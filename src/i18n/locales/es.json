@@ -1,0 +1,352 @@
+{
+  "common": {
+    "loading": "Cargando...",
+    "error": "Ocurrió un error",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "add": "Agregar",
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "sort": "Ordenar",
+    "back": "Volver",
+    "next": "Siguiente",
+    "previous": "Anterior",
+    "submit": "Enviar",
+    "confirm": "Confirmar",
+    "close": "Cerrar",
+    "yes": "Sí",
+    "no": "No",
+    "or": "o",
+    "and": "y",
+    "all": "Todo",
+    "none": "Ninguno",
+    "more": "Más",
+    "less": "Menos",
+    "seeMore": "Ver más",
+    "seeLess": "Ver menos",
+    "viewAll": "Ver todo",
+    "learnMore": "Más información"
+  },
+  "nav": {
+    "home": "Inicio",
+    "catalog": "Catálogo",
+    "courses": "Cursos",
+    "about": "Acerca de",
+    "contact": "Contacto",
+    "faq": "FAQ",
+    "login": "Iniciar sesión",
+    "logout": "Cerrar sesión",
+    "register": "Registrarse",
+    "myAccount": "Mi cuenta",
+    "dashboard": "Panel",
+    "cart": "Carrito",
+    "language": "Idioma"
+  },
+  "auth": {
+    "signIn": "Iniciar sesión",
+    "signUp": "Crear cuenta",
+    "signOut": "Cerrar sesión",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "confirmPassword": "Confirmar contraseña",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
+    "resetPassword": "Restablecer contraseña",
+    "rememberMe": "Recordarme",
+    "noAccount": "¿No tienes cuenta?",
+    "hasAccount": "¿Ya tienes cuenta?",
+    "continueWith": "Continuar con {provider}",
+    "orContinueWith": "o continuar con",
+    "mfa": {
+      "title": "Verificación en dos pasos",
+      "enterCode": "Ingresa el código de tu aplicación de autenticación",
+      "useBackupCode": "Usar código de respaldo",
+      "setup": "Configurar autenticación de dos factores",
+      "scanQR": "Escanea este código QR con tu aplicación",
+      "enterManually": "O ingresa este código manualmente",
+      "verifyCode": "Verificar código",
+      "backupCodes": "Códigos de respaldo",
+      "saveBackupCodes": "Guarda estos códigos en un lugar seguro"
+    },
+    "errors": {
+      "invalidCredentials": "Credenciales inválidas",
+      "emailRequired": "El correo es requerido",
+      "passwordRequired": "La contraseña es requerida",
+      "passwordMismatch": "Las contraseñas no coinciden",
+      "weakPassword": "La contraseña es muy débil",
+      "emailInUse": "Este correo ya está en uso",
+      "mfaRequired": "Se requiere verificación en dos pasos",
+      "invalidMfaCode": "Código de verificación inválido"
+    }
+  },
+  "products": {
+    "catalog": "Catálogo",
+    "allProducts": "Todos los productos",
+    "featured": "Destacados",
+    "newArrivals": "Nuevos",
+    "bestSellers": "Más vendidos",
+    "onSale": "En oferta",
+    "categories": "Categorías",
+    "allCategories": "Todas las categorías",
+    "price": "Precio",
+    "rating": "Calificación",
+    "reviews": "Reseñas",
+    "noReviews": "Sin reseñas",
+    "inStock": "En stock",
+    "outOfStock": "Agotado",
+    "addToCart": "Agregar al carrito",
+    "buyNow": "Comprar ahora",
+    "viewDetails": "Ver detalles",
+    "description": "Descripción",
+    "specifications": "Especificaciones",
+    "duration": "Duración",
+    "level": "Nivel",
+    "levels": {
+      "beginner": "Principiante",
+      "intermediate": "Intermedio",
+      "advanced": "Avanzado",
+      "expert": "Experto"
+    },
+    "type": {
+      "digital": "Producto digital",
+      "physical": "Producto físico",
+      "hybrid": "Producto híbrido"
+    },
+    "access": {
+      "immediate": "Acceso inmediato",
+      "lifetime": "Acceso de por vida",
+      "certificate": "Certificado incluido"
+    },
+    "filters": {
+      "priceRange": "Rango de precio",
+      "minPrice": "Precio mínimo",
+      "maxPrice": "Precio máximo",
+      "sortBy": "Ordenar por",
+      "newest": "Más reciente",
+      "oldest": "Más antiguo",
+      "priceAsc": "Precio: menor a mayor",
+      "priceDesc": "Precio: mayor a menor",
+      "popular": "Más popular",
+      "topRated": "Mejor calificado"
+    }
+  },
+  "cart": {
+    "title": "Carrito",
+    "empty": "Tu carrito está vacío",
+    "continueShopping": "Continuar comprando",
+    "items": "{count, plural, =0 {Sin artículos} =1 {1 artículo} other {# artículos}}",
+    "subtotal": "Subtotal",
+    "shipping": "Envío",
+    "freeShipping": "Gratis",
+    "tax": "Impuestos",
+    "total": "Total",
+    "checkout": "Pagar",
+    "remove": "Eliminar",
+    "quantity": "Cantidad",
+    "updateQuantity": "Actualizar cantidad"
+  },
+  "checkout": {
+    "title": "Finalizar compra",
+    "summary": "Resumen del pedido",
+    "shipping": {
+      "title": "Envío",
+      "address": "Dirección de envío",
+      "savedAddresses": "Direcciones guardadas",
+      "newAddress": "Nueva dirección",
+      "recipientName": "Nombre del destinatario",
+      "addressLine1": "Dirección",
+      "addressLine2": "Apartamento, suite, etc.",
+      "city": "Ciudad",
+      "state": "Estado/Provincia",
+      "postalCode": "Código postal",
+      "country": "País",
+      "phone": "Teléfono",
+      "saveAddress": "Guardar esta dirección",
+      "estimatedDelivery": "Entrega estimada",
+      "instructions": "Instrucciones de entrega"
+    },
+    "payment": {
+      "title": "Pago",
+      "method": "Método de pago",
+      "card": "Tarjeta de crédito",
+      "savedCards": "Tarjetas guardadas",
+      "newCard": "Nueva tarjeta",
+      "cardNumber": "Número de tarjeta",
+      "expiry": "Fecha de vencimiento",
+      "cvc": "CVC",
+      "saveCard": "Guardar esta tarjeta",
+      "applePay": "Apple Pay",
+      "googlePay": "Google Pay",
+      "paypal": "PayPal",
+      "processing": "Procesando...",
+      "secure": "Pago seguro"
+    },
+    "taxes": {
+      "tps": "IVA (5%)",
+      "tvq": "IVA Provincial (9.975%)",
+      "hst": "IVA Armonizado",
+      "gst": "IVA Federal",
+      "pst": "IVA Provincial"
+    },
+    "errors": {
+      "paymentFailed": "El pago falló",
+      "cardDeclined": "Tarjeta rechazada",
+      "insufficientFunds": "Fondos insuficientes",
+      "invalidCard": "Tarjeta inválida",
+      "expired": "Tarjeta vencida"
+    },
+    "continue": "Continuar al pago",
+    "placeOrder": "Realizar pedido",
+    "guarantee": "Garantía de devolución de 30 días"
+  },
+  "order": {
+    "title": "Pedido",
+    "number": "Número de pedido",
+    "date": "Fecha",
+    "status": "Estado",
+    "statuses": {
+      "pending": "Pendiente",
+      "processing": "Procesando",
+      "completed": "Completado",
+      "failed": "Fallido",
+      "refunded": "Reembolsado",
+      "cancelled": "Cancelado"
+    },
+    "tracking": {
+      "title": "Seguimiento de pedido",
+      "digital": "Entrega digital",
+      "physical": "Entrega física",
+      "hybrid": "Entrega híbrida",
+      "accessActivated": "Acceso activado",
+      "preparing": "Preparando",
+      "shipped": "Enviado",
+      "inTransit": "En tránsito",
+      "outForDelivery": "En camino",
+      "delivered": "Entregado"
+    },
+    "digitalDelivery": {
+      "instantAccess": "Acceso instantáneo disponible",
+      "ready": "Tu contenido está listo",
+      "startNow": "Comenzar ahora",
+      "accessCourse": "Acceder al curso"
+    },
+    "physicalDelivery": {
+      "carrier": "Transportista",
+      "trackingNumber": "Número de seguimiento",
+      "trackPackage": "Rastrear paquete",
+      "estimatedDelivery": "Entrega estimada"
+    },
+    "receipt": {
+      "title": "Recibo",
+      "download": "Descargar recibo",
+      "print": "Imprimir"
+    },
+    "history": "Historial de pedidos",
+    "noOrders": "Sin pedidos"
+  },
+  "dashboard": {
+    "welcome": "Bienvenido, {name}",
+    "overview": "Resumen",
+    "customer": {
+      "title": "Mi espacio",
+      "myCourses": "Mis cursos",
+      "myPurchases": "Mis compras",
+      "myCertificates": "Mis certificados",
+      "myProfile": "Mi perfil",
+      "progress": "Progreso",
+      "completed": "Completado",
+      "inProgress": "En progreso",
+      "notStarted": "No iniciado"
+    },
+    "client": {
+      "title": "Espacio empresarial",
+      "company": "Empresa",
+      "students": "Estudiantes",
+      "addStudent": "Agregar estudiante",
+      "purchases": "Compras",
+      "reports": "Reportes"
+    },
+    "admin": {
+      "title": "Administración",
+      "users": "Usuarios",
+      "products": "Productos",
+      "orders": "Pedidos",
+      "analytics": "Analíticas",
+      "settings": "Configuración"
+    },
+    "owner": {
+      "title": "Propietario",
+      "revenue": "Ingresos",
+      "monthlyRevenue": "Ingresos mensuales",
+      "totalRevenue": "Ingresos totales",
+      "growth": "Crecimiento",
+      "billing": "Facturación"
+    }
+  },
+  "profile": {
+    "title": "Mi perfil",
+    "personalInfo": "Información personal",
+    "firstName": "Nombre",
+    "lastName": "Apellido",
+    "fullName": "Nombre completo",
+    "email": "Correo",
+    "phone": "Teléfono",
+    "language": "Idioma",
+    "timezone": "Zona horaria",
+    "security": "Seguridad",
+    "changePassword": "Cambiar contraseña",
+    "currentPassword": "Contraseña actual",
+    "newPassword": "Nueva contraseña",
+    "twoFactor": "Autenticación de dos factores",
+    "notifications": "Notificaciones",
+    "emailNotifications": "Notificaciones por correo",
+    "savedAddresses": "Direcciones guardadas",
+    "savedCards": "Tarjetas guardadas",
+    "deleteAccount": "Eliminar cuenta"
+  },
+  "footer": {
+    "aboutUs": "Sobre nosotros",
+    "careers": "Carreras",
+    "press": "Prensa",
+    "help": "Ayuda",
+    "support": "Soporte",
+    "terms": "Términos de servicio",
+    "privacy": "Política de privacidad",
+    "cookies": "Política de cookies",
+    "accessibility": "Accesibilidad",
+    "allRightsReserved": "Todos los derechos reservados",
+    "followUs": "Síguenos",
+    "newsletter": "Boletín",
+    "subscribeNewsletter": "Suscríbete a nuestro boletín"
+  },
+  "errors": {
+    "404": {
+      "title": "Página no encontrada",
+      "description": "La página que buscas no existe.",
+      "goHome": "Ir al inicio"
+    },
+    "500": {
+      "title": "Error del servidor",
+      "description": "Ocurrió un error. Intenta de nuevo más tarde."
+    },
+    "network": "Error de conexión",
+    "unauthorized": "Acceso no autorizado",
+    "forbidden": "Acceso prohibido",
+    "validation": "Por favor verifica los campos del formulario"
+  },
+  "dates": {
+    "today": "Hoy",
+    "yesterday": "Ayer",
+    "tomorrow": "Mañana",
+    "thisWeek": "Esta semana",
+    "lastWeek": "La semana pasada",
+    "thisMonth": "Este mes",
+    "lastMonth": "El mes pasado"
+  },
+  "currency": {
+    "cad": "Dólar canadiense",
+    "usd": "Dólar estadounidense",
+    "eur": "Euro"
+  }
+}

@@ -1,0 +1,727 @@
+// =====================================================
+// PRISMA SCHEMA - Site Transactionnel de Formation
+// =====================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlserver" // Azure SQL
+  url      = env("DATABASE_URL")
+}
+
+// =====================================================
+// ENUMS
+// =====================================================
+
+enum UserRole {
+  PUBLIC
+  CUSTOMER
+  CLIENT
+  EMPLOYEE
+  OWNER
+}
+
+enum PurchaseStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  STRIPE_CARD
+  APPLE_PAY
+  GOOGLE_PAY
+  PAYPAL
+  VISA_CLICK_TO_PAY
+  MASTERCARD_CLICK_TO_PAY
+}
+
+enum ProductType {
+  DIGITAL      // Cours en ligne, formations, ebooks (accès immédiat)
+  PHYSICAL     // Produits physiques (nécessite livraison)
+  HYBRID       // Mix des deux (ex: formation + matériel)
+}
+
+enum ShippingStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  IN_TRANSIT
+  OUT_FOR_DELIVERY
+  DELIVERED
+  FAILED
+}
+
+// =====================================================
+// USERS & AUTH
+// =====================================================
+
+model User {
+  id                 String    @id @default(cuid())
+  email              String    @unique
+  emailVerified      DateTime?
+  name               String?
+  image              String?
+  password           String?   // Null si OAuth uniquement
+  role               UserRole  @default(CUSTOMER)
+  
+  // MFA
+  mfaEnabled         Boolean   @default(false)
+  mfaSecret          String?   // TOTP secret (chiffré)
+  mfaBackupCodes     String?   // Codes de backup (chiffrés)
+  
+  // Préférences utilisateur
+  locale             String    @default("fr") // Langue: fr, en, es, de, it, pt, zh, ar
+  timezone           String    @default("America/Toronto")
+  
+  // Stripe
+  stripeCustomerId   String?   @unique
+  
+  // Relations
+  accounts           Account[]
+  sessions           Session[]
+  ownedCompany       Company?  @relation("CompanyOwner")
+  companies          CompanyCustomer[]
+  purchases          Purchase[]
+  courseAccess       CourseAccess[]
+  grades             Grade[]
+  savedCards         SavedCard[]
+  addresses          UserAddress[]
+  
+  // Chat
+  conversations      Conversation[]
+  assignedChats      Conversation[] @relation("AssignedConversations")
+  messages           Message[]
+  
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  
+  @@index([email])
+  @@index([role])
+}
+
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String? @db.Text
+  access_token       String? @db.Text
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String? @db.Text
+  session_state      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// =====================================================
+// COMPANIES (CLIENTS)
+// =====================================================
+
+model Company {
+  id              String   @id @default(cuid())
+  name            String
+  slug            String   @unique
+  contactEmail    String
+  phone           String?
+  
+  // Adresse de facturation
+  billingAddress  String?
+  billingCity     String?
+  billingState    String?
+  billingPostal   String?
+  billingCountry  String?
+  
+  // Relation propriétaire (User avec role CLIENT)
+  ownerId         String   @unique
+  owner           User     @relation("CompanyOwner", fields: [ownerId], references: [id])
+  
+  // Étudiants associés
+  customers       CompanyCustomer[]
+  
+  // Achats de l'entreprise
+  purchases       Purchase[]
+  
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([slug])
+}
+
+model CompanyCustomer {
+  id          String   @id @default(cuid())
+  companyId   String
+  customerId  String
+  
+  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  customer    User     @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  
+  addedAt     DateTime @default(now())
+  addedBy     String?  // User ID qui a ajouté
+  
+  @@unique([companyId, customerId])
+  @@index([companyId])
+  @@index([customerId])
+}
+
+// =====================================================
+// PRODUCTS (COURS)
+// =====================================================
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  description String?   @db.Text
+  imageUrl    String?
+  sortOrder   Int       @default(0)
+  
+  products    Product[]
+  
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  @@index([slug])
+}
+
+model Product {
+  id              String      @id @default(cuid())
+  
+  // Informations de base
+  name            String                    // Titre principal
+  subtitle        String?                   // Sous-titre
+  slug            String      @unique
+  shortDescription String?                  // Description courte (résumé)
+  description     String?     @db.Text      // Description longue (marketing)
+  fullDetails     String?     @db.Text      // Détails complets (peut être HTML/Markdown)
+  
+  // Fiche technique (spécifications)
+  specifications  String?     @db.Text      // JSON ou Markdown des specs techniques
+  
+  // Type de produit
+  productType     ProductType @default(DIGITAL)
+  
+  // Prix
+  price           Decimal     @db.Decimal(10, 2)
+  compareAtPrice  Decimal?    @db.Decimal(10, 2) // Prix barré
+  
+  // Médias principaux
+  imageUrl        String?                   // Image principale (thumbnail)
+  videoUrl        String?                   // Vidéo de présentation
+  
+  // Galerie d'images (relation)
+  images          ProductImage[]
+  
+  // Formats disponibles (relation)
+  formats         ProductFormat[]
+  
+  // Documents associés
+  certificateUrl  String?                   // URL du certificat d'analyse (PDF)
+  certificateName String?                   // Nom du certificat
+  dataSheetUrl    String?                   // Fiche technique PDF
+  dataSheetName   String?
+  
+  // Catégorie
+  categoryId      String
+  category        Category    @relation(fields: [categoryId], references: [id])
+  
+  // Métadonnées cours (pour produits DIGITAL)
+  duration        Int?                      // Durée en minutes
+  level           String?                   // Débutant, Intermédiaire, Avancé
+  language        String      @default("fr")
+  instructor      String?                   // Formateur
+  prerequisites   String?     @db.Text      // Prérequis
+  objectives      String?     @db.Text      // Objectifs d'apprentissage
+  targetAudience  String?                   // Public cible
+  
+  // Métadonnées physiques (pour produits PHYSICAL)
+  weight          Decimal?    @db.Decimal(10, 3) // en kg
+  dimensions      String?                   // "LxWxH" en cm
+  requiresShipping Boolean    @default(false)
+  sku             String?                   // Code produit interne
+  barcode         String?                   // Code-barres EAN/UPC
+  manufacturer    String?                   // Fabricant
+  origin          String?                   // Pays d'origine
+  
+  // Modules du cours
+  modules         Module[]
+  
+  // Relations
+  purchases       Purchase[]
+  courseAccess    CourseAccess[]
+  grades          Grade[]
+  
+  // Stats
+  purchaseCount   Int         @default(0)
+  averageRating   Decimal?    @db.Decimal(2, 1)
+  reviewCount     Int         @default(0)
+  
+  // SEO
+  metaTitle       String?
+  metaDescription String?
+  
+  isActive        Boolean     @default(true)
+  isFeatured      Boolean     @default(false)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  
+  @@index([slug])
+  @@index([categoryId])
+  @@index([isFeatured])
+  @@index([productType])
+  @@index([sku])
+}
+
+// Images multiples du produit
+model ProductImage {
+  id          String   @id @default(cuid())
+  
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  url         String               // URL de l'image
+  alt         String?              // Texte alternatif
+  caption     String?              // Légende
+  sortOrder   Int      @default(0) // Ordre d'affichage
+  isPrimary   Boolean  @default(false)
+  
+  // Dimensions
+  width       Int?
+  height      Int?
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([productId])
+}
+
+// Formats disponibles pour un produit
+model ProductFormat {
+  id          String   @id @default(cuid())
+  
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  name        String               // Ex: "PDF", "Livre relié", "En ligne", "CD-ROM"
+  description String?              // Description du format
+  price       Decimal? @db.Decimal(10, 2) // Prix spécifique (si différent)
+  sku         String?              // SKU spécifique au format
+  
+  // Pour les formats digitaux
+  downloadUrl String?              // URL de téléchargement
+  fileSize    String?              // Taille du fichier
+  fileType    String?              // Type MIME
+  
+  // Stock pour formats physiques
+  inStock     Boolean  @default(true)
+  stockQuantity Int?
+  
+  sortOrder   Int      @default(0)
+  isDefault   Boolean  @default(false)
+  isActive    Boolean  @default(true)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([productId])
+}
+
+model Module {
+  id          String   @id @default(cuid())
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  name        String
+  description String?
+  sortOrder   Int      @default(0)
+  duration    Int?     // Durée en minutes
+  
+  // Contenu
+  contentUrl  String?  // URL vidéo ou contenu
+  
+  grades      Grade[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([productId])
+}
+
+// =====================================================
+// PURCHASES & PAYMENTS
+// =====================================================
+
+model Purchase {
+  id                String         @id @default(cuid())
+  
+  // Acheteur
+  userId            String
+  user              User           @relation(fields: [userId], references: [id])
+  
+  // Entreprise (si achat corporate)
+  companyId         String?
+  company           Company?       @relation(fields: [companyId], references: [id])
+  
+  // Produit
+  productId         String
+  product           Product        @relation(fields: [productId], references: [id])
+  
+  // Paiement
+  amount            Decimal        @db.Decimal(10, 2)
+  currency          String         @default("CAD")
+  paymentMethod     PaymentMethod
+  
+  // IDs externes
+  stripePaymentId   String?
+  stripeInvoiceId   String?
+  paypalOrderId     String?
+  
+  // Status
+  status            PurchaseStatus @default(PENDING)
+  
+  // Reçu
+  receiptUrl        String?
+  receiptNumber     String?        @unique
+  
+  // Accès créé (pour produits digitaux)
+  courseAccess      CourseAccess?
+  
+  // Livraison (pour produits physiques)
+  shipping          Shipping?
+  
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  
+  @@index([userId])
+  @@index([companyId])
+  @@index([productId])
+  @@index([status])
+}
+
+// =====================================================
+// SHIPPING (LIVRAISON)
+// =====================================================
+
+model Shipping {
+  id              String         @id @default(cuid())
+  
+  purchaseId      String         @unique
+  purchase        Purchase       @relation(fields: [purchaseId], references: [id])
+  
+  // Adresse de livraison
+  recipientName   String
+  addressLine1    String
+  addressLine2    String?
+  city            String
+  state           String
+  postalCode      String
+  country         String         @default("CA")
+  phone           String?
+  
+  // Expédition
+  carrier         String?        // Postes Canada, FedEx, UPS, etc.
+  trackingNumber  String?
+  trackingUrl     String?
+  
+  // Statut
+  status          ShippingStatus @default(PENDING)
+  
+  // Dates
+  shippedAt       DateTime?
+  estimatedDelivery DateTime?
+  deliveredAt     DateTime?
+  
+  // Notes
+  instructions    String?        // Instructions de livraison
+  signature       Boolean        @default(false) // Signature requise
+  
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  
+  // Historique des statuts
+  statusHistory   ShippingStatusHistory[]
+  
+  @@index([status])
+  @@index([trackingNumber])
+}
+
+model ShippingStatusHistory {
+  id          String         @id @default(cuid())
+  
+  shippingId  String
+  shipping    Shipping       @relation(fields: [shippingId], references: [id], onDelete: Cascade)
+  
+  status      ShippingStatus
+  location    String?
+  description String?
+  
+  createdAt   DateTime       @default(now())
+  
+  @@index([shippingId])
+}
+
+// =====================================================
+// CHAT / SUPPORT
+// =====================================================
+
+enum ConversationStatus {
+  OPEN
+  PENDING
+  RESOLVED
+  CLOSED
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  FILE
+  SYSTEM
+}
+
+model Conversation {
+  id            String             @id @default(cuid())
+  
+  // Utilisateur qui a initié la conversation
+  userId        String
+  user          User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Sujet/titre de la conversation
+  subject       String?
+  
+  // Statut
+  status        ConversationStatus @default(OPEN)
+  
+  // Agent assigné (employee/owner)
+  assignedToId  String?
+  assignedTo    User?              @relation("AssignedConversations", fields: [assignedToId], references: [id])
+  
+  // Métadonnées
+  priority      Int                @default(0) // 0=normal, 1=high, 2=urgent
+  tags          String?            // JSON array de tags
+  
+  // Messages
+  messages      Message[]
+  
+  // Dernier message pour tri
+  lastMessageAt DateTime           @default(now())
+  
+  // Non lus côté admin
+  unreadCount   Int                @default(1)
+  
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  
+  @@index([userId])
+  @@index([assignedToId])
+  @@index([status])
+  @@index([lastMessageAt])
+}
+
+model Message {
+  id              String       @id @default(cuid())
+  
+  conversationId  String
+  conversation    Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  
+  // Auteur du message
+  senderId        String
+  sender          User         @relation(fields: [senderId], references: [id])
+  
+  // Contenu
+  type            MessageType  @default(TEXT)
+  content         String       @db.Text
+  
+  // Fichier joint (optionnel)
+  attachmentUrl   String?
+  attachmentName  String?
+  attachmentSize  Int?
+  
+  // Lu par le destinataire
+  readAt          DateTime?
+  
+  // Message système (ex: "Conversation assignée à...")
+  isSystem        Boolean      @default(false)
+  
+  createdAt       DateTime     @default(now())
+  
+  @@index([conversationId])
+  @@index([senderId])
+  @@index([createdAt])
+}
+
+// Réponses rapides pré-configurées pour les agents
+model QuickReply {
+  id        String   @id @default(cuid())
+  
+  title     String   // Titre court pour sélection
+  content   String   @db.Text // Contenu complet
+  category  String?  // Catégorie (général, paiement, livraison...)
+  
+  // Ordre d'affichage
+  sortOrder Int      @default(0)
+  
+  isActive  Boolean  @default(true)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([category])
+}
+
+// Adresses sauvegardées de l'utilisateur
+model UserAddress {
+  id            String   @id @default(cuid())
+  
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  label         String?  // "Maison", "Bureau", etc.
+  recipientName String
+  addressLine1  String
+  addressLine2  String?
+  city          String
+  state         String
+  postalCode    String
+  country       String   @default("CA")
+  phone         String?
+  
+  isDefault     Boolean  @default(false)
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@index([userId])
+}
+
+model SavedCard {
+  id                String   @id @default(cuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Stripe Payment Method
+  stripePaymentMethodId String @unique
+  
+  // Infos affichables (non sensibles)
+  brand             String   // visa, mastercard, amex
+  last4             String   // 4 derniers chiffres
+  expMonth          Int
+  expYear           Int
+  
+  isDefault         Boolean  @default(false)
+  
+  createdAt         DateTime @default(now())
+  
+  @@index([userId])
+}
+
+// =====================================================
+// COURSE ACCESS & PROGRESS
+// =====================================================
+
+model CourseAccess {
+  id          String    @id @default(cuid())
+  
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  
+  productId   String
+  product     Product   @relation(fields: [productId], references: [id])
+  
+  purchaseId  String    @unique
+  purchase    Purchase  @relation(fields: [purchaseId], references: [id])
+  
+  // Progression
+  progress    Int       @default(0) // Pourcentage 0-100
+  lastAccessedAt DateTime?
+  
+  // Complétion
+  completedAt DateTime?
+  
+  // Certification
+  certificateUrl    String?
+  certificateNumber String?
+  certificateIssuedAt DateTime?
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  @@unique([userId, productId])
+  @@index([userId])
+  @@index([productId])
+}
+
+model Grade {
+  id          String   @id @default(cuid())
+  
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id])
+  
+  moduleId    String
+  module      Module   @relation(fields: [moduleId], references: [id])
+  
+  // Résultat
+  score       Decimal  @db.Decimal(5, 2) // 0.00 à 100.00
+  passed      Boolean
+  attempts    Int      @default(1)
+  
+  completedAt DateTime @default(now())
+  
+  @@unique([userId, moduleId])
+  @@index([userId])
+  @@index([productId])
+}
+
+// =====================================================
+// AUDIT LOG
+// =====================================================
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  
+  userId      String?
+  action      String   // CREATE, UPDATE, DELETE, LOGIN, etc.
+  entityType  String   // User, Purchase, etc.
+  entityId    String?
+  
+  details     String?  @db.Text // JSON des changements
+  ipAddress   String?
+  userAgent   String?
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([userId])
+  @@index([action])
+  @@index([entityType])
+  @@index([createdAt])
+}
