@@ -7,7 +7,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlserver" // Azure SQL
+  provider = "postgresql" // Azure PostgreSQL
   url      = env("DATABASE_URL")
 }
 
@@ -553,7 +553,7 @@ model Message {
   
   // Auteur du message
   senderId        String
-  sender          User         @relation(fields: [senderId], references: [id])
+  sender          User         @relation(fields: [senderId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   
   // Contenu
   type            MessageType  @default(TEXT)
@@ -650,13 +650,13 @@ model CourseAccess {
   id          String    @id @default(cuid())
   
   userId      String
-  user        User      @relation(fields: [userId], references: [id])
+  user        User      @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   
   productId   String
-  product     Product   @relation(fields: [productId], references: [id])
+  product     Product   @relation(fields: [productId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   
   purchaseId  String    @unique
-  purchase    Purchase  @relation(fields: [purchaseId], references: [id])
+  purchase    Purchase  @relation(fields: [purchaseId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   
   // Progression
   progress    Int       @default(0) // Pourcentage 0-100
@@ -682,13 +682,13 @@ model Grade {
   id          String   @id @default(cuid())
   
   userId      String
-  user        User     @relation(fields: [userId], references: [id])
+  user        User     @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   
   productId   String
-  product     Product  @relation(fields: [productId], references: [id])
+  product     Product  @relation(fields: [productId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   
   moduleId    String
-  module      Module   @relation(fields: [moduleId], references: [id])
+  module      Module   @relation(fields: [moduleId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   
   // Résultat
   score       Decimal  @db.Decimal(5, 2) // 0.00 à 100.00
