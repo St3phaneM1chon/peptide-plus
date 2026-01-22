@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * API - Générer et télécharger un reçu PDF
  * Supporte la traduction dans la langue de l'utilisateur

@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * API - QUICK REPLIES
  * Gestion des réponses rapides pré-configurées

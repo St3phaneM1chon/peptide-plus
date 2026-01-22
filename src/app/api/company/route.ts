@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * API - Gestion des compagnies (clients)
  * Pour les rôles CLIENT (sa propre compagnie), EMPLOYEE, OWNER

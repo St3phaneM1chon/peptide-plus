@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * API - USER PROFILE
  * Mise à jour du profil utilisateur

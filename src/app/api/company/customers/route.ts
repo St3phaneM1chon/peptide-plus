@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * API - Gestion des customers (étudiants) d'une compagnie
  * Pour les rôles CLIENT, EMPLOYEE, OWNER

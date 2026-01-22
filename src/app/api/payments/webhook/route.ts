@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * API - Webhook Stripe
  * Gère les événements de paiement

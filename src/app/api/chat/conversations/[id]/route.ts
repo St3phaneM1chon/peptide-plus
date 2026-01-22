@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * API - CONVERSATION DETAIL
  * Récupérer, modifier, supprimer une conversation

@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * API - UPDATE USER LOCALE
  * Met à jour la langue préférée de l'utilisateur

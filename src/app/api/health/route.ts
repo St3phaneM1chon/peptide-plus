@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * API HEALTH CHECK
  * Endpoint pour la surveillance et le load balancing

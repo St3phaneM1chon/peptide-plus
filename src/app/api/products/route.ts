@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * API - CRUD Produits (version enrichie)
  * Gère: formations, produits physiques, hybrides
