@@ -1,12 +1,10 @@
+'use client';
+
 /**
  * PAGE POLITIQUE DE CONFIDENTIALITÉ
  * Conforme RGPD, PIPEDA, Loi 25
  */
 
-export const metadata = {
-  title: 'Politique de confidentialité | Formations Pro',
-  description: 'Comment nous collectons, utilisons et protégeons vos données personnelles.',
-};
 
 export default function PrivacyPage() {
   const lastUpdated = '21 janvier 2026';

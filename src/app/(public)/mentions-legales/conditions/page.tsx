@@ -1,11 +1,9 @@
+'use client';
+
 /**
  * PAGE CONDITIONS D'UTILISATION
  */
 
-export const metadata = {
-  title: 'Conditions d\'utilisation | Formations Pro',
-  description: 'Conditions générales d\'utilisation de notre plateforme.',
-};
 
 export default function TermsPage() {
   const lastUpdated = '21 janvier 2026';

@@ -1,11 +1,9 @@
+'use client';
+
 /**
  * PAGE POLITIQUE DE COOKIES
  */
 
-export const metadata = {
-  title: 'Politique de cookies | Formations Pro',
-  description: 'Comment nous utilisons les cookies et technologies similaires.',
-};
 
 export default function CookiesPage() {
   const lastUpdated = '21 janvier 2026';
