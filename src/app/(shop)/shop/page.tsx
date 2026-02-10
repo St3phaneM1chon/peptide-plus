@@ -1,248 +1,151 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { ProductCard } from '@/components/shop';
 import { useTranslations } from '@/hooks/useTranslations';
 import { useCurrency } from '@/contexts/CurrencyContext';
 
-// All products
-const allProducts = [
-  {
-    id: '1',
-    name: 'Tesamorelin 20mg',
-    slug: 'tesamorelin',
-    price: 150,
-    purity: 99.60,
-    avgMass: '23.84 mg',
-    category: 'Peptides',
-    subcategory: 'weight-loss',
-    inStock: true,
-    isNew: false,
-    isBestseller: true,
-    formats: [
-      { id: 'f1a', name: 'Single vial', price: 150, inStock: true, stockQuantity: 100 },
-      { id: 'f1b', name: '10-pack', price: 1200, inStock: true, stockQuantity: 30 },
-    ],
-  },
-  {
-    id: '2',
-    name: 'Semaglutide 10mg',
-    slug: 'semaglutide',
-    price: 80,
-    purity: 99.64,
-    avgMass: '10.85 mg',
-    category: 'Peptides',
-    subcategory: 'weight-loss',
-    inStock: true,
-    isNew: false,
-    isBestseller: true,
-    formats: [
-      { id: 'f2a', name: 'Single vial', price: 80, inStock: true, stockQuantity: 80 },
-      { id: 'f2b', name: '10-pack', price: 640, inStock: true, stockQuantity: 25 },
-    ],
-  },
-  {
-    id: '3',
-    name: 'BPC-157 / TB-500 "Healing Blend" 6mg/6mg',
-    slug: 'bpc-157-tb-500-blend',
-    price: 70,
-    avgMass: '7.13 mg',
-    category: 'Peptides',
-    subcategory: 'recovery',
-    inStock: true,
-    isNew: true,
-    isBestseller: true,
-    formats: [
-      { id: 'f3a', name: 'Single vial', price: 70, inStock: true, stockQuantity: 100 },
-      { id: 'f3b', name: '10-pack', price: 560, inStock: true, stockQuantity: 20 },
-    ],
-  },
-  {
-    id: '4',
-    name: 'Retatrutide 10mg',
-    slug: 'retatrutide',
-    price: 90,
-    purity: 99.30,
-    avgMass: '10.46 mg',
-    category: 'Peptides',
-    subcategory: 'weight-loss',
-    inStock: true,
-    isNew: true,
-    isBestseller: false,
-    formats: [
-      { id: 'f4a', name: 'Single vial', price: 90, inStock: true, stockQuantity: 60 },
-      { id: 'f4b', name: '10-pack', price: 720, inStock: true, stockQuantity: 15 },
-    ],
-  },
-  {
-    id: '5',
-    name: 'Tirzepatide 10mg',
-    slug: 'tirzepatide',
-    price: 60,
-    purity: 99.74,
-    avgMass: '10.12 mg',
-    category: 'Peptides',
-    subcategory: 'weight-loss',
-    inStock: true,
-    isNew: false,
-    isBestseller: true,
-    formats: [
-      { id: 'f5a', name: 'Single vial', price: 60, inStock: true, stockQuantity: 70 },
-      { id: 'f5b', name: '10-pack', price: 480, inStock: true, stockQuantity: 20 },
-    ],
-  },
-  {
-    id: '6',
-    name: 'BPC-157 5mg',
-    slug: 'bpc-157',
-    price: 40,
-    purity: 99.83,
-    avgMass: '5.21 mg',
-    category: 'Peptides',
-    subcategory: 'recovery',
-    inStock: true,
-    isNew: false,
-    isBestseller: true,
-    formats: [
-      { id: 'f6a', name: 'Single vial', price: 40, inStock: true, stockQuantity: 150 },
-      { id: 'f6b', name: '10-pack', price: 320, inStock: true, stockQuantity: 40 },
-    ],
-  },
-  {
-    id: '7',
-    name: 'TB-500 5mg',
-    slug: 'tb-500',
-    price: 40,
-    purity: 99.43,
-    avgMass: '5.08 mg',
-    category: 'Peptides',
-    subcategory: 'recovery',
-    inStock: true,
-    isNew: false,
-    isBestseller: false,
-    formats: [
-      { id: 'f7a', name: 'Single vial', price: 40, inStock: true, stockQuantity: 120 },
-      { id: 'f7b', name: '10-pack', price: 320, inStock: true, stockQuantity: 35 },
-    ],
-  },
-  {
-    id: '8',
-    name: 'Ipamorelin 5mg',
-    slug: 'ipamorelin',
-    price: 27,
-    purity: 99.50,
-    avgMass: '5.15 mg',
-    category: 'Peptides',
-    subcategory: 'muscle-growth',
-    inStock: true,
-    isNew: false,
-    isBestseller: false,
-    formats: [
-      { id: 'f8a', name: 'Single vial', price: 27, inStock: true, stockQuantity: 200 },
-      { id: 'f8b', name: '10-pack', price: 216, inStock: true, stockQuantity: 50 },
-    ],
-  },
-  {
-    id: '9',
-    name: 'IGF-1 LR3 1mg',
-    slug: 'igf-1-lr3',
-    price: 75,
-    purity: 99.51,
-    avgMass: '1.02 mg',
-    category: 'Peptides',
-    subcategory: 'muscle-growth',
-    inStock: true,
-    isNew: false,
-    isBestseller: false,
-    formats: [
-      { id: 'f9a', name: 'Single vial', price: 75, inStock: true, stockQuantity: 50 },
-      { id: 'f9b', name: '10-pack', price: 600, inStock: true, stockQuantity: 15 },
-    ],
-  },
-  {
-    id: '10',
-    name: 'Epithalon 20mg',
-    slug: 'epithalon',
-    price: 28,
-    purity: 99.20,
-    avgMass: '20.15 mg',
-    category: 'Peptides',
-    subcategory: 'longevity',
-    inStock: true,
-    isNew: false,
-    isBestseller: false,
-    formats: [
-      { id: 'f10a', name: 'Single vial', price: 28, inStock: true, stockQuantity: 80 },
-      { id: 'f10b', name: '10-pack', price: 224, inStock: true, stockQuantity: 25 },
-    ],
-  },
-  {
-    id: '11',
-    name: 'PT-141 10mg',
-    slug: 'pt-141',
-    price: 42,
-    purity: 99.40,
-    avgMass: '10.23 mg',
-    category: 'Peptides',
-    subcategory: 'wellness',
-    inStock: true,
-    isNew: false,
-    isBestseller: false,
-    formats: [
-      { id: 'f11a', name: 'Single vial', price: 42, inStock: true, stockQuantity: 90 },
-      { id: 'f11b', name: '10-pack', price: 336, inStock: true, stockQuantity: 20 },
-    ],
-  },
-  {
-    id: '12',
-    name: 'Bacteriostatic Water 10ml',
-    slug: 'bacteriostatic-water',
-    price: 13,
-    category: 'Accessories',
-    subcategory: 'supplies',
-    inStock: true,
-    isNew: false,
-    isBestseller: false,
-    formats: [
-      { id: 'f12a', name: 'Single', price: 13, inStock: true, stockQuantity: 500 },
-      { id: 'f12b', name: '5-pack', price: 55, inStock: true, stockQuantity: 100 },
-    ],
-  },
-];
+interface ApiProduct {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  imageUrl?: string;
+  purity?: number;
+  molecularWeight?: string;
+  isActive: boolean;
+  isFeatured: boolean;
+  category?: {
+    id: string;
+    name: string;
+    slug: string;
+  };
+  formats: Array<{
+    id: string;
+    label: string;
+    type?: string;
+    price: number | string;
+    compareAtPrice?: number | string;
+    isActive: boolean;
+    stockQuantity: number;
+    imageUrl?: string;
+  }>;
+  createdAt: string;
+}
 
-const categories = [
-  { name: 'All Products', slug: 'all', count: allProducts.length },
-  { name: 'Peptides', slug: 'peptides', count: 11 },
-  { name: 'Weight Loss', slug: 'weight-loss', count: 4 },
-  { name: 'Recovery', slug: 'recovery', count: 3 },
-  { name: 'Muscle Growth', slug: 'muscle-growth', count: 2 },
-  { name: 'Accessories', slug: 'accessories', count: 1 },
-];
+interface CategoryCount {
+  name: string;
+  slug: string;
+  count: number;
+}
 
 type SortOption = 'popular' | 'newest' | 'price-asc' | 'price-desc' | 'name-asc';
 
 export default function ShopPage() {
   const { t } = useTranslations();
   const { formatPrice } = useCurrency();
-  
+
+  const [products, setProducts] = useState<ApiProduct[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   // Filter states
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [sortBy, setSortBy] = useState<SortOption>('popular');
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 200]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 500]);
   const [showInStockOnly, setShowInStockOnly] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
 
-  // Filter and sort products
+  // Fetch products from API
+  useEffect(() => {
+    async function fetchProducts() {
+      try {
+        const res = await fetch('/api/products');
+        if (!res.ok) throw new Error('Failed to fetch products');
+        const data = await res.json();
+        const list = Array.isArray(data) ? data : data.products || data.data || [];
+        setProducts(list.filter((p: ApiProduct) => p.isActive));
+      } catch (err) {
+        console.error('Error fetching products:', err);
+        setError('Unable to load products');
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchProducts();
+  }, []);
+
+  // Build dynamic categories from loaded products
+  const categories = useMemo<CategoryCount[]>(() => {
+    const catMap = new Map<string, { name: string; count: number }>();
+    for (const p of products) {
+      if (p.category) {
+        const existing = catMap.get(p.category.slug);
+        if (existing) {
+          existing.count++;
+        } else {
+          catMap.set(p.category.slug, { name: p.category.name, count: 1 });
+        }
+      }
+    }
+    const cats: CategoryCount[] = [
+      { name: t('shop.allProducts'), slug: 'all', count: products.length },
+    ];
+    for (const [slug, { name, count }] of catMap) {
+      cats.push({ name, slug, count });
+    }
+    return cats;
+  }, [products, t]);
+
+  // Compute max price for the range slider
+  const maxPrice = useMemo(() => {
+    if (products.length === 0) return 500;
+    let max = 0;
+    for (const p of products) {
+      for (const f of p.formats) {
+        const price = Number(f.price);
+        if (price > max) max = price;
+      }
+    }
+    return Math.ceil(max / 50) * 50 || 500;
+  }, [products]);
+
+  // Map API products to ProductCard props, then filter & sort
   const filteredProducts = useMemo(() => {
-    let result = [...allProducts];
+    let result = products.map((p) => {
+      const activeFormats = p.formats.filter((f) => f.isActive);
+      const lowestPrice = activeFormats.length > 0
+        ? Math.min(...activeFormats.map((f) => Number(f.price)))
+        : 0;
+      const hasStock = activeFormats.some((f) => f.stockQuantity > 0);
+
+      return {
+        id: p.id,
+        name: p.name,
+        slug: p.slug,
+        price: lowestPrice,
+        purity: p.purity ? Number(p.purity) : undefined,
+        imageUrl: p.imageUrl || undefined,
+        category: p.category?.name || '',
+        categorySlug: p.category?.slug || '',
+        inStock: hasStock,
+        isNew: new Date(p.createdAt) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+        isBestseller: p.isFeatured,
+        formats: activeFormats.map((f) => ({
+          id: f.id,
+          name: f.label,
+          price: Number(f.price),
+          comparePrice: f.compareAtPrice ? Number(f.compareAtPrice) : undefined,
+          inStock: f.stockQuantity > 0,
+          stockQuantity: f.stockQuantity,
+          image: f.imageUrl || undefined,
+        })),
+      };
+    });
 
     // Category filter
     if (selectedCategory !== 'all') {
-      result = result.filter(
-        (p) => 
-          p.category.toLowerCase() === selectedCategory.toLowerCase() ||
-          p.subcategory === selectedCategory
-      );
+      result = result.filter((p) => p.categorySlug === selectedCategory);
     }
 
     // Price filter
@@ -276,7 +179,7 @@ export default function ShopPage() {
     }
 
     return result;
-  }, [selectedCategory, sortBy, priceRange, showInStockOnly]);
+  }, [products, selectedCategory, sortBy, priceRange, showInStockOnly]);
 
   return (
     <div className="min-h-screen bg-white">
@@ -355,7 +258,7 @@ export default function ShopPage() {
                   <input
                     type="range"
                     min={0}
-                    max={200}
+                    max={maxPrice}
                     value={priceRange[1]}
                     onChange={(e) => setPriceRange([priceRange[0], Number(e.target.value)])}
                     className="w-full accent-orange-500"
@@ -383,7 +286,7 @@ export default function ShopPage() {
               <button
                 onClick={() => {
                   setSelectedCategory('all');
-                  setPriceRange([0, 200]);
+                  setPriceRange([0, maxPrice]);
                   setShowInStockOnly(false);
                   setSortBy('popular');
                 }}
@@ -399,9 +302,9 @@ export default function ShopPage() {
             {/* Sort & Count */}
             <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
               <p className="text-neutral-500">
-                {filteredProducts.length} {filteredProducts.length === 1 ? 'product' : 'products'}
+                {loading ? '...' : `${filteredProducts.length} ${filteredProducts.length === 1 ? 'product' : 'products'}`}
               </p>
-              
+
               <div className="flex items-center gap-2">
                 <label className="text-sm text-neutral-600">{t('shop.sortBy')}:</label>
                 <select
@@ -419,7 +322,7 @@ export default function ShopPage() {
             </div>
 
             {/* Active Filters */}
-            {(selectedCategory !== 'all' || showInStockOnly || priceRange[0] > 0 || priceRange[1] < 200) && (
+            {(selectedCategory !== 'all' || showInStockOnly || priceRange[0] > 0 || priceRange[1] < maxPrice) && (
               <div className="flex flex-wrap gap-2 mb-4">
                 {selectedCategory !== 'all' && (
                   <span className="inline-flex items-center gap-1 px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm">
@@ -433,29 +336,58 @@ export default function ShopPage() {
                     <button onClick={() => setShowInStockOnly(false)} className="hover:text-green-900">×</button>
                   </span>
                 )}
-                {(priceRange[0] > 0 || priceRange[1] < 200) && (
+                {(priceRange[0] > 0 || priceRange[1] < maxPrice) && (
                   <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">
                     {formatPrice(priceRange[0])} - {formatPrice(priceRange[1])}
-                    <button onClick={() => setPriceRange([0, 200])} className="hover:text-blue-900">×</button>
+                    <button onClick={() => setPriceRange([0, maxPrice])} className="hover:text-blue-900">×</button>
                   </span>
                 )}
               </div>
             )}
 
+            {/* Loading */}
+            {loading && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="animate-pulse">
+                    <div className="bg-neutral-200 rounded-lg aspect-square mb-3" />
+                    <div className="bg-neutral-200 h-4 rounded w-3/4 mb-2" />
+                    <div className="bg-neutral-200 h-4 rounded w-1/2" />
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Error */}
+            {error && !loading && (
+              <div className="text-center py-16">
+                <p className="text-red-500 text-lg mb-4">{error}</p>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="text-orange-600 hover:underline"
+                >
+                  Retry
+                </button>
+              </div>
+            )}
+
             {/* Product Grid */}
-            {filteredProducts.length > 0 ? (
+            {!loading && !error && filteredProducts.length > 0 && (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredProducts.map((product) => (
                   <ProductCard key={product.id} {...product} />
                 ))}
               </div>
-            ) : (
+            )}
+
+            {/* Empty State */}
+            {!loading && !error && filteredProducts.length === 0 && (
               <div className="text-center py-16">
                 <p className="text-neutral-500 text-lg mb-4">No products found</p>
                 <button
                   onClick={() => {
                     setSelectedCategory('all');
-                    setPriceRange([0, 200]);
+                    setPriceRange([0, maxPrice]);
                     setShowInStockOnly(false);
                   }}
                   className="text-orange-600 hover:underline"
