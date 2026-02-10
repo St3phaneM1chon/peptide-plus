@@ -1,0 +1,240 @@
+[
+  {
+    "slug": "aod-9604",
+    "main_image": "/images/products/aod-9604/main.png",
+    "formats": [
+      {
+        "sku": "AOD9604-5MG",
+        "image": "/images/products/aod-9604/aod9604-5mg.png"
+      }
+    ]
+  },
+  {
+    "slug": "bpc-157",
+    "main_image": "/images/products/bpc-157/main.png",
+    "formats": [
+      {
+        "sku": "BPC157-5MG",
+        "image": "/images/products/bpc-157/bpc157-5mg.png"
+      },
+      {
+        "sku": "BPC157-10MG",
+        "image": "/images/products/bpc-157/bpc157-10mg.png"
+      },
+      {
+        "sku": "BPC157-20MG",
+        "image": "/images/products/bpc-157/bpc157-20mg.png"
+      }
+    ]
+  },
+  {
+    "slug": "bpc-157-tb-500-blend",
+    "main_image": "/images/products/bpc-157-tb-500-blend/main.png",
+    "formats": [
+      {
+        "sku": "BLEND-BPC-TB-10MG",
+        "image": "/images/products/bpc-157-tb-500-blend/blend-bpc-tb-10mg.png"
+      },
+      {
+        "sku": "BLEND-BPC-TB-20MG",
+        "image": "/images/products/bpc-157-tb-500-blend/blend-bpc-tb-20mg.png"
+      }
+    ]
+  },
+  {
+    "slug": "cjc-1295-dac",
+    "main_image": "/images/products/cjc-1295-dac/main.png",
+    "formats": [
+      {
+        "sku": "CJC1295-DAC-2MG",
+        "image": "/images/products/cjc-1295-dac/cjc1295-dac-2mg.png"
+      },
+      {
+        "sku": "CJC1295-DAC-5MG",
+        "image": "/images/products/cjc-1295-dac/cjc1295-dac-5mg.png"
+      }
+    ]
+  },
+  {
+    "slug": "cjc-1295-ipamorelin-blend",
+    "main_image": "/images/products/cjc-1295-ipamorelin-blend/main.png",
+    "formats": [
+      {
+        "sku": "BLEND-CJC-IPA-10MG",
+        "image": "/images/products/cjc-1295-ipamorelin-blend/blend-cjc-ipa-10mg.png"
+      }
+    ]
+  },
+  {
+    "slug": "eau-bacteriostatique",
+    "main_image": "/images/products/eau-bacteriostatique/main.png",
+    "formats": [
+      {
+        "sku": "BAC-WATER-10ML",
+        "image": "/images/products/eau-bacteriostatique/bac-water-10ml.png"
+      },
+      {
+        "sku": "BAC-WATER-30ML",
+        "image": "/images/products/eau-bacteriostatique/bac-water-30ml.png"
+      }
+    ]
+  },
+  {
+    "slug": "epitalon",
+    "main_image": "/images/products/epitalon/main.png",
+    "formats": [
+      {
+        "sku": "EPITALON-10MG",
+        "image": "/images/products/epitalon/epitalon-10mg.png"
+      },
+      {
+        "sku": "EPITALON-50MG",
+        "image": "/images/products/epitalon/epitalon-50mg.png"
+      }
+    ]
+  },
+  {
+    "slug": "ghk-cu",
+    "main_image": "/images/products/ghk-cu/main.png",
+    "formats": [
+      {
+        "sku": "GHKCU-50MG",
+        "image": "/images/products/ghk-cu/ghkcu-50mg.png"
+      },
+      {
+        "sku": "GHKCU-100MG",
+        "image": "/images/products/ghk-cu/ghkcu-100mg.png"
+      },
+      {
+        "sku": "GHKCU-CREAM-1PCT",
+        "image": "/images/products/ghk-cu/ghkcu-cream-1pct.png"
+      }
+    ]
+  },
+  {
+    "slug": "ipamorelin",
+    "main_image": "/images/products/ipamorelin/main.png",
+    "formats": [
+      {
+        "sku": "IPA-5MG",
+        "image": "/images/products/ipamorelin/ipa-5mg.png"
+      },
+      {
+        "sku": "IPA-10MG",
+        "image": "/images/products/ipamorelin/ipa-10mg.png"
+      }
+    ]
+  },
+  {
+    "slug": "kit-seringues-insuline",
+    "main_image": "/images/products/kit-seringues-insuline/main.png",
+    "formats": [
+      {
+        "sku": "SYRINGE-29G-10PK",
+        "image": "/images/products/kit-seringues-insuline/syringe-29g-10pk.png"
+      },
+      {
+        "sku": "SYRINGE-29G-50PK",
+        "image": "/images/products/kit-seringues-insuline/syringe-29g-50pk.png"
+      }
+    ]
+  },
+  {
+    "slug": "mk-677-ibutamoren",
+    "main_image": "/images/products/mk-677-ibutamoren/main.png",
+    "formats": [
+      {
+        "sku": "MK677-10MG-60",
+        "image": "/images/products/mk-677-ibutamoren/mk677-10mg-60.png"
+      },
+      {
+        "sku": "MK677-25MG-60",
+        "image": "/images/products/mk-677-ibutamoren/mk677-25mg-60.png"
+      }
+    ]
+  },
+  {
+    "slug": "mots-c",
+    "main_image": "/images/products/mots-c/main.png",
+    "formats": [
+      {
+        "sku": "MOTSC-5MG",
+        "image": "/images/products/mots-c/motsc-5mg.png"
+      }
+    ]
+  },
+  {
+    "slug": "nad-plus",
+    "main_image": "/images/products/nad-plus/main.png",
+    "formats": [
+      {
+        "sku": "NAD-250MG-60",
+        "image": "/images/products/nad-plus/nad-250mg-60.png"
+      },
+      {
+        "sku": "NAD-250MG-120",
+        "image": "/images/products/nad-plus/nad-250mg-120.png"
+      }
+    ]
+  },
+  {
+    "slug": "semaglutide",
+    "main_image": "/images/products/semaglutide/main.png",
+    "formats": [
+      {
+        "sku": "SEMA-3MG",
+        "image": "/images/products/semaglutide/sema-3mg.png"
+      },
+      {
+        "sku": "SEMA-5MG",
+        "image": "/images/products/semaglutide/sema-5mg.png"
+      },
+      {
+        "sku": "SEMA-10MG",
+        "image": "/images/products/semaglutide/sema-10mg.png"
+      }
+    ]
+  },
+  {
+    "slug": "ss-31-elamipretide",
+    "main_image": "/images/products/ss-31-elamipretide/main.png",
+    "formats": [
+      {
+        "sku": "SS31-5MG",
+        "image": "/images/products/ss-31-elamipretide/ss31-5mg.png"
+      }
+    ]
+  },
+  {
+    "slug": "tb-500",
+    "main_image": "/images/products/tb-500/main.png",
+    "formats": [
+      {
+        "sku": "TB500-5MG",
+        "image": "/images/products/tb-500/tb500-5mg.png"
+      },
+      {
+        "sku": "TB500-10MG",
+        "image": "/images/products/tb-500/tb500-10mg.png"
+      }
+    ]
+  },
+  {
+    "slug": "tirzepatide",
+    "main_image": "/images/products/tirzepatide/main.png",
+    "formats": [
+      {
+        "sku": "TIRZ-5MG",
+        "image": "/images/products/tirzepatide/tirz-5mg.png"
+      },
+      {
+        "sku": "TIRZ-10MG",
+        "image": "/images/products/tirzepatide/tirz-10mg.png"
+      },
+      {
+        "sku": "TIRZ-15MG",
+        "image": "/images/products/tirzepatide/tirz-15mg.png"
+      }
+    ]
+  }
+]
