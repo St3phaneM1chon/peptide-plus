@@ -39,7 +39,8 @@ export async function PUT(request: NextRequest) {
       data: {
         action: 'LOCALE_CHANGED',
         userId: session.user.id,
-        details: { newLocale: locale },
+        entityType: 'User',
+        details: JSON.stringify({ newLocale: locale }),
         ipAddress: request.headers.get('x-forwarded-for') || 'unknown',
         userAgent: request.headers.get('user-agent') || 'unknown',
       },

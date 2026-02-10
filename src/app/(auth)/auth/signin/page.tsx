@@ -1,20 +1,33 @@
 /**
- * PAGE DE CONNEXION
+ * PAGE DE CONNEXION - BioCycle Peptides
  * Multi-providers + Email/Password + MFA
  */
 
 'use client';
+export const dynamic = 'force-dynamic';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
-export default function SignInPage() {
+function LoadingFallback() {
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
+        <p className="mt-4 text-gray-600">Chargement...</p>
+      </div>
+    </div>
+  );
+}
+
+function SignInContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
+  const callbackUrl = searchParams.get('callbackUrl') || '/';
   const error = searchParams.get('error');
+  const registered = searchParams.get('registered');
 
   const [isLoading, setIsLoading] = useState(false);
   const [showMFA, setShowMFA] = useState(false);
@@ -57,7 +70,7 @@ export default function SignInPage() {
       }
 
       router.push(callbackUrl);
-    } catch (err) {
+    } catch {
       setFormError('Une erreur est survenue');
       setIsLoading(false);
     }
@@ -68,53 +81,51 @@ export default function SignInPage() {
       <div className="max-w-md w-full">
         {/* Logo */}
         <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center justify-center">
-            <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center">
-              <svg
-                className="w-8 h-8 text-white"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                />
-              </svg>
+          <Link href="/" className="inline-flex items-center gap-2 justify-center">
+            <div className="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center">
+              <span className="text-white font-bold text-xl">BC</span>
             </div>
+            <span className="font-bold text-2xl text-gray-900">BioCycle Peptides</span>
           </Link>
-          <h2 className="mt-4 text-2xl font-bold text-gray-900">
+          <h2 className="mt-6 text-2xl font-bold text-gray-900">
             Connexion à votre compte
           </h2>
           <p className="mt-2 text-gray-600">
             Ou{' '}
-            <Link href="/auth/signup" className="text-blue-600 hover:underline">
+            <Link href="/auth/signup" className="text-orange-600 hover:underline font-medium">
               créez un compte
             </Link>
           </p>
         </div>
 
+        {/* Message de succès inscription */}
+        {registered && (
+          <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700">
+            <p className="text-sm">✅ Compte créé avec succès ! Connectez-vous maintenant.</p>
+          </div>
+        )}
+
         {/* Erreur */}
         {(error || formError) && (
-          <div className="mb-4 p-4 bg-red-50 border-l-4 border-red-400 text-red-700">
+          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
             <p className="text-sm">
               {error === 'OAuthSignin' && 'Erreur de connexion avec le provider'}
               {error === 'OAuthCallback' && 'Erreur de callback OAuth'}
               {error === 'Callback' && 'Erreur de callback'}
+              {error === 'CredentialsSignin' && 'Email ou mot de passe invalide'}
               {formError && formError}
+              {!error && !formError && 'Une erreur est survenue'}
             </p>
           </div>
         )}
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-8">
           {/* Boutons OAuth */}
           <div className="space-y-3 mb-6">
             <button
               onClick={() => handleOAuthSignIn('google')}
               disabled={isLoading}
-              className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+              className="w-full flex items-center justify-center px-4 py-3 border-2 border-gray-200 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
             >
               <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
                 <path
@@ -134,7 +145,7 @@ export default function SignInPage() {
                   d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                 />
               </svg>
-              Continuer avec Google
+              <span className="font-medium">Continuer avec Google</span>
             </button>
 
             <button
@@ -145,7 +156,7 @@ export default function SignInPage() {
               <svg className="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
               </svg>
-              Continuer avec Apple
+              <span className="font-medium">Continuer avec Apple</span>
             </button>
 
             <button
@@ -156,7 +167,7 @@ export default function SignInPage() {
               <svg className="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
               </svg>
-              Continuer avec Facebook
+              <span className="font-medium">Continuer avec Facebook</span>
             </button>
 
             <button
@@ -167,14 +178,14 @@ export default function SignInPage() {
               <svg className="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
               </svg>
-              Continuer avec X
+              <span className="font-medium">Continuer avec X</span>
             </button>
           </div>
 
           {/* Séparateur */}
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300" />
+              <div className="w-full border-t border-gray-200" />
             </div>
             <div className="relative flex justify-center text-sm">
               <span className="bg-white px-4 text-gray-500">
@@ -202,7 +213,7 @@ export default function SignInPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, email: e.target.value })
                     }
-                    className="secure-input"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                     placeholder="vous@exemple.com"
                   />
                 </div>
@@ -222,7 +233,7 @@ export default function SignInPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, password: e.target.value })
                     }
-                    className="secure-input"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                     placeholder="••••••••"
                   />
                 </div>
@@ -233,10 +244,10 @@ export default function SignInPage() {
                   htmlFor="mfaCode"
                   className="block text-sm font-medium text-gray-700 mb-1"
                 >
-                  Code d'authentification
+                  Code d&apos;authentification
                 </label>
                 <p className="text-sm text-gray-500 mb-2">
-                  Entrez le code de votre application d'authentification
+                  Entrez le code de votre application d&apos;authentification
                 </p>
                 <input
                   id="mfaCode"
@@ -246,7 +257,7 @@ export default function SignInPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, mfaCode: e.target.value })
                   }
-                  className="secure-input text-center text-2xl tracking-widest"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-center text-2xl tracking-widest"
                   placeholder="000000"
                   maxLength={6}
                   pattern="[0-9]{6}"
@@ -258,7 +269,7 @@ export default function SignInPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full btn-primary py-3 disabled:opacity-50"
+              className="w-full py-3 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 transition-colors disabled:opacity-50"
             >
               {isLoading ? (
                 <span className="flex items-center justify-center">
@@ -295,18 +306,55 @@ export default function SignInPage() {
           <div className="mt-6 text-center text-sm">
             <Link
               href="/auth/forgot-password"
-              className="text-blue-600 hover:underline"
+              className="text-orange-600 hover:underline"
             >
               Mot de passe oublié ?
             </Link>
           </div>
         </div>
 
-        {/* Note MFA */}
-        <p className="mt-6 text-center text-sm text-gray-500">
-          🔒 L'authentification à deux facteurs est obligatoire pour votre sécurité
-        </p>
+        {/* Avantages compte */}
+        <div className="mt-6 p-4 bg-orange-50 rounded-lg border border-orange-100">
+          <h3 className="font-semibold text-orange-900 mb-2 text-sm">
+            Avantages d&apos;un compte
+          </h3>
+          <ul className="text-sm text-orange-700 space-y-1">
+            <li className="flex items-center gap-2">
+              <svg className="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              Paiement plus rapide
+            </li>
+            <li className="flex items-center gap-2">
+              <svg className="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              Suivi de commandes
+            </li>
+            <li className="flex items-center gap-2">
+              <svg className="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              Points de fidélité
+            </li>
+          </ul>
+        </div>
+
+        {/* Retour boutique */}
+        <div className="mt-4 text-center">
+          <Link href="/" className="text-sm text-gray-500 hover:text-orange-600">
+            ← Retour à la boutique
+          </Link>
+        </div>
       </div>
     </div>
+  );
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <SignInContent />
+    </Suspense>
   );
 }

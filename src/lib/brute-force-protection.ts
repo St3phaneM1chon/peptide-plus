@@ -148,8 +148,8 @@ export function clearFailedAttempts(email: string): void {
  */
 export async function checkLoginAttempt(
   email: string,
-  ipAddress: string,
-  userAgent: string
+  _ipAddress: string,
+  _userAgent: string
 ): Promise<{ allowed: boolean; message?: string }> {
   const { locked, remainingTime } = await isAccountLocked(email);
 

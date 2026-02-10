@@ -12,14 +12,25 @@ const protectedRoutes = [
   '/dashboard',
   '/admin',
   '/owner',
-  '/checkout',
+  '/client',
+  '/checkout/payment',
+  '/checkout/confirm',
   '/order',
   '/profile',
+];
+
+// Routes publiques même si dans un chemin protégé
+const publicRoutes = [
+  '/checkout',
+  '/checkout/cart',
+  '/checkout/success',
 ];
 
 // Routes admin/owner uniquement
 const adminRoutes = ['/admin'];
 const ownerRoutes = ['/owner'];
+// Routes pour les clients (compagnies)
+const clientRoutes = ['/client', '/dashboard/client'];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -65,8 +76,9 @@ export async function middleware(request: NextRequest) {
   // Ajouter la locale en header pour les composants server
   response.headers.set('x-locale', locale);
 
-  // Vérifier les routes protégées
-  const isProtected = protectedRoutes.some((route) => pathname.startsWith(route));
+  // Vérifier les routes protégées (exclure les routes publiques)
+  const isPublic = publicRoutes.some((route) => pathname.startsWith(route));
+  const isProtected = !isPublic && protectedRoutes.some((route) => pathname.startsWith(route));
   const isAdmin = adminRoutes.some((route) => pathname.startsWith(route));
   const isOwner = ownerRoutes.some((route) => pathname.startsWith(route));
 
@@ -78,8 +90,8 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Vérifier les permissions admin
-  if (isAdmin && token?.role !== 'ADMIN' && token?.role !== 'EMPLOYEE' && token?.role !== 'OWNER') {
+  // Vérifier les permissions admin (EMPLOYEE ou OWNER peuvent accéder)
+  if (isAdmin && token?.role !== 'EMPLOYEE' && token?.role !== 'OWNER') {
     const url = request.nextUrl.clone();
     url.pathname = '/';
     return NextResponse.redirect(url);
@@ -87,6 +99,14 @@ export async function middleware(request: NextRequest) {
 
   // Vérifier les permissions owner
   if (isOwner && token?.role !== 'OWNER') {
+    const url = request.nextUrl.clone();
+    url.pathname = '/';
+    return NextResponse.redirect(url);
+  }
+
+  // Vérifier les permissions client (compagnies)
+  const isClientRoute = clientRoutes.some((route) => pathname.startsWith(route));
+  if (isClientRoute && token?.role !== 'CLIENT' && token?.role !== 'OWNER') {
     const url = request.nextUrl.clone();
     url.pathname = '/';
     return NextResponse.redirect(url);

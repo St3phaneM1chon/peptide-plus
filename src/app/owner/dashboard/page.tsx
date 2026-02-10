@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * DASHBOARD OWNER (PROPRIÉTAIRE)
  * Tout Employee + Facturation + Analytics avancés
@@ -186,7 +187,7 @@ export default async function OwnerDashboard() {
           <section className="lg:col-span-2 bg-white rounded-xl border border-gray-200 p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Revenus mensuels</h2>
             <div className="h-64 flex items-end space-x-2">
-              {revenueByMonth.map((item, index) => {
+              {revenueByMonth.map((item) => {
                 const maxRevenue = Math.max(...revenueByMonth.map((r) => r.total));
                 const height = maxRevenue > 0 ? (item.total / maxRevenue) * 100 : 0;
                 return (

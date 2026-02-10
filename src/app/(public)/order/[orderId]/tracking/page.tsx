@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * PAGE SUIVI COMMANDE - Routeur
  * Redirige vers le bon type de suivi selon le produit
@@ -6,7 +7,6 @@
 import { redirect, notFound } from 'next/navigation';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
-import { DigitalDeliveryTracking } from '@/components/order/DigitalDeliveryTracking';
 import { PhysicalDeliveryTracking } from '@/components/order/PhysicalDeliveryTracking';
 
 interface TrackingPageProps {
@@ -52,26 +52,15 @@ export default async function TrackingPage({ params }: TrackingPageProps) {
     notFound();
   }
 
-  // Déterminer le type de produit et afficher le bon composant
-  const isDigital = order.product.productType === 'DIGITAL';
-  const isPhysical = order.product.productType === 'PHYSICAL';
-  const isHybrid = order.product.productType === 'HYBRID';
-
+  // Tous les produits BioCycle sont physiques et nécessitent une livraison
   return (
     <div style={{ backgroundColor: 'var(--gray-100)', minHeight: '100vh' }}>
       {/* Header commun */}
       <TrackingHeader order={order} />
 
-      {/* Contenu selon le type */}
+      {/* Contenu - suivi de livraison physique */}
       <div style={{ maxWidth: '900px', margin: '0 auto', padding: '32px 24px' }}>
-        {isDigital && <DigitalDeliveryTracking order={order} />}
-        {isPhysical && <PhysicalDeliveryTracking order={order} />}
-        {isHybrid && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-            <DigitalDeliveryTracking order={order} />
-            <PhysicalDeliveryTracking order={order} />
-          </div>
-        )}
+        <PhysicalDeliveryTracking order={order} />
       </div>
     </div>
   );

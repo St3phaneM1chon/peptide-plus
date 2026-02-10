@@ -42,7 +42,7 @@ interface ShippingUpdateData {
 // Configuration email de base
 const emailConfig = {
   companyName: process.env.BUSINESS_NAME || 'Formations Pro',
-  supportEmail: process.env.BUSINESS_EMAIL || 'support@example.com',
+  supportEmail: process.env.NEXT_PUBLIC_SUPPORT_EMAIL || 'support@biocyclepeptides.com',
   logoUrl: process.env.LOGO_URL || '',
   primaryColor: '#333333',
   baseUrl: process.env.NEXTAUTH_URL || 'https://example.com',
@@ -313,7 +313,7 @@ export function passwordResetEmail(data: PasswordResetData, locale: Locale = 'fr
 export function shippingUpdateEmail(data: ShippingUpdateData, locale: Locale = 'fr'): { subject: string; html: string } {
   const t = createServerTranslator(locale);
 
-  const statusLabels: Record<string, Record<Locale, string>> = {
+  const statusLabels: Record<string, Partial<Record<Locale, string>>> = {
     PROCESSING: { fr: 'En préparation', en: 'Processing', es: 'En preparación', de: 'In Bearbeitung', it: 'In elaborazione', pt: 'Em processamento', zh: '处理中', ar: 'قيد المعالجة' },
     SHIPPED: { fr: 'Expédiée', en: 'Shipped', es: 'Enviado', de: 'Versendet', it: 'Spedito', pt: 'Enviado', zh: '已发货', ar: 'تم الشحن' },
     IN_TRANSIT: { fr: 'En transit', en: 'In Transit', es: 'En tránsito', de: 'Unterwegs', it: 'In transito', pt: 'Em trânsito', zh: '运输中', ar: 'في الطريق' },

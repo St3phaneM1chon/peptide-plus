@@ -12,7 +12,7 @@ import { UserRole } from '@/types';
 import { z } from 'zod';
 
 interface RouteParams {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 const updateConversationSchema = z.object({
@@ -23,8 +23,9 @@ const updateConversationSchema = z.object({
 });
 
 // GET - Détail d'une conversation avec messages
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export async function GET(_request: Request, { params }: RouteParams) {
   try {
+    const { id } = await params;
     const session = await auth();
     const { t } = await getApiTranslator();
 
@@ -33,7 +34,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
 
     const conversation = await prisma.conversation.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         user: {
           select: { id: true, name: true, email: true, image: true, role: true },
@@ -69,7 +70,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       // Admin lit les messages du client
       await prisma.message.updateMany({
         where: {
-          conversationId: params.id,
+          conversationId: id,
           senderId: { not: session.user.id },
           readAt: null,
         },
@@ -78,14 +79,14 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       
       // Reset unread count
       await prisma.conversation.update({
-        where: { id: params.id },
+        where: { id },
         data: { unreadCount: 0 },
       });
     } else {
       // Client lit les messages de l'admin
       await prisma.message.updateMany({
         where: {
-          conversationId: params.id,
+          conversationId: id,
           senderId: { not: session.user.id },
           readAt: null,
         },
@@ -103,6 +104,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 // PUT - Modifier une conversation (admin uniquement)
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
+    const { id } = await params;
     const session = await auth();
     const { t } = await getApiTranslator();
 
@@ -120,7 +122,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
     // Vérifier que la conversation existe
     const existing = await prisma.conversation.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!existing) {
@@ -169,7 +171,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
     // Mettre à jour
     const conversation = await prisma.conversation.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         ...data,
         ...(systemMessages.length > 0 && {
@@ -200,8 +202,9 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 }
 
 // DELETE - Supprimer une conversation (owner uniquement)
-export async function DELETE(request: NextRequest, { params }: RouteParams) {
+export async function DELETE(_request: Request, { params }: RouteParams) {
   try {
+    const { id } = await params;
     const session = await auth();
     const { t } = await getApiTranslator();
 
@@ -214,7 +217,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     }
 
     await prisma.conversation.delete({
-      where: { id: params.id },
+      where: { id },
     });
 
     return NextResponse.json({ success: true });

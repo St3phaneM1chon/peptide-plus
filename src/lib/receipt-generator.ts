@@ -44,10 +44,10 @@ export async function generateReceiptPDF(data: ReceiptData): Promise<Buffer> {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   
-  // Couleurs
-  const primaryColor = [37, 99, 235]; // blue-600
-  const textColor = [31, 41, 55]; // gray-800
-  const lightGray = [156, 163, 175]; // gray-400
+  // Couleurs - typées comme tuples pour éviter les erreurs avec spread
+  const primaryColor: [number, number, number] = [37, 99, 235]; // blue-600
+  const textColor: [number, number, number] = [31, 41, 55]; // gray-800
+  const lightGray: [number, number, number] = [156, 163, 175]; // gray-400
 
   let y = 20;
 
@@ -278,14 +278,14 @@ function formatCurrency(amount: number, currency: string): string {
   }).format(amount);
 }
 
-// Configuration de l'entreprise (à personnaliser)
+// Configuration de l'entreprise depuis les variables d'environnement
 export const businessConfig = {
-  name: 'Formations Pro Inc.',
-  address: '123 Rue Principale, Montréal, QC H2X 1Y6',
-  phone: '(514) 555-0123',
-  email: 'support@formationspro.ca',
+  name: process.env.BUSINESS_NAME || 'BioCycle Peptides Inc.',
+  address: process.env.BUSINESS_ADDRESS || '123 Rue Principale, Montréal, QC H2X 1Y6',
+  phone: process.env.BUSINESS_PHONE || '(514) 555-0123',
+  email: process.env.NEXT_PUBLIC_SUPPORT_EMAIL || 'support@biocyclepeptides.com',
   taxNumbers: {
-    tps: '123456789RT0001',
-    tvq: '1234567890TQ0001',
+    tps: process.env.TPS_NUMBER || '',
+    tvq: process.env.TVQ_NUMBER || '',
   },
 };

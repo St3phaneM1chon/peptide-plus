@@ -1,22 +1,17 @@
-/**
- * ADMIN - MODIFIER PRODUIT
- */
+export const dynamic = 'force-dynamic';
 
 import { redirect, notFound } from 'next/navigation';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { UserRole } from '@/types';
-import ProductForm from '../ProductForm';
+import ProductEditClient from './ProductEditClient';
 
 export const metadata = {
-  title: 'Modifier produit | Admin',
+  title: 'Modifier le produit | Admin',
+  description: 'Modifier les informations et formats du produit.',
 };
 
-interface Props {
-  params: { id: string };
-}
-
-export default async function EditProductPage({ params }: Props) {
+export default async function AdminProductEditPage({ params }: { params: { id: string } }) {
   const session = await auth();
 
   if (!session?.user) {
@@ -31,7 +26,10 @@ export default async function EditProductPage({ params }: Props) {
     where: { id: params.id },
     include: {
       category: true,
-      modules: {
+      images: {
+        orderBy: { sortOrder: 'asc' },
+      },
+      formats: {
         orderBy: { sortOrder: 'asc' },
       },
     },
@@ -47,15 +45,10 @@ export default async function EditProductPage({ params }: Props) {
   });
 
   return (
-    <div style={{ padding: '32px', maxWidth: '900px', margin: '0 auto' }}>
-      <h1 style={{ fontSize: '28px', fontWeight: 700, color: 'var(--gray-500)', marginBottom: '32px' }}>
-        Modifier: {product.name}
-      </h1>
-      <ProductForm 
-        categories={JSON.parse(JSON.stringify(categories))}
-        initialData={JSON.parse(JSON.stringify(product))}
-        mode="edit"
-      />
-    </div>
+    <ProductEditClient 
+      product={JSON.parse(JSON.stringify(product))}
+      categories={JSON.parse(JSON.stringify(categories))}
+      isOwner={session.user.role === UserRole.OWNER}
+    />
   );
 }

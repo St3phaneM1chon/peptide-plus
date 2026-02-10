@@ -9,12 +9,13 @@ import { prisma } from '@/lib/db';
 import { UserRole } from '@/types';
 
 interface RouteParams {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 // GET - Détail d'un utilisateur
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export async function GET(_request: Request, { params }: RouteParams) {
   try {
+    const { id } = await params;
     const session = await auth();
 
     if (!session?.user) {
@@ -22,7 +23,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
 
     // L'utilisateur peut voir son propre profil, sinon admin requis
-    const isOwnProfile = params.id === session.user.id;
+    const isOwnProfile = id === session.user.id;
     const isAdmin = session.user.role === UserRole.EMPLOYEE || session.user.role === UserRole.OWNER;
 
     if (!isOwnProfile && !isAdmin) {
@@ -30,7 +31,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
 
     const user = await prisma.user.findUnique({
-      where: { id: params.id },
+      where: { id },
       select: {
         id: true,
         email: true,
@@ -79,13 +80,14 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 // PUT - Mettre à jour un utilisateur
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
+    const { id } = await params;
     const session = await auth();
 
     if (!session?.user) {
       return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
     }
 
-    const isOwnProfile = params.id === session.user.id;
+    const isOwnProfile = id === session.user.id;
     const isAdmin = session.user.role === UserRole.EMPLOYEE || session.user.role === UserRole.OWNER;
 
     if (!isOwnProfile && !isAdmin) {
@@ -109,7 +111,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         );
       }
       // Le owner ne peut pas être rétrogradé
-      if (params.id === session.user.id && session.user.role === UserRole.OWNER) {
+      if (id === session.user.id && session.user.role === UserRole.OWNER) {
         return NextResponse.json(
           { error: 'Impossible de modifier votre propre rôle owner' },
           { status: 400 }
@@ -119,7 +121,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     }
 
     const user = await prisma.user.update({
-      where: { id: params.id },
+      where: { id },
       data: updateData,
       select: {
         id: true,
@@ -136,7 +138,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         userId: session.user.id,
         action: 'UPDATE',
         entityType: 'User',
-        entityId: params.id,
+        entityId: id,
         details: JSON.stringify(updateData),
       },
     });
@@ -152,8 +154,9 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 }
 
 // DELETE - Supprimer/désactiver un utilisateur
-export async function DELETE(request: NextRequest, { params }: RouteParams) {
+export async function DELETE(_request: Request, { params }: RouteParams) {
   try {
+    const { id } = await params;
     const session = await auth();
 
     if (!session?.user) {
@@ -165,7 +168,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     }
 
     // Ne pas permettre de se supprimer soi-même
-    if (params.id === session.user.id) {
+    if (id === session.user.id) {
       return NextResponse.json(
         { error: 'Impossible de supprimer votre propre compte' },
         { status: 400 }
@@ -174,7 +177,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
     // Soft delete - on pourrait ajouter un champ isActive
     await prisma.user.delete({
-      where: { id: params.id },
+      where: { id },
     });
 
     // Log d'audit
@@ -183,7 +186,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
         userId: session.user.id,
         action: 'DELETE',
         entityType: 'User',
-        entityId: params.id,
+        entityId: id,
       },
     });
 

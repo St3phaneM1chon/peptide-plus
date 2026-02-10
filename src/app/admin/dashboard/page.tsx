@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * DASHBOARD EMPLOYEE (ADMIN)
  * Gestion des comptes clients et association emails

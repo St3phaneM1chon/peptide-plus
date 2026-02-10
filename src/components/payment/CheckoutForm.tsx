@@ -41,7 +41,7 @@ interface CheckoutFormProps {
 
 type PaymentMethodType = 'card' | 'saved-card' | 'apple-pay' | 'google-pay' | 'paypal';
 
-export function CheckoutForm({ product, user, savedCards }: CheckoutFormProps) {
+export function CheckoutForm({ product, user: _user, savedCards }: CheckoutFormProps) {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>(
     savedCards.length > 0 ? 'saved-card' : 'card'
   );
@@ -49,7 +49,6 @@ export function CheckoutForm({ product, user, savedCards }: CheckoutFormProps) {
     savedCards.find((c) => c.isDefault)?.id || savedCards[0]?.id || ''
   );
   const [clientSecret, setClientSecret] = useState<string>('');
-  const [isLoading, setIsLoading] = useState(false);
   const [saveCard, setSaveCard] = useState(false);
 
   // Créer le PaymentIntent au chargement
@@ -288,21 +287,22 @@ function StripeCheckoutForm({
     setIsLoading(true);
     setError(null);
 
-    const { error: submitError, paymentIntent } = await stripe.confirmPayment({
+    const result = await stripe.confirmPayment({
       elements,
       confirmParams: {
         return_url: `${window.location.origin}/checkout/success?product=${productId}`,
       },
+      redirect: 'if_required',
     });
 
     // Si succès sans redirection, aller vers le suivi
-    if (!submitError && paymentIntent?.status === 'succeeded') {
-      router.push(`/checkout/success?product=${productId}&order=${paymentIntent.id}`);
+    if (!result.error && result.paymentIntent?.status === 'succeeded') {
+      router.push(`/checkout/success?product=${productId}&order=${result.paymentIntent.id}`);
       return;
     }
 
-    if (submitError) {
-      setError(submitError.message || 'Une erreur est survenue');
+    if (result.error) {
+      setError(result.error.message || 'Une erreur est survenue');
       setIsLoading(false);
     }
   };
@@ -341,7 +341,7 @@ function StripeCheckoutForm({
 }
 
 // Composant PayPal
-function PayPalCheckout({ productId, price }: { productId: string; price: number }) {
+function PayPalCheckout({ productId, price: _price }: { productId: string; price: number }) {
   const [isLoading, setIsLoading] = useState(false);
 
   const handlePayPal = async () => {
@@ -375,7 +375,7 @@ function PayPalCheckout({ productId, price }: { productId: string; price: number
 function ExpressCheckout({
   type,
   productId,
-  price,
+  price: _price,
 }: {
   type: 'apple-pay' | 'google-pay';
   productId: string;
@@ -391,8 +391,8 @@ function ExpressCheckout({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ productId, type }),
       });
-      const { clientSecret } = await response.json();
-      // Utiliser Payment Request API
+      const { clientSecret: _clientSecret } = await response.json();
+      // TODO: Utiliser Payment Request API avec clientSecret
       // ...
     } catch (error) {
       console.error('Express checkout error:', error);
@@ -423,7 +423,7 @@ function ExpressCheckout({
 function SavedCardCheckout({
   cardId,
   productId,
-  price,
+  price: _price,
 }: {
   cardId: string;
   productId: string;

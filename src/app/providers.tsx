@@ -8,6 +8,8 @@
 import { SessionProvider } from 'next-auth/react';
 import { I18nProvider } from '@/i18n/client';
 import { CartProvider } from '@/components/cart/CartDrawer';
+import { CurrencyProvider } from '@/contexts/CurrencyContext';
+import { LoyaltyProvider } from '@/contexts/LoyaltyContext';
 import { type Locale, defaultLocale } from '@/i18n/config';
 import type { ReactNode } from 'react';
 
@@ -21,9 +23,13 @@ export function Providers({ children, locale = defaultLocale, messages = {} }: P
   return (
     <SessionProvider>
       <I18nProvider locale={locale} messages={messages}>
-        <CartProvider>
-          {children}
-        </CartProvider>
+        <CurrencyProvider>
+          <LoyaltyProvider>
+            <CartProvider>
+              {children}
+            </CartProvider>
+          </LoyaltyProvider>
+        </CurrencyProvider>
       </I18nProvider>
     </SessionProvider>
   );

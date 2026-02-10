@@ -13,7 +13,7 @@ import { usePathname } from 'next/navigation';
 import { useTranslation } from '@/i18n/client';
 import { LanguageSelector } from '@/components/i18n/LanguageSelector';
 import { CartIcon } from '@/components/cart/CartDrawer';
-import { mainNavigation, utilityNavigation, ctaNavigation, dashboardNavigation, type NavItem } from '@/config/navigation';
+import { mainNavigation, ctaNavigation, dashboardNavigation, type NavItem } from '@/config/navigation';
 
 export function HeaderCorporate() {
   const { data: session, status } = useSession();
@@ -426,7 +426,7 @@ function MobileMenu({
   navigation,
   isAuthenticated,
   session,
-  userRole,
+  userRole: _userRole,
   onClose,
   getLabel,
   t,

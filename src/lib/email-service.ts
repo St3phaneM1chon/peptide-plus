@@ -19,37 +19,23 @@ interface EmailProvider {
   send(to: string, subject: string, html: string): Promise<boolean>;
 }
 
-// Provider par défaut (console en dev, à remplacer par SendGrid/Resend/etc. en prod)
-const defaultProvider: EmailProvider = {
+// Provider qui délègue à lib/email/email-service.ts (Resend, SendGrid, ou SMTP)
+const emailProviderImpl: EmailProvider = {
   async send(to: string, subject: string, html: string): Promise<boolean> {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('📧 Email (dev mode):');
-      console.log(`  To: ${to}`);
-      console.log(`  Subject: ${subject}`);
-      console.log(`  HTML length: ${html.length} chars`);
-      return true;
-    }
-
-    // En production, utiliser un vrai service
-    // Exemple avec SendGrid:
-    // const sgMail = require('@sendgrid/mail');
-    // sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-    // await sgMail.send({ to, from: emailConfig.companyName, subject, html });
-
-    // Exemple avec Resend:
-    // const { Resend } = require('resend');
-    // const resend = new Resend(process.env.RESEND_API_KEY);
-    // await resend.emails.send({ from: emailConfig.supportEmail, to, subject, html });
-
-    console.warn('Email provider not configured for production');
-    return false;
+    const { sendEmail } = await import('@/lib/email/email-service');
+    const result = await sendEmail({
+      to: { email: to },
+      subject,
+      html,
+    });
+    return result.success;
   },
 };
 
-let emailProvider: EmailProvider = defaultProvider;
+let emailProvider: EmailProvider = emailProviderImpl;
 
 /**
- * Configure le provider d'email
+ * Configure le provider d'email (override)
  */
 export function setEmailProvider(provider: EmailProvider) {
   emailProvider = provider;
@@ -101,7 +87,8 @@ export async function sendOrderConfirmation(
     data: {
       userId,
       action: 'EMAIL_SENT',
-      details: { type: 'ORDER_CONFIRMATION', orderNumber: data.orderNumber, locale, sent },
+      entityType: 'Email',
+      details: JSON.stringify({ type: 'ORDER_CONFIRMATION', orderNumber: data.orderNumber, locale, sent }),
     },
   }).catch(console.error);
   
@@ -128,7 +115,8 @@ export async function sendWelcomeEmail(
     data: {
       userId,
       action: 'EMAIL_SENT',
-      details: { type: 'WELCOME', locale, sent },
+      entityType: 'Email',
+      details: JSON.stringify({ type: 'WELCOME', locale, sent }),
     },
   }).catch(console.error);
   
@@ -156,7 +144,8 @@ export async function sendPasswordResetEmail(
     data: {
       userId,
       action: 'EMAIL_SENT',
-      details: { type: 'PASSWORD_RESET', locale, sent },
+      entityType: 'Email',
+      details: JSON.stringify({ type: 'PASSWORD_RESET', locale, sent }),
     },
   }).catch(console.error);
   
@@ -188,7 +177,8 @@ export async function sendShippingUpdate(
     data: {
       userId,
       action: 'EMAIL_SENT',
-      details: { type: 'SHIPPING_UPDATE', orderNumber: data.orderNumber, status: data.status, locale, sent },
+      entityType: 'Email',
+      details: JSON.stringify({ type: 'SHIPPING_UPDATE', orderNumber: data.orderNumber, status: data.status, locale, sent }),
     },
   }).catch(console.error);
   
@@ -221,7 +211,8 @@ export async function sendReceiptEmail(
     data: {
       userId,
       action: 'EMAIL_SENT',
-      details: { type: 'RECEIPT', orderNumber: data.orderNumber, locale, sent },
+      entityType: 'Email',
+      details: JSON.stringify({ type: 'RECEIPT', orderNumber: data.orderNumber, locale, sent }),
     },
   }).catch(console.error);
   

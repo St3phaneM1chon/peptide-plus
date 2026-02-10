@@ -13,19 +13,18 @@ import { getApiTranslator } from '@/i18n/server';
 import { type Locale, isValidLocale, defaultLocale } from '@/i18n/config';
 
 interface RouteParams {
-  params: { purchaseId: string };
+  params: Promise<{ purchaseId: string }>;
 }
 
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
+    const { purchaseId } = await params;
     const session = await auth();
     const { t } = await getApiTranslator();
 
     if (!session?.user) {
       return NextResponse.json({ error: t('errors.unauthorized') }, { status: 401 });
     }
-
-    const { purchaseId } = params;
 
     // Récupérer l'achat avec la locale de l'utilisateur
     const purchase = await prisma.purchase.findUnique({
@@ -118,12 +117,12 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         action: 'RECEIPT_DOWNLOADED',
         entityType: 'Purchase',
         entityId: purchase.id,
-        details: { locale: pdfLocale },
+        details: JSON.stringify({ locale: pdfLocale }),
       },
     });
 
     // Nom du fichier selon la locale
-    const fileNames: Record<Locale, string> = {
+    const fileNames: Partial<Record<Locale, string>> = {
       fr: 'recu',
       en: 'receipt',
       es: 'recibo',
@@ -136,8 +135,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     const fileName = `${fileNames[pdfLocale] || 'receipt'}-${purchase.receiptNumber || purchase.id}.pdf`;
 
-    // Retourner le PDF
-    return new NextResponse(pdfBuffer, {
+    // Retourner le PDF (convert Buffer to Uint8Array for NextResponse)
+    return new NextResponse(new Uint8Array(pdfBuffer), {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',

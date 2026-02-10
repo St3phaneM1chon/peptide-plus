@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * API - MESSAGES
  * Envoyer et récupérer des messages
@@ -11,7 +13,7 @@ import { UserRole } from '@/types';
 import { z } from 'zod';
 
 interface RouteParams {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 const sendMessageSchema = z.object({
@@ -25,6 +27,7 @@ const sendMessageSchema = z.object({
 // GET - Récupérer les messages (avec pagination ou nouveaux depuis lastId)
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
+    const { id } = await params;
     const session = await auth();
     const { t } = await getApiTranslator();
 
@@ -38,7 +41,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     // Vérifier l'accès à la conversation
     const conversation = await prisma.conversation.findUnique({
-      where: { id: params.id },
+      where: { id },
       select: { userId: true },
     });
 
@@ -54,7 +57,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
 
     // Construire la query
-    const where: any = { conversationId: params.id };
+    const where: { conversationId: string; createdAt?: { gt: Date } } = { conversationId: id };
 
     if (after) {
       // Récupérer les messages après un certain ID (pour le polling)
@@ -99,6 +102,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 // POST - Envoyer un message
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
+    const { id } = await params;
     const session = await auth();
     const { t } = await getApiTranslator();
 
@@ -111,7 +115,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     // Vérifier l'accès à la conversation
     const conversation = await prisma.conversation.findUnique({
-      where: { id: params.id },
+      where: { id },
       select: { userId: true, status: true },
     });
 
@@ -134,7 +138,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     // Créer le message
     const message = await prisma.message.create({
       data: {
-        conversationId: params.id,
+        conversationId: id,
         senderId: session.user.id,
         type: data.type,
         content: data.content,
@@ -162,7 +166,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 
     await prisma.conversation.update({
-      where: { id: params.id },
+      where: { id },
       data: updateData,
     });
 

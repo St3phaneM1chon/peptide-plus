@@ -1,69 +1,168 @@
 /**
  * I18N CONFIGURATION
- * Configuration du système de traduction multilingue
+ * Langues parlées au Canada/Québec
+ * Ordre: Anglais, Français, Créoles, puis alphabétique
  */
 
-export const locales = ['fr', 'en', 'es', 'de', 'it', 'pt', 'zh', 'ar'] as const;
+export const locales = [
+  // Langues principales
+  'en',      // Anglais (défaut)
+  'fr',      // Français
+  // Créoles
+  'ht',      // Créole haïtien
+  'gcr',     // Créole antillais (Guadeloupe/Martinique)
+  // Arabes
+  'ar',      // Arabe standard
+  'ar-dz',   // Arabe algérien
+  'ar-lb',   // Arabe libanais
+  'ar-ma',   // Arabe marocain (Darija)
+  // Autres (alphabétique)
+  'zh',      // Chinois
+  'de',      // Allemand
+  'es',      // Espagnol
+  'tl',      // Filipino/Tagalog
+  'hi',      // Hindi
+  'it',      // Italien
+  'ko',      // Coréen
+  'pl',      // Polonais
+  'pt',      // Portugais
+  'pa',      // Pendjabi
+  'ru',      // Russe
+  'sv',      // Suédois
+  'ta',      // Tamoul
+  'vi',      // Vietnamien
+] as const;
+
 export type Locale = (typeof locales)[number];
 
-export const defaultLocale: Locale = 'fr';
+export const defaultLocale: Locale = 'en';
 
 export const localeNames: Record<Locale, string> = {
-  fr: 'Français',
   en: 'English',
+  fr: 'Français',
+  zh: '中文',
+  pa: 'ਪੰਜਾਬੀ',
   es: 'Español',
+  tl: 'Filipino',
+  ar: 'العربية',
+  'ar-ma': 'الدارجة المغربية',
+  'ar-dz': 'الدارجة الجزائرية',
+  'ar-lb': 'اللبنانية',
   de: 'Deutsch',
   it: 'Italiano',
   pt: 'Português',
-  zh: '中文',
-  ar: 'العربية',
+  hi: 'हिन्दी',
+  pl: 'Polski',
+  vi: 'Tiếng Việt',
+  ko: '한국어',
+  ta: 'தமிழ்',
+  sv: 'Svenska',
+  ru: 'Русский',
+  ht: 'Kreyòl Ayisyen',
+  gcr: 'Kréyòl Antiyé',
 };
 
 export const localeFlags: Record<Locale, string> = {
-  fr: '🇫🇷',
-  en: '🇬🇧',
+  en: '🇨🇦',
+  fr: '🇨🇦',
+  zh: '🇨🇳',
+  pa: '🇮🇳',
   es: '🇪🇸',
+  tl: '🇵🇭',
+  ar: '🇸🇦',
+  'ar-ma': '🇲🇦',
+  'ar-dz': '🇩🇿',
+  'ar-lb': '🇱🇧',
   de: '🇩🇪',
   it: '🇮🇹',
   pt: '🇵🇹',
-  zh: '🇨🇳',
-  ar: '🇸🇦',
+  hi: '🇮🇳',
+  pl: '🇵🇱',
+  vi: '🇻🇳',
+  ko: '🇰🇷',
+  ta: '🇮🇳',
+  sv: '🇸🇪',
+  ru: '🇷🇺',
+  ht: '🇭🇹',
+  gcr: '🇬🇵',
 };
 
 // Direction du texte (RTL pour l'arabe)
 export const localeDirections: Record<Locale, 'ltr' | 'rtl'> = {
-  fr: 'ltr',
   en: 'ltr',
+  fr: 'ltr',
+  zh: 'ltr',
+  pa: 'ltr',
   es: 'ltr',
+  tl: 'ltr',
+  ar: 'rtl',
+  'ar-ma': 'rtl',
+  'ar-dz': 'rtl',
+  'ar-lb': 'rtl',
   de: 'ltr',
   it: 'ltr',
   pt: 'ltr',
-  zh: 'ltr',
-  ar: 'rtl',
+  hi: 'ltr',
+  pl: 'ltr',
+  vi: 'ltr',
+  ko: 'ltr',
+  ta: 'ltr',
+  sv: 'ltr',
+  ru: 'ltr',
+  ht: 'ltr',
+  gcr: 'ltr',
 };
 
 // Formats de date par locale
 export const localeDateFormats: Record<Locale, Intl.DateTimeFormatOptions> = {
-  fr: { dateStyle: 'long', timeStyle: 'short' },
   en: { dateStyle: 'long', timeStyle: 'short' },
+  fr: { dateStyle: 'long', timeStyle: 'short' },
+  zh: { dateStyle: 'long', timeStyle: 'short' },
+  pa: { dateStyle: 'long', timeStyle: 'short' },
   es: { dateStyle: 'long', timeStyle: 'short' },
+  tl: { dateStyle: 'long', timeStyle: 'short' },
+  ar: { dateStyle: 'long', timeStyle: 'short' },
+  'ar-ma': { dateStyle: 'long', timeStyle: 'short' },
+  'ar-dz': { dateStyle: 'long', timeStyle: 'short' },
+  'ar-lb': { dateStyle: 'long', timeStyle: 'short' },
   de: { dateStyle: 'long', timeStyle: 'short' },
   it: { dateStyle: 'long', timeStyle: 'short' },
   pt: { dateStyle: 'long', timeStyle: 'short' },
-  zh: { dateStyle: 'long', timeStyle: 'short' },
-  ar: { dateStyle: 'long', timeStyle: 'short' },
+  hi: { dateStyle: 'long', timeStyle: 'short' },
+  pl: { dateStyle: 'long', timeStyle: 'short' },
+  vi: { dateStyle: 'long', timeStyle: 'short' },
+  ko: { dateStyle: 'long', timeStyle: 'short' },
+  ta: { dateStyle: 'long', timeStyle: 'short' },
+  sv: { dateStyle: 'long', timeStyle: 'short' },
+  ru: { dateStyle: 'long', timeStyle: 'short' },
+  ht: { dateStyle: 'long', timeStyle: 'short' },
+  gcr: { dateStyle: 'long', timeStyle: 'short' },
 };
 
-// Formats de devise par locale
+// Formats de devise par locale (tout en CAD pour le Canada)
 export const localeCurrencyFormats: Record<Locale, { currency: string; style: 'currency' }> = {
-  fr: { currency: 'CAD', style: 'currency' },
   en: { currency: 'CAD', style: 'currency' },
+  fr: { currency: 'CAD', style: 'currency' },
+  zh: { currency: 'CAD', style: 'currency' },
+  pa: { currency: 'CAD', style: 'currency' },
   es: { currency: 'CAD', style: 'currency' },
-  de: { currency: 'EUR', style: 'currency' },
-  it: { currency: 'EUR', style: 'currency' },
-  pt: { currency: 'EUR', style: 'currency' },
-  zh: { currency: 'CNY', style: 'currency' },
-  ar: { currency: 'SAR', style: 'currency' },
+  tl: { currency: 'CAD', style: 'currency' },
+  ar: { currency: 'CAD', style: 'currency' },
+  'ar-ma': { currency: 'CAD', style: 'currency' },
+  'ar-dz': { currency: 'CAD', style: 'currency' },
+  'ar-lb': { currency: 'CAD', style: 'currency' },
+  de: { currency: 'CAD', style: 'currency' },
+  it: { currency: 'CAD', style: 'currency' },
+  pt: { currency: 'CAD', style: 'currency' },
+  hi: { currency: 'CAD', style: 'currency' },
+  pl: { currency: 'CAD', style: 'currency' },
+  vi: { currency: 'CAD', style: 'currency' },
+  ko: { currency: 'CAD', style: 'currency' },
+  ta: { currency: 'CAD', style: 'currency' },
+  sv: { currency: 'CAD', style: 'currency' },
+  ru: { currency: 'CAD', style: 'currency' },
+  ht: { currency: 'CAD', style: 'currency' },
+  gcr: { currency: 'CAD', style: 'currency' },
 };
 
 export function isValidLocale(locale: string): locale is Locale {
@@ -79,14 +178,34 @@ export function getLocaleFromHeaders(acceptLanguage: string | null): Locale {
     .map((lang) => {
       const [locale, quality = 'q=1.0'] = lang.trim().split(';');
       const q = parseFloat(quality.replace('q=', ''));
-      return { locale: locale.split('-')[0], quality: q };
+      return { locale: locale.toLowerCase(), quality: q };
     })
     .sort((a, b) => b.quality - a.quality);
 
   // Find first matching locale
   for (const { locale } of languages) {
+    // Chercher correspondance exacte (ex: ar-ma, ar-dz)
     if (isValidLocale(locale)) {
       return locale;
+    }
+    
+    // Chercher par préfixe (ex: fr-CA -> fr)
+    const prefix = locale.split('-')[0];
+    
+    // Cas spécial pour l'arabe: essayer de matcher le dialecte
+    if (prefix === 'ar') {
+      // Vérifier si c'est un dialecte supporté
+      const arabicDialects = ['ar-ma', 'ar-dz', 'ar-lb'];
+      if (arabicDialects.includes(locale) && isValidLocale(locale as Locale)) {
+        return locale as Locale;
+      }
+      // Sinon retourner arabe standard
+      return 'ar';
+    }
+    
+    // Pour les autres langues
+    if (isValidLocale(prefix)) {
+      return prefix;
     }
   }
 

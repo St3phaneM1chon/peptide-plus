@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * DASHBOARD CLIENT (COMPAGNIE D'ASSURANCE)
  * Gestion profil, étudiants, achats entreprise
@@ -87,8 +88,8 @@ export default async function ClientDashboard() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Profil entreprise non configuré</h1>
-          <Link href="/client/setup" className="btn-primary">
-            Configurer mon entreprise
+          <Link href="/dashboard/customer" className="btn-primary">
+            Retour au tableau de bord
           </Link>
         </div>
       </div>

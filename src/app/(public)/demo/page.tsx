@@ -3,12 +3,11 @@
  */
 
 'use client';
+export const dynamic = 'force-dynamic';
 
 import { useState } from 'react';
-import { useTranslation } from '@/i18n/client';
 
 export default function DemoPage() {
-  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',

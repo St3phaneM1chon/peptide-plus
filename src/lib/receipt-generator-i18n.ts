@@ -6,7 +6,6 @@
 import jsPDF from 'jspdf';
 import { type Locale } from '@/i18n/config';
 import { 
-  createServerTranslator, 
   formatCurrencyServer, 
   formatDateTimeServer 
 } from '@/i18n/server';
@@ -32,8 +31,8 @@ interface ReceiptData {
   locale: Locale;
 }
 
-// Labels traduits pour le reçu
-const receiptLabels: Record<Locale, {
+// Labels traduits pour le reçu (Partial - not all locales have full translations)
+const receiptLabels: Partial<Record<Locale, {
   title: string;
   receiptNo: string;
   date: string;
@@ -49,7 +48,7 @@ const receiptLabels: Record<Locale, {
   thankYou: string;
   questions: string;
   page: string;
-}> = {
+}>> = {
   fr: {
     title: 'REÇU',
     receiptNo: 'Reçu N°',
@@ -249,7 +248,7 @@ const businessConfig = {
   name: process.env.BUSINESS_NAME || 'Formations Pro',
   address: process.env.BUSINESS_ADDRESS || '123 Rue Exemple, Montréal, QC H2X 1Y6',
   phone: process.env.BUSINESS_PHONE || '(514) 555-0123',
-  email: process.env.BUSINESS_EMAIL || 'contact@example.com',
+  email: process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'contact@biocyclepeptides.com',
   tps: process.env.BUSINESS_TPS || '123456789 RT0001',
   tvq: process.env.BUSINESS_TVQ || '1234567890 TQ0001',
 };
@@ -259,7 +258,7 @@ const businessConfig = {
  */
 export function generateReceiptPDFi18n(data: ReceiptData): Buffer {
   const locale = data.locale || 'fr';
-  const labels = receiptLabels[locale] || receiptLabels.fr;
+  const labels = receiptLabels[locale] || receiptLabels.fr!;
   const isRTL = locale === 'ar';
 
   const doc = new jsPDF({

@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * EMPLOYEE - LISTE COMPLÈTE DES CLIENTS (COMPAGNIES)
  * Avec filtres, recherche et pagination

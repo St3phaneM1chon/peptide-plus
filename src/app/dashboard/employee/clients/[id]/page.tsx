@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * EMPLOYEE - DÉTAIL CLIENT
  * Profil complet + Liste des customers (étudiants)

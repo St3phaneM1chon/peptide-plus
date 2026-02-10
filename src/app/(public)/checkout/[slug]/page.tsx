@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * PAGE CHECKOUT
  * Paiement multi-providers: Stripe, Apple Pay, Google Pay, PayPal, Click to Pay
@@ -7,7 +8,6 @@
 import { redirect, notFound } from 'next/navigation';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
-import { CheckoutForm } from '@/components/payment/CheckoutForm';
 import { CheckoutPageClient } from './CheckoutPageClient';
 
 interface CheckoutPageProps {
@@ -35,37 +35,20 @@ export default async function CheckoutPage({ params }: CheckoutPageProps) {
     notFound();
   }
 
-  // Pour les produits digitaux, vérifier si déjà acheté
-  if (product.productType === 'DIGITAL') {
-    const existingAccess = await prisma.courseAccess.findUnique({
-      where: {
-        userId_productId: {
-          userId: session.user.id,
-          productId: product.id,
-        },
-      },
-    });
-
-    if (existingAccess) {
-      redirect(`/cours/${params.slug}/learn`);
-    }
-  }
-
   // Récupérer les cartes sauvegardées
   const savedCards = await prisma.savedCard.findMany({
     where: { userId: session.user.id },
     orderBy: { isDefault: 'desc' },
   });
 
-  // Récupérer les adresses sauvegardées (pour produits physiques)
-  const savedAddresses = product.productType !== 'DIGITAL'
-    ? await prisma.userAddress.findMany({
-        where: { userId: session.user.id },
-        orderBy: { isDefault: 'desc' },
-      })
-    : [];
+  // Récupérer les adresses sauvegardées (tous les produits sont physiques pour BioCycle)
+  const savedAddresses = await prisma.userAddress.findMany({
+    where: { userId: session.user.id },
+    orderBy: { isDefault: 'desc' },
+  });
 
-  const isPhysical = product.productType === 'PHYSICAL' || product.productType === 'HYBRID';
+  // Tous les produits BioCycle sont physiques et nécessitent une livraison
+  const isPhysical = true;
 
   return (
     <CheckoutPageClient
@@ -78,7 +61,7 @@ export default async function CheckoutPage({ params }: CheckoutPageProps) {
         imageUrl: product.imageUrl,
         categoryName: product.category?.name || null,
         productType: product.productType,
-        duration: product.duration,
+        duration: null,
       }}
       user={{
         id: session.user.id,

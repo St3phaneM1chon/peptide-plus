@@ -1,36 +1,37 @@
+export const dynamic = 'force-dynamic';
 /**
  * PAGE CATALOGUE
- * Liste de toutes les formations avec filtres
+ * Liste de tous les produits peptides avec filtres
  */
 
 import Link from 'next/link';
-import { prisma } from '@/lib/db';
+import { db as prisma } from '@/lib/db';
 import { ProductCard } from '@/components/products/ProductCard';
 
 interface CataloguePageProps {
-  searchParams: {
+  searchParams: Promise<{
     category?: string;
-    level?: string;
+    type?: string;
     sort?: string;
     search?: string;
-  };
+  }>;
 }
 
-async function getProducts(filters: CataloguePageProps['searchParams']) {
+async function getProducts(filters: { category?: string; type?: string; sort?: string; search?: string }) {
   const where: any = { isActive: true };
 
   if (filters.category) {
     where.category = { slug: filters.category };
   }
 
-  if (filters.level) {
-    where.level = filters.level;
+  if (filters.type) {
+    where.type = filters.type;
   }
 
   if (filters.search) {
     where.OR = [
-      { name: { contains: filters.search } },
-      { shortDescription: { contains: filters.search } },
+      { name: { contains: filters.search, mode: 'insensitive' } },
+      { shortDescription: { contains: filters.search, mode: 'insensitive' } },
     ];
   }
 
@@ -42,11 +43,8 @@ async function getProducts(filters: CataloguePageProps['searchParams']) {
     case 'price-desc':
       orderBy.price = 'desc';
       break;
-    case 'popular':
-      orderBy.purchaseCount = 'desc';
-      break;
-    case 'rating':
-      orderBy.averageRating = 'desc';
+    case 'name':
+      orderBy.name = 'asc';
       break;
     default:
       orderBy.createdAt = 'desc';
@@ -70,12 +68,13 @@ async function getCategories() {
 }
 
 export default async function CataloguePage({ searchParams }: CataloguePageProps) {
+  const params = await searchParams;
   const [products, categories] = await Promise.all([
-    getProducts(searchParams),
+    getProducts(params),
     getCategories(),
   ]);
 
-  const levels = ['Débutant', 'Intermédiaire', 'Avancé'];
+  const productTypes = ['PEPTIDE', 'SUPPLEMENT', 'ACCESSORY'];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -83,10 +82,10 @@ export default async function CataloguePage({ searchParams }: CataloguePageProps
       <section className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Catalogue des formations
+            Catalogue des Produits
           </h1>
           <p className="text-gray-600">
-            {products.length} formation{products.length > 1 ? 's' : ''} disponible{products.length > 1 ? 's' : ''}
+            {products.length} produit{products.length > 1 ? 's' : ''} disponible{products.length > 1 ? 's' : ''}
           </p>
         </div>
       </section>
@@ -105,9 +104,9 @@ export default async function CataloguePage({ searchParams }: CataloguePageProps
                   <input
                     type="text"
                     name="search"
-                    defaultValue={searchParams.search}
+                    defaultValue={params.search}
                     placeholder="Rechercher..."
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   />
                 </form>
               </div>
@@ -120,8 +119,8 @@ export default async function CataloguePage({ searchParams }: CataloguePageProps
                     <Link
                       href="/catalogue"
                       className={`block px-3 py-2 rounded-lg text-sm ${
-                        !searchParams.category
-                          ? 'bg-blue-50 text-blue-700 font-medium'
+                        !params.category
+                          ? 'bg-orange-50 text-orange-700 font-medium'
                           : 'text-gray-600 hover:bg-gray-50'
                       }`}
                     >
@@ -133,8 +132,8 @@ export default async function CataloguePage({ searchParams }: CataloguePageProps
                       <Link
                         href={`/catalogue?category=${category.slug}`}
                         className={`block px-3 py-2 rounded-lg text-sm ${
-                          searchParams.category === category.slug
-                            ? 'bg-blue-50 text-blue-700 font-medium'
+                          params.category === category.slug
+                            ? 'bg-orange-50 text-orange-700 font-medium'
                             : 'text-gray-600 hover:bg-gray-50'
                         }`}
                       >
@@ -148,33 +147,33 @@ export default async function CataloguePage({ searchParams }: CataloguePageProps
                 </ul>
               </div>
 
-              {/* Niveau */}
+              {/* Type de produit */}
               <div className="mb-6">
-                <h3 className="text-sm font-medium text-gray-700 mb-2">Niveau</h3>
+                <h3 className="text-sm font-medium text-gray-700 mb-2">Type</h3>
                 <ul className="space-y-1">
                   <li>
                     <Link
-                      href={`/catalogue${searchParams.category ? `?category=${searchParams.category}` : ''}`}
+                      href={`/catalogue${params.category ? `?category=${params.category}` : ''}`}
                       className={`block px-3 py-2 rounded-lg text-sm ${
-                        !searchParams.level
-                          ? 'bg-blue-50 text-blue-700 font-medium'
+                        !params.type
+                          ? 'bg-orange-50 text-orange-700 font-medium'
                           : 'text-gray-600 hover:bg-gray-50'
                       }`}
                     >
-                      Tous les niveaux
+                      Tous les types
                     </Link>
                   </li>
-                  {levels.map((level) => (
-                    <li key={level}>
+                  {productTypes.map((type) => (
+                    <li key={type}>
                       <Link
-                        href={`/catalogue?level=${level}${searchParams.category ? `&category=${searchParams.category}` : ''}`}
+                        href={`/catalogue?type=${type}${params.category ? `&category=${params.category}` : ''}`}
                         className={`block px-3 py-2 rounded-lg text-sm ${
-                          searchParams.level === level
-                            ? 'bg-blue-50 text-blue-700 font-medium'
+                          params.type === type
+                            ? 'bg-orange-50 text-orange-700 font-medium'
                             : 'text-gray-600 hover:bg-gray-50'
                         }`}
                       >
-                        {level}
+                        {type === 'PEPTIDE' ? 'Peptides' : type === 'SUPPLEMENT' ? 'Suppléments' : 'Accessoires'}
                       </Link>
                     </li>
                   ))}
@@ -185,17 +184,11 @@ export default async function CataloguePage({ searchParams }: CataloguePageProps
               <div>
                 <h3 className="text-sm font-medium text-gray-700 mb-2">Trier par</h3>
                 <select
-                  defaultValue={searchParams.sort || 'recent'}
-                  onChange={(e) => {
-                    const url = new URL(window.location.href);
-                    url.searchParams.set('sort', e.target.value);
-                    window.location.href = url.toString();
-                  }}
+                  defaultValue={params.sort || 'recent'}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
                 >
                   <option value="recent">Plus récent</option>
-                  <option value="popular">Plus populaire</option>
-                  <option value="rating">Mieux noté</option>
+                  <option value="name">Nom A-Z</option>
                   <option value="price-asc">Prix croissant</option>
                   <option value="price-desc">Prix décroissant</option>
                 </select>
@@ -221,13 +214,13 @@ export default async function CataloguePage({ searchParams }: CataloguePageProps
                   />
                 </svg>
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  Aucune formation trouvée
+                  Aucun produit trouvé
                 </h3>
                 <p className="text-gray-600 mb-4">
                   Essayez de modifier vos critères de recherche
                 </p>
-                <Link href="/catalogue" className="btn-primary">
-                  Voir toutes les formations
+                <Link href="/catalogue" className="inline-block px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600">
+                  Voir tous les produits
                 </Link>
               </div>
             ) : (

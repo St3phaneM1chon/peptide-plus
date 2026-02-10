@@ -161,15 +161,20 @@ export interface ProductImage {
 export interface ProductFormat {
   id: string;
   productId: string;
+  formatType: FormatType;
   name: string;
   description: string | null;
-  price: number | null;
+  imageUrl: string | null;
+  dosageMg: number | null;
+  volumeMl: number | null;
+  unitCount: number | null;
+  price: number;
+  comparePrice: number | null;
   sku: string | null;
-  downloadUrl: string | null;
-  fileSize: string | null;
-  fileType: string | null;
   inStock: boolean;
-  stockQuantity: number | null;
+  stockQuantity: number;
+  trackInventory: boolean;
+  availability: StockStatus;
   sortOrder: number;
   isDefault: boolean;
   isActive: boolean;
@@ -242,9 +247,35 @@ export enum PurchaseStatus {
 }
 
 export enum ProductType {
-  DIGITAL = 'DIGITAL',     // Cours en ligne, formations (accès immédiat)
-  PHYSICAL = 'PHYSICAL',   // Produits physiques (nécessite livraison)
-  HYBRID = 'HYBRID',       // Mix des deux
+  PEPTIDE = 'PEPTIDE',         // Peptides (vials, cartouches)
+  SUPPLEMENT = 'SUPPLEMENT',   // Suppléments (créatine, NAD+, gummies)
+  ACCESSORY = 'ACCESSORY',     // Accessoires (stylos, aiguilles, solvants)
+  BUNDLE = 'BUNDLE',           // Protocoles/bundles mensuels
+  CAPSULE = 'CAPSULE',         // Capsules orales
+}
+
+export enum FormatType {
+  VIAL_2ML = 'VIAL_2ML',
+  VIAL_10ML = 'VIAL_10ML',
+  CARTRIDGE_3ML = 'CARTRIDGE_3ML',
+  KIT_12 = 'KIT_12',
+  CAPSULE_60 = 'CAPSULE_60',
+  CAPSULE_120 = 'CAPSULE_120',
+  PACK_5 = 'PACK_5',
+  PACK_10 = 'PACK_10',
+  BUNDLE = 'BUNDLE',
+  ACCESSORY = 'ACCESSORY',
+  NASAL_SPRAY = 'NASAL_SPRAY',
+  CREAM = 'CREAM',
+}
+
+export enum StockStatus {
+  IN_STOCK = 'IN_STOCK',
+  OUT_OF_STOCK = 'OUT_OF_STOCK',
+  DISCONTINUED = 'DISCONTINUED',
+  COMING_SOON = 'COMING_SOON',
+  PRE_ORDER = 'PRE_ORDER',
+  LIMITED = 'LIMITED',
 }
 
 export enum ShippingStatus {

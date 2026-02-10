@@ -1,5 +1,5 @@
 # =====================================================
-# AZURE DEPLOYMENT PIPELINE
+# AZURE DEPLOYMENT PIPELINE - BioCycle Peptides
 # Déploiement sécurisé sur Azure App Service
 # =====================================================
 
@@ -9,17 +9,27 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
 
 env:
-  AZURE_WEBAPP_NAME: 'peptide-plus-app'
+  AZURE_WEBAPP_NAME: 'biocyclepeptides'
+  AZURE_RESOURCE_GROUP: 'biocycle-peptides-prod'
   NODE_VERSION: '20'
 
 jobs:
   # =====================================================
-  # BUILD & DEPLOY
+  # BUILD
   # =====================================================
-  build-and-deploy:
-    name: Build and Deploy
+  build:
+    name: Build Application
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -33,11 +43,55 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
       - name: Build
         run: npm run build
         env:
-          # Skip type checking for initial deployment
           NEXT_TELEMETRY_DISABLED: 1
+          NEXT_PUBLIC_SITE_NAME: "BioCycle Peptides"
+          NEXT_PUBLIC_APP_URL: "https://biocyclepeptides.com"
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-output
+          path: |
+            .next/
+            package.json
+            package-lock.json
+            public/
+            prisma/
+            next.config.js
+          retention-days: 1
+
+  # =====================================================
+  # DEPLOY
+  # =====================================================
+  deploy:
+    name: Deploy to Azure
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ github.event.inputs.environment || 'production' }}
+      url: https://biocyclepeptides.com
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-output
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install production dependencies
+        run: npm ci --production
 
       - name: Login to Azure
         uses: azure/login@v2
@@ -50,13 +104,59 @@ jobs:
               "tenantId": "${{ secrets.AZURE_TENANT_ID }}"
             }
 
+      - name: Configure App Settings
+        run: |
+          az webapp config appsettings set \
+            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+            --name ${{ env.AZURE_WEBAPP_NAME }} \
+            --settings \
+              NODE_ENV=production \
+              NEXTAUTH_URL=https://biocyclepeptides.com \
+              NEXT_PUBLIC_APP_URL=https://biocyclepeptides.com \
+              NEXT_PUBLIC_SITE_NAME="BioCycle Peptides"
+
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
           app-name: ${{ env.AZURE_WEBAPP_NAME }}
           package: .
 
+      - name: Run Database Migrations
+        run: |
+          az webapp config appsettings list \
+            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+            --name ${{ env.AZURE_WEBAPP_NAME }} \
+            --query "[?name=='DATABASE_URL'].value" -o tsv > /dev/null
+          echo "Database migrations should be run via Kudu or SSH"
+
       - name: Verify deployment
         run: |
-          echo "Deployment complete!"
-          echo "URL: https://${{ env.AZURE_WEBAPP_NAME }}.azurewebsites.net"
+          sleep 30
+          response=$(curl -s -o /dev/null -w "%{http_code}" https://biocyclepeptides.com/api/health)
+          if [ "$response" != "200" ]; then
+            echo "Health check failed with status: $response"
+            exit 1
+          fi
+          echo "✅ Deployment verified successfully!"
+          echo "🌐 URL: https://biocyclepeptides.com"
+
+  # =====================================================
+  # POST-DEPLOY NOTIFICATION
+  # =====================================================
+  notify:
+    name: Send Notification
+    needs: deploy
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Notify on success
+        if: needs.deploy.result == 'success'
+        run: |
+          echo "✅ BioCycle Peptides deployed successfully!"
+          echo "URL: https://biocyclepeptides.com"
+
+      - name: Notify on failure
+        if: needs.deploy.result == 'failure'
+        run: |
+          echo "❌ Deployment failed!"
+          exit 1

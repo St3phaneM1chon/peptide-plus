@@ -1095,6 +1095,43 @@ a:hover {
   .sensitive-data {
     display: none !important;
   }
+  
+  /* Invoice printing styles */
+  body {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+  
+  #invoice-content {
+    padding: 0 !important;
+  }
+  
+  /* Hide modal overlay and buttons when printing */
+  .fixed.inset-0.bg-black\/50 {
+    position: static !important;
+    background: none !important;
+  }
+  
+  .fixed.inset-0.bg-black\/50 > div {
+    max-width: 100% !important;
+    max-height: 100% !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+  
+  /* Hide close button and action buttons */
+  .fixed.inset-0.bg-black\/50 button {
+    display: none !important;
+  }
+  
+  /* Show invoice content only */
+  .print\\:p-0 {
+    padding: 0 !important;
+  }
+  
+  .print\\:shadow-none {
+    box-shadow: none !important;
+  }
 }
 
 .secure-input {

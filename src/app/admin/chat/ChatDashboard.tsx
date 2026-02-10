@@ -75,9 +75,9 @@ interface ChatDashboardProps {
   currentUserId: string;
 }
 
-export function ChatDashboard({ initialStats, agents, quickReplies, currentUserId }: ChatDashboardProps) {
+export function ChatDashboard({ initialStats, agents, quickReplies, currentUserId: _currentUserId }: ChatDashboardProps) {
   const { t } = useTranslation();
-  const [stats, setStats] = useState(initialStats);
+  const [stats] = useState(initialStats);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -422,7 +422,6 @@ export function ChatDashboard({ initialStats, agents, quickReplies, currentUserI
                 <AdminMessageBubble
                   key={msg.id}
                   message={msg}
-                  isOwn={msg.senderId === currentUserId}
                 />
               ))
             )}
@@ -537,7 +536,7 @@ function StatBadge({ label, value, color }: { label: string; value: number; colo
   );
 }
 
-function AdminMessageBubble({ message, isOwn }: { message: Message; isOwn: boolean }) {
+function AdminMessageBubble({ message }: { message: Message }) {
   if (message.isSystem) {
     return (
       <div style={{ textAlign: 'center', fontSize: '12px', color: 'var(--gray-400)', padding: '8px' }}>

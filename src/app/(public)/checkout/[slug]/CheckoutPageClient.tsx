@@ -230,7 +230,6 @@ export function CheckoutPageClient({
                   }}
                   user={user}
                   savedCards={savedCards}
-                  shippingAddress={isPhysical ? shippingAddress : undefined}
                 />
               </>
             )}

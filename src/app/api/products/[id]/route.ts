@@ -9,14 +9,15 @@ import { prisma } from '@/lib/db';
 import { UserRole } from '@/types';
 
 interface RouteParams {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 // GET - Détail d'un produit
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export async function GET(_request: Request, { params }: RouteParams) {
   try {
+    const { id } = await params;
     const product = await prisma.product.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         category: true,
         modules: {
@@ -49,6 +50,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 // PUT - Mettre à jour un produit
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
+    const { id } = await params;
     const session = await auth();
 
     if (!session?.user) {
@@ -64,7 +66,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
     // Vérifier que le produit existe
     const existingProduct = await prisma.product.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: { images: true, formats: true },
     });
 
@@ -90,14 +92,14 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       // Supprimer les anciennes images si nouvelles fournies
       if (images !== undefined) {
         await tx.productImage.deleteMany({
-          where: { productId: params.id },
+          where: { productId: id },
         });
         
         // Créer les nouvelles images
         if (images && images.length > 0) {
           await tx.productImage.createMany({
-            data: images.map((img: any, index: number) => ({
-              productId: params.id,
+            data: images.map((img: { url: string; alt?: string; caption?: string; sortOrder?: number; isPrimary?: boolean }, index: number) => ({
+              productId: id,
               url: img.url,
               alt: img.alt || '',
               caption: img.caption || '',
@@ -111,14 +113,14 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       // Supprimer les anciens formats si nouveaux fournis
       if (formats !== undefined) {
         await tx.productFormat.deleteMany({
-          where: { productId: params.id },
+          where: { productId: id },
         });
         
         // Créer les nouveaux formats
         if (formats && formats.length > 0) {
           await tx.productFormat.createMany({
-            data: formats.map((f: any, index: number) => ({
-              productId: params.id,
+            data: formats.map((f: { name: string; description?: string; price?: number; sku?: string; downloadUrl?: string; fileSize?: string; inStock?: boolean; stockQuantity?: number; sortOrder?: number; isDefault?: boolean }, index: number) => ({
+              productId: id,
               name: f.name,
               description: f.description || '',
               price: f.price || null,
@@ -136,7 +138,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
       // Mettre à jour le produit
       return tx.product.update({
-        where: { id: params.id },
+        where: { id },
         data: productData,
         include: { 
           category: true,
@@ -172,8 +174,9 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 }
 
 // DELETE - Supprimer un produit (soft delete)
-export async function DELETE(request: NextRequest, { params }: RouteParams) {
+export async function DELETE(_request: Request, { params }: RouteParams) {
   try {
+    const { id } = await params;
     const session = await auth();
 
     if (!session?.user) {
@@ -184,8 +187,8 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
     }
 
-    const product = await prisma.product.update({
-      where: { id: params.id },
+    await prisma.product.update({
+      where: { id },
       data: { isActive: false },
     });
 
@@ -195,7 +198,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
         userId: session.user.id,
         action: 'DELETE',
         entityType: 'Product',
-        entityId: params.id,
+        entityId: id,
       },
     });
 

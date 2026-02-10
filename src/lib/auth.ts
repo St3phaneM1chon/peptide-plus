@@ -22,28 +22,26 @@ const azureADConfig = {
   },
 };
 
-// Types personnalisés pour la session
-declare module 'next-auth' {
-  interface Session {
-    user: {
-      id: string;
-      email: string;
-      name: string;
-      roles: string[];
-      mfaVerified: boolean;
-    };
-    accessToken: string;
-    error?: string;
-  }
-
-  interface JWT {
-    accessToken: string;
-    refreshToken: string;
-    accessTokenExpires: number;
+// Types personnalisés pour Azure AD (ajoutés inline pour éviter conflits avec auth-config)
+interface AzureADSession {
+  user: {
+    id: string;
+    email: string;
+    name: string;
     roles: string[];
     mfaVerified: boolean;
-    error?: string;
-  }
+  };
+  accessToken: string;
+  error?: string;
+}
+
+interface AzureADJWT {
+  accessToken: string;
+  refreshToken: string;
+  accessTokenExpires: number;
+  roles: string[];
+  mfaVerified: boolean;
+  error?: string;
 }
 
 // Configuration NextAuth
@@ -52,7 +50,8 @@ export const authConfig: NextAuthConfig = {
     AzureADProvider({
       clientId: azureADConfig.clientId,
       clientSecret: azureADConfig.clientSecret,
-      tenantId: azureADConfig.tenantId,
+      // For Azure AD, use issuer instead of tenantId in v5
+      issuer: `https://login.microsoftonline.com/${azureADConfig.tenantId}/v2.0`,
       authorization: azureADConfig.authorization,
     }),
   ],
@@ -67,7 +66,7 @@ export const authConfig: NextAuthConfig = {
   // Callbacks de sécurité
   callbacks: {
     // Vérification lors de la connexion
-    async signIn({ user, account, profile }) {
+    async signIn({ user, account }) {
       // Log de l'événement de connexion (audit trail)
       console.log(JSON.stringify({
         event: 'signin_attempt',
@@ -94,18 +93,19 @@ export const authConfig: NextAuthConfig = {
     async jwt({ token, account, profile }) {
       // Premier login - récupérer les tokens
       if (account) {
-        token.accessToken = account.access_token!;
-        token.refreshToken = account.refresh_token!;
-        token.accessTokenExpires = account.expires_at! * 1000;
+        const extendedToken = token as unknown as AzureADJWT;
+        const azureProfile = profile as { roles?: string[]; amr?: string[] } | undefined;
+        
+        extendedToken.accessToken = account.access_token!;
+        extendedToken.refreshToken = account.refresh_token!;
+        extendedToken.accessTokenExpires = account.expires_at! * 1000;
         
         // Récupérer les rôles depuis Azure AD
-        // @ts-ignore - profile peut contenir des champs personnalisés
-        token.roles = profile?.roles || [];
+        extendedToken.roles = azureProfile?.roles || [];
         
         // Vérifier si MFA a été utilisé (claim amr)
-        // @ts-ignore
-        const authMethods = profile?.amr || [];
-        token.mfaVerified = authMethods.includes('mfa') || 
+        const authMethods = azureProfile?.amr || [];
+        extendedToken.mfaVerified = authMethods.includes('mfa') || 
                            authMethods.includes('ngcmfa') ||
                            authMethods.length > 1;
       }
@@ -121,13 +121,15 @@ export const authConfig: NextAuthConfig = {
 
     // Construction de la session
     async session({ session, token }) {
-      session.user.id = token.sub!;
-      session.user.roles = token.roles as string[];
-      session.user.mfaVerified = token.mfaVerified as boolean;
-      session.accessToken = token.accessToken as string;
+      const extendedSession = session as unknown as AzureADSession;
+      const extendedToken = token as unknown as AzureADJWT;
+      extendedSession.user.id = token.sub!;
+      extendedSession.user.roles = extendedToken.roles || [];
+      extendedSession.user.mfaVerified = extendedToken.mfaVerified || false;
+      extendedSession.accessToken = extendedToken.accessToken || '';
       
-      if (token.error) {
-        session.error = token.error as string;
+      if (extendedToken.error) {
+        extendedSession.error = extendedToken.error;
       }
 
       return session;
@@ -164,15 +166,13 @@ export const authConfig: NextAuthConfig = {
         provider: account?.provider,
       }));
     },
-    async signOut({ token }) {
+    async signOut(message) {
+      const tokenSub = 'token' in message ? (message.token as { sub?: string })?.sub : undefined;
       console.log(JSON.stringify({
         event: 'signout',
         timestamp: new Date().toISOString(),
-        userId: token.sub,
+        userId: tokenSub,
       }));
-    },
-    async session({ session }) {
-      // Log des accès session (optionnel, peut être verbeux)
     },
   },
 

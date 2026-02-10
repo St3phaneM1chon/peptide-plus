@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Production: Standalone build for Azure/Docker deployment
+  output: 'standalone',
+  
   // Build: Ignorer les erreurs pour déploiement initial
   typescript: {
     ignoreBuildErrors: true,
@@ -75,14 +78,51 @@ const nextConfig = {
   // Optimisations
   reactStrictMode: true,
   
-  // Images autorisées
+  // Compression automatique
+  compress: true,
+  
+  // Optimiser les packages
+  modularizeImports: {
+    'lucide-react': {
+      transform: 'lucide-react/dist/esm/icons/{{member}}',
+    },
+    'date-fns': {
+      transform: 'date-fns/{{member}}',
+    },
+  },
+  
+  // Experimental optimizations
+  experimental: {
+    optimizePackageImports: ['lucide-react', 'date-fns', '@radix-ui/react-icons'],
+  },
+  
+  // Images - Optimisation et domaines autorisés
   images: {
     remotePatterns: [
       {
         protocol: 'https',
         hostname: '**.azure.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.cloudinary.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'biocyclepeptides.com',
+      },
     ],
+    // Formats modernes pour performance
+    formats: ['image/avif', 'image/webp'],
+    // Tailles d'images générées automatiquement
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    // Cache images optimisées
+    minimumCacheTTL: 60 * 60 * 24 * 30, // 30 jours
   },
 
   // Variables d'environnement publiques (non sensibles uniquement!)

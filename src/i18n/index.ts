@@ -1,21 +1,58 @@
 /**
  * I18N - Système de traduction
- * Utilise next-intl pour la gestion multilingue
+ * 15 langues les plus parlées au Canada
  */
 
 import { getRequestConfig } from 'next-intl/server';
 import { defaultLocale, isValidLocale, type Locale } from './config';
 
 // Import des fichiers de traduction
-import fr from './locales/fr.json';
 import en from './locales/en.json';
+import fr from './locales/fr.json';
+import zh from './locales/zh.json';
+import pa from './locales/pa.json';
 import es from './locales/es.json';
+import tl from './locales/tl.json';
+import ar from './locales/ar.json';
+import arMa from './locales/ar-ma.json';
+import arDz from './locales/ar-dz.json';
+import arLb from './locales/ar-lb.json';
+import de from './locales/de.json';
+import it from './locales/it.json';
+import pt from './locales/pt.json';
+import hi from './locales/hi.json';
+import pl from './locales/pl.json';
+import vi from './locales/vi.json';
+import ko from './locales/ko.json';
+import ta from './locales/ta.json';
+import sv from './locales/sv.json';
+import ru from './locales/ru.json';
+import ht from './locales/ht.json';
+import gcr from './locales/gcr.json';
 
-const messages: Record<string, typeof fr> = {
-  fr,
+const messages: Record<string, typeof en> = {
   en,
+  fr,
+  zh,
+  pa,
   es,
-  // Les autres langues seront chargées dynamiquement ou ajoutées ici
+  tl,
+  ar,
+  'ar-ma': arMa,
+  'ar-dz': arDz,
+  'ar-lb': arLb,
+  de,
+  it,
+  pt,
+  hi,
+  pl,
+  vi,
+  ko,
+  ta,
+  sv,
+  ru,
+  ht,
+  gcr,
 };
 
 export default getRequestConfig(async ({ locale }) => {
@@ -25,14 +62,9 @@ export default getRequestConfig(async ({ locale }) => {
   // Load messages for the locale
   let localeMessages = messages[validLocale];
 
-  // Si pas encore chargé, essayer de charger dynamiquement
+  // Fallback to default locale if not found
   if (!localeMessages) {
-    try {
-      localeMessages = (await import(`./locales/${validLocale}.json`)).default;
-    } catch {
-      // Fallback to default locale
-      localeMessages = messages[defaultLocale];
-    }
+    localeMessages = messages[defaultLocale];
   }
 
   return {
@@ -43,13 +75,13 @@ export default getRequestConfig(async ({ locale }) => {
 });
 
 // Export types for use in components
-export type Messages = typeof fr;
+export type Messages = typeof en;
 export type MessageKey = keyof Messages;
 
 // Utilitaires de formatage
 export function formatCurrency(
   amount: number,
-  locale: Locale = 'fr',
+  locale: Locale = 'en',
   currency: string = 'CAD'
 ): string {
   return new Intl.NumberFormat(locale, {
@@ -60,20 +92,20 @@ export function formatCurrency(
 
 export function formatDate(
   date: Date | string,
-  locale: Locale = 'fr',
+  locale: Locale = 'en',
   options?: Intl.DateTimeFormatOptions
 ): string {
   const d = typeof date === 'string' ? new Date(date) : date;
   return new Intl.DateTimeFormat(locale, options || { dateStyle: 'long' }).format(d);
 }
 
-export function formatNumber(amount: number, locale: Locale = 'fr'): string {
+export function formatNumber(amount: number, locale: Locale = 'en'): string {
   return new Intl.NumberFormat(locale).format(amount);
 }
 
 export function formatRelativeTime(
   date: Date | string,
-  locale: Locale = 'fr'
+  locale: Locale = 'en'
 ): string {
   const d = typeof date === 'string' ? new Date(date) : date;
   const now = new Date();

@@ -13,7 +13,7 @@ import { LanguageSelector } from '@/components/i18n/LanguageSelector';
 import { useTranslation } from '@/i18n/client';
 
 export function HeaderShopify() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { t } = useTranslation();
 

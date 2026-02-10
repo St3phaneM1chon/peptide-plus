@@ -312,7 +312,7 @@ function CartItemRow({ item, onUpdateQuantity, onRemove }: CartItemRowProps) {
       {/* Image */}
       <div className="cart-item__image">
         {item.imageUrl ? (
-          <img src={item.imageUrl} alt={item.name} />
+          <Image src={item.imageUrl} alt={item.name} width={80} height={80} className="object-cover" />
         ) : (
           <div
             style={{

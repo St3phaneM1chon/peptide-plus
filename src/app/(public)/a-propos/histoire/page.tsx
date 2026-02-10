@@ -1,166 +1,137 @@
+'use client';
+export const dynamic = 'force-dynamic';
+
+import Link from 'next/link';
+
 /**
- * PAGE HISTOIRE
+ * PAGE NOTRE HISTOIRE - BioCycle Peptides
  */
 
-export const metadata = {
-  title: 'Notre Histoire | Formations Pro',
-  description: 'Découvrez le parcours et l\'évolution de notre entreprise depuis sa création.',
-};
+export default function HistoirePage() {
+  const timeline = [
+    {
+      year: '2023',
+      title: 'La naissance d\'une idée',
+      description: 'Face au manque de fournisseurs canadiens fiables de peptides de recherche, l\'idée de BioCycle Peptides émerge à Montréal. L\'objectif: créer une source locale de composés de haute qualité pour les chercheurs canadiens.',
+      color: '#f97316'
+    },
+    {
+      year: '2024',
+      title: 'Fondation et premiers produits',
+      description: 'Lancement officiel de BioCycle Peptides avec une gamme initiale de 50 peptides. Partenariat avec des laboratoires d\'analyse accrédités pour garantir la qualité de chaque lot.',
+      color: '#3b82f6'
+    },
+    {
+      year: '2025',
+      title: 'Expansion du catalogue',
+      description: 'Élargissement à plus de 200 produits incluant peptides, suppléments de recherche et accessoires. Mise en place du programme de fidélité pour récompenser nos clients réguliers.',
+      color: '#10b981'
+    },
+    {
+      year: '2026',
+      title: 'Aujourd\'hui et demain',
+      description: 'Plus de 500 produits disponibles et des milliers de chercheurs servis à travers le monde. Lancement de ressources éducatives et de la communauté BioCycle pour partager les connaissances.',
+      color: '#8b5cf6'
+    }
+  ];
 
-const timeline = [
-  {
-    year: '2014',
-    title: 'Les débuts',
-    description: 'Fondation de l\'entreprise avec une vision simple: rendre la formation professionnelle accessible à tous.',
-    icon: '🌱',
-  },
-  {
-    year: '2016',
-    title: 'Première plateforme en ligne',
-    description: 'Lancement de notre plateforme d\'apprentissage en ligne, permettant aux apprenants de se former à leur rythme.',
-    icon: '💻',
-  },
-  {
-    year: '2018',
-    title: 'Expansion nationale',
-    description: 'Ouverture de bureaux à Toronto et Vancouver. Plus de 10 000 apprenants formés.',
-    icon: '🚀',
-  },
-  {
-    year: '2020',
-    title: 'Adaptation et croissance',
-    description: 'Face à la pandémie, nous avons accéléré notre transformation digitale et triplé notre offre de formations.',
-    icon: '📈',
-  },
-  {
-    year: '2022',
-    title: 'Certifications reconnues',
-    description: 'Obtention de certifications internationales et partenariats avec des organisations prestigieuses.',
-    icon: '🏆',
-  },
-  {
-    year: '2024',
-    title: 'Innovation continue',
-    description: 'Intégration de l\'IA dans nos parcours d\'apprentissage et lancement de programmes sur mesure pour les entreprises.',
-    icon: '🤖',
-  },
-  {
-    year: '2026',
-    title: 'Aujourd\'hui',
-    description: 'Plus de 50 000 professionnels formés, 200+ formations et une équipe de 35 experts passionnés.',
-    icon: '⭐',
-  },
-];
-
-export default function HistoryPage() {
   return (
-    <div style={{ backgroundColor: 'var(--gray-100)' }}>
+    <div style={{ backgroundColor: 'white', minHeight: '100vh' }}>
       {/* Hero */}
-      <section
-        style={{
-          backgroundColor: 'var(--gray-500)',
-          color: 'white',
-          padding: '80px 24px',
-          textAlign: 'center',
-        }}
-      >
+      <div style={{ 
+        background: 'linear-gradient(135deg, #1f2937 0%, #111827 100%)', 
+        color: 'white', 
+        padding: '80px 24px',
+        textAlign: 'center'
+      }}>
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <h1 style={{ fontSize: '42px', fontWeight: 700, marginBottom: '24px' }}>
+          <Link href="/a-propos" style={{ color: 'rgba(255,255,255,0.8)', textDecoration: 'none', fontSize: '14px' }}>
+            ← Retour à À propos
+          </Link>
+          <h1 style={{ fontSize: '42px', fontWeight: 700, marginTop: '24px', marginBottom: '24px' }}>
             Notre Histoire
           </h1>
-          <p style={{ fontSize: '18px', opacity: 0.9, lineHeight: 1.7 }}>
-            Plus de 10 ans d'innovation et d'engagement au service de la formation professionnelle.
+          <p style={{ fontSize: '20px', lineHeight: 1.6, color: '#d1d5db' }}>
+            De l&apos;idée à la réalité: le parcours de BioCycle Peptides
           </p>
         </div>
-      </section>
+      </div>
 
       {/* Timeline */}
-      <section style={{ padding: '80px 24px' }}>
-        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-          {timeline.map((item, i) => (
-            <div
-              key={i}
-              style={{
-                display: 'flex',
-                gap: '24px',
-                marginBottom: i === timeline.length - 1 ? 0 : '48px',
-                position: 'relative',
-              }}
-            >
-              {/* Line */}
-              {i !== timeline.length - 1 && (
-                <div
-                  style={{
-                    position: 'absolute',
-                    left: '28px',
-                    top: '60px',
-                    width: '2px',
-                    height: 'calc(100% + 24px)',
-                    backgroundColor: 'var(--gray-200)',
-                  }}
-                />
-              )}
+      <div style={{ maxWidth: '800px', margin: '0 auto', padding: '64px 24px' }}>
+        <div style={{ position: 'relative' }}>
+          {/* Vertical line */}
+          <div style={{ 
+            position: 'absolute', 
+            left: '24px', 
+            top: '0', 
+            bottom: '0', 
+            width: '2px', 
+            backgroundColor: '#e5e7eb' 
+          }} />
 
-              {/* Icon */}
-              <div
-                style={{
-                  width: '56px',
-                  height: '56px',
-                  borderRadius: '50%',
-                  backgroundColor: 'white',
-                  border: '2px solid var(--gray-200)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '24px',
-                  flexShrink: 0,
-                  zIndex: 1,
-                }}
-              >
-                {item.icon}
+          {timeline.map((item, index) => (
+            <div key={index} style={{ 
+              position: 'relative', 
+              paddingLeft: '72px', 
+              paddingBottom: index === timeline.length - 1 ? '0' : '48px' 
+            }}>
+              {/* Dot */}
+              <div style={{ 
+                position: 'absolute', 
+                left: '12px', 
+                top: '4px',
+                width: '24px', 
+                height: '24px', 
+                borderRadius: '50%', 
+                backgroundColor: item.color,
+                border: '4px solid white',
+                boxShadow: '0 0 0 2px ' + item.color
+              }} />
+
+              {/* Year badge */}
+              <div style={{ 
+                display: 'inline-block',
+                padding: '4px 12px', 
+                backgroundColor: item.color, 
+                color: 'white', 
+                borderRadius: '16px',
+                fontSize: '14px',
+                fontWeight: 600,
+                marginBottom: '12px'
+              }}>
+                {item.year}
               </div>
 
-              {/* Content */}
-              <div style={{ backgroundColor: 'white', borderRadius: '12px', padding: '24px', flex: 1 }}>
-                <span
-                  style={{
-                    display: 'inline-block',
-                    padding: '4px 12px',
-                    backgroundColor: 'var(--gray-100)',
-                    borderRadius: '12px',
-                    fontSize: '13px',
-                    fontWeight: 600,
-                    color: 'var(--gray-500)',
-                    marginBottom: '12px',
-                  }}
-                >
-                  {item.year}
-                </span>
-                <h3 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '8px', color: 'var(--gray-500)' }}>
-                  {item.title}
-                </h3>
-                <p style={{ fontSize: '15px', color: 'var(--gray-400)', lineHeight: 1.7 }}>
-                  {item.description}
-                </p>
-              </div>
+              <h3 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '12px', color: '#1f2937' }}>
+                {item.title}
+              </h3>
+              <p style={{ fontSize: '15px', lineHeight: 1.7, color: '#6b7280' }}>
+                {item.description}
+              </p>
             </div>
           ))}
         </div>
-      </section>
 
-      {/* Quote */}
-      <section style={{ backgroundColor: 'white', padding: '64px 24px' }}>
-        <div style={{ maxWidth: '700px', margin: '0 auto', textAlign: 'center' }}>
-          <span style={{ fontSize: '48px', display: 'block', marginBottom: '24px' }}>"</span>
-          <blockquote style={{ fontSize: '20px', fontStyle: 'italic', color: 'var(--gray-500)', lineHeight: 1.7, marginBottom: '24px' }}>
-            Chaque personne mérite d'avoir accès aux outils et aux connaissances nécessaires pour 
-            réaliser son plein potentiel professionnel. C'est cette conviction qui nous guide depuis le premier jour.
-          </blockquote>
-          <p style={{ fontSize: '14px', color: 'var(--gray-400)' }}>
-            — <strong>Marie Dupont</strong>, Fondatrice & PDG
+        {/* Future */}
+        <div style={{ 
+          marginTop: '64px', 
+          padding: '32px', 
+          backgroundColor: '#f0fdf4', 
+          borderRadius: '16px',
+          border: '1px solid #86efac',
+          textAlign: 'center'
+        }}>
+          <h3 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '12px', color: '#166534' }}>
+            🚀 L&apos;avenir
+          </h3>
+          <p style={{ fontSize: '15px', lineHeight: 1.7, color: '#166534' }}>
+            Nous continuons d&apos;innover pour offrir les meilleurs produits et services à la communauté 
+            scientifique. Nouveaux peptides, nouvelles ressources éducatives, et toujours plus de 
+            qualité à chaque étape.
           </p>
         </div>
-      </section>
+      </div>
     </div>
   );
 }

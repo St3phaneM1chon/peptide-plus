@@ -1,13 +1,12 @@
+'use client';
+
 /**
  * PAGE SOLUTIONS - Principale
  */
 
 import Link from 'next/link';
 
-export const metadata = {
-  title: 'Solutions | Formations Pro',
-  description: 'Des solutions de formation adaptées à vos besoins: entreprises, particuliers ou partenaires.',
-};
+// metadata moved to layout for client components
 
 const solutions = [
   {

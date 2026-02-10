@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * PAGE CARRIÈRES
  * Liste des postes ouverts et culture d'entreprise
@@ -5,12 +7,9 @@
 
 import Link from 'next/link';
 
-export const metadata = {
-  title: 'Carrières | Formations Pro',
-  description: 'Rejoignez notre équipe! Découvrez nos offres d\'emploi et notre culture d\'entreprise.',
-};
+// metadata moved to layout for client components
 
-// Mock data - à remplacer par API
+// Static job listings - update manually or add a Job model to DB for dynamic management
 const openPositions = [
   {
     id: '1',

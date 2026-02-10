@@ -1,18 +1,17 @@
-/**
- * ADMIN - NOUVEAU PRODUIT
- */
+export const dynamic = 'force-dynamic';
 
 import { redirect } from 'next/navigation';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { UserRole } from '@/types';
-import ProductForm from '../ProductForm';
+import NewProductClient from './NewProductClient';
 
 export const metadata = {
   title: 'Nouveau produit | Admin',
+  description: 'Créer un nouveau produit avec ses formats.',
 };
 
-export default async function NewProductPage() {
+export default async function AdminNewProductPage() {
   const session = await auth();
 
   if (!session?.user) {
@@ -29,14 +28,8 @@ export default async function NewProductPage() {
   });
 
   return (
-    <div style={{ padding: '32px', maxWidth: '900px', margin: '0 auto' }}>
-      <h1 style={{ fontSize: '28px', fontWeight: 700, color: 'var(--gray-500)', marginBottom: '32px' }}>
-        Nouveau produit
-      </h1>
-      <ProductForm 
-        categories={JSON.parse(JSON.stringify(categories))} 
-        mode="create"
-      />
-    </div>
+    <NewProductClient 
+      categories={JSON.parse(JSON.stringify(categories))}
+    />
   );
 }

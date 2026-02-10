@@ -22,4 +22,7 @@ if (process.env.NODE_ENV !== 'production') {
   globalForPrisma.prisma = prisma;
 }
 
+// Alias for compatibility
+export const db = prisma;
+
 export default prisma;

@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * PAGE PROFIL UTILISATEUR
  * Paramètres du compte incluant la langue

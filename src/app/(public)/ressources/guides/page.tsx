@@ -1,8 +1,7 @@
+export const dynamic = 'force-dynamic';
 /**
  * PAGE GUIDES & RESSOURCES
  */
-
-import Link from 'next/link';
 
 export const metadata = {
   title: 'Guides | Formations Pro',

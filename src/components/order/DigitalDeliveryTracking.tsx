@@ -243,7 +243,7 @@ export function DigitalDeliveryTracking({ order }: DigitalDeliveryTrackingProps)
           </a>
 
           <Link
-            href={`/dashboard/customer/certificats`}
+            href={`/account/orders`}
             className="btn btn-secondary"
             style={{
               padding: '14px 20px',

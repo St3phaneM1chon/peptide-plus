@@ -1,570 +1,332 @@
-/**
- * CHAT WIDGET
- * Widget de chat flottant pour les clients/customers
- */
-
 'use client';
 
+/**
+ * Widget Chat Client - BioCycle Peptides
+ * Bulle de chat en bas à droite de l'écran
+ */
+
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useSession } from 'next-auth/react';
-import { useTranslation } from '@/i18n/client';
+import { usePathname } from 'next/navigation';
 
 interface Message {
   id: string;
   content: string;
-  senderId: string;
-  isSystem: boolean;
+  contentOriginal?: string;
+  sender: 'VISITOR' | 'ADMIN' | 'BOT';
+  senderName?: string;
   createdAt: string;
-  sender?: {
-    id: string;
-    name: string | null;
-    image: string | null;
-    role: string;
-  };
+  isFromBot: boolean;
 }
 
-interface Conversation {
-  id: string;
-  subject: string | null;
-  status: string;
-  messages: Message[];
+interface ChatSettings {
+  isAdminOnline: boolean;
+  chatbotEnabled: boolean;
+  widgetColor: string;
+  widgetPosition: string;
 }
 
-export function ChatWidget() {
-  const { data: session, status } = useSession();
-  const { t } = useTranslation();
+export default function ChatWidget() {
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
-  const [isMinimized, setIsMinimized] = useState(false);
-  const [conversation, setConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [newMessage, setNewMessage] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [sending, setSending] = useState(false);
+  const [inputValue, setInputValue] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [conversationId, setConversationId] = useState<string | null>(null);
+  const [visitorId, setVisitorId] = useState<string | null>(null);
+  const [settings, setSettings] = useState<ChatSettings | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
-  const pollingRef = useRef<NodeJS.Timeout | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  const isAuthenticated = status === 'authenticated';
+  // Obtenir ou créer le visitorId
+  useEffect(() => {
+    const stored = localStorage.getItem('biocycle_chat_visitor_id');
+    if (stored) {
+      setVisitorId(stored);
+    } else {
+      const newId = `visitor_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+      localStorage.setItem('biocycle_chat_visitor_id', newId);
+      setVisitorId(newId);
+    }
+  }, []);
 
-  // Charger la conversation existante ou en créer une
-  const loadConversation = useCallback(async () => {
-    if (!isAuthenticated) return;
+  // Charger les settings
+  useEffect(() => {
+    fetch('/api/chat/settings')
+      .then(res => res.json())
+      .then(data => setSettings(data))
+      .catch(console.error);
+  }, []);
 
-    setLoading(true);
+  // Initialiser la conversation quand on ouvre le chat
+  const initConversation = useCallback(async () => {
+    if (!visitorId) return;
+    
     try {
-      // Récupérer les conversations existantes
-      const res = await fetch('/api/chat/conversations?status=OPEN&limit=1');
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          visitorId,
+          visitorLanguage: navigator.language?.split('-')[0] || 'en',
+          currentPage: pathname,
+          userAgent: navigator.userAgent,
+        }),
+      });
+      
       const data = await res.json();
-
-      if (data.conversations?.length > 0) {
-        const conv = data.conversations[0];
-        setConversation(conv);
-        
-        // Charger les messages
-        const messagesRes = await fetch(`/api/chat/conversations/${conv.id}/messages`);
-        const messagesData = await messagesRes.json();
-        setMessages(messagesData.messages || []);
+      if (data.conversation) {
+        setConversationId(data.conversation.id);
+        setMessages(data.conversation.messages || []);
       }
     } catch (error) {
-      console.error('Error loading conversation:', error);
-    } finally {
-      setLoading(false);
+      console.error('Failed to init conversation:', error);
     }
-  }, [isAuthenticated]);
+  }, [visitorId, pathname]);
 
-  // Polling pour les nouveaux messages
-  const pollMessages = useCallback(async () => {
-    if (!conversation?.id || !isOpen) return;
-
-    try {
-      const lastMessageId = messages[messages.length - 1]?.id;
-      const url = lastMessageId
-        ? `/api/chat/conversations/${conversation.id}/messages?after=${lastMessageId}`
-        : `/api/chat/conversations/${conversation.id}/messages`;
-
-      const res = await fetch(url);
-      const data = await res.json();
-
-      if (data.messages?.length > 0) {
-        setMessages(prev => [...prev, ...data.messages]);
-        scrollToBottom();
-      }
-    } catch (error) {
-      console.error('Error polling messages:', error);
-    }
-  }, [conversation?.id, messages, isOpen]);
-
-  // Setup polling
   useEffect(() => {
-    if (isOpen && conversation?.id) {
-      pollingRef.current = setInterval(pollMessages, 3000);
+    if (isOpen && !conversationId) {
+      initConversation();
     }
+  }, [isOpen, conversationId, initConversation]);
 
-    return () => {
-      if (pollingRef.current) {
-        clearInterval(pollingRef.current);
-      }
-    };
-  }, [isOpen, conversation?.id, pollMessages]);
-
-  // Charger au premier ouverture
+  // Scroll to bottom on new messages
   useEffect(() => {
-    if (isOpen && !conversation && isAuthenticated) {
-      loadConversation();
-    }
-  }, [isOpen, conversation, isAuthenticated, loadConversation]);
-
-  // Scroll to bottom
-  const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
   }, [messages]);
 
-  // Envoyer un message
-  const sendMessage = async (e?: React.FormEvent) => {
-    e?.preventDefault();
-    if (!newMessage.trim() || sending) return;
+  // Focus input when opening
+  useEffect(() => {
+    if (isOpen) {
+      setTimeout(() => inputRef.current?.focus(), 100);
+    }
+  }, [isOpen]);
 
-    const messageContent = newMessage.trim();
-    setNewMessage('');
-    setSending(true);
+  // Reset unread count when opening
+  useEffect(() => {
+    if (isOpen) {
+      setUnreadCount(0);
+    }
+  }, [isOpen]);
+
+  // Polling for new messages (simple solution without WebSocket)
+  useEffect(() => {
+    if (!isOpen || !conversationId) return;
+
+    const pollMessages = async () => {
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ visitorId }),
+        });
+        const data = await res.json();
+        if (data.conversation?.messages) {
+          const newMessages = data.conversation.messages;
+          if (newMessages.length > messages.length) {
+            setMessages(newMessages);
+            if (!isOpen) {
+              setUnreadCount(prev => prev + (newMessages.length - messages.length));
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Polling error:', error);
+      }
+    };
+
+    const interval = setInterval(pollMessages, 5000); // Poll every 5 seconds
+    return () => clearInterval(interval);
+  }, [isOpen, conversationId, visitorId, messages.length]);
+
+  const sendMessage = async () => {
+    if (!inputValue.trim() || !conversationId || isLoading) return;
+
+    const messageContent = inputValue.trim();
+    setInputValue('');
+    setIsLoading(true);
+
+    // Optimistic update
+    const tempMessage: Message = {
+      id: `temp_${Date.now()}`,
+      content: messageContent,
+      sender: 'VISITOR',
+      createdAt: new Date().toISOString(),
+      isFromBot: false,
+    };
+    setMessages(prev => [...prev, tempMessage]);
 
     try {
-      let convId = conversation?.id;
+      const res = await fetch('/api/chat/message', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          conversationId,
+          content: messageContent,
+          sender: 'VISITOR',
+          visitorId,
+        }),
+      });
 
-      // Créer une nouvelle conversation si nécessaire
-      if (!convId) {
-        const res = await fetch('/api/chat/conversations', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            subject: 'Support',
-            message: messageContent,
-          }),
-        });
-        const data = await res.json();
-        
-        if (data.conversation) {
-          setConversation(data.conversation);
-          setMessages(data.conversation.messages || []);
-          convId = data.conversation.id;
+      const data = await res.json();
+      
+      // Replace temp message with real one
+      setMessages(prev => {
+        const filtered = prev.filter(m => m.id !== tempMessage.id);
+        const newMessages = [...filtered, data.message];
+        if (data.botMessage) {
+          newMessages.push(data.botMessage);
         }
-      } else {
-        // Envoyer dans la conversation existante
-        const res = await fetch(`/api/chat/conversations/${convId}/messages`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ content: messageContent }),
-        });
-        const data = await res.json();
-        
-        if (data.message) {
-          setMessages(prev => [...prev, data.message]);
-        }
-      }
+        return newMessages;
+      });
     } catch (error) {
-      console.error('Error sending message:', error);
-      setNewMessage(messageContent); // Restaurer le message
+      console.error('Send message error:', error);
+      // Remove temp message on error
+      setMessages(prev => prev.filter(m => m.id !== tempMessage.id));
     } finally {
-      setSending(false);
-      inputRef.current?.focus();
+      setIsLoading(false);
     }
   };
 
-  // Handle keyboard
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
     }
   };
 
-  // Ne pas afficher pour les admins
-  if (session?.user?.role === 'EMPLOYEE' || session?.user?.role === 'OWNER') {
+  const widgetColor = settings?.widgetColor || '#f97316';
+
+  // Ne pas afficher sur les pages admin
+  if (pathname?.startsWith('/admin')) {
     return null;
   }
 
   return (
     <>
-      {/* Bouton flottant */}
+      {/* Chat Button */}
       <button
-        onClick={() => setIsOpen(true)}
-        className="chat-widget-button"
-        aria-label="Ouvrir le chat"
-        style={{
-          display: isOpen ? 'none' : 'flex',
-          position: 'fixed',
-          bottom: '24px',
-          right: '24px',
-          width: '60px',
-          height: '60px',
-          borderRadius: '50%',
-          backgroundColor: 'var(--gray-500)',
-          color: 'white',
-          border: 'none',
-          cursor: 'pointer',
-          alignItems: 'center',
-          justifyContent: 'center',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-          zIndex: 9999,
-          transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.transform = 'scale(1.05)';
-          e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,0,0,0.2)';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.transform = 'scale(1)';
-          e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
-        }}
+        onClick={() => setIsOpen(!isOpen)}
+        className="fixed bottom-6 right-6 w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-110 z-50"
+        style={{ backgroundColor: widgetColor }}
+        aria-label="Open chat"
       >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          strokeWidth={1.5}
-          stroke="currentColor"
-          width="28"
-          height="28"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 0 .978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z"
-          />
-        </svg>
-        {unreadCount > 0 && (
-          <span
-            style={{
-              position: 'absolute',
-              top: '-4px',
-              right: '-4px',
-              backgroundColor: '#f44336',
-              color: 'white',
-              fontSize: '12px',
-              fontWeight: 600,
-              width: '22px',
-              height: '22px',
-              borderRadius: '50%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            {unreadCount}
-          </span>
+        {isOpen ? (
+          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        ) : (
+          <>
+            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                {unreadCount}
+              </span>
+            )}
+          </>
         )}
       </button>
 
-      {/* Fenêtre de chat */}
+      {/* Chat Window */}
       {isOpen && (
-        <div
-          className="chat-widget-window"
-          style={{
-            position: 'fixed',
-            bottom: '24px',
-            right: '24px',
-            width: '380px',
-            maxWidth: 'calc(100vw - 48px)',
-            height: isMinimized ? 'auto' : '500px',
-            maxHeight: 'calc(100vh - 100px)',
-            backgroundColor: 'white',
-            borderRadius: '16px',
-            boxShadow: '0 8px 30px rgba(0,0,0,0.12)',
-            display: 'flex',
-            flexDirection: 'column',
-            overflow: 'hidden',
-            zIndex: 10000,
-          }}
-        >
+        <div className="fixed bottom-24 right-6 w-[380px] max-w-[calc(100vw-48px)] bg-white rounded-2xl shadow-2xl overflow-hidden z-50 flex flex-col" style={{ height: '500px', maxHeight: 'calc(100vh - 140px)' }}>
           {/* Header */}
-          <div
-            style={{
-              padding: '16px 20px',
-              backgroundColor: 'var(--gray-500)',
-              color: 'white',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div
-                style={{
-                  width: '10px',
-                  height: '10px',
-                  backgroundColor: '#4CAF50',
-                  borderRadius: '50%',
-                }}
-              />
-              <div>
-                <h3 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '2px' }}>
-                  Support
-                </h3>
-                <p style={{ fontSize: '12px', opacity: 0.8 }}>
-                  {t('footer.help')}
-                </p>
-              </div>
+          <div className="px-4 py-3 text-white flex items-center gap-3" style={{ backgroundColor: widgetColor }}>
+            <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+              <span className="text-xl">🔬</span>
             </div>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <button
-                onClick={() => setIsMinimized(!isMinimized)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: 'white',
-                  cursor: 'pointer',
-                  padding: '4px',
-                  opacity: 0.8,
-                }}
-                aria-label={isMinimized ? 'Agrandir' : 'Réduire'}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={2}
-                  stroke="currentColor"
-                  width="18"
-                  height="18"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d={isMinimized ? 'M4.5 15.75l7.5-7.5 7.5 7.5' : 'M19.5 8.25l-7.5 7.5-7.5-7.5'}
-                  />
-                </svg>
-              </button>
-              <button
-                onClick={() => setIsOpen(false)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: 'white',
-                  cursor: 'pointer',
-                  padding: '4px',
-                  opacity: 0.8,
-                }}
-                aria-label="Fermer"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={2}
-                  stroke="currentColor"
-                  width="18"
-                  height="18"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+            <div className="flex-1">
+              <h3 className="font-semibold">BioCycle Peptides</h3>
+              <p className="text-xs opacity-80">
+                {settings?.isAdminOnline ? '🟢 Online' : '🤖 AI Assistant'}
+              </p>
             </div>
+            <button
+              onClick={() => setIsOpen(false)}
+              className="p-1 hover:bg-white/20 rounded transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
 
-          {/* Body */}
-          {!isMinimized && (
-            <>
-              {/* Messages */}
+          {/* Messages */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
+            {messages.map((message) => (
               <div
-                style={{
-                  flex: 1,
-                  overflowY: 'auto',
-                  padding: '16px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '12px',
-                  backgroundColor: '#f9f9f9',
-                }}
+                key={message.id}
+                className={`flex ${message.sender === 'VISITOR' ? 'justify-end' : 'justify-start'}`}
               >
-                {!isAuthenticated ? (
-                  <div style={{ textAlign: 'center', padding: '40px 20px' }}>
-                    <p style={{ color: 'var(--gray-400)', marginBottom: '16px' }}>
-                      {t('auth.signIn')} pour commencer une conversation
-                    </p>
-                    <a
-                      href="/auth/signin"
-                      className="btn btn-primary"
-                      style={{ display: 'inline-block', padding: '10px 24px' }}
-                    >
-                      {t('auth.signIn')}
-                    </a>
-                  </div>
-                ) : loading ? (
-                  <div style={{ textAlign: 'center', padding: '40px' }}>
-                    <p style={{ color: 'var(--gray-400)' }}>{t('common.loading')}</p>
-                  </div>
-                ) : messages.length === 0 ? (
-                  <div style={{ textAlign: 'center', padding: '40px 20px' }}>
-                    <p
-                      style={{
-                        fontSize: '32px',
-                        marginBottom: '12px',
-                      }}
-                    >
-                      👋
-                    </p>
-                    <p style={{ color: 'var(--gray-500)', fontWeight: 500, marginBottom: '8px' }}>
-                      Comment pouvons-nous vous aider?
-                    </p>
-                    <p style={{ color: 'var(--gray-400)', fontSize: '13px' }}>
-                      Envoyez-nous un message et nous vous répondrons rapidement.
-                    </p>
-                  </div>
-                ) : (
-                  messages.map((msg) => (
-                    <MessageBubble
-                      key={msg.id}
-                      message={msg}
-                      isOwn={msg.senderId === session?.user?.id}
-                    />
-                  ))
-                )}
-                <div ref={messagesEndRef} />
-              </div>
-
-              {/* Input */}
-              {isAuthenticated && (
-                <form
-                  onSubmit={sendMessage}
-                  style={{
-                    padding: '12px 16px',
-                    borderTop: '1px solid var(--gray-200)',
-                    backgroundColor: 'white',
-                  }}
+                <div
+                  className={`max-w-[80%] rounded-2xl px-4 py-2 ${
+                    message.sender === 'VISITOR'
+                      ? 'bg-orange-500 text-white rounded-br-md'
+                      : message.sender === 'BOT'
+                      ? 'bg-white border border-gray-200 text-gray-800 rounded-bl-md'
+                      : 'bg-blue-500 text-white rounded-bl-md'
+                  }`}
                 >
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <textarea
-                      ref={inputRef}
-                      value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
-                      onKeyDown={handleKeyDown}
-                      placeholder="Écrivez votre message..."
-                      rows={1}
-                      style={{
-                        flex: 1,
-                        padding: '10px 14px',
-                        border: '1px solid var(--gray-200)',
-                        borderRadius: '20px',
-                        resize: 'none',
-                        fontSize: '14px',
-                        outline: 'none',
-                        maxHeight: '100px',
-                      }}
-                    />
-                    <button
-                      type="submit"
-                      disabled={!newMessage.trim() || sending}
-                      style={{
-                        padding: '10px',
-                        backgroundColor: 'var(--gray-500)',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '50%',
-                        cursor: newMessage.trim() && !sending ? 'pointer' : 'not-allowed',
-                        opacity: newMessage.trim() && !sending ? 1 : 0.5,
-                        width: '40px',
-                        height: '40px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth={2}
-                        stroke="currentColor"
-                        width="18"
-                        height="18"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5"
-                        />
-                      </svg>
-                    </button>
+                  {message.sender !== 'VISITOR' && (
+                    <p className="text-xs opacity-70 mb-1">
+                      {message.senderName || (message.sender === 'BOT' ? '🤖 Assistant' : '👤 Support')}
+                    </p>
+                  )}
+                  <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                  <p className={`text-xs mt-1 ${message.sender === 'VISITOR' ? 'text-white/70' : 'text-gray-400'}`}>
+                    {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                </div>
+              </div>
+            ))}
+            
+            {isLoading && (
+              <div className="flex justify-start">
+                <div className="bg-white border border-gray-200 rounded-2xl rounded-bl-md px-4 py-3">
+                  <div className="flex gap-1">
+                    <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                    <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                    <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
                   </div>
-                </form>
-              )}
-            </>
-          )}
+                </div>
+              </div>
+            )}
+            
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Input */}
+          <div className="p-4 border-t bg-white">
+            <div className="flex gap-2">
+              <input
+                ref={inputRef}
+                type="text"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="Type your message..."
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:border-orange-500 text-sm"
+                disabled={isLoading}
+              />
+              <button
+                onClick={sendMessage}
+                disabled={!inputValue.trim() || isLoading}
+                className="w-10 h-10 rounded-full flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ backgroundColor: widgetColor }}
+              >
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                </svg>
+              </button>
+            </div>
+            <p className="text-xs text-gray-400 text-center mt-2">
+              Powered by BioCycle Peptides
+            </p>
+          </div>
         </div>
       )}
     </>
   );
 }
-
-function MessageBubble({ message, isOwn }: { message: Message; isOwn: boolean }) {
-  if (message.isSystem) {
-    return (
-      <div
-        style={{
-          textAlign: 'center',
-          fontSize: '12px',
-          color: 'var(--gray-400)',
-          padding: '8px',
-        }}
-      >
-        {message.content}
-      </div>
-    );
-  }
-
-  return (
-    <div
-      style={{
-        display: 'flex',
-        justifyContent: isOwn ? 'flex-end' : 'flex-start',
-      }}
-    >
-      <div
-        style={{
-          maxWidth: '80%',
-          padding: '10px 14px',
-          borderRadius: isOwn ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
-          backgroundColor: isOwn ? 'var(--gray-500)' : 'white',
-          color: isOwn ? 'white' : 'var(--gray-500)',
-          fontSize: '14px',
-          lineHeight: 1.4,
-          boxShadow: isOwn ? 'none' : '0 1px 2px rgba(0,0,0,0.1)',
-        }}
-      >
-        {!isOwn && message.sender?.name && (
-          <p
-            style={{
-              fontSize: '11px',
-              fontWeight: 600,
-              marginBottom: '4px',
-              color: 'var(--gray-400)',
-            }}
-          >
-            {message.sender.name}
-          </p>
-        )}
-        <p style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{message.content}</p>
-        <p
-          style={{
-            fontSize: '10px',
-            marginTop: '4px',
-            opacity: 0.7,
-            textAlign: 'right',
-          }}
-        >
-          {new Date(message.createdAt).toLocaleTimeString([], {
-            hour: '2-digit',
-            minute: '2-digit',
-          })}
-        </p>
-      </div>
-    </div>
-  );
-}
-
-export default ChatWidget;

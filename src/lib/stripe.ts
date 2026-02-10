@@ -73,7 +73,7 @@ interface CreatePaymentIntentParams {
   customerId: string;
   productId: string;
   metadata?: Record<string, string>;
-  paymentMethodTypes?: Stripe.PaymentIntentCreateParams.PaymentMethodType[];
+  paymentMethodTypes?: string[];
 }
 
 /**

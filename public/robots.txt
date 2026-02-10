@@ -1,0 +1,19 @@
+# BioCycle Peptides - robots.txt
+User-agent: *
+Allow: /
+
+# Disallow admin and private areas
+Disallow: /admin/
+Disallow: /owner/
+Disallow: /dashboard/
+Disallow: /api/
+Disallow: /auth/
+
+# Allow specific API endpoints for structured data
+Allow: /api/products
+
+# Sitemap
+Sitemap: https://biocyclepeptides.com/sitemap.xml
+
+# Crawl delay
+Crawl-delay: 1

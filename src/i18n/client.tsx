@@ -34,7 +34,7 @@ interface I18nProviderProps {
 export function I18nProvider({ children, locale: initialLocale, messages }: I18nProviderProps) {
   const [locale, setLocaleState] = useState<Locale>(initialLocale);
   const router = useRouter();
-  const pathname = usePathname();
+  usePathname(); // For router updates
 
   // Charger la locale sauvegardée
   useEffect(() => {
@@ -53,8 +53,11 @@ export function I18nProvider({ children, locale: initialLocale, messages }: I18n
   const setLocale = useCallback(async (newLocale: Locale) => {
     if (!locales.includes(newLocale)) return;
 
-    // Sauvegarder la préférence
+    // Sauvegarder la préférence dans localStorage
     localStorage.setItem('locale', newLocale);
+    
+    // Sauvegarder dans un cookie pour que le serveur le détecte
+    document.cookie = `locale=${newLocale};path=/;max-age=31536000;SameSite=Lax`;
 
     // Mettre à jour en base de données si connecté
     try {
@@ -69,9 +72,9 @@ export function I18nProvider({ children, locale: initialLocale, messages }: I18n
 
     setLocaleState(newLocale);
 
-    // Recharger la page avec la nouvelle locale
-    router.refresh();
-  }, [router]);
+    // Forcer un rechargement complet pour que le serveur utilise la nouvelle locale
+    window.location.reload();
+  }, []);
 
   // Fonction de traduction
   const t = useCallback((key: string, params?: Record<string, string | number>): string => {

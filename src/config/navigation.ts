@@ -193,10 +193,10 @@ export const socialLinks = [
 export const dashboardNavigation: Record<string, NavItem[]> = {
   CUSTOMER: [
     { key: 'dashboard', href: '/dashboard/customer' },
-    { key: 'myCourses', href: '/dashboard/customer/formations' },
-    { key: 'myPurchases', href: '/dashboard/customer/achats' },
-    { key: 'myCertificates', href: '/dashboard/customer/certificats' },
-    { key: 'profile', href: '/dashboard/customer/profile' },
+    { key: 'myOrders', href: '/account/orders' },
+    { key: 'myRewards', href: '/rewards' },
+    { key: 'profile', href: '/account/profile' },
+    { key: 'shop', href: '/shop' },
   ],
   CLIENT: [
     { key: 'dashboard', href: '/dashboard/client' },

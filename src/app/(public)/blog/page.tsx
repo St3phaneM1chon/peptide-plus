@@ -1,13 +1,12 @@
+'use client';
+
 /**
  * PAGE BLOG
  */
 
 import Link from 'next/link';
 
-export const metadata = {
-  title: 'Blog | Formations Pro',
-  description: 'Articles, conseils et tendances sur la formation professionnelle.',
-};
+// metadata moved to layout or head for client components
 
 const featuredPost = {
   slug: 'tendances-formation-2026',

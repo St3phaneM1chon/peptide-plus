@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * PAGE ACCESSIBILITÉ
  */
@@ -66,8 +67,8 @@ export default function AccessibilityPage() {
               <p>
                 Si vous rencontrez des difficultés d'accessibilité sur notre site,
                 n'hésitez pas à nous contacter à{' '}
-                <a href="mailto:accessibilite@peptideplus.com" className="text-blue-600 hover:underline">
-                  accessibilite@peptideplus.com
+                <a href="mailto:support@biocyclepeptides.com" className="text-blue-600 hover:underline">
+                  support@biocyclepeptides.com
                 </a>
               </p>
             </div>

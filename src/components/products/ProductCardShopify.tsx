@@ -6,6 +6,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useCart } from '@/components/cart/CartDrawer';
 
 interface Product {
@@ -37,6 +38,7 @@ export function ProductCardShopify({ product }: ProductCardShopifyProps) {
     e.stopPropagation();
     
     addItem({
+      id: product.id,
       productId: product.id,
       name: product.name,
       price: product.price,
@@ -50,7 +52,7 @@ export function ProductCardShopify({ product }: ProductCardShopifyProps) {
       {/* Image Container */}
       <Link href={`/cours/${product.slug}`} className="product-card__image">
         {product.imageUrl ? (
-          <img src={product.imageUrl} alt={product.name} loading="lazy" />
+          <Image src={product.imageUrl} alt={product.name} fill className="object-cover" sizes="(max-width: 768px) 100vw, 300px" />
         ) : (
           <div
             style={{

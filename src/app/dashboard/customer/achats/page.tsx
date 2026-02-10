@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * PAGE MES ACHATS (CUSTOMER)
  * Historique des achats avec reçus téléchargeables

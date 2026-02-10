@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * ADMIN - LISTE DES PRODUITS
  * Gestion complète pour Employee et Owner
@@ -25,11 +26,22 @@ export default async function AdminProductsPage() {
     redirect('/dashboard');
   }
 
-  // Récupérer les produits avec catégories
+  // Récupérer les produits avec catégories et formats
   const products = await prisma.product.findMany({
     include: {
       category: {
         select: { id: true, name: true, slug: true },
+      },
+      formats: {
+        select: {
+          id: true,
+          name: true,
+          price: true,
+          stockQuantity: true,
+          availability: true,
+          isActive: true,
+        },
+        orderBy: { sortOrder: 'asc' },
       },
     },
     orderBy: { createdAt: 'desc' },
@@ -41,13 +53,13 @@ export default async function AdminProductsPage() {
     orderBy: { sortOrder: 'asc' },
   });
 
-  // Stats
+  // Stats - BioCycle product types
   const stats = {
     total: products.length,
     active: products.filter(p => p.isActive).length,
-    digital: products.filter(p => p.productType === 'DIGITAL').length,
-    physical: products.filter(p => p.productType === 'PHYSICAL').length,
-    hybrid: products.filter(p => p.productType === 'HYBRID').length,
+    peptides: products.filter(p => p.productType === 'PEPTIDE').length,
+    supplements: products.filter(p => p.productType === 'SUPPLEMENT').length,
+    accessories: products.filter(p => p.productType === 'ACCESSORY').length,
     featured: products.filter(p => p.isFeatured).length,
   };
 

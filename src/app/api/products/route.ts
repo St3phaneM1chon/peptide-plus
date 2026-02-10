@@ -103,14 +103,6 @@ export async function POST(request: NextRequest) {
       dataSheetName,
       // Catégorie
       categoryId,
-      // Formation
-      duration,
-      level,
-      language,
-      instructor,
-      prerequisites,
-      objectives,
-      targetAudience,
       // Physique
       weight,
       dimensions,
@@ -175,14 +167,6 @@ export async function POST(request: NextRequest) {
         dataSheetName,
         // Catégorie
         categoryId,
-        // Formation
-        duration,
-        level,
-        language: language || 'fr',
-        instructor,
-        prerequisites,
-        objectives,
-        targetAudience,
         // Physique
         weight,
         dimensions,

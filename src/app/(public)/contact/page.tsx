@@ -1,15 +1,15 @@
 /**
- * PAGE CONTACT
- * Formulaire de contact et informations
+ * PAGE CONTACT - BioCycle Peptides
+ * Formulaire de contact fonctionnel
  */
 
 'use client';
+export const dynamic = 'force-dynamic';
 
 import { useState } from 'react';
-import { useTranslation } from '@/i18n/client';
+import Link from 'next/link';
 
 export default function ContactPage() {
-  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -20,34 +20,49 @@ export default function ContactPage() {
   });
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSending(true);
+    setError('');
     
-    // Simuler l'envoi
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    setSending(false);
-    setSent(true);
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+      
+      if (res.ok) {
+        setSent(true);
+      } else {
+        const data = await res.json();
+        setError(data.error || 'Une erreur est survenue');
+      }
+    } catch {
+      setError('Erreur de connexion. Veuillez réessayer.');
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
-    <div style={{ backgroundColor: 'var(--gray-100)', minHeight: '100vh' }}>
+    <div style={{ backgroundColor: '#f9fafb', minHeight: '100vh' }}>
       {/* Hero */}
       <section
         style={{
-          backgroundColor: 'var(--gray-500)',
+          background: 'linear-gradient(135deg, #1f2937 0%, #111827 100%)',
           color: 'white',
           padding: '64px 24px',
           textAlign: 'center',
         }}
       >
         <h1 style={{ fontSize: '36px', fontWeight: 700, marginBottom: '16px' }}>
-          {t('nav.contact')}
+          Contactez-nous
         </h1>
-        <p style={{ fontSize: '18px', opacity: 0.9 }}>
-          Une question? Nous sommes là pour vous aider.
+        <p style={{ fontSize: '18px', color: '#d1d5db' }}>
+          Une question sur nos produits? Notre équipe est là pour vous aider.
         </p>
       </section>
 
@@ -61,17 +76,17 @@ export default function ContactPage() {
         >
           {/* Contact Info */}
           <div>
-            <h2 style={{ fontSize: '24px', fontWeight: 600, marginBottom: '24px', color: 'var(--gray-500)' }}>
+            <h2 style={{ fontSize: '24px', fontWeight: 600, marginBottom: '24px', color: '#1f2937' }}>
               Nos coordonnées
             </h2>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               <ContactCard
                 icon="📍"
-                title="Adresse"
+                title="Siège social"
                 lines={[
-                  process.env.NEXT_PUBLIC_ADDRESS || '123 Rue Principale',
-                  process.env.NEXT_PUBLIC_CITY || 'Montréal, QC H2X 1Y6',
+                  'BioCycle Peptides Inc.',
+                  'Montréal, Québec',
                   'Canada',
                 ]}
               />
@@ -79,33 +94,50 @@ export default function ContactPage() {
                 icon="📞"
                 title="Téléphone"
                 lines={[
-                  process.env.NEXT_PUBLIC_PHONE || '1-800-XXX-XXXX',
                   'Lun-Ven: 9h-17h EST',
+                  'Service en français et anglais',
                 ]}
               />
               <ContactCard
                 icon="✉️"
                 title="Courriel"
                 lines={[
-                  process.env.NEXT_PUBLIC_EMAIL || 'info@example.com',
+                  'support@biocyclepeptides.com',
+                  'info@biocyclepeptides.com',
                   'Réponse sous 24h',
                 ]}
+                isEmail
               />
             </div>
 
-            {/* Map placeholder */}
-            <div
-              style={{
-                marginTop: '32px',
-                backgroundColor: 'var(--gray-200)',
-                borderRadius: '12px',
-                aspectRatio: '16/9',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <span style={{ color: 'var(--gray-400)' }}>🗺️ Carte Google Maps</span>
+            {/* Quick Links */}
+            <div style={{ marginTop: '32px', padding: '24px', backgroundColor: 'white', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
+              <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '16px', color: '#1f2937' }}>
+                Liens rapides
+              </h3>
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                <QuickLink href="/faq" icon="❓" text="FAQ - Questions fréquentes" />
+                <QuickLink href="/track-order" icon="📦" text="Suivre ma commande" />
+                <QuickLink href="/shipping-policy" icon="🚚" text="Politique de livraison" />
+                <QuickLink href="/refund-policy" icon="↩️" text="Retours et remboursements" />
+                <QuickLink href="/lab-results" icon="🔬" text="Résultats de laboratoire" />
+              </ul>
+            </div>
+
+            {/* Business Hours */}
+            <div style={{ marginTop: '24px', padding: '24px', backgroundColor: '#f0fdf4', borderRadius: '12px', border: '1px solid #86efac' }}>
+              <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '12px', color: '#166534' }}>
+                🕐 Heures d&apos;ouverture
+              </h3>
+              <p style={{ fontSize: '14px', color: '#166534', marginBottom: '4px' }}>
+                <strong>Lundi - Vendredi:</strong> 9h00 - 17h00 (EST)
+              </p>
+              <p style={{ fontSize: '14px', color: '#166534', marginBottom: '4px' }}>
+                <strong>Samedi - Dimanche:</strong> Fermé
+              </p>
+              <p style={{ fontSize: '13px', color: '#15803d', marginTop: '12px' }}>
+                Les commandes en ligne sont acceptées 24h/24
+              </p>
             </div>
           </div>
 
@@ -115,120 +147,226 @@ export default function ContactPage() {
               backgroundColor: 'white',
               borderRadius: '16px',
               padding: '32px',
-              border: '1px solid var(--gray-200)',
+              border: '1px solid #e5e7eb',
             }}
           >
             {sent ? (
               <div style={{ textAlign: 'center', padding: '48px 0' }}>
-                <span style={{ fontSize: '64px', display: 'block', marginBottom: '24px' }}>✅</span>
-                <h3 style={{ fontSize: '24px', fontWeight: 600, marginBottom: '12px', color: 'var(--gray-500)' }}>
+                <div style={{ 
+                  width: '80px', 
+                  height: '80px', 
+                  backgroundColor: '#d1fae5', 
+                  borderRadius: '50%', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center',
+                  margin: '0 auto 24px'
+                }}>
+                  <span style={{ fontSize: '40px' }}>✅</span>
+                </div>
+                <h3 style={{ fontSize: '24px', fontWeight: 600, marginBottom: '12px', color: '#1f2937' }}>
                   Message envoyé!
                 </h3>
-                <p style={{ color: 'var(--gray-400)' }}>
-                  Nous vous répondrons dans les plus brefs délais.
+                <p style={{ color: '#6b7280', marginBottom: '8px' }}>
+                  Merci de nous avoir contactés.
+                </p>
+                <p style={{ color: '#6b7280', fontSize: '14px' }}>
+                  Nous vous répondrons dans les plus brefs délais (généralement sous 24h).
                 </p>
                 <button
                   onClick={() => { setSent(false); setFormData({ name: '', email: '', company: '', phone: '', subject: '', message: '' }); }}
-                  className="btn btn-secondary"
-                  style={{ marginTop: '24px' }}
+                  style={{ 
+                    marginTop: '24px',
+                    padding: '12px 24px',
+                    backgroundColor: '#f3f4f6',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontWeight: 500
+                  }}
                 >
                   Envoyer un autre message
                 </button>
               </div>
             ) : (
               <>
-                <h2 style={{ fontSize: '24px', fontWeight: 600, marginBottom: '24px', color: 'var(--gray-500)' }}>
+                <h2 style={{ fontSize: '24px', fontWeight: 600, marginBottom: '8px', color: '#1f2937' }}>
                   Envoyez-nous un message
                 </h2>
+                <p style={{ color: '#6b7280', fontSize: '14px', marginBottom: '24px' }}>
+                  Remplissez le formulaire et notre équipe vous répondra rapidement.
+                </p>
+
+                {error && (
+                  <div style={{ 
+                    padding: '12px 16px', 
+                    backgroundColor: '#fef2f2', 
+                    border: '1px solid #fecaca',
+                    borderRadius: '8px',
+                    marginBottom: '20px',
+                    color: '#dc2626',
+                    fontSize: '14px'
+                  }}>
+                    {error}
+                  </div>
+                )}
 
                 <form onSubmit={handleSubmit}>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
                     <div>
-                      <label className="form-label">{t('profile.fullName')} *</label>
+                      <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: '#374151' }}>
+                        Nom complet *
+                      </label>
                       <input
                         type="text"
                         required
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        className="form-input"
                         placeholder="Jean Dupont"
+                        style={{ 
+                          width: '100%', 
+                          padding: '12px', 
+                          border: '1px solid #d1d5db', 
+                          borderRadius: '8px',
+                          fontSize: '14px'
+                        }}
                       />
                     </div>
                     <div>
-                      <label className="form-label">{t('auth.email')} *</label>
+                      <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: '#374151' }}>
+                        Courriel *
+                      </label>
                       <input
                         type="email"
                         required
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        className="form-input"
                         placeholder="jean@example.com"
+                        style={{ 
+                          width: '100%', 
+                          padding: '12px', 
+                          border: '1px solid #d1d5db', 
+                          borderRadius: '8px',
+                          fontSize: '14px'
+                        }}
                       />
                     </div>
                   </div>
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
                     <div>
-                      <label className="form-label">Entreprise</label>
+                      <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: '#374151' }}>
+                        Institution / Laboratoire
+                      </label>
                       <input
                         type="text"
                         value={formData.company}
                         onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-                        className="form-input"
-                        placeholder="Acme Inc."
+                        placeholder="Université McGill"
+                        style={{ 
+                          width: '100%', 
+                          padding: '12px', 
+                          border: '1px solid #d1d5db', 
+                          borderRadius: '8px',
+                          fontSize: '14px'
+                        }}
                       />
                     </div>
                     <div>
-                      <label className="form-label">{t('profile.phone')}</label>
+                      <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: '#374151' }}>
+                        Téléphone
+                      </label>
                       <input
                         type="tel"
                         value={formData.phone}
                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        className="form-input"
                         placeholder="(514) 555-0123"
+                        style={{ 
+                          width: '100%', 
+                          padding: '12px', 
+                          border: '1px solid #d1d5db', 
+                          borderRadius: '8px',
+                          fontSize: '14px'
+                        }}
                       />
                     </div>
                   </div>
 
                   <div style={{ marginBottom: '16px' }}>
-                    <label className="form-label">Sujet *</label>
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: '#374151' }}>
+                      Sujet *
+                    </label>
                     <select
                       required
                       value={formData.subject}
                       onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                      className="form-input form-select"
+                      style={{ 
+                        width: '100%', 
+                        padding: '12px', 
+                        border: '1px solid #d1d5db', 
+                        borderRadius: '8px',
+                        fontSize: '14px',
+                        backgroundColor: 'white'
+                      }}
                     >
                       <option value="">Sélectionnez un sujet</option>
-                      <option value="general">Question générale</option>
-                      <option value="sales">Demande de devis</option>
-                      <option value="support">Support technique</option>
+                      <option value="product">Question sur un produit</option>
+                      <option value="order">Question sur une commande</option>
+                      <option value="shipping">Livraison et expédition</option>
+                      <option value="bulk">Commande en gros</option>
+                      <option value="coa">Certificat d&apos;analyse (COA)</option>
+                      <option value="technical">Support technique</option>
                       <option value="partnership">Partenariat</option>
-                      <option value="careers">Carrières</option>
                       <option value="other">Autre</option>
                     </select>
                   </div>
 
                   <div style={{ marginBottom: '24px' }}>
-                    <label className="form-label">Message *</label>
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: '#374151' }}>
+                      Message *
+                    </label>
                     <textarea
                       required
                       rows={5}
                       value={formData.message}
                       onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                      className="form-input"
-                      placeholder="Comment pouvons-nous vous aider?"
-                      style={{ resize: 'vertical' }}
+                      placeholder="Décrivez votre question ou demande en détail..."
+                      style={{ 
+                        width: '100%', 
+                        padding: '12px', 
+                        border: '1px solid #d1d5db', 
+                        borderRadius: '8px',
+                        fontSize: '14px',
+                        resize: 'vertical'
+                      }}
                     />
                   </div>
 
                   <button
                     type="submit"
                     disabled={sending}
-                    className="btn btn-primary"
-                    style={{ width: '100%', padding: '14px', opacity: sending ? 0.7 : 1 }}
+                    style={{ 
+                      width: '100%', 
+                      padding: '14px', 
+                      backgroundColor: '#f97316',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '8px',
+                      fontWeight: 600,
+                      fontSize: '16px',
+                      cursor: sending ? 'not-allowed' : 'pointer',
+                      opacity: sending ? 0.7 : 1
+                    }}
                   >
-                    {sending ? t('common.loading') : t('common.submit')}
+                    {sending ? 'Envoi en cours...' : 'Envoyer le message'}
                   </button>
+
+                  <p style={{ fontSize: '12px', color: '#9ca3af', marginTop: '16px', textAlign: 'center' }}>
+                    En soumettant ce formulaire, vous acceptez notre{' '}
+                    <Link href="/mentions-legales/confidentialite" style={{ color: '#f97316' }}>
+                      politique de confidentialité
+                    </Link>.
+                  </p>
                 </form>
               </>
             )}
@@ -239,7 +377,7 @@ export default function ContactPage() {
   );
 }
 
-function ContactCard({ icon, title, lines }: { icon: string; title: string; lines: string[] }) {
+function ContactCard({ icon, title, lines, isEmail }: { icon: string; title: string; lines: string[]; isEmail?: boolean }) {
   return (
     <div
       style={{
@@ -248,20 +386,47 @@ function ContactCard({ icon, title, lines }: { icon: string; title: string; line
         padding: '20px',
         backgroundColor: 'white',
         borderRadius: '12px',
-        border: '1px solid var(--gray-200)',
+        border: '1px solid #e5e7eb',
       }}
     >
       <span style={{ fontSize: '24px' }}>{icon}</span>
       <div>
-        <h3 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '8px', color: 'var(--gray-500)' }}>
+        <h3 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '8px', color: '#1f2937' }}>
           {title}
         </h3>
         {lines.map((line, i) => (
-          <p key={i} style={{ fontSize: '14px', color: 'var(--gray-400)', marginBottom: '2px' }}>
-            {line}
+          <p key={i} style={{ fontSize: '14px', color: '#6b7280', marginBottom: '4px' }}>
+            {isEmail && line.includes('@') ? (
+              <a href={`mailto:${line}`} style={{ color: '#f97316' }}>{line}</a>
+            ) : (
+              line
+            )}
           </p>
         ))}
       </div>
     </div>
+  );
+}
+
+function QuickLink({ href, icon, text }: { href: string; icon: string; text: string }) {
+  return (
+    <li style={{ marginBottom: '8px' }}>
+      <Link 
+        href={href} 
+        style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: '8px', 
+          color: '#4b5563', 
+          textDecoration: 'none',
+          fontSize: '14px',
+          padding: '8px 0',
+          borderBottom: '1px solid #f3f4f6'
+        }}
+      >
+        <span>{icon}</span>
+        <span>{text}</span>
+      </Link>
+    </li>
   );
 }

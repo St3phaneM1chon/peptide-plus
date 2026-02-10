@@ -9,14 +9,15 @@ import { prisma } from '@/lib/db';
 import { UserRole } from '@/types';
 
 interface RouteParams {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 // GET - Détail d'une catégorie
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export async function GET(_request: Request, { params }: RouteParams) {
   try {
+    const { id } = await params;
     const category = await prisma.category.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         products: {
           where: { isActive: true },
@@ -45,6 +46,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 // PUT - Mettre à jour une catégorie
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
+    const { id } = await params;
     const session = await auth();
 
     if (!session?.user) {
@@ -59,7 +61,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
     // Vérifier que la catégorie existe
     const existingCategory = await prisma.category.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!existingCategory) {
@@ -80,7 +82,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     }
 
     const category = await prisma.category.update({
-      where: { id: params.id },
+      where: { id },
       data: body,
     });
 
@@ -106,7 +108,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 }
 
 // DELETE - Supprimer une catégorie (soft delete, Owner only)
-export async function DELETE(request: NextRequest, { params }: RouteParams) {
+export async function DELETE(_request: Request, { params }: RouteParams) {
   try {
     const session = await auth();
 
@@ -118,9 +120,11 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
     }
 
+    const { id } = await params;
+
     // Vérifier si la catégorie a des produits
     const category = await prisma.category.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         _count: {
           select: { products: true },
@@ -140,7 +144,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     }
 
     await prisma.category.update({
-      where: { id: params.id },
+      where: { id },
       data: { isActive: false },
     });
 
@@ -150,7 +154,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
         userId: session.user.id,
         action: 'DELETE',
         entityType: 'Category',
-        entityId: params.id,
+        entityId: id,
       },
     });
 

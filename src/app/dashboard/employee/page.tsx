@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * DASHBOARD EMPLOYEE
  * Vue d'ensemble: statistiques, liste clients, actions rapides

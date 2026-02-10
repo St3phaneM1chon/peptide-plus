@@ -11,7 +11,8 @@ import fr from './locales/fr.json';
 import en from './locales/en.json';
 import es from './locales/es.json';
 
-const allMessages: Record<Locale, typeof fr> = {
+// Partial messages - only include actively maintained translations
+const allMessages: Partial<Record<Locale, typeof fr>> = {
   fr,
   en,
   es,
@@ -28,14 +29,14 @@ const allMessages: Record<Locale, typeof fr> = {
  */
 export async function getServerLocale(): Promise<Locale> {
   // 1. Vérifier le header x-locale (défini par middleware)
-  const headersList = headers();
+  const headersList = await headers();
   const headerLocale = headersList.get('x-locale');
   if (headerLocale && isValidLocale(headerLocale)) {
     return headerLocale as Locale;
   }
 
   // 2. Vérifier le cookie
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const cookieLocale = cookieStore.get('locale')?.value;
   if (cookieLocale && isValidLocale(cookieLocale)) {
     return cookieLocale as Locale;
@@ -50,7 +51,7 @@ export async function getServerLocale(): Promise<Locale> {
  * Récupère les messages pour une locale
  */
 export function getMessages(locale: Locale = defaultLocale): typeof fr {
-  return allMessages[locale] || allMessages[defaultLocale];
+  return allMessages[locale] || allMessages[defaultLocale] || fr;
 }
 
 /**
