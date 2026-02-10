@@ -115,11 +115,31 @@ jobs:
               NEXT_PUBLIC_APP_URL=https://biocyclepeptides.com \
               NEXT_PUBLIC_SITE_NAME="BioCycle Peptides"
 
+      - name: Clean old deployment files
+        run: |
+          az webapp config appsettings set \
+            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+            --name ${{ env.AZURE_WEBAPP_NAME }} \
+            --settings SCM_DO_BUILD_DURING_DEPLOYMENT=false WEBSITE_RUN_FROM_PACKAGE=0 > /dev/null
+          # Remove stale .next cache via Kudu to ensure clean deploy
+          CREDS=$(az webapp deployment list-publishing-credentials \
+            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+            --name ${{ env.AZURE_WEBAPP_NAME }} \
+            --query "[publishingUserName, publishingPassword]" -o tsv)
+          KUDU_USER=$(echo "$CREDS" | head -1)
+          KUDU_PASS=$(echo "$CREDS" | tail -1)
+          curl -s -X DELETE \
+            -u "${KUDU_USER}:${KUDU_PASS}" \
+            "https://${{ env.AZURE_WEBAPP_NAME }}.scm.azurewebsites.net/api/vfs/site/wwwroot/.next/?recursive=true" \
+            -H "If-Match: *" || true
+          echo "Old .next/ cache cleaned"
+
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
           app-name: ${{ env.AZURE_WEBAPP_NAME }}
           package: .
+          clean: true
 
       - name: Run Database Migrations
         run: |
