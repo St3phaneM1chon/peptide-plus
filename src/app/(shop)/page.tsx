@@ -1,60 +1,73 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { ProductCard, PeptideCalculator, TrustBadges } from '@/components/shop';
 import { TrustBadgesHero } from '@/components/shop/TrustBadges';
 import { useTranslations } from '@/hooks/useTranslations';
-import { 
-  getFeaturedProducts, 
-  getProductsByType, 
-  getDefaultFormat,
-  type Product
-} from '@/data/products';
 
-// Transform Product to ProductCard props
-type ProductCardPropsType = React.ComponentProps<typeof ProductCard>;
-
-function productToCardProps(product: Product): ProductCardPropsType {
-  const defaultFormat = getDefaultFormat(product);
-  
-  // Transform formats for ProductCard - cast to match component's expected type
-  const formats = product.formats.map(f => ({
-    id: f.id,
-    name: f.name,
-    nameKey: f.nameKey,
-    type: f.type as 'vial_2ml' | 'vial_10ml' | 'cartridge_3ml' | 'cartridge_kit_12' | 'capsule' | 'pack_10' | 'syringe' | 'accessory' | 'powder' | 'gummies' | 'capsules_30' | 'capsules_60' | 'capsules_120' | 'pack_2' | 'pack_5' | 'box_50' | 'box_100' | 'kit' | undefined,
-    price: f.price,
-    comparePrice: f.comparePrice,
-    inStock: f.inStock,
-    stockQuantity: f.stockQuantity,
-    image: f.image,
-  }));
-
-  return {
-    id: product.id,
-    name: product.name,
-    nameKey: product.nameKey,
-    slug: product.slug,
-    price: defaultFormat?.price || product.price,
-    comparePrice: defaultFormat?.comparePrice,
-    purity: product.purity,
-    avgMass: product.avgMass,
-    imageUrl: product.images?.[0]?.url || '/images/products/peptide-default.png',
-    category: product.categoryName,
-    categoryKey: product.categoryKey,
-    isNew: product.isNew,
-    isBestseller: product.isBestseller,
-    inStock: product.formats.some(f => f.inStock),
-    formats,
+interface ApiProduct {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  imageUrl?: string;
+  purity?: number;
+  molecularWeight?: string;
+  isActive: boolean;
+  isFeatured: boolean;
+  category?: {
+    id: string;
+    name: string;
+    slug: string;
   };
+  images?: Array<{
+    url: string;
+    alt?: string;
+  }>;
+  formats: Array<{
+    id: string;
+    label: string;
+    type?: string;
+    price: number | string;
+    compareAtPrice?: number | string;
+    isActive: boolean;
+    stockQuantity: number;
+    imageUrl?: string;
+  }>;
+  createdAt: string;
 }
 
-// Get products for each section
-const featuredProducts = getFeaturedProducts(4).map(productToCardProps);
-const peptideProducts = getProductsByType('PEPTIDE', 4).map(productToCardProps);
-const supplementProducts = getProductsByType('SUPPLEMENT', 4).map(productToCardProps);
-const accessoryProducts = getProductsByType('ACCESSORY', 4).map(productToCardProps);
+// Map API product to ProductCard props
+function toCardProps(p: ApiProduct) {
+  const activeFormats = p.formats.filter((f) => f.isActive);
+  const lowestPrice = activeFormats.length > 0
+    ? Math.min(...activeFormats.map((f) => Number(f.price)))
+    : 0;
+  const hasStock = activeFormats.some((f) => f.stockQuantity > 0);
+
+  return {
+    id: p.id,
+    name: p.name,
+    slug: p.slug,
+    price: lowestPrice,
+    purity: p.purity ? Number(p.purity) : undefined,
+    imageUrl: p.imageUrl || p.images?.[0]?.url || undefined,
+    category: p.category?.name || '',
+    isNew: new Date(p.createdAt) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+    isBestseller: p.isFeatured,
+    inStock: hasStock,
+    formats: activeFormats.map((f) => ({
+      id: f.id,
+      name: f.label,
+      price: Number(f.price),
+      comparePrice: f.compareAtPrice ? Number(f.compareAtPrice) : undefined,
+      inStock: f.stockQuantity > 0,
+      stockQuantity: f.stockQuantity,
+      image: f.imageUrl || undefined,
+    })),
+  };
+}
 
 // Testimonials
 const testimonials = [
@@ -77,13 +90,56 @@ const testimonials = [
 
 export default function HomePage() {
   const { t } = useTranslations();
+  const [products, setProducts] = useState<ApiProduct[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/products')
+      .then((res) => res.ok ? res.json() : null)
+      .then((data) => {
+        if (data) {
+          const list = Array.isArray(data) ? data : data.products || data.data || [];
+          setProducts(list.filter((p: ApiProduct) => p.isActive));
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const featuredProducts = useMemo(
+    () => products.filter((p) => p.isFeatured).slice(0, 4).map(toCardProps),
+    [products]
+  );
+
+  const peptideProducts = useMemo(
+    () => products.filter((p) => p.category?.slug === 'peptides').slice(0, 4).map(toCardProps),
+    [products]
+  );
+
+  const supplementProducts = useMemo(
+    () => products.filter((p) => p.category?.slug === 'supplements').slice(0, 4).map(toCardProps),
+    [products]
+  );
+
+  const accessoryProducts = useMemo(
+    () => products.filter((p) => p.category?.slug === 'accessories').slice(0, 4).map(toCardProps),
+    [products]
+  );
+
+  const ProductSkeleton = () => (
+    <div className="animate-pulse">
+      <div className="bg-neutral-200 rounded-lg aspect-square mb-3" />
+      <div className="bg-neutral-200 h-4 rounded w-3/4 mb-2" />
+      <div className="bg-neutral-200 h-4 rounded w-1/2" />
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section with Lab Background */}
       <section className="relative text-white py-5 md:py-6 overflow-hidden">
         {/* Background Image - Scientists working in laboratory */}
-        <div 
+        <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
             backgroundImage: `url('https://images.unsplash.com/photo-1532094349884-543bc11b234d?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80')`,
@@ -91,27 +147,27 @@ export default function HomePage() {
         />
         {/* Dark Overlay for readability */}
         <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/70 to-black/60" />
-        
+
         {/* Content */}
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl">
             <div className="inline-flex items-center gap-2 bg-orange-500/20 border border-orange-500/30 rounded-full px-4 py-1.5 mb-6">
               <span className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></span>
-              <span className="text-orange-400 text-sm font-medium">Research Grade Peptides</span>
+              <span className="text-orange-400 text-sm font-medium">{t('home.researchGrade') || 'Research Grade Peptides'}</span>
             </div>
-            
+
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight text-white">
-              Les meilleurs Peptides de recherche au Canada
+              {t('home.heroTitle') || 'The Best Research Peptides in Canada'}
             </h1>
-            
+
             <p className="text-lg md:text-xl text-gray-300 mb-8 max-w-2xl">
               {t('shop.subtitle')}
             </p>
-            
+
             {/* CTA Buttons */}
             <div className="flex flex-wrap gap-4 mb-12">
-              <Link 
-                href="/shop" 
+              <Link
+                href="/shop"
                 className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all hover:scale-105 shadow-lg shadow-orange-500/25"
               >
                 {t('shop.viewProducts') || 'View Products'}
@@ -119,15 +175,15 @@ export default function HomePage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                 </svg>
               </Link>
-              <Link 
-                href="/lab-results" 
+              <Link
+                href="/lab-results"
                 className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 backdrop-blur border border-white/20 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all"
               >
                 {t('shop.viewLabResults') || 'Lab Results'}
               </Link>
             </div>
           </div>
-          
+
           {/* Hero Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 max-w-4xl">
             <div className="bg-white/10 backdrop-blur-md border border-white/10 px-5 py-4 rounded-xl">
@@ -171,103 +227,125 @@ export default function HomePage() {
               </svg>
             </Link>
           </div>
-          
+
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 overflow-visible">
-            {featuredProducts.map((product) => (
-              <div key={product.id} className="overflow-visible h-full">
-                <ProductCard {...product} />
-              </div>
-            ))}
+            {loading ? (
+              Array.from({ length: 4 }).map((_, i) => <ProductSkeleton key={i} />)
+            ) : (
+              featuredProducts.map((product) => (
+                <div key={product.id} className="overflow-visible h-full">
+                  <ProductCard {...product} />
+                </div>
+              ))
+            )}
           </div>
         </div>
       </section>
 
       {/* Section 2: Peptides */}
-      <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center mb-8">
-            <div>
-              <h2 className="text-3xl font-bold">{t('home.peptidesSection')}</h2>
-              <p className="text-neutral-600 mt-1">{t('home.peptidesDesc')}</p>
-            </div>
-            <Link
-              href="/category/peptides"
-              className="text-orange-600 hover:text-orange-700 font-semibold flex items-center gap-1"
-            >
-              {t('shop.viewAll')}
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </Link>
-          </div>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 overflow-visible">
-            {peptideProducts.map((product) => (
-              <div key={product.id} className="overflow-visible h-full">
-                <ProductCard {...product} />
+      {(loading || peptideProducts.length > 0) && (
+        <section className="py-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center mb-8">
+              <div>
+                <h2 className="text-3xl font-bold">{t('home.peptidesSection')}</h2>
+                <p className="text-neutral-600 mt-1">{t('home.peptidesDesc')}</p>
               </div>
-            ))}
+              <Link
+                href="/category/peptides"
+                className="text-orange-600 hover:text-orange-700 font-semibold flex items-center gap-1"
+              >
+                {t('shop.viewAll')}
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 overflow-visible">
+              {loading ? (
+                Array.from({ length: 4 }).map((_, i) => <ProductSkeleton key={i} />)
+              ) : (
+                peptideProducts.map((product) => (
+                  <div key={product.id} className="overflow-visible h-full">
+                    <ProductCard {...product} />
+                  </div>
+                ))
+              )}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Section 3: Supplements */}
-      <section className="py-16 bg-neutral-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center mb-8">
-            <div>
-              <h2 className="text-3xl font-bold">{t('home.supplementsSection')}</h2>
-              <p className="text-neutral-600 mt-1">{t('home.supplementsDesc')}</p>
-            </div>
-            <Link
-              href="/category/supplements"
-              className="text-orange-600 hover:text-orange-700 font-semibold flex items-center gap-1"
-            >
-              {t('shop.viewAll')}
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </Link>
-          </div>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 overflow-visible">
-            {supplementProducts.map((product) => (
-              <div key={product.id} className="overflow-visible h-full">
-                <ProductCard {...product} />
+      {(loading || supplementProducts.length > 0) && (
+        <section className="py-16 bg-neutral-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center mb-8">
+              <div>
+                <h2 className="text-3xl font-bold">{t('home.supplementsSection')}</h2>
+                <p className="text-neutral-600 mt-1">{t('home.supplementsDesc')}</p>
               </div>
-            ))}
+              <Link
+                href="/category/supplements"
+                className="text-orange-600 hover:text-orange-700 font-semibold flex items-center gap-1"
+              >
+                {t('shop.viewAll')}
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 overflow-visible">
+              {loading ? (
+                Array.from({ length: 4 }).map((_, i) => <ProductSkeleton key={i} />)
+              ) : (
+                supplementProducts.map((product) => (
+                  <div key={product.id} className="overflow-visible h-full">
+                    <ProductCard {...product} />
+                  </div>
+                ))
+              )}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Section 4: Accessories */}
-      <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center mb-8">
-            <div>
-              <h2 className="text-3xl font-bold">{t('home.accessoriesSection')}</h2>
-              <p className="text-neutral-600 mt-1">{t('home.accessoriesDesc')}</p>
-            </div>
-            <Link
-              href="/category/accessories"
-              className="text-orange-600 hover:text-orange-700 font-semibold flex items-center gap-1"
-            >
-              {t('shop.viewAll')}
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </Link>
-          </div>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 overflow-visible">
-            {accessoryProducts.map((product) => (
-              <div key={product.id} className="overflow-visible h-full">
-                <ProductCard {...product} />
+      {(loading || accessoryProducts.length > 0) && (
+        <section className="py-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center mb-8">
+              <div>
+                <h2 className="text-3xl font-bold">{t('home.accessoriesSection')}</h2>
+                <p className="text-neutral-600 mt-1">{t('home.accessoriesDesc')}</p>
               </div>
-            ))}
+              <Link
+                href="/category/accessories"
+                className="text-orange-600 hover:text-orange-700 font-semibold flex items-center gap-1"
+              >
+                {t('shop.viewAll')}
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 overflow-visible">
+              {loading ? (
+                Array.from({ length: 4 }).map((_, i) => <ProductSkeleton key={i} />)
+              ) : (
+                accessoryProducts.map((product) => (
+                  <div key={product.id} className="overflow-visible h-full">
+                    <ProductCard {...product} />
+                  </div>
+                ))
+              )}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* About Section */}
       <section className="py-16 bg-neutral-900 text-white">
@@ -283,11 +361,11 @@ export default function HomePage() {
       <section className="py-16 bg-neutral-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold text-center mb-12">{t('home.testimonialsTitle')}</h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {testimonials.map((testimonial, index) => (
               <div key={index} className="bg-white p-6 rounded-xl shadow-sm border border-neutral-200">
-                <div className="text-4xl text-orange-500 mb-4">"</div>
+                <div className="text-4xl text-orange-500 mb-4">&ldquo;</div>
                 <p className="text-neutral-700 mb-4 leading-relaxed">
                   {testimonial.quote}
                 </p>

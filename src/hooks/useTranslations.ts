@@ -72,8 +72,8 @@ export function useTranslations() {
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    // Get language from localStorage
-    const savedLang = localStorage.getItem('language');
+    // Get language from localStorage (key = 'locale', matching Header.tsx)
+    const savedLang = localStorage.getItem('locale');
     if (savedLang && translations[savedLang]) {
       setLocale(savedLang);
     }
@@ -81,7 +81,7 @@ export function useTranslations() {
 
     // Listen for language changes
     const handleStorageChange = () => {
-      const newLang = localStorage.getItem('language');
+      const newLang = localStorage.getItem('locale');
       if (newLang && translations[newLang]) {
         setLocale(newLang);
       }
@@ -113,7 +113,7 @@ export function useTranslations() {
   const changeLocale = useCallback((newLocale: string) => {
     if (translations[newLocale]) {
       setLocale(newLocale);
-      localStorage.setItem('language', newLocale);
+      localStorage.setItem('locale', newLocale);
     }
   }, []);
 
