@@ -81,13 +81,16 @@ export default function Footer() {
                 <Link href="/shop" className="hover:text-white transition-colors">{t('nav.allProducts') || 'All Products'}</Link>
               </li>
               <li>
-                <Link href="/category/peptides" className="hover:text-white transition-colors">{t('nav.peptides') || 'Peptides'}</Link>
+                <Link href="/category/recovery-repair" className="hover:text-white transition-colors">{t('nav.recovery') || 'Recovery & Repair'}</Link>
               </li>
               <li>
                 <Link href="/category/weight-loss" className="hover:text-white transition-colors">{t('nav.weightLoss') || 'Weight Loss'}</Link>
               </li>
               <li>
-                <Link href="/category/recovery-repair" className="hover:text-white transition-colors">{t('nav.recovery') || 'Recovery'}</Link>
+                <Link href="/category/anti-aging-longevity" className="hover:text-white transition-colors">{t('nav.antiAging') || 'Anti-Aging'}</Link>
+              </li>
+              <li>
+                <Link href="/category/supplements" className="hover:text-white transition-colors">{t('nav.supplements') || 'Supplements'}</Link>
               </li>
               <li>
                 <Link href="/category/accessories" className="hover:text-white transition-colors">{t('nav.accessories') || 'Accessories'}</Link>

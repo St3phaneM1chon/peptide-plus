@@ -186,7 +186,7 @@ export default function HomePage() {
                 <p className="text-neutral-600 mt-1">{t('home.peptidesDesc')}</p>
               </div>
               <Link
-                href="/category/peptides"
+                href="/shop"
                 className="text-orange-600 hover:text-orange-700 font-semibold flex items-center gap-1"
               >
                 {t('shop.viewAll')}

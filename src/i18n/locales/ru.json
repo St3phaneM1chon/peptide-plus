@@ -114,7 +114,8 @@
     "refundPolicy": "Политика возврата",
     "resources": "Ресурсы",
     "injectionCalculator": "Калькулятор инъекций",
-    "calculator": "Калькулятор"
+    "calculator": "Калькулятор",
+    "antiAging": "Антивозрастные"
   },
   "common": {
     "loading": "Загрузка...",

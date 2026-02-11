@@ -164,8 +164,14 @@ export default function Header() {
                       {t('nav.allProducts') || 'All Products'}
                     </DropdownItem>
                     <DropdownDivider />
-                    <DropdownItem href="/category/peptides">
-                      {t('nav.peptides') || 'Peptides'}
+                    <DropdownItem href="/category/recovery-repair">
+                      {t('nav.recovery') || 'Recovery & Repair'}
+                    </DropdownItem>
+                    <DropdownItem href="/category/weight-loss">
+                      {t('nav.weightLoss') || 'Weight Loss'}
+                    </DropdownItem>
+                    <DropdownItem href="/category/anti-aging-longevity">
+                      {t('nav.antiAging') || 'Anti-Aging'}
                     </DropdownItem>
                     <DropdownItem href="/category/supplements">
                       {t('nav.supplements') || 'Supplements'}
@@ -387,8 +393,11 @@ export default function Header() {
                 <MobileNavLink href="/shop" onClick={() => setIsMobileMenuOpen(false)}>
                   {t('nav.shop') || 'Shop'}
                 </MobileNavLink>
-                <MobileNavLink href="/category/peptides" onClick={() => setIsMobileMenuOpen(false)} indent>
-                  {t('nav.peptides') || 'Peptides'}
+                <MobileNavLink href="/category/recovery-repair" onClick={() => setIsMobileMenuOpen(false)} indent>
+                  {t('nav.recovery') || 'Recovery & Repair'}
+                </MobileNavLink>
+                <MobileNavLink href="/category/weight-loss" onClick={() => setIsMobileMenuOpen(false)} indent>
+                  {t('nav.weightLoss') || 'Weight Loss'}
                 </MobileNavLink>
                 <MobileNavLink href="/category/supplements" onClick={() => setIsMobileMenuOpen(false)} indent>
                   {t('nav.supplements') || 'Supplements'}

@@ -116,7 +116,8 @@
     "injectionCalculator": "Injection Calculator",
     "shippingPolicy": "Shipping Policy",
     "refundPolicy": "Refund Policy",
-    "calculator": "Calculator"
+    "calculator": "Calculator",
+    "antiAging": "Anti-Aging"
   },
   "categories": {
     "all": "All Products",

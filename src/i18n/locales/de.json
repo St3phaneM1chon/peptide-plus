@@ -114,7 +114,8 @@
     "refundPolicy": "Rückerstattungsrichtlinie",
     "resources": "Ressourcen",
     "injectionCalculator": "Injektionsrechner",
-    "calculator": "Rechner"
+    "calculator": "Rechner",
+    "antiAging": "Anti-Aging"
   },
   "common": {
     "loading": "Laden...",

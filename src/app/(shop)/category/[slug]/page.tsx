@@ -37,13 +37,17 @@ export default async function CategoryPage({ params }: PageProps) {
     notFound();
   }
 
-  // Requête Prisma réelle avec produits et formats
+  // Requête Prisma réelle avec produits, formats et images
   const dbProducts = await prisma.product.findMany({
     where: {
       categoryId: category.id,
       isActive: true,
     },
     include: {
+      images: {
+        orderBy: { sortOrder: 'asc' },
+        select: { id: true, url: true, alt: true, isPrimary: true },
+      },
       formats: {
         where: { isActive: true },
         orderBy: { sortOrder: 'asc' },
@@ -72,7 +76,7 @@ export default async function CategoryPage({ params }: PageProps) {
     slug: p.slug,
     price: Number(p.price),
     purity: p.purity ? Number(p.purity) : undefined,
-    imageUrl: p.imageUrl || undefined,
+    imageUrl: p.images?.find((img) => img.isPrimary)?.url || p.images?.[0]?.url || p.imageUrl || undefined,
     isNew: p.isNew || undefined,
     isBestseller: p.isBestseller || undefined,
     inStock: p.formats.some((f) => f.inStock),
