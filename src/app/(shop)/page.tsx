@@ -112,7 +112,7 @@ export default function HomePage() {
   );
 
   const peptideProducts = useMemo(
-    () => products.filter((p) => p.category?.slug === 'peptides').slice(0, 4).map(toCardProps),
+    () => products.filter((p) => p.category?.slug?.startsWith('peptides')).slice(0, 4).map(toCardProps),
     [products]
   );
 
@@ -122,7 +122,7 @@ export default function HomePage() {
   );
 
   const accessoryProducts = useMemo(
-    () => products.filter((p) => p.category?.slug === 'accessories').slice(0, 4).map(toCardProps),
+    () => products.filter((p) => p.category?.slug === 'accessoires').slice(0, 4).map(toCardProps),
     [products]
   );
 
