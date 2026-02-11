@@ -47,7 +47,13 @@ jobs:
         run: npx prisma generate
 
       - name: Build
-        run: npm run build
+        run: |
+          npm run build
+          # Copy standalone server.js to project root for Azure startup
+          cp .next/standalone/server.js ./server.js
+          # Copy public and static assets to standalone (needed for static file serving)
+          cp -r public .next/standalone/public
+          cp -r .next/static .next/standalone/.next/static
         env:
           NEXT_TELEMETRY_DISABLED: 1
           NEXT_PUBLIC_SITE_NAME: "BioCycle Peptides"
@@ -57,6 +63,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: build-output
+          include-hidden-files: true
           path: |
             .next/
             package.json
@@ -64,6 +71,7 @@ jobs:
             public/
             prisma/
             next.config.js
+            server.js
           retention-days: 1
 
   # =====================================================
