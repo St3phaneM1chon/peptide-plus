@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { ProductCard, PeptideCalculator, TrustBadges } from '@/components/shop';
 import { TrustBadgesHero } from '@/components/shop/TrustBadges';
+import HeroSlider from '@/components/shop/HeroSlider';
 import { useTranslations } from '@/hooks/useTranslations';
 
 interface ApiProduct {
@@ -136,75 +137,8 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Hero Section with Lab Background */}
-      <section className="relative text-white py-5 md:py-6 overflow-hidden">
-        {/* Background Image - Scientists working in laboratory */}
-        <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{
-            backgroundImage: `url('https://images.unsplash.com/photo-1532094349884-543bc11b234d?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80')`,
-          }}
-        />
-        {/* Dark Overlay for readability */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/70 to-black/60" />
-
-        {/* Content */}
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 bg-orange-500/20 border border-orange-500/30 rounded-full px-4 py-1.5 mb-6">
-              <span className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></span>
-              <span className="text-orange-400 text-sm font-medium">{t('home.researchGrade') || 'Research Grade Peptides'}</span>
-            </div>
-
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight text-white">
-              {t('home.heroTitle') || 'The Best Research Peptides in Canada'}
-            </h1>
-
-            <p className="text-lg md:text-xl text-gray-300 mb-8 max-w-2xl">
-              {t('shop.subtitle')}
-            </p>
-
-            {/* CTA Buttons */}
-            <div className="flex flex-wrap gap-4 mb-12">
-              <Link
-                href="/shop"
-                className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all hover:scale-105 shadow-lg shadow-orange-500/25"
-              >
-                {t('shop.viewProducts') || 'View Products'}
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                </svg>
-              </Link>
-              <Link
-                href="/lab-results"
-                className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 backdrop-blur border border-white/20 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all"
-              >
-                {t('shop.viewLabResults') || 'Lab Results'}
-              </Link>
-            </div>
-          </div>
-
-          {/* Hero Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 max-w-4xl">
-            <div className="bg-white/10 backdrop-blur-md border border-white/10 px-5 py-4 rounded-xl">
-              <p className="text-3xl md:text-4xl font-bold text-orange-400">99%+</p>
-              <p className="text-sm text-gray-300">{t('shop.avgPurity') || 'Purity Guaranteed'}</p>
-            </div>
-            <div className="bg-white/10 backdrop-blur-md border border-white/10 px-5 py-4 rounded-xl">
-              <p className="text-3xl md:text-4xl font-bold text-orange-400">500+</p>
-              <p className="text-sm text-gray-300">{t('shop.products') || 'Products'}</p>
-            </div>
-            <div className="bg-white/10 backdrop-blur-md border border-white/10 px-5 py-4 rounded-xl">
-              <p className="text-3xl md:text-4xl font-bold text-orange-400">24h</p>
-              <p className="text-sm text-gray-300">{t('shop.shipping') || 'Fast Shipping'}</p>
-            </div>
-            <div className="bg-white/10 backdrop-blur-md border border-white/10 px-5 py-4 rounded-xl">
-              <p className="text-3xl md:text-4xl font-bold text-orange-400">COA</p>
-              <p className="text-sm text-gray-300">{t('shop.coaAvailable') || 'Lab Tested'}</p>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Hero Slider */}
+      <HeroSlider />
 
       {/* Trust Badges Hero */}
       <TrustBadgesHero />

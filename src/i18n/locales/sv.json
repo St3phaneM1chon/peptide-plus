@@ -111,7 +111,10 @@
     "ambassador": "Ambassadors",
     "trackOrder": "Track Order",
     "shippingPolicy": "Shipping Policy",
-    "refundPolicy": "Refund Policy"
+    "refundPolicy": "Refund Policy",
+    "resources": "Resurser",
+    "injectionCalculator": "Injektionskalkylator",
+    "calculator": "Kalkylator"
   },
   "categories": {
     "all": "Alla Produkter",
@@ -1117,5 +1120,16 @@
     "resetFilters": "Reset filters",
     "leaveReview": "Leave a review",
     "reorder": "Order again"
+  },
+  "calculator": {
+    "title": "Peptidinjektionskalkylator",
+    "subtitle": "Beräkna din exakta peptiddos. Ange peptidmängd, lösningsmedelsvolym och önskad dos.",
+    "step1Title": "Peptidmängd",
+    "step1Desc": "Ange den totala mängden peptid i din injektionsflaska (i mg).",
+    "step2Title": "Lösningsmedelsvolym",
+    "step2Desc": "Ange mängden bakteriostatiskt vatten (i mL).",
+    "step3Title": "Önskad dos",
+    "step3Desc": "Ange önskad dos per injektion i mcg eller mg.",
+    "disclaimer": "Denna kalkylator tillhandahålls endast i informationssyfte för in vitro-forskning."
   }
 }

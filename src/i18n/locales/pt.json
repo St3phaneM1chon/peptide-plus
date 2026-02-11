@@ -111,7 +111,10 @@
     "ambassador": "Embaixadores",
     "trackOrder": "Rastrear pedido",
     "shippingPolicy": "Política de envio",
-    "refundPolicy": "Política de reembolso"
+    "refundPolicy": "Política de reembolso",
+    "resources": "Recursos",
+    "injectionCalculator": "Calculadora de injeção",
+    "calculator": "Calculadora"
   },
   "common": {
     "loading": "Carregando...",
@@ -1117,5 +1120,16 @@
     "resetFilters": "Redefinir",
     "leaveReview": "Avaliar",
     "reorder": "Pedir novamente"
+  },
+  "calculator": {
+    "title": "Calculadora de injeção de peptídeos",
+    "subtitle": "Calcule sua dosagem de peptídeo com precisão. Insira a quantidade de peptídeo, o volume de solvente e a dose desejada.",
+    "step1Title": "Quantidade de peptídeo",
+    "step1Desc": "Insira a quantidade total de peptídeo no seu frasco (em mg).",
+    "step2Title": "Volume de solvente",
+    "step2Desc": "Insira a quantidade de água bacteriostática (em mL).",
+    "step3Title": "Dose desejada",
+    "step3Desc": "Insira a dose desejada por injeção em mcg ou mg.",
+    "disclaimer": "Esta calculadora é fornecida apenas para fins informativos para pesquisa in vitro."
   }
 }

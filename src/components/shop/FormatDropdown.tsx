@@ -140,6 +140,9 @@ export default function FormatDropdown({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Filter out formats with stockQuantity <= 0
+  const visibleFormats = formats.filter(f => f.stockQuantity > 0);
+
   const getFormatInfo = (format: FormatOption) => {
     return FORMAT_DEFAULTS[format.formatType] || FORMAT_DEFAULTS.ACCESSORY;
   };
@@ -160,7 +163,7 @@ export default function FormatDropdown({
           Sélectionner le format:
         </label>
         <div className="grid grid-cols-2 gap-3">
-          {formats.map((format) => {
+          {visibleFormats.map((format) => {
             const formatInfo = getFormatInfo(format);
             const availInfo = getAvailabilityInfo(format.availability);
             const available = isAvailable(format);
@@ -283,7 +286,7 @@ export default function FormatDropdown({
       {/* Dropdown Menu */}
       {isOpen && (
         <div className="absolute z-30 top-full left-0 right-0 mt-1 bg-white border border-neutral-200 rounded-xl shadow-xl overflow-hidden max-h-80 overflow-y-auto">
-          {formats.map((format) => {
+          {visibleFormats.map((format) => {
             const formatInfo = getFormatInfo(format);
             const availInfo = getAvailabilityInfo(format.availability);
             const available = isAvailable(format);

@@ -111,7 +111,10 @@
     "ambassador": "Ambassadors",
     "trackOrder": "Track Order",
     "shippingPolicy": "Shipping Policy",
-    "refundPolicy": "Refund Policy"
+    "refundPolicy": "Refund Policy",
+    "resources": "Resources",
+    "injectionCalculator": "Injection Calculator",
+    "calculator": "கணிப்பான்"
   },
   "categories": {
     "all": "அனைத்து தயாரிப்புகள்",
@@ -1117,5 +1120,16 @@
     "resetFilters": "Reset filters",
     "leaveReview": "Leave a review",
     "reorder": "Order again"
+  },
+  "calculator": {
+    "title": "Peptide Injection Calculator",
+    "subtitle": "Calculate your precise peptide dosage. Enter the peptide amount, solvent volume, and desired dose.",
+    "step1Title": "Peptide Amount",
+    "step1Desc": "Enter the total amount of peptide in your vial (in mg).",
+    "step2Title": "Solvent Volume",
+    "step2Desc": "Enter the amount of bacteriostatic water (in mL).",
+    "step3Title": "Desired Dose",
+    "step3Desc": "Enter the dose you want per injection in mcg or mg.",
+    "disclaimer": "This calculator is provided for informational purposes only for in vitro research."
   }
 }

@@ -111,7 +111,10 @@
     "ambassador": "Ambassadors",
     "trackOrder": "Track Order",
     "shippingPolicy": "Shipping Policy",
-    "refundPolicy": "Refund Policy"
+    "refundPolicy": "Refund Policy",
+    "resources": "संसाधन",
+    "injectionCalculator": "इंजेक्शन कैलकुलेटर",
+    "calculator": "कैलकुलेटर"
   },
   "categories": {
     "all": "सभी उत्पाद",
@@ -1117,5 +1120,16 @@
     "resetFilters": "Reset filters",
     "leaveReview": "Leave a review",
     "reorder": "Order again"
+  },
+  "calculator": {
+    "title": "पेप्टाइड इंजेक्शन कैलकुलेटर",
+    "subtitle": "अपनी सटीक पेप्टाइड खुराक की गणना करें।",
+    "step1Title": "पेप्टाइड की मात्रा",
+    "step1Desc": "अपनी शीशी में पेप्टाइड की कुल मात्रा दर्ज करें (mg में)।",
+    "step2Title": "विलायक की मात्रा",
+    "step2Desc": "बैक्टीरियोस्टैटिक पानी की मात्रा दर्ज करें (mL में)।",
+    "step3Title": "वांछित खुराक",
+    "step3Desc": "प्रति इंजेक्शन वांछित खुराक mcg या mg में दर्ज करें।",
+    "disclaimer": "यह कैलकुलेटर केवल इन विट्रो अनुसंधान के सूचनात्मक उद्देश्यों के लिए है।"
   }
 }

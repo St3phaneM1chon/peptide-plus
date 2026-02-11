@@ -111,7 +111,10 @@
     "ambassador": "Embajadores",
     "trackOrder": "Rastrear pedido",
     "shippingPolicy": "Política de envío",
-    "refundPolicy": "Política de reembolso"
+    "refundPolicy": "Política de reembolso",
+    "resources": "Recursos",
+    "injectionCalculator": "Calculadora de inyección",
+    "calculator": "Calculadora"
   },
   "categories": {
     "all": "Todos los productos",
@@ -1117,5 +1120,16 @@
     "resetFilters": "Restablecer",
     "leaveReview": "Dejar reseña",
     "reorder": "Volver a pedir"
+  },
+  "calculator": {
+    "title": "Calculadora de inyección de péptidos",
+    "subtitle": "Calcule su dosis de péptido con precisión. Ingrese la cantidad de péptido, el volumen de solvente y la dosis deseada.",
+    "step1Title": "Cantidad de péptido",
+    "step1Desc": "Ingrese la cantidad total de péptido en su vial (en mg), como se indica en la etiqueta.",
+    "step2Title": "Volumen de solvente",
+    "step2Desc": "Ingrese la cantidad de agua bacteriostática que utilizará para reconstituir (en mL).",
+    "step3Title": "Dosis deseada",
+    "step3Desc": "Ingrese la dosis deseada por inyección en mcg o mg. La calculadora muestra el volumen exacto a extraer.",
+    "disclaimer": "Esta calculadora se proporciona solo con fines informativos para investigación in vitro."
   }
 }

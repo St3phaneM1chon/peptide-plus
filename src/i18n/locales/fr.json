@@ -112,8 +112,11 @@
     "forum": "Forum",
     "ambassador": "Ambassadeurs",
     "trackOrder": "Suivre ma commande",
+    "resources": "Ressources",
+    "injectionCalculator": "Calculatrice d'injection",
     "shippingPolicy": "Politique d'expédition",
-    "refundPolicy": "Politique de remboursement"
+    "refundPolicy": "Politique de remboursement",
+    "calculator": "Calculatrice"
   },
   "categories": {
     "all": "Tous les produits",
@@ -197,6 +200,17 @@
     "ml": "ml",
     "g": "g",
     "kg": "kg"
+  },
+  "calculator": {
+    "title": "Calculatrice d'injection de peptides",
+    "subtitle": "Calculez votre dosage de peptide avec précision. Entrez la quantité de peptide, le volume de solvant et la dose désirée pour obtenir vos paramètres d'injection.",
+    "step1Title": "Quantité de peptide",
+    "step1Desc": "Entrez la quantité totale de peptide dans votre fiole (en mg), tel qu'indiqué sur l'étiquette.",
+    "step2Title": "Volume de solvant",
+    "step2Desc": "Entrez la quantité d'eau bactériostatique que vous utiliserez pour reconstituer (en mL).",
+    "step3Title": "Dose désirée",
+    "step3Desc": "Entrez la dose souhaitée par injection en mcg ou mg. La calculatrice affiche le volume exact à prélever.",
+    "disclaimer": "Cette calculatrice est fournie à titre informatif uniquement pour la recherche in vitro. Tous les produits sont destinés à des fins de laboratoire et de recherche uniquement."
   },
   "disclaimer": {
     "title": "Usage de recherche uniquement",
@@ -631,6 +645,7 @@
     "recentOrder": "Commande la plus récente",
     "noOrders": "Aucune commande",
     "noOrdersDesc": "Commencez à magasiner pour voir votre historique de commandes ici.",
+    "inventory": "Mon inventaire",
     "profile": "Profil",
     "password": "Mot de passe",
     "address": "Adresse",

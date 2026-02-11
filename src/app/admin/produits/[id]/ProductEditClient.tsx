@@ -609,6 +609,28 @@ function FormatEditForm({
             className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
           />
         </div>
+        <div className="md:col-span-3">
+          <label className="block text-sm font-medium text-neutral-700 mb-1">Image URL du format</label>
+          <input
+            type="url"
+            value={format.imageUrl || ''}
+            onChange={(e) => onChange({ ...format, imageUrl: e.target.value || null })}
+            placeholder="https://exemple.com/image.png"
+            className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+          />
+          {format.imageUrl && (
+            <div className="mt-2 flex items-center gap-3">
+              <img src={format.imageUrl} alt="Aperçu" className="w-16 h-16 object-cover rounded-lg border border-neutral-200" />
+              <button
+                type="button"
+                onClick={() => onChange({ ...format, imageUrl: null })}
+                className="text-xs text-red-500 hover:text-red-700"
+              >
+                Supprimer l'image
+              </button>
+            </div>
+          )}
+        </div>
         <div>
           <label className="block text-sm font-medium text-neutral-700 mb-1">Prix *</label>
           <input
@@ -720,6 +742,7 @@ function AddFormatModal({
     formatType: 'VIAL_2ML',
     name: '',
     sku: '',
+    imageUrl: '',
     price: 0,
     comparePrice: null as number | null,
     dosageMg: null as number | null,
@@ -776,6 +799,21 @@ function AddFormatModal({
               onChange={(e) => setNewFormat({ ...newFormat, sku: e.target.value })}
               className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
             />
+          </div>
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-neutral-700 mb-1">Image URL du format</label>
+            <input
+              type="url"
+              value={newFormat.imageUrl}
+              onChange={(e) => setNewFormat({ ...newFormat, imageUrl: e.target.value })}
+              placeholder="https://exemple.com/image.png"
+              className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+            />
+            {newFormat.imageUrl && (
+              <div className="mt-2">
+                <img src={newFormat.imageUrl} alt="Aperçu" className="w-16 h-16 object-cover rounded-lg border border-neutral-200" />
+              </div>
+            )}
           </div>
           <div>
             <label className="block text-sm font-medium text-neutral-700 mb-1">Quantité en stock</label>

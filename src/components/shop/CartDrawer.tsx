@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useSession } from 'next-auth/react';
 import { useCart } from '@/contexts/CartContext';
 import { useCurrency } from '@/contexts/CurrencyContext';
 
@@ -12,6 +13,7 @@ interface CartDrawerProps {
 }
 
 export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
+  const { data: session } = useSession();
   const { items, removeItem, updateQuantity, subtotal, itemCount } = useCart();
   const { formatPrice } = useCurrency();
 
@@ -149,7 +151,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
 
             {/* Checkout Button */}
             <Link
-              href="/checkout/cart"
+              href={session ? '/checkout/cart' : '/auth/signin?callbackUrl=/checkout'}
               onClick={onClose}
               className="block w-full py-3 bg-orange-500 text-white font-semibold text-center rounded-lg hover:bg-orange-600 transition-colors"
             >

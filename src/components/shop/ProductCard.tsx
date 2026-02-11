@@ -84,8 +84,11 @@ export default function ProductCard({
   const { addItem } = useCart();
   const { t } = useTranslations();
   
+  // Filter out formats with stockQuantity <= 0
+  const availableFormats = formats?.filter(f => f.stockQuantity > 0);
+
   const [selectedFormat, setSelectedFormat] = useState<ProductFormat | undefined>(
-    formats?.find((f) => f.inStock) || formats?.[0]
+    availableFormats?.find((f) => f.inStock) || availableFormats?.[0]
   );
   const [quantity, setQuantity] = useState(1);
   const [isAdding, setIsAdding] = useState(false);
@@ -148,7 +151,7 @@ export default function ProductCard({
       formatName: formatName,
       price: displayPrice,
       comparePrice: displayComparePrice,
-      image: imageUrl || '/images/products/peptide-default.png',
+      image: selectedFormat?.image || imageUrl || '/images/products/peptide-default.png',
       maxQuantity: selectedFormat.stockQuantity || 99,
       quantity,
     });
@@ -207,7 +210,7 @@ export default function ProductCard({
         {/* Bottom Section - Packaging + Actions (aligned across all cards) */}
         <div className="mt-auto pt-4">
           {/* Format Selector Dropdown */}
-          {formats && formats.length > 1 && (
+          {availableFormats && availableFormats.length > 1 && (
             <div className="relative mb-4" ref={dropdownRef}>
               <label className="text-xs text-neutral-500 uppercase tracking-wider">{t('shop.packaging')}:</label>
               <button
@@ -238,7 +241,7 @@ export default function ProductCard({
               {/* Dropdown Menu - Overlays card with scroll */}
               {isDropdownOpen && (
                 <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-neutral-200 rounded-lg shadow-2xl max-h-64 overflow-y-auto">
-                  {formats.map((format) => (
+                  {availableFormats.map((format) => (
                     <button
                       key={format.id}
                       onClick={(e) => {

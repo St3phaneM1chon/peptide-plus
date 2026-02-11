@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import { useCart } from '@/contexts/CartContext';
 import { useCurrency } from '@/contexts/CurrencyContext';
@@ -29,6 +30,7 @@ function detectBrowserLanguage(): string {
 }
 
 export default function Header() {
+  const router = useRouter();
   const { itemCount } = useCart();
   const { t } = useTranslations();
   const { currency, currencies, setCurrency } = useCurrency();
@@ -40,22 +42,26 @@ export default function Header() {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [currentLang, setCurrentLang] = useState('en');
   
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const pathname = usePathname();
 
-  // Close dropdowns when clicking outside
+  // Close dropdowns on route change
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      // Don't close if clicking inside any dropdown or dropdown trigger
-      if (target.closest('.language-dropdown') || 
-          target.closest('.currency-dropdown') ||
-          target.closest('[data-dropdown]')) {
-        return;
-      }
-      setOpenDropdown(null);
+    setOpenDropdown(null);
+    setIsMobileMenuOpen(false);
+  }, [pathname]);
+
+  // Close dropdowns on ESC key or scroll
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpenDropdown(null);
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    const handleScroll = () => setOpenDropdown(null);
+    document.addEventListener('keydown', handleEsc);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      document.removeEventListener('keydown', handleEsc);
+      window.removeEventListener('scroll', handleScroll);
+    };
   }, []);
 
   // Initialize language from cookie/localStorage
@@ -136,11 +142,11 @@ export default function Header() {
             </Link>
 
             {/* Desktop Navigation - Simplified */}
-            <nav className="hidden lg:flex items-center gap-1" ref={dropdownRef}>
+            <nav className="hidden lg:flex items-center gap-1">
               <NavLink href="/">{t('nav.home') || 'Home'}</NavLink>
               
               {/* Shop Dropdown */}
-              <div className="relative">
+              <div className="relative" data-dropdown="shop">
                 <button
                   onClick={() => toggleDropdown('shop')}
                   className={`flex items-center gap-1 px-3 py-2 text-sm font-semibold rounded-lg transition-all whitespace-nowrap ${
@@ -154,32 +160,32 @@ export default function Header() {
                 </button>
                 {openDropdown === 'shop' && (
                   <DropdownMenu>
-                    <DropdownItem href="/shop" onClick={() => setOpenDropdown(null)}>
+                    <DropdownItem href="/shop">
                       {t('nav.allProducts') || 'All Products'}
                     </DropdownItem>
                     <DropdownDivider />
-                    <DropdownItem href="/category/peptides" onClick={() => setOpenDropdown(null)}>
+                    <DropdownItem href="/category/peptides">
                       {t('nav.peptides') || 'Peptides'}
                     </DropdownItem>
-                    <DropdownItem href="/category/supplements" onClick={() => setOpenDropdown(null)}>
+                    <DropdownItem href="/category/supplements">
                       {t('nav.supplements') || 'Supplements'}
                     </DropdownItem>
-                    <DropdownItem href="/category/accessories" onClick={() => setOpenDropdown(null)}>
+                    <DropdownItem href="/category/accessories">
                       {t('nav.accessories') || 'Accessories'}
                     </DropdownItem>
                   </DropdownMenu>
                 )}
               </div>
 
-              <NavLink href="/lab-results">{t('nav.labResults') || 'Lab Results'}</NavLink>
-              
+              <NavLink href="/calculator">{t('nav.calculator') || 'Calculator'}</NavLink>
+
               {/* Resources Dropdown */}
-              <div className="relative">
+              <div className="relative" data-dropdown="resources">
                 <button
                   onClick={() => toggleDropdown('resources')}
                   className={`flex items-center gap-1 px-3 py-2 text-sm font-semibold rounded-lg transition-all whitespace-nowrap ${
-                    openDropdown === 'resources' 
-                      ? 'text-orange-400 bg-white/10' 
+                    openDropdown === 'resources'
+                      ? 'text-orange-400 bg-white/10'
                       : 'text-gray-100 hover:text-orange-400 hover:bg-white/10'
                   }`}
                 >
@@ -188,17 +194,24 @@ export default function Header() {
                 </button>
                 {openDropdown === 'resources' && (
                   <DropdownMenu>
-                    <DropdownItem href="/learn" onClick={() => setOpenDropdown(null)}>
+                    <DropdownItem href="/lab-results">
+                      🔬 {t('nav.labResults') || 'Lab Results'}
+                    </DropdownItem>
+                    <DropdownItem href="/calculator">
+                      🧮 {t('nav.injectionCalculator') || 'Injection Calculator'}
+                    </DropdownItem>
+                    <DropdownDivider />
+                    <DropdownItem href="/learn">
                       📚 {t('nav.articles') || 'Articles'}
                     </DropdownItem>
-                    <DropdownItem href="/videos" onClick={() => setOpenDropdown(null)}>
+                    <DropdownItem href="/videos">
                       🎬 {t('nav.videos') || 'Videos'}
                     </DropdownItem>
-                    <DropdownItem href="/faq" onClick={() => setOpenDropdown(null)}>
+                    <DropdownItem href="/faq">
                       ❓ {t('nav.faq') || 'FAQ'}
                     </DropdownItem>
                     <DropdownDivider />
-                    <DropdownItem href="/rewards" onClick={() => setOpenDropdown(null)} highlight>
+                    <DropdownItem href="/rewards" highlight>
                       🎁 {t('nav.rewards') || 'Rewards'}
                     </DropdownItem>
                   </DropdownMenu>
@@ -283,7 +296,7 @@ export default function Header() {
               </div>
 
               {/* Profile */}
-              <div className="relative">
+              <div className="relative" data-dropdown="profile">
                 {status === 'authenticated' && session?.user ? (
                   <>
                     <button
@@ -309,16 +322,16 @@ export default function Header() {
                           <p className="text-xs text-gray-500 truncate">{session.user.email}</p>
                         </div>
                         <div className="py-1">
-                          <DropdownItem href="/dashboard/customer" onClick={() => setOpenDropdown(null)} icon="🏠">
+                          <DropdownItem href="/dashboard/customer" icon="🏠">
                             {t('account.dashboard') || 'Dashboard'}
                           </DropdownItem>
-                          <DropdownItem href="/account/orders" onClick={() => setOpenDropdown(null)} icon="📦">
+                          <DropdownItem href="/account/orders" icon="📦">
                             {t('account.orders') || 'Orders'}
                           </DropdownItem>
-                          <DropdownItem href="/account/inventory" onClick={() => setOpenDropdown(null)} icon="🔬">
+                          <DropdownItem href="/account/inventory" icon="🔬">
                             {t('account.inventory') || 'Inventory'}
                           </DropdownItem>
-                          <DropdownItem href="/account/profile" onClick={() => setOpenDropdown(null)} icon="👤">
+                          <DropdownItem href="/account/profile" icon="👤">
                             {t('account.profile') || 'Profile'}
                           </DropdownItem>
                         </div>
@@ -380,8 +393,11 @@ export default function Header() {
                 <MobileNavLink href="/category/supplements" onClick={() => setIsMobileMenuOpen(false)} indent>
                   {t('nav.supplements') || 'Supplements'}
                 </MobileNavLink>
+                <MobileNavLink href="/calculator" onClick={() => setIsMobileMenuOpen(false)}>
+                  🧮 {t('nav.calculator') || 'Calculator'}
+                </MobileNavLink>
                 <MobileNavLink href="/lab-results" onClick={() => setIsMobileMenuOpen(false)}>
-                  {t('nav.labResults') || 'Lab Results'}
+                  🔬 {t('nav.labResults') || 'Lab Results'}
                 </MobileNavLink>
                 <MobileNavLink href="/learn" onClick={() => setIsMobileMenuOpen(false)}>
                   📚 {t('nav.articles') || 'Articles'}
@@ -412,19 +428,19 @@ export default function Header() {
                         </div>
                       </div>
                       <MobileNavLink href="/dashboard/customer" onClick={() => setIsMobileMenuOpen(false)}>
-                        🏠 Dashboard
+                        🏠 {t('account.dashboard') || 'Dashboard'}
                       </MobileNavLink>
                       <MobileNavLink href="/account/orders" onClick={() => setIsMobileMenuOpen(false)}>
-                        📦 My Orders
+                        📦 {t('account.orders') || 'My Orders'}
                       </MobileNavLink>
                       <MobileNavLink href="/account/inventory" onClick={() => setIsMobileMenuOpen(false)}>
-                        🔬 My Inventory
+                        🔬 {t('account.inventory') || 'My Inventory'}
                       </MobileNavLink>
                       <button
                         onClick={handleSignOut}
                         className="w-full text-left px-3 py-2 text-red-400 hover:bg-white/5 rounded text-sm"
                       >
-                        🚪 Sign Out
+                        🚪 {t('account.signOut') || 'Sign Out'}
                       </button>
                     </>
                   ) : (
@@ -460,60 +476,56 @@ function NavLink({ href, children }: { href: string; children: React.ReactNode }
   );
 }
 
-function MobileNavLink({ 
-  href, 
-  children, 
+function MobileNavLink({
+  href,
+  children,
   onClick,
-  indent 
-}: { 
-  href: string; 
+  indent
+}: {
+  href: string;
   children: React.ReactNode;
   onClick?: () => void;
   indent?: boolean;
 }) {
   return (
-    <Link 
-      href={href} 
-      onClick={onClick}
-      className={`px-3 py-2 hover:bg-white/5 rounded text-sm ${indent ? 'pl-6 text-gray-400' : ''}`}
+    <button
+      onClick={() => { if (onClick) onClick(); window.location.href = href; }}
+      className={`w-full text-left px-3 py-2 hover:bg-white/5 rounded text-sm ${indent ? 'pl-6 text-gray-400' : ''}`}
     >
       {children}
-    </Link>
+    </button>
   );
 }
 
 function DropdownMenu({ children }: { children: React.ReactNode }) {
   return (
-    <div className="absolute top-full left-0 mt-1 w-48 bg-white text-black rounded-lg shadow-xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+    <div className="absolute top-full left-0 mt-1 w-48 bg-white text-black rounded-lg shadow-xl overflow-hidden z-50">
       {children}
     </div>
   );
 }
 
-function DropdownItem({ 
-  href, 
-  children, 
-  onClick,
+function DropdownItem({
+  href,
+  children,
   icon,
-  highlight 
-}: { 
-  href: string; 
+  highlight
+}: {
+  href: string;
   children: React.ReactNode;
-  onClick?: () => void;
   icon?: string;
   highlight?: boolean;
 }) {
   return (
-    <Link
-      href={href}
-      onClick={onClick}
-      className={`flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-gray-100 transition-colors ${
+    <button
+      onClick={() => { window.location.href = href; }}
+      className={`w-full flex items-center gap-2 px-4 py-2.5 text-sm text-left hover:bg-gray-100 transition-colors cursor-pointer ${
         highlight ? 'text-orange-600 font-medium' : ''
       }`}
     >
       {icon && <span>{icon}</span>}
       {children}
-    </Link>
+    </button>
   );
 }
 

@@ -17,7 +17,7 @@ import {
 } from '@/lib/canadianTaxes';
 
 type Step = 'auth' | 'info' | 'shipping' | 'payment';
-type PaymentMethod = 'card' | 'paypal' | 'apple_pay' | 'google_pay' | 'shop_pay';
+type PaymentMethod = 'paypal' | 'apple_pay' | 'google_pay' | 'shop_pay';
 
 export default function CheckoutPage() {
   const { data: session } = useSession();
@@ -28,8 +28,7 @@ export default function CheckoutPage() {
   // Determine initial step based on auth status
   const [currentStep, setCurrentStep] = useState<Step>('auth');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod>('card');
-  const [savePaymentInfo, setSavePaymentInfo] = useState(false);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod>('google_pay');
   const [guestCheckout, setGuestCheckout] = useState(false);
   
   // Form states
@@ -50,13 +49,6 @@ export default function CheckoutPage() {
     country: 'CA',
   });
   
-  const [paymentInfo, setPaymentInfo] = useState({
-    cardNumber: '',
-    cardName: '',
-    expiry: '',
-    cvv: '',
-  });
-
   // Promo code state
   const [promoCode, setPromoCode] = useState('');
   const [promoDiscount, setPromoDiscount] = useState(0);
@@ -280,7 +272,7 @@ export default function CheckoutPage() {
           throw new Error(data.error || 'Erreur PayPal');
         }
       } else {
-        // Stripe (card, apple_pay, google_pay, shop_pay)
+        // Stripe (apple_pay, google_pay, shop_pay)
         const response = await fetch('/api/payments/create-checkout', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -952,7 +944,7 @@ export default function CheckoutPage() {
                   {/* Express Payment Methods */}
                   <div className="mb-6">
                     <p className="text-sm font-medium text-gray-700 mb-3">
-                      {t('checkout.expressPayment') || 'Paiement express'}
+                      {locale?.startsWith('fr') ? 'Choisir un mode de paiement' : 'Choose a payment method'}
                     </p>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                       <button
@@ -1016,121 +1008,6 @@ export default function CheckoutPage() {
                     </div>
                   </div>
 
-                  <div className="relative my-6">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-gray-200"></div>
-                    </div>
-                    <div className="relative flex justify-center text-sm">
-                      <span className="px-4 bg-white text-gray-500">
-                        {t('checkout.orPayWithCard') || 'ou payer par carte'}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Credit Card Form */}
-                  <button
-                    onClick={() => setSelectedPaymentMethod('card')}
-                    className={`w-full mb-4 flex items-center gap-3 p-4 rounded-lg border-2 transition-colors ${
-                      selectedPaymentMethod === 'card' 
-                        ? 'border-orange-500 bg-orange-50' 
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                  >
-                    <div className="flex gap-2">
-                      <div className="w-10 h-6 bg-gradient-to-r from-blue-600 to-blue-800 rounded flex items-center justify-center text-white text-xs font-bold">VISA</div>
-                      <div className="w-10 h-6 bg-gradient-to-r from-red-500 to-orange-500 rounded flex items-center justify-center">
-                        <div className="w-3 h-3 bg-red-600 rounded-full"></div>
-                        <div className="w-3 h-3 bg-orange-400 rounded-full -ml-1"></div>
-                      </div>
-                      <div className="w-10 h-6 bg-blue-500 rounded flex items-center justify-center text-white text-xs font-bold">AMEX</div>
-                    </div>
-                    <span className="font-medium">{t('checkout.creditCard') || 'Carte de crédit'}</span>
-                  </button>
-                  
-                  {selectedPaymentMethod === 'card' && (
-                    <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          {t('checkout.cardNumber')} *
-                        </label>
-                        <input
-                          type="text"
-                          value={paymentInfo.cardNumber}
-                          onChange={(e) => {
-                            const value = e.target.value.replace(/\D/g, '').slice(0, 16);
-                            const formatted = value.replace(/(\d{4})/g, '$1 ').trim();
-                            setPaymentInfo({ ...paymentInfo, cardNumber: formatted });
-                          }}
-                          className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                          placeholder="1234 5678 9012 3456"
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          {t('checkout.cardName')} *
-                        </label>
-                        <input
-                          type="text"
-                          value={paymentInfo.cardName}
-                          onChange={(e) => setPaymentInfo({ ...paymentInfo, cardName: e.target.value })}
-                          className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                          placeholder="NOM SUR LA CARTE"
-                          required
-                        />
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            {t('checkout.expiry')} *
-                          </label>
-                          <input
-                            type="text"
-                            value={paymentInfo.expiry}
-                            onChange={(e) => {
-                              let value = e.target.value.replace(/\D/g, '').slice(0, 4);
-                              if (value.length >= 2) {
-                                value = value.slice(0, 2) + '/' + value.slice(2);
-                              }
-                              setPaymentInfo({ ...paymentInfo, expiry: value });
-                            }}
-                            className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                            placeholder="MM/YY"
-                            required
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            CVV *
-                          </label>
-                          <input
-                            type="text"
-                            value={paymentInfo.cvv}
-                            onChange={(e) => setPaymentInfo({ ...paymentInfo, cvv: e.target.value.replace(/\D/g, '').slice(0, 4) })}
-                            className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                            placeholder="123"
-                            required
-                          />
-                        </div>
-                      </div>
-                      
-                      {/* Save payment for logged in users */}
-                      {session && (
-                        <label className="flex items-center gap-2">
-                          <input
-                            type="checkbox"
-                            checked={savePaymentInfo}
-                            onChange={(e) => setSavePaymentInfo(e.target.checked)}
-                            className="w-4 h-4 text-orange-500 rounded"
-                          />
-                          <span className="text-sm text-gray-600">
-                            {t('checkout.savePayment') || 'Sauvegarder cette carte pour mes prochains achats'}
-                          </span>
-                        </label>
-                      )}
-                    </div>
-                  )}
-
                   {/* Security Notice */}
                   <div className="flex items-center gap-2 mt-4 text-sm text-gray-500">
                     <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1148,7 +1025,7 @@ export default function CheckoutPage() {
                     </button>
                     <button
                       onClick={handleSubmitOrder}
-                      disabled={isProcessing || (selectedPaymentMethod === 'card' && (!paymentInfo.cardNumber || !paymentInfo.cardName || !paymentInfo.expiry || !paymentInfo.cvv))}
+                      disabled={isProcessing}
                       className="px-8 py-3 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                     >
                       {isProcessing ? (

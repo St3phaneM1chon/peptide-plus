@@ -236,5 +236,183 @@
         "image": "/images/products/tirzepatide/tirz-15mg.png"
       }
     ]
+  },
+  {
+    "slug": "dihexa",
+    "main_image": "/images/products/dihexa/main.png",
+    "formats": [
+      {
+        "sku": "DIHEXA-5MG",
+        "image": "/images/products/dihexa/dihexa-5mg.png"
+      },
+      {
+        "sku": "DIHEXA-10MG",
+        "image": "/images/products/dihexa/dihexa-10mg.png"
+      }
+    ]
+  },
+  {
+    "slug": "follistatin-344",
+    "main_image": "/images/products/follistatin-344/main.png",
+    "formats": [
+      {
+        "sku": "FOLL-5MG",
+        "image": "/images/products/follistatin-344/foll-5mg.png"
+      },
+      {
+        "sku": "FOLL-10MG",
+        "image": "/images/products/follistatin-344/foll-10mg.png"
+      }
+    ]
+  },
+  {
+    "slug": "igf-1-lr3",
+    "main_image": "/images/products/igf-1-lr3/main.png",
+    "formats": [
+      {
+        "sku": "IGF1LR3-5MG",
+        "image": "/images/products/igf-1-lr3/igf1lr3-5mg.png"
+      },
+      {
+        "sku": "IGF1LR3-10MG",
+        "image": "/images/products/igf-1-lr3/igf1lr3-10mg.png"
+      }
+    ]
+  },
+  {
+    "slug": "kisspeptin-10",
+    "main_image": "/images/products/kisspeptin-10/main.png",
+    "formats": [
+      {
+        "sku": "KISS-5MG",
+        "image": "/images/products/kisspeptin-10/kiss-5mg.png"
+      },
+      {
+        "sku": "KISS-10MG",
+        "image": "/images/products/kisspeptin-10/kiss-10mg.png"
+      }
+    ]
+  },
+  {
+    "slug": "melanotan-2",
+    "main_image": "/images/products/melanotan-2/main.png",
+    "formats": [
+      {
+        "sku": "MT2-5MG",
+        "image": "/images/products/melanotan-2/mt2-5mg.png"
+      },
+      {
+        "sku": "MT2-10MG",
+        "image": "/images/products/melanotan-2/mt2-10mg.png"
+      }
+    ]
+  },
+  {
+    "slug": "pt-141",
+    "main_image": "/images/products/pt-141/main.png",
+    "formats": [
+      {
+        "sku": "PT141-5MG",
+        "image": "/images/products/pt-141/pt141-5mg.png"
+      },
+      {
+        "sku": "PT141-10MG",
+        "image": "/images/products/pt-141/pt141-10mg.png"
+      }
+    ]
+  },
+  {
+    "slug": "retatrutide",
+    "main_image": "/images/products/retatrutide/main.png",
+    "formats": [
+      {
+        "sku": "RETA-5MG",
+        "image": "/images/products/retatrutide/reta-5mg.png"
+      },
+      {
+        "sku": "RETA-10MG",
+        "image": "/images/products/retatrutide/reta-10mg.png"
+      }
+    ]
+  },
+  {
+    "slug": "selank",
+    "main_image": "/images/products/selank/main.png",
+    "formats": [
+      {
+        "sku": "SELANK-5MG",
+        "image": "/images/products/selank/selank-5mg.png"
+      },
+      {
+        "sku": "SELANK-10MG",
+        "image": "/images/products/selank/selank-10mg.png"
+      }
+    ]
+  },
+  {
+    "slug": "semax",
+    "main_image": "/images/products/semax/main.png",
+    "formats": [
+      {
+        "sku": "SEMAX-5MG",
+        "image": "/images/products/semax/semax-5mg.png"
+      },
+      {
+        "sku": "SEMAX-10MG",
+        "image": "/images/products/semax/semax-10mg.png"
+      }
+    ]
+  },
+  {
+    "slug": "tesamorelin",
+    "main_image": "/images/products/tesamorelin/main.png",
+    "formats": [
+      {
+        "sku": "TESA-5MG",
+        "image": "/images/products/tesamorelin/tesa-5mg.png"
+      },
+      {
+        "sku": "TESA-10MG",
+        "image": "/images/products/tesamorelin/tesa-10mg.png"
+      }
+    ]
+  },
+  {
+    "slug": "thymalin",
+    "main_image": "/images/products/thymalin/main.png",
+    "formats": [
+      {
+        "sku": "THYM-5MG",
+        "image": "/images/products/thymalin/thym-5mg.png"
+      },
+      {
+        "sku": "THYM-10MG",
+        "image": "/images/products/thymalin/thym-10mg.png"
+      }
+    ]
+  },
+  {
+    "slug": "nmn",
+    "main_image": "/images/products/nmn/main.png",
+    "formats": [
+      {
+        "sku": "NMN-60CAP",
+        "image": "/images/products/nmn/nmn-60cap.png"
+      },
+      {
+        "sku": "NMN-120CAP",
+        "image": "/images/products/nmn/nmn-120cap.png"
+      }
+    ]
+  },
+  {
+    "slug": "injection-pen",
+    "main_image": "/images/products/injection-pen/main.png",
+    "formats": [
+      {
+        "sku": "PEN-1",
+        "image": "/images/products/injection-pen/pen-1.png"
+      }
+    ]
   }
 ]

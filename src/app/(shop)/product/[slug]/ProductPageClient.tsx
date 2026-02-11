@@ -24,6 +24,13 @@ interface ProductFormat {
   image?: string;
 }
 
+interface ProductImage {
+  id: string;
+  url: string;
+  alt: string;
+  isPrimary: boolean;
+}
+
 interface RelatedProduct {
   id: string;
   name: string;
@@ -31,6 +38,7 @@ interface RelatedProduct {
   slug: string;
   price: number;
   purity?: number;
+  image?: string;
 }
 
 interface Product {
@@ -54,6 +62,8 @@ interface Product {
   categorySlug: string;
   isNew?: boolean;
   isBestseller?: boolean;
+  productImage?: string;
+  images?: ProductImage[];
   formats: ProductFormat[];
   relatedProducts: RelatedProduct[];
 }
@@ -89,8 +99,11 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
   const { formatPrice } = useCurrency();
   const { t } = useTranslations();
   
+  // Filter out formats with stockQuantity <= 0
+  const availableFormats = product.formats.filter(f => f.stockQuantity > 0);
+
   const [selectedFormat, setSelectedFormat] = useState<ProductFormat>(
-    product.formats.find(f => f.inStock) || product.formats[0]
+    availableFormats.find(f => f.inStock) || availableFormats[0] || product.formats[0]
   );
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState<'description' | 'specs' | 'research' | 'reconstitution'>('description');
@@ -154,7 +167,7 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
       price: selectedFormat.price,
       comparePrice: selectedFormat.comparePrice,
       sku: selectedFormat.sku,
-      image: '/images/products/peptide-default.png',
+      image: selectedFormat.image || product.productImage || '/images/products/peptide-default.png',
       maxQuantity: selectedFormat.stockQuantity,
       quantity,
     });
@@ -188,7 +201,7 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
           <div>
             <div className="aspect-square max-w-md mx-auto bg-neutral-100 rounded-lg overflow-hidden relative">
               <Image
-                src="/images/products/peptide-default.png"
+                src={selectedFormat?.image || product.productImage || '/images/products/peptide-default.png'}
                 alt={productName}
                 fill
                 className="object-cover"
@@ -205,6 +218,22 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
                 </span>
               )}
             </div>
+            {/* Thumbnail gallery */}
+            {product.images && product.images.length > 1 && (
+              <div className="flex gap-2 mt-3 max-w-md mx-auto overflow-x-auto">
+                {product.images.map((img) => (
+                  <div key={img.id} className="w-16 h-16 flex-shrink-0 rounded-lg overflow-hidden border-2 border-neutral-200 hover:border-orange-400 transition-colors cursor-pointer">
+                    <Image
+                      src={img.url}
+                      alt={img.alt}
+                      width={64}
+                      height={64}
+                      className="object-cover w-full h-full"
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* RIGHT: Product Info */}
@@ -294,7 +323,7 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
               {/* Dropdown Menu */}
               {isDropdownOpen && (
                 <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-neutral-200 rounded-lg shadow-2xl max-h-80 overflow-y-auto">
-                  {product.formats.map((format) => (
+                  {availableFormats.map((format) => (
                     <button
                       key={format.id}
                       onClick={() => handleFormatSelect(format)}
@@ -724,7 +753,7 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
                 >
                   <div className="aspect-square bg-neutral-100 relative">
                     <Image
-                      src="/images/products/peptide-default.png"
+                      src={related.image || '/images/products/peptide-default.png'}
                       alt={getRelatedProductName(related)}
                       fill
                       className="object-cover group-hover:scale-105 transition-transform"

@@ -111,7 +111,10 @@
     "ambassador": "大使",
     "trackOrder": "订单追踪",
     "shippingPolicy": "配送政策",
-    "refundPolicy": "退款政策"
+    "refundPolicy": "退款政策",
+    "resources": "资源",
+    "injectionCalculator": "注射计算器",
+    "calculator": "计算器"
   },
   "common": {
     "loading": "加载中...",
@@ -1117,5 +1120,16 @@
     "resetFilters": "重置",
     "leaveReview": "评价",
     "reorder": "再次购买"
+  },
+  "calculator": {
+    "title": "多肽注射计算器",
+    "subtitle": "精确计算您的多肽剂量。输入多肽含量、溶剂体积和所需剂量。",
+    "step1Title": "多肽含量",
+    "step1Desc": "输入药瓶中的多肽总量（毫克）。",
+    "step2Title": "溶剂体积",
+    "step2Desc": "输入用于复溶的抑菌水量（毫升）。",
+    "step3Title": "所需剂量",
+    "step3Desc": "输入每次注射所需的剂量（微克或毫克）。",
+    "disclaimer": "此计算器仅供体外研究参考使用。"
   }
 }

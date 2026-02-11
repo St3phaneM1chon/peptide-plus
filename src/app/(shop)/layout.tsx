@@ -21,7 +21,7 @@ export default function ShopLayout({
             <div className="min-h-screen flex flex-col bg-white">
               <FreeShippingBanner />
               <Header />
-              <main className="flex-1">{children}</main>
+              <main className="flex-1 relative z-0">{children}</main>
               <Footer />
               <DisclaimerModal />
               <NewsletterPopup />

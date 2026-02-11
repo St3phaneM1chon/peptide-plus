@@ -1899,3 +1899,86 @@ model AccountingSettings {
   
   updatedAt             DateTime  @updatedAt
 }
+
+// =====================================================
+// HERO SLIDER
+// =====================================================
+
+enum HeroMediaType {
+  IMAGE
+  VIDEO
+  ANIMATION
+}
+
+model HeroSlide {
+  id               String        @id @default(cuid())
+
+  // Identifiant interne (pour lier aux traductions i18n)
+  slug             String        @unique  // "research-peptides", "rewards", etc.
+
+  // Media
+  mediaType        HeroMediaType @default(IMAGE)
+  backgroundUrl    String                 // URL image/vidéo de fond
+  backgroundMobile String?                // URL image mobile (optionnel)
+  overlayOpacity   Int           @default(70) // 0-100
+  overlayGradient  String?                // ex: "from-black/80 via-black/70 to-black/60"
+
+  // Contenu par défaut (fallback si pas de traduction)
+  badgeText        String?
+  title            String
+  subtitle         String?       @db.Text
+
+  // CTA primaire
+  ctaText          String?
+  ctaUrl           String?
+  ctaStyle         String?       @default("primary") // "primary", "secondary", "outline"
+
+  // CTA secondaire
+  cta2Text         String?
+  cta2Url          String?
+  cta2Style        String?       @default("outline")
+
+  // Stats grid (JSON array, ex: [{"value":"99%+","label":"Purity"}])
+  statsJson        String?       @db.Text
+
+  // Ordre et visibilité
+  sortOrder        Int           @default(0)
+  isActive         Boolean       @default(true)
+
+  // Planification
+  startDate        DateTime?
+  endDate          DateTime?
+
+  // Traductions (relation)
+  translations     HeroSlideTranslation[]
+
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@index([isActive, sortOrder])
+}
+
+model HeroSlideTranslation {
+  id          String    @id @default(cuid())
+
+  slideId     String
+  slide       HeroSlide @relation(fields: [slideId], references: [id], onDelete: Cascade)
+
+  locale      String    // "fr", "en", "es", etc.
+
+  badgeText   String?
+  title       String
+  subtitle    String?   @db.Text
+  ctaText     String?
+  cta2Text    String?
+
+  // Stats traduits (JSON)
+  statsJson   String?   @db.Text
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([slideId, locale])
+  @@index([slideId])
+  @@index([locale])
+}

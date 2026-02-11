@@ -20,12 +20,19 @@ interface ApiProduct {
     name: string;
     slug: string;
   };
+  images?: Array<{
+    id: string;
+    url: string;
+    alt?: string;
+    isPrimary?: boolean;
+    sortOrder: number;
+  }>;
   formats: Array<{
     id: string;
-    label: string;
-    type?: string;
+    name: string;
+    formatType?: string;
     price: number | string;
-    compareAtPrice?: number | string;
+    comparePrice?: number | string;
     isActive: boolean;
     stockQuantity: number;
     imageUrl?: string;
@@ -119,13 +126,17 @@ export default function ShopPage() {
         : 0;
       const hasStock = activeFormats.some((f) => f.stockQuantity > 0);
 
+      // Use primary image from images array, or fallback to product imageUrl
+      const primaryImage = p.images?.find((img) => img.isPrimary) || p.images?.[0];
+      const productImageUrl = primaryImage?.url || p.imageUrl || undefined;
+
       return {
         id: p.id,
         name: p.name,
         slug: p.slug,
         price: lowestPrice,
         purity: p.purity ? Number(p.purity) : undefined,
-        imageUrl: p.imageUrl || undefined,
+        imageUrl: productImageUrl,
         category: p.category?.name || '',
         categorySlug: p.category?.slug || '',
         inStock: hasStock,
@@ -133,9 +144,9 @@ export default function ShopPage() {
         isBestseller: p.isFeatured,
         formats: activeFormats.map((f) => ({
           id: f.id,
-          name: f.label,
+          name: f.name,
           price: Number(f.price),
-          comparePrice: f.compareAtPrice ? Number(f.compareAtPrice) : undefined,
+          comparePrice: f.comparePrice ? Number(f.comparePrice) : undefined,
           inStock: f.stockQuantity > 0,
           stockQuantity: f.stockQuantity,
           image: f.imageUrl || undefined,

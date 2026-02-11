@@ -111,7 +111,10 @@
     "ambassador": "Ambassadors",
     "trackOrder": "Track Order",
     "shippingPolicy": "Shipping Policy",
-    "refundPolicy": "Refund Policy"
+    "refundPolicy": "Refund Policy",
+    "resources": "Zasoby",
+    "injectionCalculator": "Kalkulator iniekcji",
+    "calculator": "Kalkulator"
   },
   "categories": {
     "all": "Wszystkie Produkty",
@@ -1117,5 +1120,16 @@
     "resetFilters": "Reset filters",
     "leaveReview": "Leave a review",
     "reorder": "Order again"
+  },
+  "calculator": {
+    "title": "Kalkulator iniekcji peptydów",
+    "subtitle": "Oblicz precyzyjną dawkę peptydu. Wprowadź ilość peptydu, objętość rozpuszczalnika i pożądaną dawkę.",
+    "step1Title": "Ilość peptydu",
+    "step1Desc": "Wprowadź całkowitą ilość peptydu w fiolce (w mg).",
+    "step2Title": "Objętość rozpuszczalnika",
+    "step2Desc": "Wprowadź ilość wody bakteriostatycznej (w mL).",
+    "step3Title": "Pożądana dawka",
+    "step3Desc": "Wprowadź pożądaną dawkę na iniekcję w mcg lub mg.",
+    "disclaimer": "Ten kalkulator jest dostarczany wyłącznie w celach informacyjnych do badań in vitro."
   }
 }

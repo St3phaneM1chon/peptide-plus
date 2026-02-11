@@ -111,7 +111,10 @@
     "ambassador": "Ambassadors",
     "trackOrder": "Track Order",
     "shippingPolicy": "Shipping Policy",
-    "refundPolicy": "Refund Policy"
+    "refundPolicy": "Refund Policy",
+    "resources": "리소스",
+    "injectionCalculator": "주사 계산기",
+    "calculator": "계산기"
   },
   "categories": {
     "all": "모든 제품",
@@ -1117,5 +1120,16 @@
     "resetFilters": "초기화",
     "leaveReview": "리뷰",
     "reorder": "재주문"
+  },
+  "calculator": {
+    "title": "펩타이드 주사 계산기",
+    "subtitle": "정확한 펩타이드 용량을 계산하세요. 펩타이드 양, 용매 부피, 원하는 용량을 입력하세요.",
+    "step1Title": "펩타이드 양",
+    "step1Desc": "바이알에 있는 펩타이드 총량(mg)을 입력하세요.",
+    "step2Title": "용매 부피",
+    "step2Desc": "재구성에 사용할 정균수 양(mL)을 입력하세요.",
+    "step3Title": "원하는 용량",
+    "step3Desc": "주사당 원하는 용량을 mcg 또는 mg로 입력하세요.",
+    "disclaimer": "이 계산기는 체외 연구 정보 제공 목적으로만 제공됩니다."
   }
 }

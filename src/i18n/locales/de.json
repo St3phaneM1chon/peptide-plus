@@ -111,7 +111,10 @@
     "ambassador": "Botschafter",
     "trackOrder": "Bestellung verfolgen",
     "shippingPolicy": "Versandrichtlinie",
-    "refundPolicy": "Rückerstattungsrichtlinie"
+    "refundPolicy": "Rückerstattungsrichtlinie",
+    "resources": "Ressourcen",
+    "injectionCalculator": "Injektionsrechner",
+    "calculator": "Rechner"
   },
   "common": {
     "loading": "Laden...",
@@ -1117,5 +1120,16 @@
     "resetFilters": "Zurücksetzen",
     "leaveReview": "Bewerten",
     "reorder": "Erneut bestellen"
+  },
+  "calculator": {
+    "title": "Peptid-Injektionsrechner",
+    "subtitle": "Berechnen Sie Ihre präzise Peptiddosierung. Geben Sie die Peptidmenge, das Lösungsmittelvolumen und die gewünschte Dosis ein.",
+    "step1Title": "Peptidmenge",
+    "step1Desc": "Geben Sie die Gesamtmenge an Peptid in Ihrem Fläschchen ein (in mg).",
+    "step2Title": "Lösungsmittelvolumen",
+    "step2Desc": "Geben Sie die Menge an bakteriostatischem Wasser ein (in mL).",
+    "step3Title": "Gewünschte Dosis",
+    "step3Desc": "Geben Sie die gewünschte Dosis pro Injektion in mcg oder mg ein.",
+    "disclaimer": "Dieser Rechner dient nur zu Informationszwecken für die In-vitro-Forschung."
   }
 }

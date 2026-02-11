@@ -111,7 +111,10 @@
     "ambassador": "Ambassadors",
     "trackOrder": "Track Order",
     "shippingPolicy": "Shipping Policy",
-    "refundPolicy": "Refund Policy"
+    "refundPolicy": "Refund Policy",
+    "resources": "الموارد",
+    "injectionCalculator": "حاسبة الحقن",
+    "calculator": "حاسبة"
   },
   "categories": {
     "all": "جميع المنتجات",
@@ -1117,5 +1120,16 @@
     "resetFilters": "إعادة",
     "leaveReview": "تقييم",
     "reorder": "إعادة الطلب"
+  },
+  "calculator": {
+    "title": "حاسبة حقن الببتيدات",
+    "subtitle": "احسب جرعة الببتيد بدقة. أدخل كمية الببتيد وحجم المذيب والجرعة المطلوبة.",
+    "step1Title": "كمية الببتيد",
+    "step1Desc": "أدخل الكمية الإجمالية للببتيد في القارورة (بالمليغرام).",
+    "step2Title": "حجم المذيب",
+    "step2Desc": "أدخل كمية الماء المعقم (بالمليلتر).",
+    "step3Title": "الجرعة المطلوبة",
+    "step3Desc": "أدخل الجرعة المطلوبة لكل حقنة بالميكروغرام أو المليغرام.",
+    "disclaimer": "هذه الحاسبة مقدمة لأغراض إعلامية فقط للبحث المختبري."
   }
 }

@@ -112,8 +112,11 @@
     "forum": "Forum",
     "ambassador": "Ambassadors",
     "trackOrder": "Track Order",
+    "resources": "Resources",
+    "injectionCalculator": "Injection Calculator",
     "shippingPolicy": "Shipping Policy",
-    "refundPolicy": "Refund Policy"
+    "refundPolicy": "Refund Policy",
+    "calculator": "Calculator"
   },
   "categories": {
     "all": "All Products",
@@ -197,6 +200,17 @@
     "ml": "ml",
     "g": "g",
     "kg": "kg"
+  },
+  "calculator": {
+    "title": "Peptide Injection Calculator",
+    "subtitle": "Calculate your precise peptide dosage. Enter the peptide amount, solvent volume, and desired dose to get your injection parameters.",
+    "step1Title": "Peptide Amount",
+    "step1Desc": "Enter the total amount of peptide in your vial (in mg), as indicated on the label.",
+    "step2Title": "Solvent Volume",
+    "step2Desc": "Enter the amount of bacteriostatic water you will use to reconstitute (in mL).",
+    "step3Title": "Desired Dose",
+    "step3Desc": "Enter the dose you want per injection in mcg or mg. The calculator shows the exact volume to draw.",
+    "disclaimer": "This calculator is provided for informational purposes only for in vitro research. All products are intended for laboratory and research purposes only."
   },
   "disclaimer": {
     "title": "Research Use Only",
@@ -631,6 +645,7 @@
     "recentOrder": "Most Recent Order",
     "noOrders": "No orders yet",
     "noOrdersDesc": "Start shopping to see your order history here.",
+    "inventory": "My Inventory",
     "profile": "Profile",
     "password": "Password",
     "address": "Address",
