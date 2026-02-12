@@ -109,6 +109,9 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
   const [activeTab, setActiveTab] = useState<'description' | 'specs' | 'research' | 'reconstitution'>('description');
   const [addedToCart, setAddedToCart] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string>(
+    product.productImage || '/images/products/peptide-default.png'
+  );
   const dropdownRef = useRef<HTMLDivElement>(null);
   
   // Get enriched chemistry data if available
@@ -167,7 +170,7 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
       price: selectedFormat.price,
       comparePrice: selectedFormat.comparePrice,
       sku: selectedFormat.sku,
-      image: selectedFormat.image || product.productImage || '/images/products/peptide-default.png',
+      image: product.productImage || '/images/products/peptide-default.png',
       maxQuantity: selectedFormat.stockQuantity,
       quantity,
     });
@@ -201,10 +204,10 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
           <div>
             <div className="aspect-square max-w-md mx-auto bg-neutral-100 rounded-lg overflow-hidden relative">
               <Image
-                src={selectedFormat?.image || product.productImage || '/images/products/peptide-default.png'}
+                src={selectedImage}
                 alt={productName}
                 fill
-                className="object-cover"
+                className="object-contain"
                 priority
               />
               {product.isNew && (
@@ -222,7 +225,13 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
             {product.images && product.images.length > 1 && (
               <div className="flex gap-2 mt-3 max-w-md mx-auto overflow-x-auto">
                 {product.images.map((img) => (
-                  <div key={img.id} className="w-16 h-16 flex-shrink-0 rounded-lg overflow-hidden border-2 border-neutral-200 hover:border-orange-400 transition-colors cursor-pointer">
+                  <button
+                    key={img.id}
+                    onClick={() => setSelectedImage(img.url)}
+                    className={`w-16 h-16 flex-shrink-0 rounded-lg overflow-hidden border-2 transition-colors cursor-pointer ${
+                      selectedImage === img.url ? 'border-orange-500' : 'border-neutral-200 hover:border-orange-400'
+                    }`}
+                  >
                     <Image
                       src={img.url}
                       alt={img.alt}
@@ -230,7 +239,7 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
                       height={64}
                       className="object-cover w-full h-full"
                     />
-                  </div>
+                  </button>
                 ))}
               </div>
             )}
@@ -485,9 +494,22 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
           {/* Description Tab */}
           {activeTab === 'description' && (
             <div className="prose max-w-none">
-              {product.description.split('\n').map((p, i) => (
-                <p key={i} className="mb-4 text-neutral-700 leading-relaxed">{p}</p>
-              ))}
+              {(product.description || product.shortDescription) ? (
+                (product.description || product.shortDescription).split('\n').map((p, i) => (
+                  <p key={i} className="mb-4 text-neutral-700 leading-relaxed">{p}</p>
+                ))
+              ) : (
+                <p className="text-neutral-400 italic">{t('shop.noDescription') || 'Description coming soon.'}</p>
+              )}
+              {/* Chemistry enrichment from local data */}
+              {chemistryData?.researchSummary && !product.description && (
+                <div className="mt-6 p-4 bg-neutral-50 rounded-lg border">
+                  <h3 className="font-semibold text-neutral-800 mb-2">{t('shop.researchContext') || 'Research Context'}</h3>
+                  {chemistryData.researchSummary.split('\n').map((p, i) => (
+                    <p key={`rc-${i}`} className="mb-2 text-neutral-600 text-sm leading-relaxed">{p}</p>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
