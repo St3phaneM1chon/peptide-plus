@@ -1,5 +1,6 @@
 import { PrismaClient, ProductType, FormatType, DiscountType, StockStatus } from '@prisma/client';
 import { seedAccounting } from './seed-accounting';
+import { seedCustomerData } from './seed-customer-data';
 
 const prisma = new PrismaClient();
 
@@ -1154,6 +1155,11 @@ async function main() {
   // COMPTABILITÉ (Plan comptable, Paramètres, Périodes)
   // =====================================================
   await seedAccounting();
+
+  // =====================================================
+  // DONNÉES CLIENT DE TEST (Commandes, Factures, Abonnements)
+  // =====================================================
+  await seedCustomerData();
 
   // Count totals
   const productCount = await prisma.product.count();

@@ -33,10 +33,10 @@ export async function GET() {
     message: 'Application is running',
   });
 
-  // Check 2: Environment variables
+  // Check 2: Environment variables (only actually required ones)
   const requiredEnvVars = [
-    'AZURE_AD_CLIENT_ID',
-    'AZURE_AD_TENANT_ID',
+    'DATABASE_URL',
+    'NEXTAUTH_SECRET',
   ];
 
   const missingEnvVars = requiredEnvVars.filter(
