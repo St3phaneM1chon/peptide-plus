@@ -7,7 +7,7 @@ import { prisma } from './db';
 import { createSecurityLog } from './security';
 
 // Configuration
-const MAX_FAILED_ATTEMPTS = 5;         // Nombre max de tentatives
+const MAX_FAILED_ATTEMPTS = 3;         // Nombre max de tentatives (Chubb: 3)
 const LOCKOUT_DURATION_MS = 30 * 60 * 1000; // 30 minutes de lockout
 const ATTEMPT_WINDOW_MS = 15 * 60 * 1000;   // Fenêtre de 15 minutes
 

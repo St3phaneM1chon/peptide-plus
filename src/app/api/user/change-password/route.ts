@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { db } from '@/lib/db';
+import { checkPasswordHistory, addToPasswordHistory } from '@/lib/password-history';
 import bcrypt from 'bcryptjs';
 
 export async function POST(request: NextRequest) {
@@ -59,6 +60,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Mot de passe actuel incorrect' }, { status: 400 });
     }
 
+    // SECURITY: Check password history (prevent reuse of last 12 passwords)
+    const wasUsedBefore = await checkPasswordHistory(user.id, newPassword);
+    if (wasUsedBefore) {
+      return NextResponse.json(
+        { error: 'Ce mot de passe a déjà été utilisé. Veuillez en choisir un nouveau.' },
+        { status: 400 }
+      );
+    }
+
     // Hasher le nouveau mot de passe
     const hashedPassword = await bcrypt.hash(newPassword, 12);
 
@@ -67,6 +77,9 @@ export async function POST(request: NextRequest) {
       where: { id: user.id },
       data: { password: hashedPassword },
     });
+
+    // Store in password history
+    await addToPasswordHistory(user.id, hashedPassword);
 
     console.log(`Password changed for user: ${session.user.email}`);
 

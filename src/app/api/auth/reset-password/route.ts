@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { checkPasswordHistory, addToPasswordHistory } from '@/lib/password-history';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 
@@ -13,7 +14,7 @@ export async function POST(request: NextRequest) {
   try {
     // SECURITY: Rate limit password reset attempts
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
-    const rateLimit = rateLimitMiddleware(ip, '/api/auth/reset-password');
+    const rateLimit = await rateLimitMiddleware(ip, '/api/auth/reset-password');
     if (!rateLimit.success) {
       return NextResponse.json(
         { error: rateLimit.error!.message },
@@ -32,9 +33,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Validation du mot de passe
-    if (password.length < 8) {
+    if (password.length < 12) {
       return NextResponse.json(
-        { error: 'Le mot de passe doit contenir au moins 8 caractères' },
+        { error: 'Le mot de passe doit contenir au moins 12 caractères' },
         { status: 400 }
       );
     }
@@ -69,6 +70,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // SECURITY: Check password history (prevent reuse of last 12 passwords)
+    const wasUsedBefore = await checkPasswordHistory(user.id, password);
+    if (wasUsedBefore) {
+      return NextResponse.json(
+        { error: 'Ce mot de passe a déjà été utilisé. Veuillez en choisir un nouveau.' },
+        { status: 400 }
+      );
+    }
+
     // Hasher le nouveau mot de passe
     const hashedPassword = await bcrypt.hash(password, 12);
 
@@ -91,6 +101,9 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
+
+    // Store the new password in history
+    await addToPasswordHistory(user.id, hashedPassword);
 
     // Log pour audit
     console.log(JSON.stringify({

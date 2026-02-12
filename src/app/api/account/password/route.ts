@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { db } from '@/lib/db';
+import { checkPasswordHistory, addToPasswordHistory } from '@/lib/password-history';
 import bcrypt from 'bcryptjs';
 
 export async function PUT(request: Request) {
@@ -39,6 +40,15 @@ export async function PUT(request: Request) {
       );
     }
 
+    // SECURITY: Check password history (prevent reuse of last 12 passwords)
+    const wasUsedBefore = await checkPasswordHistory(user.id, newPassword);
+    if (wasUsedBefore) {
+      return NextResponse.json(
+        { error: 'Ce mot de passe a déjà été utilisé. Veuillez en choisir un nouveau.' },
+        { status: 400 }
+      );
+    }
+
     // Hash new password
     const hashedPassword = await bcrypt.hash(newPassword, 12);
 
@@ -47,6 +57,9 @@ export async function PUT(request: Request) {
       where: { email: session.user.email },
       data: { password: hashedPassword },
     });
+
+    // Store in password history
+    await addToPasswordHistory(user.id, hashedPassword);
 
     return NextResponse.json({ success: true });
   } catch (error) {

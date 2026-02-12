@@ -1,59 +1,178 @@
 /**
  * RATE LIMITER - Protection contre les abus API
- * Implémente sliding window rate limiting
+ * Redis-backed sliding window rate limiting with in-memory fallback
+ *
+ * Strategy:
+ *   1. Try to connect to Redis (via ioredis) using REDIS_URL env var.
+ *   2. If Redis is unavailable or ioredis is not installed, fall back
+ *      to the in-memory Map implementation transparently.
+ *   3. Uses Redis INCR + EXPIRE for atomic fixed-window counting.
+ *   4. Key pattern: rl:{ip_or_user}:{endpoint} with TTL = windowMs.
  */
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
 
 interface RateLimitEntry {
   count: number;
   windowStart: number;
 }
 
-// Cache en mémoire (considérer Redis pour la production multi-serveur)
+interface RateLimitResult {
+  allowed: boolean;
+  remaining: number;
+  resetAt: number;
+  limit: number;
+}
+
+// ---------------------------------------------------------------------------
+// Redis client abstraction
+// ---------------------------------------------------------------------------
+
+/**
+ * Minimal Redis interface we need -- allows swapping ioredis / node-redis / etc.
+ * We only rely on INCR, EXPIRE, TTL, DEL and KEYS.
+ */
+interface RedisClient {
+  incr(key: string): Promise<number>;
+  expire(key: string, seconds: number): Promise<number>;
+  ttl(key: string): Promise<number>;
+  del(...keys: string[]): Promise<number>;
+  keys(pattern: string): Promise<string[]>;
+  status?: string;
+  quit(): Promise<string>;
+}
+
+let redisClient: RedisClient | null = null;
+let redisAvailable = false;
+let redisInitAttempted = false;
+
+/**
+ * Attempt to lazily initialise a Redis connection.
+ * Safe to call multiple times -- only the first call does real work.
+ */
+async function getRedisClient(): Promise<RedisClient | null> {
+  if (redisInitAttempted) return redisClient;
+  redisInitAttempted = true;
+
+  const redisUrl = process.env.REDIS_URL;
+
+  if (!redisUrl) {
+    console.warn(
+      '[rate-limiter] REDIS_URL not set -- using in-memory fallback'
+    );
+    return null;
+  }
+
+  try {
+    // Dynamic import so the app doesn't crash if ioredis is not installed
+    // @ts-ignore -- ioredis may not be installed; caught at runtime below
+    const Redis = (await import('ioredis')).default;
+    const client = new Redis(redisUrl, {
+      maxRetriesPerRequest: 1,
+      connectTimeout: 3000,
+      lazyConnect: true,
+      enableReadyCheck: true,
+      retryStrategy(times: number) {
+        // Stop retrying after 3 attempts -- we will fall back to in-memory
+        if (times > 3) return null;
+        return Math.min(times * 200, 1000);
+      },
+    });
+
+    // Attempt to connect
+    await client.connect();
+    redisClient = client as unknown as RedisClient;
+    redisAvailable = true;
+    console.info('[rate-limiter] Redis connected successfully');
+
+    // If the connection drops later, flag as unavailable
+    (client as any).on('error', (err: Error) => {
+      console.error('[rate-limiter] Redis error:', err.message);
+      redisAvailable = false;
+    });
+    (client as any).on('connect', () => {
+      redisAvailable = true;
+    });
+
+    return redisClient;
+  } catch (err) {
+    // ioredis not installed OR connection failed
+    const message = err instanceof Error ? err.message : String(err);
+    console.warn(
+      `[rate-limiter] Redis unavailable (${message}) -- using in-memory fallback`
+    );
+    return null;
+  }
+}
+
+// Kick off the initialisation on module load (non-blocking)
+if (typeof process !== 'undefined' && process.env) {
+  getRedisClient().catch(() => {
+    /* swallow -- fallback is fine */
+  });
+}
+
+// ---------------------------------------------------------------------------
+// In-memory fallback store
+// ---------------------------------------------------------------------------
+
 const rateLimitCache = new Map<string, RateLimitEntry>();
 
-// Configuration par défaut
-const DEFAULT_WINDOW_MS = 60 * 1000; // 1 minute
-const DEFAULT_MAX_REQUESTS = 100;    // 100 requêtes par fenêtre
+// ---------------------------------------------------------------------------
+// Configuration
+// ---------------------------------------------------------------------------
 
-// Configurations spécifiques par endpoint
+const DEFAULT_WINDOW_MS = 60 * 1000; // 1 minute
+const DEFAULT_MAX_REQUESTS = 100;    // 100 requests per window
+
 const RATE_LIMIT_CONFIGS: Record<string, { windowMs: number; maxRequests: number }> = {
   // Auth - plus strict
   'auth/login': { windowMs: 60000, maxRequests: 5 },
   'auth/register': { windowMs: 300000, maxRequests: 3 },
   'auth/forgot-password': { windowMs: 300000, maxRequests: 3 },
   'auth/reset-password': { windowMs: 300000, maxRequests: 5 },
-  
-  // API publiques - modéré
+
+  // API publiques - modere
   'products': { windowMs: 60000, maxRequests: 60 },
   'categories': { windowMs: 60000, maxRequests: 60 },
   'search': { windowMs: 60000, maxRequests: 30 },
-  
+
   // Checkout - strict
   'checkout': { windowMs: 60000, maxRequests: 10 },
   'payments': { windowMs: 60000, maxRequests: 10 },
-  
-  // Admin - modéré
+
+  // Admin - modere
   'admin': { windowMs: 60000, maxRequests: 100 },
-  
+
   // Chat - permissif
   'chat': { windowMs: 60000, maxRequests: 120 },
 };
 
-/**
- * Génère une clé unique pour le rate limiting
- */
-function generateRateLimitKey(ip: string, endpoint: string, userId?: string): string {
-  const base = userId ? `user:${userId}` : `ip:${ip}`;
-  return `ratelimit:${base}:${endpoint}`;
-}
+// ---------------------------------------------------------------------------
+// Key generation
+// ---------------------------------------------------------------------------
+
+/** Redis key prefix */
+const REDIS_KEY_PREFIX = 'rl';
 
 /**
- * Extrait le type d'endpoint pour la configuration
+ * Generates a unique rate-limit key.
+ * Pattern: rl:{ip_or_user}:{endpoint}
  */
+function generateRateLimitKey(ip: string, endpoint: string, userId?: string): string {
+  const identity = userId ? `user_${userId}` : `ip_${ip}`;
+  return `${REDIS_KEY_PREFIX}:${identity}:${endpoint}`;
+}
+
+// ---------------------------------------------------------------------------
+// Endpoint type resolution
+// ---------------------------------------------------------------------------
+
 function getEndpointType(path: string): string {
   const segments = path.split('/').filter(Boolean);
-  
-  // API routes
+
   if (segments[0] === 'api') {
     if (segments[1] === 'auth') return `auth/${segments[2] || 'default'}`;
     if (segments[1] === 'admin') return 'admin';
@@ -61,39 +180,57 @@ function getEndpointType(path: string): string {
     if (segments[1] === 'chat') return 'chat';
     return segments[1] || 'default';
   }
-  
+
   return 'default';
 }
 
-/**
- * Vérifie si une requête dépasse la limite de rate
- */
-export function checkRateLimit(
-  ip: string,
-  path: string,
-  userId?: string
-): {
-  allowed: boolean;
-  remaining: number;
-  resetAt: number;
-  limit: number;
-} {
-  const endpointType = getEndpointType(path);
-  const config = RATE_LIMIT_CONFIGS[endpointType] || {
-    windowMs: DEFAULT_WINDOW_MS,
-    maxRequests: DEFAULT_MAX_REQUESTS,
-  };
-  
-  const key = generateRateLimitKey(ip, endpointType, userId);
+// ---------------------------------------------------------------------------
+// Core: Redis-backed check
+// ---------------------------------------------------------------------------
+
+async function checkRateLimitRedis(
+  key: string,
+  config: { windowMs: number; maxRequests: number }
+): Promise<RateLimitResult> {
+  const client = redisClient!;
+  const ttlSeconds = Math.ceil(config.windowMs / 1000);
+
+  // INCR is atomic -- creates the key with value 1 if it does not exist
+  const count = await client.incr(key);
+
+  if (count === 1) {
+    // First request in this window -- set the TTL
+    await client.expire(key, ttlSeconds);
+  }
+
+  // Determine when the window resets
+  const remainingTtl = await client.ttl(key);
+  // TTL returns -1 if no expiry set (shouldn't happen but guard)
+  const effectiveTtl = remainingTtl > 0 ? remainingTtl : ttlSeconds;
+  const resetAt = Date.now() + effectiveTtl * 1000;
+
+  const allowed = count <= config.maxRequests;
+  const remaining = Math.max(0, config.maxRequests - count);
+
+  return { allowed, remaining, resetAt, limit: config.maxRequests };
+}
+
+// ---------------------------------------------------------------------------
+// Core: In-memory fallback check
+// ---------------------------------------------------------------------------
+
+function checkRateLimitMemory(
+  key: string,
+  config: { windowMs: number; maxRequests: number }
+): RateLimitResult {
   const now = Date.now();
-  
   let entry = rateLimitCache.get(key);
-  
-  // Nouvelle entrée ou fenêtre expirée
+
+  // New entry or expired window
   if (!entry || now - entry.windowStart >= config.windowMs) {
     entry = { count: 1, windowStart: now };
     rateLimitCache.set(key, entry);
-    
+
     return {
       allowed: true,
       remaining: config.maxRequests - 1,
@@ -101,46 +238,95 @@ export function checkRateLimit(
       limit: config.maxRequests,
     };
   }
-  
-  // Incrémenter le compteur
+
   entry.count++;
-  
+
   const allowed = entry.count <= config.maxRequests;
   const remaining = Math.max(0, config.maxRequests - entry.count);
   const resetAt = entry.windowStart + config.windowMs;
-  
-  return {
-    allowed,
-    remaining,
-    resetAt,
-    limit: config.maxRequests,
-  };
+
+  return { allowed, remaining, resetAt, limit: config.maxRequests };
 }
 
+// ---------------------------------------------------------------------------
+// Public API
+// ---------------------------------------------------------------------------
+
 /**
- * Middleware pour Next.js API routes
+ * Check rate limit for a request.
+ * Tries Redis first, falls back to in-memory Map if Redis is unavailable.
  */
-export function rateLimitMiddleware(
+export async function checkRateLimit(
   ip: string,
   path: string,
   userId?: string
-): {
+): Promise<RateLimitResult> {
+  const endpointType = getEndpointType(path);
+  const config = RATE_LIMIT_CONFIGS[endpointType] || {
+    windowMs: DEFAULT_WINDOW_MS,
+    maxRequests: DEFAULT_MAX_REQUESTS,
+  };
+  const key = generateRateLimitKey(ip, endpointType, userId);
+
+  // Try Redis
+  if (redisAvailable && redisClient) {
+    try {
+      return await checkRateLimitRedis(key, config);
+    } catch (err) {
+      // Redis call failed -- degrade gracefully
+      const message = err instanceof Error ? err.message : String(err);
+      console.warn(`[rate-limiter] Redis call failed (${message}), falling back to memory`);
+      redisAvailable = false;
+    }
+  }
+
+  // Fallback: in-memory
+  return checkRateLimitMemory(key, config);
+}
+
+/**
+ * Synchronous rate limit check -- always uses in-memory store.
+ * Provided for backward-compatibility with callers that cannot await.
+ */
+export function checkRateLimitSync(
+  ip: string,
+  path: string,
+  userId?: string
+): RateLimitResult {
+  const endpointType = getEndpointType(path);
+  const config = RATE_LIMIT_CONFIGS[endpointType] || {
+    windowMs: DEFAULT_WINDOW_MS,
+    maxRequests: DEFAULT_MAX_REQUESTS,
+  };
+  const key = generateRateLimitKey(ip, endpointType, userId);
+  return checkRateLimitMemory(key, config);
+}
+
+/**
+ * Middleware for Next.js API routes.
+ * Returns rate-limit headers and optional error payload.
+ */
+export async function rateLimitMiddleware(
+  ip: string,
+  path: string,
+  userId?: string
+): Promise<{
   success: boolean;
   headers: Record<string, string>;
   error?: { message: string; retryAfter: number };
-} {
-  const result = checkRateLimit(ip, path, userId);
-  
+}> {
+  const result = await checkRateLimit(ip, path, userId);
+
   const headers: Record<string, string> = {
     'X-RateLimit-Limit': String(result.limit),
     'X-RateLimit-Remaining': String(result.remaining),
     'X-RateLimit-Reset': String(Math.ceil(result.resetAt / 1000)),
   };
-  
+
   if (!result.allowed) {
     const retryAfter = Math.ceil((result.resetAt - Date.now()) / 1000);
     headers['Retry-After'] = String(retryAfter);
-    
+
     return {
       success: false,
       headers,
@@ -150,17 +336,22 @@ export function rateLimitMiddleware(
       },
     };
   }
-  
+
   return { success: true, headers };
 }
 
+// ---------------------------------------------------------------------------
+// Cleanup
+// ---------------------------------------------------------------------------
+
 /**
- * Nettoie les entrées expirées du cache
+ * Cleans expired entries from the in-memory fallback cache.
+ * When Redis is used the TTL takes care of expiry automatically.
  */
 export function cleanupRateLimitCache(): void {
   const now = Date.now();
   const maxAge = 5 * 60 * 1000; // 5 minutes max
-  
+
   for (const [key, entry] of rateLimitCache.entries()) {
     if (now - entry.windowStart > maxAge) {
       rateLimitCache.delete(key);
@@ -168,37 +359,105 @@ export function cleanupRateLimitCache(): void {
   }
 }
 
-// Nettoyage périodique (toutes les 5 minutes)
+// Periodic in-memory cleanup (every 5 minutes)
 if (typeof setInterval !== 'undefined') {
   setInterval(cleanupRateLimitCache, 5 * 60 * 1000);
 }
 
-/**
- * Réinitialise le rate limit pour un utilisateur/IP spécifique
- * Utile pour les admins ou après un captcha réussi
- */
-export function resetRateLimit(ip: string, path: string, userId?: string): void {
-  const endpointType = getEndpointType(path);
-  const key = generateRateLimitKey(ip, endpointType, userId);
-  rateLimitCache.delete(key);
-}
+// ---------------------------------------------------------------------------
+// Reset
+// ---------------------------------------------------------------------------
 
 /**
- * Obtient les statistiques actuelles de rate limiting
+ * Resets the rate limit for a specific user/IP and path.
+ * Useful after a successful captcha or admin action.
  */
-export function getRateLimitStats(): {
+export async function resetRateLimit(
+  ip: string,
+  path: string,
+  userId?: string
+): Promise<void> {
+  const endpointType = getEndpointType(path);
+  const key = generateRateLimitKey(ip, endpointType, userId);
+
+  // Remove from in-memory cache
+  rateLimitCache.delete(key);
+
+  // Remove from Redis
+  if (redisAvailable && redisClient) {
+    try {
+      await redisClient.del(key);
+    } catch {
+      // Non-critical -- the key will expire via TTL anyway
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Stats
+// ---------------------------------------------------------------------------
+
+/**
+ * Returns current rate-limiting statistics.
+ * When Redis is the backend, in-memory stats will be empty (which is expected).
+ */
+export async function getRateLimitStats(): Promise<{
   totalEntries: number;
   entriesByEndpoint: Record<string, number>;
-} {
+  backend: 'redis' | 'memory';
+}> {
+  // Try Redis first
+  if (redisAvailable && redisClient) {
+    try {
+      const keys = await redisClient.keys(`${REDIS_KEY_PREFIX}:*`);
+      const stats: Record<string, number> = {};
+
+      for (const key of keys) {
+        // Key format: rl:{identity}:{endpoint}
+        const parts = key.split(':');
+        const endpoint = parts.slice(2).join(':') || 'unknown';
+        stats[endpoint] = (stats[endpoint] || 0) + 1;
+      }
+
+      return {
+        totalEntries: keys.length,
+        entriesByEndpoint: stats,
+        backend: 'redis',
+      };
+    } catch {
+      // Fall through to memory stats
+    }
+  }
+
+  // In-memory stats
   const stats: Record<string, number> = {};
-  
+
   for (const key of rateLimitCache.keys()) {
-    const endpoint = key.split(':')[2] || 'unknown';
+    // Key format: rl:{identity}:{endpoint}
+    const parts = key.split(':');
+    const endpoint = parts.slice(2).join(':') || 'unknown';
     stats[endpoint] = (stats[endpoint] || 0) + 1;
   }
-  
+
   return {
     totalEntries: rateLimitCache.size,
     entriesByEndpoint: stats,
+    backend: 'memory',
   };
 }
+
+// ---------------------------------------------------------------------------
+// Utilities
+// ---------------------------------------------------------------------------
+
+/**
+ * Returns true if the rate limiter is currently backed by Redis.
+ */
+export function isRedisBackend(): boolean {
+  return redisAvailable && redisClient !== null;
+}
+
+/**
+ * Exported for tests or external tooling -- the full config map.
+ */
+export { RATE_LIMIT_CONFIGS };

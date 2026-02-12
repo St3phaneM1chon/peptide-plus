@@ -213,6 +213,89 @@ export async function getActiveSessions(userId: string): Promise<{
 }
 
 // ============================================
+// LIMITATION DES SESSIONS CONCURRENTES
+// ============================================
+
+/**
+ * Limite le nombre de sessions concurrentes par utilisateur.
+ * Si le nombre de sessions existantes >= maxSessions, supprime les plus anciennes
+ * pour ne garder que (maxSessions - 1) sessions, laissant de la place pour la nouvelle.
+ *
+ * Conforme NYDFS 23 NYCRR 500 - contrôle d'accès et audit.
+ */
+export async function enforceMaxSessions(
+  userId: string,
+  maxSessions: number = 3
+): Promise<void> {
+  try {
+    // Count existing sessions for this user
+    const existingSessions = await prisma.session.findMany({
+      where: { userId },
+      orderBy: { expires: 'asc' }, // oldest first
+      select: { id: true, expires: true },
+    });
+
+    if (existingSessions.length < maxSessions) {
+      // Under the limit, nothing to do
+      return;
+    }
+
+    // Calculate how many sessions to remove:
+    // We need to bring the count down to (maxSessions - 1) to leave room for the new session
+    const sessionsToRemove = existingSessions.length - (maxSessions - 1);
+    const sessionsToDelete = existingSessions.slice(0, sessionsToRemove);
+    const idsToDelete = sessionsToDelete.map((s) => s.id);
+
+    // Delete the oldest sessions
+    await prisma.session.deleteMany({
+      where: {
+        id: { in: idsToDelete },
+      },
+    });
+
+    // Also clean up their in-memory caches
+    for (const id of idsToDelete) {
+      invalidateSession(id);
+    }
+
+    // Audit log
+    await prisma.auditLog.create({
+      data: {
+        userId,
+        action: 'SESSION_LIMIT_ENFORCED',
+        entityType: 'Session',
+        entityId: userId,
+        details: JSON.stringify({
+          reason: 'max_concurrent_sessions_exceeded',
+          maxSessions,
+          existingCount: existingSessions.length,
+          deletedCount: sessionsToRemove,
+          deletedSessionIds: idsToDelete,
+          timestamp: new Date().toISOString(),
+        }),
+      },
+    });
+
+    console.log(
+      createSecurityLog('info', 'max_sessions_enforced', {
+        userId,
+        maxSessions,
+        existingCount: existingSessions.length,
+        deletedCount: sessionsToRemove,
+      })
+    );
+  } catch (error) {
+    // Resilient: log the error but do not block the login flow
+    console.error(
+      createSecurityLog('error', 'enforce_max_sessions_failed', {
+        userId,
+        error: error instanceof Error ? error.message : String(error),
+      })
+    );
+  }
+}
+
+// ============================================
 // NETTOYAGE PÉRIODIQUE
 // ============================================
 

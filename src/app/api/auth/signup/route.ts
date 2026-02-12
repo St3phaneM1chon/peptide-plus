@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { hash } from 'bcryptjs';
 import { prisma } from '@/lib/db';
+import { addToPasswordHistory } from '@/lib/password-history';
 import { sendWelcomeEmail } from '@/lib/email-service';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { z } from 'zod';
@@ -18,7 +19,7 @@ const signupSchema = z.object({
   email: z.string().email('Email invalide'),
   password: z
     .string()
-    .min(8, 'Le mot de passe doit contenir au moins 8 caractères')
+    .min(12, 'Le mot de passe doit contenir au moins 12 caractères')
     .regex(/[A-Z]/, 'Le mot de passe doit contenir au moins une majuscule')
     .regex(/[a-z]/, 'Le mot de passe doit contenir au moins une minuscule')
     .regex(/[0-9]/, 'Le mot de passe doit contenir au moins un chiffre')
@@ -29,7 +30,7 @@ export async function POST(request: NextRequest) {
   try {
     // SECURITY: Rate limit signup attempts
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
-    const rateLimit = rateLimitMiddleware(ip, '/api/auth/register');
+    const rateLimit = await rateLimitMiddleware(ip, '/api/auth/register');
     if (!rateLimit.success) {
       return NextResponse.json(
         { error: rateLimit.error!.message },
@@ -79,6 +80,9 @@ export async function POST(request: NextRequest) {
         role: 'CUSTOMER', // Rôle par défaut
       },
     });
+
+    // Store initial password in history (for reuse prevention)
+    await addToPasswordHistory(user.id, hashedPassword);
 
     // Log d'audit
     await prisma.auditLog.create({

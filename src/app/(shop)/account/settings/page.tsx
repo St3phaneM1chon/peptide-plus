@@ -1,7 +1,7 @@
 'use client';
 
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useTranslations } from '@/hooks/useTranslations';
@@ -23,9 +23,15 @@ interface AddressData {
 export default function SettingsPage() {
   const { data: session, status, update: updateSession } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { t } = useTranslations();
-  
-  const [activeTab, setActiveTab] = useState<'profile' | 'password' | 'address'>('profile');
+
+  const mfaRequired = searchParams.get('mfa_required') === '1';
+  const [activeTab, setActiveTab] = useState<'profile' | 'password' | 'address' | 'security'>(mfaRequired ? 'security' : 'profile');
+  const [mfaSetupLoading, setMfaSetupLoading] = useState(false);
+  const [mfaQrCode, setMfaQrCode] = useState<string | null>(null);
+  const [mfaSecret, setMfaSecret] = useState<string | null>(null);
+  const [mfaVerifyCode, setMfaVerifyCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   
@@ -115,8 +121,8 @@ export default function SettingsPage() {
       return;
     }
     
-    if (passwordData.newPassword.length < 8) {
-      setMessage({ type: 'error', text: t('account.passwordTooShort') || 'Password must be at least 8 characters' });
+    if (passwordData.newPassword.length < 12) {
+      setMessage({ type: 'error', text: t('account.passwordTooShort') || 'Password must be at least 12 characters' });
       setIsLoading(false);
       return;
     }
@@ -252,6 +258,24 @@ export default function SettingsPage() {
                 <span className="hidden sm:inline">{t('account.address') || 'Address'}</span>
               </div>
             </button>
+            <button
+              onClick={() => { setActiveTab('security'); setMessage(null); }}
+              className={`flex-1 py-4 px-4 text-sm font-medium transition-colors ${
+                activeTab === 'security'
+                  ? 'text-orange-600 border-b-2 border-orange-500 -mb-px'
+                  : 'text-neutral-500 hover:text-neutral-700'
+              } ${mfaRequired && !session?.user?.mfaEnabled ? 'animate-pulse bg-red-50' : ''}`}
+            >
+              <div className="flex items-center justify-center gap-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+                <span className="hidden sm:inline">MFA / Security</span>
+                {mfaRequired && !session?.user?.mfaEnabled && (
+                  <span className="inline-flex items-center justify-center w-2 h-2 bg-red-500 rounded-full"></span>
+                )}
+              </div>
+            </button>
           </div>
 
           <div className="p-6">
@@ -378,10 +402,10 @@ export default function SettingsPage() {
                         className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                         placeholder="••••••••"
                         required
-                        minLength={8}
+                        minLength={12}
                       />
                       <p className="text-xs text-neutral-500 mt-1">
-                        {t('account.passwordRequirements') || 'Minimum 8 characters'}
+                        {t('account.passwordRequirements') || 'Minimum 12 characters with uppercase, lowercase, number and special character'}
                       </p>
                     </div>
 
@@ -504,6 +528,164 @@ export default function SettingsPage() {
                   )}
                 </button>
               </form>
+            )}
+            {/* Security / MFA Tab */}
+            {activeTab === 'security' && (
+              <div className="space-y-6">
+                {/* MFA Required Banner */}
+                {mfaRequired && !session?.user?.mfaEnabled && (
+                  <div className="p-4 rounded-lg bg-red-50 border border-red-200">
+                    <div className="flex items-start gap-3">
+                      <svg className="w-6 h-6 text-red-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                      </svg>
+                      <div>
+                        <h4 className="font-bold text-red-700">Two-Factor Authentication Required</h4>
+                        <p className="text-sm text-red-600 mt-1">
+                          Your role requires MFA to be enabled. Please set up two-factor authentication to continue using the platform.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* MFA Status */}
+                <div className="flex items-center justify-between p-4 bg-neutral-50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${session?.user?.mfaEnabled ? 'bg-green-100' : 'bg-red-100'}`}>
+                      {session?.user?.mfaEnabled ? (
+                        <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      ) : (
+                        <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      )}
+                    </div>
+                    <div>
+                      <p className="font-medium">Two-Factor Authentication (TOTP)</p>
+                      <p className={`text-sm ${session?.user?.mfaEnabled ? 'text-green-600' : 'text-red-600'}`}>
+                        {session?.user?.mfaEnabled ? 'Enabled - Your account is secured' : 'Disabled - Not configured'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* MFA Setup */}
+                {!session?.user?.mfaEnabled && (
+                  <div className="space-y-4">
+                    {!mfaQrCode ? (
+                      <button
+                        onClick={async () => {
+                          setMfaSetupLoading(true);
+                          setMessage(null);
+                          try {
+                            const res = await fetch('/api/account/mfa/setup', { method: 'POST' });
+                            const data = await res.json();
+                            if (res.ok) {
+                              setMfaQrCode(data.qrCodeUrl);
+                              setMfaSecret(data.manualEntryKey);
+                            } else {
+                              setMessage({ type: 'error', text: data.error || 'Failed to initiate MFA setup' });
+                            }
+                          } catch {
+                            setMessage({ type: 'error', text: 'Network error' });
+                          } finally {
+                            setMfaSetupLoading(false);
+                          }
+                        }}
+                        disabled={mfaSetupLoading}
+                        className="w-full py-3 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                      >
+                        {mfaSetupLoading ? (
+                          <>
+                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            Setting up...
+                          </>
+                        ) : (
+                          'Enable Two-Factor Authentication'
+                        )}
+                      </button>
+                    ) : (
+                      <div className="space-y-4">
+                        <div className="text-center">
+                          <p className="text-sm text-neutral-600 mb-4">
+                            Scan this QR code with your authenticator app (Google Authenticator, Authy, etc.)
+                          </p>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={mfaQrCode} alt="MFA QR Code" className="mx-auto w-48 h-48 border rounded-lg" />
+                          {mfaSecret && (
+                            <p className="mt-2 text-xs text-neutral-500">
+                              Manual entry key: <code className="bg-neutral-100 px-2 py-1 rounded">{mfaSecret}</code>
+                            </p>
+                          )}
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-neutral-700 mb-2">
+                            Enter the 6-digit code from your app
+                          </label>
+                          <input
+                            type="text"
+                            value={mfaVerifyCode}
+                            onChange={(e) => setMfaVerifyCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                            className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-center text-2xl tracking-widest"
+                            placeholder="000000"
+                            maxLength={6}
+                          />
+                        </div>
+                        <button
+                          onClick={async () => {
+                            setMfaSetupLoading(true);
+                            setMessage(null);
+                            try {
+                              const res = await fetch('/api/account/mfa/verify', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ code: mfaVerifyCode }),
+                              });
+                              const data = await res.json();
+                              if (res.ok) {
+                                setMessage({ type: 'success', text: 'MFA enabled successfully! Your backup codes: ' + (data.backupCodes?.join(', ') || 'Check your email') });
+                                setMfaQrCode(null);
+                                setMfaSecret(null);
+                                setMfaVerifyCode('');
+                                await updateSession({});
+                              } else {
+                                setMessage({ type: 'error', text: data.error || 'Invalid code' });
+                              }
+                            } catch {
+                              setMessage({ type: 'error', text: 'Network error' });
+                            } finally {
+                              setMfaSetupLoading(false);
+                            }
+                          }}
+                          disabled={mfaSetupLoading || mfaVerifyCode.length !== 6}
+                          className="w-full py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                        >
+                          {mfaSetupLoading ? (
+                            <>
+                              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                              Verifying...
+                            </>
+                          ) : (
+                            'Verify & Enable MFA'
+                          )}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* MFA Already Enabled */}
+                {session?.user?.mfaEnabled && (
+                  <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <p className="text-sm text-green-700">
+                      Your account is protected with two-factor authentication. To disable MFA, please contact support.
+                    </p>
+                  </div>
+                )}
+              </div>
             )}
           </div>
         </div>

@@ -149,10 +149,13 @@ model User {
   conversations      Conversation[]
   assignedChats      Conversation[] @relation("AssignedConversations")
   messages           Message[]
-  
+
+  // Password History (prevent reuse of last 12 passwords)
+  passwordHistory    PasswordHistory[]
+
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
-  
+
   @@index([email])
   @@index([role])
 }
@@ -193,6 +196,17 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model PasswordHistory {
+  id        String   @id @default(cuid())
+  userId    String
+  password  String   // bcrypt hash
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
 }
 
 // =====================================================

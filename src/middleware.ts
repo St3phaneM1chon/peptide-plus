@@ -142,6 +142,22 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  // SECURITY: Force MFA setup for OWNER and EMPLOYEE roles (Chubb requirement)
+  if (
+    token &&
+    (token.role === 'OWNER' || token.role === 'EMPLOYEE') &&
+    !token.mfaEnabled &&
+    !pathname.startsWith('/account/settings') &&
+    !pathname.startsWith('/account/security') &&
+    !pathname.startsWith('/api') &&
+    !pathname.startsWith('/auth')
+  ) {
+    const url = request.nextUrl.clone();
+    url.pathname = '/account/settings';
+    url.searchParams.set('mfa_required', '1');
+    return NextResponse.redirect(url);
+  }
+
   // Vérifier les permissions admin (EMPLOYEE ou OWNER peuvent accéder)
   if (isAdmin && token?.role !== 'EMPLOYEE' && token?.role !== 'OWNER') {
     const url = request.nextUrl.clone();
