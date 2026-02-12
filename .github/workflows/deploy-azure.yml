@@ -112,35 +112,55 @@ jobs:
               "tenantId": "${{ secrets.AZURE_TENANT_ID }}"
             }
 
-      - name: Configure App Settings
+      - name: Configure App Settings (static)
         run: |
-          # Always-set settings (static values + required secrets)
-          SETTINGS="NODE_ENV=production"
-          SETTINGS="$SETTINGS NEXTAUTH_URL=https://biocyclepeptides.com"
-          SETTINGS="$SETTINGS NEXT_PUBLIC_APP_URL=https://biocyclepeptides.com"
-          SETTINGS="$SETTINGS NEXT_PUBLIC_SITE_NAME=BioCycle Peptides"
-          SETTINGS="$SETTINGS NEXT_PUBLIC_CONTACT_EMAIL=contact@biocyclepeptides.com"
-          SETTINGS="$SETTINGS NEXT_PUBLIC_SUPPORT_EMAIL=support@biocyclepeptides.com"
-          SETTINGS="$SETTINGS SMTP_HOST=smtp.office365.com"
-          SETTINGS="$SETTINGS SMTP_PORT=587"
-          SETTINGS="$SETTINGS SMTP_FROM=BioCycle Peptides <noreply@biocyclepeptides.com>"
-
-          # Only set secrets that have values (avoid overwriting with empty strings)
-          [ -n "${{ secrets.DATABASE_URL }}" ] && SETTINGS="$SETTINGS DATABASE_URL=${{ secrets.DATABASE_URL }}"
-          [ -n "${{ secrets.NEXTAUTH_SECRET }}" ] && SETTINGS="$SETTINGS NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}"
-          [ -n "${{ secrets.OPENAI_API_KEY }}" ] && SETTINGS="$SETTINGS OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}"
-          [ -n "${{ secrets.GOOGLE_CLIENT_ID }}" ] && SETTINGS="$SETTINGS GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}"
-          [ -n "${{ secrets.GOOGLE_CLIENT_SECRET }}" ] && SETTINGS="$SETTINGS GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}"
-          [ -n "${{ secrets.STRIPE_SECRET_KEY }}" ] && SETTINGS="$SETTINGS STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }}"
-          [ -n "${{ secrets.STRIPE_WEBHOOK_SECRET }}" ] && SETTINGS="$SETTINGS STRIPE_WEBHOOK_SECRET=${{ secrets.STRIPE_WEBHOOK_SECRET }}"
-          [ -n "${{ secrets.STRIPE_PUBLISHABLE_KEY }}" ] && SETTINGS="$SETTINGS NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${{ secrets.STRIPE_PUBLISHABLE_KEY }}"
-          [ -n "${{ secrets.SMTP_USER }}" ] && SETTINGS="$SETTINGS SMTP_USER=${{ secrets.SMTP_USER }}"
-          [ -n "${{ secrets.SMTP_PASSWORD }}" ] && SETTINGS="$SETTINGS SMTP_PASSWORD=${{ secrets.SMTP_PASSWORD }}"
-
           az webapp config appsettings set \
             --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
             --name ${{ env.AZURE_WEBAPP_NAME }} \
-            --settings $SETTINGS
+            --settings \
+              NODE_ENV=production \
+              NEXTAUTH_URL=https://biocyclepeptides.com \
+              NEXT_PUBLIC_APP_URL=https://biocyclepeptides.com \
+              "NEXT_PUBLIC_SITE_NAME=BioCycle Peptides" \
+              NEXT_PUBLIC_CONTACT_EMAIL=contact@biocyclepeptides.com \
+              NEXT_PUBLIC_SUPPORT_EMAIL=support@biocyclepeptides.com \
+              SMTP_HOST=smtp.office365.com \
+              SMTP_PORT=587 \
+              "SMTP_FROM=BioCycle Peptides <noreply@biocyclepeptides.com>"
+
+      - name: Configure App Settings (secrets)
+        run: |
+          ARGS=""
+          if [ -n "$DB_URL" ]; then ARGS="$ARGS DATABASE_URL=$DB_URL"; fi
+          if [ -n "$AUTH_SEC" ]; then ARGS="$ARGS NEXTAUTH_SECRET=$AUTH_SEC"; fi
+          if [ -n "$OAI_KEY" ]; then ARGS="$ARGS OPENAI_API_KEY=$OAI_KEY"; fi
+          if [ -n "$G_CID" ]; then ARGS="$ARGS GOOGLE_CLIENT_ID=$G_CID"; fi
+          if [ -n "$G_CSEC" ]; then ARGS="$ARGS GOOGLE_CLIENT_SECRET=$G_CSEC"; fi
+          if [ -n "$STR_SK" ]; then ARGS="$ARGS STRIPE_SECRET_KEY=$STR_SK"; fi
+          if [ -n "$STR_WH" ]; then ARGS="$ARGS STRIPE_WEBHOOK_SECRET=$STR_WH"; fi
+          if [ -n "$STR_PK" ]; then ARGS="$ARGS NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=$STR_PK"; fi
+          if [ -n "$SMTP_U" ]; then ARGS="$ARGS SMTP_USER=$SMTP_U"; fi
+          if [ -n "$SMTP_P" ]; then ARGS="$ARGS SMTP_PASSWORD=$SMTP_P"; fi
+
+          if [ -n "$ARGS" ]; then
+            az webapp config appsettings set \
+              --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+              --name ${{ env.AZURE_WEBAPP_NAME }} \
+              --settings $ARGS
+          else
+            echo "No secret-based settings to configure"
+          fi
+        env:
+          DB_URL: ${{ secrets.DATABASE_URL }}
+          AUTH_SEC: ${{ secrets.NEXTAUTH_SECRET }}
+          OAI_KEY: ${{ secrets.OPENAI_API_KEY }}
+          G_CID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          G_CSEC: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          STR_SK: ${{ secrets.STRIPE_SECRET_KEY }}
+          STR_WH: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
+          STR_PK: ${{ secrets.STRIPE_PUBLISHABLE_KEY }}
+          SMTP_U: ${{ secrets.SMTP_USER }}
+          SMTP_P: ${{ secrets.SMTP_PASSWORD }}
 
       - name: Verify build artifacts
         run: |
@@ -165,11 +185,12 @@ jobs:
           clean: true
 
       - name: Sync Database Schema
-        if: ${{ secrets.DATABASE_URL != '' }}
+        if: env.DB_URL != ''
         run: |
           echo "Pushing Prisma schema to production database..."
           npx prisma db push --accept-data-loss --skip-generate 2>&1 || echo "WARNING: prisma db push failed - check manually"
         env:
+          DB_URL: ${{ secrets.DATABASE_URL }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
       - name: Verify deployment
