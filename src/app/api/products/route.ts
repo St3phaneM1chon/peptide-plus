@@ -3,12 +3,15 @@ export const dynamic = 'force-dynamic';
  * API - CRUD Produits (version enrichie)
  * Gère: formations, produits physiques, hybrides
  * Avec: images multiples, formats, certificats, fiche technique
+ * Supporte: ?locale=fr pour contenu traduit
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { UserRole } from '@/types';
+import { withTranslations, enqueue } from '@/lib/translation';
+import { isValidLocale, defaultLocale } from '@/i18n/config';
 
 // GET - Liste des produits
 export async function GET(request: NextRequest) {
@@ -19,17 +22,18 @@ export async function GET(request: NextRequest) {
     const productType = searchParams.get('type');
     const limit = parseInt(searchParams.get('limit') || '50');
     const includeInactive = searchParams.get('includeInactive') === 'true';
+    const locale = searchParams.get('locale') || defaultLocale;
 
     const where: any = {};
-    
+
     if (!includeInactive) {
       where.isActive = true;
     }
-    
+
     if (category) {
       where.category = { slug: category };
     }
-    
+
     if (featured === 'true') {
       where.isFeatured = true;
     }
@@ -38,7 +42,7 @@ export async function GET(request: NextRequest) {
       where.productType = productType;
     }
 
-    const products = await prisma.product.findMany({
+    let products = await prisma.product.findMany({
       where,
       include: {
         category: {
@@ -55,6 +59,11 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'desc' },
       take: limit,
     });
+
+    // Apply translations if locale is not default
+    if (isValidLocale(locale) && locale !== defaultLocale) {
+      products = await withTranslations(products, 'Product', locale);
+    }
 
     return NextResponse.json({ products });
   } catch (error) {
@@ -224,6 +233,9 @@ export async function POST(request: NextRequest) {
         details: JSON.stringify({ name, slug, productType }),
       },
     });
+
+    // Enqueue automatic translation to all locales
+    enqueue.product(product.id);
 
     return NextResponse.json({ product }, { status: 201 });
   } catch (error) {

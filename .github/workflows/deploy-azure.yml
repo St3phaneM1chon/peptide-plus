@@ -120,8 +120,23 @@ jobs:
             --settings \
               NODE_ENV=production \
               NEXTAUTH_URL=https://biocyclepeptides.com \
+              NEXTAUTH_SECRET="${{ secrets.NEXTAUTH_SECRET }}" \
               NEXT_PUBLIC_APP_URL=https://biocyclepeptides.com \
-              NEXT_PUBLIC_SITE_NAME="BioCycle Peptides"
+              NEXT_PUBLIC_SITE_NAME="BioCycle Peptides" \
+              NEXT_PUBLIC_CONTACT_EMAIL="contact@biocyclepeptides.com" \
+              NEXT_PUBLIC_SUPPORT_EMAIL="support@biocyclepeptides.com" \
+              DATABASE_URL="${{ secrets.DATABASE_URL }}" \
+              OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}" \
+              GOOGLE_CLIENT_ID="${{ secrets.GOOGLE_CLIENT_ID }}" \
+              GOOGLE_CLIENT_SECRET="${{ secrets.GOOGLE_CLIENT_SECRET }}" \
+              STRIPE_SECRET_KEY="${{ secrets.STRIPE_SECRET_KEY }}" \
+              STRIPE_WEBHOOK_SECRET="${{ secrets.STRIPE_WEBHOOK_SECRET }}" \
+              NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="${{ secrets.STRIPE_PUBLISHABLE_KEY }}" \
+              SMTP_HOST="smtp.office365.com" \
+              SMTP_PORT="587" \
+              SMTP_USER="${{ secrets.SMTP_USER }}" \
+              SMTP_PASSWORD="${{ secrets.SMTP_PASSWORD }}" \
+              SMTP_FROM="BioCycle Peptides <noreply@biocyclepeptides.com>"
 
       - name: Verify build artifacts
         run: |

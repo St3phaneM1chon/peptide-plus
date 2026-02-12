@@ -11,7 +11,7 @@ import {
   Gift, RefreshCw, Video, Truck, DollarSign, Send, Search, FileText,
   Briefcase, Calculator, PenLine, FileSpreadsheet, Landmark, TrendingUp,
   BarChart2, Activity, UserCheck, Settings, Menu, X, ChevronDown,
-  ChevronLeft, ExternalLink, Shield, Bell, FlaskConical
+  ChevronLeft, ExternalLink, Shield, Bell, FlaskConical, Languages
 } from 'lucide-react';
 
 // Icon mapping
@@ -50,6 +50,7 @@ const iconMap: Record<string, LucideIcon> = {
   'settings': Settings,
   'shield': Shield,
   'flask': FlaskConical,
+  'languages': Languages,
 };
 
 interface NavItem {
@@ -114,6 +115,7 @@ const navSections: NavSection[] = [
       { href: '/admin/devises', label: 'Devises', icon: 'dollar-sign' },
       { href: '/admin/emails', label: 'Emails', icon: 'send' },
       { href: '/admin/seo', label: 'SEO', icon: 'search' },
+      { href: '/admin/traductions', label: 'Traductions', icon: 'languages' },
       { href: '/admin/contenu', label: 'Contenu/Pages', icon: 'file-text' },
       { href: '/admin/medias', label: 'Medias', icon: 'image' },
     ],

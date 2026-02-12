@@ -154,6 +154,10 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
     setSelectedFormat(format);
     setQuantity(1);
     setIsDropdownOpen(false);
+    // Switch main image to format-specific image if available
+    if (format.image) {
+      setSelectedImage(format.image);
+    }
   };
 
   const handleAddToCart = () => {

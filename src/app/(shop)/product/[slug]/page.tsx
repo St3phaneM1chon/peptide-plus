@@ -4,6 +4,9 @@ import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import ProductPageClient from './ProductPageClient';
 import { prisma } from '@/lib/db';
+import { getServerLocale } from '@/i18n/server';
+import { withTranslation, getTranslatedFields } from '@/lib/translation';
+import { defaultLocale } from '@/i18n/config';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -54,9 +57,24 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     return { title: 'Product not found' };
   }
 
+  // Apply translations for metadata
+  const locale = await getServerLocale();
+  let name = product.name;
+  let subtitle = product.subtitle || '';
+  let description = product.shortDescription || product.description?.substring(0, 160) || '';
+
+  if (locale !== defaultLocale) {
+    const translated = await getTranslatedFields('Product', product.id, locale);
+    if (translated) {
+      name = translated.name || name;
+      subtitle = translated.subtitle || subtitle;
+      description = translated.metaDescription || translated.shortDescription || description;
+    }
+  }
+
   return {
-    title: `${product.name} - ${product.subtitle || ''} | Peptide Plus+`,
-    description: product.shortDescription || product.description?.substring(0, 160) || '',
+    title: `${name} - ${subtitle} | Peptide Plus+`,
+    description,
   };
 }
 
@@ -128,8 +146,15 @@ export default async function ProductPage({ params }: PageProps) {
     notFound();
   }
 
+  // Apply translations to product
+  const locale = await getServerLocale();
+  let translatedProduct = product;
+  if (locale !== defaultLocale) {
+    translatedProduct = await withTranslation(product, 'Product', locale) as typeof product;
+  }
+
   const relatedProducts = await getRelatedProductsFromDB(product.categoryId, product.id);
-  const transformedProduct = transformProductForClient(product, relatedProducts);
+  const transformedProduct = transformProductForClient(translatedProduct, relatedProducts);
 
   return <ProductPageClient product={transformedProduct} />;
 }

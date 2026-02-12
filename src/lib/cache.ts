@@ -198,11 +198,17 @@ export const CacheKeys = {
     bestsellers: () => 'products:bestsellers',
     new: () => 'products:new',
   },
-  
+
   // Categories
   categories: {
     all: () => 'categories:all',
     bySlug: (slug: string) => `categories:slug:${slug}`,
+  },
+
+  // Translations
+  translations: {
+    byEntity: (model: string, entityId: string, locale: string) =>
+      `translation:${model}:${entityId}:${locale}`,
   },
   
   // User
@@ -238,6 +244,7 @@ export const CacheTags = {
   USERS: 'users',
   CONFIG: 'config',
   STATS: 'stats',
+  TRANSLATIONS: 'translations',
 };
 
 // =====================================================

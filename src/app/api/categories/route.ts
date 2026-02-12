@@ -1,22 +1,26 @@
 export const dynamic = 'force-dynamic';
 /**
  * API - CRUD Catégories
+ * Supporte: ?locale=fr pour contenu traduit
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { UserRole } from '@/types';
+import { withTranslations, enqueue } from '@/lib/translation';
+import { isValidLocale, defaultLocale } from '@/i18n/config';
 
 // GET - Liste des catégories
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const includeInactive = searchParams.get('includeInactive') === 'true';
+    const locale = searchParams.get('locale') || defaultLocale;
 
     const where = includeInactive ? {} : { isActive: true };
 
-    const categories = await prisma.category.findMany({
+    let categories = await prisma.category.findMany({
       where,
       include: {
         _count: {
@@ -25,6 +29,11 @@ export async function GET(request: NextRequest) {
       },
       orderBy: { sortOrder: 'asc' },
     });
+
+    // Apply translations if locale is not default
+    if (isValidLocale(locale) && locale !== defaultLocale) {
+      categories = await withTranslations(categories, 'Category', locale);
+    }
 
     return NextResponse.json({ categories });
   } catch (error) {
@@ -92,6 +101,9 @@ export async function POST(request: NextRequest) {
         details: JSON.stringify({ name, slug }),
       },
     });
+
+    // Enqueue automatic translation to all locales
+    enqueue.category(category.id);
 
     return NextResponse.json({ category }, { status: 201 });
   } catch (error) {
