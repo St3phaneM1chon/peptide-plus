@@ -52,16 +52,18 @@ export async function GET() {
         : `Missing: ${missingEnvVars.join(', ')}`,
   });
 
-  // Check 3: Memory usage
+  // Check 3: Memory usage (RSS is more meaningful than heap % for Node.js)
   const memoryUsage = process.memoryUsage();
+  const rssMB = Math.round(memoryUsage.rss / 1024 / 1024);
   const heapUsedMB = Math.round(memoryUsage.heapUsed / 1024 / 1024);
   const heapTotalMB = Math.round(memoryUsage.heapTotal / 1024 / 1024);
-  const memoryPercent = (heapUsedMB / heapTotalMB) * 100;
+  // B1 tier has ~1.75GB, fail at 80% of that
+  const rssLimitMB = 1400;
 
   checks.push({
     name: 'memory',
-    status: memoryPercent < 90 ? 'pass' : 'fail',
-    message: `Heap: ${heapUsedMB}MB / ${heapTotalMB}MB (${memoryPercent.toFixed(1)}%)`,
+    status: rssMB < rssLimitMB ? 'pass' : 'fail',
+    message: `RSS: ${rssMB}MB, Heap: ${heapUsedMB}MB / ${heapTotalMB}MB`,
   });
 
   // Déterminer le statut global

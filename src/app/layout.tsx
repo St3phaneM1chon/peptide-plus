@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * ROOT LAYOUT - Application sécurisée
  * Dynamic locale loading based on cookie/header
