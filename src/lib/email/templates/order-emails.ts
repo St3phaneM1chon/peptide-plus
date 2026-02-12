@@ -143,7 +143,7 @@ export function orderConfirmationEmail(data: OrderData): { subject: string; html
           <span style="font-weight: bold; font-size: 18px; color: #1f2937;">${isFr ? 'Total' : 'Total'}</span>
         </td>
         <td align="right" style="padding: 12px 16px; border-top: 2px solid #e5e7eb;">
-          <span style="font-weight: bold; font-size: 18px; color: #f97316;">${formatPrice(data.total, currency)}</span>
+          <span style="font-weight: bold; font-size: 18px; color: #CC5500;">${formatPrice(data.total, currency)}</span>
         </td>
       </tr>
     </table>
@@ -476,7 +476,7 @@ export function satisfactionSurveyEmail(data: OrderData): { subject: string; htm
     : `⭐ ${data.customerName}, how was your order?`;
 
   const content = `
-    <h1 style="color: #f97316; margin-bottom: 8px; text-align: center;">
+    <h1 style="color: #CC5500; margin-bottom: 8px; text-align: center;">
       ${isFr ? '⭐ Votre avis compte!' : '⭐ Your opinion matters!'}
     </h1>
     <p style="font-size: 16px; color: #4b5563; text-align: center;">

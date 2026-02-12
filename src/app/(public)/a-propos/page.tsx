@@ -125,7 +125,7 @@ export default function AboutPage() {
             style={{ 
               display: 'inline-block',
               padding: '14px 32px', 
-              backgroundColor: '#f97316', 
+              backgroundColor: '#CC5500', 
               color: 'white', 
               borderRadius: '8px',
               fontWeight: 600,
@@ -143,7 +143,7 @@ export default function AboutPage() {
 function StatCard({ number, label }: { number: string; label: string }) {
   return (
     <div style={{ padding: '24px' }}>
-      <div style={{ fontSize: '36px', fontWeight: 700, color: '#f97316', marginBottom: '8px' }}>
+      <div style={{ fontSize: '36px', fontWeight: 700, color: '#CC5500', marginBottom: '8px' }}>
         {number}
       </div>
       <div style={{ fontSize: '14px', color: '#6b7280' }}>{label}</div>

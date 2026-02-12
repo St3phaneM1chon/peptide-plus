@@ -128,7 +128,7 @@ export default function InvoicesPage() {
 
         // Header
         doc.setFontSize(24);
-        doc.setTextColor(234, 88, 12);
+        doc.setTextColor(173, 71, 0);
         doc.text('BioCycle Peptides', 20, 25);
         doc.setFontSize(10);
         doc.setTextColor(100, 100, 100);
@@ -224,7 +224,7 @@ export default function InvoicesPage() {
 
         // Total
         y += 8;
-        doc.setFillColor(234, 88, 12);
+        doc.setFillColor(173, 71, 0);
         doc.rect(115, y - 5, 75, 12, 'F');
         doc.setFontSize(12);
         doc.setTextColor(255, 255, 255);

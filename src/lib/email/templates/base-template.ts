@@ -11,7 +11,7 @@ export interface BaseTemplateData {
 }
 
 // const LOGO_URL = 'https://biocyclepeptides.com/images/logo-email.png'; // For future use
-const BRAND_COLOR = '#f97316'; // Orange
+const BRAND_COLOR = '#CC5500'; // Orange
 const DARK_COLOR = '#1f2937';
 
 export function baseTemplate(data: BaseTemplateData): string {
@@ -48,7 +48,7 @@ export function baseTemplate(data: BaseTemplateData): string {
     .content { background-color: #ffffff; padding: 32px; }
     .footer { background-color: #f9fafb; padding: 24px; text-align: center; font-size: 12px; color: #6b7280; }
     .button { display: inline-block; background-color: ${BRAND_COLOR}; color: #ffffff !important; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; }
-    .button:hover { background-color: #ea580c; }
+    .button:hover { background-color: #AD4700; }
     .divider { border-top: 1px solid #e5e7eb; margin: 24px 0; }
     h1, h2, h3 { color: ${DARK_COLOR}; margin-top: 0; }
     p { color: #4b5563; line-height: 1.6; }

@@ -12,7 +12,7 @@ export default function MissionPage() {
     <div style={{ backgroundColor: 'white', minHeight: '100vh' }}>
       {/* Hero */}
       <div style={{ 
-        background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)', 
+        background: 'linear-gradient(135deg, #CC5500 0%, #AD4700 100%)', 
         color: 'white', 
         padding: '80px 24px',
         textAlign: 'center'
@@ -108,7 +108,7 @@ function ObjectiveCard({ number, title, description }: { number: string; title: 
       <div style={{ 
         width: '48px', 
         height: '48px', 
-        backgroundColor: '#f97316', 
+        backgroundColor: '#CC5500', 
         borderRadius: '50%',
         display: 'flex',
         alignItems: 'center',

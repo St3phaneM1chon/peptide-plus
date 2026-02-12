@@ -36,7 +36,7 @@ export default function EngagementsPage() {
         <EngagementSection
           icon="🏆"
           title="Engagement Qualité"
-          color="#f97316"
+          color="#CC5500"
           items={[
             'Pureté minimale garantie de 99% sur tous nos peptides',
             'Tests par laboratoires tiers indépendants et accrédités',
@@ -122,7 +122,7 @@ export default function EngagementsPage() {
             style={{ 
               display: 'inline-block',
               padding: '14px 32px', 
-              backgroundColor: '#f97316', 
+              backgroundColor: '#CC5500', 
               color: 'white', 
               borderRadius: '8px',
               fontWeight: 600,

@@ -60,7 +60,7 @@ export default function EquipePage() {
             icon="💬"
             title="Service Client"
             description="Disponibles pour répondre à vos questions, notre équipe support vous accompagne de la commande à la livraison et au-delà."
-            color="#f97316"
+            color="#CC5500"
           />
           <DepartmentCard
             icon="💻"
@@ -112,7 +112,7 @@ export default function EquipePage() {
             style={{ 
               display: 'inline-block',
               padding: '14px 32px', 
-              backgroundColor: '#f97316', 
+              backgroundColor: '#CC5500', 
               color: 'white', 
               borderRadius: '8px',
               fontWeight: 600,

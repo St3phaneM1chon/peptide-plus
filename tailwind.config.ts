@@ -22,6 +22,20 @@ const config: Config = {
           800: '#1e40af',
           900: '#1e3a8a',
         },
+        // Orange brûlé - remplace le orange Tailwind par défaut
+        orange: {
+          50: '#FEF3EB',
+          100: '#FDE0C8',
+          200: '#FABE8E',
+          300: '#F79855',
+          400: '#E57624',
+          500: '#CC5500',
+          600: '#AD4700',
+          700: '#8C3A00',
+          800: '#6E2E02',
+          900: '#5A2603',
+          950: '#3A1802',
+        },
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],

@@ -13,7 +13,7 @@ export default function HistoirePage() {
       year: '2023',
       title: 'La naissance d\'une idée',
       description: 'Face au manque de fournisseurs canadiens fiables de peptides de recherche, l\'idée de BioCycle Peptides émerge à Montréal. L\'objectif: créer une source locale de composés de haute qualité pour les chercheurs canadiens.',
-      color: '#f97316'
+      color: '#CC5500'
     },
     {
       year: '2024',

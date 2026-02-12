@@ -40,7 +40,7 @@ export function birthdayEmail(data: BirthdayEmailData): { subject: string; html:
       <span style="font-size: 64px;">🎂🎉🎁</span>
     </div>
 
-    <h1 style="color: #f97316; margin-bottom: 8px; text-align: center;">
+    <h1 style="color: #CC5500; margin-bottom: 8px; text-align: center;">
       ${isFr ? 'Joyeux anniversaire!' : 'Happy birthday!'}
     </h1>
     <p style="font-size: 18px; color: #4b5563; text-align: center;">
@@ -53,7 +53,7 @@ export function birthdayEmail(data: BirthdayEmailData): { subject: string; html:
       <p style="margin: 0 0 8px 0; font-size: 14px; color: #92400e; text-transform: uppercase; letter-spacing: 2px;">
         ${isFr ? 'Votre cadeau d\'anniversaire' : 'Your birthday gift'}
       </p>
-      <p style="margin: 0 0 16px 0; font-size: 42px; font-weight: bold; color: #f97316;">
+      <p style="margin: 0 0 16px 0; font-size: 42px; font-weight: bold; color: #CC5500;">
         ${discountText} ${isFr ? 'DE RABAIS' : 'OFF'}
       </p>
       <div style="background-color: white; border-radius: 8px; padding: 16px; margin: 16px 0;">
@@ -129,7 +129,7 @@ export function welcomeEmail(data: WelcomeEmailData): { subject: string; html: s
 
   const content = `
     <div style="text-align: center; margin-bottom: 24px;">
-      <div style="display: inline-block; width: 80px; height: 80px; background-color: #f97316; border-radius: 50%; line-height: 80px;">
+      <div style="display: inline-block; width: 80px; height: 80px; background-color: #CC5500; border-radius: 50%; line-height: 80px;">
         <span style="font-size: 40px;">🎉</span>
       </div>
     </div>
@@ -233,7 +233,7 @@ export function welcomeEmail(data: WelcomeEmailData): { subject: string; html: s
       <p style="margin: 0 0 8px 0; font-size: 12px; color: #9ca3af;">
         ${isFr ? 'Votre code de parrainage' : 'Your referral code'}
       </p>
-      <p style="margin: 0; font-size: 20px; font-weight: bold; color: #f97316; letter-spacing: 2px; font-family: monospace;">
+      <p style="margin: 0; font-size: 20px; font-weight: bold; color: #CC5500; letter-spacing: 2px; font-family: monospace;">
         ${data.referralCode}
       </p>
     </div>
@@ -292,7 +292,7 @@ export function abandonedCartEmail(data: AbandonedCartEmailData): { subject: str
               <p style="margin: 0; font-weight: 600; color: #1f2937;">${item.name}</p>
               <p style="margin: 4px 0 0 0; font-size: 14px; color: #6b7280;">Qty: ${item.quantity}</p>
             </td>
-            <td align="right" style="font-weight: 600; color: #f97316;">$${item.price.toFixed(2)}</td>
+            <td align="right" style="font-weight: 600; color: #CC5500;">$${item.price.toFixed(2)}</td>
           </tr>
         </table>
       </td>
@@ -322,7 +322,7 @@ export function abandonedCartEmail(data: AbandonedCartEmailData): { subject: str
 
     <div style="background-color: #f9fafb; border-radius: 8px; padding: 16px; margin: 24px 0; text-align: center;">
       <p style="margin: 0; font-size: 14px; color: #6b7280;">${isFr ? 'Total du panier' : 'Cart total'}</p>
-      <p style="margin: 8px 0 0 0; font-size: 28px; font-weight: bold; color: #f97316;">$${data.cartTotal.toFixed(2)}</p>
+      <p style="margin: 8px 0 0 0; font-size: 28px; font-weight: bold; color: #CC5500;">$${data.cartTotal.toFixed(2)}</p>
     </div>
 
     ${data.discountCode && data.discountValue ? `
@@ -330,7 +330,7 @@ export function abandonedCartEmail(data: AbandonedCartEmailData): { subject: str
       <p style="margin: 0 0 8px 0; font-size: 14px; color: #92400e;">
         ${isFr ? '🎁 Offre spéciale pour vous!' : '🎁 Special offer for you!'}
       </p>
-      <p style="margin: 0 0 12px 0; font-size: 24px; font-weight: bold; color: #f97316;">
+      <p style="margin: 0 0 12px 0; font-size: 24px; font-weight: bold; color: #CC5500;">
         ${data.discountValue}% ${isFr ? 'DE RABAIS' : 'OFF'}
       </p>
       <p style="margin: 0; font-size: 12px; color: #6b7280;">
@@ -398,7 +398,7 @@ export function backInStockEmail(data: BackInStockEmailData): { subject: string;
       <img src="${data.productImageUrl}" alt="${data.productName}" width="150" height="150" style="border-radius: 8px; margin-bottom: 16px;">
       ` : ''}
       <h2 style="margin: 0 0 8px 0; font-size: 20px; color: #1f2937;">${data.productName}</h2>
-      <p style="margin: 0; font-size: 24px; font-weight: bold; color: #f97316;">$${data.productPrice.toFixed(2)}</p>
+      <p style="margin: 0; font-size: 24px; font-weight: bold; color: #CC5500;">$${data.productPrice.toFixed(2)}</p>
     </div>
 
     ${emailComponents.warningBox(`
@@ -477,7 +477,7 @@ export function pointsExpiringEmail(data: PointsExpiringEmailData): { subject: s
 
     <div style="background-color: #f9fafb; border-radius: 8px; padding: 16px; margin: 24px 0; text-align: center;">
       <p style="margin: 0; font-size: 14px; color: #6b7280;">${isFr ? 'Votre solde total actuel' : 'Your current total balance'}</p>
-      <p style="margin: 8px 0 0 0; font-size: 28px; font-weight: bold; color: #f97316;">${data.currentPoints} ${isFr ? 'points' : 'points'}</p>
+      <p style="margin: 8px 0 0 0; font-size: 28px; font-weight: bold; color: #CC5500;">${data.currentPoints} ${isFr ? 'points' : 'points'}</p>
     </div>
 
     <h2 style="font-size: 18px; text-align: center;">

@@ -58,7 +58,7 @@ export default function PeptideCalculator({ className = '', onClose, isModal = f
       orange: {
         button: 'bg-orange-500 hover:bg-orange-400',
         text: 'text-orange-400',
-        track: '#f97316',
+        track: '#CC5500',
       },
       white: {
         button: 'bg-white hover:bg-gray-200',

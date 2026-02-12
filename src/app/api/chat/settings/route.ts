@@ -30,7 +30,7 @@ export async function GET(_request: Request) {
           notifyEmail: process.env.NEXT_PUBLIC_SUPPORT_EMAIL || 'support@biocyclepeptides.com',
           notifyOnNewChat: true,
           notifyOnEscalation: true,
-          widgetColor: '#f97316',
+          widgetColor: '#CC5500',
           widgetPosition: 'bottom-right',
         },
       });
@@ -100,7 +100,7 @@ export async function PUT(request: NextRequest) {
         notifyEmail,
         notifyOnNewChat: notifyOnNewChat ?? true,
         notifyOnEscalation: notifyOnEscalation ?? true,
-        widgetColor: widgetColor || '#f97316',
+        widgetColor: widgetColor || '#CC5500',
         widgetPosition: widgetPosition || 'bottom-right',
       },
     });

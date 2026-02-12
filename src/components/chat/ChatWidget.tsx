@@ -195,7 +195,7 @@ export default function ChatWidget() {
     }
   };
 
-  const widgetColor = settings?.widgetColor || '#f97316';
+  const widgetColor = settings?.widgetColor || '#CC5500';
 
   // Ne pas afficher sur les pages admin
   if (pathname?.startsWith('/admin')) {

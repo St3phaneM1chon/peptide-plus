@@ -348,7 +348,7 @@ export default function ContactPage() {
                     style={{ 
                       width: '100%', 
                       padding: '14px', 
-                      backgroundColor: '#f97316',
+                      backgroundColor: '#CC5500',
                       color: 'white',
                       border: 'none',
                       borderRadius: '8px',
@@ -363,7 +363,7 @@ export default function ContactPage() {
 
                   <p style={{ fontSize: '12px', color: '#9ca3af', marginTop: '16px', textAlign: 'center' }}>
                     En soumettant ce formulaire, vous acceptez notre{' '}
-                    <Link href="/mentions-legales/confidentialite" style={{ color: '#f97316' }}>
+                    <Link href="/mentions-legales/confidentialite" style={{ color: '#CC5500' }}>
                       politique de confidentialité
                     </Link>.
                   </p>
@@ -397,7 +397,7 @@ function ContactCard({ icon, title, lines, isEmail }: { icon: string; title: str
         {lines.map((line, i) => (
           <p key={i} style={{ fontSize: '14px', color: '#6b7280', marginBottom: '4px' }}>
             {isEmail && line.includes('@') ? (
-              <a href={`mailto:${line}`} style={{ color: '#f97316' }}>{line}</a>
+              <a href={`mailto:${line}`} style={{ color: '#CC5500' }}>{line}</a>
             ) : (
               line
             )}

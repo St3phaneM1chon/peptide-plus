@@ -90,7 +90,7 @@ export default function CookiesPage() {
               <li>Personnalisation de l&apos;interface</li>
             </ul>
 
-            <h3 style={{ fontSize: '16px', fontWeight: 600, marginTop: '20px', marginBottom: '12px', color: '#f97316' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: 600, marginTop: '20px', marginBottom: '12px', color: '#CC5500' }}>
               📢 Cookies marketing (optionnels)
             </h3>
             <p>
@@ -118,7 +118,7 @@ export default function CookiesPage() {
                 style={{ 
                   width: '100%', 
                   padding: '12px 24px', 
-                  backgroundColor: '#f97316', 
+                  backgroundColor: '#CC5500', 
                   color: 'white', 
                   border: 'none', 
                   borderRadius: '8px', 
@@ -251,7 +251,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
       <style jsx>{`
         ul { padding-left: 20px; margin: 8px 0; }
         li { margin-bottom: 8px; }
-        a { color: #f97316; }
+        a { color: #CC5500; }
       `}</style>
     </section>
   );

@@ -143,7 +143,7 @@ export default function PrivacyPage() {
           <Section title="10. Cookies">
             <p>
               Nous utilisons des cookies et technologies similaires. Pour plus d&apos;informations, consultez notre{' '}
-              <a href="/mentions-legales/cookies" style={{ color: '#f97316', fontWeight: 500 }}>
+              <a href="/mentions-legales/cookies" style={{ color: '#CC5500', fontWeight: 500 }}>
                 Politique de cookies
               </a>.
             </p>
@@ -183,7 +183,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
       <style jsx>{`
         ul { padding-left: 20px; margin: 8px 0; }
         li { margin-bottom: 8px; }
-        a { color: #f97316; }
+        a { color: #CC5500; }
       `}</style>
     </section>
   );
