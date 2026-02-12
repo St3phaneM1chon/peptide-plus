@@ -1,6 +1,6 @@
 /**
  * MIDDLEWARE NEXT.JS
- * Gestion des locales et de l'authentification
+ * Gestion des locales, authentification et permissions granulaires
  */
 
 import { NextResponse, type NextRequest } from 'next/server';
@@ -26,11 +26,62 @@ const publicRoutes = [
   '/checkout/success',
 ];
 
+// Admin sub-routes mapped to the minimum permission required.
+// If a route is not listed here, the default admin role check (EMPLOYEE|OWNER) applies.
+// OWNER always bypasses these checks.
+const ADMIN_ROUTE_PERMISSIONS: Record<string, string> = {
+  '/admin/produits': 'products.view',
+  '/admin/categories': 'categories.view',
+  '/admin/commandes': 'orders.view',
+  '/admin/utilisateurs': 'users.view',
+  '/admin/contenu': 'cms.pages.view',
+  '/admin/hero-slides': 'cms.hero.manage',
+  '/admin/livraison': 'shipping.view',
+  '/admin/codes-promo': 'marketing.promos.manage',
+  '/admin/promotions': 'marketing.discounts.manage',
+  '/admin/newsletter': 'marketing.newsletter.manage',
+  '/admin/chat': 'chat.view',
+  '/admin/emails': 'chat.respond',
+  '/admin/medias': 'media.view',
+  '/admin/inventaire': 'products.manage_inventory',
+  '/admin/seo': 'seo.edit',
+  '/admin/comptabilite': 'accounting.view',
+  '/admin/permissions': 'users.manage_permissions',
+  '/admin/settings': 'admin.settings',
+};
+
 // Routes admin/owner uniquement
 const adminRoutes = ['/admin'];
 const ownerRoutes = ['/owner'];
 // Routes pour les clients (compagnies)
 const clientRoutes = ['/client', '/dashboard/client'];
+
+// Role-based default permissions (lightweight subset for middleware - no DB queries)
+// This mirrors ROLE_DEFAULTS from src/lib/permissions.ts but is kept small for edge runtime.
+const EMPLOYEE_PERMISSIONS = new Set([
+  'products.view', 'products.create', 'products.edit', 'products.manage_formats', 'products.manage_images', 'products.manage_inventory',
+  'categories.view', 'categories.create', 'categories.edit',
+  'orders.view', 'orders.edit', 'orders.export',
+  'users.view',
+  'cms.pages.view', 'cms.pages.create', 'cms.pages.edit', 'cms.faq.manage', 'cms.blog.manage', 'cms.hero.manage',
+  'accounting.view',
+  'shipping.view', 'shipping.update_status',
+  'marketing.promos.manage', 'marketing.discounts.manage', 'marketing.newsletter.manage',
+  'chat.view', 'chat.respond',
+  'media.view', 'media.upload',
+  'analytics.view',
+  'seo.edit',
+]);
+
+/**
+ * Check if a role has a given permission code (fast, no DB).
+ * For fine-grained per-user overrides, the page-level check via hasPermission() is authoritative.
+ */
+function roleHasPermission(role: string, permissionCode: string): boolean {
+  if (role === 'OWNER') return true;
+  if (role === 'EMPLOYEE') return EMPLOYEE_PERMISSIONS.has(permissionCode);
+  return false;
+}
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -95,6 +146,24 @@ export async function middleware(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = '/';
     return NextResponse.redirect(url);
+  }
+
+  // Granular admin sub-route permission check
+  if (isAdmin && token?.role && token.role !== 'OWNER') {
+    // Find the most specific matching route
+    const matchedRoute = Object.keys(ADMIN_ROUTE_PERMISSIONS)
+      .filter((route) => pathname.startsWith(route))
+      .sort((a, b) => b.length - a.length)[0];
+
+    if (matchedRoute) {
+      const requiredPermission = ADMIN_ROUTE_PERMISSIONS[matchedRoute];
+      if (!roleHasPermission(token.role as string, requiredPermission)) {
+        const url = request.nextUrl.clone();
+        url.pathname = '/admin';
+        url.searchParams.set('denied', requiredPermission);
+        return NextResponse.redirect(url);
+      }
+    }
   }
 
   // Vérifier les permissions owner

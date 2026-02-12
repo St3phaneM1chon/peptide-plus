@@ -2,6 +2,30 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import {
+  Download,
+  ShoppingBag,
+  Clock,
+  Cog,
+  Truck,
+  PackageCheck,
+  Mail,
+  Printer,
+  RotateCcw,
+  Eye,
+  Package,
+  AlertTriangle,
+  FileText,
+} from 'lucide-react';
+
+import { PageHeader } from '@/components/admin/PageHeader';
+import { Button } from '@/components/admin/Button';
+import { FilterBar, SelectFilter } from '@/components/admin/FilterBar';
+import { OrderStatusBadge, PaymentStatusBadge } from '@/components/admin/StatusBadge';
+import { DataTable, type Column } from '@/components/admin/DataTable';
+import { StatCard } from '@/components/admin/StatCard';
+import { Modal } from '@/components/admin/Modal';
+import { FormField, Input, Textarea } from '@/components/admin/FormField';
 
 interface Order {
   id: string;
@@ -13,6 +37,9 @@ interface Order {
   shippingCost: number;
   discount: number;
   tax: number;
+  taxTps?: number;
+  taxTvq?: number;
+  taxTvh?: number;
   total: number;
   currencyCode: string;
   promoCode?: string;
@@ -27,6 +54,10 @@ interface Order {
   carrier?: string;
   trackingNumber?: string;
   adminNotes?: string;
+  orderType?: string;
+  parentOrderId?: string;
+  parentOrder?: { id: string; orderNumber: string } | null;
+  replacementOrders?: { id: string; orderNumber: string; status: string; replacementReason: string; createdAt: string }[];
   createdAt: string;
   items: Array<{
     id: string;
@@ -38,24 +69,33 @@ interface Order {
   }>;
 }
 
-const statusColors: Record<string, string> = {
-  PENDING: 'bg-yellow-100 text-yellow-800',
-  CONFIRMED: 'bg-blue-100 text-blue-800',
-  PROCESSING: 'bg-purple-100 text-purple-800',
-  SHIPPED: 'bg-indigo-100 text-indigo-800',
-  DELIVERED: 'bg-green-100 text-green-800',
-  CANCELLED: 'bg-red-100 text-red-800',
-  REFUNDED: 'bg-gray-100 text-gray-800',
-};
+interface CreditNoteRef {
+  id: string;
+  creditNoteNumber: string;
+  total: number;
+  reason: string;
+  status: string;
+  issuedAt: string | null;
+}
 
-const paymentStatusColors: Record<string, string> = {
-  PENDING: 'bg-yellow-100 text-yellow-800',
-  PAID: 'bg-green-100 text-green-800',
-  FAILED: 'bg-red-100 text-red-800',
-  REFUNDED: 'bg-gray-100 text-gray-800',
-};
+const statusOptions = [
+  { value: 'PENDING', label: 'Pending' },
+  { value: 'CONFIRMED', label: 'Confirmed' },
+  { value: 'PROCESSING', label: 'Processing' },
+  { value: 'SHIPPED', label: 'Shipped' },
+  { value: 'DELIVERED', label: 'Delivered' },
+  { value: 'CANCELLED', label: 'Cancelled' },
+];
 
-const statusOptions = ['PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'];
+const statusOptionValues = ['PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'];
+
+const reshipReasons = [
+  'Colis perdu en transit',
+  'Colis endommage',
+  'Colis retourne a l\'expediteur',
+  'Adresse incorrecte - renvoi',
+  'Contenu manquant dans le colis',
+];
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -63,6 +103,22 @@ export default function OrdersPage() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [filter, setFilter] = useState({ status: '', search: '', dateFrom: '', dateTo: '' });
   const [updating, setUpdating] = useState(false);
+
+  // Refund states
+  const [showRefundModal, setShowRefundModal] = useState(false);
+  const [refundAmount, setRefundAmount] = useState('');
+  const [refundReason, setRefundReason] = useState('');
+  const [refunding, setRefunding] = useState(false);
+  const [refundError, setRefundError] = useState('');
+
+  // Reship states
+  const [showReshipModal, setShowReshipModal] = useState(false);
+  const [reshipReason, setReshipReason] = useState('');
+  const [reshipping, setReshipping] = useState(false);
+  const [reshipError, setReshipError] = useState('');
+
+  // Enriched detail data
+  const [creditNotes, setCreditNotes] = useState<CreditNoteRef[]>([]);
 
   useEffect(() => {
     fetchOrders();
@@ -78,6 +134,45 @@ export default function OrdersPage() {
       setOrders([]);
     }
     setLoading(false);
+  };
+
+  const fetchOrderDetail = async (orderId: string) => {
+    try {
+      const res = await fetch(`/api/admin/orders/${orderId}`);
+      const data = await res.json();
+      if (data.order) {
+        const enrichedOrder: Order = {
+          ...data.order,
+          subtotal: Number(data.order.subtotal),
+          shippingCost: Number(data.order.shippingCost),
+          discount: Number(data.order.discount),
+          tax: Number(data.order.tax),
+          taxTps: Number(data.order.taxTps),
+          taxTvq: Number(data.order.taxTvq),
+          taxTvh: Number(data.order.taxTvh),
+          total: Number(data.order.total),
+          userName: data.customer?.name,
+          userEmail: data.customer?.email,
+          currencyCode: data.order.currency?.code || 'CAD',
+          items: data.order.items.map((item: Record<string, unknown>) => ({
+            ...item,
+            unitPrice: Number(item.unitPrice),
+            total: Number(item.total),
+            discount: Number(item.discount),
+          })),
+        };
+        setSelectedOrder(enrichedOrder);
+        setCreditNotes(data.creditNotes || []);
+      }
+    } catch (err) {
+      console.error('Error fetching order detail:', err);
+    }
+  };
+
+  const openOrderDetail = (order: Order) => {
+    setSelectedOrder(order);
+    setCreditNotes([]);
+    fetchOrderDetail(order.id);
   };
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
@@ -116,6 +211,92 @@ export default function OrdersPage() {
     setUpdating(false);
   };
 
+  // ─── REFUND ─────────────────────────────────────────────────────
+
+  const openRefundModal = () => {
+    if (!selectedOrder) return;
+    setRefundAmount(selectedOrder.total.toFixed(2));
+    setRefundReason('');
+    setRefundError('');
+    setShowRefundModal(true);
+  };
+
+  const handleRefund = async () => {
+    if (!selectedOrder) return;
+    const amount = parseFloat(refundAmount);
+    if (isNaN(amount) || amount <= 0) {
+      setRefundError('Montant invalide');
+      return;
+    }
+    if (!refundReason.trim()) {
+      setRefundError('La raison est requise');
+      return;
+    }
+
+    setRefunding(true);
+    setRefundError('');
+    try {
+      const res = await fetch(`/api/admin/orders/${selectedOrder.id}?action=refund`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount, reason: refundReason }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setRefundError(data.error || 'Erreur lors du remboursement');
+        return;
+      }
+      // Refresh
+      setShowRefundModal(false);
+      await fetchOrders();
+      await fetchOrderDetail(selectedOrder.id);
+    } catch (err) {
+      setRefundError('Erreur reseau');
+    } finally {
+      setRefunding(false);
+    }
+  };
+
+  // ─── RESHIP ─────────────────────────────────────────────────────
+
+  const openReshipModal = () => {
+    setReshipReason(reshipReasons[0]);
+    setReshipError('');
+    setShowReshipModal(true);
+  };
+
+  const handleReship = async () => {
+    if (!selectedOrder) return;
+    if (!reshipReason.trim()) {
+      setReshipError('La raison est requise');
+      return;
+    }
+
+    setReshipping(true);
+    setReshipError('');
+    try {
+      const res = await fetch(`/api/admin/orders/${selectedOrder.id}?action=reship`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason: reshipReason }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setReshipError(data.error || 'Erreur lors de la re-expedition');
+        return;
+      }
+      setShowReshipModal(false);
+      await fetchOrders();
+      await fetchOrderDetail(selectedOrder.id);
+    } catch (err) {
+      setReshipError('Erreur reseau');
+    } finally {
+      setReshipping(false);
+    }
+  };
+
+  // ─── FILTERS ────────────────────────────────────────────────────
+
   const filteredOrders = orders.filter(order => {
     if (filter.status && order.status !== filter.status) return false;
     if (filter.search) {
@@ -145,329 +326,494 @@ export default function OrdersPage() {
     );
   }
 
+  const canRefund = selectedOrder &&
+    (selectedOrder.paymentStatus === 'PAID' || selectedOrder.paymentStatus === 'PARTIAL_REFUND');
+  const canReship = selectedOrder &&
+    (selectedOrder.status === 'SHIPPED' || selectedOrder.status === 'DELIVERED');
+
+  const columns: Column<Order>[] = [
+    {
+      key: 'orderNumber',
+      header: 'Commande',
+      sortable: true,
+      render: (order) => (
+        <div>
+          <p className="font-semibold text-slate-900">
+            {order.orderNumber}
+            {order.orderType === 'REPLACEMENT' && (
+              <span className="ml-1 text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded">RESHIP</span>
+            )}
+          </p>
+          <p className="text-xs text-slate-500">{order.items.length} article(s)</p>
+        </div>
+      ),
+    },
+    {
+      key: 'customer',
+      header: 'Client',
+      sortable: true,
+      render: (order) => (
+        <div>
+          <p className="text-slate-900">{order.userName}</p>
+          <p className="text-xs text-slate-500">{order.userEmail}</p>
+        </div>
+      ),
+    },
+    {
+      key: 'total',
+      header: 'Total',
+      sortable: true,
+      align: 'right',
+      render: (order) => (
+        <div>
+          <p className="font-semibold text-slate-900">{order.total.toFixed(2)} {order.currencyCode}</p>
+          {order.promoCode && (
+            <p className="text-xs text-emerald-600">Code: {order.promoCode}</p>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: 'paymentStatus',
+      header: 'Paiement',
+      render: (order) => <PaymentStatusBadge status={order.paymentStatus} />,
+    },
+    {
+      key: 'status',
+      header: 'Statut',
+      render: (order) => <OrderStatusBadge status={order.status} />,
+    },
+    {
+      key: 'createdAt',
+      header: 'Date',
+      sortable: true,
+      render: (order) => (
+        <span className="text-slate-500">
+          {new Date(order.createdAt).toLocaleDateString('fr-CA')}
+        </span>
+      ),
+    },
+    {
+      key: 'actions',
+      header: 'Actions',
+      align: 'center',
+      render: (order) => (
+        <Button
+          variant="ghost"
+          size="sm"
+          icon={Eye}
+          onClick={(e) => {
+            e.stopPropagation();
+            openOrderDetail(order);
+          }}
+        >
+          Details
+        </Button>
+      ),
+    },
+  ];
+
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Commandes</h1>
-          <p className="text-gray-500">Gérez toutes les commandes clients</p>
-        </div>
-        <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center gap-2">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-          Exporter CSV
-        </button>
-      </div>
+      <PageHeader
+        title="Commandes"
+        subtitle="Gerez toutes les commandes clients"
+        actions={
+          <Button variant="secondary" icon={Download}>
+            Exporter CSV
+          </Button>
+        }
+      />
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <div className="bg-white rounded-xl p-4 border border-gray-200">
-          <p className="text-sm text-gray-500">Total</p>
-          <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
-        </div>
-        <div className="bg-yellow-50 rounded-xl p-4 border border-yellow-200">
-          <p className="text-sm text-yellow-600">En attente</p>
-          <p className="text-2xl font-bold text-yellow-700">{stats.pending}</p>
-        </div>
-        <div className="bg-purple-50 rounded-xl p-4 border border-purple-200">
-          <p className="text-sm text-purple-600">En traitement</p>
-          <p className="text-2xl font-bold text-purple-700">{stats.processing}</p>
-        </div>
-        <div className="bg-indigo-50 rounded-xl p-4 border border-indigo-200">
-          <p className="text-sm text-indigo-600">Expédiées</p>
-          <p className="text-2xl font-bold text-indigo-700">{stats.shipped}</p>
-        </div>
-        <div className="bg-green-50 rounded-xl p-4 border border-green-200">
-          <p className="text-sm text-green-600">Livrées</p>
-          <p className="text-2xl font-bold text-green-700">{stats.delivered}</p>
-        </div>
+        <StatCard label="Total" value={stats.total} icon={ShoppingBag} />
+        <StatCard label="En attente" value={stats.pending} icon={Clock} />
+        <StatCard label="En traitement" value={stats.processing} icon={Cog} />
+        <StatCard label="Expediees" value={stats.shipped} icon={Truck} />
+        <StatCard label="Livrees" value={stats.delivered} icon={PackageCheck} />
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-xl p-4 border border-gray-200">
-        <div className="flex flex-wrap gap-4">
-          <input
-            type="text"
-            placeholder="Rechercher (n° commande, client, email)..."
-            className="flex-1 min-w-[200px] px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-            value={filter.search}
-            onChange={(e) => setFilter({ ...filter, search: e.target.value })}
-          />
-          <select
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500"
-            value={filter.status}
-            onChange={(e) => setFilter({ ...filter, status: e.target.value })}
-          >
-            <option value="">Tous les statuts</option>
-            {statusOptions.map(s => (
-              <option key={s} value={s}>{s}</option>
-            ))}
-          </select>
-          <input
-            type="date"
-            className="px-4 py-2 border border-gray-300 rounded-lg"
-            value={filter.dateFrom}
-            onChange={(e) => setFilter({ ...filter, dateFrom: e.target.value })}
-          />
-          <input
-            type="date"
-            className="px-4 py-2 border border-gray-300 rounded-lg"
-            value={filter.dateTo}
-            onChange={(e) => setFilter({ ...filter, dateTo: e.target.value })}
-          />
-        </div>
-      </div>
+      <FilterBar
+        searchValue={filter.search}
+        onSearchChange={(value) => setFilter({ ...filter, search: value })}
+        searchPlaceholder="Rechercher (no commande, client, email)..."
+      >
+        <SelectFilter
+          label="Tous les statuts"
+          value={filter.status}
+          onChange={(value) => setFilter({ ...filter, status: value })}
+          options={statusOptions}
+        />
+        <input
+          type="date"
+          className="h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+          value={filter.dateFrom}
+          onChange={(e) => setFilter({ ...filter, dateFrom: e.target.value })}
+        />
+        <input
+          type="date"
+          className="h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+          value={filter.dateTo}
+          onChange={(e) => setFilter({ ...filter, dateTo: e.target.value })}
+        />
+      </FilterBar>
 
       {/* Orders Table */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Commande</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Client</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Total</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Paiement</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Statut</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Date</th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200">
-            {filteredOrders.map((order) => (
-              <tr key={order.id} className="hover:bg-gray-50">
-                <td className="px-4 py-3">
-                  <p className="font-semibold text-gray-900">{order.orderNumber}</p>
-                  <p className="text-xs text-gray-500">{order.items.length} article(s)</p>
-                </td>
-                <td className="px-4 py-3">
-                  <p className="text-gray-900">{order.userName}</p>
-                  <p className="text-xs text-gray-500">{order.userEmail}</p>
-                </td>
-                <td className="px-4 py-3">
-                  <p className="font-semibold text-gray-900">{order.total.toFixed(2)} {order.currencyCode}</p>
-                  {order.promoCode && (
-                    <p className="text-xs text-green-600">Code: {order.promoCode}</p>
-                  )}
-                </td>
-                <td className="px-4 py-3">
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${paymentStatusColors[order.paymentStatus]}`}>
-                    {order.paymentStatus}
-                  </span>
-                </td>
-                <td className="px-4 py-3">
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[order.status]}`}>
-                    {order.status}
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-sm text-gray-500">
-                  {new Date(order.createdAt).toLocaleDateString('fr-CA')}
-                </td>
-                <td className="px-4 py-3 text-center">
-                  <button
-                    onClick={() => setSelectedOrder(order)}
-                    className="px-3 py-1 bg-amber-100 text-amber-700 rounded-lg text-sm hover:bg-amber-200"
-                  >
-                    Détails
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        
-        {filteredOrders.length === 0 && (
-          <div className="p-8 text-center text-gray-500">
-            Aucune commande trouvée
-          </div>
-        )}
-      </div>
+      <DataTable
+        columns={columns}
+        data={filteredOrders}
+        keyExtractor={(order) => order.id}
+        onRowClick={(order) => openOrderDetail(order)}
+        emptyTitle="Aucune commande trouvee"
+        emptyDescription="Aucune commande ne correspond a vos filtres."
+      />
 
       {/* Order Detail Modal */}
-      {selectedOrder && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white">
+      <Modal
+        isOpen={!!selectedOrder}
+        onClose={() => { setSelectedOrder(null); setCreditNotes([]); }}
+        title={`Commande ${selectedOrder?.orderNumber ?? ''}`}
+        subtitle={selectedOrder ? new Date(selectedOrder.createdAt).toLocaleString('fr-CA') : undefined}
+        size="xl"
+        footer={
+          <>
+            <Button variant="primary" icon={Mail}>
+              Envoyer email confirmation
+            </Button>
+            <Button variant="secondary" icon={Printer}>
+              Imprimer bon de livraison
+            </Button>
+            {canReship && (
+              <Button variant="secondary" icon={Package} onClick={openReshipModal}>
+                Re-expedier (colis perdu)
+              </Button>
+            )}
+            {canRefund && (
+              <Button variant="danger" icon={RotateCcw} className="ml-auto" onClick={openRefundModal}>
+                Rembourser
+              </Button>
+            )}
+          </>
+        }
+      >
+        {selectedOrder && (
+          <div className="space-y-6">
+            {/* Replacement banner */}
+            {selectedOrder.orderType === 'REPLACEMENT' && selectedOrder.parentOrder && (
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-center gap-2">
+                <Package className="w-5 h-5 text-amber-600" />
+                <span className="text-sm text-amber-800">
+                  Re-expedition de <strong>{selectedOrder.parentOrder.orderNumber}</strong>
+                </span>
+              </div>
+            )}
+
+            {/* Status & Actions */}
+            <div className="flex flex-wrap gap-4 items-center">
+              <FormField label="Statut commande">
+                <select
+                  value={selectedOrder.status}
+                  onChange={(e) => updateOrderStatus(selectedOrder.id, e.target.value)}
+                  disabled={updating}
+                  className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                >
+                  {statusOptionValues.map(s => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+              </FormField>
+              <div className="pt-6">
+                <PaymentStatusBadge status={selectedOrder.paymentStatus} />
+              </div>
+            </div>
+
+            {/* Customer Info */}
+            <div className="grid grid-cols-2 gap-6">
               <div>
-                <h2 className="text-xl font-bold text-gray-900">Commande {selectedOrder.orderNumber}</h2>
-                <p className="text-sm text-gray-500">
-                  {new Date(selectedOrder.createdAt).toLocaleString('fr-CA')}
+                <h3 className="font-semibold text-slate-900 mb-2">Client</h3>
+                <p className="text-slate-700">{selectedOrder.userName}</p>
+                <p className="text-slate-500 text-sm">{selectedOrder.userEmail}</p>
+                <Link href={`/admin/clients/${selectedOrder.userId}`} className="text-sky-600 text-sm hover:underline">
+                  Voir le profil &rarr;
+                </Link>
+              </div>
+              <div>
+                <h3 className="font-semibold text-slate-900 mb-2">Adresse de livraison</h3>
+                <p className="text-slate-700">{selectedOrder.shippingName}</p>
+                <p className="text-slate-500 text-sm">{selectedOrder.shippingAddress1}</p>
+                <p className="text-slate-500 text-sm">
+                  {selectedOrder.shippingCity}, {selectedOrder.shippingState} {selectedOrder.shippingPostal}
                 </p>
+                <p className="text-slate-500 text-sm">{selectedOrder.shippingCountry}</p>
               </div>
-              <button
-                onClick={() => setSelectedOrder(null)}
-                className="p-2 hover:bg-gray-100 rounded-lg"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
             </div>
 
-            <div className="p-6 space-y-6">
-              {/* Status & Actions */}
-              <div className="flex flex-wrap gap-4 items-center">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Statut commande</label>
+            {/* Tracking */}
+            <div className="bg-slate-50 rounded-lg p-4">
+              <h3 className="font-semibold text-slate-900 mb-3">Suivi de livraison</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <FormField label="Transporteur">
                   <select
-                    value={selectedOrder.status}
-                    onChange={(e) => updateOrderStatus(selectedOrder.id, e.target.value)}
-                    disabled={updating}
-                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500"
+                    defaultValue={selectedOrder.carrier || ''}
+                    onChange={(e) => updateTracking(selectedOrder.id, e.target.value, selectedOrder.trackingNumber || '')}
+                    className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
                   >
-                    {statusOptions.map(s => (
-                      <option key={s} value={s}>{s}</option>
-                    ))}
+                    <option value="">Selectionner...</option>
+                    <option value="Postes Canada">Postes Canada</option>
+                    <option value="FedEx">FedEx</option>
+                    <option value="UPS">UPS</option>
+                    <option value="Purolator">Purolator</option>
+                    <option value="DHL">DHL</option>
                   </select>
-                </div>
-                <div>
-                  <span className={`px-3 py-2 rounded-full text-sm font-medium ${paymentStatusColors[selectedOrder.paymentStatus]}`}>
-                    Paiement: {selectedOrder.paymentStatus}
-                  </span>
-                </div>
-              </div>
-
-              {/* Customer Info */}
-              <div className="grid grid-cols-2 gap-6">
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">Client</h3>
-                  <p className="text-gray-700">{selectedOrder.userName}</p>
-                  <p className="text-gray-500 text-sm">{selectedOrder.userEmail}</p>
-                  <Link href={`/admin/clients/${selectedOrder.userId}`} className="text-amber-600 text-sm hover:underline">
-                    Voir le profil →
-                  </Link>
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">Adresse de livraison</h3>
-                  <p className="text-gray-700">{selectedOrder.shippingName}</p>
-                  <p className="text-gray-500 text-sm">{selectedOrder.shippingAddress1}</p>
-                  <p className="text-gray-500 text-sm">
-                    {selectedOrder.shippingCity}, {selectedOrder.shippingState} {selectedOrder.shippingPostal}
-                  </p>
-                  <p className="text-gray-500 text-sm">{selectedOrder.shippingCountry}</p>
-                </div>
-              </div>
-
-              {/* Tracking */}
-              <div className="bg-gray-50 rounded-lg p-4">
-                <h3 className="font-semibold text-gray-900 mb-3">Suivi de livraison</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Transporteur</label>
-                    <select
-                      defaultValue={selectedOrder.carrier || ''}
-                      onChange={(e) => updateTracking(selectedOrder.id, e.target.value, selectedOrder.trackingNumber || '')}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                    >
-                      <option value="">Sélectionner...</option>
-                      <option value="Postes Canada">Postes Canada</option>
-                      <option value="FedEx">FedEx</option>
-                      <option value="UPS">UPS</option>
-                      <option value="Purolator">Purolator</option>
-                      <option value="DHL">DHL</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Numéro de suivi</label>
-                    <input
-                      type="text"
-                      defaultValue={selectedOrder.trackingNumber || ''}
-                      placeholder="Ex: 1234567890"
-                      onBlur={(e) => updateTracking(selectedOrder.id, selectedOrder.carrier || '', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Items */}
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-3">Articles</h3>
-                <div className="border border-gray-200 rounded-lg overflow-hidden">
-                  <table className="w-full">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-4 py-2 text-left text-xs font-semibold text-gray-500">Produit</th>
-                        <th className="px-4 py-2 text-center text-xs font-semibold text-gray-500">Qté</th>
-                        <th className="px-4 py-2 text-right text-xs font-semibold text-gray-500">Prix unit.</th>
-                        <th className="px-4 py-2 text-right text-xs font-semibold text-gray-500">Total</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200">
-                      {selectedOrder.items.map((item) => (
-                        <tr key={item.id}>
-                          <td className="px-4 py-3">
-                            <p className="font-medium text-gray-900">{item.productName}</p>
-                            {item.formatName && (
-                              <p className="text-xs text-gray-500">{item.formatName}</p>
-                            )}
-                          </td>
-                          <td className="px-4 py-3 text-center">{item.quantity}</td>
-                          <td className="px-4 py-3 text-right">{item.unitPrice.toFixed(2)} $</td>
-                          <td className="px-4 py-3 text-right font-medium">{item.total.toFixed(2)} $</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              {/* Totals */}
-              <div className="bg-gray-50 rounded-lg p-4">
-                <div className="space-y-2">
-                  <div className="flex justify-between text-gray-600">
-                    <span>Sous-total</span>
-                    <span>{selectedOrder.subtotal.toFixed(2)} $</span>
-                  </div>
-                  <div className="flex justify-between text-gray-600">
-                    <span>Livraison</span>
-                    <span>{selectedOrder.shippingCost === 0 ? 'GRATUIT' : `${selectedOrder.shippingCost.toFixed(2)} $`}</span>
-                  </div>
-                  {selectedOrder.discount > 0 && (
-                    <div className="flex justify-between text-green-600">
-                      <span>Réduction {selectedOrder.promoCode && `(${selectedOrder.promoCode})`}</span>
-                      <span>-{selectedOrder.discount.toFixed(2)} $</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between text-gray-600">
-                    <span>Taxes</span>
-                    <span>{selectedOrder.tax.toFixed(2)} $</span>
-                  </div>
-                  <div className="flex justify-between text-lg font-bold text-gray-900 pt-2 border-t border-gray-300">
-                    <span>Total</span>
-                    <span>{selectedOrder.total.toFixed(2)} {selectedOrder.currencyCode}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Admin Notes */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Notes internes</label>
-                <textarea
-                  rows={3}
-                  defaultValue={selectedOrder.adminNotes || ''}
-                  placeholder="Notes visibles uniquement par l'admin..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                />
-              </div>
-
-              {/* Actions */}
-              <div className="flex gap-3 pt-4 border-t border-gray-200">
-                <button className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600">
-                  Envoyer email confirmation
-                </button>
-                <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
-                  Imprimer bon de livraison
-                </button>
-                <button className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 ml-auto">
-                  Rembourser
-                </button>
+                </FormField>
+                <FormField label="Numero de suivi">
+                  <Input
+                    type="text"
+                    defaultValue={selectedOrder.trackingNumber || ''}
+                    placeholder="Ex: 1234567890"
+                    onBlur={(e) => updateTracking(selectedOrder.id, selectedOrder.carrier || '', e.target.value)}
+                  />
+                </FormField>
               </div>
             </div>
+
+            {/* Items */}
+            <div>
+              <h3 className="font-semibold text-slate-900 mb-3">Articles</h3>
+              <div className="border border-slate-200 rounded-lg overflow-hidden">
+                <table className="w-full">
+                  <thead className="bg-slate-50">
+                    <tr>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Produit</th>
+                      <th className="px-4 py-2 text-center text-xs font-medium text-slate-500 uppercase">Qte</th>
+                      <th className="px-4 py-2 text-right text-xs font-medium text-slate-500 uppercase">Prix unit.</th>
+                      <th className="px-4 py-2 text-right text-xs font-medium text-slate-500 uppercase">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {selectedOrder.items.map((item) => (
+                      <tr key={item.id}>
+                        <td className="px-4 py-3">
+                          <p className="font-medium text-slate-900">{item.productName}</p>
+                          {item.formatName && (
+                            <p className="text-xs text-slate-500">{item.formatName}</p>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-center text-sm text-slate-700">{item.quantity}</td>
+                        <td className="px-4 py-3 text-right text-sm text-slate-700">{item.unitPrice.toFixed(2)} $</td>
+                        <td className="px-4 py-3 text-right text-sm font-medium text-slate-900">{item.total.toFixed(2)} $</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Totals */}
+            <div className="bg-slate-50 rounded-lg p-4">
+              <div className="space-y-2">
+                <div className="flex justify-between text-slate-600 text-sm">
+                  <span>Sous-total</span>
+                  <span>{selectedOrder.subtotal.toFixed(2)} $</span>
+                </div>
+                <div className="flex justify-between text-slate-600 text-sm">
+                  <span>Livraison</span>
+                  <span>{selectedOrder.shippingCost === 0 ? 'GRATUIT' : `${selectedOrder.shippingCost.toFixed(2)} $`}</span>
+                </div>
+                {selectedOrder.discount > 0 && (
+                  <div className="flex justify-between text-emerald-600 text-sm">
+                    <span>Reduction {selectedOrder.promoCode && `(${selectedOrder.promoCode})`}</span>
+                    <span>-{selectedOrder.discount.toFixed(2)} $</span>
+                  </div>
+                )}
+                <div className="flex justify-between text-slate-600 text-sm">
+                  <span>Taxes</span>
+                  <span>{selectedOrder.tax.toFixed(2)} $</span>
+                </div>
+                <div className="flex justify-between text-lg font-bold text-slate-900 pt-2 border-t border-slate-300">
+                  <span>Total</span>
+                  <span>{selectedOrder.total.toFixed(2)} {selectedOrder.currencyCode}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Credit Notes Section */}
+            {creditNotes.length > 0 && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <h3 className="font-semibold text-red-800 mb-3 flex items-center gap-2">
+                  <FileText className="w-4 h-4" />
+                  Notes de credit ({creditNotes.length})
+                </h3>
+                <div className="space-y-2">
+                  {creditNotes.map((cn) => (
+                    <div key={cn.id} className="flex items-center justify-between text-sm">
+                      <div>
+                        <Link
+                          href="/admin/comptabilite/notes-credit"
+                          className="font-mono text-red-700 hover:underline"
+                        >
+                          {cn.creditNoteNumber}
+                        </Link>
+                        <span className="text-red-600 ml-2">{cn.reason}</span>
+                      </div>
+                      <span className="font-medium text-red-700">-{cn.total.toFixed(2)} $</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Replacement Orders Section */}
+            {selectedOrder.replacementOrders && selectedOrder.replacementOrders.length > 0 && (
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                <h3 className="font-semibold text-amber-800 mb-3 flex items-center gap-2">
+                  <Package className="w-4 h-4" />
+                  Re-expeditions ({selectedOrder.replacementOrders.length})
+                </h3>
+                <div className="space-y-2">
+                  {selectedOrder.replacementOrders.map((ro) => (
+                    <div key={ro.id} className="flex items-center justify-between text-sm">
+                      <div>
+                        <span className="font-mono text-amber-700">{ro.orderNumber}</span>
+                        <span className="text-amber-600 ml-2">{ro.replacementReason}</span>
+                      </div>
+                      <span className="text-xs text-amber-600">
+                        {new Date(ro.createdAt).toLocaleDateString('fr-CA')} - {ro.status}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Admin Notes */}
+            <FormField label="Notes internes">
+              <Textarea
+                rows={3}
+                defaultValue={selectedOrder.adminNotes || ''}
+                placeholder="Notes visibles uniquement par l'admin..."
+              />
+            </FormField>
           </div>
+        )}
+      </Modal>
+
+      {/* ─── REFUND MODAL ────────────────────────────────────────── */}
+      <Modal
+        isOpen={showRefundModal}
+        onClose={() => setShowRefundModal(false)}
+        title="Remboursement"
+        subtitle={`Commande ${selectedOrder?.orderNumber || ''}`}
+        size="md"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setShowRefundModal(false)}>
+              Annuler
+            </Button>
+            <Button variant="danger" icon={RotateCcw} onClick={handleRefund} disabled={refunding}>
+              {refunding ? 'Traitement...' : 'Confirmer le remboursement'}
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-start gap-2">
+            <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5" />
+            <p className="text-sm text-amber-800">
+              Remboursement comptable uniquement. Aucun remboursement Stripe ne sera effectue.
+              La note de credit sera generee automatiquement.
+            </p>
+          </div>
+
+          <FormField label="Montant du remboursement ($)">
+            <Input
+              type="number"
+              step="0.01"
+              min="0.01"
+              max={selectedOrder?.total}
+              value={refundAmount}
+              onChange={(e) => setRefundAmount(e.target.value)}
+            />
+          </FormField>
+
+          <FormField label="Raison du remboursement">
+            <Textarea
+              rows={3}
+              value={refundReason}
+              onChange={(e) => setRefundReason(e.target.value)}
+              placeholder="Ex: Produit defectueux, erreur de commande..."
+            />
+          </FormField>
+
+          {refundError && (
+            <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded p-2">{refundError}</p>
+          )}
         </div>
-      )}
+      </Modal>
+
+      {/* ─── RESHIP MODAL ────────────────────────────────────────── */}
+      <Modal
+        isOpen={showReshipModal}
+        onClose={() => setShowReshipModal(false)}
+        title="Re-expedition (colis perdu)"
+        subtitle={`Commande ${selectedOrder?.orderNumber || ''}`}
+        size="md"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setShowReshipModal(false)}>
+              Annuler
+            </Button>
+            <Button variant="primary" icon={Package} onClick={handleReship} disabled={reshipping}>
+              {reshipping ? 'Traitement...' : 'Confirmer la re-expedition'}
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <p className="text-sm text-blue-800">
+              Une nouvelle commande de remplacement a $0 sera creee. Le stock sera decremente
+              et une perte inventaire sera comptabilisee.
+            </p>
+          </div>
+
+          <FormField label="Raison de la re-expedition">
+            <select
+              value={reshipReason}
+              onChange={(e) => setReshipReason(e.target.value)}
+              className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+            >
+              {reshipReasons.map((r) => (
+                <option key={r} value={r}>{r}</option>
+              ))}
+            </select>
+          </FormField>
+
+          {selectedOrder && (
+            <div>
+              <h4 className="text-sm font-medium text-slate-700 mb-2">Articles a re-expedier</h4>
+              <div className="border border-slate-200 rounded-lg divide-y divide-slate-100">
+                {selectedOrder.items.map((item) => (
+                  <div key={item.id} className="px-3 py-2 flex justify-between text-sm">
+                    <span className="text-slate-700">
+                      {item.productName}
+                      {item.formatName && <span className="text-slate-400 ml-1">({item.formatName})</span>}
+                    </span>
+                    <span className="text-slate-500">x{item.quantity}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {reshipError && (
+            <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded p-2">{reshipError}</p>
+          )}
+        </div>
+      </Modal>
     </div>
   );
 }

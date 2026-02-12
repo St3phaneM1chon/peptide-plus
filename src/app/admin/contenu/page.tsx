@@ -1,14 +1,28 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { Plus, FileText, HelpCircle, Pencil, Trash2, ExternalLink, Eye, EyeOff } from 'lucide-react';
+import { PageHeader } from '@/components/admin/PageHeader';
+import { Button } from '@/components/admin/Button';
+import { Modal } from '@/components/admin/Modal';
+import { EmptyState } from '@/components/admin/EmptyState';
+import { StatusBadge } from '@/components/admin/StatusBadge';
+import { FilterBar } from '@/components/admin/FilterBar';
+import { FormField, Input, Textarea } from '@/components/admin/FormField';
 
 interface Page {
   id: string;
   slug: string;
   title: string;
   content: string;
+  excerpt: string | null;
+  metaTitle: string | null;
+  metaDescription: string | null;
+  template: string;
   isPublished: boolean;
-  lastUpdated: string;
+  publishedAt: string | null;
+  updatedAt: string;
+  translations: { locale: string }[];
 }
 
 interface FAQItem {
@@ -16,298 +30,493 @@ interface FAQItem {
   question: string;
   answer: string;
   category: string;
-  order: number;
+  sortOrder: number;
   isPublished: boolean;
+  updatedAt: string;
+  translations: { locale: string }[];
 }
 
+type Tab = 'pages' | 'faq';
+
+const FAQ_CATEGORIES = [
+  { value: 'general', label: 'General' },
+  { value: 'shipping', label: 'Shipping' },
+  { value: 'payment', label: 'Payment' },
+  { value: 'products', label: 'Products' },
+  { value: 'returns', label: 'Returns & Refunds' },
+  { value: 'account', label: 'Account' },
+];
+
 export default function ContenuPage() {
-  const [activeTab, setActiveTab] = useState<'pages' | 'faq'>('pages');
+  const [activeTab, setActiveTab] = useState<Tab>('pages');
   const [pages, setPages] = useState<Page[]>([]);
   const [faqs, setFaqs] = useState<FAQItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [editingPage, setEditingPage] = useState<Page | null>(null);
-  const [editingFaq, setEditingFaq] = useState<FAQItem | null>(null);
+  const [search, setSearch] = useState('');
 
-  useEffect(() => {
-    fetchData();
+  // Page modal
+  const [pageModal, setPageModal] = useState(false);
+  const [editingPage, setEditingPage] = useState<Page | null>(null);
+  const [pageForm, setPageForm] = useState({
+    title: '', slug: '', content: '', excerpt: '', metaTitle: '', metaDescription: '', template: 'default', isPublished: false,
+  });
+  const [saving, setSaving] = useState(false);
+
+  // FAQ modal
+  const [faqModal, setFaqModal] = useState(false);
+  const [editingFaq, setEditingFaq] = useState<FAQItem | null>(null);
+  const [faqForm, setFaqForm] = useState({
+    question: '', answer: '', category: 'general', sortOrder: 0, isPublished: true,
+  });
+
+  const fetchPages = useCallback(async () => {
+    const res = await fetch('/api/admin/content/pages');
+    const data = await res.json();
+    setPages(data.pages || []);
   }, []);
 
-  const fetchData = async () => {
-    setPages([]);
-    setFaqs([]);
-    setLoading(false);
-  };
+  const fetchFaqs = useCallback(async () => {
+    const res = await fetch('/api/admin/content/faqs');
+    const data = await res.json();
+    setFaqs(data.faqs || []);
+  }, []);
 
-  const togglePublished = (type: 'page' | 'faq', id: string) => {
-    if (type === 'page') {
-      setPages(pages.map(p => p.id === id ? { ...p, isPublished: !p.isPublished } : p));
+  useEffect(() => {
+    Promise.all([fetchPages(), fetchFaqs()]).finally(() => setLoading(false));
+  }, [fetchPages, fetchFaqs]);
+
+  // Page CRUD
+  const openPageModal = (page?: Page) => {
+    if (page) {
+      setEditingPage(page);
+      setPageForm({
+        title: page.title, slug: page.slug, content: page.content,
+        excerpt: page.excerpt || '', metaTitle: page.metaTitle || '',
+        metaDescription: page.metaDescription || '', template: page.template,
+        isPublished: page.isPublished,
+      });
     } else {
-      setFaqs(faqs.map(f => f.id === id ? { ...f, isPublished: !f.isPublished } : f));
+      setEditingPage(null);
+      setPageForm({ title: '', slug: '', content: '', excerpt: '', metaTitle: '', metaDescription: '', template: 'default', isPublished: false });
     }
+    setPageModal(true);
   };
 
-  const faqCategories = [...new Set(faqs.map(f => f.category))];
+  const savePage = async () => {
+    setSaving(true);
+    const method = editingPage ? 'PUT' : 'POST';
+    const body = editingPage ? { id: editingPage.id, ...pageForm } : pageForm;
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500" />
-      </div>
-    );
-  }
+    const res = await fetch('/api/admin/content/pages', {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+
+    if (res.ok) {
+      setPageModal(false);
+      setEditingPage(null);
+      fetchPages();
+    } else {
+      const err = await res.json();
+      alert(err.error || 'Error saving page');
+    }
+    setSaving(false);
+  };
+
+  const deletePage = async (id: string) => {
+    if (!confirm('Delete this page? This cannot be undone.')) return;
+    await fetch(`/api/admin/content/pages?id=${id}`, { method: 'DELETE' });
+    fetchPages();
+  };
+
+  const togglePagePublished = async (page: Page) => {
+    await fetch('/api/admin/content/pages', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: page.id, isPublished: !page.isPublished }),
+    });
+    fetchPages();
+  };
+
+  // FAQ CRUD
+  const openFaqModal = (faq?: FAQItem) => {
+    if (faq) {
+      setEditingFaq(faq);
+      setFaqForm({
+        question: faq.question, answer: faq.answer, category: faq.category,
+        sortOrder: faq.sortOrder, isPublished: faq.isPublished,
+      });
+    } else {
+      setEditingFaq(null);
+      setFaqForm({ question: '', answer: '', category: 'general', sortOrder: 0, isPublished: true });
+    }
+    setFaqModal(true);
+  };
+
+  const saveFaq = async () => {
+    setSaving(true);
+    const method = editingFaq ? 'PUT' : 'POST';
+    const body = editingFaq ? { id: editingFaq.id, ...faqForm } : faqForm;
+
+    const res = await fetch('/api/admin/content/faqs', {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+
+    if (res.ok) {
+      setFaqModal(false);
+      setEditingFaq(null);
+      fetchFaqs();
+    } else {
+      const err = await res.json();
+      alert(err.error || 'Error saving FAQ');
+    }
+    setSaving(false);
+  };
+
+  const deleteFaq = async (id: string) => {
+    if (!confirm('Delete this FAQ? This cannot be undone.')) return;
+    await fetch(`/api/admin/content/faqs?id=${id}`, { method: 'DELETE' });
+    fetchFaqs();
+  };
+
+  const toggleFaqPublished = async (faq: FAQItem) => {
+    await fetch('/api/admin/content/faqs', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: faq.id, isPublished: !faq.isPublished }),
+    });
+    fetchFaqs();
+  };
+
+  // Filtered data
+  const filteredPages = pages.filter(p =>
+    !search || p.title.toLowerCase().includes(search.toLowerCase()) || p.slug.includes(search.toLowerCase())
+  );
+
+  const filteredFaqs = faqs.filter(f =>
+    !search || f.question.toLowerCase().includes(search.toLowerCase()) || f.answer.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const faqCategories = [...new Set(filteredFaqs.map(f => f.category))].sort();
+
+  // Auto-generate slug from title
+  const autoSlug = (title: string) => {
+    return title.toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .trim();
+  };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Contenu</h1>
-          <p className="text-gray-500">Gérez les pages statiques et la FAQ</p>
-        </div>
-        <button className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 flex items-center gap-2">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          {activeTab === 'pages' ? 'Nouvelle page' : 'Nouvelle question'}
+    <div>
+      <PageHeader
+        title="Content Management"
+        subtitle={`${pages.length} pages, ${faqs.length} FAQs`}
+        actions={
+          <Button
+            variant="primary"
+            icon={Plus}
+            onClick={() => activeTab === 'pages' ? openPageModal() : openFaqModal()}
+          >
+            {activeTab === 'pages' ? 'New Page' : 'New FAQ'}
+          </Button>
+        }
+      />
+
+      {/* Tabs */}
+      <div className="flex gap-1 mb-5 bg-slate-100 p-1 rounded-lg w-fit">
+        <button
+          onClick={() => setActiveTab('pages')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors
+            ${activeTab === 'pages' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+        >
+          <FileText className="w-4 h-4" />
+          Pages ({pages.length})
+        </button>
+        <button
+          onClick={() => setActiveTab('faq')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors
+            ${activeTab === 'faq' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+        >
+          <HelpCircle className="w-4 h-4" />
+          FAQ ({faqs.length})
         </button>
       </div>
 
-      {/* Tabs */}
-      <div className="border-b border-gray-200">
-        <nav className="flex gap-8">
-          <button
-            onClick={() => setActiveTab('pages')}
-            className={`py-3 border-b-2 font-medium text-sm ${
-              activeTab === 'pages'
-                ? 'border-amber-500 text-amber-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            Pages ({pages.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('faq')}
-            className={`py-3 border-b-2 font-medium text-sm ${
-              activeTab === 'faq'
-                ? 'border-amber-500 text-amber-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            FAQ ({faqs.length})
-          </button>
-        </nav>
-      </div>
+      <FilterBar
+        searchValue={search}
+        onSearchChange={setSearch}
+        searchPlaceholder={activeTab === 'pages' ? 'Search pages...' : 'Search FAQs...'}
+      />
 
-      {/* Content */}
-      {activeTab === 'pages' ? (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Page</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">URL</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Dernière MAJ</th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase">Publié</th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {pages.map((page) => (
-                <tr key={page.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 font-medium text-gray-900">{page.title}</td>
-                  <td className="px-4 py-3">
-                    <code className="text-sm bg-gray-100 px-2 py-0.5 rounded">/{page.slug}</code>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-500">
-                    {new Date(page.lastUpdated).toLocaleDateString('fr-CA')}
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <button
-                      onClick={() => togglePublished('page', page.id)}
-                      className={`w-10 h-5 rounded-full transition-colors relative ${
-                        page.isPublished ? 'bg-green-500' : 'bg-gray-300'
-                      }`}
-                    >
-                      <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-transform ${
-                        page.isPublished ? 'right-0.5' : 'left-0.5'
-                      }`} />
-                    </button>
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <div className="flex items-center justify-center gap-2">
-                      <button
-                        onClick={() => setEditingPage(page)}
-                        className="px-3 py-1 bg-amber-100 text-amber-700 rounded text-sm hover:bg-amber-200"
-                      >
-                        Modifier
-                      </button>
-                      <a
-                        href={`/${page.slug}`}
-                        target="_blank"
-                        className="px-3 py-1 bg-gray-100 text-gray-700 rounded text-sm hover:bg-gray-200"
-                      >
-                        Voir
-                      </a>
-                    </div>
-                  </td>
+      {loading ? (
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500" />
+        </div>
+      ) : activeTab === 'pages' ? (
+        /* Pages Tab */
+        filteredPages.length === 0 ? (
+          <EmptyState
+            icon={FileText}
+            title="No pages yet"
+            description="Create your first page to start managing content."
+            action={<Button variant="primary" icon={Plus} onClick={() => openPageModal()}>Create Page</Button>}
+          />
+        ) : (
+          <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
+            <table className="w-full">
+              <thead className="bg-slate-50">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Page</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">URL</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Updated</th>
+                  <th className="px-4 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">Status</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {faqCategories.map((category) => (
-            <div key={category} className="bg-white rounded-xl border border-gray-200">
-              <div className="p-4 border-b border-gray-200 bg-gray-50">
-                <h3 className="font-semibold text-gray-900">{category}</h3>
-              </div>
-              <div className="divide-y divide-gray-100">
-                {faqs.filter(f => f.category === category).map((faq) => (
-                  <div key={faq.id} className={`p-4 ${!faq.isPublished ? 'opacity-50' : ''}`}>
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <p className="font-medium text-gray-900 mb-1">{faq.question}</p>
-                        <p className="text-sm text-gray-600 line-clamp-2">{faq.answer}</p>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {filteredPages.map((page) => (
+                  <tr key={page.id} className="hover:bg-slate-50 transition-colors">
+                    <td className="px-4 py-3">
+                      <p className="text-sm font-medium text-slate-900">{page.title}</p>
+                      {page.translations.length > 0 && (
+                        <p className="text-xs text-slate-400 mt-0.5">
+                          {page.translations.length} translation{page.translations.length > 1 ? 's' : ''}
+                        </p>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <code className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-mono">/{page.slug}</code>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-slate-500">
+                      {new Date(page.updatedAt).toLocaleDateString('en-CA')}
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <button onClick={() => togglePagePublished(page)}>
+                        <StatusBadge variant={page.isPublished ? 'success' : 'neutral'} dot>
+                          {page.isPublished ? 'Published' : 'Draft'}
+                        </StatusBadge>
+                      </button>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center justify-end gap-1">
+                        <Button size="sm" variant="ghost" icon={Pencil} onClick={() => openPageModal(page)} />
+                        <a href={`/${page.slug}`} target="_blank" rel="noopener noreferrer">
+                          <Button size="sm" variant="ghost" icon={ExternalLink} />
+                        </a>
+                        <Button size="sm" variant="ghost" icon={Trash2} onClick={() => deletePage(page.id)} />
                       </div>
-                      <div className="flex items-center gap-3 ml-4">
-                        <button
-                          onClick={() => togglePublished('faq', faq.id)}
-                          className={`w-10 h-5 rounded-full transition-colors relative ${
-                            faq.isPublished ? 'bg-green-500' : 'bg-gray-300'
-                          }`}
-                        >
-                          <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-transform ${
-                            faq.isPublished ? 'right-0.5' : 'left-0.5'
-                          }`} />
-                        </button>
-                        <button
-                          onClick={() => setEditingFaq(faq)}
-                          className="px-3 py-1 bg-amber-100 text-amber-700 rounded text-sm hover:bg-amber-200"
-                        >
-                          Modifier
-                        </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )
+      ) : (
+        /* FAQ Tab */
+        filteredFaqs.length === 0 ? (
+          <EmptyState
+            icon={HelpCircle}
+            title="No FAQs yet"
+            description="Create your first FAQ to help customers find answers."
+            action={<Button variant="primary" icon={Plus} onClick={() => openFaqModal()}>Create FAQ</Button>}
+          />
+        ) : (
+          <div className="space-y-4">
+            {faqCategories.map((category) => (
+              <div key={category} className="bg-white border border-slate-200 rounded-lg overflow-hidden">
+                <div className="px-4 py-3 border-b border-slate-100 bg-slate-50">
+                  <h3 className="text-sm font-semibold text-slate-700 capitalize">{category}</h3>
+                </div>
+                <div className="divide-y divide-slate-100">
+                  {filteredFaqs.filter(f => f.category === category).map((faq) => (
+                    <div key={faq.id} className={`p-4 ${!faq.isPublished ? 'opacity-60' : ''}`}>
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-slate-900">{faq.question}</p>
+                          <p className="text-sm text-slate-500 mt-1 line-clamp-2">{faq.answer}</p>
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <button onClick={() => toggleFaqPublished(faq)} title={faq.isPublished ? 'Unpublish' : 'Publish'}>
+                            {faq.isPublished ? (
+                              <Eye className="w-4 h-4 text-emerald-500" />
+                            ) : (
+                              <EyeOff className="w-4 h-4 text-slate-400" />
+                            )}
+                          </button>
+                          <Button size="sm" variant="ghost" icon={Pencil} onClick={() => openFaqModal(faq)} />
+                          <Button size="sm" variant="ghost" icon={Trash2} onClick={() => deleteFaq(faq.id)} />
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Edit Page Modal */}
-      {editingPage && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200 flex items-center justify-between">
-              <h2 className="text-xl font-bold text-gray-900">Modifier: {editingPage.title}</h2>
-              <button onClick={() => setEditingPage(null)} className="p-2 hover:bg-gray-100 rounded-lg">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            <div className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Titre</label>
-                <input
-                  type="text"
-                  defaultValue={editingPage.title}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Slug (URL)</label>
-                <div className="flex items-center">
-                  <span className="text-gray-500 mr-1">/</span>
-                  <input
-                    type="text"
-                    defaultValue={editingPage.slug}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg"
-                  />
+                  ))}
                 </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Contenu (Markdown/HTML)</label>
-                <textarea
-                  rows={15}
-                  defaultValue={editingPage.content}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg font-mono text-sm"
-                />
-              </div>
-              <div className="flex gap-3 pt-4 border-t border-gray-200">
-                <button
-                  onClick={() => setEditingPage(null)}
-                  className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
-                >
-                  Annuler
-                </button>
-                <button className="flex-1 px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600">
-                  Sauvegarder
-                </button>
-              </div>
-            </div>
+            ))}
           </div>
-        </div>
+        )
       )}
 
-      {/* Edit FAQ Modal */}
-      {editingFaq && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl max-w-lg w-full">
-            <div className="p-6 border-b border-gray-200 flex items-center justify-between">
-              <h2 className="text-xl font-bold text-gray-900">Modifier la question</h2>
-              <button onClick={() => setEditingFaq(null)} className="p-2 hover:bg-gray-100 rounded-lg">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            <div className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Catégorie</label>
-                <select
-                  defaultValue={editingFaq.category}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                >
-                  {faqCategories.map(cat => (
-                    <option key={cat} value={cat}>{cat}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Question</label>
-                <input
-                  type="text"
-                  defaultValue={editingFaq.question}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+      {/* Page Modal */}
+      <Modal
+        isOpen={pageModal}
+        onClose={() => setPageModal(false)}
+        title={editingPage ? `Edit: ${editingPage.title}` : 'New Page'}
+        size="xl"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setPageModal(false)}>Cancel</Button>
+            <Button variant="primary" onClick={savePage} loading={saving}>Save Page</Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <FormField label="Title" required>
+              <Input
+                value={pageForm.title}
+                onChange={e => {
+                  const title = e.target.value;
+                  setPageForm(f => ({
+                    ...f,
+                    title,
+                    slug: !editingPage ? autoSlug(title) : f.slug,
+                  }));
+                }}
+                placeholder="Page title"
+              />
+            </FormField>
+            <FormField label="Slug (URL)" required>
+              <div className="flex items-center gap-1">
+                <span className="text-slate-400 text-sm">/</span>
+                <Input
+                  value={pageForm.slug}
+                  onChange={e => setPageForm(f => ({ ...f, slug: e.target.value }))}
+                  placeholder="page-slug"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Réponse</label>
-                <textarea
-                  rows={5}
-                  defaultValue={editingFaq.answer}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                />
-              </div>
-              <div className="flex gap-3 pt-4 border-t border-gray-200">
-                <button
-                  onClick={() => setEditingFaq(null)}
-                  className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
-                >
-                  Annuler
-                </button>
-                <button className="flex-1 px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600">
-                  Sauvegarder
-                </button>
-              </div>
-            </div>
+            </FormField>
           </div>
+          <FormField label="Excerpt" hint="Short summary for listings">
+            <Input
+              value={pageForm.excerpt}
+              onChange={e => setPageForm(f => ({ ...f, excerpt: e.target.value }))}
+              placeholder="Brief page description..."
+            />
+          </FormField>
+          <FormField label="Content" required>
+            <Textarea
+              value={pageForm.content}
+              onChange={e => setPageForm(f => ({ ...f, content: e.target.value }))}
+              placeholder="Page content (HTML or Markdown)..."
+              rows={12}
+              className="font-mono text-sm"
+            />
+          </FormField>
+          <div className="grid grid-cols-2 gap-4">
+            <FormField label="Meta Title" hint="SEO title tag">
+              <Input
+                value={pageForm.metaTitle}
+                onChange={e => setPageForm(f => ({ ...f, metaTitle: e.target.value }))}
+                placeholder="SEO title..."
+              />
+            </FormField>
+            <FormField label="Template">
+              <select
+                value={pageForm.template}
+                onChange={e => setPageForm(f => ({ ...f, template: e.target.value }))}
+                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500"
+              >
+                <option value="default">Default</option>
+                <option value="full-width">Full Width</option>
+                <option value="sidebar">With Sidebar</option>
+              </select>
+            </FormField>
+          </div>
+          <FormField label="Meta Description" hint="SEO description">
+            <Input
+              value={pageForm.metaDescription}
+              onChange={e => setPageForm(f => ({ ...f, metaDescription: e.target.value }))}
+              placeholder="SEO description..."
+            />
+          </FormField>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={pageForm.isPublished}
+              onChange={e => setPageForm(f => ({ ...f, isPublished: e.target.checked }))}
+              className="rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+            />
+            <span className="text-sm text-slate-700">Publish immediately</span>
+          </label>
         </div>
-      )}
+      </Modal>
+
+      {/* FAQ Modal */}
+      <Modal
+        isOpen={faqModal}
+        onClose={() => setFaqModal(false)}
+        title={editingFaq ? 'Edit FAQ' : 'New FAQ'}
+        size="md"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setFaqModal(false)}>Cancel</Button>
+            <Button variant="primary" onClick={saveFaq} loading={saving}>Save FAQ</Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <FormField label="Category">
+              <select
+                value={faqForm.category}
+                onChange={e => setFaqForm(f => ({ ...f, category: e.target.value }))}
+                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500"
+              >
+                {FAQ_CATEGORIES.map(cat => (
+                  <option key={cat.value} value={cat.value}>{cat.label}</option>
+                ))}
+              </select>
+            </FormField>
+            <FormField label="Sort Order">
+              <Input
+                type="number"
+                value={faqForm.sortOrder}
+                onChange={e => setFaqForm(f => ({ ...f, sortOrder: parseInt(e.target.value) || 0 }))}
+              />
+            </FormField>
+          </div>
+          <FormField label="Question" required>
+            <Input
+              value={faqForm.question}
+              onChange={e => setFaqForm(f => ({ ...f, question: e.target.value }))}
+              placeholder="How do I...?"
+            />
+          </FormField>
+          <FormField label="Answer" required>
+            <Textarea
+              value={faqForm.answer}
+              onChange={e => setFaqForm(f => ({ ...f, answer: e.target.value }))}
+              placeholder="The answer to this question..."
+              rows={6}
+            />
+          </FormField>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={faqForm.isPublished}
+              onChange={e => setFaqForm(f => ({ ...f, isPublished: e.target.checked }))}
+              className="rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+            />
+            <span className="text-sm text-slate-700">Published</span>
+          </label>
+        </div>
+      </Modal>
     </div>
   );
 }

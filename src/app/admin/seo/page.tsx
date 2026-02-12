@@ -1,6 +1,15 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { Globe, Pencil, FileCode, BarChart3 } from 'lucide-react';
+import {
+  PageHeader,
+  Button,
+  Modal,
+  FormField,
+  Input,
+  Textarea,
+} from '@/components/admin';
 
 interface PageSEO {
   id: string;
@@ -36,149 +45,136 @@ export default function SEOPage() {
   };
 
   const toggleNoIndex = (id: string) => {
-    setPages(pages.map(p => p.id === id ? { ...p, noIndex: !p.noIndex } : p));
+    setPages(pages.map((p) => (p.id === id ? { ...p, noIndex: !p.noIndex } : p)));
   };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500" />
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">SEO</h1>
-          <p className="text-gray-500">Optimisez le référencement de votre site</p>
-        </div>
-        <button className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600">
-          Générer sitemap.xml
-        </button>
-      </div>
+      <PageHeader
+        title="SEO"
+        subtitle="Optimisez le referencement de votre site"
+        actions={
+          <Button variant="primary" icon={Globe}>
+            Generer sitemap.xml
+          </Button>
+        }
+      />
 
       {/* Global Settings */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <h3 className="font-semibold text-gray-900 mb-4">Paramètres globaux</h3>
+      <div className="bg-white rounded-xl border border-slate-200 p-6">
+        <h3 className="font-semibold text-slate-900 mb-4">Parametres globaux</h3>
         <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Nom du site</label>
-            <input
+          <FormField label="Nom du site">
+            <Input
               type="text"
               value={globalSettings.siteName}
               onChange={(e) => setGlobalSettings({ ...globalSettings, siteName: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
             />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">URL du site</label>
-            <input
+          </FormField>
+          <FormField label="URL du site">
+            <Input
               type="url"
               value={globalSettings.siteUrl}
               onChange={(e) => setGlobalSettings({ ...globalSettings, siteUrl: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
             />
-          </div>
+          </FormField>
           <div className="col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Image OG par défaut</label>
-            <input
-              type="text"
-              value={globalSettings.defaultOgImage}
-              onChange={(e) => setGlobalSettings({ ...globalSettings, defaultOgImage: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-            />
+            <FormField label="Image OG par defaut">
+              <Input
+                type="text"
+                value={globalSettings.defaultOgImage}
+                onChange={(e) => setGlobalSettings({ ...globalSettings, defaultOgImage: e.target.value })}
+              />
+            </FormField>
           </div>
         </div>
       </div>
 
       {/* Analytics */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <h3 className="font-semibold text-gray-900 mb-4">Analytics & Tracking</h3>
+      <div className="bg-white rounded-xl border border-slate-200 p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <BarChart3 className="w-4 h-4 text-slate-400" />
+          <h3 className="font-semibold text-slate-900">Analytics & Tracking</h3>
+        </div>
         <div className="grid grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Google Analytics ID</label>
-            <input
+          <FormField label="Google Analytics ID">
+            <Input
               type="text"
               placeholder="G-XXXXXXXXXX"
               value={globalSettings.googleAnalyticsId}
               onChange={(e) => setGlobalSettings({ ...globalSettings, googleAnalyticsId: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
             />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Google Tag Manager ID</label>
-            <input
+          </FormField>
+          <FormField label="Google Tag Manager ID">
+            <Input
               type="text"
               placeholder="GTM-XXXXXXX"
               value={globalSettings.googleTagManagerId}
               onChange={(e) => setGlobalSettings({ ...globalSettings, googleTagManagerId: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
             />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Facebook Pixel ID</label>
-            <input
+          </FormField>
+          <FormField label="Facebook Pixel ID">
+            <Input
               type="text"
               placeholder="XXXXXXXXXXXXXXX"
               value={globalSettings.facebookPixelId}
               onChange={(e) => setGlobalSettings({ ...globalSettings, facebookPixelId: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
             />
-          </div>
+          </FormField>
         </div>
       </div>
 
       {/* Pages */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <div className="p-4 border-b border-gray-200">
-          <h3 className="font-semibold text-gray-900">Pages</h3>
+      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+        <div className="p-4 border-b border-slate-200">
+          <h3 className="font-semibold text-slate-900">Pages</h3>
         </div>
         <table className="w-full">
-          <thead className="bg-gray-50">
+          <thead className="bg-slate-50">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Page</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Titre</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Description</th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase">Indexée</th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase">Actions</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Page</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Titre</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Description</th>
+              <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">Indexee</th>
+              <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200">
+          <tbody className="divide-y divide-slate-100">
             {pages.map((page) => (
-              <tr key={page.id} className="hover:bg-gray-50">
+              <tr key={page.id} className="hover:bg-slate-50/50">
                 <td className="px-4 py-3">
-                  <code className="text-sm bg-gray-100 px-2 py-0.5 rounded">{page.path}</code>
+                  <code className="text-sm bg-slate-100 px-2 py-0.5 rounded text-slate-700">{page.path}</code>
                 </td>
                 <td className="px-4 py-3">
-                  <p className="text-gray-900 truncate max-w-xs">{page.title}</p>
-                  <p className="text-xs text-gray-400">{page.title.length}/60 caractères</p>
+                  <p className="text-slate-900 truncate max-w-xs">{page.title}</p>
+                  <p className="text-xs text-slate-400">{page.title.length}/60 caracteres</p>
                 </td>
                 <td className="px-4 py-3">
-                  <p className="text-gray-600 truncate max-w-sm">{page.description || '-'}</p>
-                  <p className="text-xs text-gray-400">{page.description?.length || 0}/160 caractères</p>
+                  <p className="text-slate-600 truncate max-w-sm">{page.description || '-'}</p>
+                  <p className="text-xs text-slate-400">{page.description?.length || 0}/160 caracteres</p>
                 </td>
                 <td className="px-4 py-3 text-center">
                   <button
                     onClick={() => toggleNoIndex(page.id)}
                     className={`px-2 py-1 rounded text-xs font-medium ${
-                      page.noIndex 
-                        ? 'bg-red-100 text-red-700' 
-                        : 'bg-green-100 text-green-700'
+                      page.noIndex ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'
                     }`}
                   >
                     {page.noIndex ? 'Non' : 'Oui'}
                   </button>
                 </td>
                 <td className="px-4 py-3 text-center">
-                  <button
-                    onClick={() => setEditingPage(page)}
-                    className="px-3 py-1 bg-amber-100 text-amber-700 rounded text-sm hover:bg-amber-200"
-                  >
+                  <Button variant="ghost" size="sm" icon={Pencil} onClick={() => setEditingPage(page)}>
                     Modifier
-                  </button>
+                  </Button>
                 </td>
               </tr>
             ))}
@@ -187,13 +183,18 @@ export default function SEOPage() {
       </div>
 
       {/* Robots.txt Preview */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
+      <div className="bg-white rounded-xl border border-slate-200 p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-gray-900">robots.txt</h3>
-          <button className="text-sm text-amber-600 hover:text-amber-700">Modifier</button>
+          <div className="flex items-center gap-2">
+            <FileCode className="w-4 h-4 text-slate-400" />
+            <h3 className="font-semibold text-slate-900">robots.txt</h3>
+          </div>
+          <Button variant="ghost" size="sm" icon={Pencil}>
+            Modifier
+          </Button>
         </div>
-        <pre className="bg-gray-50 rounded-lg p-4 text-sm text-gray-700 overflow-x-auto">
-{`User-agent: *
+        <pre className="bg-slate-50 rounded-lg p-4 text-sm text-slate-700 overflow-x-auto">
+          {`User-agent: *
 Allow: /
 Disallow: /admin/
 Disallow: /api/
@@ -205,73 +206,36 @@ Sitemap: ${globalSettings.siteUrl}/sitemap.xml`}
       </div>
 
       {/* Edit Page Modal */}
-      {editingPage && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl max-w-lg w-full">
-            <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-              <h3 className="font-semibold text-gray-900">Modifier SEO - {editingPage.path}</h3>
-              <button onClick={() => setEditingPage(null)} className="p-1 hover:bg-gray-100 rounded">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            <div className="p-4 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Titre <span className="text-gray-400">({editingPage.title.length}/60)</span>
-                </label>
-                <input
-                  type="text"
-                  defaultValue={editingPage.title}
-                  maxLength={60}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Meta Description <span className="text-gray-400">({editingPage.description?.length || 0}/160)</span>
-                </label>
-                <textarea
-                  rows={3}
-                  defaultValue={editingPage.description}
-                  maxLength={160}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Mots-clés</label>
-                <input
-                  type="text"
-                  defaultValue={editingPage.keywords}
-                  placeholder="mot1, mot2, mot3"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Image OG</label>
-                <input
-                  type="text"
-                  defaultValue={editingPage.ogImage}
-                  placeholder="/images/og-page.jpg"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                />
-              </div>
-              <div className="flex gap-3 pt-4 border-t border-gray-200">
-                <button
-                  onClick={() => setEditingPage(null)}
-                  className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
-                >
-                  Annuler
-                </button>
-                <button className="flex-1 px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600">
-                  Sauvegarder
-                </button>
-              </div>
+      <Modal
+        isOpen={!!editingPage}
+        onClose={() => setEditingPage(null)}
+        title={`Modifier SEO - ${editingPage?.path || ''}`}
+      >
+        {editingPage && (
+          <div className="space-y-4">
+            <FormField label="Titre" hint={`${editingPage.title.length}/60`}>
+              <Input type="text" defaultValue={editingPage.title} maxLength={60} />
+            </FormField>
+            <FormField label="Meta Description" hint={`${editingPage.description?.length || 0}/160`}>
+              <Textarea rows={3} defaultValue={editingPage.description} maxLength={160} />
+            </FormField>
+            <FormField label="Mots-cles">
+              <Input type="text" defaultValue={editingPage.keywords} placeholder="mot1, mot2, mot3" />
+            </FormField>
+            <FormField label="Image OG">
+              <Input type="text" defaultValue={editingPage.ogImage} placeholder="/images/og-page.jpg" />
+            </FormField>
+            <div className="flex gap-3 pt-4 border-t border-slate-200">
+              <Button variant="secondary" onClick={() => setEditingPage(null)} className="flex-1">
+                Annuler
+              </Button>
+              <Button variant="primary" className="flex-1">
+                Sauvegarder
+              </Button>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </Modal>
     </div>
   );
 }

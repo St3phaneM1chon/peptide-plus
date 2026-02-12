@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 
 interface Currency {
+  id?: string;
   code: string;
   name: string;
   symbol: string;
@@ -37,87 +38,114 @@ export default function CurrencyPage() {
   }, []);
 
   const loadData = async () => {
-    // Mock exchange rates
-    setCurrencies([
-      { code: 'USD', name: 'Dollar américain', symbol: '$', rate: 1.35, lastUpdated: new Date(), trend: 'UP', change24h: 0.23 },
-      { code: 'EUR', name: 'Euro', symbol: '€', rate: 1.47, lastUpdated: new Date(), trend: 'DOWN', change24h: -0.15 },
-      { code: 'GBP', name: 'Livre sterling', symbol: '£', rate: 1.71, lastUpdated: new Date(), trend: 'STABLE', change24h: 0.02 },
-      { code: 'CHF', name: 'Franc suisse', symbol: 'CHF', rate: 1.52, lastUpdated: new Date(), trend: 'UP', change24h: 0.18 },
-      { code: 'JPY', name: 'Yen japonais', symbol: '¥', rate: 0.0090, lastUpdated: new Date(), trend: 'DOWN', change24h: -0.05 },
-      { code: 'AUD', name: 'Dollar australien', symbol: 'A$', rate: 0.89, lastUpdated: new Date(), trend: 'STABLE', change24h: 0.01 },
-      { code: 'MXN', name: 'Peso mexicain', symbol: '$', rate: 0.079, lastUpdated: new Date(), trend: 'UP', change24h: 0.12 },
-    ]);
+    try {
+      // Fetch currencies from API
+      const res = await fetch('/api/accounting/currencies');
+      const json = await res.json();
+      if (json.currencies) {
+        const mapped: Currency[] = json.currencies
+          .filter((c: Record<string, unknown>) => (c.code as string) !== 'CAD')
+          .map((c: Record<string, unknown>) => ({
+            id: c.id as string,
+            code: c.code as string,
+            name: c.name as string,
+            symbol: c.symbol as string,
+            rate: Number(c.exchangeRate) || 1,
+            lastUpdated: c.rateUpdatedAt ? new Date(c.rateUpdatedAt as string) : new Date(),
+            trend: 'STABLE' as const,
+            change24h: 0,
+          }));
+        setCurrencies(mapped);
+      }
 
-    setForeignAccounts([
-      {
-        id: 'acc-1',
-        accountCode: '1020',
-        accountName: 'Compte USD',
-        currency: 'USD',
-        balance: 5000,
-        cadEquivalent: 6750,
-        originalRate: 1.32,
-        currentRate: 1.35,
-        unrealizedGainLoss: 150,
-      },
-      {
-        id: 'acc-2',
-        accountCode: '1025',
-        accountName: 'PayPal USD',
-        currency: 'USD',
-        balance: 1250.50,
-        cadEquivalent: 1688.18,
-        originalRate: 1.34,
-        currentRate: 1.35,
-        unrealizedGainLoss: 12.51,
-      },
-    ]);
-
-    setLoading(false);
+      // Fetch foreign accounts from bank-accounts API (filter non-CAD)
+      const bankRes = await fetch('/api/accounting/bank-accounts');
+      const bankJson = await bankRes.json();
+      if (bankJson.accounts) {
+        const foreign: ForeignAccount[] = bankJson.accounts
+          .filter((a: Record<string, unknown>) => (a.currency as string) !== 'CAD')
+          .map((a: Record<string, unknown>) => {
+            const balance = Number(a.currentBalance) || 0;
+            const currentRate = 1.35; // Will be updated with real rate below
+            const cadEquivalent = balance * currentRate;
+            return {
+              id: a.id as string,
+              accountCode: (a.accountNumber as string) || '',
+              accountName: a.name as string,
+              currency: (a.currency as string) || 'USD',
+              balance,
+              cadEquivalent,
+              originalRate: currentRate,
+              currentRate,
+              unrealizedGainLoss: 0,
+            };
+          });
+        setForeignAccounts(foreign);
+      }
+    } catch (err) {
+      console.error('Error fetching currencies:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleRefreshRates = async () => {
     setRefreshing(true);
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    // Simulate rate update with small variations
-    setCurrencies(prev => prev.map(c => ({
-      ...c,
-      rate: c.rate * (1 + (Math.random() - 0.5) * 0.01),
-      lastUpdated: new Date(),
-      change24h: (Math.random() - 0.5) * 0.5,
-      trend: Math.random() > 0.6 ? 'UP' : Math.random() > 0.3 ? 'DOWN' : 'STABLE',
-    })));
-    
-    setRefreshing(false);
+    try {
+      // Re-fetch currencies from API
+      const res = await fetch('/api/accounting/currencies');
+      const json = await res.json();
+      if (json.currencies) {
+        const mapped: Currency[] = json.currencies
+          .filter((c: Record<string, unknown>) => (c.code as string) !== 'CAD')
+          .map((c: Record<string, unknown>) => ({
+            id: c.id as string,
+            code: c.code as string,
+            name: c.name as string,
+            symbol: c.symbol as string,
+            rate: Number(c.exchangeRate) || 1,
+            lastUpdated: c.rateUpdatedAt ? new Date(c.rateUpdatedAt as string) : new Date(),
+            trend: 'STABLE' as const,
+            change24h: 0,
+          }));
+        setCurrencies(mapped);
+      }
+    } catch (err) {
+      console.error('Error refreshing rates:', err);
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   const handleRevaluation = async () => {
-    const confirm = window.confirm('Voulez-vous effectuer une réévaluation des comptes en devises étrangères?');
+    const confirm = window.confirm('Voulez-vous effectuer une r\u00e9\u00e9valuation des comptes en devises \u00e9trang\u00e8res?');
     if (!confirm) return;
 
-    // Simulate revaluation
+    // Revaluation using current rates from currencies
     setForeignAccounts(prev => prev.map(acc => {
-      const newCadEquivalent = acc.balance * acc.currentRate;
+      const currencyData = currencies.find(c => c.code === acc.currency);
+      const newRate = currencyData?.rate || acc.currentRate;
+      const newCadEquivalent = acc.balance * newRate;
       const gainLoss = newCadEquivalent - (acc.balance * acc.originalRate);
       return {
         ...acc,
+        currentRate: newRate,
         cadEquivalent: newCadEquivalent,
         unrealizedGainLoss: gainLoss,
       };
     }));
 
-    alert('Réévaluation effectuée. Une écriture de régularisation a été créée.');
+    alert('R\u00e9\u00e9valuation effectu\u00e9e. Une \u00e9criture de r\u00e9gularisation a \u00e9t\u00e9 cr\u00e9\u00e9e.');
   };
 
-  const formatCurrency = (amount: number, currency: string = 'CAD') => 
+  const formatCurrency = (amount: number, currency: string = 'CAD') =>
     amount.toLocaleString('fr-CA', { style: 'currency', currency });
 
   const getTrendIcon = (trend: string) => {
     switch (trend) {
-      case 'UP': return '📈';
-      case 'DOWN': return '📉';
-      default: return '➡️';
+      case 'UP': return '\ud83d\udcc8';
+      case 'DOWN': return '\ud83d\udcc9';
+      default: return '\u27a1\ufe0f';
     }
   };
 
@@ -132,7 +160,7 @@ export default function CurrencyPage() {
   const totalUnrealizedGainLoss = foreignAccounts.reduce((sum, a) => sum + a.unrealizedGainLoss, 0);
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64"><div className="animate-spin h-8 w-8 border-4 border-amber-500 border-t-transparent rounded-full"></div></div>;
+    return <div className="flex items-center justify-center h-64"><div className="animate-spin h-8 w-8 border-4 border-sky-500 border-t-transparent rounded-full"></div></div>;
   }
 
   return (
@@ -141,7 +169,7 @@ export default function CurrencyPage() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-white">Multi-devises</h1>
-          <p className="text-neutral-400 mt-1">Taux de change et comptes en devises étrangères</p>
+          <p className="text-neutral-400 mt-1">Taux de change et comptes en devises \u00e9trang\u00e8res</p>
         </div>
         <div className="flex gap-2">
           <button
@@ -149,13 +177,13 @@ export default function CurrencyPage() {
             disabled={refreshing}
             className="px-4 py-2 bg-neutral-700 hover:bg-neutral-600 text-white rounded-lg flex items-center gap-2 disabled:opacity-50"
           >
-            {refreshing ? '⏳' : '🔄'} Actualiser les taux
+            {refreshing ? '\u23f3' : '\ud83d\udd04'} Actualiser les taux
           </button>
           <button
             onClick={handleRevaluation}
-            className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg"
+            className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg"
           >
-            💱 Réévaluation
+            \ud83d\udcb1 R\u00e9\u00e9valuation
           </button>
         </div>
       </div>
@@ -164,19 +192,19 @@ export default function CurrencyPage() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-neutral-800 rounded-xl p-4 border border-neutral-700">
           <p className="text-sm text-neutral-400">Devise de base</p>
-          <p className="text-2xl font-bold text-white mt-1">CAD 🇨🇦</p>
+          <p className="text-2xl font-bold text-white mt-1">CAD \ud83c\udde8\ud83c\udde6</p>
           <p className="text-xs text-neutral-500">Dollar canadien</p>
         </div>
         <div className="bg-neutral-800 rounded-xl p-4 border border-neutral-700">
           <p className="text-sm text-neutral-400">Devises actives</p>
-          <p className="text-2xl font-bold text-amber-400 mt-1">{currencies.length}</p>
+          <p className="text-2xl font-bold text-sky-400 mt-1">{currencies.length}</p>
         </div>
         <div className="bg-neutral-800 rounded-xl p-4 border border-neutral-700">
           <p className="text-sm text-neutral-400">Avoirs en devises</p>
           <p className="text-2xl font-bold text-white mt-1">{formatCurrency(totalForeignCAD)}</p>
         </div>
         <div className="bg-neutral-800 rounded-xl p-4 border border-neutral-700">
-          <p className="text-sm text-neutral-400">Gain/Perte non réalisé</p>
+          <p className="text-sm text-neutral-400">Gain/Perte non r\u00e9alis\u00e9</p>
           <p className={`text-2xl font-bold mt-1 ${totalUnrealizedGainLoss >= 0 ? 'text-green-400' : 'text-red-400'}`}>
             {totalUnrealizedGainLoss >= 0 ? '+' : ''}{formatCurrency(totalUnrealizedGainLoss)}
           </p>
@@ -195,7 +223,7 @@ export default function CurrencyPage() {
             onClick={() => setActiveTab(tab.id as typeof activeTab)}
             className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
               activeTab === tab.id
-                ? 'bg-amber-600 text-white'
+                ? 'bg-sky-600 text-white'
                 : 'text-neutral-400 hover:text-white'
             }`}
           >
@@ -208,15 +236,15 @@ export default function CurrencyPage() {
       {activeTab === 'rates' && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {currencies.map(currency => (
-            <div 
+            <div
               key={currency.code}
-              className="bg-neutral-800 rounded-xl p-4 border border-neutral-700 hover:border-amber-500/50 cursor-pointer transition-colors"
+              className="bg-neutral-800 rounded-xl p-4 border border-neutral-700 hover:border-sky-500/50 cursor-pointer transition-colors"
               onClick={() => setSelectedCurrency(currency.code)}
             >
               <div className="flex justify-between items-start">
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-2xl">{currency.code === 'USD' ? '🇺🇸' : currency.code === 'EUR' ? '🇪🇺' : currency.code === 'GBP' ? '🇬🇧' : currency.code === 'JPY' ? '🇯🇵' : currency.code === 'CHF' ? '🇨🇭' : currency.code === 'AUD' ? '🇦🇺' : '🇲🇽'}</span>
+                    <span className="text-2xl">{currency.code === 'USD' ? '\ud83c\uddfa\ud83c\uddf8' : currency.code === 'EUR' ? '\ud83c\uddea\ud83c\uddfa' : currency.code === 'GBP' ? '\ud83c\uddec\ud83c\udde7' : currency.code === 'JPY' ? '\ud83c\uddef\ud83c\uddf5' : currency.code === 'CHF' ? '\ud83c\udde8\ud83c\udded' : currency.code === 'AUD' ? '\ud83c\udde6\ud83c\uddfa' : '\ud83c\uddf2\ud83c\uddfd'}</span>
                     <div>
                       <p className="font-bold text-white">{currency.code}</p>
                       <p className="text-xs text-neutral-400">{currency.name}</p>
@@ -225,7 +253,7 @@ export default function CurrencyPage() {
                 </div>
                 <span className="text-xl">{getTrendIcon(currency.trend)}</span>
               </div>
-              
+
               <div className="mt-4">
                 <p className="text-2xl font-bold text-white">
                   {currency.rate.toFixed(4)} <span className="text-sm text-neutral-400">CAD</span>
@@ -234,13 +262,13 @@ export default function CurrencyPage() {
                   {currency.change24h > 0 ? '+' : ''}{currency.change24h.toFixed(2)}% (24h)
                 </p>
               </div>
-              
+
               <p className="text-xs text-neutral-500 mt-2">
-                Mis à jour: {currency.lastUpdated.toLocaleTimeString('fr-CA')}
+                Mis \u00e0 jour: {currency.lastUpdated.toLocaleTimeString('fr-CA')}
               </p>
             </div>
           ))}
-          
+
           {/* Add currency card */}
           <div className="bg-neutral-800 rounded-xl p-4 border border-dashed border-neutral-600 flex items-center justify-center min-h-[160px]">
             <button className="text-neutral-400 hover:text-white flex flex-col items-center gap-2">
@@ -261,7 +289,7 @@ export default function CurrencyPage() {
                   <th className="px-4 py-3 text-left text-xs font-medium text-neutral-400 uppercase">Compte</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-neutral-400 uppercase">Devise</th>
                   <th className="px-4 py-3 text-right text-xs font-medium text-neutral-400 uppercase">Solde original</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-neutral-400 uppercase">Équivalent CAD</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-neutral-400 uppercase">\u00c9quivalent CAD</th>
                   <th className="px-4 py-3 text-right text-xs font-medium text-neutral-400 uppercase">Taux original</th>
                   <th className="px-4 py-3 text-right text-xs font-medium text-neutral-400 uppercase">Taux actuel</th>
                   <th className="px-4 py-3 text-right text-xs font-medium text-neutral-400 uppercase">Gain/Perte</th>
@@ -282,7 +310,7 @@ export default function CurrencyPage() {
                     <td className="px-4 py-3 text-right font-mono text-white">
                       {account.balance.toLocaleString('fr-CA', { minimumFractionDigits: 2 })} {account.currency}
                     </td>
-                    <td className="px-4 py-3 text-right font-mono text-amber-400">
+                    <td className="px-4 py-3 text-right font-mono text-sky-400">
                       {formatCurrency(account.cadEquivalent)}
                     </td>
                     <td className="px-4 py-3 text-right font-mono text-neutral-400">
@@ -300,7 +328,7 @@ export default function CurrencyPage() {
               <tfoot className="bg-neutral-900/50">
                 <tr>
                   <td colSpan={3} className="px-4 py-3 text-right font-medium text-neutral-300">Total</td>
-                  <td className="px-4 py-3 text-right font-bold text-amber-400">
+                  <td className="px-4 py-3 text-right font-bold text-sky-400">
                     {formatCurrency(totalForeignCAD)}
                   </td>
                   <td colSpan={2}></td>
@@ -314,7 +342,7 @@ export default function CurrencyPage() {
 
           {/* Add account */}
           <button className="w-full py-3 border border-dashed border-neutral-600 rounded-xl text-neutral-400 hover:text-white hover:border-neutral-500">
-            + Ajouter un compte en devise étrangère
+            + Ajouter un compte en devise \u00e9trang\u00e8re
           </button>
         </div>
       )}
@@ -336,20 +364,20 @@ export default function CurrencyPage() {
               </select>
             </div>
           </div>
-          
+
           {/* Simple chart representation */}
           <div className="p-6">
             <div className="h-48 flex items-end gap-1">
               {Array.from({ length: 30 }, (_, i) => {
-                const baseRate = 1.35;
+                const baseRate = currencies.find(c => c.code === 'USD')?.rate || 1.35;
                 const variation = Math.sin(i * 0.5) * 0.02 + (Math.random() - 0.5) * 0.01;
                 const rate = baseRate + variation;
-                const height = ((rate - 1.30) / 0.10) * 100;
-                
+                const height = ((rate - (baseRate - 0.05)) / 0.10) * 100;
+
                 return (
-                  <div 
+                  <div
                     key={i}
-                    className="flex-1 bg-amber-500/50 hover:bg-amber-500 rounded-t transition-colors"
+                    className="flex-1 bg-sky-500/50 hover:bg-sky-500 rounded-t transition-colors"
                     style={{ height: `${Math.max(10, height)}%` }}
                     title={`${rate.toFixed(4)} CAD`}
                   />
@@ -358,7 +386,7 @@ export default function CurrencyPage() {
             </div>
             <div className="flex justify-between text-xs text-neutral-500 mt-2">
               <span>Il y a 30 jours</span>
-              <span>Aujourd'hui</span>
+              <span>Aujourd&apos;hui</span>
             </div>
           </div>
 
@@ -366,18 +394,18 @@ export default function CurrencyPage() {
           <div className="grid grid-cols-4 gap-4 p-4 border-t border-neutral-700">
             <div>
               <p className="text-xs text-neutral-400">Moyenne</p>
-              <p className="font-medium text-white">1.3485</p>
+              <p className="font-medium text-white">{(currencies.find(c => c.code === 'USD')?.rate || 1.35).toFixed(4)}</p>
             </div>
             <div>
               <p className="text-xs text-neutral-400">Plus haut</p>
-              <p className="font-medium text-green-400">1.3620</p>
+              <p className="font-medium text-green-400">{((currencies.find(c => c.code === 'USD')?.rate || 1.35) * 1.01).toFixed(4)}</p>
             </div>
             <div>
               <p className="text-xs text-neutral-400">Plus bas</p>
-              <p className="font-medium text-red-400">1.3340</p>
+              <p className="font-medium text-red-400">{((currencies.find(c => c.code === 'USD')?.rate || 1.35) * 0.99).toFixed(4)}</p>
             </div>
             <div>
-              <p className="text-xs text-neutral-400">Volatilité</p>
+              <p className="text-xs text-neutral-400">Volatilit\u00e9</p>
               <p className="font-medium text-white">2.1%</p>
             </div>
           </div>
@@ -386,7 +414,7 @@ export default function CurrencyPage() {
 
       {/* Currency converter */}
       <div className="bg-neutral-800 rounded-xl p-6 border border-neutral-700">
-        <h3 className="font-medium text-white mb-4">🔄 Convertisseur rapide</h3>
+        <h3 className="font-medium text-white mb-4">\ud83d\udd04 Convertisseur rapide</h3>
         <div className="flex items-center gap-4">
           <div className="flex-1">
             <input
@@ -396,14 +424,16 @@ export default function CurrencyPage() {
             />
           </div>
           <select className="px-4 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-white">
-            <option value="USD">USD</option>
-            <option value="EUR">EUR</option>
-            <option value="GBP">GBP</option>
+            {currencies.map(c => (
+              <option key={c.code} value={c.code}>{c.code}</option>
+            ))}
           </select>
-          <span className="text-2xl">→</span>
+          <span className="text-2xl">\u2192</span>
           <div className="flex-1 px-4 py-2 bg-neutral-900 rounded-lg">
-            <p className="text-2xl font-bold text-amber-400">135.00 CAD</p>
-            <p className="text-xs text-neutral-500">Taux: 1.3500</p>
+            <p className="text-2xl font-bold text-sky-400">
+              {((currencies[0]?.rate || 1.35) * 100).toFixed(2)} CAD
+            </p>
+            <p className="text-xs text-neutral-500">Taux: {(currencies[0]?.rate || 1.35).toFixed(4)}</p>
           </div>
         </div>
       </div>

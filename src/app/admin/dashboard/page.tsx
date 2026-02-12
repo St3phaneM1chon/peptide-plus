@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic';
 /**
- * DASHBOARD EMPLOYEE (ADMIN)
- * Gestion des comptes clients et association emails
+ * DASHBOARD ADMIN - E-Commerce
+ * Vue d'ensemble: commandes, revenus, clients, inventaire
  */
 
 import { redirect } from 'next/navigation';
@@ -9,53 +9,160 @@ import Link from 'next/link';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { UserRole } from '@/types';
+import {
+  ShoppingCart,
+  DollarSign,
+  Users,
+  Package,
+  Clock,
+  AlertTriangle,
+  Building2,
+  TrendingUp,
+  ArrowUpRight,
+  Eye,
+  UserPlus,
+  BarChart3,
+  Tag,
+} from 'lucide-react';
+
+// --------------------------------------------------
+// Data fetching
+// --------------------------------------------------
 
 async function getAdminData() {
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
   const [
+    totalOrders,
+    pendingOrders,
+    monthlyOrders,
     totalClients,
     totalCustomers,
     totalProducts,
-    recentPurchases,
+    lowStockFormats,
+    recentOrders,
     recentUsers,
-    pendingAssociations,
   ] = await Promise.all([
+    // Total orders
+    prisma.order.count(),
+
+    // Pending orders (not yet shipped/delivered)
+    prisma.order.count({
+      where: { status: { in: ['PENDING', 'CONFIRMED', 'PROCESSING'] } },
+    }),
+
+    // Monthly orders with revenue
+    prisma.order.findMany({
+      where: {
+        createdAt: { gte: startOfMonth },
+        paymentStatus: 'PAID',
+      },
+      select: { total: true },
+    }),
+
+    // Total companies (clients B2B)
     prisma.company.count(),
+
+    // Total customers
     prisma.user.count({ where: { role: 'CUSTOMER' } }),
+
+    // Active products
     prisma.product.count({ where: { isActive: true } }),
-    prisma.purchase.findMany({
-      take: 10,
-      orderBy: { createdAt: 'desc' },
-      include: {
-        user: true,
-        product: true,
-        company: true,
+
+    // Low stock formats (stock below threshold)
+    prisma.productFormat.count({
+      where: {
+        trackInventory: true,
+        isActive: true,
+        stockQuantity: { lte: 10 },
       },
     }),
+
+    // Recent orders (last 10)
+    prisma.order.findMany({
+      take: 10,
+      orderBy: { createdAt: 'desc' },
+      include: { items: true },
+    }),
+
+    // Recent users
     prisma.user.findMany({
       take: 10,
       orderBy: { createdAt: 'desc' },
       where: { role: { in: ['CUSTOMER', 'CLIENT'] } },
     }),
-    // Utilisateurs non associés à une compagnie
-    prisma.user.count({
-      where: {
-        role: 'CUSTOMER',
-        companies: { none: {} },
-      },
-    }),
   ]);
+
+  // Calculate monthly revenue from Decimal values
+  const monthlyRevenue = monthlyOrders.reduce(
+    (sum, o) => sum + Number(o.total),
+    0
+  );
 
   return {
     stats: {
+      totalOrders,
+      pendingOrders,
+      monthlyRevenue,
       totalClients,
       totalCustomers,
       totalProducts,
-      pendingAssociations,
+      lowStockFormats,
     },
-    recentPurchases,
+    recentOrders,
     recentUsers,
   };
 }
+
+// --------------------------------------------------
+// Helpers
+// --------------------------------------------------
+
+function formatCurrency(amount: number): string {
+  return new Intl.NumberFormat('fr-CA', {
+    style: 'currency',
+    currency: 'CAD',
+  }).format(amount);
+}
+
+function getOrderStatusLabel(status: string): { label: string; classes: string } {
+  switch (status) {
+    case 'PENDING':
+      return { label: 'En attente', classes: 'bg-yellow-100 text-yellow-700' };
+    case 'CONFIRMED':
+      return { label: 'Confirmee', classes: 'bg-sky-100 text-sky-700' };
+    case 'PROCESSING':
+      return { label: 'En traitement', classes: 'bg-sky-100 text-sky-700' };
+    case 'SHIPPED':
+      return { label: 'Expediee', classes: 'bg-indigo-100 text-indigo-700' };
+    case 'DELIVERED':
+      return { label: 'Livree', classes: 'bg-green-100 text-green-700' };
+    case 'CANCELLED':
+      return { label: 'Annulee', classes: 'bg-red-100 text-red-700' };
+    default:
+      return { label: status, classes: 'bg-slate-100 text-slate-700' };
+  }
+}
+
+function getPaymentStatusLabel(status: string): { label: string; classes: string } {
+  switch (status) {
+    case 'PAID':
+      return { label: 'Paye', classes: 'bg-green-100 text-green-700' };
+    case 'PENDING':
+      return { label: 'En attente', classes: 'bg-yellow-100 text-yellow-700' };
+    case 'FAILED':
+      return { label: 'Echoue', classes: 'bg-red-100 text-red-700' };
+    case 'REFUNDED':
+      return { label: 'Rembourse', classes: 'bg-slate-100 text-slate-700' };
+    default:
+      return { label: status, classes: 'bg-slate-100 text-slate-700' };
+  }
+}
+
+// --------------------------------------------------
+// Page Component
+// --------------------------------------------------
 
 export default async function AdminDashboard() {
   const session = await auth();
@@ -68,219 +175,304 @@ export default async function AdminDashboard() {
     redirect('/dashboard');
   }
 
-  const { stats, recentPurchases, recentUsers } = await getAdminData();
+  const { stats, recentOrders, recentUsers } = await getAdminData();
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Administration</h1>
-              <p className="text-gray-600">Gestion des comptes et clients</p>
+    <div className="space-y-6">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
+          <p className="text-slate-500 mt-1">Vue d&apos;ensemble de votre boutique</p>
+        </div>
+        <div className="flex gap-3">
+          <Link
+            href="/admin/commandes"
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
+          >
+            <ShoppingCart className="w-4 h-4" />
+            Commandes
+          </Link>
+          <Link
+            href="/admin/produits/nouveau"
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-sky-600 rounded-lg hover:bg-sky-700 transition-colors"
+          >
+            <Package className="w-4 h-4" />
+            Nouveau produit
+          </Link>
+        </div>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard
+          label="Commandes totales"
+          value={stats.totalOrders.toLocaleString('fr-CA')}
+          icon={<ShoppingCart className="w-5 h-5" />}
+          iconBg="bg-sky-100 text-sky-600"
+          href="/admin/commandes"
+        />
+        <StatCard
+          label="Revenu du mois"
+          value={formatCurrency(stats.monthlyRevenue)}
+          icon={<DollarSign className="w-5 h-5" />}
+          iconBg="bg-green-100 text-green-600"
+          href="/admin/comptabilite"
+        />
+        <StatCard
+          label="Commandes en attente"
+          value={stats.pendingOrders.toLocaleString('fr-CA')}
+          icon={<Clock className="w-5 h-5" />}
+          iconBg="bg-yellow-100 text-yellow-600"
+          href="/admin/commandes"
+          alert={stats.pendingOrders > 0}
+        />
+        <StatCard
+          label="Alertes stock"
+          value={stats.lowStockFormats.toLocaleString('fr-CA')}
+          icon={<AlertTriangle className="w-5 h-5" />}
+          iconBg="bg-red-100 text-red-600"
+          href="/admin/inventaire"
+          alert={stats.lowStockFormats > 0}
+        />
+      </div>
+
+      {/* Secondary Stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <StatCard
+          label="Clients B2B"
+          value={stats.totalClients.toLocaleString('fr-CA')}
+          icon={<Building2 className="w-5 h-5" />}
+          iconBg="bg-indigo-100 text-indigo-600"
+          href="/admin/clients"
+        />
+        <StatCard
+          label="Clients"
+          value={stats.totalCustomers.toLocaleString('fr-CA')}
+          icon={<Users className="w-5 h-5" />}
+          iconBg="bg-violet-100 text-violet-600"
+          href="/admin/clients"
+        />
+        <StatCard
+          label="Produits actifs"
+          value={stats.totalProducts.toLocaleString('fr-CA')}
+          icon={<Package className="w-5 h-5" />}
+          iconBg="bg-teal-100 text-teal-600"
+          href="/admin/produits"
+        />
+      </div>
+
+      {/* Quick Actions */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <QuickAction
+          href="/admin/commandes"
+          icon={<ShoppingCart className="w-5 h-5" />}
+          title="Commandes"
+        />
+        <QuickAction
+          href="/admin/produits"
+          icon={<Package className="w-5 h-5" />}
+          title="Produits"
+        />
+        <QuickAction
+          href="/admin/inventaire"
+          icon={<BarChart3 className="w-5 h-5" />}
+          title="Inventaire"
+        />
+        <QuickAction
+          href="/admin/promo-codes"
+          icon={<Tag className="w-5 h-5" />}
+          title="Codes promo"
+        />
+      </div>
+
+      {/* Recent Data Panels */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Recent Orders */}
+        <section className="bg-white rounded-xl border border-slate-200">
+          <div className="p-5 border-b border-slate-200 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <ShoppingCart className="w-4 h-4 text-slate-400" />
+              <h2 className="text-base font-semibold text-slate-900">Commandes recentes</h2>
             </div>
-            <div className="flex space-x-3">
-              <Link href="/admin/association" className="btn-secondary">
-                Association emails
-              </Link>
-              <Link href="/admin/clients/nouveau" className="btn-primary">
-                Nouveau client
-              </Link>
-            </div>
+            <Link
+              href="/admin/commandes"
+              className="inline-flex items-center gap-1 text-sm text-sky-600 hover:text-sky-700 font-medium"
+            >
+              Voir tout
+              <ArrowUpRight className="w-3.5 h-3.5" />
+            </Link>
           </div>
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <StatCard
-            title="Compagnies"
-            value={stats.totalClients}
-            icon="building"
-            color="blue"
-            href="/admin/clients"
-          />
-          <StatCard
-            title="Étudiants"
-            value={stats.totalCustomers}
-            icon="users"
-            color="green"
-            href="/admin/customers"
-          />
-          <StatCard
-            title="Formations"
-            value={stats.totalProducts}
-            icon="book"
-            color="purple"
-            href="/admin/produits"
-          />
-          <StatCard
-            title="À associer"
-            value={stats.pendingAssociations}
-            icon="link"
-            color="orange"
-            href="/admin/association"
-            alert={stats.pendingAssociations > 0}
-          />
-        </div>
-
-        {/* Navigation rapide */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <QuickAction href="/admin/clients" icon="building" title="Gérer les clients" />
-          <QuickAction href="/admin/customers" icon="users" title="Gérer les étudiants" />
-          <QuickAction href="/admin/association" icon="link" title="Associer emails" />
-          <QuickAction href="/admin/produits" icon="package" title="Gérer les formations" />
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Utilisateurs récents */}
-          <section className="bg-white rounded-xl border border-gray-200">
-            <div className="p-6 border-b border-gray-200 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900">Inscriptions récentes</h2>
-              <Link href="/admin/customers" className="text-blue-600 hover:underline text-sm">
-                Voir tout
-              </Link>
-            </div>
-            <div className="divide-y divide-gray-200">
-              {recentUsers.map((user) => (
-                <div key={user.id} className="p-4 flex items-center justify-between">
-                  <div className="flex items-center">
-                    <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
-                      {user.image ? (
-                        <img src={user.image} alt="" className="w-10 h-10 rounded-full" />
-                      ) : (
-                        <span className="text-gray-600 font-semibold">
-                          {user.name?.charAt(0) || user.email.charAt(0)}
-                        </span>
-                      )}
+          <div className="divide-y divide-slate-100">
+            {recentOrders.length === 0 && (
+              <div className="p-8 text-center text-slate-400 text-sm">
+                Aucune commande pour le moment
+              </div>
+            )}
+            {recentOrders.map((order) => {
+              const orderStatus = getOrderStatusLabel(order.status);
+              const paymentStatus = getPaymentStatusLabel(order.paymentStatus);
+              const itemCount = order.items.length;
+              return (
+                <div key={order.id} className="p-4 hover:bg-slate-50/50 transition-colors">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-slate-900 text-sm">
+                        {order.orderNumber}
+                      </span>
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${orderStatus.classes}`}>
+                        {orderStatus.label}
+                      </span>
                     </div>
-                    <div className="ml-3">
-                      <p className="font-medium text-gray-900">{user.name || user.email}</p>
-                      <p className="text-sm text-gray-500">
-                        {new Date(user.createdAt).toLocaleDateString('fr-CA')}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <span className={`px-2 py-1 text-xs rounded-full ${
-                      user.role === 'CLIENT'
-                        ? 'bg-blue-100 text-blue-700'
-                        : 'bg-gray-100 text-gray-700'
-                    }`}>
-                      {user.role === 'CLIENT' ? 'Client' : 'Étudiant'}
+                    <span className="font-semibold text-slate-900 text-sm">
+                      {formatCurrency(Number(order.total))}
                     </span>
-                    <Link
-                      href={`/admin/customers/${user.id}`}
-                      className="text-blue-600 hover:underline text-sm"
-                    >
-                      Voir
-                    </Link>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-3 text-slate-500">
+                      <span>{itemCount} article{itemCount > 1 ? 's' : ''}</span>
+                      <span>{new Date(order.createdAt).toLocaleDateString('fr-CA')}</span>
+                    </div>
+                    <span className={`px-2 py-0.5 rounded-full text-xs ${paymentStatus.classes}`}>
+                      {paymentStatus.label}
+                    </span>
                   </div>
                 </div>
-              ))}
-            </div>
-          </section>
+              );
+            })}
+          </div>
+        </section>
 
-          {/* Achats récents */}
-          <section className="bg-white rounded-xl border border-gray-200">
-            <div className="p-6 border-b border-gray-200 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900">Achats récents</h2>
-              <Link href="/admin/achats" className="text-blue-600 hover:underline text-sm">
-                Voir tout
-              </Link>
+        {/* Recent Users */}
+        <section className="bg-white rounded-xl border border-slate-200">
+          <div className="p-5 border-b border-slate-200 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <UserPlus className="w-4 h-4 text-slate-400" />
+              <h2 className="text-base font-semibold text-slate-900">Inscriptions recentes</h2>
             </div>
-            <div className="divide-y divide-gray-200">
-              {recentPurchases.map((purchase) => (
-                <div key={purchase.id} className="p-4">
-                  <div className="flex items-center justify-between mb-1">
-                    <p className="font-medium text-gray-900 truncate max-w-[200px]">
-                      {purchase.product.name}
+            <Link
+              href="/admin/clients"
+              className="inline-flex items-center gap-1 text-sm text-sky-600 hover:text-sky-700 font-medium"
+            >
+              Voir tout
+              <ArrowUpRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+          <div className="divide-y divide-slate-100">
+            {recentUsers.length === 0 && (
+              <div className="p-8 text-center text-slate-400 text-sm">
+                Aucune inscription pour le moment
+              </div>
+            )}
+            {recentUsers.map((user) => (
+              <div key={user.id} className="p-4 flex items-center justify-between hover:bg-slate-50/50 transition-colors">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 bg-slate-100 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
+                    {user.image ? (
+                      <img src={user.image} alt="" className="w-9 h-9 rounded-full object-cover" />
+                    ) : (
+                      <span className="text-slate-600 font-semibold text-sm">
+                        {user.name?.charAt(0)?.toUpperCase() || user.email.charAt(0).toUpperCase()}
+                      </span>
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-medium text-slate-900 text-sm truncate">
+                      {user.name || user.email}
                     </p>
-                    <span className="font-semibold text-gray-900">
-                      {Number(purchase.amount).toFixed(2)} $
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-500">
-                      {purchase.user.name || purchase.user.email}
-                      {purchase.company && ` (${purchase.company.name})`}
-                    </span>
-                    <span className={`px-2 py-0.5 rounded-full text-xs ${
-                      purchase.status === 'COMPLETED'
-                        ? 'bg-green-100 text-green-700'
-                        : purchase.status === 'PENDING'
-                        ? 'bg-yellow-100 text-yellow-700'
-                        : 'bg-red-100 text-red-700'
-                    }`}>
-                      {purchase.status === 'COMPLETED' ? 'Payé' : 
-                       purchase.status === 'PENDING' ? 'En attente' : 'Échoué'}
-                    </span>
+                    <p className="text-xs text-slate-400">
+                      {new Date(user.createdAt).toLocaleDateString('fr-CA')}
+                    </p>
                   </div>
                 </div>
-              ))}
-            </div>
-          </section>
-        </div>
-      </main>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${
+                    user.role === 'CLIENT'
+                      ? 'bg-sky-100 text-sky-700'
+                      : 'bg-slate-100 text-slate-600'
+                  }`}>
+                    {user.role === 'CLIENT' ? 'Client B2B' : 'Client'}
+                  </span>
+                  <Link
+                    href={`/admin/clients`}
+                    className="p-1 text-slate-400 hover:text-sky-600 transition-colors"
+                    title="Voir le profil"
+                  >
+                    <Eye className="w-4 h-4" />
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
     </div>
   );
 }
 
-function StatCard({ title, value, icon, color, href, alert = false }: {
-  title: string;
-  value: number;
-  icon: string;
-  color: 'blue' | 'green' | 'purple' | 'orange';
+// --------------------------------------------------
+// StatCard Component
+// --------------------------------------------------
+
+function StatCard({
+  label,
+  value,
+  icon,
+  iconBg,
+  href,
+  alert = false,
+}: {
+  label: string;
+  value: string;
+  icon: React.ReactNode;
+  iconBg: string;
   href: string;
   alert?: boolean;
 }) {
-  const colors = {
-    blue: 'bg-blue-100 text-blue-600',
-    green: 'bg-green-100 text-green-600',
-    purple: 'bg-purple-100 text-purple-600',
-    orange: 'bg-orange-100 text-orange-600',
-  };
-
   return (
-    <Link href={href} className="bg-white rounded-xl p-6 border border-gray-200 hover:shadow-md transition-shadow relative">
+    <Link
+      href={href}
+      className="group relative bg-white rounded-xl p-5 border border-slate-200 hover:border-sky-200 hover:shadow-sm transition-all"
+    >
       {alert && (
-        <span className="absolute top-4 right-4 w-3 h-3 bg-red-500 rounded-full animate-pulse" />
+        <span className="absolute top-3 right-3 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse" />
       )}
-      <div className="flex items-center">
-        <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${colors[color]}`}>
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            {icon === 'building' && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />}
-            {icon === 'users' && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />}
-            {icon === 'book' && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />}
-            {icon === 'link' && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />}
-          </svg>
+      <div className="flex items-center gap-4">
+        <div className={`w-11 h-11 rounded-lg flex items-center justify-center flex-shrink-0 ${iconBg}`}>
+          {icon}
         </div>
-        <div className="ml-4">
-          <p className="text-sm text-gray-500">{title}</p>
-          <p className="text-2xl font-bold text-gray-900">{value}</p>
+        <div className="min-w-0">
+          <p className="text-sm text-slate-500 truncate">{label}</p>
+          <p className="text-xl font-bold text-slate-900 mt-0.5">{value}</p>
         </div>
       </div>
+      <TrendingUp className="absolute bottom-3 right-3 w-4 h-4 text-slate-200 group-hover:text-sky-300 transition-colors" />
     </Link>
   );
 }
 
-function QuickAction({ href, icon, title }: { href: string; icon: string; title: string }) {
+// --------------------------------------------------
+// QuickAction Component
+// --------------------------------------------------
+
+function QuickAction({
+  href,
+  icon,
+  title,
+}: {
+  href: string;
+  icon: React.ReactNode;
+  title: string;
+}) {
   return (
     <Link
       href={href}
-      className="bg-white rounded-xl p-4 border border-gray-200 hover:border-blue-300 hover:shadow-sm transition-all flex items-center"
+      className="bg-white rounded-xl p-4 border border-slate-200 hover:border-sky-300 hover:shadow-sm transition-all flex items-center gap-3 group"
     >
-      <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center text-blue-600 mr-3">
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          {icon === 'building' && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />}
-          {icon === 'users' && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />}
-          {icon === 'link' && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />}
-          {icon === 'package' && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />}
-        </svg>
+      <div className="w-9 h-9 bg-sky-50 rounded-lg flex items-center justify-center text-sky-600 group-hover:bg-sky-100 transition-colors flex-shrink-0">
+        {icon}
       </div>
-      <span className="font-medium text-gray-900">{title}</span>
+      <span className="font-medium text-slate-900 text-sm">{title}</span>
     </Link>
   );
 }

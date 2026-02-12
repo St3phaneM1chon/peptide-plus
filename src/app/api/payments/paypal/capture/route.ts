@@ -1,11 +1,13 @@
 export const dynamic = 'force-dynamic';
 /**
  * API - Capturer un paiement PayPal
+ * Creates a real Order record + accounting entries + inventory consumption
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
+import { createAccountingEntriesForOrder } from '@/lib/accounting/webhook-accounting.service';
 
 const PAYPAL_API_URL = process.env.PAYPAL_SANDBOX === 'true'
   ? 'https://api-m.sandbox.paypal.com'
@@ -32,34 +34,29 @@ async function getPayPalAccessToken(): Promise<string> {
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();
+    const body = await request.json();
+    const {
+      orderId: paypalOrderId,
+      cartItems,
+      shippingInfo,
+      subtotal,
+      shippingCost,
+      taxBreakdown,
+      total,
+      promoCode,
+      promoDiscount,
+      cartId,
+    } = body;
 
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
-    }
-
-    const { orderId } = await request.json();
-
-    if (!orderId) {
+    if (!paypalOrderId) {
       return NextResponse.json({ error: 'Order ID requis' }, { status: 400 });
     }
 
-    // Récupérer l'achat
-    const purchase = await prisma.purchase.findFirst({
-      where: {
-        paypalOrderId: orderId,
-        userId: session.user.id,
-      },
-    });
-
-    if (!purchase) {
-      return NextResponse.json({ error: 'Achat non trouvé' }, { status: 404 });
-    }
-
-    // Capturer le paiement
+    // Capture the PayPal payment
     const accessToken = await getPayPalAccessToken();
 
     const captureResponse = await fetch(
-      `${PAYPAL_API_URL}/v2/checkout/orders/${orderId}/capture`,
+      `${PAYPAL_API_URL}/v2/checkout/orders/${paypalOrderId}/capture`,
       {
         method: 'POST',
         headers: {
@@ -72,55 +69,172 @@ export async function POST(request: NextRequest) {
     const captureData = await captureResponse.json();
 
     if (captureData.status === 'COMPLETED') {
-      // Mettre à jour l'achat
-      await prisma.purchase.update({
-        where: { id: purchase.id },
-        data: {
-          status: 'COMPLETED',
-        },
+      const userId = session?.user?.id || 'guest';
+
+      // Find or create currency
+      let currency = await prisma.currency.findUnique({
+        where: { code: 'CAD' },
+      });
+      if (!currency) {
+        currency = await prisma.currency.create({
+          data: { code: 'CAD', name: 'Dollar canadien', symbol: '$', exchangeRate: 1 },
+        });
+      }
+
+      const taxTps = taxBreakdown?.tps || 0;
+      const taxTvq = taxBreakdown?.tvq || 0;
+      const taxTvh = taxBreakdown?.tvh || 0;
+      const totalTax = taxTps + taxTvq + taxTvh;
+
+      // Generate order number
+      const orderNumber = `PP-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`;
+
+      // Create the order in a transaction
+      const order = await prisma.$transaction(async (tx) => {
+        const newOrder = await tx.order.create({
+          data: {
+            orderNumber,
+            userId,
+            subtotal: subtotal || 0,
+            shippingCost: shippingCost || 0,
+            discount: promoDiscount || 0,
+            tax: totalTax,
+            taxTps,
+            taxTvq,
+            taxTvh,
+            total: total || Number(captureData.purchase_units?.[0]?.amount?.value || 0),
+            currencyId: currency!.id,
+            paymentMethod: 'PAYPAL',
+            paymentStatus: 'PAID',
+            status: 'CONFIRMED',
+            paypalOrderId,
+            promoCode: promoCode || null,
+            promoDiscount: promoDiscount || null,
+            shippingName: shippingInfo ? `${shippingInfo.firstName} ${shippingInfo.lastName}` : '',
+            shippingAddress1: shippingInfo?.address || '',
+            shippingAddress2: shippingInfo?.apartment || null,
+            shippingCity: shippingInfo?.city || '',
+            shippingState: shippingInfo?.province || '',
+            shippingPostal: shippingInfo?.postalCode || '',
+            shippingCountry: shippingInfo?.country || 'CA',
+            shippingPhone: shippingInfo?.phone || null,
+            items: cartItems?.length > 0 ? {
+              create: cartItems.map((item: any) => ({
+                productId: item.productId,
+                formatId: item.formatId || null,
+                productName: item.name,
+                formatName: item.formatName || null,
+                sku: item.sku || null,
+                quantity: item.quantity,
+                unitPrice: item.price,
+                discount: item.discount || 0,
+                total: item.price * item.quantity - (item.discount || 0),
+              })),
+            } : undefined,
+          },
+        });
+
+        // Consume inventory reservations
+        if (cartId) {
+          const reservations = await tx.inventoryReservation.findMany({
+            where: { cartId, status: 'RESERVED' },
+          });
+
+          for (const reservation of reservations) {
+            await tx.inventoryReservation.update({
+              where: { id: reservation.id },
+              data: { status: 'CONSUMED', orderId: newOrder.id, consumedAt: new Date() },
+            });
+
+            if (reservation.formatId) {
+              await tx.productFormat.update({
+                where: { id: reservation.formatId },
+                data: { stockQuantity: { decrement: reservation.quantity } },
+              });
+            }
+
+            await tx.inventoryTransaction.create({
+              data: {
+                productId: reservation.productId,
+                formatId: reservation.formatId,
+                type: 'SALE',
+                quantity: -reservation.quantity,
+                unitCost: 0,
+                runningWAC: 0,
+                orderId: newOrder.id,
+              },
+            });
+          }
+        }
+
+        return newOrder;
       });
 
-      // Créer l'accès au cours
-      await prisma.courseAccess.create({
-        data: {
-          userId: session.user.id,
-          productId: purchase.productId,
-          purchaseId: purchase.id,
-        },
-      });
+      // Create accounting entries (non-blocking)
+      try {
+        await createAccountingEntriesForOrder(order.id);
+      } catch (acctError) {
+        console.error('Failed to create PayPal accounting entries:', acctError);
+      }
 
-      // Incrémenter le compteur d'achats
-      await prisma.product.update({
-        where: { id: purchase.productId },
-        data: { purchaseCount: { increment: 1 } },
-      });
+      // Track promo code usage
+      if (promoCode && promoDiscount > 0) {
+        try {
+          await prisma.promoCode.updateMany({
+            where: { code: promoCode },
+            data: { usageCount: { increment: 1 } },
+          });
+          const promo = await prisma.promoCode.findUnique({ where: { code: promoCode } });
+          if (promo) {
+            await prisma.promoCodeUsage.create({
+              data: {
+                promoCodeId: promo.id,
+                userId,
+                orderId: order.id,
+                discount: promoDiscount,
+              },
+            });
+          }
+        } catch (promoError) {
+          console.error('Failed to track promo code usage:', promoError);
+        }
+      }
 
-      // Log d'audit
+      // Also update the legacy Purchase record if it exists
+      try {
+        const purchase = await prisma.purchase.findFirst({
+          where: { paypalOrderId, userId },
+        });
+        if (purchase) {
+          await prisma.purchase.update({
+            where: { id: purchase.id },
+            data: { status: 'COMPLETED' },
+          });
+        }
+      } catch {
+        // Legacy purchase not found, that's OK
+      }
+
+      // Audit log
       await prisma.auditLog.create({
         data: {
-          userId: session.user.id,
+          userId,
           action: 'PAYPAL_PAYMENT_CAPTURED',
-          entityType: 'Purchase',
-          entityId: purchase.id,
-          details: JSON.stringify({
-            paypalOrderId: orderId,
-          }),
+          entityType: 'Order',
+          entityId: order.id,
+          details: JSON.stringify({ paypalOrderId, orderNumber }),
         },
       });
 
       return NextResponse.json({
         success: true,
-        purchaseId: purchase.id,
+        orderId: order.id,
+        orderNumber,
       });
     } else {
-      // Paiement échoué
-      await prisma.purchase.update({
-        where: { id: purchase.id },
-        data: { status: 'FAILED' },
-      });
-
+      // Payment failed
       return NextResponse.json(
-        { error: 'Le paiement PayPal a échoué' },
+        { error: 'Le paiement PayPal a échoué', status: captureData.status },
         { status: 400 }
       );
     }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 interface ExtractedInvoice {
   invoiceNumber?: string;
@@ -34,6 +34,29 @@ export default function OCRPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [history, setHistory] = useState<ScanHistory[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadHistory();
+  }, []);
+
+  const loadHistory = async () => {
+    setLoadingHistory(true);
+    setError(null);
+    try {
+      const response = await fetch('/api/accounting/ocr/history');
+      if (!response.ok) throw new Error(`Erreur ${response.status}`);
+      const data = await response.json();
+      setHistory(data.scans || data.history || data.data || []);
+    } catch (err) {
+      console.error('Error loading OCR history:', err);
+      setError('Impossible de charger l\'historique des scans.');
+      setHistory([]);
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
 
   const handleFileSelect = async (file: File) => {
     if (!file) return;
@@ -70,8 +93,9 @@ export default function OCRPage() {
         method: 'POST',
         body: formData,
       });
+      if (!response.ok) throw new Error(`Erreur ${response.status}`);
       const data = await response.json();
-      setExtractedData(data.extractedData || null);
+      setExtractedData(data.data || data.extractedData || null);
     } catch (error) {
       console.error('Error scanning invoice:', error);
       setExtractedData(null);
@@ -91,28 +115,29 @@ export default function OCRPage() {
   const handleSaveInvoice = async () => {
     if (!extractedData) return;
 
-    // Add to history
-    const newScan: ScanHistory = {
-      id: `scan-${Date.now()}`,
-      fileName: 'facture-scannee.png',
-      supplierName: extractedData.supplierName || 'Inconnu',
-      total: extractedData.total || 0,
-      status: extractedData.confidence > 0.8 ? 'SUCCESS' : 'NEEDS_REVIEW',
-      createdAt: new Date(),
-    };
-    
-    setHistory(prev => [newScan, ...prev]);
-    
-    // Reset
-    setExtractedData(null);
-    setUploadedImage(null);
-    
-    alert('Facture enregistrée et écriture créée!');
+    try {
+      const response = await fetch('/api/accounting/ocr/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(extractedData),
+      });
+      if (!response.ok) throw new Error(`Erreur ${response.status}`);
+
+      // Reset
+      setExtractedData(null);
+      setUploadedImage(null);
+
+      alert('Facture enregistrée et écriture créée!');
+      await loadHistory();
+    } catch (err) {
+      console.error('Error saving invoice:', err);
+      alert('Erreur lors de l\'enregistrement de la facture.');
+    }
   };
 
   const getConfidenceColor = (confidence: number) => {
     if (confidence >= 0.9) return 'text-green-400';
-    if (confidence >= 0.7) return 'text-amber-400';
+    if (confidence >= 0.7) return 'text-yellow-400';
     return 'text-red-400';
   };
 
@@ -143,7 +168,7 @@ export default function OCRPage() {
         </div>
         <div className="bg-neutral-800 rounded-xl p-4 border border-neutral-700">
           <p className="text-sm text-neutral-400">À vérifier</p>
-          <p className="text-2xl font-bold text-amber-400 mt-1">
+          <p className="text-2xl font-bold text-yellow-400 mt-1">
             {history.filter(h => h.status === 'NEEDS_REVIEW').length}
           </p>
         </div>
@@ -163,7 +188,7 @@ export default function OCRPage() {
             onClick={() => fileInputRef.current?.click()}
             className={`bg-neutral-800 rounded-xl p-8 border-2 border-dashed cursor-pointer transition-all ${
               dragActive 
-                ? 'border-amber-500 bg-amber-500/10' 
+                ? 'border-sky-500 bg-sky-500/10'
                 : 'border-neutral-600 hover:border-neutral-500'
             }`}
           >
@@ -177,7 +202,7 @@ export default function OCRPage() {
             
             {scanning ? (
               <div className="text-center py-8">
-                <div className="animate-spin h-12 w-12 border-4 border-amber-500 border-t-transparent rounded-full mx-auto"></div>
+                <div className="animate-spin h-12 w-12 border-4 border-sky-500 border-t-transparent rounded-full mx-auto"></div>
                 <p className="text-white mt-4">Analyse en cours...</p>
                 <p className="text-sm text-neutral-400 mt-1">Extraction des données avec IA</p>
               </div>
@@ -210,19 +235,19 @@ export default function OCRPage() {
             <h3 className="font-medium text-white mb-4">💡 Comment ça marche</h3>
             <ol className="space-y-3 text-sm">
               <li className="flex gap-3">
-                <span className="w-6 h-6 bg-amber-600 rounded-full flex items-center justify-center text-xs font-bold">1</span>
+                <span className="w-6 h-6 bg-sky-600 rounded-full flex items-center justify-center text-xs font-bold">1</span>
                 <span className="text-neutral-300">Téléversez une photo ou PDF de votre facture</span>
               </li>
               <li className="flex gap-3">
-                <span className="w-6 h-6 bg-amber-600 rounded-full flex items-center justify-center text-xs font-bold">2</span>
+                <span className="w-6 h-6 bg-sky-600 rounded-full flex items-center justify-center text-xs font-bold">2</span>
                 <span className="text-neutral-300">L'IA analyse et extrait les informations</span>
               </li>
               <li className="flex gap-3">
-                <span className="w-6 h-6 bg-amber-600 rounded-full flex items-center justify-center text-xs font-bold">3</span>
+                <span className="w-6 h-6 bg-sky-600 rounded-full flex items-center justify-center text-xs font-bold">3</span>
                 <span className="text-neutral-300">Vérifiez et validez les données extraites</span>
               </li>
               <li className="flex gap-3">
-                <span className="w-6 h-6 bg-amber-600 rounded-full flex items-center justify-center text-xs font-bold">4</span>
+                <span className="w-6 h-6 bg-sky-600 rounded-full flex items-center justify-center text-xs font-bold">4</span>
                 <span className="text-neutral-300">La facture et l'écriture comptable sont créées</span>
               </li>
             </ol>
@@ -372,7 +397,7 @@ export default function OCRPage() {
                 </button>
                 <button
                   onClick={handleSaveInvoice}
-                  className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg"
+                  className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg"
                 >
                   ✓ Enregistrer la facture
                 </button>
@@ -390,6 +415,13 @@ export default function OCRPage() {
             <div className="p-4 border-b border-neutral-700">
               <h3 className="font-medium text-white">Scans récents</h3>
             </div>
+            {loadingHistory ? (
+              <div className="p-4 text-center text-neutral-400">Chargement...</div>
+            ) : error ? (
+              <div className="p-4 text-center text-red-400">{error}</div>
+            ) : history.length === 0 ? (
+              <div className="p-4 text-center text-neutral-400">Aucun scan pour le moment</div>
+            ) : null}
             <div className="divide-y divide-neutral-700">
               {history.slice(0, 5).map(scan => (
                 <div key={scan.id} className="p-3 hover:bg-neutral-700/30">
@@ -402,7 +434,7 @@ export default function OCRPage() {
                       <p className="text-sm font-medium text-white">{formatCurrency(scan.total)}</p>
                       <span className={`text-xs ${
                         scan.status === 'SUCCESS' ? 'text-green-400' :
-                        scan.status === 'NEEDS_REVIEW' ? 'text-amber-400' : 'text-red-400'
+                        scan.status === 'NEEDS_REVIEW' ? 'text-yellow-400' : 'text-red-400'
                       }`}>
                         {scan.status === 'SUCCESS' ? '✓' : scan.status === 'NEEDS_REVIEW' ? '⚠' : '✗'}
                       </span>

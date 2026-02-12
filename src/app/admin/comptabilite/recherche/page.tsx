@@ -30,7 +30,7 @@ const typeLabels: Record<string, string> = {
 };
 
 const typeColors: Record<string, string> = {
-  ENTRY: 'bg-amber-900/30 text-amber-400',
+  ENTRY: 'bg-sky-900/30 text-sky-400',
   INVOICE: 'bg-green-900/30 text-green-400',
   SUPPLIER: 'bg-blue-900/30 text-blue-400',
   TRANSACTION: 'bg-purple-900/30 text-purple-400',
@@ -70,23 +70,28 @@ export default function SearchPage() {
     return () => clearTimeout(timer);
   }, [query]);
 
+  const [searchError, setSearchError] = useState<string | null>(null);
+
   const handleSearch = async () => {
     setLoading(true);
+    setSearchError(null);
 
     try {
       const params = new URLSearchParams({ q: query });
       if (filters.types.length < 4) {
-        params.set('types', filters.types.join(','));
+        params.set('type', filters.types.join(','));
       }
-      if (filters.dateFrom) params.set('dateFrom', filters.dateFrom);
-      if (filters.dateTo) params.set('dateTo', filters.dateTo);
+      if (filters.dateFrom) params.set('from', filters.dateFrom);
+      if (filters.dateTo) params.set('to', filters.dateTo);
       if (filters.status) params.set('status', filters.status);
 
       const response = await fetch(`/api/accounting/search?${params}`);
+      if (!response.ok) throw new Error(`Erreur ${response.status}`);
       const data = await response.json();
-      setResults(data.results || []);
-    } catch (error) {
-      console.error('Error searching:', error);
+      setResults(data.results || data.data || []);
+    } catch (err) {
+      console.error('Error searching:', err);
+      setSearchError('Erreur lors de la recherche.');
       setResults([]);
     } finally {
       setLoading(false);
@@ -156,14 +161,14 @@ export default function SearchPage() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Rechercher par numéro, description, montant, référence..."
-              className="w-full px-4 py-3 pl-12 bg-neutral-800 border border-neutral-700 rounded-xl text-white text-lg focus:border-amber-500 focus:outline-none"
+              className="w-full px-4 py-3 pl-12 bg-neutral-800 border border-neutral-700 rounded-xl text-white text-lg focus:border-sky-500 focus:outline-none"
               autoFocus
             />
             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl">🔍</span>
             
             {loading && (
               <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                <div className="animate-spin h-5 w-5 border-2 border-amber-500 border-t-transparent rounded-full"></div>
+                <div className="animate-spin h-5 w-5 border-2 border-sky-500 border-t-transparent rounded-full"></div>
               </div>
             )}
           </div>
@@ -171,7 +176,7 @@ export default function SearchPage() {
           <button
             onClick={() => setShowFilters(!showFilters)}
             className={`px-4 py-3 rounded-xl border ${
-              showFilters ? 'bg-amber-600 border-amber-600 text-white' : 'bg-neutral-800 border-neutral-700 text-neutral-300'
+              showFilters ? 'bg-sky-600 border-sky-600 text-white' : 'bg-neutral-800 border-neutral-700 text-neutral-300'
             }`}
           >
             ⚙️ Filtres
@@ -216,7 +221,7 @@ export default function SearchPage() {
                     onClick={() => toggleType(type)}
                     className={`px-3 py-1 rounded-full text-sm ${
                       filters.types.includes(type)
-                        ? 'bg-amber-600 text-white'
+                        ? 'bg-sky-600 text-white'
                         : 'bg-neutral-700 text-neutral-400'
                     }`}
                   >
@@ -363,7 +368,7 @@ export default function SearchPage() {
                     )}
                     {result.highlights && (
                       <p 
-                        className="text-sm text-neutral-300 mt-2 [&_mark]:bg-amber-500/30 [&_mark]:text-amber-300"
+                        className="text-sm text-neutral-300 mt-2 [&_mark]:bg-sky-500/30 [&_mark]:text-sky-300"
                         dangerouslySetInnerHTML={{ __html: result.highlights }}
                       />
                     )}
@@ -371,12 +376,12 @@ export default function SearchPage() {
                   <div className="text-right ml-4">
                     <p className="font-bold text-white">{formatCurrency(result.amount)}</p>
                     <p className="text-sm text-neutral-500">
-                      {result.date.toLocaleDateString('fr-CA')}
+                      {new Date(result.date).toLocaleDateString('fr-CA')}
                     </p>
                     <span className={`text-xs ${
                       result.status === 'POSTED' || result.status === 'PAID' || result.status === 'MATCHED'
                         ? 'text-green-400'
-                        : 'text-amber-400'
+                        : 'text-yellow-400'
                     }`}>
                       {result.status}
                     </span>
@@ -388,8 +393,15 @@ export default function SearchPage() {
         </div>
       )}
 
+      {/* Error */}
+      {searchError && (
+        <div className="bg-neutral-800 rounded-xl p-8 border border-red-700 text-center">
+          <p className="text-red-400">{searchError}</p>
+        </div>
+      )}
+
       {/* No results */}
-      {query && !loading && results.length === 0 && (
+      {query && !loading && !searchError && results.length === 0 && (
         <div className="bg-neutral-800 rounded-xl p-8 border border-neutral-700 text-center">
           <div className="text-4xl mb-4">🔍</div>
           <h3 className="text-lg font-medium text-white mb-2">Aucun résultat</h3>

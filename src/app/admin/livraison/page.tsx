@@ -1,6 +1,25 @@
+/**
+ * ADMIN - GESTION DES ZONES DE LIVRAISON
+ */
+
 'use client';
 
 import { useState, useEffect } from 'react';
+import {
+  Plus,
+  MapPin,
+  Truck,
+  Globe,
+  Package,
+  Pencil,
+  Check,
+} from 'lucide-react';
+import {
+  PageHeader,
+  Button,
+  Modal,
+  StatCard,
+} from '@/components/admin';
 
 interface ShippingZone {
   id: string;
@@ -62,7 +81,7 @@ export default function LivraisonPage() {
       if (z.id === zoneId) {
         return {
           ...z,
-          methods: z.methods.map(m => 
+          methods: z.methods.map(m =>
             m.id === methodId ? { ...m, isActive: !m.isActive } : m
           ),
         };
@@ -74,68 +93,70 @@ export default function LivraisonPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500" />
       </div>
     );
   }
 
+  const modalIsOpen = showForm || !!editingZone;
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Zones de livraison</h1>
-          <p className="text-gray-500">Configurez les zones et méthodes de livraison</p>
-        </div>
-        <button
-          onClick={() => setShowForm(true)}
-          className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 flex items-center gap-2"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          Nouvelle zone
-        </button>
-      </div>
+    <>
+      <PageHeader
+        title="Zones de livraison"
+        subtitle="Configurez les zones et méthodes de livraison"
+        actions={
+          <Button
+            variant="primary"
+            icon={Plus}
+            onClick={() => setShowForm(true)}
+          >
+            Nouvelle zone
+          </Button>
+        }
+      />
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl p-4 border border-gray-200">
-          <p className="text-sm text-gray-500">Zones</p>
-          <p className="text-2xl font-bold text-gray-900">{zones.length}</p>
-        </div>
-        <div className="bg-green-50 rounded-xl p-4 border border-green-200">
-          <p className="text-sm text-green-600">Actives</p>
-          <p className="text-2xl font-bold text-green-700">{zones.filter(z => z.isActive).length}</p>
-        </div>
-        <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
-          <p className="text-sm text-blue-600">Pays couverts</p>
-          <p className="text-2xl font-bold text-blue-700">
-            {new Set(zones.flatMap(z => z.countries)).size}
-          </p>
-        </div>
-        <div className="bg-amber-50 rounded-xl p-4 border border-amber-200">
-          <p className="text-sm text-amber-600">Méthodes</p>
-          <p className="text-2xl font-bold text-amber-700">
-            {zones.reduce((sum, z) => sum + z.methods.length, 0)}
-          </p>
-        </div>
+      <div className="grid grid-cols-4 gap-4 mb-6">
+        <StatCard
+          label="Zones"
+          value={zones.length}
+          icon={MapPin}
+        />
+        <StatCard
+          label="Actives"
+          value={zones.filter(z => z.isActive).length}
+          icon={Check}
+          className="!border-green-200 !bg-green-50"
+        />
+        <StatCard
+          label="Pays couverts"
+          value={new Set(zones.flatMap(z => z.countries)).size}
+          icon={Globe}
+          className="!border-sky-200 !bg-sky-50"
+        />
+        <StatCard
+          label="Méthodes"
+          value={zones.reduce((sum, z) => sum + z.methods.length, 0)}
+          icon={Truck}
+          className="!border-sky-200 !bg-sky-50"
+        />
       </div>
 
       {/* Zones List */}
       <div className="space-y-4">
         {zones.map((zone) => (
-          <div 
-            key={zone.id} 
-            className={`bg-white rounded-xl border ${zone.isActive ? 'border-gray-200' : 'border-gray-200 opacity-60'}`}
+          <div
+            key={zone.id}
+            className={`bg-white rounded-lg border ${zone.isActive ? 'border-slate-200' : 'border-slate-200 opacity-60'}`}
           >
-            <div className="p-6 border-b border-gray-100">
+            <div className="p-6 border-b border-slate-100">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="font-bold text-gray-900 text-lg">{zone.name}</h3>
+                  <h3 className="font-semibold text-slate-900 text-lg">{zone.name}</h3>
                   <div className="flex flex-wrap gap-1 mt-2">
                     {zone.countries.map((code) => (
-                      <span key={code} className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded">
+                      <span key={code} className="px-2 py-0.5 bg-slate-100 text-slate-600 text-xs rounded">
                         {countriesData[code] || code}
                       </span>
                     ))}
@@ -145,19 +166,21 @@ export default function LivraisonPage() {
                   <button
                     onClick={() => toggleZoneActive(zone.id)}
                     className={`w-12 h-6 rounded-full transition-colors relative ${
-                      zone.isActive ? 'bg-green-500' : 'bg-gray-300'
+                      zone.isActive ? 'bg-green-500' : 'bg-slate-300'
                     }`}
                   >
                     <span className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
                       zone.isActive ? 'right-1' : 'left-1'
                     }`} />
                   </button>
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    icon={Pencil}
                     onClick={() => setEditingZone(zone)}
-                    className="px-3 py-1 bg-amber-100 text-amber-700 rounded text-sm hover:bg-amber-200"
                   >
                     Modifier
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -165,7 +188,7 @@ export default function LivraisonPage() {
             <div className="p-4">
               <table className="w-full">
                 <thead>
-                  <tr className="text-xs text-gray-500 uppercase">
+                  <tr className="text-xs text-slate-500 uppercase">
                     <th className="text-left py-2">Méthode</th>
                     <th className="text-left py-2">Transporteur</th>
                     <th className="text-center py-2">Délai</th>
@@ -174,25 +197,25 @@ export default function LivraisonPage() {
                     <th className="text-center py-2">Actif</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-slate-100">
                   {zone.methods.map((method) => (
                     <tr key={method.id} className={!method.isActive ? 'opacity-50' : ''}>
-                      <td className="py-3 font-medium text-gray-900">{method.name}</td>
-                      <td className="py-3 text-gray-600">{method.carrier}</td>
-                      <td className="py-3 text-center text-gray-600">
+                      <td className="py-3 font-medium text-slate-900">{method.name}</td>
+                      <td className="py-3 text-slate-600">{method.carrier}</td>
+                      <td className="py-3 text-center text-slate-600">
                         {method.minDays}-{method.maxDays} jours
                       </td>
-                      <td className="py-3 text-right font-medium text-gray-900">
+                      <td className="py-3 text-right font-medium text-slate-900">
                         {method.price.toFixed(2)} $
                       </td>
-                      <td className="py-3 text-right text-gray-600">
+                      <td className="py-3 text-right text-slate-600">
                         {method.freeAbove ? `${method.freeAbove} $` : '-'}
                       </td>
                       <td className="py-3 text-center">
                         <button
                           onClick={() => toggleMethodActive(zone.id, method.id)}
                           className={`w-10 h-5 rounded-full transition-colors relative ${
-                            method.isActive ? 'bg-green-500' : 'bg-gray-300'
+                            method.isActive ? 'bg-green-500' : 'bg-slate-300'
                           }`}
                         >
                           <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-transform ${
@@ -204,31 +227,53 @@ export default function LivraisonPage() {
                   ))}
                 </tbody>
               </table>
-              <button className="mt-3 text-sm text-amber-600 hover:text-amber-700">
-                + Ajouter une méthode
+              <button className="mt-3 text-sm text-sky-600 hover:text-sky-700 inline-flex items-center gap-1">
+                <Plus className="w-3.5 h-3.5" />
+                Ajouter une méthode
               </button>
             </div>
           </div>
         ))}
+
+        {zones.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-16 text-center bg-white border border-slate-200 rounded-lg">
+            <div className="p-3 bg-slate-100 rounded-xl mb-4">
+              <Package className="w-8 h-8 text-slate-400" />
+            </div>
+            <h3 className="text-sm font-medium text-slate-900">Aucune zone de livraison</h3>
+            <p className="mt-1 text-sm text-slate-500 max-w-sm">
+              Créez votre première zone pour configurer les options de livraison.
+            </p>
+            <div className="mt-4">
+              <Button
+                variant="primary"
+                icon={Plus}
+                onClick={() => setShowForm(true)}
+              >
+                Nouvelle zone
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Form Modal */}
-      {(showForm || editingZone) && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl max-w-lg w-full p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">
-              {editingZone ? 'Modifier la zone' : 'Nouvelle zone'}
-            </h2>
-            <p className="text-gray-500 mb-4">Fonctionnalité en cours de développement...</p>
-            <button
-              onClick={() => { setShowForm(false); setEditingZone(null); }}
-              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
-            >
-              Fermer
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
+      <Modal
+        isOpen={modalIsOpen}
+        onClose={() => { setShowForm(false); setEditingZone(null); }}
+        title={editingZone ? 'Modifier la zone' : 'Nouvelle zone'}
+        size="md"
+        footer={
+          <Button
+            variant="secondary"
+            onClick={() => { setShowForm(false); setEditingZone(null); }}
+          >
+            Fermer
+          </Button>
+        }
+      >
+        <p className="text-slate-500">Fonctionnalité en cours de développement...</p>
+      </Modal>
+    </>
   );
 }

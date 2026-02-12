@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { ArrowLeft, Plus, Trash2 } from 'lucide-react';
 
 interface Category {
   id: string;
@@ -154,9 +155,7 @@ export default function NewProductClient({ categories }: Props) {
               href="/admin/produits"
               className="p-2 text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
+              <ArrowLeft className="w-5 h-5" />
             </Link>
             <div>
               <h1 className="text-2xl font-bold text-neutral-900">Nouveau produit</h1>
@@ -166,7 +165,7 @@ export default function NewProductClient({ categories }: Props) {
           <button
             onClick={handleSave}
             disabled={saving}
-            className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors disabled:opacity-50"
+            className="px-4 py-2 bg-sky-500 text-white rounded-lg hover:bg-sky-600 transition-colors disabled:opacity-50"
           >
             {saving ? 'Création...' : 'Créer le produit'}
           </button>
@@ -208,7 +207,7 @@ export default function NewProductClient({ categories }: Props) {
                   value={formData.name}
                   onChange={(e) => handleNameChange(e.target.value)}
                   placeholder="Ex: BPC-157"
-                  className="w-full px-4 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="w-full px-4 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
                 />
               </div>
 
@@ -220,7 +219,7 @@ export default function NewProductClient({ categories }: Props) {
                   value={formData.subtitle}
                   onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
                   placeholder="Ex: Body Protection Compound-157"
-                  className="w-full px-4 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="w-full px-4 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
                 />
               </div>
 
@@ -232,7 +231,7 @@ export default function NewProductClient({ categories }: Props) {
                   value={formData.slug}
                   onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
                   placeholder="bpc-157"
-                  className="w-full px-4 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="w-full px-4 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
                 />
               </div>
 
@@ -242,7 +241,7 @@ export default function NewProductClient({ categories }: Props) {
                 <select
                   value={formData.productType}
                   onChange={(e) => setFormData({ ...formData, productType: e.target.value })}
-                  className="w-full px-4 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="w-full px-4 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
                 >
                   {PRODUCT_TYPES.map(type => (
                     <option key={type.value} value={type.value}>{type.label}</option>
@@ -256,7 +255,7 @@ export default function NewProductClient({ categories }: Props) {
                 <select
                   value={formData.categoryId}
                   onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
-                  className="w-full px-4 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="w-full px-4 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
                 >
                   {categories.map(cat => (
                     <option key={cat.id} value={cat.id}>{cat.name}</option>
@@ -272,7 +271,7 @@ export default function NewProductClient({ categories }: Props) {
                   step="0.01"
                   value={formData.price}
                   onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
-                  className="w-full px-4 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="w-full px-4 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
                 />
               </div>
 
@@ -285,7 +284,7 @@ export default function NewProductClient({ categories }: Props) {
                   value={formData.purity}
                   onChange={(e) => setFormData({ ...formData, purity: e.target.value })}
                   placeholder="99.50"
-                  className="w-full px-4 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="w-full px-4 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
                 />
               </div>
 
@@ -297,7 +296,7 @@ export default function NewProductClient({ categories }: Props) {
                   value={formData.casNumber}
                   onChange={(e) => setFormData({ ...formData, casNumber: e.target.value })}
                   placeholder="137525-51-0"
-                  className="w-full px-4 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="w-full px-4 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
                 />
               </div>
 
@@ -309,7 +308,7 @@ export default function NewProductClient({ categories }: Props) {
                   value={formData.storageConditions}
                   onChange={(e) => setFormData({ ...formData, storageConditions: e.target.value })}
                   placeholder="2-8°C"
-                  className="w-full px-4 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="w-full px-4 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
                 />
               </div>
 
@@ -321,7 +320,7 @@ export default function NewProductClient({ categories }: Props) {
                   value={formData.shortDescription}
                   onChange={(e) => setFormData({ ...formData, shortDescription: e.target.value })}
                   placeholder="Description courte pour les listes de produits..."
-                  className="w-full px-4 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="w-full px-4 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
                 />
               </div>
 
@@ -333,7 +332,7 @@ export default function NewProductClient({ categories }: Props) {
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="Description détaillée du produit..."
-                  className="w-full px-4 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="w-full px-4 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
                 />
               </div>
 
@@ -344,7 +343,7 @@ export default function NewProductClient({ categories }: Props) {
                   type="url"
                   value={formData.imageUrl}
                   onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                  className="w-full px-4 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="w-full px-4 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
                 />
               </div>
 
@@ -357,7 +356,7 @@ export default function NewProductClient({ categories }: Props) {
                       type="checkbox"
                       checked={formData.isActive}
                       onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                      className="w-4 h-4 text-orange-500 border-neutral-300 rounded focus:ring-orange-500"
+                      className="w-4 h-4 text-sky-500 border-neutral-300 rounded focus:ring-sky-500"
                     />
                     <span className="text-sm text-neutral-700">Actif (visible sur le site)</span>
                   </label>
@@ -366,7 +365,7 @@ export default function NewProductClient({ categories }: Props) {
                       type="checkbox"
                       checked={formData.isFeatured}
                       onChange={(e) => setFormData({ ...formData, isFeatured: e.target.checked })}
-                      className="w-4 h-4 text-orange-500 border-neutral-300 rounded focus:ring-orange-500"
+                      className="w-4 h-4 text-sky-500 border-neutral-300 rounded focus:ring-sky-500"
                     />
                     <span className="text-sm text-neutral-700">En vedette</span>
                   </label>
@@ -375,7 +374,7 @@ export default function NewProductClient({ categories }: Props) {
                       type="checkbox"
                       checked={formData.isNew}
                       onChange={(e) => setFormData({ ...formData, isNew: e.target.checked })}
-                      className="w-4 h-4 text-orange-500 border-neutral-300 rounded focus:ring-orange-500"
+                      className="w-4 h-4 text-sky-500 border-neutral-300 rounded focus:ring-sky-500"
                     />
                     <span className="text-sm text-neutral-700">Nouveau</span>
                   </label>
@@ -384,7 +383,7 @@ export default function NewProductClient({ categories }: Props) {
                       type="checkbox"
                       checked={formData.isBestseller}
                       onChange={(e) => setFormData({ ...formData, isBestseller: e.target.checked })}
-                      className="w-4 h-4 text-orange-500 border-neutral-300 rounded focus:ring-orange-500"
+                      className="w-4 h-4 text-sky-500 border-neutral-300 rounded focus:ring-sky-500"
                     />
                     <span className="text-sm text-neutral-700">Bestseller</span>
                   </label>
@@ -401,11 +400,9 @@ export default function NewProductClient({ categories }: Props) {
             <div className="flex justify-end">
               <button
                 onClick={() => setShowAddFormat(true)}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-sky-500 text-white rounded-lg hover:bg-sky-600 transition-colors"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
+                <Plus className="w-5 h-5" />
                 Ajouter un format
               </button>
             </div>
@@ -425,7 +422,7 @@ export default function NewProductClient({ categories }: Props) {
                       <div className="flex items-center gap-2">
                         <p className="font-medium text-neutral-900">{format.name}</p>
                         {format.isDefault && (
-                          <span className="px-2 py-0.5 text-xs bg-orange-100 text-orange-700 rounded-full">Par défaut</span>
+                          <span className="px-2 py-0.5 text-xs bg-sky-100 text-sky-700 rounded-full">Par défaut</span>
                         )}
                       </div>
                       <p className="text-sm text-neutral-500">
@@ -443,9 +440,7 @@ export default function NewProductClient({ categories }: Props) {
                       onClick={() => handleRemoveFormat(format.id)}
                       className="p-2 text-neutral-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
+                      <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
@@ -457,7 +452,7 @@ export default function NewProductClient({ categories }: Props) {
                 <p className="text-neutral-500 mb-4">Aucun format défini pour ce produit.</p>
                 <button
                   onClick={() => setShowAddFormat(true)}
-                  className="text-orange-600 hover:text-orange-700 font-medium"
+                  className="text-sky-600 hover:text-sky-700 font-medium"
                 >
                   Ajouter un premier format
                 </button>
@@ -511,7 +506,7 @@ function AddFormatModal({
             <select
               value={newFormat.formatType}
               onChange={(e) => setNewFormat({ ...newFormat, formatType: e.target.value })}
-              className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
             >
               {FORMAT_TYPES.map(type => (
                 <option key={type.value} value={type.value}>{type.icon} {type.label}</option>
@@ -525,7 +520,7 @@ function AddFormatModal({
               value={newFormat.name}
               onChange={(e) => setNewFormat({ ...newFormat, name: e.target.value })}
               placeholder="Ex: 5mg Vial"
-              className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
             />
           </div>
           <div>
@@ -535,7 +530,7 @@ function AddFormatModal({
               step="0.01"
               value={newFormat.price}
               onChange={(e) => setNewFormat({ ...newFormat, price: parseFloat(e.target.value) || 0 })}
-              className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
             />
           </div>
           <div>
@@ -544,7 +539,7 @@ function AddFormatModal({
               type="text"
               value={newFormat.sku}
               onChange={(e) => setNewFormat({ ...newFormat, sku: e.target.value })}
-              className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
             />
           </div>
           <div>
@@ -553,7 +548,7 @@ function AddFormatModal({
               type="number"
               value={newFormat.stockQuantity}
               onChange={(e) => setNewFormat({ ...newFormat, stockQuantity: parseInt(e.target.value) || 0 })}
-              className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
             />
           </div>
           <div>
@@ -561,7 +556,7 @@ function AddFormatModal({
             <select
               value={newFormat.availability}
               onChange={(e) => setNewFormat({ ...newFormat, availability: e.target.value })}
-              className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
             >
               {AVAILABILITY_OPTIONS.map(opt => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -575,7 +570,7 @@ function AddFormatModal({
               step="0.01"
               value={newFormat.dosageMg || ''}
               onChange={(e) => setNewFormat({ ...newFormat, dosageMg: e.target.value ? parseFloat(e.target.value) : null })}
-              className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
             />
           </div>
           <div>
@@ -584,7 +579,7 @@ function AddFormatModal({
               type="number"
               value={newFormat.unitCount || ''}
               onChange={(e) => setNewFormat({ ...newFormat, unitCount: e.target.value ? parseInt(e.target.value) : null })}
-              className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
             />
           </div>
         </div>
@@ -594,7 +589,7 @@ function AddFormatModal({
               type="checkbox"
               checked={newFormat.isActive}
               onChange={(e) => setNewFormat({ ...newFormat, isActive: e.target.checked })}
-              className="w-4 h-4 text-orange-500 border-neutral-300 rounded focus:ring-orange-500"
+              className="w-4 h-4 text-sky-500 border-neutral-300 rounded focus:ring-sky-500"
             />
             <span className="text-sm text-neutral-700">Actif</span>
           </label>
@@ -603,7 +598,7 @@ function AddFormatModal({
               type="checkbox"
               checked={newFormat.isDefault}
               onChange={(e) => setNewFormat({ ...newFormat, isDefault: e.target.checked })}
-              className="w-4 h-4 text-orange-500 border-neutral-300 rounded focus:ring-orange-500"
+              className="w-4 h-4 text-sky-500 border-neutral-300 rounded focus:ring-sky-500"
             />
             <span className="text-sm text-neutral-700">Format par défaut</span>
           </label>
@@ -618,7 +613,7 @@ function AddFormatModal({
           <button
             onClick={() => onAdd(newFormat)}
             disabled={!newFormat.name || !newFormat.price}
-            className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors disabled:opacity-50"
+            className="px-4 py-2 bg-sky-500 text-white rounded-lg hover:bg-sky-600 transition-colors disabled:opacity-50"
           >
             Ajouter
           </button>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 
 interface CashFlowProjection {
   period: string;
@@ -25,87 +25,119 @@ export default function ForecastingPage() {
   const [forecastPeriod, setForecastPeriod] = useState(6);
   const [minimumCash, setMinimumCash] = useState(10000);
 
-  // Initial values - should be loaded from API
-  const currentBalance = 0;
-  const monthlyRevenue = 0;
-  const monthlyExpenses = 0;
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [currentBalance, setCurrentBalance] = useState(0);
+  const [monthlyRevenue, setMonthlyRevenue] = useState(0);
+  const [monthlyExpenses, setMonthlyExpenses] = useState(0);
 
-  const baseProjections: CashFlowProjection[] = Array.from({ length: forecastPeriod }, (_, i) => {
-    const date = new Date();
-    date.setMonth(date.getMonth() + i + 1);
-    const period = date.toLocaleDateString('fr-CA', { month: 'short', year: 'numeric' });
-    const growthFactor = Math.pow(1.05, i);
-    const inflows = monthlyRevenue * growthFactor;
-    const outflows = monthlyExpenses * Math.pow(1.03, i);
-    const netCashFlow = inflows - outflows;
-    const openingBalance = i === 0 ? currentBalance : 0; // Will be calculated
-    const closingBalance = openingBalance + netCashFlow;
-    
-    return { period, openingBalance, inflows, outflows, netCashFlow, closingBalance };
-  });
+  // Fetch real data from dashboard API
+  useEffect(() => {
+    async function fetchForecastData() {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await fetch('/api/accounting/dashboard');
+        if (!res.ok) throw new Error('Erreur chargement données');
+        const data = await res.json();
 
-  // Recalculate with running balance
-  let runningBalance = currentBalance;
-  baseProjections.forEach(p => {
-    p.openingBalance = runningBalance;
-    p.closingBalance = runningBalance + p.netCashFlow;
-    runningBalance = p.closingBalance;
-  });
+        setCurrentBalance(data.bankBalance || 0);
+        setMonthlyRevenue(data.totalRevenue || 0);
+        setMonthlyExpenses(data.totalExpenses || 0);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Erreur de chargement');
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchForecastData();
+  }, []);
 
-  const scenarios: Scenario[] = [
-    {
-      id: 'base',
-      name: 'Scénario de base',
-      revenueGrowth: 5,
-      expenseGrowth: 3,
-      color: 'amber',
-      projections: baseProjections,
-    },
-    {
-      id: 'aggressive',
-      name: 'Croissance agressive',
-      revenueGrowth: 15,
-      expenseGrowth: 8,
-      color: 'green',
-      projections: [],
-    },
-    {
-      id: 'conservative',
-      name: 'Conservateur',
-      revenueGrowth: 2,
-      expenseGrowth: 2,
-      color: 'blue',
-      projections: [],
-    },
-    {
-      id: 'worst',
-      name: 'Pire scénario',
-      revenueGrowth: -20,
-      expenseGrowth: 5,
-      color: 'red',
-      projections: [],
-    },
-  ];
-
-  // Calculate scenarios
-  scenarios.forEach(scenario => {
-    if (scenario.id === 'base') return;
-    
-    let balance = currentBalance;
-    scenario.projections = Array.from({ length: forecastPeriod }, (_, i) => {
+  // Calculate projections from real data
+  const baseProjections: CashFlowProjection[] = useMemo(() => {
+    const projections: CashFlowProjection[] = Array.from({ length: forecastPeriod }, (_, i) => {
       const date = new Date();
       date.setMonth(date.getMonth() + i + 1);
       const period = date.toLocaleDateString('fr-CA', { month: 'short', year: 'numeric' });
-      const inflows = monthlyRevenue * Math.pow(1 + scenario.revenueGrowth / 100, i);
-      const outflows = monthlyExpenses * Math.pow(1 + scenario.expenseGrowth / 100, i);
+      const growthFactor = Math.pow(1.05, i);
+      const inflows = monthlyRevenue * growthFactor;
+      const outflows = monthlyExpenses * Math.pow(1.03, i);
       const netCashFlow = inflows - outflows;
-      const openingBalance = balance;
-      const closingBalance = balance + netCashFlow;
-      balance = closingBalance;
-      
+      const openingBalance = i === 0 ? currentBalance : 0;
+      const closingBalance = openingBalance + netCashFlow;
+
       return { period, openingBalance, inflows, outflows, netCashFlow, closingBalance };
     });
-  });
+
+    // Recalculate with running balance
+    let runningBalance = currentBalance;
+    projections.forEach(p => {
+      p.openingBalance = runningBalance;
+      p.closingBalance = runningBalance + p.netCashFlow;
+      runningBalance = p.closingBalance;
+    });
+
+    return projections;
+  }, [forecastPeriod, currentBalance, monthlyRevenue, monthlyExpenses]);
+
+  const scenarios: Scenario[] = useMemo(() => {
+    const scenarioDefs = [
+      {
+        id: 'base',
+        name: 'Scénario de base',
+        revenueGrowth: 5,
+        expenseGrowth: 3,
+        color: 'sky',
+        projections: baseProjections,
+      },
+      {
+        id: 'aggressive',
+        name: 'Croissance agressive',
+        revenueGrowth: 15,
+        expenseGrowth: 8,
+        color: 'green',
+        projections: [] as CashFlowProjection[],
+      },
+      {
+        id: 'conservative',
+        name: 'Conservateur',
+        revenueGrowth: 2,
+        expenseGrowth: 2,
+        color: 'blue',
+        projections: [] as CashFlowProjection[],
+      },
+      {
+        id: 'worst',
+        name: 'Pire scénario',
+        revenueGrowth: -20,
+        expenseGrowth: 5,
+        color: 'red',
+        projections: [] as CashFlowProjection[],
+      },
+    ];
+
+    // Calculate scenario projections
+    scenarioDefs.forEach(scenario => {
+      if (scenario.id === 'base') return;
+
+      let balance = currentBalance;
+      scenario.projections = Array.from({ length: forecastPeriod }, (_, i) => {
+        const date = new Date();
+        date.setMonth(date.getMonth() + i + 1);
+        const period = date.toLocaleDateString('fr-CA', { month: 'short', year: 'numeric' });
+        const inflows = monthlyRevenue * Math.pow(1 + scenario.revenueGrowth / 100, i);
+        const outflows = monthlyExpenses * Math.pow(1 + scenario.expenseGrowth / 100, i);
+        const netCashFlow = inflows - outflows;
+        const openingBalance = balance;
+        const closingBalance = balance + netCashFlow;
+        balance = closingBalance;
+
+        return { period, openingBalance, inflows, outflows, netCashFlow, closingBalance };
+      });
+    });
+
+    return scenarioDefs;
+  }, [baseProjections, currentBalance, forecastPeriod, monthlyRevenue, monthlyExpenses]);
 
   const alerts = baseProjections
     .filter(p => p.closingBalance < minimumCash)
@@ -115,13 +147,18 @@ export default function ForecastingPage() {
       balance: p.closingBalance,
     }));
 
-  const lowestPoint = Math.min(...baseProjections.map(p => p.closingBalance));
+  const lowestPoint = baseProjections.length > 0
+    ? Math.min(...baseProjections.map(p => p.closingBalance))
+    : 0;
   const lowestPeriod = baseProjections.find(p => p.closingBalance === lowestPoint)?.period;
   const totalInflows = baseProjections.reduce((sum, p) => sum + p.inflows, 0);
   const totalOutflows = baseProjections.reduce((sum, p) => sum + p.outflows, 0);
 
-  const formatCurrency = (amount: number) => 
+  const formatCurrency = (amount: number) =>
     amount.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' });
+
+  if (loading) return <div className="p-8 text-center">Chargement...</div>;
+  if (error) return <div className="p-8 text-center text-red-400">Erreur: {error}</div>;
 
   return (
     <div className="space-y-6">
@@ -141,7 +178,7 @@ export default function ForecastingPage() {
             <option value={6}>6 mois</option>
             <option value={12}>12 mois</option>
           </select>
-          <button className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg">
+          <button className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg">
             📊 Exporter
           </button>
         </div>
@@ -163,7 +200,7 @@ export default function ForecastingPage() {
         </div>
         <div className="bg-neutral-800 rounded-xl p-4 border border-neutral-700">
           <p className="text-sm text-neutral-400">Solde final projeté</p>
-          <p className="text-xl font-bold text-amber-400 mt-1">
+          <p className="text-xl font-bold text-sky-400 mt-1">
             {formatCurrency(baseProjections[baseProjections.length - 1]?.closingBalance || 0)}
           </p>
         </div>
@@ -188,7 +225,7 @@ export default function ForecastingPage() {
             onClick={() => setActiveTab(tab.id as typeof activeTab)}
             className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
               activeTab === tab.id
-                ? 'bg-amber-600 text-white'
+                ? 'bg-sky-600 text-white'
                 : 'text-neutral-400 hover:text-white'
             }`}
           >
@@ -205,15 +242,15 @@ export default function ForecastingPage() {
             <h3 className="font-medium text-white mb-4">Évolution du solde</h3>
             <div className="flex items-end gap-2 h-48">
               {baseProjections.map((p, i) => {
-                const maxBalance = Math.max(...baseProjections.map(p => p.closingBalance));
-                const height = (p.closingBalance / maxBalance) * 100;
+                const maxBalance = Math.max(...baseProjections.map(p => Math.abs(p.closingBalance)), 1);
+                const height = (Math.abs(p.closingBalance) / maxBalance) * 100;
                 const isLow = p.closingBalance < minimumCash;
-                
+
                 return (
                   <div key={i} className="flex-1 flex flex-col items-center">
-                    <div 
+                    <div
                       className={`w-full rounded-t transition-all ${
-                        isLow ? 'bg-red-500' : 'bg-amber-500'
+                        isLow ? 'bg-red-500' : 'bg-sky-500'
                       }`}
                       style={{ height: `${Math.max(5, height)}%` }}
                     />
@@ -271,8 +308,10 @@ export default function ForecastingPage() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {scenarios.map(scenario => {
               const finalBalance = scenario.projections[scenario.projections.length - 1]?.closingBalance || 0;
-              const lowestBalance = Math.min(...scenario.projections.map(p => p.closingBalance));
-              
+              const lowestBalance = scenario.projections.length > 0
+                ? Math.min(...scenario.projections.map(p => p.closingBalance))
+                : 0;
+
               return (
                 <div key={scenario.id} className={`bg-neutral-800 rounded-xl p-4 border border-${scenario.color}-500/30`}>
                   <div className={`w-3 h-3 rounded-full bg-${scenario.color}-500 mb-2`}></div>
@@ -339,7 +378,7 @@ export default function ForecastingPage() {
         <div className="space-y-4">
           <div className="bg-neutral-800 rounded-xl p-4 border border-neutral-700">
             <div className="flex items-center gap-4">
-              <label className="text-sm text-neutral-300">Seuil d'alerte minimum:</label>
+              <label className="text-sm text-neutral-300">Seuil d&apos;alerte minimum:</label>
               <input
                 type="number"
                 value={minimumCash}
@@ -361,11 +400,11 @@ export default function ForecastingPage() {
           ) : (
             <div className="space-y-3">
               {alerts.map((alert, i) => (
-                <div 
-                  key={i} 
+                <div
+                  key={i}
                   className={`rounded-xl p-4 border ${
-                    alert.type === 'CRITICAL' 
-                      ? 'bg-red-900/20 border-red-500/30' 
+                    alert.type === 'CRITICAL'
+                      ? 'bg-red-900/20 border-red-500/30'
                       : 'bg-yellow-900/20 border-yellow-500/30'
                   }`}
                 >
@@ -387,7 +426,7 @@ export default function ForecastingPage() {
                         <button className="px-3 py-1 bg-neutral-700 hover:bg-neutral-600 text-white text-sm rounded-lg">
                           Voir le détail
                         </button>
-                        <button className="px-3 py-1 bg-amber-600/20 hover:bg-amber-600/30 text-amber-400 text-sm rounded-lg">
+                        <button className="px-3 py-1 bg-sky-600/20 hover:bg-sky-600/30 text-sky-400 text-sm rounded-lg">
                           Suggestions
                         </button>
                       </div>

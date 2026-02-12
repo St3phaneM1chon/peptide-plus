@@ -1,6 +1,23 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import {
+  MessageCircleQuestion,
+  CheckCircle,
+  AlertCircle,
+  Trash2,
+  Pencil,
+  MessageSquare,
+} from 'lucide-react';
+
+import { PageHeader } from '@/components/admin/PageHeader';
+import { Button } from '@/components/admin/Button';
+import { Modal } from '@/components/admin/Modal';
+import { StatCard } from '@/components/admin/StatCard';
+import { StatusBadge } from '@/components/admin/StatusBadge';
+import { EmptyState } from '@/components/admin/EmptyState';
+import { FilterBar, SelectFilter } from '@/components/admin/FilterBar';
+import { FormField, Textarea } from '@/components/admin/FormField';
 
 interface Question {
   id: string;
@@ -92,182 +109,161 @@ export default function QuestionsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500" />
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Questions produits</h1>
-          <p className="text-gray-500">Répondez aux questions des clients</p>
-        </div>
-      </div>
+      <PageHeader
+        title="Questions produits"
+        subtitle="Repondez aux questions des clients"
+      />
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
-        <div className="bg-white rounded-xl p-4 border border-gray-200">
-          <p className="text-sm text-gray-500">Total questions</p>
-          <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
-        </div>
-        <div className="bg-yellow-50 rounded-xl p-4 border border-yellow-200">
-          <p className="text-sm text-yellow-600">Sans réponse</p>
-          <p className="text-2xl font-bold text-yellow-700">{stats.unanswered}</p>
-        </div>
-        <div className="bg-green-50 rounded-xl p-4 border border-green-200">
-          <p className="text-sm text-green-600">Répondues</p>
-          <p className="text-2xl font-bold text-green-700">{stats.answered}</p>
-        </div>
+        <StatCard label="Total questions" value={stats.total} icon={MessageCircleQuestion} />
+        <StatCard label="Sans reponse" value={stats.unanswered} icon={AlertCircle} />
+        <StatCard label="Repondues" value={stats.answered} icon={CheckCircle} />
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-xl p-4 border border-gray-200">
-        <div className="flex flex-wrap gap-4">
-          <input
-            type="text"
-            placeholder="Rechercher..."
-            className="flex-1 min-w-[200px] px-4 py-2 border border-gray-300 rounded-lg"
-            value={filter.search}
-            onChange={(e) => setFilter({ ...filter, search: e.target.value })}
-          />
-          <select
-            className="px-4 py-2 border border-gray-300 rounded-lg"
-            value={filter.answered}
-            onChange={(e) => setFilter({ ...filter, answered: e.target.value })}
-          >
-            <option value="">Toutes</option>
-            <option value="unanswered">Sans réponse</option>
-            <option value="answered">Répondues</option>
-          </select>
-        </div>
-      </div>
+      <FilterBar
+        searchValue={filter.search}
+        onSearchChange={(v) => setFilter({ ...filter, search: v })}
+        searchPlaceholder="Rechercher..."
+      >
+        <SelectFilter
+          label="Toutes"
+          value={filter.answered}
+          onChange={(v) => setFilter({ ...filter, answered: v })}
+          options={[
+            { value: 'unanswered', label: 'Sans reponse' },
+            { value: 'answered', label: 'Repondues' },
+          ]}
+        />
+      </FilterBar>
 
       {/* Questions List */}
-      <div className="space-y-4">
-        {filteredQuestions.map((question) => (
-          <div 
-            key={question.id} 
-            className={`bg-white rounded-xl border p-6 ${
-              !question.answer ? 'border-yellow-300 bg-yellow-50/30' : 'border-gray-200'
-            }`}
-          >
-            <div className="flex items-start justify-between mb-3">
-              <div>
-                <p className="text-sm text-gray-500 mb-1">
-                  {question.userName} • {question.productName} • {new Date(question.createdAt).toLocaleDateString('fr-CA')}
-                </p>
-                {!question.answer && (
-                  <span className="inline-block px-2 py-0.5 bg-yellow-100 text-yellow-700 text-xs rounded-full">
-                    En attente de réponse
-                  </span>
-                )}
+      {filteredQuestions.length === 0 ? (
+        <div className="bg-white border border-slate-200 rounded-lg">
+          <EmptyState
+            icon={MessageCircleQuestion}
+            title="Aucune question trouvee"
+            description="Aucune question ne correspond aux filtres selectionnes"
+          />
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {filteredQuestions.map((question) => (
+            <div
+              key={question.id}
+              className={`bg-white rounded-xl border p-6 ${
+                !question.answer ? 'border-yellow-300 bg-yellow-50/30' : 'border-slate-200'
+              }`}
+            >
+              <div className="flex items-start justify-between mb-3">
+                <div>
+                  <p className="text-sm text-slate-500 mb-1">
+                    {question.userName} &bull; {question.productName} &bull; {new Date(question.createdAt).toLocaleDateString('fr-CA')}
+                  </p>
+                  {!question.answer && (
+                    <StatusBadge variant="warning">
+                      En attente de reponse
+                    </StatusBadge>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => togglePublic(question.id, question.isPublic)}
+                  >
+                    <StatusBadge variant={question.isPublic ? 'success' : 'neutral'}>
+                      {question.isPublic ? 'Public' : 'Prive'}
+                    </StatusBadge>
+                  </button>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => togglePublic(question.id, question.isPublic)}
-                  className={`px-2 py-1 rounded text-xs ${
-                    question.isPublic 
-                      ? 'bg-green-100 text-green-700' 
-                      : 'bg-gray-100 text-gray-600'
-                  }`}
-                >
-                  {question.isPublic ? 'Public' : 'Privé'}
-                </button>
-              </div>
-            </div>
 
-            <div className="mb-4">
-              <p className="font-medium text-gray-900 flex items-start gap-2">
-                <span className="text-amber-500">Q:</span>
-                {question.question}
-              </p>
-            </div>
-
-            {question.answer && (
-              <div className="bg-green-50 rounded-lg p-4 mb-4">
-                <p className="text-green-800 flex items-start gap-2">
-                  <span className="text-green-600 font-bold">R:</span>
-                  {question.answer}
-                </p>
-                <p className="text-xs text-green-600 mt-2">
-                  {question.answeredBy} • {question.answeredAt && new Date(question.answeredAt).toLocaleDateString('fr-CA')}
+              <div className="mb-4">
+                <p className="font-medium text-slate-900 flex items-start gap-2">
+                  <span className="text-sky-500">Q:</span>
+                  {question.question}
                 </p>
               </div>
-            )}
 
-            <div className="flex gap-2 pt-3 border-t border-gray-100">
-              <button
-                onClick={() => { setSelectedQuestion(question); setAnswerText(question.answer || ''); }}
-                className="px-3 py-1 bg-amber-100 text-amber-700 rounded text-sm hover:bg-amber-200"
-              >
-                {question.answer ? 'Modifier réponse' : 'Répondre'}
-              </button>
-              <button
-                onClick={() => deleteQuestion(question.id)}
-                className="px-3 py-1 bg-red-100 text-red-700 rounded text-sm hover:bg-red-200"
-              >
-                Supprimer
-              </button>
-            </div>
-          </div>
-        ))}
+              {question.answer && (
+                <div className="bg-emerald-50 rounded-lg p-4 mb-4">
+                  <p className="text-emerald-800 flex items-start gap-2">
+                    <span className="text-emerald-600 font-bold">R:</span>
+                    {question.answer}
+                  </p>
+                  <p className="text-xs text-emerald-600 mt-2">
+                    {question.answeredBy} &bull; {question.answeredAt && new Date(question.answeredAt).toLocaleDateString('fr-CA')}
+                  </p>
+                </div>
+              )}
 
-        {filteredQuestions.length === 0 && (
-          <div className="bg-white rounded-xl border border-gray-200 p-8 text-center text-gray-500">
-            Aucune question trouvée
-          </div>
-        )}
-      </div>
-
-      {/* Answer Modal */}
-      {selectedQuestion && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl max-w-lg w-full">
-            <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-              <h3 className="font-semibold text-gray-900">Répondre à la question</h3>
-              <button onClick={() => setSelectedQuestion(null)} className="p-1 hover:bg-gray-100 rounded">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            <div className="p-4 space-y-4">
-              <div className="bg-gray-50 rounded-lg p-3">
-                <p className="text-sm text-gray-500 mb-1">{selectedQuestion.userName} - {selectedQuestion.productName}</p>
-                <p className="font-medium text-gray-900">{selectedQuestion.question}</p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Votre réponse</label>
-                <textarea
-                  rows={4}
-                  value={answerText}
-                  onChange={(e) => setAnswerText(e.target.value)}
-                  placeholder="Répondez à la question..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                />
-              </div>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setSelectedQuestion(null)}
-                  className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+              <div className="flex gap-2 pt-3 border-t border-slate-100">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  icon={question.answer ? Pencil : MessageSquare}
+                  onClick={() => { setSelectedQuestion(question); setAnswerText(question.answer || ''); }}
                 >
-                  Annuler
-                </button>
-                <button
-                  onClick={() => submitAnswer(selectedQuestion.id)}
-                  disabled={!answerText.trim()}
-                  className="flex-1 px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 disabled:opacity-50"
+                  {question.answer ? 'Modifier reponse' : 'Repondre'}
+                </Button>
+                <Button
+                  variant="danger"
+                  size="sm"
+                  icon={Trash2}
+                  onClick={() => deleteQuestion(question.id)}
                 >
-                  Publier la réponse
-                </button>
+                  Supprimer
+                </Button>
               </div>
             </div>
-          </div>
+          ))}
         </div>
       )}
+
+      {/* Answer Modal */}
+      <Modal
+        isOpen={!!selectedQuestion}
+        onClose={() => setSelectedQuestion(null)}
+        title="Repondre a la question"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setSelectedQuestion(null)}>
+              Annuler
+            </Button>
+            <Button
+              variant="primary"
+              disabled={!answerText.trim()}
+              onClick={() => selectedQuestion && submitAnswer(selectedQuestion.id)}
+            >
+              Publier la reponse
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <div className="bg-slate-50 rounded-lg p-3">
+            <p className="text-sm text-slate-500 mb-1">
+              {selectedQuestion?.userName} - {selectedQuestion?.productName}
+            </p>
+            <p className="font-medium text-slate-900">{selectedQuestion?.question}</p>
+          </div>
+          <FormField label="Votre reponse">
+            <Textarea
+              rows={4}
+              value={answerText}
+              onChange={(e) => setAnswerText(e.target.value)}
+              placeholder="Repondez a la question..."
+            />
+          </FormField>
+        </div>
+      </Modal>
     </div>
   );
 }

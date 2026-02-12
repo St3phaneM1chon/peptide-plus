@@ -24,7 +24,7 @@ const categoryColors: Record<string, string> = {
   SALES: 'bg-green-900/30 text-green-400',
   PURCHASES: 'bg-blue-900/30 text-blue-400',
   PAYROLL: 'bg-purple-900/30 text-purple-400',
-  TAXES: 'bg-amber-900/30 text-amber-400',
+  TAXES: 'bg-yellow-900/30 text-yellow-400',
   ADJUSTMENTS: 'bg-red-900/30 text-red-400',
   OTHER: 'bg-neutral-700 text-neutral-300',
 };
@@ -39,7 +39,7 @@ const categoryLabels: Record<string, string> = {
 };
 
 export default function QuickEntryPage() {
-  const [templates, setTemplates] = useState<Template[]>([
+  const defaultTemplates: Template[] = [
     {
       id: 'tpl-1',
       name: 'Vente avec taxes (QC)',
@@ -114,16 +114,68 @@ export default function QuickEntryPage() {
         { accountCode: '1590', accountName: 'Amort. cumulé', creditFormula: 'amount' },
       ],
     },
-  ]);
+  ];
 
+  const [templates, setTemplates] = useState<Template[]>(defaultTemplates);
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
   const [formValues, setFormValues] = useState<Record<string, string>>({});
-  const [recentEntries, setRecentEntries] = useState<RecentEntry[]>([
-    { id: 'e1', date: new Date(), description: 'Vente ORD-2026-0089', amount: 234.50, status: 'POSTED' },
-    { id: 'e2', date: new Date(Date.now() - 3600000), description: 'Achat Azure', amount: 185.50, status: 'DRAFT' },
-    { id: 'e3', date: new Date(Date.now() - 7200000), description: 'Frais Stripe', amount: 12.34, status: 'POSTED' },
-  ]);
+  const [recentEntries, setRecentEntries] = useState<RecentEntry[]>([]);
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [entryDate, setEntryDate] = useState(new Date().toISOString().split('T')[0]);
+
+  // Fetch recent entries from API
+  useEffect(() => {
+    const fetchRecentEntries = async () => {
+      try {
+        const res = await fetch('/api/accounting/entries?limit=5');
+        if (res.ok) {
+          const data = await res.json();
+          const mapped: RecentEntry[] = (data.entries || []).slice(0, 5).map((e: any) => ({
+            id: e.id,
+            date: new Date(e.createdAt || e.date),
+            description: e.description,
+            amount: e.totalDebits || e.lines?.reduce((s: number, l: any) => s + (Number(l.debit) || 0), 0) || 0,
+            status: e.status,
+          }));
+          setRecentEntries(mapped);
+        }
+      } catch (err) {
+        console.error('Error fetching recent entries:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchRecentEntries();
+  }, []);
+
+  // Fetch chart of accounts to enrich template account names
+  useEffect(() => {
+    const fetchAccounts = async () => {
+      try {
+        const res = await fetch('/api/accounting/chart-of-accounts');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.accounts && Array.isArray(data.accounts)) {
+            const accountMap = new Map<string, string>();
+            data.accounts.forEach((a: any) => accountMap.set(a.code, a.name));
+
+            // Update template account names from real chart of accounts
+            setTemplates(prev => prev.map(tpl => ({
+              ...tpl,
+              lines: tpl.lines.map(line => ({
+                ...line,
+                accountName: accountMap.get(line.accountCode) || line.accountName,
+              })),
+            })));
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching chart of accounts:', err);
+      }
+    };
+    fetchAccounts();
+  }, []);
 
   // Keyboard shortcuts
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
@@ -148,28 +200,60 @@ export default function QuickEntryPage() {
   }, [handleKeyDown]);
 
   const handleSave = async (andPost: boolean = false) => {
+    if (!selectedTemplate) return;
     setSaving(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    const amount = parseFloat(formValues.amount || '0');
-    const newEntry: RecentEntry = {
-      id: `e-${Date.now()}`,
-      date: new Date(),
-      description: selectedTemplate?.name || 'Nouvelle écriture',
-      amount,
-      status: andPost ? 'POSTED' : 'DRAFT',
-    };
-    
-    setRecentEntries(prev => [newEntry, ...prev.slice(0, 4)]);
-    setSaving(false);
-    setSelectedTemplate(null);
-    setFormValues({});
-    
-    // Update template frequency
-    if (selectedTemplate) {
-      setTemplates(prev => prev.map(t =>
-        t.id === selectedTemplate.id ? { ...t, frequency: t.frequency + 1 } : t
-      ));
+
+    try {
+      const previewLines = calculatePreview();
+      const lines = previewLines.map(line => ({
+        accountCode: line.accountCode,
+        description: selectedTemplate.name,
+        debit: line.debit,
+        credit: line.credit,
+      }));
+
+      const res = await fetch('/api/accounting/entries', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          date: entryDate,
+          description: `${selectedTemplate.name}${formValues.reference ? ` - ${formValues.reference}` : ''}`,
+          type: 'MANUAL',
+          reference: formValues.reference || undefined,
+          lines,
+          postImmediately: andPost,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const amount = parseFloat(formValues.amount || formValues.gst || '0');
+        const newEntry: RecentEntry = {
+          id: data.entry?.id || `e-${Date.now()}`,
+          date: new Date(),
+          description: selectedTemplate.name,
+          amount,
+          status: andPost ? 'POSTED' : 'DRAFT',
+        };
+
+        setRecentEntries(prev => [newEntry, ...prev.slice(0, 4)]);
+        setSelectedTemplate(null);
+        setFormValues({});
+        setEntryDate(new Date().toISOString().split('T')[0]);
+
+        // Update template frequency
+        setTemplates(prev => prev.map(t =>
+          t.id === selectedTemplate.id ? { ...t, frequency: t.frequency + 1 } : t
+        ));
+      } else {
+        const errData = await res.json();
+        alert(errData.error || 'Erreur lors de la création');
+      }
+    } catch (err) {
+      console.error('Error saving entry:', err);
+      alert('Erreur lors de la création de l\'écriture');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -202,6 +286,8 @@ export default function QuickEntryPage() {
 
   const sortedTemplates = [...templates].sort((a, b) => b.frequency - a.frequency);
 
+  if (loading) return <div className="p-8 text-center">Chargement...</div>;
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -210,7 +296,7 @@ export default function QuickEntryPage() {
           <h1 className="text-2xl font-bold text-white">Saisie rapide</h1>
           <p className="text-neutral-400 mt-1">Templates et raccourcis pour accélérer la saisie</p>
         </div>
-        <button className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg">
+        <button className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg">
           + Nouveau template
         </button>
       </div>
@@ -242,7 +328,7 @@ export default function QuickEntryPage() {
                 onClick={() => setSelectedTemplate(template)}
                 className={`p-4 rounded-xl border text-left transition-all ${
                   selectedTemplate?.id === template.id
-                    ? 'bg-amber-600/20 border-amber-500'
+                    ? 'bg-sky-600/20 border-sky-500'
                     : 'bg-neutral-800 border-neutral-700 hover:border-neutral-600'
                 }`}
               >
@@ -291,7 +377,7 @@ export default function QuickEntryPage() {
                     <p className="text-sm font-medium text-white">
                       {entry.amount.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}
                     </p>
-                    <span className={`text-xs ${entry.status === 'POSTED' ? 'text-green-400' : 'text-amber-400'}`}>
+                    <span className={`text-xs ${entry.status === 'POSTED' ? 'text-green-400' : 'text-yellow-400'}`}>
                       {entry.status === 'POSTED' ? 'Validée' : 'Brouillon'}
                     </span>
                   </div>
@@ -328,7 +414,8 @@ export default function QuickEntryPage() {
                   <label className="block text-sm font-medium text-neutral-300 mb-1">Date</label>
                   <input
                     type="date"
-                    defaultValue={new Date().toISOString().split('T')[0]}
+                    value={entryDate}
+                    onChange={(e) => setEntryDate(e.target.value)}
                     className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-white"
                   />
                 </div>
@@ -436,7 +523,7 @@ export default function QuickEntryPage() {
                 <button
                   onClick={() => handleSave(true)}
                   disabled={saving || !formValues.amount}
-                  className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg disabled:opacity-50"
+                  className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg disabled:opacity-50"
                 >
                   {saving ? 'Enregistrement...' : 'Enregistrer et valider (Ctrl+Enter)'}
                 </button>

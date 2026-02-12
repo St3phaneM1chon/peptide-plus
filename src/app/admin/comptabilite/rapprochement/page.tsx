@@ -1,6 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { Upload, Zap, Check, CheckCircle } from 'lucide-react';
+import { PageHeader, Button, Modal, StatusBadge } from '@/components/admin';
 
 interface BankTransaction {
   id: string;
@@ -8,7 +10,7 @@ interface BankTransaction {
   description: string;
   amount: number;
   type: 'CREDIT' | 'DEBIT';
-  matched: boolean;
+  reconciliationStatus: string;
   matchedEntryId?: string;
 }
 
@@ -17,99 +19,195 @@ interface JournalEntry {
   date: string;
   entryNumber: string;
   description: string;
-  amount: number;
-  type: 'DEBIT' | 'CREDIT';
-  matched: boolean;
+  totalDebits: number;
+  totalCredits: number;
+  type: string;
+  status: string;
+}
+
+interface BankAccount {
+  id: string;
+  name: string;
+  institution: string;
+  accountNumber?: string;
+  currentBalance: number;
 }
 
 export default function RapprochementPage() {
-  const [selectedAccount, setSelectedAccount] = useState('desjardins');
+  const [selectedAccount, setSelectedAccount] = useState('');
   const [selectedMonth, setSelectedMonth] = useState('2026-01');
   const [showMatchModal, setShowMatchModal] = useState(false);
   const [selectedBankTx, setSelectedBankTx] = useState<BankTransaction | null>(null);
+  const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
 
-  const bankTransactions: BankTransaction[] = [
-    { id: 'b1', date: '2026-01-25', description: 'STRIPE TRANSFER', amount: 2500.00, type: 'CREDIT', matched: false },
-    { id: 'b2', date: '2026-01-25', description: 'STRIPE PAYOUT', amount: 458.05, type: 'CREDIT', matched: false },
-    { id: 'b3', date: '2026-01-24', description: 'GOOGLE ADS', amount: 125.00, type: 'DEBIT', matched: true, matchedEntryId: 'j3' },
-    { id: 'b4', date: '2026-01-24', description: 'STRIPE TRANSFER', amount: 445.50, type: 'CREDIT', matched: true, matchedEntryId: 'j4' },
-    { id: 'b5', date: '2026-01-23', description: 'POSTES CANADA', amount: 89.50, type: 'DEBIT', matched: true, matchedEntryId: 'j5' },
-    { id: 'b6', date: '2026-01-22', description: 'STRIPE REFUND', amount: 125.00, type: 'DEBIT', matched: true, matchedEntryId: 'j6' },
-    { id: 'b7', date: '2026-01-20', description: 'PAYMENT - MICROSOFT', amount: 300.00, type: 'DEBIT', matched: true, matchedEntryId: 'j7' },
-    { id: 'b8', date: '2026-01-18', description: 'STRIPE TRANSFER', amount: 1890.00, type: 'CREDIT', matched: true, matchedEntryId: 'j8' },
-  ];
+  const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
+  const [bankTransactions, setBankTransactions] = useState<BankTransaction[]>([]);
+  const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [reconciling, setReconciling] = useState(false);
+  const [matching, setMatching] = useState(false);
 
-  const journalEntries: JournalEntry[] = [
-    { id: 'j1', date: '2026-01-25', entryNumber: 'JV-2026-0020', description: 'Transfert Stripe vers banque', amount: 2500.00, type: 'DEBIT', matched: false },
-    { id: 'j2', date: '2026-01-25', entryNumber: 'JV-2026-0015', description: 'Vente #ORD-2026-0008', amount: 458.05, type: 'DEBIT', matched: false },
-    { id: 'j3', date: '2026-01-24', entryNumber: 'JV-2026-0019', description: 'Frais Google Ads', amount: 125.00, type: 'CREDIT', matched: true },
-    { id: 'j4', date: '2026-01-24', entryNumber: 'JV-2026-0014', description: 'Vente #ORD-2026-0007', amount: 445.50, type: 'DEBIT', matched: true },
-    { id: 'j5', date: '2026-01-23', entryNumber: 'JV-2026-0018', description: 'Frais Postes Canada', amount: 89.50, type: 'CREDIT', matched: true },
-    { id: 'j6', date: '2026-01-22', entryNumber: 'JV-2026-0013', description: 'Remboursement client', amount: 125.00, type: 'CREDIT', matched: true },
-    { id: 'j7', date: '2026-01-20', entryNumber: 'JV-2026-0008', description: 'Azure hébergement', amount: 300.00, type: 'CREDIT', matched: true },
-    { id: 'j8', date: '2026-01-18', entryNumber: 'JV-2026-0012', description: 'Vente #ORD-2026-0006', amount: 1890.00, type: 'DEBIT', matched: true },
-  ];
+  // Fetch bank accounts on mount
+  useEffect(() => {
+    async function fetchAccounts() {
+      try {
+        const res = await fetch('/api/accounting/bank-accounts');
+        if (!res.ok) throw new Error('Erreur chargement comptes');
+        const data = await res.json();
+        setBankAccounts(data.accounts || []);
+        if (data.accounts?.length > 0 && !selectedAccount) {
+          setSelectedAccount(data.accounts[0].id);
+        }
+      } catch (err) {
+        console.error('Fetch bank accounts error:', err);
+      }
+    }
+    fetchAccounts();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const unmatchedBank = bankTransactions.filter(t => !t.matched);
-  const unmatchedJournal = journalEntries.filter(t => !t.matched);
-  const matchedCount = bankTransactions.filter(t => t.matched).length;
+  // Fetch transactions and journal entries when account or month changes
+  const fetchData = useCallback(async () => {
+    if (!selectedAccount) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const [year, month] = selectedMonth.split('-');
+      const from = `${year}-${month}-01`;
+      const lastDay = new Date(parseInt(year), parseInt(month), 0).getDate();
+      const to = `${year}-${month}-${String(lastDay).padStart(2, '0')}`;
 
-  const bankBalance = 32450.00;
-  const bookBalance = 32450.00;
+      const [txRes, entriesRes] = await Promise.all([
+        fetch(`/api/accounting/bank-transactions?bankAccountId=${selectedAccount}&from=${from}&to=${to}&limit=200`),
+        fetch(`/api/accounting/entries?status=POSTED&limit=200`),
+      ]);
+
+      if (!txRes.ok) throw new Error('Erreur chargement transactions bancaires');
+      if (!entriesRes.ok) throw new Error('Erreur chargement écritures');
+
+      const txData = await txRes.json();
+      const entriesData = await entriesRes.json();
+
+      setBankTransactions(txData.transactions || []);
+      setJournalEntries(entriesData.entries || []);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur de chargement');
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedAccount, selectedMonth]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const unmatchedBank = bankTransactions.filter(t => t.reconciliationStatus !== 'MATCHED');
+  const unmatchedJournal = journalEntries.filter(e => {
+    // Journal entries not yet matched to any bank transaction
+    return !bankTransactions.some(bt => bt.matchedEntryId === e.id);
+  });
+  const matchedCount = bankTransactions.filter(t => t.reconciliationStatus === 'MATCHED').length;
+
+  const currentAccount = bankAccounts.find(a => a.id === selectedAccount);
+  const bankBalance = currentAccount?.currentBalance || 0;
+  const bookBalance = bankBalance; // Simplified - in full impl, calculate from GL
   const difference = bankBalance - bookBalance;
 
   const handleMatch = (bankTx: BankTransaction) => {
     setSelectedBankTx(bankTx);
+    setSelectedEntryId(null);
     setShowMatchModal(true);
   };
 
+  const handleAutoReconcile = async () => {
+    if (!selectedAccount) return;
+    setReconciling(true);
+    try {
+      const res = await fetch('/api/accounting/reconciliation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bankAccountId: selectedAccount }),
+      });
+      if (!res.ok) throw new Error('Erreur auto-rapprochement');
+      const data = await res.json();
+      const matchCount = data.result?.matched?.length || 0;
+      alert(`Auto-rapprochement terminé: ${matchCount} transactions rapprochées.`);
+      await fetchData();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Erreur lors du rapprochement');
+    } finally {
+      setReconciling(false);
+    }
+  };
+
+  const handleConfirmMatch = async () => {
+    if (!selectedBankTx || !selectedEntryId) return;
+    setMatching(true);
+    try {
+      const res = await fetch('/api/accounting/bank-transactions', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: selectedBankTx.id,
+          reconciliationStatus: 'MATCHED',
+          matchedEntryId: selectedEntryId,
+        }),
+      });
+      if (!res.ok) throw new Error('Erreur rapprochement');
+      setShowMatchModal(false);
+      await fetchData();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Erreur lors du rapprochement');
+    } finally {
+      setMatching(false);
+    }
+  };
+
+  if (loading) return <div className="p-8 text-center">Chargement...</div>;
+  if (error) return <div className="p-8 text-center text-red-600">Erreur: {error}</div>;
+
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Rapprochement bancaire</h1>
-          <p className="text-gray-500">Conciliez vos relevés bancaires avec vos écritures</p>
-        </div>
-        <div className="flex gap-3">
-          <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center gap-2">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-            </svg>
-            Importer relevé
-          </button>
-          <button className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 flex items-center gap-2">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-            Auto-rapprocher
-          </button>
-        </div>
-      </div>
+      <PageHeader
+        title="Rapprochement bancaire"
+        subtitle="Conciliez vos relevés bancaires avec vos écritures"
+        actions={
+          <>
+            <Button variant="secondary" icon={Upload}>Importer relevé</Button>
+            <Button variant="primary" icon={Zap} onClick={handleAutoReconcile} disabled={reconciling}>
+              {reconciling ? 'Rapprochement...' : 'Auto-rapprocher'}
+            </Button>
+          </>
+        }
+      />
 
       {/* Filters */}
-      <div className="bg-white rounded-xl border border-gray-200 p-4">
+      <div className="bg-white rounded-xl border border-slate-200 p-4">
         <div className="flex gap-4">
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Compte</label>
+            <label className="block text-xs text-slate-500 mb-1">Compte</label>
             <select
               value={selectedAccount}
               onChange={(e) => setSelectedAccount(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg bg-white"
+              className="h-9 px-4 border border-slate-300 rounded-lg bg-white text-sm text-slate-700
+                focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
             >
-              <option value="desjardins">Desjardins - ****4521</option>
-              <option value="td">TD Bank USD - ****8834</option>
-              <option value="stripe">Stripe</option>
-              <option value="paypal">PayPal</option>
+              {bankAccounts.map(acc => (
+                <option key={acc.id} value={acc.id}>
+                  {acc.institution} - {acc.name}{acc.accountNumber ? ` (****${acc.accountNumber.slice(-4)})` : ''}
+                </option>
+              ))}
             </select>
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Période</label>
+            <label className="block text-xs text-slate-500 mb-1">Période</label>
             <input
               type="month"
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg"
+              className="h-9 px-4 border border-slate-300 rounded-lg text-sm text-slate-700
+                focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
             />
           </div>
         </div>
@@ -117,13 +215,13 @@ export default function RapprochementPage() {
 
       {/* Summary */}
       <div className="grid grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl p-4 border border-gray-200">
-          <p className="text-sm text-gray-500">Solde relevé</p>
-          <p className="text-2xl font-bold text-gray-900">{bankBalance.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}</p>
+        <div className="bg-white rounded-xl p-4 border border-slate-200">
+          <p className="text-sm text-slate-500">Solde relevé</p>
+          <p className="text-2xl font-bold text-slate-900">{bankBalance.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}</p>
         </div>
-        <div className="bg-white rounded-xl p-4 border border-gray-200">
-          <p className="text-sm text-gray-500">Solde comptable</p>
-          <p className="text-2xl font-bold text-gray-900">{bookBalance.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}</p>
+        <div className="bg-white rounded-xl p-4 border border-slate-200">
+          <p className="text-sm text-slate-500">Solde comptable</p>
+          <p className="text-2xl font-bold text-slate-900">{bookBalance.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}</p>
         </div>
         <div className={`rounded-xl p-4 border ${difference === 0 ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
           <p className={`text-sm ${difference === 0 ? 'text-green-600' : 'text-red-600'}`}>Différence</p>
@@ -133,7 +231,7 @@ export default function RapprochementPage() {
         </div>
         <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
           <p className="text-sm text-blue-600">Progression</p>
-          <p className="text-2xl font-bold text-blue-700">{Math.round((matchedCount / bankTransactions.length) * 100)}%</p>
+          <p className="text-2xl font-bold text-blue-700">{bankTransactions.length > 0 ? Math.round((matchedCount / bankTransactions.length) * 100) : 0}%</p>
           <p className="text-xs text-blue-600">{matchedCount}/{bankTransactions.length} rapprochés</p>
         </div>
       </div>
@@ -141,34 +239,32 @@ export default function RapprochementPage() {
       {/* Two Column Layout */}
       <div className="grid grid-cols-2 gap-6">
         {/* Bank Transactions */}
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          <div className="p-4 border-b border-gray-200 bg-blue-50">
+        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+          <div className="p-4 border-b border-slate-200 bg-blue-50">
             <h3 className="font-semibold text-blue-900">Relevé bancaire ({unmatchedBank.length} non rapprochés)</h3>
           </div>
           <div className="max-h-[500px] overflow-y-auto">
             <table className="w-full">
-              <thead className="bg-gray-50 sticky top-0">
+              <thead className="bg-slate-50 sticky top-0">
                 <tr>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500">Date</th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500">Description</th>
-                  <th className="px-3 py-2 text-right text-xs font-semibold text-gray-500">Montant</th>
-                  <th className="px-3 py-2 text-center text-xs font-semibold text-gray-500">Action</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-slate-500">Date</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-slate-500">Description</th>
+                  <th className="px-3 py-2 text-right text-xs font-semibold text-slate-500">Montant</th>
+                  <th className="px-3 py-2 text-center text-xs font-semibold text-slate-500">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
+              <tbody className="divide-y divide-slate-200">
                 {bankTransactions.map((tx) => (
-                  <tr key={tx.id} className={tx.matched ? 'bg-green-50/50' : 'bg-yellow-50/50'}>
+                  <tr key={tx.id} className={tx.reconciliationStatus === 'MATCHED' ? 'bg-green-50/50' : 'bg-yellow-50/50'}>
                     <td className="px-3 py-2 text-sm">{new Date(tx.date).toLocaleDateString('fr-CA')}</td>
                     <td className="px-3 py-2 text-sm truncate max-w-[150px]" title={tx.description}>{tx.description}</td>
                     <td className={`px-3 py-2 text-sm text-right font-medium ${tx.type === 'CREDIT' ? 'text-green-600' : 'text-red-600'}`}>
                       {tx.type === 'CREDIT' ? '+' : '-'}{tx.amount.toFixed(2)}
                     </td>
                     <td className="px-3 py-2 text-center">
-                      {tx.matched ? (
+                      {tx.reconciliationStatus === 'MATCHED' ? (
                         <span className="text-green-600">
-                          <svg className="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
+                          <Check className="w-4 h-4 inline" />
                         </span>
                       ) : (
                         <button
@@ -181,52 +277,58 @@ export default function RapprochementPage() {
                     </td>
                   </tr>
                 ))}
+                {bankTransactions.length === 0 && (
+                  <tr><td colSpan={4} className="px-3 py-8 text-center text-slate-400">Aucune transaction bancaire</td></tr>
+                )}
               </tbody>
             </table>
           </div>
         </div>
 
         {/* Journal Entries */}
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          <div className="p-4 border-b border-gray-200 bg-emerald-50">
+        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+          <div className="p-4 border-b border-slate-200 bg-emerald-50">
             <h3 className="font-semibold text-emerald-900">Écritures comptables ({unmatchedJournal.length} non rapprochées)</h3>
           </div>
           <div className="max-h-[500px] overflow-y-auto">
             <table className="w-full">
-              <thead className="bg-gray-50 sticky top-0">
+              <thead className="bg-slate-50 sticky top-0">
                 <tr>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500">Date</th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500">Description</th>
-                  <th className="px-3 py-2 text-right text-xs font-semibold text-gray-500">Montant</th>
-                  <th className="px-3 py-2 text-center text-xs font-semibold text-gray-500">Statut</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-slate-500">Date</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-slate-500">Description</th>
+                  <th className="px-3 py-2 text-right text-xs font-semibold text-slate-500">Montant</th>
+                  <th className="px-3 py-2 text-center text-xs font-semibold text-slate-500">Statut</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
-                {journalEntries.map((entry) => (
-                  <tr key={entry.id} className={entry.matched ? 'bg-green-50/50' : 'bg-yellow-50/50'}>
-                    <td className="px-3 py-2 text-sm">{new Date(entry.date).toLocaleDateString('fr-CA')}</td>
-                    <td className="px-3 py-2">
-                      <p className="text-sm truncate max-w-[150px]" title={entry.description}>{entry.description}</p>
-                      <p className="text-xs text-gray-500">{entry.entryNumber}</p>
-                    </td>
-                    <td className={`px-3 py-2 text-sm text-right font-medium ${entry.type === 'DEBIT' ? 'text-green-600' : 'text-red-600'}`}>
-                      {entry.type === 'DEBIT' ? '+' : '-'}{entry.amount.toFixed(2)}
-                    </td>
-                    <td className="px-3 py-2 text-center">
-                      {entry.matched ? (
-                        <span className="text-green-600">
-                          <svg className="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                        </span>
-                      ) : (
-                        <span className="px-2 py-0.5 bg-yellow-100 text-yellow-800 rounded-full text-xs">
-                          En attente
-                        </span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
+              <tbody className="divide-y divide-slate-200">
+                {journalEntries.map((entry) => {
+                  const isMatched = bankTransactions.some(bt => bt.matchedEntryId === entry.id);
+                  const amount = Math.max(entry.totalDebits, entry.totalCredits);
+                  return (
+                    <tr key={entry.id} className={isMatched ? 'bg-green-50/50' : 'bg-yellow-50/50'}>
+                      <td className="px-3 py-2 text-sm">{new Date(entry.date).toLocaleDateString('fr-CA')}</td>
+                      <td className="px-3 py-2">
+                        <p className="text-sm truncate max-w-[150px]" title={entry.description}>{entry.description}</p>
+                        <p className="text-xs text-slate-500">{entry.entryNumber}</p>
+                      </td>
+                      <td className="px-3 py-2 text-sm text-right font-medium text-slate-700">
+                        {amount.toFixed(2)}
+                      </td>
+                      <td className="px-3 py-2 text-center">
+                        {isMatched ? (
+                          <span className="text-green-600">
+                            <Check className="w-4 h-4 inline" />
+                          </span>
+                        ) : (
+                          <StatusBadge variant="warning">En attente</StatusBadge>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+                {journalEntries.length === 0 && (
+                  <tr><td colSpan={4} className="px-3 py-8 text-center text-slate-400">Aucune écriture comptable</td></tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -234,72 +336,82 @@ export default function RapprochementPage() {
       </div>
 
       {/* Complete Reconciliation Button */}
-      {difference === 0 && unmatchedBank.length === 0 && (
+      {difference === 0 && unmatchedBank.length === 0 && bankTransactions.length > 0 && (
         <div className="bg-green-50 border border-green-200 rounded-xl p-6 text-center">
-          <svg className="w-12 h-12 mx-auto text-green-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
+          <CheckCircle className="w-12 h-12 mx-auto text-green-600 mb-3" />
           <h3 className="text-lg font-semibold text-green-900 mb-2">Rapprochement complet!</h3>
           <p className="text-green-700 mb-4">Toutes les transactions sont rapprochées et les soldes correspondent.</p>
-          <button className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+          <Button variant="primary" className="bg-green-600 hover:bg-green-700">
             Valider le rapprochement
-          </button>
+          </Button>
         </div>
       )}
 
       {/* Match Modal */}
-      {showMatchModal && selectedBankTx && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl max-w-lg w-full">
-            <div className="p-6 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">Rapprocher la transaction</h3>
+      <Modal
+        isOpen={showMatchModal && !!selectedBankTx}
+        onClose={() => setShowMatchModal(false)}
+        title="Rapprocher la transaction"
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setShowMatchModal(false)}>Annuler</Button>
+            <Button
+              variant="primary"
+              onClick={handleConfirmMatch}
+              disabled={!selectedEntryId || matching}
+            >
+              {matching ? 'Rapprochement...' : 'Rapprocher'}
+            </Button>
+          </>
+        }
+      >
+        {selectedBankTx && (
+          <div className="space-y-4">
+            <div className="bg-blue-50 rounded-lg p-4">
+              <p className="text-sm text-blue-600">Transaction bancaire</p>
+              <p className="font-medium text-blue-900">{selectedBankTx.description}</p>
+              <p className="text-lg font-bold text-blue-900">
+                {selectedBankTx.type === 'CREDIT' ? '+' : '-'}{selectedBankTx.amount.toFixed(2)} $
+              </p>
             </div>
-            <div className="p-6 space-y-4">
-              <div className="bg-blue-50 rounded-lg p-4">
-                <p className="text-sm text-blue-600">Transaction bancaire</p>
-                <p className="font-medium text-blue-900">{selectedBankTx.description}</p>
-                <p className="text-lg font-bold text-blue-900">
-                  {selectedBankTx.type === 'CREDIT' ? '+' : '-'}{selectedBankTx.amount.toFixed(2)} $
-                </p>
-              </div>
 
-              <div>
-                <p className="text-sm font-medium text-gray-700 mb-2">Sélectionner l'écriture correspondante:</p>
-                <div className="space-y-2 max-h-48 overflow-y-auto">
-                  {unmatchedJournal
-                    .filter(e => Math.abs(e.amount - selectedBankTx.amount) < 0.01)
-                    .map((entry) => (
-                      <label key={entry.id} className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
-                        <input type="radio" name="matchEntry" className="text-emerald-600" />
+            <div>
+              <p className="text-sm font-medium text-slate-700 mb-2">Sélectionner l&apos;écriture correspondante:</p>
+              <div className="space-y-2 max-h-48 overflow-y-auto">
+                {unmatchedJournal
+                  .filter(e => {
+                    const entryAmount = Math.max(e.totalDebits, e.totalCredits);
+                    return Math.abs(entryAmount - selectedBankTx.amount) < 0.01;
+                  })
+                  .map((entry) => {
+                    const entryAmount = Math.max(entry.totalDebits, entry.totalCredits);
+                    return (
+                      <label key={entry.id} className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="matchEntry"
+                          className="text-emerald-600"
+                          checked={selectedEntryId === entry.id}
+                          onChange={() => setSelectedEntryId(entry.id)}
+                        />
                         <div className="flex-1">
-                          <p className="font-medium text-gray-900">{entry.description}</p>
-                          <p className="text-xs text-gray-500">{entry.entryNumber} • {new Date(entry.date).toLocaleDateString('fr-CA')}</p>
+                          <p className="font-medium text-slate-900">{entry.description}</p>
+                          <p className="text-xs text-slate-500">{entry.entryNumber} &bull; {new Date(entry.date).toLocaleDateString('fr-CA')}</p>
                         </div>
-                        <span className={`font-medium ${entry.type === 'DEBIT' ? 'text-green-600' : 'text-red-600'}`}>
-                          {entry.amount.toFixed(2)} $
+                        <span className="font-medium text-slate-700">
+                          {entryAmount.toFixed(2)} $
                         </span>
                       </label>
-                    ))}
-                </div>
+                    );
+                  })}
+                {unmatchedJournal.filter(e => Math.abs(Math.max(e.totalDebits, e.totalCredits) - selectedBankTx.amount) < 0.01).length === 0 && (
+                  <p className="text-sm text-slate-400 text-center py-4">Aucune écriture correspondante trouvée</p>
+                )}
               </div>
             </div>
-            <div className="p-6 border-t border-gray-200 flex justify-end gap-3">
-              <button
-                onClick={() => setShowMatchModal(false)}
-                className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg"
-              >
-                Annuler
-              </button>
-              <button
-                onClick={() => { alert('Rapprochement effectué!'); setShowMatchModal(false); }}
-                className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700"
-              >
-                Rapprocher
-              </button>
-            </div>
           </div>
-        </div>
-      )}
+        )}
+      </Modal>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 interface BankConnection {
   id: string;
@@ -11,6 +11,16 @@ interface BankConnection {
   currency: string;
   lastSync: Date;
   status: 'ACTIVE' | 'REQUIRES_REAUTH' | 'ERROR';
+}
+
+interface BankAccount {
+  id: string;
+  name: string;
+  institution: string;
+  accountNumber?: string;
+  currentBalance: number;
+  currency: string;
+  isActive: boolean;
 }
 
 interface ImportedTransaction {
@@ -25,15 +35,96 @@ interface ImportedTransaction {
   selected: boolean;
 }
 
+interface ImportHistoryItem {
+  date: string;
+  source: string;
+  count: number;
+  importBatch: string;
+}
+
 export default function BankImportPage() {
   const [activeTab, setActiveTab] = useState<'connections' | 'import' | 'history'>('connections');
   const [connections, setConnections] = useState<BankConnection[]>([]);
-  
+  const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
+  const [selectedBankAccountId, setSelectedBankAccountId] = useState('');
+
   const [importedTransactions, setImportedTransactions] = useState<ImportedTransaction[]>([]);
   const [importing, setImporting] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [importHistory, setImportHistory] = useState<ImportHistoryItem[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [csvFormat, setCsvFormat] = useState<'desjardins' | 'td' | 'rbc' | 'generic'>('desjardins');
+
+  // Fetch bank accounts on mount
+  useEffect(() => {
+    async function fetchBankAccounts() {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await fetch('/api/accounting/bank-accounts');
+        if (!res.ok) throw new Error('Erreur chargement comptes bancaires');
+        const data = await res.json();
+        const accounts = data.accounts || [];
+        setBankAccounts(accounts);
+        if (accounts.length > 0 && !selectedBankAccountId) {
+          setSelectedBankAccountId(accounts[0].id);
+        }
+        // Map bank accounts to connections format for the connections tab
+        setConnections(accounts.filter((a: BankAccount) => a.isActive).map((a: BankAccount) => ({
+          id: a.id,
+          bankName: a.institution,
+          accountName: a.name,
+          accountMask: a.accountNumber ? `****${a.accountNumber.slice(-4)}` : '',
+          balance: a.currentBalance,
+          currency: a.currency || 'CAD',
+          lastSync: new Date(),
+          status: 'ACTIVE' as const,
+        })));
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Erreur de chargement');
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchBankAccounts();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Fetch import history (recent bank transactions grouped by importBatch)
+  useEffect(() => {
+    async function fetchHistory() {
+      try {
+        const res = await fetch('/api/accounting/bank-transactions?limit=200');
+        if (!res.ok) return;
+        const data = await res.json();
+        const transactions = data.transactions || [];
+        // Group by importBatch
+        const batches: Record<string, { date: string; count: number; source: string }> = {};
+        for (const tx of transactions) {
+          const batch = tx.importBatch || 'manual';
+          if (!batches[batch]) {
+            batches[batch] = {
+              date: tx.importedAt || tx.date,
+              count: 0,
+              source: tx.bankAccount?.institution || 'Import CSV',
+            };
+          }
+          batches[batch].count++;
+        }
+        setImportHistory(Object.entries(batches).map(([key, val]) => ({
+          importBatch: key,
+          date: val.date,
+          source: val.source,
+          count: val.count,
+        })));
+      } catch {
+        // silent - history is non-critical
+      }
+    }
+    fetchHistory();
+  }, []);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -51,7 +142,14 @@ export default function BankImportPage() {
         body: formData,
       });
       const data = await response.json();
-      setImportedTransactions(data.transactions || []);
+      const txs = (data.transactions || []).map((t: ImportedTransaction, i: number) => ({
+        ...t,
+        id: t.id || `import-${i}`,
+        date: new Date(t.date),
+        selected: true,
+        confidence: t.confidence || 0.5,
+      }));
+      setImportedTransactions(txs);
     } catch (error) {
       console.error('Error parsing CSV:', error);
       setImportedTransactions([]);
@@ -64,23 +162,53 @@ export default function BankImportPage() {
   const handleSync = async (connectionId: string) => {
     setSyncing(true);
     await new Promise(resolve => setTimeout(resolve, 2000));
-    
+
     // Update last sync
-    setConnections(prev => prev.map(c => 
+    setConnections(prev => prev.map(c =>
       c.id === connectionId ? { ...c, lastSync: new Date() } : c
     ));
-    
+
     setSyncing(false);
     alert('Synchronisation terminée! 12 nouvelles transactions importées.');
   };
 
   const handleImportSelected = async () => {
     const selected = importedTransactions.filter(t => t.selected);
+    if (selected.length === 0) return;
+    if (!selectedBankAccountId) {
+      alert('Veuillez sélectionner un compte bancaire.');
+      return;
+    }
+
     setImporting(true);
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    alert(`${selected.length} transactions importées avec succès!`);
-    setImportedTransactions([]);
-    setImporting(false);
+    try {
+      const res = await fetch('/api/accounting/bank-transactions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bankAccountId: selectedBankAccountId,
+          transactions: selected.map(t => ({
+            date: t.date instanceof Date ? t.date.toISOString() : t.date,
+            description: t.description,
+            amount: t.amount,
+            type: t.type,
+          })),
+        }),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || 'Erreur import');
+      }
+
+      const data = await res.json();
+      alert(`${data.imported} transactions importées avec succès!`);
+      setImportedTransactions([]);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Erreur lors de l\'import');
+    } finally {
+      setImporting(false);
+    }
   };
 
   const toggleTransaction = (id: string) => {
@@ -99,6 +227,9 @@ export default function BankImportPage() {
     if (confidence >= 0.6) return 'text-yellow-400';
     return 'text-red-400';
   };
+
+  if (loading) return <div className="p-8 text-center">Chargement...</div>;
+  if (error) return <div className="p-8 text-center text-red-400">Erreur: {error}</div>;
 
   return (
     <div className="space-y-6">
@@ -122,7 +253,7 @@ export default function BankImportPage() {
             onClick={() => setActiveTab(tab.id as typeof activeTab)}
             className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
               activeTab === tab.id
-                ? 'bg-amber-600 text-white'
+                ? 'bg-sky-600 text-white'
                 : 'text-neutral-400 hover:text-white'
             }`}
           >
@@ -160,7 +291,7 @@ export default function BankImportPage() {
                       conn.status === 'REQUIRES_REAUTH' ? 'bg-yellow-900/30 text-yellow-400' :
                       'bg-red-900/30 text-red-400'
                     }`}>
-                      {conn.status === 'ACTIVE' ? 'Connecté' : 
+                      {conn.status === 'ACTIVE' ? 'Connecté' :
                        conn.status === 'REQUIRES_REAUTH' ? 'Réauthentification requise' : 'Erreur'}
                     </span>
                   </div>
@@ -169,7 +300,7 @@ export default function BankImportPage() {
                   <button
                     onClick={() => handleSync(conn.id)}
                     disabled={syncing}
-                    className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-sm rounded-lg disabled:opacity-50"
+                    className="px-3 py-1.5 bg-sky-600 hover:bg-sky-700 text-white text-sm rounded-lg disabled:opacity-50"
                   >
                     {syncing ? 'Synchronisation...' : '🔄 Synchroniser'}
                   </button>
@@ -182,6 +313,11 @@ export default function BankImportPage() {
                 </div>
               </div>
             ))}
+            {connections.length === 0 && (
+              <div className="bg-neutral-800 rounded-xl p-6 border border-neutral-700 text-center text-neutral-400">
+                Aucun compte bancaire configuré.
+              </div>
+            )}
           </div>
 
           {/* Add new connection */}
@@ -190,7 +326,7 @@ export default function BankImportPage() {
               <p className="text-lg font-medium text-white mb-2">Connecter un nouveau compte</p>
               <p className="text-sm text-neutral-400 mb-4">Synchronisation automatique via Plaid (Desjardins, TD, RBC, BMO, etc.)</p>
               <div className="flex justify-center gap-4">
-                <button className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg">
+                <button className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg">
                   + Connecter via Plaid
                 </button>
               </div>
@@ -211,7 +347,7 @@ export default function BankImportPage() {
                 <div className="text-4xl mb-4">📄</div>
                 <h3 className="text-lg font-medium text-white mb-2">Importer un relevé bancaire</h3>
                 <p className="text-sm text-neutral-400 mb-4">Formats supportés: Desjardins, TD, RBC, CSV générique</p>
-                
+
                 <div className="flex justify-center gap-4 mb-4">
                   <select
                     value={csvFormat}
@@ -223,7 +359,21 @@ export default function BankImportPage() {
                     <option value="rbc">RBC</option>
                     <option value="generic">CSV Générique</option>
                   </select>
-                  
+
+                  {bankAccounts.length > 0 && (
+                    <select
+                      value={selectedBankAccountId}
+                      onChange={e => setSelectedBankAccountId(e.target.value)}
+                      className="px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-white"
+                    >
+                      {bankAccounts.map(acc => (
+                        <option key={acc.id} value={acc.id}>
+                          {acc.institution} - {acc.name}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+
                   <input
                     ref={fileInputRef}
                     type="file"
@@ -234,12 +384,12 @@ export default function BankImportPage() {
                   <button
                     onClick={() => fileInputRef.current?.click()}
                     disabled={importing}
-                    className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg disabled:opacity-50"
+                    className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg disabled:opacity-50"
                   >
                     {importing ? 'Analyse en cours...' : 'Sélectionner un fichier CSV'}
                   </button>
                 </div>
-                
+
                 <p className="text-xs text-neutral-500">
                   Le système catégorisera automatiquement vos transactions
                 </p>
@@ -247,6 +397,24 @@ export default function BankImportPage() {
             </div>
           ) : (
             <>
+              {/* Bank account selector for import */}
+              {bankAccounts.length > 0 && (
+                <div className="bg-neutral-800 rounded-xl p-4 border border-neutral-700">
+                  <label className="text-sm text-neutral-300 mr-3">Compte de destination:</label>
+                  <select
+                    value={selectedBankAccountId}
+                    onChange={e => setSelectedBankAccountId(e.target.value)}
+                    className="px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-white"
+                  >
+                    {bankAccounts.map(acc => (
+                      <option key={acc.id} value={acc.id}>
+                        {acc.institution} - {acc.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               {/* Stats */}
               <div className="grid grid-cols-4 gap-4">
                 <div className="bg-neutral-800 rounded-xl p-4 border border-neutral-700">
@@ -255,7 +423,7 @@ export default function BankImportPage() {
                 </div>
                 <div className="bg-neutral-800 rounded-xl p-4 border border-neutral-700">
                   <p className="text-sm text-neutral-400">Sélectionnées</p>
-                  <p className="text-2xl font-bold text-amber-400">{importedTransactions.filter(t => t.selected).length}</p>
+                  <p className="text-2xl font-bold text-sky-400">{importedTransactions.filter(t => t.selected).length}</p>
                 </div>
                 <div className="bg-neutral-800 rounded-xl p-4 border border-neutral-700">
                   <p className="text-sm text-neutral-400">Confiance moyenne</p>
@@ -279,7 +447,7 @@ export default function BankImportPage() {
                       type="checkbox"
                       checked={importedTransactions.every(t => t.selected)}
                       onChange={toggleAll}
-                      className="rounded border-neutral-600 bg-neutral-700 text-amber-500"
+                      className="rounded border-neutral-600 bg-neutral-700 text-sky-500"
                     />
                     <span className="text-sm text-neutral-300">Tout sélectionner</span>
                   </label>
@@ -299,7 +467,7 @@ export default function BankImportPage() {
                     </button>
                   </div>
                 </div>
-                
+
                 <table className="w-full">
                   <thead className="bg-neutral-900/50">
                     <tr>
@@ -313,8 +481,8 @@ export default function BankImportPage() {
                   </thead>
                   <tbody className="divide-y divide-neutral-700">
                     {importedTransactions.map(tx => (
-                      <tr 
-                        key={tx.id} 
+                      <tr
+                        key={tx.id}
                         className={`hover:bg-neutral-700/30 ${tx.confidence < 0.7 ? 'bg-yellow-900/10' : ''}`}
                       >
                         <td className="px-4 py-3">
@@ -322,11 +490,11 @@ export default function BankImportPage() {
                             type="checkbox"
                             checked={tx.selected}
                             onChange={() => toggleTransaction(tx.id)}
-                            className="rounded border-neutral-600 bg-neutral-700 text-amber-500"
+                            className="rounded border-neutral-600 bg-neutral-700 text-sky-500"
                           />
                         </td>
                         <td className="px-4 py-3 text-white">
-                          {tx.date.toLocaleDateString('fr-CA')}
+                          {tx.date instanceof Date ? tx.date.toLocaleDateString('fr-CA') : new Date(tx.date).toLocaleDateString('fr-CA')}
                         </td>
                         <td className="px-4 py-3">
                           <p className="text-white">{tx.description}</p>
@@ -375,9 +543,9 @@ export default function BankImportPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-700">
-              {([] as { date: Date; source: string; count: number; status: string }[]).map((item, i) => (
+              {importHistory.map((item, i) => (
                 <tr key={i} className="hover:bg-neutral-700/30">
-                  <td className="px-4 py-3 text-white">{item.date.toLocaleDateString('fr-CA')}</td>
+                  <td className="px-4 py-3 text-white">{new Date(item.date).toLocaleDateString('fr-CA')}</td>
                   <td className="px-4 py-3 text-neutral-300">{item.source}</td>
                   <td className="px-4 py-3 text-right text-white">{item.count}</td>
                   <td className="px-4 py-3">
@@ -385,6 +553,11 @@ export default function BankImportPage() {
                   </td>
                 </tr>
               ))}
+              {importHistory.length === 0 && (
+                <tr>
+                  <td colSpan={4} className="px-4 py-8 text-center text-neutral-400">Aucun historique d&apos;import</td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

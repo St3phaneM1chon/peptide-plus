@@ -1,0 +1,1984 @@
+// =====================================================
+// PRISMA SCHEMA - Site Transactionnel de Formation
+// =====================================================
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql" // Azure PostgreSQL
+  url      = env("DATABASE_URL")
+}
+
+// =====================================================
+// ENUMS
+// =====================================================
+
+enum UserRole {
+  PUBLIC
+  CUSTOMER
+  CLIENT
+  EMPLOYEE
+  OWNER
+}
+
+enum PurchaseStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  STRIPE_CARD
+  APPLE_PAY
+  GOOGLE_PAY
+  PAYPAL
+  VISA_CLICK_TO_PAY
+  MASTERCARD_CLICK_TO_PAY
+}
+
+enum ProductType {
+  PEPTIDE      // Peptides (vials, cartouches)
+  SUPPLEMENT   // Suppléments (créatine, NAD+, gummies)
+  ACCESSORY    // Accessoires (stylos, aiguilles, solvants)
+  BUNDLE       // Protocoles/bundles mensuels
+  CAPSULE      // Capsules orales
+}
+
+enum FormatType {
+  VIAL_2ML       // Vial de 2ml (single vial)
+  VIAL_10ML      // Vial de 10ml
+  CARTRIDGE_3ML  // Cartouche d'injection 3ml (single)
+  KIT_12         // Kit de 12 cartouches (rack)
+  CAPSULE_60     // Boîte de 60 capsules
+  CAPSULE_120    // Boîte de 120 capsules
+  PACK_5         // Pack de 5 unités
+  PACK_10        // Pack de 10 unités
+  BUNDLE         // Bundle/protocole
+  ACCESSORY      // Accessoire
+  NASAL_SPRAY    // Spray nasal
+  CREAM          // Crème topique
+}
+
+enum DiscountType {
+  PERCENTAGE   // Pourcentage de réduction
+  FIXED_AMOUNT // Montant fixe
+}
+
+enum StockStatus {
+  IN_STOCK       // Disponible
+  OUT_OF_STOCK   // Rupture de stock temporaire
+  DISCONTINUED   // Produit arrêté définitivement
+  COMING_SOON    // Bientôt disponible
+  PRE_ORDER      // Pré-commande possible
+  LIMITED        // Stock limité
+}
+
+enum ShippingStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  IN_TRANSIT
+  OUT_FOR_DELIVERY
+  DELIVERED
+  FAILED
+}
+
+// =====================================================
+// USERS & AUTH
+// =====================================================
+
+model User {
+  id                 String    @id @default(cuid())
+  email              String    @unique
+  emailVerified      DateTime?
+  name               String?
+  image              String?
+  password           String?   // Null si OAuth uniquement
+  role               UserRole  @default(CUSTOMER)
+  
+  // MFA
+  mfaEnabled         Boolean   @default(false)
+  mfaSecret          String?   // TOTP secret (chiffré)
+  mfaBackupCodes     String?   // Codes de backup (chiffrés)
+  
+  // Password Reset
+  resetToken         String?   // Token hashé pour reset password
+  resetTokenExpiry   DateTime? // Date d'expiration du token
+  
+  // Préférences utilisateur
+  locale             String    @default("fr") // Langue: fr, en, es, de, it, pt, zh, ar
+  timezone           String    @default("America/Toronto")
+  
+  // Stripe
+  stripeCustomerId   String?   @unique
+  
+  // Contact
+  phone              String?
+  
+  // Anniversaire (pour emails et bonus)
+  birthDate          DateTime?
+  lastBirthdayEmail  DateTime? // Dernière fois qu'on a envoyé l'email d'anniversaire
+  
+  // Programme de fidélité
+  loyaltyPoints      Int       @default(0)    // Points actuels
+  lifetimePoints     Int       @default(0)    // Points gagnés au total
+  loyaltyTier        String    @default("BRONZE") // BRONZE, SILVER, GOLD, PLATINUM, DIAMOND
+  referralCode       String?   @unique        // Code de parrainage unique
+  referredById       String?                  // ID de l'utilisateur qui l'a référé
+  
+  // Transactions de fidélité
+  loyaltyTransactions LoyaltyTransaction[]
+  
+  // Relations
+  accounts           Account[]
+  sessions           Session[]
+  ownedCompany       Company?  @relation("CompanyOwner")
+  companies          CompanyCustomer[]
+  purchases          Purchase[]
+  courseAccess       CourseAccess[]
+  grades             Grade[]
+  savedCards         SavedCard[]
+  addresses          UserAddress[]
+  
+  // Chat
+  conversations      Conversation[]
+  assignedChats      Conversation[] @relation("AssignedConversations")
+  messages           Message[]
+  
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  
+  @@index([email])
+  @@index([role])
+}
+
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String? @db.Text
+  access_token       String? @db.Text
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String? @db.Text
+  session_state      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// =====================================================
+// COMPANIES (CLIENTS)
+// =====================================================
+
+model Company {
+  id              String   @id @default(cuid())
+  name            String
+  slug            String   @unique
+  contactEmail    String
+  phone           String?
+  
+  // Adresse de facturation
+  billingAddress  String?
+  billingCity     String?
+  billingState    String?
+  billingPostal   String?
+  billingCountry  String?
+  
+  // Relation propriétaire (User avec role CLIENT)
+  ownerId         String   @unique
+  owner           User     @relation("CompanyOwner", fields: [ownerId], references: [id])
+  
+  // Étudiants associés
+  customers       CompanyCustomer[]
+  
+  // Achats de l'entreprise
+  purchases       Purchase[]
+  
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([slug])
+}
+
+model CompanyCustomer {
+  id          String   @id @default(cuid())
+  companyId   String
+  customerId  String
+  
+  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  customer    User     @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  
+  addedAt     DateTime @default(now())
+  addedBy     String?  // User ID qui a ajouté
+  
+  @@unique([companyId, customerId])
+  @@index([companyId])
+  @@index([customerId])
+}
+
+// =====================================================
+// PRODUCTS (COURS)
+// =====================================================
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  description String?   @db.Text
+  imageUrl    String?
+  sortOrder   Int       @default(0)
+  
+  products    Product[]
+  
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  @@index([slug])
+}
+
+model Product {
+  id              String      @id @default(cuid())
+  
+  // Informations de base
+  name            String                    // Titre principal (ex: "BPC-157")
+  subtitle        String?                   // Sous-titre (ex: "Body Protection Compound-157")
+  slug            String      @unique
+  shortDescription String?                  // Description courte (résumé)
+  description     String?     @db.Text      // Description longue (marketing)
+  fullDetails     String?     @db.Text      // Détails complets (peut être HTML/Markdown)
+  
+  // Fiche technique (spécifications)
+  specifications  String?     @db.Text      // JSON ou Markdown des specs techniques
+  
+  // Type de produit
+  productType     ProductType @default(PEPTIDE)
+  
+  // Prix de base (le prix minimum parmi les variantes)
+  price           Decimal     @db.Decimal(10, 2)
+  compareAtPrice  Decimal?    @db.Decimal(10, 2) // Prix barré
+  
+  // ========== SPÉCIFIQUE PEPTIDES ==========
+  // Pureté (affichée comme badge)
+  purity          Decimal?    @db.Decimal(5, 2)  // Ex: 99.43
+  
+  // Séquence d'acides aminés
+  aminoSequence   String?     @db.Text
+  
+  // Masse moléculaire
+  molecularWeight Decimal?    @db.Decimal(10, 2) // en Da
+  
+  // CAS Number (identifiant chimique)
+  casNumber       String?
+  
+  // Formule moléculaire
+  molecularFormula String?
+  
+  // Stockage recommandé
+  storageConditions String?   // "2-8°C", "-20°C"
+  
+  // Médias principaux
+  imageUrl        String?                   // Image principale (thumbnail)
+  videoUrl        String?                   // Vidéo de présentation
+  
+  // Galerie d'images (relation)
+  images          ProductImage[]
+  
+  // Formats/Variantes disponibles (relation) - VIALS, CARTRIDGES, CAPSULES
+  formats         ProductFormat[]
+  
+  // Documents associés
+  certificateUrl  String?                   // URL du certificat d'analyse (PDF)
+  certificateName String?                   // Nom du certificat
+  dataSheetUrl    String?                   // Fiche technique PDF
+  dataSheetName   String?
+  coaUrl          String?                   // Certificate of Analysis
+  msdsUrl         String?                   // Material Safety Data Sheet
+  hplcUrl         String?                   // HPLC Report URL
+  
+  // Catégorie
+  categoryId      String
+  category        Category    @relation(fields: [categoryId], references: [id])
+  
+  // ========== STOCK GLOBAL ==========
+  // (Stock détaillé par variante dans ProductFormat)
+  trackInventory  Boolean     @default(true)
+  allowBackorder  Boolean     @default(false)
+  
+  // Métadonnées physiques
+  weight          Decimal?    @db.Decimal(10, 3) // en kg
+  dimensions      String?                   // "LxWxH" en cm
+  requiresShipping Boolean    @default(true)
+  sku             String?                   // Code produit interne
+  barcode         String?                   // Code-barres EAN/UPC
+  manufacturer    String?                   // Fabricant/Lab
+  origin          String?                   // Pays d'origine
+  
+  // Modules du cours (pour bundles avec formation)
+  modules         Module[]
+  
+  // Relations
+  purchases       Purchase[]
+  courseAccess    CourseAccess[]
+  grades          Grade[]
+  
+  // Stats
+  purchaseCount   Int         @default(0)
+  averageRating   Decimal?    @db.Decimal(2, 1)
+  reviewCount     Int         @default(0)
+  
+  // SEO
+  metaTitle       String?
+  metaDescription String?
+  
+  // Tags pour recherche
+  tags            String?                   // JSON array: ["recovery", "healing", "muscle"]
+  
+  isActive        Boolean     @default(true)
+  isFeatured      Boolean     @default(false)
+  isNew           Boolean     @default(false)
+  isBestseller    Boolean     @default(false)
+  
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  
+  @@index([slug])
+  @@index([categoryId])
+  @@index([isFeatured])
+  @@index([productType])
+  @@index([sku])
+  @@index([isNew])
+  @@index([isBestseller])
+}
+
+// Images multiples du produit
+model ProductImage {
+  id          String   @id @default(cuid())
+  
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  url         String               // URL de l'image
+  alt         String?              // Texte alternatif
+  caption     String?              // Légende
+  sortOrder   Int      @default(0) // Ordre d'affichage
+  isPrimary   Boolean  @default(false)
+  
+  // Dimensions
+  width       Int?
+  height      Int?
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([productId])
+}
+
+// Formats/Variantes disponibles pour un produit (Peptides)
+model ProductFormat {
+  id            String       @id @default(cuid())
+  
+  productId     String
+  product       Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  // Type de format
+  formatType    FormatType   @default(VIAL_2ML)
+  
+  // Nom affiché
+  name          String                // "5mg Vial", "10mg Cartridge", "60 Capsules"
+  description   String?               // Description du format
+  
+  // Image spécifique au format (vial, cartouche, kit, capsule)
+  imageUrl      String?               // URL de l'image de ce format
+  
+  // Dosage/Contenu
+  dosageMg      Decimal?     @db.Decimal(10, 2)  // Quantité en mg (ex: 5, 10, 20)
+  volumeMl      Decimal?     @db.Decimal(10, 2)  // Volume en ml (ex: 2, 3, 10)
+  unitCount     Int?                  // Nombre d'unités (pour capsules, packs)
+  
+  // Prix
+  price         Decimal      @db.Decimal(10, 2)  // Prix de cette variante
+  comparePrice  Decimal?     @db.Decimal(10, 2)  // Prix barré
+  
+  // SKU unique pour cette variante
+  sku           String?      @unique
+  barcode       String?               // EAN/UPC
+  
+  // Stock & Disponibilité
+  inStock         Boolean    @default(true)      // Physiquement en stock
+  stockQuantity   Int        @default(0)
+  lowStockThreshold Int      @default(10)
+  trackInventory  Boolean    @default(true)
+  
+  // Statuts de disponibilité
+  availability    StockStatus @default(IN_STOCK)  // IN_STOCK, OUT_OF_STOCK, DISCONTINUED, COMING_SOON, PRE_ORDER
+  availableDate   DateTime?                       // Date de disponibilité prévue
+  discontinuedAt  DateTime?                       // Date d'arrêt
+  
+  // Poids pour calcul livraison
+  weightGrams   Int?                  // Poids en grammes
+  
+  sortOrder     Int          @default(0)
+  isDefault     Boolean      @default(false)
+  isActive      Boolean      @default(true)       // Visible sur le site
+  
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  
+  @@index([productId])
+  @@index([sku])
+  @@index([formatType])
+  @@index([availability])
+}
+
+model Module {
+  id          String   @id @default(cuid())
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  name        String
+  description String?
+  sortOrder   Int      @default(0)
+  duration    Int?     // Durée en minutes
+  
+  // Contenu
+  contentUrl  String?  // URL vidéo ou contenu
+  
+  grades      Grade[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([productId])
+}
+
+// =====================================================
+// PURCHASES & PAYMENTS
+// =====================================================
+
+model Purchase {
+  id                String         @id @default(cuid())
+  
+  // Acheteur
+  userId            String
+  user              User           @relation(fields: [userId], references: [id])
+  
+  // Entreprise (si achat corporate)
+  companyId         String?
+  company           Company?       @relation(fields: [companyId], references: [id])
+  
+  // Produit
+  productId         String
+  product           Product        @relation(fields: [productId], references: [id])
+  
+  // Paiement
+  amount            Decimal        @db.Decimal(10, 2)
+  currency          String         @default("CAD")
+  paymentMethod     PaymentMethod
+  
+  // IDs externes
+  stripePaymentId   String?
+  stripeInvoiceId   String?
+  paypalOrderId     String?
+  
+  // Status
+  status            PurchaseStatus @default(PENDING)
+  
+  // Reçu
+  receiptUrl        String?
+  receiptNumber     String?        @unique
+  
+  // Accès créé (pour produits digitaux)
+  courseAccess      CourseAccess?
+  
+  // Livraison (pour produits physiques)
+  shipping          Shipping?
+  
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  
+  @@index([userId])
+  @@index([companyId])
+  @@index([productId])
+  @@index([status])
+}
+
+// =====================================================
+// SHIPPING (LIVRAISON)
+// =====================================================
+
+model Shipping {
+  id              String         @id @default(cuid())
+  
+  purchaseId      String         @unique
+  purchase        Purchase       @relation(fields: [purchaseId], references: [id])
+  
+  // Adresse de livraison
+  recipientName   String
+  addressLine1    String
+  addressLine2    String?
+  city            String
+  state           String
+  postalCode      String
+  country         String         @default("CA")
+  phone           String?
+  
+  // Expédition
+  carrier         String?        // Postes Canada, FedEx, UPS, etc.
+  trackingNumber  String?
+  trackingUrl     String?
+  
+  // Statut
+  status          ShippingStatus @default(PENDING)
+  
+  // Dates
+  shippedAt       DateTime?
+  estimatedDelivery DateTime?
+  deliveredAt     DateTime?
+  
+  // Notes
+  instructions    String?        // Instructions de livraison
+  signature       Boolean        @default(false) // Signature requise
+  
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  
+  // Historique des statuts
+  statusHistory   ShippingStatusHistory[]
+  
+  @@index([status])
+  @@index([trackingNumber])
+}
+
+model ShippingStatusHistory {
+  id          String         @id @default(cuid())
+  
+  shippingId  String
+  shipping    Shipping       @relation(fields: [shippingId], references: [id], onDelete: Cascade)
+  
+  status      ShippingStatus
+  location    String?
+  description String?
+  
+  createdAt   DateTime       @default(now())
+  
+  @@index([shippingId])
+}
+
+// =====================================================
+// CHAT / SUPPORT
+// =====================================================
+
+enum ConversationStatus {
+  OPEN
+  PENDING
+  RESOLVED
+  CLOSED
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  FILE
+  SYSTEM
+}
+
+model Conversation {
+  id            String             @id @default(cuid())
+  
+  // Utilisateur qui a initié la conversation
+  userId        String
+  user          User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Sujet/titre de la conversation
+  subject       String?
+  
+  // Statut
+  status        ConversationStatus @default(OPEN)
+  
+  // Agent assigné (employee/owner)
+  assignedToId  String?
+  assignedTo    User?              @relation("AssignedConversations", fields: [assignedToId], references: [id])
+  
+  // Métadonnées
+  priority      Int                @default(0) // 0=normal, 1=high, 2=urgent
+  tags          String?            // JSON array de tags
+  
+  // Messages
+  messages      Message[]
+  
+  // Dernier message pour tri
+  lastMessageAt DateTime           @default(now())
+  
+  // Non lus côté admin
+  unreadCount   Int                @default(1)
+  
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  
+  @@index([userId])
+  @@index([assignedToId])
+  @@index([status])
+  @@index([lastMessageAt])
+}
+
+model Message {
+  id              String       @id @default(cuid())
+  
+  conversationId  String
+  conversation    Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  
+  // Auteur du message
+  senderId        String
+  sender          User         @relation(fields: [senderId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  
+  // Contenu
+  type            MessageType  @default(TEXT)
+  content         String       @db.Text
+  
+  // Fichier joint (optionnel)
+  attachmentUrl   String?
+  attachmentName  String?
+  attachmentSize  Int?
+  
+  // Lu par le destinataire
+  readAt          DateTime?
+  
+  // Message système (ex: "Conversation assignée à...")
+  isSystem        Boolean      @default(false)
+  
+  createdAt       DateTime     @default(now())
+  
+  @@index([conversationId])
+  @@index([senderId])
+  @@index([createdAt])
+}
+
+// Réponses rapides pré-configurées pour les agents
+model QuickReply {
+  id        String   @id @default(cuid())
+  
+  title     String   // Titre court pour sélection
+  content   String   @db.Text // Contenu complet
+  category  String?  // Catégorie (général, paiement, livraison...)
+  
+  // Ordre d'affichage
+  sortOrder Int      @default(0)
+  
+  isActive  Boolean  @default(true)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([category])
+}
+
+// Adresses sauvegardées de l'utilisateur
+model UserAddress {
+  id            String   @id @default(cuid())
+  
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  label         String?  // "Maison", "Bureau", etc.
+  recipientName String
+  addressLine1  String
+  addressLine2  String?
+  city          String
+  state         String
+  postalCode    String
+  country       String   @default("CA")
+  phone         String?
+  
+  isDefault     Boolean  @default(false)
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@index([userId])
+}
+
+model SavedCard {
+  id                String   @id @default(cuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Stripe Payment Method
+  stripePaymentMethodId String @unique
+  
+  // Infos affichables (non sensibles)
+  brand             String   // visa, mastercard, amex
+  last4             String   // 4 derniers chiffres
+  expMonth          Int
+  expYear           Int
+  
+  isDefault         Boolean  @default(false)
+  
+  createdAt         DateTime @default(now())
+  
+  @@index([userId])
+}
+
+// =====================================================
+// COURSE ACCESS & PROGRESS
+// =====================================================
+
+model CourseAccess {
+  id          String    @id @default(cuid())
+  
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  
+  productId   String
+  product     Product   @relation(fields: [productId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  
+  purchaseId  String    @unique
+  purchase    Purchase  @relation(fields: [purchaseId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  
+  // Progression
+  progress    Int       @default(0) // Pourcentage 0-100
+  lastAccessedAt DateTime?
+  
+  // Complétion
+  completedAt DateTime?
+  
+  // Certification
+  certificateUrl    String?
+  certificateNumber String?
+  certificateIssuedAt DateTime?
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  @@unique([userId, productId])
+  @@index([userId])
+  @@index([productId])
+}
+
+model Grade {
+  id          String   @id @default(cuid())
+  
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  
+  moduleId    String
+  module      Module   @relation(fields: [moduleId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  
+  // Résultat
+  score       Decimal  @db.Decimal(5, 2) // 0.00 à 100.00
+  passed      Boolean
+  attempts    Int      @default(1)
+  
+  completedAt DateTime @default(now())
+  
+  @@unique([userId, moduleId])
+  @@index([userId])
+  @@index([productId])
+}
+
+// =====================================================
+// AUDIT LOG
+// =====================================================
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  
+  userId      String?
+  action      String   // CREATE, UPDATE, DELETE, LOGIN, etc.
+  entityType  String   // User, Purchase, etc.
+  entityId    String?
+  
+  details     String?  @db.Text // JSON des changements
+  ipAddress   String?
+  userAgent   String?
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([userId])
+  @@index([action])
+  @@index([entityType])
+  @@index([createdAt])
+}
+
+// =====================================================
+// DEVISES & CONVERSION
+// =====================================================
+
+model Currency {
+  id            String   @id @default(cuid())
+  
+  code          String   @unique  // CAD, USD, EUR
+  name          String             // Dollar canadien, US Dollar, Euro
+  symbol        String             // $, €
+  
+  // Taux de change par rapport à CAD (devise de base)
+  exchangeRate  Decimal  @db.Decimal(10, 6) @default(1.000000)
+  
+  // Dernière mise à jour du taux
+  rateUpdatedAt DateTime @default(now())
+  
+  isDefault     Boolean  @default(false)
+  isActive      Boolean  @default(true)
+  
+  // Commandes dans cette devise
+  orders        Order[]
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@index([code])
+}
+
+// =====================================================
+// ZONES DE LIVRAISON
+// =====================================================
+
+model ShippingZone {
+  id              String   @id @default(cuid())
+  
+  name            String             // "Canada", "États-Unis", "Europe"
+  
+  // Pays inclus (codes ISO)
+  countries       String             // JSON array: ["CA"], ["US"], ["FR","DE","IT"]
+  
+  // Frais de base
+  baseFee         Decimal  @db.Decimal(10, 2)
+  
+  // Frais par article additionnel
+  perItemFee      Decimal  @db.Decimal(10, 2) @default(0)
+  
+  // Seuil pour livraison gratuite (null = jamais gratuit)
+  freeShippingThreshold Decimal? @db.Decimal(10, 2)
+  
+  // Délais estimés
+  estimatedDaysMin Int      @default(3)
+  estimatedDaysMax Int      @default(7)
+  
+  // Restrictions
+  maxWeight       Decimal? @db.Decimal(10, 3) // kg max
+  isActive        Boolean  @default(true)
+  
+  // Notes/restrictions spéciales
+  notes           String?  @db.Text
+  
+  sortOrder       Int      @default(0)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([isActive])
+}
+
+// =====================================================
+// PROMOTIONS & RÉDUCTIONS
+// =====================================================
+
+model Discount {
+  id              String       @id @default(cuid())
+  
+  name            String                 // "Solde d'été", "Black Friday"
+  
+  // Type de réduction
+  type            DiscountType @default(PERCENTAGE)
+  value           Decimal      @db.Decimal(10, 2) // % ou montant fixe
+  
+  // Application
+  appliesToAll    Boolean      @default(false)
+  categoryId      String?                // Si appliqué à une catégorie
+  productId       String?                // Si appliqué à un produit spécifique
+  
+  // Période de validité
+  startsAt        DateTime?
+  endsAt          DateTime?
+  
+  // Badge à afficher
+  badge           String?                // "PROMO", "-20%", "NOUVEAU"
+  badgeColor      String?                // Couleur hex
+  
+  isActive        Boolean      @default(true)
+  
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  
+  @@index([categoryId])
+  @@index([productId])
+  @@index([isActive])
+  @@index([startsAt, endsAt])
+}
+
+model PromoCode {
+  id              String       @id @default(cuid())
+  
+  code            String       @unique   // "SUMMER20", "WELCOME10"
+  description     String?                // Description interne
+  
+  // Type de réduction
+  type            DiscountType @default(PERCENTAGE)
+  value           Decimal      @db.Decimal(10, 2)
+  
+  // Conditions
+  minOrderAmount  Decimal?     @db.Decimal(10, 2) // Minimum de commande
+  maxDiscount     Decimal?     @db.Decimal(10, 2) // Réduction max (pour %)
+  
+  // Limites d'utilisation
+  usageLimit      Int?                   // Nombre total d'utilisations
+  usageLimitPerUser Int?                 // Par utilisateur
+  usageCount      Int          @default(0)
+  
+  // Période de validité
+  startsAt        DateTime?
+  endsAt          DateTime?
+  
+  // Restrictions
+  firstOrderOnly  Boolean      @default(false)
+  productIds      String?                // JSON array de product IDs
+  categoryIds     String?                // JSON array de category IDs
+  
+  isActive        Boolean      @default(true)
+  
+  // Historique d'utilisation
+  usages          PromoCodeUsage[]
+  
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  
+  @@index([code])
+  @@index([isActive])
+}
+
+model PromoCodeUsage {
+  id          String    @id @default(cuid())
+  
+  promoCodeId String
+  promoCode   PromoCode @relation(fields: [promoCodeId], references: [id], onDelete: Cascade)
+  
+  userId      String
+  orderId     String?
+  
+  discount    Decimal   @db.Decimal(10, 2) // Montant économisé
+  
+  usedAt      DateTime  @default(now())
+  
+  @@index([promoCodeId])
+  @@index([userId])
+}
+
+// =====================================================
+// PANIER
+// =====================================================
+
+model Cart {
+  id            String     @id @default(cuid())
+  
+  // Utilisateur (null si panier anonyme)
+  userId        String?    @unique
+  
+  // Session ID pour paniers anonymes
+  sessionId     String?    @unique
+  
+  // Devise sélectionnée
+  currencyCode  String     @default("CAD")
+  
+  // Code promo appliqué
+  promoCodeId   String?
+  
+  // Articles
+  items         CartItem[]
+  
+  // Expiration panier anonyme
+  expiresAt     DateTime?
+  
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  
+  @@index([userId])
+  @@index([sessionId])
+}
+
+model CartItem {
+  id            String   @id @default(cuid())
+  
+  cartId        String
+  cart          Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  
+  productId     String
+  formatId      String?            // ProductFormat ID si variante
+  
+  quantity      Int      @default(1)
+  
+  // Prix au moment de l'ajout (peut changer)
+  priceAtAdd    Decimal  @db.Decimal(10, 2)
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@unique([cartId, productId, formatId])
+  @@index([cartId])
+}
+
+// =====================================================
+// COMMANDES (ORDERS) - Remplace Purchase pour e-commerce
+// =====================================================
+
+model Order {
+  id                String         @id @default(cuid())
+  
+  orderNumber       String         @unique // PP-2024-001234
+  
+  // Client
+  userId            String
+  
+  // Montants
+  subtotal          Decimal        @db.Decimal(10, 2)
+  shippingCost      Decimal        @db.Decimal(10, 2) @default(0)
+  discount          Decimal        @db.Decimal(10, 2) @default(0)
+  tax               Decimal        @db.Decimal(10, 2) @default(0)
+  total             Decimal        @db.Decimal(10, 2)
+  
+  // Devise
+  currencyId        String
+  currency          Currency       @relation(fields: [currencyId], references: [id])
+  exchangeRate      Decimal        @db.Decimal(10, 6) @default(1) // Taux au moment de la commande
+  
+  // Code promo utilisé
+  promoCode         String?
+  promoDiscount     Decimal?       @db.Decimal(10, 2)
+  
+  // Paiement
+  paymentMethod     PaymentMethod?
+  paymentStatus     String         @default("PENDING") // PENDING, PAID, FAILED, REFUNDED
+  stripePaymentId   String?
+  paypalOrderId     String?
+  
+  // Statut commande
+  status            String         @default("PENDING") // PENDING, CONFIRMED, PROCESSING, SHIPPED, DELIVERED, CANCELLED
+  
+  // Adresse de livraison
+  shippingName      String
+  shippingAddress1  String
+  shippingAddress2  String?
+  shippingCity      String
+  shippingState     String
+  shippingPostal    String
+  shippingCountry   String         @default("CA")
+  shippingPhone     String?
+  
+  // Livraison
+  carrier           String?
+  trackingNumber    String?
+  trackingUrl       String?
+  shippedAt         DateTime?
+  deliveredAt       DateTime?
+  
+  // Notes
+  customerNotes     String?        @db.Text
+  adminNotes        String?        @db.Text
+  
+  // Articles
+  items             OrderItem[]
+  
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  
+  @@index([userId])
+  @@index([orderNumber])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model OrderItem {
+  id            String   @id @default(cuid())
+  
+  orderId       String
+  order         Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  productId     String
+  formatId      String?
+  
+  // Snapshot au moment de la commande
+  productName   String
+  formatName    String?
+  sku           String?
+  
+  quantity      Int
+  unitPrice     Decimal  @db.Decimal(10, 2)
+  discount      Decimal  @db.Decimal(10, 2) @default(0)
+  total         Decimal  @db.Decimal(10, 2)
+  
+  createdAt     DateTime @default(now())
+  
+  @@index([orderId])
+  @@index([productId])
+}
+
+// =====================================================
+// FAVORIS / WISHLIST
+// =====================================================
+
+model Wishlist {
+  id          String   @id @default(cuid())
+  
+  userId      String
+  productId   String
+  
+  createdAt   DateTime @default(now())
+  
+  @@unique([userId, productId])
+  @@index([userId])
+}
+
+// =====================================================
+// NEWSLETTER
+// =====================================================
+
+model NewsletterSubscriber {
+  id            String    @id @default(cuid())
+  
+  email         String    @unique
+  name          String?
+  
+  isActive      Boolean   @default(true)
+  
+  // Source d'inscription
+  source        String?   // "homepage", "checkout", "popup"
+  
+  // Préférences
+  locale        String    @default("fr")
+  
+  subscribedAt  DateTime  @default(now())
+  unsubscribedAt DateTime?
+  
+  @@index([email])
+  @@index([isActive])
+}
+
+// =====================================================
+// PROGRAMME DE FIDÉLITÉ
+// =====================================================
+
+enum LoyaltyTransactionType {
+  EARN_PURCHASE       // Points gagnés sur un achat
+  EARN_REFERRAL       // Points gagnés par parrainage
+  EARN_REVIEW         // Points gagnés pour un avis
+  EARN_SIGNUP         // Points de bienvenue
+  EARN_BIRTHDAY       // Bonus anniversaire
+  EARN_BONUS          // Bonus promotionnel
+  REDEEM_DISCOUNT     // Points échangés contre une réduction
+  REDEEM_PRODUCT      // Points échangés contre un produit
+  EXPIRE              // Points expirés
+  ADJUST              // Ajustement manuel (admin)
+}
+
+model LoyaltyTransaction {
+  id            String                  @id @default(cuid())
+  
+  userId        String
+  user          User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  type          LoyaltyTransactionType
+  points        Int                     // Positif = gain, Négatif = dépense
+  
+  // Détails
+  description   String?                 // Description de la transaction
+  orderId       String?                 // ID de commande associée
+  referralId    String?                 // ID de l'utilisateur référé (si parrainage)
+  
+  // Solde après transaction
+  balanceAfter  Int
+  
+  // Métadonnées
+  metadata      String?                 @db.Text // JSON avec détails additionnels
+  
+  createdAt     DateTime                @default(now())
+  expiresAt     DateTime?               // Date d'expiration des points (si applicable)
+  
+  @@index([userId])
+  @@index([type])
+  @@index([createdAt])
+}
+
+// =====================================================
+// SYSTÈME DE CHAT MULTILINGUE
+// =====================================================
+
+model ChatConversation {
+  id              String        @id @default(cuid())
+  
+  // Visiteur (peut être anonyme ou connecté)
+  visitorId       String        // ID unique du visiteur (cookie ou session)
+  visitorName     String?       // Nom si fourni
+  visitorEmail    String?       // Email si fourni
+  visitorLanguage String        @default("en") // Langue détectée/choisie
+  
+  // Utilisateur connecté (optionnel)
+  userId          String?
+  
+  // Statut
+  status          ChatStatus    @default(ACTIVE)
+  isOnline        Boolean       @default(true) // Visiteur encore connecté?
+  
+  // Metadata
+  userAgent       String?
+  ipCountry       String?       // Pays détecté via IP
+  currentPage     String?       // Page où le chat a été ouvert
+  
+  // Messages
+  messages        ChatMessage[]
+  
+  // Timestamps
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  lastMessageAt   DateTime      @default(now())
+  closedAt        DateTime?
+  
+  @@index([visitorId])
+  @@index([userId])
+  @@index([status])
+  @@index([lastMessageAt])
+}
+
+model ChatMessage {
+  id              String          @id @default(cuid())
+  conversationId  String
+  conversation    ChatConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  
+  // Contenu
+  content         String          @db.Text
+  contentOriginal String?         @db.Text  // Message original avant traduction
+  
+  // Qui a envoyé
+  sender          ChatSender      // VISITOR, ADMIN, BOT
+  senderName      String?
+  
+  // Langue
+  language        String          @default("en") // Langue du message original
+  translatedTo    String?         // Langue de traduction (si traduit)
+  
+  // Metadata
+  isRead          Boolean         @default(false)
+  isFromBot       Boolean         @default(false)
+  metadata        String?         @db.Text // JSON pour données additionnelles
+  
+  createdAt       DateTime        @default(now())
+  
+  @@index([conversationId])
+  @@index([createdAt])
+}
+
+// Configuration du chat (admin settings)
+model ChatSettings {
+  id                  String    @id @default("default")
+  
+  // Statut admin
+  isAdminOnline       Boolean   @default(false)
+  adminLanguage       String    @default("fr") // Langue de l'admin
+  
+  // Chatbot
+  chatbotEnabled      Boolean   @default(true)
+  chatbotGreeting     String?   @db.Text // Message d'accueil
+  chatbotPrompt       String?   @db.Text // System prompt personnalisé
+  
+  // Notifications
+  notifyEmail         String?   // Email pour notifications
+  notifyOnNewChat     Boolean   @default(true)
+  notifyOnEscalation  Boolean   @default(true)
+  
+  // Apparence
+  widgetColor         String    @default("#f97316") // Orange
+  widgetPosition      String    @default("bottom-right")
+  
+  updatedAt           DateTime  @updatedAt
+}
+
+enum ChatStatus {
+  ACTIVE
+  WAITING_ADMIN
+  CLOSED
+  ARCHIVED
+}
+
+enum ChatSender {
+  VISITOR
+  ADMIN
+  BOT
+}
+
+// =====================================================
+// COMPTABILITÉ / ACCOUNTING
+// =====================================================
+
+enum AccountType {
+  ASSET
+  LIABILITY
+  EQUITY
+  REVENUE
+  EXPENSE
+}
+
+enum JournalEntryType {
+  MANUAL
+  AUTO_SALE
+  AUTO_REFUND
+  AUTO_STRIPE_FEE
+  AUTO_PAYPAL_FEE
+  AUTO_SHIPPING
+  AUTO_PURCHASE
+  RECURRING
+  ADJUSTMENT
+  CLOSING
+}
+
+enum JournalEntryStatus {
+  DRAFT
+  POSTED
+  VOIDED
+}
+
+enum ReconciliationStatus {
+  PENDING
+  MATCHED
+  UNMATCHED
+  MANUAL
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  PARTIAL
+  OVERDUE
+  CANCELLED
+  VOID
+}
+
+enum TaxReportStatus {
+  DRAFT
+  GENERATED
+  FILED
+  PAID
+}
+
+// Plan comptable - Chart of Accounts
+model ChartOfAccount {
+  id              String        @id @default(cuid())
+  
+  code            String        @unique   // "1010", "4010", etc.
+  name            String                  // "Compte bancaire principal"
+  description     String?
+  
+  type            AccountType             // ASSET, LIABILITY, etc.
+  
+  // Hiérarchie
+  parentId        String?
+  parent          ChartOfAccount? @relation("AccountHierarchy", fields: [parentId], references: [id])
+  children        ChartOfAccount[] @relation("AccountHierarchy")
+  
+  // Solde normal
+  normalBalance   String        @default("DEBIT") // DEBIT ou CREDIT
+  
+  // Options
+  isActive        Boolean       @default(true)
+  isSystem        Boolean       @default(false) // Compte système non modifiable
+  allowDirectEntry Boolean      @default(true)  // Permet écritures directes
+  
+  // Relations
+  journalLines    JournalLine[]
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  @@index([type])
+  @@index([parentId])
+}
+
+// Écritures de journal
+model JournalEntry {
+  id              String              @id @default(cuid())
+  
+  entryNumber     String              @unique // JV-2026-0001
+  date            DateTime
+  description     String
+  
+  type            JournalEntryType    @default(MANUAL)
+  status          JournalEntryStatus  @default(DRAFT)
+  
+  // Références
+  reference       String?             // Numéro de référence externe
+  orderId         String?             // ID de commande associée
+  
+  // Lignes
+  lines           JournalLine[]
+  
+  // Métadonnées
+  createdBy       String              // User ID
+  postedBy        String?
+  postedAt        DateTime?
+  voidedBy        String?
+  voidedAt        DateTime?
+  voidReason      String?
+  
+  // Documents joints
+  attachments     String?             @db.Text // JSON array d'URLs
+  
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  
+  @@index([date])
+  @@index([status])
+  @@index([type])
+  @@index([orderId])
+}
+
+// Lignes d'écritures
+model JournalLine {
+  id              String          @id @default(cuid())
+  
+  entryId         String
+  entry           JournalEntry    @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  
+  accountId       String
+  account         ChartOfAccount  @relation(fields: [accountId], references: [id])
+  
+  description     String?
+  
+  debit           Decimal         @db.Decimal(12, 2) @default(0)
+  credit          Decimal         @db.Decimal(12, 2) @default(0)
+  
+  // Ventilation analytique (optionnel)
+  costCenter      String?         // Centre de coût
+  projectCode     String?         // Code projet
+  
+  createdAt       DateTime        @default(now())
+  
+  @@index([entryId])
+  @@index([accountId])
+}
+
+// Comptes bancaires
+model BankAccount {
+  id              String            @id @default(cuid())
+  
+  name            String                    // "Compte principal Desjardins"
+  accountNumber   String?                   // Numéro masqué
+  institution     String                    // "Desjardins", "TD", etc.
+  
+  type            String            @default("CHECKING") // CHECKING, SAVINGS, STRIPE, PAYPAL
+  currency        String            @default("CAD")
+  
+  // Compte comptable associé
+  chartAccountId  String?
+  
+  // Solde actuel
+  currentBalance  Decimal           @db.Decimal(12, 2) @default(0)
+  
+  // Dernière synchronisation
+  lastSyncAt      DateTime?
+  
+  // API credentials (chiffrées)
+  apiCredentials  String?           @db.Text
+  
+  isActive        Boolean           @default(true)
+  isDefault       Boolean           @default(false)
+  
+  // Transactions
+  transactions    BankTransaction[]
+  
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  
+  @@index([type])
+}
+
+// Transactions bancaires
+model BankTransaction {
+  id              String              @id @default(cuid())
+  
+  bankAccountId   String
+  bankAccount     BankAccount         @relation(fields: [bankAccountId], references: [id], onDelete: Cascade)
+  
+  date            DateTime
+  description     String
+  
+  amount          Decimal             @db.Decimal(12, 2)
+  type            String              // CREDIT ou DEBIT
+  
+  // Catégorisation
+  category        String?
+  reference       String?             // Numéro de chèque, référence virement
+  
+  // Rapprochement
+  reconciliationStatus ReconciliationStatus @default(PENDING)
+  matchedEntryId  String?             // JournalEntry ID si rapproché
+  matchedAt       DateTime?
+  matchedBy       String?
+  
+  // Import
+  importBatch     String?             // ID du batch d'import
+  importedAt      DateTime            @default(now())
+  
+  // Données brutes
+  rawData         String?             @db.Text // JSON des données bancaires brutes
+  
+  createdAt       DateTime            @default(now())
+  
+  @@index([bankAccountId])
+  @@index([date])
+  @@index([reconciliationStatus])
+}
+
+// Factures fournisseurs
+model SupplierInvoice {
+  id              String          @id @default(cuid())
+  
+  invoiceNumber   String                  // Numéro de facture du fournisseur
+  
+  // Fournisseur
+  supplierId      String?
+  supplierName    String
+  supplierEmail   String?
+  
+  // Montants
+  subtotal        Decimal         @db.Decimal(12, 2)
+  taxTps          Decimal         @db.Decimal(12, 2) @default(0)
+  taxTvq          Decimal         @db.Decimal(12, 2) @default(0)
+  taxOther        Decimal         @db.Decimal(12, 2) @default(0)
+  total           Decimal         @db.Decimal(12, 2)
+  
+  amountPaid      Decimal         @db.Decimal(12, 2) @default(0)
+  balance         Decimal         @db.Decimal(12, 2) // total - amountPaid
+  
+  currency        String          @default("CAD")
+  
+  // Dates
+  invoiceDate     DateTime
+  dueDate         DateTime
+  paidAt          DateTime?
+  
+  // Statut
+  status          InvoiceStatus   @default(DRAFT)
+  
+  // Catégorie de dépense
+  expenseCategory String?
+  
+  // Documents
+  documentUrl     String?                 // PDF de la facture
+  
+  // Notes
+  notes           String?         @db.Text
+  
+  // Écriture comptable générée
+  journalEntryId  String?
+  
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  
+  @@index([supplierId])
+  @@index([status])
+  @@index([dueDate])
+}
+
+// Factures clients
+model CustomerInvoice {
+  id              String          @id @default(cuid())
+  
+  invoiceNumber   String          @unique // FACT-2026-0001
+  
+  // Client
+  customerId      String?
+  customerName    String
+  customerEmail   String?
+  customerAddress String?         @db.Text
+  
+  // Commande liée
+  orderId         String?
+  
+  // Montants
+  subtotal        Decimal         @db.Decimal(12, 2)
+  shippingCost    Decimal         @db.Decimal(12, 2) @default(0)
+  discount        Decimal         @db.Decimal(12, 2) @default(0)
+  taxTps          Decimal         @db.Decimal(12, 2) @default(0)
+  taxTvq          Decimal         @db.Decimal(12, 2) @default(0)
+  taxTvh          Decimal         @db.Decimal(12, 2) @default(0)
+  total           Decimal         @db.Decimal(12, 2)
+  
+  amountPaid      Decimal         @db.Decimal(12, 2) @default(0)
+  balance         Decimal         @db.Decimal(12, 2)
+  
+  currency        String          @default("CAD")
+  
+  // Dates
+  invoiceDate     DateTime
+  dueDate         DateTime
+  paidAt          DateTime?
+  
+  // Statut
+  status          InvoiceStatus   @default(SENT)
+  
+  // Lignes
+  items           CustomerInvoiceItem[]
+  
+  // Documents
+  pdfUrl          String?
+  
+  // Notes
+  notes           String?         @db.Text
+  
+  // Rappels envoyés
+  remindersSent   Int             @default(0)
+  lastReminderAt  DateTime?
+  
+  // Écriture comptable
+  journalEntryId  String?
+  
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  
+  @@index([customerId])
+  @@index([orderId])
+  @@index([status])
+  @@index([dueDate])
+}
+
+model CustomerInvoiceItem {
+  id              String          @id @default(cuid())
+  
+  invoiceId       String
+  invoice         CustomerInvoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  
+  description     String
+  quantity        Int             @default(1)
+  unitPrice       Decimal         @db.Decimal(12, 2)
+  discount        Decimal         @db.Decimal(12, 2) @default(0)
+  total           Decimal         @db.Decimal(12, 2)
+  
+  // Référence produit
+  productId       String?
+  productSku      String?
+  
+  createdAt       DateTime        @default(now())
+  
+  @@index([invoiceId])
+}
+
+// Rapports de taxes
+model TaxReport {
+  id              String          @id @default(cuid())
+  
+  // Période
+  period          String                  // "2026-01", "Q1-2026", "2026"
+  periodType      String          @default("MONTHLY") // MONTHLY, QUARTERLY, ANNUAL
+  year            Int
+  month           Int?
+  quarter         Int?
+  
+  // Région
+  region          String                  // "Québec", "Ontario", etc.
+  regionCode      String                  // "QC", "ON", etc.
+  
+  // Taxes collectées
+  tpsCollected    Decimal         @db.Decimal(12, 2) @default(0)
+  tvqCollected    Decimal         @db.Decimal(12, 2) @default(0)
+  tvhCollected    Decimal         @db.Decimal(12, 2) @default(0)
+  otherTaxCollected Decimal       @db.Decimal(12, 2) @default(0)
+  
+  // Crédits d'intrants
+  tpsPaid         Decimal         @db.Decimal(12, 2) @default(0)
+  tvqPaid         Decimal         @db.Decimal(12, 2) @default(0)
+  tvhPaid         Decimal         @db.Decimal(12, 2) @default(0)
+  otherTaxPaid    Decimal         @db.Decimal(12, 2) @default(0)
+  
+  // Montants nets
+  netTps          Decimal         @db.Decimal(12, 2) @default(0)
+  netTvq          Decimal         @db.Decimal(12, 2) @default(0)
+  netTvh          Decimal         @db.Decimal(12, 2) @default(0)
+  netTotal        Decimal         @db.Decimal(12, 2) @default(0)
+  
+  // Stats
+  salesCount      Int             @default(0)
+  totalSales      Decimal         @db.Decimal(12, 2) @default(0)
+  
+  // Statut
+  status          TaxReportStatus @default(DRAFT)
+  
+  // Dates
+  generatedAt     DateTime        @default(now())
+  filedAt         DateTime?
+  paidAt          DateTime?
+  dueDate         DateTime
+  
+  // Numéro de déclaration
+  filingNumber    String?
+  
+  // Document généré
+  pdfUrl          String?
+  
+  // Notes
+  notes           String?         @db.Text
+  
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  
+  @@unique([regionCode, year, month])
+  @@index([year])
+  @@index([status])
+}
+
+// Alertes comptables
+model AccountingAlert {
+  id              String          @id @default(cuid())
+  
+  type            String                  // OVERDUE_INVOICE, LOW_CASH, TAX_DUE, etc.
+  severity        String          @default("MEDIUM") // LOW, MEDIUM, HIGH, CRITICAL
+  
+  title           String
+  message         String          @db.Text
+  
+  // Lien vers l'élément concerné
+  entityType      String?                 // Invoice, TaxReport, etc.
+  entityId        String?
+  link            String?                 // URL admin
+  
+  // Statut
+  readAt          DateTime?
+  readBy          String?
+  resolvedAt      DateTime?
+  resolvedBy      String?
+  
+  createdAt       DateTime        @default(now())
+  
+  @@index([type])
+  @@index([severity])
+  @@index([createdAt])
+}
+
+// Périodes comptables
+model AccountingPeriod {
+  id              String          @id @default(cuid())
+  
+  name            String                  // "Janvier 2026"
+  code            String          @unique // "2026-01"
+  
+  startDate       DateTime
+  endDate         DateTime
+  
+  // Statut
+  status          String          @default("OPEN") // OPEN, IN_REVIEW, LOCKED
+  
+  // Clôture
+  closedAt        DateTime?
+  closedBy        String?
+  
+  // Vérifications de clôture
+  closingChecklist String?        @db.Text // JSON des vérifications
+  
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  
+  @@index([status])
+  @@index([startDate])
+}
+
+// Budget
+model Budget {
+  id              String          @id @default(cuid())
+  
+  name            String                  // "Budget 2026"
+  year            Int
+  
+  // Lignes budgétaires
+  lines           BudgetLine[]
+  
+  isActive        Boolean         @default(true)
+  
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  
+  @@index([year])
+}
+
+model BudgetLine {
+  id              String          @id @default(cuid())
+  
+  budgetId        String
+  budget          Budget          @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+  
+  // Compte
+  accountCode     String
+  accountName     String
+  
+  // Type
+  type            String          @default("EXPENSE") // REVENUE, EXPENSE
+  
+  // Montants mensuels
+  january         Decimal         @db.Decimal(12, 2) @default(0)
+  february        Decimal         @db.Decimal(12, 2) @default(0)
+  march           Decimal         @db.Decimal(12, 2) @default(0)
+  april           Decimal         @db.Decimal(12, 2) @default(0)
+  may             Decimal         @db.Decimal(12, 2) @default(0)
+  june            Decimal         @db.Decimal(12, 2) @default(0)
+  july            Decimal         @db.Decimal(12, 2) @default(0)
+  august          Decimal         @db.Decimal(12, 2) @default(0)
+  september       Decimal         @db.Decimal(12, 2) @default(0)
+  october         Decimal         @db.Decimal(12, 2) @default(0)
+  november        Decimal         @db.Decimal(12, 2) @default(0)
+  december        Decimal         @db.Decimal(12, 2) @default(0)
+  
+  total           Decimal         @db.Decimal(12, 2) @default(0)
+  
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  
+  @@index([budgetId])
+  @@index([accountCode])
+}
+
+// Paramètres comptables
+model AccountingSettings {
+  id                    String    @id @default("default")
+  
+  // Informations entreprise
+  companyName           String    @default("BioCycle Peptides Inc.")
+  companyAddress        String?
+  companyCity           String    @default("Montréal")
+  companyProvince       String    @default("QC")
+  companyPostalCode     String?
+  companyPhone          String?
+  companyEmail          String?
+  
+  // Numéros fiscaux
+  tpsNumber             String?   // Numéro TPS
+  tvqNumber             String?   // Numéro TVQ
+  neq                   String?   // Numéro d'entreprise du Québec
+  
+  // Année fiscale
+  fiscalYearStart       Int       @default(1) // Mois de début (1 = janvier)
+  
+  // Méthode comptable
+  accountingMethod      String    @default("ACCRUAL") // CASH ou ACCRUAL
+  
+  // Devise par défaut
+  defaultCurrency       String    @default("CAD")
+  
+  // Fréquence de déclaration TPS/TVQ
+  taxFilingFrequency    String    @default("MONTHLY") // MONTHLY, QUARTERLY, ANNUAL
+  
+  // Automatisation
+  autoCreateSaleEntries Boolean   @default(true)
+  autoReconcileStripe   Boolean   @default(true)
+  
+  updatedAt             DateTime  @updatedAt
+}
+
+// =====================================================
+// HERO SLIDER
+// =====================================================
+
+enum HeroMediaType {
+  IMAGE
+  VIDEO
+  ANIMATION
+}
+
+model HeroSlide {
+  id               String        @id @default(cuid())
+
+  // Identifiant interne (pour lier aux traductions i18n)
+  slug             String        @unique  // "research-peptides", "rewards", etc.
+
+  // Media
+  mediaType        HeroMediaType @default(IMAGE)
+  backgroundUrl    String                 // URL image/vidéo de fond
+  backgroundMobile String?                // URL image mobile (optionnel)
+  overlayOpacity   Int           @default(70) // 0-100
+  overlayGradient  String?                // ex: "from-black/80 via-black/70 to-black/60"
+
+  // Contenu par défaut (fallback si pas de traduction)
+  badgeText        String?
+  title            String
+  subtitle         String?       @db.Text
+
+  // CTA primaire
+  ctaText          String?
+  ctaUrl           String?
+  ctaStyle         String?       @default("primary") // "primary", "secondary", "outline"
+
+  // CTA secondaire
+  cta2Text         String?
+  cta2Url          String?
+  cta2Style        String?       @default("outline")
+
+  // Stats grid (JSON array, ex: [{"value":"99%+","label":"Purity"}])
+  statsJson        String?       @db.Text
+
+  // Ordre et visibilité
+  sortOrder        Int           @default(0)
+  isActive         Boolean       @default(true)
+
+  // Planification
+  startDate        DateTime?
+  endDate          DateTime?
+
+  // Traductions (relation)
+  translations     HeroSlideTranslation[]
+
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@index([isActive, sortOrder])
+}
+
+model HeroSlideTranslation {
+  id          String    @id @default(cuid())
+
+  slideId     String
+  slide       HeroSlide @relation(fields: [slideId], references: [id], onDelete: Cascade)
+
+  locale      String    // "fr", "en", "es", etc.
+
+  badgeText   String?
+  title       String
+  subtitle    String?   @db.Text
+  ctaText     String?
+  cta2Text    String?
+
+  // Stats traduits (JSON)
+  statsJson   String?   @db.Text
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([slideId, locale])
+  @@index([slideId])
+  @@index([locale])
+}

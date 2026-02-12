@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { Plus, Loader2 } from 'lucide-react';
+import { PageHeader, Button, Modal, FormField, Input } from '@/components/admin';
 
 interface LoyaltyTier {
   name: string;
@@ -49,7 +51,7 @@ export default function FidelitePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(config),
       });
-      alert('Configuration sauvegardée!');
+      alert('Configuration sauvegardee!');
     } catch (err) {
       console.error('Error saving config:', err);
     }
@@ -57,8 +59,8 @@ export default function FidelitePage() {
   };
 
   const tierColors: Record<string, string> = {
-    orange: 'bg-orange-100 text-orange-800 border-orange-300',
-    gray: 'bg-gray-200 text-gray-700 border-gray-400',
+    orange: 'bg-sky-100 text-sky-800 border-sky-300',
+    gray: 'bg-slate-200 text-slate-700 border-slate-400',
     yellow: 'bg-yellow-100 text-yellow-800 border-yellow-400',
     blue: 'bg-blue-100 text-blue-800 border-blue-400',
     purple: 'bg-purple-100 text-purple-800 border-purple-400',
@@ -67,132 +69,94 @@ export default function FidelitePage() {
   if (loading || !config) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-sky-500" />
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Programme de fidélité</h1>
-          <p className="text-gray-500">Configurez les règles du programme de récompenses</p>
-        </div>
-        <button
-          onClick={saveConfig}
-          disabled={saving}
-          className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 disabled:opacity-50"
-        >
-          {saving ? 'Sauvegarde...' : 'Sauvegarder'}
-        </button>
-      </div>
+      <PageHeader
+        title="Programme de fidelite"
+        subtitle="Configurez les regles du programme de recompenses"
+        actions={
+          <Button variant="primary" loading={saving} onClick={saveConfig}>
+            {saving ? 'Sauvegarde...' : 'Sauvegarder'}
+          </Button>
+        }
+      />
 
       {/* Basic Settings */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <h3 className="font-semibold text-gray-900 mb-4">Paramètres de base</h3>
+      <div className="bg-white rounded-xl border border-slate-200 p-6">
+        <h3 className="font-semibold text-slate-900 mb-4">Parametres de base</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Points par dollar</label>
-            <input
+          <FormField label="Points par dollar" hint="Niveau Bronze">
+            <Input
               type="number"
               value={config.pointsPerDollar}
               onChange={(e) => setConfig({ ...config, pointsPerDollar: parseInt(e.target.value) || 0 })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
             />
-            <p className="text-xs text-gray-500 mt-1">Niveau Bronze</p>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Valeur du point ($)</label>
-            <input
+          </FormField>
+          <FormField label="Valeur du point ($)" hint={`1 point = ${config.pointsValue} $`}>
+            <Input
               type="number"
               step="0.001"
               value={config.pointsValue}
               onChange={(e) => setConfig({ ...config, pointsValue: parseFloat(e.target.value) || 0 })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
             />
-            <p className="text-xs text-gray-500 mt-1">1 point = {config.pointsValue} $</p>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Min. échange (pts)</label>
-            <input
+          </FormField>
+          <FormField label="Min. echange (pts)" hint={`= ${(config.minRedemption * config.pointsValue).toFixed(2)} $`}>
+            <Input
               type="number"
               value={config.minRedemption}
               onChange={(e) => setConfig({ ...config, minRedemption: parseInt(e.target.value) || 0 })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
             />
-            <p className="text-xs text-gray-500 mt-1">= {(config.minRedemption * config.pointsValue).toFixed(2)} $</p>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Bonus parrainage</label>
-            <input
+          </FormField>
+          <FormField label="Bonus parrainage" hint="Pour parrain et filleul">
+            <Input
               type="number"
               value={config.referralBonus}
               onChange={(e) => setConfig({ ...config, referralBonus: parseInt(e.target.value) || 0 })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
             />
-            <p className="text-xs text-gray-500 mt-1">Pour parrain et filleul</p>
-          </div>
+          </FormField>
         </div>
       </div>
 
       {/* Special Bonuses */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <h3 className="font-semibold text-gray-900 mb-4">Bonus spéciaux</h3>
+      <div className="bg-white rounded-xl border border-slate-200 p-6">
+        <h3 className="font-semibold text-slate-900 mb-4">Bonus speciaux</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Bonus anniversaire</label>
-            <input
+          <FormField label="Bonus anniversaire" hint="Points offerts">
+            <Input
               type="number"
               value={config.birthdayBonus}
               onChange={(e) => setConfig({ ...config, birthdayBonus: parseInt(e.target.value) || 0 })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
             />
-            <p className="text-xs text-gray-500 mt-1">Points offerts</p>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Bonus 1ère commande</label>
-            <input
-              type="number"
-              defaultValue={100}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-            />
-            <p className="text-xs text-gray-500 mt-1">Points offerts</p>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Bonus avis produit</label>
-            <input
-              type="number"
-              defaultValue={50}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-            />
-            <p className="text-xs text-gray-500 mt-1">Par avis laissé</p>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Bonus inscription</label>
-            <input
-              type="number"
-              defaultValue={200}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-            />
-            <p className="text-xs text-gray-500 mt-1">Points de bienvenue</p>
-          </div>
+          </FormField>
+          <FormField label="Bonus 1ere commande" hint="Points offerts">
+            <Input type="number" defaultValue={100} />
+          </FormField>
+          <FormField label="Bonus avis produit" hint="Par avis laisse">
+            <Input type="number" defaultValue={50} />
+          </FormField>
+          <FormField label="Bonus inscription" hint="Points de bienvenue">
+            <Input type="number" defaultValue={200} />
+          </FormField>
         </div>
       </div>
 
       {/* Tiers */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
+      <div className="bg-white rounded-xl border border-slate-200 p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-gray-900">Niveaux de fidélité</h3>
-          <button className="text-sm text-amber-600 hover:text-amber-700">
-            + Ajouter un niveau
-          </button>
+          <h3 className="font-semibold text-slate-900">Niveaux de fidelite</h3>
+          <Button variant="ghost" size="sm" icon={Plus} className="text-sky-600 hover:text-sky-700">
+            Ajouter un niveau
+          </Button>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           {config.tiers.map((tier) => (
-            <div 
+            <div
               key={tier.name}
               className={`rounded-xl border-2 p-4 ${tierColors[tier.color]}`}
             >
@@ -200,7 +164,7 @@ export default function FidelitePage() {
                 <h4 className="font-bold text-lg">{tier.name}</h4>
                 <p className="text-sm opacity-75">{tier.minPoints.toLocaleString()}+ pts</p>
               </div>
-              
+
               <div className="space-y-2 mb-3">
                 <div className="flex justify-between text-sm">
                   <span>Multiplicateur:</span>
@@ -210,20 +174,20 @@ export default function FidelitePage() {
                   <span>{config.pointsPerDollar * tier.multiplier} pts/$</span>
                 </div>
               </div>
-              
+
               <div className="pt-3 border-t border-current/20">
                 <p className="text-xs font-semibold mb-1">Avantages:</p>
                 <ul className="text-xs space-y-1">
                   {tier.perks.map((perk, i) => (
                     <li key={i} className="flex items-start gap-1">
-                      <span>✓</span>
+                      <span>&#10003;</span>
                       <span>{perk}</span>
                     </li>
                   ))}
                 </ul>
               </div>
-              
-              <button 
+
+              <button
                 onClick={() => setEditingTier(tier.name)}
                 className="w-full mt-3 text-xs py-1 bg-white/50 rounded hover:bg-white/70"
               >
@@ -235,48 +199,44 @@ export default function FidelitePage() {
       </div>
 
       {/* Simulation */}
-      <div className="bg-amber-50 rounded-xl border border-amber-200 p-6">
-        <h3 className="font-semibold text-amber-900 mb-4">Simulation</h3>
+      <div className="bg-sky-50 rounded-xl border border-sky-200 p-6">
+        <h3 className="font-semibold text-sky-900 mb-4">Simulation</h3>
         <div className="grid grid-cols-3 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-amber-800 mb-1">Montant d'achat</label>
-            <input
+          <FormField label="Montant d'achat">
+            <Input
               type="number"
               defaultValue={100}
-              className="w-full px-3 py-2 border border-amber-300 rounded-lg bg-white"
+              className="border-sky-300 bg-white"
             />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-amber-800 mb-1">Niveau client</label>
-            <select className="w-full px-3 py-2 border border-amber-300 rounded-lg bg-white">
+          </FormField>
+          <FormField label="Niveau client">
+            <select className="w-full h-9 px-3 rounded-lg border border-sky-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
               {config.tiers.map(t => (
                 <option key={t.name} value={t.name}>{t.name}</option>
               ))}
             </select>
-          </div>
+          </FormField>
           <div className="bg-white rounded-lg p-4 text-center">
-            <p className="text-sm text-amber-600">Points gagnés</p>
-            <p className="text-3xl font-bold text-amber-900">1,000</p>
-            <p className="text-xs text-amber-600">= 10.00 $ de réduction</p>
+            <p className="text-sm text-sky-600">Points gagnes</p>
+            <p className="text-3xl font-bold text-sky-900">1,000</p>
+            <p className="text-xs text-sky-600">= 10.00 $ de reduction</p>
           </div>
         </div>
       </div>
 
       {/* Edit Tier Modal */}
-      {editingTier && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl max-w-md w-full p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Modifier {editingTier}</h2>
-            <p className="text-gray-500 mb-4">Fonctionnalité en cours de développement...</p>
-            <button
-              onClick={() => setEditingTier(null)}
-              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
-            >
-              Fermer
-            </button>
-          </div>
-        </div>
-      )}
+      <Modal
+        isOpen={!!editingTier}
+        onClose={() => setEditingTier(null)}
+        title={`Modifier ${editingTier}`}
+        footer={
+          <Button variant="secondary" onClick={() => setEditingTier(null)}>
+            Fermer
+          </Button>
+        }
+      >
+        <p className="text-slate-500">Fonctionnalite en cours de developpement...</p>
+      </Modal>
     </div>
   );
 }

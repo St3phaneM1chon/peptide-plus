@@ -1,4 +1,5 @@
 import { PrismaClient, ProductType, FormatType, DiscountType, StockStatus } from '@prisma/client';
+import { seedAccounting } from './seed-accounting';
 
 const prisma = new PrismaClient();
 
@@ -1149,9 +1150,15 @@ async function main() {
     },
   });
 
+  // =====================================================
+  // COMPTABILITÉ (Plan comptable, Paramètres, Périodes)
+  // =====================================================
+  await seedAccounting();
+
   // Count totals
   const productCount = await prisma.product.count();
   const formatCount = await prisma.productFormat.count();
+  const accountCount = await prisma.chartOfAccount.count();
 
   console.log('✅ Seeding terminé avec succès!');
   console.log(`
@@ -1161,6 +1168,7 @@ async function main() {
 - ${Object.keys(categories).length} catégories
 - ${productCount} produits
 - ${formatCount} formats/variantes
+- ${accountCount} comptes comptables
 - 4 codes promo
 - 1 admin
   `);

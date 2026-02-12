@@ -44,6 +44,7 @@ export const ACCOUNT_CODES = {
   TPS_PAYABLE: '2110',
   TVQ_PAYABLE: '2120',
   TVH_PAYABLE: '2130',
+  PST_PAYABLE: '2150',
   INTL_TAX_PAYABLE: '2140',
   DEFERRED_REVENUE: '2300',
 
@@ -82,6 +83,7 @@ export const ACCOUNT_CODES = {
   PROFESSIONAL_ACCOUNTING: '6710',
   PROFESSIONAL_LEGAL: '6720',
   DEPRECIATION: '6800',
+  INVENTORY_LOSS: '6900',
 
   // Other (7000-7999)
   FX_GAINS_LOSSES: '7000',
@@ -97,7 +99,7 @@ export const TAX_RATES = {
   AB: { TPS: 0.05, combined: 0.05 },
   SK: { TPS: 0.05, PST: 0.06, combined: 0.11 },
   MB: { TPS: 0.05, PST: 0.07, combined: 0.12 },
-  NS: { TVH: 0.15, combined: 0.15 },
+  NS: { TVH: 0.14, combined: 0.14 },
   NB: { TVH: 0.15, combined: 0.15 },
   NL: { TVH: 0.15, combined: 0.15 },
   PE: { TVH: 0.15, combined: 0.15 },

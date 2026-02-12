@@ -2,6 +2,27 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import {
+  Download,
+  Users,
+  UserCheck,
+  Briefcase,
+  Crown,
+  Mail,
+  KeyRound,
+  ShoppingCart,
+  Ban,
+} from 'lucide-react';
+
+import { PageHeader } from '@/components/admin/PageHeader';
+import { Button } from '@/components/admin/Button';
+import { FilterBar, SelectFilter } from '@/components/admin/FilterBar';
+import { StatusBadge } from '@/components/admin/StatusBadge';
+import { EmptyState } from '@/components/admin/EmptyState';
+import { DataTable, type Column } from '@/components/admin/DataTable';
+import { StatCard } from '@/components/admin/StatCard';
+import { Modal } from '@/components/admin/Modal';
+import { FormField, Input } from '@/components/admin/FormField';
 
 interface User {
   id: string;
@@ -22,20 +43,22 @@ interface User {
   totalSpent?: number;
 }
 
-const roleColors: Record<string, string> = {
-  PUBLIC: 'bg-gray-100 text-gray-800',
-  CUSTOMER: 'bg-blue-100 text-blue-800',
-  CLIENT: 'bg-purple-100 text-purple-800',
-  EMPLOYEE: 'bg-amber-100 text-amber-800',
-  OWNER: 'bg-green-100 text-green-800',
+type BadgeVariant = 'success' | 'warning' | 'error' | 'info' | 'neutral' | 'primary';
+
+const roleVariants: Record<string, BadgeVariant> = {
+  PUBLIC: 'neutral',
+  CUSTOMER: 'info',
+  CLIENT: 'primary',
+  EMPLOYEE: 'warning',
+  OWNER: 'success',
 };
 
-const tierColors: Record<string, string> = {
-  BRONZE: 'bg-orange-100 text-orange-800',
-  SILVER: 'bg-gray-200 text-gray-700',
-  GOLD: 'bg-yellow-100 text-yellow-800',
-  PLATINUM: 'bg-blue-100 text-blue-800',
-  DIAMOND: 'bg-purple-100 text-purple-800',
+const tierVariants: Record<string, BadgeVariant> = {
+  BRONZE: 'warning',
+  SILVER: 'neutral',
+  GOLD: 'warning',
+  PLATINUM: 'info',
+  DIAMOND: 'primary',
 };
 
 export default function ClientsPage() {
@@ -121,305 +144,277 @@ export default function ClientsPage() {
     gold: users.filter(u => u.loyaltyTier === 'GOLD' || u.loyaltyTier === 'PLATINUM' || u.loyaltyTier === 'DIAMOND').length,
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500" />
-      </div>
-    );
-  }
+  const columns: Column<User>[] = [
+    {
+      key: 'client',
+      header: 'Client',
+      render: (user) => (
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center flex-shrink-0">
+            {user.image ? (
+              <img src={user.image} alt="" className="w-10 h-10 rounded-full" />
+            ) : (
+              <span className="text-slate-600 font-semibold">
+                {user.name?.charAt(0) || user.email.charAt(0).toUpperCase()}
+              </span>
+            )}
+          </div>
+          <div>
+            <p className="font-medium text-slate-900">{user.name || 'Sans nom'}</p>
+            <p className="text-xs text-slate-500">{user.email}</p>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: 'role',
+      header: 'Role',
+      render: (user) => (
+        <StatusBadge variant={roleVariants[user.role] || 'neutral'}>
+          {user.role}
+        </StatusBadge>
+      ),
+    },
+    {
+      key: 'tier',
+      header: 'Fidelite',
+      render: (user) => (
+        <StatusBadge variant={tierVariants[user.loyaltyTier] || 'neutral'}>
+          {user.loyaltyTier}
+        </StatusBadge>
+      ),
+    },
+    {
+      key: 'points',
+      header: 'Points',
+      render: (user) => (
+        <div>
+          <p className="font-semibold text-slate-900">{user.loyaltyPoints.toLocaleString()}</p>
+          <p className="text-xs text-slate-500">/{user.lifetimePoints.toLocaleString()} total</p>
+        </div>
+      ),
+    },
+    {
+      key: 'purchases',
+      header: 'Achats',
+      render: (user) => (
+        <div>
+          <p className="font-semibold text-slate-900">{user._count?.purchases || 0}</p>
+          {user.totalSpent && user.totalSpent > 0 && (
+            <p className="text-xs text-slate-500">{user.totalSpent.toFixed(2)} $</p>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: 'createdAt',
+      header: 'Inscrit',
+      render: (user) => (
+        <span className="text-sm text-slate-500">
+          {new Date(user.createdAt).toLocaleDateString('fr-CA')}
+        </span>
+      ),
+    },
+    {
+      key: 'actions',
+      header: 'Actions',
+      align: 'center',
+      render: (user) => (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            setSelectedUser(user);
+          }}
+          className="text-sky-600 hover:text-sky-700 hover:bg-sky-50"
+        >
+          Gerer
+        </Button>
+      ),
+    },
+  ];
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Clients</h1>
-          <p className="text-gray-500">Gérez vos clients et leurs points de fidélité</p>
-        </div>
-        <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center gap-2">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-          Exporter
-        </button>
-      </div>
+      <PageHeader
+        title="Clients"
+        subtitle="Gerez vos clients et leurs points de fidelite"
+        actions={
+          <Button variant="secondary" icon={Download}>
+            Exporter
+          </Button>
+        }
+      />
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl p-4 border border-gray-200">
-          <p className="text-sm text-gray-500">Total utilisateurs</p>
-          <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
-        </div>
-        <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
-          <p className="text-sm text-blue-600">Clients</p>
-          <p className="text-2xl font-bold text-blue-700">{stats.customers}</p>
-        </div>
-        <div className="bg-amber-50 rounded-xl p-4 border border-amber-200">
-          <p className="text-sm text-amber-600">Employés</p>
-          <p className="text-2xl font-bold text-amber-700">{stats.employees}</p>
-        </div>
-        <div className="bg-yellow-50 rounded-xl p-4 border border-yellow-200">
-          <p className="text-sm text-yellow-600">VIP (Gold+)</p>
-          <p className="text-2xl font-bold text-yellow-700">{stats.gold}</p>
-        </div>
+        <StatCard label="Total utilisateurs" value={stats.total} icon={Users} />
+        <StatCard label="Clients" value={stats.customers} icon={UserCheck} />
+        <StatCard label="Employes" value={stats.employees} icon={Briefcase} />
+        <StatCard label="VIP (Gold+)" value={stats.gold} icon={Crown} />
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-xl p-4 border border-gray-200">
-        <div className="flex flex-wrap gap-4">
-          <input
-            type="text"
-            placeholder="Rechercher (nom, email)..."
-            className="flex-1 min-w-[200px] px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500"
-            value={filter.search}
-            onChange={(e) => setFilter({ ...filter, search: e.target.value })}
-          />
-          <select
-            className="px-4 py-2 border border-gray-300 rounded-lg"
-            value={filter.role}
-            onChange={(e) => setFilter({ ...filter, role: e.target.value })}
-          >
-            <option value="">Tous les rôles</option>
-            <option value="CUSTOMER">Customer</option>
-            <option value="CLIENT">Client</option>
-            <option value="EMPLOYEE">Employee</option>
-            <option value="OWNER">Owner</option>
-          </select>
-          <select
-            className="px-4 py-2 border border-gray-300 rounded-lg"
-            value={filter.tier}
-            onChange={(e) => setFilter({ ...filter, tier: e.target.value })}
-          >
-            <option value="">Tous les niveaux</option>
-            <option value="BRONZE">Bronze</option>
-            <option value="SILVER">Silver</option>
-            <option value="GOLD">Gold</option>
-            <option value="PLATINUM">Platinum</option>
-            <option value="DIAMOND">Diamond</option>
-          </select>
-        </div>
-      </div>
+      <FilterBar
+        searchValue={filter.search}
+        onSearchChange={(value) => setFilter({ ...filter, search: value })}
+        searchPlaceholder="Rechercher (nom, email)..."
+      >
+        <SelectFilter
+          label="Tous les roles"
+          value={filter.role}
+          onChange={(value) => setFilter({ ...filter, role: value })}
+          options={[
+            { value: 'CUSTOMER', label: 'Customer' },
+            { value: 'CLIENT', label: 'Client' },
+            { value: 'EMPLOYEE', label: 'Employee' },
+            { value: 'OWNER', label: 'Owner' },
+          ]}
+        />
+        <SelectFilter
+          label="Tous les niveaux"
+          value={filter.tier}
+          onChange={(value) => setFilter({ ...filter, tier: value })}
+          options={[
+            { value: 'BRONZE', label: 'Bronze' },
+            { value: 'SILVER', label: 'Silver' },
+            { value: 'GOLD', label: 'Gold' },
+            { value: 'PLATINUM', label: 'Platinum' },
+            { value: 'DIAMOND', label: 'Diamond' },
+          ]}
+        />
+      </FilterBar>
 
       {/* Users Table */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Client</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Rôle</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Fidélité</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Points</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Achats</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Inscrit</th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200">
-            {filteredUsers.map((user) => (
-              <tr key={user.id} className="hover:bg-gray-50">
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                      {user.image ? (
-                        <img src={user.image} alt="" className="w-10 h-10 rounded-full" />
-                      ) : (
-                        <span className="text-gray-600 font-semibold">
-                          {user.name?.charAt(0) || user.email.charAt(0).toUpperCase()}
-                        </span>
-                      )}
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-900">{user.name || 'Sans nom'}</p>
-                      <p className="text-xs text-gray-500">{user.email}</p>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-4 py-3">
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${roleColors[user.role]}`}>
-                    {user.role}
-                  </span>
-                </td>
-                <td className="px-4 py-3">
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${tierColors[user.loyaltyTier]}`}>
-                    {user.loyaltyTier}
-                  </span>
-                </td>
-                <td className="px-4 py-3">
-                  <p className="font-semibold text-gray-900">{user.loyaltyPoints.toLocaleString()}</p>
-                  <p className="text-xs text-gray-500">/{user.lifetimePoints.toLocaleString()} total</p>
-                </td>
-                <td className="px-4 py-3">
-                  <p className="font-semibold text-gray-900">{user._count?.purchases || 0}</p>
-                  {user.totalSpent && user.totalSpent > 0 && (
-                    <p className="text-xs text-gray-500">{user.totalSpent.toFixed(2)} $</p>
-                  )}
-                </td>
-                <td className="px-4 py-3 text-sm text-gray-500">
-                  {new Date(user.createdAt).toLocaleDateString('fr-CA')}
-                </td>
-                <td className="px-4 py-3 text-center">
-                  <button
-                    onClick={() => setSelectedUser(user)}
-                    className="px-3 py-1 bg-amber-100 text-amber-700 rounded-lg text-sm hover:bg-amber-200"
-                  >
-                    Gérer
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-
-        {filteredUsers.length === 0 && (
-          <div className="p-8 text-center text-gray-500">
-            Aucun utilisateur trouvé
-          </div>
-        )}
-      </div>
+      <DataTable
+        columns={columns}
+        data={filteredUsers}
+        keyExtractor={(user) => user.id}
+        loading={loading}
+        emptyTitle="Aucun utilisateur trouve"
+        emptyDescription="Aucun utilisateur ne correspond aux filtres selectionnes."
+        onRowClick={(user) => setSelectedUser(user)}
+      />
 
       {/* User Detail Modal */}
-      {selectedUser && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
-                  {selectedUser.image ? (
-                    <img src={selectedUser.image} alt="" className="w-12 h-12 rounded-full" />
-                  ) : (
-                    <span className="text-gray-600 font-bold text-xl">
-                      {selectedUser.name?.charAt(0) || selectedUser.email.charAt(0).toUpperCase()}
-                    </span>
-                  )}
+      <Modal
+        isOpen={!!selectedUser}
+        onClose={() => setSelectedUser(null)}
+        title={selectedUser?.name || 'Sans nom'}
+        subtitle={selectedUser?.email}
+        size="lg"
+        footer={
+          <div className="flex gap-2 w-full flex-wrap">
+            <Link href={`/admin/commandes?user=${selectedUser?.id}`}>
+              <Button variant="secondary" icon={ShoppingCart} size="sm">
+                Voir ses commandes
+              </Button>
+            </Link>
+            <Button variant="secondary" icon={Mail} size="sm">
+              Envoyer email
+            </Button>
+            <Button variant="secondary" icon={KeyRound} size="sm">
+              Reinitialiser mot de passe
+            </Button>
+            <div className="ml-auto">
+              <Button variant="danger" icon={Ban} size="sm">
+                Suspendre
+              </Button>
+            </div>
+          </div>
+        }
+      >
+        {selectedUser && (
+          <div className="space-y-6">
+            {/* Role */}
+            <FormField label="Role">
+              <select
+                value={selectedUser.role}
+                onChange={(e) => updateUserRole(selectedUser.id, e.target.value)}
+                disabled={saving}
+                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900
+                  focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-shadow"
+              >
+                <option value="PUBLIC">Public</option>
+                <option value="CUSTOMER">Customer</option>
+                <option value="CLIENT">Client</option>
+                <option value="EMPLOYEE">Employee</option>
+                <option value="OWNER">Owner</option>
+              </select>
+            </FormField>
+
+            {/* Loyalty Info */}
+            <div className="bg-sky-50 rounded-lg p-4 border border-sky-200">
+              <h3 className="font-semibold text-sky-900 mb-3">Programme de fidelite</h3>
+              <div className="grid grid-cols-3 gap-4 mb-4">
+                <div>
+                  <p className="text-sm text-sky-700">Niveau</p>
+                  <StatusBadge variant={tierVariants[selectedUser.loyaltyTier] || 'neutral'}>
+                    {selectedUser.loyaltyTier}
+                  </StatusBadge>
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-gray-900">{selectedUser.name || 'Sans nom'}</h2>
-                  <p className="text-sm text-gray-500">{selectedUser.email}</p>
+                  <p className="text-sm text-sky-700">Points actuels</p>
+                  <p className="text-2xl font-bold text-sky-900">{selectedUser.loyaltyPoints.toLocaleString()}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-sky-700">Points a vie</p>
+                  <p className="text-2xl font-bold text-sky-900">{selectedUser.lifetimePoints.toLocaleString()}</p>
                 </div>
               </div>
-              <button
-                onClick={() => setSelectedUser(null)}
-                className="p-2 hover:bg-gray-100 rounded-lg"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+              {selectedUser.referralCode && (
+                <p className="text-sm text-sky-700">
+                  Code parrainage: <span className="font-mono font-bold">{selectedUser.referralCode}</span>
+                </p>
+              )}
             </div>
 
-            <div className="p-6 space-y-6">
-              {/* Role */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Rôle</label>
-                <select
-                  value={selectedUser.role}
-                  onChange={(e) => updateUserRole(selectedUser.id, e.target.value)}
-                  disabled={saving}
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500"
-                >
-                  <option value="PUBLIC">Public</option>
-                  <option value="CUSTOMER">Customer</option>
-                  <option value="CLIENT">Client</option>
-                  <option value="EMPLOYEE">Employee</option>
-                  <option value="OWNER">Owner</option>
-                </select>
+            {/* Adjust Points */}
+            <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
+              <h3 className="font-semibold text-slate-900 mb-3">Ajuster les points</h3>
+              <div className="grid grid-cols-2 gap-4 mb-3">
+                <FormField label="Montant">
+                  <Input
+                    type="number"
+                    placeholder="Ex: 100 ou -50"
+                    value={adjustPoints.amount || ''}
+                    onChange={(e) => setAdjustPoints({ ...adjustPoints, amount: parseInt(e.target.value) || 0 })}
+                  />
+                </FormField>
+                <FormField label="Raison">
+                  <Input
+                    type="text"
+                    placeholder="Raison de l'ajustement"
+                    value={adjustPoints.reason}
+                    onChange={(e) => setAdjustPoints({ ...adjustPoints, reason: e.target.value })}
+                  />
+                </FormField>
               </div>
+              <Button
+                variant="primary"
+                onClick={() => adjustUserPoints(selectedUser.id)}
+                disabled={saving || !adjustPoints.amount || !adjustPoints.reason}
+                loading={saving}
+              >
+                Appliquer l&apos;ajustement
+              </Button>
+            </div>
 
-              {/* Loyalty Info */}
-              <div className="bg-amber-50 rounded-lg p-4">
-                <h3 className="font-semibold text-amber-900 mb-3">Programme de fidélité</h3>
-                <div className="grid grid-cols-3 gap-4 mb-4">
-                  <div>
-                    <p className="text-sm text-amber-700">Niveau</p>
-                    <span className={`px-2 py-1 rounded-full text-sm font-medium ${tierColors[selectedUser.loyaltyTier]}`}>
-                      {selectedUser.loyaltyTier}
-                    </span>
-                  </div>
-                  <div>
-                    <p className="text-sm text-amber-700">Points actuels</p>
-                    <p className="text-2xl font-bold text-amber-900">{selectedUser.loyaltyPoints.toLocaleString()}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-amber-700">Points à vie</p>
-                    <p className="text-2xl font-bold text-amber-900">{selectedUser.lifetimePoints.toLocaleString()}</p>
-                  </div>
-                </div>
-                {selectedUser.referralCode && (
-                  <p className="text-sm text-amber-700">
-                    Code parrainage: <span className="font-mono font-bold">{selectedUser.referralCode}</span>
-                  </p>
-                )}
+            {/* Stats */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-white border border-slate-200 rounded-lg p-4">
+                <p className="text-sm text-slate-500">Commandes</p>
+                <p className="text-2xl font-bold text-slate-900">{selectedUser._count?.purchases || 0}</p>
               </div>
-
-              {/* Adjust Points */}
-              <div className="bg-gray-50 rounded-lg p-4">
-                <h3 className="font-semibold text-gray-900 mb-3">Ajuster les points</h3>
-                <div className="grid grid-cols-2 gap-4 mb-3">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Montant</label>
-                    <input
-                      type="number"
-                      placeholder="Ex: 100 ou -50"
-                      value={adjustPoints.amount || ''}
-                      onChange={(e) => setAdjustPoints({ ...adjustPoints, amount: parseInt(e.target.value) || 0 })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Raison</label>
-                    <input
-                      type="text"
-                      placeholder="Raison de l'ajustement"
-                      value={adjustPoints.reason}
-                      onChange={(e) => setAdjustPoints({ ...adjustPoints, reason: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                    />
-                  </div>
-                </div>
-                <button
-                  onClick={() => adjustUserPoints(selectedUser.id)}
-                  disabled={saving || !adjustPoints.amount || !adjustPoints.reason}
-                  className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 disabled:opacity-50"
-                >
-                  Appliquer l'ajustement
-                </button>
-              </div>
-
-              {/* Stats */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-white border border-gray-200 rounded-lg p-4">
-                  <p className="text-sm text-gray-500">Commandes</p>
-                  <p className="text-2xl font-bold text-gray-900">{selectedUser._count?.purchases || 0}</p>
-                </div>
-                <div className="bg-white border border-gray-200 rounded-lg p-4">
-                  <p className="text-sm text-gray-500">Total dépensé</p>
-                  <p className="text-2xl font-bold text-gray-900">{selectedUser.totalSpent?.toFixed(2) || '0.00'} $</p>
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="flex gap-3 pt-4 border-t border-gray-200">
-                <Link
-                  href={`/admin/commandes?user=${selectedUser.id}`}
-                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
-                >
-                  Voir ses commandes
-                </Link>
-                <button className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200">
-                  Envoyer email
-                </button>
-                <button className="px-4 py-2 bg-amber-100 text-amber-700 rounded-lg hover:bg-amber-200">
-                  Réinitialiser mot de passe
-                </button>
-                <button className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 ml-auto">
-                  Suspendre
-                </button>
+              <div className="bg-white border border-slate-200 rounded-lg p-4">
+                <p className="text-sm text-slate-500">Total depense</p>
+                <p className="text-2xl font-bold text-emerald-700">{selectedUser.totalSpent?.toFixed(2) || '0.00'} $</p>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </Modal>
     </div>
   );
 }

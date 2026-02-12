@@ -54,17 +54,23 @@ export default function RecurringEntriesPage() {
     startDate: new Date().toISOString().split('T')[0],
   });
 
+  const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
     loadEntries();
   }, []);
 
   const loadEntries = async () => {
+    setLoading(true);
+    setError(null);
     try {
-      const response = await fetch('/api/accounting/recurring-entries');
+      const response = await fetch('/api/accounting/recurring');
+      if (!response.ok) throw new Error(`Erreur ${response.status}`);
       const data = await response.json();
-      setEntries(data.entries || []);
-    } catch (error) {
-      console.error('Error loading recurring entries:', error);
+      setEntries(data.entries || data.data || []);
+    } catch (err) {
+      console.error('Error loading recurring entries:', err);
+      setError('Impossible de charger les écritures récurrentes.');
       setEntries([]);
     } finally {
       setLoading(false);
@@ -73,49 +79,79 @@ export default function RecurringEntriesPage() {
 
   const handleProcessDue = async () => {
     setProcessing(true);
-    // Simulate processing
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    alert('Écritures récurrentes traitées avec succès!');
-    setProcessing(false);
-    loadEntries();
+    try {
+      const response = await fetch('/api/accounting/recurring/process', {
+        method: 'POST',
+      });
+      if (!response.ok) throw new Error(`Erreur ${response.status}`);
+      alert('Écritures récurrentes traitées avec succès!');
+      await loadEntries();
+    } catch (err) {
+      console.error('Error processing recurring entries:', err);
+      alert('Erreur lors du traitement des écritures récurrentes.');
+    } finally {
+      setProcessing(false);
+    }
   };
 
-  const handleToggleActive = (id: string) => {
-    setEntries(prev => prev.map(e => 
-      e.id === id ? { ...e, isActive: !e.isActive } : e
-    ));
+  const handleToggleActive = async (id: string) => {
+    const entry = entries.find(e => e.id === id);
+    if (!entry) return;
+    try {
+      const response = await fetch('/api/accounting/recurring', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, active: !entry.isActive }),
+      });
+      if (!response.ok) throw new Error(`Erreur ${response.status}`);
+      await loadEntries();
+    } catch (err) {
+      console.error('Error toggling recurring entry:', err);
+      // Optimistic fallback
+      setEntries(prev => prev.map(e =>
+        e.id === id ? { ...e, isActive: !e.isActive } : e
+      ));
+    }
   };
 
-  const handleSave = () => {
-    const newEntry: RecurringEntry = {
-      id: `rec-${Date.now()}`,
-      name: formData.name,
-      description: formData.description,
-      frequency: formData.frequency as RecurringEntry['frequency'],
-      dayOfMonth: formData.dayOfMonth,
-      amount: formData.amount,
-      lines: [
-        { accountCode: formData.debitAccount, accountName: 'Compte débit', debit: formData.amount, credit: 0 },
-        { accountCode: formData.creditAccount, accountName: 'Compte crédit', debit: 0, credit: formData.amount },
-      ],
-      nextRunDate: new Date(formData.startDate),
-      isActive: true,
-      autoPost: formData.autoPost,
-      totalRuns: 0,
-    };
-    setEntries(prev => [...prev, newEntry]);
-    setShowModal(false);
-    setFormData({
-      name: '',
-      description: '',
-      frequency: 'MONTHLY',
-      dayOfMonth: 1,
-      amount: 0,
-      debitAccount: '6800',
-      creditAccount: '1590',
-      autoPost: true,
-      startDate: new Date().toISOString().split('T')[0],
-    });
+  const handleSave = async () => {
+    try {
+      const payload = {
+        name: formData.name,
+        description: formData.description,
+        frequency: formData.frequency,
+        dayOfMonth: formData.dayOfMonth,
+        amount: formData.amount,
+        lines: [
+          { accountCode: formData.debitAccount, accountName: 'Compte débit', debit: formData.amount, credit: 0 },
+          { accountCode: formData.creditAccount, accountName: 'Compte crédit', debit: 0, credit: formData.amount },
+        ],
+        startDate: formData.startDate,
+        autoPost: formData.autoPost,
+      };
+      const response = await fetch('/api/accounting/recurring', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!response.ok) throw new Error(`Erreur ${response.status}`);
+      setShowModal(false);
+      setFormData({
+        name: '',
+        description: '',
+        frequency: 'MONTHLY',
+        dayOfMonth: 1,
+        amount: 0,
+        debitAccount: '6800',
+        creditAccount: '1590',
+        autoPost: true,
+        startDate: new Date().toISOString().split('T')[0],
+      });
+      await loadEntries();
+    } catch (err) {
+      console.error('Error saving recurring entry:', err);
+      alert('Erreur lors de la création de l\'écriture récurrente.');
+    }
   };
 
   const applyTemplate = (template: typeof predefinedTemplates[0]) => {
@@ -145,7 +181,16 @@ export default function RecurringEntriesPage() {
   )[0];
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64"><div className="animate-spin h-8 w-8 border-4 border-amber-500 border-t-transparent rounded-full"></div></div>;
+    return <div className="p-8 text-center">Chargement...</div>;
+  }
+
+  if (error) {
+    return (
+      <div className="p-8 text-center">
+        <p className="text-red-400 mb-4">{error}</p>
+        <button onClick={loadEntries} className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg">Réessayer</button>
+      </div>
+    );
   }
 
   return (
@@ -170,7 +215,7 @@ export default function RecurringEntriesPage() {
           </button>
           <button
             onClick={() => setShowModal(true)}
-            className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg flex items-center gap-2"
+            className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg flex items-center gap-2"
           >
             <span>+</span> Nouvelle récurrence
           </button>
@@ -185,7 +230,7 @@ export default function RecurringEntriesPage() {
         </div>
         <div className="bg-neutral-800 rounded-xl p-4 border border-neutral-700">
           <p className="text-sm text-neutral-400">Coût mensuel estimé</p>
-          <p className="text-2xl font-bold text-amber-400 mt-1">{totalMonthly.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}</p>
+          <p className="text-2xl font-bold text-sky-400 mt-1">{totalMonthly.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}</p>
         </div>
         <div className="bg-neutral-800 rounded-xl p-4 border border-neutral-700">
           <p className="text-sm text-neutral-400">Prochaine exécution</p>
@@ -274,6 +319,21 @@ export default function RecurringEntriesPage() {
                       ✏️
                     </button>
                     <button
+                      onClick={async () => {
+                        if (!confirm('Désactiver cette écriture récurrente?')) return;
+                        try {
+                          const response = await fetch('/api/accounting/recurring', {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ id: entry.id, active: false }),
+                          });
+                          if (!response.ok) throw new Error(`Erreur ${response.status}`);
+                          await loadEntries();
+                        } catch (err) {
+                          console.error('Error deactivating entry:', err);
+                          alert('Erreur lors de la désactivation.');
+                        }
+                      }}
                       className="p-1 hover:bg-neutral-700 rounded text-neutral-400 hover:text-red-400"
                       title="Supprimer"
                     >
@@ -415,7 +475,7 @@ export default function RecurringEntriesPage() {
                   type="checkbox"
                   checked={formData.autoPost}
                   onChange={e => setFormData(prev => ({ ...prev, autoPost: e.target.checked }))}
-                  className="rounded border-neutral-600 bg-neutral-700 text-amber-500"
+                  className="rounded border-neutral-600 bg-neutral-700 text-sky-500"
                 />
                 <span className="text-neutral-300">Valider automatiquement les écritures</span>
               </label>
@@ -431,7 +491,7 @@ export default function RecurringEntriesPage() {
               <button
                 onClick={handleSave}
                 disabled={!formData.name || !formData.amount}
-                className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg disabled:opacity-50"
+                className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg disabled:opacity-50"
               >
                 Créer la récurrence
               </button>
@@ -461,7 +521,7 @@ export default function RecurringEntriesPage() {
                   return (
                     <div key={i} className="flex justify-between items-center p-3 bg-neutral-700/50 rounded-lg">
                       <span className="text-neutral-300">{date.toLocaleDateString('fr-CA', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
-                      <span className="font-medium text-amber-400">{showPreview.amount.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}</span>
+                      <span className="font-medium text-sky-400">{showPreview.amount.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}</span>
                     </div>
                   );
                 })}

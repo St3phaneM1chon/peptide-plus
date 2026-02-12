@@ -1,7 +1,25 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
+import {
+  ListTodo,
+  Clock,
+  CheckCircle2,
+  AlertTriangle,
+  Plus,
+  Check,
+  CalendarDays,
+} from 'lucide-react';
+import {
+  PageHeader,
+  Button,
+  StatCard,
+  SelectFilter,
+  FilterBar,
+  EmptyState,
+  StatusBadge,
+} from '@/components/admin';
 import { getAllCountriesWithCompliance } from '@/lib/countryObligations';
 
 interface TaskWithCountry {
@@ -17,10 +35,52 @@ interface TaskWithCountry {
   status: 'pending' | 'completed' | 'overdue';
 }
 
+interface TaxReportTask {
+  id: string;
+  region: string;
+  regionCode: string;
+  period: string;
+  status: string;
+  dueDate: string;
+}
+
 export default function FiscalTasksPage() {
   const countries = getAllCountriesWithCompliance();
-  
-  // Flatten all tasks from all countries
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [apiReportTasks, setApiReportTasks] = useState<TaxReportTask[]>([]);
+
+  // Fetch tax reports to derive real deadline-based tasks
+  useEffect(() => {
+    const fetchTaxReports = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const year = new Date().getFullYear();
+        const res = await fetch(`/api/accounting/tax-reports?year=${year}`);
+        if (res.ok) {
+          const data = await res.json();
+          const reports = (data.reports || []).map((r: Record<string, unknown>) => ({
+            id: r.id as string,
+            region: r.region as string,
+            regionCode: r.regionCode as string,
+            period: r.period as string,
+            status: r.status as string,
+            dueDate: r.dueDate as string,
+          }));
+          setApiReportTasks(reports);
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Erreur inconnue');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTaxReports();
+  }, []);
+
+  // Flatten all tasks from all countries AND merge with API report deadlines
   const allTasks = useMemo(() => {
     const tasks: TaskWithCountry[] = [];
     countries.forEach(country => {
@@ -33,14 +93,39 @@ export default function FiscalTasksPage() {
         });
       });
     });
+
+    // Add deadline tasks from real API tax reports
+    apiReportTasks
+      .filter(r => r.status === 'GENERATED' || r.status === 'FILED')
+      .forEach(report => {
+        const daysUntil = Math.ceil((new Date(report.dueDate).getTime() - Date.now()) / 86400000);
+        tasks.push({
+          id: `report-${report.id}`,
+          name: `${report.status === 'GENERATED' ? 'Declarer' : 'Payer'} ${report.region} - ${report.period}`,
+          nameFr: `${report.status === 'GENERATED' ? 'Declarer' : 'Payer'} ${report.region} - ${report.period}`,
+          description: `Rapport fiscal ${report.region} pour la periode ${report.period}. Echeance: ${new Date(report.dueDate).toLocaleDateString('fr-CA')}`,
+          descriptionFr: `Rapport fiscal ${report.region} pour la periode ${report.period}`,
+          dueDate: new Date(report.dueDate).toLocaleDateString('fr-CA'),
+          frequency: 'monthly',
+          countryCode: report.regionCode,
+          countryName: report.region,
+          status: daysUntil < 0 ? 'overdue' : 'pending',
+        });
+      });
+
     return tasks;
-  }, [countries]);
-  
-  const [tasks, setTasks] = useState<TaskWithCountry[]>(allTasks);
-  const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'completed' | 'overdue'>('all');
+  }, [countries, apiReportTasks]);
+
+  const [tasks, setTasks] = useState<TaskWithCountry[]>([]);
+  const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterFrequency, setFilterFrequency] = useState<string>('all');
   const [filterCountry, setFilterCountry] = useState<string>('all');
-  
+
+  // Update tasks when allTasks changes
+  useEffect(() => {
+    setTasks(allTasks);
+  }, [allTasks]);
+
   // Filter tasks
   const filteredTasks = useMemo(() => {
     return tasks.filter(task => {
@@ -50,7 +135,7 @@ export default function FiscalTasksPage() {
       return matchesStatus && matchesFrequency && matchesCountry;
     });
   }, [tasks, filterStatus, filterFrequency, filterCountry]);
-  
+
   // Group tasks by due date period
   const groupedTasks = useMemo(() => {
     const groups: Record<string, TaskWithCountry[]> = {
@@ -59,7 +144,7 @@ export default function FiscalTasksPage() {
       'thisQuarter': [],
       'later': [],
     };
-    
+
     // For demo, we'll just distribute them
     filteredTasks.forEach((task, index) => {
       if (index % 4 === 0) groups.urgent.push(task);
@@ -67,18 +152,18 @@ export default function FiscalTasksPage() {
       else if (index % 4 === 2) groups.thisQuarter.push(task);
       else groups.later.push(task);
     });
-    
+
     return groups;
   }, [filteredTasks]);
-  
+
   const toggleTaskStatus = (taskId: string) => {
-    setTasks(prev => prev.map(t => 
-      t.id === taskId 
+    setTasks(prev => prev.map(t =>
+      t.id === taskId
         ? { ...t, status: t.status === 'completed' ? 'pending' : 'completed' as const }
         : t
     ));
   };
-  
+
   const stats = useMemo(() => ({
     total: tasks.length,
     pending: tasks.filter(t => t.status === 'pending').length,
@@ -86,218 +171,188 @@ export default function FiscalTasksPage() {
     overdue: tasks.filter(t => t.status === 'overdue').length,
   }), [tasks]);
 
+  if (loading) return <div className="p-8 text-center">Chargement...</div>;
+  if (error) return <div className="p-8 text-center text-red-600">Erreur: {error}</div>;
+
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-4 mb-2">
-            <Link href="/admin/fiscal" className="text-gray-500 hover:text-gray-700">
-              ← Obligations Fiscales
-            </Link>
-          </div>
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                Tâches & Échéances Fiscales
-              </h1>
-              <p className="text-gray-600 mt-1">
-                Suivi des déclarations et obligations pour tous les pays
-              </p>
-            </div>
-            <button className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
-              + Ajouter une tâche
-            </button>
-          </div>
-        </div>
-        
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-            <div className="text-3xl font-bold text-blue-600">{stats.total}</div>
-            <div className="text-sm text-gray-600">Tâches totales</div>
-          </div>
-          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-            <div className="text-3xl font-bold text-yellow-600">{stats.pending}</div>
-            <div className="text-sm text-gray-600">En attente</div>
-          </div>
-          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-            <div className="text-3xl font-bold text-green-600">{stats.completed}</div>
-            <div className="text-sm text-gray-600">Complétées</div>
-          </div>
-          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-            <div className="text-3xl font-bold text-red-600">{stats.overdue}</div>
-            <div className="text-sm text-gray-600">En retard</div>
-          </div>
-        </div>
-        
-        {/* Filters */}
-        <div className="bg-white rounded-xl shadow-sm p-6 mb-6 border border-gray-100">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Statut</label>
-              <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value as typeof filterStatus)}
-                className="w-full px-4 py-2 border border-gray-200 rounded-lg"
-              >
-                <option value="all">Tous les statuts</option>
-                <option value="pending">En attente</option>
-                <option value="completed">Complétées</option>
-                <option value="overdue">En retard</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Fréquence</label>
-              <select
-                value={filterFrequency}
-                onChange={(e) => setFilterFrequency(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-200 rounded-lg"
-              >
-                <option value="all">Toutes</option>
-                <option value="monthly">Mensuelle</option>
-                <option value="quarterly">Trimestrielle</option>
-                <option value="annually">Annuelle</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Pays</label>
-              <select
-                value={filterCountry}
-                onChange={(e) => setFilterCountry(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-200 rounded-lg"
-              >
-                <option value="all">Tous les pays</option>
-                {countries.map(c => (
-                  <option key={c.code} value={c.code}>{c.name}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </div>
-        
-        {/* Task Groups */}
-        <div className="space-y-6">
-          {/* Urgent */}
-          {groupedTasks.urgent.length > 0 && (
-            <TaskGroup 
-              title="🚨 Urgent - Cette semaine"
-              tasks={groupedTasks.urgent}
-              onToggle={toggleTaskStatus}
-              bgColor="bg-red-50"
-              borderColor="border-red-200"
-            />
-          )}
-          
-          {/* This Month */}
-          {groupedTasks.thisMonth.length > 0 && (
-            <TaskGroup 
-              title="📅 Ce mois-ci"
-              tasks={groupedTasks.thisMonth}
-              onToggle={toggleTaskStatus}
-              bgColor="bg-orange-50"
-              borderColor="border-orange-200"
-            />
-          )}
-          
-          {/* This Quarter */}
-          {groupedTasks.thisQuarter.length > 0 && (
-            <TaskGroup 
-              title="📆 Ce trimestre"
-              tasks={groupedTasks.thisQuarter}
-              onToggle={toggleTaskStatus}
-              bgColor="bg-yellow-50"
-              borderColor="border-yellow-200"
-            />
-          )}
-          
-          {/* Later */}
-          {groupedTasks.later.length > 0 && (
-            <TaskGroup 
-              title="📋 Plus tard"
-              tasks={groupedTasks.later}
-              onToggle={toggleTaskStatus}
-              bgColor="bg-gray-50"
-              borderColor="border-gray-200"
-            />
-          )}
-        </div>
-        
-        {filteredTasks.length === 0 && (
-          <div className="text-center py-12 text-gray-500">
-            Aucune tâche trouvée avec ces critères
-          </div>
+    <div className="space-y-6">
+      <PageHeader
+        title="Taches & Echeances Fiscales"
+        subtitle="Suivi des declarations et obligations pour tous les pays"
+        backHref="/admin/fiscal"
+        backLabel="Obligations Fiscales"
+        actions={
+          <Button variant="primary" icon={Plus}>
+            Ajouter une tache
+          </Button>
+        }
+      />
+
+      {/* Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <StatCard label="Taches totales" value={stats.total} icon={ListTodo} />
+        <StatCard label="En attente" value={stats.pending} icon={Clock} />
+        <StatCard label="Completees" value={stats.completed} icon={CheckCircle2} />
+        <StatCard label="En retard" value={stats.overdue} icon={AlertTriangle} />
+      </div>
+
+      {/* Filters */}
+      <FilterBar>
+        <SelectFilter
+          label="Tous les statuts"
+          value={filterStatus === 'all' ? '' : filterStatus}
+          onChange={(v) => setFilterStatus(v || 'all')}
+          options={[
+            { value: 'pending', label: 'En attente' },
+            { value: 'completed', label: 'Completees' },
+            { value: 'overdue', label: 'En retard' },
+          ]}
+        />
+        <SelectFilter
+          label="Toutes les frequences"
+          value={filterFrequency === 'all' ? '' : filterFrequency}
+          onChange={(v) => setFilterFrequency(v || 'all')}
+          options={[
+            { value: 'monthly', label: 'Mensuelle' },
+            { value: 'quarterly', label: 'Trimestrielle' },
+            { value: 'annually', label: 'Annuelle' },
+          ]}
+        />
+        <SelectFilter
+          label="Tous les pays"
+          value={filterCountry === 'all' ? '' : filterCountry}
+          onChange={(v) => setFilterCountry(v || 'all')}
+          options={countries.map(c => ({ value: c.code, label: c.name }))}
+        />
+      </FilterBar>
+
+      {/* Task Groups */}
+      <div className="space-y-6">
+        {groupedTasks.urgent.length > 0 && (
+          <TaskGroup
+            title="Urgent - Cette semaine"
+            icon={<AlertTriangle className="w-5 h-5 text-red-500" />}
+            tasks={groupedTasks.urgent}
+            onToggle={toggleTaskStatus}
+            bgColor="bg-red-50"
+            borderColor="border-red-200"
+          />
+        )}
+
+        {groupedTasks.thisMonth.length > 0 && (
+          <TaskGroup
+            title="Ce mois-ci"
+            icon={<CalendarDays className="w-5 h-5 text-yellow-600" />}
+            tasks={groupedTasks.thisMonth}
+            onToggle={toggleTaskStatus}
+            bgColor="bg-yellow-50"
+            borderColor="border-yellow-200"
+          />
+        )}
+
+        {groupedTasks.thisQuarter.length > 0 && (
+          <TaskGroup
+            title="Ce trimestre"
+            icon={<Clock className="w-5 h-5 text-sky-600" />}
+            tasks={groupedTasks.thisQuarter}
+            onToggle={toggleTaskStatus}
+            bgColor="bg-sky-50"
+            borderColor="border-sky-200"
+          />
+        )}
+
+        {groupedTasks.later.length > 0 && (
+          <TaskGroup
+            title="Plus tard"
+            icon={<ListTodo className="w-5 h-5 text-slate-500" />}
+            tasks={groupedTasks.later}
+            onToggle={toggleTaskStatus}
+            bgColor="bg-slate-50"
+            borderColor="border-slate-200"
+          />
         )}
       </div>
+
+      {filteredTasks.length === 0 && (
+        <EmptyState
+          icon={ListTodo}
+          title="Aucune tache trouvee"
+          description="Aucune tache trouvee avec ces criteres"
+        />
+      )}
     </div>
   );
 }
 
-function TaskGroup({ 
-  title, 
-  tasks, 
+function TaskGroup({
+  title,
+  icon,
+  tasks,
   onToggle,
   bgColor,
   borderColor
-}: { 
-  title: string; 
-  tasks: TaskWithCountry[]; 
+}: {
+  title: string;
+  icon: React.ReactNode;
+  tasks: TaskWithCountry[];
   onToggle: (id: string) => void;
   bgColor: string;
   borderColor: string;
 }) {
   return (
     <div className={`rounded-xl ${bgColor} border ${borderColor} overflow-hidden`}>
-      <div className="px-6 py-4 border-b border-gray-200">
-        <h3 className="font-semibold text-gray-900">{title}</h3>
+      <div className="px-6 py-4 border-b border-slate-200">
+        <div className="flex items-center gap-2">
+          {icon}
+          <h3 className="font-semibold text-slate-900">{title}</h3>
+        </div>
       </div>
-      <div className="divide-y divide-gray-200">
+      <div className="divide-y divide-slate-200">
         {tasks.map((task) => (
-          <div key={task.id} className="px-6 py-4 bg-white hover:bg-gray-50">
+          <div key={task.id} className="px-6 py-4 bg-white hover:bg-slate-50">
             <div className="flex items-start gap-4">
               <button
                 onClick={() => onToggle(task.id)}
                 className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${
                   task.status === 'completed'
                     ? 'bg-green-500 border-green-500 text-white'
-                    : 'border-gray-300 hover:border-green-500'
+                    : 'border-slate-300 hover:border-green-500'
                 }`}
               >
                 {task.status === 'completed' && (
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
+                  <Check className="w-4 h-4" />
                 )}
               </button>
-              
+
               <div className="flex-grow">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="text-lg">{getCountryFlag(task.countryCode)}</span>
-                    <h4 className={`font-semibold ${task.status === 'completed' ? 'text-gray-400 line-through' : 'text-gray-900'}`}>
+                    <h4 className={`font-semibold ${task.status === 'completed' ? 'text-slate-400 line-through' : 'text-slate-900'}`}>
                       {task.name}
                     </h4>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className={`px-2 py-1 text-xs rounded-full ${
-                      task.frequency === 'monthly' ? 'bg-blue-100 text-blue-700' :
-                      task.frequency === 'quarterly' ? 'bg-purple-100 text-purple-700' :
-                      'bg-orange-100 text-orange-700'
-                    }`}>
+                    <StatusBadge variant={
+                      task.frequency === 'monthly' ? 'info' :
+                      task.frequency === 'quarterly' ? 'primary' :
+                      'warning'
+                    }>
                       {task.frequency === 'monthly' ? 'Mensuel' :
                        task.frequency === 'quarterly' ? 'Trimestriel' : 'Annuel'}
-                    </span>
-                    <Link 
+                    </StatusBadge>
+                    <Link
                       href={`/admin/fiscal/country/${task.countryCode}`}
-                      className="text-blue-600 hover:text-blue-800 text-sm"
+                      className="text-sky-600 hover:text-sky-800 text-sm"
                     >
-                      {task.countryName} →
+                      {task.countryName} &rarr;
                     </Link>
                   </div>
                 </div>
-                <p className="text-sm text-gray-600 mt-1">{task.description}</p>
-                <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
-                  <span>📅 Échéance: {task.dueDate}</span>
+                <p className="text-sm text-slate-600 mt-1">{task.description}</p>
+                <div className="flex items-center gap-1.5 mt-2 text-xs text-slate-500">
+                  <CalendarDays className="w-3.5 h-3.5" />
+                  <span>Echeance: {task.dueDate}</span>
                 </div>
               </div>
             </div>
@@ -310,8 +365,8 @@ function TaskGroup({
 
 function getCountryFlag(code: string): string {
   const flags: Record<string, string> = {
-    CA: '🇨🇦', US: '🇺🇸', EU: '🇪🇺', GB: '🇬🇧', JP: '🇯🇵', 
-    AU: '🇦🇺', AE: '🇦🇪', IL: '🇮🇱', CL: '🇨🇱', PE: '🇵🇪',
+    CA: '\u{1F1E8}\u{1F1E6}', US: '\u{1F1FA}\u{1F1F8}', EU: '\u{1F1EA}\u{1F1FA}', GB: '\u{1F1EC}\u{1F1E7}', JP: '\u{1F1EF}\u{1F1F5}',
+    AU: '\u{1F1E6}\u{1F1FA}', AE: '\u{1F1E6}\u{1F1EA}', IL: '\u{1F1EE}\u{1F1F1}', CL: '\u{1F1E8}\u{1F1F1}', PE: '\u{1F1F5}\u{1F1EA}',
   };
-  return flags[code] || '🌍';
+  return flags[code] || '\u{1F30D}';
 }

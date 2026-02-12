@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { Plus, Pencil, Trash2, Percent, Zap, Package } from 'lucide-react';
+import { PageHeader, Button, Modal, EmptyState, StatusBadge } from '@/components/admin';
 
 interface Promotion {
   id: string;
@@ -21,12 +23,12 @@ interface Promotion {
   createdAt: string;
 }
 
-const typeLabels: Record<string, { label: string; color: string }> = {
-  PRODUCT_DISCOUNT: { label: 'Réduction produit', color: 'bg-blue-100 text-blue-800' },
-  CATEGORY_DISCOUNT: { label: 'Réduction catégorie', color: 'bg-purple-100 text-purple-800' },
-  BUNDLE: { label: 'Bundle', color: 'bg-green-100 text-green-800' },
-  BUY_X_GET_Y: { label: 'X acheté = Y offert', color: 'bg-amber-100 text-amber-800' },
-  FLASH_SALE: { label: 'Vente flash', color: 'bg-red-100 text-red-800' },
+const typeLabels: Record<string, { label: string; variant: 'info' | 'primary' | 'success' | 'warning' | 'error' }> = {
+  PRODUCT_DISCOUNT: { label: 'Reduction produit', variant: 'info' },
+  CATEGORY_DISCOUNT: { label: 'Reduction categorie', variant: 'primary' },
+  BUNDLE: { label: 'Bundle', variant: 'success' },
+  BUY_X_GET_Y: { label: 'X achete = Y offert', variant: 'warning' },
+  FLASH_SALE: { label: 'Vente flash', variant: 'error' },
 };
 
 export default function PromotionsPage() {
@@ -51,59 +53,40 @@ export default function PromotionsPage() {
   };
 
   const toggleActive = async (id: string, isActive: boolean) => {
-    setPromotions(promotions.map(p => p.id === id ? { ...p, isActive: !isActive } : p));
+    setPromotions(promotions.map((p) => (p.id === id ? { ...p, isActive: !isActive } : p)));
   };
 
   const deletePromotion = async (id: string) => {
     if (!confirm('Supprimer cette promotion ?')) return;
-    setPromotions(promotions.filter(p => p.id !== id));
+    setPromotions(promotions.filter((p) => p.id !== id));
   };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500" />
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Promotions</h1>
-          <p className="text-gray-500">Créez des offres spéciales et promotions automatiques</p>
-        </div>
-        <button
-          onClick={() => setShowForm(true)}
-          className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 flex items-center gap-2"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          Nouvelle promotion
-        </button>
-      </div>
+      <PageHeader
+        title="Promotions"
+        subtitle="Creez des offres speciales et promotions automatiques"
+        actions={
+          <Button variant="primary" icon={Plus} onClick={() => setShowForm(true)}>
+            Nouvelle promotion
+          </Button>
+        }
+      />
 
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl p-4 border border-gray-200">
-          <p className="text-sm text-gray-500">Total</p>
-          <p className="text-2xl font-bold text-gray-900">{promotions.length}</p>
-        </div>
-        <div className="bg-green-50 rounded-xl p-4 border border-green-200">
-          <p className="text-sm text-green-600">Actives</p>
-          <p className="text-2xl font-bold text-green-700">{promotions.filter(p => p.isActive).length}</p>
-        </div>
-        <div className="bg-red-50 rounded-xl p-4 border border-red-200">
-          <p className="text-sm text-red-600">Ventes flash</p>
-          <p className="text-2xl font-bold text-red-700">{promotions.filter(p => p.type === 'FLASH_SALE').length}</p>
-        </div>
-        <div className="bg-amber-50 rounded-xl p-4 border border-amber-200">
-          <p className="text-sm text-amber-600">Bundles</p>
-          <p className="text-2xl font-bold text-amber-700">{promotions.filter(p => p.type === 'BUNDLE').length}</p>
-        </div>
+        <MiniStat icon={Percent} label="Total" value={promotions.length} bg="bg-slate-100 text-slate-600" />
+        <MiniStat icon={Percent} label="Actives" value={promotions.filter((p) => p.isActive).length} bg="bg-emerald-100 text-emerald-600" />
+        <MiniStat icon={Zap} label="Ventes flash" value={promotions.filter((p) => p.type === 'FLASH_SALE').length} bg="bg-red-100 text-red-600" />
+        <MiniStat icon={Package} label="Bundles" value={promotions.filter((p) => p.type === 'BUNDLE').length} bg="bg-sky-100 text-sky-600" />
       </div>
 
       {/* Promotions List */}
@@ -111,48 +94,43 @@ export default function PromotionsPage() {
         {promotions.map((promo) => {
           const isExpired = promo.endsAt && new Date(promo.endsAt) < new Date();
           return (
-            <div 
-              key={promo.id} 
-              className={`bg-white rounded-xl border border-gray-200 p-6 ${!promo.isActive || isExpired ? 'opacity-60' : ''}`}
+            <div
+              key={promo.id}
+              className={`bg-white rounded-xl border border-slate-200 p-6 ${!promo.isActive || isExpired ? 'opacity-60' : ''}`}
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    <h3 className="font-bold text-gray-900 text-lg">{promo.name}</h3>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${typeLabels[promo.type].color}`}>
+                    <h3 className="font-bold text-slate-900 text-lg">{promo.name}</h3>
+                    <StatusBadge variant={typeLabels[promo.type].variant}>
                       {typeLabels[promo.type].label}
-                    </span>
-                    {isExpired && (
-                      <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
-                        Expirée
-                      </span>
-                    )}
+                    </StatusBadge>
+                    {isExpired && <StatusBadge variant="neutral">Expiree</StatusBadge>}
                   </div>
-                  
-                  <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+
+                  <div className="flex flex-wrap gap-4 text-sm text-slate-600">
                     <div>
-                      <span className="font-medium">Réduction: </span>
-                      <span className="text-amber-600 font-bold">
-                        {promo.discountType === 'PERCENTAGE' 
-                          ? `${promo.discountValue}%` 
-                          : `${promo.discountValue} $`
-                        }
+                      <span className="font-medium">Reduction: </span>
+                      <span className="text-sky-600 font-bold">
+                        {promo.discountType === 'PERCENTAGE' ? `${promo.discountValue}%` : `${promo.discountValue} $`}
                       </span>
                     </div>
-                    
+
                     {promo.type === 'BUY_X_GET_Y' && (
                       <div>
-                        <span className="font-medium">Achetez {promo.buyQuantity}, obtenez {promo.getQuantity} gratuit</span>
+                        <span className="font-medium">
+                          Achetez {promo.buyQuantity}, obtenez {promo.getQuantity} gratuit
+                        </span>
                       </div>
                     )}
-                    
+
                     <div>
-                      <span className="font-medium">Priorité: </span>
+                      <span className="font-medium">Priorite: </span>
                       <span>{promo.priority}</span>
                     </div>
-                    
+
                     <div>
-                      <span className="font-medium">Validité: </span>
+                      <span className="font-medium">Validite: </span>
                       <span>
                         {new Date(promo.startsAt).toLocaleDateString('fr-CA')}
                         {promo.endsAt && ` - ${new Date(promo.endsAt).toLocaleDateString('fr-CA')}`}
@@ -160,30 +138,18 @@ export default function PromotionsPage() {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => toggleActive(promo.id, promo.isActive)}
-                    className={`w-12 h-6 rounded-full transition-colors relative ${
-                      promo.isActive ? 'bg-green-500' : 'bg-gray-300'
-                    }`}
+                    className={`w-12 h-6 rounded-full transition-colors relative ${promo.isActive ? 'bg-emerald-500' : 'bg-slate-300'}`}
                   >
-                    <span className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
-                      promo.isActive ? 'right-1' : 'left-1'
-                    }`} />
+                    <span className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${promo.isActive ? 'right-1' : 'left-1'}`} />
                   </button>
-                  <button
-                    onClick={() => setEditingPromo(promo)}
-                    className="px-3 py-1 bg-amber-100 text-amber-700 rounded text-sm hover:bg-amber-200"
-                  >
+                  <Button variant="ghost" size="sm" icon={Pencil} onClick={() => setEditingPromo(promo)}>
                     Modifier
-                  </button>
-                  <button
-                    onClick={() => deletePromotion(promo.id)}
-                    className="px-3 py-1 bg-red-100 text-red-700 rounded text-sm hover:bg-red-200"
-                  >
-                    Supprimer
-                  </button>
+                  </Button>
+                  <Button variant="ghost" size="sm" icon={Trash2} onClick={() => deletePromotion(promo.id)} className="text-slate-400 hover:text-red-600" />
                 </div>
               </div>
             </div>
@@ -191,27 +157,40 @@ export default function PromotionsPage() {
         })}
 
         {promotions.length === 0 && (
-          <div className="bg-white rounded-xl border border-gray-200 p-8 text-center text-gray-500">
-            Aucune promotion. Créez votre première promotion.
-          </div>
+          <EmptyState
+            icon={Percent}
+            title="Aucune promotion"
+            description="Creez votre premiere promotion."
+            action={
+              <Button variant="primary" icon={Plus} onClick={() => setShowForm(true)}>
+                Nouvelle promotion
+              </Button>
+            }
+          />
         )}
       </div>
 
       {/* Form Modal */}
-      {showForm && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl max-w-lg w-full p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Nouvelle promotion</h2>
-            <p className="text-gray-500 mb-4">Fonctionnalité en cours de développement...</p>
-            <button
-              onClick={() => setShowForm(false)}
-              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
-            >
-              Fermer
-            </button>
-          </div>
-        </div>
-      )}
+      <Modal isOpen={showForm} onClose={() => setShowForm(false)} title="Nouvelle promotion">
+        <p className="text-slate-500 mb-4">Fonctionnalite en cours de developpement...</p>
+        <Button variant="secondary" onClick={() => setShowForm(false)}>
+          Fermer
+        </Button>
+      </Modal>
+    </div>
+  );
+}
+
+function MiniStat({ icon: Icon, label, value, bg }: { icon: React.ComponentType<{ className?: string }>; label: string; value: number; bg: string }) {
+  return (
+    <div className="bg-white rounded-xl p-4 border border-slate-200 flex items-center gap-3">
+      <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${bg}`}>
+        <Icon className="w-4 h-4" />
+      </div>
+      <div>
+        <p className="text-xs text-slate-500">{label}</p>
+        <p className="text-xl font-bold text-slate-900">{value}</p>
+      </div>
     </div>
   );
 }

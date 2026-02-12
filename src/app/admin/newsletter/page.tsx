@@ -1,6 +1,28 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import {
+  Send,
+  Users,
+  UserMinus,
+  Mail,
+  BarChart3,
+  Download,
+  Pencil,
+  Clock,
+  Trash2,
+  XCircle,
+} from 'lucide-react';
+import {
+  PageHeader,
+  Button,
+  Modal,
+  EmptyState,
+  StatusBadge,
+  FormField,
+  Input,
+  Textarea,
+} from '@/components/admin';
 
 interface Subscriber {
   id: string;
@@ -23,6 +45,15 @@ interface Campaign {
   openRate?: number;
   clickRate?: number;
 }
+
+const statusVariant: Record<string, 'success' | 'neutral' | 'error' | 'info' | 'warning'> = {
+  ACTIVE: 'success',
+  UNSUBSCRIBED: 'neutral',
+  BOUNCED: 'error',
+  DRAFT: 'neutral',
+  SCHEDULED: 'info',
+  SENT: 'success',
+};
 
 export default function NewsletterPage() {
   const [activeTab, setActiveTab] = useState<'subscribers' | 'campaigns'>('subscribers');
@@ -55,185 +86,123 @@ export default function NewsletterPage() {
   };
 
   const stats = {
-    totalSubscribers: subscribers.filter(s => s.status === 'ACTIVE').length,
-    unsubscribed: subscribers.filter(s => s.status === 'UNSUBSCRIBED').length,
+    totalSubscribers: subscribers.filter((s) => s.status === 'ACTIVE').length,
+    unsubscribed: subscribers.filter((s) => s.status === 'UNSUBSCRIBED').length,
     totalCampaigns: campaigns.length,
-    avgOpenRate: campaigns.filter(c => c.openRate).reduce((sum, c) => sum + (c.openRate || 0), 0) / 
-                 campaigns.filter(c => c.openRate).length || 0,
-    fromPopup: subscribers.filter(s => s.source === 'popup' && s.status === 'ACTIVE').length,
-    fromFooter: subscribers.filter(s => s.source === 'footer' && s.status === 'ACTIVE').length,
-    fromCheckout: subscribers.filter(s => s.source === 'checkout' && s.status === 'ACTIVE').length,
-  };
-
-  const statusColors: Record<string, string> = {
-    ACTIVE: 'bg-green-100 text-green-800',
-    UNSUBSCRIBED: 'bg-gray-100 text-gray-800',
-    BOUNCED: 'bg-red-100 text-red-800',
-    DRAFT: 'bg-gray-100 text-gray-800',
-    SCHEDULED: 'bg-blue-100 text-blue-800',
-    SENT: 'bg-green-100 text-green-800',
+    avgOpenRate:
+      campaigns.filter((c) => c.openRate).reduce((sum, c) => sum + (c.openRate || 0), 0) /
+        campaigns.filter((c) => c.openRate).length || 0,
+    fromPopup: subscribers.filter((s) => s.source === 'popup' && s.status === 'ACTIVE').length,
+    fromFooter: subscribers.filter((s) => s.source === 'footer' && s.status === 'ACTIVE').length,
+    fromCheckout: subscribers.filter((s) => s.source === 'checkout' && s.status === 'ACTIVE').length,
   };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500" />
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Newsletter</h1>
-          <p className="text-gray-500">Gérez vos abonnés et campagnes email</p>
-        </div>
-        <button
-          onClick={() => setShowComposer(true)}
-          className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 flex items-center gap-2"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-          </svg>
-          Nouvelle campagne
-        </button>
-      </div>
+      <PageHeader
+        title="Newsletter"
+        subtitle="Gerez vos abonnes et campagnes email"
+        actions={
+          <Button variant="primary" icon={Send} onClick={() => setShowComposer(true)}>
+            Nouvelle campagne
+          </Button>
+        }
+      />
 
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl p-4 border border-gray-200">
-          <p className="text-sm text-gray-500">Abonnés actifs</p>
-          <p className="text-2xl font-bold text-gray-900">{stats.totalSubscribers}</p>
-        </div>
-        <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-          <p className="text-sm text-gray-500">Désabonnés</p>
-          <p className="text-2xl font-bold text-gray-700">{stats.unsubscribed}</p>
-        </div>
-        <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
-          <p className="text-sm text-blue-600">Campagnes</p>
-          <p className="text-2xl font-bold text-blue-700">{stats.totalCampaigns}</p>
-        </div>
-        <div className="bg-green-50 rounded-xl p-4 border border-green-200">
-          <p className="text-sm text-green-600">Taux d'ouverture moy.</p>
-          <p className="text-2xl font-bold text-green-700">{stats.avgOpenRate.toFixed(1)}%</p>
-        </div>
+        <StatMini icon={Users} label="Abonnes actifs" value={stats.totalSubscribers} bg="bg-sky-50 text-sky-600" />
+        <StatMini icon={UserMinus} label="Desabonnes" value={stats.unsubscribed} bg="bg-slate-50 text-slate-500" />
+        <StatMini icon={Mail} label="Campagnes" value={stats.totalCampaigns} bg="bg-indigo-50 text-indigo-600" />
+        <StatMini
+          icon={BarChart3}
+          label="Taux d'ouverture moy."
+          value={`${stats.avgOpenRate.toFixed(1)}%`}
+          bg="bg-emerald-50 text-emerald-600"
+        />
       </div>
 
-      {/* Rapport des inscriptions par source */}
-      <div className="bg-white rounded-xl p-6 border border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">📊 Rapport des inscriptions par source</h3>
+      {/* Source breakdown */}
+      <div className="bg-white rounded-xl p-6 border border-slate-200">
+        <h3 className="text-base font-semibold text-slate-900 mb-4">Inscriptions par source</h3>
         <div className="grid grid-cols-3 gap-4">
-          <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-purple-500">💬</span>
-              <p className="text-sm font-medium text-purple-700">Popup d'accueil</p>
-            </div>
-            <p className="text-3xl font-bold text-purple-900">{stats.fromPopup}</p>
-            <p className="text-xs text-purple-600 mt-1">
-              {stats.totalSubscribers > 0 ? ((stats.fromPopup / stats.totalSubscribers) * 100).toFixed(1) : 0}% du total
-            </p>
-          </div>
-          <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-blue-500">📧</span>
-              <p className="text-sm font-medium text-blue-700">Pied de page</p>
-            </div>
-            <p className="text-3xl font-bold text-blue-900">{stats.fromFooter}</p>
-            <p className="text-xs text-blue-600 mt-1">
-              {stats.totalSubscribers > 0 ? ((stats.fromFooter / stats.totalSubscribers) * 100).toFixed(1) : 0}% du total
-            </p>
-          </div>
-          <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-amber-500">🛒</span>
-              <p className="text-sm font-medium text-amber-700">Checkout</p>
-            </div>
-            <p className="text-3xl font-bold text-amber-900">{stats.fromCheckout}</p>
-            <p className="text-xs text-amber-600 mt-1">
-              {stats.totalSubscribers > 0 ? ((stats.fromCheckout / stats.totalSubscribers) * 100).toFixed(1) : 0}% du total
-            </p>
-          </div>
+          <SourceCard label="Popup d'accueil" value={stats.fromPopup} total={stats.totalSubscribers} color="violet" />
+          <SourceCard label="Pied de page" value={stats.fromFooter} total={stats.totalSubscribers} color="sky" />
+          <SourceCard label="Checkout" value={stats.fromCheckout} total={stats.totalSubscribers} color="amber" />
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-gray-200">
+      <div className="border-b border-slate-200">
         <nav className="flex gap-8">
-          <button
-            onClick={() => setActiveTab('subscribers')}
-            className={`py-3 border-b-2 font-medium text-sm ${
-              activeTab === 'subscribers'
-                ? 'border-amber-500 text-amber-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            Abonnés ({subscribers.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('campaigns')}
-            className={`py-3 border-b-2 font-medium text-sm ${
-              activeTab === 'campaigns'
-                ? 'border-amber-500 text-amber-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            Campagnes ({campaigns.length})
-          </button>
+          {(['subscribers', 'campaigns'] as const).map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`py-3 border-b-2 font-medium text-sm transition-colors ${
+                activeTab === tab
+                  ? 'border-sky-500 text-sky-600'
+                  : 'border-transparent text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              {tab === 'subscribers' ? `Abonnes (${subscribers.length})` : `Campagnes (${campaigns.length})`}
+            </button>
+          ))}
         </nav>
       </div>
 
       {/* Content */}
       {activeTab === 'subscribers' ? (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+          <div className="p-4 border-b border-slate-200 flex items-center justify-between">
             <input
               type="text"
               placeholder="Rechercher un email..."
-              className="px-4 py-2 border border-gray-300 rounded-lg w-64"
+              className="px-4 py-2 border border-slate-300 rounded-lg w-64 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
             />
-            <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
+            <Button variant="secondary" icon={Download}>
               Exporter CSV
-            </button>
+            </Button>
           </div>
           <table className="w-full">
-            <thead className="bg-gray-50">
+            <thead className="bg-slate-50">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Email</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Langue</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Source</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Statut</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Inscrit le</th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase">Actions</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Email</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Langue</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Source</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Statut</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Inscrit le</th>
+                <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody className="divide-y divide-slate-100">
               {subscribers.map((sub) => (
-                <tr key={sub.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 font-medium text-gray-900">{sub.email}</td>
-                  <td className="px-4 py-3 text-gray-500">{sub.locale.toUpperCase()}</td>
+                <tr key={sub.id} className="hover:bg-slate-50/50">
+                  <td className="px-4 py-3 font-medium text-slate-900">{sub.email}</td>
+                  <td className="px-4 py-3 text-slate-500">{sub.locale.toUpperCase()}</td>
                   <td className="px-4 py-3">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      sub.source === 'popup' ? 'bg-purple-100 text-purple-800' :
-                      sub.source === 'footer' ? 'bg-blue-100 text-blue-800' :
-                      'bg-gray-100 text-gray-800'
-                    }`}>
+                    <StatusBadge
+                      variant={sub.source === 'popup' ? 'primary' : sub.source === 'footer' ? 'info' : 'neutral'}
+                    >
                       {sub.source || 'N/A'}
-                    </span>
+                    </StatusBadge>
                   </td>
                   <td className="px-4 py-3">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[sub.status]}`}>
-                      {sub.status}
-                    </span>
+                    <StatusBadge variant={statusVariant[sub.status]}>{sub.status}</StatusBadge>
                   </td>
-                  <td className="px-4 py-3 text-gray-500">
+                  <td className="px-4 py-3 text-slate-500">
                     {new Date(sub.subscribedAt).toLocaleDateString('fr-CA')}
                   </td>
                   <td className="px-4 py-3 text-center">
-                    <button className="px-2 py-1 bg-red-100 text-red-700 rounded text-xs hover:bg-red-200">
-                      Supprimer
-                    </button>
+                    <Button variant="ghost" size="sm" icon={Trash2} className="text-slate-400 hover:text-red-600" />
                   </td>
                 </tr>
               ))}
@@ -243,53 +212,45 @@ export default function NewsletterPage() {
       ) : (
         <div className="space-y-4">
           {campaigns.map((campaign) => (
-            <div key={campaign.id} className="bg-white rounded-xl border border-gray-200 p-6">
+            <div key={campaign.id} className="bg-white rounded-xl border border-slate-200 p-6">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    <h3 className="font-bold text-gray-900">{campaign.subject}</h3>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[campaign.status]}`}>
-                      {campaign.status}
-                    </span>
+                    <h3 className="font-bold text-slate-900">{campaign.subject}</h3>
+                    <StatusBadge variant={statusVariant[campaign.status]}>{campaign.status}</StatusBadge>
                   </div>
-                  <div className="flex flex-wrap gap-4 text-sm text-gray-500">
+                  <div className="flex flex-wrap gap-4 text-sm text-slate-500">
                     {campaign.sentAt && (
-                      <span>Envoyé le {new Date(campaign.sentAt).toLocaleDateString('fr-CA')}</span>
+                      <span>Envoye le {new Date(campaign.sentAt).toLocaleDateString('fr-CA')}</span>
                     )}
                     {campaign.scheduledFor && (
-                      <span>Programmé pour {new Date(campaign.scheduledFor).toLocaleDateString('fr-CA')}</span>
+                      <span>Programme pour {new Date(campaign.scheduledFor).toLocaleDateString('fr-CA')}</span>
                     )}
-                    {campaign.recipientCount > 0 && (
-                      <span>{campaign.recipientCount} destinataires</span>
-                    )}
-                    {campaign.openRate && (
-                      <span className="text-green-600">{campaign.openRate}% ouverture</span>
-                    )}
-                    {campaign.clickRate && (
-                      <span className="text-blue-600">{campaign.clickRate}% clics</span>
-                    )}
+                    {campaign.recipientCount > 0 && <span>{campaign.recipientCount} destinataires</span>}
+                    {campaign.openRate && <span className="text-emerald-600">{campaign.openRate}% ouverture</span>}
+                    {campaign.clickRate && <span className="text-sky-600">{campaign.clickRate}% clics</span>}
                   </div>
                 </div>
                 <div className="flex gap-2">
                   {campaign.status === 'DRAFT' && (
                     <>
-                      <button className="px-3 py-1 bg-amber-100 text-amber-700 rounded text-sm hover:bg-amber-200">
+                      <Button variant="ghost" size="sm" icon={Pencil}>
                         Modifier
-                      </button>
-                      <button className="px-3 py-1 bg-green-100 text-green-700 rounded text-sm hover:bg-green-200">
+                      </Button>
+                      <Button variant="primary" size="sm" icon={Send}>
                         Envoyer
-                      </button>
+                      </Button>
                     </>
                   )}
                   {campaign.status === 'SCHEDULED' && (
-                    <button className="px-3 py-1 bg-red-100 text-red-700 rounded text-sm hover:bg-red-200">
+                    <Button variant="ghost" size="sm" icon={XCircle} className="text-red-600">
                       Annuler
-                    </button>
+                    </Button>
                   )}
                   {campaign.status === 'SENT' && (
-                    <button className="px-3 py-1 bg-gray-100 text-gray-700 rounded text-sm hover:bg-gray-200">
+                    <Button variant="ghost" size="sm" icon={BarChart3}>
                       Statistiques
-                    </button>
+                    </Button>
                   )}
                 </div>
               </div>
@@ -299,53 +260,88 @@ export default function NewsletterPage() {
       )}
 
       {/* Composer Modal */}
-      {showComposer && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200 flex items-center justify-between">
-              <h2 className="text-xl font-bold text-gray-900">Nouvelle campagne</h2>
-              <button onClick={() => setShowComposer(false)} className="p-2 hover:bg-gray-100 rounded-lg">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            <div className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Sujet *</label>
-                <input
-                  type="text"
-                  value={newCampaign.subject}
-                  onChange={(e) => setNewCampaign({ ...newCampaign, subject: e.target.value })}
-                  placeholder="Sujet de l'email"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Contenu *</label>
-                <textarea
-                  rows={10}
-                  value={newCampaign.content}
-                  onChange={(e) => setNewCampaign({ ...newCampaign, content: e.target.value })}
-                  placeholder="Contenu de l'email (HTML supporté)"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg font-mono text-sm"
-                />
-              </div>
-              <div className="flex gap-3 pt-4 border-t border-gray-200">
-                <button className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
-                  Sauvegarder brouillon
-                </button>
-                <button className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
-                  Programmer
-                </button>
-                <button className="flex-1 px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600">
-                  Envoyer maintenant
-                </button>
-              </div>
-            </div>
+      <Modal isOpen={showComposer} onClose={() => setShowComposer(false)} title="Nouvelle campagne" size="lg">
+        <div className="space-y-4">
+          <FormField label="Sujet" required>
+            <Input
+              type="text"
+              value={newCampaign.subject}
+              onChange={(e) => setNewCampaign({ ...newCampaign, subject: e.target.value })}
+              placeholder="Sujet de l'email"
+            />
+          </FormField>
+          <FormField label="Contenu" required>
+            <Textarea
+              rows={10}
+              value={newCampaign.content}
+              onChange={(e) => setNewCampaign({ ...newCampaign, content: e.target.value })}
+              placeholder="Contenu de l'email (HTML supporte)"
+              className="font-mono text-sm"
+            />
+          </FormField>
+          <div className="flex gap-3 pt-4 border-t border-slate-200">
+            <Button variant="secondary" className="flex-1">
+              Sauvegarder brouillon
+            </Button>
+            <Button variant="outline" icon={Clock} className="flex-1">
+              Programmer
+            </Button>
+            <Button variant="primary" icon={Send} className="flex-1">
+              Envoyer maintenant
+            </Button>
           </div>
         </div>
-      )}
+      </Modal>
+    </div>
+  );
+}
+
+function StatMini({
+  icon: Icon,
+  label,
+  value,
+  bg,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  value: number | string;
+  bg: string;
+}) {
+  return (
+    <div className="bg-white rounded-xl p-4 border border-slate-200 flex items-center gap-3">
+      <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${bg}`}>
+        <Icon className="w-4 h-4" />
+      </div>
+      <div>
+        <p className="text-xs text-slate-500">{label}</p>
+        <p className="text-xl font-bold text-slate-900">{value}</p>
+      </div>
+    </div>
+  );
+}
+
+function SourceCard({
+  label,
+  value,
+  total,
+  color,
+}: {
+  label: string;
+  value: number;
+  total: number;
+  color: 'violet' | 'sky' | 'amber';
+}) {
+  const pct = total > 0 ? ((value / total) * 100).toFixed(1) : '0';
+  const colors = {
+    violet: 'bg-violet-50 border-violet-200 text-violet-700',
+    sky: 'bg-sky-50 border-sky-200 text-sky-700',
+    amber: 'bg-teal-50 border-teal-200 text-teal-700',
+  };
+  return (
+    <div className={`rounded-lg p-4 border ${colors[color]}`}>
+      <p className="text-sm font-medium mb-1">{label}</p>
+      <p className="text-3xl font-bold">{value}</p>
+      <p className="text-xs mt-1 opacity-75">{pct}% du total</p>
     </div>
   );
 }

@@ -1,41 +1,102 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { use } from 'react';
+import { Check, ShoppingCart, DollarSign, Receipt, Truck, FileSpreadsheet, Printer, Calendar, ClipboardList } from 'lucide-react';
 import { getCountryCompliance, type CountryCompliance, type AnnualTask } from '@/lib/countryObligations';
+import {
+  PageHeader,
+  StatCard,
+  StatusBadge,
+  Button,
+  DataTable,
+  EmptyState,
+  type Column,
+} from '@/components/admin';
 
-// TODO: Replace with real API fetch from database
-const mockOrders: { id: string; date: string; customer: string; total: number; status: string; taxCollected: number }[] = [];
-
-// TODO: Replace with real API fetch from database
-const mockMonthlySummary: { month: string; orders: number; revenue: number; taxCollected: number; avgOrder: number }[] = [];
+type OrderItem = { id: string; date: string; customer: string; total: number; status: string; taxCollected: number };
+type MonthlySummaryItem = { month: string; orders: number; revenue: number; taxCollected: number; avgOrder: number };
 
 export default function CountryDetailPage({ params }: { params: Promise<{ code: string }> }) {
   const resolvedParams = use(params);
   const countryCode = resolvedParams.code.toUpperCase();
   const country = getCountryCompliance(countryCode);
-  
+
   const [activeTab, setActiveTab] = useState<'overview' | 'obligations' | 'tasks' | 'orders' | 'reports'>('overview');
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [_selectedMonth, _setSelectedMonth] = useState('Jan 2026');
-  
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [orders, setOrders] = useState<OrderItem[]>([]);
+  const [monthlySummary, setMonthlySummary] = useState<MonthlySummaryItem[]>([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Fetch tax reports for this region/country code
+        const reportsRes = await fetch(`/api/accounting/tax-reports?regionCode=${countryCode}`);
+        if (reportsRes.ok) {
+          const data = await reportsRes.json();
+          const reports = data.reports || [];
+
+          // Build monthly summary from reports
+          const monthMap = new Map<string, { orders: number; revenue: number; taxCollected: number }>();
+          for (const r of reports) {
+            if (r.periodType === 'MONTHLY' && r.month) {
+              const monthKey = `${r.year}-${String(r.month).padStart(2, '0')}`;
+              const existing = monthMap.get(monthKey) || { orders: 0, revenue: 0, taxCollected: 0 };
+              existing.orders += r.salesCount || 0;
+              existing.revenue += r.totalSales || 0;
+              existing.taxCollected += (r.tpsCollected || 0) + (r.tvqCollected || 0) + (r.tvhCollected || 0) + (r.otherTaxCollected || 0);
+              monthMap.set(monthKey, existing);
+            }
+          }
+
+          const builtMonthly: MonthlySummaryItem[] = Array.from(monthMap.entries())
+            .sort(([a], [b]) => a.localeCompare(b))
+            .map(([month, data]) => ({
+              month,
+              orders: data.orders,
+              revenue: Math.round(data.revenue),
+              taxCollected: Math.round(data.taxCollected),
+              avgOrder: data.orders > 0 ? Math.round(data.revenue / data.orders * 100) / 100 : 0,
+            }));
+          setMonthlySummary(builtMonthly);
+        }
+
+        // Orders are not available via a dedicated country-specific API, keep empty
+        setOrders([]);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Erreur inconnue');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [countryCode]);
+
   // Calculate totals - must be before conditional return to respect hooks rules
   const totals = useMemo(() => {
-    const totalRevenue = mockMonthlySummary.reduce((sum, m) => sum + m.revenue, 0);
-    const totalTax = mockMonthlySummary.reduce((sum, m) => sum + m.taxCollected, 0);
-    const totalOrders = mockMonthlySummary.reduce((sum, m) => sum + m.orders, 0);
+    const totalRevenue = monthlySummary.reduce((sum, m) => sum + m.revenue, 0);
+    const totalTax = monthlySummary.reduce((sum, m) => sum + m.taxCollected, 0);
+    const totalOrders = monthlySummary.reduce((sum, m) => sum + m.orders, 0);
     return { totalRevenue, totalTax, totalOrders };
-  }, []);
-  
+  }, [monthlySummary]);
+
+  if (loading) return <div className="p-8 text-center">Chargement...</div>;
+  if (error) return <div className="p-8 text-center text-red-600">Erreur: {error}</div>;
+
   if (!country) {
     return (
-      <div className="min-h-screen bg-gray-50 p-6 flex items-center justify-center">
+      <div className="p-6 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Pays non trouvé</h1>
-          <p className="text-gray-600 mb-6">Le code pays "{countryCode}" n'est pas configuré.</p>
+          <h1 className="text-2xl font-bold text-slate-900 mb-4">Pays non trouve</h1>
+          <p className="text-slate-600 mb-6">Le code pays &quot;{countryCode}&quot; n&apos;est pas configure.</p>
           <Link href="/admin/fiscal" className="text-blue-600 hover:underline">
-            ← Retour à la liste
+            &larr; Retour a la liste
           </Link>
         </div>
       </div>
@@ -43,96 +104,91 @@ export default function CountryDetailPage({ params }: { params: Promise<{ code: 
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-4 mb-2">
-            <Link href="/admin/fiscal" className="text-gray-500 hover:text-gray-700">
-              ← Obligations Fiscales
-            </Link>
-          </div>
-          <div className="flex items-center gap-4">
+    <div className="p-6">
+      {/* Header */}
+      <PageHeader
+        title={country.name}
+        subtitle={`${country.region}${country.hasFTA ? ` \u2022 ${country.ftaName}` : ''}`}
+        backHref="/admin/fiscal"
+        backLabel="Obligations Fiscales"
+        badge={
+          <>
             <span className="text-4xl">{getCountryFlag(country.code)}</span>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                {country.name}
-              </h1>
-              <p className="text-gray-600">
-                {country.region} {country.hasFTA && `• ${country.ftaName}`}
-              </p>
-            </div>
             {country.hasFTA && (
-              <span className="ml-auto px-4 py-2 bg-green-100 text-green-700 font-medium rounded-lg">
-                ✓ Accord de libre-échange
-              </span>
+              <StatusBadge variant="success">
+                Accord de libre-echange
+              </StatusBadge>
             )}
-          </div>
+          </>
+        }
+      />
+
+      {/* Quick Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <StatCard
+          label="Commandes totales"
+          value={totals.totalOrders}
+          icon={ShoppingCart}
+        />
+        <StatCard
+          label={`Revenus ${country.localCurrency}`}
+          value={`$${totals.totalRevenue.toLocaleString()}`}
+          icon={DollarSign}
+        />
+        <StatCard
+          label="Taxes percues"
+          value={`$${totals.totalTax.toLocaleString()}`}
+          icon={Receipt}
+        />
+        <StatCard
+          label="Delai livraison"
+          value={`${country.shippingDays} j`}
+          icon={Truck}
+        />
+      </div>
+
+      {/* Tabs */}
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 mb-6">
+        <div className="border-b border-slate-200">
+          <nav className="flex -mb-px">
+            {[
+              { id: 'overview', label: 'Vue d\'ensemble' },
+              { id: 'obligations', label: 'Obligations fiscales' },
+              { id: 'tasks', label: 'Taches & Echeances' },
+              { id: 'orders', label: 'Commandes' },
+              { id: 'reports', label: 'Rapports' },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as typeof activeTab)}
+                className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
+                  activeTab === tab.id
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </nav>
         </div>
-        
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-            <div className="text-3xl font-bold text-blue-600">{totals.totalOrders}</div>
-            <div className="text-sm text-gray-600">Commandes totales</div>
-          </div>
-          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-            <div className="text-3xl font-bold text-green-600">${totals.totalRevenue.toLocaleString()}</div>
-            <div className="text-sm text-gray-600">Revenus {country.localCurrency}</div>
-          </div>
-          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-            <div className="text-3xl font-bold text-orange-600">${totals.totalTax.toLocaleString()}</div>
-            <div className="text-sm text-gray-600">Taxes perçues</div>
-          </div>
-          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-            <div className="text-3xl font-bold text-purple-600">{country.shippingDays} j</div>
-            <div className="text-sm text-gray-600">Délai livraison</div>
-          </div>
-        </div>
-        
-        {/* Tabs */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-6">
-          <div className="border-b border-gray-200">
-            <nav className="flex -mb-px">
-              {[
-                { id: 'overview', label: 'Vue d\'ensemble' },
-                { id: 'obligations', label: 'Obligations fiscales' },
-                { id: 'tasks', label: 'Tâches & Échéances' },
-                { id: 'orders', label: 'Commandes' },
-                { id: 'reports', label: 'Rapports' },
-              ].map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id as typeof activeTab)}
-                  className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
-                    activeTab === tab.id
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </nav>
-          </div>
-          
-          <div className="p-6">
-            {activeTab === 'overview' && (
-              <OverviewTab country={country} />
-            )}
-            {activeTab === 'obligations' && (
-              <ObligationsTab country={country} />
-            )}
-            {activeTab === 'tasks' && (
-              <TasksTab country={country} />
-            )}
-            {activeTab === 'orders' && (
-              <OrdersTab country={country} orders={mockOrders} />
-            )}
-            {activeTab === 'reports' && (
-              <ReportsTab country={country} monthlyData={mockMonthlySummary} />
-            )}
-          </div>
+
+        <div className="p-6">
+          {activeTab === 'overview' && (
+            <OverviewTab country={country} />
+          )}
+          {activeTab === 'obligations' && (
+            <ObligationsTab country={country} />
+          )}
+          {activeTab === 'tasks' && (
+            <TasksTab country={country} />
+          )}
+          {activeTab === 'orders' && (
+            <OrdersTab country={country} orders={orders} />
+          )}
+          {activeTab === 'reports' && (
+            <ReportsTab country={country} monthlyData={monthlySummary} />
+          )}
         </div>
       </div>
     </div>
@@ -146,57 +202,57 @@ function OverviewTab({ country }: { country: CountryCompliance }) {
       {/* Canadian Export Obligations */}
       <div className="bg-blue-50 rounded-lg p-6">
         <h3 className="text-lg font-semibold text-blue-900 mb-4">
-          Obligations d'exportation canadiennes
+          Obligations d&apos;exportation canadiennes
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="bg-white rounded-lg p-4">
-            <div className="text-sm text-gray-500">Taxes canadiennes</div>
-            <div className={`font-bold ${country.canadianObligations.zeroRated ? 'text-green-600' : 'text-orange-600'}`}>
-              {country.canadianObligations.zeroRated ? '0% (Détaxé)' : 'Taxable'}
+            <div className="text-sm text-slate-500">Taxes canadiennes</div>
+            <div className={`font-bold ${country.canadianObligations.zeroRated ? 'text-green-600' : 'text-sky-600'}`}>
+              {country.canadianObligations.zeroRated ? '0% (Detaxe)' : 'Taxable'}
             </div>
           </div>
           <div className="bg-white rounded-lg p-4">
-            <div className="text-sm text-gray-500">Déclaration SCDE</div>
-            <div className={`font-bold ${country.canadianObligations.cersRequired ? 'text-purple-600' : 'text-gray-600'}`}>
+            <div className="text-sm text-slate-500">Declaration SCDE</div>
+            <div className={`font-bold ${country.canadianObligations.cersRequired ? 'text-purple-600' : 'text-slate-600'}`}>
               {country.canadianObligations.cersRequired ? `Requis (>${country.canadianObligations.cersThreshold}$)` : 'Non requis'}
             </div>
           </div>
           <div className="bg-white rounded-lg p-4">
-            <div className="text-sm text-gray-500">Certificat d'origine</div>
-            <div className={`font-bold ${country.canadianObligations.certificateOfOrigin ? 'text-green-600' : 'text-gray-600'}`}>
+            <div className="text-sm text-slate-500">Certificat d&apos;origine</div>
+            <div className={`font-bold ${country.canadianObligations.certificateOfOrigin ? 'text-green-600' : 'text-slate-600'}`}>
               {country.canadianObligations.certificateOfOrigin ? 'Requis' : 'Non requis'}
             </div>
           </div>
           <div className="bg-white rounded-lg p-4">
-            <div className="text-sm text-gray-500">Permis d'exportation</div>
-            <div className={`font-bold ${country.canadianObligations.exportPermit ? 'text-red-600' : 'text-gray-600'}`}>
+            <div className="text-sm text-slate-500">Permis d&apos;exportation</div>
+            <div className={`font-bold ${country.canadianObligations.exportPermit ? 'text-red-600' : 'text-slate-600'}`}>
               {country.canadianObligations.exportPermit ? 'Requis' : 'Non requis'}
             </div>
           </div>
         </div>
       </div>
-      
+
       {/* Shipping Info */}
-      <div className="bg-gray-50 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
+      <div className="bg-slate-50 rounded-lg p-6">
+        <h3 className="text-lg font-semibold text-slate-900 mb-4">
           Informations de livraison
         </h3>
         <div className="grid grid-cols-3 gap-4">
           <div>
-            <div className="text-sm text-gray-500">Délai estimé</div>
+            <div className="text-sm text-slate-500">Delai estime</div>
             <div className="font-bold">{country.shippingDays} jours ouvrables</div>
           </div>
           <div>
-            <div className="text-sm text-gray-500">Frais de base</div>
+            <div className="text-sm text-slate-500">Frais de base</div>
             <div className="font-bold">${country.shippingCost} CAD</div>
           </div>
           <div>
-            <div className="text-sm text-gray-500">Devise locale</div>
+            <div className="text-sm text-slate-500">Devise locale</div>
             <div className="font-bold">{country.localCurrencySymbol} {country.localCurrency}</div>
           </div>
         </div>
       </div>
-      
+
       {/* Notes */}
       <div className="bg-yellow-50 rounded-lg p-6">
         <h3 className="text-lg font-semibold text-yellow-900 mb-4">
@@ -205,7 +261,7 @@ function OverviewTab({ country }: { country: CountryCompliance }) {
         <ul className="space-y-2">
           {country.notes.map((note, index) => (
             <li key={index} className="flex items-start gap-2 text-sm text-yellow-800">
-              <span className="text-yellow-600">•</span>
+              <span className="text-yellow-600">&bull;</span>
               {note}
             </li>
           ))}
@@ -219,48 +275,48 @@ function OverviewTab({ country }: { country: CountryCompliance }) {
 function ObligationsTab({ country }: { country: CountryCompliance }) {
   return (
     <div className="space-y-6">
-      <h3 className="text-lg font-semibold text-gray-900">
+      <h3 className="text-lg font-semibold text-slate-900">
         Obligations fiscales pour {country.name}
       </h3>
-      
+
       {country.destinationObligations.length === 0 ? (
-        <div className="text-center py-8 text-gray-500">
-          Aucune obligation fiscale spécifique configurée pour ce pays
-        </div>
+        <EmptyState
+          icon={ClipboardList}
+          title="Aucune obligation fiscale"
+          description="Aucune obligation fiscale specifique configuree pour ce pays"
+        />
       ) : (
         <div className="space-y-4">
           {country.destinationObligations.map((obligation, index) => (
-            <div key={index} className="bg-gray-50 rounded-lg p-6 border border-gray-200">
+            <div key={index} className="bg-slate-50 rounded-lg p-6 border border-slate-200">
               <div className="flex items-start justify-between mb-2">
                 <div>
-                  <h4 className="font-semibold text-gray-900">{obligation.name}</h4>
-                  <p className="text-sm text-gray-500">{obligation.nameFr}</p>
+                  <h4 className="font-semibold text-slate-900">{obligation.name}</h4>
+                  <p className="text-sm text-slate-500">{obligation.nameFr}</p>
                 </div>
-                <span className={`px-3 py-1 text-xs font-medium rounded-full ${
-                  obligation.required ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-600'
-                }`}>
+                <StatusBadge variant={obligation.required ? 'error' : 'neutral'}>
                   {obligation.required ? 'Obligatoire' : 'Optionnel'}
-                </span>
+                </StatusBadge>
               </div>
-              
-              <p className="text-gray-700 mb-4">{obligation.description}</p>
-              
+
+              <p className="text-slate-700 mb-4">{obligation.description}</p>
+
               <div className="grid grid-cols-3 gap-4 text-sm">
                 {obligation.rate && (
                   <div>
-                    <span className="text-gray-500">Taux:</span>
+                    <span className="text-slate-500">Taux:</span>
                     <span className="ml-2 font-medium">{obligation.rate}</span>
                   </div>
                 )}
                 {obligation.threshold && (
                   <div>
-                    <span className="text-gray-500">Seuil:</span>
+                    <span className="text-slate-500">Seuil:</span>
                     <span className="ml-2 font-medium">{obligation.threshold}</span>
                   </div>
                 )}
                 {obligation.frequency && (
                   <div>
-                    <span className="text-gray-500">Fréquence:</span>
+                    <span className="text-slate-500">Frequence:</span>
                     <span className="ml-2 font-medium capitalize">{obligation.frequency}</span>
                   </div>
                 )}
@@ -278,10 +334,10 @@ function TasksTab({ country }: { country: CountryCompliance }) {
   const [tasks, setTasks] = useState<(AnnualTask & { status: string })[]>(
     country.annualTasks.map(t => ({ ...t, status: t.status || 'pending' }))
   );
-  
+
   const toggleTaskStatus = (taskId: string) => {
-    setTasks(prev => prev.map(t => 
-      t.id === taskId 
+    setTasks(prev => prev.map(t =>
+      t.id === taskId
         ? { ...t, status: t.status === 'completed' ? 'pending' : 'completed' }
         : t
     ));
@@ -290,27 +346,29 @@ function TasksTab({ country }: { country: CountryCompliance }) {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-900">
-          Tâches et échéances
+        <h3 className="text-lg font-semibold text-slate-900">
+          Taches et echeances
         </h3>
-        <div className="text-sm text-gray-500">
-          {tasks.filter(t => t.status === 'completed').length}/{tasks.length} complétées
+        <div className="text-sm text-slate-500">
+          {tasks.filter(t => t.status === 'completed').length}/{tasks.length} completees
         </div>
       </div>
-      
+
       {tasks.length === 0 ? (
-        <div className="text-center py-8 text-gray-500">
-          Aucune tâche récurrente configurée pour ce pays
-        </div>
+        <EmptyState
+          icon={Calendar}
+          title="Aucune tache recurrente"
+          description="Aucune tache recurrente configuree pour ce pays"
+        />
       ) : (
         <div className="space-y-3">
           {tasks.map((task) => (
-            <div 
-              key={task.id} 
+            <div
+              key={task.id}
               className={`rounded-lg p-4 border ${
-                task.status === 'completed' 
-                  ? 'bg-green-50 border-green-200' 
-                  : 'bg-white border-gray-200'
+                task.status === 'completed'
+                  ? 'bg-green-50 border-green-200'
+                  : 'bg-white border-slate-200'
               }`}
             >
               <div className="flex items-start gap-4">
@@ -319,34 +377,32 @@ function TasksTab({ country }: { country: CountryCompliance }) {
                   className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${
                     task.status === 'completed'
                       ? 'bg-green-500 border-green-500 text-white'
-                      : 'border-gray-300 hover:border-green-500'
+                      : 'border-slate-300 hover:border-green-500'
                   }`}
                 >
                   {task.status === 'completed' && (
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
+                    <Check className="w-4 h-4" />
                   )}
                 </button>
-                
+
                 <div className="flex-grow">
                   <div className="flex items-center justify-between">
-                    <h4 className={`font-semibold ${task.status === 'completed' ? 'text-green-800 line-through' : 'text-gray-900'}`}>
+                    <h4 className={`font-semibold ${task.status === 'completed' ? 'text-green-800 line-through' : 'text-slate-900'}`}>
                       {task.name}
                     </h4>
-                    <span className={`px-2 py-1 text-xs rounded-full ${
-                      task.frequency === 'monthly' ? 'bg-blue-100 text-blue-700' :
-                      task.frequency === 'quarterly' ? 'bg-purple-100 text-purple-700' :
-                      'bg-orange-100 text-orange-700'
-                    }`}>
+                    <StatusBadge variant={
+                      task.frequency === 'monthly' ? 'info' :
+                      task.frequency === 'quarterly' ? 'primary' :
+                      'warning'
+                    }>
                       {task.frequency === 'monthly' ? 'Mensuel' :
                        task.frequency === 'quarterly' ? 'Trimestriel' :
                        task.frequency === 'annually' ? 'Annuel' : 'Unique'}
-                    </span>
+                    </StatusBadge>
                   </div>
-                  <p className="text-sm text-gray-600 mt-1">{task.description}</p>
-                  <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
-                    <span>📅 Échéance: {task.dueDate}</span>
+                  <p className="text-sm text-slate-600 mt-1">{task.description}</p>
+                  <div className="flex items-center gap-4 mt-2 text-xs text-slate-500">
+                    <span>Echeance: {task.dueDate}</span>
                   </div>
                 </div>
               </div>
@@ -359,135 +415,167 @@ function TasksTab({ country }: { country: CountryCompliance }) {
 }
 
 // Orders Tab Component
-function OrdersTab({ country, orders }: { country: CountryCompliance; orders: typeof mockOrders }) {
+function OrdersTab({ country, orders }: { country: CountryCompliance; orders: OrderItem[] }) {
+  const orderColumns: Column<OrderItem>[] = [
+    {
+      key: 'id',
+      header: 'N Commande',
+      render: (order) => <span className="font-medium text-blue-600">{order.id}</span>,
+    },
+    {
+      key: 'date',
+      header: 'Date',
+      render: (order) => <span className="text-slate-600">{order.date}</span>,
+    },
+    {
+      key: 'customer',
+      header: 'Client',
+      render: (order) => <span className="text-slate-900">{order.customer}</span>,
+    },
+    {
+      key: 'total',
+      header: 'Total',
+      align: 'right',
+      render: (order) => <span className="font-medium">${order.total.toFixed(2)}</span>,
+    },
+    {
+      key: 'taxCollected',
+      header: 'Taxes',
+      align: 'right',
+      render: (order) => <span className="text-slate-600">${order.taxCollected.toFixed(2)}</span>,
+    },
+    {
+      key: 'status',
+      header: 'Statut',
+      align: 'center',
+      render: (order) => {
+        const variant = order.status === 'delivered' ? 'success' as const
+          : order.status === 'shipped' ? 'info' as const
+          : 'warning' as const;
+        const label = order.status === 'delivered' ? 'Livre'
+          : order.status === 'shipped' ? 'Expedie' : 'En traitement';
+        return <StatusBadge variant={variant}>{label}</StatusBadge>;
+      },
+    },
+  ];
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-900">
-          Commandes récentes - {country.name}
+        <h3 className="text-lg font-semibold text-slate-900">
+          Commandes recentes - {country.name}
         </h3>
-        <button className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm">
+        <Button variant="primary" icon={FileSpreadsheet} size="sm">
           Exporter CSV
-        </button>
+        </Button>
       </div>
-      
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-gray-200">
-              <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">N° Commande</th>
-              <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">Date</th>
-              <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">Client</th>
-              <th className="text-right py-3 px-4 text-sm font-medium text-gray-500">Total</th>
-              <th className="text-right py-3 px-4 text-sm font-medium text-gray-500">Taxes</th>
-              <th className="text-center py-3 px-4 text-sm font-medium text-gray-500">Statut</th>
-            </tr>
-          </thead>
-          <tbody>
-            {orders.map((order) => (
-              <tr key={order.id} className="border-b border-gray-100 hover:bg-gray-50">
-                <td className="py-3 px-4 font-medium text-blue-600">{order.id}</td>
-                <td className="py-3 px-4 text-gray-600">{order.date}</td>
-                <td className="py-3 px-4 text-gray-900">{order.customer}</td>
-                <td className="py-3 px-4 text-right font-medium">${order.total.toFixed(2)}</td>
-                <td className="py-3 px-4 text-right text-gray-600">${order.taxCollected.toFixed(2)}</td>
-                <td className="py-3 px-4 text-center">
-                  <span className={`px-2 py-1 text-xs rounded-full ${
-                    order.status === 'delivered' ? 'bg-green-100 text-green-700' :
-                    order.status === 'shipped' ? 'bg-blue-100 text-blue-700' :
-                    'bg-yellow-100 text-yellow-700'
-                  }`}>
-                    {order.status === 'delivered' ? 'Livré' :
-                     order.status === 'shipped' ? 'Expédié' : 'En traitement'}
-                  </span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+
+      <DataTable
+        columns={orderColumns}
+        data={orders}
+        keyExtractor={(order) => order.id}
+        emptyTitle="Aucune commande"
+        emptyDescription="Aucune commande enregistree pour ce pays"
+      />
     </div>
   );
 }
 
 // Reports Tab Component
-function ReportsTab({ country, monthlyData }: { country: CountryCompliance; monthlyData: typeof mockMonthlySummary }) {
+function ReportsTab({ country, monthlyData }: { country: CountryCompliance; monthlyData: MonthlySummaryItem[] }) {
   const totals = {
     orders: monthlyData.reduce((sum, m) => sum + m.orders, 0),
     revenue: monthlyData.reduce((sum, m) => sum + m.revenue, 0),
     tax: monthlyData.reduce((sum, m) => sum + m.taxCollected, 0),
   };
 
+  const monthColumns: Column<MonthlySummaryItem>[] = [
+    {
+      key: 'month',
+      header: 'Mois',
+      render: (m) => <span className="font-medium">{m.month}</span>,
+    },
+    {
+      key: 'orders',
+      header: 'Commandes',
+      align: 'right',
+      render: (m) => m.orders,
+    },
+    {
+      key: 'revenue',
+      header: 'Revenus',
+      align: 'right',
+      render: (m) => <span className="font-medium text-green-600">${m.revenue.toLocaleString()}</span>,
+    },
+    {
+      key: 'taxCollected',
+      header: 'Taxes percues',
+      align: 'right',
+      render: (m) => <span className="text-sky-600">${m.taxCollected.toLocaleString()}</span>,
+    },
+    {
+      key: 'avgOrder',
+      header: 'Panier moyen',
+      align: 'right',
+      render: (m) => `$${m.avgOrder.toFixed(2)}`,
+    },
+  ];
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-900">
+        <h3 className="text-lg font-semibold text-slate-900">
           Rapports mensuels - {country.name}
         </h3>
         <div className="flex gap-2">
-          <button className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 text-sm">
+          <Button variant="primary" icon={FileSpreadsheet} size="sm">
             Exporter Excel
-          </button>
-          <button className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm">
+          </Button>
+          <Button variant="secondary" icon={Printer} size="sm">
             Imprimer PDF
-          </button>
+          </Button>
         </div>
       </div>
-      
+
       {/* Monthly Summary Table */}
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-gray-200 bg-gray-50">
-              <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">Mois</th>
-              <th className="text-right py-3 px-4 text-sm font-medium text-gray-500">Commandes</th>
-              <th className="text-right py-3 px-4 text-sm font-medium text-gray-500">Revenus</th>
-              <th className="text-right py-3 px-4 text-sm font-medium text-gray-500">Taxes perçues</th>
-              <th className="text-right py-3 px-4 text-sm font-medium text-gray-500">Panier moyen</th>
-            </tr>
-          </thead>
-          <tbody>
-            {monthlyData.map((month) => (
-              <tr key={month.month} className="border-b border-gray-100 hover:bg-gray-50">
-                <td className="py-3 px-4 font-medium">{month.month}</td>
-                <td className="py-3 px-4 text-right">{month.orders}</td>
-                <td className="py-3 px-4 text-right font-medium text-green-600">${month.revenue.toLocaleString()}</td>
-                <td className="py-3 px-4 text-right text-orange-600">${month.taxCollected.toLocaleString()}</td>
-                <td className="py-3 px-4 text-right">${month.avgOrder.toFixed(2)}</td>
-              </tr>
-            ))}
-          </tbody>
-          <tfoot>
-            <tr className="bg-gray-100 font-bold">
-              <td className="py-3 px-4">TOTAL</td>
-              <td className="py-3 px-4 text-right">{totals.orders}</td>
-              <td className="py-3 px-4 text-right text-green-600">${totals.revenue.toLocaleString()}</td>
-              <td className="py-3 px-4 text-right text-orange-600">${totals.tax.toLocaleString()}</td>
-              <td className="py-3 px-4 text-right">${totals.orders > 0 ? (totals.revenue / totals.orders).toFixed(2) : '0.00'}</td>
-            </tr>
-          </tfoot>
-        </table>
-      </div>
-      
+      <DataTable
+        columns={monthColumns}
+        data={monthlyData}
+        keyExtractor={(m) => m.month}
+        emptyTitle="Aucune donnee"
+        emptyDescription="Aucune donnee mensuelle disponible"
+      />
+
+      {/* Totals row displayed separately when data exists */}
+      {monthlyData.length > 0 && (
+        <div className="bg-slate-100 rounded-lg p-4 grid grid-cols-5 gap-4 text-sm font-bold">
+          <div>TOTAL</div>
+          <div className="text-right">{totals.orders}</div>
+          <div className="text-right text-green-600">${totals.revenue.toLocaleString()}</div>
+          <div className="text-right text-sky-600">${totals.tax.toLocaleString()}</div>
+          <div className="text-right">${totals.orders > 0 ? (totals.revenue / totals.orders).toFixed(2) : '0.00'}</div>
+        </div>
+      )}
+
       {/* Tax Remittance Summary */}
-      <div className="bg-orange-50 rounded-lg p-6 border border-orange-200">
-        <h4 className="font-semibold text-orange-900 mb-4">Résumé des taxes à remettre</h4>
+      <div className="bg-sky-50 rounded-lg p-6 border border-sky-200">
+        <h4 className="font-semibold text-sky-900 mb-4">Resume des taxes a remettre</h4>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div>
-            <div className="text-sm text-orange-600">Taxes perçues (6 mois)</div>
-            <div className="text-2xl font-bold text-orange-900">${totals.tax.toLocaleString()}</div>
+            <div className="text-sm text-sky-600">Taxes percues (6 mois)</div>
+            <div className="text-2xl font-bold text-sky-900">${totals.tax.toLocaleString()}</div>
           </div>
           <div>
-            <div className="text-sm text-orange-600">Devise</div>
-            <div className="text-2xl font-bold text-orange-900">{country.localCurrency}</div>
+            <div className="text-sm text-sky-600">Devise</div>
+            <div className="text-2xl font-bold text-sky-900">{country.localCurrency}</div>
           </div>
           <div>
-            <div className="text-sm text-orange-600">Prochaine échéance</div>
-            <div className="text-2xl font-bold text-orange-900">31 Jan 2026</div>
+            <div className="text-sm text-sky-600">Prochaine echeance</div>
+            <div className="text-2xl font-bold text-sky-900">31 Jan 2026</div>
           </div>
           <div>
-            <div className="text-sm text-orange-600">Statut</div>
-            <div className="text-lg font-bold text-green-600">À jour</div>
+            <div className="text-sm text-sky-600">Statut</div>
+            <div className="text-lg font-bold text-green-600">A jour</div>
           </div>
         </div>
       </div>
@@ -498,19 +586,19 @@ function ReportsTab({ country, monthlyData }: { country: CountryCompliance; mont
 // Helper function to get country flag emoji
 function getCountryFlag(code: string): string {
   const flags: Record<string, string> = {
-    CA: '🇨🇦',
-    US: '🇺🇸',
-    EU: '🇪🇺',
-    GB: '🇬🇧',
-    JP: '🇯🇵',
-    AU: '🇦🇺',
-    AE: '🇦🇪',
-    IL: '🇮🇱',
-    CL: '🇨🇱',
-    PE: '🇵🇪',
-    FR: '🇫🇷',
-    DE: '🇩🇪',
-    MX: '🇲🇽',
+    CA: '\u{1F1E8}\u{1F1E6}',
+    US: '\u{1F1FA}\u{1F1F8}',
+    EU: '\u{1F1EA}\u{1F1FA}',
+    GB: '\u{1F1EC}\u{1F1E7}',
+    JP: '\u{1F1EF}\u{1F1F5}',
+    AU: '\u{1F1E6}\u{1F1FA}',
+    AE: '\u{1F1E6}\u{1F1EA}',
+    IL: '\u{1F1EE}\u{1F1F1}',
+    CL: '\u{1F1E8}\u{1F1F1}',
+    PE: '\u{1F1F5}\u{1F1EA}',
+    FR: '\u{1F1EB}\u{1F1F7}',
+    DE: '\u{1F1E9}\u{1F1EA}',
+    MX: '\u{1F1F2}\u{1F1FD}',
   };
-  return flags[code] || '🌍';
+  return flags[code] || '\u{1F30D}';
 }

@@ -43,7 +43,7 @@ const actionColors: Record<string, string> = {
   CREATE: 'bg-green-900/30 text-green-400',
   UPDATE: 'bg-blue-900/30 text-blue-400',
   DELETE: 'bg-red-900/30 text-red-400',
-  POST: 'bg-amber-900/30 text-amber-400',
+  POST: 'bg-sky-900/30 text-sky-400',
   VOID: 'bg-red-900/30 text-red-400',
   APPROVE: 'bg-green-900/30 text-green-400',
   RECONCILE: 'bg-purple-900/30 text-purple-400',
@@ -65,17 +65,37 @@ export default function AuditTrailPage() {
   const [selectedEntry, setSelectedEntry] = useState<AuditEntry | null>(null);
   const [exporting, setExporting] = useState(false);
 
+  const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
     loadEntries();
   }, []);
 
+  // Refetch when date filters change
+  useEffect(() => {
+    if (filters.dateFrom || filters.dateTo) {
+      loadEntries();
+    }
+  }, [filters.dateFrom, filters.dateTo]);
+
   const loadEntries = async () => {
+    setLoading(true);
+    setError(null);
     try {
-      const response = await fetch('/api/accounting/audit');
+      const params = new URLSearchParams();
+      if (filters.action) params.set('type', filters.action);
+      if (filters.dateFrom) params.set('from', filters.dateFrom);
+      if (filters.dateTo) params.set('to', filters.dateTo);
+      if (filters.entityType) params.set('entityType', filters.entityType);
+
+      const queryStr = params.toString();
+      const response = await fetch(`/api/accounting/audit${queryStr ? `?${queryStr}` : ''}`);
+      if (!response.ok) throw new Error(`Erreur ${response.status}`);
       const data = await response.json();
-      setEntries(data.entries || []);
-    } catch (error) {
-      console.error('Error loading audit entries:', error);
+      setEntries(data.entries || data.data || []);
+    } catch (err) {
+      console.error('Error loading audit entries:', err);
+      setError('Impossible de charger la piste d\'audit.');
       setEntries([]);
     } finally {
       setLoading(false);
@@ -101,7 +121,7 @@ export default function AuditTrailPage() {
     // Generate CSV
     const headers = ['Date/Heure', 'Action', 'Type', 'Document', 'Utilisateur', 'IP', 'Modifications'];
     const rows = filteredEntries.map(e => [
-      e.timestamp.toISOString(),
+      new Date(e.timestamp).toISOString(),
       actionLabels[e.action] || e.action,
       entityLabels[e.entityType] || e.entityType,
       e.entityNumber || e.entityId,
@@ -128,7 +148,16 @@ export default function AuditTrailPage() {
   const uniqueUsers = new Set(entries.map(e => e.userName)).size;
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64"><div className="animate-spin h-8 w-8 border-4 border-amber-500 border-t-transparent rounded-full"></div></div>;
+    return <div className="p-8 text-center">Chargement...</div>;
+  }
+
+  if (error) {
+    return (
+      <div className="p-8 text-center">
+        <p className="text-red-400 mb-4">{error}</p>
+        <button onClick={loadEntries} className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg">Réessayer</button>
+      </div>
+    );
   }
 
   return (
@@ -142,7 +171,7 @@ export default function AuditTrailPage() {
         <button
           onClick={handleExport}
           disabled={exporting}
-          className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg flex items-center gap-2 disabled:opacity-50"
+          className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg flex items-center gap-2 disabled:opacity-50"
         >
           {exporting ? 'Export...' : '📥 Exporter CSV'}
         </button>
@@ -156,7 +185,7 @@ export default function AuditTrailPage() {
         </div>
         <div className="bg-neutral-800 rounded-xl p-4 border border-neutral-700">
           <p className="text-sm text-neutral-400">Total actions</p>
-          <p className="text-2xl font-bold text-amber-400 mt-1">{entries.length}</p>
+          <p className="text-2xl font-bold text-sky-400 mt-1">{entries.length}</p>
         </div>
         <div className="bg-neutral-800 rounded-xl p-4 border border-neutral-700">
           <p className="text-sm text-neutral-400">Utilisateurs actifs</p>
@@ -240,10 +269,10 @@ export default function AuditTrailPage() {
               <div className="flex items-start gap-4">
                 <div className="text-center min-w-[60px]">
                   <p className="text-xs text-neutral-500">
-                    {entry.timestamp.toLocaleDateString('fr-CA')}
+                    {new Date(entry.timestamp).toLocaleDateString('fr-CA')}
                   </p>
                   <p className="text-sm text-neutral-300">
-                    {entry.timestamp.toLocaleTimeString('fr-CA', { hour: '2-digit', minute: '2-digit' })}
+                    {new Date(entry.timestamp).toLocaleTimeString('fr-CA', { hour: '2-digit', minute: '2-digit' })}
                   </p>
                 </div>
                 
@@ -288,7 +317,7 @@ export default function AuditTrailPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-xs text-neutral-400">Date/Heure</p>
-                  <p className="text-white">{selectedEntry.timestamp.toLocaleString('fr-CA')}</p>
+                  <p className="text-white">{new Date(selectedEntry.timestamp).toLocaleString('fr-CA')}</p>
                 </div>
                 <div>
                   <p className="text-xs text-neutral-400">Action</p>
