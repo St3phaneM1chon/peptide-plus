@@ -38,6 +38,7 @@ enum PaymentMethod {
   PAYPAL
   VISA_CLICK_TO_PAY
   MASTERCARD_CLICK_TO_PAY
+  AURELIA_PAY
 }
 
 enum ProductType {
@@ -1064,6 +1065,10 @@ model Order {
   shippingCost      Decimal        @db.Decimal(10, 2) @default(0)
   discount          Decimal        @db.Decimal(10, 2) @default(0)
   tax               Decimal        @db.Decimal(10, 2) @default(0)
+  taxTps            Decimal        @db.Decimal(10, 2) @default(0) // GST/TPS
+  taxTvq            Decimal        @db.Decimal(10, 2) @default(0) // QST/TVQ
+  taxTvh            Decimal        @db.Decimal(10, 2) @default(0) // HST/TVH
+  taxPst            Decimal        @db.Decimal(10, 2) @default(0) // PST (BC, SK, MB)
   total             Decimal        @db.Decimal(10, 2)
   
   // Devise
@@ -1104,17 +1109,25 @@ model Order {
   // Notes
   customerNotes     String?        @db.Text
   adminNotes        String?        @db.Text
-  
+
+  // Re-expedition / Remplacement
+  parentOrderId     String?
+  parentOrder       Order?         @relation("OrderReplacement", fields: [parentOrderId], references: [id])
+  replacementOrders Order[]        @relation("OrderReplacement")
+  replacementReason String?
+  orderType         String         @default("STANDARD") // STANDARD | REPLACEMENT
+
   // Articles
   items             OrderItem[]
-  
+
   createdAt         DateTime       @default(now())
   updatedAt         DateTime       @updatedAt
-  
+
   @@index([userId])
   @@index([orderNumber])
   @@index([status])
   @@index([createdAt])
+  @@index([parentOrderId])
 }
 
 model OrderItem {
@@ -1140,6 +1153,39 @@ model OrderItem {
   
   @@index([orderId])
   @@index([productId])
+}
+
+// =====================================================
+// SUBSCRIPTIONS (Abonnements automatiques)
+// =====================================================
+
+model Subscription {
+  id              String   @id @default(cuid())
+  userId          String
+  productId       String
+  formatId        String?
+
+  // Snapshot
+  productName     String
+  formatName      String?
+
+  quantity        Int      @default(1)
+  frequency       String   @default("MONTHLY") // WEEKLY | BIWEEKLY | MONTHLY | BIMONTHLY
+  discountPercent Int      @default(10)         // 5, 10, 15, 20
+  unitPrice       Decimal  @db.Decimal(10, 2)   // Prix au moment de la creation
+
+  status          String   @default("ACTIVE")   // ACTIVE | PAUSED | CANCELLED
+
+  nextDelivery    DateTime
+  lastDelivery    DateTime?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  cancelledAt     DateTime?
+
+  @@index([userId])
+  @@index([status])
+  @@index([nextDelivery])
 }
 
 // =====================================================
@@ -1335,6 +1381,108 @@ enum ChatSender {
 }
 
 // =====================================================
+// WEBHOOK IDEMPOTENCE
+// =====================================================
+
+enum WebhookEventStatus {
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+model WebhookEvent {
+  id              String              @id @default(cuid())
+
+  eventId         String              @unique // Stripe event ID or PayPal webhook ID
+  provider        String                      // "stripe" or "paypal"
+  eventType       String                      // "checkout.session.completed", etc.
+
+  status          WebhookEventStatus  @default(PROCESSING)
+
+  // Linked entities
+  orderId         String?
+  journalEntryId  String?
+
+  // Payload for debugging
+  payload         String?             @db.Text
+  errorMessage    String?             @db.Text
+
+  processedAt     DateTime?
+  createdAt       DateTime            @default(now())
+
+  @@index([eventId])
+  @@index([provider])
+  @@index([status])
+}
+
+// =====================================================
+// INVENTORY TRACKING
+// =====================================================
+
+enum InventoryTransactionType {
+  PURCHASE
+  SALE
+  ADJUSTMENT
+  RETURN
+  LOSS
+}
+
+enum InventoryReservationStatus {
+  RESERVED
+  RELEASED
+  CONSUMED
+}
+
+model InventoryTransaction {
+  id              String                    @id @default(cuid())
+
+  productId       String
+  formatId        String?
+
+  type            InventoryTransactionType
+  quantity        Int                       // Positive for inbound, negative for outbound
+  unitCost        Decimal                   @db.Decimal(12, 4)  // Cost per unit at time of transaction
+  runningWAC      Decimal                   @db.Decimal(12, 4)  // Weighted Average Cost after this transaction
+
+  // References
+  orderId             String?
+  supplierInvoiceId   String?
+  reason              String?
+
+  createdBy       String?
+  createdAt       DateTime              @default(now())
+
+  @@index([productId, formatId])
+  @@index([type])
+  @@index([orderId])
+  @@index([createdAt])
+}
+
+model InventoryReservation {
+  id              String                      @id @default(cuid())
+
+  productId       String
+  formatId        String?
+  quantity        Int
+
+  // Reference
+  orderId         String?
+  cartId          String?
+
+  status          InventoryReservationStatus  @default(RESERVED)
+  expiresAt       DateTime
+
+  createdAt       DateTime                    @default(now())
+  consumedAt      DateTime?
+  releasedAt      DateTime?
+
+  @@index([status])
+  @@index([expiresAt])
+  @@index([orderId])
+  @@index([cartId])
+}
+
+// =====================================================
 // COMPTABILITÉ / ACCOUNTING
 // =====================================================
 
@@ -1379,6 +1527,12 @@ enum InvoiceStatus {
   PARTIAL
   OVERDUE
   CANCELLED
+  VOID
+}
+
+enum CreditNoteStatus {
+  DRAFT
+  ISSUED
   VOID
 }
 
@@ -1450,10 +1604,14 @@ model JournalEntry {
   
   // Documents joints
   attachments     String?             @db.Text // JSON array d'URLs
-  
+
+  // Devise (pour les transactions multi-devises)
+  currency        String              @default("CAD")
+  exchangeRate    Decimal             @db.Decimal(10, 6) @default(1.000000)
+
   createdAt       DateTime            @default(now())
   updatedAt       DateTime            @updatedAt
-  
+
   @@index([date])
   @@index([status])
   @@index([type])
@@ -1630,8 +1788,9 @@ model CustomerInvoice {
   taxTps          Decimal         @db.Decimal(12, 2) @default(0)
   taxTvq          Decimal         @db.Decimal(12, 2) @default(0)
   taxTvh          Decimal         @db.Decimal(12, 2) @default(0)
+  taxPst          Decimal         @db.Decimal(12, 2) @default(0)
   total           Decimal         @db.Decimal(12, 2)
-  
+
   amountPaid      Decimal         @db.Decimal(12, 2) @default(0)
   balance         Decimal         @db.Decimal(12, 2)
   
@@ -1647,7 +1806,10 @@ model CustomerInvoice {
   
   // Lignes
   items           CustomerInvoiceItem[]
-  
+
+  // Notes de credit
+  creditNotes     CreditNote[]
+
   // Documents
   pdfUrl          String?
   
@@ -1689,6 +1851,54 @@ model CustomerInvoiceItem {
   createdAt       DateTime        @default(now())
   
   @@index([invoiceId])
+}
+
+// Notes de credit
+model CreditNote {
+  id                String           @id @default(cuid())
+
+  creditNoteNumber  String           @unique // NC-2026-0001
+
+  // Facture liee (optionnel)
+  invoiceId         String?
+  invoice           CustomerInvoice? @relation(fields: [invoiceId], references: [id])
+
+  // Commande liee
+  orderId           String?
+
+  // Client
+  customerName      String
+  customerEmail     String?
+
+  // Montants
+  subtotal          Decimal          @db.Decimal(12, 2)
+  taxTps            Decimal          @db.Decimal(12, 2) @default(0)
+  taxTvq            Decimal          @db.Decimal(12, 2) @default(0)
+  taxTvh            Decimal          @db.Decimal(12, 2) @default(0)
+  taxPst            Decimal          @db.Decimal(12, 2) @default(0)
+  total             Decimal          @db.Decimal(12, 2)
+  currency          String           @default("CAD")
+
+  // Details
+  reason            String
+  status            CreditNoteStatus @default(DRAFT)
+
+  // Audit
+  issuedAt          DateTime?
+  issuedBy          String?
+  voidedAt          DateTime?
+  voidedBy          String?
+
+  // Ecriture comptable
+  journalEntryId    String?
+
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  @@index([orderId])
+  @@index([invoiceId])
+  @@index([status])
+  @@index([createdAt])
 }
 
 // Rapports de taxes
@@ -1863,6 +2073,70 @@ model BudgetLine {
   @@index([accountCode])
 }
 
+// Bons de commande fournisseurs
+model PurchaseOrder {
+  id              String              @id @default(cuid())
+
+  poNumber        String              @unique   // PO-2026-0001
+  supplierId      String?
+  supplierName    String
+  supplierEmail   String?
+
+  department      String              @default("OPS")  // OPS, MKT, TECH, ADMIN, FULFIL, RD
+  status          String              @default("DRAFT") // DRAFT, APPROVED, ORDERED, RECEIVED, CANCELLED
+
+  // Approval
+  requestedBy     String?
+  approvedBy      String?
+  approvedAt      DateTime?
+
+  // Totals
+  subtotal        Decimal             @db.Decimal(12, 2) @default(0)
+  taxTps          Decimal             @db.Decimal(12, 2) @default(0)
+  taxTvq          Decimal             @db.Decimal(12, 2) @default(0)
+  total           Decimal             @db.Decimal(12, 2) @default(0)
+
+  currency        String              @default("CAD")
+
+  notes           String?             @db.Text
+
+  // Linked invoice
+  supplierInvoiceId String?
+
+  items           PurchaseOrderItem[]
+
+  orderedAt       DateTime?
+  receivedAt      DateTime?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  @@index([status])
+  @@index([department])
+  @@index([supplierId])
+}
+
+model PurchaseOrderItem {
+  id              String          @id @default(cuid())
+
+  purchaseOrderId String
+  purchaseOrder   PurchaseOrder   @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+
+  description     String
+  productId       String?
+  formatId        String?
+  sku             String?
+
+  quantity        Int
+  unitCost        Decimal         @db.Decimal(12, 2)
+  total           Decimal         @db.Decimal(12, 2)
+
+  receivedQty     Int             @default(0)
+
+  createdAt       DateTime        @default(now())
+
+  @@index([purchaseOrderId])
+}
+
 // Paramètres comptables
 model AccountingSettings {
   id                    String    @id @default("default")
@@ -1981,4 +2255,458 @@ model HeroSlideTranslation {
   @@unique([slideId, locale])
   @@index([slideId])
   @@index([locale])
+}
+
+// =====================================================
+// PERMISSIONS GRANULAIRES
+// =====================================================
+
+// Permission individuelle (ex: "products.create", "orders.view")
+model Permission {
+  id          String   @id @default(cuid())
+
+  code        String   @unique   // "products.create", "orders.view", "admin.users.edit"
+  name        String              // "Create Products"
+  description String?
+  module      String              // "products", "orders", "users", "accounting", "settings"
+
+  // Quel role a cette permission par defaut
+  defaultOwner    Boolean @default(true)
+  defaultEmployee Boolean @default(false)
+  defaultClient   Boolean @default(false)
+  defaultCustomer Boolean @default(false)
+
+  // Relations
+  groups      PermissionGroupPermission[]
+
+  createdAt   DateTime @default(now())
+
+  @@index([module])
+}
+
+// Groupe de permissions (ex: "Gestionnaire produits", "Comptable")
+model PermissionGroup {
+  id          String   @id @default(cuid())
+
+  name        String              // "Product Manager", "Accountant", "Support Agent"
+  description String?
+  color       String?             // Hex color for badge
+
+  // Permissions dans ce groupe
+  permissions PermissionGroupPermission[]
+
+  // Utilisateurs assignes a ce groupe
+  users       UserPermissionGroup[]
+
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Relation many-to-many Permission <-> PermissionGroup
+model PermissionGroupPermission {
+  id              String          @id @default(cuid())
+
+  groupId         String
+  group           PermissionGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  permissionId    String
+  permission      Permission      @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  createdAt       DateTime        @default(now())
+
+  @@unique([groupId, permissionId])
+  @@index([groupId])
+  @@index([permissionId])
+}
+
+// Assignation User <-> PermissionGroup
+model UserPermissionGroup {
+  id          String          @id @default(cuid())
+
+  userId      String
+  groupId     String
+  group       PermissionGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  assignedBy  String?         // User ID who assigned
+  assignedAt  DateTime        @default(now())
+
+  @@unique([userId, groupId])
+  @@index([userId])
+  @@index([groupId])
+}
+
+// Override individuel par utilisateur (grant ou revoke une permission specifique)
+model UserPermissionOverride {
+  id              String   @id @default(cuid())
+
+  userId          String
+  permissionCode  String              // "products.create"
+
+  // true = granted, false = revoked (override le role et les groupes)
+  granted         Boolean
+
+  reason          String?             // Pourquoi cet override
+  grantedBy       String              // User ID (OWNER) qui a fait le changement
+
+  expiresAt       DateTime?           // Override temporaire (ex: acces pendant 30 jours)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([userId, permissionCode])
+  @@index([userId])
+  @@index([permissionCode])
+}
+
+// =====================================================
+// CMS - PAGES & FAQ EDITABLES
+// =====================================================
+
+model Page {
+  id              String   @id @default(cuid())
+
+  title           String
+  slug            String   @unique
+  content         String   @db.Text
+  excerpt         String?  @db.Text
+
+  metaTitle       String?
+  metaDescription String?
+  locale          String   @default("en")
+
+  // Template
+  template        String   @default("default") // "default", "full-width", "sidebar"
+
+  isPublished     Boolean  @default(false)
+  publishedAt     DateTime?
+
+  // Traductions
+  translations    PageTranslation[]
+
+  createdBy       String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([slug])
+  @@index([isPublished])
+}
+
+model PageTranslation {
+  id              String   @id @default(cuid())
+
+  pageId          String
+  page            Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  locale          String              // "fr", "en", "es", etc.
+
+  title           String
+  content         String   @db.Text
+  metaTitle       String?
+  metaDescription String?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([pageId, locale])
+  @@index([pageId])
+  @@index([locale])
+}
+
+model Faq {
+  id          String   @id @default(cuid())
+
+  question    String
+  answer      String   @db.Text
+
+  category    String   @default("general")
+  locale      String   @default("en")
+  sortOrder   Int      @default(0)
+  isPublished Boolean  @default(true)
+
+  // Traductions
+  translations FaqTranslation[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([category])
+  @@index([isPublished])
+}
+
+model FaqTranslation {
+  id          String   @id @default(cuid())
+
+  faqId       String
+  faq         Faq      @relation(fields: [faqId], references: [id], onDelete: Cascade)
+
+  locale      String
+  question    String
+  answer      String   @db.Text
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([faqId, locale])
+  @@index([faqId])
+  @@index([locale])
+}
+
+// =====================================================
+// SITE SETTINGS (existing SiteSettings + new granular SiteSetting)
+// =====================================================
+
+model SiteSettings {
+  id                    String   @id @default("default")
+
+  companyName           String   @default("BioCycle Peptides")
+  companyLegalName      String?
+  companyDescription    String?  @db.Text
+  logoUrl               String?
+  email                 String?
+  supportEmail          String?
+  legalEmail            String?
+  privacyEmail          String?
+  phone                 String?
+  address               String?
+  city                  String?
+  province              String?
+  postalCode            String?
+  country               String?  @default("CA")
+  businessHours         String?  @db.Text // JSON
+  socialLinks           String?  @db.Text // JSON
+
+  freeShippingThreshold Decimal? @db.Decimal(10, 2)
+  defaultCurrency       String   @default("CAD")
+
+  newsletterEnabled     Boolean  @default(true)
+  newsletterTitle       String?
+  newsletterSubtitle    String?
+  newsletterDiscount    Int?
+  newsletterPromoCode   String?
+
+  disclaimerEnabled     Boolean  @default(true)
+  disclaimerTitle       String?
+  disclaimerContent     String?  @db.Text
+  disclaimerAgeMin      Int      @default(18)
+
+  cookieBannerText      String?  @db.Text
+  trustBadges           String?  @db.Text // JSON
+  headerNav             String?  @db.Text // JSON
+  footerNav             String?  @db.Text // JSON
+
+  shippingRates         String?  @db.Text // JSON
+  refundDays            Int      @default(30)
+  refundProcessingDays  String?
+  ambassadorTiers       String?  @db.Text // JSON
+  rewardTiers           String?  @db.Text // JSON
+  subscriptionFreqs     String?  @db.Text // JSON
+  testimonials          String?  @db.Text // JSON
+  statsJson             String?  @db.Text // JSON
+
+  updatedAt             DateTime @updatedAt
+}
+
+model SiteSetting {
+  id          String   @id @default(cuid())
+
+  key         String   @unique
+  value       String   @db.Text
+  type        String   @default("text")
+  module      String   @default("general")
+
+  description String?
+
+  updatedBy   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([module])
+}
+
+// =====================================================
+// CONTENT MODELS (Blog, Articles, Videos, Webinars)
+// =====================================================
+
+model Article {
+  id              String    @id @default(cuid())
+
+  title           String
+  slug            String    @unique
+  excerpt         String?   @db.Text
+  content         String?   @db.Text
+  imageUrl        String?
+  author          String?
+  category        String?
+  tags            String?   @db.Text
+  readTime        Int?
+  difficulty      String?
+
+  isFeatured      Boolean   @default(false)
+  isPublished     Boolean   @default(false)
+  publishedAt     DateTime?
+  locale          String    @default("en")
+
+  metaTitle       String?
+  metaDescription String?
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([slug])
+  @@index([isPublished])
+  @@index([category])
+}
+
+model BlogPost {
+  id              String    @id @default(cuid())
+
+  title           String
+  slug            String    @unique
+  excerpt         String?   @db.Text
+  content         String?   @db.Text
+  imageUrl        String?
+  author          String?
+  category        String?
+  tags            String?   @db.Text
+  readTime        Int?
+
+  isFeatured      Boolean   @default(false)
+  isPublished     Boolean   @default(false)
+  publishedAt     DateTime?
+  locale          String    @default("en")
+
+  metaTitle       String?
+  metaDescription String?
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([slug])
+  @@index([isPublished])
+  @@index([category])
+}
+
+model Video {
+  id              String    @id @default(cuid())
+
+  title           String
+  slug            String    @unique
+  description     String?   @db.Text
+  thumbnailUrl    String?
+  videoUrl        String?
+  duration        String?
+  category        String?
+  tags            String?   @db.Text
+  instructor      String?
+  views           Int       @default(0)
+
+  isFeatured      Boolean   @default(false)
+  isPublished     Boolean   @default(false)
+  locale          String    @default("en")
+  sortOrder       Int       @default(0)
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([slug])
+  @@index([isPublished])
+  @@index([category])
+}
+
+model Webinar {
+  id              String    @id @default(cuid())
+
+  title           String
+  slug            String    @unique
+  description     String?   @db.Text
+  thumbnailUrl    String?
+  speaker         String?
+  speakerTitle    String?
+  speakerImage    String?
+  scheduledAt     DateTime?
+  duration        Int?
+  category        String?
+  tags            String?   @db.Text
+  registrationUrl String?
+  recordingUrl    String?
+  maxAttendees    Int?
+  registeredCount Int       @default(0)
+
+  isFeatured      Boolean   @default(false)
+  isPublished     Boolean   @default(false)
+  isLive          Boolean   @default(false)
+  locale          String    @default("en")
+  sortOrder       Int       @default(0)
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([slug])
+  @@index([isPublished])
+  @@index([scheduledAt])
+}
+
+// =====================================================
+// UAT TESTING — AureliaPay
+// =====================================================
+
+model UatTestRun {
+  id              String        @id @default(cuid())
+  runNumber       Int           @unique @default(autoincrement())
+  status          String        @default("RUNNING")  // RUNNING | COMPLETED | FAILED | CANCELLED
+  canadaOnly      Boolean       @default(true)
+  totalScenarios  Int           @default(0)
+  passedCount     Int           @default(0)
+  failedCount     Int           @default(0)
+  skippedCount    Int           @default(0)
+  startedAt       DateTime      @default(now())
+  completedAt     DateTime?
+  durationMs      Int?
+  cleanedUp       Boolean       @default(false)
+  testCases       UatTestCase[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+model UatTestCase {
+  id              String         @id @default(cuid())
+  runId           String
+  run             UatTestRun     @relation(fields: [runId], references: [id], onDelete: Cascade)
+  scenarioCode    String
+  scenarioName    String
+  region          String
+  status          String         @default("PENDING") // PENDING | RUNNING | PASSED | FAILED | SKIPPED
+  orderId         String?
+  orderNumber     String?
+  expectedTaxes   Json?
+  actualTaxes     Json?
+  expectedTotal   Decimal?       @db.Decimal(12, 2)
+  actualTotal     Decimal?       @db.Decimal(12, 2)
+  verifications   Json?
+  errors          UatTestError[]
+  durationMs      Int?
+  startedAt       DateTime?
+  completedAt     DateTime?
+  createdAt       DateTime       @default(now())
+
+  @@index([runId])
+  @@index([scenarioCode])
+}
+
+model UatTestError {
+  id              String       @id @default(cuid())
+  testCaseId      String
+  testCase        UatTestCase  @relation(fields: [testCaseId], references: [id], onDelete: Cascade)
+  category        String
+  severity        String       @default("ERROR") // ERROR | WARNING | INFO
+  message         String
+  expected        String?
+  actual          String?
+  context         Json?
+  stackTrace      String?      @db.Text
+  createdAt       DateTime     @default(now())
+
+  @@index([testCaseId])
+  @@index([category])
 }

@@ -13,6 +13,7 @@ import { useRouter } from 'next/navigation';
 interface OrderItem {
   id: string;
   productName: string;
+  formatName?: string;
   quantity: number;
   unitPrice: number;
   sku?: string;
@@ -500,7 +501,10 @@ export default function OrdersPage() {
                             <span className="text-xl">🧪</span>
                           </div>
                           <div>
-                            <p className="font-medium text-gray-900">{item.productName}</p>
+                            <p className="font-medium text-gray-900">
+                              {item.productName}
+                              {item.formatName ? ` — ${item.formatName}` : ''}
+                            </p>
                             <p className="text-sm text-gray-500">
                               Qté: {item.quantity} × ${Number(item.unitPrice).toFixed(2)}
                             </p>
@@ -731,7 +735,10 @@ function InvoiceModal({
                   {order.items.map((item) => (
                     <tr key={item.id}>
                       <td className="px-4 py-3">
-                        <p className="font-medium text-gray-900">{item.productName}</p>
+                        <p className="font-medium text-gray-900">
+                          {item.productName}
+                          {item.formatName ? ` — ${item.formatName}` : ''}
+                        </p>
                         {item.sku && <p className="text-xs text-gray-500">SKU: {item.sku}</p>}
                       </td>
                       <td className="px-4 py-3 text-center text-gray-600">{item.quantity}</td>

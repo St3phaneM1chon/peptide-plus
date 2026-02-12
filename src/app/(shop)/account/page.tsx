@@ -161,16 +161,16 @@ export default function AccountPage() {
             description="Suivre mes commandes"
           />
           <QuickActionCard
-            href="/account/inventory"
-            icon="🧪"
-            title="Mon inventaire"
-            description="Gérer mes peptides"
+            href="/account/invoices"
+            icon="📄"
+            title="Mes factures"
+            description="Historique facturation"
           />
           <QuickActionCard
-            href="/account/protocols"
-            icon="📋"
-            title="Mes protocoles"
-            description="Suivre mes recherches"
+            href="/account/products"
+            icon="🧪"
+            title="Mes produits"
+            description="Reorder rapide"
             highlight
           />
           <QuickActionCard

@@ -18,31 +18,40 @@ interface SubscriptionProduct {
 
 interface Subscription {
   id: string;
-  product: SubscriptionProduct;
-  frequency: 'weekly' | 'biweekly' | 'monthly' | 'bimonthly';
+  productId: string;
+  formatId: string | null;
+  productName: string;
+  formatName: string | null;
   quantity: number;
+  frequency: string;
+  discountPercent: number;
+  unitPrice: number;
+  status: string;
   nextDelivery: string;
-  status: 'active' | 'paused' | 'cancelled';
-  discount: number;
+  lastDelivery: string | null;
   createdAt: string;
+  cancelledAt: string | null;
 }
 
-// Products loaded from API
-
 const getFrequencies = (t: (key: string) => string) => [
-  { id: 'weekly', label: t('subscriptions.weekly') || 'Weekly', days: 7, discount: 20 },
-  { id: 'biweekly', label: t('subscriptions.biweekly') || 'Every 2 Weeks', days: 14, discount: 15 },
-  { id: 'monthly', label: t('subscriptions.monthly') || 'Monthly', days: 30, discount: 10 },
-  { id: 'bimonthly', label: t('subscriptions.bimonthly') || 'Every 2 Months', days: 60, discount: 5 },
+  { id: 'WEEKLY', label: t('subscriptions.weekly') || 'Weekly', days: 7, discount: 20 },
+  { id: 'BIWEEKLY', label: t('subscriptions.biweekly') || 'Every 2 Weeks', days: 14, discount: 15 },
+  { id: 'MONTHLY', label: t('subscriptions.monthly') || 'Monthly', days: 30, discount: 10 },
+  { id: 'BIMONTHLY', label: t('subscriptions.bimonthly') || 'Every 2 Months', days: 60, discount: 5 },
 ];
 
-// Subscriptions loaded from API (empty until subscription system is connected)
+const frequencyLabels: Record<string, string> = {
+  WEEKLY: 'Hebdomadaire',
+  BIWEEKLY: 'Aux 2 semaines',
+  MONTHLY: 'Mensuel',
+  BIMONTHLY: 'Aux 2 mois',
+};
 
 export default function SubscriptionsPage() {
   const { data: session } = useSession();
   const { t } = useTranslations();
   const { formatPrice } = useCurrency();
-  
+
   const [activeTab, setActiveTab] = useState<'browse' | 'manage'>('browse');
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [subscriptionProducts, setSubscriptionProducts] = useState<SubscriptionProduct[]>([]);
@@ -51,6 +60,7 @@ export default function SubscriptionsPage() {
   const [selectedFrequency, setSelectedFrequency] = useState(frequencies[2]); // Monthly default
   const [quantity, setQuantity] = useState(1);
   const [isCreating, setIsCreating] = useState(false);
+  const [loadingSubs, setLoadingSubs] = useState(false);
 
   // Load products from API
   useEffect(() => {
@@ -68,10 +78,30 @@ export default function SubscriptionsPage() {
         }));
         setSubscriptionProducts(products);
       })
-      .catch(() => {
-        // Silently fail - page shows empty product list
-      });
+      .catch(() => {});
   }, []);
+
+  // Load subscriptions from DB
+  useEffect(() => {
+    if (session?.user) {
+      fetchSubscriptions();
+    }
+  }, [session]);
+
+  const fetchSubscriptions = async () => {
+    setLoadingSubs(true);
+    try {
+      const res = await fetch('/api/account/subscriptions');
+      if (res.ok) {
+        const data = await res.json();
+        setSubscriptions(data.subscriptions || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch subscriptions:', error);
+    } finally {
+      setLoadingSubs(false);
+    }
+  };
 
   const calculatePrice = (basePrice: number, discount: number) => {
     return basePrice * (1 - discount / 100);
@@ -79,38 +109,70 @@ export default function SubscriptionsPage() {
 
   const handleCreateSubscription = async () => {
     if (!session || !selectedProduct) return;
-    
+
     setIsCreating(true);
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    const newSub: Subscription = {
-      id: Date.now().toString(),
-      product: selectedProduct,
-      frequency: selectedFrequency.id as Subscription['frequency'],
-      quantity,
-      nextDelivery: new Date(Date.now() + selectedFrequency.days * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      status: 'active',
-      discount: selectedFrequency.discount,
-      createdAt: new Date().toISOString(),
-    };
-    
-    setSubscriptions(prev => [...prev, newSub]);
-    setIsCreating(false);
-    setSelectedProduct(null);
-    setActiveTab('manage');
-  };
+    try {
+      const res = await fetch('/api/account/subscriptions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          productId: selectedProduct.id,
+          quantity,
+          frequency: selectedFrequency.id,
+        }),
+      });
 
-  const handlePauseSubscription = (subId: string) => {
-    setSubscriptions(prev => prev.map(s => 
-      s.id === subId ? { ...s, status: s.status === 'paused' ? 'active' : 'paused' } : s
-    ));
-  };
-
-  const handleCancelSubscription = (subId: string) => {
-    if (confirm(t('subscriptions.confirmCancel') || 'Are you sure you want to cancel this subscription?')) {
-      setSubscriptions(prev => prev.filter(s => s.id !== subId));
+      if (res.ok) {
+        await fetchSubscriptions();
+        setSelectedProduct(null);
+        setActiveTab('manage');
+      }
+    } catch (error) {
+      console.error('Error creating subscription:', error);
+    } finally {
+      setIsCreating(false);
     }
   };
+
+  const handlePauseSubscription = async (subId: string) => {
+    const sub = subscriptions.find(s => s.id === subId);
+    if (!sub) return;
+
+    const action = sub.status === 'PAUSED' ? 'resume' : 'pause';
+    try {
+      const res = await fetch('/api/account/subscriptions', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: subId, action }),
+      });
+
+      if (res.ok) {
+        await fetchSubscriptions();
+      }
+    } catch (error) {
+      console.error('Error updating subscription:', error);
+    }
+  };
+
+  const handleCancelSubscription = async (subId: string) => {
+    if (!confirm(t('subscriptions.confirmCancel') || 'Are you sure you want to cancel this subscription?')) return;
+
+    try {
+      const res = await fetch('/api/account/subscriptions', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: subId, action: 'cancel' }),
+      });
+
+      if (res.ok) {
+        await fetchSubscriptions();
+      }
+    } catch (error) {
+      console.error('Error cancelling subscription:', error);
+    }
+  };
+
+  const activeSubscriptions = subscriptions.filter(s => s.status !== 'CANCELLED');
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -124,7 +186,7 @@ export default function SubscriptionsPage() {
           <p className="text-xl text-white/90 max-w-2xl mx-auto">
             {t('subscriptions.subtitle') || 'Never run out of your essential peptides. Set up automatic deliveries and save up to 20% on every order.'}
           </p>
-          
+
           <div className="flex flex-wrap justify-center gap-6 mt-8">
             {[
               { icon: '💰', text: t('subscriptions.benefit1') || 'Save up to 20%' },
@@ -163,9 +225,9 @@ export default function SubscriptionsPage() {
             }`}
           >
             {t('subscriptions.mySubscriptions') || 'My Subscriptions'}
-            {subscriptions.length > 0 && (
+            {activeSubscriptions.length > 0 && (
               <span className="ml-2 px-2 py-0.5 bg-white/20 rounded-full text-sm">
-                {subscriptions.length}
+                {activeSubscriptions.length}
               </span>
             )}
           </button>
@@ -216,10 +278,9 @@ export default function SubscriptionsPage() {
             <div className="lg:col-span-1">
               <div className="bg-white rounded-xl shadow-sm border border-neutral-200 p-6 sticky top-24">
                 <h3 className="text-lg font-bold mb-4">{t('subscriptions.buildSubscription') || 'Build Your Subscription'}</h3>
-                
+
                 {selectedProduct ? (
                   <>
-                    {/* Selected Product */}
                     <div className="bg-neutral-50 rounded-lg p-4 mb-4">
                       <div className="flex items-center justify-between">
                         <div>
@@ -237,7 +298,6 @@ export default function SubscriptionsPage() {
                       </div>
                     </div>
 
-                    {/* Frequency */}
                     <div className="mb-4">
                       <label className="block text-sm font-medium mb-2">{t('subscriptions.deliveryFrequency') || 'Delivery Frequency'}</label>
                       <div className="space-y-2">
@@ -266,7 +326,6 @@ export default function SubscriptionsPage() {
                       </div>
                     </div>
 
-                    {/* Quantity */}
                     <div className="mb-6">
                       <label className="block text-sm font-medium mb-2">{t('subscriptions.quantity') || 'Quantity'}</label>
                       <div className="flex items-center gap-3">
@@ -286,7 +345,6 @@ export default function SubscriptionsPage() {
                       </div>
                     </div>
 
-                    {/* Summary */}
                     <div className="border-t pt-4 mb-4">
                       <div className="flex justify-between text-sm mb-2">
                         <span className="text-neutral-500">{t('subscriptions.regularPrice') || 'Regular Price'}</span>
@@ -309,7 +367,6 @@ export default function SubscriptionsPage() {
                       <p className="text-xs text-neutral-500 mt-1">per delivery</p>
                     </div>
 
-                    {/* CTA */}
                     {session ? (
                       <button
                         onClick={handleCreateSubscription}
@@ -369,7 +426,11 @@ export default function SubscriptionsPage() {
                   {t('subscriptions.signIn') || 'Sign In'}
                 </Link>
               </div>
-            ) : subscriptions.length === 0 ? (
+            ) : loadingSubs ? (
+              <div className="flex items-center justify-center py-16">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+              </div>
+            ) : activeSubscriptions.length === 0 ? (
               <div className="bg-white rounded-xl p-12 text-center">
                 <span className="text-6xl mb-4 block">📦</span>
                 <h3 className="text-xl font-bold mb-2">{t('subscriptions.noSubscriptions') || 'No Active Subscriptions'}</h3>
@@ -383,7 +444,7 @@ export default function SubscriptionsPage() {
               </div>
             ) : (
               <div className="space-y-4">
-                {subscriptions.map((sub) => (
+                {activeSubscriptions.map((sub) => (
                   <div key={sub.id} className="bg-white rounded-xl shadow-sm border border-neutral-200 overflow-hidden">
                     <div className="p-6">
                       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -392,19 +453,22 @@ export default function SubscriptionsPage() {
                             <span className="text-3xl">💊</span>
                           </div>
                           <div>
-                            <h3 className="font-bold text-lg">{sub.product.name}</h3>
+                            <h3 className="font-bold text-lg">
+                              {sub.productName}
+                              {sub.formatName ? ` — ${sub.formatName}` : ''}
+                            </h3>
                             <p className="text-sm text-neutral-500">
-                              {sub.quantity}x • {frequencies.find(f => f.id === sub.frequency)?.label}
+                              {sub.quantity}x • {frequencyLabels[sub.frequency] || sub.frequency}
                             </p>
                             <div className="flex items-center gap-2 mt-1">
                               <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${
-                                sub.status === 'active' ? 'bg-green-100 text-green-700' :
-                                sub.status === 'paused' ? 'bg-yellow-100 text-yellow-700' :
+                                sub.status === 'ACTIVE' ? 'bg-green-100 text-green-700' :
+                                sub.status === 'PAUSED' ? 'bg-yellow-100 text-yellow-700' :
                                 'bg-red-100 text-red-700'
                               }`}>
-                                {sub.status.charAt(0).toUpperCase() + sub.status.slice(1)}
+                                {sub.status === 'ACTIVE' ? 'Actif' : sub.status === 'PAUSED' ? 'En pause' : 'Annule'}
                               </span>
-                              <span className="text-xs text-green-600">Save {sub.discount}%</span>
+                              <span className="text-xs text-green-600">Economisez {sub.discountPercent}%</span>
                             </div>
                           </div>
                         </div>
@@ -412,9 +476,9 @@ export default function SubscriptionsPage() {
                         <div className="flex items-center gap-4">
                           <div className="text-right">
                             <p className="font-bold text-lg">
-                              {formatPrice(calculatePrice(sub.product.basePrice * sub.quantity, sub.discount))}
+                              {formatPrice(sub.unitPrice * sub.quantity * (1 - sub.discountPercent / 100))}
                             </p>
-                            <p className="text-sm text-neutral-500">per delivery</p>
+                            <p className="text-sm text-neutral-500">par livraison</p>
                           </div>
                         </div>
                       </div>
@@ -426,7 +490,7 @@ export default function SubscriptionsPage() {
                           <div>
                             <p className="text-sm text-neutral-500">{t('subscriptions.nextDelivery') || 'Next Delivery'}</p>
                             <p className="font-medium">
-                              {new Date(sub.nextDelivery).toLocaleDateString('en-CA', {
+                              {new Date(sub.nextDelivery).toLocaleDateString('fr-CA', {
                                 weekday: 'long',
                                 year: 'numeric',
                                 month: 'long',
@@ -440,13 +504,13 @@ export default function SubscriptionsPage() {
                             onClick={() => handlePauseSubscription(sub.id)}
                             className="px-4 py-2 border border-neutral-300 rounded-lg text-sm font-medium hover:bg-neutral-100"
                           >
-                            {sub.status === 'paused' ? 'Resume' : 'Pause'}
+                            {sub.status === 'PAUSED' ? 'Reprendre' : 'Pause'}
                           </button>
                           <button
                             onClick={() => handleCancelSubscription(sub.id)}
                             className="px-4 py-2 border border-red-300 text-red-600 rounded-lg text-sm font-medium hover:bg-red-50"
                           >
-                            Cancel
+                            Annuler
                           </button>
                         </div>
                       </div>
