@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import DOMPurify from 'isomorphic-dompurify';
 
 interface SearchResult {
   id: string;
@@ -369,7 +370,7 @@ export default function SearchPage() {
                     {result.highlights && (
                       <p 
                         className="text-sm text-neutral-300 mt-2 [&_mark]:bg-sky-500/30 [&_mark]:text-sky-300"
-                        dangerouslySetInnerHTML={{ __html: result.highlights }}
+                        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(result.highlights, { ALLOWED_TAGS: ['mark'] }) }}
                       />
                     )}
                   </div>

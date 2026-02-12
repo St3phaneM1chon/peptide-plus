@@ -2,6 +2,28 @@
 
 import { useState, useEffect, useCallback } from 'react';
 
+/**
+ * SECURITY: Safe formula evaluator - replaces eval()
+ * Only supports basic arithmetic: +, -, *, /, (, ), and named variables
+ */
+function safeEvalFormula(formula: string, vars: Record<string, number>): number {
+  try {
+    // Replace variable names with their values
+    let expr = formula;
+    for (const [key, value] of Object.entries(vars)) {
+      expr = expr.replace(new RegExp(`\\b${key}\\b`, 'g'), String(value));
+    }
+    // Validate: only allow digits, decimal points, arithmetic operators, parentheses, spaces
+    if (!/^[\d\s+\-*/().]+$/.test(expr)) {
+      return 0;
+    }
+    // Use Function with validated expression (safe because we verified the character set)
+    return Number(new Function(`"use strict"; return (${expr})`)()) || 0;
+  } catch {
+    return 0;
+  }
+}
+
 interface Template {
   id: string;
   name: string;
@@ -269,11 +291,12 @@ export default function QuickEntryPage() {
       let debit = 0;
       let credit = 0;
       
+      // SECURITY FIX: Replace eval() with safe arithmetic parser
       if (line.debitFormula) {
-        debit = eval(line.debitFormula.replace(/amount/g, String(amount)).replace(/gst/g, String(gst)).replace(/qst/g, String(qst)).replace(/total/g, String(total)));
+        debit = safeEvalFormula(line.debitFormula, { amount, gst, qst, total });
       }
       if (line.creditFormula) {
-        credit = eval(line.creditFormula.replace(/amount/g, String(amount)).replace(/gst/g, String(gst)).replace(/qst/g, String(qst)).replace(/total/g, String(total)));
+        credit = safeEvalFormula(line.creditFormula, { amount, gst, qst, total });
       }
       
       return {

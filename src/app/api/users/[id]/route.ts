@@ -104,16 +104,32 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     if (image !== undefined) updateData.image = image;
     
     if (role !== undefined) {
-      if (!isAdmin) {
+      // Only OWNER can change roles (H14 - role escalation fix)
+      if (session.user.role !== UserRole.OWNER) {
         return NextResponse.json(
-          { error: 'Seul un administrateur peut changer le rôle' },
+          { error: 'Seul le propriétaire (OWNER) peut changer les rôles' },
           { status: 403 }
         );
       }
-      // Le owner ne peut pas être rétrogradé
-      if (id === session.user.id && session.user.role === UserRole.OWNER) {
+      // The OWNER cannot change their own role
+      if (id === session.user.id) {
         return NextResponse.json(
           { error: 'Impossible de modifier votre propre rôle owner' },
+          { status: 400 }
+        );
+      }
+      // Prevent setting anyone's role to OWNER
+      if (role === UserRole.OWNER) {
+        return NextResponse.json(
+          { error: 'Impossible d\'attribuer le rôle OWNER' },
+          { status: 403 }
+        );
+      }
+      // Validate that role is a known value
+      const allowedRoles = [UserRole.PUBLIC, UserRole.CUSTOMER, UserRole.CLIENT, UserRole.EMPLOYEE];
+      if (!allowedRoles.includes(role)) {
+        return NextResponse.json(
+          { error: 'Rôle invalide' },
           { status: 400 }
         );
       }

@@ -53,6 +53,10 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { visitorId, visitorName, visitorEmail, visitorLanguage, currentPage, userAgent } = body;
 
+    // Vérifier si l'utilisateur est connecté
+    const session = await auth();
+    const isAdmin = session?.user && ['OWNER', 'EMPLOYEE'].includes(session.user.role as string);
+
     // Utiliser visitorId fourni ou en générer un nouveau
     const finalVisitorId = visitorId || uuidv4();
 
@@ -70,11 +74,21 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // Vérification d'ownership : si une conversation existe, vérifier que l'appelant y a droit
+    if (conversation && !isAdmin) {
+      // Si la conversation a un userId, vérifier qu'il correspond à l'utilisateur connecté
+      if (conversation.userId && session?.user?.id && conversation.userId !== session.user.id) {
+        return NextResponse.json({ error: 'Non autorisé' }, { status: 403 });
+      }
+      // Si l'utilisateur est connecté mais la conversation n'a pas de userId,
+      // et que les visitorId ne correspondent pas, refuser l'accès
+      if (session?.user?.id && !conversation.userId && conversation.visitorId !== finalVisitorId) {
+        return NextResponse.json({ error: 'Non autorisé' }, { status: 403 });
+      }
+    }
+
     // Si pas de conversation, en créer une nouvelle
     if (!conversation) {
-      // Vérifier si l'utilisateur est connecté
-      const session = await auth();
-      
       conversation = await db.chatConversation.create({
         data: {
           visitorId: finalVisitorId,

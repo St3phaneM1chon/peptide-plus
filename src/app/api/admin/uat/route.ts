@@ -40,9 +40,9 @@ export async function POST(request: NextRequest) {
       totalScenarios: scenarios.length,
       canadaOnly,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('[UAT API] POST error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Une erreur est survenue' }, { status: 500 });
   }
 }
 
@@ -60,8 +60,8 @@ export async function GET(_request: NextRequest) {
     });
 
     return NextResponse.json({ runs });
-  } catch (error: any) {
+  } catch (error) {
     console.error('[UAT API] GET error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Une erreur est survenue' }, { status: 500 });
   }
 }

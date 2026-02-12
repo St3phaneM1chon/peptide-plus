@@ -37,9 +37,9 @@ export async function GET(
     }
 
     return NextResponse.json(detail);
-  } catch (error: any) {
+  } catch (error) {
     console.error('[UAT API] GET detail error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Une erreur est survenue' }, { status: 500 });
   }
 }
 
@@ -58,8 +58,8 @@ export async function DELETE(
     const result = await cleanupUatRun(id);
 
     return NextResponse.json(result);
-  } catch (error: any) {
+  } catch (error) {
     console.error('[UAT API] DELETE error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Une erreur est survenue' }, { status: 500 });
   }
 }

@@ -1,12 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { auth } from '@/lib/auth-config';
+import { UserRole } from '@/types';
 
 /**
  * GET /api/accounting/dashboard
  * Returns accounting dashboard data
+ * SECURITY: Requires EMPLOYEE or OWNER role
  */
 export async function GET(request: NextRequest) {
   try {
+    const session = await auth();
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
+    }
+    if (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER) {
+      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
+    }
+
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);

@@ -55,14 +55,16 @@ const nextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://login.microsoftonline.com",
+              "script-src 'self' 'unsafe-inline' https://js.stripe.com https://www.paypal.com https://login.microsoftonline.com",
               "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: https:",
-              "font-src 'self'",
-              "connect-src 'self' https://*.azure.com https://login.microsoftonline.com",
+              "img-src 'self' data: https: blob:",
+              "font-src 'self' data:",
+              "connect-src 'self' https://*.azure.com https://login.microsoftonline.com https://api.stripe.com https://www.paypal.com https://api.openai.com",
+              "frame-src https://js.stripe.com https://www.paypal.com https://hooks.stripe.com",
               "frame-ancestors 'none'",
               "base-uri 'self'",
-              "form-action 'self'"
+              "form-action 'self'",
+              "upgrade-insecure-requests"
             ].join('; ')
           }
         ]

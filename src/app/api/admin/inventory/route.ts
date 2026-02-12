@@ -159,7 +159,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Admin inventory POST error:', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Internal server error' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
@@ -212,7 +212,7 @@ export async function PUT(request: NextRequest) {
   } catch (error) {
     console.error('Admin inventory PUT error:', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Internal server error' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

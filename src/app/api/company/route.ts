@@ -235,10 +235,23 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { id, ...updates } = body;
+    const { id } = body;
 
     if (!id) {
       return NextResponse.json({ error: 'id requis' }, { status: 400 });
+    }
+
+    // Whitelist: only allow safe fields to be updated (H12 - mass assignment fix)
+    const allowedFields = [
+      'name', 'slug', 'contactEmail', 'phone',
+      'billingAddress', 'billingCity', 'billingState', 'billingPostal', 'billingCountry',
+      'isActive',
+    ] as const;
+    const updates: Record<string, unknown> = {};
+    for (const field of allowedFields) {
+      if (body[field] !== undefined) {
+        updates[field] = body[field];
+      }
     }
 
     // Récupérer la compagnie
@@ -269,7 +282,7 @@ export async function PUT(request: NextRequest) {
     // Si le slug change, vérifier unicité
     if (updates.slug && updates.slug !== company.slug) {
       const existingSlug = await prisma.company.findUnique({
-        where: { slug: updates.slug },
+        where: { slug: updates.slug as string },
       });
 
       if (existingSlug) {

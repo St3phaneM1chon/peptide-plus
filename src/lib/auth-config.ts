@@ -84,16 +84,28 @@ const providers = [
       password: { label: 'Mot de passe', type: 'password' },
       mfaCode: { label: 'Code MFA', type: 'text' },
     },
-    async authorize(credentials, _request) {
+    async authorize(credentials, request) {
       if (!credentials?.email || !credentials?.password) {
         throw new Error('Email et mot de passe requis');
       }
 
+      const email = (credentials.email as string).toLowerCase();
+      const ipAddress = request?.headers?.get?.('x-forwarded-for') || 'unknown';
+      const userAgent = request?.headers?.get?.('user-agent') || 'unknown';
+
+      // SECURITY: Check brute-force lockout before any DB query
+      const { checkLoginAttempt, recordFailedAttempt, clearFailedAttempts } = await import('./brute-force-protection');
+      const lockCheck = await checkLoginAttempt(email, ipAddress, userAgent);
+      if (!lockCheck.allowed) {
+        throw new Error(lockCheck.message || 'Compte temporairement verrouillé');
+      }
+
       const user = await prisma.user.findUnique({
-        where: { email: credentials.email as string },
+        where: { email },
       });
 
       if (!user || !user.password) {
+        await recordFailedAttempt(email, ipAddress, userAgent);
         throw new Error('Identifiants invalides');
       }
 
@@ -103,19 +115,29 @@ const providers = [
       );
 
       if (!isPasswordValid) {
+        await recordFailedAttempt(email, ipAddress, userAgent);
         throw new Error('Identifiants invalides');
       }
 
       // Si MFA activé, vérifier le code
       if (user.mfaEnabled) {
         if (!credentials.mfaCode) {
-          // Retourner un flag pour demander le code MFA
           throw new Error('MFA_REQUIRED');
         }
 
         const { verifyTOTP } = await import('./mfa');
+        // SECURITY FIX: Decrypt the MFA secret before verification
+        let mfaSecret = user.mfaSecret!;
+        try {
+          const { decrypt } = await import('./security');
+          mfaSecret = await decrypt(user.mfaSecret!);
+        } catch {
+          // If decryption fails (ENCRYPTION_KEY missing), use raw value as fallback
+          // This handles the migration period before ENCRYPTION_KEY is set
+        }
+
         const isValidMFA = verifyTOTP(
-          user.mfaSecret!,
+          mfaSecret,
           credentials.mfaCode as string
         );
 
@@ -123,6 +145,9 @@ const providers = [
           throw new Error('Code MFA invalide');
         }
       }
+
+      // SECURITY: Clear failed attempts on successful login
+      clearFailedAttempts(email);
 
       // Return user object (custom fields like role/mfaEnabled handled by callbacks)
       return {
@@ -171,11 +196,6 @@ export const authConfig: NextAuthConfig = {
           })
         );
 
-        // En développement, on ne force pas MFA
-        if (process.env.NODE_ENV === 'development') {
-          return true;
-        }
-
         // Pour les providers OAuth, vérifier l'utilisateur
         if (account?.provider !== 'credentials') {
           try {
@@ -191,15 +211,16 @@ export const authConfig: NextAuthConfig = {
             }
           } catch (dbError) {
             console.error('Database error in signIn:', dbError);
-            // Permettre la connexion même si la DB échoue
-            return true;
+            // SECURITY FIX: Fail-closed -- deny login if DB is unavailable
+            return false;
           }
         }
 
         return true;
       } catch (error) {
         console.error('Error in signIn callback:', error);
-        return true; // Permettre la connexion en cas d'erreur
+        // SECURITY FIX: Fail-closed -- deny login on unexpected errors
+        return false;
       }
     },
 

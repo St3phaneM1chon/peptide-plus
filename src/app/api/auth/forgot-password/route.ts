@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { sendPasswordResetEmail } from '@/lib/email-service';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import crypto from 'crypto';
 
 // Durée de validité du token (1 heure)
@@ -13,6 +14,16 @@ const TOKEN_EXPIRY_HOURS = 1;
 
 export async function POST(request: NextRequest) {
   try {
+    // SECURITY: Rate limit password reset requests
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+    const rateLimit = rateLimitMiddleware(ip, '/api/auth/forgot-password');
+    if (!rateLimit.success) {
+      return NextResponse.json(
+        { error: rateLimit.error!.message },
+        { status: 429, headers: rateLimit.headers }
+      );
+    }
+
     const { email } = await request.json();
 
     if (!email) {
@@ -87,8 +98,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: 'Si un compte existe avec cet email, vous recevrez un lien de réinitialisation.',
-      // En dev, on retourne l'URL pour faciliter les tests
-      ...(process.env.NODE_ENV === 'development' && { resetUrl }),
     });
 
   } catch (error) {

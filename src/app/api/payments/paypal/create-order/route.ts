@@ -2,21 +2,28 @@
  * API Route - Création de commande PayPal
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+/**
+ * API Route - Création de commande PayPal
+ * SECURITY: All prices validated server-side from database
+ */
 
-const PAYPAL_API_URL = process.env.PAYPAL_MODE === 'live' 
+import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/lib/auth-config';
+import { prisma } from '@/lib/db';
+
+const PAYPAL_API_URL = process.env.PAYPAL_MODE === 'live'
   ? 'https://api-m.paypal.com'
   : 'https://api-m.sandbox.paypal.com';
 
 async function getPayPalAccessToken(): Promise<string> {
-  const auth = Buffer.from(
+  const authStr = Buffer.from(
     `${process.env.PAYPAL_CLIENT_ID}:${process.env.PAYPAL_CLIENT_SECRET}`
   ).toString('base64');
 
   const response = await fetch(`${PAYPAL_API_URL}/v1/oauth2/token`, {
     method: 'POST',
     headers: {
-      'Authorization': `Basic ${auth}`,
+      'Authorization': `Basic ${authStr}`,
       'Content-Type': 'application/x-www-form-urlencoded',
     },
     body: 'grant_type=client_credentials',
@@ -28,20 +35,71 @@ async function getPayPalAccessToken(): Promise<string> {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { total, currency = 'CAD', items, shippingInfo } = body;
-
-    // Vérifier que PayPal est configuré
-    if (!process.env.PAYPAL_CLIENT_ID || !process.env.PAYPAL_CLIENT_SECRET) {
-      return NextResponse.json(
-        { error: 'PayPal n\'est pas configuré' },
-        { status: 503 }
-      );
+    const session = await auth();
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
     }
+
+    const body = await request.json();
+    const { items, currency = 'CAD', shippingInfo } = body;
+
+    if (!process.env.PAYPAL_CLIENT_ID || !process.env.PAYPAL_CLIENT_SECRET) {
+      return NextResponse.json({ error: 'PayPal n\'est pas configuré' }, { status: 503 });
+    }
+
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      return NextResponse.json({ error: 'Panier vide' }, { status: 400 });
+    }
+
+    // SECURITY: Validate ALL prices from the database
+    const verifiedItems: { name: string; format: string; quantity: number; price: number }[] = [];
+    let serverSubtotal = 0;
+
+    for (const item of items) {
+      if (!item.productId || !item.quantity || item.quantity < 1) {
+        return NextResponse.json({ error: 'Données article invalides' }, { status: 400 });
+      }
+
+      const product = await prisma.product.findUnique({
+        where: { id: item.productId },
+        select: { name: true, price: true, isActive: true },
+      });
+
+      if (!product || !product.isActive) {
+        return NextResponse.json({ error: `Produit introuvable: ${item.productId}` }, { status: 400 });
+      }
+
+      let verifiedPrice = Number(product.price);
+      let formatName = '';
+
+      if (item.formatId) {
+        const format = await prisma.productFormat.findUnique({
+          where: { id: item.formatId },
+          select: { name: true, price: true },
+        });
+        if (!format) {
+          return NextResponse.json({ error: `Format introuvable: ${item.formatId}` }, { status: 400 });
+        }
+        verifiedPrice = Number(format.price);
+        formatName = format.name;
+      }
+
+      const quantity = Math.max(1, Math.floor(item.quantity));
+      serverSubtotal += verifiedPrice * quantity;
+
+      verifiedItems.push({
+        name: product.name,
+        format: formatName,
+        quantity,
+        price: verifiedPrice,
+      });
+    }
+
+    serverSubtotal = Math.round(serverSubtotal * 100) / 100;
+    const serverTotal = serverSubtotal; // Shipping/taxes handled by PayPal or added separately
 
     const accessToken = await getPayPalAccessToken();
 
-    // Créer la commande PayPal
     const response = await fetch(`${PAYPAL_API_URL}/v2/checkout/orders`, {
       method: 'POST',
       headers: {
@@ -52,20 +110,18 @@ export async function POST(request: NextRequest) {
         intent: 'CAPTURE',
         purchase_units: [{
           reference_id: `order_${Date.now()}`,
-          description: 'Commande Peptide Plus+',
+          description: 'Commande BioCycle Peptides',
           amount: {
             currency_code: currency.toUpperCase(),
-            value: total.toFixed(2),
+            value: serverTotal.toFixed(2),
             breakdown: {
               item_total: {
                 currency_code: currency.toUpperCase(),
-                value: items.reduce((sum: number, item: any) => 
-                  sum + (item.price * item.quantity), 0
-                ).toFixed(2),
+                value: serverSubtotal.toFixed(2),
               },
             },
           },
-          items: items.map((item: any) => ({
+          items: verifiedItems.map((item) => ({
             name: item.name,
             description: item.format || '',
             quantity: item.quantity.toString(),
@@ -76,9 +132,7 @@ export async function POST(request: NextRequest) {
             category: 'PHYSICAL_GOODS',
           })),
           shipping: shippingInfo ? {
-            name: {
-              full_name: `${shippingInfo.firstName} ${shippingInfo.lastName}`,
-            },
+            name: { full_name: `${shippingInfo.firstName} ${shippingInfo.lastName}` },
             address: {
               address_line_1: shippingInfo.address,
               address_line_2: shippingInfo.apartment || undefined,
@@ -90,7 +144,7 @@ export async function POST(request: NextRequest) {
           } : undefined,
         }],
         application_context: {
-          brand_name: 'Peptide Plus+',
+          brand_name: 'BioCycle Peptides',
           landing_page: 'LOGIN',
           user_action: 'PAY_NOW',
           return_url: `${process.env.NEXT_PUBLIC_APP_URL}/checkout/success`,
@@ -103,10 +157,7 @@ export async function POST(request: NextRequest) {
 
     if (!response.ok) {
       console.error('PayPal order creation error:', order);
-      return NextResponse.json(
-        { error: 'Erreur lors de la création de la commande PayPal' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Erreur lors de la création de la commande PayPal' }, { status: 500 });
     }
 
     return NextResponse.json({
@@ -115,9 +166,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('PayPal error:', error);
-    return NextResponse.json(
-      { error: 'Erreur PayPal' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Erreur PayPal' }, { status: 500 });
   }
 }

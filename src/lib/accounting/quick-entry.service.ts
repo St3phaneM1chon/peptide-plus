@@ -177,9 +177,13 @@ export function evaluateFormula(
   }
 
   try {
-    // Safe eval using Function constructor
+    // SECURITY FIX: Validate expression contains only safe characters
+    // Only allow digits, decimals, arithmetic operators, parentheses, spaces
+    if (!/^[\d\s+\-*/().]+$/.test(expression)) {
+      return 0;
+    }
     // eslint-disable-next-line no-new-func
-    return new Function(`return ${expression}`)();
+    return new Function(`"use strict"; return (${expression})`)();
   } catch {
     return 0;
   }

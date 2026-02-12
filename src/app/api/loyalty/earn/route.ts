@@ -41,6 +41,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Type is required' }, { status: 400 });
     }
 
+    // SECURITY: Only EMPLOYEE/OWNER can award points (except SIGNUP which has its own duplicate check)
+    // This prevents customers from awarding themselves arbitrary points
+    const isAdmin = session.user.role === 'EMPLOYEE' || session.user.role === 'OWNER';
+    const allowedCustomerTypes = ['SIGNUP']; // Only SIGNUP is self-service (with duplicate check)
+
+    if (!isAdmin && !allowedCustomerTypes.includes(type.toUpperCase())) {
+      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
+    }
+
     // Récupérer l'utilisateur
     const user = await db.user.findUnique({
       where: { email: session.user.email },

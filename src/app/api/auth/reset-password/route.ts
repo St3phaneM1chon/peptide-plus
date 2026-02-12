@@ -5,11 +5,22 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 
 export async function POST(request: NextRequest) {
   try {
+    // SECURITY: Rate limit password reset attempts
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+    const rateLimit = rateLimitMiddleware(ip, '/api/auth/reset-password');
+    if (!rateLimit.success) {
+      return NextResponse.json(
+        { error: rateLimit.error!.message },
+        { status: 429, headers: rateLimit.headers }
+      );
+    }
+
     const { token, email, password } = await request.json();
 
     // Validation des paramètres
@@ -48,13 +59,7 @@ export async function POST(request: NextRequest) {
       });
     } catch (dbError) {
       console.error('Database query error (resetToken fields may not exist):', dbError);
-      
-      // Fallback: vérifier juste l'email en développement
-      if (process.env.NODE_ENV === 'development') {
-        user = await prisma.user.findUnique({
-          where: { email: email.toLowerCase() },
-        });
-      }
+      // SECURITY FIX: Never bypass token validation. If schema is missing fields, fail.
     }
 
     if (!user) {
@@ -79,14 +84,12 @@ export async function POST(request: NextRequest) {
       });
     } catch (dbError) {
       console.error('Database update error:', dbError);
-      
-      // Fallback: mettre à jour juste le mot de passe
-      await prisma.user.update({
-        where: { id: user.id },
-        data: {
-          password: hashedPassword,
-        },
-      });
+      // SECURITY FIX: If we can't clear the reset token, don't update the password
+      // This prevents token reuse attacks
+      return NextResponse.json(
+        { error: 'Erreur lors de la réinitialisation' },
+        { status: 500 }
+      );
     }
 
     // Log pour audit

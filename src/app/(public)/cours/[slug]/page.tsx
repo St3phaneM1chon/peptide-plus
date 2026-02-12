@@ -194,7 +194,7 @@ export default async function CoursePage({ params }: CoursePageProps) {
               </h2>
               <div
                 className="prose max-w-none text-gray-600"
-                dangerouslySetInnerHTML={{ __html: product.description || '' }}
+                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(product.description || '', { ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'ul', 'ol', 'li', 'h2', 'h3', 'h4', 'a', 'span', 'blockquote'], ALLOWED_ATTR: ['href', 'target', 'rel', 'class'] }) }}
               />
             </div>
 

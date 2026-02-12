@@ -185,7 +185,8 @@ export async function POST(request: NextRequest) {
     });
 
     if (!result.success) {
-      return NextResponse.json({ error: 'Failed to send email', details: result.error }, { status: 500 });
+      console.error('Failed to send marketing email:', result.error);
+      return NextResponse.json({ error: 'Failed to send email' }, { status: 500 });
     }
 
     console.log(`📧 Marketing email sent: ${emailType} to ${user.email}`);

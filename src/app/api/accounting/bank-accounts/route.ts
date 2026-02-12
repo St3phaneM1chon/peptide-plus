@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/lib/auth-config';
+import { UserRole } from '@/types';
 import { prisma } from '@/lib/db';
 
 /**
@@ -7,6 +9,14 @@ import { prisma } from '@/lib/db';
  */
 export async function GET() {
   try {
+    const session = await auth();
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
+    }
+    if (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER) {
+      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
+    }
+
     const accounts = await prisma.bankAccount.findMany({
       orderBy: { createdAt: 'desc' },
     });
@@ -32,6 +42,14 @@ export async function GET() {
  */
 export async function POST(request: NextRequest) {
   try {
+    const session = await auth();
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
+    }
+    if (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER) {
+      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
+    }
+
     const body = await request.json();
     const { name, accountNumber, institution, type, currency, chartAccountId } = body;
 
@@ -69,6 +87,14 @@ export async function POST(request: NextRequest) {
  */
 export async function PUT(request: NextRequest) {
   try {
+    const session = await auth();
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
+    }
+    if (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER) {
+      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
+    }
+
     const body = await request.json();
     const { id, name, currentBalance, isActive } = body;
 

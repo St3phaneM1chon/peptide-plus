@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/lib/auth-config';
+import { UserRole } from '@/types';
 import { prisma } from '@/lib/db';
 import {
   createExpenseEntry,
@@ -9,6 +11,14 @@ import {
 
 export async function GET(request: NextRequest) {
   try {
+    const session = await auth();
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
+    }
+    if (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER) {
+      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
+    }
+
     const { searchParams } = new URL(request.url);
     const department = searchParams.get('department') as DepartmentCode | null;
     const fromStr = searchParams.get('from');
@@ -40,6 +50,14 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const session = await auth();
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
+    }
+    if (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER) {
+      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
+    }
+
     const body = await request.json();
     const { description, accountCode, amount, date, department, reference, createdBy = 'system' } = body;
 
@@ -62,8 +80,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, entryId }, { status: 201 });
   } catch (error) {
-    const msg = error instanceof Error ? error.message : 'Unknown error';
-    console.error('Error creating expense:', msg);
-    return NextResponse.json({ error: msg }, { status: 500 });
+    console.error('Error creating expense:', error);
+    return NextResponse.json({ error: 'Une erreur est survenue' }, { status: 500 });
   }
 }

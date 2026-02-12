@@ -11,31 +11,60 @@ import { translateMessage, getChatbotResponse, detectLanguage } from '@/lib/chat
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { conversationId, content, sender, visitorId: _visitorId } = body;
+    const { conversationId, content, sender, visitorId } = body;
 
     if (!conversationId || !content) {
       return NextResponse.json({ error: 'conversationId and content required' }, { status: 400 });
     }
 
-    // Vérifier la conversation
-    const conversation = await db.chatConversation.findUnique({
-      where: { id: conversationId },
-      include: {
-        messages: {
-          orderBy: { createdAt: 'asc' },
-          take: 20, // Derniers messages pour contexte
+    // Vérifier autorisation
+    const session = await auth();
+    const isAdmin = session?.user && ['OWNER', 'EMPLOYEE'].includes(session.user.role as string);
+
+    // Vérifier la conversation avec contrôle d'accès
+    let conversation;
+
+    if (isAdmin) {
+      // Les admins peuvent accéder à toutes les conversations
+      conversation = await db.chatConversation.findUnique({
+        where: { id: conversationId },
+        include: {
+          messages: {
+            orderBy: { createdAt: 'asc' },
+            take: 20,
+          },
         },
-      },
-    });
+      });
+    } else if (sender === 'VISITOR' && visitorId) {
+      // Les visiteurs ne peuvent accéder qu'à leur propre conversation via visitorId
+      conversation = await db.chatConversation.findFirst({
+        where: { id: conversationId, visitorId: visitorId },
+        include: {
+          messages: {
+            orderBy: { createdAt: 'asc' },
+            take: 20,
+          },
+        },
+      });
+    } else if (session?.user?.id) {
+      // Utilisateur connecté : vérifier qu'il est propriétaire de la conversation
+      conversation = await db.chatConversation.findFirst({
+        where: { id: conversationId, userId: session.user.id },
+        include: {
+          messages: {
+            orderBy: { createdAt: 'asc' },
+            take: 20,
+          },
+        },
+      });
+    } else {
+      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
+    }
 
     if (!conversation) {
       return NextResponse.json({ error: 'Conversation not found' }, { status: 404 });
     }
 
-    // Vérifier autorisation pour admin
-    const session = await auth();
-    const isAdmin = session?.user && ['OWNER', 'EMPLOYEE'].includes(session.user.role as string);
-    
     if (sender === 'ADMIN' && !isAdmin) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

@@ -2,6 +2,7 @@
 
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import DOMPurify from 'isomorphic-dompurify';
 
 // Article content data
 const articlesContent: Record<string, {
@@ -574,16 +575,19 @@ export default function ArticlePage() {
               prose-strong:text-gray-900
               prose-code:bg-gray-100 prose-code:px-2 prose-code:py-0.5 prose-code:rounded
               prose-table:w-full prose-th:bg-gray-50 prose-th:p-3 prose-td:p-3 prose-td:border-t"
-            dangerouslySetInnerHTML={{ 
-              __html: article.content
-                .replace(/\n## /g, '\n<h2>')
-                .replace(/\n### /g, '\n<h3>')
-                .replace(/<h2>([^<]+)/g, '<h2>$1</h2>')
-                .replace(/<h3>([^<]+)/g, '<h3>$1</h3>')
-                .replace(/\n- \*\*/g, '\n<li><strong>')
-                .replace(/\*\*:/g, '</strong>:')
-                .replace(/\n❌/g, '\n<p class="text-red-600">❌')
-                .replace(/\n\n/g, '</p>\n<p>')
+            dangerouslySetInnerHTML={{
+              __html: DOMPurify.sanitize(
+                article.content
+                  .replace(/\n## /g, '\n<h2>')
+                  .replace(/\n### /g, '\n<h3>')
+                  .replace(/<h2>([^<]+)/g, '<h2>$1</h2>')
+                  .replace(/<h3>([^<]+)/g, '<h3>$1</h3>')
+                  .replace(/\n- \*\*/g, '\n<li><strong>')
+                  .replace(/\*\*:/g, '</strong>:')
+                  .replace(/\n❌/g, '\n<p class="text-red-600">❌')
+                  .replace(/\n\n/g, '</p>\n<p>'),
+                { ALLOWED_TAGS: ['h2', 'h3', 'p', 'li', 'strong', 'em', 'ul', 'ol', 'a', 'br', 'code', 'pre', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'mark', 'span', 'div'], ALLOWED_ATTR: ['class', 'href', 'target', 'rel'] }
+              )
             }}
           />
         </div>

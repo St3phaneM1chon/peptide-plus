@@ -62,7 +62,29 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     }
 
     const body = await request.json();
-    const { images, formats, ...productData } = body;
+    const { images, formats } = body;
+
+    // Whitelist: only allow safe fields to be updated (H13 - mass assignment fix)
+    const allowedProductFields = [
+      'name', 'subtitle', 'slug', 'shortDescription', 'description', 'fullDetails',
+      'specifications', 'productType', 'price', 'compareAtPrice',
+      'purity', 'aminoSequence', 'molecularWeight', 'casNumber', 'molecularFormula',
+      'storageConditions',
+      'imageUrl', 'videoUrl',
+      'certificateUrl', 'certificateName', 'dataSheetUrl', 'dataSheetName',
+      'coaUrl', 'msdsUrl', 'hplcUrl',
+      'categoryId',
+      'trackInventory', 'allowBackorder',
+      'weight', 'dimensions', 'requiresShipping', 'sku', 'barcode', 'manufacturer', 'origin',
+      'metaTitle', 'metaDescription', 'tags',
+      'isActive', 'isFeatured', 'isNew', 'isBestseller',
+    ] as const;
+    const productData: Record<string, unknown> = {};
+    for (const field of allowedProductFields) {
+      if (body[field] !== undefined) {
+        productData[field] = body[field];
+      }
+    }
 
     // Vérifier que le produit existe
     const existingProduct = await prisma.product.findUnique({
@@ -77,7 +99,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     // Si le slug change, vérifier l'unicité
     if (productData.slug && productData.slug !== existingProduct.slug) {
       const slugExists = await prisma.product.findUnique({
-        where: { slug: productData.slug },
+        where: { slug: productData.slug as string },
       });
       if (slugExists) {
         return NextResponse.json(

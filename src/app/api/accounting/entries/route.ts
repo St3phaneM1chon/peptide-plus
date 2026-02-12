@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
+import { UserRole } from '@/types';
 import { prisma } from '@/lib/db';
 
 /**
@@ -11,6 +12,9 @@ export async function GET(request: NextRequest) {
     const session = await auth();
     if (!session?.user) {
       return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
+    }
+    if (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER) {
+      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -109,6 +113,9 @@ export async function POST(request: NextRequest) {
     if (!session?.user) {
       return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
     }
+    if (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER) {
+      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
+    }
 
     const body = await request.json();
     const { date, description, type, reference, lines, postImmediately } = body;
@@ -204,6 +211,9 @@ export async function PUT(request: NextRequest) {
     if (!session?.user) {
       return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
     }
+    if (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER) {
+      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
+    }
 
     const body = await request.json();
     const { id, date, description, reference, lines } = body;
@@ -295,6 +305,9 @@ export async function DELETE(request: NextRequest) {
     const session = await auth();
     if (!session?.user) {
       return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
+    }
+    if (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER) {
+      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
     }
 
     const { searchParams } = new URL(request.url);

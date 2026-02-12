@@ -1,9 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { purchaseStock } from '@/lib/inventory';
+import { auth } from '@/lib/auth-config';
+import { UserRole } from '@/types';
+
+// SECURITY: Shared auth check for all handlers
+async function requireAdmin() {
+  const session = await auth();
+  if (!session?.user) {
+    return { error: NextResponse.json({ error: 'Non autorisé' }, { status: 401 }) };
+  }
+  if (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER) {
+    return { error: NextResponse.json({ error: 'Accès refusé' }, { status: 403 }) };
+  }
+  return { session };
+}
 
 export async function GET(request: NextRequest) {
   try {
+    const authResult = await requireAdmin();
+    if ('error' in authResult && authResult.error) return authResult.error;
+
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
     const department = searchParams.get('department');
@@ -37,6 +54,9 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const authResult = await requireAdmin();
+    if ('error' in authResult && authResult.error) return authResult.error;
+
     const body = await request.json();
     const {
       supplierName, supplierEmail, department = 'OPS',
@@ -104,6 +124,9 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
+    const authResult = await requireAdmin();
+    if ('error' in authResult && authResult.error) return authResult.error;
+
     const body = await request.json();
     const { id, status, approvedBy, notes } = body;
 

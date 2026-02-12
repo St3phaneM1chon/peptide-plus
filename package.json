@@ -34,6 +34,7 @@
     "@types/uuid": "^10.0.0",
     "bcryptjs": "^2.4.3",
     "helmet": "^7.1.0",
+    "isomorphic-dompurify": "^3.0.0-rc.2",
     "jose": "^5.2.0",
     "jspdf": "^4.0.0",
     "lucide-react": "^0.563.0",

@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { hash } from 'bcryptjs';
 import { prisma } from '@/lib/db';
 import { sendWelcomeEmail } from '@/lib/email-service';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { z } from 'zod';
 
 // Schéma de validation NYDFS-compliant
@@ -26,6 +27,16 @@ const signupSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    // SECURITY: Rate limit signup attempts
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+    const rateLimit = rateLimitMiddleware(ip, '/api/auth/register');
+    if (!rateLimit.success) {
+      return NextResponse.json(
+        { error: rateLimit.error!.message },
+        { status: 429, headers: rateLimit.headers }
+      );
+    }
+
     const body = await request.json();
 
     // Validation
@@ -45,9 +56,14 @@ export async function POST(request: NextRequest) {
     });
 
     if (existingUser) {
+      // SECURITY FIX H17: Don't reveal whether email exists (account enumeration)
+      // Return same success response to prevent attackers from discovering valid emails
       return NextResponse.json(
-        { error: 'Un compte existe déjà avec cet email' },
-        { status: 400 }
+        {
+          success: true,
+          message: 'Si cet email est disponible, un compte a été créé. Vérifiez votre boîte de réception.',
+        },
+        { status: 201 }
       );
     }
 
@@ -85,12 +101,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: true,
-        message: 'Compte créé avec succès',
-        user: {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-        },
+        message: 'Si cet email est disponible, un compte a été créé. Vérifiez votre boîte de réception.',
       },
       { status: 201 }
     );

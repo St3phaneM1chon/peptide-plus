@@ -26,36 +26,42 @@ export async function PUT(request: Request) {
 
     const data = await request.json();
 
-    // Upsert l'adresse par défaut
-    const address = await db.userAddress.upsert({
-      where: {
-        id: data.id || 'new-address',
-      },
-      update: {
-        recipientName: data.recipientName || session.user.name || '',
-        addressLine1: data.addressLine1 || data.address || '',
-        addressLine2: data.addressLine2 || '',
-        city: data.city || '',
-        state: data.state || data.province || '',
-        postalCode: data.postalCode || '',
-        country: data.country || 'CA',
-        phone: data.phone || '',
-        label: data.label || 'Principal',
-      },
-      create: {
-        userId: user.id,
-        recipientName: data.recipientName || session.user.name || '',
-        addressLine1: data.addressLine1 || data.address || '',
-        addressLine2: data.addressLine2 || '',
-        city: data.city || '',
-        state: data.state || data.province || '',
-        postalCode: data.postalCode || '',
-        country: data.country || 'CA',
-        phone: data.phone || '',
-        label: data.label || 'Principal',
-        isDefault: true,
-      },
-    });
+    const addressData = {
+      recipientName: data.recipientName || session.user.name || '',
+      addressLine1: data.addressLine1 || data.address || '',
+      addressLine2: data.addressLine2 || '',
+      city: data.city || '',
+      state: data.state || data.province || '',
+      postalCode: data.postalCode || '',
+      country: data.country || 'CA',
+      phone: data.phone || '',
+      label: data.label || 'Principal',
+    };
+
+    let address;
+
+    // SECURITY: If updating an existing address, verify ownership first
+    if (data.id) {
+      const existing = await db.userAddress.findFirst({
+        where: { id: data.id, userId: user.id },
+      });
+      if (!existing) {
+        return NextResponse.json({ error: 'Adresse introuvable' }, { status: 404 });
+      }
+      address = await db.userAddress.update({
+        where: { id: data.id },
+        data: addressData,
+      });
+    } else {
+      // Create new address
+      address = await db.userAddress.create({
+        data: {
+          userId: user.id,
+          ...addressData,
+          isDefault: true,
+        },
+      });
+    }
 
     return NextResponse.json({
       success: true,

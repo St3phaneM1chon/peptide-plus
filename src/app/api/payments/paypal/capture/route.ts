@@ -69,7 +69,11 @@ export async function POST(request: NextRequest) {
     const captureData = await captureResponse.json();
 
     if (captureData.status === 'COMPLETED') {
-      const userId = session?.user?.id || 'guest';
+      // SECURITY: Require authentication for order creation
+      if (!session?.user?.id) {
+        return NextResponse.json({ error: 'Authentification requise' }, { status: 401 });
+      }
+      const userId = session.user.id;
 
       // Find or create currency
       let currency = await prisma.currency.findUnique({
@@ -102,7 +106,8 @@ export async function POST(request: NextRequest) {
             taxTps,
             taxTvq,
             taxTvh,
-            total: total || Number(captureData.purchase_units?.[0]?.amount?.value || 0),
+            // SECURITY: Use PayPal's captured amount as source of truth
+            total: Number(captureData.purchase_units?.[0]?.payments?.captures?.[0]?.amount?.value || captureData.purchase_units?.[0]?.amount?.value || 0),
             currencyId: currency!.id,
             paymentMethod: 'PAYPAL',
             paymentStatus: 'PAID',

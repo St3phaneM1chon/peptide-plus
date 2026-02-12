@@ -59,6 +59,15 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
     const body = await request.json();
 
+    // Whitelist: only allow safe fields to be updated (H11 - mass assignment fix)
+    const allowedFields = ['name', 'slug', 'description', 'imageUrl', 'sortOrder', 'isActive'] as const;
+    const updateData: Record<string, unknown> = {};
+    for (const field of allowedFields) {
+      if (body[field] !== undefined) {
+        updateData[field] = body[field];
+      }
+    }
+
     // Vérifier que la catégorie existe
     const existingCategory = await prisma.category.findUnique({
       where: { id },
@@ -69,9 +78,9 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     }
 
     // Si le slug change, vérifier l'unicité
-    if (body.slug && body.slug !== existingCategory.slug) {
+    if (updateData.slug && updateData.slug !== existingCategory.slug) {
       const slugExists = await prisma.category.findUnique({
-        where: { slug: body.slug },
+        where: { slug: updateData.slug as string },
       });
       if (slugExists) {
         return NextResponse.json(
@@ -83,7 +92,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
     const category = await prisma.category.update({
       where: { id },
-      data: body,
+      data: updateData,
     });
 
     // Log d'audit
@@ -93,7 +102,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         action: 'UPDATE',
         entityType: 'Category',
         entityId: category.id,
-        details: JSON.stringify(body),
+        details: JSON.stringify(updateData),
       },
     });
 

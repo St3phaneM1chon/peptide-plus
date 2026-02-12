@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     const authHeader = request.headers.get('authorization');
     const cronSecret = process.env.CRON_SECRET;
     
-    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+    if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -111,7 +111,7 @@ export async function GET(request: NextRequest) {
           userId,
           email: data.user.email,
           success: false,
-          error: error instanceof Error ? error.message : 'Unknown error',
+          error: 'Failed to process points expiring email',
         });
       }
     }
