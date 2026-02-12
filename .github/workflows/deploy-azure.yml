@@ -114,29 +114,33 @@ jobs:
 
       - name: Configure App Settings
         run: |
+          # Always-set settings (static values + required secrets)
+          SETTINGS="NODE_ENV=production"
+          SETTINGS="$SETTINGS NEXTAUTH_URL=https://biocyclepeptides.com"
+          SETTINGS="$SETTINGS NEXT_PUBLIC_APP_URL=https://biocyclepeptides.com"
+          SETTINGS="$SETTINGS NEXT_PUBLIC_SITE_NAME=BioCycle Peptides"
+          SETTINGS="$SETTINGS NEXT_PUBLIC_CONTACT_EMAIL=contact@biocyclepeptides.com"
+          SETTINGS="$SETTINGS NEXT_PUBLIC_SUPPORT_EMAIL=support@biocyclepeptides.com"
+          SETTINGS="$SETTINGS SMTP_HOST=smtp.office365.com"
+          SETTINGS="$SETTINGS SMTP_PORT=587"
+          SETTINGS="$SETTINGS SMTP_FROM=BioCycle Peptides <noreply@biocyclepeptides.com>"
+
+          # Only set secrets that have values (avoid overwriting with empty strings)
+          [ -n "${{ secrets.DATABASE_URL }}" ] && SETTINGS="$SETTINGS DATABASE_URL=${{ secrets.DATABASE_URL }}"
+          [ -n "${{ secrets.NEXTAUTH_SECRET }}" ] && SETTINGS="$SETTINGS NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}"
+          [ -n "${{ secrets.OPENAI_API_KEY }}" ] && SETTINGS="$SETTINGS OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}"
+          [ -n "${{ secrets.GOOGLE_CLIENT_ID }}" ] && SETTINGS="$SETTINGS GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}"
+          [ -n "${{ secrets.GOOGLE_CLIENT_SECRET }}" ] && SETTINGS="$SETTINGS GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}"
+          [ -n "${{ secrets.STRIPE_SECRET_KEY }}" ] && SETTINGS="$SETTINGS STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }}"
+          [ -n "${{ secrets.STRIPE_WEBHOOK_SECRET }}" ] && SETTINGS="$SETTINGS STRIPE_WEBHOOK_SECRET=${{ secrets.STRIPE_WEBHOOK_SECRET }}"
+          [ -n "${{ secrets.STRIPE_PUBLISHABLE_KEY }}" ] && SETTINGS="$SETTINGS NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${{ secrets.STRIPE_PUBLISHABLE_KEY }}"
+          [ -n "${{ secrets.SMTP_USER }}" ] && SETTINGS="$SETTINGS SMTP_USER=${{ secrets.SMTP_USER }}"
+          [ -n "${{ secrets.SMTP_PASSWORD }}" ] && SETTINGS="$SETTINGS SMTP_PASSWORD=${{ secrets.SMTP_PASSWORD }}"
+
           az webapp config appsettings set \
             --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
             --name ${{ env.AZURE_WEBAPP_NAME }} \
-            --settings \
-              NODE_ENV=production \
-              NEXTAUTH_URL=https://biocyclepeptides.com \
-              NEXTAUTH_SECRET="${{ secrets.NEXTAUTH_SECRET }}" \
-              NEXT_PUBLIC_APP_URL=https://biocyclepeptides.com \
-              NEXT_PUBLIC_SITE_NAME="BioCycle Peptides" \
-              NEXT_PUBLIC_CONTACT_EMAIL="contact@biocyclepeptides.com" \
-              NEXT_PUBLIC_SUPPORT_EMAIL="support@biocyclepeptides.com" \
-              DATABASE_URL="${{ secrets.DATABASE_URL }}" \
-              OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}" \
-              GOOGLE_CLIENT_ID="${{ secrets.GOOGLE_CLIENT_ID }}" \
-              GOOGLE_CLIENT_SECRET="${{ secrets.GOOGLE_CLIENT_SECRET }}" \
-              STRIPE_SECRET_KEY="${{ secrets.STRIPE_SECRET_KEY }}" \
-              STRIPE_WEBHOOK_SECRET="${{ secrets.STRIPE_WEBHOOK_SECRET }}" \
-              NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="${{ secrets.STRIPE_PUBLISHABLE_KEY }}" \
-              SMTP_HOST="smtp.office365.com" \
-              SMTP_PORT="587" \
-              SMTP_USER="${{ secrets.SMTP_USER }}" \
-              SMTP_PASSWORD="${{ secrets.SMTP_PASSWORD }}" \
-              SMTP_FROM="BioCycle Peptides <noreply@biocyclepeptides.com>"
+            --settings $SETTINGS
 
       - name: Verify build artifacts
         run: |
@@ -160,13 +164,13 @@ jobs:
           package: .
           clean: true
 
-      - name: Run Database Migrations
+      - name: Sync Database Schema
+        if: ${{ secrets.DATABASE_URL != '' }}
         run: |
-          az webapp config appsettings list \
-            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
-            --name ${{ env.AZURE_WEBAPP_NAME }} \
-            --query "[?name=='DATABASE_URL'].value" -o tsv > /dev/null
-          echo "Database migrations should be run via Kudu or SSH"
+          echo "Pushing Prisma schema to production database..."
+          npx prisma db push --accept-data-loss --skip-generate 2>&1 || echo "WARNING: prisma db push failed - check manually"
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
       - name: Verify deployment
         run: |
