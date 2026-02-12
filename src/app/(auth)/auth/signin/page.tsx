@@ -38,10 +38,11 @@ function SignInContent() {
   });
   const [formError, setFormError] = useState('');
 
-  // Connexion OAuth
+  // Connexion OAuth - use post-login redirect for role-based routing
   const handleOAuthSignIn = async (provider: string) => {
     setIsLoading(true);
-    await signIn(provider, { callbackUrl });
+    const targetUrl = (callbackUrl === '/' || !callbackUrl) ? '/auth/post-login' : callbackUrl;
+    await signIn(provider, { callbackUrl: targetUrl });
   };
 
   // Connexion Email/Password
@@ -69,7 +70,20 @@ function SignInContent() {
         return;
       }
 
-      router.push(callbackUrl);
+      // Role-based redirect: OWNER/EMPLOYEE → admin, others → account
+      if (callbackUrl === '/' || !callbackUrl) {
+        try {
+          const sessionRes = await fetch('/api/auth/session');
+          const sessionData = await sessionRes.json();
+          if (sessionData?.user?.role === 'OWNER' || sessionData?.user?.role === 'EMPLOYEE') {
+            router.push('/admin');
+            return;
+          }
+        } catch {}
+        router.push('/account');
+      } else {
+        router.push(callbackUrl);
+      }
     } catch {
       setFormError('Une erreur est survenue');
       setIsLoading(false);

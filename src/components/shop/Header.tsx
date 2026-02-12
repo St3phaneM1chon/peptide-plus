@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
@@ -41,8 +41,21 @@ export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [currentLang, setCurrentLang] = useState('en');
-  
+  const [shopCategories, setShopCategories] = useState<{name: string; slug: string}[]>([]);
+
   const pathname = usePathname();
+
+  // Fetch categories for shop dropdown
+  useEffect(() => {
+    fetch('/api/categories')
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data?.categories) {
+          setShopCategories(data.categories.filter((c: any) => c.isActive !== false));
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   // Close dropdowns on route change
   useEffect(() => {
@@ -163,22 +176,12 @@ export default function Header() {
                     <DropdownItem href="/shop">
                       {t('nav.allProducts') || 'All Products'}
                     </DropdownItem>
-                    <DropdownDivider />
-                    <DropdownItem href="/category/recovery-repair">
-                      {t('nav.recovery') || 'Recovery & Repair'}
-                    </DropdownItem>
-                    <DropdownItem href="/category/weight-loss">
-                      {t('nav.weightLoss') || 'Weight Loss'}
-                    </DropdownItem>
-                    <DropdownItem href="/category/anti-aging-longevity">
-                      {t('nav.antiAging') || 'Anti-Aging'}
-                    </DropdownItem>
-                    <DropdownItem href="/category/supplements">
-                      {t('nav.supplements') || 'Supplements'}
-                    </DropdownItem>
-                    <DropdownItem href="/category/accessories">
-                      {t('nav.accessories') || 'Accessories'}
-                    </DropdownItem>
+                    {shopCategories.length > 0 && <DropdownDivider />}
+                    {shopCategories.map(cat => (
+                      <DropdownItem key={cat.slug} href={`/category/${cat.slug}`}>
+                        {cat.name}
+                      </DropdownItem>
+                    ))}
                   </DropdownMenu>
                 )}
               </div>
@@ -328,7 +331,12 @@ export default function Header() {
                           <p className="text-xs text-gray-500 truncate">{session.user.email}</p>
                         </div>
                         <div className="py-1">
-                          <DropdownItem href="/dashboard/customer" icon="🏠">
+                          {(session.user.role === 'OWNER' || session.user.role === 'EMPLOYEE') && (
+                            <DropdownItem href="/admin" icon="⚙️" highlight>
+                              Admin Panel
+                            </DropdownItem>
+                          )}
+                          <DropdownItem href="/account" icon="🏠">
                             {t('account.dashboard') || 'Dashboard'}
                           </DropdownItem>
                           <DropdownItem href="/account/orders" icon="📦">
@@ -393,15 +401,11 @@ export default function Header() {
                 <MobileNavLink href="/shop" onClick={() => setIsMobileMenuOpen(false)}>
                   {t('nav.shop') || 'Shop'}
                 </MobileNavLink>
-                <MobileNavLink href="/category/recovery-repair" onClick={() => setIsMobileMenuOpen(false)} indent>
-                  {t('nav.recovery') || 'Recovery & Repair'}
-                </MobileNavLink>
-                <MobileNavLink href="/category/weight-loss" onClick={() => setIsMobileMenuOpen(false)} indent>
-                  {t('nav.weightLoss') || 'Weight Loss'}
-                </MobileNavLink>
-                <MobileNavLink href="/category/supplements" onClick={() => setIsMobileMenuOpen(false)} indent>
-                  {t('nav.supplements') || 'Supplements'}
-                </MobileNavLink>
+                {shopCategories.map(cat => (
+                  <MobileNavLink key={cat.slug} href={`/category/${cat.slug}`} onClick={() => setIsMobileMenuOpen(false)} indent>
+                    {cat.name}
+                  </MobileNavLink>
+                ))}
                 <MobileNavLink href="/calculator" onClick={() => setIsMobileMenuOpen(false)}>
                   🧮 {t('nav.calculator') || 'Calculator'}
                 </MobileNavLink>
@@ -436,7 +440,12 @@ export default function Header() {
                           <p className="text-xs text-gray-400 truncate">{session.user.email}</p>
                         </div>
                       </div>
-                      <MobileNavLink href="/dashboard/customer" onClick={() => setIsMobileMenuOpen(false)}>
+                      {(session.user.role === 'OWNER' || session.user.role === 'EMPLOYEE') && (
+                        <MobileNavLink href="/admin" onClick={() => setIsMobileMenuOpen(false)}>
+                          ⚙️ Admin Panel
+                        </MobileNavLink>
+                      )}
+                      <MobileNavLink href="/account" onClick={() => setIsMobileMenuOpen(false)}>
                         🏠 {t('account.dashboard') || 'Dashboard'}
                       </MobileNavLink>
                       <MobileNavLink href="/account/orders" onClick={() => setIsMobileMenuOpen(false)}>

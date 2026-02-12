@@ -13,6 +13,7 @@ const protectedRoutes = [
   '/admin',
   '/owner',
   '/client',
+  '/account',
   '/checkout/payment',
   '/checkout/confirm',
   '/order',
