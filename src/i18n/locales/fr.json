@@ -96,7 +96,45 @@
       "error": "Échec de l'inscription. Veuillez réessayer.",
       "subscribed": "Vous serez avisé!",
       "subscribedMessage": "Nous vous enverrons un courriel lorsque ce produit sera de nouveau en stock."
-    }
+    },
+    "addToWishlist": "Ajouter à la liste de souhaits",
+    "additionalSpecs": "Spécifications supplémentaires",
+    "appearance": "Apparence",
+    "basePrice": "Prix de base",
+    "bestValue": "Meilleur rapport qualité-prix",
+    "bulkPricing": "Prix en gros",
+    "bulkPricingNote": "Remises sur volume disponibles pour les commandes en gros",
+    "chemicalProperties": "Propriétés chimiques",
+    "downloadCOA": "Télécharger le COA",
+    "featured": "En vedette",
+    "highestPurity": "Pureté maximale",
+    "hplcPurity": "Pureté HPLC",
+    "importantNotes": "Notes importantes",
+    "mechanism": "Mécanisme d'action",
+    "newArrival": "Nouveauté",
+    "noDescription": "Aucune description disponible",
+    "premiumPeptides": "Peptides de recherche premium",
+    "productVideo": "Vidéo du produit",
+    "recommendedSolvent": "Solvant recommandé",
+    "recommendedVolume": "Volume recommandé",
+    "reconstitution": "Reconstitution",
+    "reconstitutionGuide": "Guide de reconstitution",
+    "reconstitutionSteps": "Étapes de reconstitution",
+    "references": "Références",
+    "research": "Recherche",
+    "researchContext": "Contexte de recherche",
+    "researchOverview": "Aperçu de la recherche",
+    "save": "Économisez",
+    "sequence": "Séquence",
+    "solubility": "Solubilité",
+    "stability": "Stabilité",
+    "storageInstructions": "Instructions de conservation",
+    "synonyms": "Synonymes",
+    "unit": "Unité",
+    "units": "Unités",
+    "video": "Vidéo",
+    "videoDescription": "Regardez notre présentation du produit et guide d'utilisation",
+    "viewHPLC": "Voir le rapport HPLC"
   },
   "home": {
     "heroTitle": "Les meilleurs peptides de recherche au Canada",
@@ -173,7 +211,14 @@
     "shippingPolicy": "Politique d'expédition",
     "refundPolicy": "Politique de remboursement",
     "calculator": "Calculatrice",
-    "antiAging": "Anti-Âge"
+    "antiAging": "Anti-Âge",
+    "catalog": "Catalogue",
+    "categories": "Catégories",
+    "courses": "Cours",
+    "currency": "Devise",
+    "dashboard": "Tableau de bord",
+    "myAccount": "Mon compte",
+    "quickLinks": "Liens rapides"
   },
   "categories": {
     "all": "Tous les produits",
@@ -215,7 +260,9 @@
     "vialCoolerCase": "Étui réfrigérant pour fioles (2ml)",
     "cartridgeCoolerCase": "Étui réfrigérant pour cartouches (3ml)",
     "travelCoolerKit": "Kit de voyage réfrigérant",
-    "starterKit": "Kit de démarrage complet"
+    "starterKit": "Kit de démarrage complet",
+    "catalog": "Catalogue de produits",
+    "description": "Description"
   },
   "formats": {
     "vial": "Fiole",
@@ -297,7 +344,10 @@
     "newsletter": "Restez informé",
     "newsletterDesc": "Abonnez-vous pour des offres exclusives, nouveaux produits et insights de recherche.",
     "subscribe": "S'abonner",
-    "securePayments": "Paiements sécurisés"
+    "securePayments": "Paiements sécurisés",
+    "allRightsReserved": "Tous droits réservés",
+    "help": "Aide",
+    "subscribeNewsletter": "Abonnez-vous à notre infolettre"
   },
   "compare": {
     "compare": "Comparer",
@@ -386,7 +436,9 @@
     "nextSlide": "Slide suivant",
     "total": "Total",
     "redirecting": "Redirection...",
-    "tryAgain": "Réessayer"
+    "tryAgain": "Réessayer",
+    "saving": "Sauvegarde...",
+    "search": "Rechercher"
   },
   "cart": {
     "title": "Votre panier",
@@ -417,7 +469,8 @@
     "taxesNote": "Taxes et frais de livraison calculés à la caisse",
     "decreaseQuantity": "Diminuer la quantité",
     "increaseQuantity": "Augmenter la quantité",
-    "customersAlsoBought": "Les clients ont aussi acheté"
+    "customersAlsoBought": "Les clients ont aussi acheté",
+    "discount": "Remise"
   },
   "checkout": {
     "emptyCart": "Votre panier est vide",
@@ -525,7 +578,13 @@
     "districtLabel": "District",
     "districtPlaceholder": "Nom du district",
     "exampleAbbrev": "Ex:",
-    "coloniaPlaceholder": "Ex: Col. Roma Norte"
+    "coloniaPlaceholder": "Ex: Col. Roma Norte",
+    "address1": "Adresse ligne 1",
+    "address2": "Adresse ligne 2",
+    "checkout": "Paiement",
+    "errors": {
+      "paymentFailed": "Le paiement a échoué. Veuillez réessayer."
+    }
   },
   "rewards": {
     "title": "Programme de récompenses",
@@ -571,7 +630,8 @@
     "redeemSuccess": "Récompense échangée avec succès! Elle sera appliquée à votre prochaine commande.",
     "redeeming": "Échange...",
     "morePointsNeeded": "pts de plus requis",
-    "pointsPerDollar": "points par 1$ dépensé"
+    "pointsPerDollar": "points par 1$ dépensé",
+    "rewards": "Récompenses"
   },
   "subscriptions": {
     "title": "Abonnez-vous et économisez",
@@ -823,7 +883,22 @@
       "shippingInfo": "Livraison",
       "tracking": "Suivi",
       "thankYou": "Merci pour votre confiance!",
-      "last": "Dernière"
+      "last": "Dernière",
+      "addressUpdated": "Adresse mise à jour avec succès",
+      "cancelOrder": "Annuler la commande",
+      "cancelOrderConfirmMessage": "Cette action est irréversible",
+      "cancelOrderConfirmTitle": "Êtes-vous sûr de vouloir annuler cette commande?",
+      "cancelling": "Annulation en cours...",
+      "confirmCancel": "Confirmer l'annulation",
+      "editAddress": "Modifier l'adresse",
+      "editShippingAddress": "Modifier l'adresse de livraison",
+      "items": "articles",
+      "refundNote": "Les remboursements seront traités sur le mode de paiement original dans les 5 à 7 jours ouvrables",
+      "reorderAllUnavailable": "Tous les articles de cette commande sont actuellement indisponibles",
+      "reorderError": "Erreur lors de l'ajout au panier",
+      "reorderItemsAdded": "{count} article(s) ajouté(s) au panier",
+      "reorderItemsUnavailable": "Certains articles sont indisponibles : {items}",
+      "reordering": "Ajout au panier..."
     },
     "settings": "Paramètres du compte",
     "signOut": "Déconnexion",
@@ -1046,7 +1121,65 @@
     "security": "Sécurité",
     "changePassword": "Modifier mon mot de passe",
     "changePasswordDescription": "Changer votre mot de passe de connexion",
-    "memberSince": "Membre depuis"
+    "memberSince": "Membre depuis",
+    "addedOn": "Ajouté le",
+    "invoices": {
+      "carrier": "Transporteur",
+      "clearFilter": "Effacer le filtre",
+      "colActions": "Actions",
+      "colDate": "Date",
+      "colInvoice": "Facture",
+      "colItems": "Articles",
+      "colStatus": "Statut",
+      "colTotal": "Total",
+      "currency": "Devise",
+      "date": "Date",
+      "dateFrom": "Du",
+      "dateTo": "Au",
+      "discount": "Remise",
+      "downloadPdf": "Télécharger PDF",
+      "errorLoadDetail": "Erreur lors du chargement des détails de la facture",
+      "errorPdf": "Erreur lors de la génération du PDF",
+      "filter": "Filtrer",
+      "free": "Gratuit",
+      "invoiceDetail": "Détails de la facture",
+      "invoicesLabel": "Factures",
+      "item": "article",
+      "items": "articles",
+      "lineTotal": "Total ligne",
+      "loading": "Chargement des factures...",
+      "method": "Méthode",
+      "next": "Suivant",
+      "noInvoices": "Aucune facture",
+      "noInvoicesDateRange": "Aucune facture trouvée pour cette période",
+      "noInvoicesDescription": "Vos factures apparaîtront ici après vos commandes",
+      "notes": "Notes",
+      "of": "de",
+      "order": "Commande",
+      "orderRef": "Référence de commande",
+      "page": "Page",
+      "paid": "Payé",
+      "paymentInfo": "Informations de paiement",
+      "previous": "Précédent",
+      "print": "Imprimer",
+      "product": "Produit",
+      "qty": "Qté",
+      "shipTo": "Livrer à",
+      "shipping": "Livraison",
+      "shopNow": "Magasiner",
+      "showingResults": "Affichage de {from} à {to} sur {total} factures",
+      "subtitle": "Consultez et téléchargez vos factures",
+      "subtotal": "Sous-total",
+      "thankYou": "Merci pour votre achat!",
+      "title": "Mes factures",
+      "total": "Total",
+      "tracking": "Suivi",
+      "unitPrice": "Prix unitaire",
+      "view": "Voir"
+    },
+    "removeFromWishlist": "Retirer de la liste de souhaits",
+    "savedProducts": "Produits sauvegardés",
+    "wishlist": "Liste de souhaits"
   },
   "reviews": {
     "customerReviews": "Avis clients",
@@ -1079,7 +1212,9 @@
     "thankYou": "Merci pour votre avis! +100 points de fidélité gagnés.",
     "showingStarReviews": "Affichage des avis {rating} étoiles",
     "showingAllReviews": "Affichage des {count} avis",
-    "clearFilter": "Effacer le filtre"
+    "clearFilter": "Effacer le filtre",
+    "rewardsInfo": "Rédigez un avis et gagnez 100 points de fidélité",
+    "rewardsTitle": "Gagnez des récompenses"
   },
   "qa": {
     "questionsAnswers": "Questions et réponses",
@@ -1132,7 +1267,8 @@
     "readyToStart": "Prêt à commencer votre recherche?",
     "browseCollection": "Parcourez notre collection de peptides de recherche haute pureté.",
     "shopPeptides": "Voir les peptides",
-    "readTime": "min de lecture"
+    "readTime": "min de lecture",
+    "featured": "Articles vedettes"
   },
   "faq": {
     "title": "Questions fréquemment posées",
@@ -1146,7 +1282,13 @@
     "returnsRefunds": "Retours et remboursements",
     "qualitySafety": "Qualité et sécurité",
     "stillHaveQuestions": "Vous avez encore des questions?",
-    "contactUs": "Contactez-nous"
+    "contactUs": "Contactez-nous",
+    "calculatorButton": "Essayer le calculateur",
+    "calculatorDesc": "Calculez les dosages précis de peptides avec notre calculateur d'injection",
+    "calculatorTitle": "Calculateur d'injection de peptides",
+    "contactButton": "Contacter le support",
+    "empty": "Aucune question trouvée",
+    "loading": "Chargement..."
   },
   "contact": {
     "title": "Contactez-nous",
@@ -1261,7 +1403,23 @@
     "asia": "Asie",
     "restOfWorld": "Reste du monde",
     "calculatedAtCheckout": "Calculé à la caisse",
-    "lastUpdated": "Dernière mise à jour"
+    "lastUpdated": "Dernière mise à jour",
+    "customs": {
+      "title": "Douanes et droits"
+    },
+    "options": {
+      "title": "Options de livraison"
+    },
+    "packaging": {
+      "title": "Emballage et manutention"
+    },
+    "processing": {
+      "title": "Traitement des commandes"
+    },
+    "subtitle": "Informations et politiques de livraison",
+    "tracking": {
+      "title": "Suivi de commande"
+    }
   },
   "refund": {
     "title": "Politique de remboursement",
@@ -1281,7 +1439,8 @@
     "paypal": "PayPal",
     "applePay": "Apple Pay / Google Pay",
     "timesVary": "Les délais peuvent varier selon votre banque ou institution financière.",
-    "lastUpdated": "Dernière mise à jour"
+    "lastUpdated": "Dernière mise à jour",
+    "subtitle": "Notre politique de remboursement et procédures"
   },
   "newsletter": {
     "title": "Obtenez 10% sur votre première commande",
@@ -1307,7 +1466,8 @@
     "description": "Nous utilisons des cookies pour améliorer votre expérience, analyser le trafic du site et à des fins marketing.",
     "accept": "Accepter tout",
     "decline": "Refuser",
-    "learnMore": "En savoir plus"
+    "learnMore": "En savoir plus",
+    "message": "Nous utilisons des cookies pour améliorer votre expérience de navigation et analyser le trafic du site."
   },
   "trust": {
     "labTested": "Testé en labo",
@@ -1892,7 +2052,8 @@
     "backToProfile": "Retour au profil",
     "home": "Accueil",
     "myProfile": "Mon profil",
-    "errorOccurred": "Une erreur est survenue"
+    "errorOccurred": "Une erreur est survenue",
+    "resetPassword": "Réinitialiser le mot de passe"
   },
   "admin": {
     "brandName": "BioCycle Admin",
@@ -2150,7 +2311,12 @@
       "supplements": "Suppléments",
       "accessories": "Accessoires",
       "emptyTitle": "Aucun produit trouvé",
-      "emptyDescription": "Aucun produit ne correspond à vos filtres."
+      "emptyDescription": "Aucun produit ne correspond à vos filtres.",
+      "export": "Exporter",
+      "exportError": "Erreur lors de l'exportation des produits",
+      "exportSuccess": "Produits exportés avec succès",
+      "importCsv": "Importer CSV",
+      "importError": "Erreur lors de l'importation des produits"
     },
     "clients": {
       "title": "Clients",
@@ -2285,7 +2451,9 @@
       "historyDaysAgo2": "il y a 2 jours",
       "historyDaysAgo3": "il y a 3 jours",
       "historyDaysAgo5": "il y a 5 jours",
-      "historyDaysAgo30": "il y a 30 jours"
+      "historyDaysAgo30": "il y a 30 jours",
+      "exportError": "Erreur lors de l'exportation de l'inventaire",
+      "exportSuccess": "Inventaire exporté avec succès"
     },
     "commandes": {
       "title": "Commandes",
@@ -2953,7 +3121,8 @@
       "addCurrencyTitle": "Ajouter une devise",
       "inDevelopment": "Fonctionnalité en cours de développement...",
       "close": "Fermer",
-      "ratesUpdated": "Taux de change mis à jour depuis l'API externe"
+      "ratesUpdated": "Taux de change mis à jour depuis l'API externe",
+      "refreshing": "Actualisation des taux de change..."
     },
     "emailConfig": {
       "title": "Emails",
@@ -3301,7 +3470,11 @@
       "referralsLabel": "Parrainages",
       "generatedSalesLabel": "Ventes générées",
       "totalEarningsLabel": "Gains totaux",
-      "payoutProcessed": "Paiement traité pour l’ambassadeur #{id}"
+      "payoutProcessed": "Paiement traité pour l’ambassadeur #{id}",
+      "noPendingPayout": "Aucun paiement en attente",
+      "payoutError": "Erreur lors du traitement du paiement",
+      "pendingPayoutLabel": "Paiement en attente",
+      "processPayoutNow": "Traiter le paiement maintenant"
     },
     "reports": {
       "title": "Rapports comptables",
@@ -5019,5 +5192,111 @@
     "bestSeller": "MEILLEURE VENTE",
     "sale": "PROMO",
     "backInStock": "DE RETOUR"
+  },
+  "countdown": {
+    "days": "jours",
+    "expired": "Offre expirée",
+    "hours": "heures",
+    "minutes": "minutes",
+    "seconds": "secondes"
+  },
+  "errors": {
+    "404": {
+      "title": "Page non trouvée"
+    },
+    "forbidden": "Accès interdit",
+    "unauthorized": "Accès non autorisé"
+  },
+  "flashSale": {
+    "endsIn": "Se termine dans",
+    "expired": "Vente terminée",
+    "shopNow": "Magasiner",
+    "thankYou": "Merci pour votre achat!"
+  },
+  "labResults": {
+    "batch": "Lot",
+    "coa": "Certificat d'analyse",
+    "coaDesc": "Certificats vérifiés par des tiers pour chaque lot",
+    "contactUs": "Contactez-nous",
+    "ctaDesc": "Parcourez notre gamme complète de peptides de recherche testés en laboratoire",
+    "ctaTitle": "Prêt à commander?",
+    "hplc": "Analyse HPLC",
+    "hplcDesc": "Tests de chromatographie liquide haute performance",
+    "noResults": "Aucun résultat trouvé",
+    "noResultsDesc": "Essayez d'ajuster votre recherche ou contactez-nous pour des informations spécifiques sur un lot",
+    "passed": "Réussi",
+    "process": "Notre processus de tests",
+    "product": "Produit",
+    "purity": "Pureté",
+    "purityDesc": "Niveaux de pureté vérifiés pour les peptides de recherche",
+    "purityLabel": "Pureté",
+    "recentTests": "Résultats de tests récents",
+    "report": "Voir le rapport",
+    "status": "Statut",
+    "step1Desc": "Chaque lot subit des tests rigoureux en laboratoire tiers",
+    "step1Title": "Tests par des tiers",
+    "step2Desc": "L'analyse HPLC vérifie la pureté et l'identité des peptides",
+    "step2Title": "Analyse HPLC",
+    "step3Desc": "La spectrométrie de masse confirme la structure moléculaire",
+    "step3Title": "Spectrométrie de masse",
+    "step4Desc": "Documentation complète disponible pour chaque lot",
+    "step4Title": "COA émis",
+    "subtitle": "Certificats d'analyse vérifiés par des tiers pour chaque lot",
+    "testDate": "Date du test",
+    "thirdParty": "Vérifié par des tiers",
+    "thirdPartyDesc": "Les tests en laboratoire indépendant garantissent la qualité",
+    "title": "Résultats de laboratoire et certificats"
+  },
+  "navigation": {
+    "requestDemo": "Demander une démo"
+  },
+  "order": {
+    "digitalDelivery": {
+      "accessCourse": "Accéder au cours",
+      "instantAccess": "Accès instantané",
+      "ready": "Vos produits numériques sont prêts"
+    },
+    "number": "Numéro de commande",
+    "physicalDelivery": {
+      "estimatedDelivery": "Livraison estimée",
+      "trackPackage": "Suivre le colis",
+      "trackingNumber": "Numéro de suivi"
+    },
+    "receipt": {
+      "download": "Télécharger le reçu",
+      "title": "Reçu de commande"
+    },
+    "status": "Statut de la commande",
+    "tracking": {
+      "preparing": "Préparation de votre commande",
+      "title": "Suivi de commande"
+    }
+  },
+  "profile": {
+    "changePassword": "Changer le mot de passe",
+    "email": "Courriel",
+    "fullName": "Nom complet",
+    "language": "Langue",
+    "personalInfo": "Informations personnelles",
+    "security": "Sécurité",
+    "timezone": "Fuseau horaire",
+    "title": "Mon profil",
+    "twoFactor": "Authentification à deux facteurs"
+  },
+  "promotion": {
+    "endsIn": "Se termine dans"
+  },
+  "track": {
+    "button": "Suivre la commande",
+    "email": "Adresse courriel",
+    "emailHint": "Le courriel utilisé pour votre commande",
+    "orderNumber": "Numéro de commande",
+    "searching": "Recherche en cours...",
+    "subtitle": "Entrez les détails de votre commande pour suivre votre colis",
+    "title": "Suivre votre commande"
+  },
+  "validation": {
+    "emailRequired": "Le courriel est requis",
+    "invalidEmail": "Adresse courriel invalide"
   }
 }

@@ -65,7 +65,45 @@
     "relatedProducts": "Related Products",
     "recentlyViewed": "Recently Viewed",
     "verifiedBuyer": "Verified Buyer",
-    "shop": "दुकान"
+    "shop": "दुकान",
+    "addToWishlist": "Add to Wishlist",
+    "additionalSpecs": "Additional Specifications",
+    "appearance": "Appearance",
+    "basePrice": "Base Price",
+    "bestValue": "Best Value",
+    "bulkPricing": "Bulk Pricing",
+    "bulkPricingNote": "Volume discounts available for bulk orders",
+    "chemicalProperties": "Chemical Properties",
+    "downloadCOA": "Download COA",
+    "featured": "Featured",
+    "highestPurity": "Highest Purity",
+    "hplcPurity": "HPLC Purity",
+    "importantNotes": "Important Notes",
+    "mechanism": "Mechanism of Action",
+    "newArrival": "New Arrival",
+    "noDescription": "No description available",
+    "premiumPeptides": "Premium Research Peptides",
+    "productVideo": "Product Video",
+    "recommendedSolvent": "Recommended Solvent",
+    "recommendedVolume": "Recommended Volume",
+    "reconstitution": "Reconstitution",
+    "reconstitutionGuide": "Reconstitution Guide",
+    "reconstitutionSteps": "Reconstitution Steps",
+    "references": "References",
+    "research": "Research",
+    "researchContext": "Research Context",
+    "researchOverview": "Research Overview",
+    "save": "Save",
+    "sequence": "Sequence",
+    "solubility": "Solubility",
+    "stability": "Stability",
+    "storageInstructions": "Storage Instructions",
+    "synonyms": "Synonyms",
+    "unit": "Unit",
+    "units": "Units",
+    "video": "Video",
+    "videoDescription": "Watch our product overview and usage guide",
+    "viewHPLC": "View HPLC Report"
   },
   "home": {
     "heroTitle": "कनाडा में सर्वश्रेष्ठ अनुसंधान पेप्टाइड्स",
@@ -141,7 +179,14 @@
     "shippingPolicy": "Shipping Policy",
     "refundPolicy": "Refund Policy",
     "calculator": "कैलकुलेटर",
-    "antiAging": "एंटी-एजिंग"
+    "antiAging": "एंटी-एजिंग",
+    "catalog": "Catalog",
+    "categories": "Categories",
+    "courses": "Courses",
+    "currency": "Currency",
+    "dashboard": "Dashboard",
+    "myAccount": "My Account",
+    "quickLinks": "Quick Links"
   },
   "categories": {
     "all": "सभी उत्पाद",
@@ -183,7 +228,9 @@
     "vialCoolerCase": "वायल कूलर केस",
     "cartridgeCoolerCase": "कार्ट्रिज कूलर केस",
     "travelCoolerKit": "ट्रैवल कूलर किट",
-    "starterKit": "कम्प्लीट स्टार्टर किट"
+    "starterKit": "कम्प्लीट स्टार्टर किट",
+    "catalog": "Product Catalog",
+    "description": "Description"
   },
   "formats": {
     "vial": "वायल",
@@ -265,7 +312,10 @@
     "newsletter": "Stay Updated",
     "newsletterDesc": "Subscribe for exclusive offers, new products, and research insights.",
     "subscribe": "Subscribe",
-    "securePayments": "Secure Payments"
+    "securePayments": "Secure Payments",
+    "allRightsReserved": "All rights reserved",
+    "help": "Help",
+    "subscribeNewsletter": "Subscribe to our newsletter"
   },
   "common": {
     "loading": "लोड हो रहा है...",
@@ -314,7 +364,9 @@
     "goToSlide": "Go to slide {number}",
     "previousSlide": "Previous slide",
     "nextSlide": "Next slide",
-    "total": "कुल"
+    "total": "कुल",
+    "saving": "Saving...",
+    "search": "Search"
   },
   "cart": {
     "title": "Your Cart",
@@ -344,7 +396,8 @@
     "closeCart": "Close cart",
     "taxesNote": "Taxes and shipping calculated at checkout",
     "decreaseQuantity": "Decrease quantity",
-    "increaseQuantity": "Increase quantity"
+    "increaseQuantity": "Increase quantity",
+    "discount": "Discount"
   },
   "checkout": {
     "emptyCart": "Your cart is empty",
@@ -452,7 +505,13 @@
     "districtLabel": "District",
     "districtPlaceholder": "District name",
     "exampleAbbrev": "e.g.",
-    "coloniaPlaceholder": "e.g., Col. Roma Norte"
+    "coloniaPlaceholder": "e.g., Col. Roma Norte",
+    "address1": "Address line 1",
+    "address2": "Address line 2",
+    "checkout": "Checkout",
+    "errors": {
+      "paymentFailed": "Payment failed. Please try again."
+    }
   },
   "rewards": {
     "title": "Rewards Program",
@@ -498,7 +557,8 @@
     "redeemSuccess": "Reward redeemed successfully! It will be applied to your next order.",
     "redeeming": "Redeeming...",
     "morePointsNeeded": "more pts needed",
-    "pointsPerDollar": "points per $1 spent"
+    "pointsPerDollar": "points per $1 spent",
+    "rewards": "Rewards"
   },
   "subscriptions": {
     "title": "Subscribe & Save",
@@ -750,7 +810,22 @@
       "shippingInfo": "Shipping",
       "tracking": "Tracking",
       "thankYou": "Thank you for your trust!",
-      "last": "Last"
+      "last": "Last",
+      "addressUpdated": "Address updated successfully",
+      "cancelOrder": "Cancel Order",
+      "cancelOrderConfirmMessage": "This action cannot be undone",
+      "cancelOrderConfirmTitle": "Are you sure you want to cancel this order?",
+      "cancelling": "Cancelling...",
+      "confirmCancel": "Confirm Cancellation",
+      "editAddress": "Edit Address",
+      "editShippingAddress": "Edit Shipping Address",
+      "items": "items",
+      "refundNote": "Refunds will be processed to the original payment method within 5-7 business days",
+      "reorderAllUnavailable": "All items in this order are currently unavailable",
+      "reorderError": "Failed to add items to cart",
+      "reorderItemsAdded": "{count} item(s) added to cart",
+      "reorderItemsUnavailable": "Some items are unavailable: {items}",
+      "reordering": "Adding to cart..."
     },
     "settings": "Account Settings",
     "signOut": "Sign Out",
@@ -973,7 +1048,65 @@
     "security": "Security",
     "changePassword": "Change my password",
     "changePasswordDescription": "Change your login password",
-    "memberSince": "Member since"
+    "memberSince": "Member since",
+    "addedOn": "Added on",
+    "invoices": {
+      "carrier": "Carrier",
+      "clearFilter": "Clear filter",
+      "colActions": "Actions",
+      "colDate": "Date",
+      "colInvoice": "Invoice",
+      "colItems": "Items",
+      "colStatus": "Status",
+      "colTotal": "Total",
+      "currency": "Currency",
+      "date": "Date",
+      "dateFrom": "From",
+      "dateTo": "To",
+      "discount": "Discount",
+      "downloadPdf": "Download PDF",
+      "errorLoadDetail": "Error loading invoice details",
+      "errorPdf": "Error generating PDF",
+      "filter": "Filter",
+      "free": "Free",
+      "invoiceDetail": "Invoice Details",
+      "invoicesLabel": "Invoices",
+      "item": "item",
+      "items": "items",
+      "lineTotal": "Line Total",
+      "loading": "Loading invoices...",
+      "method": "Method",
+      "next": "Next",
+      "noInvoices": "No invoices",
+      "noInvoicesDateRange": "No invoices found in this date range",
+      "noInvoicesDescription": "Your invoices will appear here after your orders",
+      "notes": "Notes",
+      "of": "of",
+      "order": "Order",
+      "orderRef": "Order Reference",
+      "page": "Page",
+      "paid": "Paid",
+      "paymentInfo": "Payment Information",
+      "previous": "Previous",
+      "print": "Print",
+      "product": "Product",
+      "qty": "Qty",
+      "shipTo": "Ship to",
+      "shipping": "Shipping",
+      "shopNow": "Shop Now",
+      "showingResults": "Showing {from} to {to} of {total} invoices",
+      "subtitle": "View and download your invoices",
+      "subtotal": "Subtotal",
+      "thankYou": "Thank you for your purchase!",
+      "title": "My Invoices",
+      "total": "Total",
+      "tracking": "Tracking",
+      "unitPrice": "Unit Price",
+      "view": "View"
+    },
+    "removeFromWishlist": "Remove from wishlist",
+    "savedProducts": "Saved Products",
+    "wishlist": "Wishlist"
   },
   "reviews": {
     "customerReviews": "Customer Reviews",
@@ -1006,7 +1139,9 @@
     "thankYou": "Thank you for your review! +100 loyalty points earned.",
     "showingStarReviews": "Showing {rating}-star reviews",
     "showingAllReviews": "Showing all {count} reviews",
-    "clearFilter": "Clear filter"
+    "clearFilter": "Clear filter",
+    "rewardsInfo": "Write a review and earn 100 loyalty points",
+    "rewardsTitle": "Earn Rewards"
   },
   "qa": {
     "questionsAnswers": "Questions & Answers",
@@ -1059,7 +1194,8 @@
     "readyToStart": "Ready to Start Your Research?",
     "browseCollection": "Browse our collection of high-purity research peptides.",
     "shopPeptides": "Shop Peptides",
-    "readTime": "min read"
+    "readTime": "min read",
+    "featured": "Featured Articles"
   },
   "faq": {
     "title": "Frequently Asked Questions",
@@ -1073,7 +1209,13 @@
     "returnsRefunds": "Returns & Refunds",
     "qualitySafety": "Quality & Safety",
     "stillHaveQuestions": "Still have questions?",
-    "contactUs": "Contact Us"
+    "contactUs": "Contact Us",
+    "calculatorButton": "Try Calculator",
+    "calculatorDesc": "Calculate precise peptide dosages with our injection calculator",
+    "calculatorTitle": "Peptide Injection Calculator",
+    "contactButton": "Contact Support",
+    "empty": "No questions found",
+    "loading": "Loading..."
   },
   "contact": {
     "title": "Contact Us",
@@ -1188,7 +1330,23 @@
     "asia": "Asia",
     "restOfWorld": "Rest of World",
     "calculatedAtCheckout": "Calculated at checkout",
-    "lastUpdated": "Last updated"
+    "lastUpdated": "Last updated",
+    "customs": {
+      "title": "Customs & Duties"
+    },
+    "options": {
+      "title": "Shipping Options"
+    },
+    "packaging": {
+      "title": "Packaging & Handling"
+    },
+    "processing": {
+      "title": "Order Processing"
+    },
+    "subtitle": "Shipping information and policies",
+    "tracking": {
+      "title": "Order Tracking"
+    }
   },
   "refund": {
     "title": "Refund Policy",
@@ -1208,7 +1366,8 @@
     "paypal": "PayPal",
     "applePay": "Apple Pay / Google Pay",
     "timesVary": "Times may vary depending on your bank or financial institution.",
-    "lastUpdated": "Last updated"
+    "lastUpdated": "Last updated",
+    "subtitle": "Our refund policy and procedures"
   },
   "newsletter": {
     "title": "Get 10% Off Your First Order",
@@ -1234,7 +1393,8 @@
     "description": "We use cookies to enhance your experience, analyze site traffic, and for marketing purposes.",
     "accept": "Accept All",
     "decline": "Decline",
-    "learnMore": "Learn More"
+    "learnMore": "Learn More",
+    "message": "We use cookies to enhance your browsing experience and analyze site traffic."
   },
   "trust": {
     "labTested": "Lab Tested",
@@ -1817,7 +1977,8 @@
     "backToProfile": "Back to profile",
     "home": "Home",
     "myProfile": "My profile",
-    "errorOccurred": "An error occurred"
+    "errorOccurred": "An error occurred",
+    "resetPassword": "Reset Password"
   },
   "admin": {
     "products": {
@@ -1857,7 +2018,12 @@
       "supplements": "Supplements",
       "accessories": "Accessories",
       "emptyTitle": "No product found",
-      "emptyDescription": "No product matches your filters."
+      "emptyDescription": "No product matches your filters.",
+      "export": "Export",
+      "exportError": "Error exporting products",
+      "exportSuccess": "Products exported successfully",
+      "importCsv": "Import CSV",
+      "importError": "Error importing products"
     },
     "brandName": "BioCycle Admin",
     "nav": {
@@ -2076,7 +2242,9 @@
       "historyDaysAgo2": "2 days ago",
       "historyDaysAgo3": "3 days ago",
       "historyDaysAgo5": "5 days ago",
-      "historyDaysAgo30": "30 days ago"
+      "historyDaysAgo30": "30 days ago",
+      "exportError": "Error exporting inventory",
+      "exportSuccess": "Inventory exported successfully"
     },
     "commandes": {
       "title": "Orders",
@@ -2744,7 +2912,8 @@
       "addCurrencyTitle": "Add a Currency",
       "inDevelopment": "Feature under development...",
       "close": "Close",
-      "ratesUpdated": "Exchange rates updated from external API"
+      "ratesUpdated": "Exchange rates updated from external API",
+      "refreshing": "Refreshing exchange rates..."
     },
     "emailConfig": {
       "title": "Emails",
@@ -3092,7 +3261,11 @@
       "referralsLabel": "Referrals",
       "generatedSalesLabel": "Generated sales",
       "totalEarningsLabel": "Total earnings",
-      "payoutProcessed": "Payout processed for ambassador #{id}"
+      "payoutProcessed": "Payout processed for ambassador #{id}",
+      "noPendingPayout": "No pending payouts",
+      "payoutError": "Error processing payout",
+      "pendingPayoutLabel": "Pending Payout",
+      "processPayoutNow": "Process Payout Now"
     },
     "reports": {
       "title": "Accounting Reports",
@@ -4800,5 +4973,111 @@
       "errorLocking": "Error locking period",
       "errorLockingPeriod": "Error locking the period"
     }
+  },
+  "countdown": {
+    "days": "days",
+    "expired": "Offer expired",
+    "hours": "hours",
+    "minutes": "minutes",
+    "seconds": "seconds"
+  },
+  "errors": {
+    "404": {
+      "title": "Page Not Found"
+    },
+    "forbidden": "Access Forbidden",
+    "unauthorized": "Unauthorized Access"
+  },
+  "flashSale": {
+    "endsIn": "Ends in",
+    "expired": "Sale ended",
+    "shopNow": "Shop Now",
+    "thankYou": "Thank you for your purchase!"
+  },
+  "labResults": {
+    "batch": "Batch",
+    "coa": "Certificate of Analysis",
+    "coaDesc": "Third-party verified certificates for every batch",
+    "contactUs": "Contact Us",
+    "ctaDesc": "Browse our complete range of lab-tested research peptides",
+    "ctaTitle": "Ready to Order?",
+    "hplc": "HPLC Analysis",
+    "hplcDesc": "High-Performance Liquid Chromatography testing",
+    "noResults": "No results found",
+    "noResultsDesc": "Try adjusting your search or contact us for specific batch information",
+    "passed": "Passed",
+    "process": "Our Testing Process",
+    "product": "Product",
+    "purity": "Purity",
+    "purityDesc": "Verified purity levels for research-grade peptides",
+    "purityLabel": "Purity",
+    "recentTests": "Recent Test Results",
+    "report": "View Report",
+    "status": "Status",
+    "step1Desc": "Each batch undergoes rigorous third-party laboratory testing",
+    "step1Title": "Third-Party Testing",
+    "step2Desc": "HPLC analysis verifies peptide purity and identity",
+    "step2Title": "HPLC Analysis",
+    "step3Desc": "Mass spectrometry confirms molecular structure",
+    "step3Title": "Mass Spectrometry",
+    "step4Desc": "Complete documentation available for every batch",
+    "step4Title": "COA Issued",
+    "subtitle": "Third-party verified certificates of analysis for every batch",
+    "testDate": "Test Date",
+    "thirdParty": "Third-Party Verified",
+    "thirdPartyDesc": "Independent laboratory testing ensures quality",
+    "title": "Lab Results & Certificates"
+  },
+  "navigation": {
+    "requestDemo": "Request Demo"
+  },
+  "order": {
+    "digitalDelivery": {
+      "accessCourse": "Access Course",
+      "instantAccess": "Instant Access",
+      "ready": "Your digital products are ready"
+    },
+    "number": "Order Number",
+    "physicalDelivery": {
+      "estimatedDelivery": "Estimated Delivery",
+      "trackPackage": "Track Package",
+      "trackingNumber": "Tracking Number"
+    },
+    "receipt": {
+      "download": "Download Receipt",
+      "title": "Order Receipt"
+    },
+    "status": "Order Status",
+    "tracking": {
+      "preparing": "Preparing your order",
+      "title": "Order Tracking"
+    }
+  },
+  "profile": {
+    "changePassword": "Change Password",
+    "email": "Email",
+    "fullName": "Full Name",
+    "language": "Language",
+    "personalInfo": "Personal Information",
+    "security": "Security",
+    "timezone": "Timezone",
+    "title": "My Profile",
+    "twoFactor": "Two-Factor Authentication"
+  },
+  "promotion": {
+    "endsIn": "Ends in"
+  },
+  "track": {
+    "button": "Track Order",
+    "email": "Email Address",
+    "emailHint": "The email used for your order",
+    "orderNumber": "Order Number",
+    "searching": "Searching...",
+    "subtitle": "Enter your order details to track your package",
+    "title": "Track Your Order"
+  },
+  "validation": {
+    "emailRequired": "Email is required",
+    "invalidEmail": "Invalid email address"
   }
 }

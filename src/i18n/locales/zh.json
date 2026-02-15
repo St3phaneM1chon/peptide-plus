@@ -65,7 +65,45 @@
     "relatedProducts": "相关产品",
     "recentlyViewed": "最近浏览",
     "verifiedBuyer": "认证买家",
-    "shop": "商店"
+    "shop": "商店",
+    "addToWishlist": "Add to Wishlist",
+    "additionalSpecs": "Additional Specifications",
+    "appearance": "Appearance",
+    "basePrice": "Base Price",
+    "bestValue": "Best Value",
+    "bulkPricing": "Bulk Pricing",
+    "bulkPricingNote": "Volume discounts available for bulk orders",
+    "chemicalProperties": "Chemical Properties",
+    "downloadCOA": "Download COA",
+    "featured": "Featured",
+    "highestPurity": "Highest Purity",
+    "hplcPurity": "HPLC Purity",
+    "importantNotes": "Important Notes",
+    "mechanism": "Mechanism of Action",
+    "newArrival": "New Arrival",
+    "noDescription": "No description available",
+    "premiumPeptides": "Premium Research Peptides",
+    "productVideo": "Product Video",
+    "recommendedSolvent": "Recommended Solvent",
+    "recommendedVolume": "Recommended Volume",
+    "reconstitution": "Reconstitution",
+    "reconstitutionGuide": "Reconstitution Guide",
+    "reconstitutionSteps": "Reconstitution Steps",
+    "references": "References",
+    "research": "Research",
+    "researchContext": "Research Context",
+    "researchOverview": "Research Overview",
+    "save": "Save",
+    "sequence": "Sequence",
+    "solubility": "Solubility",
+    "stability": "Stability",
+    "storageInstructions": "Storage Instructions",
+    "synonyms": "Synonyms",
+    "unit": "Unit",
+    "units": "Units",
+    "video": "Video",
+    "videoDescription": "Watch our product overview and usage guide",
+    "viewHPLC": "View HPLC Report"
   },
   "home": {
     "heroTitle": "加拿大最佳研究用多肽",
@@ -141,7 +179,14 @@
     "shippingPolicy": "配送政策",
     "refundPolicy": "退款政策",
     "calculator": "计算器",
-    "antiAging": "抗衰老"
+    "antiAging": "抗衰老",
+    "catalog": "Catalog",
+    "categories": "Categories",
+    "courses": "Courses",
+    "currency": "Currency",
+    "dashboard": "Dashboard",
+    "myAccount": "My Account",
+    "quickLinks": "Quick Links"
   },
   "categories": {
     "all": "所有产品",
@@ -183,7 +228,9 @@
     "vialCoolerCase": "Vial Cooler Case (2ml)",
     "cartridgeCoolerCase": "Cartridge Cooler Case (3ml)",
     "travelCoolerKit": "Travel Cooler Kit",
-    "starterKit": "Complete Starter Kit"
+    "starterKit": "Complete Starter Kit",
+    "catalog": "Product Catalog",
+    "description": "Description"
   },
   "formats": {
     "vial": "小瓶",
@@ -265,7 +312,10 @@
     "newsletter": "保持更新",
     "newsletterDesc": "订阅独家优惠、新品和研究资讯。",
     "subscribe": "订阅",
-    "securePayments": "安全支付"
+    "securePayments": "安全支付",
+    "allRightsReserved": "All rights reserved",
+    "help": "Help",
+    "subscribeNewsletter": "Subscribe to our newsletter"
   },
   "common": {
     "loading": "加载中...",
@@ -314,7 +364,9 @@
     "goToSlide": "Go to slide {number}",
     "previousSlide": "Previous slide",
     "nextSlide": "Next slide",
-    "total": "总计"
+    "total": "总计",
+    "saving": "Saving...",
+    "search": "Search"
   },
   "cart": {
     "title": "您的购物车",
@@ -344,7 +396,8 @@
     "closeCart": "Close cart",
     "taxesNote": "Taxes and shipping calculated at checkout",
     "decreaseQuantity": "Decrease quantity",
-    "increaseQuantity": "Increase quantity"
+    "increaseQuantity": "Increase quantity",
+    "discount": "Discount"
   },
   "checkout": {
     "emptyCart": "购物车是空的",
@@ -452,7 +505,13 @@
     "districtLabel": "District",
     "districtPlaceholder": "District name",
     "exampleAbbrev": "e.g.",
-    "coloniaPlaceholder": "e.g., Col. Roma Norte"
+    "coloniaPlaceholder": "e.g., Col. Roma Norte",
+    "address1": "Address line 1",
+    "address2": "Address line 2",
+    "checkout": "Checkout",
+    "errors": {
+      "paymentFailed": "Payment failed. Please try again."
+    }
   },
   "rewards": {
     "title": "奖励计划",
@@ -498,7 +557,8 @@
     "redeemSuccess": "奖励兑换成功！将应用于您的下一笔订单。",
     "redeeming": "兑换中...",
     "morePointsNeeded": "积分还需",
-    "pointsPerDollar": "每消费$1获得积分"
+    "pointsPerDollar": "每消费$1获得积分",
+    "rewards": "Rewards"
   },
   "subscriptions": {
     "title": "订阅优惠",
@@ -750,7 +810,22 @@
       "shippingInfo": "Shipping",
       "tracking": "Tracking",
       "thankYou": "Thank you for your trust!",
-      "last": "Last"
+      "last": "Last",
+      "addressUpdated": "Address updated successfully",
+      "cancelOrder": "Cancel Order",
+      "cancelOrderConfirmMessage": "This action cannot be undone",
+      "cancelOrderConfirmTitle": "Are you sure you want to cancel this order?",
+      "cancelling": "Cancelling...",
+      "confirmCancel": "Confirm Cancellation",
+      "editAddress": "Edit Address",
+      "editShippingAddress": "Edit Shipping Address",
+      "items": "items",
+      "refundNote": "Refunds will be processed to the original payment method within 5-7 business days",
+      "reorderAllUnavailable": "All items in this order are currently unavailable",
+      "reorderError": "Failed to add items to cart",
+      "reorderItemsAdded": "{count} item(s) added to cart",
+      "reorderItemsUnavailable": "Some items are unavailable: {items}",
+      "reordering": "Adding to cart..."
     },
     "settings": "账户设置",
     "signOut": "登出",
@@ -973,7 +1048,65 @@
     "security": "Security",
     "changePassword": "Change my password",
     "changePasswordDescription": "Change your login password",
-    "memberSince": "Member since"
+    "memberSince": "Member since",
+    "addedOn": "Added on",
+    "invoices": {
+      "carrier": "Carrier",
+      "clearFilter": "Clear filter",
+      "colActions": "Actions",
+      "colDate": "Date",
+      "colInvoice": "Invoice",
+      "colItems": "Items",
+      "colStatus": "Status",
+      "colTotal": "Total",
+      "currency": "Currency",
+      "date": "Date",
+      "dateFrom": "From",
+      "dateTo": "To",
+      "discount": "Discount",
+      "downloadPdf": "Download PDF",
+      "errorLoadDetail": "Error loading invoice details",
+      "errorPdf": "Error generating PDF",
+      "filter": "Filter",
+      "free": "Free",
+      "invoiceDetail": "Invoice Details",
+      "invoicesLabel": "Invoices",
+      "item": "item",
+      "items": "items",
+      "lineTotal": "Line Total",
+      "loading": "Loading invoices...",
+      "method": "Method",
+      "next": "Next",
+      "noInvoices": "No invoices",
+      "noInvoicesDateRange": "No invoices found in this date range",
+      "noInvoicesDescription": "Your invoices will appear here after your orders",
+      "notes": "Notes",
+      "of": "of",
+      "order": "Order",
+      "orderRef": "Order Reference",
+      "page": "Page",
+      "paid": "Paid",
+      "paymentInfo": "Payment Information",
+      "previous": "Previous",
+      "print": "Print",
+      "product": "Product",
+      "qty": "Qty",
+      "shipTo": "Ship to",
+      "shipping": "Shipping",
+      "shopNow": "Shop Now",
+      "showingResults": "Showing {from} to {to} of {total} invoices",
+      "subtitle": "View and download your invoices",
+      "subtotal": "Subtotal",
+      "thankYou": "Thank you for your purchase!",
+      "title": "My Invoices",
+      "total": "Total",
+      "tracking": "Tracking",
+      "unitPrice": "Unit Price",
+      "view": "View"
+    },
+    "removeFromWishlist": "Remove from wishlist",
+    "savedProducts": "Saved Products",
+    "wishlist": "Wishlist"
   },
   "reviews": {
     "customerReviews": "客户评价",
@@ -1006,7 +1139,9 @@
     "thankYou": "感谢您的评价！+100积分已到账。",
     "showingStarReviews": "显示{rating}星评价",
     "showingAllReviews": "显示全部{count}条评价",
-    "clearFilter": "清除筛选"
+    "clearFilter": "清除筛选",
+    "rewardsInfo": "Write a review and earn 100 loyalty points",
+    "rewardsTitle": "Earn Rewards"
   },
   "qa": {
     "questionsAnswers": "问答",
@@ -1059,7 +1194,8 @@
     "readyToStart": "准备开始您的研究？",
     "browseCollection": "浏览我们的高纯度研究多肽系列。",
     "shopPeptides": "查看多肽",
-    "readTime": "分钟阅读"
+    "readTime": "分钟阅读",
+    "featured": "Featured Articles"
   },
   "faq": {
     "title": "常见问题",
@@ -1073,7 +1209,13 @@
     "returnsRefunds": "退货与退款",
     "qualitySafety": "质量与安全",
     "stillHaveQuestions": "还有问题？",
-    "contactUs": "联系我们"
+    "contactUs": "联系我们",
+    "calculatorButton": "Try Calculator",
+    "calculatorDesc": "Calculate precise peptide dosages with our injection calculator",
+    "calculatorTitle": "Peptide Injection Calculator",
+    "contactButton": "Contact Support",
+    "empty": "No questions found",
+    "loading": "Loading..."
   },
   "contact": {
     "title": "联系我们",
@@ -1188,7 +1330,23 @@
     "asia": "Asia",
     "restOfWorld": "Rest of World",
     "calculatedAtCheckout": "Calculated at checkout",
-    "lastUpdated": "最后更新"
+    "lastUpdated": "最后更新",
+    "customs": {
+      "title": "Customs & Duties"
+    },
+    "options": {
+      "title": "Shipping Options"
+    },
+    "packaging": {
+      "title": "Packaging & Handling"
+    },
+    "processing": {
+      "title": "Order Processing"
+    },
+    "subtitle": "Shipping information and policies",
+    "tracking": {
+      "title": "Order Tracking"
+    }
   },
   "refund": {
     "title": "退款政策",
@@ -1208,7 +1366,8 @@
     "paypal": "PayPal",
     "applePay": "Apple Pay / Google Pay",
     "timesVary": "时间可能因银行或金融机构而异。",
-    "lastUpdated": "最后更新"
+    "lastUpdated": "最后更新",
+    "subtitle": "Our refund policy and procedures"
   },
   "newsletter": {
     "title": "首单享9折",
@@ -1234,7 +1393,8 @@
     "description": "我们使用Cookie来改善您的体验、分析网站流量和进行营销。",
     "accept": "全部接受",
     "decline": "拒绝",
-    "learnMore": "了解更多"
+    "learnMore": "了解更多",
+    "message": "We use cookies to enhance your browsing experience and analyze site traffic."
   },
   "trust": {
     "labTested": "实验室测试",
@@ -1817,7 +1977,8 @@
     "backToProfile": "Back to profile",
     "home": "Home",
     "myProfile": "My profile",
-    "errorOccurred": "An error occurred"
+    "errorOccurred": "An error occurred",
+    "resetPassword": "Reset Password"
   },
   "admin": {
     "products": {
@@ -1857,7 +2018,12 @@
       "supplements": "Supplements",
       "accessories": "Accessories",
       "emptyTitle": "No product found",
-      "emptyDescription": "No product matches your filters."
+      "emptyDescription": "No product matches your filters.",
+      "export": "Export",
+      "exportError": "Error exporting products",
+      "exportSuccess": "Products exported successfully",
+      "importCsv": "Import CSV",
+      "importError": "Error importing products"
     },
     "brandName": "BioCycle Admin",
     "nav": {
@@ -2076,7 +2242,9 @@
       "historyDaysAgo2": "2 days ago",
       "historyDaysAgo3": "3 days ago",
       "historyDaysAgo5": "5 days ago",
-      "historyDaysAgo30": "30 days ago"
+      "historyDaysAgo30": "30 days ago",
+      "exportError": "Error exporting inventory",
+      "exportSuccess": "Inventory exported successfully"
     },
     "commandes": {
       "title": "Orders",
@@ -2744,7 +2912,8 @@
       "addCurrencyTitle": "Add a Currency",
       "inDevelopment": "Feature under development...",
       "close": "Close",
-      "ratesUpdated": "Exchange rates updated from external API"
+      "ratesUpdated": "Exchange rates updated from external API",
+      "refreshing": "Refreshing exchange rates..."
     },
     "emailConfig": {
       "title": "Emails",
@@ -3092,7 +3261,11 @@
       "referralsLabel": "Referrals",
       "generatedSalesLabel": "Generated sales",
       "totalEarningsLabel": "Total earnings",
-      "payoutProcessed": "Payout processed for ambassador #{id}"
+      "payoutProcessed": "Payout processed for ambassador #{id}",
+      "noPendingPayout": "No pending payouts",
+      "payoutError": "Error processing payout",
+      "pendingPayoutLabel": "Pending Payout",
+      "processPayoutNow": "Process Payout Now"
     },
     "reports": {
       "title": "Accounting Reports",
@@ -4800,5 +4973,111 @@
       "errorLocking": "Error locking period",
       "errorLockingPeriod": "Error locking the period"
     }
+  },
+  "countdown": {
+    "days": "days",
+    "expired": "Offer expired",
+    "hours": "hours",
+    "minutes": "minutes",
+    "seconds": "seconds"
+  },
+  "errors": {
+    "404": {
+      "title": "Page Not Found"
+    },
+    "forbidden": "Access Forbidden",
+    "unauthorized": "Unauthorized Access"
+  },
+  "flashSale": {
+    "endsIn": "Ends in",
+    "expired": "Sale ended",
+    "shopNow": "Shop Now",
+    "thankYou": "Thank you for your purchase!"
+  },
+  "labResults": {
+    "batch": "Batch",
+    "coa": "Certificate of Analysis",
+    "coaDesc": "Third-party verified certificates for every batch",
+    "contactUs": "Contact Us",
+    "ctaDesc": "Browse our complete range of lab-tested research peptides",
+    "ctaTitle": "Ready to Order?",
+    "hplc": "HPLC Analysis",
+    "hplcDesc": "High-Performance Liquid Chromatography testing",
+    "noResults": "No results found",
+    "noResultsDesc": "Try adjusting your search or contact us for specific batch information",
+    "passed": "Passed",
+    "process": "Our Testing Process",
+    "product": "Product",
+    "purity": "Purity",
+    "purityDesc": "Verified purity levels for research-grade peptides",
+    "purityLabel": "Purity",
+    "recentTests": "Recent Test Results",
+    "report": "View Report",
+    "status": "Status",
+    "step1Desc": "Each batch undergoes rigorous third-party laboratory testing",
+    "step1Title": "Third-Party Testing",
+    "step2Desc": "HPLC analysis verifies peptide purity and identity",
+    "step2Title": "HPLC Analysis",
+    "step3Desc": "Mass spectrometry confirms molecular structure",
+    "step3Title": "Mass Spectrometry",
+    "step4Desc": "Complete documentation available for every batch",
+    "step4Title": "COA Issued",
+    "subtitle": "Third-party verified certificates of analysis for every batch",
+    "testDate": "Test Date",
+    "thirdParty": "Third-Party Verified",
+    "thirdPartyDesc": "Independent laboratory testing ensures quality",
+    "title": "Lab Results & Certificates"
+  },
+  "navigation": {
+    "requestDemo": "Request Demo"
+  },
+  "order": {
+    "digitalDelivery": {
+      "accessCourse": "Access Course",
+      "instantAccess": "Instant Access",
+      "ready": "Your digital products are ready"
+    },
+    "number": "Order Number",
+    "physicalDelivery": {
+      "estimatedDelivery": "Estimated Delivery",
+      "trackPackage": "Track Package",
+      "trackingNumber": "Tracking Number"
+    },
+    "receipt": {
+      "download": "Download Receipt",
+      "title": "Order Receipt"
+    },
+    "status": "Order Status",
+    "tracking": {
+      "preparing": "Preparing your order",
+      "title": "Order Tracking"
+    }
+  },
+  "profile": {
+    "changePassword": "Change Password",
+    "email": "Email",
+    "fullName": "Full Name",
+    "language": "Language",
+    "personalInfo": "Personal Information",
+    "security": "Security",
+    "timezone": "Timezone",
+    "title": "My Profile",
+    "twoFactor": "Two-Factor Authentication"
+  },
+  "promotion": {
+    "endsIn": "Ends in"
+  },
+  "track": {
+    "button": "Track Order",
+    "email": "Email Address",
+    "emailHint": "The email used for your order",
+    "orderNumber": "Order Number",
+    "searching": "Searching...",
+    "subtitle": "Enter your order details to track your package",
+    "title": "Track Your Order"
+  },
+  "validation": {
+    "emailRequired": "Email is required",
+    "invalidEmail": "Invalid email address"
   }
 }
