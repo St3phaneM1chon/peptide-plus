@@ -41,7 +41,7 @@ export {
 } from './auto-translate';
 
 export {
-  // Queue operations
+  // Queue operations (DB-backed, persistent)
   enqueueTranslation,
   enqueue,
   getJobStatus,
@@ -50,7 +50,9 @@ export {
   cleanupJobs,
   stopQueue,
   resumeQueue,
+  processNightJobs,
   type TranslationJob,
+  type QueueStats,
 } from './queue';
 
 export {

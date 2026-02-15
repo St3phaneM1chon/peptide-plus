@@ -1,0 +1,75 @@
+export const dynamic = 'force-dynamic';
+/**
+ * API Night Worker - Traitement des passes 2 et 3 de traduction
+ *
+ * POST /api/admin/translations/night-worker
+ * Header: Authorization: Bearer <CRON_SECRET>
+ *
+ * Called by external cron (e.g., Azure Timer Trigger, GitHub Actions, cron-job.org)
+ * at 2AM for Pass 2 (Claude Haiku improvement) and 4AM for Pass 3 (GPT-4o verification).
+ *
+ * Can also be triggered manually from the admin dashboard.
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/lib/auth-config';
+import { UserRole } from '@/types';
+import { processNightJobs, getQueueStats, cleanupJobs } from '@/lib/translation';
+
+export async function POST(request: NextRequest) {
+  try {
+    // Auth: either CRON_SECRET header or admin session
+    const cronSecret = request.headers.get('authorization')?.replace('Bearer ', '');
+    const isAuthorizedCron = cronSecret && process.env.CRON_SECRET && cronSecret === process.env.CRON_SECRET;
+
+    if (!isAuthorizedCron) {
+      const session = await auth();
+      if (!session?.user || (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER)) {
+        return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
+      }
+    }
+
+    console.log('[NightWorker] Starting night translation processing...');
+
+    // Process all pending Pass 2 and Pass 3 jobs
+    const results = await processNightJobs();
+
+    // Clean up old completed/failed jobs (older than 72h)
+    const cleaned = await cleanupJobs(72);
+
+    // Get updated stats
+    const stats = await getQueueStats();
+
+    console.log(`[NightWorker] Done. Pass 2: ${results.pass2.processed} ok / ${results.pass2.errors} err. Pass 3: ${results.pass3.processed} ok / ${results.pass3.errors} err. Cleaned: ${cleaned}`);
+
+    return NextResponse.json({
+      message: 'Night worker processing complete',
+      results,
+      cleaned,
+      stats,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error('[NightWorker] Error:', error);
+    return NextResponse.json(
+      { error: 'Night worker failed', details: error instanceof Error ? error.message : String(error) },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * GET /api/admin/translations/night-worker
+ * Returns queue stats for monitoring
+ */
+export async function GET() {
+  try {
+    const stats = await getQueueStats();
+    return NextResponse.json({ stats, timestamp: new Date().toISOString() });
+  } catch (error) {
+    return NextResponse.json(
+      { error: 'Failed to get stats', details: error instanceof Error ? error.message : String(error) },
+      { status: 500 }
+    );
+  }
+}

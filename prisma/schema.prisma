@@ -173,7 +173,7 @@ model Article {
 }
 
 model ArticleTranslation {
-  id              String   @id
+  id              String             @id
   articleId       String
   locale          String
   title           String?
@@ -182,11 +182,12 @@ model ArticleTranslation {
   metaTitle       String?
   metaDescription String?
   contentHash     String?
-  translatedBy    String?  @default("gpt-4o-mini")
-  isApproved      Boolean  @default(false)
-  createdAt       DateTime @default(now())
+  translatedBy    String?            @default("gpt-4o-mini")
+  isApproved      Boolean            @default(false)
+  createdAt       DateTime           @default(now())
   updatedAt       DateTime
-  article         Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  qualityLevel    TranslationQuality @default(draft)
+  article         Article            @relation(fields: [articleId], references: [id], onDelete: Cascade)
 
   @@unique([articleId, locale])
   @@index([articleId])
@@ -281,7 +282,7 @@ model BlogPost {
 }
 
 model BlogPostTranslation {
-  id              String   @id
+  id              String             @id
   blogPostId      String
   locale          String
   title           String?
@@ -290,11 +291,12 @@ model BlogPostTranslation {
   metaTitle       String?
   metaDescription String?
   contentHash     String?
-  translatedBy    String?  @default("gpt-4o-mini")
-  isApproved      Boolean  @default(false)
-  createdAt       DateTime @default(now())
+  translatedBy    String?            @default("gpt-4o-mini")
+  isApproved      Boolean            @default(false)
+  createdAt       DateTime           @default(now())
   updatedAt       DateTime
-  blogPost        BlogPost @relation(fields: [blogPostId], references: [id], onDelete: Cascade)
+  qualityLevel    TranslationQuality @default(draft)
+  blogPost        BlogPost           @relation(fields: [blogPostId], references: [id], onDelete: Cascade)
 
   @@unique([blogPostId, locale])
   @@index([blogPostId])
@@ -416,17 +418,18 @@ model Category {
 }
 
 model CategoryTranslation {
-  id           String   @id
+  id           String             @id
   categoryId   String
   locale       String
   name         String?
   description  String?
   contentHash  String?
-  translatedBy String?  @default("gpt-4o-mini")
-  isApproved   Boolean  @default(false)
-  createdAt    DateTime @default(now())
+  translatedBy String?            @default("gpt-4o-mini")
+  isApproved   Boolean            @default(false)
+  createdAt    DateTime           @default(now())
   updatedAt    DateTime
-  category     Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  qualityLevel TranslationQuality @default(draft)
+  category     Category           @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
   @@unique([categoryId, locale])
   @@index([categoryId])
@@ -775,14 +778,18 @@ model Faq {
 }
 
 model FaqTranslation {
-  id        String   @id
-  faqId     String
-  locale    String
-  question  String
-  answer    String
-  createdAt DateTime @default(now())
-  updatedAt DateTime
-  faq       Faq      @relation(fields: [faqId], references: [id], onDelete: Cascade)
+  id           String             @id
+  faqId        String
+  locale       String
+  question     String
+  answer       String
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime
+  contentHash  String?
+  translatedBy String?            @default("gpt-4o-mini")
+  isApproved   Boolean            @default(false)
+  qualityLevel TranslationQuality @default(draft)
+  faq          Faq                @relation(fields: [faqId], references: [id], onDelete: Cascade)
 
   @@unique([faqId, locale])
   @@index([faqId])
@@ -852,14 +859,18 @@ model Guide {
 }
 
 model GuideTranslation {
-  id          String   @id
-  guideId     String
-  locale      String
-  title       String?
-  description String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime
-  guide       Guide    @relation(fields: [guideId], references: [id], onDelete: Cascade)
+  id           String             @id
+  guideId      String
+  locale       String
+  title        String?
+  description  String?
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime
+  contentHash  String?
+  translatedBy String?            @default("gpt-4o-mini")
+  isApproved   Boolean            @default(false)
+  qualityLevel TranslationQuality @default(draft)
+  guide        Guide              @relation(fields: [guideId], references: [id], onDelete: Cascade)
 
   @@unique([guideId, locale])
   @@index([guideId])
@@ -895,18 +906,22 @@ model HeroSlide {
 }
 
 model HeroSlideTranslation {
-  id        String    @id
-  slideId   String
-  locale    String
-  badgeText String?
-  title     String
-  subtitle  String?
-  ctaText   String?
-  cta2Text  String?
-  statsJson String?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime
-  heroSlide HeroSlide @relation(fields: [slideId], references: [id], onDelete: Cascade)
+  id           String             @id
+  slideId      String
+  locale       String
+  badgeText    String?
+  title        String
+  subtitle     String?
+  ctaText      String?
+  cta2Text     String?
+  statsJson    String?
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime
+  contentHash  String?
+  translatedBy String?            @default("gpt-4o-mini")
+  isApproved   Boolean            @default(false)
+  qualityLevel TranslationQuality @default(draft)
+  heroSlide    HeroSlide          @relation(fields: [slideId], references: [id], onDelete: Cascade)
 
   @@unique([slideId, locale])
   @@index([locale])
@@ -1092,15 +1107,19 @@ model NewsArticle {
 }
 
 model NewsArticleTranslation {
-  id            String      @id
+  id            String             @id
   newsArticleId String
   locale        String
   title         String?
   excerpt       String?
   content       String?
-  createdAt     DateTime    @default(now())
+  createdAt     DateTime           @default(now())
   updatedAt     DateTime
-  newsArticle   NewsArticle @relation(fields: [newsArticleId], references: [id], onDelete: Cascade)
+  contentHash   String?
+  translatedBy  String?            @default("gpt-4o-mini")
+  isApproved    Boolean            @default(false)
+  qualityLevel  TranslationQuality @default(draft)
+  newsArticle   NewsArticle        @relation(fields: [newsArticleId], references: [id], onDelete: Cascade)
 
   @@unique([newsArticleId, locale])
   @@index([newsArticleId])
@@ -1238,16 +1257,20 @@ model Page {
 }
 
 model PageTranslation {
-  id              String   @id
+  id              String             @id
   pageId          String
   locale          String
   title           String
   content         String
   metaTitle       String?
   metaDescription String?
-  createdAt       DateTime @default(now())
+  createdAt       DateTime           @default(now())
   updatedAt       DateTime
-  page            Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  contentHash     String?
+  translatedBy    String?            @default("gpt-4o-mini")
+  isApproved      Boolean            @default(false)
+  qualityLevel    TranslationQuality @default(draft)
+  page            Page               @relation(fields: [pageId], references: [id], onDelete: Cascade)
 
   @@unique([pageId, locale])
   @@index([locale])
@@ -1453,17 +1476,18 @@ model ProductFormat {
 }
 
 model ProductFormatTranslation {
-  id            String        @id
+  id            String             @id
   formatId      String
   locale        String
   name          String?
   description   String?
   contentHash   String?
-  translatedBy  String?       @default("gpt-4o-mini")
-  isApproved    Boolean       @default(false)
-  createdAt     DateTime      @default(now())
+  translatedBy  String?            @default("gpt-4o-mini")
+  isApproved    Boolean            @default(false)
+  createdAt     DateTime           @default(now())
   updatedAt     DateTime
-  productFormat ProductFormat @relation(fields: [formatId], references: [id], onDelete: Cascade)
+  qualityLevel  TranslationQuality @default(draft)
+  productFormat ProductFormat      @relation(fields: [formatId], references: [id], onDelete: Cascade)
 
   @@unique([formatId, locale])
   @@index([formatId])
@@ -1505,7 +1529,7 @@ model ProductQuestion {
 }
 
 model ProductTranslation {
-  id                  String   @id
+  id                  String             @id
   productId           String
   locale              String
   name                String?
@@ -1517,15 +1541,16 @@ model ProductTranslation {
   metaTitle           String?
   metaDescription     String?
   contentHash         String?
-  translatedBy        String?  @default("gpt-4o-mini")
-  isApproved          Boolean  @default(false)
-  createdAt           DateTime @default(now())
+  translatedBy        String?            @default("gpt-4o-mini")
+  isApproved          Boolean            @default(false)
+  createdAt           DateTime           @default(now())
   updatedAt           DateTime
   customSections      Json?
   participateResearch String?
   relatedResearch     String?
   researchSays        String?
-  product             Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  qualityLevel        TranslationQuality @default(draft)
+  product             Product            @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@unique([productId, locale])
   @@index([locale])
@@ -1674,17 +1699,18 @@ model QuickReply {
 }
 
 model QuickReplyTranslation {
-  id           String     @id
+  id           String             @id
   quickReplyId String
   locale       String
   title        String?
   content      String?
   contentHash  String?
-  translatedBy String?    @default("gpt-4o-mini")
-  isApproved   Boolean    @default(false)
-  createdAt    DateTime   @default(now())
+  translatedBy String?            @default("gpt-4o-mini")
+  isApproved   Boolean            @default(false)
+  createdAt    DateTime           @default(now())
   updatedAt    DateTime
-  quickReply   QuickReply @relation(fields: [quickReplyId], references: [id], onDelete: Cascade)
+  qualityLevel TranslationQuality @default(draft)
+  quickReply   QuickReply         @relation(fields: [quickReplyId], references: [id], onDelete: Cascade)
 
   @@unique([quickReplyId, locale])
   @@index([locale])
@@ -2043,14 +2069,18 @@ model Testimonial {
 }
 
 model TestimonialTranslation {
-  id            String      @id
+  id            String             @id
   testimonialId String
   locale        String
   content       String?
   role          String?
-  createdAt     DateTime    @default(now())
+  createdAt     DateTime           @default(now())
   updatedAt     DateTime
-  testimonial   Testimonial @relation(fields: [testimonialId], references: [id], onDelete: Cascade)
+  contentHash   String?
+  translatedBy  String?            @default("gpt-4o-mini")
+  isApproved    Boolean            @default(false)
+  qualityLevel  TranslationQuality @default(draft)
+  testimonial   Testimonial        @relation(fields: [testimonialId], references: [id], onDelete: Cascade)
 
   @@unique([testimonialId, locale])
   @@index([testimonialId])
@@ -2255,17 +2285,18 @@ model Video {
 }
 
 model VideoTranslation {
-  id           String   @id
+  id           String             @id
   videoId      String
   locale       String
   title        String?
   description  String?
   contentHash  String?
-  translatedBy String?  @default("gpt-4o-mini")
-  isApproved   Boolean  @default(false)
-  createdAt    DateTime @default(now())
+  translatedBy String?            @default("gpt-4o-mini")
+  isApproved   Boolean            @default(false)
+  createdAt    DateTime           @default(now())
   updatedAt    DateTime
-  video        Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  qualityLevel TranslationQuality @default(draft)
+  video        Video              @relation(fields: [videoId], references: [id], onDelete: Cascade)
 
   @@unique([videoId, locale])
   @@index([locale])
@@ -2322,18 +2353,19 @@ model Webinar {
 }
 
 model WebinarTranslation {
-  id           String   @id
+  id           String             @id
   webinarId    String
   locale       String
   title        String?
   description  String?
   speakerTitle String?
   contentHash  String?
-  translatedBy String?  @default("gpt-4o-mini")
-  isApproved   Boolean  @default(false)
-  createdAt    DateTime @default(now())
+  translatedBy String?            @default("gpt-4o-mini")
+  isApproved   Boolean            @default(false)
+  createdAt    DateTime           @default(now())
   updatedAt    DateTime
-  webinar      Webinar  @relation(fields: [webinarId], references: [id], onDelete: Cascade)
+  qualityLevel TranslationQuality @default(draft)
+  webinar      Webinar            @relation(fields: [webinarId], references: [id], onDelete: Cascade)
 
   @@unique([webinarId, locale])
   @@index([locale])
@@ -2374,6 +2406,41 @@ model WishlistItem {
   @@unique([collectionId, productId])
   @@index([collectionId])
   @@index([productId])
+}
+
+model TranslationJob {
+  id          String               @id @default(cuid())
+  model       String
+  entityId    String
+  pass        Int                  @default(1)
+  priority    Int                  @default(3)
+  status      TranslationJobStatus @default(pending)
+  retries     Int                  @default(0)
+  maxRetries  Int                  @default(3)
+  error       String?
+  scheduledAt DateTime             @default(now())
+  startedAt   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+
+  @@unique([model, entityId, pass, status])
+  @@index([status, priority, scheduledAt])
+  @@index([model, entityId])
+}
+
+enum TranslationQuality {
+  draft
+  improved
+  verified
+  human
+}
+
+enum TranslationJobStatus {
+  pending
+  processing
+  completed
+  failed
 }
 
 enum AccountType {

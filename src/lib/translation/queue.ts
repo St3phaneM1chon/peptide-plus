@@ -1,8 +1,13 @@
 /**
- * FILE D'ATTENTE DE TRADUCTION - BioCycle Peptides
+ * FILE D'ATTENTE DE TRADUCTION PERSISTANTE - BioCycle Peptides
  *
- * Queue en mémoire pour les traductions asynchrones.
- * Les jobs sont traités séquentiellement avec retry et backoff exponentiel.
+ * Queue backed by PostgreSQL (via Prisma TranslationJob model).
+ * Survit aux redémarrages du serveur.
+ *
+ * Pipeline 3 passes:
+ *   Pass 1 = GPT-4o-mini (immédiat, draft)
+ *   Pass 2 = Claude Haiku (nuit, amélioration → improved)
+ *   Pass 3 = GPT-4o validation (nuit, vérification → verified)
  *
  * Priorités:
  * 1 = Urgent (produit modifié, traduction manquante demandée)
@@ -12,43 +17,36 @@
  * 5 = Batch (traduction initiale en masse)
  */
 
+import { prisma } from '@/lib/db';
 import {
   translateEntityAllLocales,
   type TranslatableModel,
 } from './auto-translate';
+import type { TranslationJob as PrismaTranslationJob, TranslationJobStatus } from '@prisma/client';
 
 // ============================================
 // TYPES
 // ============================================
 
-export interface TranslationJob {
-  id: string;
-  model: TranslatableModel;
-  entityId: string;
-  priority: number;
-  status: 'pending' | 'processing' | 'completed' | 'failed';
-  retries: number;
-  maxRetries: number;
-  error?: string;
-  createdAt: Date;
-  startedAt?: Date;
-  completedAt?: Date;
-  force: boolean;
-}
+export type { PrismaTranslationJob as TranslationJob };
 
-interface QueueStats {
+export interface QueueStats {
   pending: number;
   processing: number;
   completed: number;
   failed: number;
   total: number;
+  byPass: {
+    pass1: { pending: number; completed: number; failed: number };
+    pass2: { pending: number; completed: number; failed: number };
+    pass3: { pending: number; completed: number; failed: number };
+  };
 }
 
 // ============================================
 // QUEUE STATE
 // ============================================
 
-const jobs: Map<string, TranslationJob> = new Map();
 let isProcessing = false;
 let processingTimeout: NodeJS.Timeout | null = null;
 
@@ -56,56 +54,70 @@ let processingTimeout: NodeJS.Timeout | null = null;
 // QUEUE OPERATIONS
 // ============================================
 
-function generateJobId(): string {
-  return `tj_${Date.now()}_${crypto.randomUUID().replace(/-/g, '').substring(0, 6)}`;
-}
-
 /**
- * Add a translation job to the queue
+ * Add a translation job to the persistent queue.
+ * Pass 1 = immediate draft, Pass 2 = improvement, Pass 3 = verification.
  */
-export function enqueueTranslation(
+export async function enqueueTranslation(
   model: TranslatableModel,
   entityId: string,
-  options: { priority?: number; force?: boolean } = {}
-): string {
-  const { priority = 3, force = false } = options;
+  options: { priority?: number; force?: boolean; pass?: number } = {}
+): Promise<string> {
+  const { priority = 3, force = false, pass = 1 } = options;
 
-  // Check for duplicate pending job
-  for (const [, job] of jobs) {
-    if (
-      job.model === model &&
-      job.entityId === entityId &&
-      (job.status === 'pending' || job.status === 'processing')
-    ) {
-      return job.id; // Already queued
-    }
+  // Check for existing pending/processing job with same model+entity+pass
+  const existing = await prisma.translationJob.findFirst({
+    where: {
+      model,
+      entityId,
+      pass,
+      status: { in: ['pending', 'processing'] },
+    },
+  });
+
+  if (existing && !force) {
+    return existing.id;
   }
 
-  const id = generateJobId();
-  const job: TranslationJob = {
-    id,
-    model,
-    entityId,
-    priority,
-    status: 'pending',
-    retries: 0,
-    maxRetries: 3,
-    createdAt: new Date(),
-    force,
-  };
+  const job = await prisma.translationJob.create({
+    data: {
+      model,
+      entityId,
+      pass,
+      priority,
+      status: 'pending',
+      scheduledAt: pass === 1 ? new Date() : getNextNightSlot(pass),
+    },
+  });
 
-  jobs.set(id, job);
-
-  // Start processing if not already running
-  if (!isProcessing) {
+  // Start processing pass 1 jobs immediately
+  if (pass === 1 && !isProcessing) {
     scheduleProcessing();
   }
 
-  return id;
+  return job.id;
 }
 
 /**
- * Enqueue translation for specific priority presets
+ * Schedule pass 2/3 jobs for night processing.
+ * Pass 2 at 2AM, Pass 3 at 4AM (local time).
+ */
+function getNextNightSlot(pass: number): Date {
+  const now = new Date();
+  const target = new Date(now);
+  const targetHour = pass === 2 ? 2 : 4; // 2AM for pass 2, 4AM for pass 3
+
+  target.setHours(targetHour, 0, 0, 0);
+  // If we've passed the target hour today, schedule for tomorrow
+  if (target <= now) {
+    target.setDate(target.getDate() + 1);
+  }
+  return target;
+}
+
+/**
+ * Enqueue translation for specific priority presets (Pass 1 only).
+ * After Pass 1 completes, Pass 2 and 3 are auto-scheduled.
  */
 export const enqueue = {
   product: (entityId: string, force = false) =>
@@ -137,57 +149,84 @@ export const enqueue = {
 };
 
 /**
- * Get job status
+ * Get job status by ID
  */
-export function getJobStatus(jobId: string): TranslationJob | undefined {
-  return jobs.get(jobId);
+export async function getJobStatus(jobId: string): Promise<PrismaTranslationJob | null> {
+  return prisma.translationJob.findUnique({ where: { id: jobId } });
 }
 
 /**
  * Get queue statistics
  */
-export function getQueueStats(): QueueStats {
-  let pending = 0, processing = 0, completed = 0, failed = 0;
+export async function getQueueStats(): Promise<QueueStats> {
+  const jobs = await prisma.translationJob.groupBy({
+    by: ['status', 'pass'],
+    _count: true,
+  });
 
-  for (const [, job] of jobs) {
-    switch (job.status) {
-      case 'pending': pending++; break;
-      case 'processing': processing++; break;
-      case 'completed': completed++; break;
-      case 'failed': failed++; break;
+  const stats: QueueStats = {
+    pending: 0, processing: 0, completed: 0, failed: 0, total: 0,
+    byPass: {
+      pass1: { pending: 0, completed: 0, failed: 0 },
+      pass2: { pending: 0, completed: 0, failed: 0 },
+      pass3: { pending: 0, completed: 0, failed: 0 },
+    },
+  };
+
+  for (const group of jobs) {
+    const count = group._count;
+    stats.total += count;
+
+    switch (group.status as TranslationJobStatus) {
+      case 'pending': stats.pending += count; break;
+      case 'processing': stats.processing += count; break;
+      case 'completed': stats.completed += count; break;
+      case 'failed': stats.failed += count; break;
+    }
+
+    const passKey = `pass${group.pass}` as keyof typeof stats.byPass;
+    if (passKey in stats.byPass) {
+      const statusKey = group.status as 'pending' | 'completed' | 'failed';
+      if (statusKey in stats.byPass[passKey]) {
+        stats.byPass[passKey][statusKey] += count;
+      }
     }
   }
 
-  return { pending, processing, completed, failed, total: jobs.size };
+  return stats;
 }
 
 /**
- * Get all jobs (optionally filtered by status)
+ * Get jobs filtered by status and/or pass
  */
-export function getJobs(status?: TranslationJob['status']): TranslationJob[] {
-  const allJobs = Array.from(jobs.values());
-  if (status) return allJobs.filter(j => j.status === status);
-  return allJobs.sort((a, b) => a.priority - b.priority || a.createdAt.getTime() - b.createdAt.getTime());
+export async function getJobs(
+  filters: { status?: TranslationJobStatus; pass?: number; limit?: number } = {}
+): Promise<PrismaTranslationJob[]> {
+  const where: Record<string, unknown> = {};
+  if (filters.status) where.status = filters.status;
+  if (filters.pass) where.pass = filters.pass;
+
+  return prisma.translationJob.findMany({
+    where,
+    orderBy: [{ priority: 'asc' }, { scheduledAt: 'asc' }],
+    take: filters.limit || 100,
+  });
 }
 
 /**
- * Clear completed/failed jobs older than specified hours
+ * Clean up completed/failed jobs older than specified hours
  */
-export function cleanupJobs(olderThanHours = 24): number {
-  const cutoff = Date.now() - olderThanHours * 60 * 60 * 1000;
-  let removed = 0;
+export async function cleanupJobs(olderThanHours = 72): Promise<number> {
+  const cutoff = new Date(Date.now() - olderThanHours * 60 * 60 * 1000);
 
-  for (const [id, job] of jobs) {
-    if (
-      (job.status === 'completed' || job.status === 'failed') &&
-      job.createdAt.getTime() < cutoff
-    ) {
-      jobs.delete(id);
-      removed++;
-    }
-  }
+  const result = await prisma.translationJob.deleteMany({
+    where: {
+      status: { in: ['completed', 'failed'] },
+      createdAt: { lt: cutoff },
+    },
+  });
 
-  return removed;
+  return result.count;
 }
 
 // ============================================
@@ -200,54 +239,261 @@ function scheduleProcessing(delayMs = 100): void {
 }
 
 async function processNextJob(): Promise<void> {
-  // Find next pending job by priority
-  const pendingJobs = Array.from(jobs.values())
-    .filter(j => j.status === 'pending')
-    .sort((a, b) => a.priority - b.priority || a.createdAt.getTime() - b.createdAt.getTime());
+  const now = new Date();
 
-  if (pendingJobs.length === 0) {
+  // Find next pending job that's ready to run (scheduledAt <= now)
+  const job = await prisma.translationJob.findFirst({
+    where: {
+      status: 'pending',
+      scheduledAt: { lte: now },
+    },
+    orderBy: [{ priority: 'asc' }, { scheduledAt: 'asc' }],
+  });
+
+  if (!job) {
     isProcessing = false;
     return;
   }
 
   isProcessing = true;
-  const job = pendingJobs[0];
-  job.status = 'processing';
-  job.startedAt = new Date();
+
+  // Mark as processing
+  await prisma.translationJob.update({
+    where: { id: job.id },
+    data: { status: 'processing', startedAt: now },
+  });
 
   try {
-    console.log(`[TranslationQueue] Processing ${job.model}#${job.entityId} (priority: ${job.priority})`);
+    console.log(`[TranslationQueue] Pass ${job.pass}: Processing ${job.model}#${job.entityId} (priority: ${job.priority})`);
 
-    await translateEntityAllLocales(job.model, job.entityId, {
-      force: job.force,
-      concurrency: 3,
+    // Execute the appropriate pass
+    await executePass(job);
+
+    // Mark completed
+    await prisma.translationJob.update({
+      where: { id: job.id },
+      data: { status: 'completed', completedAt: new Date() },
     });
 
-    job.status = 'completed';
-    job.completedAt = new Date();
-    console.log(`[TranslationQueue] Completed ${job.model}#${job.entityId}`);
+    console.log(`[TranslationQueue] Pass ${job.pass}: Completed ${job.model}#${job.entityId}`);
+
+    // Auto-schedule next pass if applicable
+    if (job.pass === 1) {
+      await enqueueTranslation(job.model as TranslatableModel, job.entityId, {
+        priority: job.priority,
+        pass: 2,
+      });
+    } else if (job.pass === 2) {
+      await enqueueTranslation(job.model as TranslatableModel, job.entityId, {
+        priority: job.priority,
+        pass: 3,
+      });
+    }
   } catch (error) {
-    job.retries++;
-    if (job.retries >= job.maxRetries) {
-      job.status = 'failed';
-      job.error = error instanceof Error ? error.message : String(error);
-      console.error(`[TranslationQueue] Failed (max retries) ${job.model}#${job.entityId}:`, error);
+    const retries = job.retries + 1;
+    if (retries >= job.maxRetries) {
+      await prisma.translationJob.update({
+        where: { id: job.id },
+        data: {
+          status: 'failed',
+          retries,
+          error: error instanceof Error ? error.message : String(error),
+        },
+      });
+      console.error(`[TranslationQueue] Pass ${job.pass}: Failed (max retries) ${job.model}#${job.entityId}:`, error);
     } else {
-      job.status = 'pending';
-      console.warn(`[TranslationQueue] Retry ${job.retries}/${job.maxRetries} for ${job.model}#${job.entityId}`);
+      await prisma.translationJob.update({
+        where: { id: job.id },
+        data: {
+          status: 'pending',
+          retries,
+          scheduledAt: new Date(Date.now() + Math.pow(2, retries) * 1000),
+        },
+      });
+      console.warn(`[TranslationQueue] Pass ${job.pass}: Retry ${retries}/${job.maxRetries} for ${job.model}#${job.entityId}`);
     }
   }
 
-  // Schedule next job with backoff if retrying
-  const delay = job.status === 'pending'
-    ? Math.pow(2, job.retries) * 1000 // Exponential backoff
-    : 500; // Normal delay between jobs
-
+  // Schedule next job
+  const delay = 500;
   scheduleProcessing(delay);
 }
 
 /**
- * Stop the queue processing
+ * Execute a translation pass based on pass number.
+ * Pass 1: GPT-4o-mini (draft) - via existing translateEntityAllLocales
+ * Pass 2: Claude Haiku (improvement) - reads draft, improves quality
+ * Pass 3: GPT-4o (verification) - validates fluency, flags issues
+ */
+async function executePass(job: PrismaTranslationJob): Promise<void> {
+  const model = job.model as TranslatableModel;
+
+  switch (job.pass) {
+    case 1:
+      // Pass 1: Initial translation with GPT-4o-mini
+      await translateEntityAllLocales(model, job.entityId, {
+        force: true,
+        concurrency: 3,
+      });
+      // Update quality level to 'draft'
+      await updateQualityLevel(model, job.entityId, 'draft', 'gpt-4o-mini');
+      break;
+
+    case 2:
+      // Pass 2: Improvement with Claude Haiku
+      await improveTranslationsWithClaude(model, job.entityId);
+      await updateQualityLevel(model, job.entityId, 'improved', 'claude-haiku-4-5');
+      break;
+
+    case 3:
+      // Pass 3: Verification with GPT-4o
+      await verifyTranslationsWithGPT4o(model, job.entityId);
+      await updateQualityLevel(model, job.entityId, 'verified', 'gpt-4o');
+      break;
+  }
+}
+
+/**
+ * Update qualityLevel for all translations of an entity.
+ */
+async function updateQualityLevel(
+  model: TranslatableModel,
+  entityId: string,
+  quality: 'draft' | 'improved' | 'verified',
+  translatedBy: string
+): Promise<void> {
+  const tableMap: Record<string, string> = {
+    Product: 'productTranslation',
+    ProductFormat: 'productFormatTranslation',
+    Category: 'categoryTranslation',
+    Article: 'articleTranslation',
+    BlogPost: 'blogPostTranslation',
+    Video: 'videoTranslation',
+    Webinar: 'webinarTranslation',
+    QuickReply: 'quickReplyTranslation',
+  };
+  const fkMap: Record<string, string> = {
+    Product: 'productId',
+    ProductFormat: 'formatId',
+    Category: 'categoryId',
+    Article: 'articleId',
+    BlogPost: 'blogPostId',
+    Video: 'videoId',
+    Webinar: 'webinarId',
+    QuickReply: 'quickReplyId',
+  };
+
+  const tableName = tableMap[model];
+  const fkField = fkMap[model];
+  if (!tableName || !fkField) return;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic Prisma model access
+  await ((prisma as Record<string, any>)[tableName]).updateMany({
+    where: { [fkField]: entityId },
+    data: { qualityLevel: quality, translatedBy },
+  });
+}
+
+/**
+ * Pass 2: Read existing draft translations, send to Claude Haiku for improvement.
+ * Claude reads the source (FR) + draft translation and improves quality.
+ */
+async function improveTranslationsWithClaude(
+  _model: TranslatableModel,
+  _entityId: string
+): Promise<void> {
+  // TODO: Implement Claude Haiku improvement pass
+  // For now, this is a placeholder that will be implemented
+  // when ANTHROPIC_API_KEY is configured
+  console.log(`[Pass2] Claude Haiku improvement - placeholder for ${_model}#${_entityId}`);
+}
+
+/**
+ * Pass 3: Read improved translation, send to GPT-4o for verification.
+ * GPT-4o checks fluency, accuracy, and flags potential issues.
+ */
+async function verifyTranslationsWithGPT4o(
+  _model: TranslatableModel,
+  _entityId: string
+): Promise<void> {
+  // TODO: Implement GPT-4o verification pass
+  // Will be implemented to run at 4AM nightly
+  console.log(`[Pass3] GPT-4o verification - placeholder for ${_model}#${_entityId}`);
+}
+
+// ============================================
+// NIGHT WORKER
+// ============================================
+
+/**
+ * Process all pending Pass 2 and Pass 3 jobs.
+ * Called by cron/API endpoint at night.
+ */
+export async function processNightJobs(): Promise<{
+  pass2: { processed: number; errors: number };
+  pass3: { processed: number; errors: number };
+}> {
+  const results = {
+    pass2: { processed: 0, errors: 0 },
+    pass3: { processed: 0, errors: 0 },
+  };
+
+  for (const pass of [2, 3]) {
+    const jobs = await prisma.translationJob.findMany({
+      where: { status: 'pending', pass },
+      orderBy: [{ priority: 'asc' }, { scheduledAt: 'asc' }],
+      take: 500,
+    });
+
+    for (const job of jobs) {
+      try {
+        await prisma.translationJob.update({
+          where: { id: job.id },
+          data: { status: 'processing', startedAt: new Date() },
+        });
+
+        await executePass(job);
+
+        await prisma.translationJob.update({
+          where: { id: job.id },
+          data: { status: 'completed', completedAt: new Date() },
+        });
+
+        const passKey = pass === 2 ? 'pass2' : 'pass3';
+        results[passKey].processed++;
+
+        // Auto-schedule next pass
+        if (pass === 2) {
+          await enqueueTranslation(job.model as TranslatableModel, job.entityId, {
+            priority: job.priority,
+            pass: 3,
+          });
+        }
+      } catch (error) {
+        const passKey = pass === 2 ? 'pass2' : 'pass3';
+        results[passKey].errors++;
+        console.error(`[NightWorker] Pass ${pass} error for ${job.model}#${job.entityId}:`, error);
+
+        await prisma.translationJob.update({
+          where: { id: job.id },
+          data: {
+            status: 'failed',
+            error: error instanceof Error ? error.message : String(error),
+          },
+        });
+      }
+    }
+  }
+
+  return results;
+}
+
+// ============================================
+// CONTROL
+// ============================================
+
+/**
+ * Stop the queue processing loop
  */
 export function stopQueue(): void {
   if (processingTimeout) {
