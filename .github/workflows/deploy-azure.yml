@@ -193,6 +193,27 @@ jobs:
           DB_URL: ${{ secrets.DATABASE_URL }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
+      - name: Seed Database (if empty)
+        if: env.DB_URL != ''
+        run: |
+          if [ -f "prisma/seed-data.sql" ]; then
+            echo "Checking if database needs seeding..."
+            PRODUCT_COUNT=$(psql "$DATABASE_URL" -t -c "SELECT count(*) FROM \"Product\";" 2>/dev/null | tr -d ' ' || echo "0")
+            echo "Current product count: $PRODUCT_COUNT"
+            if [ "$PRODUCT_COUNT" = "0" ] || [ "$PRODUCT_COUNT" = "" ]; then
+              echo "Database is empty - seeding with initial data..."
+              psql "$DATABASE_URL" -f prisma/seed-data.sql 2>&1 | tail -20
+              echo "Database seeded successfully!"
+            else
+              echo "Database already has $PRODUCT_COUNT products - skipping seed"
+            fi
+          else
+            echo "No seed-data.sql found - skipping"
+          fi
+        env:
+          DB_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
       - name: Verify deployment
         run: |
           echo "Waiting for app to start..."
