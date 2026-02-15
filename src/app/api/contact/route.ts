@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * API Contact - BioCycle Peptides
  * Reçoit et traite les messages du formulaire de contact

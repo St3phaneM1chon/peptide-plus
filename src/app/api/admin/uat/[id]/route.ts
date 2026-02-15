@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * UAT API — Run Detail & Cleanup
  * GET    /api/admin/uat/[id] — Get run detail with test cases and tax report

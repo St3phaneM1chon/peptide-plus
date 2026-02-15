@@ -20,6 +20,7 @@ import {
   Modal,
   StatCard,
 } from '@/components/admin';
+import { useI18n } from '@/i18n/client';
 
 interface ShippingZone {
   id: string;
@@ -38,20 +39,8 @@ interface ShippingZone {
   isActive: boolean;
 }
 
-const countriesData: Record<string, string> = {
-  CA: 'Canada',
-  US: 'États-Unis',
-  FR: 'France',
-  GB: 'Royaume-Uni',
-  DE: 'Allemagne',
-  ES: 'Espagne',
-  IT: 'Italie',
-  AU: 'Australie',
-  MX: 'Mexique',
-  BR: 'Brésil',
-};
-
 export default function LivraisonPage() {
+  const { t } = useI18n();
   const [zones, setZones] = useState<ShippingZone[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -90,6 +79,10 @@ export default function LivraisonPage() {
     }));
   };
 
+  const getCountryName = (code: string): string => {
+    return t(`admin.shipping.countries.${code}`) || code;
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -103,15 +96,15 @@ export default function LivraisonPage() {
   return (
     <>
       <PageHeader
-        title="Zones de livraison"
-        subtitle="Configurez les zones et méthodes de livraison"
+        title={t('admin.shipping.title')}
+        subtitle={t('admin.shipping.subtitle')}
         actions={
           <Button
             variant="primary"
             icon={Plus}
             onClick={() => setShowForm(true)}
           >
-            Nouvelle zone
+            {t('admin.shipping.newZone')}
           </Button>
         }
       />
@@ -119,24 +112,24 @@ export default function LivraisonPage() {
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4 mb-6">
         <StatCard
-          label="Zones"
+          label={t('admin.shipping.zones')}
           value={zones.length}
           icon={MapPin}
         />
         <StatCard
-          label="Actives"
+          label={t('admin.shipping.active')}
           value={zones.filter(z => z.isActive).length}
           icon={Check}
           className="!border-green-200 !bg-green-50"
         />
         <StatCard
-          label="Pays couverts"
+          label={t('admin.shipping.countriesCovered')}
           value={new Set(zones.flatMap(z => z.countries)).size}
           icon={Globe}
           className="!border-sky-200 !bg-sky-50"
         />
         <StatCard
-          label="Méthodes"
+          label={t('admin.shipping.methods')}
           value={zones.reduce((sum, z) => sum + z.methods.length, 0)}
           icon={Truck}
           className="!border-sky-200 !bg-sky-50"
@@ -157,7 +150,7 @@ export default function LivraisonPage() {
                   <div className="flex flex-wrap gap-1 mt-2">
                     {zone.countries.map((code) => (
                       <span key={code} className="px-2 py-0.5 bg-slate-100 text-slate-600 text-xs rounded">
-                        {countriesData[code] || code}
+                        {getCountryName(code)}
                       </span>
                     ))}
                   </div>
@@ -179,7 +172,7 @@ export default function LivraisonPage() {
                     icon={Pencil}
                     onClick={() => setEditingZone(zone)}
                   >
-                    Modifier
+                    {t('admin.shipping.edit')}
                   </Button>
                 </div>
               </div>
@@ -189,12 +182,12 @@ export default function LivraisonPage() {
               <table className="w-full">
                 <thead>
                   <tr className="text-xs text-slate-500 uppercase">
-                    <th className="text-left py-2">Méthode</th>
-                    <th className="text-left py-2">Transporteur</th>
-                    <th className="text-center py-2">Délai</th>
-                    <th className="text-right py-2">Prix</th>
-                    <th className="text-right py-2">Gratuit dès</th>
-                    <th className="text-center py-2">Actif</th>
+                    <th className="text-left py-2">{t('admin.shipping.method')}</th>
+                    <th className="text-left py-2">{t('admin.shipping.carrier')}</th>
+                    <th className="text-center py-2">{t('admin.shipping.delay')}</th>
+                    <th className="text-right py-2">{t('admin.shipping.price')}</th>
+                    <th className="text-right py-2">{t('admin.shipping.freeAbove')}</th>
+                    <th className="text-center py-2">{t('admin.shipping.activeCol')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -203,7 +196,7 @@ export default function LivraisonPage() {
                       <td className="py-3 font-medium text-slate-900">{method.name}</td>
                       <td className="py-3 text-slate-600">{method.carrier}</td>
                       <td className="py-3 text-center text-slate-600">
-                        {method.minDays}-{method.maxDays} jours
+                        {method.minDays}-{method.maxDays} {t('admin.shipping.days')}
                       </td>
                       <td className="py-3 text-right font-medium text-slate-900">
                         {method.price.toFixed(2)} $
@@ -229,7 +222,7 @@ export default function LivraisonPage() {
               </table>
               <button className="mt-3 text-sm text-sky-600 hover:text-sky-700 inline-flex items-center gap-1">
                 <Plus className="w-3.5 h-3.5" />
-                Ajouter une méthode
+                {t('admin.shipping.addMethod')}
               </button>
             </div>
           </div>
@@ -240,9 +233,9 @@ export default function LivraisonPage() {
             <div className="p-3 bg-slate-100 rounded-xl mb-4">
               <Package className="w-8 h-8 text-slate-400" />
             </div>
-            <h3 className="text-sm font-medium text-slate-900">Aucune zone de livraison</h3>
+            <h3 className="text-sm font-medium text-slate-900">{t('admin.shipping.emptyTitle')}</h3>
             <p className="mt-1 text-sm text-slate-500 max-w-sm">
-              Créez votre première zone pour configurer les options de livraison.
+              {t('admin.shipping.emptyDescription')}
             </p>
             <div className="mt-4">
               <Button
@@ -250,7 +243,7 @@ export default function LivraisonPage() {
                 icon={Plus}
                 onClick={() => setShowForm(true)}
               >
-                Nouvelle zone
+                {t('admin.shipping.newZone')}
               </Button>
             </div>
           </div>
@@ -261,18 +254,18 @@ export default function LivraisonPage() {
       <Modal
         isOpen={modalIsOpen}
         onClose={() => { setShowForm(false); setEditingZone(null); }}
-        title={editingZone ? 'Modifier la zone' : 'Nouvelle zone'}
+        title={editingZone ? t('admin.shipping.editZone') : t('admin.shipping.newZoneTitle')}
         size="md"
         footer={
           <Button
             variant="secondary"
             onClick={() => { setShowForm(false); setEditingZone(null); }}
           >
-            Fermer
+            {t('admin.shipping.close')}
           </Button>
         }
       >
-        <p className="text-slate-500">Fonctionnalité en cours de développement...</p>
+        <p className="text-slate-500">{t('admin.shipping.inDevelopment')}</p>
       </Modal>
     </>
   );

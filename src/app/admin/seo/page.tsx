@@ -10,6 +10,7 @@ import {
   Input,
   Textarea,
 } from '@/components/admin';
+import { useI18n } from '@/i18n/client';
 
 interface PageSEO {
   id: string;
@@ -23,6 +24,7 @@ interface PageSEO {
 }
 
 export default function SEOPage() {
+  const { t } = useI18n();
   const [pages, setPages] = useState<PageSEO[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingPage, setEditingPage] = useState<PageSEO | null>(null);
@@ -59,27 +61,27 @@ export default function SEOPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="SEO"
-        subtitle="Optimisez le referencement de votre site"
+        title={t('admin.seo.title')}
+        subtitle={t('admin.seo.subtitle')}
         actions={
           <Button variant="primary" icon={Globe}>
-            Generer sitemap.xml
+            {t('admin.seo.generateSitemap')}
           </Button>
         }
       />
 
       {/* Global Settings */}
       <div className="bg-white rounded-xl border border-slate-200 p-6">
-        <h3 className="font-semibold text-slate-900 mb-4">Parametres globaux</h3>
+        <h3 className="font-semibold text-slate-900 mb-4">{t('admin.seo.globalSettings')}</h3>
         <div className="grid grid-cols-2 gap-4">
-          <FormField label="Nom du site">
+          <FormField label={t('admin.seo.siteName')}>
             <Input
               type="text"
               value={globalSettings.siteName}
               onChange={(e) => setGlobalSettings({ ...globalSettings, siteName: e.target.value })}
             />
           </FormField>
-          <FormField label="URL du site">
+          <FormField label={t('admin.seo.siteUrl')}>
             <Input
               type="url"
               value={globalSettings.siteUrl}
@@ -87,7 +89,7 @@ export default function SEOPage() {
             />
           </FormField>
           <div className="col-span-2">
-            <FormField label="Image OG par defaut">
+            <FormField label={t('admin.seo.defaultOgImage')}>
               <Input
                 type="text"
                 value={globalSettings.defaultOgImage}
@@ -102,10 +104,10 @@ export default function SEOPage() {
       <div className="bg-white rounded-xl border border-slate-200 p-6">
         <div className="flex items-center gap-2 mb-4">
           <BarChart3 className="w-4 h-4 text-slate-400" />
-          <h3 className="font-semibold text-slate-900">Analytics & Tracking</h3>
+          <h3 className="font-semibold text-slate-900">{t('admin.seo.analyticsTracking')}</h3>
         </div>
         <div className="grid grid-cols-3 gap-4">
-          <FormField label="Google Analytics ID">
+          <FormField label={t('admin.seo.googleAnalyticsId')}>
             <Input
               type="text"
               placeholder="G-XXXXXXXXXX"
@@ -113,7 +115,7 @@ export default function SEOPage() {
               onChange={(e) => setGlobalSettings({ ...globalSettings, googleAnalyticsId: e.target.value })}
             />
           </FormField>
-          <FormField label="Google Tag Manager ID">
+          <FormField label={t('admin.seo.googleTagManagerId')}>
             <Input
               type="text"
               placeholder="GTM-XXXXXXX"
@@ -121,7 +123,7 @@ export default function SEOPage() {
               onChange={(e) => setGlobalSettings({ ...globalSettings, googleTagManagerId: e.target.value })}
             />
           </FormField>
-          <FormField label="Facebook Pixel ID">
+          <FormField label={t('admin.seo.facebookPixelId')}>
             <Input
               type="text"
               placeholder="XXXXXXXXXXXXXXX"
@@ -135,16 +137,16 @@ export default function SEOPage() {
       {/* Pages */}
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
         <div className="p-4 border-b border-slate-200">
-          <h3 className="font-semibold text-slate-900">Pages</h3>
+          <h3 className="font-semibold text-slate-900">{t('admin.seo.pages')}</h3>
         </div>
         <table className="w-full">
           <thead className="bg-slate-50">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Page</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Titre</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Description</th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">Indexee</th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">Actions</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.seo.page')}</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.seo.titleCol')}</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.seo.description')}</th>
+              <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.seo.indexed')}</th>
+              <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.seo.actionsCol')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
@@ -155,11 +157,11 @@ export default function SEOPage() {
                 </td>
                 <td className="px-4 py-3">
                   <p className="text-slate-900 truncate max-w-xs">{page.title}</p>
-                  <p className="text-xs text-slate-400">{page.title.length}/60 caracteres</p>
+                  <p className="text-xs text-slate-400">{page.title.length}/60 {t('admin.seo.characters')}</p>
                 </td>
                 <td className="px-4 py-3">
                   <p className="text-slate-600 truncate max-w-sm">{page.description || '-'}</p>
-                  <p className="text-xs text-slate-400">{page.description?.length || 0}/160 caracteres</p>
+                  <p className="text-xs text-slate-400">{page.description?.length || 0}/160 {t('admin.seo.characters')}</p>
                 </td>
                 <td className="px-4 py-3 text-center">
                   <button
@@ -168,12 +170,12 @@ export default function SEOPage() {
                       page.noIndex ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'
                     }`}
                   >
-                    {page.noIndex ? 'Non' : 'Oui'}
+                    {page.noIndex ? t('admin.seo.no') : t('admin.seo.yes')}
                   </button>
                 </td>
                 <td className="px-4 py-3 text-center">
                   <Button variant="ghost" size="sm" icon={Pencil} onClick={() => setEditingPage(page)}>
-                    Modifier
+                    {t('admin.seo.edit')}
                   </Button>
                 </td>
               </tr>
@@ -190,7 +192,7 @@ export default function SEOPage() {
             <h3 className="font-semibold text-slate-900">robots.txt</h3>
           </div>
           <Button variant="ghost" size="sm" icon={Pencil}>
-            Modifier
+            {t('admin.seo.edit')}
           </Button>
         </div>
         <pre className="bg-slate-50 rounded-lg p-4 text-sm text-slate-700 overflow-x-auto">
@@ -209,28 +211,28 @@ Sitemap: ${globalSettings.siteUrl}/sitemap.xml`}
       <Modal
         isOpen={!!editingPage}
         onClose={() => setEditingPage(null)}
-        title={`Modifier SEO - ${editingPage?.path || ''}`}
+        title={t('admin.seo.editSeoTitle', { path: editingPage?.path || '' })}
       >
         {editingPage && (
           <div className="space-y-4">
-            <FormField label="Titre" hint={`${editingPage.title.length}/60`}>
+            <FormField label={t('admin.seo.titleField')} hint={`${editingPage.title.length}/60`}>
               <Input type="text" defaultValue={editingPage.title} maxLength={60} />
             </FormField>
-            <FormField label="Meta Description" hint={`${editingPage.description?.length || 0}/160`}>
+            <FormField label={t('admin.seo.metaDescription')} hint={`${editingPage.description?.length || 0}/160`}>
               <Textarea rows={3} defaultValue={editingPage.description} maxLength={160} />
             </FormField>
-            <FormField label="Mots-cles">
-              <Input type="text" defaultValue={editingPage.keywords} placeholder="mot1, mot2, mot3" />
+            <FormField label={t('admin.seo.keywords')}>
+              <Input type="text" defaultValue={editingPage.keywords} placeholder={t('admin.seo.keywordsPlaceholder')} />
             </FormField>
-            <FormField label="Image OG">
+            <FormField label={t('admin.seo.ogImage')}>
               <Input type="text" defaultValue={editingPage.ogImage} placeholder="/images/og-page.jpg" />
             </FormField>
             <div className="flex gap-3 pt-4 border-t border-slate-200">
               <Button variant="secondary" onClick={() => setEditingPage(null)} className="flex-1">
-                Annuler
+                {t('admin.seo.cancel')}
               </Button>
               <Button variant="primary" className="flex-1">
-                Sauvegarder
+                {t('admin.seo.save')}
               </Button>
             </div>
           </div>

@@ -12,6 +12,8 @@ import {
   Input,
   StatusBadge,
 } from '@/components/admin';
+import { useI18n } from '@/i18n/client';
+import { toast } from 'sonner';
 
 interface Account {
   id: string;
@@ -25,15 +27,17 @@ interface Account {
   children?: Account[];
 }
 
-const accountTypes = {
-  ASSET: { label: 'Actif', color: 'blue', prefix: '1' },
-  LIABILITY: { label: 'Passif', color: 'red', prefix: '2' },
-  EQUITY: { label: 'Capitaux propres', color: 'purple', prefix: '3' },
-  REVENUE: { label: 'Revenus', color: 'green', prefix: '4' },
-  EXPENSE: { label: 'D\u00e9penses', color: 'sky', prefix: '5-6-7' },
-};
-
 export default function PlanComptablePage() {
+  const { t, locale } = useI18n();
+
+  const accountTypes: Record<string, { label: string; color: string; prefix: string }> = {
+    ASSET: { label: t('admin.chartOfAccounts.typeAsset'), color: 'blue', prefix: '1' },
+    LIABILITY: { label: t('admin.chartOfAccounts.typeLiability'), color: 'red', prefix: '2' },
+    EQUITY: { label: t('admin.chartOfAccounts.typeEquity'), color: 'purple', prefix: '3' },
+    REVENUE: { label: t('admin.chartOfAccounts.typeRevenue'), color: 'green', prefix: '4' },
+    EXPENSE: { label: t('admin.chartOfAccounts.typeExpense'), color: 'sky', prefix: '5-6-7' },
+  };
+
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState<string>('');
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(['1000', '2000', '4000', '5000']));
@@ -44,6 +48,7 @@ export default function PlanComptablePage() {
 
   useEffect(() => {
     fetchAccounts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchAccounts = async () => {
@@ -72,14 +77,14 @@ export default function PlanComptablePage() {
 
   const getCategoryFromType = (type: string, code: string): string => {
     const codeNum = parseInt(code);
-    if (type === 'ASSET') return codeNum < 1500 ? 'Actifs courants' : 'Actifs non courants';
-    if (type === 'LIABILITY') return 'Passifs courants';
-    if (type === 'EQUITY') return 'Capitaux propres';
-    if (type === 'REVENUE') return 'Revenus';
+    if (type === 'ASSET') return codeNum < 1500 ? t('admin.chartOfAccounts.currentAssets') : t('admin.chartOfAccounts.nonCurrentAssets');
+    if (type === 'LIABILITY') return t('admin.chartOfAccounts.currentLiabilities');
+    if (type === 'EQUITY') return t('admin.chartOfAccounts.typeEquity');
+    if (type === 'REVENUE') return t('admin.chartOfAccounts.typeRevenue');
     if (type === 'EXPENSE') {
-      if (codeNum < 6000) return 'CMV';
-      if (codeNum < 7000) return 'Exploitation';
-      return 'Autres';
+      if (codeNum < 6000) return t('admin.chartOfAccounts.cogs');
+      if (codeNum < 7000) return t('admin.chartOfAccounts.operations');
+      return t('admin.chartOfAccounts.other');
     }
     return '';
   };
@@ -116,7 +121,7 @@ export default function PlanComptablePage() {
         });
         if (!res.ok) {
           const err = await res.json();
-          alert(err.error || 'Erreur lors de la mise \u00e0 jour');
+          toast.error(err.error || t('admin.chartOfAccounts.updateError'));
           return;
         }
       } else {
@@ -127,7 +132,7 @@ export default function PlanComptablePage() {
         });
         if (!res.ok) {
           const err = await res.json();
-          alert(err.error || 'Erreur lors de la cr\u00e9ation');
+          toast.error(err.error || t('admin.chartOfAccounts.createError'));
           return;
         }
       }
@@ -135,7 +140,7 @@ export default function PlanComptablePage() {
       await fetchAccounts();
     } catch (err) {
       console.error('Error saving account:', err);
-      alert('Erreur lors de la sauvegarde');
+      toast.error(t('admin.chartOfAccounts.saveError'));
     }
   };
 
@@ -180,11 +185,11 @@ export default function PlanComptablePage() {
   };
 
   const typeFilterOptions = [
-    { value: 'ASSET', label: 'Actifs' },
-    { value: 'LIABILITY', label: 'Passifs' },
-    { value: 'EQUITY', label: 'Capitaux propres' },
-    { value: 'REVENUE', label: 'Revenus' },
-    { value: 'EXPENSE', label: 'D\u00e9penses' },
+    { value: 'ASSET', label: t('admin.chartOfAccounts.typeAssets') },
+    { value: 'LIABILITY', label: t('admin.chartOfAccounts.typeLiabilities') },
+    { value: 'EQUITY', label: t('admin.chartOfAccounts.typeEquity') },
+    { value: 'REVENUE', label: t('admin.chartOfAccounts.typeRevenue') },
+    { value: 'EXPENSE', label: t('admin.chartOfAccounts.typeExpense') },
   ];
 
   const summaryCardColors: Record<string, { bg: string; border: string; text: string; value: string }> = {
@@ -195,13 +200,13 @@ export default function PlanComptablePage() {
     sky: { bg: 'bg-sky-50', border: 'border-sky-200', text: 'text-sky-600', value: 'text-sky-900' },
   };
 
-  if (loading) return <div className="p-8 text-center">Chargement...</div>;
+  if (loading) return <div className="p-8 text-center">{t('admin.chartOfAccounts.loading')}</div>;
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Plan Comptable"
-        subtitle="Structure des comptes selon NCECF"
+        title={t('admin.chartOfAccounts.title')}
+        subtitle={t('admin.chartOfAccounts.subtitle')}
         actions={
           <Button
             variant="primary"
@@ -209,7 +214,7 @@ export default function PlanComptablePage() {
             onClick={() => { setEditingAccount(null); setShowModal(true); }}
             className="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800"
           >
-            Nouveau compte
+            {t('admin.chartOfAccounts.newAccount')}
           </Button>
         }
       />
@@ -222,10 +227,10 @@ export default function PlanComptablePage() {
             <div key={key} className={`${colors.bg} rounded-xl p-4 border ${colors.border}`}>
               <p className={`text-sm ${colors.text}`}>{value.label}</p>
               <p className={`text-xl font-bold ${colors.value}`}>
-                {totals[key as keyof typeof totals].toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}
+                {totals[key as keyof typeof totals].toLocaleString(locale, { style: 'currency', currency: 'CAD' })}
               </p>
               <p className="text-xs text-slate-500 mt-1">
-                {accounts.filter(a => a.type === key && !a.parentId).length} comptes
+                {accounts.filter(a => a.type === key && !a.parentId).length} {t('admin.chartOfAccounts.accounts')}
               </p>
             </div>
           );
@@ -236,15 +241,15 @@ export default function PlanComptablePage() {
       <FilterBar
         searchValue={searchTerm}
         onSearchChange={setSearchTerm}
-        searchPlaceholder="Rechercher par nom ou code..."
+        searchPlaceholder={t('admin.chartOfAccounts.searchPlaceholder')}
         actions={
           <Button variant="secondary" icon={Download}>
-            Exporter
+            {t('admin.chartOfAccounts.export')}
           </Button>
         }
       >
         <SelectFilter
-          label="Tous les types"
+          label={t('admin.chartOfAccounts.allTypes')}
           value={selectedType}
           onChange={setSelectedType}
           options={typeFilterOptions}
@@ -256,13 +261,13 @@ export default function PlanComptablePage() {
         <table className="w-full">
           <thead className="bg-slate-50">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Code</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Nom du compte</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Type</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Cat\u00e9gorie</th>
-              <th className="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase">Solde</th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">Statut</th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">Actions</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.chartOfAccounts.code')}</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.chartOfAccounts.accountName')}</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.chartOfAccounts.type')}</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.chartOfAccounts.category')}</th>
+              <th className="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase">{t('admin.chartOfAccounts.balance')}</th>
+              <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.chartOfAccounts.statusCol')}</th>
+              <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.chartOfAccounts.actionsCol')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-200">
@@ -300,12 +305,12 @@ export default function PlanComptablePage() {
                     <td className="px-4 py-3 text-slate-600 text-sm">{account.category}</td>
                     <td className="px-4 py-3 text-right">
                       <span className={`font-medium ${account.balance >= 0 ? 'text-slate-900' : 'text-red-600'}`}>
-                        {account.balance.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}
+                        {account.balance.toLocaleString(locale, { style: 'currency', currency: 'CAD' })}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-center">
                       <StatusBadge variant={account.isActive ? 'success' : 'neutral'}>
-                        {account.isActive ? 'Actif' : 'Inactif'}
+                        {account.isActive ? t('admin.chartOfAccounts.active') : t('admin.chartOfAccounts.inactive')}
                       </StatusBadge>
                     </td>
                     <td className="px-4 py-3 text-center">
@@ -313,13 +318,13 @@ export default function PlanComptablePage() {
                         <button
                           onClick={() => { setEditingAccount(account); setShowModal(true); }}
                           className="p-1.5 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded"
-                          title="Modifier"
+                          title={t('admin.chartOfAccounts.edit')}
                         >
                           <Pencil className="w-4 h-4" />
                         </button>
                         <button
                           className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded"
-                          title="Voir transactions"
+                          title={t('admin.chartOfAccounts.viewTransactions')}
                         >
                           <ClipboardList className="w-4 h-4" />
                         </button>
@@ -343,12 +348,12 @@ export default function PlanComptablePage() {
                       <td className="px-4 py-2 text-slate-500 text-sm">{child.category}</td>
                       <td className="px-4 py-2 text-right">
                         <span className={`text-sm ${child.balance >= 0 ? 'text-slate-700' : 'text-red-600'}`}>
-                          {child.balance.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}
+                          {child.balance.toLocaleString(locale, { style: 'currency', currency: 'CAD' })}
                         </span>
                       </td>
                       <td className="px-4 py-2 text-center">
                         <StatusBadge variant={child.isActive ? 'success' : 'neutral'}>
-                          {child.isActive ? 'Actif' : 'Inactif'}
+                          {child.isActive ? t('admin.chartOfAccounts.active') : t('admin.chartOfAccounts.inactive')}
                         </StatusBadge>
                       </td>
                       <td className="px-4 py-2 text-center">
@@ -374,24 +379,24 @@ export default function PlanComptablePage() {
       <Modal
         isOpen={showModal}
         onClose={() => setShowModal(false)}
-        title={editingAccount ? 'Modifier le compte' : 'Nouveau compte'}
+        title={editingAccount ? t('admin.chartOfAccounts.editAccount') : t('admin.chartOfAccounts.newAccount')}
         footer={
           <>
             <Button variant="ghost" onClick={() => setShowModal(false)}>
-              Annuler
+              {t('admin.chartOfAccounts.cancel')}
             </Button>
             <Button
               onClick={handleSaveAccount}
               className="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white border-transparent shadow-sm"
             >
-              {editingAccount ? 'Mettre \u00e0 jour' : 'Cr\u00e9er le compte'}
+              {editingAccount ? t('admin.chartOfAccounts.updateAccount') : t('admin.chartOfAccounts.createAccount')}
             </Button>
           </>
         }
       >
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
-            <FormField label="Code">
+            <FormField label={t('admin.chartOfAccounts.code')}>
               <Input
                 id="accountCode"
                 type="text"
@@ -399,45 +404,45 @@ export default function PlanComptablePage() {
                 placeholder="1000"
               />
             </FormField>
-            <FormField label="Type">
+            <FormField label={t('admin.chartOfAccounts.type')}>
               <select
                 id="accountType"
                 defaultValue={editingAccount?.type || 'ASSET'}
                 className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white
                   focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-shadow"
               >
-                <option value="ASSET">Actif</option>
-                <option value="LIABILITY">Passif</option>
-                <option value="EQUITY">Capitaux propres</option>
-                <option value="REVENUE">Revenus</option>
-                <option value="EXPENSE">D\u00e9penses</option>
+                <option value="ASSET">{t('admin.chartOfAccounts.typeAsset')}</option>
+                <option value="LIABILITY">{t('admin.chartOfAccounts.typeLiability')}</option>
+                <option value="EQUITY">{t('admin.chartOfAccounts.typeEquity')}</option>
+                <option value="REVENUE">{t('admin.chartOfAccounts.typeRevenue')}</option>
+                <option value="EXPENSE">{t('admin.chartOfAccounts.typeExpense')}</option>
               </select>
             </FormField>
           </div>
-          <FormField label="Nom du compte">
+          <FormField label={t('admin.chartOfAccounts.accountName')}>
             <Input
               id="accountName"
               type="text"
               defaultValue={editingAccount?.name || ''}
-              placeholder="Encaisse et banque"
+              placeholder={t('admin.chartOfAccounts.placeholderAccountName')}
             />
           </FormField>
-          <FormField label="Cat\u00e9gorie">
+          <FormField label={t('admin.chartOfAccounts.category')}>
             <Input
               id="accountCategory"
               type="text"
               defaultValue={editingAccount?.category || ''}
-              placeholder="Actifs courants"
+              placeholder={t('admin.chartOfAccounts.currentAssets')}
             />
           </FormField>
-          <FormField label="Compte parent (optionnel)">
+          <FormField label={t('admin.chartOfAccounts.parentAccount')}>
             <select
               id="accountParent"
               defaultValue={editingAccount?.parentId || ''}
               className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white
                 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-shadow"
             >
-              <option value="">Aucun (compte principal)</option>
+              <option value="">{t('admin.chartOfAccounts.noParent')}</option>
               {parentAccounts.map(a => (
                 <option key={a.id} value={a.id}>{a.code} - {a.name}</option>
               ))}
@@ -450,7 +455,7 @@ export default function PlanComptablePage() {
               defaultChecked={editingAccount?.isActive ?? true}
               className="w-4 h-4 rounded border-slate-300 text-emerald-600"
             />
-            <label htmlFor="isActive" className="text-sm text-slate-700">Compte actif</label>
+            <label htmlFor="isActive" className="text-sm text-slate-700">{t('admin.chartOfAccounts.activeAccount')}</label>
           </div>
         </div>
       </Modal>

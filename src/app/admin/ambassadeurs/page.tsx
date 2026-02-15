@@ -13,7 +13,6 @@ import {
 import {
   PageHeader,
   StatCard,
-  StatusBadge,
   Button,
   Modal,
   DataTable,
@@ -21,6 +20,8 @@ import {
   SelectFilter,
   type Column,
 } from '@/components/admin';
+import { useI18n } from '@/i18n/client';
+import { toast } from 'sonner';
 
 interface Ambassador {
   id: string;
@@ -45,19 +46,8 @@ const tierConfig: Record<string, { color: string; commission: number; minSales: 
   PLATINUM: { color: 'bg-blue-100 text-blue-800', commission: 15, minSales: 15000 },
 };
 
-const statusVariant: Record<string, 'warning' | 'success' | 'error'> = {
-  PENDING: 'warning',
-  ACTIVE: 'success',
-  SUSPENDED: 'error',
-};
-
-const statusLabels: Record<string, string> = {
-  PENDING: 'En attente',
-  ACTIVE: 'Actif',
-  SUSPENDED: 'Suspendu',
-};
-
 export default function AmbassadeursPage() {
+  const { t, locale } = useI18n();
   const [ambassadors, setAmbassadors] = useState<Ambassador[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState({ status: '', tier: '', search: '' });
@@ -69,17 +59,52 @@ export default function AmbassadeursPage() {
   }, []);
 
   const fetchAmbassadors = async () => {
-    setAmbassadors([]);
-    setLoading(false);
+    try {
+      setLoading(true);
+      const res = await fetch('/api/ambassadors');
+      if (res.ok) {
+        const data = await res.json();
+        setAmbassadors(data.ambassadors || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch ambassadors:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const updateStatus = (id: string, status: 'ACTIVE' | 'SUSPENDED') => {
     setAmbassadors(ambassadors.map(a => a.id === id ? { ...a, status } : a));
   };
 
-  const processPayout = (id: string) => {
-    alert(`Paiement traité pour l'ambassadeur #${id}`);
-    setAmbassadors(ambassadors.map(a => a.id === id ? { ...a, pendingPayout: 0 } : a));
+  const processPayout = async (id: string) => {
+    try {
+      const res = await fetch('/api/ambassadors/payouts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ambassadorId: id }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        toast.error(data.error || t('admin.ambassadors.payoutError'));
+        return;
+      }
+
+      const data = await res.json();
+      toast.success(
+        t('admin.ambassadors.payoutProcessed', {
+          amount: data.payout.amount.toFixed(2),
+          count: data.payout.commissionsCount,
+        })
+      );
+
+      // Refresh the ambassador list to get updated figures
+      await fetchAmbassadors();
+    } catch (error) {
+      console.error('Payout error:', error);
+      toast.error(t('admin.ambassadors.payoutError'));
+    }
   };
 
   const filteredAmbassadors = ambassadors.filter(amb => {
@@ -106,18 +131,18 @@ export default function AmbassadeursPage() {
   const columns: Column<Ambassador>[] = [
     {
       key: 'ambassador',
-      header: 'Ambassadeur',
+      header: t('admin.ambassadors.colAmbassador'),
       render: (amb) => (
         <div>
           <p className="font-medium text-slate-900">{amb.userName}</p>
           <p className="text-xs text-slate-500">{amb.userEmail}</p>
-          <p className="text-xs text-slate-400">{amb.totalReferrals} parrainages</p>
+          <p className="text-xs text-slate-400">{t('admin.ambassadors.referralsCount', { count: amb.totalReferrals })}</p>
         </div>
       ),
     },
     {
       key: 'code',
-      header: 'Code',
+      header: t('admin.ambassadors.colCode'),
       render: (amb) => (
         <code className="font-mono font-bold text-sky-600 bg-sky-50 px-2 py-1 rounded">
           {amb.referralCode}
@@ -126,7 +151,7 @@ export default function AmbassadeursPage() {
     },
     {
       key: 'tier',
-      header: 'Niveau',
+      header: t('admin.ambassadors.colTier'),
       align: 'center',
       render: (amb) => (
         <span className={`px-2 py-1 rounded-full text-xs font-medium ${tierConfig[amb.tier].color}`}>
@@ -136,17 +161,17 @@ export default function AmbassadeursPage() {
     },
     {
       key: 'sales',
-      header: 'Ventes',
+      header: t('admin.ambassadors.colSales'),
       align: 'right',
       render: (amb) => (
         <span className="font-medium text-slate-900">
-          {amb.totalSales.toLocaleString()} $
+          {amb.totalSales.toLocaleString(locale)} $
         </span>
       ),
     },
     {
       key: 'earnings',
-      header: 'Gains',
+      header: t('admin.ambassadors.colEarnings'),
       align: 'right',
       render: (amb) => (
         <span className="text-slate-600">{amb.totalEarnings.toFixed(2)} $</span>
@@ -154,7 +179,7 @@ export default function AmbassadeursPage() {
     },
     {
       key: 'pending',
-      header: 'En attente',
+      header: t('admin.ambassadors.colPending'),
       align: 'right',
       render: (amb) => (
         amb.pendingPayout > 0 ? (
@@ -166,7 +191,7 @@ export default function AmbassadeursPage() {
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: t('admin.ambassadors.colActions'),
       align: 'center',
       render: (amb) => (
         <div className="flex items-center justify-center gap-2">
@@ -175,7 +200,7 @@ export default function AmbassadeursPage() {
               onClick={(e) => { e.stopPropagation(); updateStatus(amb.id, 'ACTIVE'); }}
               className="px-2 py-1 bg-green-100 text-green-700 rounded text-xs hover:bg-green-200"
             >
-              Approuver
+              {t('admin.ambassadors.approve')}
             </button>
           )}
           {amb.pendingPayout > 0 && (
@@ -183,7 +208,7 @@ export default function AmbassadeursPage() {
               onClick={(e) => { e.stopPropagation(); processPayout(amb.id); }}
               className="px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs hover:bg-purple-200"
             >
-              Payer
+              {t('admin.ambassadors.pay')}
             </button>
           )}
           <Button
@@ -192,7 +217,7 @@ export default function AmbassadeursPage() {
             icon={Eye}
             onClick={(e) => { e.stopPropagation(); setSelectedAmbassador(amb); }}
           >
-            Détails
+            {t('admin.ambassadors.details')}
           </Button>
         </div>
       ),
@@ -202,8 +227,8 @@ export default function AmbassadeursPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Programme Ambassadeur"
-        subtitle="Gérez vos ambassadeurs et affiliés"
+        title={t('admin.ambassadors.title')}
+        subtitle={t('admin.ambassadors.subtitle')}
         actions={
           <div className="flex gap-3">
             <Button
@@ -212,10 +237,10 @@ export default function AmbassadeursPage() {
               onClick={() => setShowApplications(true)}
             >
               <span className="w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">1</span>
-              Candidatures
+              {t('admin.ambassadors.applications')}
             </Button>
             <Button variant="primary" icon={Settings}>
-              Configurer le programme
+              {t('admin.ambassadors.configureProgram')}
             </Button>
           </div>
         }
@@ -224,24 +249,24 @@ export default function AmbassadeursPage() {
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4">
         <StatCard
-          label="Ambassadeurs actifs"
+          label={t('admin.ambassadors.activeAmbassadors')}
           value={stats.total}
           icon={Users}
         />
         <StatCard
-          label="Ventes générées"
-          value={`${stats.totalSales.toLocaleString()} $`}
+          label={t('admin.ambassadors.generatedSales')}
+          value={`${stats.totalSales.toLocaleString(locale)} $`}
           icon={TrendingUp}
           className="bg-green-50 border-green-200"
         />
         <StatCard
-          label="Commissions versées"
-          value={`${stats.totalCommissions.toLocaleString()} $`}
+          label={t('admin.ambassadors.commissionsPaid')}
+          value={`${stats.totalCommissions.toLocaleString(locale)} $`}
           icon={DollarSign}
           className="bg-sky-50 border-sky-200"
         />
         <StatCard
-          label="Paiements en attente"
+          label={t('admin.ambassadors.pendingPayouts')}
           value={`${stats.pendingPayouts.toFixed(2)} $`}
           icon={Clock}
           className="bg-purple-50 border-purple-200"
@@ -250,13 +275,13 @@ export default function AmbassadeursPage() {
 
       {/* Tiers Info */}
       <div className="bg-white rounded-xl border border-slate-200 p-4">
-        <h3 className="font-semibold text-slate-900 mb-3">Niveaux de commission</h3>
+        <h3 className="font-semibold text-slate-900 mb-3">{t('admin.ambassadors.commissionLevels')}</h3>
         <div className="grid grid-cols-4 gap-4">
           {Object.entries(tierConfig).map(([tier, config]) => (
             <div key={tier} className={`p-3 rounded-lg ${config.color}`}>
               <p className="font-bold">{tier}</p>
-              <p className="text-sm">{config.commission}% commission</p>
-              <p className="text-xs opacity-75">{config.minSales > 0 ? `${config.minSales}$+ ventes` : 'Niveau de base'}</p>
+              <p className="text-sm">{t('admin.ambassadors.commissionPercent', { rate: config.commission })}</p>
+              <p className="text-xs opacity-75">{config.minSales > 0 ? t('admin.ambassadors.minSales', { amount: config.minSales }) : t('admin.ambassadors.baseLevel')}</p>
             </div>
           ))}
         </div>
@@ -266,20 +291,20 @@ export default function AmbassadeursPage() {
       <FilterBar
         searchValue={filter.search}
         onSearchChange={(v) => setFilter({ ...filter, search: v })}
-        searchPlaceholder="Rechercher..."
+        searchPlaceholder={t('admin.ambassadors.searchPlaceholder')}
       >
         <SelectFilter
-          label="Tous les statuts"
+          label={t('admin.ambassadors.allStatuses')}
           value={filter.status}
           onChange={(v) => setFilter({ ...filter, status: v })}
           options={[
-            { value: 'ACTIVE', label: 'Actif' },
-            { value: 'PENDING', label: 'En attente' },
-            { value: 'SUSPENDED', label: 'Suspendu' },
+            { value: 'ACTIVE', label: t('admin.ambassadors.statusActive') },
+            { value: 'PENDING', label: t('admin.ambassadors.statusPending') },
+            { value: 'SUSPENDED', label: t('admin.ambassadors.statusSuspended') },
           ]}
         />
         <SelectFilter
-          label="Tous les niveaux"
+          label={t('admin.ambassadors.allTiers')}
           value={filter.tier}
           onChange={(v) => setFilter({ ...filter, tier: v })}
           options={[
@@ -297,8 +322,8 @@ export default function AmbassadeursPage() {
         data={filteredAmbassadors}
         keyExtractor={(amb) => amb.id}
         loading={loading}
-        emptyTitle="Aucun ambassadeur trouvé"
-        emptyDescription="Aucun ambassadeur ne correspond aux critères de recherche."
+        emptyTitle={t('admin.ambassadors.emptyTitle')}
+        emptyDescription={t('admin.ambassadors.emptyDescription')}
       />
 
       {/* Ambassador Detail Modal */}
@@ -314,18 +339,18 @@ export default function AmbassadeursPage() {
                   variant="danger"
                   onClick={() => { updateStatus(selectedAmbassador.id, 'SUSPENDED'); setSelectedAmbassador(null); }}
                 >
-                  Suspendre
+                  {t('admin.ambassadors.suspend')}
                 </Button>
               ) : (
                 <Button
                   variant="primary"
                   onClick={() => { updateStatus(selectedAmbassador.id, 'ACTIVE'); setSelectedAmbassador(null); }}
                 >
-                  Activer
+                  {t('admin.ambassadors.activate')}
                 </Button>
               )}
               <Button variant="primary">
-                Modifier la commission
+                {t('admin.ambassadors.editCommission')}
               </Button>
             </>
           )
@@ -334,30 +359,46 @@ export default function AmbassadeursPage() {
         {selectedAmbassador && (
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <p className="text-sm text-slate-500">Code de parrainage</p>
+              <p className="text-sm text-slate-500">{t('admin.ambassadors.referralCode')}</p>
               <code className="font-mono font-bold text-lg">{selectedAmbassador.referralCode}</code>
             </div>
             <div>
-              <p className="text-sm text-slate-500">Niveau</p>
+              <p className="text-sm text-slate-500">{t('admin.ambassadors.tierLabel')}</p>
               <span className={`px-2 py-1 rounded-full text-sm font-medium ${tierConfig[selectedAmbassador.tier].color}`}>
                 {selectedAmbassador.tier}
               </span>
             </div>
             <div>
-              <p className="text-sm text-slate-500">Commission</p>
+              <p className="text-sm text-slate-500">{t('admin.ambassadors.commissionLabel')}</p>
               <p className="font-bold">{selectedAmbassador.commissionRate}%</p>
             </div>
             <div>
-              <p className="text-sm text-slate-500">Parrainages</p>
+              <p className="text-sm text-slate-500">{t('admin.ambassadors.referralsLabel')}</p>
               <p className="font-bold">{selectedAmbassador.totalReferrals}</p>
             </div>
             <div>
-              <p className="text-sm text-slate-500">Ventes générées</p>
-              <p className="font-bold">{selectedAmbassador.totalSales.toLocaleString()} $</p>
+              <p className="text-sm text-slate-500">{t('admin.ambassadors.generatedSalesLabel')}</p>
+              <p className="font-bold">{selectedAmbassador.totalSales.toLocaleString(locale)} $</p>
             </div>
             <div>
-              <p className="text-sm text-slate-500">Gains totaux</p>
+              <p className="text-sm text-slate-500">{t('admin.ambassadors.totalEarningsLabel')}</p>
               <p className="font-bold">{selectedAmbassador.totalEarnings.toFixed(2)} $</p>
+            </div>
+            <div className="col-span-2 pt-2 border-t border-slate-200">
+              <p className="text-sm text-slate-500">{t('admin.ambassadors.pendingPayoutLabel')}</p>
+              {selectedAmbassador.pendingPayout > 0 ? (
+                <div className="flex items-center gap-3 mt-1">
+                  <p className="font-bold text-purple-600 text-lg">{selectedAmbassador.pendingPayout.toFixed(2)} $</p>
+                  <button
+                    onClick={() => { processPayout(selectedAmbassador.id); setSelectedAmbassador(null); }}
+                    className="px-3 py-1.5 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors"
+                  >
+                    {t('admin.ambassadors.processPayoutNow')}
+                  </button>
+                </div>
+              ) : (
+                <p className="text-slate-400 mt-1">{t('admin.ambassadors.noPendingPayout')}</p>
+              )}
             </div>
           </div>
         )}

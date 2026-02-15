@@ -6,6 +6,11 @@ import Image from 'next/image';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useCart } from '@/contexts/CartContext';
 import { useTranslations } from '@/hooks/useTranslations';
+import WishlistButton from './WishlistButton';
+import QuickViewButton from './QuickViewButton';
+import QuickViewModal from './QuickViewModal';
+import CompareButton from './CompareButton';
+import ProductBadges from './ProductBadges';
 
 type FormatType = 'vial_2ml' | 'vial_10ml' | 'cartridge_3ml' | 'cartridge_kit_12' | 'capsule' | 'pack_10' | 'syringe' | 'accessory' | 'powder' | 'gummies' | 'capsules_30' | 'capsules_60' | 'capsules_120' | 'pack_2' | 'pack_5' | 'box_50' | 'box_100' | 'kit';
 
@@ -38,6 +43,11 @@ interface ProductCardProps {
   inStock?: boolean;
   formats?: ProductFormat[];
   avgMass?: string;
+  createdAt?: Date | string;
+  purchaseCount?: number;
+  averageRating?: number;
+  reviewCount?: number;
+  restockedAt?: Date | string;
 }
 
 // Format type icons
@@ -79,6 +89,11 @@ export default function ProductCard({
   inStock = true,
   formats,
   avgMass,
+  createdAt,
+  purchaseCount,
+  averageRating,
+  reviewCount,
+  restockedAt,
 }: ProductCardProps) {
   const { formatPrice } = useCurrency();
   const { addItem } = useCart();
@@ -93,6 +108,7 @@ export default function ProductCard({
   const [quantity, setQuantity] = useState(1);
   const [isAdding, setIsAdding] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const displayPrice = selectedFormat?.price || price;
@@ -160,24 +176,56 @@ export default function ProductCard({
   };
 
   return (
-    <div className="bg-white rounded-xl border border-neutral-200 hover:shadow-lg transition-all duration-300 relative overflow-visible flex flex-col h-full">
-      {/* Image */}
-      <Link href={`/product/${slug}`}>
-        <div className="relative aspect-square bg-neutral-100 overflow-hidden rounded-t-xl">
-          <Image
-            src={imageUrl || '/images/products/peptide-default.png'}
-            alt={productName}
-            fill
-            className="object-cover hover:scale-105 transition-transform duration-300"
-          />
-          {/* Category Badge */}
-          {categoryName && (
-            <span className="absolute top-3 left-3 px-3 py-1 bg-black/80 text-white text-xs font-medium rounded-full">
-              {categoryName}
-            </span>
-          )}
+    <>
+      <article className="bg-white rounded-xl border border-neutral-200 hover:shadow-lg transition-all duration-300 relative overflow-visible flex flex-col h-full group" aria-label={productName}>
+        {/* Image */}
+        <div className="relative">
+          <Link href={`/product/${slug}`} aria-label={`View ${productName} details`}>
+            <div className="relative aspect-square bg-neutral-100 overflow-hidden rounded-t-xl">
+              <Image
+                src={imageUrl || '/images/products/peptide-default.png'}
+                alt={`${productName} - ${categoryName || 'product'} image`}
+                fill
+                className="object-cover hover:scale-105 transition-transform duration-300"
+              />
+
+              {/* Product Badges - Top Left */}
+              <ProductBadges
+                product={{
+                  createdAt,
+                  purchaseCount,
+                  averageRating,
+                  reviewCount,
+                  price: displayPrice,
+                  compareAtPrice: displayComparePrice,
+                  formats: availableFormats,
+                  restockedAt,
+                }}
+                maxBadges={2}
+              />
+
+              {/* Category Badge - Bottom Left */}
+              {categoryName && (
+                <span className="absolute bottom-3 left-3 px-3 py-1 bg-black/80 text-white text-xs font-medium rounded-full">
+                  {categoryName}
+                </span>
+              )}
+            </div>
+          </Link>
+          {/* Action Buttons Container */}
+          <div className="absolute top-3 right-3 flex flex-col gap-2 z-10">
+            {/* Wishlist Heart Button */}
+            <WishlistButton productId={id} variant="icon" />
+            {/* Quick View Button - appears on hover */}
+            <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+              <QuickViewButton onClick={() => setIsQuickViewOpen(true)} />
+            </div>
+            {/* Compare Button - appears on hover */}
+            <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+              <CompareButton productSlug={slug} productName={productName} variant="icon" />
+            </div>
+          </div>
         </div>
-      </Link>
 
       {/* Content */}
       <div className="p-4 overflow-visible flex flex-col flex-grow">
@@ -218,6 +266,9 @@ export default function ProductCard({
                   e.preventDefault();
                   setIsDropdownOpen(!isDropdownOpen);
                 }}
+                aria-label={`Select format for ${productName}`}
+                aria-expanded={isDropdownOpen}
+                aria-haspopup="listbox"
                 className="w-full mt-1 flex items-center justify-between gap-2 px-3 py-2 border border-neutral-300 rounded-lg bg-white hover:border-orange-400 transition-colors"
               >
                 <div className="flex items-center gap-2">
@@ -240,10 +291,12 @@ export default function ProductCard({
 
               {/* Dropdown Menu - Overlays card with scroll */}
               {isDropdownOpen && (
-                <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-neutral-200 rounded-lg shadow-2xl max-h-64 overflow-y-auto">
+                <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-neutral-200 rounded-lg shadow-2xl max-h-64 overflow-y-auto" role="listbox" aria-label="Available formats">
                   {availableFormats.map((format) => (
                     <button
                       key={format.id}
+                      role="option"
+                      aria-selected={selectedFormat?.id === format.id}
                       onClick={(e) => {
                         e.preventDefault();
                         handleFormatSelect(format);
@@ -293,22 +346,24 @@ export default function ProductCard({
           {/* Quantity & Add to Cart */}
           <div className="flex items-center gap-2">
           {/* Quantity Selector */}
-          <div className="flex items-center border border-neutral-300 rounded-lg">
+          <div className="flex items-center border border-neutral-300 rounded-lg" role="group" aria-label={`Quantity for ${productName}`}>
             <button
               onClick={(e) => {
                 e.preventDefault();
                 setQuantity(Math.max(1, quantity - 1));
               }}
+              aria-label="Decrease quantity"
               className="w-8 h-8 flex items-center justify-center text-neutral-600 hover:bg-neutral-100"
             >
               −
             </button>
-            <span className="w-8 text-center text-sm font-medium">{quantity}</span>
+            <span className="w-8 text-center text-sm font-medium" aria-live="polite" aria-atomic="true">{quantity}</span>
             <button
               onClick={(e) => {
                 e.preventDefault();
                 setQuantity(quantity + 1);
               }}
+              aria-label="Increase quantity"
               className="w-8 h-8 flex items-center justify-center text-neutral-600 hover:bg-neutral-100"
             >
               +
@@ -319,6 +374,7 @@ export default function ProductCard({
           <button
             onClick={handleAddToCart}
             disabled={!inStock || isAdding}
+            aria-label={`Add ${productName} to cart`}
             className={`flex-1 py-2 px-4 rounded-lg font-semibold text-sm transition-all ${
               isAdding
                 ? 'bg-green-600 text-white'
@@ -332,6 +388,14 @@ export default function ProductCard({
         </div>
         </div>
       </div>
-    </div>
+      </article>
+
+      {/* Quick View Modal */}
+      <QuickViewModal
+        slug={slug}
+        isOpen={isQuickViewOpen}
+        onClose={() => setIsQuickViewOpen(false)}
+      />
+    </>
   );
 }

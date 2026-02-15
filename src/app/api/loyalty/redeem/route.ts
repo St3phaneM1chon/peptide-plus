@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * API Loyalty Redeem - BioCycle Peptides
  * Échange des points de fidélité contre des récompenses
@@ -67,7 +69,8 @@ export async function POST(request: NextRequest) {
     const newPoints = user.loyaltyPoints - reward.points;
 
     // Générer un code de récompense unique
-    const rewardCode = `BC${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+    // SECURITY: Use crypto.randomUUID for non-guessable reward codes
+    const rewardCode = `BC${Date.now().toString(36).toUpperCase()}${crypto.randomUUID().replace(/-/g, '').substring(0, 4).toUpperCase()}`;
 
     // Transaction Prisma pour mettre à jour l'utilisateur et créer la transaction
     const [, transaction] = await db.$transaction([

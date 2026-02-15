@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Plus, Pencil, Trash2, Percent, Zap, Package } from 'lucide-react';
 import { PageHeader, Button, Modal, EmptyState, StatusBadge } from '@/components/admin';
+import { useI18n } from '@/i18n/client';
 
 interface Promotion {
   id: string;
@@ -23,19 +24,20 @@ interface Promotion {
   createdAt: string;
 }
 
-const typeLabels: Record<string, { label: string; variant: 'info' | 'primary' | 'success' | 'warning' | 'error' }> = {
-  PRODUCT_DISCOUNT: { label: 'Reduction produit', variant: 'info' },
-  CATEGORY_DISCOUNT: { label: 'Reduction categorie', variant: 'primary' },
-  BUNDLE: { label: 'Bundle', variant: 'success' },
-  BUY_X_GET_Y: { label: 'X achete = Y offert', variant: 'warning' },
-  FLASH_SALE: { label: 'Vente flash', variant: 'error' },
-};
-
 export default function PromotionsPage() {
+  const { t, locale, formatCurrency } = useI18n();
   const [promotions, setPromotions] = useState<Promotion[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [, setEditingPromo] = useState<Promotion | null>(null);
+
+  const typeLabels: Record<string, { label: string; variant: 'info' | 'primary' | 'success' | 'warning' | 'error' }> = {
+    PRODUCT_DISCOUNT: { label: t('admin.promotions.typeProductDiscount'), variant: 'info' },
+    CATEGORY_DISCOUNT: { label: t('admin.promotions.typeCategoryDiscount'), variant: 'primary' },
+    BUNDLE: { label: t('admin.promotions.typeBundle'), variant: 'success' },
+    BUY_X_GET_Y: { label: t('admin.promotions.typeBuyXGetY'), variant: 'warning' },
+    FLASH_SALE: { label: t('admin.promotions.typeFlashSale'), variant: 'error' },
+  };
 
   useEffect(() => {
     fetchPromotions();
@@ -57,7 +59,7 @@ export default function PromotionsPage() {
   };
 
   const deletePromotion = async (id: string) => {
-    if (!confirm('Supprimer cette promotion ?')) return;
+    if (!confirm(t('admin.promotions.confirmDelete'))) return;
     setPromotions(promotions.filter((p) => p.id !== id));
   };
 
@@ -72,21 +74,21 @@ export default function PromotionsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Promotions"
-        subtitle="Creez des offres speciales et promotions automatiques"
+        title={t('admin.promotions.title')}
+        subtitle={t('admin.promotions.subtitle')}
         actions={
           <Button variant="primary" icon={Plus} onClick={() => setShowForm(true)}>
-            Nouvelle promotion
+            {t('admin.promotions.newPromotion')}
           </Button>
         }
       />
 
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4">
-        <MiniStat icon={Percent} label="Total" value={promotions.length} bg="bg-slate-100 text-slate-600" />
-        <MiniStat icon={Percent} label="Actives" value={promotions.filter((p) => p.isActive).length} bg="bg-emerald-100 text-emerald-600" />
-        <MiniStat icon={Zap} label="Ventes flash" value={promotions.filter((p) => p.type === 'FLASH_SALE').length} bg="bg-red-100 text-red-600" />
-        <MiniStat icon={Package} label="Bundles" value={promotions.filter((p) => p.type === 'BUNDLE').length} bg="bg-sky-100 text-sky-600" />
+        <MiniStat icon={Percent} label={t('admin.promotions.statTotal')} value={promotions.length} bg="bg-slate-100 text-slate-600" />
+        <MiniStat icon={Percent} label={t('admin.promotions.statActive')} value={promotions.filter((p) => p.isActive).length} bg="bg-emerald-100 text-emerald-600" />
+        <MiniStat icon={Zap} label={t('admin.promotions.statFlashSales')} value={promotions.filter((p) => p.type === 'FLASH_SALE').length} bg="bg-red-100 text-red-600" />
+        <MiniStat icon={Package} label={t('admin.promotions.statBundles')} value={promotions.filter((p) => p.type === 'BUNDLE').length} bg="bg-sky-100 text-sky-600" />
       </div>
 
       {/* Promotions List */}
@@ -105,35 +107,35 @@ export default function PromotionsPage() {
                     <StatusBadge variant={typeLabels[promo.type].variant}>
                       {typeLabels[promo.type].label}
                     </StatusBadge>
-                    {isExpired && <StatusBadge variant="neutral">Expiree</StatusBadge>}
+                    {isExpired && <StatusBadge variant="neutral">{t('admin.promotions.expired')}</StatusBadge>}
                   </div>
 
                   <div className="flex flex-wrap gap-4 text-sm text-slate-600">
                     <div>
-                      <span className="font-medium">Reduction: </span>
+                      <span className="font-medium">{t('admin.promotions.discount')} </span>
                       <span className="text-sky-600 font-bold">
-                        {promo.discountType === 'PERCENTAGE' ? `${promo.discountValue}%` : `${promo.discountValue} $`}
+                        {promo.discountType === 'PERCENTAGE' ? `${promo.discountValue}%` : formatCurrency(promo.discountValue)}
                       </span>
                     </div>
 
                     {promo.type === 'BUY_X_GET_Y' && (
                       <div>
                         <span className="font-medium">
-                          Achetez {promo.buyQuantity}, obtenez {promo.getQuantity} gratuit
+                          {t('admin.promotions.buyXGetY', { buyQty: promo.buyQuantity ?? 0, getQty: promo.getQuantity ?? 0 })}
                         </span>
                       </div>
                     )}
 
                     <div>
-                      <span className="font-medium">Priorite: </span>
+                      <span className="font-medium">{t('admin.promotions.priority')} </span>
                       <span>{promo.priority}</span>
                     </div>
 
                     <div>
-                      <span className="font-medium">Validite: </span>
+                      <span className="font-medium">{t('admin.promotions.validity')} </span>
                       <span>
-                        {new Date(promo.startsAt).toLocaleDateString('fr-CA')}
-                        {promo.endsAt && ` - ${new Date(promo.endsAt).toLocaleDateString('fr-CA')}`}
+                        {new Date(promo.startsAt).toLocaleDateString(locale)}
+                        {promo.endsAt && ` - ${new Date(promo.endsAt).toLocaleDateString(locale)}`}
                       </span>
                     </div>
                   </div>
@@ -147,7 +149,7 @@ export default function PromotionsPage() {
                     <span className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${promo.isActive ? 'right-1' : 'left-1'}`} />
                   </button>
                   <Button variant="ghost" size="sm" icon={Pencil} onClick={() => setEditingPromo(promo)}>
-                    Modifier
+                    {t('admin.promotions.edit')}
                   </Button>
                   <Button variant="ghost" size="sm" icon={Trash2} onClick={() => deletePromotion(promo.id)} className="text-slate-400 hover:text-red-600" />
                 </div>
@@ -159,11 +161,11 @@ export default function PromotionsPage() {
         {promotions.length === 0 && (
           <EmptyState
             icon={Percent}
-            title="Aucune promotion"
-            description="Creez votre premiere promotion."
+            title={t('admin.promotions.emptyTitle')}
+            description={t('admin.promotions.emptyDescription')}
             action={
               <Button variant="primary" icon={Plus} onClick={() => setShowForm(true)}>
-                Nouvelle promotion
+                {t('admin.promotions.newPromotion')}
               </Button>
             }
           />
@@ -171,10 +173,10 @@ export default function PromotionsPage() {
       </div>
 
       {/* Form Modal */}
-      <Modal isOpen={showForm} onClose={() => setShowForm(false)} title="Nouvelle promotion">
-        <p className="text-slate-500 mb-4">Fonctionnalite en cours de developpement...</p>
+      <Modal isOpen={showForm} onClose={() => setShowForm(false)} title={t('admin.promotions.modalTitle')}>
+        <p className="text-slate-500 mb-4">{t('admin.promotions.featureInDevelopment')}</p>
         <Button variant="secondary" onClick={() => setShowForm(false)}>
-          Fermer
+          {t('admin.promotions.close')}
         </Button>
       </Modal>
     </div>

@@ -2,18 +2,23 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useSession, signIn } from 'next-auth/react';
+import Breadcrumbs from '@/components/ui/Breadcrumbs';
 import { useCart } from '@/contexts/CartContext';
 import { useTranslations } from '@/hooks/useTranslations';
 import { useCurrency } from '@/contexts/CurrencyContext';
-import { 
-  calculateTaxes, 
+import { toast } from 'sonner';
+import { checkoutShippingSchema, validateForm } from '@/lib/form-validation';
+import { FormError } from '@/components/ui/FormError';
+import { AddressAutocomplete } from '@/components/ui/AddressAutocomplete';
+import {
+  calculateTaxes,
   calculateShipping,
-  getProvincesList, 
+  getProvincesList,
   getCountriesList,
   getAddressFormat,
-  cadToUsd,
-  type TaxBreakdown 
+  type TaxBreakdown
 } from '@/lib/canadianTaxes';
 
 type Step = 'auth' | 'info' | 'shipping' | 'payment';
@@ -23,7 +28,7 @@ export default function CheckoutPage() {
   const { data: session } = useSession();
   const { items, subtotal } = useCart();
   const { t, locale } = useTranslations();
-  const { formatPrice } = useCurrency();
+  const { formatPrice, currency } = useCurrency();
   
   // Determine initial step based on auth status
   const [currentStep, setCurrentStep] = useState<Step>('auth');
@@ -49,12 +54,33 @@ export default function CheckoutPage() {
     country: 'CA',
   });
   
+  // Shipping validation errors
+  const [shippingErrors, setShippingErrors] = useState<Record<string, string>>({});
+
+  // Clear a specific shipping field error when user modifies that field
+  const clearShippingError = (field: string) => {
+    if (shippingErrors[field]) {
+      setShippingErrors((prev) => {
+        const next = { ...prev };
+        delete next[field];
+        return next;
+      });
+    }
+  };
+
   // Promo code state
   const [promoCode, setPromoCode] = useState('');
   const [promoDiscount, setPromoDiscount] = useState(0);
   const [promoApplied, setPromoApplied] = useState<string | null>(null);
   const [promoError, setPromoError] = useState('');
   const [promoLoading, setPromoLoading] = useState(false);
+
+  // Gift card state
+  const [giftCardCode, setGiftCardCode] = useState('');
+  const [giftCardDiscount, setGiftCardDiscount] = useState(0);
+  const [giftCardApplied, setGiftCardApplied] = useState<string | null>(null);
+  const [giftCardError, setGiftCardError] = useState('');
+  const [giftCardLoading, setGiftCardLoading] = useState(false);
 
   // Apply promo code
   const applyPromoCode = async () => {
@@ -76,13 +102,16 @@ export default function CheckoutPage() {
         setPromoDiscount(data.discount);
         setPromoApplied(data.code);
         setPromoError('');
+        toast.success('Promo code applied successfully');
       } else {
-        setPromoError(data.error || 'Code invalide');
+        setPromoError(data.error || t('checkout.invalidPromoCode'));
         setPromoDiscount(0);
         setPromoApplied(null);
+        toast.error('Invalid promo code');
       }
     } catch {
-      setPromoError('Erreur de validation');
+      setPromoError(t('checkout.validationError'));
+      toast.error('Failed to validate promo code');
     } finally {
       setPromoLoading(false);
     }
@@ -94,6 +123,48 @@ export default function CheckoutPage() {
     setPromoDiscount(0);
     setPromoApplied(null);
     setPromoError('');
+  };
+
+  // Apply gift card
+  const applyGiftCard = async () => {
+    if (!giftCardCode.trim()) return;
+
+    setGiftCardLoading(true);
+    setGiftCardError('');
+
+    try {
+      const res = await fetch(`/api/gift-cards/balance?code=${encodeURIComponent(giftCardCode)}`);
+      const data = await res.json();
+
+      if (res.ok && data.balance > 0) {
+        // Calculate how much to apply (up to the remaining total)
+        const remainingTotal = subtotal - promoDiscount;
+        const discountAmount = Math.min(data.balance, remainingTotal);
+
+        setGiftCardDiscount(discountAmount);
+        setGiftCardApplied(giftCardCode);
+        setGiftCardError('');
+        toast.success(`Gift card applied: ${formatPrice(discountAmount)}`);
+      } else {
+        setGiftCardError(data.error || 'Invalid or expired gift card');
+        setGiftCardDiscount(0);
+        setGiftCardApplied(null);
+        toast.error('Invalid gift card');
+      }
+    } catch {
+      setGiftCardError('Failed to validate gift card');
+      toast.error('Failed to validate gift card');
+    } finally {
+      setGiftCardLoading(false);
+    }
+  };
+
+  // Remove gift card
+  const removeGiftCard = () => {
+    setGiftCardCode('');
+    setGiftCardDiscount(0);
+    setGiftCardApplied(null);
+    setGiftCardError('');
   };
 
   // Auto-fill from session when user is logged in
@@ -134,22 +205,13 @@ export default function CheckoutPage() {
   // Get countries and provinces/states lists
   const countries = useMemo(() => getCountriesList(locale?.startsWith('fr') ? 'fr' : 'en'), [locale]);
 
-  // Total calculation (including promo discount)
-  const subtotalAfterDiscount = subtotal - promoDiscount;
+  // Total calculation (including promo discount and gift card)
+  const subtotalAfterDiscount = subtotal - promoDiscount - giftCardDiscount;
   const taxBreakdownAfterDiscount = useMemo(() => {
     return calculateTaxes(subtotalAfterDiscount, shippingInfo.province, shippingInfo.country);
   }, [subtotalAfterDiscount, shippingInfo.province, shippingInfo.country]);
-  
-  const totalCAD = taxBreakdownAfterDiscount.grandTotal + shippingCalc.shippingCAD;
-  const totalUSD = cadToUsd(totalCAD);
 
-  // Format USD
-  const formatUSD = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(amount);
-  };
+  const totalCAD = taxBreakdownAfterDiscount.grandTotal + shippingCalc.shippingCAD;
 
   // Get provinces/states list based on selected country
   const provinces = useMemo(() => {
@@ -232,7 +294,7 @@ export default function CheckoutPage() {
     try {
       const orderData = {
         items: items.map(item => ({
-          id: item.productId,
+          productId: item.productId,
           formatId: item.formatId,
           name: item.name,
           format: item.formatName,
@@ -250,7 +312,7 @@ export default function CheckoutPage() {
         shipping: shippingCalc.shippingCAD,
         taxes: taxBreakdown.totalTax,
         total: totalCAD,
-        currency: 'CAD',
+        currency: currency.code,
       };
 
       // Route selon la méthode de paiement
@@ -269,7 +331,7 @@ export default function CheckoutPage() {
           window.location.href = data.approvalUrl;
           return;
         } else {
-          throw new Error(data.error || 'Erreur PayPal');
+          throw new Error(data.error || t('checkout.paymentError'));
         }
       } else {
         // Stripe (apple_pay, google_pay, shop_pay)
@@ -286,20 +348,29 @@ export default function CheckoutPage() {
           window.location.href = data.url;
           return;
         } else {
-          throw new Error(data.error || 'Erreur de paiement');
+          throw new Error(data.error || t('checkout.paymentError'));
         }
       }
     } catch (error) {
       console.error('Payment error:', error);
-      alert('Erreur lors du traitement du paiement. Veuillez réessayer.');
+      toast.error('Something went wrong placing your order. Please try again.');
     } finally {
       setIsProcessing(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-6xl mx-auto px-4">
+    <div className="min-h-screen bg-gray-50">
+      {/* Breadcrumbs */}
+      <Breadcrumbs
+        items={[
+          { label: t('nav.home') || 'Home', href: '/' },
+          { label: t('cart.title') || 'Cart', href: '/checkout/cart' },
+          { label: t('checkout.checkout') || 'Checkout' },
+        ]}
+      />
+
+      <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <Link href="/" className="flex items-center gap-2">
@@ -314,13 +385,13 @@ export default function CheckoutPage() {
         </div>
 
         {/* Progress Steps */}
-        <div className="flex items-center justify-center mb-8">
+        <div className="flex items-center justify-center mb-8" role="navigation" aria-label="Checkout progress">
           <div className="flex items-center">
             {!session && !guestCheckout && (
               <>
                 <StepIndicator 
                   number={1} 
-                  label={t('checkout.account') || 'Compte'} 
+                  label={t('checkout.account')}
                   active={currentStep === 'auth'} 
                   completed={currentStep !== 'auth'} 
                 />
@@ -362,15 +433,15 @@ export default function CheckoutPage() {
               {/* Step 0: Authentication / Account */}
               {currentStep === 'auth' && !session && (
                 <div>
-                  <h2 className="text-xl font-bold mb-2">{t('checkout.welcomeBack') || 'Bienvenue'}</h2>
+                  <h2 className="text-xl font-bold mb-2">{t('checkout.welcomeBack')}</h2>
                   <p className="text-gray-600 mb-6">
-                    {t('checkout.signInBenefits') || 'Connectez-vous pour un paiement plus rapide et accéder à votre historique de commandes'}
+                    {t('checkout.signInBenefits')}
                   </p>
                   
                   {/* Express Checkout Options */}
                   <div className="mb-8">
                     <p className="text-sm font-medium text-gray-700 mb-4">
-                      {t('checkout.expressCheckout') || 'Paiement express'}
+                      {t('checkout.expressCheckout')}
                     </p>
                     
                     <div className="grid grid-cols-2 gap-3">
@@ -442,7 +513,7 @@ export default function CheckoutPage() {
                     </div>
                     <div className="relative flex justify-center text-sm">
                       <span className="px-4 bg-white text-gray-500">
-                        {t('checkout.orSignInWith') || 'ou connectez-vous avec'}
+                        {t('checkout.orSignInWith')}
                       </span>
                     </div>
                   </div>
@@ -461,7 +532,7 @@ export default function CheckoutPage() {
                         <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
                         <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                       </svg>
-                      <span className="font-medium">{t('checkout.continueWithGoogle') || 'Continuer avec Google'}</span>
+                      <span className="font-medium">{t('checkout.continueWithGoogle')}</span>
                     </button>
                     
                     {/* Apple */}
@@ -473,7 +544,7 @@ export default function CheckoutPage() {
                       <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
                       </svg>
-                      <span className="font-medium">{t('checkout.continueWithApple') || 'Continuer avec Apple'}</span>
+                      <span className="font-medium">{t('checkout.continueWithApple')}</span>
                     </button>
                     
                     {/* Facebook */}
@@ -485,7 +556,7 @@ export default function CheckoutPage() {
                       <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
                       </svg>
-                      <span className="font-medium">{t('checkout.continueWithFacebook') || 'Continuer avec Facebook'}</span>
+                      <span className="font-medium">{t('checkout.continueWithFacebook')}</span>
                     </button>
                     
                     {/* X (Twitter) */}
@@ -497,7 +568,7 @@ export default function CheckoutPage() {
                       <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
                       </svg>
-                      <span className="font-medium">{t('checkout.continueWithX') || 'Continuer avec X'}</span>
+                      <span className="font-medium">{t('checkout.continueWithX')}</span>
                     </button>
                   </div>
                   
@@ -507,7 +578,7 @@ export default function CheckoutPage() {
                     </div>
                     <div className="relative flex justify-center text-sm">
                       <span className="px-4 bg-white text-gray-500">
-                        {t('checkout.or') || 'ou'}
+                        {t('checkout.or')}
                       </span>
                     </div>
                   </div>
@@ -517,38 +588,38 @@ export default function CheckoutPage() {
                     onClick={handleGuestCheckout}
                     className="w-full px-6 py-3 border-2 border-orange-500 text-orange-600 font-semibold rounded-lg hover:bg-orange-50 transition-colors"
                   >
-                    {t('checkout.continueAsGuest') || 'Continuer en tant qu\'invité'}
+                    {t('checkout.continueAsGuest')}
                   </button>
                   
                   {/* Benefits of signing in */}
                   <div className="mt-8 p-4 bg-blue-50 rounded-lg">
                     <h3 className="font-semibold text-blue-900 mb-2">
-                      {t('checkout.whyCreateAccount') || 'Pourquoi créer un compte?'}
+                      {t('checkout.whyCreateAccount')}
                     </h3>
                     <ul className="text-sm text-blue-700 space-y-1">
                       <li className="flex items-center gap-2">
                         <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
-                        {t('checkout.benefit1') || 'Paiement plus rapide avec informations sauvegardées'}
+                        {t('checkout.benefit1')}
                       </li>
                       <li className="flex items-center gap-2">
                         <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
-                        {t('checkout.benefit2') || 'Suivi de vos commandes en temps réel'}
+                        {t('checkout.benefit2')}
                       </li>
                       <li className="flex items-center gap-2">
                         <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
-                        {t('checkout.benefit3') || 'Historique de commandes et recommandations'}
+                        {t('checkout.benefit3')}
                       </li>
                       <li className="flex items-center gap-2">
                         <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
-                        {t('checkout.benefit4') || 'Offres exclusives et points de fidélité'}
+                        {t('checkout.benefit4')}
                       </li>
                     </ul>
                   </div>
@@ -561,16 +632,18 @@ export default function CheckoutPage() {
                   <h2 className="text-xl font-bold mb-6">{t('checkout.contactInfo')}</h2>
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label htmlFor="checkout-email" className="block text-sm font-medium text-gray-700 mb-1">
                         {t('checkout.email')} *
                       </label>
                       <input
+                        id="checkout-email"
                         type="email"
                         value={contactInfo.email}
                         onChange={(e) => setContactInfo({ ...contactInfo, email: e.target.value })}
                         className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                        placeholder="vous@exemple.com"
+                        placeholder={t('auth.emailPlaceholder')}
                         required
+                        aria-required="true"
                       />
                     </div>
                     <div>
@@ -601,7 +674,7 @@ export default function CheckoutPage() {
                       onClick={() => setCurrentStep('auth')}
                       className="text-orange-600 hover:underline"
                     >
-                      {t('checkout.backToSignIn') || '← Retour à la connexion'}
+                      {t('checkout.backToSignIn')}
                     </button>
                     <button
                       onClick={() => setCurrentStep('shipping')}
@@ -622,7 +695,7 @@ export default function CheckoutPage() {
                     <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
                       <div className="flex items-center gap-3">
                         {session.user.image ? (
-                          <img src={session.user.image} alt="" className="w-10 h-10 rounded-full" />
+                          <Image src={session.user.image} alt="" width={40} height={40} className="w-10 h-10 rounded-full" unoptimized />
                         ) : (
                           <div className="w-10 h-10 bg-green-200 rounded-full flex items-center justify-center">
                             <span className="text-green-700 font-semibold">
@@ -635,7 +708,7 @@ export default function CheckoutPage() {
                           <p className="text-sm text-green-700">{session.user.email}</p>
                         </div>
                         <span className="ml-auto px-2 py-1 bg-green-200 text-green-800 text-xs font-medium rounded">
-                          {t('checkout.loggedIn') || 'Connecté'}
+                          {t('checkout.loggedIn')}
                         </span>
                       </div>
                     </div>
@@ -645,42 +718,72 @@ export default function CheckoutPage() {
                   <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label htmlFor="shipping-firstName" className="block text-sm font-medium text-gray-700 mb-1">
                           {t('checkout.firstName')} *
                         </label>
                         <input
+                          id="shipping-firstName"
                           type="text"
                           value={shippingInfo.firstName}
-                          onChange={(e) => setShippingInfo({ ...shippingInfo, firstName: e.target.value })}
-                          className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                          onChange={(e) => { setShippingInfo({ ...shippingInfo, firstName: e.target.value }); clearShippingError('firstName'); }}
+                          className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 ${shippingErrors.firstName ? 'border-red-500' : 'border-gray-200'}`}
                           required
+                          aria-required="true"
+                          aria-invalid={!!shippingErrors.firstName}
+                          aria-describedby={shippingErrors.firstName ? 'error-firstName' : undefined}
                         />
+                        <FormError error={shippingErrors.firstName} id="error-firstName" />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label htmlFor="shipping-lastName" className="block text-sm font-medium text-gray-700 mb-1">
                           {t('checkout.lastName')} *
                         </label>
                         <input
+                          id="shipping-lastName"
                           type="text"
                           value={shippingInfo.lastName}
-                          onChange={(e) => setShippingInfo({ ...shippingInfo, lastName: e.target.value })}
-                          className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                          onChange={(e) => { setShippingInfo({ ...shippingInfo, lastName: e.target.value }); clearShippingError('lastName'); }}
+                          className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 ${shippingErrors.lastName ? 'border-red-500' : 'border-gray-200'}`}
                           required
+                          aria-required="true"
+                          aria-invalid={!!shippingErrors.lastName}
+                          aria-describedby={shippingErrors.lastName ? 'error-lastName' : undefined}
                         />
+                        <FormError error={shippingErrors.lastName} id="error-lastName" />
                       </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label htmlFor="shipping-address" className="block text-sm font-medium text-gray-700 mb-1">
                         {t('checkout.address')} *
                       </label>
-                      <input
-                        type="text"
+                      <AddressAutocomplete
+                        id="shipping-address"
                         value={shippingInfo.address}
-                        onChange={(e) => setShippingInfo({ ...shippingInfo, address: e.target.value })}
-                        className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                        placeholder="123 Rue Principale"
+                        onChange={(addressComponents) => {
+                          setShippingInfo({
+                            ...shippingInfo,
+                            address: addressComponents.street,
+                            city: addressComponents.city,
+                            province: addressComponents.province || shippingInfo.province,
+                            postalCode: addressComponents.postalCode,
+                            country: addressComponents.country || shippingInfo.country,
+                          });
+                          clearShippingError('address');
+                          clearShippingError('city');
+                          clearShippingError('province');
+                          clearShippingError('postalCode');
+                        }}
+                        onInputChange={(value) => {
+                          setShippingInfo({ ...shippingInfo, address: value });
+                          clearShippingError('address');
+                        }}
+                        placeholder={t('checkout.address')}
+                        className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 ${shippingErrors.address ? 'border-red-500' : 'border-gray-200'}`}
                         required
+                        aria-invalid={!!shippingErrors.address}
+                        aria-describedby={shippingErrors.address ? 'error-address' : undefined}
                       />
+                      <FormError error={shippingErrors.address} id="error-address" />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -691,33 +794,40 @@ export default function CheckoutPage() {
                         value={shippingInfo.apartment}
                         onChange={(e) => setShippingInfo({ ...shippingInfo, apartment: e.target.value })}
                         className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                        placeholder="Apt, suite, etc."
+                        placeholder={t('checkout.apartment')}
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label htmlFor="shipping-city" className="block text-sm font-medium text-gray-700 mb-1">
                           {t('checkout.city')} *
                         </label>
                         <input
+                          id="shipping-city"
                           type="text"
                           value={shippingInfo.city}
-                          onChange={(e) => setShippingInfo({ ...shippingInfo, city: e.target.value })}
-                          className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                          onChange={(e) => { setShippingInfo({ ...shippingInfo, city: e.target.value }); clearShippingError('city'); }}
+                          className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 ${shippingErrors.city ? 'border-red-500' : 'border-gray-200'}`}
                           required
+                          aria-required="true"
+                          aria-invalid={!!shippingErrors.city}
+                          aria-describedby={shippingErrors.city ? 'error-city' : undefined}
                         />
+                        <FormError error={shippingErrors.city} id="error-city" />
                       </div>
                     </div>
                     
                     {/* Country Selection */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label htmlFor="shipping-country" className="block text-sm font-medium text-gray-700 mb-1">
                         {t('checkout.country')} *
                       </label>
                       <select
+                        id="shipping-country"
                         value={shippingInfo.country}
                         onChange={(e) => handleCountryChange(e.target.value)}
                         className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        aria-required="true"
                       >
                         {Object.entries(
                           countries.reduce((acc, c) => {
@@ -750,23 +860,22 @@ export default function CheckoutPage() {
                           <input
                             type="text"
                             value={shippingInfo.postalCode}
-                            onChange={(e) => setShippingInfo({ ...shippingInfo, postalCode: e.target.value.toUpperCase() })}
-                            className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                            onChange={(e) => { setShippingInfo({ ...shippingInfo, postalCode: e.target.value.toUpperCase() }); clearShippingError('postalCode'); }}
+                            className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 ${shippingErrors.postalCode ? 'border-red-500' : 'border-gray-200'}`}
                             placeholder={addressFormat.postalCodePlaceholder || ''}
                             required={addressFormat.postalCodeRequired}
                           />
+                          <FormError error={shippingErrors.postalCode} />
                           {addressFormat.postalCodeExample && addressFormat.postalCodeExample !== 'Not required' && addressFormat.postalCodeExample !== 'Not used' && (
                             <p className="text-xs text-gray-500 mt-1">
-                              {locale?.startsWith('fr') ? 'Ex:' : 'e.g.'} {addressFormat.postalCodeExample}
+                              {t('checkout.exampleAbbrev')} {addressFormat.postalCodeExample}
                             </p>
                           )}
                         </div>
                       ) : (
                         <div className="flex items-center">
                           <p className="text-xs text-amber-600 bg-amber-50 p-2 rounded">
-                            {locale?.startsWith('fr') 
-                              ? 'Ce pays n\'utilise pas de code postal' 
-                              : 'This country does not use postal codes'}
+                            {t('checkout.noPostalCode')}
                           </p>
                         </div>
                       )}
@@ -779,17 +888,18 @@ export default function CheckoutPage() {
                           </label>
                           <select
                             value={shippingInfo.province}
-                            onChange={(e) => setShippingInfo({ ...shippingInfo, province: e.target.value })}
-                            className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                            onChange={(e) => { setShippingInfo({ ...shippingInfo, province: e.target.value }); clearShippingError('province'); }}
+                            className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 ${shippingErrors.province ? 'border-red-500' : 'border-gray-200'}`}
                             required={addressFormat.regionRequired}
                           >
-                            <option value="">{locale?.startsWith('fr') ? 'Sélectionner...' : 'Select...'}</option>
+                            <option value="">{t('checkout.selectRegion')}</option>
                             {regionsList.map((p) => (
                               <option key={p.code} value={p.code}>
                                 {p.name} {shippingInfo.country === 'CA' ? `(${p.taxRate})` : ''}
                               </option>
                             ))}
                           </select>
+                          <FormError error={shippingErrors.province} />
                         </div>
                       ) : (
                         <div>
@@ -811,7 +921,7 @@ export default function CheckoutPage() {
                     {/* Address Notes for this country */}
                     {addressFormat.notes && (
                       <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
-                        <span className="font-medium">{locale?.startsWith('fr') ? 'Note:' : 'Note:'}</span> {addressFormat.notes}
+                        <span className="font-medium">Note:</span> {addressFormat.notes}
                       </div>
                     )}
                     
@@ -819,20 +929,18 @@ export default function CheckoutPage() {
                     {addressFormat.additionalFields?.colonia && (
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Colonia (Neighborhood) *
+                          {t('checkout.coloniaLabel')} *
                         </label>
                         <input
                           type="text"
                           value={shippingInfo.apartment}
                           onChange={(e) => setShippingInfo({ ...shippingInfo, apartment: e.target.value })}
                           className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                          placeholder={locale?.startsWith('fr') ? 'Ex: Col. Roma Norte' : 'e.g., Col. Roma Norte'}
+                          placeholder={t('checkout.coloniaPlaceholder')}
                           required
                         />
                         <p className="text-xs text-amber-600 mt-1">
-                          {locale?.startsWith('fr') 
-                            ? 'La colonia (quartier) est obligatoire pour les livraisons au Mexique'
-                            : 'Colonia (neighborhood) is required for Mexico deliveries'}
+                          {t('checkout.coloniaRequired')}
                         </p>
                       </div>
                     )}
@@ -840,12 +948,12 @@ export default function CheckoutPage() {
                     {addressFormat.additionalFields?.district && shippingInfo.country !== 'HK' && (
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                          District *
+                          {t('checkout.districtLabel')} *
                         </label>
                         <input
                           type="text"
                           className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                          placeholder={locale?.startsWith('fr') ? 'Nom du district' : 'District name'}
+                          placeholder={t('checkout.districtPlaceholder')}
                           required
                         />
                       </div>
@@ -880,7 +988,7 @@ export default function CheckoutPage() {
                           defaultChecked
                         />
                         <span className="text-sm text-gray-600">
-                          {t('checkout.saveAddress') || 'Sauvegarder cette adresse pour mes prochaines commandes'}
+                          {t('checkout.saveAddress')}
                         </span>
                       </label>
                     )}
@@ -891,14 +999,22 @@ export default function CheckoutPage() {
                       onClick={() => setCurrentStep(guestCheckout ? 'info' : 'auth')}
                       className="text-orange-600 hover:underline"
                     >
-                      {guestCheckout ? t('checkout.backToInfo') : t('checkout.backToSignIn') || '← Retour'}
+                      {guestCheckout ? t('checkout.backToInfo') : t('checkout.backToSignIn')}
                     </button>
                     <button
-                      onClick={() => setCurrentStep('payment')}
+                      onClick={() => {
+                        const validation = validateForm(checkoutShippingSchema, shippingInfo);
+                        if (!validation.success) {
+                          setShippingErrors(validation.errors || {});
+                          return;
+                        }
+                        setShippingErrors({});
+                        setCurrentStep('payment');
+                      }}
                       disabled={
-                        !shippingInfo.firstName || 
-                        !shippingInfo.lastName || 
-                        !shippingInfo.address || 
+                        !shippingInfo.firstName ||
+                        !shippingInfo.lastName ||
+                        !shippingInfo.address ||
                         !shippingInfo.city ||
                         (addressFormat.postalCodeRequired && !shippingInfo.postalCode) ||
                         (addressFormat.regionRequired && !shippingInfo.province) ||
@@ -944,7 +1060,7 @@ export default function CheckoutPage() {
                   {/* Express Payment Methods */}
                   <div className="mb-6">
                     <p className="text-sm font-medium text-gray-700 mb-3">
-                      {locale?.startsWith('fr') ? 'Choisir un mode de paiement' : 'Choose a payment method'}
+                      {t('checkout.choosePaymentMethod')}
                     </p>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                       <button
@@ -1059,7 +1175,7 @@ export default function CheckoutPage() {
                   <div key={`${item.productId}-${item.formatId || 'default'}`} className="flex gap-3">
                     <div className="w-16 h-16 bg-gray-100 rounded-lg flex-shrink-0 relative">
                       {item.image && (
-                        <img src={item.image} alt={item.name} className="w-full h-full object-cover rounded-lg" />
+                        <Image src={item.image} alt={item.name} width={64} height={64} className="w-full h-full object-cover rounded-lg" unoptimized />
                       )}
                       <span className="absolute -top-2 -right-2 w-5 h-5 bg-gray-500 text-white text-xs rounded-full flex items-center justify-center">
                         {item.quantity}
@@ -1075,7 +1191,7 @@ export default function CheckoutPage() {
               </div>
               
               {/* Promo Code */}
-              <div className="mb-6">
+              <div className="mb-4">
                 {promoApplied ? (
                   <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg">
                     <div className="flex items-center gap-2">
@@ -1101,7 +1217,7 @@ export default function CheckoutPage() {
                         type="text"
                         value={promoCode}
                         onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
-                        placeholder={t('cart.promoCode') || 'Code promo'}
+                        placeholder={t('cart.promoCode')}
                         className="flex-grow px-4 py-2 border border-gray-200 rounded-lg text-sm uppercase"
                         onKeyDown={(e) => e.key === 'Enter' && applyPromoCode()}
                       />
@@ -1110,7 +1226,7 @@ export default function CheckoutPage() {
                         disabled={promoLoading || !promoCode.trim()}
                         className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 disabled:opacity-50"
                       >
-                        {promoLoading ? '...' : (t('cart.apply') || 'Appliquer')}
+                        {promoLoading ? '...' : t('cart.apply')}
                       </button>
                     </div>
                     {promoError && (
@@ -1119,14 +1235,65 @@ export default function CheckoutPage() {
                   </>
                 )}
               </div>
-              
+
+              {/* Gift Card */}
+              <div className="mb-6">
+                {giftCardApplied ? (
+                  <div className="flex items-center justify-between p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span className="text-orange-700 font-medium">{giftCardApplied}</span>
+                      <span className="text-orange-600 text-sm">(-{formatPrice(giftCardDiscount)})</span>
+                    </div>
+                    <button
+                      onClick={removeGiftCard}
+                      className="text-orange-700 hover:text-orange-900"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={giftCardCode}
+                        onChange={(e) => setGiftCardCode(e.target.value.toUpperCase())}
+                        placeholder="Gift Card (XXXX-XXXX-XXXX-XXXX)"
+                        className="flex-grow px-4 py-2 border border-gray-200 rounded-lg text-sm uppercase font-mono"
+                        maxLength={19}
+                        onKeyDown={(e) => e.key === 'Enter' && applyGiftCard()}
+                      />
+                      <button
+                        onClick={applyGiftCard}
+                        disabled={giftCardLoading || !giftCardCode.trim()}
+                        className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 disabled:opacity-50"
+                      >
+                        {giftCardLoading ? '...' : t('cart.apply')}
+                      </button>
+                    </div>
+                    {giftCardError && (
+                      <p className="text-red-500 text-sm mt-2">{giftCardError}</p>
+                    )}
+                  </>
+                )}
+              </div>
+
               {/* Totals */}
               <div className="space-y-3 border-t border-gray-200 pt-4">
                 <div className="flex justify-between">
                   <span className="text-gray-600">{t('cart.subtotal')}</span>
                   <div className="text-right">
                     <span className="font-medium">{formatPrice(subtotal)}</span>
-                    <span className="text-xs text-gray-500 block">{formatUSD(cadToUsd(subtotal))}</span>
+                    {currency.code !== 'CAD' && (
+                      <span className="text-xs text-gray-500 block">
+                        ≈ {new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD' }).format(subtotal)} CAD
+                      </span>
+                    )}
                   </div>
                 </div>
                 
@@ -1137,22 +1304,32 @@ export default function CheckoutPage() {
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                       </svg>
-                      {t('cart.discount') || 'Réduction'} ({promoApplied})
+                      {t('cart.discount')} ({promoApplied})
                     </span>
                     <span className="font-medium">-{formatPrice(promoDiscount)}</span>
                   </div>
                 )}
-                
+
+                {/* Gift Card Discount */}
+                {giftCardDiscount > 0 && (
+                  <div className="flex justify-between text-orange-600">
+                    <span className="flex items-center gap-1">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Gift Card ({giftCardApplied})
+                    </span>
+                    <span className="font-medium">-{formatPrice(giftCardDiscount)}</span>
+                  </div>
+                )}
+
                 <div className="flex justify-between">
                   <span className="text-gray-600">{t('cart.shipping')}</span>
                   <div className="text-right">
                     {shippingCalc.isFree ? (
                       <span className="text-green-600 font-medium">{t('cart.free')}</span>
                     ) : (
-                      <>
-                        <span className="font-medium">{formatPrice(shippingCalc.shippingCAD)}</span>
-                        <span className="text-xs text-gray-500 block">{formatUSD(shippingCalc.shippingUSD)}</span>
-                      </>
+                      <span className="font-medium">{formatPrice(shippingCalc.shippingCAD)}</span>
                     )}
                   </div>
                 </div>
@@ -1184,7 +1361,11 @@ export default function CheckoutPage() {
                   <span>{t('cart.total')}</span>
                   <div className="text-right">
                     <span>{formatPrice(totalCAD)}</span>
-                    <span className="text-sm text-gray-500 font-normal block">≈ {formatUSD(totalUSD)}</span>
+                    {currency.code !== 'CAD' && (
+                      <span className="text-sm text-gray-500 font-normal block">
+                        ≈ {new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD' }).format(totalCAD)} CAD
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1196,12 +1377,18 @@ export default function CheckoutPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                   <span className="text-gray-600">
-                    {t('checkout.estimatedDelivery') || 'Livraison estimée'}: <strong>{shippingCalc.estimatedDays} {t('checkout.businessDays')}</strong>
+                    {t('checkout.estimatedDelivery')}: <strong>{shippingCalc.estimatedDays} {t('checkout.businessDays')}</strong>
                   </span>
                 </div>
               </div>
               
-              <p className="text-xs text-gray-500 mt-4 text-center">
+              {currency.code !== 'CAD' && (
+                <p className="text-xs text-gray-500 mt-4 text-center">
+                  {t('checkout.chargedInCurrency', { currency: currency.code }) ||
+                   `You will be charged in ${currency.code}. Amounts shown are approximate.`}
+                </p>
+              )}
+              <p className="text-xs text-gray-500 mt-2 text-center">
                 {t('checkout.currencyNote')}
               </p>
             </div>
@@ -1213,18 +1400,19 @@ export default function CheckoutPage() {
 }
 
 // Step Indicator Component
-function StepIndicator({ number, label, active, completed }: { 
-  number: number; 
-  label: string; 
-  active: boolean; 
-  completed: boolean 
+function StepIndicator({ number, label, active, completed }: {
+  number: number;
+  label: string;
+  active: boolean;
+  completed: boolean
 }) {
+  const stepStatus = completed ? 'completed' : active ? 'current' : 'upcoming';
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2" aria-label={`Step ${number}: ${label} - ${stepStatus}`} aria-current={active ? 'step' : undefined}>
       <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
         completed ? 'bg-orange-500 text-white' :
         active ? 'bg-orange-500 text-white' : 'bg-gray-200 text-gray-500'
-      }`}>
+      }`} aria-hidden="true">
         {completed ? (
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />

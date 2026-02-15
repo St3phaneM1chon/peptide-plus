@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { UserRole } from '@/types';
@@ -56,6 +58,11 @@ export async function GET() {
     });
     const mappedTaxReports = taxReports.map((t) => ({
       ...t,
+      periodType: t.periodType as 'MONTHLY' | 'QUARTERLY' | 'ANNUAL',
+      month: t.month ?? undefined,
+      quarter: t.quarter ?? undefined,
+      filedAt: t.filedAt ?? undefined,
+      paidAt: t.paidAt ?? undefined,
       tpsCollected: Number(t.tpsCollected),
       tvqCollected: Number(t.tvqCollected),
       tvhCollected: Number(t.tvhCollected),
@@ -89,7 +96,6 @@ export async function GET() {
 
     // Expense anomalies: aggregate current month vs previous months
     const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const currentExpenses: Record<string, number> = {};
     const historicalAverages: Record<string, number> = {};
 
@@ -125,7 +131,7 @@ export async function GET() {
     // Get next tax deadline info
     const settings = await prisma.accountingSettings.findFirst();
     const taxDeadline = getNextTaxDeadline(
-      settings?.taxFilingFrequency || 'MONTHLY'
+      (settings?.taxFilingFrequency || 'MONTHLY') as 'MONTHLY' | 'QUARTERLY' | 'ANNUAL'
     );
 
     return NextResponse.json({

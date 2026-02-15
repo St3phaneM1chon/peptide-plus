@@ -130,7 +130,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     }
 
     // Créer un message système si assignation change
-    const systemMessages: any[] = [];
+    const systemMessages: { senderId: string; type: string; content: string; isSystem: boolean }[] = [];
     
     if (data.assignedToId !== undefined && data.assignedToId !== existing.assignedToId) {
       if (data.assignedToId) {
@@ -170,17 +170,15 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     }
 
     // Mettre à jour
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const updateData: any = { ...data };
+    if (systemMessages.length > 0) {
+      updateData.messages = { create: systemMessages };
+      updateData.lastMessageAt = new Date();
+    }
     const conversation = await prisma.conversation.update({
       where: { id },
-      data: {
-        ...data,
-        ...(systemMessages.length > 0 && {
-          messages: {
-            create: systemMessages,
-          },
-          lastMessageAt: new Date(),
-        }),
-      },
+      data: updateData,
       include: {
         user: {
           select: { id: true, name: true, email: true, image: true },

@@ -15,7 +15,7 @@ export const siteConfig = {
   siteName: process.env.SITE_NAME || process.env.BUSINESS_NAME || 'Mon Site',
   
   // URL du site
-  siteUrl: process.env.NEXTAUTH_URL || 'https://example.com',
+  siteUrl: process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || 'https://biocyclepeptides.com',
   
   // Configuration du chat
   chat: {

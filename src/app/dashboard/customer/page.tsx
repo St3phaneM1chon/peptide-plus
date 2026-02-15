@@ -270,6 +270,7 @@ function QuickLink({ href, icon, title }: { href: string; icon: string; title: s
   );
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Prisma order object with nested relations
 function OrderCard({ order }: { order: any }) {
   const statusColors: Record<string, string> = {
     PENDING: 'bg-yellow-100 text-yellow-800',

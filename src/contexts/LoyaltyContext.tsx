@@ -136,6 +136,7 @@ export function LoyaltyProvider({ children }: { children: ReactNode }) {
       }
       setIsLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session]);
 
   // Update tier when points change
@@ -144,6 +145,7 @@ export function LoyaltyProvider({ children }: { children: ReactNode }) {
     if (newTier.id !== state.tier.id) {
       setState(prev => ({ ...prev, tier: newTier }));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.lifetimePoints]);
 
   const loadLoyaltyData = async () => {
@@ -174,10 +176,14 @@ export function LoyaltyProvider({ children }: { children: ReactNode }) {
   };
 
   const generateReferralCode = () => {
+    // SECURITY: Use crypto.getRandomValues for non-guessable referral codes
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    const randomBytes = crypto.getRandomValues(new Uint8Array(6));
+    const randomStr = Array.from(randomBytes).map(b => chars[b % chars.length]).join('');
     if (session?.user?.name) {
-      return `${session.user.name.split(' ')[0].toUpperCase()}${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+      return `${session.user.name.split(' ')[0].toUpperCase()}${randomStr.substring(0, 4)}`;
     }
-    return `PP${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+    return `PP${randomStr}`;
   };
 
   const earnPoints = async (amount: number, description: string, orderId?: string) => {

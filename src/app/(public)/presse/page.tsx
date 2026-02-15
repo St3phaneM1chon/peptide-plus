@@ -72,7 +72,7 @@ export default function PressPage() {
             {pressReleases.map((release, i) => (
               <Link
                 key={i}
-                href="#"
+                href="/actualites"
                 style={{
                   display: 'flex',
                   justifyContent: 'space-between',
@@ -121,7 +121,7 @@ export default function PressPage() {
             {mediaAssets.map((asset, i) => (
               <a
                 key={i}
-                href="#"
+                href="/contact"
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -141,8 +141,8 @@ export default function PressPage() {
             ))}
           </div>
           <div style={{ marginTop: '32px', textAlign: 'center' }}>
-            <Link href="#" className="btn btn-secondary">
-              Télécharger le kit complet (ZIP)
+            <Link href="/contact" className="btn btn-secondary">
+              Demander le kit complet (ZIP)
             </Link>
           </div>
         </div>

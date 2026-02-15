@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
     const isAdmin = [UserRole.EMPLOYEE, UserRole.OWNER].includes(session.user.role as UserRole);
 
     // Construire la query
-    const where: any = {};
+    const where: Record<string, unknown> = {};
 
     if (isAdmin) {
       // Admin voit toutes les conversations ou celles qui lui sont assignées

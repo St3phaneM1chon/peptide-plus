@@ -90,7 +90,8 @@ export const authConfig: NextAuthConfig = {
     },
 
     // Enrichissement du JWT
-    async jwt({ token, account, profile }) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async jwt({ token, account, profile }: any) {
       // Premier login - récupérer les tokens
       if (account) {
         const extendedToken = token as unknown as AzureADJWT;
@@ -183,7 +184,7 @@ export const authConfig: NextAuthConfig = {
 /**
  * Rafraîchir le token d'accès Azure AD
  */
-async function refreshAccessToken(token: any) {
+async function refreshAccessToken(token: Record<string, unknown>) {
   try {
     const response = await fetch(
       `https://login.microsoftonline.com/${process.env.AZURE_AD_TENANT_ID}/oauth2/v2.0/token`,
@@ -194,7 +195,7 @@ async function refreshAccessToken(token: any) {
           client_id: process.env.AZURE_AD_CLIENT_ID!,
           client_secret: process.env.AZURE_AD_CLIENT_SECRET!,
           grant_type: 'refresh_token',
-          refresh_token: token.refreshToken,
+          refresh_token: String(token.refreshToken),
           scope: 'openid profile email User.Read',
         }),
       }

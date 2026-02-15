@@ -215,8 +215,8 @@ export function FooterCorporate() {
                 </a>
               </p>
               <p>
-                <a href={`mailto:${process.env.NEXT_PUBLIC_EMAIL || 'info@example.com'}`} style={{ color: 'inherit' }}>
-                  ✉️ {process.env.NEXT_PUBLIC_EMAIL || 'info@example.com'}
+                <a href={`mailto:${process.env.NEXT_PUBLIC_EMAIL || 'info@biocyclepeptides.com'}`} style={{ color: 'inherit' }}>
+                  ✉️ {process.env.NEXT_PUBLIC_EMAIL || 'info@biocyclepeptides.com'}
                 </a>
               </p>
             </div>

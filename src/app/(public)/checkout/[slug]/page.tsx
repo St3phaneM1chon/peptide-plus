@@ -11,7 +11,7 @@ import { prisma } from '@/lib/db';
 import { CheckoutPageClient } from './CheckoutPageClient';
 
 interface CheckoutPageProps {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }
 
 async function getProduct(slug: string) {
@@ -22,14 +22,15 @@ async function getProduct(slug: string) {
 }
 
 export default async function CheckoutPage({ params }: CheckoutPageProps) {
+  const { slug } = await params;
   const session = await auth();
 
   // Rediriger vers login si non connecté
   if (!session?.user) {
-    redirect(`/auth/signin?callbackUrl=/checkout/${params.slug}`);
+    redirect(`/auth/signin?callbackUrl=/checkout/${slug}`);
   }
 
-  const product = await getProduct(params.slug);
+  const product = await getProduct(slug);
 
   if (!product) {
     notFound();

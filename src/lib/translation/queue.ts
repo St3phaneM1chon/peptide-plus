@@ -57,7 +57,7 @@ let processingTimeout: NodeJS.Timeout | null = null;
 // ============================================
 
 function generateJobId(): string {
-  return `tj_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+  return `tj_${Date.now()}_${crypto.randomUUID().replace(/-/g, '').substring(0, 6)}`;
 }
 
 /**

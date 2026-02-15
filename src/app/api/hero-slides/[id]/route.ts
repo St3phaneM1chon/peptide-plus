@@ -54,7 +54,7 @@ export async function PUT(
     if (slideData.endDate) slideData.endDate = new Date(slideData.endDate);
     else if (slideData.endDate === null || slideData.endDate === '') slideData.endDate = null;
 
-    const slide = await prisma.heroSlide.update({
+    await prisma.heroSlide.update({
       where: { id },
       data: slideData,
     });

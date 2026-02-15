@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 // CRON Job - Release Expired Inventory Reservations
 // Releases reservations that have passed their TTL
 // Schedule: every 5 minutes

@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * API Currencies - BioCycle Peptides
  * Retourne les devises actives avec leurs taux de change depuis la DB
@@ -11,10 +13,12 @@ export async function GET() {
     const currencies = await prisma.currency.findMany({
       where: { isActive: true },
       select: {
+        id: true,
         code: true,
         name: true,
         symbol: true,
         exchangeRate: true,
+        isDefault: true,
       },
       orderBy: [
         { isDefault: 'desc' },

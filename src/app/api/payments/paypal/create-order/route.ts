@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * API Route - Création de commande PayPal
  */
@@ -162,7 +164,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       orderId: order.id,
-      approvalUrl: order.links.find((link: any) => link.rel === 'approve')?.href,
+      approvalUrl: order.links.find((link: { rel: string; href: string }) => link.rel === 'approve')?.href,
     });
   } catch (error) {
     console.error('PayPal error:', error);

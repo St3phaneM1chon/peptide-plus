@@ -108,7 +108,7 @@ function getContextForModel(model: TranslatableModel): TranslationContext {
 
 /** Fields that should be translated for each model type */
 export const TRANSLATABLE_FIELDS: Record<TranslatableModel, string[]> = {
-  Product: ['name', 'subtitle', 'shortDescription', 'description', 'fullDetails', 'specifications', 'metaTitle', 'metaDescription'],
+  Product: ['name', 'subtitle', 'shortDescription', 'description', 'fullDetails', 'specifications', 'metaTitle', 'metaDescription', 'researchSays', 'relatedResearch', 'participateResearch'],
   ProductFormat: ['name', 'description'],
   Category: ['name', 'description'],
   Article: ['title', 'excerpt', 'content', 'metaTitle', 'metaDescription'],
@@ -210,7 +210,8 @@ export async function translateFields(
   // Parse the response back into field->value map
   const translated: Record<string, string> = {};
   for (const field of nonEmptyFields) {
-    const regex = new RegExp(`\\[FIELD:${field.name}\\]\\n?([\\s\\S]*?)\\n?\\[/FIELD:${field.name}\\]`);
+    const escapedName = field.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`\\[FIELD:${escapedName}\\]\\n?([\\s\\S]*?)\\n?\\[/FIELD:${escapedName}\\]`);
     const match = result.match(regex);
     translated[field.name] = match ? match[1].trim() : field.value;
   }
@@ -238,7 +239,9 @@ export async function translateEntity(
 
   // 1. Fetch source entity
   const sourceModel = model === 'ProductFormat' ? 'productFormat' : model.charAt(0).toLowerCase() + model.slice(1);
-  const entity = await (prisma as any)[sourceModel].findUnique({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic Prisma model access requires runtime key indexing
+  const prismaModel = (prisma as Record<string, any>)[sourceModel];
+  const entity = await prismaModel.findUnique({
     where: { id: entityId },
   });
 
@@ -255,8 +258,10 @@ export async function translateEntity(
   const hash = contentHash(sourceFields);
 
   // 3. Check if translation already exists and is up to date
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic Prisma model access requires runtime key indexing
+  const prismaTranslation = (prisma as Record<string, any>)[tableName];
   if (!options.force) {
-    const existing = await (prisma as any)[tableName].findUnique({
+    const existing = await prismaTranslation.findUnique({
       where: { [`${fkField}_locale`]: { [fkField]: entityId, locale: targetLocale } },
     });
 
@@ -286,8 +291,34 @@ export async function translateEntity(
 
   const translatedFields = await translateFields(fieldsToTranslate, targetLocale, context);
 
+  // 4b. Translate customSections JSON if present (Product model only)
+  if (model === 'Product' && entity.customSections) {
+    try {
+      const sections = typeof entity.customSections === 'string'
+        ? JSON.parse(entity.customSections)
+        : entity.customSections;
+      if (Array.isArray(sections) && sections.length > 0) {
+        const sectionFields: TranslationField[] = [];
+        for (let i = 0; i < sections.length; i++) {
+          if (sections[i].title) sectionFields.push({ name: `cs_title_${i}`, value: sections[i].title });
+          if (sections[i].content) sectionFields.push({ name: `cs_content_${i}`, value: sections[i].content });
+        }
+        if (sectionFields.length > 0) {
+          const translatedSections = await translateFields(sectionFields, targetLocale, context);
+          const result = sections.map((s: { title?: string; content?: string }, i: number) => ({
+            title: translatedSections[`cs_title_${i}`] || s.title || '',
+            content: translatedSections[`cs_content_${i}`] || s.content || '',
+          }));
+          translatedFields.customSections = JSON.stringify(result);
+        }
+      }
+    } catch {
+      // Skip customSections translation on parse error
+    }
+  }
+
   // 5. Upsert translation in DB
-  const data: Record<string, any> = {
+  const data: Record<string, string | boolean> = {
     locale: targetLocale,
     contentHash: hash,
     translatedBy: 'gpt-4o-mini',
@@ -295,7 +326,7 @@ export async function translateEntity(
     ...translatedFields,
   };
 
-  await (prisma as any)[tableName].upsert({
+  await prismaTranslation.upsert({
     where: { [`${fkField}_locale`]: { [fkField]: entityId, locale: targetLocale } },
     create: { [fkField]: entityId, ...data },
     update: data,
@@ -374,7 +405,8 @@ export async function getTranslatedFields(
   if (cached) return cached;
 
   // 2. Check DB
-  const translation = await (prisma as any)[tableName].findUnique({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic Prisma model access requires runtime key indexing
+  const translation = await ((prisma as Record<string, any>)[tableName]).findUnique({
     where: { [`${fkField}_locale`]: { [fkField]: entityId, locale } },
   });
 
@@ -398,7 +430,7 @@ export async function getTranslatedFields(
  * Apply translations to an entity object
  * Returns a new object with translated fields overlaid
  */
-export async function withTranslation<T extends Record<string, any>>(
+export async function withTranslation<T extends Record<string, unknown> & { id: string }>(
   entity: T,
   model: TranslatableModel,
   locale: string
@@ -414,7 +446,7 @@ export async function withTranslation<T extends Record<string, any>>(
 /**
  * Apply translations to an array of entities
  */
-export async function withTranslations<T extends Record<string, any>>(
+export async function withTranslations<T extends Record<string, unknown> & { id: string }>(
   entities: T[],
   model: TranslatableModel,
   locale: string
@@ -441,13 +473,14 @@ export async function getTranslationStatus(
   const fkField = FK_FIELD_MAP[model];
   const allLocales = locales.filter(l => l !== defaultLocale);
 
-  const translations = await (prisma as any)[tableName].findMany({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic Prisma model access requires runtime key indexing
+  const translations: { locale: string; isApproved: boolean }[] = await ((prisma as Record<string, any>)[tableName]).findMany({
     where: { [fkField]: entityId },
     select: { locale: true, isApproved: true },
   });
 
-  const translatedLocales = translations.map((t: any) => t.locale);
-  const approvedLocales = translations.filter((t: any) => t.isApproved).map((t: any) => t.locale);
+  const translatedLocales = translations.map((t) => t.locale);
+  const approvedLocales = translations.filter((t) => t.isApproved).map((t) => t.locale);
   const pendingLocales = allLocales.filter(l => !translatedLocales.includes(l));
 
   return {
@@ -476,13 +509,15 @@ export async function getModelTranslationCoverage(model: TranslatableModel): Pro
   const targetLocaleCount = locales.length - 1; // Exclude default
 
   // Count total entities
-  const totalEntities = await (prisma as any)[sourceModel].count();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic Prisma model access requires runtime key indexing
+  const totalEntities = await ((prisma as Record<string, any>)[sourceModel]).count();
   if (totalEntities === 0) {
     return { totalEntities: 0, fullyTranslated: 0, partiallyTranslated: 0, untranslated: 0, coveragePercent: 100 };
   }
 
   // Count translations per entity
-  const translationCounts = await (prisma as any)[tableName].groupBy({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic Prisma model access requires runtime key indexing
+  const translationCounts = await ((prisma as Record<string, any>)[tableName]).groupBy({
     by: [fkField],
     _count: { locale: true },
   });
@@ -528,7 +563,8 @@ export async function batchTranslateModel(
   const sourceModel = model === 'ProductFormat' ? 'productFormat' : model.charAt(0).toLowerCase() + model.slice(1);
 
   // Get all entity IDs
-  const entities = await (prisma as any)[sourceModel].findMany({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic Prisma model access requires runtime key indexing
+  const entities = await ((prisma as Record<string, any>)[sourceModel]).findMany({
     select: { id: true },
   });
 

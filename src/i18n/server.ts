@@ -11,8 +11,9 @@ import fr from './locales/fr.json';
 import en from './locales/en.json';
 import es from './locales/es.json';
 
-// Partial messages - only include actively maintained translations
-const allMessages: Partial<Record<Locale, typeof fr>> = {
+// Partial messages - only include actively maintained translations.
+// Use a flexible type to accommodate partial translation files.
+const allMessages: Partial<Record<Locale, Record<string, unknown>>> = {
   fr,
   en,
   es,
@@ -50,7 +51,7 @@ export async function getServerLocale(): Promise<Locale> {
 /**
  * Récupère les messages pour une locale
  */
-export function getMessages(locale: Locale = defaultLocale): typeof fr {
+export function getMessages(locale: Locale = defaultLocale): Record<string, unknown> {
   return allMessages[locale] || allMessages[defaultLocale] || fr;
 }
 
@@ -62,10 +63,10 @@ export function createServerTranslator(locale: Locale = defaultLocale) {
 
   return function t(key: string, params?: Record<string, string | number>): string {
     const keys = key.split('.');
-    let value: any = messages;
+    let value: unknown = messages;
 
     for (const k of keys) {
-      value = value?.[k];
+      value = (value as Record<string, unknown>)?.[k];
       if (value === undefined) {
         console.warn(`[i18n] Translation key not found: ${key}`);
         return key;

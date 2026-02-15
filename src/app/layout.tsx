@@ -11,6 +11,8 @@ import './globals.css';
 import { Providers } from './providers';
 import { cookies, headers } from 'next/headers';
 import { defaultLocale, isValidLocale, type Locale, localeDirections } from '@/i18n/config';
+import { JsonLd } from '@/components/seo/JsonLd';
+import { organizationSchema, websiteSchema } from '@/lib/structured-data';
 
 // Import all locale files
 import fr from '@/i18n/locales/fr.json';
@@ -39,7 +41,7 @@ import ta from '@/i18n/locales/ta.json';
 const inter = Inter({ subsets: ['latin'] });
 
 // Messages map - all supported locales
-const messagesMap: Record<string, Record<string, any>> = {
+const messagesMap: Record<string, Record<string, unknown>> = {
   fr,
   en,
   es,
@@ -65,6 +67,7 @@ const messagesMap: Record<string, Record<string, any>> = {
 };
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://biocyclepeptides.com'),
   title: {
     template: '%s | BioCycle Peptides',
     default: 'BioCycle Peptides - Premium Research Peptides Canada',
@@ -76,6 +79,15 @@ export const metadata: Metadata = {
   },
   referrer: 'strict-origin-when-cross-origin',
   keywords: ['peptides', 'research peptides', 'Canada', 'BPC-157', 'TB-500', 'Semaglutide', 'lab tested'],
+  alternates: {
+    canonical: 'https://biocyclepeptides.com',
+  },
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'BioCycle Peptides',
+  },
   openGraph: {
     title: 'BioCycle Peptides - Premium Research Peptides',
     description: 'Canada\'s trusted source for premium research peptides. Lab-tested, 99%+ purity.',
@@ -83,6 +95,21 @@ export const metadata: Metadata = {
     siteName: 'BioCycle Peptides',
     locale: 'en_CA',
     type: 'website',
+    images: [
+      {
+        url: '/images/og-default.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'BioCycle Peptides - Premium Research Peptides Canada',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    site: '@biocyclepeptides',
+    title: 'BioCycle Peptides - Premium Research Peptides',
+    description: 'Canada\'s trusted source for premium research peptides. Lab-tested, 99%+ purity.',
+    images: ['/images/og-default.jpg'],
   },
 };
 
@@ -148,12 +175,37 @@ export default async function RootLayout({
   const dir = localeDirections[locale] || 'ltr';
   
   return (
-    <html lang={locale} dir={dir} suppressHydrationWarning>
+    <html lang={locale} dir={dir} data-locale={locale} suppressHydrationWarning>
       <head>
         <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
         <meta name="format-detection" content="telephone=no" />
+        <meta name="theme-color" content="#f97316" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="BioCycle" />
+        <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/sw.js').then(
+                    function(registration) {
+                      console.log('ServiceWorker registration successful');
+                    },
+                    function(err) {
+                      console.log('ServiceWorker registration failed: ', err);
+                    }
+                  );
+                });
+              }
+            `,
+          }}
+        />
       </head>
       <body className={inter.className}>
+        <JsonLd data={organizationSchema()} />
+        <JsonLd data={websiteSchema()} />
         <Providers locale={locale} messages={messages}>
           <main className="min-h-screen bg-gray-50">
             {children}

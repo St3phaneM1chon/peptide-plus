@@ -1,0 +1,317 @@
+export const dynamic = 'force-dynamic';
+
+/**
+ * Admin Products Import API
+ * POST - Import products from a CSV file (multipart/form-data)
+ * Upserts: updates existing products if slug matches, creates new ones otherwise
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/db';
+import { auth } from '@/lib/auth-config';
+
+// ---------------------------------------------------------------------------
+// CSV parsing with proper quote handling
+// ---------------------------------------------------------------------------
+
+function parseCSVLine(line: string): string[] {
+  const fields: string[] = [];
+  let current = '';
+  let inQuotes = false;
+  let i = 0;
+
+  while (i < line.length) {
+    const char = line[i];
+
+    if (inQuotes) {
+      if (char === '"') {
+        // Check for escaped quote ("")
+        if (i + 1 < line.length && line[i + 1] === '"') {
+          current += '"';
+          i += 2;
+          continue;
+        }
+        // End of quoted field
+        inQuotes = false;
+        i++;
+        continue;
+      }
+      current += char;
+      i++;
+    } else {
+      if (char === '"') {
+        inQuotes = true;
+        i++;
+        continue;
+      }
+      if (char === ',') {
+        fields.push(current.trim());
+        current = '';
+        i++;
+        continue;
+      }
+      current += char;
+      i++;
+    }
+  }
+
+  // Push the last field
+  fields.push(current.trim());
+  return fields;
+}
+
+function parseCSV(text: string): Record<string, string>[] {
+  // Normalize line endings and split
+  const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
+
+  // Filter empty lines
+  const nonEmpty = lines.filter((l) => l.trim().length > 0);
+  if (nonEmpty.length < 2) return []; // Need header + at least 1 data row
+
+  const headers = parseCSVLine(nonEmpty[0]);
+  const rows: Record<string, string>[] = [];
+
+  for (let i = 1; i < nonEmpty.length; i++) {
+    const values = parseCSVLine(nonEmpty[i]);
+    const row: Record<string, string> = {};
+    for (let j = 0; j < headers.length; j++) {
+      row[headers[j]] = values[j] ?? '';
+    }
+    rows.push(row);
+  }
+
+  return rows;
+}
+
+// ---------------------------------------------------------------------------
+// Validation helpers
+// ---------------------------------------------------------------------------
+
+function parseBool(val: string): boolean {
+  const lower = val.toLowerCase().trim();
+  return lower === 'true' || lower === '1' || lower === 'yes' || lower === 'oui';
+}
+
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // Remove accents
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+const VALID_PRODUCT_TYPES = ['PEPTIDE', 'SUPPLEMENT', 'ACCESSORY', 'BUNDLE', 'CAPSULE'];
+
+interface ImportError {
+  row: number;
+  message: string;
+}
+
+// POST /api/admin/products/import - Import products from CSV
+export async function POST(request: NextRequest) {
+  try {
+    const session = await auth();
+    if (!session?.user || session.user.role !== 'OWNER') {
+      return NextResponse.json({ error: 'Forbidden - OWNER role required' }, { status: 403 });
+    }
+
+    // Parse multipart form data
+    const formData = await request.formData();
+    const file = formData.get('file') as File | null;
+
+    if (!file) {
+      return NextResponse.json(
+        { error: 'No file uploaded. Send a CSV file in a "file" form field.' },
+        { status: 400 }
+      );
+    }
+
+    // Validate file type
+    if (!file.name.endsWith('.csv') && file.type !== 'text/csv') {
+      return NextResponse.json(
+        { error: 'Only CSV files are accepted.' },
+        { status: 400 }
+      );
+    }
+
+    // Read and parse the CSV
+    const text = await file.text();
+    const rows = parseCSV(text);
+
+    if (rows.length === 0) {
+      return NextResponse.json(
+        { error: 'CSV file is empty or has no data rows.' },
+        { status: 400 }
+      );
+    }
+
+    // Check required columns
+    const requiredColumns = ['name'];
+    const firstRow = rows[0];
+    const missingColumns = requiredColumns.filter((col) => !(col in firstRow));
+    if (missingColumns.length > 0) {
+      return NextResponse.json(
+        { error: `Missing required columns: ${missingColumns.join(', ')}` },
+        { status: 400 }
+      );
+    }
+
+    // Fetch all categories for lookup
+    const allCategories = await prisma.category.findMany({
+      select: { id: true, name: true, slug: true },
+    });
+    const categoryById = new Map(allCategories.map((c) => [c.id, c]));
+    const categoryByName = new Map(allCategories.map((c) => [c.name.toLowerCase(), c]));
+
+    // Default category (first one if exists)
+    const defaultCategory = allCategories[0];
+
+    let created = 0;
+    let updated = 0;
+    const errors: ImportError[] = [];
+
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      const rowNum = i + 2; // +2 because row 1 is header, data starts at row 2
+
+      try {
+        // Validate required fields
+        const name = row.name?.trim();
+        if (!name) {
+          errors.push({ row: rowNum, message: 'Missing product name' });
+          continue;
+        }
+
+        // Determine slug
+        const slug = row.slug?.trim() || slugify(name);
+        if (!slug) {
+          errors.push({ row: rowNum, message: 'Could not generate slug from name' });
+          continue;
+        }
+
+        // Resolve category
+        let categoryId: string | null = null;
+
+        if (row.categoryId?.trim()) {
+          const cat = categoryById.get(row.categoryId.trim());
+          if (cat) {
+            categoryId = cat.id;
+          } else {
+            errors.push({ row: rowNum, message: `Category ID "${row.categoryId}" not found` });
+            continue;
+          }
+        } else if (row.categoryName?.trim()) {
+          const cat = categoryByName.get(row.categoryName.trim().toLowerCase());
+          if (cat) {
+            categoryId = cat.id;
+          } else {
+            errors.push({ row: rowNum, message: `Category name "${row.categoryName}" not found` });
+            continue;
+          }
+        } else {
+          // Use default category
+          if (defaultCategory) {
+            categoryId = defaultCategory.id;
+          } else {
+            errors.push({ row: rowNum, message: 'No category specified and no default category exists' });
+            continue;
+          }
+        }
+
+        // Parse product type
+        const productTypeRaw = row.productType?.trim().toUpperCase() || 'PEPTIDE';
+        const productType = VALID_PRODUCT_TYPES.includes(productTypeRaw) ? productTypeRaw : 'PEPTIDE';
+
+        // Parse price
+        const priceStr = row.price?.trim();
+        const price = priceStr ? parseFloat(priceStr) : 0;
+        if (isNaN(price) || price < 0) {
+          errors.push({ row: rowNum, message: `Invalid price: "${priceStr}"` });
+          continue;
+        }
+
+        // Parse optional numeric fields
+        const compareAtPrice = row.compareAtPrice?.trim()
+          ? parseFloat(row.compareAtPrice)
+          : null;
+        const purity = row.purity?.trim() ? parseFloat(row.purity) : null;
+        const molecularWeight = row.molecularWeight?.trim()
+          ? parseFloat(row.molecularWeight)
+          : null;
+
+        // Parse boolean fields
+        const isActive = row.isActive !== undefined ? parseBool(row.isActive) : true;
+        const isFeatured = row.isFeatured !== undefined ? parseBool(row.isFeatured) : false;
+        const isNew = row.isNew !== undefined ? parseBool(row.isNew) : false;
+        const isBestseller = row.isBestseller !== undefined ? parseBool(row.isBestseller) : false;
+
+        // Build data object
+        const data = {
+          name,
+          productType: productType as 'PEPTIDE' | 'SUPPLEMENT' | 'ACCESSORY' | 'BUNDLE' | 'CAPSULE',
+          categoryId,
+          description: row.description?.trim() || null,
+          shortDescription: row.shortDescription?.trim() || null,
+          price,
+          compareAtPrice,
+          purity,
+          molecularWeight,
+          casNumber: row.casNumber?.trim() || null,
+          molecularFormula: row.molecularFormula?.trim() || null,
+          sku: row.sku?.trim() || null,
+          manufacturer: row.manufacturer?.trim() || null,
+          origin: row.origin?.trim() || null,
+          imageUrl: row.imageUrl?.trim() || null,
+          isActive,
+          isFeatured,
+          isNew,
+          isBestseller,
+        };
+
+        // Check if product exists by slug
+        const existing = await prisma.product.findUnique({
+          where: { slug },
+          select: { id: true },
+        });
+
+        if (existing) {
+          // Update existing product
+          await prisma.product.update({
+            where: { slug },
+            data,
+          });
+          updated++;
+        } else {
+          // Create new product
+          await prisma.product.create({
+            data: {
+              ...data,
+              slug,
+            },
+          });
+          created++;
+        }
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Unknown error';
+        errors.push({ row: rowNum, message });
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      summary: {
+        totalRows: rows.length,
+        created,
+        updated,
+        errors,
+      },
+    });
+  } catch (error) {
+    console.error('Admin products import POST error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}

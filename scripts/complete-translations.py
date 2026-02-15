@@ -552,26 +552,26 @@ def deep_merge(base: dict, updates: dict) -> dict:
 def update_locale_file(locale_code: str, translations: dict):
     """Update a locale file with missing translations"""
     locale_path = f"/Volumes/AI_Project/peptide-plus/src/i18n/locales/{locale_code}.json"
-    
+
     if not os.path.exists(locale_path):
         print(f"File not found: {locale_path}")
         return False
-    
+
     with open(locale_path, 'r', encoding='utf-8') as f:
         current = json.load(f)
-    
+
     updated = deep_merge(current, translations)
-    
+
     with open(locale_path, 'w', encoding='utf-8') as f:
         json.dump(updated, f, ensure_ascii=False, indent=2)
-    
+
     print(f"Updated: {locale_code}.json")
     return True
 
 def main():
     for locale_code, translations in TRANSLATIONS.items():
         update_locale_file(locale_code, translations)
-    
+
     print("\nTranslations completed!")
 
 if __name__ == "__main__":

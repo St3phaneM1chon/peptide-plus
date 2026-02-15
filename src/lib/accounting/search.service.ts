@@ -101,13 +101,13 @@ export async function advancedSearch(
   };
 
   // Build common date filter
-  const dateFilter: any = {};
+  const dateFilter: Record<string, Date> = {};
   if (dateFrom) dateFilter.gte = dateFrom;
   if (dateTo) dateFilter.lte = dateTo;
 
   // Search Journal Entries
   if (entityTypes.includes('ENTRY')) {
-    const entryWhere: any = {};
+    const entryWhere: Record<string, unknown> = {};
     
     if (searchText) {
       entryWhere.OR = [
@@ -167,7 +167,7 @@ export async function advancedSearch(
 
   // Search Customer Invoices
   if (entityTypes.includes('INVOICE')) {
-    const invoiceWhere: any = {};
+    const invoiceWhere: Record<string, unknown> = {};
     
     if (searchText) {
       invoiceWhere.OR = [
@@ -214,7 +214,7 @@ export async function advancedSearch(
 
   // Search Supplier Invoices
   if (entityTypes.includes('SUPPLIER')) {
-    const supplierWhere: any = {};
+    const supplierWhere: Record<string, unknown> = {};
     
     if (searchText) {
       supplierWhere.OR = [
@@ -257,7 +257,7 @@ export async function advancedSearch(
 
   // Search Bank Transactions
   if (entityTypes.includes('TRANSACTION')) {
-    const txWhere: any = {};
+    const txWhere: Record<string, unknown> = {};
     
     if (searchText) {
       txWhere.description = { contains: searchText, mode: 'insensitive' };

@@ -16,6 +16,7 @@ import {
   FileText,
 } from 'lucide-react';
 import { PageHeader, StatCard, StatusBadge, Button, SelectFilter } from '@/components/admin';
+import { useI18n } from '@/i18n/client';
 
 interface DashboardStats {
   tresorerie: number;
@@ -50,6 +51,7 @@ const alertIcons: Record<Alert['type'], typeof AlertTriangle> = {
 };
 
 export default function ComptabiliteDashboard() {
+  const { t, locale } = useI18n();
   const [selectedPeriod, setSelectedPeriod] = useState('2026-01');
   const [loading, setLoading] = useState(true);
 
@@ -78,6 +80,13 @@ export default function ComptabiliteDashboard() {
     financing: 0,
     net: 0,
   });
+
+  const monthNames = [
+    t('admin.accounting.monthJan'), t('admin.accounting.monthFeb'), t('admin.accounting.monthMar'),
+    t('admin.accounting.monthApr'), t('admin.accounting.monthMay'), t('admin.accounting.monthJun'),
+    t('admin.accounting.monthJul'), t('admin.accounting.monthAug'), t('admin.accounting.monthSep'),
+    t('admin.accounting.monthOct'), t('admin.accounting.monthNov'), t('admin.accounting.monthDec'),
+  ];
 
   // Fetch dashboard data from API
   useEffect(() => {
@@ -110,7 +119,6 @@ export default function ComptabiliteDashboard() {
             setRevenueData(data.revenueData);
           } else {
             // Build a single-month bar from totals
-            const monthNames = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
             const currentMonth = monthNames[new Date().getMonth()];
             setRevenueData([{ month: currentMonth, revenue: totalRevenue, expenses: totalExpenses, profit }]);
           }
@@ -138,6 +146,7 @@ export default function ComptabiliteDashboard() {
     };
 
     fetchDashboard();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedPeriod]);
 
   // Fetch alerts from API
@@ -147,7 +156,7 @@ export default function ComptabiliteDashboard() {
         const response = await fetch('/api/accounting/alerts');
         if (response.ok) {
           const data = await response.json();
-          const mappedAlerts: Alert[] = data.alerts.map((alert: any) => ({
+          const mappedAlerts: Alert[] = data.alerts.map((alert: Record<string, string>) => ({
             id: alert.id,
             type: alert.severity === 'CRITICAL' || alert.severity === 'HIGH' ? 'danger' :
                   alert.severity === 'MEDIUM' ? 'warning' : 'info',
@@ -169,11 +178,11 @@ export default function ComptabiliteDashboard() {
   const maxRevenue = revenueData.length > 0 ? Math.max(...revenueData.map(d => d.revenue)) : 1;
 
   const periodOptions = [
-    { value: '2026-01', label: 'Janvier 2026' },
-    { value: '2025-12', label: 'Décembre 2025' },
-    { value: '2025-11', label: 'Novembre 2025' },
-    { value: '2025-Q4', label: 'Q4 2025' },
-    { value: '2025', label: 'Année 2025' },
+    { value: '2026-01', label: t('admin.accounting.january2026') },
+    { value: '2025-12', label: t('admin.accounting.december2025') },
+    { value: '2025-11', label: t('admin.accounting.november2025') },
+    { value: '2025-Q4', label: t('admin.accounting.q42025') },
+    { value: '2025', label: t('admin.accounting.year2025') },
   ];
 
   const expenseBarColors = [
@@ -185,24 +194,24 @@ export default function ComptabiliteDashboard() {
     'bg-slate-400',
   ];
 
-  if (loading) return <div className="p-8 text-center">Chargement...</div>;
+  if (loading) return <div className="p-8 text-center">{t('admin.accounting.loading')}</div>;
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <PageHeader
-        title="Dashboard Comptable"
-        subtitle="Vue d'ensemble de votre situation financière"
+        title={t('admin.accounting.dashboardTitle')}
+        subtitle={t('admin.accounting.dashboardSubtitle')}
         actions={
           <>
             <SelectFilter
-              label="Période"
+              label={t('admin.accounting.period')}
               value={selectedPeriod}
               onChange={setSelectedPeriod}
               options={periodOptions}
             />
             <Button variant="primary" icon={Download}>
-              Exporter
+              {t('admin.accounting.export')}
             </Button>
           </>
         }
@@ -211,28 +220,28 @@ export default function ComptabiliteDashboard() {
       {/* KPI Cards */}
       <div className="grid grid-cols-4 gap-4">
         <StatCard
-          label="Trésorerie"
-          value={stats.tresorerie.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}
+          label={t('admin.accounting.treasury')}
+          value={stats.tresorerie.toLocaleString(locale, { style: 'currency', currency: 'CAD' })}
           icon={Landmark}
-          trend={{ value: stats.tresorerieChange, label: 'vs mois dernier' }}
+          trend={{ value: stats.tresorerieChange, label: t('admin.accounting.vsLastMonth') }}
         />
         <StatCard
-          label="CA du mois"
-          value={stats.caMonth.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}
+          label={t('admin.accounting.monthlyRevenue')}
+          value={stats.caMonth.toLocaleString(locale, { style: 'currency', currency: 'CAD' })}
           icon={DollarSign}
-          trend={{ value: stats.caChange, label: 'vs mois dernier' }}
+          trend={{ value: stats.caChange, label: t('admin.accounting.vsLastMonth') }}
         />
         <StatCard
-          label="Marge brute"
+          label={t('admin.accounting.grossMargin')}
           value={`${stats.margeBrute}%`}
           icon={BarChart3}
-          trend={{ value: stats.margeChange, label: 'vs mois dernier' }}
+          trend={{ value: stats.margeChange, label: t('admin.accounting.vsLastMonth') }}
         />
         <StatCard
-          label="Bénéfice net"
-          value={stats.beneficeNet.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}
+          label={t('admin.accounting.netProfit')}
+          value={stats.beneficeNet.toLocaleString(locale, { style: 'currency', currency: 'CAD' })}
           icon={TrendingUp}
-          trend={{ value: stats.beneficeChange, label: 'vs mois dernier' }}
+          trend={{ value: stats.beneficeChange, label: t('admin.accounting.vsLastMonth') }}
         />
       </div>
 
@@ -240,7 +249,7 @@ export default function ComptabiliteDashboard() {
       <div className="grid grid-cols-3 gap-6">
         {/* Revenue Chart */}
         <div className="col-span-2 bg-white rounded-xl border border-slate-200 p-6">
-          <h3 className="font-semibold text-slate-900 mb-4">Évolution financière (12 derniers mois)</h3>
+          <h3 className="font-semibold text-slate-900 mb-4">{t('admin.accounting.financialEvolution')}</h3>
           <div className="h-64 flex items-end gap-2">
             {revenueData.map((data, index) => (
               <div key={index} className="flex-1 flex flex-col items-center gap-1">
@@ -248,12 +257,12 @@ export default function ComptabiliteDashboard() {
                   <div
                     className="w-full bg-emerald-500 rounded-t"
                     style={{ height: `${(data.revenue / maxRevenue) * 100}%` }}
-                    title={`Revenus: ${data.revenue.toLocaleString()} $`}
+                    title={`${t('admin.accounting.revenueLabel')}: ${data.revenue.toLocaleString(locale)} $`}
                   />
                   <div
                     className="w-full bg-red-400 rounded-b"
                     style={{ height: `${(data.expenses / maxRevenue) * 100}%`, marginTop: '-' + ((data.expenses / maxRevenue) * 100) + '%' }}
-                    title={`Dépenses: ${data.expenses.toLocaleString()} $`}
+                    title={`${t('admin.accounting.expensesLabel')}: ${data.expenses.toLocaleString(locale)} $`}
                   />
                 </div>
                 <span className="text-xs text-slate-500">{data.month}</span>
@@ -263,24 +272,24 @@ export default function ComptabiliteDashboard() {
           <div className="flex items-center justify-center gap-6 mt-4">
             <div className="flex items-center gap-2">
               <span className="w-3 h-3 bg-emerald-500 rounded" />
-              <span className="text-sm text-slate-600">Revenus</span>
+              <span className="text-sm text-slate-600">{t('admin.accounting.revenueLabel')}</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="w-3 h-3 bg-red-400 rounded" />
-              <span className="text-sm text-slate-600">Dépenses</span>
+              <span className="text-sm text-slate-600">{t('admin.accounting.expensesLabel')}</span>
             </div>
           </div>
         </div>
 
         {/* Cash Flow Summary */}
         <div className="bg-white rounded-xl border border-slate-200 p-6">
-          <h3 className="font-semibold text-slate-900 mb-4">Flux de trésorerie</h3>
+          <h3 className="font-semibold text-slate-900 mb-4">{t('admin.accounting.cashFlowTitle')}</h3>
           <div className="space-y-4">
             <div>
               <div className="flex items-center justify-between text-sm mb-1">
-                <span className="text-slate-600">Activités d&apos;exploitation</span>
+                <span className="text-slate-600">{t('admin.accounting.operatingActivities')}</span>
                 <span className={`font-medium ${cashFlow.operating >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {cashFlow.operating >= 0 ? '+' : ''}{cashFlow.operating.toLocaleString()} $
+                  {cashFlow.operating >= 0 ? '+' : ''}{cashFlow.operating.toLocaleString(locale)} $
                 </span>
               </div>
               <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
@@ -289,9 +298,9 @@ export default function ComptabiliteDashboard() {
             </div>
             <div>
               <div className="flex items-center justify-between text-sm mb-1">
-                <span className="text-slate-600">Activités d&apos;investissement</span>
+                <span className="text-slate-600">{t('admin.accounting.investingActivities')}</span>
                 <span className={`font-medium ${cashFlow.investing >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {cashFlow.investing >= 0 ? '+' : ''}{cashFlow.investing.toLocaleString()} $
+                  {cashFlow.investing >= 0 ? '+' : ''}{cashFlow.investing.toLocaleString(locale)} $
                 </span>
               </div>
               <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
@@ -300,9 +309,9 @@ export default function ComptabiliteDashboard() {
             </div>
             <div>
               <div className="flex items-center justify-between text-sm mb-1">
-                <span className="text-slate-600">Activités de financement</span>
+                <span className="text-slate-600">{t('admin.accounting.financingActivities')}</span>
                 <span className="font-medium text-slate-500">
-                  {cashFlow.financing.toLocaleString()} $
+                  {cashFlow.financing.toLocaleString(locale)} $
                 </span>
               </div>
               <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
@@ -311,9 +320,9 @@ export default function ComptabiliteDashboard() {
             </div>
             <div className="pt-4 border-t border-slate-200">
               <div className="flex items-center justify-between">
-                <span className="font-semibold text-slate-900">Variation nette</span>
+                <span className="font-semibold text-slate-900">{t('admin.accounting.netVariation')}</span>
                 <span className={`text-xl font-bold ${cashFlow.net >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {cashFlow.net >= 0 ? '+' : ''}{cashFlow.net.toLocaleString()} $
+                  {cashFlow.net >= 0 ? '+' : ''}{cashFlow.net.toLocaleString(locale)} $
                 </span>
               </div>
             </div>
@@ -326,9 +335,9 @@ export default function ComptabiliteDashboard() {
         {/* Tasks */}
         <div className="bg-white rounded-xl border border-slate-200 p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-slate-900">Tâches à faire</h3>
+            <h3 className="font-semibold text-slate-900">{t('admin.accounting.tasksTodo')}</h3>
             <Link href="/admin/comptabilite/cloture" className="text-sm text-emerald-600 hover:text-emerald-700">
-              Voir tout →
+              {t('admin.accounting.viewAll')}
             </Link>
           </div>
           <div className="space-y-3">
@@ -342,7 +351,7 @@ export default function ComptabiliteDashboard() {
                 />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-slate-900 truncate">{task.title}</p>
-                  <p className="text-xs text-slate-500">Échéance: {new Date(task.dueDate).toLocaleDateString('fr-CA')}</p>
+                  <p className="text-xs text-slate-500">{t('admin.accounting.dueDate').replace('{date}', new Date(task.dueDate).toLocaleDateString(locale))}</p>
                 </div>
                 <StatusBadge
                   variant={
@@ -351,7 +360,7 @@ export default function ComptabiliteDashboard() {
                     'neutral'
                   }
                 >
-                  {task.priority === 'high' ? 'Urgent' : task.priority === 'medium' ? 'Moyen' : 'Faible'}
+                  {task.priority === 'high' ? t('admin.accounting.priorityHigh') : task.priority === 'medium' ? t('admin.accounting.priorityMedium') : t('admin.accounting.priorityLow')}
                 </StatusBadge>
               </div>
             ))}
@@ -360,7 +369,7 @@ export default function ComptabiliteDashboard() {
 
         {/* Alerts */}
         <div className="bg-white rounded-xl border border-slate-200 p-6">
-          <h3 className="font-semibold text-slate-900 mb-4">Alertes</h3>
+          <h3 className="font-semibold text-slate-900 mb-4">{t('admin.accounting.alertsTitle')}</h3>
           <div className="space-y-3">
             {alerts.map((alert) => {
               const AlertIcon = alertIcons[alert.type];
@@ -396,13 +405,13 @@ export default function ComptabiliteDashboard() {
       {/* Expenses Breakdown */}
       <div className="grid grid-cols-2 gap-6">
         <div className="bg-white rounded-xl border border-slate-200 p-6">
-          <h3 className="font-semibold text-slate-900 mb-4">Répartition des dépenses</h3>
+          <h3 className="font-semibold text-slate-900 mb-4">{t('admin.accounting.expenseBreakdown')}</h3>
           <div className="space-y-3">
             {topExpenses.map((expense, index) => (
               <div key={index}>
                 <div className="flex items-center justify-between text-sm mb-1">
                   <span className="text-slate-600">{expense.category}</span>
-                  <span className="font-medium text-slate-900">{expense.amount.toLocaleString()} $ ({expense.percentage}%)</span>
+                  <span className="font-medium text-slate-900">{expense.amount.toLocaleString(locale)} $ ({expense.percentage}%)</span>
                 </div>
                 <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
                   <div
@@ -417,7 +426,7 @@ export default function ComptabiliteDashboard() {
 
         {/* Quick Actions */}
         <div className="bg-white rounded-xl border border-slate-200 p-6">
-          <h3 className="font-semibold text-slate-900 mb-4">Actions rapides</h3>
+          <h3 className="font-semibold text-slate-900 mb-4">{t('admin.accounting.quickActions')}</h3>
           <div className="grid grid-cols-2 gap-3">
             <Link
               href="/admin/comptabilite/ecritures?new=true"
@@ -426,7 +435,7 @@ export default function ComptabiliteDashboard() {
               <span className="p-2 bg-emerald-100 rounded-lg text-emerald-600">
                 <Plus className="w-5 h-5" />
               </span>
-              <span className="font-medium text-emerald-900">Nouvelle écriture</span>
+              <span className="font-medium text-emerald-900">{t('admin.accounting.newEntry')}</span>
             </Link>
             <Link
               href="/admin/comptabilite/rapprochement"
@@ -435,7 +444,7 @@ export default function ComptabiliteDashboard() {
               <span className="p-2 bg-blue-100 rounded-lg text-blue-600">
                 <CheckCircle className="w-5 h-5" />
               </span>
-              <span className="font-medium text-blue-900">Rapprochement</span>
+              <span className="font-medium text-blue-900">{t('admin.accounting.reconciliation')}</span>
             </Link>
             <Link
               href="/admin/comptabilite/etats-financiers"
@@ -444,7 +453,7 @@ export default function ComptabiliteDashboard() {
               <span className="p-2 bg-purple-100 rounded-lg text-purple-600">
                 <FileText className="w-5 h-5" />
               </span>
-              <span className="font-medium text-purple-900">États financiers</span>
+              <span className="font-medium text-purple-900">{t('admin.accounting.financialStatements')}</span>
             </Link>
             <Link
               href="/admin/comptabilite/rapports"
@@ -453,7 +462,7 @@ export default function ComptabiliteDashboard() {
               <span className="p-2 bg-sky-100 rounded-lg text-sky-600">
                 <BarChart3 className="w-5 h-5" />
               </span>
-              <span className="font-medium text-sky-900">Rapports taxes</span>
+              <span className="font-medium text-sky-900">{t('admin.accounting.taxReports')}</span>
             </Link>
           </div>
         </div>

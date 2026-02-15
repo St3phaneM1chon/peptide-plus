@@ -8,6 +8,7 @@ import { StatusBadge } from '@/components/admin/StatusBadge';
 import { Modal } from '@/components/admin/Modal';
 import { EmptyState } from '@/components/admin/EmptyState';
 import { Input } from '@/components/admin/FormField';
+import { useI18n } from '@/i18n/client';
 
 type Tab = 'defaults' | 'groups' | 'overrides';
 
@@ -50,13 +51,8 @@ interface Override {
   createdAt: string;
 }
 
-const tabs: { id: Tab; label: string; icon: typeof Shield }[] = [
-  { id: 'defaults', label: 'Role Defaults', icon: Settings },
-  { id: 'groups', label: 'Permission Groups', icon: Users },
-  { id: 'overrides', label: 'User Overrides', icon: UserCog },
-];
-
 export default function PermissionsPage() {
+  const { t } = useI18n();
   const [activeTab, setActiveTab] = useState<Tab>('defaults');
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [modules, setModules] = useState<Record<string, { label: string; permissions: string[] }>>({});
@@ -74,6 +70,12 @@ export default function PermissionsPage() {
   const [selectedUser, setSelectedUser] = useState<UserBasic | null>(null);
   const [userSearch, setUserSearch] = useState('');
   const [overrides, setOverrides] = useState<Override[]>([]);
+
+  const tabs: { id: Tab; label: string; icon: typeof Shield }[] = [
+    { id: 'defaults', label: t('admin.permissions.tabDefaults'), icon: Settings },
+    { id: 'groups', label: t('admin.permissions.tabGroups'), icon: Users },
+    { id: 'overrides', label: t('admin.permissions.tabOverrides'), icon: UserCog },
+  ];
 
   const fetchPermissions = useCallback(async () => {
     setLoading(true);
@@ -154,7 +156,7 @@ export default function PermissionsPage() {
   };
 
   const deleteGroup = async (groupId: string) => {
-    if (!confirm('Delete this permission group?')) return;
+    if (!confirm(t('admin.permissions.deleteGroupConfirm'))) return;
     await fetch('/api/admin/permissions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -201,9 +203,9 @@ export default function PermissionsPage() {
   return (
     <div>
       <PageHeader
-        title="Permissions"
-        subtitle="Manage role defaults, permission groups, and per-user overrides"
-        badge={<StatusBadge variant="info">OWNER Only</StatusBadge>}
+        title={t('admin.permissions.title')}
+        subtitle={t('admin.permissions.subtitle')}
+        badge={<StatusBadge variant="info">{t('admin.permissions.ownerOnly')}</StatusBadge>}
       />
 
       {/* Tabs */}
@@ -232,11 +234,11 @@ export default function PermissionsPage() {
         <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
           <div className="px-5 py-3 border-b border-slate-200 bg-slate-50">
             <div className="grid grid-cols-[1fr_80px_80px_80px_80px] gap-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-              <span>Permission</span>
-              <span className="text-center">Owner</span>
-              <span className="text-center">Employee</span>
-              <span className="text-center">Client</span>
-              <span className="text-center">Customer</span>
+              <span>{t('admin.permissions.permission')}</span>
+              <span className="text-center">{t('admin.permissions.owner')}</span>
+              <span className="text-center">{t('admin.permissions.employee')}</span>
+              <span className="text-center">{t('admin.permissions.client')}</span>
+              <span className="text-center">{t('admin.permissions.customer')}</span>
             </div>
           </div>
           <div className="divide-y divide-slate-100">
@@ -267,17 +269,17 @@ export default function PermissionsPage() {
                         {['defaultOwner', 'defaultEmployee', 'defaultClient', 'defaultCustomer'].map(field => (
                           <div key={field} className="flex justify-center">
                             <button
-                              onClick={() => field !== 'defaultOwner' && updateDefault(perm.code, field, !(perm as Record<string, boolean>)[field])}
+                              onClick={() => field !== 'defaultOwner' && updateDefault(perm.code, field, !(perm as unknown as Record<string, boolean>)[field])}
                               disabled={field === 'defaultOwner'}
                               className={`w-6 h-6 rounded flex items-center justify-center transition-colors
-                                ${(perm as Record<string, boolean>)[field]
+                                ${(perm as unknown as Record<string, boolean>)[field]
                                   ? 'bg-emerald-100 text-emerald-600'
                                   : 'bg-slate-100 text-slate-300'
                                 }
                                 ${field === 'defaultOwner' ? 'cursor-not-allowed opacity-60' : 'hover:ring-2 hover:ring-sky-300'}
                               `}
                             >
-                              {(perm as Record<string, boolean>)[field] ? <Check className="w-3.5 h-3.5" /> : <X className="w-3.5 h-3.5" />}
+                              {(perm as unknown as Record<string, boolean>)[field] ? <Check className="w-3.5 h-3.5" /> : <X className="w-3.5 h-3.5" />}
                             </button>
                           </div>
                         ))}
@@ -304,18 +306,18 @@ export default function PermissionsPage() {
                 setGroupModal(true);
               }}
             >
-              New Group
+              {t('admin.permissions.newGroup')}
             </Button>
           </div>
 
           {groups.length === 0 ? (
             <EmptyState
               icon={Users}
-              title="No permission groups yet"
-              description="Create groups to bundle permissions and assign them to users."
+              title={t('admin.permissions.noGroupsTitle')}
+              description={t('admin.permissions.noGroupsDescription')}
               action={
                 <Button variant="primary" icon={Plus} onClick={() => setGroupModal(true)}>
-                  Create First Group
+                  {t('admin.permissions.createFirstGroup')}
                 </Button>
               }
             />
@@ -335,7 +337,7 @@ export default function PermissionsPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <StatusBadge variant="neutral">{group._count.users} users</StatusBadge>
+                      <StatusBadge variant="neutral">{t('admin.permissions.usersCount', { count: group._count.users })}</StatusBadge>
                       <Button
                         size="sm"
                         variant="ghost"
@@ -350,7 +352,7 @@ export default function PermissionsPage() {
                           setGroupModal(true);
                         }}
                       >
-                        Edit
+                        {t('admin.permissions.edit')}
                       </Button>
                       <Button size="sm" variant="ghost" icon={Trash2} onClick={() => deleteGroup(group.id)} />
                     </div>
@@ -363,7 +365,7 @@ export default function PermissionsPage() {
                     ))}
                     {group.permissions.length > 8 && (
                       <span className="text-[11px] text-slate-400 px-2 py-0.5">
-                        +{group.permissions.length - 8} more
+                        {t('admin.permissions.morePermissions', { count: group.permissions.length - 8 })}
                       </span>
                     )}
                   </div>
@@ -376,34 +378,34 @@ export default function PermissionsPage() {
           <Modal
             isOpen={groupModal}
             onClose={() => setGroupModal(false)}
-            title={editingGroup ? 'Edit Permission Group' : 'New Permission Group'}
+            title={editingGroup ? t('admin.permissions.editGroup') : t('admin.permissions.newGroupTitle')}
             size="lg"
             footer={
               <>
-                <Button variant="secondary" onClick={() => setGroupModal(false)}>Cancel</Button>
-                <Button variant="primary" onClick={saveGroup}>Save Group</Button>
+                <Button variant="secondary" onClick={() => setGroupModal(false)}>{t('admin.permissions.cancel')}</Button>
+                <Button variant="primary" onClick={saveGroup}>{t('admin.permissions.saveGroup')}</Button>
               </>
             }
           >
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Group Name</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.permissions.groupName')}</label>
                 <Input
                   value={groupForm.name}
                   onChange={e => setGroupForm(f => ({ ...f, name: e.target.value }))}
-                  placeholder="e.g., Product Manager"
+                  placeholder={t('admin.permissions.groupNamePlaceholder')}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Description</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.permissions.descriptionLabel')}</label>
                 <Input
                   value={groupForm.description}
                   onChange={e => setGroupForm(f => ({ ...f, description: e.target.value }))}
-                  placeholder="What this group is for..."
+                  placeholder={t('admin.permissions.descriptionPlaceholder')}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Color</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.permissions.color')}</label>
                 <input
                   type="color"
                   value={groupForm.color}
@@ -412,7 +414,7 @@ export default function PermissionsPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Permissions</label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">{t('admin.permissions.permissionsLabel')}</label>
                 <div className="max-h-80 overflow-y-auto border border-slate-200 rounded-lg divide-y divide-slate-100">
                   {groupedPermissions.map(group => (
                     <div key={group.key}>
@@ -454,7 +456,7 @@ export default function PermissionsPage() {
         <div>
           {/* User search */}
           <div className="bg-white border border-slate-200 rounded-lg p-5 mb-4">
-            <label className="block text-sm font-medium text-slate-700 mb-2">Search User</label>
+            <label className="block text-sm font-medium text-slate-700 mb-2">{t('admin.permissions.searchUser')}</label>
             <div className="relative w-full max-w-md">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <Input
@@ -463,7 +465,7 @@ export default function PermissionsPage() {
                   setUserSearch(e.target.value);
                   searchUsers(e.target.value);
                 }}
-                placeholder="Search by name or email..."
+                placeholder={t('admin.permissions.searchPlaceholder')}
                 className="pl-9"
               />
             </div>
@@ -507,16 +509,16 @@ export default function PermissionsPage() {
                   <StatusBadge variant="info">{selectedUser.role}</StatusBadge>
                 </div>
                 <Button variant="secondary" onClick={() => { setSelectedUser(null); setOverrides([]); }}>
-                  Change User
+                  {t('admin.permissions.changeUser')}
                 </Button>
               </div>
 
               <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
                 <div className="px-5 py-3 border-b border-slate-200 bg-slate-50">
                   <div className="grid grid-cols-[1fr_120px_80px] gap-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                    <span>Permission</span>
-                    <span className="text-center">Override</span>
-                    <span className="text-center">Actions</span>
+                    <span>{t('admin.permissions.permission')}</span>
+                    <span className="text-center">{t('admin.permissions.overrideCol')}</span>
+                    <span className="text-center">{t('admin.permissions.actionsCol')}</span>
                   </div>
                 </div>
                 <div className="divide-y divide-slate-100 max-h-[60vh] overflow-y-auto">
@@ -542,7 +544,7 @@ export default function PermissionsPage() {
                                     : 'bg-slate-50 text-slate-400 hover:bg-emerald-50 hover:text-emerald-600'
                                   }`}
                               >
-                                Grant
+                                {t('admin.permissions.grant')}
                               </button>
                               <button
                                 onClick={() => toggleOverride(perm.code, false)}
@@ -552,7 +554,7 @@ export default function PermissionsPage() {
                                     : 'bg-slate-50 text-slate-400 hover:bg-red-50 hover:text-red-600'
                                   }`}
                               >
-                                Revoke
+                                {t('admin.permissions.revoke')}
                               </button>
                             </div>
                             <div className="flex justify-center">
@@ -560,7 +562,7 @@ export default function PermissionsPage() {
                                 <button
                                   onClick={() => removeOverride(perm.code)}
                                   className="text-slate-400 hover:text-red-500 transition-colors"
-                                  title="Remove override (use role default)"
+                                  title={t('admin.permissions.removeOverrideTitle')}
                                 >
                                   <X className="w-4 h-4" />
                                 </button>
@@ -577,8 +579,8 @@ export default function PermissionsPage() {
           ) : (
             <EmptyState
               icon={UserCog}
-              title="Select a user"
-              description="Search for a user above to manage their individual permission overrides."
+              title={t('admin.permissions.selectUserTitle')}
+              description={t('admin.permissions.selectUserDescription')}
             />
           )}
         </div>

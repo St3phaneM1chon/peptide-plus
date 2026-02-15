@@ -35,7 +35,9 @@ export async function GET(request: NextRequest) {
       categories = await withTranslations(categories, 'Category', locale);
     }
 
-    return NextResponse.json({ categories });
+    return NextResponse.json({ categories }, {
+      headers: { 'Cache-Control': 'public, s-maxage=600, stale-while-revalidate=1200' },
+    });
   } catch (error) {
     console.error('Error fetching categories:', error);
     return NextResponse.json(

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 const nextJest = require('next/jest');
 
 const createJestConfig = nextJest({
@@ -12,31 +13,19 @@ const customJestConfig = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
-  testPathIgnorePatterns: ['<rootDir>/node_modules/', '<rootDir>/.next/'],
+  testPathIgnorePatterns: [
+    '<rootDir>/node_modules/',
+    '<rootDir>/.next/',
+    '<rootDir>/src/__tests__/helpers/',
+  ],
+  testMatch: [
+    '<rootDir>/src/__tests__/**/*.test.ts',
+    '<rootDir>/src/__tests__/**/*.test.tsx',
+  ],
   collectCoverageFrom: [
     'src/**/*.{js,jsx,ts,tsx}',
     '!src/**/*.d.ts',
     '!src/**/index.ts',
-  ],
-  // Use node environment for API tests
-  projects: [
-    {
-      displayName: 'unit',
-      testMatch: ['<rootDir>/src/__tests__/*.test.ts'],
-      testEnvironment: 'jest-environment-jsdom',
-      setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
-      moduleNameMapper: {
-        '^@/(.*)$': '<rootDir>/src/$1',
-      },
-    },
-    {
-      displayName: 'api',
-      testMatch: ['<rootDir>/src/__tests__/api/**/*.test.ts'],
-      testEnvironment: 'node',
-      moduleNameMapper: {
-        '^@/(.*)$': '<rootDir>/src/$1',
-      },
-    },
   ],
 };
 

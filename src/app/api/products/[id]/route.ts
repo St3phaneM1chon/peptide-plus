@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { UserRole } from '@/types';
+import { enqueue } from '@/lib/translation';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -77,6 +78,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       'trackInventory', 'allowBackorder',
       'weight', 'dimensions', 'requiresShipping', 'sku', 'barcode', 'manufacturer', 'origin',
       'metaTitle', 'metaDescription', 'tags',
+      'researchSays', 'relatedResearch', 'participateResearch', 'customSections',
       'isActive', 'isFeatured', 'isNew', 'isBestseller',
     ] as const;
     const productData: Record<string, unknown> = {};
@@ -141,18 +143,27 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         // Créer les nouveaux formats
         if (formats && formats.length > 0) {
           await tx.productFormat.createMany({
-            data: formats.map((f: { name: string; description?: string; price?: number; sku?: string; downloadUrl?: string; fileSize?: string; inStock?: boolean; stockQuantity?: number; sortOrder?: number; isDefault?: boolean }, index: number) => ({
+            data: formats.map((f: Record<string, unknown>, index: number) => ({
               productId: id,
-              name: f.name,
-              description: f.description || '',
-              price: f.price || null,
-              sku: f.sku || '',
-              downloadUrl: f.downloadUrl || '',
-              fileSize: f.fileSize || '',
+              formatType: (f.formatType as string) || 'VIAL_2ML',
+              name: f.name as string,
+              description: (f.description as string) || '',
+              imageUrl: (f.imageUrl as string) || null,
+              dosageMg: f.dosageMg ? Number(f.dosageMg) : null,
+              volumeMl: f.volumeMl ? Number(f.volumeMl) : null,
+              unitCount: f.unitCount ? Number(f.unitCount) : null,
+              costPrice: f.costPrice ? Number(f.costPrice) : null,
+              price: Number(f.price) || 0,
+              comparePrice: f.comparePrice ? Number(f.comparePrice) : null,
+              sku: (f.sku as string) || null,
+              barcode: (f.barcode as string) || null,
               inStock: f.inStock !== false,
-              stockQuantity: f.stockQuantity || null,
-              sortOrder: f.sortOrder ?? index,
-              isDefault: f.isDefault || false,
+              stockQuantity: Number(f.stockQuantity) || 0,
+              lowStockThreshold: f.lowStockThreshold != null ? Number(f.lowStockThreshold) : 5,
+              availability: (f.availability as string) || 'IN_STOCK',
+              sortOrder: f.sortOrder != null ? Number(f.sortOrder) : index,
+              isDefault: !!f.isDefault,
+              isActive: f.isActive !== false,
             })),
           });
         }
@@ -177,13 +188,16 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         action: 'UPDATE',
         entityType: 'Product',
         entityId: product.id,
-        details: JSON.stringify({ 
+        details: JSON.stringify({
           fields: Object.keys(productData),
           imagesCount: images?.length,
           formatsCount: formats?.length,
         }),
       },
     });
+
+    // Re-translate product in all locales (force overwrite existing translations)
+    enqueue.productUrgent(product.id);
 
     return NextResponse.json({ product });
   } catch (error) {

@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * UAT API — Launch & List runs
  * POST /api/admin/uat — Launch a new UAT run

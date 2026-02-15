@@ -26,6 +26,7 @@ import {
   EmptyState,
   Input,
 } from '@/components/admin';
+import { useI18n } from '@/i18n/client';
 
 interface Message {
   id: string;
@@ -63,6 +64,7 @@ interface Settings {
 }
 
 export default function AdminChatPage() {
+  const { t, locale } = useI18n();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -186,6 +188,26 @@ export default function AdminChatPage() {
     }
   };
 
+  const getLanguageName = (code: string): string => {
+    const key = `admin.chat.lang_${code}`;
+    const result = t(key);
+    return result === key ? code.toUpperCase() : result;
+  };
+
+  const formatTimeAgo = (dateString: string): string => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return t('admin.chat.justNow');
+    if (diffMins < 60) return `${diffMins}m`;
+    if (diffHours < 24) return `${diffHours}h`;
+    return t('admin.chat.daysAgo', { count: diffDays });
+  };
+
   // Stats
   const activeChats = conversations.filter(c => c.status === 'ACTIVE').length;
   const waitingChats = conversations.filter(c => c.status === 'WAITING_ADMIN').length;
@@ -194,23 +216,23 @@ export default function AdminChatPage() {
   return (
     <>
       <PageHeader
-        title="Centre de Chat"
-        subtitle="Gerez vos conversations clients"
+        title={t('admin.chat.title')}
+        subtitle={t('admin.chat.subtitle')}
         actions={
           <div className="flex items-center gap-3">
             {/* Stats */}
             <div className="flex gap-2 text-sm">
               <StatusBadge variant="success" dot>
-                {activeChats} actifs
+                {t('admin.chat.activeCount', { count: activeChats })}
               </StatusBadge>
               {waitingChats > 0 && (
                 <StatusBadge variant="warning" dot className="animate-pulse">
-                  {waitingChats} en attente
+                  {t('admin.chat.waitingCount', { count: waitingChats })}
                 </StatusBadge>
               )}
               {unreadCount > 0 && (
                 <StatusBadge variant="error" dot>
-                  {unreadCount} non lus
+                  {t('admin.chat.unreadCount', { count: unreadCount })}
                 </StatusBadge>
               )}
             </div>
@@ -222,7 +244,7 @@ export default function AdminChatPage() {
               className={settings?.isAdminOnline ? 'bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800' : ''}
             >
               <span className={`w-2.5 h-2.5 rounded-full ${settings?.isAdminOnline ? 'bg-white' : 'bg-slate-400'}`} />
-              {settings?.isAdminOnline ? 'En ligne' : 'Hors ligne'}
+              {settings?.isAdminOnline ? t('admin.chat.online') : t('admin.chat.offline')}
             </Button>
           </div>
         }
@@ -232,14 +254,14 @@ export default function AdminChatPage() {
         {/* Conversations List */}
         <div className="w-80 bg-white border border-slate-200 rounded-xl overflow-hidden flex flex-col">
           <div className="p-4 border-b border-slate-200 bg-slate-50">
-            <h2 className="font-semibold text-slate-900">Conversations</h2>
+            <h2 className="font-semibold text-slate-900">{t('admin.chat.conversations')}</h2>
           </div>
           <div className="flex-1 overflow-y-auto">
             {conversations.length === 0 ? (
               <EmptyState
                 icon={MessageCircle}
-                title="Aucune conversation"
-                description="Les nouvelles conversations apparaitront ici"
+                title={t('admin.chat.noConversations')}
+                description={t('admin.chat.noConversationsDesc')}
               />
             ) : (
               conversations.map(conv => (
@@ -255,11 +277,11 @@ export default function AdminChatPage() {
                       <div className="flex items-center gap-2">
                         <span className={`w-2 h-2 rounded-full ${conv.isOnline ? 'bg-emerald-500' : 'bg-slate-300'}`} />
                         <span className="font-medium text-slate-900 truncate">
-                          {conv.visitorName || conv.visitorEmail || `Visiteur ${conv.visitorId.slice(0, 8)}`}
+                          {conv.visitorName || conv.visitorEmail || `${t('admin.chat.visitor')} ${conv.visitorId.slice(0, 8)}`}
                         </span>
                       </div>
                       <p className="text-sm text-slate-500 truncate mt-1">
-                        {conv.messages?.[0]?.content?.slice(0, 50) || 'Nouvelle conversation'}
+                        {conv.messages?.[0]?.content?.slice(0, 50) || t('admin.chat.newConversation')}
                       </p>
                       <div className="flex items-center gap-2 mt-2">
                         <span className="inline-flex items-center gap-1 text-xs text-slate-400">
@@ -296,8 +318,8 @@ export default function AdminChatPage() {
             <div className="flex-1 flex items-center justify-center">
               <EmptyState
                 icon={ArrowLeftRight}
-                title="Selectionnez une conversation"
-                description="Choisissez une conversation dans la liste pour commencer"
+                title={t('admin.chat.selectConversation')}
+                description={t('admin.chat.selectConversationDesc')}
               />
             </div>
           ) : (
@@ -307,7 +329,7 @@ export default function AdminChatPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="font-semibold text-slate-900">
-                      {selectedConversation.visitorName || selectedConversation.visitorEmail || 'Visiteur'}
+                      {selectedConversation.visitorName || selectedConversation.visitorEmail || t('admin.chat.visitor')}
                     </h3>
                     <div className="flex items-center gap-3 text-sm text-slate-500 mt-0.5">
                       <span className="inline-flex items-center gap-1">
@@ -332,7 +354,7 @@ export default function AdminChatPage() {
                     variant={selectedConversation.isOnline ? 'success' : 'neutral'}
                     dot
                   >
-                    {selectedConversation.isOnline ? 'En ligne' : 'Hors ligne'}
+                    {selectedConversation.isOnline ? t('admin.chat.online') : t('admin.chat.offline')}
                   </StatusBadge>
                 </div>
               </div>
@@ -356,11 +378,11 @@ export default function AdminChatPage() {
                       <div className="flex items-center gap-2 mb-1">
                         <span className="inline-flex items-center gap-1 text-xs font-medium opacity-70">
                           {message.sender === 'VISITOR' ? (
-                            <><User className="w-3 h-3" /> Visiteur</>
+                            <><User className="w-3 h-3" /> {t('admin.chat.visitor')}</>
                           ) : message.sender === 'BOT' ? (
-                            <><Bot className="w-3 h-3" /> Bot</>
+                            <><Bot className="w-3 h-3" /> {t('admin.chat.bot')}</>
                           ) : (
-                            <><UserCog className="w-3 h-3" /> Vous</>
+                            <><UserCog className="w-3 h-3" /> {t('admin.chat.you')}</>
                           )}
                         </span>
                         {message.sender === 'VISITOR' && message.language && (
@@ -375,14 +397,14 @@ export default function AdminChatPage() {
                       {message.contentOriginal && message.contentOriginal !== message.content && (
                         <details className="mt-2">
                           <summary className="text-xs opacity-50 cursor-pointer">
-                            Voir l&apos;original
+                            {t('admin.chat.viewOriginal')}
                           </summary>
                           <p className="text-xs opacity-70 mt-1 italic">{message.contentOriginal}</p>
                         </details>
                       )}
 
                       <p className="text-xs mt-2 opacity-50">
-                        {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {new Date(message.createdAt).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}
                       </p>
                     </div>
                   </div>
@@ -398,7 +420,7 @@ export default function AdminChatPage() {
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                     onKeyPress={handleKeyPress}
-                    placeholder={`Repondre en francais (sera traduit en ${getLanguageName(selectedConversation.visitorLanguage)})...`}
+                    placeholder={t('admin.chat.replyPlaceholder', { language: getLanguageName(selectedConversation.visitorLanguage) })}
                     className="flex-1 !h-11 !rounded-xl"
                     disabled={isLoading}
                   />
@@ -411,12 +433,12 @@ export default function AdminChatPage() {
                     loading={isLoading}
                     className="!rounded-xl !px-6"
                   >
-                    Envoyer
+                    {t('admin.chat.send')}
                   </Button>
                 </div>
                 <p className="flex items-center justify-center gap-1.5 text-xs text-slate-400 mt-2">
                   <Lightbulb className="w-3.5 h-3.5" />
-                  Votre message sera automatiquement traduit dans la langue du client
+                  {t('admin.chat.autoTranslateHint')}
                 </p>
               </div>
             </>
@@ -425,36 +447,4 @@ export default function AdminChatPage() {
       </div>
     </>
   );
-}
-
-// Helpers
-function formatTimeAgo(dateString: string): string {
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMs / 3600000);
-  const diffDays = Math.floor(diffMs / 86400000);
-
-  if (diffMins < 1) return 'A l\'instant';
-  if (diffMins < 60) return `${diffMins}m`;
-  if (diffHours < 24) return `${diffHours}h`;
-  return `${diffDays}j`;
-}
-
-function getLanguageName(code: string): string {
-  const languages: Record<string, string> = {
-    en: 'Anglais',
-    fr: 'Francais',
-    es: 'Espagnol',
-    de: 'Allemand',
-    it: 'Italien',
-    pt: 'Portugais',
-    zh: 'Chinois',
-    ar: 'Arabe',
-    ru: 'Russe',
-    ja: 'Japonais',
-    ko: 'Coreen',
-  };
-  return languages[code] || code.toUpperCase();
 }

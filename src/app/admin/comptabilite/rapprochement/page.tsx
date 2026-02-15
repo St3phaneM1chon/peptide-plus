@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Upload, Zap, Check, CheckCircle } from 'lucide-react';
 import { PageHeader, Button, Modal, StatusBadge } from '@/components/admin';
+import { useI18n } from '@/i18n/client';
+import { toast } from 'sonner';
 
 interface BankTransaction {
   id: string;
@@ -34,6 +36,7 @@ interface BankAccount {
 }
 
 export default function RapprochementPage() {
+  const { t } = useI18n();
   const [selectedAccount, setSelectedAccount] = useState('');
   const [selectedMonth, setSelectedMonth] = useState('2026-01');
   const [showMatchModal, setShowMatchModal] = useState(false);
@@ -53,7 +56,7 @@ export default function RapprochementPage() {
     async function fetchAccounts() {
       try {
         const res = await fetch('/api/accounting/bank-accounts');
-        if (!res.ok) throw new Error('Erreur chargement comptes');
+        if (!res.ok) throw new Error(t('admin.reconciliation.errorLoadAccounts'));
         const data = await res.json();
         setBankAccounts(data.accounts || []);
         if (data.accounts?.length > 0 && !selectedAccount) {
@@ -83,8 +86,8 @@ export default function RapprochementPage() {
         fetch(`/api/accounting/entries?status=POSTED&limit=200`),
       ]);
 
-      if (!txRes.ok) throw new Error('Erreur chargement transactions bancaires');
-      if (!entriesRes.ok) throw new Error('Erreur chargement écritures');
+      if (!txRes.ok) throw new Error(t('admin.reconciliation.errorLoadBankTx'));
+      if (!entriesRes.ok) throw new Error(t('admin.reconciliation.errorLoadEntries'));
 
       const txData = await txRes.json();
       const entriesData = await entriesRes.json();
@@ -92,7 +95,7 @@ export default function RapprochementPage() {
       setBankTransactions(txData.transactions || []);
       setJournalEntries(entriesData.entries || []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erreur de chargement');
+      setError(err instanceof Error ? err.message : t('admin.reconciliation.errorLoading'));
     } finally {
       setLoading(false);
     }
@@ -129,13 +132,13 @@ export default function RapprochementPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ bankAccountId: selectedAccount }),
       });
-      if (!res.ok) throw new Error('Erreur auto-rapprochement');
+      if (!res.ok) throw new Error(t('admin.reconciliation.errorAutoReconcile'));
       const data = await res.json();
       const matchCount = data.result?.matched?.length || 0;
-      alert(`Auto-rapprochement terminé: ${matchCount} transactions rapprochées.`);
+      toast.success(t('admin.reconciliation.autoReconcileComplete', { count: matchCount }));
       await fetchData();
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Erreur lors du rapprochement');
+      toast.error(err instanceof Error ? err.message : t('admin.reconciliation.errorReconciling'));
     } finally {
       setReconciling(false);
     }
@@ -154,29 +157,29 @@ export default function RapprochementPage() {
           matchedEntryId: selectedEntryId,
         }),
       });
-      if (!res.ok) throw new Error('Erreur rapprochement');
+      if (!res.ok) throw new Error(t('admin.reconciliation.errorMatch'));
       setShowMatchModal(false);
       await fetchData();
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Erreur lors du rapprochement');
+      toast.error(err instanceof Error ? err.message : t('admin.reconciliation.errorReconciling'));
     } finally {
       setMatching(false);
     }
   };
 
-  if (loading) return <div className="p-8 text-center">Chargement...</div>;
-  if (error) return <div className="p-8 text-center text-red-600">Erreur: {error}</div>;
+  if (loading) return <div className="p-8 text-center">{t('admin.reconciliation.loading')}</div>;
+  if (error) return <div className="p-8 text-center text-red-600">{t('admin.reconciliation.errorPrefix')} {error}</div>;
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Rapprochement bancaire"
-        subtitle="Conciliez vos relevés bancaires avec vos écritures"
+        title={t('admin.reconciliation.title')}
+        subtitle={t('admin.reconciliation.subtitle')}
         actions={
           <>
-            <Button variant="secondary" icon={Upload}>Importer relevé</Button>
+            <Button variant="secondary" icon={Upload}>{t('admin.reconciliation.importStatement')}</Button>
             <Button variant="primary" icon={Zap} onClick={handleAutoReconcile} disabled={reconciling}>
-              {reconciling ? 'Rapprochement...' : 'Auto-rapprocher'}
+              {reconciling ? t('admin.reconciliation.autoReconciling') : t('admin.reconciliation.autoReconcile')}
             </Button>
           </>
         }
@@ -186,7 +189,7 @@ export default function RapprochementPage() {
       <div className="bg-white rounded-xl border border-slate-200 p-4">
         <div className="flex gap-4">
           <div>
-            <label className="block text-xs text-slate-500 mb-1">Compte</label>
+            <label className="block text-xs text-slate-500 mb-1">{t('admin.reconciliation.accountLabel')}</label>
             <select
               value={selectedAccount}
               onChange={(e) => setSelectedAccount(e.target.value)}
@@ -201,7 +204,7 @@ export default function RapprochementPage() {
             </select>
           </div>
           <div>
-            <label className="block text-xs text-slate-500 mb-1">Période</label>
+            <label className="block text-xs text-slate-500 mb-1">{t('admin.reconciliation.periodLabel')}</label>
             <input
               type="month"
               value={selectedMonth}
@@ -216,23 +219,23 @@ export default function RapprochementPage() {
       {/* Summary */}
       <div className="grid grid-cols-4 gap-4">
         <div className="bg-white rounded-xl p-4 border border-slate-200">
-          <p className="text-sm text-slate-500">Solde relevé</p>
+          <p className="text-sm text-slate-500">{t('admin.reconciliation.statementBalance')}</p>
           <p className="text-2xl font-bold text-slate-900">{bankBalance.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}</p>
         </div>
         <div className="bg-white rounded-xl p-4 border border-slate-200">
-          <p className="text-sm text-slate-500">Solde comptable</p>
+          <p className="text-sm text-slate-500">{t('admin.reconciliation.bookBalance')}</p>
           <p className="text-2xl font-bold text-slate-900">{bookBalance.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}</p>
         </div>
         <div className={`rounded-xl p-4 border ${difference === 0 ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
-          <p className={`text-sm ${difference === 0 ? 'text-green-600' : 'text-red-600'}`}>Différence</p>
+          <p className={`text-sm ${difference === 0 ? 'text-green-600' : 'text-red-600'}`}>{t('admin.reconciliation.difference')}</p>
           <p className={`text-2xl font-bold ${difference === 0 ? 'text-green-700' : 'text-red-700'}`}>
             {difference.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}
           </p>
         </div>
         <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
-          <p className="text-sm text-blue-600">Progression</p>
+          <p className="text-sm text-blue-600">{t('admin.reconciliation.progress')}</p>
           <p className="text-2xl font-bold text-blue-700">{bankTransactions.length > 0 ? Math.round((matchedCount / bankTransactions.length) * 100) : 0}%</p>
-          <p className="text-xs text-blue-600">{matchedCount}/{bankTransactions.length} rapprochés</p>
+          <p className="text-xs text-blue-600">{matchedCount}/{bankTransactions.length} {t('admin.reconciliation.reconciled')}</p>
         </div>
       </div>
 
@@ -241,16 +244,16 @@ export default function RapprochementPage() {
         {/* Bank Transactions */}
         <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
           <div className="p-4 border-b border-slate-200 bg-blue-50">
-            <h3 className="font-semibold text-blue-900">Relevé bancaire ({unmatchedBank.length} non rapprochés)</h3>
+            <h3 className="font-semibold text-blue-900">{t('admin.reconciliation.bankStatement')} ({unmatchedBank.length} {t('admin.reconciliation.unreconciled')})</h3>
           </div>
           <div className="max-h-[500px] overflow-y-auto">
             <table className="w-full">
               <thead className="bg-slate-50 sticky top-0">
                 <tr>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-slate-500">Date</th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-slate-500">Description</th>
-                  <th className="px-3 py-2 text-right text-xs font-semibold text-slate-500">Montant</th>
-                  <th className="px-3 py-2 text-center text-xs font-semibold text-slate-500">Action</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-slate-500">{t('admin.reconciliation.dateCol')}</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-slate-500">{t('admin.reconciliation.descriptionCol')}</th>
+                  <th className="px-3 py-2 text-right text-xs font-semibold text-slate-500">{t('admin.reconciliation.amountCol')}</th>
+                  <th className="px-3 py-2 text-center text-xs font-semibold text-slate-500">{t('admin.reconciliation.actionCol')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
@@ -271,14 +274,14 @@ export default function RapprochementPage() {
                           onClick={() => handleMatch(tx)}
                           className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs hover:bg-blue-200"
                         >
-                          Rapprocher
+                          {t('admin.reconciliation.reconcileBtn')}
                         </button>
                       )}
                     </td>
                   </tr>
                 ))}
                 {bankTransactions.length === 0 && (
-                  <tr><td colSpan={4} className="px-3 py-8 text-center text-slate-400">Aucune transaction bancaire</td></tr>
+                  <tr><td colSpan={4} className="px-3 py-8 text-center text-slate-400">{t('admin.reconciliation.noBankTransactions')}</td></tr>
                 )}
               </tbody>
             </table>
@@ -288,16 +291,16 @@ export default function RapprochementPage() {
         {/* Journal Entries */}
         <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
           <div className="p-4 border-b border-slate-200 bg-emerald-50">
-            <h3 className="font-semibold text-emerald-900">Écritures comptables ({unmatchedJournal.length} non rapprochées)</h3>
+            <h3 className="font-semibold text-emerald-900">{t('admin.reconciliation.journalEntries')} ({unmatchedJournal.length} {t('admin.reconciliation.unreconciledEntries')})</h3>
           </div>
           <div className="max-h-[500px] overflow-y-auto">
             <table className="w-full">
               <thead className="bg-slate-50 sticky top-0">
                 <tr>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-slate-500">Date</th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-slate-500">Description</th>
-                  <th className="px-3 py-2 text-right text-xs font-semibold text-slate-500">Montant</th>
-                  <th className="px-3 py-2 text-center text-xs font-semibold text-slate-500">Statut</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-slate-500">{t('admin.reconciliation.dateCol')}</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-slate-500">{t('admin.reconciliation.descriptionCol')}</th>
+                  <th className="px-3 py-2 text-right text-xs font-semibold text-slate-500">{t('admin.reconciliation.amountCol')}</th>
+                  <th className="px-3 py-2 text-center text-xs font-semibold text-slate-500">{t('admin.reconciliation.statusCol')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
@@ -320,14 +323,14 @@ export default function RapprochementPage() {
                             <Check className="w-4 h-4 inline" />
                           </span>
                         ) : (
-                          <StatusBadge variant="warning">En attente</StatusBadge>
+                          <StatusBadge variant="warning">{t('admin.reconciliation.pending')}</StatusBadge>
                         )}
                       </td>
                     </tr>
                   );
                 })}
                 {journalEntries.length === 0 && (
-                  <tr><td colSpan={4} className="px-3 py-8 text-center text-slate-400">Aucune écriture comptable</td></tr>
+                  <tr><td colSpan={4} className="px-3 py-8 text-center text-slate-400">{t('admin.reconciliation.noJournalEntries')}</td></tr>
                 )}
               </tbody>
             </table>
@@ -339,10 +342,10 @@ export default function RapprochementPage() {
       {difference === 0 && unmatchedBank.length === 0 && bankTransactions.length > 0 && (
         <div className="bg-green-50 border border-green-200 rounded-xl p-6 text-center">
           <CheckCircle className="w-12 h-12 mx-auto text-green-600 mb-3" />
-          <h3 className="text-lg font-semibold text-green-900 mb-2">Rapprochement complet!</h3>
-          <p className="text-green-700 mb-4">Toutes les transactions sont rapprochées et les soldes correspondent.</p>
+          <h3 className="text-lg font-semibold text-green-900 mb-2">{t('admin.reconciliation.reconciliationComplete')}</h3>
+          <p className="text-green-700 mb-4">{t('admin.reconciliation.allTransactionsReconciled')}</p>
           <Button variant="primary" className="bg-green-600 hover:bg-green-700">
-            Valider le rapprochement
+            {t('admin.reconciliation.validateReconciliation')}
           </Button>
         </div>
       )}
@@ -351,16 +354,16 @@ export default function RapprochementPage() {
       <Modal
         isOpen={showMatchModal && !!selectedBankTx}
         onClose={() => setShowMatchModal(false)}
-        title="Rapprocher la transaction"
+        title={t('admin.reconciliation.matchTransaction')}
         footer={
           <>
-            <Button variant="ghost" onClick={() => setShowMatchModal(false)}>Annuler</Button>
+            <Button variant="ghost" onClick={() => setShowMatchModal(false)}>{t('admin.reconciliation.cancel')}</Button>
             <Button
               variant="primary"
               onClick={handleConfirmMatch}
               disabled={!selectedEntryId || matching}
             >
-              {matching ? 'Rapprochement...' : 'Rapprocher'}
+              {matching ? t('admin.reconciliation.matching') : t('admin.reconciliation.reconcileBtn')}
             </Button>
           </>
         }
@@ -368,7 +371,7 @@ export default function RapprochementPage() {
         {selectedBankTx && (
           <div className="space-y-4">
             <div className="bg-blue-50 rounded-lg p-4">
-              <p className="text-sm text-blue-600">Transaction bancaire</p>
+              <p className="text-sm text-blue-600">{t('admin.reconciliation.bankTransaction')}</p>
               <p className="font-medium text-blue-900">{selectedBankTx.description}</p>
               <p className="text-lg font-bold text-blue-900">
                 {selectedBankTx.type === 'CREDIT' ? '+' : '-'}{selectedBankTx.amount.toFixed(2)} $
@@ -376,7 +379,7 @@ export default function RapprochementPage() {
             </div>
 
             <div>
-              <p className="text-sm font-medium text-slate-700 mb-2">Sélectionner l&apos;écriture correspondante:</p>
+              <p className="text-sm font-medium text-slate-700 mb-2">{t('admin.reconciliation.selectMatchingEntry')}</p>
               <div className="space-y-2 max-h-48 overflow-y-auto">
                 {unmatchedJournal
                   .filter(e => {
@@ -405,7 +408,7 @@ export default function RapprochementPage() {
                     );
                   })}
                 {unmatchedJournal.filter(e => Math.abs(Math.max(e.totalDebits, e.totalCredits) - selectedBankTx.amount) < 0.01).length === 0 && (
-                  <p className="text-sm text-slate-400 text-center py-4">Aucune écriture correspondante trouvée</p>
+                  <p className="text-sm text-slate-400 text-center py-4">{t('admin.reconciliation.noMatchingEntry')}</p>
                 )}
               </div>
             </div>

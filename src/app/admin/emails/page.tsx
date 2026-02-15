@@ -24,6 +24,7 @@ import {
   Textarea,
   type Column,
 } from '@/components/admin';
+import { useI18n } from '@/i18n/client';
 
 interface EmailTemplate {
   id: string;
@@ -46,24 +47,25 @@ interface EmailLog {
 
 type BadgeVariant = 'success' | 'warning' | 'error' | 'info' | 'neutral' | 'primary';
 
-const templateTypes: Record<string, { label: string; description: string; variant: BadgeVariant }> = {
-  ORDER_CONFIRMATION: { label: 'Confirmation commande', description: 'Envoy\u00e9 apr\u00e8s paiement', variant: 'success' },
-  ORDER_SHIPPED: { label: 'Exp\u00e9dition', description: 'Envoy\u00e9 avec num\u00e9ro de suivi', variant: 'info' },
-  ORDER_DELIVERED: { label: 'Livraison', description: 'Envoy\u00e9 \u00e0 la livraison', variant: 'primary' },
-  WELCOME: { label: 'Bienvenue', description: 'Nouvel utilisateur', variant: 'warning' },
-  PASSWORD_RESET: { label: 'Reset mot de passe', description: 'Lien de r\u00e9initialisation', variant: 'neutral' },
-  BIRTHDAY: { label: 'Anniversaire', description: 'Email de f\u00eate + bonus', variant: 'error' },
-  ABANDONED_CART: { label: 'Panier abandonn\u00e9', description: 'Rappel apr\u00e8s 24h', variant: 'warning' },
-  REVIEW_REQUEST: { label: 'Demande d\'avis', description: 'Apr\u00e8s livraison', variant: 'warning' },
-};
-
 const emailStatusMap: Record<string, { label: string; variant: BadgeVariant }> = {
   SENT: { label: 'SENT', variant: 'success' },
   FAILED: { label: 'FAILED', variant: 'error' },
   PENDING: { label: 'PENDING', variant: 'warning' },
 };
 
+const templateVariants: Record<string, BadgeVariant> = {
+  ORDER_CONFIRMATION: 'success',
+  ORDER_SHIPPED: 'info',
+  ORDER_DELIVERED: 'primary',
+  WELCOME: 'warning',
+  PASSWORD_RESET: 'neutral',
+  BIRTHDAY: 'error',
+  ABANDONED_CART: 'warning',
+  REVIEW_REQUEST: 'warning',
+};
+
 export default function EmailsPage() {
+  const { t, locale } = useI18n();
   const [activeTab, setActiveTab] = useState<'templates' | 'logs' | 'settings'>('templates');
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
   const [logs, setLogs] = useState<EmailLog[]>([]);
@@ -92,37 +94,49 @@ export default function EmailsPage() {
   };
 
   const tabs: { key: typeof activeTab; label: string }[] = [
-    { key: 'templates', label: 'Templates' },
-    { key: 'logs', label: 'Historique' },
-    { key: 'settings', label: 'Param\u00e8tres' },
+    { key: 'templates', label: t('admin.emailConfig.tabTemplates') },
+    { key: 'logs', label: t('admin.emailConfig.tabLogs') },
+    { key: 'settings', label: t('admin.emailConfig.tabSettings') },
   ];
+
+  const getTemplateLabel = (type: string): string => {
+    return t(`admin.emailConfig.templateTypes.${type}.label`);
+  };
+
+  const getTemplateDescription = (type: string): string => {
+    return t(`admin.emailConfig.templateTypes.${type}.description`);
+  };
+
+  const getTemplateVariant = (type: string): BadgeVariant => {
+    return templateVariants[type] || 'neutral';
+  };
 
   const logColumns: Column<EmailLog>[] = [
     {
       key: 'type',
-      header: 'Type',
+      header: t('admin.emailConfig.type'),
       render: (log) => {
-        const tpl = templateTypes[log.templateType];
+        const variant = getTemplateVariant(log.templateType);
         return (
-          <StatusBadge variant={tpl?.variant || 'neutral'}>
-            {tpl?.label || log.templateType}
+          <StatusBadge variant={variant}>
+            {getTemplateLabel(log.templateType)}
           </StatusBadge>
         );
       },
     },
     {
       key: 'to',
-      header: 'Destinataire',
+      header: t('admin.emailConfig.recipient'),
       render: (log) => <span className="text-slate-900">{log.to}</span>,
     },
     {
       key: 'subject',
-      header: 'Sujet',
+      header: t('admin.emailConfig.subject'),
       render: (log) => <span className="text-slate-600 truncate max-w-xs block">{log.subject}</span>,
     },
     {
       key: 'status',
-      header: 'Statut',
+      header: t('admin.emailConfig.status'),
       align: 'center',
       render: (log) => {
         const cfg = emailStatusMap[log.status] || { label: log.status, variant: 'neutral' as BadgeVariant };
@@ -131,10 +145,10 @@ export default function EmailsPage() {
     },
     {
       key: 'date',
-      header: 'Date',
+      header: t('admin.emailConfig.date'),
       render: (log) => (
         <span className="text-sm text-slate-500">
-          {new Date(log.sentAt).toLocaleString('fr-CA')}
+          {new Date(log.sentAt).toLocaleString(locale)}
         </span>
       ),
     },
@@ -151,11 +165,11 @@ export default function EmailsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Emails"
-        subtitle="G\u00e9rez les templates et les envois d'emails"
+        title={t('admin.emailConfig.title')}
+        subtitle={t('admin.emailConfig.subtitle')}
         actions={
           <Button variant="primary" icon={SendHorizontal}>
-            Envoyer un test
+            {t('admin.emailConfig.sendTest')}
           </Button>
         }
       />
@@ -163,24 +177,24 @@ export default function EmailsPage() {
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
-          label="Templates actifs"
+          label={t('admin.emailConfig.activeTemplates')}
           value={`${stats.activeTemplates}/${templates.length}`}
           icon={LayoutTemplate}
         />
         <StatCard
-          label="Emails envoy\u00e9s (24h)"
+          label={t('admin.emailConfig.emailsSent24h')}
           value={stats.sent}
           icon={CheckCircle2}
           className="!border-green-200 !bg-green-50"
         />
         <StatCard
-          label="\u00c9checs"
+          label={t('admin.emailConfig.failures')}
           value={stats.failed}
           icon={XCircle}
           className="!border-red-200 !bg-red-50"
         />
         <StatCard
-          label="Taux de succ\u00e8s"
+          label={t('admin.emailConfig.successRate')}
           value={`${((stats.sent / (stats.sent + stats.failed)) * 100 || 0).toFixed(1)}%`}
           icon={BarChart3}
         />
@@ -210,13 +224,13 @@ export default function EmailsPage() {
         templates.length === 0 ? (
           <EmptyState
             icon={Mail}
-            title="Aucun template"
-            description="Les templates d'emails appara\u00eetront ici une fois configur\u00e9s."
+            title={t('admin.emailConfig.noTemplates')}
+            description={t('admin.emailConfig.noTemplatesDescription')}
           />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {templates.map((template) => {
-              const tpl = templateTypes[template.type];
+              const variant = getTemplateVariant(template.type);
               return (
                 <div
                   key={template.id}
@@ -224,9 +238,9 @@ export default function EmailsPage() {
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div>
-                      <StatusBadge variant={tpl.variant}>{tpl.label}</StatusBadge>
+                      <StatusBadge variant={variant}>{getTemplateLabel(template.type)}</StatusBadge>
                       <h3 className="font-semibold text-slate-900 mt-1">{template.name}</h3>
-                      <p className="text-xs text-slate-500">{tpl.description}</p>
+                      <p className="text-xs text-slate-500">{getTemplateDescription(template.type)}</p>
                     </div>
                     <button
                       onClick={() => toggleTemplate(template.id)}
@@ -239,17 +253,17 @@ export default function EmailsPage() {
                       }`} />
                     </button>
                   </div>
-                  <p className="text-sm text-slate-600 mb-3 truncate">Sujet: {template.subject}</p>
+                  <p className="text-sm text-slate-600 mb-3 truncate">{t('admin.emailConfig.subject')}: {template.subject}</p>
                   <div className="flex justify-between items-center">
                     <span className="text-xs text-slate-400">
-                      MAJ: {new Date(template.lastUpdated).toLocaleDateString('fr-CA')}
+                      {t('admin.emailConfig.updated')}: {new Date(template.lastUpdated).toLocaleDateString(locale)}
                     </span>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => setEditingTemplate(template)}
                     >
-                      Modifier
+                      {t('admin.emailConfig.edit')}
                     </Button>
                   </div>
                 </div>
@@ -265,8 +279,8 @@ export default function EmailsPage() {
           columns={logColumns}
           data={logs}
           keyExtractor={(log) => log.id}
-          emptyTitle="Aucun email envoy\u00e9"
-          emptyDescription="L'historique des emails envoy\u00e9s appara\u00eetra ici."
+          emptyTitle={t('admin.emailConfig.noEmailsSent')}
+          emptyDescription={t('admin.emailConfig.noEmailsSentDescription')}
         />
       )}
 
@@ -274,47 +288,47 @@ export default function EmailsPage() {
       {activeTab === 'settings' && (
         <div className="bg-white rounded-xl border border-slate-200 p-6 space-y-6">
           <div>
-            <h3 className="font-semibold text-slate-900 mb-4">Configuration SMTP</h3>
+            <h3 className="font-semibold text-slate-900 mb-4">{t('admin.emailConfig.smtpConfig')}</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <FormField label="Provider">
+              <FormField label={t('admin.emailConfig.provider')}>
                 <select className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
                   <option>Resend</option>
                   <option>SendGrid</option>
-                  <option>SMTP personnalis\u00e9</option>
+                  <option>{t('admin.emailConfig.customSmtp')}</option>
                 </select>
               </FormField>
-              <FormField label="Email exp\u00e9diteur">
+              <FormField label={t('admin.emailConfig.senderEmail')}>
                 <Input type="email" defaultValue="noreply@biocycle.ca" />
               </FormField>
-              <FormField label="Nom exp\u00e9diteur">
+              <FormField label={t('admin.emailConfig.senderName')}>
                 <Input type="text" defaultValue="BioCycle Peptides" />
               </FormField>
-              <FormField label="Email r\u00e9ponse">
+              <FormField label={t('admin.emailConfig.replyEmail')}>
                 <Input type="email" defaultValue="support@biocycle.ca" />
               </FormField>
             </div>
           </div>
 
           <div className="pt-4 border-t border-slate-200">
-            <h3 className="font-semibold text-slate-900 mb-4">Automatisations</h3>
+            <h3 className="font-semibold text-slate-900 mb-4">{t('admin.emailConfig.automations')}</h3>
             <div className="space-y-3">
               <label className="flex items-center justify-between">
-                <span className="text-slate-700">Email panier abandonn\u00e9 (apr\u00e8s 24h)</span>
+                <span className="text-slate-700">{t('admin.emailConfig.abandonedCartEmail')}</span>
                 <input type="checkbox" className="w-4 h-4 rounded border-slate-300 text-sky-500 focus:ring-sky-500" />
               </label>
               <label className="flex items-center justify-between">
-                <span className="text-slate-700">Demande d'avis (5 jours apr\u00e8s livraison)</span>
+                <span className="text-slate-700">{t('admin.emailConfig.reviewRequest')}</span>
                 <input type="checkbox" defaultChecked className="w-4 h-4 rounded border-slate-300 text-sky-500 focus:ring-sky-500" />
               </label>
               <label className="flex items-center justify-between">
-                <span className="text-slate-700">Email anniversaire</span>
+                <span className="text-slate-700">{t('admin.emailConfig.birthdayEmail')}</span>
                 <input type="checkbox" defaultChecked className="w-4 h-4 rounded border-slate-300 text-sky-500 focus:ring-sky-500" />
               </label>
             </div>
           </div>
 
           <Button variant="primary" icon={Save}>
-            Sauvegarder
+            {t('admin.emailConfig.save')}
           </Button>
         </div>
       )}
@@ -323,25 +337,25 @@ export default function EmailsPage() {
       <Modal
         isOpen={!!editingTemplate}
         onClose={() => setEditingTemplate(null)}
-        title="Modifier le template"
+        title={t('admin.emailConfig.editTemplate')}
         size="lg"
         footer={
           <>
             <Button variant="secondary" icon={Eye}>
-              Pr\u00e9visualiser
+              {t('admin.emailConfig.preview')}
             </Button>
             <Button variant="primary" icon={Save}>
-              Sauvegarder
+              {t('admin.emailConfig.save')}
             </Button>
           </>
         }
       >
         {editingTemplate && (
           <div className="space-y-4">
-            <FormField label="Sujet" hint={`Variables: {orderNumber}, {customerName}, {trackingUrl}`}>
+            <FormField label={t('admin.emailConfig.subject')} hint={t('admin.emailConfig.subjectHint')}>
               <Input type="text" defaultValue={editingTemplate.subject} />
             </FormField>
-            <FormField label="Contenu (HTML)">
+            <FormField label={t('admin.emailConfig.contentHtml')}>
               <Textarea
                 rows={15}
                 defaultValue={editingTemplate.content}

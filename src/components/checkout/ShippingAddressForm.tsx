@@ -6,6 +6,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { AddressAutocomplete } from '@/components/ui/AddressAutocomplete';
 
 interface ShippingAddress {
   recipientName: string;
@@ -302,14 +303,23 @@ export function ShippingAddressForm({
           {/* Adresse ligne 1 */}
           <div style={{ gridColumn: 'span 2' }}>
             <label className="form-label">Adresse</label>
-            <input
-              type="text"
+            <AddressAutocomplete
               value={newAddress.addressLine1}
-              onChange={(e) =>
-                setNewAddress({ ...newAddress, addressLine1: e.target.value })
+              onChange={(addressComponents) => {
+                setNewAddress({
+                  ...newAddress,
+                  addressLine1: addressComponents.street,
+                  city: addressComponents.city,
+                  state: addressComponents.province || newAddress.state,
+                  postalCode: addressComponents.postalCode,
+                  country: addressComponents.country || newAddress.country,
+                });
+              }}
+              onInputChange={(value) =>
+                setNewAddress({ ...newAddress, addressLine1: value })
               }
-              className="form-input"
               placeholder="123 Rue Principale"
+              className="form-input"
               required
             />
           </div>

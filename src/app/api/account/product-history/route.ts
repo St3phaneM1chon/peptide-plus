@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * API Historique produits agrégé
  * GET /api/account/product-history - Tous les produits commandés par le client, groupés par catégorie

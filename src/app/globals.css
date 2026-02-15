@@ -7,6 +7,22 @@
 @tailwind components;
 @tailwind utilities;
 
+/* PWA Install Banner Animation */
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
+}
+
 /* =====================================================
    PALETTE DE COULEURS - 5 TONS DE GRIS
    ===================================================== */
@@ -1045,6 +1061,36 @@ a:hover {
 .gap-2 { gap: 8px; }
 .gap-4 { gap: 16px; }
 .gap-6 { gap: 24px; }
+
+/* =====================================================
+   ACCESSIBILITY
+   ===================================================== */
+
+/* Focus-visible outline for keyboard navigation */
+*:focus-visible {
+  outline: 2px solid #CC5500;
+  outline-offset: 2px;
+}
+
+/* Remove focus-visible outline on elements that have their own focus styles */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: none;
+}
+
+/* Screen reader only utility (supplements Tailwind's sr-only) */
+.sr-only-custom {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
 
 /* =====================================================
    ANIMATIONS

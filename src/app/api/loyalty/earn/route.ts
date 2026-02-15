@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * API Loyalty Earn - BioCycle Peptides
  * Gagne des points de fidélité
@@ -147,6 +149,7 @@ export async function POST(request: NextRequest) {
       db.loyaltyTransaction.create({
         data: {
           userId: user.id,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Prisma enum type from dynamic value
           type: transactionType as any,
           points: pointsToEarn,
           description: transactionDescription,

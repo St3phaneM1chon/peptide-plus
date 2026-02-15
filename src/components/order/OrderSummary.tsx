@@ -5,10 +5,12 @@
 
 'use client';
 
+import Image from 'next/image';
+
 interface OrderSummaryProps {
   order: {
     id: string;
-    amount: number | any;
+    amount: number;
     currency: string;
     paymentMethod: string;
     createdAt: Date;
@@ -81,13 +83,16 @@ export function OrderSummary({ order }: OrderSummaryProps) {
             overflow: 'hidden',
             backgroundColor: 'var(--gray-100)',
             flexShrink: 0,
+            position: 'relative',
           }}
         >
           {order.product.imageUrl ? (
-            <img
+            <Image
               src={order.product.imageUrl}
               alt={order.product.name}
-              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              fill
+              style={{ objectFit: 'cover' }}
+              unoptimized
             />
           ) : (
             <div

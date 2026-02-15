@@ -72,7 +72,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Overview: all models coverage
-    const overview: Record<string, any> = {};
+    const overview: Record<string, unknown> = {};
     for (const m of ALL_MODELS) {
       try {
         overview[m] = await getModelTranslationCoverage(m);

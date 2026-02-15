@@ -1,7 +1,8 @@
+export const dynamic = 'force-dynamic';
+
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { UserRole } from '@/types';
-import { prisma } from '@/lib/db';
 import {
   createExpenseEntry,
   getExpensesByDepartment,

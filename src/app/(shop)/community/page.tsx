@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useSession } from 'next-auth/react';
 import { useTranslations } from '@/hooks/useTranslations';
 
@@ -272,7 +273,7 @@ export default function CommunityPage() {
                           {/* Avatar */}
                           <div className="hidden sm:block">
                             {post.userAvatar ? (
-                              <img src={post.userAvatar} alt="" className="w-12 h-12 rounded-full" />
+                              <Image src={post.userAvatar} alt="" width={48} height={48} className="w-12 h-12 rounded-full" unoptimized />
                             ) : (
                               <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
                                 <span className="text-purple-600 font-bold text-lg">{post.userName.charAt(0)}</span>

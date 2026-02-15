@@ -309,15 +309,15 @@ export async function seedPermissions(): Promise<void> {
 
   for (const code of allCodes) {
     const name = PERMISSIONS[code];
-    const module = code.split('.')[0];
+    const permissionModule = code.split('.')[0];
 
     await prisma.permission.upsert({
       where: { code },
-      update: { name, module },
+      update: { name, module: permissionModule },
       create: {
         code,
         name,
-        module,
+        module: permissionModule,
         defaultOwner: true,
         defaultEmployee: ROLE_DEFAULTS.EMPLOYEE.includes(code),
         defaultClient: ROLE_DEFAULTS.CLIENT.includes(code),

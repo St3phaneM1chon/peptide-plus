@@ -5,6 +5,7 @@ import Link from 'next/link';
 import {
   Upload,
   FileDown,
+  Loader2,
   Package,
   PackageCheck,
   AlertTriangle,
@@ -19,7 +20,6 @@ import {
   PageHeader,
   Button,
   Modal,
-  EmptyState,
   StatusBadge,
   StatCard,
   FilterBar,
@@ -28,6 +28,8 @@ import {
   Input,
   type Column,
 } from '@/components/admin';
+import { useI18n } from '@/i18n/client';
+import { toast } from 'sonner';
 
 interface ProductFormat {
   id: string;
@@ -45,23 +47,8 @@ interface ProductFormat {
 
 type AvailabilityVariant = 'success' | 'error' | 'warning' | 'neutral' | 'info' | 'primary';
 
-const availabilityConfig: Record<string, { label: string; variant: AvailabilityVariant }> = {
-  IN_STOCK: { label: 'En stock', variant: 'success' },
-  OUT_OF_STOCK: { label: 'Rupture', variant: 'error' },
-  LOW_STOCK: { label: 'Stock bas', variant: 'warning' },
-  DISCONTINUED: { label: 'Discontinue', variant: 'neutral' },
-  COMING_SOON: { label: 'Bientot disponible', variant: 'info' },
-  PRE_ORDER: { label: 'Pre-commande', variant: 'primary' },
-};
-
-const availabilityOptions = [
-  { value: 'IN_STOCK', label: 'En stock' },
-  { value: 'OUT_OF_STOCK', label: 'Rupture' },
-  { value: 'DISCONTINUED', label: 'Discontinue' },
-  { value: 'COMING_SOON', label: 'Bientot disponible' },
-];
-
 export default function InventairePage() {
+  const { t, formatCurrency } = useI18n();
   const [inventory, setInventory] = useState<ProductFormat[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState({ search: '', availability: '', lowStock: false });
@@ -69,6 +56,51 @@ export default function InventairePage() {
   const [editValue, setEditValue] = useState<number>(0);
   const [adjustmentReason, setAdjustmentReason] = useState('');
   const [showHistory, setShowHistory] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
+
+  const handleExportInventory = async () => {
+    setExporting(true);
+    try {
+      const res = await fetch('/api/admin/inventory/export');
+      if (!res.ok) {
+        toast.error(t('admin.inventory.exportError') || 'Export failed');
+        return;
+      }
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const disposition = res.headers.get('Content-Disposition');
+      const filename = disposition?.match(/filename="(.+)"/)?.[1] || 'inventory-export.csv';
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success(t('admin.inventory.exportSuccess') || 'Inventory exported successfully');
+    } catch (error) {
+      console.error('Export error:', error);
+      toast.error(t('admin.inventory.exportError') || 'Export failed');
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const availabilityConfig: Record<string, { label: string; variant: AvailabilityVariant }> = useMemo(() => ({
+    IN_STOCK: { label: t('admin.inventory.availInStock'), variant: 'success' },
+    OUT_OF_STOCK: { label: t('admin.inventory.availOutOfStock'), variant: 'error' },
+    LOW_STOCK: { label: t('admin.inventory.lowStock'), variant: 'warning' },
+    DISCONTINUED: { label: t('admin.inventory.availDiscontinued'), variant: 'neutral' },
+    COMING_SOON: { label: t('admin.inventory.availComingSoon'), variant: 'info' },
+    PRE_ORDER: { label: t('admin.inventory.availPreOrder'), variant: 'primary' },
+  }), [t]);
+
+  const availabilityOptions = useMemo(() => [
+    { value: 'IN_STOCK', label: t('admin.inventory.availInStock') },
+    { value: 'OUT_OF_STOCK', label: t('admin.inventory.availOutOfStock') },
+    { value: 'DISCONTINUED', label: t('admin.inventory.availDiscontinued') },
+    { value: 'COMING_SOON', label: t('admin.inventory.availComingSoon') },
+  ], [t]);
 
   useEffect(() => {
     fetchInventory();
@@ -138,7 +170,7 @@ export default function InventairePage() {
   const getAvailabilityBadge = (item: ProductFormat) => {
     const isLowStock = item.stockQuantity <= item.lowStockThreshold && item.stockQuantity > 0;
     if (isLowStock) {
-      return <StatusBadge variant="warning" dot>STOCK BAS</StatusBadge>;
+      return <StatusBadge variant="warning" dot>{t('admin.inventory.availLowStock')}</StatusBadge>;
     }
     const config = availabilityConfig[item.availability] || { label: item.availability.replace('_', ' '), variant: 'neutral' as const };
     return <StatusBadge variant={config.variant} dot>{config.label}</StatusBadge>;
@@ -147,7 +179,7 @@ export default function InventairePage() {
   const columns: Column<ProductFormat>[] = [
     {
       key: 'product',
-      header: 'Produit',
+      header: t('admin.inventory.colProduct'),
       sortable: true,
       render: (item) => (
         <Link href={`/admin/produits/${item.productId}`} className="hover:text-sky-600 transition-colors">
@@ -158,7 +190,7 @@ export default function InventairePage() {
     },
     {
       key: 'sku',
-      header: 'SKU',
+      header: t('admin.inventory.colSku'),
       render: (item) => (
         <code className="text-sm text-slate-600 bg-slate-100 px-2 py-0.5 rounded">
           {item.sku || '-'}
@@ -167,15 +199,15 @@ export default function InventairePage() {
     },
     {
       key: 'price',
-      header: 'Prix',
+      header: t('admin.inventory.colPrice'),
       sortable: true,
       render: (item) => (
-        <span className="font-medium text-slate-900">{item.price.toFixed(2)} $</span>
+        <span className="font-medium text-slate-900">{formatCurrency(item.price)}</span>
       ),
     },
     {
       key: 'stock',
-      header: 'Stock',
+      header: t('admin.inventory.colStock'),
       align: 'center',
       sortable: true,
       render: (item) => {
@@ -206,7 +238,7 @@ export default function InventairePage() {
     },
     {
       key: 'threshold',
-      header: 'Seuil',
+      header: t('admin.inventory.colThreshold'),
       align: 'center',
       render: (item) => (
         <span className="text-slate-500">{item.lowStockThreshold}</span>
@@ -214,12 +246,12 @@ export default function InventairePage() {
     },
     {
       key: 'status',
-      header: 'Statut',
+      header: t('admin.inventory.colStatus'),
       render: (item) => getAvailabilityBadge(item),
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: t('admin.inventory.colActions'),
       align: 'center',
       render: (item) => {
         if (editingId === item.id) {
@@ -258,7 +290,7 @@ export default function InventairePage() {
                 setEditValue(item.stockQuantity);
               }}
             >
-              Modifier
+              {t('admin.inventory.edit')}
             </Button>
             <Button
               size="sm"
@@ -266,7 +298,7 @@ export default function InventairePage() {
               icon={History}
               onClick={() => setShowHistory(item.id)}
             >
-              Historique
+              {t('admin.inventory.history')}
             </Button>
           </div>
         );
@@ -277,15 +309,20 @@ export default function InventairePage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Inventaire"
-        subtitle="Gerez le stock de vos produits"
+        title={t('admin.inventory.title')}
+        subtitle={t('admin.inventory.subtitle')}
         actions={
           <>
             <Button variant="secondary" icon={Upload}>
-              Importer CSV
+              {t('admin.inventory.importCsv')}
             </Button>
-            <Button variant="secondary" icon={FileDown}>
-              Exporter
+            <Button
+              variant="secondary"
+              icon={exporting ? Loader2 : FileDown}
+              onClick={handleExportInventory}
+              disabled={exporting}
+            >
+              {t('admin.inventory.export')}
             </Button>
           </>
         }
@@ -294,31 +331,31 @@ export default function InventairePage() {
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <StatCard
-          label="Total produits"
+          label={t('admin.inventory.totalProducts')}
           value={stats.total}
           icon={Package}
         />
         <StatCard
-          label="En stock"
+          label={t('admin.inventory.inStock')}
           value={stats.inStock}
           icon={PackageCheck}
           className="border-green-200 bg-green-50"
         />
         <StatCard
-          label="Stock bas"
+          label={t('admin.inventory.lowStock')}
           value={stats.lowStock}
           icon={AlertTriangle}
           className="border-yellow-200 bg-yellow-50"
         />
         <StatCard
-          label="Rupture"
+          label={t('admin.inventory.outOfStock')}
           value={stats.outOfStock}
           icon={PackageX}
           className="border-red-200 bg-red-50"
         />
         <StatCard
-          label="Valeur stock"
-          value={`${stats.totalValue.toFixed(0)} $`}
+          label={t('admin.inventory.stockValue')}
+          value={formatCurrency(stats.totalValue)}
           icon={DollarSign}
           className="border-emerald-200 bg-emerald-50"
         />
@@ -328,7 +365,7 @@ export default function InventairePage() {
       <FilterBar
         searchValue={filter.search}
         onSearchChange={(value) => setFilter({ ...filter, search: value })}
-        searchPlaceholder="Rechercher (produit, SKU)..."
+        searchPlaceholder={t('admin.inventory.searchPlaceholder')}
         actions={
           <label className="flex items-center gap-2 cursor-pointer">
             <input
@@ -337,12 +374,12 @@ export default function InventairePage() {
               onChange={(e) => setFilter({ ...filter, lowStock: e.target.checked })}
               className="w-4 h-4 rounded border-slate-300 text-sky-500 focus:ring-sky-500"
             />
-            <span className="text-sm text-slate-700">Stock bas uniquement</span>
+            <span className="text-sm text-slate-700">{t('admin.inventory.lowStockOnly')}</span>
           </label>
         }
       >
         <SelectFilter
-          label="Tous les statuts"
+          label={t('admin.inventory.allStatuses')}
           value={filter.availability}
           onChange={(value) => setFilter({ ...filter, availability: value })}
           options={availabilityOptions}
@@ -355,21 +392,21 @@ export default function InventairePage() {
         data={filteredInventory}
         keyExtractor={(item) => item.id}
         loading={loading}
-        emptyTitle="Aucun produit trouve"
-        emptyDescription="Aucun produit ne correspond aux filtres selectionnes."
+        emptyTitle={t('admin.inventory.emptyTitle')}
+        emptyDescription={t('admin.inventory.emptyDescription')}
       />
 
       {/* Adjustment Reason Panel */}
       {editingId && (
         <div className="fixed bottom-4 right-4 bg-white rounded-xl shadow-lg border border-slate-200 p-4 w-80 z-40">
-          <h4 className="font-semibold text-slate-900 mb-2">Raison de l&apos;ajustement</h4>
+          <h4 className="font-semibold text-slate-900 mb-2">{t('admin.inventory.adjustmentReason')}</h4>
           <Input
             type="text"
-            placeholder="Ex: Reception stock, Correction inventaire..."
+            placeholder={t('admin.inventory.adjustmentPlaceholder')}
             value={adjustmentReason}
             onChange={(e) => setAdjustmentReason(e.target.value)}
           />
-          <p className="text-xs text-slate-400 mt-2">Requis pour enregistrer la modification</p>
+          <p className="text-xs text-slate-400 mt-2">{t('admin.inventory.adjustmentRequired')}</p>
         </div>
       )}
 
@@ -377,28 +414,28 @@ export default function InventairePage() {
       <Modal
         isOpen={!!showHistory}
         onClose={() => setShowHistory(null)}
-        title="Historique des mouvements"
+        title={t('admin.inventory.historyTitle')}
       >
         <div className="space-y-3">
           <div className="flex items-center gap-3 text-sm">
             <span className="text-green-600 font-bold">+10</span>
-            <span className="text-slate-500">Reception stock</span>
-            <span className="text-slate-400 ml-auto">il y a 2 jours</span>
+            <span className="text-slate-500">{t('admin.inventory.historyStockReception')}</span>
+            <span className="text-slate-400 ml-auto">{t('admin.inventory.historyDaysAgo2')}</span>
           </div>
           <div className="flex items-center gap-3 text-sm">
             <span className="text-red-600 font-bold">-2</span>
-            <span className="text-slate-500">Commande #BC-2026-00001</span>
-            <span className="text-slate-400 ml-auto">il y a 3 jours</span>
+            <span className="text-slate-500">{t('admin.inventory.historyOrder')} #BC-2026-00001</span>
+            <span className="text-slate-400 ml-auto">{t('admin.inventory.historyDaysAgo3')}</span>
           </div>
           <div className="flex items-center gap-3 text-sm">
             <span className="text-red-600 font-bold">-1</span>
-            <span className="text-slate-500">Commande #BC-2026-00002</span>
-            <span className="text-slate-400 ml-auto">il y a 5 jours</span>
+            <span className="text-slate-500">{t('admin.inventory.historyOrder')} #BC-2026-00002</span>
+            <span className="text-slate-400 ml-auto">{t('admin.inventory.historyDaysAgo5')}</span>
           </div>
           <div className="flex items-center gap-3 text-sm">
             <span className="text-green-600 font-bold">+50</span>
-            <span className="text-slate-500">Stock initial</span>
-            <span className="text-slate-400 ml-auto">il y a 30 jours</span>
+            <span className="text-slate-500">{t('admin.inventory.historyInitialStock')}</span>
+            <span className="text-slate-400 ml-auto">{t('admin.inventory.historyDaysAgo30')}</span>
           </div>
         </div>
       </Modal>

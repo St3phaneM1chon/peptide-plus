@@ -39,11 +39,11 @@ export default function FormatSelector({
 }: FormatSelectorProps) {
   return (
     <div className="space-y-3">
-      <label className="text-sm text-neutral-500 uppercase tracking-wider block">
+      <label id="format-selector-label" className="text-sm text-neutral-500 uppercase tracking-wider block">
         Select Format:
       </label>
-      
-      <div className="grid grid-cols-2 gap-3">
+
+      <div className="grid grid-cols-2 gap-3" role="radiogroup" aria-labelledby="format-selector-label">
         {formats.map((format) => {
           const formatInfo = formatImages[format.type] || { icon: '📦', label: format.name };
           const isSelected = selectedFormat.id === format.id;
@@ -51,6 +51,9 @@ export default function FormatSelector({
           return (
             <button
               key={format.id}
+              role="radio"
+              aria-checked={isSelected}
+              aria-label={`${format.name} - ${formatPrice(format.price)}${!format.inStock ? ' (out of stock)' : ''}`}
               onClick={() => onSelect(format)}
               disabled={!format.inStock}
               className={`relative flex items-center gap-3 p-3 rounded-xl border-2 text-left transition-all ${

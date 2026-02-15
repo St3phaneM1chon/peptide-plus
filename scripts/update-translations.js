@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 /**
  * Script to update all translation files with missing keys from English
  * Run with: node scripts/update-translations.js

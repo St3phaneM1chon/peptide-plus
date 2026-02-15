@@ -5,6 +5,9 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useTranslations } from '@/hooks/useTranslations';
+import { settingsProfileSchema, validateForm } from '@/lib/form-validation';
+import { FormError } from '@/components/ui/FormError';
+import { toast } from 'sonner';
 
 interface ProfileData {
   name: string;
@@ -58,6 +61,19 @@ export default function SettingsPage() {
     country: 'Canada',
   });
 
+  // Validation errors for profile tab
+  const [profileErrors, setProfileErrors] = useState<Record<string, string>>({});
+
+  const clearProfileError = (field: string) => {
+    if (profileErrors[field]) {
+      setProfileErrors((prev) => {
+        const next = { ...prev };
+        delete next[field];
+        return next;
+      });
+    }
+  };
+
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/auth/signin?callbackUrl=/account/settings');
@@ -85,9 +101,22 @@ export default function SettingsPage() {
 
   const handleProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate with Zod
+    const validation = validateForm(settingsProfileSchema, {
+      name: profileData.name,
+      phone: profileData.phone || undefined,
+    });
+
+    if (!validation.success) {
+      setProfileErrors(validation.errors || {});
+      return;
+    }
+
+    setProfileErrors({});
     setIsLoading(true);
     setMessage(null);
-    
+
     try {
       const res = await fetch('/api/account/profile', {
         method: 'PUT',
@@ -97,13 +126,16 @@ export default function SettingsPage() {
       
       if (res.ok) {
         await updateSession({ name: profileData.name });
-        setMessage({ type: 'success', text: t('account.profileUpdated') || 'Profile updated successfully!' });
+        setMessage({ type: 'success', text: t('account.profileUpdated') });
+        toast.success('Profile updated successfully');
       } else {
         const error = await res.json();
-        setMessage({ type: 'error', text: error.message || 'Failed to update profile' });
+        setMessage({ type: 'error', text: error.message || t('account.errorUpdateProfile') });
+        toast.error('Failed to update profile');
       }
     } catch (error) {
-      setMessage({ type: 'error', text: 'An error occurred. Please try again.' });
+      setMessage({ type: 'error', text: t('account.errorGeneric') });
+      toast.error('Something went wrong. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -116,13 +148,15 @@ export default function SettingsPage() {
     
     // Validation
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      setMessage({ type: 'error', text: t('account.passwordMismatch') || 'Passwords do not match' });
+      setMessage({ type: 'error', text: t('account.passwordMismatch') });
+      toast.error('Passwords do not match');
       setIsLoading(false);
       return;
     }
-    
+
     if (passwordData.newPassword.length < 12) {
-      setMessage({ type: 'error', text: t('account.passwordTooShort') || 'Password must be at least 12 characters' });
+      setMessage({ type: 'error', text: t('account.passwordTooShort') });
+      toast.error('Password must be at least 12 characters');
       setIsLoading(false);
       return;
     }
@@ -138,14 +172,17 @@ export default function SettingsPage() {
       });
       
       if (res.ok) {
-        setMessage({ type: 'success', text: t('account.passwordUpdated') || 'Password updated successfully!' });
+        setMessage({ type: 'success', text: t('account.passwordUpdated') });
         setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+        toast.success('Password changed successfully');
       } else {
         const error = await res.json();
-        setMessage({ type: 'error', text: error.message || 'Failed to update password' });
+        setMessage({ type: 'error', text: error.message || t('account.errorUpdatePassword') });
+        toast.error('Failed to change password');
       }
     } catch (error) {
-      setMessage({ type: 'error', text: 'An error occurred. Please try again.' });
+      setMessage({ type: 'error', text: t('account.errorGeneric') });
+      toast.error('Something went wrong. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -159,18 +196,20 @@ export default function SettingsPage() {
     try {
       // Save to localStorage for quick access
       localStorage.setItem('shipping_address', JSON.stringify(addressData));
-      
+
       // Also save to backend
       await fetch('/api/account/address', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(addressData),
       });
-      
-      setMessage({ type: 'success', text: t('account.addressUpdated') || 'Address saved successfully!' });
+
+      setMessage({ type: 'success', text: t('account.addressUpdated') });
+      toast.success('Address saved successfully');
     } catch (error) {
       // Still show success if localStorage worked
-      setMessage({ type: 'success', text: t('account.addressUpdated') || 'Address saved successfully!' });
+      setMessage({ type: 'success', text: t('account.addressUpdated') });
+      toast.success('Address saved successfully');
     } finally {
       setIsLoading(false);
     }
@@ -201,10 +240,10 @@ export default function SettingsPage() {
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
-            {t('account.backToAccount') || 'Back to Account'}
+            {t('account.backToAccount')}
           </Link>
-          <h1 className="text-2xl md:text-3xl font-bold">{t('account.accountSettings') || 'Account Settings'}</h1>
-          <p className="text-neutral-400 mt-1">{t('account.settingsDescription') || 'Manage your profile and preferences'}</p>
+          <h1 className="text-2xl md:text-3xl font-bold">{t('account.accountSettings') }</h1>
+          <p className="text-neutral-400 mt-1">{t('account.settingsDescription') }</p>
         </div>
       </section>
 
@@ -224,7 +263,7 @@ export default function SettingsPage() {
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
-                <span className="hidden sm:inline">{t('account.profile') || 'Profile'}</span>
+                <span className="hidden sm:inline">{t('account.profile') }</span>
               </div>
             </button>
             <button
@@ -239,7 +278,7 @@ export default function SettingsPage() {
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
-                <span className="hidden sm:inline">{t('account.password') || 'Password'}</span>
+                <span className="hidden sm:inline">{t('account.password') }</span>
               </div>
             </button>
             <button
@@ -255,7 +294,7 @@ export default function SettingsPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
-                <span className="hidden sm:inline">{t('account.address') || 'Address'}</span>
+                <span className="hidden sm:inline">{t('account.address') }</span>
               </div>
             </button>
             <button
@@ -270,7 +309,7 @@ export default function SettingsPage() {
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                 </svg>
-                <span className="hidden sm:inline">MFA / Security</span>
+                <span className="hidden sm:inline">{t('account.mfaSecurity')}</span>
                 {mfaRequired && !session?.user?.mfaEnabled && (
                   <span className="inline-flex items-center justify-center w-2 h-2 bg-red-500 rounded-full"></span>
                 )}
@@ -304,20 +343,21 @@ export default function SettingsPage() {
               <form onSubmit={handleProfileSubmit} className="space-y-6">
                 <div>
                   <label className="block text-sm font-medium text-neutral-700 mb-2">
-                    {t('account.fullName') || 'Full Name'}
+                    {t('account.fullName') }
                   </label>
                   <input
                     type="text"
                     value={profileData.name}
-                    onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
-                    className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    onChange={(e) => { setProfileData({ ...profileData, name: e.target.value }); clearProfileError('name'); }}
+                    className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent ${profileErrors.name ? 'border-red-500' : 'border-neutral-300'}`}
                     placeholder="John Doe"
                   />
+                  <FormError error={profileErrors.name} />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-neutral-700 mb-2">
-                    {t('account.email') || 'Email Address'}
+                    {t('account.email') }
                   </label>
                   <input
                     type="email"
@@ -326,21 +366,22 @@ export default function SettingsPage() {
                     className="w-full px-4 py-3 border border-neutral-200 rounded-lg bg-neutral-50 text-neutral-500 cursor-not-allowed"
                   />
                   <p className="text-xs text-neutral-500 mt-1">
-                    {t('account.emailCannotChange') || 'Email address cannot be changed'}
+                    {t('account.emailCannotChange') }
                   </p>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-neutral-700 mb-2">
-                    {t('account.phone') || 'Phone Number'}
+                    {t('account.phone') }
                   </label>
                   <input
                     type="tel"
                     value={profileData.phone}
-                    onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
-                    className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    onChange={(e) => { setProfileData({ ...profileData, phone: e.target.value }); clearProfileError('phone'); }}
+                    className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent ${profileErrors.phone ? 'border-red-500' : 'border-neutral-300'}`}
                     placeholder="+1 (555) 123-4567"
                   />
+                  <FormError error={profileErrors.phone} />
                 </div>
 
                 <button
@@ -351,11 +392,10 @@ export default function SettingsPage() {
                   {isLoading ? (
                     <>
                       <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      {t('account.saving') || 'Saving...'}
+                      {t('account.saving') }
                     </>
                   ) : (
-                    t('account.saveChanges') || 'Save Changes'
-                  )}
+                    t('account.saveChanges')                   )}
                 </button>
               </form>
             )}
@@ -370,16 +410,16 @@ export default function SettingsPage() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                       </svg>
                     </div>
-                    <h3 className="text-lg font-bold mb-2">{t('account.oauthPassword') || 'Social Login Account'}</h3>
+                    <h3 className="text-lg font-bold mb-2">{t('account.oauthPassword') }</h3>
                     <p className="text-neutral-500">
-                      {t('account.oauthPasswordDesc') || 'You signed in with a social account. Password management is handled by your provider.'}
+                      {t('account.oauthPasswordDesc') }
                     </p>
                   </div>
                 ) : (
                   <form onSubmit={handlePasswordSubmit} className="space-y-6">
                     <div>
                       <label className="block text-sm font-medium text-neutral-700 mb-2">
-                        {t('account.currentPassword') || 'Current Password'}
+                        {t('account.currentPassword') }
                       </label>
                       <input
                         type="password"
@@ -393,7 +433,7 @@ export default function SettingsPage() {
 
                     <div>
                       <label className="block text-sm font-medium text-neutral-700 mb-2">
-                        {t('account.newPassword') || 'New Password'}
+                        {t('account.newPassword') }
                       </label>
                       <input
                         type="password"
@@ -405,13 +445,13 @@ export default function SettingsPage() {
                         minLength={12}
                       />
                       <p className="text-xs text-neutral-500 mt-1">
-                        {t('account.passwordRequirements') || 'Minimum 12 characters with uppercase, lowercase, number and special character'}
+                        {t('account.passwordRequirements') }
                       </p>
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-neutral-700 mb-2">
-                        {t('account.confirmPassword') || 'Confirm New Password'}
+                        {t('account.confirmPassword') }
                       </label>
                       <input
                         type="password"
@@ -431,11 +471,10 @@ export default function SettingsPage() {
                       {isLoading ? (
                         <>
                           <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                          {t('account.updating') || 'Updating...'}
+                          {t('account.updating') }
                         </>
                       ) : (
-                        t('account.updatePassword') || 'Update Password'
-                      )}
+                        t('account.updatePassword')                       )}
                     </button>
                   </form>
                 )}
@@ -447,7 +486,7 @@ export default function SettingsPage() {
               <form onSubmit={handleAddressSubmit} className="space-y-6">
                 <div>
                   <label className="block text-sm font-medium text-neutral-700 mb-2">
-                    {t('account.streetAddress') || 'Street Address'}
+                    {t('account.streetAddress') }
                   </label>
                   <input
                     type="text"
@@ -461,7 +500,7 @@ export default function SettingsPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-neutral-700 mb-2">
-                      {t('account.city') || 'City'}
+                      {t('account.city') }
                     </label>
                     <input
                       type="text"
@@ -473,7 +512,7 @@ export default function SettingsPage() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-neutral-700 mb-2">
-                      {t('account.province') || 'Province/State'}
+                      {t('account.province') }
                     </label>
                     <input
                       type="text"
@@ -488,7 +527,7 @@ export default function SettingsPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-neutral-700 mb-2">
-                      {t('account.postalCode') || 'Postal Code'}
+                      {t('account.postalCode') }
                     </label>
                     <input
                       type="text"
@@ -500,7 +539,7 @@ export default function SettingsPage() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-neutral-700 mb-2">
-                      {t('account.country') || 'Country'}
+                      {t('account.country') }
                     </label>
                     <select
                       value={addressData.country}
@@ -521,11 +560,10 @@ export default function SettingsPage() {
                   {isLoading ? (
                     <>
                       <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      {t('account.saving') || 'Saving...'}
+                      {t('account.saving') }
                     </>
                   ) : (
-                    t('account.saveAddress') || 'Save Address'
-                  )}
+                    t('account.saveAddress')                   )}
                 </button>
               </form>
             )}
@@ -540,9 +578,9 @@ export default function SettingsPage() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
                       </svg>
                       <div>
-                        <h4 className="font-bold text-red-700">Two-Factor Authentication Required</h4>
+                        <h4 className="font-bold text-red-700">{t('account.mfaRequired')}</h4>
                         <p className="text-sm text-red-600 mt-1">
-                          Your role requires MFA to be enabled. Please set up two-factor authentication to continue using the platform.
+                          {t('account.mfaRequiredDesc')}
                         </p>
                       </div>
                     </div>
@@ -564,9 +602,9 @@ export default function SettingsPage() {
                       )}
                     </div>
                     <div>
-                      <p className="font-medium">Two-Factor Authentication (TOTP)</p>
+                      <p className="font-medium">{t('account.mfaTotpTitle')}</p>
                       <p className={`text-sm ${session?.user?.mfaEnabled ? 'text-green-600' : 'text-red-600'}`}>
-                        {session?.user?.mfaEnabled ? 'Enabled - Your account is secured' : 'Disabled - Not configured'}
+                        {session?.user?.mfaEnabled ? t('account.mfaEnabled') : t('account.mfaDisabled')}
                       </p>
                     </div>
                   </div>
@@ -587,10 +625,10 @@ export default function SettingsPage() {
                               setMfaQrCode(data.qrCodeUrl);
                               setMfaSecret(data.manualEntryKey);
                             } else {
-                              setMessage({ type: 'error', text: data.error || 'Failed to initiate MFA setup' });
+                              setMessage({ type: 'error', text: data.error || t('account.mfaSetupFailed') });
                             }
                           } catch {
-                            setMessage({ type: 'error', text: 'Network error' });
+                            setMessage({ type: 'error', text: t('account.errorNetwork') });
                           } finally {
                             setMfaSetupLoading(false);
                           }
@@ -601,17 +639,17 @@ export default function SettingsPage() {
                         {mfaSetupLoading ? (
                           <>
                             <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                            Setting up...
+                            {t('account.mfaSettingUp')}
                           </>
                         ) : (
-                          'Enable Two-Factor Authentication'
+                          t('account.mfaEnableButton')
                         )}
                       </button>
                     ) : (
                       <div className="space-y-4">
                         <div className="text-center">
                           <p className="text-sm text-neutral-600 mb-4">
-                            Scan this QR code with your authenticator app (Google Authenticator, Authy, etc.)
+                            {t('account.mfaScanQrCode')}
                           </p>
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img src={mfaQrCode} alt="MFA QR Code" className="mx-auto w-48 h-48 border rounded-lg" />
@@ -623,7 +661,7 @@ export default function SettingsPage() {
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-neutral-700 mb-2">
-                            Enter the 6-digit code from your app
+                            {t('account.mfaEnterCode')}
                           </label>
                           <input
                             type="text"
@@ -646,16 +684,16 @@ export default function SettingsPage() {
                               });
                               const data = await res.json();
                               if (res.ok) {
-                                setMessage({ type: 'success', text: 'MFA enabled successfully! Your backup codes: ' + (data.backupCodes?.join(', ') || 'Check your email') });
+                                setMessage({ type: 'success', text: t('account.mfaEnabledSuccess') + ': ' + (data.backupCodes?.join(', ') || t('account.mfaCheckEmail')) });
                                 setMfaQrCode(null);
                                 setMfaSecret(null);
                                 setMfaVerifyCode('');
                                 await updateSession({});
                               } else {
-                                setMessage({ type: 'error', text: data.error || 'Invalid code' });
+                                setMessage({ type: 'error', text: data.error || t('account.mfaInvalidCode') });
                               }
                             } catch {
-                              setMessage({ type: 'error', text: 'Network error' });
+                              setMessage({ type: 'error', text: t('account.errorNetwork') });
                             } finally {
                               setMfaSetupLoading(false);
                             }
@@ -666,10 +704,10 @@ export default function SettingsPage() {
                           {mfaSetupLoading ? (
                             <>
                               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                              Verifying...
+                              {t('account.mfaVerifying')}
                             </>
                           ) : (
-                            'Verify & Enable MFA'
+                            t('account.mfaVerifyButton')
                           )}
                         </button>
                       </div>
@@ -681,7 +719,7 @@ export default function SettingsPage() {
                 {session?.user?.mfaEnabled && (
                   <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
                     <p className="text-sm text-green-700">
-                      Your account is protected with two-factor authentication. To disable MFA, please contact support.
+                      {t('account.mfaProtected')}
                     </p>
                   </div>
                 )}
@@ -693,20 +731,20 @@ export default function SettingsPage() {
         {/* Danger Zone */}
         <div className="bg-white rounded-xl shadow-sm border border-red-200">
           <div className="p-6">
-            <h3 className="text-lg font-bold text-red-600 mb-2">{t('account.dangerZone') || 'Danger Zone'}</h3>
+            <h3 className="text-lg font-bold text-red-600 mb-2">{t('account.dangerZone') }</h3>
             <p className="text-sm text-neutral-500 mb-4">
-              {t('account.dangerZoneDesc') || 'Irreversible and destructive actions'}
+              {t('account.dangerZoneDesc') }
             </p>
             <button
               onClick={() => {
-                if (confirm(t('account.deleteConfirm') || 'Are you sure you want to delete your account? This action cannot be undone.')) {
+                if (confirm(t('account.deleteConfirm'))) {
                   // Handle account deletion
-                  alert('Account deletion requested. Our team will process this within 24 hours.');
+                  alert(t('account.deletionRequested'));
                 }
               }}
               className="px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors text-sm font-medium"
             >
-              {t('account.deleteAccount') || 'Delete Account'}
+              {t('account.deleteAccount') }
             </button>
           </div>
         </div>

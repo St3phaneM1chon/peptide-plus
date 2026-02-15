@@ -1,9 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { useSession } from 'next-auth/react';
 import { useTranslations } from '@/hooks/useTranslations';
 import Link from 'next/link';
+import { toast } from 'sonner';
+import ReviewImageUpload from './ReviewImageUpload';
+import ReviewImageGallery from './ReviewImageGallery';
 
 interface Review {
   id: string;
@@ -28,15 +32,15 @@ interface ProductReviewsProps {
   productName: string;
 }
 
-// Reviews loaded from API (empty by default until review system is implemented)
-
-export default function ProductReviews({ productId: _productId, productName }: ProductReviewsProps) {
+export default function ProductReviews({ productId, productName }: ProductReviewsProps) {
   const { data: session } = useSession();
   const { t } = useTranslations();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [showWriteReview, setShowWriteReview] = useState(false);
   const [sortBy, setSortBy] = useState<'recent' | 'helpful' | 'highest' | 'lowest'>('helpful');
   const [filterRating, setFilterRating] = useState<number | null>(null);
+  const [filterWithPhotos, setFilterWithPhotos] = useState(false);
+  const [isLoadingReviews, setIsLoadingReviews] = useState(true);
   
   // New review form state
   const [newReview, setNewReview] = useState({
@@ -48,17 +52,39 @@ export default function ProductReviews({ productId: _productId, productName }: P
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
+  // Load reviews on mount
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        setIsLoadingReviews(true);
+        const response = await fetch(`/api/reviews?productId=${productId}`);
+        if (response.ok) {
+          const data = await response.json();
+          setReviews(data.reviews || []);
+        }
+      } catch (error) {
+        console.error('Failed to load reviews:', error);
+      } finally {
+        setIsLoadingReviews(false);
+      }
+    };
+
+    fetchReviews();
+  }, [productId]);
+
   // Calculate stats
-  const averageRating = reviews.length > 0 
-    ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length 
+  const averageRating = reviews.length > 0
+    ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
     : 0;
-  const ratingCounts = [5, 4, 3, 2, 1].map(rating => 
+  const ratingCounts = [5, 4, 3, 2, 1].map(rating =>
     reviews.filter(r => r.rating === rating).length
   );
+  const reviewsWithPhotosCount = reviews.filter(r => r.images && r.images.length > 0).length;
 
   // Sort and filter reviews
   const sortedReviews = [...reviews]
     .filter(r => filterRating === null || r.rating === filterRating)
+    .filter(r => !filterWithPhotos || (r.images && r.images.length > 0))
     .sort((a, b) => {
       switch (sortBy) {
         case 'recent': return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
@@ -72,31 +98,68 @@ export default function ProductReviews({ productId: _productId, productName }: P
   const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!session) return;
-    
+
     setIsSubmitting(true);
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    const review: Review = {
-      id: Date.now().toString(),
-      userId: session.user?.email || '',
-      userName: session.user?.name || 'Anonymous',
-      rating: newReview.rating,
-      title: newReview.title,
-      content: newReview.content,
-      verified: true,
-      helpful: 0,
-      createdAt: new Date().toISOString(),
-    };
-    
-    setReviews(prev => [review, ...prev]);
-    setIsSubmitting(false);
-    setSubmitSuccess(true);
-    setShowWriteReview(false);
-    setNewReview({ rating: 5, title: '', content: '', images: [] });
-    
-    setTimeout(() => setSubmitSuccess(false), 3000);
+
+    try {
+      let imageUrls: string[] = [];
+
+      // Upload images first if any
+      if (newReview.images.length > 0) {
+        const formData = new FormData();
+        newReview.images.forEach(file => {
+          formData.append('images', file);
+        });
+
+        const uploadResponse = await fetch('/api/reviews/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!uploadResponse.ok) {
+          const error = await uploadResponse.json();
+          throw new Error(error.error || 'Failed to upload images');
+        }
+
+        const uploadData = await uploadResponse.json();
+        imageUrls = uploadData.urls;
+      }
+
+      // Submit review with image URLs
+      const response = await fetch('/api/reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          productId,
+          rating: newReview.rating,
+          title: newReview.title,
+          comment: newReview.content,
+          imageUrls,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to submit review');
+      }
+
+      const data = await response.json();
+      const pointsMessage = data.pointsAwarded > 0
+        ? ` You earned ${data.pointsAwarded} loyalty points!`
+        : '';
+
+      toast.success(`Review submitted successfully!${pointsMessage} It will be published after admin approval.`);
+      setSubmitSuccess(true);
+      setShowWriteReview(false);
+      setNewReview({ rating: 5, title: '', content: '', images: [] });
+
+      setTimeout(() => setSubmitSuccess(false), 5000);
+    } catch (error) {
+      console.error('Error submitting review:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to submit review');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleHelpful = (reviewId: string) => {
@@ -147,6 +210,19 @@ export default function ProductReviews({ productId: _productId, productName }: P
         </div>
       )}
 
+      {/* Rewards Info Banner */}
+      <div className="mb-6 p-4 bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-lg flex items-center gap-3">
+        <span className="text-2xl">💰</span>
+        <div>
+          <p className="font-medium text-orange-800">
+            {t('reviews.rewardsTitle') || 'Get Rewarded for Your Reviews!'}
+          </p>
+          <p className="text-sm text-orange-600">
+            {t('reviews.rewardsInfo') || 'Earn 50 loyalty points for each review, or 100 points when you include photos'}
+          </p>
+        </div>
+      </div>
+
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
@@ -157,7 +233,7 @@ export default function ProductReviews({ productId: _productId, productName }: P
             <span className="text-neutral-500">({reviews.length} {t('reviews.reviews') || 'reviews'})</span>
           </div>
         </div>
-        
+
         <button
           onClick={() => setShowWriteReview(true)}
           className="px-6 py-3 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600 transition-colors"
@@ -203,16 +279,42 @@ export default function ProductReviews({ productId: _productId, productName }: P
 
         {/* Reviews List */}
         <div className="md:col-span-2">
-          {/* Sort Options */}
-          <div className="flex items-center justify-between mb-4">
-            <p className="text-sm text-neutral-500">
-              {filterRating ? `Showing ${filterRating}-star reviews` : `Showing all ${sortedReviews.length} reviews`}
-              {filterRating && (
-                <button onClick={() => setFilterRating(null)} className="ml-2 text-orange-500 hover:underline">
-                  Clear filter
+          {/* Sort Options and Filters */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-sm text-neutral-500">
+                {filterRating ? `Showing ${filterRating}-star reviews` : `Showing all ${sortedReviews.length} reviews`}
+                {(filterRating || filterWithPhotos) && (
+                  <button
+                    onClick={() => {
+                      setFilterRating(null);
+                      setFilterWithPhotos(false);
+                    }}
+                    className="ml-2 text-orange-500 hover:underline"
+                  >
+                    Clear filters
+                  </button>
+                )}
+              </p>
+
+              {/* With Photos Filter */}
+              {reviewsWithPhotosCount > 0 && (
+                <button
+                  onClick={() => setFilterWithPhotos(!filterWithPhotos)}
+                  className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                    filterWithPhotos
+                      ? 'bg-orange-500 text-white'
+                      : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'
+                  }`}
+                >
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  With Photos ({reviewsWithPhotosCount})
                 </button>
               )}
-            </p>
+            </div>
+
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
@@ -227,49 +329,56 @@ export default function ProductReviews({ productId: _productId, productName }: P
 
           {/* Reviews */}
           <div className="space-y-6">
-            {sortedReviews.map((review) => (
-              <div key={review.id} className="border-b border-neutral-200 pb-6">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    {review.userAvatar ? (
-                      <img src={review.userAvatar} alt="" className="w-10 h-10 rounded-full" />
-                    ) : (
-                      <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
-                        <span className="text-orange-600 font-bold">{review.userName.charAt(0)}</span>
-                      </div>
-                    )}
-                    <div>
-                      <p className="font-medium">{review.userName}</p>
-                      <div className="flex items-center gap-2">
-                        <StarRating rating={review.rating} size="sm" />
-                        {review.verified && (
-                          <span className="text-xs text-green-600 flex items-center gap-1">
-                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                            </svg>
-                            Verified Purchase
-                          </span>
-                        )}
+            {isLoadingReviews ? (
+              <div className="text-center py-8">
+                <div className="inline-block w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+                <p className="text-neutral-500 mt-2">Loading reviews...</p>
+              </div>
+            ) : sortedReviews.length === 0 ? (
+              <div className="text-center py-8 text-neutral-500">
+                {filterRating || filterWithPhotos ? 'No reviews match your filters' : 'No reviews yet. Be the first to review!'}
+              </div>
+            ) : (
+              sortedReviews.map((review) => (
+                <div key={review.id} className="border-b border-neutral-200 pb-6">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      {review.userAvatar ? (
+                        <Image src={review.userAvatar} alt="" width={40} height={40} className="w-10 h-10 rounded-full" unoptimized />
+                      ) : (
+                        <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
+                          <span className="text-orange-600 font-bold">{review.userName.charAt(0)}</span>
+                        </div>
+                      )}
+                      <div>
+                        <p className="font-medium">{review.userName}</p>
+                        <div className="flex items-center gap-2">
+                          <StarRating rating={review.rating} size="sm" />
+                          {review.verified && (
+                            <span className="text-xs text-green-600 flex items-center gap-1">
+                              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                              </svg>
+                              Verified Purchase
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
+                    <span className="text-sm text-neutral-500">
+                      {new Date(review.createdAt).toLocaleDateString('en-CA', {
+                        year: 'numeric', month: 'short', day: 'numeric'
+                      })}
+                    </span>
                   </div>
-                  <span className="text-sm text-neutral-500">
-                    {new Date(review.createdAt).toLocaleDateString('en-CA', { 
-                      year: 'numeric', month: 'short', day: 'numeric' 
-                    })}
-                  </span>
-                </div>
-                
-                <h4 className="font-semibold mt-3">{review.title}</h4>
-                <p className="text-neutral-600 mt-2">{review.content}</p>
-                
-                {review.images && review.images.length > 0 && (
-                  <div className="flex gap-2 mt-3">
-                    {review.images.map((img, i) => (
-                      <img key={i} src={img} alt="" className="w-20 h-20 object-cover rounded-lg border" />
-                    ))}
-                  </div>
-                )}
+
+                  <h4 className="font-semibold mt-3">{review.title}</h4>
+                  <p className="text-neutral-600 mt-2">{review.content}</p>
+
+                  {/* Review Images Gallery */}
+                  {review.images && review.images.length > 0 && (
+                    <ReviewImageGallery images={review.images} />
+                  )}
 
                 {/* Response from store */}
                 {review.response && (
@@ -293,8 +402,9 @@ export default function ProductReviews({ productId: _productId, productName }: P
                     Report
                   </button>
                 </div>
-              </div>
-            ))}
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>
@@ -364,22 +474,21 @@ export default function ProductReviews({ productId: _productId, productName }: P
 
                 <div>
                   <label className="block text-sm font-medium mb-2">{t('reviews.addPhotos') || 'Add Photos (Optional)'}</label>
-                  <div className="border-2 border-dashed border-neutral-300 rounded-lg p-6 text-center hover:border-orange-500 transition-colors cursor-pointer">
-                    <input type="file" multiple accept="image/*" className="hidden" id="review-images" />
-                    <label htmlFor="review-images" className="cursor-pointer">
-                      <svg className="w-8 h-8 mx-auto text-neutral-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                      <p className="text-sm text-neutral-500">Click to upload images</p>
-                    </label>
-                  </div>
+                  <ReviewImageUpload
+                    onImagesChange={(files) => setNewReview(prev => ({ ...prev, images: files }))}
+                    maxImages={3}
+                  />
                 </div>
 
                 <div className="bg-orange-50 rounded-lg p-4 flex items-center gap-3">
                   <span className="text-2xl">🎁</span>
                   <div>
-                    <p className="font-medium text-orange-800">{t('reviews.earnPoints') || 'Earn 100 Loyalty Points!'}</p>
-                    <p className="text-sm text-orange-600">{t('reviews.earnPointsDesc') || 'Submit a verified review and earn bonus points'}</p>
+                    <p className="font-medium text-orange-800">
+                      {t('reviews.earnPoints') || 'Earn Loyalty Points!'}
+                    </p>
+                    <p className="text-sm text-orange-600">
+                      {t('reviews.earnPointsDesc') || 'Earn 50 points for a review, 100 points with photos!'}
+                    </p>
                   </div>
                 </div>
 

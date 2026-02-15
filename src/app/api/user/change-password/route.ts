@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * API Changer mot de passe
  * POST /api/user/change-password

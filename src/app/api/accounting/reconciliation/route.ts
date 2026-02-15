@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { UserRole } from '@/types';
@@ -80,12 +82,14 @@ export async function POST(request: NextRequest) {
     const result = autoReconcile(bankTransactions, journalEntries, criteria);
 
     // Update matched transactions in DB
-    for (const match of result.matched) {
+    const matchedTransactions = bankTransactions.filter(
+      (t) => t.reconciliationStatus === 'MATCHED'
+    );
+    for (const match of matchedTransactions) {
       await prisma.bankTransaction.update({
-        where: { id: match.bankTransaction.id },
+        where: { id: match.id },
         data: {
           reconciliationStatus: 'MATCHED',
-          matchedEntryId: match.journalEntry.id,
           matchedAt: new Date(),
           matchedBy: session.user.id || session.user.email,
         },

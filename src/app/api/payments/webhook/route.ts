@@ -1,6 +1,8 @@
+export const dynamic = 'force-dynamic';
+
 /**
- * Webhook Stripe - Traitement des événements de paiement
- * Avec idempotence, création comptable automatique, et envoi d'emails
+ * Webhook Stripe - Traitement des evenements de paiement
+ * Avec idempotence, creation comptable automatique, et envoi d'emails
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -9,6 +11,8 @@ import { prisma } from '@/lib/db';
 import { sendEmail, orderConfirmationEmail, type OrderData } from '@/lib/email';
 import { createAccountingEntriesForOrder } from '@/lib/accounting/webhook-accounting.service';
 import { generateCOGSEntry } from '@/lib/inventory';
+import { qualifyReferral } from '@/app/api/referrals/qualify/route';
+import { logger } from '@/lib/logger';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2023-10-16',
@@ -82,7 +86,9 @@ export async function POST(request: NextRequest) {
     try {
       event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
     } catch (err) {
-      console.error('Webhook signature verification failed:', err);
+      logger.error('Webhook signature verification failed', {
+        error: err instanceof Error ? err.message : String(err),
+      });
       return NextResponse.json(
         { error: 'Webhook signature verification failed' },
         { status: 400 }
@@ -91,7 +97,7 @@ export async function POST(request: NextRequest) {
 
     // Idempotence check: if already processed, return 200 immediately
     if (await checkIdempotence(event.id)) {
-      console.log(`Webhook ${event.id} already processed, skipping`);
+      logger.info('Webhook already processed, skipping', { eventId: event.id });
       return NextResponse.json({ received: true, duplicate: true });
     }
 
@@ -128,14 +134,18 @@ export async function POST(request: NextRequest) {
         }
 
         default:
-          console.log(`Unhandled event type: ${event.type}`);
+          logger.info('Unhandled event type', { eventType: event.type });
           await completeWebhookEvent(event.id);
       }
 
       return NextResponse.json({ received: true });
     } catch (processError) {
       const errorMsg = processError instanceof Error ? processError.message : 'Unknown error';
-      console.error(`Webhook processing error for ${event.id}:`, errorMsg);
+      logger.error('Webhook processing error', {
+        eventId: event.id,
+        eventType: event.type,
+        error: errorMsg,
+      });
       await failWebhookEvent(event.id, errorMsg);
       return NextResponse.json(
         { error: 'Webhook handler failed' },
@@ -143,7 +153,10 @@ export async function POST(request: NextRequest) {
       );
     }
   } catch (error) {
-    console.error('Webhook error:', error);
+    logger.error('Webhook error', {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
     return NextResponse.json(
       { error: 'Webhook handler failed' },
       { status: 500 }
@@ -152,7 +165,7 @@ export async function POST(request: NextRequest) {
 }
 
 async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId: string) {
-  console.log('Checkout session completed:', session.id);
+  logger.info('Checkout session completed', { sessionId: session.id });
 
   const metadata = session.metadata || {};
   const { userId, shippingAddress } = metadata;
@@ -168,13 +181,24 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
   const shippingCost = parseFloat(metadata.shippingCost || '0');
   const subtotal = parseFloat(metadata.subtotal || '0');
 
+  // Multi-currency: retrieve currency info from checkout metadata
+  const checkoutCurrencyId = metadata.currencyId;
+  const checkoutExchangeRate = parseFloat(metadata.exchangeRate || '1');
+
   // Generate order number
   const orderNumber = `PP-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`;
 
-  // Find or create currency
-  let currency = await prisma.currency.findUnique({
-    where: { code: session.currency?.toUpperCase() || 'CAD' }
-  });
+  // Find currency: prefer the ID stored at checkout time, then fall back to code lookup
+  let currency = checkoutCurrencyId
+    ? await prisma.currency.findUnique({ where: { id: checkoutCurrencyId } })
+    : null;
+
+  if (!currency) {
+    const currencyCode = metadata.currencyCode || session.currency?.toUpperCase() || 'CAD';
+    currency = await prisma.currency.findUnique({
+      where: { code: currencyCode },
+    });
+  }
 
   if (!currency) {
     currency = await prisma.currency.create({
@@ -183,14 +207,23 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
         name: session.currency?.toUpperCase() === 'USD' ? 'US Dollar' : 'Dollar canadien',
         symbol: '$',
         exchangeRate: 1,
-      }
+      },
     });
   }
 
-  // Calculate amounts from Stripe if not in metadata
+  // Amounts in metadata are always in CAD (base currency).
+  // Stripe charged the user in the selected currency, but we
+  // record accounting values in CAD for consistency.
   const stripeSubtotal = subtotal || (session.amount_subtotal || 0) / 100;
   const stripeTotal = (session.amount_total || 0) / 100;
   const totalTax = taxTps + taxTvq + taxTvh;
+
+  // If the order was placed in a foreign currency, the Stripe total
+  // is in that currency. We still record the CAD amounts from metadata
+  // for accounting, plus the exchange rate used at checkout time.
+  const cadTotal = subtotal
+    ? subtotal - promoDiscount + totalTax + shippingCost
+    : stripeTotal; // fallback
 
   // Create the order with items in a transaction
   const order = await prisma.$transaction(async (tx) => {
@@ -205,8 +238,9 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
         taxTps,
         taxTvq,
         taxTvh,
-        total: stripeTotal,
+        total: cadTotal,
         currencyId: currency!.id,
+        exchangeRate: checkoutExchangeRate,
         paymentMethod: 'STRIPE_CARD',
         paymentStatus: 'PAID',
         status: 'CONFIRMED',
@@ -222,7 +256,7 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
         shippingCountry: shipping?.country || 'CA',
         shippingPhone: shipping?.phone || null,
         items: cartItems.length > 0 ? {
-          create: cartItems.map((item: any) => ({
+          create: cartItems.map((item: Record<string, unknown>) => ({
             productId: item.productId,
             formatId: item.formatId || null,
             productName: item.name,
@@ -231,7 +265,7 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
             quantity: item.quantity,
             unitPrice: item.price,
             discount: item.discount || 0,
-            total: item.price * item.quantity - (item.discount || 0),
+            total: Number(item.price) * Number(item.quantity) - (Number(item.discount) || 0),
           })),
         } : undefined,
       },
@@ -277,25 +311,36 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
     return newOrder;
   });
 
-  console.log('Order created:', order.id, 'Number:', orderNumber);
+  logger.info('Order created', { orderId: order.id, orderNumber });
 
   // Create accounting entries (non-blocking - don't fail the webhook)
   let journalEntryId: string | undefined;
   try {
     const result = await createAccountingEntriesForOrder(order.id);
     journalEntryId = result.saleEntryId;
-    console.log(`Accounting entries created for ${orderNumber}: sale=${result.saleEntryId}, fee=${result.feeEntryId}, invoice=${result.invoiceId}`);
+    logger.info('Accounting entries created', {
+      orderNumber,
+      saleEntryId: result.saleEntryId,
+      feeEntryId: result.feeEntryId,
+      invoiceId: result.invoiceId,
+    });
   } catch (acctError) {
-    console.error(`Failed to create accounting entries for ${orderNumber}:`, acctError);
+    logger.error('Failed to create accounting entries', {
+      orderNumber,
+      error: acctError instanceof Error ? acctError.message : String(acctError),
+    });
     // Don't fail the webhook for accounting errors
   }
 
   // Generate COGS entry (non-blocking)
   try {
     await generateCOGSEntry(order.id);
-    console.log(`COGS entry created for ${orderNumber}`);
+    logger.info('COGS entry created', { orderNumber });
   } catch (cogsError) {
-    console.error(`Failed to create COGS entry for ${orderNumber}:`, cogsError);
+    logger.error('Failed to create COGS entry', {
+      orderNumber,
+      error: cogsError instanceof Error ? cogsError.message : String(cogsError),
+    });
   }
 
   // Track promo code usage
@@ -314,7 +359,88 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
         },
       });
     } catch (promoError) {
-      console.error('Failed to track promo code usage:', promoError);
+      logger.error('Failed to track promo code usage', {
+        promoCode,
+        error: promoError instanceof Error ? promoError.message : String(promoError),
+      });
+    }
+  }
+
+  // Create ambassador commission if the order used a referral code
+  if (promoCode) {
+    try {
+      const ambassador = await prisma.ambassador.findUnique({
+        where: { referralCode: promoCode },
+      });
+
+      if (ambassador && ambassador.status === 'ACTIVE') {
+        const rate = Number(ambassador.commissionRate);
+        const commissionAmount = Math.round(Number(order.total) * rate) / 100;
+
+        await prisma.ambassadorCommission.upsert({
+          where: {
+            ambassadorId_orderId: {
+              ambassadorId: ambassador.id,
+              orderId: order.id,
+            },
+          },
+          create: {
+            ambassadorId: ambassador.id,
+            orderId: order.id,
+            orderNumber: order.orderNumber,
+            orderTotal: Number(order.total),
+            commissionRate: rate,
+            commissionAmount,
+          },
+          update: {},
+        });
+        logger.info('Ambassador commission created', {
+          ambassadorName: ambassador.name,
+          commissionAmount,
+          orderNumber,
+        });
+      }
+    } catch (commError) {
+      logger.error('Failed to create ambassador commission', {
+        orderNumber,
+        error: commError instanceof Error ? commError.message : String(commError),
+      });
+    }
+  }
+
+  // Referral program: qualify referral if buyer was referred and this is their first paid order
+  if (userId && userId !== 'guest') {
+    try {
+      const buyer = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { referredById: true },
+      });
+
+      if (buyer?.referredById) {
+        // Check if the buyer has any previous PAID orders (besides this one)
+        const previousPaidOrders = await prisma.order.count({
+          where: {
+            userId,
+            paymentStatus: 'PAID',
+            id: { not: order.id },
+          },
+        });
+
+        if (previousPaidOrders === 0) {
+          const result = await qualifyReferral(userId, order.id, Number(cadTotal));
+          if (result.success) {
+            logger.info('Referral qualified', { orderNumber, message: result.message });
+          } else {
+            logger.info('Referral not qualified', { orderNumber, message: result.message });
+          }
+        }
+      }
+    } catch (refError) {
+      logger.error('Failed to process referral qualification', {
+        orderNumber,
+        error: refError instanceof Error ? refError.message : String(refError),
+      });
+      // Don't fail the webhook for referral errors
     }
   }
 
@@ -328,7 +454,7 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
 }
 
 async function handleRefund(charge: Stripe.Charge, eventId: string) {
-  console.log('Charge refunded:', charge.id);
+  logger.info('Charge refunded', { chargeId: charge.id });
 
   // Find the order
   const order = await prisma.order.findFirst({
@@ -336,7 +462,7 @@ async function handleRefund(charge: Stripe.Charge, eventId: string) {
   });
 
   if (!order) {
-    console.error('Order not found for refund:', charge.payment_intent);
+    logger.error('Order not found for refund', { paymentIntent: charge.payment_intent });
     await completeWebhookEvent(eventId);
     return;
   }
@@ -357,7 +483,6 @@ async function handleRefund(charge: Stripe.Charge, eventId: string) {
     const tps = Number(order.taxTps);
     const tvq = Number(order.taxTvq);
     const tvh = Number(order.taxTvh);
-    const totalTax = tps + tvq + tvh;
     const orderTotal = Number(order.total);
     const refundRatio = refundAmount / orderTotal;
 
@@ -370,7 +495,10 @@ async function handleRefund(charge: Stripe.Charge, eventId: string) {
       'Remboursement Stripe'
     );
   } catch (acctError) {
-    console.error('Failed to create refund accounting entries:', acctError);
+    logger.error('Failed to create refund accounting entries', {
+      orderId: order.id,
+      error: acctError instanceof Error ? acctError.message : String(acctError),
+    });
   }
 
   // Restore inventory for full refunds
@@ -400,7 +528,10 @@ async function handleRefund(charge: Stripe.Charge, eventId: string) {
         });
       }
     } catch (invError) {
-      console.error('Failed to restore inventory for refund:', invError);
+      logger.error('Failed to restore inventory for refund', {
+        orderId: order.id,
+        error: invError instanceof Error ? invError.message : String(invError),
+      });
     }
   }
 
@@ -464,17 +595,26 @@ async function sendOrderConfirmationEmailAsync(orderId: string, userId: string) 
     });
 
     if (result.success) {
-      console.log(`Confirmation email sent for order ${order.orderNumber} to ${user.email}`);
+      logger.info('Confirmation email sent', {
+        orderNumber: order.orderNumber,
+        to: user.email,
+      });
     } else {
-      console.error(`Failed to send confirmation email: ${result.error}`);
+      logger.error('Failed to send confirmation email', {
+        orderNumber: order.orderNumber,
+        error: result.error,
+      });
     }
   } catch (error) {
-    console.error('Error sending order confirmation email:', error);
+    logger.error('Error sending order confirmation email', {
+      orderId,
+      error: error instanceof Error ? error.message : String(error),
+    });
   }
 }
 
 async function handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
-  console.log('Payment succeeded:', paymentIntent.id);
+  logger.info('Payment succeeded', { paymentIntentId: paymentIntent.id });
   await prisma.order.updateMany({
     where: { stripePaymentId: paymentIntent.id },
     data: { paymentStatus: 'PAID' },
@@ -482,7 +622,7 @@ async function handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
 }
 
 async function handlePaymentFailure(paymentIntent: Stripe.PaymentIntent) {
-  console.log('Payment failed:', paymentIntent.id);
+  logger.warn('Payment failed', { paymentIntentId: paymentIntent.id });
 
   await prisma.order.updateMany({
     where: { stripePaymentId: paymentIntent.id },

@@ -194,7 +194,7 @@ export function ChatDashboard({ initialStats, agents, quickReplies, currentUserI
   };
 
   // Changer le statut
-  const updateConversation = async (updates: Record<string, any>) => {
+  const updateConversation = async (updates: Record<string, unknown>) => {
     if (!selectedConversation) return;
 
     try {

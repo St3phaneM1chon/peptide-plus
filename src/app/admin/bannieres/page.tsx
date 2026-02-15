@@ -5,6 +5,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import {
   Plus,
   ChevronUp,
@@ -26,6 +27,8 @@ import {
   Input,
   Textarea,
 } from '@/components/admin';
+import { useI18n } from '@/i18n/client';
+import { toast } from 'sonner';
 
 const LOCALES = [
   'en','fr','es','de','it','pt','ru','zh','ko','ar','pl','sv',
@@ -87,11 +90,12 @@ const emptySlide: Omit<HeroSlide, 'id' | 'translations'> = {
 };
 
 export default function BannieresPage() {
+  const { t } = useI18n();
   const [slides, setSlides] = useState<HeroSlide[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingSlide, setEditingSlide] = useState<HeroSlide | null>(null);
-  const [form, setForm] = useState<any>({ ...emptySlide });
+  const [form, setForm] = useState<Omit<HeroSlide, 'id' | 'translations'>>({ ...emptySlide });
   const [translations, setTranslations] = useState<Record<string, Translation>>({});
   const [activeTab, setActiveTab] = useState('general');
   const [saving, setSaving] = useState(false);
@@ -132,7 +136,7 @@ export default function BannieresPage() {
       endDate: slide.endDate ? slide.endDate.slice(0, 16) : '',
     });
     const trMap: Record<string, Translation> = {};
-    slide.translations.forEach((t) => { trMap[t.locale] = { ...t }; });
+    slide.translations.forEach((tr) => { trMap[tr.locale] = { ...tr }; });
     setTranslations(trMap);
     setActiveTab('general');
     setShowForm(true);
@@ -141,7 +145,7 @@ export default function BannieresPage() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const trArray = Object.values(translations).filter((t) => t.title);
+      const trArray = Object.values(translations).filter((tr) => tr.title);
       const body = { ...form, translations: trArray };
 
       const url = editingSlide ? `/api/hero-slides/${editingSlide.id}` : '/api/hero-slides';
@@ -155,7 +159,7 @@ export default function BannieresPage() {
 
       if (!res.ok) {
         const data = await res.json();
-        alert(data.error || 'Erreur');
+        toast.error(data.error || t('admin.banners.error'));
         setSaving(false);
         return;
       }
@@ -163,7 +167,7 @@ export default function BannieresPage() {
       setShowForm(false);
       fetchSlides();
     } catch {
-      alert('Erreur de connexion');
+      toast.error(t('admin.banners.connectionError'));
     }
     setSaving(false);
   };
@@ -178,7 +182,7 @@ export default function BannieresPage() {
   };
 
   const deleteSlide = async (id: string) => {
-    if (!confirm('Supprimer cette slide ?')) return;
+    if (!confirm(t('admin.banners.confirmDelete'))) return;
     await fetch(`/api/hero-slides/${id}`, { method: 'DELETE' });
     fetchSlides();
   };
@@ -233,7 +237,7 @@ export default function BannieresPage() {
   const modalFooter = (
     <>
       <Button variant="secondary" onClick={() => setShowForm(false)}>
-        Annuler
+        {t('admin.banners.cancelBtn')}
       </Button>
       <Button
         variant="primary"
@@ -241,7 +245,7 @@ export default function BannieresPage() {
         disabled={!form.slug || !form.title || !form.backgroundUrl}
         onClick={handleSave}
       >
-        {saving ? 'Enregistrement...' : editingSlide ? 'Mettre \u00e0 jour' : 'Cr\u00e9er'}
+        {saving ? t('admin.banners.saving') : editingSlide ? t('admin.banners.update') : t('admin.banners.create')}
       </Button>
     </>
   );
@@ -250,11 +254,11 @@ export default function BannieresPage() {
     <div className="space-y-6">
       {/* Header */}
       <PageHeader
-        title="Hero Slider"
-        subtitle="G\u00e9rez les slides du carrousel hero de la page d'accueil"
+        title={t('admin.banners.title')}
+        subtitle={t('admin.banners.subtitle')}
         actions={
           <Button variant="primary" icon={Plus} onClick={openCreate}>
-            Nouvelle slide
+            {t('admin.banners.newSlide')}
           </Button>
         }
       />
@@ -262,18 +266,18 @@ export default function BannieresPage() {
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
         <StatCard
-          label="Total"
+          label={t('admin.banners.total')}
           value={slides.length}
           icon={Layers}
         />
         <StatCard
-          label="Actives"
+          label={t('admin.banners.active')}
           value={slides.filter((s) => s.isActive).length}
           icon={Eye}
           className="bg-emerald-50 border-emerald-200"
         />
         <StatCard
-          label="Traductions"
+          label={t('admin.banners.translations')}
           value={slides.reduce((acc, s) => acc + s.translations.length, 0)}
           icon={Languages}
           className="bg-sky-50 border-sky-200"
@@ -283,7 +287,7 @@ export default function BannieresPage() {
       {/* Slides List */}
       <div className="bg-white rounded-xl border border-slate-200">
         <div className="p-4 border-b border-slate-200">
-          <h2 className="font-semibold text-slate-900">Slides ({slides.length})</h2>
+          <h2 className="font-semibold text-slate-900">{t('admin.banners.slidesCount', { count: slides.length })}</h2>
         </div>
 
         {slides.length > 0 ? (
@@ -313,10 +317,12 @@ export default function BannieresPage() {
 
                 {/* Thumbnail */}
                 <div className="w-32 h-20 bg-slate-100 rounded-lg overflow-hidden flex-shrink-0 relative">
-                  <img
+                  <Image
                     src={slide.backgroundUrl}
                     alt=""
-                    className="w-full h-full object-cover"
+                    fill
+                    className="object-cover"
+                    unoptimized
                   />
                   <span className="absolute bottom-1 right-1 bg-black/70 text-white text-xs px-1.5 py-0.5 rounded">
                     {slide.mediaType}
@@ -328,9 +334,9 @@ export default function BannieresPage() {
                   <p className="font-medium text-slate-900 truncate">{slide.title}</p>
                   <p className="text-sm text-slate-500 truncate">slug: {slide.slug}</p>
                   <div className="flex items-center gap-2 mt-1 text-xs text-slate-400">
-                    <span>{slide.translations.length} traduction(s)</span>
+                    <span>{t('admin.banners.translationCount', { count: slide.translations.length })}</span>
                     {slide.ctaUrl && <span>CTA: {slide.ctaUrl}</span>}
-                    <span>Ordre: {slide.sortOrder}</span>
+                    <span>{t('admin.banners.order')}: {slide.sortOrder}</span>
                   </div>
                 </div>
 
@@ -349,10 +355,10 @@ export default function BannieresPage() {
                     />
                   </button>
                   <Button size="sm" variant="secondary" icon={Pencil} onClick={() => openEdit(slide)}>
-                    Modifier
+                    {t('admin.banners.editSlide')}
                   </Button>
                   <Button size="sm" variant="danger" icon={Trash2} onClick={() => deleteSlide(slide.id)}>
-                    Supprimer
+                    {t('admin.banners.deleteSlide')}
                   </Button>
                 </div>
               </div>
@@ -361,11 +367,11 @@ export default function BannieresPage() {
         ) : (
           <EmptyState
             icon={ImageIcon}
-            title="Aucune slide"
-            description="Cr\u00e9ez votre premi\u00e8re slide pour le hero slider."
+            title={t('admin.banners.emptyTitle')}
+            description={t('admin.banners.emptyDescription')}
             action={
               <Button variant="primary" icon={Plus} onClick={openCreate}>
-                Nouvelle slide
+                {t('admin.banners.newSlide')}
               </Button>
             }
           />
@@ -376,23 +382,23 @@ export default function BannieresPage() {
       <Modal
         isOpen={showForm}
         onClose={() => setShowForm(false)}
-        title={editingSlide ? 'Modifier la slide' : 'Nouvelle slide'}
+        title={editingSlide ? t('admin.banners.editModalTitle') : t('admin.banners.createModalTitle')}
         size="xl"
         footer={modalFooter}
       >
         {/* Tabs */}
         <div className="border-b border-slate-200 -mx-5 px-5 -mt-5 mb-5 flex gap-1 overflow-x-auto">
           <button onClick={() => setActiveTab('general')} className={tabCls('general')}>
-            G\u00e9n\u00e9ral
+            {t('admin.banners.tabGeneral')}
           </button>
           <button onClick={() => setActiveTab('media')} className={tabCls('media')}>
-            M\u00e9dia &amp; Overlay
+            {t('admin.banners.tabMedia')}
           </button>
           <button onClick={() => setActiveTab('cta')} className={tabCls('cta')}>
-            CTA &amp; Stats
+            {t('admin.banners.tabCta')}
           </button>
           <button onClick={() => setActiveTab('schedule')} className={tabCls('schedule')}>
-            Programmation
+            {t('admin.banners.tabSchedule')}
           </button>
           {LOCALES.map((loc) => (
             <button
@@ -409,14 +415,14 @@ export default function BannieresPage() {
         {activeTab === 'general' && (
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <FormField label="Slug" required>
+              <FormField label={t('admin.banners.slug')} required>
                 <Input
                   value={form.slug}
                   onChange={(e) => setForm({ ...form, slug: e.target.value })}
                   placeholder="research-peptides"
                 />
               </FormField>
-              <FormField label="Ordre">
+              <FormField label={t('admin.banners.sortOrder')}>
                 <Input
                   type="number"
                   value={form.sortOrder}
@@ -424,20 +430,20 @@ export default function BannieresPage() {
                 />
               </FormField>
             </div>
-            <FormField label="Titre (d\u00e9faut)" required>
+            <FormField label={t('admin.banners.defaultTitle')} required>
               <Input
                 value={form.title}
                 onChange={(e) => setForm({ ...form, title: e.target.value })}
               />
             </FormField>
-            <FormField label="Sous-titre (d\u00e9faut)">
+            <FormField label={t('admin.banners.defaultSubtitle')}>
               <Textarea
                 value={form.subtitle}
                 onChange={(e) => setForm({ ...form, subtitle: e.target.value })}
                 rows={2}
               />
             </FormField>
-            <FormField label="Badge">
+            <FormField label={t('admin.banners.badge')}>
               <Input
                 value={form.badgeText}
                 onChange={(e) => setForm({ ...form, badgeText: e.target.value })}
@@ -451,7 +457,7 @@ export default function BannieresPage() {
                 onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
                 className="rounded border-slate-300 text-sky-500 focus:ring-sky-500"
               />
-              <label className="text-sm text-slate-700">Active</label>
+              <label className="text-sm text-slate-700">{t('admin.banners.isActive')}</label>
             </div>
           </div>
         )}
@@ -459,36 +465,36 @@ export default function BannieresPage() {
         {/* Media Tab */}
         {activeTab === 'media' && (
           <div className="space-y-4">
-            <FormField label="Type de m\u00e9dia">
+            <FormField label={t('admin.banners.mediaType')}>
               <select
                 value={form.mediaType}
                 onChange={(e) => setForm({ ...form, mediaType: e.target.value })}
                 className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
               >
-                <option value="IMAGE">Image</option>
-                <option value="VIDEO">Vid\u00e9o</option>
-                <option value="ANIMATION">Animation</option>
+                <option value="IMAGE">{t('admin.banners.imageOption')}</option>
+                <option value="VIDEO">{t('admin.banners.videoOption')}</option>
+                <option value="ANIMATION">{t('admin.banners.animationOption')}</option>
               </select>
             </FormField>
-            <FormField label="URL background" required>
+            <FormField label={t('admin.banners.backgroundUrl')} required>
               <Input
                 value={form.backgroundUrl}
                 onChange={(e) => setForm({ ...form, backgroundUrl: e.target.value })}
                 placeholder="https://images.unsplash.com/..."
               />
               {form.backgroundUrl && (
-                <div className="mt-2 h-32 rounded-lg overflow-hidden bg-slate-100">
-                  <img src={form.backgroundUrl} alt="" className="w-full h-full object-cover" />
+                <div className="mt-2 h-32 rounded-lg overflow-hidden bg-slate-100 relative">
+                  <Image src={form.backgroundUrl} alt="" fill className="object-cover" unoptimized />
                 </div>
               )}
             </FormField>
-            <FormField label="URL mobile (optionnel)">
+            <FormField label={t('admin.banners.mobileUrl')}>
               <Input
                 value={form.backgroundMobile}
                 onChange={(e) => setForm({ ...form, backgroundMobile: e.target.value })}
               />
             </FormField>
-            <FormField label={`Opacit\u00e9 overlay (${form.overlayOpacity}%)`}>
+            <FormField label={t('admin.banners.overlayOpacity', { value: form.overlayOpacity })}>
               <input
                 type="range"
                 min="0"
@@ -498,7 +504,7 @@ export default function BannieresPage() {
                 className="w-full"
               />
             </FormField>
-            <FormField label="Gradient (classes Tailwind)">
+            <FormField label={t('admin.banners.gradient')}>
               <Input
                 value={form.overlayGradient}
                 onChange={(e) => setForm({ ...form, overlayGradient: e.target.value })}
@@ -512,65 +518,65 @@ export default function BannieresPage() {
         {activeTab === 'cta' && (
           <div className="space-y-6">
             <div>
-              <h3 className="font-medium text-slate-900 mb-3">CTA Primaire</h3>
+              <h3 className="font-medium text-slate-900 mb-3">{t('admin.banners.primaryCta')}</h3>
               <div className="grid grid-cols-3 gap-4">
-                <FormField label="Texte">
+                <FormField label={t('admin.banners.ctaText')}>
                   <Input
                     value={form.ctaText}
                     onChange={(e) => setForm({ ...form, ctaText: e.target.value })}
-                    placeholder="Voir les produits"
+                    placeholder={t('admin.banners.ctaPlaceholder')}
                   />
                 </FormField>
-                <FormField label="URL">
+                <FormField label={t('admin.banners.ctaUrl')}>
                   <Input
                     value={form.ctaUrl}
                     onChange={(e) => setForm({ ...form, ctaUrl: e.target.value })}
                     placeholder="/shop"
                   />
                 </FormField>
-                <FormField label="Style">
+                <FormField label={t('admin.banners.ctaStyle')}>
                   <select
                     value={form.ctaStyle}
                     onChange={(e) => setForm({ ...form, ctaStyle: e.target.value })}
                     className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
                   >
-                    <option value="primary">Primary (orange)</option>
-                    <option value="secondary">Secondary (blanc)</option>
-                    <option value="outline">Outline (transparent)</option>
+                    <option value="primary">{t('admin.banners.stylePrimary')}</option>
+                    <option value="secondary">{t('admin.banners.styleSecondary')}</option>
+                    <option value="outline">{t('admin.banners.styleOutline')}</option>
                   </select>
                 </FormField>
               </div>
             </div>
             <div>
-              <h3 className="font-medium text-slate-900 mb-3">CTA Secondaire</h3>
+              <h3 className="font-medium text-slate-900 mb-3">{t('admin.banners.secondaryCta')}</h3>
               <div className="grid grid-cols-3 gap-4">
-                <FormField label="Texte">
+                <FormField label={t('admin.banners.ctaText')}>
                   <Input
                     value={form.cta2Text}
                     onChange={(e) => setForm({ ...form, cta2Text: e.target.value })}
                   />
                 </FormField>
-                <FormField label="URL">
+                <FormField label={t('admin.banners.ctaUrl')}>
                   <Input
                     value={form.cta2Url}
                     onChange={(e) => setForm({ ...form, cta2Url: e.target.value })}
                   />
                 </FormField>
-                <FormField label="Style">
+                <FormField label={t('admin.banners.ctaStyle')}>
                   <select
                     value={form.cta2Style}
                     onChange={(e) => setForm({ ...form, cta2Style: e.target.value })}
                     className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
                   >
-                    <option value="primary">Primary (orange)</option>
-                    <option value="secondary">Secondary (blanc)</option>
-                    <option value="outline">Outline (transparent)</option>
+                    <option value="primary">{t('admin.banners.stylePrimary')}</option>
+                    <option value="secondary">{t('admin.banners.styleSecondary')}</option>
+                    <option value="outline">{t('admin.banners.styleOutline')}</option>
                   </select>
                 </FormField>
               </div>
             </div>
             <div>
-              <FormField label="Stats JSON">
+              <FormField label={t('admin.banners.statsJson')}>
                 <Textarea
                   value={form.statsJson}
                   onChange={(e) => setForm({ ...form, statsJson: e.target.value })}
@@ -586,14 +592,14 @@ export default function BannieresPage() {
         {/* Schedule Tab */}
         {activeTab === 'schedule' && (
           <div className="space-y-4">
-            <FormField label="Date de d\u00e9but">
+            <FormField label={t('admin.banners.startDate')}>
               <Input
                 type="datetime-local"
                 value={form.startDate || ''}
                 onChange={(e) => setForm({ ...form, startDate: e.target.value })}
               />
             </FormField>
-            <FormField label="Date de fin">
+            <FormField label={t('admin.banners.endDate')}>
               <Input
                 type="datetime-local"
                 value={form.endDate || ''}
@@ -601,7 +607,7 @@ export default function BannieresPage() {
               />
             </FormField>
             <p className="text-sm text-slate-500">
-              Laissez vide pour afficher la slide sans restriction de dates.
+              {t('admin.banners.scheduleTip')}
             </p>
           </div>
         )}
@@ -613,21 +619,21 @@ export default function BannieresPage() {
           return (
             <div key={loc} className="space-y-4">
               <h3 className="font-medium text-slate-900">
-                Traduction: {LOCALE_LABELS[loc] || loc} ({loc.toUpperCase()})
+                {t('admin.banners.translationLabel', { language: LOCALE_LABELS[loc] || loc, code: loc.toUpperCase() })}
               </h3>
-              <FormField label="Badge">
+              <FormField label={t('admin.banners.trBadge')}>
                 <Input
                   value={tr.badgeText || ''}
                   onChange={(e) => updateTranslation(loc, 'badgeText', e.target.value)}
                 />
               </FormField>
-              <FormField label="Titre" required>
+              <FormField label={t('admin.banners.trTitle')} required>
                 <Input
                   value={tr.title || ''}
                   onChange={(e) => updateTranslation(loc, 'title', e.target.value)}
                 />
               </FormField>
-              <FormField label="Sous-titre">
+              <FormField label={t('admin.banners.trSubtitle')}>
                 <Textarea
                   value={tr.subtitle || ''}
                   onChange={(e) => updateTranslation(loc, 'subtitle', e.target.value)}
@@ -635,26 +641,26 @@ export default function BannieresPage() {
                 />
               </FormField>
               <div className="grid grid-cols-2 gap-4">
-                <FormField label="CTA Texte">
+                <FormField label={t('admin.banners.trCtaText')}>
                   <Input
                     value={tr.ctaText || ''}
                     onChange={(e) => updateTranslation(loc, 'ctaText', e.target.value)}
                   />
                 </FormField>
-                <FormField label="CTA2 Texte">
+                <FormField label={t('admin.banners.trCta2Text')}>
                   <Input
                     value={tr.cta2Text || ''}
                     onChange={(e) => updateTranslation(loc, 'cta2Text', e.target.value)}
                   />
                 </FormField>
               </div>
-              <FormField label="Stats JSON">
+              <FormField label={t('admin.banners.trStatsJson')}>
                 <Textarea
                   value={tr.statsJson || ''}
                   onChange={(e) => updateTranslation(loc, 'statsJson', e.target.value)}
                   rows={3}
                   className="font-mono text-sm"
-                  placeholder='[{"value":"99%+","label":"Puret\u00e9"}]'
+                  placeholder='[{"value":"99%+","label":"Purity"}]'
                 />
               </FormField>
             </div>

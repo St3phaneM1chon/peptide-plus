@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * API RESET PASSWORD
  * Réinitialise le mot de passe avec un token valide

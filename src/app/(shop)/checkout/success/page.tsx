@@ -3,6 +3,7 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import Breadcrumbs from '@/components/ui/Breadcrumbs';
 import { useTranslations } from '@/hooks/useTranslations';
 import { useCart } from '@/contexts/CartContext';
 
@@ -11,14 +12,14 @@ function CheckoutSuccessContent() {
   const searchParams = useSearchParams();
   const { clearCart } = useCart();
   const [orderNumber, setOrderNumber] = useState<string>('');
-  
+
   useEffect(() => {
     // Vider le panier après paiement réussi
     clearCart();
-    
+
     // Récupérer le session_id de Stripe si disponible
     const sessionId = searchParams.get('session_id');
-    
+
     if (sessionId) {
       // Format: PP-YYYY-XXXXXX
       setOrderNumber(`PP-${new Date().getFullYear()}-${sessionId.slice(-6).toUpperCase()}`);
@@ -29,8 +30,16 @@ function CheckoutSuccessContent() {
   }, [searchParams, clearCart]);
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-2xl mx-auto px-4">
+    <div className="min-h-screen bg-gray-50">
+      {/* Breadcrumbs */}
+      <Breadcrumbs
+        items={[
+          { label: t('nav.home') || 'Home', href: '/' },
+          { label: t('checkout.orderConfirmed') || 'Order Confirmed' },
+        ]}
+      />
+
+      <div className="max-w-2xl mx-auto px-4 py-12">
         <div className="bg-white rounded-2xl shadow-sm p-8 text-center">
           {/* Success Icon */}
           <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -100,7 +109,7 @@ function CheckoutSuccessContent() {
 
         {/* Support */}
         <p className="text-center text-sm text-gray-500 mt-8">
-          Questions about your order? Contact us at{' '}
+          {t('checkout.questionsContact')}{' '}
           <a href="mailto:support@biocyclepeptides.com" className="text-orange-600 hover:underline">
             support@biocyclepeptides.com
           </a>

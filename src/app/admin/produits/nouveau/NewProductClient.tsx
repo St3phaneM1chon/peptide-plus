@@ -3,7 +3,11 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Plus, Trash2 } from 'lucide-react';
+import Image from 'next/image';
+import { ArrowLeft, Plus, Trash2, GripVertical, ExternalLink, FileText, ImageIcon, Video, Link2 } from 'lucide-react';
+import { getFormatTypes, getProductTypes, getAvailabilityOptions, VOLUME_OPTIONS, getStockDisplay } from '../product-constants';
+import { useI18n } from '@/i18n/client';
+import { toast } from 'sonner';
 
 interface Category {
   id: string;
@@ -11,15 +15,35 @@ interface Category {
   slug: string;
 }
 
+interface ProductText {
+  id: string;
+  name: string;
+  title: string;
+  subtitle: string;
+  intro: string;
+  text: string;
+  summary: string;
+  pdfUrl: string;
+  imageUrl: string;
+  videoUrl: string;
+  externalLink: string;
+  internalLink: string;
+  references: string;
+}
+
 interface FormatToCreate {
   id: string;
   formatType: string;
   name: string;
-  sku: string;
-  price: number;
-  comparePrice: number | null;
+  description: string;
+  imageUrl: string;
+  volumeMl: number | null;
   dosageMg: number | null;
   unitCount: number | null;
+  sku: string;
+  costPrice: number | null;
+  price: number;
+  comparePrice: number | null;
   stockQuantity: number;
   lowStockThreshold: number;
   availability: string;
@@ -31,41 +55,14 @@ interface Props {
   categories: Category[];
 }
 
-const FORMAT_TYPES = [
-  { value: 'VIAL_2ML', label: 'Vial 2ml', icon: '💉' },
-  { value: 'VIAL_10ML', label: 'Vial 10ml', icon: '💉' },
-  { value: 'CARTRIDGE_3ML', label: 'Cartouche 3ml', icon: '🔫' },
-  { value: 'KIT_12', label: 'Kit de 12', icon: '📦' },
-  { value: 'CAPSULE_60', label: 'Capsules (60)', icon: '💊' },
-  { value: 'CAPSULE_120', label: 'Capsules (120)', icon: '💊' },
-  { value: 'PACK_5', label: 'Pack de 5', icon: '📦' },
-  { value: 'PACK_10', label: 'Pack de 10', icon: '📦' },
-  { value: 'BUNDLE', label: 'Bundle', icon: '🎁' },
-  { value: 'ACCESSORY', label: 'Accessoire', icon: '🔧' },
-  { value: 'NASAL_SPRAY', label: 'Spray nasal', icon: '💨' },
-  { value: 'CREAM', label: 'Crème', icon: '🧴' },
-];
-
-const PRODUCT_TYPES = [
-  { value: 'PEPTIDE', label: 'Peptide' },
-  { value: 'SUPPLEMENT', label: 'Supplément' },
-  { value: 'ACCESSORY', label: 'Accessoire' },
-  { value: 'BUNDLE', label: 'Bundle' },
-  { value: 'CAPSULE', label: 'Capsule' },
-];
-
-const AVAILABILITY_OPTIONS = [
-  { value: 'IN_STOCK', label: 'En stock' },
-  { value: 'OUT_OF_STOCK', label: 'Rupture de stock' },
-  { value: 'COMING_SOON', label: 'Bientôt disponible' },
-  { value: 'PRE_ORDER', label: 'Pré-commande' },
-];
-
 export default function NewProductClient({ categories }: Props) {
   const router = useRouter();
+  const { t } = useI18n();
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<'info' | 'formats'>('info');
-  
+  const [activeTab, setActiveTab] = useState<'header' | 'texts' | 'formats'>('header');
+
+  const PRODUCT_TYPES = getProductTypes(t);
+
   const [formData, setFormData] = useState({
     name: '',
     subtitle: '',
@@ -75,12 +72,13 @@ export default function NewProductClient({ categories }: Props) {
     productType: 'PEPTIDE',
     price: 0,
     compareAtPrice: '',
-    purity: '',
+    purity: '99.30',
     molecularWeight: '',
     casNumber: '',
     molecularFormula: '',
     storageConditions: '',
     imageUrl: '/images/products/peptide-default.png',
+    videoUrl: '',
     categoryId: categories[0]?.id || '',
     isFeatured: false,
     isNew: true,
@@ -88,34 +86,86 @@ export default function NewProductClient({ categories }: Props) {
     isActive: true,
   });
 
+  const [productTexts, setProductTexts] = useState<ProductText[]>([]);
   const [formats, setFormats] = useState<FormatToCreate[]>([]);
-  const [showAddFormat, setShowAddFormat] = useState(false);
+  const [editingTextId, setEditingTextId] = useState<string | null>(null);
 
-  // Auto-generate slug from name
+  // Auto-generate slug
   const handleNameChange = (name: string) => {
     const slug = name
       .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)/g, '');
     setFormData({ ...formData, name, slug });
   };
 
-  const handleAddFormat = (format: Omit<FormatToCreate, 'id'>) => {
-    const newFormat: FormatToCreate = {
-      ...format,
-      id: `temp-${Date.now()}`,
+  // Product texts
+  const addProductText = () => {
+    const newText: ProductText = {
+      id: `text-${Date.now()}`,
+      name: '',
+      title: '',
+      subtitle: '',
+      intro: '',
+      text: '',
+      summary: '',
+      pdfUrl: '',
+      imageUrl: '',
+      videoUrl: '',
+      externalLink: '',
+      internalLink: '',
+      references: '',
     };
-    setFormats([...formats, newFormat]);
-    setShowAddFormat(false);
+    setProductTexts([...productTexts, newText]);
+    setEditingTextId(newText.id);
   };
 
-  const handleRemoveFormat = (id: string) => {
+  const updateProductText = (id: string, field: keyof ProductText, value: string) => {
+    setProductTexts(productTexts.map(pt => pt.id === id ? { ...pt, [field]: value } : pt));
+  };
+
+  const removeProductText = (id: string) => {
+    setProductTexts(productTexts.filter(pt => pt.id !== id));
+    if (editingTextId === id) setEditingTextId(null);
+  };
+
+  // Formats
+  const addFormat = () => {
+    const newFormat: FormatToCreate = {
+      id: `fmt-${Date.now()}`,
+      formatType: 'VIAL_2ML',
+      name: '',
+      description: '',
+      imageUrl: '',
+      volumeMl: 2,
+      dosageMg: null,
+      unitCount: null,
+      sku: '',
+      costPrice: null,
+      price: 0,
+      comparePrice: null,
+      stockQuantity: 100,
+      lowStockThreshold: 5,
+      availability: 'IN_STOCK',
+      isDefault: formats.length === 0,
+      isActive: true,
+    };
+    setFormats([...formats, newFormat]);
+  };
+
+  const updateFormat = (id: string, updates: Partial<FormatToCreate>) => {
+    setFormats(formats.map(f => f.id === id ? { ...f, ...updates } : f));
+  };
+
+  const removeFormat = (id: string) => {
     setFormats(formats.filter(f => f.id !== id));
   };
 
   const handleSave = async () => {
-    if (!formData.name || !formData.slug || !formData.price || !formData.categoryId) {
-      alert('Veuillez remplir tous les champs requis (nom, slug, prix, catégorie)');
+    if (!formData.name || !formData.slug || !formData.categoryId) {
+      toast.error(t('admin.productForm.requiredFieldsAlert'));
       return;
     }
 
@@ -126,7 +176,11 @@ export default function NewProductClient({ categories }: Props) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
-          formats: formats.map(({ id, ...f }) => f),
+          price: formData.price || formats[0]?.price || 0,
+          purity: formData.purity ? parseFloat(formData.purity) : null,
+          molecularWeight: formData.molecularWeight ? parseFloat(formData.molecularWeight as string) : null,
+          customSections: productTexts.map(({ id: _id, ...rest }) => rest),
+          formats: formats.map(({ id: _id, ...f }) => f),
         }),
       });
 
@@ -135,257 +189,288 @@ export default function NewProductClient({ categories }: Props) {
         router.push(`/admin/produits/${data.product.id}`);
       } else {
         const data = await res.json();
-        alert(data.error || 'Erreur lors de la création');
+        toast.error(data.error || t('admin.productForm.creationError'));
       }
-    } catch (error) {
-      console.error('Save error:', error);
-      alert('Erreur lors de la création');
+    } catch {
+      toast.error(t('admin.productForm.creationError'));
     } finally {
       setSaving(false);
     }
   };
 
+  const tabs = [
+    { id: 'header' as const, label: t('admin.productForm.tabHeader'), icon: '📋', count: null },
+    { id: 'texts' as const, label: t('admin.productForm.tabTexts'), icon: '📝', count: productTexts.length },
+    { id: 'formats' as const, label: t('admin.productForm.tabFormats'), icon: '📦', count: formats.length },
+  ];
+
   return (
     <div className="min-h-screen bg-neutral-50 p-6">
-      <div className="max-w-5xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
-            <Link
-              href="/admin/produits"
-              className="p-2 text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors"
-            >
+            <Link href="/admin/produits" className="p-2 text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors">
               <ArrowLeft className="w-5 h-5" />
             </Link>
             <div>
-              <h1 className="text-2xl font-bold text-neutral-900">Nouveau produit</h1>
-              <p className="text-sm text-neutral-500">Créez un nouveau produit avec ses formats</p>
+              <h1 className="text-2xl font-bold text-neutral-900">{t('admin.productForm.newProduct')}</h1>
+              <p className="text-sm text-neutral-500">{t('admin.productForm.newProductSubtitle')}</p>
             </div>
           </div>
           <button
             onClick={handleSave}
             disabled={saving}
-            className="px-4 py-2 bg-sky-500 text-white rounded-lg hover:bg-sky-600 transition-colors disabled:opacity-50"
+            className="px-6 py-2.5 bg-sky-500 text-white rounded-lg hover:bg-sky-600 transition-colors disabled:opacity-50 font-medium"
           >
-            {saving ? 'Création...' : 'Créer le produit'}
+            {saving ? t('admin.productForm.creating') : t('admin.productForm.createProduct')}
           </button>
         </div>
 
         {/* Tabs */}
         <div className="flex gap-1 mb-6 bg-neutral-200 rounded-lg p-1">
-          <button
-            onClick={() => setActiveTab('info')}
-            className={`flex-1 px-4 py-2 rounded-md font-medium transition-colors ${
-              activeTab === 'info'
-                ? 'bg-white text-neutral-900 shadow-sm'
-                : 'text-neutral-600 hover:text-neutral-900'
-            }`}
-          >
-            Informations
-          </button>
-          <button
-            onClick={() => setActiveTab('formats')}
-            className={`flex-1 px-4 py-2 rounded-md font-medium transition-colors ${
-              activeTab === 'formats'
-                ? 'bg-white text-neutral-900 shadow-sm'
-                : 'text-neutral-600 hover:text-neutral-900'
-            }`}
-          >
-            Formats / Packaging ({formats.length})
-          </button>
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex-1 px-4 py-2.5 rounded-md font-medium transition-colors flex items-center justify-center gap-2 ${
+                activeTab === tab.id
+                  ? 'bg-white text-neutral-900 shadow-sm'
+                  : 'text-neutral-600 hover:text-neutral-900'
+              }`}
+            >
+              <span>{tab.icon}</span>
+              {tab.label}
+              {tab.count !== null && tab.count > 0 && (
+                <span className="px-1.5 py-0.5 text-xs bg-sky-100 text-sky-700 rounded-full">{tab.count}</span>
+              )}
+            </button>
+          ))}
         </div>
 
-        {/* Info Tab */}
-        {activeTab === 'info' && (
-          <div className="bg-white rounded-xl border border-neutral-200 p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Nom */}
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-1">Nom du produit *</label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => handleNameChange(e.target.value)}
-                  placeholder="Ex: BPC-157"
-                  className="w-full px-4 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
-                />
-              </div>
+        {/* ===== TAB: HEADER ===== */}
+        {activeTab === 'header' && (
+          <div className="space-y-6">
+            {/* General info */}
+            <div className="bg-white rounded-xl border border-neutral-200 p-6">
+              <h2 className="text-lg font-semibold text-neutral-900 mb-4">{t('admin.productForm.generalInfo')}</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                  <label className="block text-sm font-medium text-neutral-700 mb-1">{t('admin.productForm.productCategory')} *</label>
+                  <select
+                    value={formData.categoryId}
+                    onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
+                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  >
+                    {categories.map(cat => (
+                      <option key={cat.id} value={cat.id}>{cat.name}</option>
+                    ))}
+                  </select>
+                </div>
 
-              {/* Subtitle */}
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-1">Sous-titre</label>
-                <input
-                  type="text"
-                  value={formData.subtitle}
-                  onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
-                  placeholder="Ex: Body Protection Compound-157"
-                  className="w-full px-4 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
-                />
-              </div>
+                <div>
+                  <label className="block text-sm font-medium text-neutral-700 mb-1">{t('admin.productForm.productType')} *</label>
+                  <select
+                    value={formData.productType}
+                    onChange={(e) => setFormData({ ...formData, productType: e.target.value })}
+                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  >
+                    {PRODUCT_TYPES.map(type => (
+                      <option key={type.value} value={type.value}>{type.label}</option>
+                    ))}
+                  </select>
+                </div>
 
-              {/* Slug */}
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-1">Slug *</label>
-                <input
-                  type="text"
-                  value={formData.slug}
-                  onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                  placeholder="bpc-157"
-                  className="w-full px-4 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
-                />
-              </div>
+                <div>
+                  <label className="block text-sm font-medium text-neutral-700 mb-1">{t('admin.productForm.productName')} *</label>
+                  <input
+                    type="text"
+                    value={formData.name}
+                    onChange={(e) => handleNameChange(e.target.value)}
+                    placeholder={t('admin.productForm.placeholderProductName')}
+                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  />
+                </div>
 
-              {/* Type */}
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-1">Type de produit *</label>
-                <select
-                  value={formData.productType}
-                  onChange={(e) => setFormData({ ...formData, productType: e.target.value })}
-                  className="w-full px-4 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
-                >
-                  {PRODUCT_TYPES.map(type => (
-                    <option key={type.value} value={type.value}>{type.label}</option>
-                  ))}
-                </select>
-              </div>
+                <div>
+                  <label className="block text-sm font-medium text-neutral-700 mb-1">{t('admin.productForm.slugUrl')} *</label>
+                  <input
+                    type="text"
+                    value={formData.slug}
+                    onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                    placeholder={t('admin.productForm.placeholderSlug')}
+                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 font-mono text-sm"
+                  />
+                </div>
 
-              {/* Catégorie */}
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-1">Catégorie *</label>
-                <select
-                  value={formData.categoryId}
-                  onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
-                  className="w-full px-4 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
-                >
-                  {categories.map(cat => (
-                    <option key={cat.id} value={cat.id}>{cat.name}</option>
-                  ))}
-                </select>
-              </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-neutral-700 mb-1">{t('admin.productForm.titleDescription')}</label>
+                  <input
+                    type="text"
+                    value={formData.subtitle}
+                    onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
+                    placeholder={t('admin.productForm.placeholderSubtitle')}
+                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  />
+                </div>
 
-              {/* Prix */}
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-1">Prix de base *</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={formData.price}
-                  onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
-                  className="w-full px-4 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
-                />
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-neutral-700 mb-1">{t('admin.productForm.shortHeaderDescription')}</label>
+                  <textarea
+                    rows={2}
+                    maxLength={300}
+                    value={formData.shortDescription}
+                    onChange={(e) => setFormData({ ...formData, shortDescription: e.target.value })}
+                    placeholder={t('admin.productForm.placeholderShortDescription')}
+                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  />
+                  <p className="text-xs text-neutral-400 mt-1">{(formData.shortDescription || '').length}/300 {t('admin.productForm.characters')}</p>
+                </div>
               </div>
+            </div>
 
-              {/* Pureté */}
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-1">Pureté (%)</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={formData.purity}
-                  onChange={(e) => setFormData({ ...formData, purity: e.target.value })}
-                  placeholder="99.50"
-                  className="w-full px-4 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
-                />
-              </div>
-
-              {/* CAS Number */}
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-1">CAS Number</label>
-                <input
-                  type="text"
-                  value={formData.casNumber}
-                  onChange={(e) => setFormData({ ...formData, casNumber: e.target.value })}
-                  placeholder="137525-51-0"
-                  className="w-full px-4 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
-                />
-              </div>
-
-              {/* Storage */}
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-1">Stockage</label>
-                <input
-                  type="text"
-                  value={formData.storageConditions}
-                  onChange={(e) => setFormData({ ...formData, storageConditions: e.target.value })}
-                  placeholder="2-8°C"
-                  className="w-full px-4 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
-                />
-              </div>
-
-              {/* Description courte */}
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-neutral-700 mb-1">Description courte</label>
-                <textarea
-                  rows={2}
-                  value={formData.shortDescription}
-                  onChange={(e) => setFormData({ ...formData, shortDescription: e.target.value })}
-                  placeholder="Description courte pour les listes de produits..."
-                  className="w-full px-4 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
-                />
-              </div>
-
-              {/* Description */}
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-neutral-700 mb-1">Description complète</label>
-                <textarea
-                  rows={4}
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Description détaillée du produit..."
-                  className="w-full px-4 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
-                />
-              </div>
-
-              {/* Image URL */}
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-neutral-700 mb-1">URL de l'image</label>
-                <input
-                  type="url"
-                  value={formData.imageUrl}
-                  onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                  className="w-full px-4 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
-                />
-              </div>
-
-              {/* Options */}
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-neutral-700 mb-3">Options</label>
-                <div className="flex flex-wrap gap-4">
-                  <label className="flex items-center gap-2 cursor-pointer">
+            {/* Peptide specs */}
+            <div className="bg-white rounded-xl border border-neutral-200 p-6">
+              <h2 className="text-lg font-semibold text-neutral-900 mb-4">{t('admin.productForm.peptideSpecs')}</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <div>
+                  <label className="block text-sm font-medium text-neutral-700 mb-1">
+                    {t('admin.productForm.purity')}
+                    <span className="text-neutral-400 font-normal ml-1">{t('admin.productForm.purityDefault')}</span>
+                  </label>
+                  <div className="relative">
                     <input
-                      type="checkbox"
-                      checked={formData.isActive}
-                      onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                      className="w-4 h-4 text-sky-500 border-neutral-300 rounded focus:ring-sky-500"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      max="100"
+                      value={formData.purity}
+                      onChange={(e) => setFormData({ ...formData, purity: e.target.value })}
+                      className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
                     />
-                    <span className="text-sm text-neutral-700">Actif (visible sur le site)</span>
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400">%</span>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-neutral-700 mb-1">{t('admin.productForm.casNumber')}</label>
+                  <input
+                    type="text"
+                    value={formData.casNumber}
+                    onChange={(e) => setFormData({ ...formData, casNumber: e.target.value })}
+                    placeholder="137525-51-0"
+                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-neutral-700 mb-1">{t('admin.productForm.molecularWeight')}</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={formData.molecularWeight}
+                    onChange={(e) => setFormData({ ...formData, molecularWeight: e.target.value })}
+                    placeholder="1419.53"
+                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-neutral-700 mb-1">{t('admin.productForm.molecularFormula')}</label>
+                  <input
+                    type="text"
+                    value={formData.molecularFormula}
+                    onChange={(e) => setFormData({ ...formData, molecularFormula: e.target.value })}
+                    placeholder="C62H98N16O22"
+                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 font-mono text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-neutral-700 mb-1">{t('admin.productForm.storageConditions')}</label>
+                  <input
+                    type="text"
+                    value={formData.storageConditions}
+                    onChange={(e) => setFormData({ ...formData, storageConditions: e.target.value })}
+                    placeholder={t('admin.productForm.placeholderStorageConditions')}
+                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-neutral-700 mb-1">{t('admin.productForm.basePrice')} *</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={formData.price || ''}
+                    onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
+                    placeholder="49.99"
+                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Image & Options */}
+            <div className="bg-white rounded-xl border border-neutral-200 p-6">
+              <h2 className="text-lg font-semibold text-neutral-900 mb-4">{t('admin.productForm.mediaAndStatus')}</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+                <div>
+                  <label className="block text-sm font-medium text-neutral-700 mb-1">{t('admin.productForm.mainImage')}</label>
+                  <input
+                    type="url"
+                    value={formData.imageUrl}
+                    onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  />
+                  {formData.imageUrl && formData.imageUrl !== '/images/products/peptide-default.png' && (
+                    <div className="mt-2">
+                      <Image src={formData.imageUrl} alt={t('admin.productForm.preview')} width={80} height={80} className="w-20 h-20 object-cover rounded-lg border border-neutral-200" unoptimized />
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-neutral-700 mb-1">{t('admin.productForm.videoYoutubeVimeo')}</label>
+                  <input
+                    type="url"
+                    value={formData.videoUrl}
+                    onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
+                    placeholder={t('admin.productForm.placeholderVideoUrl')}
+                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  />
+                </div>
+              </div>
+
+              {/* Active / Inactive Toggle */}
+              <div className="border-t border-neutral-100 pt-5">
+                <div className="flex flex-wrap gap-6">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <div className="relative">
+                      <input
+                        type="checkbox"
+                        checked={formData.isActive}
+                        onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-neutral-200 rounded-full peer-checked:bg-green-500 transition-colors"></div>
+                      <div className="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full transition-transform peer-checked:translate-x-5 shadow-sm"></div>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-neutral-700">{t('admin.productForm.active')}</span>
+                      <p className="text-xs text-neutral-400">{t('admin.productForm.visibleOnSite')}</p>
+                    </div>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={formData.isFeatured}
-                      onChange={(e) => setFormData({ ...formData, isFeatured: e.target.checked })}
-                      className="w-4 h-4 text-sky-500 border-neutral-300 rounded focus:ring-sky-500"
-                    />
-                    <span className="text-sm text-neutral-700">En vedette</span>
+                    <input type="checkbox" checked={formData.isFeatured} onChange={(e) => setFormData({ ...formData, isFeatured: e.target.checked })} className="w-4 h-4 text-sky-500 border-neutral-300 rounded focus:ring-sky-500" />
+                    <span className="text-sm text-neutral-700">{t('admin.productForm.featured')}</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={formData.isNew}
-                      onChange={(e) => setFormData({ ...formData, isNew: e.target.checked })}
-                      className="w-4 h-4 text-sky-500 border-neutral-300 rounded focus:ring-sky-500"
-                    />
-                    <span className="text-sm text-neutral-700">Nouveau</span>
+                    <input type="checkbox" checked={formData.isNew} onChange={(e) => setFormData({ ...formData, isNew: e.target.checked })} className="w-4 h-4 text-sky-500 border-neutral-300 rounded focus:ring-sky-500" />
+                    <span className="text-sm text-neutral-700">{t('admin.productForm.new')}</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={formData.isBestseller}
-                      onChange={(e) => setFormData({ ...formData, isBestseller: e.target.checked })}
-                      className="w-4 h-4 text-sky-500 border-neutral-300 rounded focus:ring-sky-500"
-                    />
-                    <span className="text-sm text-neutral-700">Bestseller</span>
+                    <input type="checkbox" checked={formData.isBestseller} onChange={(e) => setFormData({ ...formData, isBestseller: e.target.checked })} className="w-4 h-4 text-sky-500 border-neutral-300 rounded focus:ring-sky-500" />
+                    <span className="text-sm text-neutral-700">{t('admin.productForm.bestseller')}</span>
                   </label>
                 </div>
               </div>
@@ -393,78 +478,250 @@ export default function NewProductClient({ categories }: Props) {
           </div>
         )}
 
-        {/* Formats Tab */}
-        {activeTab === 'formats' && (
+        {/* ===== TAB: PRODUCT TEXTS ===== */}
+        {activeTab === 'texts' && (
           <div className="space-y-4">
-            {/* Add Format Button */}
-            <div className="flex justify-end">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-semibold text-neutral-900">{t('admin.productForm.productTexts')}</h2>
+                <p className="text-sm text-neutral-500">{t('admin.productForm.productTextsDescription')}</p>
+              </div>
               <button
-                onClick={() => setShowAddFormat(true)}
+                onClick={addProductText}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-sky-500 text-white rounded-lg hover:bg-sky-600 transition-colors"
               >
-                <Plus className="w-5 h-5" />
-                Ajouter un format
+                <Plus className="w-4 h-4" />
+                {t('admin.productForm.addText')}
               </button>
             </div>
 
-            {/* Formats List */}
-            {formats.map((format) => (
-              <div
-                key={format.id}
-                className="bg-white rounded-xl border border-neutral-200 p-4"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-neutral-100 rounded-lg flex items-center justify-center text-2xl">
-                      {FORMAT_TYPES.find(t => t.value === format.formatType)?.icon || '📦'}
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <p className="font-medium text-neutral-900">{format.name}</p>
-                        {format.isDefault && (
-                          <span className="px-2 py-0.5 text-xs bg-sky-100 text-sky-700 rounded-full">Par défaut</span>
-                        )}
-                      </div>
-                      <p className="text-sm text-neutral-500">
-                        {format.sku && <span className="mr-3">SKU: {format.sku}</span>}
-                        {format.dosageMg && <span>{format.dosageMg}mg</span>}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <p className="font-semibold text-neutral-900">${format.price.toFixed(2)}</p>
-                      <p className="text-sm text-neutral-500">{format.stockQuantity} en stock</p>
-                    </div>
-                    <button
-                      onClick={() => handleRemoveFormat(format.id)}
-                      className="p-2 text-neutral-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-
-            {formats.length === 0 && (
+            {productTexts.length === 0 ? (
               <div className="bg-white rounded-xl border border-neutral-200 p-12 text-center">
-                <p className="text-neutral-500 mb-4">Aucun format défini pour ce produit.</p>
-                <button
-                  onClick={() => setShowAddFormat(true)}
-                  className="text-sky-600 hover:text-sky-700 font-medium"
-                >
-                  Ajouter un premier format
+                <FileText className="w-12 h-12 text-neutral-300 mx-auto mb-3" />
+                <p className="text-neutral-500 mb-4">{t('admin.productForm.noProductTexts')}</p>
+                <button onClick={addProductText} className="text-sky-600 hover:text-sky-700 font-medium">
+                  {t('admin.productForm.addFirstText')}
                 </button>
               </div>
-            )}
+            ) : (
+              productTexts.map((pt) => (
+                <div key={pt.id} className="bg-white rounded-xl border border-neutral-200 overflow-hidden">
+                  {/* Text header - clickable */}
+                  <div
+                    onClick={() => setEditingTextId(editingTextId === pt.id ? null : pt.id)}
+                    className="flex items-center justify-between p-4 cursor-pointer hover:bg-neutral-50 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <GripVertical className="w-4 h-4 text-neutral-300" />
+                      <div>
+                        <p className="font-medium text-neutral-900">{pt.name || t('admin.productForm.untitledText')}</p>
+                        <p className="text-sm text-neutral-500 truncate max-w-md">
+                          {pt.title || pt.summary || t('admin.productForm.clickToEdit')}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {pt.pdfUrl && <FileText className="w-4 h-4 text-red-400" />}
+                      {pt.imageUrl && <ImageIcon className="w-4 h-4 text-blue-400" />}
+                      {pt.videoUrl && <Video className="w-4 h-4 text-purple-400" />}
+                      {pt.externalLink && <ExternalLink className="w-4 h-4 text-green-400" />}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); removeProductText(pt.id); }}
+                        className="p-1.5 text-neutral-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
 
-            {/* Add Format Modal */}
-            {showAddFormat && (
-              <AddFormatModal
-                onAdd={handleAddFormat}
-                onClose={() => setShowAddFormat(false)}
-              />
+                  {/* Expanded edit form */}
+                  {editingTextId === pt.id && (
+                    <div className="border-t border-neutral-100 p-5 space-y-4 bg-neutral-50">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs font-medium text-neutral-600 mb-1">{t('admin.productForm.textName')} *</label>
+                          <input
+                            type="text"
+                            value={pt.name}
+                            onChange={(e) => updateProductText(pt.id, 'name', e.target.value)}
+                            placeholder={t('admin.productForm.placeholderTextName')}
+                            className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-neutral-600 mb-1">{t('admin.productForm.title')}</label>
+                          <input
+                            type="text"
+                            value={pt.title}
+                            onChange={(e) => updateProductText(pt.id, 'title', e.target.value)}
+                            placeholder={t('admin.productForm.placeholderTitle')}
+                            className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-neutral-600 mb-1">{t('admin.productForm.subtitle')}</label>
+                          <input
+                            type="text"
+                            value={pt.subtitle}
+                            onChange={(e) => updateProductText(pt.id, 'subtitle', e.target.value)}
+                            placeholder={t('admin.productForm.placeholderSubtitleText')}
+                            className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-neutral-600 mb-1">{t('admin.productForm.summary')}</label>
+                          <input
+                            type="text"
+                            value={pt.summary}
+                            onChange={(e) => updateProductText(pt.id, 'summary', e.target.value)}
+                            placeholder={t('admin.productForm.placeholderSummary')}
+                            className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-medium text-neutral-600 mb-1">{t('admin.productForm.introduction')}</label>
+                        <textarea
+                          rows={2}
+                          value={pt.intro}
+                          onChange={(e) => updateProductText(pt.id, 'intro', e.target.value)}
+                          placeholder={t('admin.productForm.placeholderIntro')}
+                          className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-medium text-neutral-600 mb-1">{t('admin.productForm.fullText')}</label>
+                        <textarea
+                          rows={6}
+                          value={pt.text}
+                          onChange={(e) => updateProductText(pt.id, 'text', e.target.value)}
+                          placeholder={t('admin.productForm.placeholderFullText')}
+                          className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 font-mono"
+                        />
+                      </div>
+
+                      {/* Media & Links */}
+                      <div className="border-t border-neutral-200 pt-4">
+                        <p className="text-xs font-medium text-neutral-600 mb-3">{t('admin.productForm.mediaAndLinks')}</p>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                          <div>
+                            <label className="flex items-center gap-1.5 text-xs text-neutral-500 mb-1">
+                              <FileText className="w-3 h-3" /> PDF
+                            </label>
+                            <input
+                              type="url"
+                              value={pt.pdfUrl}
+                              onChange={(e) => updateProductText(pt.id, 'pdfUrl', e.target.value)}
+                              placeholder={t('admin.productForm.pdfUrl')}
+                              className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="flex items-center gap-1.5 text-xs text-neutral-500 mb-1">
+                              <ImageIcon className="w-3 h-3" /> Image
+                            </label>
+                            <input
+                              type="url"
+                              value={pt.imageUrl}
+                              onChange={(e) => updateProductText(pt.id, 'imageUrl', e.target.value)}
+                              placeholder={t('admin.productForm.imageUrl')}
+                              className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="flex items-center gap-1.5 text-xs text-neutral-500 mb-1">
+                              <Video className="w-3 h-3" /> {t('admin.productForm.video')}
+                            </label>
+                            <input
+                              type="url"
+                              value={pt.videoUrl}
+                              onChange={(e) => updateProductText(pt.id, 'videoUrl', e.target.value)}
+                              placeholder={t('admin.productForm.videoUrl')}
+                              className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="flex items-center gap-1.5 text-xs text-neutral-500 mb-1">
+                              <ExternalLink className="w-3 h-3" /> {t('admin.productForm.externalLink')}
+                            </label>
+                            <input
+                              type="url"
+                              value={pt.externalLink}
+                              onChange={(e) => updateProductText(pt.id, 'externalLink', e.target.value)}
+                              placeholder="https://..."
+                              className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="flex items-center gap-1.5 text-xs text-neutral-500 mb-1">
+                              <Link2 className="w-3 h-3" /> {t('admin.productForm.internalLink')}
+                            </label>
+                            <input
+                              type="text"
+                              value={pt.internalLink}
+                              onChange={(e) => updateProductText(pt.id, 'internalLink', e.target.value)}
+                              placeholder="/product/bpc-157"
+                              className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="flex items-center gap-1.5 text-xs text-neutral-500 mb-1">
+                              <FileText className="w-3 h-3" /> {t('admin.productForm.references')}
+                            </label>
+                            <input
+                              type="text"
+                              value={pt.references}
+                              onChange={(e) => updateProductText(pt.id, 'references', e.target.value)}
+                              placeholder="DOI, PMID, URLs..."
+                              className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        )}
+
+        {/* ===== TAB: FORMATS ===== */}
+        {activeTab === 'formats' && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-semibold text-neutral-900">{t('admin.productForm.availableFormats')}</h2>
+                <p className="text-sm text-neutral-500">{t('admin.productForm.formatsDescription')}</p>
+              </div>
+              <button
+                onClick={addFormat}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-sky-500 text-white rounded-lg hover:bg-sky-600 transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                {t('admin.productForm.addFormat')}
+              </button>
+            </div>
+
+            {formats.length === 0 ? (
+              <div className="bg-white rounded-xl border border-neutral-200 p-12 text-center">
+                <p className="text-neutral-500 mb-4">{t('admin.productForm.noFormats')}</p>
+                <button onClick={addFormat} className="text-sky-600 hover:text-sky-700 font-medium">
+                  {t('admin.productForm.addFirstFormat')}
+                </button>
+              </div>
+            ) : (
+              formats.map((format, index) => (
+                <FormatCard
+                  key={format.id}
+                  format={format}
+                  index={index}
+                  onUpdate={(updates) => updateFormat(format.id, updates)}
+                  onRemove={() => removeFormat(format.id)}
+                />
+              ))
             )}
           </div>
         )}
@@ -473,152 +730,269 @@ export default function NewProductClient({ categories }: Props) {
   );
 }
 
-// Add Format Modal
-function AddFormatModal({
-  onAdd,
-  onClose,
+// ==================== FORMAT CARD COMPONENT ====================
+
+function FormatCard({
+  format,
+  index,
+  onUpdate,
+  onRemove,
 }: {
-  onAdd: (format: Omit<FormatToCreate, 'id'>) => void;
-  onClose: () => void;
+  format: FormatToCreate;
+  index: number;
+  onUpdate: (updates: Partial<FormatToCreate>) => void;
+  onRemove: () => void;
 }) {
-  const [newFormat, setNewFormat] = useState({
-    formatType: 'VIAL_2ML',
-    name: '',
-    sku: '',
-    price: 0,
-    comparePrice: null as number | null,
-    dosageMg: null as number | null,
-    unitCount: null as number | null,
-    stockQuantity: 100,
-    lowStockThreshold: 10,
-    availability: 'IN_STOCK',
-    isDefault: false,
-    isActive: true,
-  });
+  const { t } = useI18n();
+  const [expanded, setExpanded] = useState(true);
+
+  const FORMAT_TYPES = getFormatTypes(t);
+  const AVAILABILITY_OPTIONS = getAvailabilityOptions(t);
+
+  const stock = getStockDisplay(format.stockQuantity, format.lowStockThreshold, t);
+  const margin = format.costPrice && format.price
+    ? ((format.price - format.costPrice) / format.price * 100).toFixed(1)
+    : null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-        <h3 className="text-lg font-bold text-neutral-900 mb-4">Ajouter un format</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className={`bg-white rounded-xl border ${
+      format.stockQuantity === 0 ? 'border-red-200' :
+      format.stockQuantity <= format.lowStockThreshold ? 'border-amber-200' :
+      format.isDefault ? 'border-sky-200' :
+      'border-neutral-200'
+    } overflow-hidden`}>
+      {/* Header */}
+      <div
+        onClick={() => setExpanded(!expanded)}
+        className="flex items-center justify-between p-4 cursor-pointer hover:bg-neutral-50 transition-colors"
+      >
+        <div className="flex items-center gap-3">
+          <span className="text-2xl">{FORMAT_TYPES.find(ft => ft.value === format.formatType)?.icon || '📦'}</span>
           <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-1">Type *</label>
-            <select
-              value={newFormat.formatType}
-              onChange={(e) => setNewFormat({ ...newFormat, formatType: e.target.value })}
-              className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
-            >
-              {FORMAT_TYPES.map(type => (
-                <option key={type.value} value={type.value}>{type.icon} {type.label}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-1">Nom du format *</label>
-            <input
-              type="text"
-              value={newFormat.name}
-              onChange={(e) => setNewFormat({ ...newFormat, name: e.target.value })}
-              placeholder="Ex: 5mg Vial"
-              className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-1">Prix *</label>
-            <input
-              type="number"
-              step="0.01"
-              value={newFormat.price}
-              onChange={(e) => setNewFormat({ ...newFormat, price: parseFloat(e.target.value) || 0 })}
-              className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-1">SKU</label>
-            <input
-              type="text"
-              value={newFormat.sku}
-              onChange={(e) => setNewFormat({ ...newFormat, sku: e.target.value })}
-              className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-1">Quantité en stock</label>
-            <input
-              type="number"
-              value={newFormat.stockQuantity}
-              onChange={(e) => setNewFormat({ ...newFormat, stockQuantity: parseInt(e.target.value) || 0 })}
-              className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-1">Disponibilité</label>
-            <select
-              value={newFormat.availability}
-              onChange={(e) => setNewFormat({ ...newFormat, availability: e.target.value })}
-              className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
-            >
-              {AVAILABILITY_OPTIONS.map(opt => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-1">Dosage (mg)</label>
-            <input
-              type="number"
-              step="0.01"
-              value={newFormat.dosageMg || ''}
-              onChange={(e) => setNewFormat({ ...newFormat, dosageMg: e.target.value ? parseFloat(e.target.value) : null })}
-              className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-1">Nb d'unités</label>
-            <input
-              type="number"
-              value={newFormat.unitCount || ''}
-              onChange={(e) => setNewFormat({ ...newFormat, unitCount: e.target.value ? parseInt(e.target.value) : null })}
-              className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
-            />
+            <div className="flex items-center gap-2">
+              <p className="font-medium text-neutral-900">
+                {format.name || t('admin.productForm.formatNumber', { number: index + 1 })}
+              </p>
+              {format.isDefault && (
+                <span className="px-2 py-0.5 text-xs bg-sky-100 text-sky-700 rounded-full">{t('admin.productForm.default')}</span>
+              )}
+            </div>
+            <p className="text-sm text-neutral-500">
+              {format.volumeMl && `${format.volumeMl}ml`}
+              {format.dosageMg && ` · ${format.dosageMg}mg`}
+              {format.sku && ` · SKU: ${format.sku}`}
+            </p>
           </div>
         </div>
-        <div className="flex items-center gap-4 mt-4">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={newFormat.isActive}
-              onChange={(e) => setNewFormat({ ...newFormat, isActive: e.target.checked })}
-              className="w-4 h-4 text-sky-500 border-neutral-300 rounded focus:ring-sky-500"
-            />
-            <span className="text-sm text-neutral-700">Actif</span>
-          </label>
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={newFormat.isDefault}
-              onChange={(e) => setNewFormat({ ...newFormat, isDefault: e.target.checked })}
-              className="w-4 h-4 text-sky-500 border-neutral-300 rounded focus:ring-sky-500"
-            />
-            <span className="text-sm text-neutral-700">Format par défaut</span>
-          </label>
-        </div>
-        <div className="flex justify-end gap-2 mt-6">
+        <div className="flex items-center gap-4">
+          <div className="text-right">
+            <p className="font-semibold text-neutral-900">${format.price.toFixed(2)}</p>
+            {format.costPrice && (
+              <p className="text-xs text-neutral-400">{t('admin.productForm.cost')}: ${format.costPrice.toFixed(2)}</p>
+            )}
+          </div>
+          <div className={`px-2.5 py-1 rounded-full text-xs font-medium ${stock.color} ${stock.bg}`}>
+            {stock.text}
+          </div>
           <button
-            onClick={onClose}
-            className="px-4 py-2 text-neutral-600 border border-neutral-200 rounded-lg hover:bg-neutral-50 transition-colors"
+            onClick={(e) => { e.stopPropagation(); onRemove(); }}
+            className="p-1.5 text-neutral-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
           >
-            Annuler
-          </button>
-          <button
-            onClick={() => onAdd(newFormat)}
-            disabled={!newFormat.name || !newFormat.price}
-            className="px-4 py-2 bg-sky-500 text-white rounded-lg hover:bg-sky-600 transition-colors disabled:opacity-50"
-          >
-            Ajouter
+            <Trash2 className="w-4 h-4" />
           </button>
         </div>
       </div>
+
+      {/* Expanded form */}
+      {expanded && (
+        <div className="border-t border-neutral-100 p-5 bg-neutral-50 space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-neutral-600 mb-1">{t('admin.productForm.formatType')} *</label>
+              <select
+                value={format.formatType}
+                onChange={(e) => onUpdate({ formatType: e.target.value })}
+                className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+              >
+                {FORMAT_TYPES.map(type => (
+                  <option key={type.value} value={type.value}>{type.icon} {type.label}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-neutral-600 mb-1">{t('admin.productForm.formatName')} *</label>
+              <input
+                type="text"
+                value={format.name}
+                onChange={(e) => onUpdate({ name: e.target.value })}
+                placeholder={t('admin.productForm.placeholderFormatName')}
+                className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-neutral-600 mb-1">{t('admin.productForm.volumeMl')}</label>
+              <select
+                value={format.volumeMl || ''}
+                onChange={(e) => onUpdate({ volumeMl: e.target.value ? parseFloat(e.target.value) : null })}
+                className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+              >
+                <option value="">{t('admin.productForm.select')}</option>
+                {VOLUME_OPTIONS.map(v => (
+                  <option key={v} value={v}>{v} ml</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-neutral-600 mb-1">{t('admin.productForm.dosageMg')}</label>
+              <input
+                type="number"
+                step="0.01"
+                value={format.dosageMg || ''}
+                onChange={(e) => onUpdate({ dosageMg: e.target.value ? parseFloat(e.target.value) : null })}
+                placeholder="5"
+                className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+              />
+            </div>
+          </div>
+
+          {/* Prices */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-neutral-600 mb-1">{t('admin.productForm.costPrice')}</label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                value={format.costPrice || ''}
+                onChange={(e) => onUpdate({ costPrice: e.target.value ? parseFloat(e.target.value) : null })}
+                placeholder="15.00"
+                className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-neutral-600 mb-1">{t('admin.productForm.sellingPrice')} *</label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                value={format.price || ''}
+                onChange={(e) => onUpdate({ price: parseFloat(e.target.value) || 0 })}
+                placeholder="49.99"
+                className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-neutral-600 mb-1">{t('admin.productForm.strikethroughPrice')}</label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                value={format.comparePrice || ''}
+                onChange={(e) => onUpdate({ comparePrice: e.target.value ? parseFloat(e.target.value) : null })}
+                placeholder="69.99"
+                className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+              />
+            </div>
+            {margin && (
+              <div className="flex items-end pb-2">
+                <span className={`text-sm font-medium ${parseFloat(margin) >= 50 ? 'text-green-600' : parseFloat(margin) >= 30 ? 'text-amber-600' : 'text-red-600'}`}>
+                  {t('admin.productForm.margin')}: {margin}%
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Inventory */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-neutral-600 mb-1">{t('admin.productForm.stockQuantity')} *</label>
+              <input
+                type="number"
+                min="0"
+                value={format.stockQuantity}
+                onChange={(e) => {
+                  const qty = parseInt(e.target.value) || 0;
+                  const availability = qty === 0 ? 'OUT_OF_STOCK' : qty <= format.lowStockThreshold ? 'LIMITED' : 'IN_STOCK';
+                  onUpdate({ stockQuantity: qty, availability });
+                }}
+                className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-neutral-600 mb-1">{t('admin.productForm.stockAlertThreshold')}</label>
+              <input
+                type="number"
+                min="0"
+                value={format.lowStockThreshold}
+                onChange={(e) => onUpdate({ lowStockThreshold: parseInt(e.target.value) || 5 })}
+                className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-neutral-600 mb-1">{t('admin.productForm.sku')}</label>
+              <input
+                type="text"
+                value={format.sku}
+                onChange={(e) => onUpdate({ sku: e.target.value })}
+                placeholder="BPC157-5MG-VIAL"
+                className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-neutral-600 mb-1">{t('admin.productForm.availability')}</label>
+              <select
+                value={format.availability}
+                onChange={(e) => onUpdate({ availability: e.target.value })}
+                className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+              >
+                {AVAILABILITY_OPTIONS.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Photo & Options */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-neutral-600 mb-1">{t('admin.productForm.formatPhoto')}</label>
+              <input
+                type="url"
+                value={format.imageUrl}
+                onChange={(e) => onUpdate({ imageUrl: e.target.value })}
+                placeholder={t('admin.productForm.imageUrl')}
+                className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+              />
+              {format.imageUrl && (
+                <div className="mt-2 flex items-center gap-2">
+                  <Image src={format.imageUrl} alt="" width={48} height={48} className="w-12 h-12 object-cover rounded-lg border" unoptimized />
+                  <button onClick={() => onUpdate({ imageUrl: '' })} className="text-xs text-red-500 hover:text-red-700">{t('admin.productForm.delete')}</button>
+                </div>
+              )}
+            </div>
+            <div className="flex items-end gap-4 pb-2">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={format.isDefault}
+                  onChange={(e) => onUpdate({ isDefault: e.target.checked })}
+                  className="w-4 h-4 text-sky-500 border-neutral-300 rounded focus:ring-sky-500"
+                />
+                <span className="text-sm text-neutral-700">{t('admin.productForm.default')}</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={format.isActive}
+                  onChange={(e) => onUpdate({ isActive: e.target.checked })}
+                  className="w-4 h-4 text-sky-500 border-neutral-300 rounded focus:ring-sky-500"
+                />
+                <span className="text-sm text-neutral-700">{t('admin.productForm.active')}</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -3,7 +3,9 @@
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useEffect, useState } from 'react';
+import Breadcrumbs from '@/components/ui/Breadcrumbs';
 import { useTranslations } from '@/hooks/useTranslations';
 
 interface OrderSummary {
@@ -65,15 +67,26 @@ export default function AccountPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Breadcrumbs */}
+      <Breadcrumbs
+        items={[
+          { label: t('nav.home') || 'Home', href: '/' },
+          { label: t('account.myAccount') || 'My Account' },
+        ]}
+      />
+
       {/* Header */}
       <section className="bg-gradient-to-br from-neutral-900 via-neutral-800 to-black text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-4">
             {session.user?.image ? (
-              <img
+              <Image
                 src={session.user.image}
                 alt="Profile"
+                width={64}
+                height={64}
                 className="w-16 h-16 rounded-full border-4 border-orange-500"
+                unoptimized
               />
             ) : (
               <div className="w-16 h-16 bg-orange-500 rounded-full flex items-center justify-center">
@@ -84,7 +97,7 @@ export default function AccountPage() {
             )}
             <div>
               <h1 className="text-2xl md:text-3xl font-bold">
-                {t('account.welcome') || 'Welcome back'}, {session.user?.name?.split(' ')[0] || 'User'}!
+                {t('account.welcome')}, {session.user?.name?.split(' ')[0] || 'User'}!
               </h1>
               <p className="text-neutral-400">{session.user?.email}</p>
             </div>
@@ -104,7 +117,7 @@ export default function AccountPage() {
               </div>
               <div>
                 <p className="text-2xl font-bold">{orderSummary?.totalOrders || 0}</p>
-                <p className="text-sm text-neutral-500">{t('account.totalOrders') || 'Total Orders'}</p>
+                <p className="text-sm text-neutral-500">{t('account.totalOrders') }</p>
               </div>
             </div>
           </div>
@@ -118,7 +131,7 @@ export default function AccountPage() {
               </div>
               <div>
                 <p className="text-2xl font-bold">${(orderSummary?.totalSpent || 0).toFixed(2)}</p>
-                <p className="text-sm text-neutral-500">{t('account.totalSpent') || 'Total Spent'}</p>
+                <p className="text-sm text-neutral-500">{t('account.totalSpent') }</p>
               </div>
             </div>
           </div>
@@ -132,7 +145,7 @@ export default function AccountPage() {
               </div>
               <div>
                 <p className="text-2xl font-bold">{orderSummary?.pendingOrders || 0}</p>
-                <p className="text-sm text-neutral-500">{t('account.pendingOrders') || 'Pending'}</p>
+                <p className="text-sm text-neutral-500">{t('account.pendingOrders') }</p>
               </div>
             </div>
           </div>
@@ -146,7 +159,7 @@ export default function AccountPage() {
               </div>
               <div>
                 <p className="text-2xl font-bold">VIP</p>
-                <p className="text-sm text-neutral-500">{t('account.memberStatus') || 'Member Status'}</p>
+                <p className="text-sm text-neutral-500">{t('account.memberStatus') }</p>
               </div>
             </div>
           </div>
@@ -157,43 +170,68 @@ export default function AccountPage() {
           <QuickActionCard
             href="/account/orders"
             icon="📦"
-            title={t('account.viewOrders') || 'Mes commandes'}
-            description="Suivre mes commandes"
+            title={t('account.viewOrders')}
+            description={t('account.trackMyOrders')}
           />
           <QuickActionCard
             href="/account/invoices"
             icon="📄"
-            title="Mes factures"
-            description="Historique facturation"
+            title={t('account.myInvoices')}
+            description={t('account.invoiceHistory')}
           />
           <QuickActionCard
             href="/account/products"
             icon="🧪"
-            title="Mes produits"
-            description="Reorder rapide"
+            title={t('account.myProducts')}
+            description={t('account.quickReorder')}
             highlight
           />
           <QuickActionCard
             href="/account/rewards"
             icon="⭐"
-            title="Récompenses"
-            description="Mes points fidélité"
+            title={t('account.rewards')}
+            description={t('account.myLoyaltyPoints')}
           />
         </div>
 
         {/* Quick Actions - Row 2 */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <QuickActionCard
+            href="/account/referrals"
+            icon="🎁"
+            title={t('customerRewards.referral') || 'Refer Friends'}
+            description={t('customerRewards.earnPerFriend') || 'Earn points for each friend'}
+            highlight
+          />
+          <QuickActionCard
+            href="/account/wishlist"
+            icon="❤️"
+            title={t('account.wishlist') || 'My Wishlist'}
+            description={t('account.savedProducts') || 'Saved products'}
+          />
+          <QuickActionCard
+            href="/account/returns"
+            icon="🔄"
+            title="Returns & Exchanges"
+            description="Request returns or RMA"
+          />
           <QuickActionCard
             href="/account/settings"
             icon="⚙️"
-            title={t('account.accountSettings') || 'Paramètres'}
-            description="Profil et préférences"
+            title={t('account.accountSettings')}
+            description={t('account.profileAndPreferences')}
+          />
+          <QuickActionCard
+            href="/account/notifications"
+            icon="🔔"
+            title="Notifications"
+            description="Manage email preferences"
           />
           <QuickActionCard
             href="/subscriptions"
             icon="🔄"
-            title="Abonnements"
-            description="Auto-reorder"
+            title={t('account.subscriptions')}
+            description={t('account.autoReorder')}
           />
           <Link
             href="/shop"
@@ -203,8 +241,8 @@ export default function AccountPage() {
               <div className="flex items-center gap-3">
                 <span className="text-2xl">🛒</span>
                 <div>
-                  <h3 className="font-semibold">{t('account.continueShopping') || 'Continuer mes achats'}</h3>
-                  <p className="text-sm text-white/80">{t('account.browseProducts') || 'Voir les produits'}</p>
+                  <h3 className="font-semibold">{t('account.continueShopping')}</h3>
+                  <p className="text-sm text-white/80">{t('account.browseProducts')}</p>
                 </div>
               </div>
               <svg className="w-5 h-5 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -218,9 +256,9 @@ export default function AccountPage() {
         {orderSummary?.lastOrder && (
           <div className="bg-white rounded-xl p-6 shadow-sm border border-neutral-200">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold">{t('account.recentOrder') || 'Most Recent Order'}</h2>
+              <h2 className="text-lg font-bold">{t('account.recentOrder')}</h2>
               <Link href="/account/orders" className="text-orange-600 hover:text-orange-700 text-sm font-medium">
-                {t('account.viewAll') || 'View All'} →
+                {t('account.viewAll')} →
               </Link>
             </div>
 
@@ -259,8 +297,8 @@ export default function AccountPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
               </svg>
             </div>
-            <h3 className="text-lg font-bold mb-2">{t('account.noOrders') || 'No orders yet'}</h3>
-            <p className="text-neutral-500 mb-6">{t('account.noOrdersDesc') || 'Start shopping to see your orders here'}</p>
+            <h3 className="text-lg font-bold mb-2">{t('account.noOrders')}</h3>
+            <p className="text-neutral-500 mb-6">{t('account.noOrdersDesc')}</p>
             <Link
               href="/shop"
               className="inline-flex items-center gap-2 px-6 py-3 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600 transition-colors"
@@ -268,7 +306,7 @@ export default function AccountPage() {
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
               </svg>
-              {t('account.startShopping') || 'Start Shopping'}
+              {t('account.startShopping')}
             </Link>
           </div>
         )}

@@ -334,17 +334,17 @@ async function createCustomerInvoice(order: OrderWithItems): Promise<string> {
 
   // Get customer info
   let customerName = 'Client';
-  let customerEmail: string | null = null;
+  const customerEmail: string | null = null;
   if (order.items.length > 0) {
     // The order model doesn't directly link to User, we use userId
     // For now get from shipping info
-    customerName = (order as any).shippingName || 'Client';
+    customerName = (order as unknown as Record<string, unknown>).shippingName as string || 'Client';
   }
 
   const invoice = await prisma.customerInvoice.create({
     data: {
       invoiceNumber,
-      customerId: (order as any).userId || null,
+      customerId: (order as unknown as Record<string, unknown>).userId as string || null,
       customerName,
       customerEmail,
       orderId: order.id,

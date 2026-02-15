@@ -7,10 +7,10 @@ import {
   Button,
   Modal,
   EmptyState,
-  StatusBadge,
   FormField,
   Input,
 } from '@/components/admin';
+import { useI18n } from '@/i18n/client';
 
 interface PromoCode {
   id: string;
@@ -31,6 +31,7 @@ interface PromoCode {
 }
 
 export default function PromoCodesPage() {
+  const { t, locale, formatCurrency } = useI18n();
   const [promoCodes, setPromoCodes] = useState<PromoCode[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -67,11 +68,10 @@ export default function PromoCodesPage() {
   };
 
   const generateCode = () => {
+    // SECURITY: Use crypto.getRandomValues for non-guessable promo codes
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let code = '';
-    for (let i = 0; i < 8; i++) {
-      code += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
+    const randomBytes = crypto.getRandomValues(new Uint8Array(8));
+    const code = Array.from(randomBytes).map(b => chars.charAt(b % chars.length)).join('');
     setFormData({ ...formData, code });
   };
 
@@ -119,7 +119,7 @@ export default function PromoCodesPage() {
   };
 
   const deletePromoCode = async (id: string) => {
-    if (!confirm('Supprimer ce code promo ?')) return;
+    if (!confirm(t('admin.promoCodes.confirmDelete'))) return;
     try {
       await fetch(`/api/admin/promo-codes/${id}`, { method: 'DELETE' });
       setPromoCodes(promoCodes.filter((p) => p.id !== id));
@@ -181,8 +181,8 @@ export default function PromoCodesPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Codes Promo"
-        subtitle="Gerez vos codes promotionnels"
+        title={t('admin.promoCodes.title')}
+        subtitle={t('admin.promoCodes.subtitle')}
         actions={
           <Button
             variant="primary"
@@ -192,7 +192,7 @@ export default function PromoCodesPage() {
               setShowForm(true);
             }}
           >
-            Nouveau code
+            {t('admin.promoCodes.newCode')}
           </Button>
         }
       />
@@ -204,7 +204,7 @@ export default function PromoCodesPage() {
             <Tag className="w-4 h-4" />
           </div>
           <div>
-            <p className="text-xs text-slate-500">Total codes</p>
+            <p className="text-xs text-slate-500">{t('admin.promoCodes.totalCodes')}</p>
             <p className="text-xl font-bold text-slate-900">{stats.total}</p>
           </div>
         </div>
@@ -213,7 +213,7 @@ export default function PromoCodesPage() {
             <CheckCircle className="w-4 h-4" />
           </div>
           <div>
-            <p className="text-xs text-emerald-600">Actifs</p>
+            <p className="text-xs text-emerald-600">{t('admin.promoCodes.active')}</p>
             <p className="text-xl font-bold text-emerald-700">{stats.active}</p>
           </div>
         </div>
@@ -222,7 +222,7 @@ export default function PromoCodesPage() {
             <BarChart3 className="w-4 h-4" />
           </div>
           <div>
-            <p className="text-xs text-sky-600">Utilisations totales</p>
+            <p className="text-xs text-sky-600">{t('admin.promoCodes.totalUsage')}</p>
             <p className="text-xl font-bold text-sky-700">{stats.totalUsage}</p>
           </div>
         </div>
@@ -233,13 +233,13 @@ export default function PromoCodesPage() {
         <table className="w-full">
           <thead className="bg-slate-50">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Code</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Reduction</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Conditions</th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">Utilisations</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Validite</th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">Statut</th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">Actions</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.promoCodes.colCode')}</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.promoCodes.colDiscount')}</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.promoCodes.colConditions')}</th>
+              <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.promoCodes.colUsage')}</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.promoCodes.colValidity')}</th>
+              <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.promoCodes.colStatus')}</th>
+              <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.promoCodes.colActions')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
@@ -257,13 +257,13 @@ export default function PromoCodesPage() {
                   </td>
                   <td className="px-4 py-3">
                     <span className="font-bold text-sky-600">
-                      {promo.type === 'PERCENTAGE' ? `${promo.value}%` : `${promo.value} $`}
+                      {promo.type === 'PERCENTAGE' ? `${promo.value}%` : formatCurrency(promo.value)}
                     </span>
-                    {promo.maxDiscount && <p className="text-xs text-slate-500">Max: {promo.maxDiscount} $</p>}
+                    {promo.maxDiscount && <p className="text-xs text-slate-500">{t('admin.promoCodes.maxPrefix')} {formatCurrency(promo.maxDiscount)}</p>}
                   </td>
                   <td className="px-4 py-3 text-sm text-slate-600">
-                    {promo.minOrderAmount && <p>Min: {promo.minOrderAmount} $</p>}
-                    {promo.firstOrderOnly && <p className="text-sky-600">1ere commande</p>}
+                    {promo.minOrderAmount && <p>{t('admin.promoCodes.minPrefix')} {formatCurrency(promo.minOrderAmount)}</p>}
+                    {promo.firstOrderOnly && <p className="text-sky-600">{t('admin.promoCodes.firstOrderOnly')}</p>}
                   </td>
                   <td className="px-4 py-3 text-center">
                     <span className="font-bold text-slate-900">{promo.usageCount}</span>
@@ -274,17 +274,17 @@ export default function PromoCodesPage() {
                       <>
                         {promo.startsAt && (
                           <p className="text-slate-500">
-                            Du: {new Date(promo.startsAt).toLocaleDateString('fr-CA')}
+                            {t('admin.promoCodes.fromDate')} {new Date(promo.startsAt).toLocaleDateString(locale)}
                           </p>
                         )}
                         {promo.endsAt && (
                           <p className={isExpired ? 'text-red-500' : 'text-slate-500'}>
-                            Au: {new Date(promo.endsAt).toLocaleDateString('fr-CA')}
+                            {t('admin.promoCodes.toDate')} {new Date(promo.endsAt).toLocaleDateString(locale)}
                           </p>
                         )}
                       </>
                     ) : (
-                      <span className="text-slate-400">Illimite</span>
+                      <span className="text-slate-400">{t('admin.promoCodes.unlimited')}</span>
                     )}
                   </td>
                   <td className="px-4 py-3 text-center">
@@ -304,7 +304,7 @@ export default function PromoCodesPage() {
                   <td className="px-4 py-3 text-center">
                     <div className="flex items-center justify-center gap-1">
                       <Button variant="ghost" size="sm" icon={Pencil} onClick={() => startEdit(promo)}>
-                        Modifier
+                        {t('admin.promoCodes.edit')}
                       </Button>
                       <Button
                         variant="ghost"
@@ -324,8 +324,8 @@ export default function PromoCodesPage() {
         {promoCodes.length === 0 && (
           <EmptyState
             icon={Tag}
-            title="Aucun code promo"
-            description="Creez votre premier code promotionnel."
+            title={t('admin.promoCodes.emptyTitle')}
+            description={t('admin.promoCodes.emptyDescription')}
             action={
               <Button
                 variant="primary"
@@ -335,7 +335,7 @@ export default function PromoCodesPage() {
                   setShowForm(true);
                 }}
               >
-                Nouveau code
+                {t('admin.promoCodes.newCode')}
               </Button>
             }
           />
@@ -346,49 +346,49 @@ export default function PromoCodesPage() {
       <Modal
         isOpen={showForm}
         onClose={resetForm}
-        title={editingCode ? 'Modifier le code' : 'Nouveau code promo'}
+        title={editingCode ? t('admin.promoCodes.editModalTitle') : t('admin.promoCodes.newModalTitle')}
         size="lg"
       >
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <FormField label="Code" required>
+            <FormField label={t('admin.promoCodes.labelCode')} required>
               <div className="flex gap-2">
                 <Input
                   type="text"
                   required
                   value={formData.code}
                   onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
-                  placeholder="Ex: SUMMER25"
+                  placeholder={t('admin.promoCodes.codePlaceholder')}
                   className="uppercase"
                 />
                 <Button type="button" variant="secondary" icon={Shuffle} onClick={generateCode}>
-                  Generer
+                  {t('admin.promoCodes.generate')}
                 </Button>
               </div>
             </FormField>
           </div>
 
-          <FormField label="Description">
+          <FormField label={t('admin.promoCodes.labelDescription')}>
             <Input
               type="text"
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              placeholder="Description interne"
+              placeholder={t('admin.promoCodes.descriptionPlaceholder')}
             />
           </FormField>
 
           <div className="grid grid-cols-2 gap-4">
-            <FormField label="Type" required>
+            <FormField label={t('admin.promoCodes.labelType')} required>
               <select
                 value={formData.type}
-                onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
+                onChange={(e) => setFormData({ ...formData, type: e.target.value as 'PERCENTAGE' | 'FIXED_AMOUNT' })}
                 className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
               >
-                <option value="PERCENTAGE">Pourcentage (%)</option>
-                <option value="FIXED_AMOUNT">Montant fixe ($)</option>
+                <option value="PERCENTAGE">{t('admin.promoCodes.typePercentage')}</option>
+                <option value="FIXED_AMOUNT">{t('admin.promoCodes.typeFixedAmount')}</option>
               </select>
             </FormField>
-            <FormField label="Valeur" required>
+            <FormField label={t('admin.promoCodes.labelValue')} required>
               <Input
                 type="number"
                 required
@@ -400,39 +400,39 @@ export default function PromoCodesPage() {
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <FormField label="Minimum commande ($)">
+            <FormField label={t('admin.promoCodes.labelMinOrder')}>
               <Input
                 type="number"
                 min={0}
                 step="0.01"
                 value={formData.minOrderAmount}
                 onChange={(e) => setFormData({ ...formData, minOrderAmount: e.target.value })}
-                placeholder="Ex: 100"
+                placeholder={t('admin.promoCodes.minOrderPlaceholder')}
               />
             </FormField>
-            <FormField label="Reduction max ($)">
+            <FormField label={t('admin.promoCodes.labelMaxDiscount')}>
               <Input
                 type="number"
                 min={0}
                 step="0.01"
                 value={formData.maxDiscount}
                 onChange={(e) => setFormData({ ...formData, maxDiscount: e.target.value })}
-                placeholder="Pour les %"
+                placeholder={t('admin.promoCodes.maxDiscountPlaceholder')}
               />
             </FormField>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <FormField label="Limite totale">
+            <FormField label={t('admin.promoCodes.labelTotalLimit')}>
               <Input
                 type="number"
                 min={1}
                 value={formData.usageLimit}
                 onChange={(e) => setFormData({ ...formData, usageLimit: e.target.value })}
-                placeholder="Illimite"
+                placeholder={t('admin.promoCodes.totalLimitPlaceholder')}
               />
             </FormField>
-            <FormField label="Limite par client">
+            <FormField label={t('admin.promoCodes.labelPerCustomerLimit')}>
               <Input
                 type="number"
                 min={1}
@@ -443,14 +443,14 @@ export default function PromoCodesPage() {
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <FormField label="Date debut">
+            <FormField label={t('admin.promoCodes.labelStartDate')}>
               <Input
                 type="datetime-local"
                 value={formData.startsAt}
                 onChange={(e) => setFormData({ ...formData, startsAt: e.target.value })}
               />
             </FormField>
-            <FormField label="Date fin">
+            <FormField label={t('admin.promoCodes.labelEndDate')}>
               <Input
                 type="datetime-local"
                 value={formData.endsAt}
@@ -466,15 +466,15 @@ export default function PromoCodesPage() {
               onChange={(e) => setFormData({ ...formData, firstOrderOnly: e.target.checked })}
               className="w-4 h-4 rounded border-slate-300 text-sky-500"
             />
-            <span className="text-sm text-slate-700">Premiere commande uniquement</span>
+            <span className="text-sm text-slate-700">{t('admin.promoCodes.firstOrderOnlyCheckbox')}</span>
           </label>
 
           <div className="flex gap-3 pt-4 border-t border-slate-200">
             <Button type="button" variant="secondary" onClick={resetForm} className="flex-1">
-              Annuler
+              {t('admin.promoCodes.cancel')}
             </Button>
             <Button type="submit" variant="primary" loading={saving} className="flex-1">
-              {editingCode ? 'Enregistrer' : 'Creer'}
+              {editingCode ? t('admin.promoCodes.save') : t('admin.promoCodes.create')}
             </Button>
           </div>
         </form>

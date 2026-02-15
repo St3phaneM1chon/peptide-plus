@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * Admin Orders API
  * GET - List orders with filtering, pagination, and search
@@ -27,7 +29,7 @@ export async function GET(request: NextRequest) {
     const offset = (page - 1) * limit;
 
     // Build where clause
-    const where: any = {};
+    const where: Record<string, unknown> = {};
 
     if (status) {
       where.status = status;
@@ -44,13 +46,13 @@ export async function GET(request: NextRequest) {
     if (from || to) {
       where.createdAt = {};
       if (from) {
-        where.createdAt.gte = new Date(from);
+        (where.createdAt as Record<string, unknown>).gte = new Date(from);
       }
       if (to) {
         // Set to end of the day
         const toDate = new Date(to);
         toDate.setHours(23, 59, 59, 999);
-        where.createdAt.lte = toDate;
+        (where.createdAt as Record<string, unknown>).lte = toDate;
       }
     }
 
@@ -139,7 +141,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Build update data
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
 
     if (status) {
       updateData.status = status;

@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
         startDate: startDate ? new Date(startDate) : null,
         endDate: endDate ? new Date(endDate) : null,
         translations: translations?.length > 0 ? {
-          create: translations.map((t: any) => ({
+          create: translations.map((t: Record<string, string>) => ({
             locale: t.locale,
             badgeText: t.badgeText,
             title: t.title,

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
+import Breadcrumbs from '@/components/ui/Breadcrumbs';
 import { useLoyalty, LOYALTY_TIERS, LOYALTY_REWARDS, LOYALTY_CONFIG } from '@/contexts/LoyaltyContext';
 import { useTranslations } from '@/hooks/useTranslations';
 
@@ -55,6 +56,14 @@ export default function RewardsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Breadcrumbs */}
+      <Breadcrumbs
+        items={[
+          { label: t('nav.home') || 'Home', href: '/' },
+          { label: t('rewards.rewards') || 'Rewards' },
+        ]}
+      />
+
       {/* Hero Section */}
       <section className={`bg-gradient-to-br ${tier.color} text-white py-12`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

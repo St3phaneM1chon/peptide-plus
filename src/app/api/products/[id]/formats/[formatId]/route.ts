@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth-config';
@@ -48,6 +50,7 @@ export async function PUT(
       dosageMg,
       volumeMl,
       unitCount,
+      costPrice,
       price,
       comparePrice,
       sku,
@@ -96,6 +99,7 @@ export async function PUT(
         dosageMg,
         volumeMl,
         unitCount,
+        costPrice,
         price: price ?? undefined,
         comparePrice,
         sku,

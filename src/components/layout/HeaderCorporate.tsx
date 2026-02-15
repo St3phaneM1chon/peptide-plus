@@ -8,6 +8,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useSession, signOut } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
 import { useTranslation } from '@/i18n/client';
@@ -315,6 +316,7 @@ function NavItemComponent({
 }
 
 // User Menu
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Session and translation function types from external libs
 function UserMenu({ session, userRole, t }: { session: any; userRole: string; t: any }) {
   const [open, setOpen] = useState(false);
   const dashboardItems = dashboardNavigation[userRole] || dashboardNavigation.CUSTOMER;
@@ -335,10 +337,13 @@ function UserMenu({ session, userRole, t }: { session: any; userRole: string; t:
         }}
       >
         {session.user?.image ? (
-          <img
+          <Image
             src={session.user.image}
             alt=""
-            style={{ width: '28px', height: '28px', borderRadius: '50%' }}
+            width={28}
+            height={28}
+            style={{ borderRadius: '50%' }}
+            unoptimized
           />
         ) : (
           <div
@@ -433,11 +438,11 @@ function MobileMenu({
 }: {
   navigation: NavItem[];
   isAuthenticated: boolean;
-  session: any;
+  session: { user?: { name?: string | null; email?: string | null; image?: string | null; role?: string } } | null;
   userRole: string;
   onClose: () => void;
   getLabel: (key: string) => string;
-  t: any;
+  t: (key: string, params?: Record<string, string | number>) => string;
 }) {
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
 

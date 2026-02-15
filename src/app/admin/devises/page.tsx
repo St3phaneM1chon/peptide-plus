@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { Plus, RefreshCw, Pencil, Coins, CheckCircle, Star } from 'lucide-react';
 import { PageHeader, Button, Modal } from '@/components/admin';
+import { useI18n } from '@/i18n/client';
+import { toast } from 'sonner';
 
 interface Currency {
   code: string;
@@ -15,8 +17,10 @@ interface Currency {
 }
 
 export default function DevisesPage() {
+  const { t, locale } = useI18n();
   const [currencies, setCurrencies] = useState<Currency[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [autoUpdate, setAutoUpdate] = useState(true);
   const [showAddCurrency, setShowAddCurrency] = useState(false);
 
@@ -51,8 +55,31 @@ export default function DevisesPage() {
   };
 
   const updateExchangeRates = async () => {
-    alert("Taux de change mis a jour depuis l'API externe");
-    setCurrencies(currencies.map((c) => ({ ...c, lastUpdated: new Date().toISOString() })));
+    setRefreshing(true);
+    try {
+      const res = await fetch('/api/admin/currencies/refresh', { method: 'POST' });
+      const data = await res.json();
+
+      if (!res.ok) {
+        toast.error(data.error || 'Failed to refresh rates');
+        return;
+      }
+
+      // Re-fetch currencies to get updated rates from DB
+      await fetchCurrencies();
+
+      const updatedCount = data.updated?.length || 0;
+      toast.success(
+        updatedCount > 0
+          ? `${updatedCount} ${t('admin.currencies.ratesUpdated')}`
+          : t('admin.currencies.ratesUpdated')
+      );
+    } catch (err) {
+      console.error('Error refreshing rates:', err);
+      toast.error('Failed to refresh exchange rates');
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   if (loading) {
@@ -66,15 +93,22 @@ export default function DevisesPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Devises"
-        subtitle="Gerez les devises et taux de change"
+        title={t('admin.currencies.title')}
+        subtitle={t('admin.currencies.subtitle')}
         actions={
           <div className="flex gap-3">
-            <Button variant="secondary" icon={RefreshCw} onClick={updateExchangeRates}>
-              Actualiser les taux
+            <Button variant="secondary" icon={RefreshCw} onClick={updateExchangeRates} disabled={refreshing}>
+              {refreshing ? (
+                <span className="flex items-center gap-2">
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  {t('admin.currencies.refreshing') || 'Refreshing...'}
+                </span>
+              ) : (
+                t('admin.currencies.refreshRates')
+              )}
             </Button>
             <Button variant="primary" icon={Plus} onClick={() => setShowAddCurrency(true)}>
-              Ajouter devise
+              {t('admin.currencies.addCurrency')}
             </Button>
           </div>
         }
@@ -84,8 +118,8 @@ export default function DevisesPage() {
       <div className="bg-white rounded-xl border border-slate-200 p-6">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="font-semibold text-slate-900">Mise a jour automatique</h3>
-            <p className="text-sm text-slate-500">Actualiser les taux de change quotidiennement</p>
+            <h3 className="font-semibold text-slate-900">{t('admin.currencies.autoUpdate')}</h3>
+            <p className="text-sm text-slate-500">{t('admin.currencies.autoUpdateDescription')}</p>
           </div>
           <button
             onClick={() => setAutoUpdate(!autoUpdate)}
@@ -98,9 +132,9 @@ export default function DevisesPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
-        <MiniStat icon={Coins} label="Total devises" value={currencies.length} bg="bg-slate-100 text-slate-600" />
-        <MiniStat icon={CheckCircle} label="Actives" value={currencies.filter((c) => c.isActive).length} bg="bg-emerald-100 text-emerald-600" />
-        <MiniStat icon={Star} label="Par defaut" value={currencies.find((c) => c.isDefault)?.code || 'CAD'} bg="bg-sky-100 text-sky-600" />
+        <MiniStat icon={Coins} label={t('admin.currencies.totalCurrencies')} value={currencies.length} bg="bg-slate-100 text-slate-600" />
+        <MiniStat icon={CheckCircle} label={t('admin.currencies.activeCurrencies')} value={currencies.filter((c) => c.isActive).length} bg="bg-emerald-100 text-emerald-600" />
+        <MiniStat icon={Star} label={t('admin.currencies.defaultCurrency')} value={currencies.find((c) => c.isDefault)?.code || 'CAD'} bg="bg-sky-100 text-sky-600" />
       </div>
 
       {/* Table */}
@@ -108,13 +142,13 @@ export default function DevisesPage() {
         <table className="w-full">
           <thead className="bg-slate-50">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Devise</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Symbole</th>
-              <th className="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase">Taux (vs CAD)</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Derniere MAJ</th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">Par defaut</th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">Actif</th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">Actions</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.currencies.currency')}</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.currencies.symbol')}</th>
+              <th className="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase">{t('admin.currencies.rateVsCAD')}</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.currencies.lastUpdate')}</th>
+              <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.currencies.defaultCol')}</th>
+              <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.currencies.activeCol')}</th>
+              <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.currencies.actions')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
@@ -134,13 +168,27 @@ export default function DevisesPage() {
                 <td className="px-4 py-4 text-lg font-mono text-slate-700">{currency.symbol}</td>
                 <td className="px-4 py-4 text-right">
                   {currency.isDefault ? (
-                    <span className="text-slate-500">Base</span>
+                    <span className="text-slate-500">{t('admin.currencies.base')}</span>
                   ) : (
                     <span className="font-mono text-slate-900">{currency.exchangeRate.toFixed(4)}</span>
                   )}
                 </td>
-                <td className="px-4 py-4 text-sm text-slate-500">
-                  {new Date(currency.lastUpdated).toLocaleString('fr-CA')}
+                <td className="px-4 py-4">
+                  <div>
+                    <p className="text-sm text-slate-700">
+                      {new Date(currency.lastUpdated).toLocaleDateString(locale, {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                      })}
+                    </p>
+                    <p className="text-xs text-slate-400">
+                      {new Date(currency.lastUpdated).toLocaleTimeString(locale, {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </p>
+                  </div>
                 </td>
                 <td className="px-4 py-4 text-center">
                   <input
@@ -166,7 +214,7 @@ export default function DevisesPage() {
                 </td>
                 <td className="px-4 py-4 text-center">
                   <Button variant="ghost" size="sm" icon={Pencil}>
-                    Modifier
+                    {t('admin.currencies.edit')}
                   </Button>
                 </td>
               </tr>
@@ -177,7 +225,7 @@ export default function DevisesPage() {
 
       {/* Conversion Preview */}
       <div className="bg-white rounded-xl border border-slate-200 p-6">
-        <h3 className="font-semibold text-slate-900 mb-4">Apercu conversion (100 CAD)</h3>
+        <h3 className="font-semibold text-slate-900 mb-4">{t('admin.currencies.conversionPreview')}</h3>
         <div className="grid grid-cols-5 gap-4">
           {currencies
             .filter((c) => c.isActive && !c.isDefault)
@@ -191,10 +239,10 @@ export default function DevisesPage() {
       </div>
 
       {/* Add Currency Modal */}
-      <Modal isOpen={showAddCurrency} onClose={() => setShowAddCurrency(false)} title="Ajouter une devise">
-        <p className="text-slate-500 mb-4">Fonctionnalite en cours de developpement...</p>
+      <Modal isOpen={showAddCurrency} onClose={() => setShowAddCurrency(false)} title={t('admin.currencies.addCurrencyTitle')}>
+        <p className="text-slate-500 mb-4">{t('admin.currencies.inDevelopment')}</p>
         <Button variant="secondary" onClick={() => setShowAddCurrency(false)}>
-          Fermer
+          {t('admin.currencies.close')}
         </Button>
       </Modal>
     </div>

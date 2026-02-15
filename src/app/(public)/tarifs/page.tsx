@@ -1,77 +1,82 @@
+'use client';
+
 export const dynamic = 'force-dynamic';
 /**
  * PAGE TARIFS
  */
 
 import Link from 'next/link';
-
-export const metadata = {
-  title: 'Tarifs | Formations Pro',
-  description: 'Découvrez nos plans et tarifs pour particuliers et entreprises.',
-};
-
-const individualPlans = [
-  {
-    name: 'Gratuit',
-    price: '0',
-    period: '',
-    description: 'Pour découvrir la plateforme',
-    features: ['5 formations gratuites', 'Accès limité aux ressources', 'Certificats basiques', 'Support par email'],
-    cta: 'Commencer',
-    href: '/auth/signup',
-    popular: false,
-  },
-  {
-    name: 'Pro',
-    price: '29',
-    period: '/mois',
-    description: 'Pour les professionnels ambitieux',
-    features: ['Accès illimité aux formations', 'Toutes les ressources', 'Certificats reconnus', 'Support prioritaire', 'Téléchargements'],
-    cta: 'Essai gratuit 14 jours',
-    href: '/auth/signup?plan=pro',
-    popular: true,
-  },
-  {
-    name: 'Annuel',
-    price: '249',
-    period: '/an',
-    description: 'Économisez 30% avec le plan annuel',
-    features: ['Tout du plan Pro', '2 mois offerts', 'Parcours certifiants', 'Coaching mensuel', 'Accès anticipé'],
-    cta: 'Économiser 30%',
-    href: '/auth/signup?plan=annual',
-    popular: false,
-  },
-];
-
-const enterprisePlans = [
-  {
-    name: 'Starter',
-    price: '499',
-    period: '/mois',
-    description: 'Pour les petites équipes',
-    employees: 'Jusqu\'à 25 employés',
-    features: ['50 formations', 'Tableaux de bord', 'Rapports basiques', 'Support email'],
-  },
-  {
-    name: 'Business',
-    price: '1499',
-    period: '/mois',
-    description: 'Pour les entreprises en croissance',
-    employees: 'Jusqu\'à 100 employés',
-    features: ['Toutes les formations', 'SSO / SAML', 'API', 'Support prioritaire', 'Gestionnaire dédié'],
-    popular: true,
-  },
-  {
-    name: 'Enterprise',
-    price: 'Sur mesure',
-    period: '',
-    description: 'Pour les grandes organisations',
-    employees: 'Illimité',
-    features: ['Formations personnalisées', 'On-premise possible', 'SLA garanti', 'Intégrations', 'Formation des formateurs'],
-  },
-];
+import { useTranslations } from '@/hooks/useTranslations';
 
 export default function PricingPage() {
+  const { t } = useTranslations();
+
+  const individualPlans = [
+    {
+      name: t('pricing.free'),
+      price: t('pricing.freePrice'),
+      period: '',
+      description: t('pricing.freeDesc'),
+      features: [t('pricing.freeFeature1'), t('pricing.freeFeature2'), t('pricing.freeFeature3'), t('pricing.freeFeature4')],
+      cta: t('pricing.freeCta'),
+      href: '/auth/signup',
+      popular: false,
+    },
+    {
+      name: t('pricing.pro'),
+      price: t('pricing.proPrice'),
+      period: t('pricing.proPeriod'),
+      description: t('pricing.proDesc'),
+      features: [t('pricing.proFeature1'), t('pricing.proFeature2'), t('pricing.proFeature3'), t('pricing.proFeature4'), t('pricing.proFeature5')],
+      cta: t('pricing.proCta'),
+      href: '/auth/signup?plan=pro',
+      popular: true,
+    },
+    {
+      name: t('pricing.annual'),
+      price: t('pricing.annualPrice'),
+      period: t('pricing.annualPeriod'),
+      description: t('pricing.annualDesc'),
+      features: [t('pricing.annualFeature1'), t('pricing.annualFeature2'), t('pricing.annualFeature3'), t('pricing.annualFeature4'), t('pricing.annualFeature5')],
+      cta: t('pricing.annualCta'),
+      href: '/auth/signup?plan=annual',
+      popular: false,
+    },
+  ];
+
+  const enterprisePlans = [
+    {
+      name: t('pricing.starter'),
+      price: t('pricing.starterPrice'),
+      period: t('pricing.starterPeriod'),
+      description: t('pricing.starterDesc'),
+      employees: t('pricing.starterEmployees'),
+      features: [t('pricing.starterFeature1'), t('pricing.starterFeature2'), t('pricing.starterFeature3'), t('pricing.starterFeature4')],
+      popular: false,
+      isCustomPrice: false,
+    },
+    {
+      name: t('pricing.business'),
+      price: t('pricing.businessPrice'),
+      period: t('pricing.businessPeriod'),
+      description: t('pricing.businessPlanDesc'),
+      employees: t('pricing.businessEmployees'),
+      features: [t('pricing.businessFeature1'), t('pricing.businessFeature2'), t('pricing.businessFeature3'), t('pricing.businessFeature4'), t('pricing.businessFeature5')],
+      popular: true,
+      isCustomPrice: false,
+    },
+    {
+      name: t('pricing.enterprise'),
+      price: t('pricing.enterprisePrice'),
+      period: '',
+      description: t('pricing.enterpriseDesc'),
+      employees: t('pricing.enterpriseEmployees'),
+      features: [t('pricing.enterpriseFeature1'), t('pricing.enterpriseFeature2'), t('pricing.enterpriseFeature3'), t('pricing.enterpriseFeature4'), t('pricing.enterpriseFeature5')],
+      popular: false,
+      isCustomPrice: true,
+    },
+  ];
+
   return (
     <div style={{ backgroundColor: 'var(--gray-100)' }}>
       {/* Hero */}
@@ -84,10 +89,10 @@ export default function PricingPage() {
         }}
       >
         <h1 style={{ fontSize: '42px', fontWeight: 700, marginBottom: '16px' }}>
-          Tarifs simples et transparents
+          {t('pricing.title')}
         </h1>
         <p style={{ fontSize: '18px', opacity: 0.9 }}>
-          Choisissez le plan adapté à vos besoins. Sans engagement.
+          {t('pricing.subtitle')}
         </p>
       </section>
 
@@ -95,10 +100,10 @@ export default function PricingPage() {
       <section style={{ padding: '80px 24px' }}>
         <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <h2 style={{ fontSize: '28px', fontWeight: 700, textAlign: 'center', marginBottom: '16px', color: 'var(--gray-500)' }}>
-            Pour les particuliers
+            {t('pricing.forIndividuals')}
           </h2>
           <p style={{ fontSize: '16px', color: 'var(--gray-400)', textAlign: 'center', marginBottom: '48px' }}>
-            Développez vos compétences à votre rythme.
+            {t('pricing.individualDesc')}
           </p>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
@@ -128,7 +133,7 @@ export default function PricingPage() {
                       fontWeight: 600,
                     }}
                   >
-                    POPULAIRE
+                    {t('pricing.popular')}
                   </span>
                 )}
                 <h3 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '8px' }}>{plan.name}</h3>
@@ -174,10 +179,10 @@ export default function PricingPage() {
       <section style={{ backgroundColor: 'white', padding: '80px 24px' }}>
         <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <h2 style={{ fontSize: '28px', fontWeight: 700, textAlign: 'center', marginBottom: '16px', color: 'var(--gray-500)' }}>
-            Pour les entreprises
+            {t('pricing.forBusiness')}
           </h2>
           <p style={{ fontSize: '16px', color: 'var(--gray-400)', textAlign: 'center', marginBottom: '48px' }}>
-            Solutions complètes pour former vos équipes.
+            {t('pricing.businessDesc')}
           </p>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
@@ -207,14 +212,14 @@ export default function PricingPage() {
                       fontWeight: 600,
                     }}
                   >
-                    RECOMMANDÉ
+                    {t('pricing.recommended')}
                   </span>
                 )}
                 <h3 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '8px' }}>{plan.name}</h3>
                 <p style={{ fontSize: '14px', opacity: 0.8, marginBottom: '8px' }}>{plan.description}</p>
                 <p style={{ fontSize: '12px', opacity: 0.7, marginBottom: '16px' }}>{plan.employees}</p>
                 <p style={{ fontSize: '40px', fontWeight: 700, marginBottom: '24px' }}>
-                  {plan.price.startsWith('Sur') ? plan.price : `$${plan.price}`}
+                  {plan.isCustomPrice ? plan.price : `$${plan.price}`}
                   <span style={{ fontSize: '16px', fontWeight: 400, opacity: 0.7 }}>{plan.period}</span>
                 </p>
                 <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px' }}>
@@ -231,7 +236,7 @@ export default function PricingPage() {
                   ))}
                 </ul>
                 <Link
-                  href={plan.price.startsWith('Sur') ? '/contact' : '/demo'}
+                  href={plan.isCustomPrice ? '/contact' : '/demo'}
                   className="btn"
                   style={{
                     display: 'block',
@@ -241,7 +246,7 @@ export default function PricingPage() {
                     color: plan.popular ? 'var(--gray-500)' : 'white',
                   }}
                 >
-                  {plan.price.startsWith('Sur') ? 'Contactez-nous' : 'Demander une démo'}
+                  {plan.isCustomPrice ? t('pricing.contactUs') : t('pricing.requestDemo')}
                 </Link>
               </div>
             ))}
@@ -252,17 +257,17 @@ export default function PricingPage() {
       {/* FAQ */}
       <section style={{ padding: '64px 24px', textAlign: 'center' }}>
         <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '16px', color: 'var(--gray-500)' }}>
-          Questions sur les tarifs?
+          {t('pricing.faqTitle')}
         </h2>
         <p style={{ fontSize: '16px', color: 'var(--gray-400)', marginBottom: '24px' }}>
-          Consultez notre FAQ ou contactez-nous.
+          {t('pricing.faqDesc')}
         </p>
         <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
           <Link href="/faq" className="btn btn-secondary">
-            Voir la FAQ
+            {t('pricing.viewFaq')}
           </Link>
           <Link href="/contact" className="btn btn-primary">
-            Nous contacter
+            {t('pricing.contactUs')}
           </Link>
         </div>
       </section>

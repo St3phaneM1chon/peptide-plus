@@ -1,3 +1,5 @@
+export {};
+
 /**
  * API Integration Tests - Health & Status
  * Run with: TEST_BASE_URL=http://localhost:3000 npm test -- --testPathPattern="api"
@@ -17,7 +19,7 @@ describeIf('Health & Status API', () => {
       '/faq',
     ];
 
-    test.each(publicRoutes)('GET %s should return 200', async (route) => {
+    test.each(publicRoutes)('GET %s should return 200', async (route: string) => {
       const response = await fetch(`${baseUrl}${route}`);
       expect(response.status).toBe(200);
     });
@@ -30,7 +32,7 @@ describeIf('Health & Status API', () => {
       '/owner',
     ];
 
-    test.each(protectedRoutes)('GET %s should redirect when unauthenticated', async (route) => {
+    test.each(protectedRoutes)('GET %s should redirect when unauthenticated', async (route: string) => {
       const response = await fetch(`${baseUrl}${route}`, { redirect: 'manual' });
       // Should redirect to auth page (307) or return auth error
       expect([200, 307, 401, 403]).toContain(response.status);

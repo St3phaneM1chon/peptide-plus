@@ -28,63 +28,7 @@ import {
   Settings,
   type LucideIcon,
 } from 'lucide-react';
-
-const navSections = [
-  {
-    title: 'Vue d\'ensemble',
-    items: [
-      { name: 'Dashboard', href: '/admin/comptabilite', icon: 'dashboard' },
-      { name: 'Recherche', href: '/admin/comptabilite/recherche', icon: 'search' },
-    ],
-  },
-  {
-    title: 'Saisie',
-    items: [
-      { name: 'Saisie Rapide', href: '/admin/comptabilite/saisie-rapide', icon: 'zap' },
-      { name: 'Écritures', href: '/admin/comptabilite/ecritures', icon: 'edit' },
-      { name: 'Récurrentes', href: '/admin/comptabilite/recurrentes', icon: 'repeat' },
-      { name: 'OCR Factures', href: '/admin/comptabilite/ocr', icon: 'camera' },
-    ],
-  },
-  {
-    title: 'Comptes',
-    items: [
-      { name: 'Grand Livre', href: '/admin/comptabilite/grand-livre', icon: 'book' },
-      { name: 'Plan Comptable', href: '/admin/comptabilite/plan-comptable', icon: 'list' },
-      { name: 'Factures Clients', href: '/admin/comptabilite/factures-clients', icon: 'invoice' },
-      { name: 'Factures Fournisseurs', href: '/admin/comptabilite/factures-fournisseurs', icon: 'receipt' },
-      { name: 'Notes de Credit', href: '/admin/comptabilite/notes-credit', icon: 'invoice' },
-      { name: 'Aging', href: '/admin/comptabilite/aging', icon: 'clock' },
-    ],
-  },
-  {
-    title: 'Banque',
-    items: [
-      { name: 'Comptes Bancaires', href: '/admin/comptabilite/banques', icon: 'bank' },
-      { name: 'Import Bancaire', href: '/admin/comptabilite/import-bancaire', icon: 'download' },
-      { name: 'Rapprochement', href: '/admin/comptabilite/rapprochement', icon: 'check' },
-      { name: 'Devises', href: '/admin/comptabilite/devises', icon: 'currency' },
-    ],
-  },
-  {
-    title: 'Rapports',
-    items: [
-      { name: 'États Financiers', href: '/admin/comptabilite/etats-financiers', icon: 'chart' },
-      { name: 'Prévisions', href: '/admin/comptabilite/previsions', icon: 'trending' },
-      { name: 'Budget', href: '/admin/comptabilite/budget', icon: 'target' },
-      { name: 'Rapports', href: '/admin/comptabilite/rapports', icon: 'report' },
-      { name: 'Exports', href: '/admin/comptabilite/exports', icon: 'upload' },
-    ],
-  },
-  {
-    title: 'Conformité',
-    items: [
-      { name: 'Piste d\'Audit', href: '/admin/comptabilite/audit', icon: 'shield' },
-      { name: 'Clôture', href: '/admin/comptabilite/cloture', icon: 'lock' },
-      { name: 'Paramètres', href: '/admin/comptabilite/parametres', icon: 'settings' },
-    ],
-  },
-];
+import { useI18n } from '@/i18n/client';
 
 const icons: Record<string, LucideIcon> = {
   dashboard: LayoutDashboard,
@@ -114,6 +58,64 @@ const icons: Record<string, LucideIcon> = {
 
 export default function ComptabiliteLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { t } = useI18n();
+
+  const navSections = [
+    {
+      title: t('admin.accountingLayout.sectionOverview'),
+      items: [
+        { name: t('admin.accountingLayout.dashboard'), href: '/admin/comptabilite', icon: 'dashboard' },
+        { name: t('admin.accountingLayout.search'), href: '/admin/comptabilite/recherche', icon: 'search' },
+      ],
+    },
+    {
+      title: t('admin.accountingLayout.sectionEntry'),
+      items: [
+        { name: t('admin.accountingLayout.quickEntry'), href: '/admin/comptabilite/saisie-rapide', icon: 'zap' },
+        { name: t('admin.accountingLayout.entries'), href: '/admin/comptabilite/ecritures', icon: 'edit' },
+        { name: t('admin.accountingLayout.recurring'), href: '/admin/comptabilite/recurrentes', icon: 'repeat' },
+        { name: t('admin.accountingLayout.ocrInvoices'), href: '/admin/comptabilite/ocr', icon: 'camera' },
+      ],
+    },
+    {
+      title: t('admin.accountingLayout.sectionAccounts'),
+      items: [
+        { name: t('admin.accountingLayout.generalLedger'), href: '/admin/comptabilite/grand-livre', icon: 'book' },
+        { name: t('admin.accountingLayout.chartOfAccounts'), href: '/admin/comptabilite/plan-comptable', icon: 'list' },
+        { name: t('admin.accountingLayout.clientInvoices'), href: '/admin/comptabilite/factures-clients', icon: 'invoice' },
+        { name: t('admin.accountingLayout.supplierInvoices'), href: '/admin/comptabilite/factures-fournisseurs', icon: 'receipt' },
+        { name: t('admin.accountingLayout.creditNotes'), href: '/admin/comptabilite/notes-credit', icon: 'invoice' },
+        { name: t('admin.accountingLayout.aging'), href: '/admin/comptabilite/aging', icon: 'clock' },
+      ],
+    },
+    {
+      title: t('admin.accountingLayout.sectionBank'),
+      items: [
+        { name: t('admin.accountingLayout.bankAccounts'), href: '/admin/comptabilite/banques', icon: 'bank' },
+        { name: t('admin.accountingLayout.bankImport'), href: '/admin/comptabilite/import-bancaire', icon: 'download' },
+        { name: t('admin.accountingLayout.reconciliation'), href: '/admin/comptabilite/rapprochement', icon: 'check' },
+        { name: t('admin.accountingLayout.currencies'), href: '/admin/comptabilite/devises', icon: 'currency' },
+      ],
+    },
+    {
+      title: t('admin.accountingLayout.sectionReports'),
+      items: [
+        { name: t('admin.accountingLayout.financialStatements'), href: '/admin/comptabilite/etats-financiers', icon: 'chart' },
+        { name: t('admin.accountingLayout.forecasts'), href: '/admin/comptabilite/previsions', icon: 'trending' },
+        { name: t('admin.accountingLayout.budget'), href: '/admin/comptabilite/budget', icon: 'target' },
+        { name: t('admin.accountingLayout.reports'), href: '/admin/comptabilite/rapports', icon: 'report' },
+        { name: t('admin.accountingLayout.exports'), href: '/admin/comptabilite/exports', icon: 'upload' },
+      ],
+    },
+    {
+      title: t('admin.accountingLayout.sectionCompliance'),
+      items: [
+        { name: t('admin.accountingLayout.auditTrail'), href: '/admin/comptabilite/audit', icon: 'shield' },
+        { name: t('admin.accountingLayout.closing'), href: '/admin/comptabilite/cloture', icon: 'lock' },
+        { name: t('admin.accountingLayout.settings'), href: '/admin/comptabilite/parametres', icon: 'settings' },
+      ],
+    },
+  ];
 
   return (
     <div className="flex gap-6">
@@ -127,7 +129,7 @@ export default function ComptabiliteLayout({ children }: { children: React.React
               </h2>
               <nav className="space-y-0.5">
                 {section.items.map((item) => {
-                  const isActive = pathname === item.href || 
+                  const isActive = pathname === item.href ||
                     (item.href !== '/admin/comptabilite' && pathname.startsWith(item.href));
                   return (
                     <Link

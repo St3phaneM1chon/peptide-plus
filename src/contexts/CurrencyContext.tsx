@@ -3,10 +3,12 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 interface Currency {
+  id?: string;
   code: string;
   name: string;
   symbol: string;
   exchangeRate: number;
+  isDefault?: boolean;
 }
 
 interface CurrencyContextType {
@@ -15,13 +17,16 @@ interface CurrencyContextType {
   setCurrency: (currency: Currency) => void;
   convertPrice: (priceInCAD: number) => number;
   formatPrice: (priceInCAD: number) => string;
+  /** Returns the currency code lowercased for Stripe (e.g. 'cad', 'usd') */
+  stripeCurrencyCode: string;
 }
 
 // Fallback statique utilisé uniquement si la DB est inaccessible
 const fallbackCurrencies: Currency[] = [
-  { code: 'CAD', name: 'Dollar canadien', symbol: '$', exchangeRate: 1 },
-  { code: 'USD', name: 'Dollar américain', symbol: '$', exchangeRate: 0.74 },
-  { code: 'EUR', name: 'Euro', symbol: '€', exchangeRate: 0.68 },
+  { code: 'CAD', name: 'Dollar canadien', symbol: '$', exchangeRate: 1, isDefault: true },
+  { code: 'USD', name: 'Dollar américain', symbol: '$', exchangeRate: 0.74, isDefault: false },
+  { code: 'EUR', name: 'Euro', symbol: '€', exchangeRate: 0.68, isDefault: false },
+  { code: 'GBP', name: 'British Pound', symbol: '\u00A3', exchangeRate: 0.58, isDefault: false },
 ];
 
 const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined);
@@ -38,11 +43,13 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
       .then((res) => res.ok ? res.json() : null)
       .then((data) => {
         if (data?.currencies?.length) {
-          const dbCurrencies: Currency[] = data.currencies.map((c: { code: string; name: string; symbol: string; exchangeRate: number }) => ({
+          const dbCurrencies: Currency[] = data.currencies.map((c: { id?: string; code: string; name: string; symbol: string; exchangeRate: number; isDefault?: boolean }) => ({
+            id: c.id,
             code: c.code,
             name: c.name,
             symbol: c.symbol,
             exchangeRate: Number(c.exchangeRate),
+            isDefault: c.isDefault,
           }));
           setCurrencies(dbCurrencies);
           // Appliquer la préférence stockée
@@ -80,20 +87,27 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
 
   const formatPrice = (priceInCAD: number): string => {
     const converted = convertPrice(priceInCAD);
-    
-    // Format based on currency
-    const formatter = new Intl.NumberFormat(
-      currency.code === 'EUR' ? 'fr-FR' : 'en-CA',
-      {
-        style: 'currency',
-        currency: currency.code,
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      }
-    );
-    
+
+    // Select locale based on currency for proper formatting
+    const localeMap: Record<string, string> = {
+      CAD: 'en-CA',
+      USD: 'en-US',
+      EUR: 'fr-FR',
+      GBP: 'en-GB',
+    };
+    const locale = localeMap[currency.code] || 'en-CA';
+
+    const formatter = new Intl.NumberFormat(locale, {
+      style: 'currency',
+      currency: currency.code,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+
     return formatter.format(converted);
   };
+
+  const stripeCurrencyCode = currency.code.toLowerCase();
 
   return (
     <CurrencyContext.Provider
@@ -103,6 +117,7 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
         setCurrency,
         convertPrice,
         formatPrice,
+        stripeCurrencyCode,
       }}
     >
       {children}

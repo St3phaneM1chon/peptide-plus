@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 // @ts-nocheck
 import { PrismaClient } from '@prisma/client';
 const p = new PrismaClient();

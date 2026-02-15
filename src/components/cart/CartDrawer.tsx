@@ -8,6 +8,7 @@
 import { useState, useEffect, createContext, useContext } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useI18n } from '@/i18n/client';
 
 // =====================================================
 // CART CONTEXT
@@ -140,12 +141,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
 export function CartIcon() {
   const { itemCount, toggleCart } = useCart();
+  const { t } = useI18n();
 
   return (
     <button
       onClick={toggleCart}
       className="header__icon cart-icon"
-      aria-label="Ouvrir le panier"
+      aria-label={t('cart.openCart')}
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -171,6 +173,7 @@ export function CartIcon() {
 
 function CartDrawer() {
   const { items, isOpen, subtotal, closeCart, updateQuantity, removeItem } = useCart();
+  const { t, formatCurrency } = useI18n();
 
   // Fermer avec Escape
   useEffect(() => {
@@ -206,11 +209,11 @@ function CartDrawer() {
       <div className={`cart-drawer ${isOpen ? 'open' : ''}`} role="dialog" aria-modal="true">
         {/* Header */}
         <div className="cart-drawer__header">
-          <h2 className="cart-drawer__title">Panier ({items.length})</h2>
+          <h2 className="cart-drawer__title">{t('cart.titleWithCount', { count: items.length })}</h2>
           <button
             className="cart-drawer__close"
             onClick={closeCart}
-            aria-label="Fermer le panier"
+            aria-label={t('cart.closeCart')}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -248,9 +251,9 @@ function CartDrawer() {
                   d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"
                 />
               </svg>
-              <p className="cart-drawer__empty-text">Votre panier est vide</p>
+              <p className="cart-drawer__empty-text">{t('cart.emptyTitle')}</p>
               <button className="btn btn-primary" onClick={closeCart}>
-                Continuer vos achats
+                {t('cart.continueShopping')}
               </button>
             </div>
           ) : (
@@ -261,6 +264,8 @@ function CartDrawer() {
                   item={item}
                   onUpdateQuantity={(qty) => updateQuantity(item.id, qty)}
                   onRemove={() => removeItem(item.id)}
+                  t={t}
+                  formatCurrency={formatCurrency}
                 />
               ))}
             </div>
@@ -271,23 +276,23 @@ function CartDrawer() {
         {items.length > 0 && (
           <div className="cart-drawer__footer">
             <div className="cart-drawer__subtotal">
-              <span className="cart-drawer__subtotal-label">Sous-total</span>
+              <span className="cart-drawer__subtotal-label">{t('cart.subtotal')}</span>
               <span className="cart-drawer__subtotal-value">
-                {subtotal.toFixed(2)} $
+                {formatCurrency(subtotal)}
               </span>
             </div>
             <p className="cart-drawer__note">
-              Taxes et frais de livraison calculés à la caisse
+              {t('cart.taxesNote')}
             </p>
             <Link
               href="/checkout"
               className="cart-drawer__checkout"
               onClick={closeCart}
             >
-              Passer à la caisse
+              {t('cart.proceedToCheckout')}
             </Link>
             <button className="cart-drawer__continue" onClick={closeCart}>
-              Continuer vos achats
+              {t('cart.continueShopping')}
             </button>
           </div>
         )}
@@ -304,9 +309,11 @@ interface CartItemRowProps {
   item: CartItem;
   onUpdateQuantity: (quantity: number) => void;
   onRemove: () => void;
+  t: (key: string, params?: Record<string, string | number>) => string;
+  formatCurrency: (amount: number) => string;
 }
 
-function CartItemRow({ item, onUpdateQuantity, onRemove }: CartItemRowProps) {
+function CartItemRow({ item, onUpdateQuantity, onRemove, t, formatCurrency }: CartItemRowProps) {
   return (
     <div className="cart-item">
       {/* Image */}
@@ -328,14 +335,14 @@ function CartItemRow({ item, onUpdateQuantity, onRemove }: CartItemRowProps) {
       <div className="cart-item__details">
         <h4 className="cart-item__title">{item.name}</h4>
         {item.variant && <p className="cart-item__variant">{item.variant}</p>}
-        <p className="cart-item__price">{item.price.toFixed(2)} $</p>
+        <p className="cart-item__price">{formatCurrency(item.price)}</p>
 
         <div className="cart-item__actions">
           {/* Quantity */}
           <div className="cart-item__quantity">
             <button
               onClick={() => onUpdateQuantity(item.quantity - 1)}
-              aria-label="Diminuer la quantité"
+              aria-label={t('cart.decreaseQuantity')}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -352,7 +359,7 @@ function CartItemRow({ item, onUpdateQuantity, onRemove }: CartItemRowProps) {
             <span>{item.quantity}</span>
             <button
               onClick={() => onUpdateQuantity(item.quantity + 1)}
-              aria-label="Augmenter la quantité"
+              aria-label={t('cart.increaseQuantity')}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -374,7 +381,7 @@ function CartItemRow({ item, onUpdateQuantity, onRemove }: CartItemRowProps) {
 
           {/* Remove */}
           <button className="cart-item__remove" onClick={onRemove}>
-            Retirer
+            {t('cart.remove')}
           </button>
         </div>
       </div>

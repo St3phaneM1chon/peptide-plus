@@ -261,7 +261,8 @@ export async function getHistoricalRates(
   
   const current = new Date(startDate);
   while (current <= endDate) {
-    // Add some variation
+    // SECURITY NOTE: Math.random() is intentional here - used only for mock/simulated
+    // historical rate data, not for security purposes. No crypto needed.
     const variation = (Math.random() - 0.5) * 0.02;
     rates.push({
       date: new Date(current),

@@ -1,7 +1,9 @@
+export const dynamic = 'force-dynamic';
+
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
-import { PERMISSIONS, PERMISSION_MODULES, seedPermissions } from '@/lib/permissions';
+import { PERMISSION_MODULES, seedPermissions } from '@/lib/permissions';
 
 // GET /api/admin/permissions - List all permissions, groups, and overrides
 export async function GET(request: NextRequest) {

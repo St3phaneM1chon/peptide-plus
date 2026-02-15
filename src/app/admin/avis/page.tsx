@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import {
   Star,
   MessageSquare,
@@ -9,7 +10,7 @@ import {
   ThumbsUp,
   ThumbsDown,
   MessageCircle,
-  Search,
+  Camera,
 } from 'lucide-react';
 import {
   PageHeader,
@@ -23,6 +24,7 @@ import {
   FormField,
   Textarea,
 } from '@/components/admin';
+import { useI18n } from '@/i18n/client';
 
 interface Review {
   id: string;
@@ -34,6 +36,7 @@ interface Review {
   rating: number;
   title?: string;
   content: string;
+  images?: string[];
   isVerifiedPurchase: boolean;
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
   adminResponse?: string;
@@ -46,18 +49,19 @@ const statusVariant: Record<string, 'warning' | 'success' | 'error'> = {
   REJECTED: 'error',
 };
 
-const statusLabel: Record<string, string> = {
-  PENDING: 'En attente',
-  APPROVED: 'Approuve',
-  REJECTED: 'Rejete',
-};
-
 export default function AvisPage() {
+  const { t, locale } = useI18n();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState({ status: '', rating: '', search: '' });
   const [selectedReview, setSelectedReview] = useState<Review | null>(null);
   const [adminResponse, setAdminResponse] = useState('');
+
+  const statusLabel: Record<string, string> = {
+    PENDING: t('admin.reviews.statusPending'),
+    APPROVED: t('admin.reviews.statusApproved'),
+    REJECTED: t('admin.reviews.statusRejected'),
+  };
 
   useEffect(() => {
     fetchReviews();
@@ -127,6 +131,7 @@ export default function AvisPage() {
     pending: reviews.filter(r => r.status === 'PENDING').length,
     approved: reviews.filter(r => r.status === 'APPROVED').length,
     avgRating: reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length || 0,
+    withPhotos: reviews.filter(r => r.images && r.images.length > 0).length,
   };
 
   const renderStars = (rating: number) => {
@@ -153,44 +158,45 @@ export default function AvisPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Avis clients"
-        subtitle="Moderez les avis et repondez aux clients"
+        title={t('admin.reviews.title')}
+        subtitle={t('admin.reviews.subtitle')}
       />
 
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard label="Total avis" value={stats.total} icon={MessageSquare} />
-        <StatCard label="En attente" value={stats.pending} icon={Clock} />
-        <StatCard label="Approuves" value={stats.approved} icon={CheckCircle2} />
-        <StatCard label="Note moyenne" value={stats.avgRating.toFixed(1)} icon={Star} />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <StatCard label={t('admin.reviews.totalReviews')} value={stats.total} icon={MessageSquare} />
+        <StatCard label={t('admin.reviews.pending')} value={stats.pending} icon={Clock} />
+        <StatCard label={t('admin.reviews.approved')} value={stats.approved} icon={CheckCircle2} />
+        <StatCard label={t('admin.reviews.avgRating')} value={stats.avgRating.toFixed(1)} icon={Star} />
+        <StatCard label="With Photos" value={stats.withPhotos} icon={Camera} />
       </div>
 
       {/* Filters */}
       <FilterBar
         searchValue={filter.search}
         onSearchChange={(v) => setFilter({ ...filter, search: v })}
-        searchPlaceholder="Rechercher..."
+        searchPlaceholder={t('admin.reviews.searchPlaceholder')}
       >
         <SelectFilter
-          label="Tous les statuts"
+          label={t('admin.reviews.allStatuses')}
           value={filter.status}
           onChange={(v) => setFilter({ ...filter, status: v })}
           options={[
-            { value: 'PENDING', label: 'En attente' },
-            { value: 'APPROVED', label: 'Approuve' },
-            { value: 'REJECTED', label: 'Rejete' },
+            { value: 'PENDING', label: t('admin.reviews.statusPending') },
+            { value: 'APPROVED', label: t('admin.reviews.statusApproved') },
+            { value: 'REJECTED', label: t('admin.reviews.statusRejected') },
           ]}
         />
         <SelectFilter
-          label="Toutes les notes"
+          label={t('admin.reviews.allRatings')}
           value={filter.rating}
           onChange={(v) => setFilter({ ...filter, rating: v })}
           options={[
-            { value: '5', label: '5 etoiles' },
-            { value: '4', label: '4 etoiles' },
-            { value: '3', label: '3 etoiles' },
-            { value: '2', label: '2 etoiles' },
-            { value: '1', label: '1 etoile' },
+            { value: '5', label: t('admin.reviews.stars5') },
+            { value: '4', label: t('admin.reviews.stars4') },
+            { value: '3', label: t('admin.reviews.stars3') },
+            { value: '2', label: t('admin.reviews.stars2') },
+            { value: '1', label: t('admin.reviews.stars1') },
           ]}
         />
       </FilterBar>
@@ -204,14 +210,14 @@ export default function AvisPage() {
                 <div className="flex items-center gap-3 mb-1">
                   <span className="font-medium text-slate-900">{review.userName}</span>
                   {review.isVerifiedPurchase && (
-                    <StatusBadge variant="success">Achat verifie</StatusBadge>
+                    <StatusBadge variant="success">{t('admin.reviews.verifiedPurchase')}</StatusBadge>
                   )}
                   <StatusBadge variant={statusVariant[review.status]} dot>
                     {statusLabel[review.status]}
                   </StatusBadge>
                 </div>
                 <p className="text-sm text-slate-500">
-                  {review.productName} &bull; {new Date(review.createdAt).toLocaleDateString('fr-CA')}
+                  {review.productName} &bull; {new Date(review.createdAt).toLocaleDateString(locale)}
                 </p>
               </div>
               {renderStars(review.rating)}
@@ -222,9 +228,30 @@ export default function AvisPage() {
             )}
             <p className="text-slate-700 mb-3">{review.content}</p>
 
+            {/* Review Images */}
+            {review.images && review.images.length > 0 && (
+              <div className="flex gap-2 mb-3">
+                {review.images.map((img, idx) => (
+                  <div key={idx} className="relative w-20 h-20 rounded-lg overflow-hidden border border-slate-200">
+                    <Image
+                      src={img}
+                      alt={`Review image ${idx + 1}`}
+                      fill
+                      className="object-cover"
+                      unoptimized
+                    />
+                  </div>
+                ))}
+                <div className="flex items-center gap-1 px-2 text-xs text-slate-500">
+                  <Camera className="w-3 h-3" />
+                  {review.images.length}
+                </div>
+              </div>
+            )}
+
             {review.adminResponse && (
               <div className="bg-sky-50 rounded-lg p-3 mb-3">
-                <p className="text-sm font-medium text-sky-800 mb-1">Reponse BioCycle:</p>
+                <p className="text-sm font-medium text-sky-800 mb-1">{t('admin.reviews.responseBioCycle')}</p>
                 <p className="text-sm text-sky-700">{review.adminResponse}</p>
               </div>
             )}
@@ -239,7 +266,7 @@ export default function AvisPage() {
                     onClick={() => updateReviewStatus(review.id, 'APPROVED')}
                     className="text-green-700 hover:bg-green-100"
                   >
-                    Approuver
+                    {t('admin.reviews.approve')}
                   </Button>
                   <Button
                     size="sm"
@@ -248,7 +275,7 @@ export default function AvisPage() {
                     onClick={() => updateReviewStatus(review.id, 'REJECTED')}
                     className="text-red-700 hover:bg-red-100"
                   >
-                    Rejeter
+                    {t('admin.reviews.reject')}
                   </Button>
                 </>
               )}
@@ -259,7 +286,7 @@ export default function AvisPage() {
                 onClick={() => { setSelectedReview(review); setAdminResponse(review.adminResponse || ''); }}
                 className="text-sky-700 hover:bg-sky-100"
               >
-                {review.adminResponse ? 'Modifier reponse' : 'Repondre'}
+                {review.adminResponse ? t('admin.reviews.editResponse') : t('admin.reviews.respond')}
               </Button>
             </div>
           </div>
@@ -268,8 +295,8 @@ export default function AvisPage() {
         {filteredReviews.length === 0 && (
           <EmptyState
             icon={MessageSquare}
-            title="Aucun avis trouve"
-            description="Aucun avis ne correspond aux filtres selectionnes"
+            title={t('admin.reviews.emptyTitle')}
+            description={t('admin.reviews.emptyDescription')}
           />
         )}
       </div>
@@ -278,18 +305,18 @@ export default function AvisPage() {
       <Modal
         isOpen={!!selectedReview}
         onClose={() => setSelectedReview(null)}
-        title="Repondre a l'avis"
+        title={t('admin.reviews.modalTitle')}
         footer={
           <>
             <Button variant="secondary" onClick={() => setSelectedReview(null)}>
-              Annuler
+              {t('admin.reviews.cancel')}
             </Button>
             <Button
               variant="primary"
               onClick={() => selectedReview && submitAdminResponse(selectedReview.id)}
               disabled={!adminResponse.trim()}
             >
-              Publier la reponse
+              {t('admin.reviews.publishResponse')}
             </Button>
           </>
         }
@@ -301,13 +328,33 @@ export default function AvisPage() {
                 <p className="text-sm text-slate-500">{selectedReview.userName}</p>
                 {renderStars(selectedReview.rating)}
               </div>
+              {selectedReview.title && (
+                <h4 className="font-semibold text-slate-900 mb-1">{selectedReview.title}</h4>
+              )}
               <p className="text-slate-700">{selectedReview.content}</p>
+
+              {/* Review Images in Modal */}
+              {selectedReview.images && selectedReview.images.length > 0 && (
+                <div className="flex gap-2 mt-3">
+                  {selectedReview.images.map((img, idx) => (
+                    <div key={idx} className="relative w-24 h-24 rounded-lg overflow-hidden border border-slate-200">
+                      <Image
+                        src={img}
+                        alt={`Review image ${idx + 1}`}
+                        fill
+                        className="object-cover"
+                        unoptimized
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-            <FormField label="Votre reponse">
+            <FormField label={t('admin.reviews.yourResponse')}>
               <Textarea
                 value={adminResponse}
                 onChange={(e) => setAdminResponse(e.target.value)}
-                placeholder="Repondez au client..."
+                placeholder={t('admin.reviews.respondPlaceholder')}
               />
             </FormField>
           </div>

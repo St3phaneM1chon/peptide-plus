@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from '@/hooks/useTranslations';
 
 interface SubscriptionOfferModalProps {
   productId: string;
@@ -12,13 +13,6 @@ interface SubscriptionOfferModalProps {
   onDecline: () => void;
 }
 
-const FREQUENCIES = [
-  { id: 'WEEKLY', label: 'Hebdomadaire', discount: 20 },
-  { id: 'BIWEEKLY', label: 'Aux 2 semaines', discount: 15 },
-  { id: 'MONTHLY', label: 'Mensuel', discount: 10 },
-  { id: 'BIMONTHLY', label: 'Aux 2 mois', discount: 5 },
-];
-
 export default function SubscriptionOfferModal({
   productName,
   formatName,
@@ -26,7 +20,15 @@ export default function SubscriptionOfferModal({
   onAccept,
   onDecline,
 }: SubscriptionOfferModalProps) {
+  const { t } = useTranslations();
   const [selectedFrequency, setSelectedFrequency] = useState('MONTHLY');
+
+  const FREQUENCIES = [
+    { id: 'WEEKLY', label: t('subscriptions.weekly'), discount: 20 },
+    { id: 'BIWEEKLY', label: t('subscriptions.biweekly'), discount: 15 },
+    { id: 'MONTHLY', label: t('subscriptions.monthly'), discount: 10 },
+    { id: 'BIMONTHLY', label: t('subscriptions.bimonthly'), discount: 5 },
+  ];
 
   const selected = FREQUENCIES.find((f) => f.id === selectedFrequency)!;
   const discountedPrice = currentPrice * (1 - selected.discount / 100);
@@ -36,7 +38,7 @@ export default function SubscriptionOfferModal({
       <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden">
         {/* Header */}
         <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-5 text-white">
-          <h2 className="text-xl font-bold">S&apos;abonner et economiser!</h2>
+          <h2 className="text-xl font-bold">{t('subscriptions.offerTitle')}</h2>
           <p className="text-sm text-white/80 mt-1">
             {productName}
             {formatName ? ` — ${formatName}` : ''}
@@ -46,7 +48,7 @@ export default function SubscriptionOfferModal({
         <div className="p-6">
           {/* Current price */}
           <div className="mb-5">
-            <p className="text-sm text-gray-500">Prix actuel</p>
+            <p className="text-sm text-gray-500">{t('subscriptions.currentPrice')}</p>
             <p className="text-2xl font-bold text-gray-900">${currentPrice.toFixed(2)}</p>
           </div>
 
@@ -75,7 +77,7 @@ export default function SubscriptionOfferModal({
                     <div>
                       <span className="font-medium text-gray-900">{freq.label}</span>
                       <span className="ml-2 text-sm text-green-600 font-medium">
-                        Economisez {freq.discount}%
+                        {t('subscriptions.save', { percent: freq.discount })}
                       </span>
                     </div>
                   </div>
@@ -88,11 +90,11 @@ export default function SubscriptionOfferModal({
           {/* Savings highlight */}
           <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6 text-center">
             <p className="text-sm text-green-700">
-              Vous economisez{' '}
+              {t('subscriptions.youSave')}{' '}
               <span className="font-bold text-green-800">
                 ${(currentPrice - discountedPrice).toFixed(2)}
               </span>{' '}
-              par livraison ({selected.discount}%)
+              {t('subscriptions.perDelivery')} ({selected.discount}%)
             </p>
           </div>
 
@@ -102,18 +104,18 @@ export default function SubscriptionOfferModal({
               onClick={onDecline}
               className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors"
             >
-              Non merci
+              {t('subscriptions.decline')}
             </button>
             <button
               onClick={() => onAccept(selectedFrequency, selected.discount)}
               className="flex-1 px-4 py-3 bg-orange-500 text-white rounded-xl font-medium hover:bg-orange-600 transition-colors"
             >
-              S&apos;abonner
+              {t('subscriptions.subscribe')}
             </button>
           </div>
 
           <p className="text-xs text-gray-400 text-center mt-3">
-            Annulez ou modifiez a tout moment. Sans engagement.
+            {t('subscriptions.cancelAnytime')}
           </p>
         </div>
       </div>

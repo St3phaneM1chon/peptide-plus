@@ -1,14 +1,22 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * API Account Address - BioCycle Peptides
  * Gestion des adresses utilisateur via le modèle UserAddress
  */
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { db } from '@/lib/db';
+import { validateCsrf } from '@/lib/csrf-middleware';
 
-export async function PUT(request: Request) {
+export async function PUT(request: NextRequest) {
   try {
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const session = await auth();
 
     if (!session?.user?.email) {

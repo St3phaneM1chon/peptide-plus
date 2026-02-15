@@ -262,7 +262,7 @@ export async function simulateAureliaPay(params: {
     const address = generateAddress(scenario);
 
     // 6. Get a test user
-    let testUser = await prisma.user.findFirst({ orderBy: { createdAt: 'asc' } });
+    const testUser = await prisma.user.findFirst({ orderBy: { createdAt: 'asc' } });
     if (!testUser) {
       throw new Error('Aucun utilisateur disponible pour le test UAT');
     }
@@ -368,15 +368,16 @@ export async function simulateAureliaPay(params: {
     });
 
     return { orderId: order.id, orderNumber: order.orderNumber, success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Log the error to the test case
+    const err = error instanceof Error ? error : new Error('Erreur inconnue');
     await prisma.uatTestError.create({
       data: {
         testCaseId,
         category: 'SIMULATION_ERROR',
         severity: 'ERROR',
-        message: error.message || 'Erreur inconnue lors de la simulation',
-        stackTrace: error.stack,
+        message: err.message || 'Erreur inconnue lors de la simulation',
+        stackTrace: err.stack,
         context: { scenarioCode: scenario.code, region: scenario.region },
       },
     });
@@ -385,7 +386,7 @@ export async function simulateAureliaPay(params: {
       orderId: '',
       orderNumber: '',
       success: false,
-      error: error.message,
+      error: err.message,
     };
   }
 }
@@ -407,14 +408,15 @@ export async function executePostActions(params: {
       } else if (action === 'reship') {
         await executeReship(orderId, testCaseId);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(`Post-action ${action} echouee`);
       await prisma.uatTestError.create({
         data: {
           testCaseId,
           category: action === 'refund' ? 'REFUND_ERROR' : 'RESHIP_ERROR',
           severity: 'ERROR',
-          message: error.message || `Post-action ${action} echouee`,
-          stackTrace: error.stack,
+          message: err.message || `Post-action ${action} echouee`,
+          stackTrace: err.stack,
           context: { orderId, action },
         },
       });
@@ -440,7 +442,7 @@ async function executeRefund(orderId: string, _testCaseId: string): Promise<void
   const refundTps = Number(order.taxTps);
   const refundTvq = Number(order.taxTvq);
   const refundTvh = Number(order.taxTvh);
-  const refundPst = Number((order as any).taxPst || 0);
+  const refundPst = Number((order as Record<string, unknown>).taxPst || 0);
 
   // 1. Create refund accounting entries
   const entryId = await createRefundAccountingEntries(

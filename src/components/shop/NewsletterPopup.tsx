@@ -1,43 +1,31 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import { useTranslations } from '@/hooks/useTranslations';
 
 export default function NewsletterPopup() {
   const { t, locale } = useTranslations();
+  const { data: session } = useSession();
   const [isOpen, setIsOpen] = useState(false);
   const [email, setEmail] = useState('');
+  const [birthDate, setBirthDate] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [detectedLocale, setDetectedLocale] = useState<string | null>(null);
 
   useEffect(() => {
-    // Detect browser language
-    if (typeof navigator !== 'undefined') {
-      const browserLang = navigator.language || (navigator as any).userLanguage;
-      setDetectedLocale(browserLang?.split('-')[0] || 'en');
+    // Don't show to logged-in users (they already have an account)
+    if (session?.user) {
+      return;
     }
 
     // Check if user has already seen the popup or subscribed
     const hasSeenPopup = localStorage.getItem('newsletter_popup_seen');
     const hasSubscribed = localStorage.getItem('newsletter_subscribed');
-    
+
     if (hasSeenPopup || hasSubscribed) {
       return;
     }
-
-    // Wait for disclaimer to be accepted before showing
-    const showPopupAfterDisclaimer = () => {
-      const disclaimerAccepted = localStorage.getItem('biocycle_disclaimer_accepted');
-      if (disclaimerAccepted) {
-        // Show popup 3 seconds after disclaimer is accepted
-        const timer = setTimeout(() => {
-          setIsOpen(true);
-        }, 3000);
-        return () => clearTimeout(timer);
-      }
-      return undefined;
-    };
 
     // Check if disclaimer was already accepted
     const disclaimerAccepted = localStorage.getItem('biocycle_disclaimer_accepted');
@@ -61,7 +49,7 @@ export default function NewsletterPopup() {
     return () => {
       window.removeEventListener('disclaimerAccepted', handleDisclaimerAccepted);
     };
-  }, []);
+  }, [session]);
 
   const handleClose = () => {
     setIsOpen(false);
@@ -77,10 +65,11 @@ export default function NewsletterPopup() {
       const response = await fetch('/api/newsletter', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           email,
           source: 'popup',
-          locale: locale || detectedLocale || 'en'
+          locale: locale || 'en',
+          ...(birthDate && { birthDate }),
         }),
       });
 
@@ -95,6 +84,9 @@ export default function NewsletterPopup() {
     // Save subscription locally as backup
     localStorage.setItem('newsletter_subscribed', 'true');
     localStorage.setItem('newsletter_email', email);
+    if (birthDate) {
+      localStorage.setItem('newsletter_birthdate', birthDate);
+    }
     
     // Generate discount code
     const discountCode = `WELCOME10-${Date.now().toString(36).toUpperCase().slice(-6)}`;
@@ -105,16 +97,6 @@ export default function NewsletterPopup() {
   };
 
   if (!isOpen) return null;
-
-  // Use browser locale for content
-  const isFrench = locale === 'fr' || detectedLocale === 'fr';
-
-  // Fallback translations based on detected locale
-  const getContent = (key: string, enFallback: string, frFallback: string) => {
-    const translated = t(key);
-    if (translated !== key) return translated;
-    return isFrench ? frFallback : enFallback;
-  };
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
@@ -138,10 +120,10 @@ export default function NewsletterPopup() {
                 <span className="text-3xl">💊</span>
               </div>
               <h2 className="text-2xl md:text-3xl font-bold mb-2">
-                {getContent('newsletter.title', 'Get 10% Off Your First Order!', 'Obtenez 10% de rabais sur votre première commande!')}
+                {t('newsletter.title')}
               </h2>
               <p className="text-orange-100">
-                {getContent('newsletter.subtitle', 'Join our research community for exclusive offers', 'Rejoignez notre communauté de recherche pour des offres exclusives')}
+                {t('newsletter.subtitle')}
               </p>
             </div>
 
@@ -150,15 +132,29 @@ export default function NewsletterPopup() {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label htmlFor="newsletter-email" className="block text-sm font-medium text-gray-700 mb-1">
-                    {getContent('newsletter.emailLabel', 'Email Address', 'Adresse courriel')}
+                    {t('newsletter.emailLabel')}
                   </label>
                   <input
                     type="email"
                     id="newsletter-email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder={isFrench ? "votre@courriel.com" : "your@email.com"}
+                    placeholder={t('newsletter.placeholder')}
                     required
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="newsletter-dob" className="block text-sm font-medium text-gray-700 mb-1">
+                    {t('newsletter.dobLabel', 'Date of Birth')} <span className="text-xs text-gray-400">({t('newsletter.dobOptional', 'optional - for a birthday surprise!')})</span>
+                  </label>
+                  <input
+                    type="date"
+                    id="newsletter-dob"
+                    value={birthDate}
+                    onChange={(e) => setBirthDate(e.target.value)}
+                    max={new Date().toISOString().split('T')[0]}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
                   />
                 </div>
@@ -174,10 +170,10 @@ export default function NewsletterPopup() {
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                       </svg>
-                      {getContent('common.loading', 'Loading...', 'Chargement...')}
+                      {t('common.loading')}
                     </span>
                   ) : (
-                    getContent('newsletter.cta', 'Get My 10% Discount', 'Obtenir mon rabais de 10%')
+                    t('newsletter.cta')
                   )}
                 </button>
               </form>
@@ -185,33 +181,33 @@ export default function NewsletterPopup() {
               {/* Benefits */}
               <div className="mt-6 pt-6 border-t border-gray-100">
                 <p className="text-sm text-gray-500 mb-3">
-                  {getContent('newsletter.benefits', 'Subscribers get:', 'Les abonnés reçoivent:')}
+                  {t('newsletter.benefits')}
                 </p>
                 <ul className="space-y-2">
                   <li className="flex items-center gap-2 text-sm text-gray-600">
                     <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                     </svg>
-                    {getContent('newsletter.benefit1', 'Exclusive discounts & promotions', 'Rabais et promotions exclusifs')}
+                    {t('newsletter.benefit1')}
                   </li>
                   <li className="flex items-center gap-2 text-sm text-gray-600">
                     <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                     </svg>
-                    {getContent('newsletter.benefit2', 'New product announcements', 'Annonces de nouveaux produits')}
+                    {t('newsletter.benefit2')}
                   </li>
                   <li className="flex items-center gap-2 text-sm text-gray-600">
                     <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                     </svg>
-                    {getContent('newsletter.benefit3', 'Latest research insights', 'Dernières découvertes en recherche')}
+                    {t('newsletter.benefit3')}
                   </li>
                 </ul>
               </div>
 
               {/* Privacy note */}
               <p className="mt-4 text-xs text-gray-400 text-center">
-                {getContent('newsletter.privacy', 'We respect your privacy. Unsubscribe anytime.', 'Nous respectons votre vie privée. Désabonnez-vous à tout moment.')}
+                {t('newsletter.privacy')}
               </p>
             </div>
           </>
@@ -224,16 +220,16 @@ export default function NewsletterPopup() {
               </svg>
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">
-              {getContent('newsletter.successTitle', 'Welcome to the Family!', 'Bienvenue dans la famille!')}
+              {t('newsletter.successTitle')}
             </h2>
             <p className="text-gray-600 mb-6">
-              {getContent('newsletter.successMessage', 'Your discount code has been applied to your account.', 'Votre code de rabais a été appliqué à votre compte.')}
+              {t('newsletter.successMessage')}
             </p>
             
             {/* Discount Code Display */}
             <div className="bg-orange-50 border-2 border-dashed border-orange-300 rounded-lg p-4 mb-6">
               <p className="text-sm text-orange-600 mb-1">
-                {getContent('newsletter.yourCode', 'Your discount code:', 'Votre code de rabais:')}
+                {t('newsletter.yourCode')}
               </p>
               <p className="text-2xl font-bold text-orange-600 font-mono">WELCOME10</p>
             </div>
@@ -242,7 +238,7 @@ export default function NewsletterPopup() {
               onClick={handleClose}
               className="px-6 py-3 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 transition-colors"
             >
-              {getContent('newsletter.startShopping', 'Start Shopping', 'Commencer mes achats')}
+              {t('newsletter.startShopping')}
             </button>
           </div>
         )}

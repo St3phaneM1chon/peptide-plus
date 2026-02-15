@@ -1,59 +1,45 @@
+'use client';
 export const dynamic = 'force-dynamic';
 /**
  * PAGE RÉFÉRENCES
  */
 
 import Link from 'next/link';
+import { useState, useEffect } from 'react';
 
-export const metadata = {
-  title: 'Références | Formations Pro',
-  description: 'Liste complète de nos clients par secteur d\'activité.',
-};
-
-const clientsByIndustry = [
-  {
-    industry: 'Finance & Assurance',
-    icon: '🏦',
-    clients: ['Desjardins', 'Banque Nationale', 'TD Canada', 'RBC', 'Intact Assurance', 'Manuvie', 'Sun Life', 'iA Groupe financier'],
-  },
-  {
-    industry: 'Technologie',
-    icon: '💻',
-    clients: ['CGI', 'Ubisoft', 'WSP', 'Lightspeed', 'Coveo', 'Nuvei', 'Element AI', 'Unity Technologies'],
-  },
-  {
-    industry: 'Télécommunications',
-    icon: '📱',
-    clients: ['Bell Canada', 'Vidéotron', 'Rogers', 'TELUS', 'Cogeco', 'SaskTel'],
-  },
-  {
-    industry: 'Énergie & Services publics',
-    icon: '⚡',
-    clients: ['Hydro-Québec', 'Énergir', 'TransCanada', 'Suncor', 'Imperial Oil', 'Enbridge'],
-  },
-  {
-    industry: 'Commerce de détail',
-    icon: '🛒',
-    clients: ['Metro', 'Couche-Tard', 'SAQ', 'Jean Coutu', 'Dollarama', 'Canadian Tire', 'Loblaws'],
-  },
-  {
-    industry: 'Manufacturier & Aérospatiale',
-    icon: '✈️',
-    clients: ['Bombardier', 'CAE', 'Pratt & Whitney', 'Bell Textron', 'Safran', 'Airbus Canada'],
-  },
-  {
-    industry: 'Santé & Pharmaceutique',
-    icon: '🏥',
-    clients: ['CIUSSS', 'Pfizer Canada', 'AbbVie', 'Merck', 'Valeant', 'Biron'],
-  },
-  {
-    industry: 'Gouvernement & Parapublic',
-    icon: '🏛️',
-    clients: ['Gouvernement du Québec', 'Ville de Montréal', 'Postes Canada', 'Radio-Canada', 'Société de transport'],
-  },
-];
+interface ClientReference {
+  id: string;
+  name: string;
+  logoUrl: string | null;
+  industry: string | null;
+  website: string | null;
+  description: string | null;
+  isPublished: boolean;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
 
 export default function ReferencesPage() {
+  const [byIndustry, setByIndustry] = useState<Record<string, ClientReference[]>>({});
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/client-references')
+      .then((res) => res.json())
+      .then((data) => {
+        setByIndustry(data.byIndustry || {});
+      })
+      .catch((err) => {
+        console.error('Failed to fetch client references:', err);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, []);
+
+  const industries = Object.keys(byIndustry);
+
   return (
     <div style={{ backgroundColor: 'var(--gray-100)' }}>
       {/* Hero */}
@@ -78,44 +64,57 @@ export default function ReferencesPage() {
       {/* Clients by industry */}
       <section style={{ padding: '80px 24px' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-            {clientsByIndustry.map((category, i) => (
-              <div
-                key={i}
-                style={{
-                  backgroundColor: 'white',
-                  borderRadius: '16px',
-                  padding: '32px',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
-                  <span style={{ fontSize: '32px' }}>{category.icon}</span>
-                  <h2 style={{ fontSize: '20px', fontWeight: 600, color: 'var(--gray-500)' }}>
-                    {category.industry}
-                  </h2>
-                  <span style={{ fontSize: '13px', color: 'var(--gray-400)', marginLeft: 'auto' }}>
-                    {category.clients.length} clients
-                  </span>
-                </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
-                  {category.clients.map((client, j) => (
-                    <span
-                      key={j}
-                      style={{
-                        padding: '10px 16px',
-                        backgroundColor: 'var(--gray-50)',
-                        borderRadius: '8px',
-                        fontSize: '14px',
-                        color: 'var(--gray-500)',
-                      }}
-                    >
-                      {client}
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: '60px 0' }}>
+              <p style={{ fontSize: '16px', color: 'var(--gray-400)' }}>
+                Chargement des références...
+              </p>
+            </div>
+          ) : industries.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '60px 0' }}>
+              <p style={{ fontSize: '16px', color: 'var(--gray-400)' }}>
+                Aucune référence disponible pour le moment.
+              </p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+              {industries.map((industry, i) => (
+                <div
+                  key={i}
+                  style={{
+                    backgroundColor: 'white',
+                    borderRadius: '16px',
+                    padding: '32px',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+                    <h2 style={{ fontSize: '20px', fontWeight: 600, color: 'var(--gray-500)' }}>
+                      {industry}
+                    </h2>
+                    <span style={{ fontSize: '13px', color: 'var(--gray-400)', marginLeft: 'auto' }}>
+                      {byIndustry[industry].length} clients
                     </span>
-                  ))}
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+                    {byIndustry[industry].map((client, j) => (
+                      <span
+                        key={j}
+                        style={{
+                          padding: '10px 16px',
+                          backgroundColor: 'var(--gray-50)',
+                          borderRadius: '8px',
+                          fontSize: '14px',
+                          color: 'var(--gray-500)',
+                        }}
+                      >
+                        {client.name}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 

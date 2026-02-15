@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { Plus, RefreshCw, Settings, Download } from 'lucide-react';
 import { PageHeader, Button, StatusBadge, FormField, Input } from '@/components/admin';
+import { useI18n } from '@/i18n/client';
+import { toast } from 'sonner';
 
 interface AccountingSettingsData {
   companyName: string;
@@ -18,7 +20,25 @@ interface AccountingSettingsData {
   [key: string]: unknown;
 }
 
+interface Currency {
+  code: string;
+  name: string;
+  symbol: string;
+  rate: number;
+  isDefault: boolean;
+  active: boolean;
+}
+
+interface Integration {
+  id: string;
+  name: string;
+  status: 'connected' | 'not_connected';
+  lastSync: string | null;
+  icon: string;
+}
+
 export default function ParametresComptablesPage() {
+  const { t } = useI18n();
   const [activeTab, setActiveTab] = useState<'general' | 'fiscal' | 'currencies' | 'integrations'>('general');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -38,25 +58,14 @@ export default function ParametresComptablesPage() {
     autoReconcileStripe: true,
   });
 
-  const currencies = [
-    { code: 'CAD', name: 'Dollar canadien', symbol: '$', rate: 1, isDefault: true, active: true },
-    { code: 'USD', name: 'Dollar américain', symbol: '$', rate: 1.36, isDefault: false, active: true },
-    { code: 'EUR', name: 'Euro', symbol: '€', rate: 1.47, isDefault: false, active: true },
-    { code: 'GBP', name: 'Livre sterling', symbol: '£', rate: 1.71, isDefault: false, active: false },
-  ];
-
-  const integrations = [
-    { id: 'stripe', name: 'Stripe', status: 'connected', lastSync: '2026-01-25T14:30:00Z', icon: '💳' },
-    { id: 'paypal', name: 'PayPal', status: 'connected', lastSync: '2026-01-25T14:30:00Z', icon: '🅿️' },
-    { id: 'quickbooks', name: 'QuickBooks', status: 'not_connected', lastSync: null, icon: '📊' },
-    { id: 'bank', name: 'Desjardins', status: 'connected', lastSync: '2026-01-25T10:00:00Z', icon: '🏦' },
-  ];
+  const [currencies, setCurrencies] = useState<Currency[]>([]);
+  const [integrations, setIntegrations] = useState<Integration[]>([]);
 
   // Fetch settings from API
   const fetchSettings = async () => {
     try {
       const res = await fetch('/api/accounting/settings');
-      if (!res.ok) throw new Error('Erreur lors du chargement des paramètres');
+      if (!res.ok) throw new Error(t('admin.accountingSettings.errorLoadSettings'));
       const data = await res.json();
       if (data.settings) {
         setSettings({
@@ -73,9 +82,79 @@ export default function ParametresComptablesPage() {
         });
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erreur inconnue');
+      setError(err instanceof Error ? err.message : t('admin.accountingSettings.errorUnknown'));
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Fetch currencies from API
+  const fetchCurrencies = async () => {
+    try {
+      const res = await fetch('/api/accounting/currencies');
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.currencies && Array.isArray(data.currencies)) {
+        setCurrencies(
+          data.currencies.map((c: { code: string; name: string; symbol: string; exchangeRate: number; isDefault: boolean; isActive: boolean }) => ({
+            code: c.code,
+            name: c.name,
+            symbol: c.symbol,
+            rate: c.exchangeRate,
+            isDefault: c.isDefault,
+            active: c.isActive,
+          }))
+        );
+      }
+    } catch {
+      // Currencies fetch failure is non-blocking; the tab will simply show an empty table
+    }
+  };
+
+  // Fetch bank accounts from API and derive integration statuses
+  const fetchIntegrations = async () => {
+    try {
+      const res = await fetch('/api/accounting/bank-accounts');
+      if (!res.ok) return;
+      const data = await res.json();
+      const bankAccounts: Array<{ type?: string; name?: string; institution?: string; lastSyncAt?: string | null }> =
+        data.bankAccounts || data.accounts || [];
+
+      const integrationMap: Record<string, Integration> = {
+        stripe: { id: 'stripe', name: 'Stripe', status: 'not_connected', lastSync: null, icon: '\uD83D\uDCB3' },
+        paypal: { id: 'paypal', name: 'PayPal', status: 'not_connected', lastSync: null, icon: '\uD83C\uDD7F\uFE0F' },
+        quickbooks: { id: 'quickbooks', name: 'QuickBooks', status: 'not_connected', lastSync: null, icon: '\uD83D\uDCCA' },
+        bank: { id: 'bank', name: 'Desjardins', status: 'not_connected', lastSync: null, icon: '\uD83C\uDFE6' },
+      };
+
+      for (const account of bankAccounts) {
+        const typeLower = (account.type || '').toLowerCase();
+        const nameLower = (account.name || '').toLowerCase();
+        const institutionLower = (account.institution || '').toLowerCase();
+
+        if (typeLower.includes('stripe') || nameLower.includes('stripe')) {
+          integrationMap.stripe.status = 'connected';
+          integrationMap.stripe.lastSync = account.lastSyncAt || null;
+        } else if (typeLower.includes('paypal') || nameLower.includes('paypal')) {
+          integrationMap.paypal.status = 'connected';
+          integrationMap.paypal.lastSync = account.lastSyncAt || null;
+        } else if (institutionLower.includes('desjardins') || nameLower.includes('desjardins')) {
+          integrationMap.bank.status = 'connected';
+          integrationMap.bank.name = account.institution || 'Desjardins';
+          integrationMap.bank.lastSync = account.lastSyncAt || null;
+        }
+      }
+      // QuickBooks remains as not_connected — it is an external integration, not a bank account
+
+      setIntegrations(Object.values(integrationMap));
+    } catch {
+      // Integration fetch failure is non-blocking; the tab will simply show defaults
+      setIntegrations([
+        { id: 'stripe', name: 'Stripe', status: 'not_connected', lastSync: null, icon: '\uD83D\uDCB3' },
+        { id: 'paypal', name: 'PayPal', status: 'not_connected', lastSync: null, icon: '\uD83C\uDD7F\uFE0F' },
+        { id: 'quickbooks', name: 'QuickBooks', status: 'not_connected', lastSync: null, icon: '\uD83D\uDCCA' },
+        { id: 'bank', name: 'Desjardins', status: 'not_connected', lastSync: null, icon: '\uD83C\uDFE6' },
+      ]);
     }
   };
 
@@ -91,12 +170,12 @@ export default function ParametresComptablesPage() {
       });
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || 'Erreur lors de la sauvegarde');
+        throw new Error(data.error || t('admin.accountingSettings.errorSaving'));
       }
-      setSaveMessage('Paramètres sauvegardés avec succès');
+      setSaveMessage(t('admin.accountingSettings.saveSuccess'));
       setTimeout(() => setSaveMessage(null), 3000);
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Erreur lors de la sauvegarde');
+      toast.error(err instanceof Error ? err.message : t('admin.accountingSettings.errorSaving'));
     } finally {
       setSaving(false);
     }
@@ -104,6 +183,8 @@ export default function ParametresComptablesPage() {
 
   useEffect(() => {
     fetchSettings();
+    fetchCurrencies();
+    fetchIntegrations();
   }, []);
 
   // Map fiscal year start month to month-day format for display
@@ -125,21 +206,21 @@ export default function ParametresComptablesPage() {
     setSettings({ ...settings, fiscalYearStart: reverseMap[endDate] || 1 });
   };
 
-  if (loading) return <div className="p-8 text-center">Chargement...</div>;
-  if (error) return <div className="p-8 text-center text-red-600">Erreur: {error}</div>;
+  if (loading) return <div className="p-8 text-center">{t('admin.accountingSettings.loading')}</div>;
+  if (error) return <div className="p-8 text-center text-red-600">{t('admin.accountingSettings.errorPrefix')} {error}</div>;
 
   const tabs = [
-    { id: 'general' as const, label: 'Général' },
-    { id: 'fiscal' as const, label: 'Fiscal' },
-    { id: 'currencies' as const, label: 'Devises' },
-    { id: 'integrations' as const, label: 'Intégrations' },
+    { id: 'general' as const, label: t('admin.accountingSettings.tabGeneral') },
+    { id: 'fiscal' as const, label: t('admin.accountingSettings.tabFiscal') },
+    { id: 'currencies' as const, label: t('admin.accountingSettings.tabCurrencies') },
+    { id: 'integrations' as const, label: t('admin.accountingSettings.tabIntegrations') },
   ];
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Paramètres comptables"
-        subtitle="Configurez votre système comptable"
+        title={t('admin.accountingSettings.title')}
+        subtitle={t('admin.accountingSettings.subtitle')}
       />
 
       {/* Save success message */}
@@ -170,16 +251,16 @@ export default function ParametresComptablesPage() {
       {activeTab === 'general' && (
         <div className="space-y-6">
           <div className="bg-white rounded-xl border border-slate-200 p-6">
-            <h3 className="font-semibold text-slate-900 mb-4">Informations de l&apos;entreprise</h3>
+            <h3 className="font-semibold text-slate-900 mb-4">{t('admin.accountingSettings.companyInfo')}</h3>
             <div className="grid grid-cols-2 gap-6">
-              <FormField label="Nom de l'entreprise">
+              <FormField label={t('admin.accountingSettings.companyName')}>
                 <Input
                   type="text"
                   value={settings.companyName}
                   onChange={(e) => setSettings({ ...settings, companyName: e.target.value })}
                 />
               </FormField>
-              <FormField label="Numéro d'entreprise (NEQ)">
+              <FormField label={t('admin.accountingSettings.neq')}>
                 <Input
                   type="text"
                   value={settings.neq}
@@ -190,50 +271,50 @@ export default function ParametresComptablesPage() {
           </div>
 
           <div className="bg-white rounded-xl border border-slate-200 p-6">
-            <h3 className="font-semibold text-slate-900 mb-4">Paramètres comptables</h3>
+            <h3 className="font-semibold text-slate-900 mb-4">{t('admin.accountingSettings.accountingParams')}</h3>
             <div className="grid grid-cols-2 gap-6">
-              <FormField label="Fin d'exercice fiscal">
+              <FormField label={t('admin.accountingSettings.fiscalYearEnd')}>
                 <select
                   value={fiscalYearDisplay}
                   onChange={(e) => handleFiscalYearChange(e.target.value)}
                   className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
                 >
-                  <option value="12-31">31 décembre</option>
-                  <option value="03-31">31 mars</option>
-                  <option value="06-30">30 juin</option>
-                  <option value="09-30">30 septembre</option>
+                  <option value="12-31">{t('admin.accountingSettings.december31')}</option>
+                  <option value="03-31">{t('admin.accountingSettings.march31')}</option>
+                  <option value="06-30">{t('admin.accountingSettings.june30')}</option>
+                  <option value="09-30">{t('admin.accountingSettings.september30')}</option>
                 </select>
               </FormField>
-              <FormField label="Méthode comptable">
+              <FormField label={t('admin.accountingSettings.accountingMethod')}>
                 <select
                   value={settings.accountingMethod}
                   onChange={(e) => setSettings({ ...settings, accountingMethod: e.target.value })}
                   className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
                 >
-                  <option value="ACCRUAL">Comptabilité d&apos;exercice</option>
-                  <option value="CASH">Comptabilité de caisse</option>
+                  <option value="ACCRUAL">{t('admin.accountingSettings.accrualAccounting')}</option>
+                  <option value="CASH">{t('admin.accountingSettings.cashAccounting')}</option>
                 </select>
               </FormField>
-              <FormField label="Devise par défaut">
+              <FormField label={t('admin.accountingSettings.defaultCurrency')}>
                 <select
                   value={settings.defaultCurrency}
                   onChange={(e) => setSettings({ ...settings, defaultCurrency: e.target.value })}
                   className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
                 >
-                  <option value="CAD">CAD - Dollar canadien</option>
-                  <option value="USD">USD - Dollar américain</option>
+                  <option value="CAD">{t('admin.accountingSettings.cadLabel')}</option>
+                  <option value="USD">{t('admin.accountingSettings.usdLabel')}</option>
                 </select>
               </FormField>
             </div>
           </div>
 
           <div className="bg-white rounded-xl border border-slate-200 p-6">
-            <h3 className="font-semibold text-slate-900 mb-4">Automatisations</h3>
+            <h3 className="font-semibold text-slate-900 mb-4">{t('admin.accountingSettings.automations')}</h3>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium text-slate-900">Rapprochement automatique Stripe</p>
-                  <p className="text-sm text-slate-500">Rapprocher automatiquement les transactions Stripe</p>
+                  <p className="font-medium text-slate-900">{t('admin.accountingSettings.autoReconcileStripe')}</p>
+                  <p className="text-sm text-slate-500">{t('admin.accountingSettings.autoReconcileStripeDesc')}</p>
                 </div>
                 <button
                   onClick={() => setSettings({ ...settings, autoReconcileStripe: !settings.autoReconcileStripe })}
@@ -248,8 +329,8 @@ export default function ParametresComptablesPage() {
               </div>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium text-slate-900">Écritures de vente automatiques</p>
-                  <p className="text-sm text-slate-500">Générer automatiquement les écritures lors des ventes</p>
+                  <p className="font-medium text-slate-900">{t('admin.accountingSettings.autoSaleEntries')}</p>
+                  <p className="text-sm text-slate-500">{t('admin.accountingSettings.autoSaleEntriesDesc')}</p>
                 </div>
                 <button
                   onClick={() => setSettings({ ...settings, autoCreateSaleEntries: !settings.autoCreateSaleEntries })}
@@ -271,9 +352,9 @@ export default function ParametresComptablesPage() {
       {activeTab === 'fiscal' && (
         <div className="space-y-6">
           <div className="bg-white rounded-xl border border-slate-200 p-6">
-            <h3 className="font-semibold text-slate-900 mb-4">Numéros de taxes</h3>
+            <h3 className="font-semibold text-slate-900 mb-4">{t('admin.accountingSettings.taxNumbers')}</h3>
             <div className="grid grid-cols-2 gap-6">
-              <FormField label="Numéro TPS (fédéral)">
+              <FormField label={t('admin.accountingSettings.tpsNumber')}>
                 <Input
                   type="text"
                   value={settings.tpsNumber}
@@ -281,7 +362,7 @@ export default function ParametresComptablesPage() {
                   placeholder="123456789RT0001"
                 />
               </FormField>
-              <FormField label="Numéro TVQ (Québec)">
+              <FormField label={t('admin.accountingSettings.tvqNumber')}>
                 <Input
                   type="text"
                   value={settings.tvqNumber}
@@ -293,38 +374,45 @@ export default function ParametresComptablesPage() {
           </div>
 
           <div className="bg-white rounded-xl border border-slate-200 p-6">
-            <h3 className="font-semibold text-slate-900 mb-4">Taux de taxes</h3>
+            <h3 className="font-semibold text-slate-900 mb-4">{t('admin.accountingSettings.taxRates')}</h3>
             <table className="w-full">
               <thead className="bg-slate-50">
                 <tr>
-                  <th className="px-4 py-2 text-left text-xs font-semibold text-slate-500 uppercase">Taxe</th>
-                  <th className="px-4 py-2 text-left text-xs font-semibold text-slate-500 uppercase">Juridiction</th>
-                  <th className="px-4 py-2 text-right text-xs font-semibold text-slate-500 uppercase">Taux</th>
-                  <th className="px-4 py-2 text-center text-xs font-semibold text-slate-500 uppercase">Actif</th>
+                  <th className="px-4 py-2 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.accountingSettings.taxCol')}</th>
+                  <th className="px-4 py-2 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.accountingSettings.jurisdictionCol')}</th>
+                  <th className="px-4 py-2 text-right text-xs font-semibold text-slate-500 uppercase">{t('admin.accountingSettings.rateCol')}</th>
+                  <th className="px-4 py-2 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.accountingSettings.activeCol')}</th>
                 </tr>
               </thead>
+              {/*
+                Canadian tax rates are intentionally hardcoded here.
+                These are standardized government-set rates (TPS/GST, TVQ/QST, TVH/HST, PST)
+                that change very infrequently (typically only via federal/provincial budget announcements).
+                For a settings display page, hardcoding is acceptable and avoids an unnecessary API call.
+                If rates change, update them here directly.
+              */}
               <tbody className="divide-y divide-slate-200">
-                <tr><td className="px-4 py-3">TPS</td><td className="px-4 py-3 text-slate-600">Canada (fédéral)</td><td className="px-4 py-3 text-right">5%</td><td className="px-4 py-3 text-center text-green-600">&#10003;</td></tr>
-                <tr><td className="px-4 py-3">TVQ</td><td className="px-4 py-3 text-slate-600">Québec</td><td className="px-4 py-3 text-right">9.975%</td><td className="px-4 py-3 text-center text-green-600">&#10003;</td></tr>
-                <tr><td className="px-4 py-3">TVH</td><td className="px-4 py-3 text-slate-600">Ontario</td><td className="px-4 py-3 text-right">13%</td><td className="px-4 py-3 text-center text-green-600">&#10003;</td></tr>
-                <tr><td className="px-4 py-3">TVH</td><td className="px-4 py-3 text-slate-600">Nouvelle-Écosse</td><td className="px-4 py-3 text-right">15%</td><td className="px-4 py-3 text-center text-green-600">&#10003;</td></tr>
-                <tr><td className="px-4 py-3">PST</td><td className="px-4 py-3 text-slate-600">Colombie-Britannique</td><td className="px-4 py-3 text-right">7%</td><td className="px-4 py-3 text-center text-green-600">&#10003;</td></tr>
+                <tr><td className="px-4 py-3">TPS</td><td className="px-4 py-3 text-slate-600">{t('admin.accountingSettings.canadaFederal')}</td><td className="px-4 py-3 text-right">5%</td><td className="px-4 py-3 text-center text-green-600">&#10003;</td></tr>
+                <tr><td className="px-4 py-3">TVQ</td><td className="px-4 py-3 text-slate-600">{t('admin.accountingSettings.quebec')}</td><td className="px-4 py-3 text-right">9.975%</td><td className="px-4 py-3 text-center text-green-600">&#10003;</td></tr>
+                <tr><td className="px-4 py-3">TVH</td><td className="px-4 py-3 text-slate-600">{t('admin.accountingSettings.ontario')}</td><td className="px-4 py-3 text-right">13%</td><td className="px-4 py-3 text-center text-green-600">&#10003;</td></tr>
+                <tr><td className="px-4 py-3">TVH</td><td className="px-4 py-3 text-slate-600">{t('admin.accountingSettings.novaScotia')}</td><td className="px-4 py-3 text-right">15%</td><td className="px-4 py-3 text-center text-green-600">&#10003;</td></tr>
+                <tr><td className="px-4 py-3">PST</td><td className="px-4 py-3 text-slate-600">{t('admin.accountingSettings.britishColumbia')}</td><td className="px-4 py-3 text-right">7%</td><td className="px-4 py-3 text-center text-green-600">&#10003;</td></tr>
               </tbody>
             </table>
           </div>
 
           <div className="bg-white rounded-xl border border-slate-200 p-6">
-            <h3 className="font-semibold text-slate-900 mb-4">Fréquence de déclaration</h3>
+            <h3 className="font-semibold text-slate-900 mb-4">{t('admin.accountingSettings.filingFrequency')}</h3>
             <div className="grid grid-cols-2 gap-6">
-              <FormField label="TPS/TVQ">
+              <FormField label={t('admin.accountingSettings.tpsTvq')}>
                 <select
                   value={settings.taxFilingFrequency}
                   onChange={(e) => setSettings({ ...settings, taxFilingFrequency: e.target.value })}
                   className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
                 >
-                  <option value="MONTHLY">Mensuelle</option>
-                  <option value="QUARTERLY">Trimestrielle</option>
-                  <option value="ANNUAL">Annuelle</option>
+                  <option value="MONTHLY">{t('admin.accountingSettings.monthly')}</option>
+                  <option value="QUARTERLY">{t('admin.accountingSettings.quarterly')}</option>
+                  <option value="ANNUAL">{t('admin.accountingSettings.annual')}</option>
                 </select>
               </FormField>
             </div>
@@ -337,19 +425,19 @@ export default function ParametresComptablesPage() {
         <div className="space-y-6">
           <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
             <div className="p-4 border-b border-slate-200 flex items-center justify-between">
-              <h3 className="font-semibold text-slate-900">Devises configurées</h3>
+              <h3 className="font-semibold text-slate-900">{t('admin.accountingSettings.configuredCurrencies')}</h3>
               <Button variant="ghost" size="sm" icon={Plus} className="text-emerald-700 hover:bg-emerald-50">
-                Ajouter devise
+                {t('admin.accountingSettings.addCurrency')}
               </Button>
             </div>
             <table className="w-full">
               <thead className="bg-slate-50">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Devise</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Symbole</th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase">Taux (vs CAD)</th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">Par défaut</th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">Actif</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.accountingSettings.currencyCol')}</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.accountingSettings.symbolCol')}</th>
+                  <th className="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase">{t('admin.accountingSettings.rateVsCAD')}</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.accountingSettings.defaultCol')}</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.accountingSettings.activeCol')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
@@ -379,8 +467,8 @@ export default function ParametresComptablesPage() {
             <div className="flex items-center gap-3">
               <span className="text-blue-500">&#8505;&#65039;</span>
               <div>
-                <p className="font-medium text-blue-900">Mise à jour automatique des taux</p>
-                <p className="text-sm text-blue-700">Les taux de change sont mis à jour quotidiennement depuis la Banque du Canada.</p>
+                <p className="font-medium text-blue-900">{t('admin.accountingSettings.autoRateUpdate')}</p>
+                <p className="text-sm text-blue-700">{t('admin.accountingSettings.autoRateUpdateDesc')}</p>
               </div>
             </div>
           </div>
@@ -402,27 +490,27 @@ export default function ParametresComptablesPage() {
                         variant={integration.status === 'connected' ? 'success' : 'neutral'}
                         dot
                       >
-                        {integration.status === 'connected' ? 'Connecté' : 'Non connecté'}
+                        {integration.status === 'connected' ? t('admin.accountingSettings.connectedStatus') : t('admin.accountingSettings.notConnectedStatus')}
                       </StatusBadge>
                     </div>
                     {integration.lastSync && (
                       <p className="text-sm text-slate-500 mt-1">
-                        Dernière sync: {new Date(integration.lastSync).toLocaleString('fr-CA')}
+                        {t('admin.accountingSettings.lastSyncPrefix')} {new Date(integration.lastSync).toLocaleString('fr-CA')}
                       </p>
                     )}
                     <div className="mt-3">
                       {integration.status === 'connected' ? (
                         <div className="flex gap-2">
                           <Button variant="ghost" size="sm" icon={RefreshCw} className="text-blue-700 hover:bg-blue-50">
-                            Synchroniser
+                            {t('admin.accountingSettings.syncBtn')}
                           </Button>
                           <Button variant="ghost" size="sm" icon={Settings}>
-                            Configurer
+                            {t('admin.accountingSettings.configureBtn')}
                           </Button>
                         </div>
                       ) : (
                         <Button variant="primary" size="sm" className="bg-emerald-600 hover:bg-emerald-700">
-                          Connecter
+                          {t('admin.accountingSettings.connectBtn')}
                         </Button>
                       )}
                     </div>
@@ -433,12 +521,12 @@ export default function ParametresComptablesPage() {
           </div>
 
           <div className="bg-white rounded-xl border border-slate-200 p-6">
-            <h3 className="font-semibold text-slate-900 mb-4">Export comptable</h3>
-            <p className="text-slate-600 mb-4">Exportez vos données vers un logiciel comptable externe.</p>
+            <h3 className="font-semibold text-slate-900 mb-4">{t('admin.accountingSettings.accountingExport')}</h3>
+            <p className="text-slate-600 mb-4">{t('admin.accountingSettings.accountingExportDesc')}</p>
             <div className="flex gap-3">
-              <Button variant="secondary" icon={Download}>Export QuickBooks (.IIF)</Button>
-              <Button variant="secondary" icon={Download}>Export Sage (.CSV)</Button>
-              <Button variant="secondary" icon={Download}>Export Excel</Button>
+              <Button variant="secondary" icon={Download}>{t('admin.accountingSettings.exportQuickBooks')}</Button>
+              <Button variant="secondary" icon={Download}>{t('admin.accountingSettings.exportSage')}</Button>
+              <Button variant="secondary" icon={Download}>{t('admin.accountingSettings.exportExcel')}</Button>
             </div>
           </div>
         </div>
@@ -452,7 +540,7 @@ export default function ParametresComptablesPage() {
           onClick={handleSave}
           disabled={saving}
         >
-          {saving ? 'Sauvegarde...' : 'Sauvegarder les modifications'}
+          {saving ? t('admin.accountingSettings.saving') : t('admin.accountingSettings.saveChanges')}
         </Button>
       </div>
     </div>

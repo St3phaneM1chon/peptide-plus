@@ -6,12 +6,14 @@ import {
   FileSpreadsheet, FileText, ArrowUpDown,
 } from 'lucide-react';
 import { PageHeader, Button, StatusBadge, DataTable, type Column } from '@/components/admin';
+import { useI18n } from '@/i18n/client';
 
 type SalesDataItem = { code: string; country: string; flag: string; orders: number; revenue: number; taxCollected: number; avgOrder: number; growth: number };
 type MonthlyTrendItem = { month: string; orders: number; revenue: number };
 type RecentOrderItem = { id: string; date: string; country: string; customer: string; total: number; status: string };
 
 export default function GlobalReportsPage() {
+  const { t, locale } = useI18n();
   const [selectedPeriod, setSelectedPeriod] = useState('6months');
   const [sortBy, setSortBy] = useState<'revenue' | 'orders' | 'growth'>('revenue');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
@@ -53,24 +55,49 @@ export default function GlobalReportsPage() {
             NS: '\u{1F1E8}\u{1F1E6}', NB: '\u{1F1E8}\u{1F1E6}',
             US: '\u{1F1FA}\u{1F1F8}', FR: '\u{1F1EB}\u{1F1F7}', GB: '\u{1F1EC}\u{1F1E7}',
           };
-          const regionNames: Record<string, string> = {
-            QC: 'Quebec', ON: 'Ontario', BC: 'Colombie-Britannique',
-            AB: 'Alberta', MB: 'Manitoba', SK: 'Saskatchewan',
-            NS: 'Nouvelle-Ecosse', NB: 'Nouveau-Brunswick',
-            US: 'Etats-Unis', FR: 'France', GB: 'Royaume-Uni',
+          const regionNameKeys: Record<string, string> = {
+            QC: 'regionQuebec', ON: 'regionOntario', BC: 'regionBC',
+            AB: 'regionAlberta', MB: 'regionManitoba', SK: 'regionSaskatchewan',
+            NS: 'regionNovaScotia', NB: 'regionNewBrunswick',
+            US: 'regionUS', FR: 'regionFrance', GB: 'regionUK',
           };
+
+          // Fetch previous year data for growth comparison
+          let prevRegionMap: Map<string, { revenue: number }> | null = null;
+          try {
+            const prevYear = new Date().getFullYear() - 1;
+            const prevRes = await fetch(`/api/accounting/tax-reports?year=${prevYear}`);
+            if (prevRes.ok) {
+              const prevData = await prevRes.json();
+              const prevReports = prevData.reports || [];
+              prevRegionMap = new Map();
+              for (const r of prevReports) {
+                const existing = prevRegionMap.get(r.regionCode) || { revenue: 0 };
+                existing.revenue += r.totalSales || 0;
+                prevRegionMap.set(r.regionCode, existing);
+              }
+            }
+          } catch {
+            // Growth comparison is supplementary
+          }
 
           const built: SalesDataItem[] = [];
           for (const [code, data] of regionMap.entries()) {
+            // Calculate real growth from previous year
+            const prevRevenue = prevRegionMap?.get(code)?.revenue || 0;
+            const growth = prevRevenue > 0
+              ? Math.round(((data.revenue - prevRevenue) / prevRevenue) * 1000) / 10
+              : 0;
+
             built.push({
               code,
-              country: regionNames[code] || code,
+              country: regionNameKeys[code] ? t(`admin.fiscalReports.${regionNameKeys[code]}`) : code,
               flag: regionFlags[code] || '\u{1F30D}',
               orders: data.orders,
               revenue: Math.round(data.revenue),
               taxCollected: Math.round(data.taxCollected),
               avgOrder: data.orders > 0 ? Math.round(data.revenue / data.orders) : 0,
-              growth: 0, // Growth requires historical comparison
+              growth,
             });
           }
           setSalesData(built);
@@ -99,14 +126,14 @@ export default function GlobalReportsPage() {
         // We don't have a dedicated recent orders API, leave empty or fetch if available
         setRecentOrders([]);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Erreur inconnue');
+        setError(err instanceof Error ? err.message : t('admin.fiscalReports.unknownError'));
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, [selectedPeriod]);
+  }, [selectedPeriod, t]);
 
   // Calculate totals
   const totals = useMemo(() => {
@@ -126,100 +153,43 @@ export default function GlobalReportsPage() {
   }, [salesData, sortBy, sortOrder]);
 
   const periods = [
-    { value: '1month', label: '1 mois' },
-    { value: '3months', label: '3 mois' },
-    { value: '6months', label: '6 mois' },
-    { value: '1year', label: '1 an' },
-    { value: 'all', label: 'Tout' },
-  ];
-
-  const _countryColumns: Column<SalesDataItem>[] = [
-    {
-      key: 'country',
-      header: 'Pays',
-      render: (row) => (
-        <div className="flex items-center gap-2">
-          <span className="text-xl">{row.flag}</span>
-          <span className="font-medium">{row.country}</span>
-        </div>
-      ),
-    },
-    {
-      key: 'orders',
-      header: 'Commandes',
-      align: 'right',
-      sortable: true,
-      render: (row) => <span className="font-medium">{row.orders.toLocaleString()}</span>,
-    },
-    {
-      key: 'revenue',
-      header: 'Revenus',
-      align: 'right',
-      sortable: true,
-      render: (row) => <span className="font-medium text-green-600">${row.revenue.toLocaleString()}</span>,
-    },
-    {
-      key: 'taxCollected',
-      header: 'Taxes',
-      align: 'right',
-      render: (row) => <span className="text-slate-600">${row.taxCollected.toLocaleString()}</span>,
-    },
-    {
-      key: 'growth',
-      header: 'Croissance',
-      align: 'right',
-      sortable: true,
-      render: (row) => (
-        <span className={`font-medium ${row.growth >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-          {row.growth >= 0 ? '+' : ''}{row.growth}%
-        </span>
-      ),
-    },
-    {
-      key: 'actions',
-      header: 'Actions',
-      align: 'center',
-      render: (row) => (
-        <Link
-          href={`/admin/fiscal/country/${row.code}`}
-          className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-        >
-          Details
-        </Link>
-      ),
-    },
+    { value: '1month', label: t('admin.fiscalReports.period1month') },
+    { value: '3months', label: t('admin.fiscalReports.period3months') },
+    { value: '6months', label: t('admin.fiscalReports.period6months') },
+    { value: '1year', label: t('admin.fiscalReports.period1year') },
+    { value: 'all', label: t('admin.fiscalReports.periodAll') },
   ];
 
   const orderColumns: Column<RecentOrderItem>[] = [
     {
       key: 'id',
-      header: 'N Commande',
+      header: t('admin.fiscalReports.orderNumberCol'),
       render: (row) => <span className="font-medium text-blue-600">{row.id}</span>,
     },
     {
       key: 'date',
-      header: 'Date',
+      header: t('admin.fiscalReports.dateCol'),
       render: (row) => <span className="text-slate-600">{row.date}</span>,
     },
     {
       key: 'country',
-      header: 'Pays',
+      header: t('admin.fiscalReports.countryFlagCol'),
       render: (row) => <span className="text-lg">{getCountryFlag(row.country)}</span>,
     },
     {
       key: 'customer',
-      header: 'Client',
+      header: t('admin.fiscalReports.customerCol'),
       render: (row) => row.customer,
     },
     {
       key: 'total',
-      header: 'Total',
+      header: t('admin.fiscalReports.totalCol'),
       align: 'right',
       render: (row) => <span className="font-medium">${row.total.toFixed(2)}</span>,
     },
     {
       key: 'status',
-      header: 'Statut',
+      header: t('admin.fiscalReports.statusCol'),
       align: 'center',
       render: (row) => (
         <StatusBadge
@@ -229,30 +199,30 @@ export default function GlobalReportsPage() {
             'warning'
           }
         >
-          {row.status === 'delivered' ? 'Livre' :
-           row.status === 'shipped' ? 'Expedie' : 'En traitement'}
+          {row.status === 'delivered' ? t('admin.fiscalReports.statusDelivered') :
+           row.status === 'shipped' ? t('admin.fiscalReports.statusShipped') : t('admin.fiscalReports.statusProcessing')}
         </StatusBadge>
       ),
     },
   ];
 
-  if (loading) return <div className="p-8 text-center">Chargement...</div>;
-  if (error) return <div className="p-8 text-center text-red-600">Erreur: {error}</div>;
+  if (loading) return <div className="p-8 text-center">{t('admin.fiscalReports.loading')}</div>;
+  if (error) return <div className="p-8 text-center text-red-600">{t('admin.fiscalReports.errorPrefix')} {error}</div>;
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Rapport Global des Ventes"
-        subtitle="Vue consolidee de toutes les ventes par pays"
+        title={t('admin.fiscalReports.title')}
+        subtitle={t('admin.fiscalReports.subtitle')}
         backHref="/admin/fiscal"
-        backLabel="Obligations Fiscales"
+        backLabel={t('admin.fiscalReports.backLabel')}
         actions={
           <>
             <Button variant="secondary" icon={FileSpreadsheet} className="bg-green-500 text-white hover:bg-green-600 border-transparent">
-              Exporter Excel
+              {t('admin.fiscalReports.exportExcel')}
             </Button>
             <Button variant="secondary" icon={FileText} className="bg-blue-500 text-white hover:bg-blue-600 border-transparent">
-              Imprimer PDF
+              {t('admin.fiscalReports.printPdf')}
             </Button>
           </>
         }
@@ -261,7 +231,7 @@ export default function GlobalReportsPage() {
       {/* Period Selector */}
       <div className="bg-white rounded-xl shadow-sm p-4 border border-slate-100">
         <div className="flex items-center gap-4">
-          <span className="text-sm font-medium text-slate-600">Periode:</span>
+          <span className="text-sm font-medium text-slate-600">{t('admin.fiscalReports.periodLabel')}</span>
           {periods.map((period) => (
             <button
               key={period.value}
@@ -281,24 +251,24 @@ export default function GlobalReportsPage() {
       {/* Global Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-sm p-6 text-white">
-          <div className="text-blue-100 text-sm">Commandes totales</div>
-          <div className="text-4xl font-bold mt-1">{totals.totalOrders.toLocaleString()}</div>
-          <div className="text-blue-200 text-sm mt-2">Tous pays confondus</div>
+          <div className="text-blue-100 text-sm">{t('admin.fiscalReports.totalOrders')}</div>
+          <div className="text-4xl font-bold mt-1">{totals.totalOrders.toLocaleString(locale)}</div>
+          <div className="text-blue-200 text-sm mt-2">{t('admin.fiscalReports.allCountries')}</div>
         </div>
         <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-sm p-6 text-white">
-          <div className="text-green-100 text-sm">Revenus totaux</div>
+          <div className="text-green-100 text-sm">{t('admin.fiscalReports.totalRevenue')}</div>
           <div className="text-4xl font-bold mt-1">${(totals.totalRevenue / 1000).toFixed(0)}K</div>
           <div className="text-green-200 text-sm mt-2">CAD</div>
         </div>
         <div className="bg-gradient-to-br from-sky-500 to-sky-600 rounded-xl shadow-sm p-6 text-white">
-          <div className="text-sky-100 text-sm">Taxes percues</div>
+          <div className="text-sky-100 text-sm">{t('admin.fiscalReports.taxCollected')}</div>
           <div className="text-4xl font-bold mt-1">${(totals.totalTax / 1000).toFixed(0)}K</div>
-          <div className="text-sky-200 text-sm mt-2">A remettre</div>
+          <div className="text-sky-200 text-sm mt-2">{t('admin.fiscalReports.toRemit')}</div>
         </div>
         <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-sm p-6 text-white">
-          <div className="text-purple-100 text-sm">Croissance moyenne</div>
+          <div className="text-purple-100 text-sm">{t('admin.fiscalReports.avgGrowth')}</div>
           <div className="text-4xl font-bold mt-1">+{totals.avgGrowth.toFixed(1)}%</div>
-          <div className="text-purple-200 text-sm mt-2">vs periode precedente</div>
+          <div className="text-purple-200 text-sm mt-2">{t('admin.fiscalReports.vsPreviousPeriod')}</div>
         </div>
       </div>
 
@@ -308,16 +278,16 @@ export default function GlobalReportsPage() {
         <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-100">
           <div className="p-6 border-b border-slate-100">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-slate-900">Ventes par pays</h2>
+              <h2 className="text-lg font-semibold text-slate-900">{t('admin.fiscalReports.salesByCountry')}</h2>
               <div className="flex gap-2">
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
                   className="text-sm border border-slate-200 rounded-lg px-3 py-1 focus:outline-none focus:ring-2 focus:ring-sky-500"
                 >
-                  <option value="revenue">Par revenus</option>
-                  <option value="orders">Par commandes</option>
-                  <option value="growth">Par croissance</option>
+                  <option value="revenue">{t('admin.fiscalReports.sortByRevenue')}</option>
+                  <option value="orders">{t('admin.fiscalReports.sortByOrders')}</option>
+                  <option value="growth">{t('admin.fiscalReports.sortByGrowth')}</option>
                 </select>
                 <button
                   onClick={() => setSortOrder(o => o === 'desc' ? 'asc' : 'desc')}
@@ -332,12 +302,12 @@ export default function GlobalReportsPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-slate-100 bg-slate-50">
-                  <th className="text-left py-3 px-4 text-xs font-medium text-slate-500 uppercase">Pays</th>
-                  <th className="text-right py-3 px-4 text-xs font-medium text-slate-500 uppercase">Commandes</th>
-                  <th className="text-right py-3 px-4 text-xs font-medium text-slate-500 uppercase">Revenus</th>
-                  <th className="text-right py-3 px-4 text-xs font-medium text-slate-500 uppercase">Taxes</th>
-                  <th className="text-right py-3 px-4 text-xs font-medium text-slate-500 uppercase">Croissance</th>
-                  <th className="text-center py-3 px-4 text-xs font-medium text-slate-500 uppercase">Actions</th>
+                  <th className="text-left py-3 px-4 text-xs font-medium text-slate-500 uppercase">{t('admin.fiscalReports.countryCol')}</th>
+                  <th className="text-right py-3 px-4 text-xs font-medium text-slate-500 uppercase">{t('admin.fiscalReports.ordersCol')}</th>
+                  <th className="text-right py-3 px-4 text-xs font-medium text-slate-500 uppercase">{t('admin.fiscalReports.revenueCol')}</th>
+                  <th className="text-right py-3 px-4 text-xs font-medium text-slate-500 uppercase">{t('admin.fiscalReports.taxesCol')}</th>
+                  <th className="text-right py-3 px-4 text-xs font-medium text-slate-500 uppercase">{t('admin.fiscalReports.growthCol')}</th>
+                  <th className="text-center py-3 px-4 text-xs font-medium text-slate-500 uppercase">{t('admin.fiscalReports.actionsCol')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -349,12 +319,12 @@ export default function GlobalReportsPage() {
                         <span className="font-medium">{country.country}</span>
                       </div>
                     </td>
-                    <td className="py-3 px-4 text-right font-medium">{country.orders.toLocaleString()}</td>
+                    <td className="py-3 px-4 text-right font-medium">{country.orders.toLocaleString(locale)}</td>
                     <td className="py-3 px-4 text-right font-medium text-green-600">
-                      ${country.revenue.toLocaleString()}
+                      ${country.revenue.toLocaleString(locale)}
                     </td>
                     <td className="py-3 px-4 text-right text-slate-600">
-                      ${country.taxCollected.toLocaleString()}
+                      ${country.taxCollected.toLocaleString(locale)}
                     </td>
                     <td className="py-3 px-4 text-right">
                       <span className={`font-medium ${country.growth >= 0 ? 'text-green-600' : 'text-red-600'}`}>
@@ -366,7 +336,7 @@ export default function GlobalReportsPage() {
                         href={`/admin/fiscal/country/${country.code}`}
                         className="text-blue-600 hover:text-blue-800 text-sm font-medium"
                       >
-                        Details
+                        {t('admin.fiscalReports.details')}
                       </Link>
                     </td>
                   </tr>
@@ -375,9 +345,9 @@ export default function GlobalReportsPage() {
               <tfoot>
                 <tr className="bg-slate-100 font-bold">
                   <td className="py-3 px-4">TOTAL</td>
-                  <td className="py-3 px-4 text-right">{totals.totalOrders.toLocaleString()}</td>
-                  <td className="py-3 px-4 text-right text-green-600">${totals.totalRevenue.toLocaleString()}</td>
-                  <td className="py-3 px-4 text-right text-slate-600">${totals.totalTax.toLocaleString()}</td>
+                  <td className="py-3 px-4 text-right">{totals.totalOrders.toLocaleString(locale)}</td>
+                  <td className="py-3 px-4 text-right text-green-600">${totals.totalRevenue.toLocaleString(locale)}</td>
+                  <td className="py-3 px-4 text-right text-slate-600">${totals.totalTax.toLocaleString(locale)}</td>
                   <td className="py-3 px-4 text-right text-green-600">+{totals.avgGrowth.toFixed(1)}%</td>
                   <td className="py-3 px-4"></td>
                 </tr>
@@ -388,10 +358,10 @@ export default function GlobalReportsPage() {
 
         {/* Revenue Distribution */}
         <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
-          <h2 className="text-lg font-semibold text-slate-900 mb-4">Distribution des revenus</h2>
+          <h2 className="text-lg font-semibold text-slate-900 mb-4">{t('admin.fiscalReports.revenueDistribution')}</h2>
           <div className="space-y-3">
             {sortedCountries.length === 0 ? (
-              <div className="text-sm text-slate-500">Aucune donnee disponible</div>
+              <div className="text-sm text-slate-500">{t('admin.fiscalReports.noDataAvailable')}</div>
             ) : (
               <>
                 {sortedCountries.slice(0, 6).map((country) => {
@@ -416,7 +386,7 @@ export default function GlobalReportsPage() {
                 })}
                 {sortedCountries.length > 6 && (
                   <div className="pt-2 border-t border-slate-100 text-sm text-slate-500">
-                    + {sortedCountries.length - 6} autres pays
+                    {t('admin.fiscalReports.otherCountries', { count: sortedCountries.length - 6 })}
                   </div>
                 )}
               </>
@@ -427,16 +397,16 @@ export default function GlobalReportsPage() {
 
       {/* Monthly Trend */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
-        <h2 className="text-lg font-semibold text-slate-900 mb-4">Evolution mensuelle</h2>
+        <h2 className="text-lg font-semibold text-slate-900 mb-4">{t('admin.fiscalReports.monthlyEvolution')}</h2>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-slate-100">
-                <th className="text-left py-3 px-4 text-sm font-medium text-slate-500">Mois</th>
-                <th className="text-right py-3 px-4 text-sm font-medium text-slate-500">Commandes</th>
-                <th className="text-right py-3 px-4 text-sm font-medium text-slate-500">Revenus</th>
-                <th className="text-right py-3 px-4 text-sm font-medium text-slate-500">Moyenne/commande</th>
-                <th className="py-3 px-4 text-sm font-medium text-slate-500">Tendance</th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-slate-500">{t('admin.fiscalReports.monthCol')}</th>
+                <th className="text-right py-3 px-4 text-sm font-medium text-slate-500">{t('admin.fiscalReports.ordersCol')}</th>
+                <th className="text-right py-3 px-4 text-sm font-medium text-slate-500">{t('admin.fiscalReports.revenueCol')}</th>
+                <th className="text-right py-3 px-4 text-sm font-medium text-slate-500">{t('admin.fiscalReports.avgPerOrder')}</th>
+                <th className="py-3 px-4 text-sm font-medium text-slate-500">{t('admin.fiscalReports.trendCol')}</th>
               </tr>
             </thead>
             <tbody>
@@ -448,7 +418,7 @@ export default function GlobalReportsPage() {
                     <td className="py-3 px-4 font-medium">{month.month}</td>
                     <td className="py-3 px-4 text-right">{month.orders}</td>
                     <td className="py-3 px-4 text-right font-medium text-green-600">
-                      ${month.revenue.toLocaleString()}
+                      ${month.revenue.toLocaleString(locale)}
                     </td>
                     <td className="py-3 px-4 text-right">
                       ${(month.revenue / month.orders).toFixed(2)}
@@ -458,7 +428,7 @@ export default function GlobalReportsPage() {
                         <div className="flex-grow bg-slate-200 rounded-full h-2">
                           <div
                             className="bg-green-500 h-2 rounded-full"
-                            style={{ width: `${(month.revenue / 180000) * 100}%` }}
+                            style={{ width: `${monthlyTrend.length > 0 ? (month.revenue / Math.max(...monthlyTrend.map(m => m.revenue), 1)) * 100 : 0}%` }}
                           />
                         </div>
                         <span className={`text-xs font-medium ${parseFloat(change) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
@@ -478,9 +448,9 @@ export default function GlobalReportsPage() {
       <div className="bg-white rounded-xl shadow-sm border border-slate-100">
         <div className="p-6 border-b border-slate-100">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-slate-900">Commandes recentes (tous pays)</h2>
+            <h2 className="text-lg font-semibold text-slate-900">{t('admin.fiscalReports.recentOrdersAllCountries')}</h2>
             <Link href="/admin" className="text-blue-600 hover:text-blue-800 text-sm font-medium">
-              Voir toutes
+              {t('admin.fiscalReports.viewAll')}
             </Link>
           </div>
         </div>
@@ -488,8 +458,8 @@ export default function GlobalReportsPage() {
           columns={orderColumns}
           data={recentOrders}
           keyExtractor={(row) => row.id}
-          emptyTitle="Aucune commande"
-          emptyDescription="Aucune commande recente a afficher"
+          emptyTitle={t('admin.fiscalReports.emptyOrdersTitle')}
+          emptyDescription={t('admin.fiscalReports.emptyOrdersDescription')}
         />
       </div>
     </div>

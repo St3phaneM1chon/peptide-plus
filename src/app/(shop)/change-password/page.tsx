@@ -8,10 +8,12 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from '@/hooks/useTranslations';
 
 export default function ChangePasswordPage() {
   const { status } = useSession();
   const router = useRouter();
+  const { t } = useTranslations();
   const [formData, setFormData] = useState({
     currentPassword: '',
     newPassword: '',
@@ -40,11 +42,11 @@ export default function ChangePasswordPage() {
 
   const validatePassword = (password: string): string[] => {
     const errors: string[] = [];
-    if (password.length < 8) errors.push('Au moins 8 caractères');
-    if (!/[A-Z]/.test(password)) errors.push('Au moins une majuscule');
-    if (!/[a-z]/.test(password)) errors.push('Au moins une minuscule');
-    if (!/[0-9]/.test(password)) errors.push('Au moins un chiffre');
-    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) errors.push('Au moins un caractère spécial');
+    if (password.length < 8) errors.push(t('auth.passwordMinChars'));
+    if (!/[A-Z]/.test(password)) errors.push(t('auth.passwordOneUppercase'));
+    if (!/[a-z]/.test(password)) errors.push(t('auth.passwordOneLowercase'));
+    if (!/[0-9]/.test(password)) errors.push(t('auth.passwordOneDigit'));
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) errors.push(t('auth.passwordSpecialChar'));
     return errors;
   };
 
@@ -54,13 +56,13 @@ export default function ChangePasswordPage() {
 
     // Validation
     if (formData.newPassword !== formData.confirmPassword) {
-      setMessage({ type: 'error', text: 'Les mots de passe ne correspondent pas' });
+      setMessage({ type: 'error', text: t('auth.passwordsNoMatch') });
       return;
     }
 
     const passwordErrors = validatePassword(formData.newPassword);
     if (passwordErrors.length > 0) {
-      setMessage({ type: 'error', text: `Mot de passe invalide: ${passwordErrors.join(', ')}` });
+      setMessage({ type: 'error', text: passwordErrors.join(', ') });
       return;
     }
 
@@ -79,14 +81,14 @@ export default function ChangePasswordPage() {
       const data = await res.json();
 
       if (res.ok) {
-        setMessage({ type: 'success', text: 'Mot de passe modifié avec succès!' });
+        setMessage({ type: 'success', text: t('auth.passwordChanged') });
         setFormData({ currentPassword: '', newPassword: '', confirmPassword: '' });
         setTimeout(() => router.push('/account/profile'), 2000);
       } else {
-        setMessage({ type: 'error', text: data.error || 'Erreur lors de la modification' });
+        setMessage({ type: 'error', text: data.error || t('auth.passwordChangeError') });
       }
     } catch (error) {
-      setMessage({ type: 'error', text: 'Une erreur est survenue' });
+      setMessage({ type: 'error', text: t('auth.errorOccurred') });
     } finally {
       setLoading(false);
     }
@@ -95,11 +97,11 @@ export default function ChangePasswordPage() {
   const passwordStrength = (password: string): { level: number; label: string; color: string } => {
     const errors = validatePassword(password);
     const strength = 5 - errors.length;
-    if (strength <= 1) return { level: 1, label: 'Très faible', color: 'bg-red-500' };
-    if (strength === 2) return { level: 2, label: 'Faible', color: 'bg-orange-500' };
-    if (strength === 3) return { level: 3, label: 'Moyen', color: 'bg-yellow-500' };
-    if (strength === 4) return { level: 4, label: 'Fort', color: 'bg-lime-500' };
-    return { level: 5, label: 'Très fort', color: 'bg-green-500' };
+    if (strength <= 1) return { level: 1, label: t('auth.passwordVeryWeak'), color: 'bg-red-500' };
+    if (strength === 2) return { level: 2, label: t('auth.passwordWeak'), color: 'bg-orange-500' };
+    if (strength === 3) return { level: 3, label: t('auth.passwordMedium'), color: 'bg-yellow-500' };
+    if (strength === 4) return { level: 4, label: t('auth.passwordStrong'), color: 'bg-lime-500' };
+    return { level: 5, label: t('auth.passwordVeryStrong'), color: 'bg-green-500' };
   };
 
   const strength = formData.newPassword ? passwordStrength(formData.newPassword) : null;
@@ -110,13 +112,13 @@ export default function ChangePasswordPage() {
         {/* Header */}
         <div className="mb-8">
           <nav className="text-sm text-gray-500 mb-2">
-            <Link href="/" className="hover:text-orange-600">Accueil</Link>
+            <Link href="/" className="hover:text-orange-600">{t('auth.home')}</Link>
             <span className="mx-2">/</span>
-            <Link href="/account/profile" className="hover:text-orange-600">Mon profil</Link>
+            <Link href="/account/profile" className="hover:text-orange-600">{t('auth.myProfile')}</Link>
             <span className="mx-2">/</span>
-            <span className="text-gray-900">Changer mot de passe</span>
+            <span className="text-gray-900">{t('auth.changePassword')}</span>
           </nav>
-          <h1 className="text-3xl font-bold text-gray-900">Changer mon mot de passe</h1>
+          <h1 className="text-3xl font-bold text-gray-900">{t('auth.changePassword')}</h1>
         </div>
 
         {/* Messages */}
@@ -131,9 +133,9 @@ export default function ChangePasswordPage() {
         {/* Form */}
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
           <div className="p-6 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">Sécurité du compte</h2>
+            <h2 className="text-lg font-semibold text-gray-900">{t('auth.accountSecurity')}</h2>
             <p className="text-sm text-gray-500 mt-1">
-              Assurez-vous d&apos;utiliser un mot de passe fort et unique
+              {t('auth.useStrongPassword')}
             </p>
           </div>
 
@@ -141,7 +143,7 @@ export default function ChangePasswordPage() {
             {/* Current Password */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Mot de passe actuel
+                {t('account.currentPassword')}
               </label>
               <div className="relative">
                 <input
@@ -164,7 +166,7 @@ export default function ChangePasswordPage() {
             {/* New Password */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Nouveau mot de passe
+                {t('account.newPassword')}
               </label>
               <div className="relative">
                 <input
@@ -199,7 +201,7 @@ export default function ChangePasswordPage() {
                   <p className={`text-xs ${
                     strength.level >= 4 ? 'text-green-600' : strength.level >= 3 ? 'text-yellow-600' : 'text-red-600'
                   }`}>
-                    Force: {strength.label}
+                    {t('auth.passwordStrengthLabel')}: {strength.label}
                   </p>
                 </div>
               )}
@@ -207,19 +209,19 @@ export default function ChangePasswordPage() {
               {/* Requirements */}
               <ul className="mt-3 text-xs text-gray-500 space-y-1">
                 <li className={formData.newPassword.length >= 8 ? 'text-green-600' : ''}>
-                  ✓ Au moins 8 caractères
+                  ✓ {t('auth.passwordMinChars')}
                 </li>
                 <li className={/[A-Z]/.test(formData.newPassword) ? 'text-green-600' : ''}>
-                  ✓ Au moins une majuscule
+                  ✓ {t('auth.passwordOneUppercase')}
                 </li>
                 <li className={/[a-z]/.test(formData.newPassword) ? 'text-green-600' : ''}>
-                  ✓ Au moins une minuscule
+                  ✓ {t('auth.passwordOneLowercase')}
                 </li>
                 <li className={/[0-9]/.test(formData.newPassword) ? 'text-green-600' : ''}>
-                  ✓ Au moins un chiffre
+                  ✓ {t('auth.passwordOneDigit')}
                 </li>
                 <li className={/[!@#$%^&*(),.?":{}|<>]/.test(formData.newPassword) ? 'text-green-600' : ''}>
-                  ✓ Au moins un caractère spécial
+                  ✓ {t('auth.passwordSpecialChar')}
                 </li>
               </ul>
             </div>
@@ -227,7 +229,7 @@ export default function ChangePasswordPage() {
             {/* Confirm Password */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Confirmer le nouveau mot de passe
+                {t('account.confirmPassword')}
               </label>
               <div className="relative">
                 <input
@@ -252,7 +254,7 @@ export default function ChangePasswordPage() {
                 </button>
               </div>
               {formData.confirmPassword && formData.confirmPassword !== formData.newPassword && (
-                <p className="text-red-600 text-sm mt-1">Les mots de passe ne correspondent pas</p>
+                <p className="text-red-600 text-sm mt-1">{t('auth.passwordsNoMatch')}</p>
               )}
             </div>
 
@@ -263,7 +265,7 @@ export default function ChangePasswordPage() {
                 disabled={loading || !formData.currentPassword || !formData.newPassword || formData.newPassword !== formData.confirmPassword}
                 className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white py-3 rounded-lg font-medium transition-colors"
               >
-                {loading ? 'Modification en cours...' : 'Changer le mot de passe'}
+                {loading ? t('auth.changingPassword') : t('auth.changePasswordBtn')}
               </button>
             </div>
           </form>
@@ -272,7 +274,7 @@ export default function ChangePasswordPage() {
         {/* Back Link */}
         <div className="text-center mt-6">
           <Link href="/account/profile" className="text-orange-600 hover:text-orange-700 font-medium">
-            ← Retour au profil
+            ← {t('auth.backToProfile')}
           </Link>
         </div>
       </div>

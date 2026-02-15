@@ -9,6 +9,7 @@ import { StatusBadge } from '@/components/admin/StatusBadge';
 import { StatCard } from '@/components/admin/StatCard';
 import { FilterBar, SelectFilter } from '@/components/admin/FilterBar';
 import { DataTable, type Column } from '@/components/admin/DataTable';
+import { useI18n } from '@/i18n/client';
 
 interface CreditNote {
   id: string;
@@ -43,22 +44,24 @@ interface Stats {
 
 type BadgeVariant = 'success' | 'warning' | 'error' | 'info' | 'neutral';
 
-const statusConfig: Record<string, { label: string; variant: BadgeVariant }> = {
-  DRAFT: { label: 'Brouillon', variant: 'neutral' },
-  ISSUED: { label: 'En vigueur', variant: 'success' },
-  VOID: { label: 'Annulee', variant: 'error' },
-};
-
-const statusFilterOptions = [
-  { value: 'ISSUED', label: 'En vigueur' },
-  { value: 'VOID', label: 'Annulee' },
-  { value: 'DRAFT', label: 'Brouillon' },
-];
-
-const formatCAD = (amount: number) =>
-  amount.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' });
-
 export default function NotesCreditPage() {
+  const { t, locale } = useI18n();
+
+  const statusConfig: Record<string, { label: string; variant: BadgeVariant }> = {
+    DRAFT: { label: t('admin.creditNotes.statusDraft'), variant: 'neutral' },
+    ISSUED: { label: t('admin.creditNotes.statusIssued'), variant: 'success' },
+    VOID: { label: t('admin.creditNotes.statusVoid'), variant: 'error' },
+  };
+
+  const statusFilterOptions = [
+    { value: 'ISSUED', label: t('admin.creditNotes.statusIssued') },
+    { value: 'VOID', label: t('admin.creditNotes.statusVoid') },
+    { value: 'DRAFT', label: t('admin.creditNotes.statusDraft') },
+  ];
+
+  const formatCAD = (amount: number) =>
+    amount.toLocaleString(locale, { style: 'currency', currency: 'CAD' });
+
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
   const [selectedNote, setSelectedNote] = useState<CreditNote | null>(null);
@@ -75,30 +78,30 @@ export default function NotesCreditPage() {
       if (selectedStatus) params.set('status', selectedStatus);
       if (searchTerm) params.set('search', searchTerm);
       const response = await fetch(`/api/accounting/credit-notes?${params.toString()}`);
-      if (!response.ok) throw new Error(`Erreur ${response.status}`);
+      if (!response.ok) throw new Error(`${t('admin.creditNotes.errorPrefix')} ${response.status}`);
       const data = await response.json();
       setCreditNotes(data.creditNotes ?? []);
       setStats(data.stats ?? { totalCount: 0, totalAmount: 0, issuedCount: 0, issuedAmount: 0, voidCount: 0 });
     } catch (err) {
       console.error('Error fetching credit notes:', err);
-      setError(err instanceof Error ? err.message : 'Erreur lors du chargement');
+      setError(err instanceof Error ? err.message : t('admin.creditNotes.loadError'));
       setCreditNotes([]);
     } finally {
       setLoading(false);
     }
-  }, [selectedStatus, searchTerm]);
+  }, [selectedStatus, searchTerm, t]);
 
   useEffect(() => {
     fetchCreditNotes();
   }, [fetchCreditNotes]);
 
-  if (loading) return <div className="p-8 text-center">Chargement...</div>;
-  if (error) return <div className="p-8 text-center text-red-600">Erreur: {error}</div>;
+  if (loading) return <div className="p-8 text-center">{t('admin.creditNotes.loading')}</div>;
+  if (error) return <div className="p-8 text-center text-red-600">{t('admin.creditNotes.errorPrefix')} {error}</div>;
 
   const columns: Column<CreditNote>[] = [
     {
       key: 'creditNoteNumber',
-      header: 'N\u00b0',
+      header: t('admin.creditNotes.number'),
       render: (cn) => (
         <div>
           <button
@@ -108,14 +111,14 @@ export default function NotesCreditPage() {
             {cn.creditNoteNumber}
           </button>
           {cn.invoice && (
-            <p className="text-xs text-slate-500">Facture: {cn.invoice.invoiceNumber}</p>
+            <p className="text-xs text-slate-500">{t('admin.creditNotes.invoice')}: {cn.invoice.invoiceNumber}</p>
           )}
         </div>
       ),
     },
     {
       key: 'customer',
-      header: 'Client',
+      header: t('admin.creditNotes.client'),
       render: (cn) => (
         <div>
           <p className="text-sm font-medium text-slate-900">{cn.customerName}</p>
@@ -125,7 +128,7 @@ export default function NotesCreditPage() {
     },
     {
       key: 'reason',
-      header: 'Raison',
+      header: t('admin.creditNotes.reason'),
       render: (cn) => (
         <p className="text-sm text-slate-600 truncate max-w-[200px]" title={cn.reason}>
           {cn.reason}
@@ -134,16 +137,16 @@ export default function NotesCreditPage() {
     },
     {
       key: 'date',
-      header: 'Date',
+      header: t('admin.creditNotes.date'),
       render: (cn) => (
         <span className="text-sm text-slate-500">
-          {new Date(cn.issuedAt || cn.createdAt).toLocaleDateString('fr-CA')}
+          {new Date(cn.issuedAt || cn.createdAt).toLocaleDateString(locale)}
         </span>
       ),
     },
     {
       key: 'total',
-      header: 'Total',
+      header: t('admin.creditNotes.total'),
       align: 'right',
       render: (cn) => (
         <span className="font-medium text-red-600">-{formatCAD(cn.total)}</span>
@@ -151,7 +154,7 @@ export default function NotesCreditPage() {
     },
     {
       key: 'status',
-      header: 'Statut',
+      header: t('admin.creditNotes.status'),
       align: 'center',
       render: (cn) => {
         const cfg = statusConfig[cn.status];
@@ -160,20 +163,20 @@ export default function NotesCreditPage() {
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: t('admin.creditNotes.actions'),
       align: 'center',
       render: (cn) => (
         <div className="flex items-center justify-center gap-1" onClick={(e) => e.stopPropagation()}>
           <button
             onClick={() => setSelectedNote(cn)}
             className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded"
-            title="Voir"
+            title={t('admin.creditNotes.view')}
           >
             <Eye className="w-4 h-4" />
           </button>
           <button
             className="p-1.5 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded"
-            title="Telecharger PDF"
+            title={t('admin.creditNotes.downloadPdf')}
           >
             <Download className="w-4 h-4" />
           </button>
@@ -187,26 +190,26 @@ export default function NotesCreditPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Notes de credit"
-        subtitle="Notes de credit emises pour remboursements et ajustements"
+        title={t('admin.creditNotes.title')}
+        subtitle={t('admin.creditNotes.subtitle')}
       />
 
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4">
-        <StatCard label="Total notes" value={stats.totalCount} icon={FileText} />
-        <StatCard label="Montant total" value={formatCAD(stats.totalAmount)} icon={DollarSign} className="!bg-red-50 !border-red-200" />
-        <StatCard label="En vigueur" value={stats.issuedCount} icon={CheckCircle} className="!bg-green-50 !border-green-200" />
-        <StatCard label="Annulees" value={stats.voidCount} icon={XCircle} className="!bg-slate-50 !border-slate-200" />
+        <StatCard label={t('admin.creditNotes.totalNotes')} value={stats.totalCount} icon={FileText} />
+        <StatCard label={t('admin.creditNotes.totalAmount')} value={formatCAD(stats.totalAmount)} icon={DollarSign} className="!bg-red-50 !border-red-200" />
+        <StatCard label={t('admin.creditNotes.inEffect')} value={stats.issuedCount} icon={CheckCircle} className="!bg-green-50 !border-green-200" />
+        <StatCard label={t('admin.creditNotes.voided')} value={stats.voidCount} icon={XCircle} className="!bg-slate-50 !border-slate-200" />
       </div>
 
       {/* Filters */}
       <FilterBar
         searchValue={searchTerm}
         onSearchChange={setSearchTerm}
-        searchPlaceholder="Rechercher par numero, client..."
+        searchPlaceholder={t('admin.creditNotes.searchPlaceholder')}
       >
         <SelectFilter
-          label="Tous les statuts"
+          label={t('admin.creditNotes.allStatuses')}
           value={selectedStatus}
           onChange={setSelectedStatus}
           options={statusFilterOptions}
@@ -218,8 +221,8 @@ export default function NotesCreditPage() {
         columns={columns}
         data={creditNotes}
         keyExtractor={(cn) => cn.id}
-        emptyTitle="Aucune note de credit"
-        emptyDescription="Aucune note de credit ne correspond aux filtres selectionnes."
+        emptyTitle={t('admin.creditNotes.noNotes')}
+        emptyDescription={t('admin.creditNotes.noNotesDesc')}
       />
 
       {/* Detail Modal */}
@@ -227,12 +230,12 @@ export default function NotesCreditPage() {
         isOpen={!!cn}
         onClose={() => setSelectedNote(null)}
         title={cn?.creditNoteNumber ?? ''}
-        subtitle={cn ? `Commande: ${cn.orderId || 'N/A'}` : ''}
+        subtitle={cn ? `${t('admin.creditNotes.order')}: ${cn.orderId || 'N/A'}` : ''}
         size="xl"
         footer={
           cn && (
             <Button variant="primary" icon={Download}>
-              Telecharger PDF
+              {t('admin.creditNotes.downloadPdf')}
             </Button>
           )
         }
@@ -242,7 +245,7 @@ export default function NotesCreditPage() {
             {/* Header info */}
             <div className="grid grid-cols-2 gap-6">
               <div>
-                <h4 className="text-sm font-medium text-slate-500 mb-2">Client</h4>
+                <h4 className="text-sm font-medium text-slate-500 mb-2">{t('admin.creditNotes.client')}</h4>
                 <p className="font-medium text-slate-900">{cn.customerName}</p>
                 {cn.customerEmail && <p className="text-sm text-slate-600">{cn.customerEmail}</p>}
               </div>
@@ -253,16 +256,16 @@ export default function NotesCreditPage() {
                   </StatusBadge>
                 </div>
                 <p className="text-sm text-slate-500">
-                  Emise le: {cn.issuedAt ? new Date(cn.issuedAt).toLocaleDateString('fr-CA') : 'N/A'}
+                  {t('admin.creditNotes.issuedOn')}: {cn.issuedAt ? new Date(cn.issuedAt).toLocaleDateString(locale) : 'N/A'}
                 </p>
                 {cn.invoice && (
                   <p className="text-sm text-blue-600">
-                    Facture: {cn.invoice.invoiceNumber}
+                    {t('admin.creditNotes.invoice')}: {cn.invoice.invoiceNumber}
                   </p>
                 )}
                 {cn.journalEntryId && (
                   <p className="text-sm text-slate-500">
-                    Ecriture comptable liee
+                    {t('admin.creditNotes.linkedJournalEntry')}
                   </p>
                 )}
               </div>
@@ -270,7 +273,7 @@ export default function NotesCreditPage() {
 
             {/* Reason */}
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-              <h4 className="text-sm font-medium text-amber-800 mb-1">Raison</h4>
+              <h4 className="text-sm font-medium text-amber-800 mb-1">{t('admin.creditNotes.reason')}</h4>
               <p className="text-sm text-amber-700">{cn.reason}</p>
             </div>
 
@@ -278,29 +281,29 @@ export default function NotesCreditPage() {
             <div className="flex justify-end">
               <div className="w-64 space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-slate-500">Sous-total</span>
+                  <span className="text-slate-500">{t('admin.creditNotes.subtotal')}</span>
                   <span className="text-slate-900">-{cn.subtotal.toFixed(2)} $</span>
                 </div>
                 {cn.taxTps > 0 && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-slate-500">TPS</span>
+                    <span className="text-slate-500">{t('admin.creditNotes.tps')}</span>
                     <span className="text-slate-900">-{cn.taxTps.toFixed(2)} $</span>
                   </div>
                 )}
                 {cn.taxTvq > 0 && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-slate-500">TVQ</span>
+                    <span className="text-slate-500">{t('admin.creditNotes.tvq')}</span>
                     <span className="text-slate-900">-{cn.taxTvq.toFixed(2)} $</span>
                   </div>
                 )}
                 {cn.taxTvh > 0 && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-slate-500">TVH</span>
+                    <span className="text-slate-500">{t('admin.creditNotes.tvh')}</span>
                     <span className="text-slate-900">-{cn.taxTvh.toFixed(2)} $</span>
                   </div>
                 )}
                 <div className="flex justify-between text-lg font-bold border-t border-slate-200 pt-2">
-                  <span>Total</span>
+                  <span>{t('admin.creditNotes.total')}</span>
                   <span className="text-red-600">-{cn.total.toFixed(2)} $</span>
                 </div>
               </div>

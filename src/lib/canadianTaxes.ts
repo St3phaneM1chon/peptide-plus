@@ -2378,8 +2378,12 @@ export function getAddressFormat(countryCode: string, lang: 'en' | 'fr' = 'en'):
  */
 export function validatePostalCode(postalCode: string, countryCode: string): boolean {
   const format = ADDRESS_FORMATS[countryCode] || DEFAULT_ADDRESS_FORMAT;
-  const regex = new RegExp(format.postalCodePattern, 'i');
-  return regex.test(postalCode.trim());
+  try {
+    const regex = new RegExp(format.postalCodePattern, 'i');
+    return regex.test(postalCode.trim());
+  } catch {
+    return false;
+  }
 }
 
 /**

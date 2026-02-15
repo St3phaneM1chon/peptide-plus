@@ -6,6 +6,7 @@ export const dynamic = 'force-dynamic';
 
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 
@@ -139,10 +140,13 @@ export default async function PurchasesPage() {
                       <div className="flex items-center">
                         <div className="w-10 h-10 bg-gray-100 rounded-lg flex-shrink-0 mr-3 overflow-hidden">
                           {purchase.product.imageUrl ? (
-                            <img
+                            <Image
                               src={purchase.product.imageUrl}
                               alt=""
+                              width={40}
+                              height={40}
                               className="w-full h-full object-cover"
+                              unoptimized
                             />
                           ) : (
                             <div className="w-full h-full bg-gradient-to-br from-blue-500 to-blue-700" />

@@ -7,8 +7,20 @@ import { useCart } from '@/contexts/CartContext';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useTranslations } from '@/hooks/useTranslations';
 import { getPeptideChemistry } from '@/data/peptideChemistry';
+import Breadcrumbs from '@/components/ui/Breadcrumbs';
 import ProductReviews from '@/components/shop/ProductReviews';
 import ProductQA from '@/components/shop/ProductQA';
+import WishlistButton from '@/components/shop/WishlistButton';
+import RecentlyViewed from '@/components/shop/RecentlyViewed';
+import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
+import ShareButtons from '@/components/shop/ShareButtons';
+import StickyAddToCart from '@/components/shop/StickyAddToCart';
+import StockAlertButton from '@/components/shop/StockAlertButton';
+import QuantityTiers from '@/components/shop/QuantityTiers';
+import ProductBadges from '@/components/shop/ProductBadges';
+import PriceDropButton from '@/components/shop/PriceDropButton';
+import ProductVideo from '@/components/shop/ProductVideo';
+import CountdownTimer from '@/components/ui/CountdownTimer';
 
 interface ProductFormat {
   id: string;
@@ -41,6 +53,20 @@ interface RelatedProduct {
   image?: string;
 }
 
+interface QuantityDiscount {
+  id: string;
+  minQty: number;
+  maxQty: number | null;
+  discount: number;
+}
+
+interface Promotion {
+  id: string;
+  name: string;
+  endsAt: string | null;
+  badge: string | null;
+}
+
 interface Product {
   id: string;
   name: string;
@@ -63,9 +89,17 @@ interface Product {
   isNew?: boolean;
   isBestseller?: boolean;
   productImage?: string;
+  videoUrl?: string;
   images?: ProductImage[];
   formats: ProductFormat[];
   relatedProducts: RelatedProduct[];
+  quantityDiscounts?: QuantityDiscount[];
+  createdAt?: Date | string;
+  purchaseCount?: number;
+  averageRating?: number;
+  reviewCount?: number;
+  restockedAt?: Date | string;
+  promotion?: Promotion | null;
 }
 
 interface ProductPageClientProps {
@@ -98,7 +132,14 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
   const { addItem } = useCart();
   const { formatPrice } = useCurrency();
   const { t } = useTranslations();
-  
+  const { addViewed } = useRecentlyViewed();
+
+  // Track this product as recently viewed
+  useEffect(() => {
+    addViewed(product.slug);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product.slug]);
+
   // Filter out formats with stockQuantity <= 0
   const availableFormats = product.formats.filter(f => f.stockQuantity > 0);
 
@@ -106,13 +147,14 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
     availableFormats.find(f => f.inStock) || availableFormats[0] || product.formats[0]
   );
   const [quantity, setQuantity] = useState(1);
-  const [activeTab, setActiveTab] = useState<'description' | 'specs' | 'research' | 'reconstitution'>('description');
+  const [activeTab, setActiveTab] = useState<'description' | 'specs' | 'research' | 'reconstitution' | 'video'>('description');
   const [addedToCart, setAddedToCart] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string>(
     product.productImage || '/images/products/peptide-default.png'
   );
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const addToCartButtonRef = useRef<HTMLButtonElement>(null);
   
   // Get enriched chemistry data if available
   const chemistryData = getPeptideChemistry(product.slug);
@@ -150,6 +192,27 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
     return related.name;
   };
 
+  // Calculate effective price based on quantity discounts
+  const getEffectivePrice = (basePrice: number, qty: number) => {
+    if (!product.quantityDiscounts || product.quantityDiscounts.length === 0) {
+      return basePrice;
+    }
+
+    // Find the applicable discount tier
+    const applicableTier = product.quantityDiscounts
+      .filter(tier => qty >= tier.minQty && (tier.maxQty === null || qty <= tier.maxQty))
+      .sort((a, b) => b.discount - a.discount)[0]; // Get highest discount
+
+    if (applicableTier) {
+      return basePrice * (1 - applicableTier.discount / 100);
+    }
+
+    return basePrice;
+  };
+
+  // Get the effective price per unit
+  const effectivePrice = getEffectivePrice(selectedFormat.price, quantity);
+
   const handleFormatSelect = (format: ProductFormat) => {
     setSelectedFormat(format);
     setQuantity(1);
@@ -162,43 +225,51 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
 
   const handleAddToCart = () => {
     if (!selectedFormat.inStock) return;
-    
+
     const formatName = getFormatName(selectedFormat);
     const fullProductName = `${productName} ${formatName}`;
-    
+
     addItem({
       productId: product.id,
       formatId: selectedFormat.id,
       name: fullProductName,
       formatName: formatName,
-      price: selectedFormat.price,
-      comparePrice: selectedFormat.comparePrice,
+      price: effectivePrice, // Use the discounted price
+      comparePrice: effectivePrice < selectedFormat.price ? selectedFormat.price : selectedFormat.comparePrice,
       sku: selectedFormat.sku,
       image: product.productImage || '/images/products/peptide-default.png',
       maxQuantity: selectedFormat.stockQuantity,
       quantity,
     });
-    
+
     setAddedToCart(true);
     setTimeout(() => setAddedToCart(false), 2000);
   };
 
   return (
+    <>
+      {/* Sticky Add to Cart Bar */}
+      <StickyAddToCart
+        productName={productName}
+        price={effectivePrice}
+        formattedPrice={formatPrice(effectivePrice)}
+        selectedFormat={getFormatName(selectedFormat)}
+        onAddToCart={handleAddToCart}
+        isOutOfStock={!selectedFormat.inStock}
+        addedToCart={addedToCart}
+        targetRef={addToCartButtonRef}
+      />
+
     <div className="min-h-screen bg-white">
-      {/* Breadcrumb */}
-      <div className="bg-neutral-100 border-b">
-        <div className="max-w-6xl mx-auto px-4 py-3">
-          <nav className="flex items-center gap-2 text-sm text-neutral-500">
-            <Link href="/" className="hover:text-black">{t('nav.home')}</Link>
-            <span>/</span>
-            <Link href="/shop" className="hover:text-black">{t('nav.shop')}</Link>
-            <span>/</span>
-            <Link href={`/category/${product.categorySlug}`} className="hover:text-black">{categoryName}</Link>
-            <span>/</span>
-            <span className="text-black">{productName}</span>
-          </nav>
-        </div>
-      </div>
+      {/* Breadcrumbs */}
+      <Breadcrumbs
+        items={[
+          { label: t('nav.home') || 'Home', href: '/' },
+          { label: t('shop.shop') || 'Shop', href: '/shop' },
+          { label: categoryName, href: `/category/${product.categorySlug}` },
+          { label: productName },
+        ]}
+      />
 
       {/* Product Content */}
       <div className="max-w-6xl mx-auto px-4 py-8">
@@ -214,24 +285,31 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
                 className="object-contain"
                 priority
               />
-              {product.isNew && (
-                <span className="absolute top-3 left-3 bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded">
-                  {t('shop.new')}
-                </span>
-              )}
-              {product.isBestseller && (
-                <span className="absolute top-3 right-3 bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded">
-                  {t('shop.bestseller')}
-                </span>
-              )}
+
+              {/* Product Badges */}
+              <ProductBadges
+                product={{
+                  createdAt: product.createdAt,
+                  purchaseCount: product.purchaseCount,
+                  averageRating: product.averageRating,
+                  reviewCount: product.reviewCount,
+                  price: selectedFormat.price,
+                  compareAtPrice: selectedFormat.comparePrice,
+                  formats: availableFormats,
+                }}
+                maxBadges={3}
+                className="top-3 left-3"
+              />
             </div>
             {/* Thumbnail gallery */}
             {product.images && product.images.length > 1 && (
-              <div className="flex gap-2 mt-3 max-w-md mx-auto overflow-x-auto">
-                {product.images.map((img) => (
+              <div className="flex gap-2 mt-3 max-w-md mx-auto overflow-x-auto" role="group" aria-label="Product image gallery">
+                {product.images.map((img, index) => (
                   <button
                     key={img.id}
                     onClick={() => setSelectedImage(img.url)}
+                    aria-label={`View image ${index + 1} of ${product.images!.length}${img.alt ? `: ${img.alt}` : ''}`}
+                    aria-current={selectedImage === img.url ? 'true' : undefined}
                     className={`w-16 h-16 flex-shrink-0 rounded-lg overflow-hidden border-2 transition-colors cursor-pointer ${
                       selectedImage === img.url ? 'border-orange-500' : 'border-neutral-200 hover:border-orange-400'
                     }`}
@@ -268,17 +346,39 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
               </p>
             )}
 
-            {/* Price - adapts with selected format */}
+            {/* Price - adapts with selected format and quantity discounts */}
             <div className="flex items-center gap-3 mb-4">
               <span className="text-3xl font-bold text-orange-600">
-                {formatPrice(selectedFormat.price)}
+                {formatPrice(effectivePrice)}
               </span>
-              {selectedFormat.comparePrice && selectedFormat.comparePrice > selectedFormat.price && (
+              {effectivePrice < selectedFormat.price && (
+                <span className="text-xl text-neutral-400 line-through">
+                  {formatPrice(selectedFormat.price)}
+                </span>
+              )}
+              {!effectivePrice && selectedFormat.comparePrice && selectedFormat.comparePrice > selectedFormat.price && (
                 <span className="text-xl text-neutral-400 line-through">
                   {formatPrice(selectedFormat.comparePrice)}
                 </span>
               )}
             </div>
+
+            {/* Flash Sale Countdown Timer */}
+            {product.promotion?.endsAt && (
+              <div className="mb-6 p-4 bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-300 rounded-lg">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-xl">⚡</span>
+                  <h3 className="font-bold text-orange-800">
+                    {product.promotion.name} {t('promotion.endsIn') || 'Ends In'}
+                  </h3>
+                </div>
+                <CountdownTimer
+                  endDate={product.promotion.endsAt}
+                  variant="compact"
+                  showDays={true}
+                />
+              </div>
+            )}
 
             {/* Purity & Mass Badges */}
             {(product.purity || product.avgMass) && (
@@ -308,6 +408,9 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
               </label>
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                aria-label={`Select format for ${productName}`}
+                aria-expanded={isDropdownOpen}
+                aria-haspopup="listbox"
                 className="w-full flex items-center justify-between gap-3 px-4 py-3 border-2 border-neutral-300 rounded-lg bg-white hover:border-orange-400 transition-colors"
               >
                 <div className="flex items-center gap-3">
@@ -335,10 +438,12 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
 
               {/* Dropdown Menu */}
               {isDropdownOpen && (
-                <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-neutral-200 rounded-lg shadow-2xl max-h-80 overflow-y-auto">
+                <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-neutral-200 rounded-lg shadow-2xl max-h-80 overflow-y-auto" role="listbox" aria-label="Available formats">
                   {availableFormats.map((format) => (
                     <button
                       key={format.id}
+                      role="option"
+                      aria-selected={selectedFormat.id === format.id}
                       onClick={() => handleFormatSelect(format)}
                       disabled={!format.inStock}
                       className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors border-b border-neutral-100 last:border-b-0 ${
@@ -387,19 +492,32 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
               )}
             </div>
 
+            {/* Quantity Discounts / Bulk Pricing */}
+            {product.quantityDiscounts && product.quantityDiscounts.length > 0 && (
+              <div className="mb-6">
+                <QuantityTiers
+                  tiers={product.quantityDiscounts}
+                  basePrice={selectedFormat.price}
+                  currentQuantity={quantity}
+                />
+              </div>
+            )}
+
             {/* Quantity + Add to Cart */}
-            <div className="flex items-center gap-4 mb-6">
+            <div className="flex items-center gap-4 mb-4">
               {/* Quantity Selector */}
-              <div className="flex items-center border border-neutral-300 rounded-lg">
+              <div className="flex items-center border border-neutral-300 rounded-lg" role="group" aria-label={`Quantity for ${productName}`}>
                 <button
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  aria-label="Decrease quantity"
                   className="w-12 h-12 flex items-center justify-center text-xl hover:bg-neutral-100 transition-colors"
                 >
                   −
                 </button>
-                <span className="w-14 text-center font-bold text-lg">{quantity}</span>
+                <span className="w-14 text-center font-bold text-lg" aria-live="polite" aria-atomic="true">{quantity}</span>
                 <button
                   onClick={() => setQuantity(Math.min(selectedFormat.stockQuantity, quantity + 1))}
+                  aria-label="Increase quantity"
                   className="w-12 h-12 flex items-center justify-center text-xl hover:bg-neutral-100 transition-colors"
                 >
                   +
@@ -408,8 +526,10 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
 
               {/* Add to Cart Button */}
               <button
+                ref={addToCartButtonRef}
                 onClick={handleAddToCart}
                 disabled={!selectedFormat.inStock}
+                aria-label={`Add ${productName} to cart`}
                 className={`flex-1 py-3 px-6 rounded-lg font-bold text-lg transition-all ${
                   addedToCart
                     ? 'bg-green-600 text-white'
@@ -418,13 +538,23 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
                     : 'bg-neutral-300 text-neutral-500 cursor-not-allowed'
                 }`}
               >
-                {addedToCart 
-                  ? `✓ ${t('shop.added')}` 
-                  : selectedFormat.inStock 
-                    ? `${t('shop.addToCart')} - ${formatPrice(selectedFormat.price * quantity)}`
+                {addedToCart
+                  ? `✓ ${t('shop.added')}`
+                  : selectedFormat.inStock
+                    ? `${t('shop.addToCart')} - ${formatPrice(effectivePrice * quantity)}`
                     : t('shop.outOfStock')
                 }
               </button>
+            </div>
+
+            {/* Wishlist & Price Alert Buttons */}
+            <div className="mb-6 flex gap-3">
+              <WishlistButton productId={product.id} variant="button" />
+              <PriceDropButton
+                productId={product.id}
+                currentPrice={selectedFormat.price}
+                variant="button"
+              />
             </div>
 
             {/* Stock Warning */}
@@ -436,6 +566,18 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
               </div>
             )}
 
+            {/* Back-in-Stock Alert */}
+            {!selectedFormat.inStock && (
+              <div className="mb-6">
+                <StockAlertButton
+                  productId={product.id}
+                  formatId={selectedFormat.id}
+                  productName={productName}
+                  formatName={getFormatName(selectedFormat)}
+                />
+              </div>
+            )}
+
             {/* Trust badges */}
             <div className="flex flex-wrap gap-4 text-sm text-neutral-600 border-t pt-4">
               <span className="flex items-center gap-1">✅ {t('shop.labTested')}</span>
@@ -443,13 +585,26 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
               <span className="flex items-center gap-1">🔒 {t('shop.securePayment')}</span>
               <span className="flex items-center gap-1">📦 {t('shop.freeShipping')}</span>
             </div>
+
+            {/* Share Buttons */}
+            <div className="border-t pt-4 mt-4">
+              <ShareButtons
+                url={`/product/${product.slug}`}
+                title={productName}
+                description={product.shortDescription}
+              />
+            </div>
           </div>
         </div>
 
         {/* Tabs: Description / Specifications / Research / Reconstitution */}
         <div className="mt-12 border-t pt-8">
-          <div className="flex flex-wrap gap-4 md:gap-6 border-b mb-6">
+          <div className="flex flex-wrap gap-4 md:gap-6 border-b mb-6" role="tablist" aria-label="Product information tabs">
             <button
+              role="tab"
+              id="tab-description"
+              aria-selected={activeTab === 'description'}
+              aria-controls="tabpanel-description"
               onClick={() => setActiveTab('description')}
               className={`pb-3 font-medium text-base md:text-lg whitespace-nowrap ${
                 activeTab === 'description'
@@ -460,6 +615,10 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
               {t('shop.description')}
             </button>
             <button
+              role="tab"
+              id="tab-specs"
+              aria-selected={activeTab === 'specs'}
+              aria-controls="tabpanel-specs"
               onClick={() => setActiveTab('specs')}
               className={`pb-3 font-medium text-base md:text-lg whitespace-nowrap ${
                 activeTab === 'specs'
@@ -471,6 +630,10 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
             </button>
             {chemistryData?.researchSummary && (
               <button
+                role="tab"
+                id="tab-research"
+                aria-selected={activeTab === 'research'}
+                aria-controls="tabpanel-research"
                 onClick={() => setActiveTab('research')}
                 className={`pb-3 font-medium text-base md:text-lg whitespace-nowrap ${
                   activeTab === 'research'
@@ -483,6 +646,10 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
             )}
             {chemistryData?.reconstitution && (
               <button
+                role="tab"
+                id="tab-reconstitution"
+                aria-selected={activeTab === 'reconstitution'}
+                aria-controls="tabpanel-reconstitution"
                 onClick={() => setActiveTab('reconstitution')}
                 className={`pb-3 font-medium text-base md:text-lg whitespace-nowrap ${
                   activeTab === 'reconstitution'
@@ -493,11 +660,27 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
                 💉 {t('shop.reconstitution') || 'Reconstitution'}
               </button>
             )}
+            {product.videoUrl && (
+              <button
+                role="tab"
+                id="tab-video"
+                aria-selected={activeTab === 'video'}
+                aria-controls="tabpanel-video"
+                onClick={() => setActiveTab('video')}
+                className={`pb-3 font-medium text-base md:text-lg whitespace-nowrap ${
+                  activeTab === 'video'
+                    ? 'text-orange-600 border-b-2 border-orange-600'
+                    : 'text-neutral-500 hover:text-black'
+                }`}
+              >
+                🎥 {t('shop.video') || 'Video'}
+              </button>
+            )}
           </div>
 
           {/* Description Tab */}
           {activeTab === 'description' && (
-            <div className="prose max-w-none">
+            <div role="tabpanel" id="tabpanel-description" aria-labelledby="tab-description" className="prose max-w-none">
               {(product.description || product.shortDescription) ? (
                 (product.description || product.shortDescription).split('\n').map((p, i) => (
                   <p key={i} className="mb-4 text-neutral-700 leading-relaxed">{p}</p>
@@ -519,7 +702,7 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
 
           {/* Specifications Tab */}
           {activeTab === 'specs' && (
-            <div className="bg-neutral-50 rounded-lg p-6">
+            <div role="tabpanel" id="tabpanel-specs" aria-labelledby="tab-specs" className="bg-neutral-50 rounded-lg p-6">
               {/* COA Download Button */}
               {chemistryData?.coaAvailable && (
                 <div className="mb-6 flex flex-wrap gap-3">
@@ -635,7 +818,7 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
 
           {/* Research Tab */}
           {activeTab === 'research' && chemistryData?.researchSummary && (
-            <div className="bg-neutral-50 rounded-lg p-6">
+            <div role="tabpanel" id="tabpanel-research" aria-labelledby="tab-research" className="bg-neutral-50 rounded-lg p-6">
               <div className="flex items-center gap-3 mb-4">
                 <span className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center text-xl">🔬</span>
                 <h3 className="font-bold text-xl">{t('shop.researchOverview') || 'Research Overview'}</h3>
@@ -690,7 +873,7 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
 
           {/* Reconstitution Tab */}
           {activeTab === 'reconstitution' && chemistryData?.reconstitution && (
-            <div className="bg-neutral-50 rounded-lg p-6">
+            <div role="tabpanel" id="tabpanel-reconstitution" aria-labelledby="tab-reconstitution" className="bg-neutral-50 rounded-lg p-6">
               <div className="flex items-center gap-3 mb-4">
                 <span className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-xl">💉</span>
                 <h3 className="font-bold text-xl">{t('shop.reconstitutionGuide') || 'Reconstitution Guide'}</h3>
@@ -764,6 +947,22 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
               </div>
             </div>
           )}
+
+          {/* Video Tab */}
+          {activeTab === 'video' && product.videoUrl && (
+            <div role="tabpanel" id="tabpanel-video" aria-labelledby="tab-video" className="bg-neutral-50 rounded-lg p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <span className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center text-xl">🎥</span>
+                <h3 className="font-bold text-xl">{t('shop.productVideo') || 'Product Video'}</h3>
+              </div>
+
+              <ProductVideo videoUrl={product.videoUrl} />
+
+              <p className="mt-4 text-sm text-neutral-600">
+                {t('shop.videoDescription') || 'Watch this video to learn more about this product, its benefits, and how to use it properly.'}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Related Products */}
@@ -800,6 +999,9 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
           </div>
         )}
 
+        {/* Recently Viewed Products */}
+        <RecentlyViewed excludeSlug={product.slug} />
+
         {/* Reviews Section */}
         <div className="mt-12 border-t pt-8">
           <ProductReviews productId={product.id} productName={product.name} />
@@ -819,5 +1021,6 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
         </div>
       </div>
     </div>
+    </>
   );
 }

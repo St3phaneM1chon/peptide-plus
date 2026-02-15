@@ -498,9 +498,122 @@ export function pointsExpiringEmail(data: PointsExpiringEmailData): { subject: s
   return {
     subject,
     html: baseTemplate({
-      preheader: isFr 
+      preheader: isFr
         ? `${data.expiringPoints} points expirent le ${expiryDateStr} - Utilisez-les!`
         : `${data.expiringPoints} points expire on ${expiryDateStr} - Use them!`,
+      content,
+      locale: data.locale,
+    }),
+  };
+}
+
+// ============================================
+// 6. EMAIL BAISSE DE PRIX
+// ============================================
+export interface PriceDropEmailData {
+  customerName: string;
+  customerEmail: string;
+  productName: string;
+  productSlug: string;
+  productImageUrl?: string;
+  originalPrice: number;
+  currentPrice: number;
+  priceDrop: number;
+  priceDropPercent: number;
+  targetPrice?: number;
+  locale?: 'fr' | 'en';
+}
+
+export function priceDropEmail(data: PriceDropEmailData): { subject: string; html: string } {
+  const isFr = data.locale !== 'en';
+
+  const subject = isFr
+    ? `💰 ${data.productName} - Prix réduit de ${data.priceDropPercent.toFixed(0)}%!`
+    : `💰 ${data.productName} - Price dropped ${data.priceDropPercent.toFixed(0)}%!`;
+
+  const productUrl = `https://biocyclepeptides.com/product/${data.productSlug}`;
+
+  const content = `
+    <h1 style="color: #059669; margin-bottom: 8px; text-align: center;">
+      ${isFr ? '💰 Le prix a baissé!' : '💰 Price dropped!'}
+    </h1>
+    <p style="font-size: 16px; color: #4b5563; text-align: center;">
+      ${isFr
+        ? `Bonjour ${data.customerName}, le produit que vous suivez est maintenant en solde!`
+        : `Hello ${data.customerName}, the product you're watching is now on sale!`}
+    </p>
+
+    <div style="background-color: #f9fafb; border-radius: 12px; padding: 24px; margin: 24px 0; text-align: center;">
+      ${data.productImageUrl ? `
+      <img src="${data.productImageUrl}" alt="${data.productName}" width="150" height="150" style="border-radius: 8px; margin-bottom: 16px;">
+      ` : ''}
+      <h2 style="margin: 0 0 16px 0; font-size: 20px; color: #1f2937;">${data.productName}</h2>
+
+      <div style="display: inline-block; background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border-radius: 12px; padding: 20px; margin-bottom: 16px;">
+        <p style="margin: 0 0 4px 0; font-size: 12px; color: #065f46; text-transform: uppercase; letter-spacing: 1px;">
+          ${isFr ? 'Prix réduit de' : 'Price reduced by'}
+        </p>
+        <p style="margin: 0; font-size: 36px; font-weight: bold; color: #059669;">
+          ${data.priceDropPercent.toFixed(0)}%
+        </p>
+      </div>
+
+      <div style="display: flex; align-items: center; justify-content: center; gap: 16px; margin-top: 16px;">
+        <div>
+          <p style="margin: 0 0 4px 0; font-size: 12px; color: #9ca3af; text-decoration: line-through;">
+            ${isFr ? 'Avant' : 'Before'}: $${data.originalPrice.toFixed(2)}
+          </p>
+          <p style="margin: 0; font-size: 28px; font-weight: bold; color: #CC5500;">
+            $${data.currentPrice.toFixed(2)}
+          </p>
+        </div>
+      </div>
+
+      <p style="margin: 16px 0 0 0; font-size: 14px; color: #059669; font-weight: 600;">
+        ${isFr ? 'Vous économisez' : 'You save'} $${data.priceDrop.toFixed(2)}!
+      </p>
+    </div>
+
+    ${data.targetPrice && data.currentPrice <= data.targetPrice ? emailComponents.warningBox(`
+      <p style="margin: 0; color: #065f46; text-align: center;">
+        <strong>🎯 ${isFr ? 'Prix cible atteint!' : 'Target price reached!'}</strong><br>
+        ${isFr
+          ? `Le prix est maintenant de $${data.currentPrice.toFixed(2)} (votre cible: $${data.targetPrice.toFixed(2)})`
+          : `Price is now $${data.currentPrice.toFixed(2)} (your target: $${data.targetPrice.toFixed(2)})`}
+      </p>
+    `) : ''}
+
+    <div style="background-color: #fef3c7; border-radius: 12px; padding: 20px; margin: 24px 0; text-align: center;">
+      <p style="margin: 0; color: #92400e; font-weight: 600;">
+        ⚡ ${isFr ? 'Profitez-en maintenant!' : 'Take advantage now!'}
+      </p>
+      <p style="margin: 8px 0 0 0; font-size: 13px; color: #92400e;">
+        ${isFr
+          ? 'Les prix peuvent changer à tout moment'
+          : 'Prices may change at any time'}
+      </p>
+    </div>
+
+    ${emailComponents.button(
+      isFr ? 'Voir le produit' : 'View product',
+      productUrl
+    )}
+
+    <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 32px 0;">
+
+    <p style="font-size: 12px; color: #9ca3af; text-align: center;">
+      ${isFr
+        ? 'Vous recevez cet email car vous suivez ce produit.'
+        : 'You\'re receiving this email because you\'re watching this product.'}
+    </p>
+  `;
+
+  return {
+    subject,
+    html: baseTemplate({
+      preheader: isFr
+        ? `${data.productName} - Maintenant $${data.currentPrice.toFixed(2)} (économisez $${data.priceDrop.toFixed(2)})`
+        : `${data.productName} - Now $${data.currentPrice.toFixed(2)} (save $${data.priceDrop.toFixed(2)})`,
       content,
       locale: data.locale,
     }),

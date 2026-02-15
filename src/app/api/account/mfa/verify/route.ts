@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * API MFA VERIFY - Verify TOTP code and enable MFA
  * Completes MFA setup after user scans QR code

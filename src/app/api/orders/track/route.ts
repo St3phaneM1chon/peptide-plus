@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * API Order Tracking - BioCycle Peptides
  * Recherche une commande par numéro + email et retourne le statut de livraison
@@ -35,11 +37,21 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Find the user by email, then look up the order
+    const user = await prisma.user.findUnique({
+      where: { email: email.toLowerCase().trim() },
+      select: { id: true },
+    });
+
+    if (!user) {
+      return NextResponse.json({ found: false });
+    }
+
     // Chercher la commande dans la DB
     const order = await prisma.order.findFirst({
       where: {
         orderNumber: orderNumber.trim(),
-        user: { email: email.toLowerCase().trim() },
+        userId: user.id,
       },
       select: {
         id: true,

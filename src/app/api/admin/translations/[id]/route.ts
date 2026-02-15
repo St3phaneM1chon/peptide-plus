@@ -68,13 +68,15 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     if (locale) {
       // Get single translation
-      const translation = await (prisma as any)[tableName].findUnique({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const translation = await ((prisma as Record<string, any>)[tableName]).findUnique({
         where: { [`${fkField}_locale`]: { [fkField]: entityId, locale } },
       });
       return NextResponse.json({ translation });
     } else {
       // Get all translations for this entity
-      const translations = await (prisma as any)[tableName].findMany({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const translations = await ((prisma as Record<string, any>)[tableName]).findMany({
         where: { [fkField]: entityId },
         orderBy: { locale: 'asc' },
       });
@@ -111,7 +113,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     const validFields = TRANSLATABLE_FIELDS[model];
 
     // Filter to only valid translatable fields
-    const updateData: Record<string, any> = {};
+    const updateData: Record<string, unknown> = {};
     if (fields) {
       for (const [key, value] of Object.entries(fields)) {
         if (validFields.includes(key)) {
@@ -126,7 +128,8 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
     updateData.translatedBy = 'manual';
 
-    const translation = await (prisma as any)[tableName].upsert({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const translation = await ((prisma as Record<string, any>)[tableName]).upsert({
       where: { [`${fkField}_locale`]: { [fkField]: entityId, locale } },
       create: { [fkField]: entityId, locale, ...updateData },
       update: updateData,
@@ -167,14 +170,16 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
     if (locale) {
       // Delete single translation
-      await (prisma as any)[tableName].delete({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await ((prisma as Record<string, any>)[tableName]).delete({
         where: { [`${fkField}_locale`]: { [fkField]: entityId, locale } },
       });
       cacheDelete(`translation:${model}:${entityId}:${locale}`);
       return NextResponse.json({ message: `Traduction ${locale} supprimée` });
     } else {
       // Delete all translations for this entity
-      const result = await (prisma as any)[tableName].deleteMany({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const result = await ((prisma as Record<string, any>)[tableName]).deleteMany({
         where: { [fkField]: entityId },
       });
       return NextResponse.json({

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { RefreshCw, Plus, CreditCard, Landmark, PiggyBank, Check } from 'lucide-react';
 import { PageHeader, Button, StatusBadge } from '@/components/admin';
+import { useI18n } from '@/i18n/client';
 
 interface BankAccount {
   id: string;
@@ -27,13 +28,21 @@ interface Transaction {
 }
 
 export default function BanquesPage() {
+  const { t } = useI18n();
   const [selectedAccount, setSelectedAccount] = useState<BankAccount | null>(null);
   const [accounts, setAccounts] = useState<BankAccount[]>([]);
   const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
+  const [currencyRates, setCurrencyRates] = useState<Record<string, number>>({});
+  const [expectedInflows, setExpectedInflows] = useState(0);
+  const [expectedOutflows, setExpectedOutflows] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchBankAccounts();
+    fetchCurrencyRates();
+    fetchExpectedInflows();
+    fetchExpectedOutflows();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchBankAccounts = async () => {
@@ -58,6 +67,78 @@ export default function BanquesPage() {
       console.error('Error fetching bank accounts:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchCurrencyRates = async () => {
+    try {
+      const res = await fetch('/api/accounting/currencies');
+      const json = await res.json();
+      if (json.currencies) {
+        const rates: Record<string, number> = {};
+        for (const c of json.currencies) {
+          rates[c.code] = Number(c.exchangeRate) || 1;
+        }
+        setCurrencyRates(rates);
+      }
+    } catch (err) {
+      console.error('Error fetching currency rates:', err);
+    }
+  };
+
+  const fetchExpectedInflows = async () => {
+    try {
+      const res = await fetch('/api/accounting/customer-invoices?status=PENDING&limit=1000');
+      const json = await res.json();
+      if (json.invoices) {
+        const total = json.invoices.reduce(
+          (sum: number, inv: { total: number; amountPaid?: number }) =>
+            sum + (Number(inv.total) - Number(inv.amountPaid || 0)),
+          0
+        );
+        setExpectedInflows(total);
+      }
+    } catch (err) {
+      console.error('Error fetching expected inflows:', err);
+    }
+  };
+
+  const fetchExpectedOutflows = async () => {
+    try {
+      const res = await fetch('/api/accounting/recurring');
+      if (!res.ok) {
+        setExpectedOutflows(0);
+        return;
+      }
+      const json = await res.json();
+      if (json.entries) {
+        const now = new Date();
+        const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+        const frequencyMultiplier: Record<string, number> = {
+          DAILY: 30,
+          WEEKLY: 4,
+          BIWEEKLY: 2,
+          MONTHLY: 1,
+          QUARTERLY: 1 / 3,
+          YEARLY: 1 / 12,
+        };
+
+        const total = json.entries
+          .filter((entry: { nextRunDate?: string; isActive?: boolean }) => {
+            if (entry.isActive === false) return false;
+            if (!entry.nextRunDate) return true;
+            return new Date(entry.nextRunDate) <= thirtyDaysFromNow;
+          })
+          .reduce((sum: number, entry: { amount: number; frequency?: string }) => {
+            const multiplier = frequencyMultiplier[entry.frequency || 'MONTHLY'] || 1;
+            return sum + Math.abs(Number(entry.amount)) * multiplier;
+          }, 0);
+
+        setExpectedOutflows(total);
+      }
+    } catch (err) {
+      console.error('Error fetching expected outflows:', err);
     }
   };
 
@@ -94,8 +175,9 @@ export default function BanquesPage() {
   };
 
   const totalBalance = accounts.reduce((sum, acc) => {
-    if (acc.currency === 'USD') {
-      return sum + (acc.balance * 1.36); // Conversion approximative
+    if (acc.currency !== 'CAD') {
+      const rate = currencyRates[acc.currency] || 1;
+      return sum + (acc.balance * rate);
     }
     return sum + acc.balance;
   }, 0);
@@ -126,17 +208,17 @@ export default function BanquesPage() {
     }
   };
 
-  if (loading) return <div className="p-8 text-center">Chargement...</div>;
+  if (loading) return <div className="p-8 text-center">{t('admin.bankAccounts.loading')}</div>;
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Comptes bancaires"
-        subtitle="G\u00e9rez vos comptes et suivez les soldes"
+        title={t('admin.bankAccounts.title')}
+        subtitle={t('admin.bankAccounts.subtitle')}
         actions={
           <>
-            <Button variant="secondary" icon={RefreshCw}>Synchroniser</Button>
-            <Button variant="primary" icon={Plus}>Ajouter compte</Button>
+            <Button variant="secondary" icon={RefreshCw}>{t('admin.bankAccounts.sync')}</Button>
+            <Button variant="primary" icon={Plus}>{t('admin.bankAccounts.addAccount')}</Button>
           </>
         }
       />
@@ -145,14 +227,14 @@ export default function BanquesPage() {
       <div className="bg-gradient-to-r from-emerald-600 to-emerald-700 rounded-xl p-6 text-white">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-emerald-100">Solde total (CAD)</p>
+            <p className="text-emerald-100">{t('admin.bankAccounts.totalBalanceCAD')}</p>
             <p className="text-4xl font-bold mt-1">{totalBalance.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}</p>
-            <p className="text-emerald-200 text-sm mt-2">{accounts.length} comptes actifs</p>
+            <p className="text-emerald-200 text-sm mt-2">{accounts.length} {t('admin.bankAccounts.activeAccounts')}</p>
           </div>
           <div className="text-right">
-            <p className="text-emerald-100 text-sm">Transactions en attente</p>
+            <p className="text-emerald-100 text-sm">{t('admin.bankAccounts.pendingTransactions')}</p>
             <p className="text-2xl font-bold">{pendingReconciliation}</p>
-            <p className="text-emerald-200 text-sm">\u00e0 rapprocher</p>
+            <p className="text-emerald-200 text-sm">{t('admin.bankAccounts.toReconcile')}</p>
           </div>
         </div>
       </div>
@@ -191,7 +273,7 @@ export default function BanquesPage() {
                 {account.balance.toLocaleString('fr-CA', { style: 'currency', currency: account.currency })}
               </p>
               <p className="text-xs text-slate-500 mt-2">
-                Sync: {account.lastSync ? new Date(account.lastSync).toLocaleString('fr-CA') : 'Jamais'}
+                {t('admin.bankAccounts.syncPrefix')} {account.lastSync ? new Date(account.lastSync).toLocaleString('fr-CA') : t('admin.bankAccounts.never')}
               </p>
             </div>
           );
@@ -201,19 +283,19 @@ export default function BanquesPage() {
       {/* Recent Transactions */}
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
         <div className="p-4 border-b border-slate-200 flex items-center justify-between">
-          <h3 className="font-semibold text-slate-900">Transactions r\u00e9centes</h3>
+          <h3 className="font-semibold text-slate-900">{t('admin.bankAccounts.recentTransactions')}</h3>
           <a href="/admin/comptabilite/rapprochement" className="text-sm text-emerald-600 hover:text-emerald-700">
-            Voir tout &rarr;
+            {t('admin.bankAccounts.viewAll')} &rarr;
           </a>
         </div>
         <table className="w-full">
           <thead className="bg-slate-50">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Date</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Description</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Cat\u00e9gorie</th>
-              <th className="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase">Montant</th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">Statut</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.bankAccounts.dateCol')}</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.bankAccounts.descriptionCol')}</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.bankAccounts.categoryCol')}</th>
+              <th className="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase">{t('admin.bankAccounts.amountCol')}</th>
+              <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.bankAccounts.statusCol')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-200">
@@ -241,7 +323,7 @@ export default function BanquesPage() {
                       <Check className="w-5 h-5 inline" />
                     </span>
                   ) : (
-                    <StatusBadge variant="warning">En attente</StatusBadge>
+                    <StatusBadge variant="warning">{t('admin.bankAccounts.pending')}</StatusBadge>
                   )}
                 </td>
               </tr>
@@ -252,25 +334,25 @@ export default function BanquesPage() {
 
       {/* Cash Flow Forecast */}
       <div className="bg-white rounded-xl border border-slate-200 p-6">
-        <h3 className="font-semibold text-slate-900 mb-4">Pr\u00e9vision de tr\u00e9sorerie (30 jours)</h3>
+        <h3 className="font-semibold text-slate-900 mb-4">{t('admin.bankAccounts.cashFlowForecast')}</h3>
         <div className="grid grid-cols-4 gap-4">
           <div className="p-4 bg-slate-50 rounded-lg">
-            <p className="text-sm text-slate-500">Solde actuel</p>
+            <p className="text-sm text-slate-500">{t('admin.bankAccounts.currentBalance')}</p>
             <p className="text-xl font-bold text-slate-900">{totalBalance.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}</p>
           </div>
           <div className="p-4 bg-green-50 rounded-lg">
-            <p className="text-sm text-green-600">Entr\u00e9es pr\u00e9vues</p>
-            <p className="text-xl font-bold text-green-700">+12,500 $</p>
-            <p className="text-xs text-green-600 mt-1">Ventes estim\u00e9es</p>
+            <p className="text-sm text-green-600">{t('admin.bankAccounts.expectedInflows')}</p>
+            <p className="text-xl font-bold text-green-700">+{expectedInflows.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}</p>
+            <p className="text-xs text-green-600 mt-1">{t('admin.bankAccounts.estimatedSales')}</p>
           </div>
           <div className="p-4 bg-red-50 rounded-lg">
-            <p className="text-sm text-red-600">Sorties pr\u00e9vues</p>
-            <p className="text-xl font-bold text-red-700">-8,200 $</p>
-            <p className="text-xs text-red-600 mt-1">Factures &amp; r\u00e9currents</p>
+            <p className="text-sm text-red-600">{t('admin.bankAccounts.expectedOutflows')}</p>
+            <p className="text-xl font-bold text-red-700">-{expectedOutflows.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}</p>
+            <p className="text-xs text-red-600 mt-1">{t('admin.bankAccounts.invoicesAndRecurring')}</p>
           </div>
           <div className="p-4 bg-blue-50 rounded-lg">
-            <p className="text-sm text-blue-600">Solde pr\u00e9vu (30j)</p>
-            <p className="text-xl font-bold text-blue-700">{(totalBalance + 12500 - 8200).toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}</p>
+            <p className="text-sm text-blue-600">{t('admin.bankAccounts.projectedBalance30d')}</p>
+            <p className="text-xl font-bold text-blue-700">{(totalBalance + expectedInflows - expectedOutflows).toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}</p>
           </div>
         </div>
       </div>

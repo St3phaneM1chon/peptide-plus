@@ -44,7 +44,7 @@ async function executeRun(
   const startTime = Date.now();
   let passed = 0;
   let failed = 0;
-  let skipped = 0;
+  const skipped = 0;
 
   for (const scenario of scenarios) {
     const caseStart = Date.now();
@@ -124,16 +124,17 @@ async function executeRun(
           },
         });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       failed++;
-      // Collect error — don't stop
+      // Collect error -- don't stop
+      const err = error instanceof Error ? error : new Error('Erreur inconnue');
       await prisma.uatTestError.create({
         data: {
           testCaseId: testCase.id,
           category: 'RUNTIME_ERROR',
           severity: 'ERROR',
-          message: error.message || 'Erreur inconnue',
-          stackTrace: error.stack,
+          message: err.message || 'Erreur inconnue',
+          stackTrace: err.stack,
           context: { scenarioCode: scenario.code },
         },
       });

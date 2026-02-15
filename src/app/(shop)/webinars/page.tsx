@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { useTranslations } from '@/hooks/useTranslations';
@@ -24,119 +24,61 @@ interface Webinar {
   thumbnail: string;
   tags: string[];
   recordingUrl?: string;
+  isFeatured?: boolean;
 }
 
-const webinars: Webinar[] = [
-  {
-    id: '1',
-    title: 'Introduction to Peptide Research: A Beginner\'s Guide',
-    description: 'Join us for a comprehensive introduction to peptide research. We will cover the basics of peptide structure, common research applications, and best practices for handling and storage.',
-    speaker: {
-      name: 'Dr. Sarah Chen',
-      title: 'Research Director',
-    },
-    date: '2026-02-15',
-    time: '2:00 PM EST',
-    duration: '60 min',
-    category: 'Education',
-    status: 'upcoming',
-    registrations: 245,
-    maxAttendees: 500,
-    thumbnail: '/images/webinars/intro-peptides.jpg',
-    tags: ['beginner', 'education', 'fundamentals'],
-  },
-  {
-    id: '2',
-    title: 'GLP-1 Agonists Deep Dive: Semaglutide & Beyond',
-    description: 'An in-depth look at GLP-1 receptor agonists, their mechanisms of action, and the latest research findings. Perfect for researchers working with metabolic compounds.',
-    speaker: {
-      name: 'Dr. Michael Roberts',
-      title: 'Metabolic Research Specialist',
-    },
-    date: '2026-02-22',
-    time: '1:00 PM EST',
-    duration: '90 min',
-    category: 'Research',
-    status: 'upcoming',
-    registrations: 312,
-    maxAttendees: 400,
-    thumbnail: '/images/webinars/glp1-deep-dive.jpg',
-    tags: ['glp-1', 'semaglutide', 'advanced'],
-  },
-  {
-    id: '3',
-    title: 'Lab Best Practices: Quality Control & Documentation',
-    description: 'Learn how to maintain proper documentation, quality control measures, and compliance standards in your peptide research lab.',
-    speaker: {
-      name: 'Jennifer Martinez, PhD',
-      title: 'Quality Assurance Manager',
-    },
-    date: '2026-03-01',
-    time: '11:00 AM EST',
-    duration: '75 min',
-    category: 'Best Practices',
-    status: 'upcoming',
-    registrations: 178,
-    maxAttendees: 300,
-    thumbnail: '/images/webinars/lab-practices.jpg',
-    tags: ['quality', 'documentation', 'compliance'],
-  },
-  {
-    id: '4',
-    title: 'Reconstitution Masterclass: Hands-On Techniques',
-    description: 'A practical, hands-on webinar demonstrating proper peptide reconstitution techniques with live demonstrations and Q&A.',
-    speaker: {
-      name: 'Peptide Plus+ Lab Team',
-      title: 'Technical Specialists',
-    },
-    date: '2026-01-28',
-    time: '3:00 PM EST',
-    duration: '45 min',
-    category: 'Tutorial',
-    status: 'live',
-    registrations: 523,
-    thumbnail: '/images/webinars/reconstitution.jpg',
-    tags: ['reconstitution', 'hands-on', 'tutorial'],
-  },
-  {
-    id: '5',
-    title: 'BPC-157 Research Update: 2025 Year in Review',
-    description: 'A comprehensive review of the most significant BPC-157 research published in 2025, with analysis and implications for ongoing studies.',
-    speaker: {
-      name: 'Dr. James Wilson',
-      title: 'Research Scientist',
-    },
-    date: '2026-01-10',
-    time: '2:00 PM EST',
-    duration: '60 min',
-    category: 'Research',
-    status: 'recorded',
-    registrations: 892,
-    thumbnail: '/images/webinars/bpc157-review.jpg',
-    tags: ['bpc-157', 'research', 'review'],
-    recordingUrl: '/webinars/recordings/bpc157-2025-review',
-  },
-  {
-    id: '6',
-    title: 'Understanding COA & HPLC Reports',
-    description: 'Learn how to read and interpret Certificate of Analysis and HPLC purity reports to ensure you are getting quality research materials.',
-    speaker: {
-      name: 'Dr. Lisa Park',
-      title: 'Analytical Chemistry Lead',
-    },
-    date: '2025-12-15',
-    time: '1:00 PM EST',
-    duration: '50 min',
-    category: 'Education',
-    status: 'recorded',
-    registrations: 654,
-    thumbnail: '/images/webinars/coa-hplc.jpg',
-    tags: ['coa', 'hplc', 'quality'],
-    recordingUrl: '/webinars/recordings/understanding-coa',
-  },
-];
+function mapDbWebinar(w: Record<string, unknown>): Webinar {
+  const scheduledAt = w.scheduledAt ? new Date(w.scheduledAt as string) : null;
+  const now = new Date();
 
-const categories = ['All', 'Education', 'Research', 'Tutorial', 'Best Practices'];
+  let status: 'upcoming' | 'live' | 'recorded';
+  if (w.isLive) {
+    status = 'live';
+  } else if (w.recordingUrl) {
+    status = 'recorded';
+  } else if (scheduledAt && scheduledAt > now) {
+    status = 'upcoming';
+  } else {
+    status = 'recorded';
+  }
+
+  let parsedTags: string[] = [];
+  if (w.tags) {
+    try {
+      parsedTags = JSON.parse(w.tags as string);
+    } catch {
+      parsedTags = (w.tags as string).split(',').map((t: string) => t.trim()).filter(Boolean);
+    }
+  }
+
+  const timeStr = scheduledAt
+    ? scheduledAt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZoneName: 'short' })
+    : '';
+
+  const durationMin = w.duration ? `${w.duration} min` : '';
+
+  return {
+    id: w.id as string,
+    title: (w.title as string) || '',
+    description: (w.description as string) || '',
+    speaker: {
+      name: (w.speaker as string) || 'TBA',
+      title: (w.speakerTitle as string) || '',
+      avatar: (w.speakerImage as string) || undefined,
+    },
+    date: scheduledAt ? scheduledAt.toISOString().split('T')[0] : '',
+    time: timeStr,
+    duration: durationMin,
+    category: (w.category as string) || 'General',
+    status,
+    registrations: (w.registeredCount as number) || 0,
+    maxAttendees: (w.maxAttendees as number) || undefined,
+    thumbnail: (w.thumbnailUrl as string) || '/images/webinars/default.jpg',
+    tags: parsedTags,
+    recordingUrl: (w.recordingUrl as string) || undefined,
+    isFeatured: (w.isFeatured as boolean) || false,
+  };
+}
 
 export default function WebinarsPage() {
   const { data: session } = useSession();
@@ -145,6 +87,29 @@ export default function WebinarsPage() {
   const [activeCategory, setActiveCategory] = useState('All');
   const [registeredWebinars, setRegisteredWebinars] = useState<string[]>([]);
   const [showRegistrationModal, setShowRegistrationModal] = useState<Webinar | null>(null);
+
+  const [webinars, setWebinars] = useState<Webinar[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchWebinars() {
+      try {
+        const res = await fetch('/api/webinars');
+        if (!res.ok) throw new Error('Failed to fetch webinars');
+        const data = await res.json();
+        const mapped = (data.webinars || []).map(mapDbWebinar);
+        setWebinars(mapped);
+      } catch (err) {
+        console.error('Error loading webinars:', err);
+        setWebinars([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchWebinars();
+  }, []);
+
+  const categories = ['All', ...Array.from(new Set(webinars.map(w => w.category).filter(Boolean)))];
 
   const filteredWebinars = webinars
     .filter(w => activeFilter === 'all' || w.status === activeFilter || (activeFilter === 'upcoming' && w.status === 'live'))
@@ -195,6 +160,46 @@ export default function WebinarsPage() {
       day: 'numeric',
     });
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-neutral-500">Loading webinars...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!loading && webinars.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        {/* Hero */}
+        <section className="bg-gradient-to-br from-blue-600 to-blue-700 text-white py-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center gap-3 mb-4">
+              <span className="text-4xl">🎓</span>
+              <h1 className="text-3xl md:text-4xl font-bold">
+                {t('webinars.title') || 'Webinars & Events'}
+              </h1>
+            </div>
+            <p className="text-xl text-blue-100 max-w-2xl">
+              {t('webinars.subtitle') || 'Learn from experts with our free educational webinars. Live sessions, Q&A, and on-demand recordings.'}
+            </p>
+          </div>
+        </section>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="text-center">
+            <span className="text-6xl mb-4 block">🎓</span>
+            <h3 className="text-lg font-bold mb-2">{t('webinars.noWebinars') || 'No webinars available yet'}</h3>
+            <p className="text-neutral-500">{t('webinars.checkBack') || 'Check back soon for new educational content!'}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -427,7 +432,7 @@ export default function WebinarsPage() {
                 </button>
               </div>
             </div>
-            
+
             <div className="p-6">
               <h4 className="font-bold mb-2">{showRegistrationModal.title}</h4>
               <div className="flex items-center gap-4 text-sm text-neutral-500 mb-6">

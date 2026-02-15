@@ -1,3 +1,5 @@
+export {};
+
 /**
  * API Integration Tests - Products
  * Run with: TEST_BASE_URL=http://localhost:3000 npm test -- --testPathPattern="api"

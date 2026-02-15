@@ -26,7 +26,11 @@ import ru from '@/i18n/locales/ru.json';
 import ht from '@/i18n/locales/ht.json';
 import gcr from '@/i18n/locales/gcr.json';
 
-const translations: Record<string, typeof en> = {
+// Use Record<string, unknown> for locale files that may have partial translations.
+// The getNestedValue function handles missing keys with fallback to English.
+type TranslationMessages = Record<string, Record<string, unknown>>;
+
+const translations: TranslationMessages = {
   en,
   fr,
   zh,
@@ -34,21 +38,21 @@ const translations: Record<string, typeof en> = {
   es,
   tl,
   ar,
-  'ar-ma': arMa as typeof en,
-  'ar-dz': arDz as typeof en,
-  'ar-lb': arLb as typeof en,
-  de: de as typeof en,
-  it: it as typeof en,
-  pt: pt as typeof en,
-  hi: hi as typeof en,
-  pl: pl as typeof en,
-  vi: vi as typeof en,
-  ko: ko as typeof en,
-  ta: ta as typeof en,
-  sv: sv as typeof en,
-  ru: ru as typeof en,
-  ht: ht as typeof en,
-  gcr: gcr as typeof en,
+  'ar-ma': arMa,
+  'ar-dz': arDz,
+  'ar-lb': arLb,
+  de,
+  it,
+  pt,
+  hi,
+  pl,
+  vi,
+  ko,
+  ta,
+  sv,
+  ru,
+  ht,
+  gcr,
 };
 
 // Get nested value from object using dot notation
@@ -67,12 +71,30 @@ function getNestedValue(obj: Record<string, unknown>, path: string): string {
   return typeof value === 'string' ? value : path;
 }
 
+/** Read initial locale from server-rendered data-locale or cookie before defaulting */
+function getInitialLocale(): string {
+  if (typeof document !== 'undefined') {
+    // 1. Check localStorage (user preference)
+    const saved = localStorage.getItem('locale');
+    if (saved && translations[saved]) return saved;
+
+    // 2. Check server-detected locale from <html data-locale="...">
+    const serverLocale = document.documentElement.dataset.locale;
+    if (serverLocale && translations[serverLocale]) return serverLocale;
+
+    // 3. Check cookie
+    const match = document.cookie.match(/(?:^|;\s*)locale=([^;]+)/);
+    if (match && translations[match[1]]) return match[1];
+  }
+  return 'en';
+}
+
 export function useTranslations() {
-  const [locale, setLocale] = useState<string>('en');
+  const [locale, setLocale] = useState<string>(getInitialLocale);
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    // Get language from localStorage (key = 'locale', matching Header.tsx)
+    // Re-check on mount (SSR may have rendered with 'en' before hydration)
     const savedLang = localStorage.getItem('locale');
     if (savedLang && translations[savedLang]) {
       setLocale(savedLang);

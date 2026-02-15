@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * API pour envoyer des emails de commande
  * POST /api/emails/send-order-email
@@ -12,11 +14,13 @@ import {
   orderProcessingEmail,
   orderShippedEmail,
   orderDeliveredEmail,
+  orderCancelledEmail,
+  orderRefundEmail,
   satisfactionSurveyEmail,
   type OrderData,
 } from '@/lib/email';
 
-type EmailType = 'confirmation' | 'processing' | 'shipped' | 'delivered' | 'satisfaction';
+type EmailType = 'confirmation' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'refund' | 'satisfaction';
 
 export async function POST(request: NextRequest) {
   try {
@@ -33,13 +37,16 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { orderId, emailType, trackingNumber, trackingUrl, carrier, estimatedDelivery } = body as {
+    const { orderId, emailType, trackingNumber, trackingUrl, carrier, estimatedDelivery, cancellationReason, refundAmount, refundIsPartial } = body as {
       orderId: string;
       emailType: EmailType;
       trackingNumber?: string;
       trackingUrl?: string;
       carrier?: string;
       estimatedDelivery?: string;
+      cancellationReason?: string;
+      refundAmount?: number;
+      refundIsPartial?: boolean;
     };
 
     if (!orderId || !emailType) {
@@ -100,6 +107,9 @@ export async function POST(request: NextRequest) {
       carrier: carrier || order.carrier || undefined,
       estimatedDelivery: estimatedDelivery,
       locale: (user.locale as 'fr' | 'en') || 'fr',
+      cancellationReason,
+      refundAmount,
+      refundIsPartial,
     };
 
     // Générer l'email selon le type
@@ -120,6 +130,12 @@ export async function POST(request: NextRequest) {
         break;
       case 'delivered':
         emailContent = orderDeliveredEmail(orderData);
+        break;
+      case 'cancelled':
+        emailContent = orderCancelledEmail(orderData);
+        break;
+      case 'refund':
+        emailContent = orderRefundEmail(orderData);
         break;
       case 'satisfaction':
         emailContent = satisfactionSurveyEmail(orderData);

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Printer, Download, Check, Clock } from 'lucide-react';
 import { PageHeader, Button } from '@/components/admin';
+import { useI18n } from '@/i18n/client';
 
 interface Transaction {
   id: string;
@@ -43,6 +44,7 @@ interface LedgerAccount {
 }
 
 export default function GrandLivrePage() {
+  const { t } = useI18n();
   const [selectedAccount, setSelectedAccount] = useState('1010');
   const [dateFrom, setDateFrom] = useState('2026-01-01');
   const [dateTo, setDateTo] = useState('2026-01-31');
@@ -138,17 +140,17 @@ export default function GrandLivrePage() {
   const totalCredit = filteredTransactions.reduce((sum, t) => sum + t.credit, 0);
   const currentAccount = accounts.find(a => a.code === selectedAccount);
 
-  if (loading && accounts.length === 0) return <div className="p-8 text-center">Chargement...</div>;
+  if (loading && accounts.length === 0) return <div className="p-8 text-center">{t('admin.generalLedger.loading')}</div>;
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Grand Livre"
-        subtitle="Historique d\u00e9taill\u00e9 des transactions par compte"
+        title={t('admin.generalLedger.title')}
+        subtitle={t('admin.generalLedger.subtitle')}
         actions={
           <>
-            <Button variant="secondary" icon={Printer}>Imprimer</Button>
-            <Button variant="primary" icon={Download}>Exporter PDF</Button>
+            <Button variant="secondary" icon={Printer}>{t('admin.generalLedger.print')}</Button>
+            <Button variant="primary" icon={Download}>{t('admin.generalLedger.exportPDF')}</Button>
           </>
         }
       />
@@ -157,7 +159,7 @@ export default function GrandLivrePage() {
       <div className="bg-white rounded-xl border border-slate-200 p-4">
         <div className="grid grid-cols-5 gap-4">
           <div className="col-span-2">
-            <label className="block text-xs font-medium text-slate-500 mb-1">Compte</label>
+            <label className="block text-xs font-medium text-slate-500 mb-1">{t('admin.generalLedger.accountLabel')}</label>
             <select
               value={selectedAccount}
               onChange={(e) => setSelectedAccount(e.target.value)}
@@ -172,7 +174,7 @@ export default function GrandLivrePage() {
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-500 mb-1">Du</label>
+            <label className="block text-xs font-medium text-slate-500 mb-1">{t('admin.generalLedger.fromLabel')}</label>
             <input
               type="date"
               value={dateFrom}
@@ -182,7 +184,7 @@ export default function GrandLivrePage() {
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-500 mb-1">Au</label>
+            <label className="block text-xs font-medium text-slate-500 mb-1">{t('admin.generalLedger.toLabel')}</label>
             <input
               type="date"
               value={dateTo}
@@ -192,10 +194,10 @@ export default function GrandLivrePage() {
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-500 mb-1">Recherche</label>
+            <label className="block text-xs font-medium text-slate-500 mb-1">{t('admin.generalLedger.searchLabel')}</label>
             <input
               type="text"
-              placeholder="Description, r\u00e9f\u00e9rence..."
+              placeholder={t('admin.generalLedger.searchPlaceholder')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full h-9 px-3 border border-slate-300 rounded-lg text-sm text-slate-700
@@ -209,11 +211,11 @@ export default function GrandLivrePage() {
       <div className="bg-emerald-50 rounded-xl border border-emerald-200 p-6">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm text-emerald-600 font-medium">Compte s\u00e9lectionn\u00e9</p>
+            <p className="text-sm text-emerald-600 font-medium">{t('admin.generalLedger.selectedAccount')}</p>
             <h2 className="text-xl font-bold text-emerald-900">{currentAccount?.code} - {currentAccount?.name}</h2>
           </div>
           <div className="text-right">
-            <p className="text-sm text-emerald-600">Solde actuel</p>
+            <p className="text-sm text-emerald-600">{t('admin.generalLedger.currentBalance')}</p>
             <p className="text-3xl font-bold text-emerald-900">
               {(ledgerSummary.balance || currentAccount?.balance || 0).toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}
             </p>
@@ -223,7 +225,7 @@ export default function GrandLivrePage() {
 
       {/* Loading indicator for entries */}
       {loading && (
-        <div className="p-4 text-center text-slate-500">Chargement des \u00e9critures...</div>
+        <div className="p-4 text-center text-slate-500">{t('admin.generalLedger.loadingEntries')}</div>
       )}
 
       {/* Transactions Table */}
@@ -232,14 +234,14 @@ export default function GrandLivrePage() {
           <table className="w-full">
             <thead className="bg-slate-50">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Date</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">N\u00b0 \u00c9criture</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Description</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">R\u00e9f\u00e9rence</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase">D\u00e9bit</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase">Cr\u00e9dit</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase">Solde</th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">Rapp.</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.generalLedger.dateCol')}</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.generalLedger.entryNumberCol')}</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.generalLedger.descriptionCol')}</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.generalLedger.referenceCol')}</th>
+                <th className="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase">{t('admin.generalLedger.debitCol')}</th>
+                <th className="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase">{t('admin.generalLedger.creditCol')}</th>
+                <th className="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase">{t('admin.generalLedger.balanceCol')}</th>
+                <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.generalLedger.reconciledCol')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200">
@@ -297,7 +299,7 @@ export default function GrandLivrePage() {
             <tfoot className="bg-slate-100">
               <tr>
                 <td colSpan={4} className="px-4 py-3 text-sm font-semibold text-slate-900">
-                  Total p\u00e9riode
+                  {t('admin.generalLedger.totalPeriod')}
                 </td>
                 <td className="px-4 py-3 text-right font-bold text-slate-900">
                   {totalDebit.toLocaleString('fr-CA', { minimumFractionDigits: 2 })} $
@@ -319,11 +321,11 @@ export default function GrandLivrePage() {
       <div className="flex items-center gap-6 text-sm text-slate-500">
         <div className="flex items-center gap-2">
           <Check className="w-5 h-5 text-green-600" />
-          <span>Rapproch\u00e9</span>
+          <span>{t('admin.generalLedger.reconciledLegend')}</span>
         </div>
         <div className="flex items-center gap-2">
           <Clock className="w-5 h-5 text-slate-300" />
-          <span>En attente de rapprochement</span>
+          <span>{t('admin.generalLedger.pendingReconciliation')}</span>
         </div>
       </div>
     </div>

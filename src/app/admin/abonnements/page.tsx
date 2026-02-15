@@ -15,12 +15,12 @@ import {
   StatusBadge,
   Button,
   Modal,
-  EmptyState,
   DataTable,
   FilterBar,
   SelectFilter,
   type Column,
 } from '@/components/admin';
+import { useI18n } from '@/i18n/client';
 
 interface Subscription {
   id: string;
@@ -39,30 +39,31 @@ interface Subscription {
   createdAt: string;
 }
 
-const frequencyLabels: Record<string, string> = {
-  WEEKLY: 'Hebdomadaire',
-  BIWEEKLY: 'Toutes les 2 semaines',
-  MONTHLY: 'Mensuel',
-  BIMONTHLY: 'Tous les 2 mois',
-};
-
 const statusVariant: Record<string, 'success' | 'warning' | 'error'> = {
   ACTIVE: 'success',
   PAUSED: 'warning',
   CANCELLED: 'error',
 };
 
-const statusLabels: Record<string, string> = {
-  ACTIVE: 'Actif',
-  PAUSED: 'En pause',
-  CANCELLED: 'Annulé',
-};
-
 export default function AbonnementsPage() {
+  const { t, locale } = useI18n();
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState({ status: '', search: '' });
   const [selectedSub, setSelectedSub] = useState<Subscription | null>(null);
+
+  const frequencyLabels: Record<string, string> = {
+    WEEKLY: t('admin.subscriptions.frequencyWeekly'),
+    BIWEEKLY: t('admin.subscriptions.frequencyBiweekly'),
+    MONTHLY: t('admin.subscriptions.frequencyMonthly'),
+    BIMONTHLY: t('admin.subscriptions.frequencyBimonthly'),
+  };
+
+  const statusLabels: Record<string, string> = {
+    ACTIVE: t('admin.subscriptions.statusActive'),
+    PAUSED: t('admin.subscriptions.statusPaused'),
+    CANCELLED: t('admin.subscriptions.statusCancelled'),
+  };
 
   useEffect(() => {
     fetchSubscriptions();
@@ -109,7 +110,7 @@ export default function AbonnementsPage() {
   const columns: Column<Subscription>[] = [
     {
       key: 'client',
-      header: 'Client',
+      header: t('admin.subscriptions.colClient'),
       render: (sub) => (
         <div>
           <p className="font-medium text-slate-900">{sub.userName}</p>
@@ -119,7 +120,7 @@ export default function AbonnementsPage() {
     },
     {
       key: 'product',
-      header: 'Produit',
+      header: t('admin.subscriptions.colProduct'),
       render: (sub) => (
         <div>
           <p className="font-medium text-slate-900">{sub.productName}</p>
@@ -129,14 +130,14 @@ export default function AbonnementsPage() {
     },
     {
       key: 'frequency',
-      header: 'Fréquence',
+      header: t('admin.subscriptions.colFrequency'),
       render: (sub) => (
         <span className="text-slate-600">{frequencyLabels[sub.frequency]}</span>
       ),
     },
     {
       key: 'price',
-      header: 'Prix',
+      header: t('admin.subscriptions.colPrice'),
       align: 'right',
       render: (sub) => (
         <div>
@@ -147,11 +148,11 @@ export default function AbonnementsPage() {
     },
     {
       key: 'nextDelivery',
-      header: 'Prochaine livraison',
+      header: t('admin.subscriptions.colNextDelivery'),
       render: (sub) => (
         <span className="text-slate-600">
           {sub.status === 'ACTIVE'
-            ? new Date(sub.nextDelivery).toLocaleDateString('fr-CA')
+            ? new Date(sub.nextDelivery).toLocaleDateString(locale)
             : '-'
           }
         </span>
@@ -159,7 +160,7 @@ export default function AbonnementsPage() {
     },
     {
       key: 'status',
-      header: 'Statut',
+      header: t('admin.subscriptions.colStatus'),
       align: 'center',
       render: (sub) => (
         <StatusBadge variant={statusVariant[sub.status]} dot>
@@ -169,7 +170,7 @@ export default function AbonnementsPage() {
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: t('admin.subscriptions.colActions'),
       align: 'center',
       render: (sub) => (
         <div className="flex items-center justify-center gap-2">
@@ -178,7 +179,7 @@ export default function AbonnementsPage() {
               onClick={(e) => { e.stopPropagation(); updateStatus(sub.id, 'PAUSED'); }}
               className="px-2 py-1 bg-yellow-100 text-yellow-700 rounded text-xs hover:bg-yellow-200"
             >
-              Pause
+              {t('admin.subscriptions.pause')}
             </button>
           )}
           {sub.status === 'PAUSED' && (
@@ -186,7 +187,7 @@ export default function AbonnementsPage() {
               onClick={(e) => { e.stopPropagation(); updateStatus(sub.id, 'ACTIVE'); }}
               className="px-2 py-1 bg-green-100 text-green-700 rounded text-xs hover:bg-green-200"
             >
-              Reprendre
+              {t('admin.subscriptions.resume')}
             </button>
           )}
           <Button
@@ -195,7 +196,7 @@ export default function AbonnementsPage() {
             icon={Eye}
             onClick={(e) => { e.stopPropagation(); setSelectedSub(sub); }}
           >
-            Détails
+            {t('admin.subscriptions.details')}
           </Button>
         </div>
       ),
@@ -205,11 +206,11 @@ export default function AbonnementsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Abonnements"
-        subtitle="Gérez les abonnements récurrents"
+        title={t('admin.subscriptions.title')}
+        subtitle={t('admin.subscriptions.subtitle')}
         actions={
           <Button variant="primary" icon={Settings}>
-            Configurer les options
+            {t('admin.subscriptions.configureOptions')}
           </Button>
         }
       />
@@ -217,24 +218,24 @@ export default function AbonnementsPage() {
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4">
         <StatCard
-          label="Total"
+          label={t('admin.subscriptions.total')}
           value={subscriptions.length}
           icon={Repeat}
         />
         <StatCard
-          label="Actifs"
+          label={t('admin.subscriptions.active')}
           value={stats.active}
           icon={Users}
           className="bg-green-50 border-green-200"
         />
         <StatCard
-          label="En pause"
+          label={t('admin.subscriptions.paused')}
           value={stats.paused}
           icon={Pause}
           className="bg-yellow-50 border-yellow-200"
         />
         <StatCard
-          label="Revenu mensuel estimé"
+          label={t('admin.subscriptions.estimatedMonthlyRevenue')}
           value={`${stats.monthlyRevenue.toFixed(0)} $`}
           icon={DollarSign}
           className="bg-sky-50 border-sky-200"
@@ -243,23 +244,23 @@ export default function AbonnementsPage() {
 
       {/* Config */}
       <div className="bg-white rounded-xl border border-slate-200 p-4">
-        <h3 className="font-semibold text-slate-900 mb-3">Configuration des abonnements</h3>
+        <h3 className="font-semibold text-slate-900 mb-3">{t('admin.subscriptions.subscriptionConfig')}</h3>
         <div className="grid grid-cols-4 gap-4">
           <div className="p-3 bg-slate-50 rounded-lg text-center">
             <p className="font-bold text-lg">15%</p>
-            <p className="text-sm text-slate-500">Réduction abonnés</p>
+            <p className="text-sm text-slate-500">{t('admin.subscriptions.subscriberDiscount')}</p>
           </div>
           <div className="p-3 bg-slate-50 rounded-lg text-center">
-            <p className="font-bold text-lg">GRATUITE</p>
-            <p className="text-sm text-slate-500">Livraison abonnés</p>
+            <p className="font-bold text-lg">{t('admin.subscriptions.free')}</p>
+            <p className="text-sm text-slate-500">{t('admin.subscriptions.subscriberShipping')}</p>
           </div>
           <div className="p-3 bg-slate-50 rounded-lg text-center">
-            <p className="font-bold text-lg">3 jours</p>
-            <p className="text-sm text-slate-500">Rappel avant livraison</p>
+            <p className="font-bold text-lg">{t('admin.subscriptions.days', { count: '3' })}</p>
+            <p className="text-sm text-slate-500">{t('admin.subscriptions.reminderBeforeDelivery')}</p>
           </div>
           <div className="p-3 bg-slate-50 rounded-lg text-center">
-            <p className="font-bold text-lg">1 pause/an</p>
-            <p className="text-sm text-slate-500">Pause autorisée</p>
+            <p className="font-bold text-lg">{t('admin.subscriptions.pausePerYear', { count: '1' })}</p>
+            <p className="text-sm text-slate-500">{t('admin.subscriptions.allowedPause')}</p>
           </div>
         </div>
       </div>
@@ -268,16 +269,16 @@ export default function AbonnementsPage() {
       <FilterBar
         searchValue={filter.search}
         onSearchChange={(v) => setFilter({ ...filter, search: v })}
-        searchPlaceholder="Rechercher..."
+        searchPlaceholder={t('admin.subscriptions.searchPlaceholder')}
       >
         <SelectFilter
-          label="Tous les statuts"
+          label={t('admin.subscriptions.allStatuses')}
           value={filter.status}
           onChange={(v) => setFilter({ ...filter, status: v })}
           options={[
-            { value: 'ACTIVE', label: 'Actif' },
-            { value: 'PAUSED', label: 'En pause' },
-            { value: 'CANCELLED', label: 'Annulé' },
+            { value: 'ACTIVE', label: t('admin.subscriptions.statusActive') },
+            { value: 'PAUSED', label: t('admin.subscriptions.statusPaused') },
+            { value: 'CANCELLED', label: t('admin.subscriptions.statusCancelled') },
           ]}
         />
       </FilterBar>
@@ -288,15 +289,15 @@ export default function AbonnementsPage() {
         data={filteredSubscriptions}
         keyExtractor={(sub) => sub.id}
         loading={loading}
-        emptyTitle="Aucun abonnement trouvé"
-        emptyDescription="Aucun abonnement ne correspond aux critères de recherche."
+        emptyTitle={t('admin.subscriptions.emptyTitle')}
+        emptyDescription={t('admin.subscriptions.emptyDescription')}
       />
 
       {/* Detail Modal */}
       <Modal
         isOpen={!!selectedSub}
         onClose={() => setSelectedSub(null)}
-        title="Détails de l'abonnement"
+        title={t('admin.subscriptions.subscriptionDetails')}
         footer={
           selectedSub && (
             <>
@@ -305,11 +306,11 @@ export default function AbonnementsPage() {
                   variant="danger"
                   onClick={() => { updateStatus(selectedSub.id, 'CANCELLED'); setSelectedSub(null); }}
                 >
-                  Annuler
+                  {t('admin.subscriptions.cancel')}
                 </Button>
               )}
               <Button variant="primary">
-                Modifier
+                {t('admin.subscriptions.modify')}
               </Button>
             </>
           )
@@ -318,40 +319,40 @@ export default function AbonnementsPage() {
         {selectedSub && (
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <p className="text-sm text-slate-500">Client</p>
+              <p className="text-sm text-slate-500">{t('admin.subscriptions.client')}</p>
               <p className="font-medium">{selectedSub.userName}</p>
             </div>
             <div>
-              <p className="text-sm text-slate-500">Statut</p>
+              <p className="text-sm text-slate-500">{t('admin.subscriptions.status')}</p>
               <StatusBadge variant={statusVariant[selectedSub.status]} dot>
                 {statusLabels[selectedSub.status]}
               </StatusBadge>
             </div>
             <div>
-              <p className="text-sm text-slate-500">Produit</p>
+              <p className="text-sm text-slate-500">{t('admin.subscriptions.product')}</p>
               <p className="font-medium">{selectedSub.productName}</p>
             </div>
             <div>
-              <p className="text-sm text-slate-500">Format</p>
+              <p className="text-sm text-slate-500">{t('admin.subscriptions.format')}</p>
               <p className="font-medium">{selectedSub.formatName} x {selectedSub.quantity}</p>
             </div>
             <div>
-              <p className="text-sm text-slate-500">Fréquence</p>
+              <p className="text-sm text-slate-500">{t('admin.subscriptions.frequency')}</p>
               <p className="font-medium">{frequencyLabels[selectedSub.frequency]}</p>
             </div>
             <div>
-              <p className="text-sm text-slate-500">Prix</p>
+              <p className="text-sm text-slate-500">{t('admin.subscriptions.price')}</p>
               <p className="font-medium">{(selectedSub.price * (1 - selectedSub.discount / 100)).toFixed(2)} $</p>
             </div>
             <div>
-              <p className="text-sm text-slate-500">Créé le</p>
-              <p className="font-medium">{new Date(selectedSub.createdAt).toLocaleDateString('fr-CA')}</p>
+              <p className="text-sm text-slate-500">{t('admin.subscriptions.createdAt')}</p>
+              <p className="font-medium">{new Date(selectedSub.createdAt).toLocaleDateString(locale)}</p>
             </div>
             <div>
-              <p className="text-sm text-slate-500">Prochaine livraison</p>
+              <p className="text-sm text-slate-500">{t('admin.subscriptions.nextDelivery')}</p>
               <p className="font-medium">
                 {selectedSub.status === 'ACTIVE'
-                  ? new Date(selectedSub.nextDelivery).toLocaleDateString('fr-CA')
+                  ? new Date(selectedSub.nextDelivery).toLocaleDateString(locale)
                   : '-'
                 }
               </p>

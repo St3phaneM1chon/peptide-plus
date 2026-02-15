@@ -109,7 +109,7 @@ async function main() {
   if (passed.length > 0) {
     console.log(`=== CAS PASSES (${passed.length}) ===`);
     for (const tc of passed) {
-      const taxes = tc.expectedTaxes as any;
+      const taxes = tc.expectedTaxes as Record<string, number> | null;
       const taxStr = taxes ? `TPS:${taxes.tps || 0} TVQ:${taxes.tvq || 0} TVH:${taxes.tvh || 0} PST:${taxes.pst || 0}` : '';
       console.log(`  ✓ ${tc.scenarioCode.padEnd(25)} ${tc.region.padEnd(6)} Total:${Number(tc.expectedTotal || 0).toFixed(2).padStart(10)}$ ${taxStr}`);
     }
@@ -121,7 +121,7 @@ async function main() {
   console.log('Region   | Ventes | Total ventes  | TPS       | TVQ       | TVH       | PST       | Total tax  | Ecart');
   console.log('---------|--------|--------------|-----------|-----------|-----------|-----------|------------|------');
   for (const row of taxReport.rows) {
-    const pstCollected = (row as any).pstCollected || 0;
+    const pstCollected = (row as unknown as Record<string, unknown>).pstCollected as number || 0;
     console.log(
       `${row.region.padEnd(9)}| ${String(row.salesCount).padEnd(7)}| ${row.totalSales.toFixed(2).padStart(12)}$ | ${row.tpsCollected.toFixed(2).padStart(9)}$ | ${row.tvqCollected.toFixed(2).padStart(9)}$ | ${row.tvhCollected.toFixed(2).padStart(9)}$ | ${pstCollected.toFixed(2).padStart(9)}$ | ${row.totalTaxCollected.toFixed(2).padStart(10)}$ | ${(row.difference >= 0 ? '+' : '') + row.difference.toFixed(2)}$`
     );

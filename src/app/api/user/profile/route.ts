@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * API Profil utilisateur
  * GET /api/user/profile - Récupère le profil

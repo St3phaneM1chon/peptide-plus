@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * Admin Inventory Transaction History API
  * GET - List inventory transactions with filtering
@@ -23,7 +25,7 @@ export async function GET(request: NextRequest) {
     const offset = parseInt(searchParams.get('offset') || '0', 10);
 
     // Build where clause
-    const where: any = {};
+    const where: Record<string, unknown> = {};
 
     if (productId) {
       where.productId = productId;

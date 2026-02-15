@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * Admin Inventory API
  * GET  - List all products with inventory info
@@ -46,38 +48,47 @@ export async function GET(request: NextRequest) {
       orderBy: { stockQuantity: 'asc' },
     });
 
-    // Get the latest WAC for each format
-    const inventoryItems = await Promise.all(
-      formats.map(async (format) => {
-        const lastTransaction = await prisma.inventoryTransaction.findFirst({
-          where: {
-            productId: format.productId,
-            formatId: format.id,
-          },
-          orderBy: { createdAt: 'desc' },
-          select: { runningWAC: true },
-        });
+    // Batch query: fetch the latest WAC for ALL formats at once
+    // Uses raw SQL with DISTINCT ON to get the most recent transaction per (productId, formatId)
+    const latestTransactions = await prisma.$queryRaw<
+      { productId: string; formatId: string | null; runningWAC: number }[]
+    >`
+      SELECT DISTINCT ON ("productId", "formatId")
+        "productId", "formatId", "runningWAC"
+      FROM "InventoryTransaction"
+      ORDER BY "productId", "formatId", "createdAt" DESC
+    `;
 
-        return {
-          formatId: format.id,
-          productId: format.productId,
-          productName: format.product.name,
-          productSlug: format.product.slug,
-          productSku: format.product.sku,
-          productImageUrl: format.product.imageUrl,
-          productActive: format.product.isActive,
-          formatName: format.name,
-          formatType: format.formatType,
-          formatSku: format.sku,
-          stockQuantity: format.stockQuantity,
-          lowStockThreshold: format.lowStockThreshold,
-          isLowStock: format.stockQuantity <= format.lowStockThreshold,
-          availability: format.availability,
-          wac: lastTransaction ? Number(lastTransaction.runningWAC) : 0,
-          price: Number(format.price),
-        };
-      })
-    );
+    // Build a lookup map: "productId:formatId" -> runningWAC
+    const wacMap = new Map<string, number>();
+    for (const tx of latestTransactions) {
+      const key = `${tx.productId}:${tx.formatId ?? ''}`;
+      wacMap.set(key, Number(tx.runningWAC));
+    }
+
+    const inventoryItems = formats.map((format) => {
+      const key = `${format.productId}:${format.id}`;
+      const wac = wacMap.get(key) ?? 0;
+
+      return {
+        formatId: format.id,
+        productId: format.productId,
+        productName: format.product.name,
+        productSlug: format.product.slug,
+        productSku: format.product.sku,
+        productImageUrl: format.product.imageUrl,
+        productActive: format.product.isActive,
+        formatName: format.name,
+        formatType: format.formatType,
+        formatSku: format.sku,
+        stockQuantity: format.stockQuantity,
+        lowStockThreshold: format.lowStockThreshold,
+        isLowStock: format.stockQuantity <= format.lowStockThreshold,
+        availability: format.availability,
+        wac,
+        price: Number(format.price),
+      };
+    });
 
     // Filter low stock in memory if requested
     const result = lowStockOnly
@@ -139,11 +150,11 @@ export async function POST(request: NextRequest) {
     }
 
     await purchaseStock(
-      items.map((item: any) => ({
-        productId: item.productId,
-        formatId: item.formatId || undefined,
-        quantity: item.quantity,
-        unitCost: item.unitCost,
+      items.map((item: Record<string, unknown>) => ({
+        productId: item.productId as string,
+        formatId: (item.formatId as string) || undefined,
+        quantity: item.quantity as number,
+        unitCost: item.unitCost as number,
       })),
       supplierInvoiceId || undefined,
       session.user.id

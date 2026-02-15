@@ -15,10 +15,15 @@ export {
   orderProcessingEmail,
   orderShippedEmail,
   orderDeliveredEmail,
+  orderCancelledEmail,
+  orderRefundEmail,
   satisfactionSurveyEmail,
   type OrderData,
   type OrderItem,
 } from './templates/order-emails';
+
+// Order lifecycle email dispatcher
+export { sendOrderLifecycleEmail } from './order-lifecycle';
 
 // Templates marketing
 export {
@@ -27,9 +32,11 @@ export {
   abandonedCartEmail,
   backInStockEmail,
   pointsExpiringEmail,
+  priceDropEmail,
   type BirthdayEmailData,
   type WelcomeEmailData,
   type AbandonedCartEmailData,
   type BackInStockEmailData,
   type PointsExpiringEmailData,
+  type PriceDropEmailData,
 } from './templates/marketing-emails';

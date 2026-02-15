@@ -7,13 +7,16 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useSession, signOut } from 'next-auth/react';
 import { UserRole } from '@/types';
+import { useTranslations } from '@/hooks/useTranslations';
 
 export function Header() {
   const { data: session, status } = useSession();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const { t } = useTranslations();
 
   const isLoading = status === 'loading';
   const isAuthenticated = status === 'authenticated';
@@ -58,7 +61,7 @@ export function Header() {
                 </svg>
               </div>
               <span className="ml-3 text-xl font-bold text-gray-900">
-                Formations Pro
+                {t('shop.title')}
               </span>
             </Link>
           </div>
@@ -69,19 +72,19 @@ export function Header() {
               href="/catalogue"
               className="text-gray-600 hover:text-gray-900 font-medium"
             >
-              Catalogue
+              {t('nav.shop')}
             </Link>
             <Link
               href="/catalogue/securite-routiere"
               className="text-gray-600 hover:text-gray-900 font-medium"
             >
-              Sécurité Routière
+              {t('nav.peptides')}
             </Link>
             <Link
               href="/catalogue/sst"
               className="text-gray-600 hover:text-gray-900 font-medium"
             >
-              SST
+              {t('nav.supplements')}
             </Link>
           </div>
 
@@ -96,10 +99,13 @@ export function Header() {
                   className="flex items-center space-x-2 text-gray-700 hover:text-gray-900"
                 >
                   {session.user.image ? (
-                    <img
+                    <Image
                       src={session.user.image}
                       alt={session.user.name || ''}
+                      width={32}
+                      height={32}
                       className="w-8 h-8 rounded-full"
+                      unoptimized
                     />
                   ) : (
                     <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
@@ -132,28 +138,28 @@ export function Header() {
                       className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
                       onClick={() => setUserMenuOpen(false)}
                     >
-                      Mon Dashboard
+                      {t('account.dashboard')}
                     </Link>
                     <Link
-                      href="/dashboard/customer/profil"
+                      href="/dashboard/customer/profile"
                       className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
                       onClick={() => setUserMenuOpen(false)}
                     >
-                      Mon Profil
+                      {t('account.profile')}
                     </Link>
                     <Link
                       href="/dashboard/customer/achats"
                       className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
                       onClick={() => setUserMenuOpen(false)}
                     >
-                      Mes Achats
+                      {t('account.orders')}
                     </Link>
                     <hr className="my-1" />
                     <button
                       onClick={() => signOut({ callbackUrl: '/' })}
                       className="block w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100"
                     >
-                      Déconnexion
+                      {t('account.signOut')}
                     </button>
                   </div>
                 )}
@@ -164,13 +170,13 @@ export function Header() {
                   href="/auth/signin"
                   className="text-gray-600 hover:text-gray-900 font-medium"
                 >
-                  Connexion
+                  {t('nav.login')}
                 </Link>
                 <Link
                   href="/auth/signup"
                   className="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
                 >
-                  S'inscrire
+                  {t('nav.register')}
                 </Link>
               </>
             )}
@@ -215,21 +221,21 @@ export function Header() {
                 className="block px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                Catalogue
+                {t('nav.shop')}
               </Link>
               <Link
                 href="/catalogue/securite-routiere"
                 className="block px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                Sécurité Routière
+                {t('nav.peptides')}
               </Link>
               <Link
                 href="/catalogue/sst"
                 className="block px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                SST
+                {t('nav.supplements')}
               </Link>
             </div>
           </div>

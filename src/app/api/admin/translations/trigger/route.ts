@@ -53,7 +53,8 @@ export async function POST(request: NextRequest) {
         : model.charAt(0).toLowerCase() + model.slice(1);
 
       const { prisma } = await import('@/lib/db');
-      const entities = await (prisma as any)[sourceModelName].findMany({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic Prisma model access
+      const entities = await ((prisma as Record<string, any>)[sourceModelName]).findMany({
         select: { id: true },
       });
 

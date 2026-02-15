@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { Check, Loader2, Info, Save, Lock } from 'lucide-react';
 import { PageHeader, StatusBadge, Button } from '@/components/admin';
+import { useI18n } from '@/i18n/client';
+import { toast } from 'sonner';
 
 interface ChecklistItem {
   id: string;
@@ -25,6 +27,7 @@ interface Period {
 type BadgeVariant = 'info' | 'warning' | 'success' | 'neutral';
 
 export default function CloturePage() {
+  const { t } = useI18n();
   const [periods, setPeriods] = useState<Period[]>([]);
   const [selectedPeriod, setSelectedPeriod] = useState<string>('');
   const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
@@ -37,7 +40,7 @@ export default function CloturePage() {
   const fetchPeriods = async () => {
     try {
       const res = await fetch('/api/accounting/periods');
-      if (!res.ok) throw new Error('Erreur lors du chargement des périodes');
+      if (!res.ok) throw new Error(t('admin.closing.errorLoadPeriods'));
       const data = await res.json();
       const fetchedPeriods: Period[] = (data.periods || []).sort(
         (a: Period, b: Period) => b.code.localeCompare(a.code)
@@ -47,7 +50,7 @@ export default function CloturePage() {
         setSelectedPeriod(fetchedPeriods[0].code);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erreur inconnue');
+      setError(err instanceof Error ? err.message : t('admin.closing.errorUnknown'));
     } finally {
       setLoading(false);
     }
@@ -59,7 +62,7 @@ export default function CloturePage() {
     setChecklistLoading(true);
     try {
       const res = await fetch(`/api/accounting/periods/${code}/close`);
-      if (!res.ok) throw new Error('Erreur lors du chargement de la checklist');
+      if (!res.ok) throw new Error(t('admin.closing.errorLoadChecklist'));
       const data = await res.json();
       setChecklist(data.checklist || []);
     } catch (err) {
@@ -92,13 +95,13 @@ export default function CloturePage() {
       });
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || 'Erreur lors du verrouillage');
+        throw new Error(data.error || t('admin.closing.errorLocking'));
       }
       // Refresh periods and checklist
       await fetchPeriods();
       await fetchChecklist(selectedPeriod);
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Erreur lors du verrouillage de la période');
+      toast.error(err instanceof Error ? err.message : t('admin.closing.errorLockingPeriod'));
     } finally {
       setLockingPeriod(false);
     }
@@ -116,8 +119,8 @@ export default function CloturePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedPeriod]);
 
-  if (loading) return <div className="p-8 text-center">Chargement...</div>;
-  if (error) return <div className="p-8 text-center text-red-600">Erreur: {error}</div>;
+  if (loading) return <div className="p-8 text-center">{t('admin.closing.loading')}</div>;
+  if (error) return <div className="p-8 text-center text-red-600">{t('admin.closing.errorPrefix')} {error}</div>;
 
   const currentPeriod = periods.find(p => p.code === selectedPeriod) || periods[0];
   const okTasks = checklist.filter(t => t.status === 'ok').length;
@@ -125,24 +128,24 @@ export default function CloturePage() {
   const canLock = checklist.length > 0 && errorTasks === 0 && currentPeriod?.status !== 'LOCKED';
 
   const statusConfig: Record<string, { label: string; variant: BadgeVariant }> = {
-    OPEN: { label: 'Ouverte', variant: 'info' },
-    IN_REVIEW: { label: 'En révision', variant: 'warning' },
-    CLOSED: { label: 'Fermée', variant: 'success' },
-    LOCKED: { label: 'Verrouillée', variant: 'neutral' },
+    OPEN: { label: t('admin.closing.statusOpen'), variant: 'info' },
+    IN_REVIEW: { label: t('admin.closing.statusInReview'), variant: 'warning' },
+    CLOSED: { label: t('admin.closing.statusClosed'), variant: 'success' },
+    LOCKED: { label: t('admin.closing.statusLocked'), variant: 'neutral' },
   };
 
   const taskStatusConfig: Record<string, { label: string; variant: BadgeVariant }> = {
-    pending: { label: 'En attente', variant: 'neutral' },
-    ok: { label: 'OK', variant: 'success' },
-    warning: { label: 'Attention', variant: 'warning' },
-    error: { label: 'Erreur', variant: 'info' },
+    pending: { label: t('admin.closing.taskPending'), variant: 'neutral' },
+    ok: { label: t('admin.closing.taskOk'), variant: 'success' },
+    warning: { label: t('admin.closing.taskWarning'), variant: 'warning' },
+    error: { label: t('admin.closing.taskError'), variant: 'info' },
   };
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Clôture de période"
-        subtitle="Gérez la clôture des périodes comptables"
+        title={t('admin.closing.title')}
+        subtitle={t('admin.closing.subtitle')}
       />
 
       {/* Period Cards */}
@@ -194,10 +197,10 @@ export default function CloturePage() {
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-bold text-emerald-900">{currentPeriod.name}</h2>
-                <p className="text-emerald-700">Checklist de clôture</p>
+                <p className="text-emerald-700">{t('admin.closing.closingChecklist')}</p>
               </div>
               <div className="text-right">
-                <p className="text-sm text-emerald-600">Progression</p>
+                <p className="text-sm text-emerald-600">{t('admin.closing.progressLabel')}</p>
                 <p className="text-2xl font-bold text-emerald-900">{okTasks}/{checklist.length}</p>
               </div>
             </div>
@@ -207,11 +210,11 @@ export default function CloturePage() {
             {checklistLoading ? (
               <div className="text-center py-8 text-slate-500">
                 <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
-                Analyse en cours...
+                {t('admin.closing.analyzing')}
               </div>
             ) : checklist.length === 0 ? (
               <div className="text-center py-8 text-slate-500">
-                Cliquez sur une période pour lancer la vérification de clôture.
+                {t('admin.closing.clickToVerify')}
               </div>
             ) : (
               <div className="space-y-3">
@@ -269,13 +272,13 @@ export default function CloturePage() {
           <div className="p-6 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
             <p className="text-sm text-slate-600">
               {currentPeriod.status === 'LOCKED' ? (
-                <span className="text-slate-500">&#128274; Cette période est verrouillée</span>
+                <span className="text-slate-500">&#128274; {t('admin.closing.periodLocked')}</span>
               ) : errorTasks > 0 ? (
-                <span className="text-red-600">&#9888; {errorTasks} erreur(s) doivent être corrigées avant la clôture</span>
+                <span className="text-red-600">&#9888; {t('admin.closing.errorsToFix', { count: errorTasks })}</span>
               ) : checklist.length > 0 && errorTasks === 0 ? (
-                <span className="text-green-600">&#10003; Aucune erreur bloquante détectée</span>
+                <span className="text-green-600">&#10003; {t('admin.closing.noBlockingErrors')}</span>
               ) : (
-                <span className="text-yellow-600">&#9888; Lancez la vérification pour voir l&apos;état</span>
+                <span className="text-yellow-600">&#9888; {t('admin.closing.runVerification')}</span>
               )}
             </p>
             <div className="flex gap-3">
@@ -285,7 +288,7 @@ export default function CloturePage() {
                 onClick={() => fetchChecklist(selectedPeriod)}
                 disabled={checklistLoading}
               >
-                Relancer la vérification
+                {t('admin.closing.rerunVerification')}
               </Button>
               <Button
                 variant="primary"
@@ -294,7 +297,7 @@ export default function CloturePage() {
                 onClick={handleLockPeriod}
                 className={!canLock ? 'bg-slate-300 text-slate-500 cursor-not-allowed hover:bg-slate-300 border-slate-300' : 'bg-emerald-600 hover:bg-emerald-700 border-emerald-600'}
               >
-                {lockingPeriod ? 'Verrouillage...' : 'Clôturer la période'}
+                {lockingPeriod ? t('admin.closing.locking') : t('admin.closing.closePeriod')}
               </Button>
             </div>
           </div>
@@ -305,24 +308,24 @@ export default function CloturePage() {
       <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
         <div className="flex items-center gap-2 mb-2">
           <Info className="w-5 h-5 text-blue-600" />
-          <h3 className="font-semibold text-blue-900">Conseils pour la clôture</h3>
+          <h3 className="font-semibold text-blue-900">{t('admin.closing.tipsTitle')}</h3>
         </div>
         <ul className="space-y-2 text-sm text-blue-800">
           <li className="flex items-start gap-2">
             <span className="text-blue-500">&#8226;</span>
-            Effectuez le rapprochement bancaire avant les autres tâches
+            {t('admin.closing.tip1')}
           </li>
           <li className="flex items-start gap-2">
             <span className="text-blue-500">&#8226;</span>
-            Vérifiez les factures fournisseurs non enregistrées (cut-off)
+            {t('admin.closing.tip2')}
           </li>
           <li className="flex items-start gap-2">
             <span className="text-blue-500">&#8226;</span>
-            Passez les écritures d&apos;amortissement et de provisions
+            {t('admin.closing.tip3')}
           </li>
           <li className="flex items-start gap-2">
             <span className="text-blue-500">&#8226;</span>
-            Une fois verrouillée, la période ne peut plus être modifiée sans autorisation
+            {t('admin.closing.tip4')}
           </li>
         </ul>
       </div>

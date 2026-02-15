@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * API Newsletter - BioCycle Peptides
  * Gère les inscriptions à la newsletter
@@ -8,7 +10,7 @@ import { prisma } from '@/lib/db';
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, source, locale } = await request.json();
+    const { email, source, locale, birthDate } = await request.json();
 
     if (!email || !email.includes('@')) {
       return NextResponse.json(
@@ -17,12 +19,28 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Parse and validate birthDate if provided
+    let parsedBirthDate: Date | undefined;
+    if (birthDate) {
+      parsedBirthDate = new Date(birthDate);
+      if (isNaN(parsedBirthDate.getTime())) {
+        parsedBirthDate = undefined;
+      }
+    }
+
     // Vérifier si l'email existe déjà
     const existing = await prisma.newsletterSubscriber.findUnique({
       where: { email: email.toLowerCase() },
     }).catch(() => null);
 
     if (existing) {
+      // Update birthDate if not already set
+      if (parsedBirthDate && !existing.birthDate) {
+        await prisma.newsletterSubscriber.update({
+          where: { id: existing.id },
+          data: { birthDate: parsedBirthDate },
+        }).catch(() => {});
+      }
       return NextResponse.json({
         success: true,
         message: 'Vous êtes déjà inscrit à notre newsletter !',
@@ -37,6 +55,7 @@ export async function POST(request: NextRequest) {
         subscribedAt: new Date(),
         source: source || 'footer',
         locale: locale || 'fr',
+        ...(parsedBirthDate && { birthDate: parsedBirthDate }),
       },
     });
 

@@ -106,7 +106,7 @@ export default function HelpPage() {
             {popularArticles.map((article, i) => (
               <Link
                 key={i}
-                href="#"
+                href="/faq"
                 style={{
                   display: 'flex',
                   justifyContent: 'space-between',
@@ -170,8 +170,8 @@ export default function HelpPage() {
               <p style={{ fontSize: '14px', color: 'var(--gray-400)', marginBottom: '16px' }}>
                 Lun-Ven, 9h-17h EST
               </p>
-              <a href="tel:1-800-XXX-XXXX" className="btn btn-secondary" style={{ display: 'block', width: '100%' }}>
-                1-800-XXX-XXXX
+              <a href={`tel:${process.env.NEXT_PUBLIC_PHONE || '1-855-999-PEPP'}`} className="btn btn-secondary" style={{ display: 'block', width: '100%' }}>
+                {process.env.NEXT_PUBLIC_PHONE || '1-855-999-PEPP'}
               </a>
             </div>
           </div>

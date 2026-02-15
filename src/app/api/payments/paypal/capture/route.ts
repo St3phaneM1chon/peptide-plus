@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
       subtotal,
       shippingCost,
       taxBreakdown,
-      total,
+      total: _total,
       promoCode,
       promoDiscount,
       cartId,
@@ -124,7 +124,7 @@ export async function POST(request: NextRequest) {
             shippingCountry: shippingInfo?.country || 'CA',
             shippingPhone: shippingInfo?.phone || null,
             items: cartItems?.length > 0 ? {
-              create: cartItems.map((item: any) => ({
+              create: cartItems.map((item: Record<string, unknown>) => ({
                 productId: item.productId,
                 formatId: item.formatId || null,
                 productName: item.name,
@@ -133,7 +133,7 @@ export async function POST(request: NextRequest) {
                 quantity: item.quantity,
                 unitPrice: item.price,
                 discount: item.discount || 0,
-                total: item.price * item.quantity - (item.discount || 0),
+                total: Number(item.price) * Number(item.quantity) - (Number(item.discount) || 0),
               })),
             } : undefined,
           },
@@ -202,6 +202,41 @@ export async function POST(request: NextRequest) {
           }
         } catch (promoError) {
           console.error('Failed to track promo code usage:', promoError);
+        }
+      }
+
+      // Create ambassador commission if the order used a referral code
+      if (promoCode) {
+        try {
+          const ambassador = await prisma.ambassador.findUnique({
+            where: { referralCode: promoCode },
+          });
+
+          if (ambassador && ambassador.status === 'ACTIVE') {
+            const rate = Number(ambassador.commissionRate);
+            const commissionAmount = Math.round(Number(order.total) * rate) / 100;
+
+            await prisma.ambassadorCommission.upsert({
+              where: {
+                ambassadorId_orderId: {
+                  ambassadorId: ambassador.id,
+                  orderId: order.id,
+                },
+              },
+              create: {
+                ambassadorId: ambassador.id,
+                orderId: order.id,
+                orderNumber: order.orderNumber,
+                orderTotal: Number(order.total),
+                commissionRate: rate,
+                commissionAmount,
+              },
+              update: {},
+            });
+            console.log(`Ambassador commission: ${commissionAmount}$ for ${ambassador.name} (order ${orderNumber})`);
+          }
+        } catch (commError) {
+          console.error('Failed to create ambassador commission:', commError);
         }
       }
 

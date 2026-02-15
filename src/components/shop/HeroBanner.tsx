@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import { useTranslations } from '@/hooks/useTranslations';
 
 interface Slide {
   id: number;
@@ -14,52 +15,53 @@ interface Slide {
   badge?: string;
 }
 
-const slides: Slide[] = [
-  {
-    id: 1,
-    title: 'Peptides de Recherche',
-    subtitle: 'Pureté 99%+ Garantie',
-    description: 'Peptides de haute qualité pour la recherche scientifique. Certificats d\'analyse disponibles.',
-    cta: 'Voir les produits',
-    href: '/shop',
-    bgGradient: 'from-emerald-900 via-emerald-800 to-neutral-900',
-    badge: 'QUALITÉ LABORATOIRE',
-  },
-  {
-    id: 2,
-    title: 'Nouveaux GLP-1',
-    subtitle: 'Semaglutide • Tirzepatide • Retatrutide',
-    description: 'Découvrez notre gamme complète de peptides agonistes GLP-1 pour la recherche métabolique.',
-    cta: 'Explorer',
-    href: '/category/weight-loss',
-    bgGradient: 'from-blue-900 via-blue-800 to-neutral-900',
-    badge: 'NOUVEAUTÉS',
-  },
-  {
-    id: 3,
-    title: 'Blends Populaires',
-    subtitle: 'BPC-157 + TB-500',
-    description: 'Combinaisons synergiques pré-mélangées pour une efficacité maximale en recherche.',
-    cta: 'Voir les blends',
-    href: '/category/peptide-blends',
-    bgGradient: 'from-purple-900 via-purple-800 to-neutral-900',
-    badge: 'BEST-SELLER',
-  },
-  {
-    id: 4,
-    title: 'Livraison Gratuite',
-    subtitle: 'Commandes 200$+ au Canada',
-    description: 'Expédition rapide et discrète. Suivi complet de votre commande.',
-    cta: 'Commander maintenant',
-    href: '/shop',
-    bgGradient: 'from-amber-900 via-amber-800 to-neutral-900',
-    badge: 'OFFRE SPÉCIALE',
-  },
-];
-
 export default function HeroBanner() {
+  const { t } = useTranslations();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+
+  const slides: Slide[] = [
+    {
+      id: 1,
+      title: t('home.hero.slide1Title'),
+      subtitle: t('home.hero.slide1Subtitle'),
+      description: t('home.hero.slide1Description'),
+      cta: t('home.hero.slide1Cta'),
+      href: '/shop',
+      bgGradient: 'from-emerald-900 via-emerald-800 to-neutral-900',
+      badge: t('home.hero.slide1Badge'),
+    },
+    {
+      id: 2,
+      title: t('home.hero.slide2Title'),
+      subtitle: t('home.hero.slide2Subtitle'),
+      description: t('home.hero.slide2Description'),
+      cta: t('home.hero.slide2Cta'),
+      href: '/category/weight-loss',
+      bgGradient: 'from-blue-900 via-blue-800 to-neutral-900',
+      badge: t('home.hero.slide2Badge'),
+    },
+    {
+      id: 3,
+      title: t('home.hero.slide3Title'),
+      subtitle: t('home.hero.slide3Subtitle'),
+      description: t('home.hero.slide3Description'),
+      cta: t('home.hero.slide3Cta'),
+      href: '/category/peptide-blends',
+      bgGradient: 'from-purple-900 via-purple-800 to-neutral-900',
+      badge: t('home.hero.slide3Badge'),
+    },
+    {
+      id: 4,
+      title: t('home.hero.slide4Title'),
+      subtitle: t('home.hero.slide4Subtitle'),
+      description: t('home.hero.slide4Description'),
+      cta: t('home.hero.slide4Cta'),
+      href: '/shop',
+      bgGradient: 'from-amber-900 via-amber-800 to-neutral-900',
+      badge: t('home.hero.slide4Badge'),
+    },
+  ];
 
   const nextSlide = useCallback(() => {
     setCurrentSlide((prev) => (prev + 1) % slides.length);
@@ -142,7 +144,7 @@ export default function HeroBanner() {
       <button
         onClick={prevSlide}
         className="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 backdrop-blur-sm rounded-full text-white hover:bg-white/20 transition-colors hidden md:block"
-        aria-label="Slide précédent"
+        aria-label={t('common.previousSlide')}
       >
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -151,7 +153,7 @@ export default function HeroBanner() {
       <button
         onClick={nextSlide}
         className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 backdrop-blur-sm rounded-full text-white hover:bg-white/20 transition-colors hidden md:block"
-        aria-label="Slide suivant"
+        aria-label={t('common.nextSlide')}
       >
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -169,7 +171,7 @@ export default function HeroBanner() {
                 ? 'bg-white w-8'
                 : 'bg-white/40 hover:bg-white/60'
             }`}
-            aria-label={`Aller au slide ${index + 1}`}
+            aria-label={t('common.goToSlide', { number: String(index + 1) })}
           />
         ))}
       </div>

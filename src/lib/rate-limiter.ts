@@ -67,7 +67,6 @@ async function getRedisClient(): Promise<RedisClient | null> {
 
   try {
     // Dynamic import so the app doesn't crash if ioredis is not installed
-    // @ts-ignore -- ioredis may not be installed; caught at runtime below
     const Redis = (await import('ioredis')).default;
     const client = new Redis(redisUrl, {
       maxRetriesPerRequest: 1,
@@ -88,10 +87,12 @@ async function getRedisClient(): Promise<RedisClient | null> {
     console.info('[rate-limiter] Redis connected successfully');
 
     // If the connection drops later, flag as unavailable
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Redis client event emitter not typed
     (client as any).on('error', (err: Error) => {
       console.error('[rate-limiter] Redis error:', err.message);
       redisAvailable = false;
     });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Redis client event emitter not typed
     (client as any).on('connect', () => {
       redisAvailable = true;
     });

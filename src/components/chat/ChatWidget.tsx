@@ -44,7 +44,7 @@ export default function ChatWidget() {
     if (stored) {
       setVisitorId(stored);
     } else {
-      const newId = `visitor_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+      const newId = `visitor_${Date.now()}_${crypto.randomUUID().substring(0, 8)}`;
       localStorage.setItem('biocycle_chat_visitor_id', newId);
       setVisitorId(newId);
     }

@@ -4,9 +4,8 @@ import { useState, useEffect } from 'react';
 import { useTranslations } from '@/hooks/useTranslations';
 
 export default function DisclaimerModal() {
-  const { t, locale } = useTranslations();
+  const { t } = useTranslations();
   const [isOpen, setIsOpen] = useState(false);
-  const [detectedLocale, setDetectedLocale] = useState<string | null>(null);
 
   useEffect(() => {
     // Check if user has already accepted
@@ -14,18 +13,12 @@ export default function DisclaimerModal() {
     if (!hasAccepted) {
       setIsOpen(true);
     }
-
-    // Detect browser language for initial display
-    if (typeof navigator !== 'undefined') {
-      const browserLang = navigator.language || (navigator as any).userLanguage;
-      setDetectedLocale(browserLang?.split('-')[0] || 'en');
-    }
   }, []);
 
   const handleAccept = () => {
     localStorage.setItem('biocycle_disclaimer_accepted', 'true');
     setIsOpen(false);
-    
+
     // Dispatch event for newsletter popup to know disclaimer is done
     window.dispatchEvent(new CustomEvent('disclaimerAccepted'));
   };
@@ -36,36 +29,15 @@ export default function DisclaimerModal() {
 
   if (!isOpen) return null;
 
-  // Use translated content or fallback based on detected locale
-  const isFrench = locale === 'fr' || detectedLocale === 'fr';
-
-  // Helper to get translation with fallback
-  const getText = (key: string, enFallback: string, frFallback: string) => {
-    const translated = t(key);
-    if (translated !== key) return translated;
-    return isFrench ? frFallback : enFallback;
-  };
-
   const content = {
-    title: getText('disclaimer.title', 'Research Use Only', 'Usage de recherche uniquement'),
-    intro: getText('disclaimer.text', 
-      'All products sold on this website are intended for laboratory and research purposes only.',
-      'Tous les produits vendus sur ce site sont destinés uniquement à des fins de laboratoire et de recherche.'),
-    warning: getText('disclaimer.notForConsumption',
-      'These products are NOT intended for human or animal consumption.',
-      'Ces produits NE SONT PAS destinés à la consommation humaine ou animale.') + ' ' +
-      getText('disclaimer.byEntering',
-        'By entering this website, you confirm that:',
-        'En entrant sur ce site, vous confirmez que:'),
-    age: getText('disclaimer.age', 'You are at least 21 years of age', 'Vous avez au moins 21 ans'),
-    research: getText('disclaimer.research', 
-      'You will use products only for legitimate research', 
-      'Vous utiliserez les produits uniquement pour la recherche légitime'),
-    noConsumption: getText('disclaimer.understand', 
-      'You understand these products are not for consumption', 
-      'Vous comprenez que ces produits ne sont pas destinés à la consommation'),
-    accept: getText('disclaimer.agree', 'I Agree - Enter Site', "J'accepte - Entrer sur le site"),
-    decline: getText('disclaimer.disagree', 'I Disagree - Leave Site', 'Je refuse - Quitter le site'),
+    title: t('disclaimer.title'),
+    intro: t('disclaimer.text'),
+    warning: t('disclaimer.notForConsumption') + ' ' + t('disclaimer.byEntering'),
+    age: t('disclaimer.age'),
+    research: t('disclaimer.research'),
+    noConsumption: t('disclaimer.understand'),
+    accept: t('disclaimer.agree'),
+    decline: t('disclaimer.disagree'),
   };
 
   return (

@@ -9,6 +9,7 @@ import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from '@/hooks/useTranslations';
 
 // Types
 interface OrderItem {
@@ -67,6 +68,7 @@ type SortBy = 'name' | 'quantity' | 'recent' | 'spent';
 export default function InventoryPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const { t } = useTranslations();
   
   // State
   const [orders, setOrders] = useState<Order[]>([]);
@@ -299,7 +301,7 @@ export default function InventoryPage() {
 
   // Export CSV
   const exportCSV = () => {
-    const headers = ['Produit', 'Catégorie', 'Format', 'Quantité totale', 'Total dépensé', 'Dernière commande', 'Statut stock', 'Notes'];
+    const headers = [t('account.inventory.csvProduct'), t('account.inventory.csvCategory'), t('account.inventory.csvFormat'), t('account.inventory.csvTotalQuantity'), t('account.inventory.csvTotalSpent'), t('account.inventory.csvLastOrder'), t('account.inventory.csvStockStatus'), t('account.inventory.csvNotes')];
     const rows = filteredInventory.flatMap(p => 
       p.formats.map(f => [
         p.productName,
@@ -328,7 +330,7 @@ export default function InventoryPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Chargement de votre inventaire...</p>
+          <p className="text-gray-600">{t('account.inventory.loading')}</p>
         </div>
       </div>
     );
@@ -345,41 +347,41 @@ export default function InventoryPage() {
         {/* Header */}
         <div className="mb-8">
           <nav className="text-sm text-gray-500 mb-2">
-            <Link href="/" className="hover:text-orange-600">Accueil</Link>
+            <Link href="/" className="hover:text-orange-600">{t('account.inventory.breadcrumbHome')}</Link>
             <span className="mx-2">/</span>
-            <Link href="/dashboard/customer" className="hover:text-orange-600">Dashboard</Link>
+            <Link href="/dashboard/customer" className="hover:text-orange-600">{t('account.inventory.breadcrumbDashboard')}</Link>
             <span className="mx-2">/</span>
-            <span className="text-gray-900">Mon inventaire</span>
+            <span className="text-gray-900">{t('account.inventory.breadcrumbInventory')}</span>
           </nav>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">🔬 Mon inventaire de recherche</h1>
-              <p className="text-gray-600 mt-1">Gérez vos peptides et planifiez vos réapprovisionnements</p>
+              <h1 className="text-3xl font-bold text-gray-900">{t('account.inventory.title')}</h1>
+              <p className="text-gray-600 mt-1">{t('account.inventory.subtitle')}</p>
             </div>
             <button
               onClick={exportCSV}
               className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium"
             >
-              📥 Exporter CSV
+              {t('account.inventory.exportCsv')}
             </button>
           </div>
         </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
-          <StatCard icon="🧪" label="Produits" value={stats.totalProducts} />
-          <StatCard icon="📦" label="Formats" value={stats.totalFormats} />
-          <StatCard icon="🔢" label="Unités totales" value={stats.totalQuantity} />
-          <StatCard icon="💰" label="Total dépensé" value={`$${stats.totalSpent.toFixed(0)}`} />
-          <StatCard 
-            icon="📅" 
-            label="Première commande" 
-            value={stats.firstOrderDate ? formatRelativeDate(stats.firstOrderDate) : '-'} 
+          <StatCard icon="🧪" label={t('account.inventory.statProducts')} value={stats.totalProducts} />
+          <StatCard icon="📦" label={t('account.inventory.statFormats')} value={stats.totalFormats} />
+          <StatCard icon="🔢" label={t('account.inventory.statTotalUnits')} value={stats.totalQuantity} />
+          <StatCard icon="💰" label={t('account.inventory.statTotalSpent')} value={`$${stats.totalSpent.toFixed(0)}`} />
+          <StatCard
+            icon="📅"
+            label={t('account.inventory.statFirstOrder')}
+            value={stats.firstOrderDate ? formatRelativeDate(stats.firstOrderDate, t) : '-'}
           />
-          <StatCard 
-            icon="⏱️" 
-            label="Fréquence moy." 
-            value={stats.averageOrderFrequency ? `${stats.averageOrderFrequency}j` : '-'} 
+          <StatCard
+            icon="⏱️"
+            label={t('account.inventory.statAvgFrequency')}
+            value={stats.averageOrderFrequency ? `${stats.averageOrderFrequency}${t('account.inventory.daysSuffix')}` : '-'}
           />
         </div>
 
@@ -389,9 +391,9 @@ export default function InventoryPage() {
             <div className="flex items-start gap-3">
               <span className="text-2xl">⚠️</span>
               <div>
-                <h3 className="font-semibold text-amber-800">Alertes de stock</h3>
+                <h3 className="font-semibold text-amber-800">{t('account.inventory.stockAlerts')}</h3>
                 <p className="text-amber-700 text-sm mt-1">
-                  {lowStockItems.length} produit{lowStockItems.length > 1 ? 's' : ''} marqué{lowStockItems.length > 1 ? 's' : ''} comme bas ou épuisé:
+                  {lowStockItems.length} {t('account.inventory.stockAlertCount', { count: lowStockItems.length })}:
                 </p>
                 <div className="flex flex-wrap gap-2 mt-2">
                   {lowStockItems.map(item => (
@@ -418,7 +420,7 @@ export default function InventoryPage() {
               <div className="relative">
                 <input
                   type="text"
-                  placeholder="Rechercher un peptide..."
+                  placeholder={t('account.inventory.searchPlaceholder')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
@@ -435,7 +437,7 @@ export default function InventoryPage() {
             >
               {categories.map(cat => (
                 <option key={cat} value={cat}>
-                  {cat === 'all' ? 'Toutes catégories' : cat}
+                  {cat === 'all' ? t('account.inventory.allCategories') : cat}
                 </option>
               ))}
             </select>
@@ -446,11 +448,11 @@ export default function InventoryPage() {
               onChange={(e) => setStockFilter(e.target.value as StockFilter)}
               className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
             >
-              <option value="all">Tous les statuts</option>
-              <option value="full">🟢 Stock plein</option>
-              <option value="low">🟡 Stock bas</option>
-              <option value="empty">🔴 Épuisé</option>
-              <option value="unknown">⚪ Non renseigné</option>
+              <option value="all">{t('account.inventory.allStatuses')}</option>
+              <option value="full">{t('account.inventory.stockFull')}</option>
+              <option value="low">{t('account.inventory.stockLow')}</option>
+              <option value="empty">{t('account.inventory.stockEmpty')}</option>
+              <option value="unknown">{t('account.inventory.stockUnknown')}</option>
             </select>
 
             {/* Sort */}
@@ -459,10 +461,10 @@ export default function InventoryPage() {
               onChange={(e) => setSortBy(e.target.value as SortBy)}
               className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
             >
-              <option value="recent">Plus récent</option>
-              <option value="name">Nom A-Z</option>
-              <option value="quantity">Quantité ↓</option>
-              <option value="spent">Dépenses ↓</option>
+              <option value="recent">{t('account.inventory.sortRecent')}</option>
+              <option value="name">{t('account.inventory.sortName')}</option>
+              <option value="quantity">{t('account.inventory.sortQuantity')}</option>
+              <option value="spent">{t('account.inventory.sortSpent')}</option>
             </select>
 
             {/* View Toggle */}
@@ -490,20 +492,20 @@ export default function InventoryPage() {
               <span className="text-4xl">🧪</span>
             </div>
             <h2 className="text-xl font-semibold text-gray-900 mb-2">
-              {searchTerm || stockFilter !== 'all' || categoryFilter !== 'all' 
-                ? 'Aucun produit trouvé' 
-                : 'Votre inventaire est vide'}
+              {searchTerm || stockFilter !== 'all' || categoryFilter !== 'all'
+                ? t('account.inventory.noProductFound')
+                : t('account.inventory.emptyInventory')}
             </h2>
             <p className="text-gray-600 mb-6">
               {searchTerm || stockFilter !== 'all' || categoryFilter !== 'all'
-                ? 'Essayez de modifier vos filtres de recherche'
-                : 'Commencez à commander des peptides pour construire votre inventaire'}
+                ? t('account.inventory.tryModifyFilters')
+                : t('account.inventory.startOrdering')}
             </p>
             <Link
               href="/shop"
               className="inline-block bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-medium transition-colors"
             >
-              Découvrir nos produits
+              {t('account.inventory.discoverProducts')}
             </Link>
           </div>
         )}
@@ -517,6 +519,7 @@ export default function InventoryPage() {
                 product={product}
                 onUpdateStock={updateStockStatus}
                 onViewDetails={() => setSelectedProduct(product)}
+                t={t}
               />
             ))}
           </div>
@@ -528,14 +531,14 @@ export default function InventoryPage() {
               <table className="w-full">
                 <thead>
                   <tr className="bg-gray-50 border-b border-gray-200">
-                    <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase">Produit</th>
-                    <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase">Catégorie</th>
-                    <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase">Formats</th>
-                    <th className="text-center py-3 px-4 text-xs font-semibold text-gray-500 uppercase">Qté totale</th>
-                    <th className="text-center py-3 px-4 text-xs font-semibold text-gray-500 uppercase">Total</th>
-                    <th className="text-center py-3 px-4 text-xs font-semibold text-gray-500 uppercase">Dernière cmd</th>
-                    <th className="text-center py-3 px-4 text-xs font-semibold text-gray-500 uppercase">Stock</th>
-                    <th className="text-center py-3 px-4 text-xs font-semibold text-gray-500 uppercase">Actions</th>
+                    <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase">{t('account.inventory.tableProduct')}</th>
+                    <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase">{t('account.inventory.tableCategory')}</th>
+                    <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase">{t('account.inventory.tableFormats')}</th>
+                    <th className="text-center py-3 px-4 text-xs font-semibold text-gray-500 uppercase">{t('account.inventory.tableTotalQty')}</th>
+                    <th className="text-center py-3 px-4 text-xs font-semibold text-gray-500 uppercase">{t('account.inventory.tableTotal')}</th>
+                    <th className="text-center py-3 px-4 text-xs font-semibold text-gray-500 uppercase">{t('account.inventory.tableLastOrder')}</th>
+                    <th className="text-center py-3 px-4 text-xs font-semibold text-gray-500 uppercase">{t('account.inventory.tableStock')}</th>
+                    <th className="text-center py-3 px-4 text-xs font-semibold text-gray-500 uppercase">{t('account.inventory.tableActions')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -566,14 +569,14 @@ export default function InventoryPage() {
                         {formatDate(product.lastOrderDate)}
                       </td>
                       <td className="py-3 px-4 text-center">
-                        <StockBadge status={product.stockStatus} />
+                        <StockBadge status={product.stockStatus} t={t} />
                       </td>
                       <td className="py-3 px-4 text-center">
                         <button
                           onClick={() => setSelectedProduct(product)}
                           className="text-orange-600 hover:text-orange-700 text-sm font-medium"
                         >
-                          Détails
+                          {t('account.inventory.details')}
                         </button>
                       </td>
                     </tr>
@@ -591,6 +594,7 @@ export default function InventoryPage() {
             onClose={() => setSelectedProduct(null)}
             onUpdateStock={updateStockStatus}
             onUpdateNotes={updateNotes}
+            t={t}
           />
         )}
       </div>
@@ -616,34 +620,43 @@ function StatCard({ icon, label, value }: { icon: string; label: string; value: 
   );
 }
 
-function StockBadge({ status }: { status: string }) {
+function StockBadge({ status, t }: { status: string; t?: (key: string) => string }) {
   const styles: Record<string, string> = {
     full: 'bg-green-100 text-green-800',
     low: 'bg-amber-100 text-amber-800',
     empty: 'bg-red-100 text-red-800',
     unknown: 'bg-gray-100 text-gray-600',
   };
-  const labels: Record<string, string> = {
-    full: '🟢 Plein',
-    low: '🟡 Bas',
-    empty: '🔴 Épuisé',
-    unknown: '⚪ ?',
+  const getLabel = (s: string) => {
+    if (!t) {
+      const fallback: Record<string, string> = { full: 'Full', low: 'Low', empty: 'Empty', unknown: '?' };
+      return fallback[s] || '?';
+    }
+    const keys: Record<string, string> = {
+      full: 'account.inventory.badgeFull',
+      low: 'account.inventory.badgeLow',
+      empty: 'account.inventory.badgeEmpty',
+      unknown: 'account.inventory.badgeUnknown',
+    };
+    return t(keys[s] || keys.unknown);
   };
   return (
     <span className={`px-2 py-1 rounded-full text-xs font-medium ${styles[status] || styles.unknown}`}>
-      {labels[status] || labels.unknown}
+      {getLabel(status)}
     </span>
   );
 }
 
-function ProductCard({ 
-  product, 
-  onUpdateStock, 
-  onViewDetails 
-}: { 
+function ProductCard({
+  product,
+  onUpdateStock,
+  onViewDetails,
+  t,
+}: {
   product: ProductInventory;
   onUpdateStock: (id: string, status: 'full' | 'low' | 'empty' | 'unknown') => void;
   onViewDetails: () => void;
+  t: (key: string, params?: Record<string, string | number>) => string;
 }) {
   const [showStockMenu, setShowStockMenu] = useState(false);
 
@@ -663,7 +676,7 @@ function ProductCard({
               onClick={() => setShowStockMenu(!showStockMenu)}
               className="p-1 hover:bg-gray-100 rounded"
             >
-              <StockBadge status={product.stockStatus} />
+              <StockBadge status={product.stockStatus} t={t} />
             </button>
             {showStockMenu && (
               <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 py-1 min-w-[120px]">
@@ -676,7 +689,7 @@ function ProductCard({
                     }}
                     className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50"
                   >
-                    <StockBadge status={status} />
+                    <StockBadge status={status} t={t} />
                   </button>
                 ))}
               </div>
@@ -687,7 +700,7 @@ function ProductCard({
 
       {/* Formats */}
       <div className="p-4 bg-gray-50">
-        <p className="text-xs text-gray-500 mb-2">Formats commandés</p>
+        <p className="text-xs text-gray-500 mb-2">{t('account.inventory.orderedFormats')}</p>
         <div className="flex flex-wrap gap-2">
           {product.formats.map(f => (
             <div key={f.formatName} className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-sm">
@@ -701,11 +714,11 @@ function ProductCard({
       {/* Stats */}
       <div className="p-4 grid grid-cols-2 gap-4">
         <div>
-          <p className="text-xs text-gray-500">Quantité totale</p>
+          <p className="text-xs text-gray-500">{t('account.inventory.totalQuantity')}</p>
           <p className="text-xl font-bold text-gray-900">{product.totalQuantity}</p>
         </div>
         <div>
-          <p className="text-xs text-gray-500">Total dépensé</p>
+          <p className="text-xs text-gray-500">{t('account.inventory.totalSpent')}</p>
           <p className="text-xl font-bold text-orange-600">${product.totalSpent.toFixed(2)}</p>
         </div>
       </div>
@@ -725,20 +738,20 @@ function ProductCard({
           onClick={onViewDetails}
           className="flex-1 py-2 text-sm font-medium text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
         >
-          Voir détails
+          {t('account.inventory.viewDetails')}
         </button>
         <Link
           href={`/shop?search=${encodeURIComponent(product.productName)}`}
           className="flex-1 py-2 text-sm font-medium text-center bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors"
         >
-          Commander
+          {t('account.inventory.order')}
         </Link>
       </div>
 
       {/* Last order */}
       <div className="px-4 pb-4 text-center">
         <p className="text-xs text-gray-400">
-          Dernière commande: {formatRelativeDate(product.lastOrderDate)}
+          {t('account.inventory.lastOrderLabel')}: {formatRelativeDate(product.lastOrderDate, t)}
         </p>
       </div>
     </div>
@@ -750,11 +763,13 @@ function ProductDetailModal({
   onClose,
   onUpdateStock,
   onUpdateNotes,
+  t,
 }: {
   product: ProductInventory;
   onClose: () => void;
   onUpdateStock: (id: string, status: 'full' | 'low' | 'empty' | 'unknown') => void;
   onUpdateNotes: (id: string, notes: string) => void;
+  t: (key: string, params?: Record<string, string | number>) => string;
 }) {
   const [notes, setNotes] = useState(product.notes);
   const [activeTab, setActiveTab] = useState<'overview' | 'history'>('overview');
@@ -794,17 +809,17 @@ function ProductDetailModal({
                 : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}
           >
-            Vue d&apos;ensemble
+            {t('account.inventory.tabOverview')}
           </button>
           <button
             onClick={() => setActiveTab('history')}
             className={`flex-1 py-3 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === 'history' 
-                ? 'border-orange-500 text-orange-600' 
+              activeTab === 'history'
+                ? 'border-orange-500 text-orange-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}
           >
-            Historique commandes
+            {t('account.inventory.tabHistory')}
           </button>
         </div>
 
@@ -816,34 +831,34 @@ function ProductDetailModal({
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="bg-gray-50 rounded-lg p-4 text-center">
                   <p className="text-2xl font-bold text-gray-900">{product.totalQuantity}</p>
-                  <p className="text-xs text-gray-500">Unités totales</p>
+                  <p className="text-xs text-gray-500">{t('account.inventory.statTotalUnits')}</p>
                 </div>
                 <div className="bg-gray-50 rounded-lg p-4 text-center">
                   <p className="text-2xl font-bold text-orange-600">${product.totalSpent.toFixed(2)}</p>
-                  <p className="text-xs text-gray-500">Total dépensé</p>
+                  <p className="text-xs text-gray-500">{t('account.inventory.totalSpent')}</p>
                 </div>
                 <div className="bg-gray-50 rounded-lg p-4 text-center">
                   <p className="text-2xl font-bold text-gray-900">{product.totalOrders}</p>
-                  <p className="text-xs text-gray-500">Commandes</p>
+                  <p className="text-xs text-gray-500">{t('account.inventory.modalOrders')}</p>
                 </div>
                 <div className="bg-gray-50 rounded-lg p-4 text-center">
                   <p className="text-2xl font-bold text-gray-900">{product.formats.length}</p>
-                  <p className="text-xs text-gray-500">Formats</p>
+                  <p className="text-xs text-gray-500">{t('account.inventory.statFormats')}</p>
                 </div>
               </div>
 
               {/* Formats breakdown */}
               <div>
-                <h3 className="font-semibold text-gray-900 mb-3">Détail par format</h3>
+                <h3 className="font-semibold text-gray-900 mb-3">{t('account.inventory.formatBreakdown')}</h3>
                 <div className="space-y-2">
                   {product.formats.map(f => (
                     <div key={f.formatName} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                       <div>
                         <p className="font-medium text-gray-900">{f.formatName}</p>
-                        <p className="text-sm text-gray-500">{f.orderCount} commande{f.orderCount > 1 ? 's' : ''}</p>
+                        <p className="text-sm text-gray-500">{f.orderCount} {t('account.inventory.orderCount', { count: f.orderCount })}</p>
                       </div>
                       <div className="text-right">
-                        <p className="font-semibold text-gray-900">{f.totalQuantity} unités</p>
+                        <p className="font-semibold text-gray-900">{f.totalQuantity} {t('account.inventory.units')}</p>
                         <p className="text-sm text-orange-600">${f.totalSpent.toFixed(2)}</p>
                       </div>
                     </div>
@@ -853,7 +868,7 @@ function ProductDetailModal({
 
               {/* Stock Status */}
               <div>
-                <h3 className="font-semibold text-gray-900 mb-3">Statut du stock</h3>
+                <h3 className="font-semibold text-gray-900 mb-3">{t('account.inventory.stockStatusTitle')}</h3>
                 <div className="flex gap-2">
                   {(['full', 'low', 'empty', 'unknown'] as const).map(status => (
                     <button
@@ -865,7 +880,7 @@ function ProductDetailModal({
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >
-                      <StockBadge status={status} />
+                      <StockBadge status={status} t={t} />
                     </button>
                   ))}
                 </div>
@@ -873,12 +888,12 @@ function ProductDetailModal({
 
               {/* Notes */}
               <div>
-                <h3 className="font-semibold text-gray-900 mb-3">Notes personnelles</h3>
+                <h3 className="font-semibold text-gray-900 mb-3">{t('account.inventory.personalNotes')}</h3>
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   onBlur={saveNotes}
-                  placeholder="Ajoutez des notes (ex: pour quel projet, stockage spécial...)"
+                  placeholder={t('account.inventory.notesPlaceholder')}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-none"
                   rows={3}
                 />
@@ -886,8 +901,8 @@ function ProductDetailModal({
 
               {/* Timeline info */}
               <div className="flex items-center justify-between text-sm text-gray-500 pt-4 border-t border-gray-200">
-                <span>Première commande: {formatDate(product.firstOrderDate)}</span>
-                <span>Dernière commande: {formatDate(product.lastOrderDate)}</span>
+                <span>{t('account.inventory.firstOrderLabel')}: {formatDate(product.firstOrderDate)}</span>
+                <span>{t('account.inventory.lastOrderLabel')}: {formatDate(product.lastOrderDate)}</span>
               </div>
             </div>
           )}
@@ -923,13 +938,13 @@ function ProductDetailModal({
             onClick={onClose}
             className="flex-1 py-3 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition-colors"
           >
-            Fermer
+            {t('account.inventory.close')}
           </button>
           <Link
             href={`/shop?search=${encodeURIComponent(product.productName)}`}
             className="flex-1 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium text-center transition-colors"
           >
-            Commander à nouveau
+            {t('account.inventory.reorder')}
           </Link>
         </div>
       </div>
@@ -960,15 +975,23 @@ function formatDate(dateString: string): string {
   });
 }
 
-function formatRelativeDate(dateString: string): string {
+function formatRelativeDate(dateString: string, t?: (key: string) => string): string {
   const date = new Date(dateString);
   const now = new Date();
   const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
-  
-  if (diffDays === 0) return "Aujourd'hui";
-  if (diffDays === 1) return 'Hier';
-  if (diffDays < 7) return `Il y a ${diffDays} jours`;
-  if (diffDays < 30) return `Il y a ${Math.floor(diffDays / 7)} sem.`;
-  if (diffDays < 365) return `Il y a ${Math.floor(diffDays / 30)} mois`;
+
+  if (t) {
+    if (diffDays === 0) return t('account.inventory.today');
+    if (diffDays === 1) return t('account.inventory.yesterday');
+    if (diffDays < 7) return `${diffDays} ${t('account.inventory.daysAgo')}`;
+    if (diffDays < 30) return `${Math.floor(diffDays / 7)} ${t('account.inventory.weeksAgo')}`;
+    if (diffDays < 365) return `${Math.floor(diffDays / 30)} ${t('account.inventory.monthsAgo')}`;
+  } else {
+    if (diffDays === 0) return "Today";
+    if (diffDays === 1) return 'Yesterday';
+    if (diffDays < 7) return `${diffDays} days ago`;
+    if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+    if (diffDays < 365) return `${Math.floor(diffDays / 30)} months ago`;
+  }
   return formatDate(dateString);
 }

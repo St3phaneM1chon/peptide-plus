@@ -19,6 +19,7 @@ import { StatCard } from '@/components/admin/StatCard';
 import { StatusBadge } from '@/components/admin/StatusBadge';
 import { EmptyState } from '@/components/admin/EmptyState';
 import { FormField, Input, Textarea } from '@/components/admin/FormField';
+import { useI18n } from '@/i18n/client';
 
 interface Webinar {
   id: string;
@@ -45,6 +46,7 @@ const statusVariant: Record<string, 'neutral' | 'info' | 'error' | 'success'> = 
 };
 
 export default function WebinairesPage() {
+  const { t, locale } = useI18n();
   const [webinars, setWebinars] = useState<Webinar[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -80,21 +82,21 @@ export default function WebinairesPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Webinaires"
-        subtitle="Planifiez et g&eacute;rez vos webinaires"
+        title={t('admin.webinars.title')}
+        subtitle={t('admin.webinars.subtitle')}
         actions={
           <Button variant="primary" icon={Plus} onClick={() => setShowForm(true)}>
-            Nouveau webinaire
+            {t('admin.webinars.newWebinar')}
           </Button>
         }
       />
 
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4">
-        <StatCard label="A venir" value={stats.upcoming} icon={CalendarDays} />
-        <StatCard label="Completes" value={stats.completed} icon={CheckCircle} />
-        <StatCard label="Inscrits (a venir)" value={stats.totalRegistered} icon={Users} />
-        <StatCard label="Taux presence moy." value={`${stats.avgAttendance.toFixed(0)}%`} icon={BarChart3} />
+        <StatCard label={t('admin.webinars.upcoming')} value={stats.upcoming} icon={CalendarDays} />
+        <StatCard label={t('admin.webinars.completed')} value={stats.completed} icon={CheckCircle} />
+        <StatCard label={t('admin.webinars.registeredUpcoming')} value={stats.totalRegistered} icon={Users} />
+        <StatCard label={t('admin.webinars.avgAttendanceRate')} value={`${stats.avgAttendance.toFixed(0)}%`} icon={BarChart3} />
       </div>
 
       {/* Webinars List */}
@@ -102,11 +104,11 @@ export default function WebinairesPage() {
         <div className="bg-white border border-slate-200 rounded-lg">
           <EmptyState
             icon={Video}
-            title="Aucun webinaire"
-            description="Commencez par creer votre premier webinaire"
+            title={t('admin.webinars.noWebinars')}
+            description={t('admin.webinars.startCreating')}
             action={
               <Button variant="primary" icon={Plus} onClick={() => setShowForm(true)}>
-                Nouveau webinaire
+                {t('admin.webinars.newWebinar')}
               </Button>
             }
           />
@@ -131,7 +133,7 @@ export default function WebinairesPage() {
                     </span>
                     <span className="flex items-center gap-1">
                       <CalendarDays className="w-4 h-4" />
-                      {new Date(webinar.scheduledAt).toLocaleDateString('fr-CA')} a {new Date(webinar.scheduledAt).toLocaleTimeString('fr-CA', { hour: '2-digit', minute: '2-digit' })}
+                      {new Date(webinar.scheduledAt).toLocaleDateString(locale)} {t('admin.webinars.atTime')} {new Date(webinar.scheduledAt).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}
                     </span>
                     <span className="flex items-center gap-1">
                       <Clock className="w-4 h-4" />
@@ -139,8 +141,8 @@ export default function WebinairesPage() {
                     </span>
                     <span className="flex items-center gap-1">
                       <Users className="w-4 h-4" />
-                      {webinar.registeredCount}/{webinar.maxAttendees} inscrits
-                      {webinar.status === 'COMPLETED' && ` (${webinar.attendedCount} presents)`}
+                      {webinar.registeredCount}/{webinar.maxAttendees} {t('admin.webinars.registered')}
+                      {webinar.status === 'COMPLETED' && ` (${t('admin.webinars.attended', { count: String(webinar.attendedCount) })})`}
                     </span>
                   </div>
                 </div>
@@ -148,8 +150,8 @@ export default function WebinairesPage() {
                 <div className="flex flex-col gap-2 ml-4">
                   {webinar.status === 'SCHEDULED' && (
                     <>
-                      <Button variant="outline" size="sm">Modifier</Button>
-                      <Button variant="danger" size="sm">Annuler</Button>
+                      <Button variant="outline" size="sm">{t('admin.webinars.editWebinar')}</Button>
+                      <Button variant="danger" size="sm">{t('admin.webinars.cancelWebinar')}</Button>
                     </>
                   )}
                   {webinar.recordingUrl && (
@@ -158,10 +160,10 @@ export default function WebinairesPage() {
                       target="_blank"
                       className="px-3 py-1 bg-purple-100 text-purple-700 rounded text-sm hover:bg-purple-200 text-center"
                     >
-                      Voir replay
+                      {t('admin.webinars.viewReplay')}
                     </a>
                   )}
-                  <Button variant="ghost" size="sm">Voir inscrits</Button>
+                  <Button variant="ghost" size="sm">{t('admin.webinars.viewRegistered')}</Button>
                 </div>
               </div>
             </div>
@@ -173,43 +175,43 @@ export default function WebinairesPage() {
       <Modal
         isOpen={showForm}
         onClose={() => setShowForm(false)}
-        title="Nouveau webinaire"
+        title={t('admin.webinars.newWebinar')}
         footer={
           <>
             <Button variant="secondary" onClick={() => setShowForm(false)}>
-              Annuler
+              {t('admin.webinars.cancelButton')}
             </Button>
             <Button variant="primary">
-              Creer
+              {t('admin.webinars.create')}
             </Button>
           </>
         }
       >
         <div className="space-y-4">
-          <FormField label="Titre" required>
+          <FormField label={t('admin.webinars.formTitle')} required>
             <Input type="text" />
           </FormField>
-          <FormField label="Description" required>
+          <FormField label={t('admin.webinars.formDescription')} required>
             <Textarea rows={3} />
           </FormField>
           <div className="grid grid-cols-2 gap-4">
-            <FormField label="Date et heure" required>
+            <FormField label={t('admin.webinars.formDateTime')} required>
               <Input type="datetime-local" />
             </FormField>
-            <FormField label="Duree (min)" required>
+            <FormField label={t('admin.webinars.formDuration')} required>
               <Input type="number" defaultValue={60} />
             </FormField>
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <FormField label="Hote" required>
+            <FormField label={t('admin.webinars.formHost')} required>
               <Input type="text" />
             </FormField>
-            <FormField label="Places max">
+            <FormField label={t('admin.webinars.formMaxSeats')}>
               <Input type="number" defaultValue={100} />
             </FormField>
           </div>
-          <FormField label="Lien de la reunion">
-            <Input type="url" placeholder="https://zoom.us/j/..." />
+          <FormField label={t('admin.webinars.formMeetingLink')}>
+            <Input type="url" placeholder={t('admin.webinars.formMeetingPlaceholder')} />
           </FormField>
         </div>
       </Modal>

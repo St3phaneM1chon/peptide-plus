@@ -7,6 +7,7 @@ import { type Locale, defaultLocale, isValidLocale } from '@/i18n/config';
 import { prisma } from './db';
 import {
   orderConfirmationEmail,
+  orderCancellationEmail,
   welcomeEmail,
   passwordResetEmail,
   shippingUpdateEmail,
@@ -216,6 +217,40 @@ export async function sendReceiptEmail(
     },
   }).catch(console.error);
   
+  return sent;
+}
+
+/**
+ * Envoie un email de confirmation d'annulation de commande
+ */
+export async function sendOrderCancellation(
+  userId: string,
+  email: string,
+  data: {
+    customerName: string;
+    orderNumber: string;
+    total: number;
+    currency?: string;
+    items: { name: string; quantity: number }[];
+    refundAmount?: number;
+    refundMethod?: string;
+  }
+) {
+  const locale = await getUserLocale(userId);
+  const { subject, html } = orderCancellationEmail(data, locale);
+
+  const sent = await emailProvider.send(email, subject, html);
+
+  // Log
+  await prisma.auditLog.create({
+    data: {
+      userId,
+      action: 'EMAIL_SENT',
+      entityType: 'Email',
+      details: JSON.stringify({ type: 'ORDER_CANCELLATION', orderNumber: data.orderNumber, locale, sent }),
+    },
+  }).catch(console.error);
+
   return sent;
 }
 

@@ -154,7 +154,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     });
 
     // Mettre à jour la conversation
-    const updateData: any = {
+    const updateData: Record<string, unknown> = {
       lastMessageAt: new Date(),
       // Si le client répond et la conversation était résolue, la rouvrir
       ...(isOwner && conversation.status === 'RESOLVED' && { status: 'OPEN' }),

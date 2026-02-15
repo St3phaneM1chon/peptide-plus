@@ -14,6 +14,8 @@ import {
   Loader2,
 } from 'lucide-react';
 import { PageHeader, StatusBadge, Button, type Column, DataTable } from '@/components/admin';
+import { useI18n } from '@/i18n/client';
+import { toast } from 'sonner';
 
 interface TaxReport {
   id: string;
@@ -51,6 +53,7 @@ interface TaxSummary {
 type BadgeVariant = 'neutral' | 'info' | 'warning' | 'success';
 
 export default function RapportsComptablesPage() {
+  const { t } = useI18n();
   const [selectedYear, setSelectedYear] = useState('2026');
   const [taxReports, setTaxReports] = useState<TaxReport[]>([]);
   const [taxSummary, setTaxSummary] = useState<TaxSummary | null>(null);
@@ -59,23 +62,23 @@ export default function RapportsComptablesPage() {
   const [generatingPdf, setGeneratingPdf] = useState<string | null>(null);
 
   const managementReports = [
-    { id: '1', name: 'Analyse des ventes par produit', icon: BarChart3, description: 'Répartition du CA par produit et catégorie' },
-    { id: '2', name: 'Analyse des ventes par région', icon: Globe, description: 'Performance par zone géographique' },
-    { id: '3', name: 'Analyse de rentabilité', icon: DollarSign, description: 'Marge par produit et coût d\'acquisition' },
-    { id: '4', name: 'Analyse des dépenses', icon: TrendingDown, description: 'Répartition et tendances des dépenses' },
-    { id: '5', name: 'Rapport de performance', icon: Target, description: 'KPIs et indicateurs clés' },
-    { id: '6', name: 'Rapport de trésorerie', icon: Banknote, description: 'Entrées, sorties et prévisions' },
+    { id: '1', name: t('admin.reports.salesByProduct'), icon: BarChart3, description: t('admin.reports.salesByProductDesc') },
+    { id: '2', name: t('admin.reports.salesByRegion'), icon: Globe, description: t('admin.reports.salesByRegionDesc') },
+    { id: '3', name: t('admin.reports.profitability'), icon: DollarSign, description: t('admin.reports.profitabilityDesc') },
+    { id: '4', name: t('admin.reports.expenseAnalysis'), icon: TrendingDown, description: t('admin.reports.expenseAnalysisDesc') },
+    { id: '5', name: t('admin.reports.performanceReport'), icon: Target, description: t('admin.reports.performanceReportDesc') },
+    { id: '6', name: t('admin.reports.cashFlowReport'), icon: Banknote, description: t('admin.reports.cashFlowReportDesc') },
   ];
 
   // Fetch tax reports
   const fetchTaxReports = async (year: string) => {
     try {
       const res = await fetch(`/api/accounting/tax-reports?year=${year}`);
-      if (!res.ok) throw new Error('Erreur lors du chargement des rapports');
+      if (!res.ok) throw new Error(t('admin.reports.errorLoadReports'));
       const data = await res.json();
       setTaxReports(data.reports || []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erreur inconnue');
+      setError(err instanceof Error ? err.message : t('admin.reports.errorUnknown'));
     }
   };
 
@@ -83,7 +86,7 @@ export default function RapportsComptablesPage() {
   const fetchTaxSummary = async (year: string) => {
     try {
       const res = await fetch(`/api/accounting/tax-summary?from=${year}-01-01&to=${year}-12-31`);
-      if (!res.ok) throw new Error('Erreur lors du chargement du sommaire');
+      if (!res.ok) throw new Error(t('admin.reports.errorLoadSummary'));
       const data = await res.json();
       setTaxSummary(data);
     } catch (err) {
@@ -98,17 +101,21 @@ export default function RapportsComptablesPage() {
       const res = await fetch(`/api/accounting/reports/pdf?type=${reportType}&period=${selectedYear}`);
       if (!res.ok) {
         const errorData = await res.json().catch(() => null);
-        throw new Error(errorData?.error || 'Erreur lors de la génération du rapport');
+        throw new Error(errorData?.error || t('admin.reports.errorGenerating'));
       }
       const html = await res.text();
-      // Open HTML in new tab for printing/saving as PDF
-      const newWindow = window.open('', '_blank');
+      // SECURITY: Use Blob URL instead of document.write to avoid XSS vectors
+      const blob = new Blob([html], { type: 'text/html; charset=utf-8' });
+      const blobUrl = URL.createObjectURL(blob);
+      const newWindow = window.open(blobUrl, '_blank');
+      // Clean up the Blob URL after a delay to allow the window to load
       if (newWindow) {
-        newWindow.document.write(html);
-        newWindow.document.close();
+        newWindow.addEventListener('load', () => URL.revokeObjectURL(blobUrl));
+      } else {
+        URL.revokeObjectURL(blobUrl);
       }
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Erreur lors de la génération');
+      toast.error(err instanceof Error ? err.message : t('admin.reports.errorGenerating'));
     } finally {
       setGeneratingPdf(null);
     }
@@ -122,10 +129,10 @@ export default function RapportsComptablesPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: reportId, status: 'FILED' }),
       });
-      if (!res.ok) throw new Error('Erreur lors de la déclaration');
+      if (!res.ok) throw new Error(t('admin.reports.errorFiling'));
       await fetchTaxReports(selectedYear);
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Erreur');
+      toast.error(err instanceof Error ? err.message : t('admin.reports.errorUnknown'));
     }
   };
 
@@ -141,25 +148,25 @@ export default function RapportsComptablesPage() {
     loadData();
   }, [selectedYear]);
 
-  if (loading) return <div className="p-8 text-center">Chargement...</div>;
-  if (error) return <div className="p-8 text-center text-red-600">Erreur: {error}</div>;
+  if (loading) return <div className="p-8 text-center">{t('admin.reports.loading')}</div>;
+  if (error) return <div className="p-8 text-center text-red-600">{t('admin.reports.errorPrefix')} {error}</div>;
 
   const statusConfig: Record<string, { label: string; variant: BadgeVariant }> = {
-    DRAFT: { label: 'Brouillon', variant: 'neutral' },
-    GENERATED: { label: 'Généré', variant: 'info' },
-    FILED: { label: 'Déclaré', variant: 'warning' },
-    PAID: { label: 'Payé', variant: 'success' },
+    DRAFT: { label: t('admin.reports.statusDraft'), variant: 'neutral' },
+    GENERATED: { label: t('admin.reports.statusGenerated'), variant: 'info' },
+    FILED: { label: t('admin.reports.statusFiled'), variant: 'warning' },
+    PAID: { label: t('admin.reports.statusPaid'), variant: 'success' },
     // lowercase fallbacks
-    draft: { label: 'Brouillon', variant: 'neutral' },
-    generated: { label: 'Généré', variant: 'info' },
-    filed: { label: 'Déclaré', variant: 'warning' },
-    paid: { label: 'Payé', variant: 'success' },
+    draft: { label: t('admin.reports.statusDraft'), variant: 'neutral' },
+    generated: { label: t('admin.reports.statusGenerated'), variant: 'info' },
+    filed: { label: t('admin.reports.statusFiled'), variant: 'warning' },
+    paid: { label: t('admin.reports.statusPaid'), variant: 'success' },
   };
 
   const taxColumns: Column<TaxReport>[] = [
     {
       key: 'period',
-      header: 'Rapport',
+      header: t('admin.reports.reportCol'),
       render: (report) => (
         <div>
           <p className="font-medium text-slate-900">TPS/TVQ - {report.period}</p>
@@ -169,19 +176,19 @@ export default function RapportsComptablesPage() {
     },
     {
       key: 'tpsCollected',
-      header: 'TPS collectée',
+      header: t('admin.reports.tpsCollected'),
       align: 'right',
       render: (report) => <span className="text-slate-900">{report.tpsCollected.toFixed(2)} $</span>,
     },
     {
       key: 'tvqCollected',
-      header: 'TVQ collectée',
+      header: t('admin.reports.tvqCollected'),
       align: 'right',
       render: (report) => <span className="text-slate-900">{report.tvqCollected.toFixed(2)} $</span>,
     },
     {
       key: 'ctirti',
-      header: 'CTI/RTI',
+      header: t('admin.reports.ctiRti'),
       align: 'right',
       render: (report) => (
         <span className="text-red-600">-{(report.tpsPaid + report.tvqPaid).toFixed(2)} $</span>
@@ -189,7 +196,7 @@ export default function RapportsComptablesPage() {
     },
     {
       key: 'net',
-      header: 'Net à payer',
+      header: t('admin.reports.netToPay'),
       align: 'right',
       render: (report) => {
         return <span className="font-bold text-emerald-600">{report.netTotal.toFixed(2)} $</span>;
@@ -197,7 +204,7 @@ export default function RapportsComptablesPage() {
     },
     {
       key: 'dueDate',
-      header: 'Échéance',
+      header: t('admin.reports.dueDate'),
       align: 'center',
       render: (report) => (
         <span className="text-sm text-slate-600">{report.dueDate ? new Date(report.dueDate).toLocaleDateString('fr-CA') : '-'}</span>
@@ -205,7 +212,7 @@ export default function RapportsComptablesPage() {
     },
     {
       key: 'status',
-      header: 'Statut',
+      header: t('admin.reports.statusCol'),
       align: 'center',
       render: (report) => {
         const cfg = statusConfig[report.status] || { label: report.status, variant: 'neutral' as BadgeVariant };
@@ -214,7 +221,7 @@ export default function RapportsComptablesPage() {
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: t('admin.reports.actionsCol'),
       align: 'center',
       render: (report) => (
         <div className="flex items-center justify-center gap-1">
@@ -228,7 +235,7 @@ export default function RapportsComptablesPage() {
             PDF
           </Button>
           {(report.status === 'GENERATED' || report.status === 'generated') && (
-            <Button variant="primary" size="sm" onClick={() => handleFileTaxReport(report.id)}>Déclarer</Button>
+            <Button variant="primary" size="sm" onClick={() => handleFileTaxReport(report.id)}>{t('admin.reports.fileBtn')}</Button>
           )}
         </div>
       ),
@@ -243,8 +250,8 @@ export default function RapportsComptablesPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Rapports comptables"
-        subtitle="Rapports fiscaux et de gestion"
+        title={t('admin.reports.title')}
+        subtitle={t('admin.reports.subtitle')}
         actions={
           <select
             value={selectedYear}
@@ -262,11 +269,11 @@ export default function RapportsComptablesPage() {
       <div>
         <div className="flex items-center justify-between mb-3">
           <div>
-            <h2 className="font-semibold text-sky-900">Rapports de taxes</h2>
-            <p className="text-sm text-sky-700">TPS/TVQ et déclarations fiscales</p>
+            <h2 className="font-semibold text-sky-900">{t('admin.reports.taxReportsTitle')}</h2>
+            <p className="text-sm text-sky-700">{t('admin.reports.taxReportsSubtitle')}</p>
           </div>
           <Link href="/admin/fiscal" className="text-sm text-sky-600 hover:text-sky-700 inline-flex items-center gap-1">
-            Module fiscal complet <ArrowRight className="w-3.5 h-3.5" />
+            {t('admin.reports.fullFiscalModule')} <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>
         {taxReports.length > 0 ? (
@@ -277,14 +284,14 @@ export default function RapportsComptablesPage() {
           />
         ) : (
           <div className="bg-white rounded-xl border border-slate-200 p-8 text-center text-slate-500">
-            Aucun rapport de taxes pour {selectedYear}
+            {t('admin.reports.noTaxReports', { year: selectedYear })}
           </div>
         )}
       </div>
 
       {/* Management Reports Grid */}
       <div>
-        <h2 className="text-lg font-semibold text-slate-900 mb-4">Rapports de gestion</h2>
+        <h2 className="text-lg font-semibold text-slate-900 mb-4">{t('admin.reports.managementReports')}</h2>
         <div className="grid grid-cols-3 gap-4">
           {managementReports.map((report) => {
             const Icon = report.icon;
@@ -315,11 +322,11 @@ export default function RapportsComptablesPage() {
                     >
                       {generatingPdf === apiType ? (
                         <>
-                          <Loader2 className="w-3.5 h-3.5 animate-spin" /> Génération...
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" /> {t('admin.reports.generating')}
                         </>
                       ) : (
                         <>
-                          Générer le rapport <ArrowRight className="w-3.5 h-3.5" />
+                          {t('admin.reports.generateReport')} <ArrowRight className="w-3.5 h-3.5" />
                         </>
                       )}
                     </button>
@@ -333,58 +340,58 @@ export default function RapportsComptablesPage() {
 
       {/* Annual Reports */}
       <div className="bg-white rounded-xl border border-slate-200 p-6">
-        <h2 className="font-semibold text-slate-900 mb-4">Rapports annuels</h2>
+        <h2 className="font-semibold text-slate-900 mb-4">{t('admin.reports.annualReports')}</h2>
         <div className="grid grid-cols-4 gap-4">
           <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-            <p className="text-sm text-blue-600">T2 - Déclaration fédérale</p>
+            <p className="text-sm text-blue-600">{t('admin.reports.federalDeclaration')}</p>
             <p className="font-bold text-blue-900 mt-1">{parseInt(selectedYear) - 1}</p>
-            <p className="text-xs text-blue-600 mt-2">Échéance: 30 juin {selectedYear}</p>
-            <button className="mt-3 text-sm text-blue-700 hover:underline inline-flex items-center gap-1">Préparer <ArrowRight className="w-3.5 h-3.5" /></button>
+            <p className="text-xs text-blue-600 mt-2">{t('admin.reports.dueDatePrefix')} 30 juin {selectedYear}</p>
+            <button className="mt-3 text-sm text-blue-700 hover:underline inline-flex items-center gap-1">{t('admin.reports.prepare')} <ArrowRight className="w-3.5 h-3.5" /></button>
           </div>
           <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
-            <p className="text-sm text-purple-600">CO-17 - Déclaration Québec</p>
+            <p className="text-sm text-purple-600">{t('admin.reports.quebecDeclaration')}</p>
             <p className="font-bold text-purple-900 mt-1">{parseInt(selectedYear) - 1}</p>
-            <p className="text-xs text-purple-600 mt-2">Échéance: 30 juin {selectedYear}</p>
-            <button className="mt-3 text-sm text-purple-700 hover:underline inline-flex items-center gap-1">Préparer <ArrowRight className="w-3.5 h-3.5" /></button>
+            <p className="text-xs text-purple-600 mt-2">{t('admin.reports.dueDatePrefix')} 30 juin {selectedYear}</p>
+            <button className="mt-3 text-sm text-purple-700 hover:underline inline-flex items-center gap-1">{t('admin.reports.prepare')} <ArrowRight className="w-3.5 h-3.5" /></button>
           </div>
           <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-            <p className="text-sm text-green-600">États financiers</p>
+            <p className="text-sm text-green-600">{t('admin.reports.financialStatementsLabel')}</p>
             <p className="font-bold text-green-900 mt-1">{parseInt(selectedYear) - 1}</p>
-            <p className="text-xs text-green-600 mt-2">À réviser</p>
+            <p className="text-xs text-green-600 mt-2">{t('admin.reports.toReview')}</p>
             <button
               className="mt-3 text-sm text-green-700 hover:underline inline-flex items-center gap-1"
               onClick={() => handleGeneratePdf('income')}
             >
-              Générer <ArrowRight className="w-3.5 h-3.5" />
+              {t('admin.reports.generate')} <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
           <div className="p-4 bg-sky-50 rounded-lg border border-sky-200">
-            <p className="text-sm text-sky-600">Rapport d&apos;audit</p>
+            <p className="text-sm text-sky-600">{t('admin.reports.auditReport')}</p>
             <p className="font-bold text-sky-900 mt-1">{parseInt(selectedYear) - 1}</p>
-            <p className="text-xs text-sky-600 mt-2">Optionnel</p>
-            <button className="mt-3 text-sm text-sky-700 hover:underline inline-flex items-center gap-1">Demander <ArrowRight className="w-3.5 h-3.5" /></button>
+            <p className="text-xs text-sky-600 mt-2">{t('admin.reports.optional')}</p>
+            <button className="mt-3 text-sm text-sky-700 hover:underline inline-flex items-center gap-1">{t('admin.reports.request')} <ArrowRight className="w-3.5 h-3.5" /></button>
           </div>
         </div>
       </div>
 
       {/* Quick Stats */}
       <div className="bg-gradient-to-r from-emerald-600 to-emerald-700 rounded-xl p-6 text-white">
-        <h3 className="font-semibold text-emerald-100 mb-4">Résumé fiscal {selectedYear}</h3>
+        <h3 className="font-semibold text-emerald-100 mb-4">{t('admin.reports.fiscalSummary', { year: selectedYear })}</h3>
         <div className="grid grid-cols-4 gap-6">
           <div>
-            <p className="text-emerald-200 text-sm">TPS collectée</p>
+            <p className="text-emerald-200 text-sm">{t('admin.reports.tpsCollected')}</p>
             <p className="text-2xl font-bold">{Math.round(totalTpsCollected).toLocaleString()} $</p>
           </div>
           <div>
-            <p className="text-emerald-200 text-sm">TVQ collectée</p>
+            <p className="text-emerald-200 text-sm">{t('admin.reports.tvqCollected')}</p>
             <p className="text-2xl font-bold">{Math.round(totalTvqCollected).toLocaleString()} $</p>
           </div>
           <div>
-            <p className="text-emerald-200 text-sm">CTI/RTI réclamés</p>
+            <p className="text-emerald-200 text-sm">{t('admin.reports.ctiRtiClaimed')}</p>
             <p className="text-2xl font-bold">{Math.round(totalCtiRti).toLocaleString()} $</p>
           </div>
           <div>
-            <p className="text-emerald-200 text-sm">Net à remettre</p>
+            <p className="text-emerald-200 text-sm">{t('admin.reports.netToRemit')}</p>
             <p className="text-2xl font-bold">{Math.round(totalNetRemit).toLocaleString()} $</p>
           </div>
         </div>

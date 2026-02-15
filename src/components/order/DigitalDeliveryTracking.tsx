@@ -11,7 +11,27 @@ import { TrackingTimeline } from './TrackingTimeline';
 import { OrderSummary } from './OrderSummary';
 
 interface DigitalDeliveryTrackingProps {
-  order: any;
+  order: {
+    id: string;
+    createdAt: Date | string;
+    amount: number;
+    currency: string;
+    paymentMethod: string;
+    product: {
+      id: string;
+      name: string;
+      slug: string;
+      imageUrl: string | null;
+      category: { name: string } | null;
+    };
+    user: {
+      name: string | null;
+      email: string;
+    };
+    courseAccess?: {
+      createdAt: Date | string;
+    } | null;
+  };
 }
 
 export function DigitalDeliveryTracking({ order }: DigitalDeliveryTrackingProps) {
@@ -152,7 +172,7 @@ export function DigitalDeliveryTracking({ order }: DigitalDeliveryTrackingProps)
         </div>
 
         {/* Résumé */}
-        <OrderSummary order={order} />
+        <OrderSummary order={{ ...order, createdAt: new Date(order.createdAt) }} />
       </div>
 
       {/* Actions */}

@@ -11,7 +11,8 @@ export const metadata = {
   description: 'Modifier les informations et formats du produit.',
 };
 
-export default async function AdminProductEditPage({ params }: { params: { id: string } }) {
+export default async function AdminProductEditPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const session = await auth();
 
   if (!session?.user) {
@@ -23,7 +24,7 @@ export default async function AdminProductEditPage({ params }: { params: { id: s
   }
 
   const product = await prisma.product.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: {
       category: true,
       images: {

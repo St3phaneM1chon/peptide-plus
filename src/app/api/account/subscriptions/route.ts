@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * API Subscriptions client
  * GET  /api/account/subscriptions    — Lister mes abonnements
@@ -14,6 +16,7 @@ const FREQUENCY_DISCOUNTS: Record<string, number> = {
   BIWEEKLY: 15,
   MONTHLY: 10,
   BIMONTHLY: 5,
+  QUARTERLY: 5,
 };
 
 const FREQUENCY_DAYS: Record<string, number> = {
@@ -21,6 +24,7 @@ const FREQUENCY_DAYS: Record<string, number> = {
   BIWEEKLY: 14,
   MONTHLY: 30,
   BIMONTHLY: 60,
+  QUARTERLY: 90,
 };
 
 async function getUser(session: { user?: { email?: string | null } }) {

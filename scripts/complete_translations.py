@@ -889,18 +889,18 @@ def main():
     for locale_file in sorted(locales_dir.glob("*.json")):
         if locale_file.name in ["en.json", "fr.json"]:
             continue
-        
+
         lang = locale_file.stem
         base_lang = lang.split('-')[0]
-        
+
         print(f"Processing {lang}...")
-        
+
         with open(locale_file, "r", encoding="utf-8") as f:
             data = json.load(f)
-        
+
         # Get translation source
         trans_source = translations.get(lang) or translations.get(base_lang)
-        
+
         if trans_source:
             # Update sections with complete translations
             for section in ["protocols", "customerRewards", "customerAddresses", "invoice", "orderFilters"]:
@@ -909,7 +909,7 @@ def main():
             print(f"  ✓ {lang} - Native translations applied")
         else:
             print(f"  ⚠ {lang} - Using English fallback")
-        
+
         # Write updated file
         with open(locale_file, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=2)

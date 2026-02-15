@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Plus, Pencil, Users, UserCheck, Crown } from 'lucide-react';
 import { PageHeader, Button, Modal, FormField, Input, StatusBadge } from '@/components/admin';
+import { useI18n } from '@/i18n/client';
 
 interface Employee {
   id: string;
@@ -15,24 +16,42 @@ interface Employee {
   createdAt: string;
 }
 
-const allPermissions = [
-  { key: 'orders.view', label: 'Voir les commandes' },
-  { key: 'orders.manage', label: 'Gerer les commandes' },
-  { key: 'products.view', label: 'Voir les produits' },
-  { key: 'products.manage', label: 'Gerer les produits' },
-  { key: 'customers.view', label: 'Voir les clients' },
-  { key: 'customers.manage', label: 'Gerer les clients' },
-  { key: 'inventory.view', label: "Voir l'inventaire" },
-  { key: 'inventory.manage', label: "Gerer l'inventaire" },
-  { key: 'marketing.manage', label: 'Marketing (promos, newsletter)' },
-  { key: 'reviews.moderate', label: 'Moderer les avis' },
-  { key: 'chat.respond', label: 'Repondre au chat' },
-  { key: 'reports.view', label: 'Voir les rapports' },
-  { key: 'settings.manage', label: 'Gerer les parametres' },
-  { key: 'employees.manage', label: 'Gerer les employes' },
-];
+const permissionKeys = [
+  'orders.view',
+  'orders.manage',
+  'products.view',
+  'products.manage',
+  'customers.view',
+  'customers.manage',
+  'inventory.view',
+  'inventory.manage',
+  'marketing.manage',
+  'reviews.moderate',
+  'chat.respond',
+  'reports.view',
+  'settings.manage',
+  'employees.manage',
+] as const;
+
+const permissionI18nMap: Record<string, string> = {
+  'orders.view': 'admin.employees.permViewOrders',
+  'orders.manage': 'admin.employees.permManageOrders',
+  'products.view': 'admin.employees.permViewProducts',
+  'products.manage': 'admin.employees.permManageProducts',
+  'customers.view': 'admin.employees.permViewCustomers',
+  'customers.manage': 'admin.employees.permManageCustomers',
+  'inventory.view': 'admin.employees.permViewInventory',
+  'inventory.manage': 'admin.employees.permManageInventory',
+  'marketing.manage': 'admin.employees.permMarketing',
+  'reviews.moderate': 'admin.employees.permModerateReviews',
+  'chat.respond': 'admin.employees.permRespondChat',
+  'reports.view': 'admin.employees.permViewReports',
+  'settings.manage': 'admin.employees.permManageSettings',
+  'employees.manage': 'admin.employees.permManageEmployees',
+};
 
 export default function EmployesPage() {
+  const { t, locale } = useI18n();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -96,20 +115,20 @@ export default function EmployesPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Employes"
-        subtitle="Gerez les acces de votre equipe"
+        title={t('admin.employees.title')}
+        subtitle={t('admin.employees.subtitle')}
         actions={
           <Button variant="primary" icon={Plus} onClick={() => { resetForm(); setShowForm(true); }}>
-            Inviter un employe
+            {t('admin.employees.inviteEmployee')}
           </Button>
         }
       />
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
-        <MiniStat icon={Users} label="Total" value={employees.length} bg="bg-slate-100 text-slate-600" />
-        <MiniStat icon={UserCheck} label="Actifs" value={employees.filter((e) => e.isActive).length} bg="bg-emerald-100 text-emerald-600" />
-        <MiniStat icon={Crown} label="Proprietaires" value={employees.filter((e) => e.role === 'OWNER').length} bg="bg-sky-100 text-sky-600" />
+        <MiniStat icon={Users} label={t('admin.employees.total')} value={employees.length} bg="bg-slate-100 text-slate-600" />
+        <MiniStat icon={UserCheck} label={t('admin.employees.active')} value={employees.filter((e) => e.isActive).length} bg="bg-emerald-100 text-emerald-600" />
+        <MiniStat icon={Crown} label={t('admin.employees.owners')} value={employees.filter((e) => e.role === 'OWNER').length} bg="bg-sky-100 text-sky-600" />
       </div>
 
       {/* Table */}
@@ -117,12 +136,12 @@ export default function EmployesPage() {
         <table className="w-full">
           <thead className="bg-slate-50">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Employe</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Role</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Permissions</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Derniere connexion</th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">Statut</th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">Actions</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.employees.employeeCol')}</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.employees.roleCol')}</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.employees.permissionsCol')}</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.employees.lastLogin')}</th>
+              <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.employees.statusCol')}</th>
+              <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.employees.actionsCol')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
@@ -146,11 +165,11 @@ export default function EmployesPage() {
                 </td>
                 <td className="px-4 py-4">
                   <p className="text-sm text-slate-600">
-                    {emp.role === 'OWNER' ? 'Toutes' : `${emp.permissions.length} permissions`}
+                    {emp.role === 'OWNER' ? t('admin.employees.allPermissions') : t('admin.employees.permissionsCount', { count: emp.permissions.length })}
                   </p>
                 </td>
                 <td className="px-4 py-4 text-sm text-slate-500">
-                  {emp.lastLogin ? new Date(emp.lastLogin).toLocaleString('fr-CA') : 'Jamais'}
+                  {emp.lastLogin ? new Date(emp.lastLogin).toLocaleString(locale) : t('admin.employees.never')}
                 </td>
                 <td className="px-4 py-4 text-center">
                   <button
@@ -167,7 +186,7 @@ export default function EmployesPage() {
                 </td>
                 <td className="px-4 py-4 text-center">
                   <Button variant="ghost" size="sm" icon={Pencil} onClick={() => startEdit(emp)}>
-                    Modifier
+                    {t('admin.employees.editBtn')}
                   </Button>
                 </td>
               </tr>
@@ -180,10 +199,10 @@ export default function EmployesPage() {
       <Modal
         isOpen={showForm}
         onClose={resetForm}
-        title={editingEmployee ? 'Modifier les acces' : 'Inviter un employe'}
+        title={editingEmployee ? t('admin.employees.editAccess') : t('admin.employees.inviteTitle')}
       >
         <div className="space-y-4">
-          <FormField label="Email" required>
+          <FormField label={t('admin.employees.emailLabel')} required>
             <Input
               type="email"
               value={formData.email}
@@ -191,36 +210,36 @@ export default function EmployesPage() {
               disabled={!!editingEmployee}
             />
           </FormField>
-          <FormField label="Nom" required>
+          <FormField label={t('admin.employees.nameLabel')} required>
             <Input
               type="text"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             />
           </FormField>
-          <FormField label="Role">
+          <FormField label={t('admin.employees.roleLabel')}>
             <select
               value={formData.role}
-              onChange={(e) => setFormData({ ...formData, role: e.target.value as any })}
+              onChange={(e) => setFormData({ ...formData, role: e.target.value as 'OWNER' | 'EMPLOYEE' })}
               className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
             >
-              <option value="EMPLOYEE">Employe</option>
-              <option value="OWNER">Proprietaire (tous les acces)</option>
+              <option value="EMPLOYEE">{t('admin.employees.roleEmployee')}</option>
+              <option value="OWNER">{t('admin.employees.roleOwner')}</option>
             </select>
           </FormField>
 
           {formData.role === 'EMPLOYEE' && (
-            <FormField label="Permissions">
+            <FormField label={t('admin.employees.permissionsLabel')}>
               <div className="space-y-2 max-h-48 overflow-y-auto border border-slate-200 rounded-lg p-3">
-                {allPermissions.map((perm) => (
-                  <label key={perm.key} className="flex items-center gap-2 cursor-pointer">
+                {permissionKeys.map((key) => (
+                  <label key={key} className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="checkbox"
-                      checked={formData.permissions.includes(perm.key)}
-                      onChange={() => togglePermission(perm.key)}
+                      checked={formData.permissions.includes(key)}
+                      onChange={() => togglePermission(key)}
                       className="w-4 h-4 rounded border-slate-300 text-sky-500"
                     />
-                    <span className="text-sm text-slate-700">{perm.label}</span>
+                    <span className="text-sm text-slate-700">{t(permissionI18nMap[key])}</span>
                   </label>
                 ))}
               </div>
@@ -229,10 +248,10 @@ export default function EmployesPage() {
 
           <div className="flex gap-3 pt-4 border-t border-slate-200">
             <Button variant="secondary" onClick={resetForm} className="flex-1">
-              Annuler
+              {t('admin.employees.cancelBtn')}
             </Button>
             <Button variant="primary" className="flex-1">
-              {editingEmployee ? 'Sauvegarder' : "Envoyer l'invitation"}
+              {editingEmployee ? t('admin.employees.saveBtn') : t('admin.employees.sendInvitation')}
             </Button>
           </div>
         </div>

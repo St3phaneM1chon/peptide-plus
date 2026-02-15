@@ -6,6 +6,8 @@ import {
   CheckCircle2, XCircle, Clock, Loader2, AlertTriangle, Info,
   RefreshCw, MapPin
 } from 'lucide-react';
+import { useI18n } from '@/i18n/client';
+import { toast } from 'sonner';
 
 // =====================================================
 // TYPES
@@ -33,7 +35,7 @@ interface UatTestError {
   message: string;
   expected: string | null;
   actual: string | null;
-  context: Record<string, any> | null;
+  context: Record<string, unknown> | null;
 }
 
 interface UatTestCase {
@@ -85,6 +87,7 @@ interface RunDetail {
 // =====================================================
 
 export default function UatPage() {
+  const { t, locale } = useI18n();
   const [runs, setRuns] = useState<UatRun[]>([]);
   const [loading, setLoading] = useState(true);
   const [launching, setLaunching] = useState(false);
@@ -155,10 +158,10 @@ export default function UatPage() {
         await fetchRuns();
       } else {
         const err = await res.json();
-        alert(err.error || 'Erreur lors du lancement');
+        toast.error(err.error || t('admin.uat.launchError'));
       }
-    } catch (e: any) {
-      alert(e.message);
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : t('admin.uat.unknownError'));
     } finally {
       setLaunching(false);
     }
@@ -183,22 +186,22 @@ export default function UatPage() {
 
   // Cleanup
   const handleCleanup = async (runId: string) => {
-    if (!confirm('Supprimer TOUTES les donnees de test de ce run?\n\nCommandes, ecritures, factures, transactions inventaire seront supprimees.\nLe stock sera restaure.')) return;
+    if (!confirm(t('admin.uat.cleanupConfirm'))) return;
     setCleaningUp(runId);
     try {
       const res = await fetch(`/api/admin/uat/${runId}`, { method: 'DELETE' });
       if (res.ok) {
         const data = await res.json();
         const counts = Object.entries(data.deleted).map(([k, v]) => `${k}: ${v}`).join(', ');
-        alert(`Nettoyage termine!\n\n${counts}`);
+        toast.success(`${t('admin.uat.cleanupDone')}\n\n${counts}`);
         fetchRuns();
         if (selectedRunId === runId) {
           setSelectedRunId(null);
           setRunDetail(null);
         }
       }
-    } catch (e: any) {
-      alert('Erreur: ' + e.message);
+    } catch (e: unknown) {
+      toast.error(t('admin.uat.errorPrefix') + (e instanceof Error ? e.message : t('admin.uat.unknownError')));
     } finally {
       setCleaningUp(null);
     }
@@ -211,8 +214,8 @@ export default function UatPage() {
         <div className="flex items-center gap-3">
           <FlaskConical className="w-7 h-7 text-purple-600" />
           <div>
-            <h1 className="text-2xl font-bold text-slate-800">Tests UAT — AureliaPay</h1>
-            <p className="text-sm text-slate-500">Pipeline comptable automatise: Order → Payment → Inventory → COGS → Invoice → Journal</p>
+            <h1 className="text-2xl font-bold text-slate-800">{t('admin.uat.title')}</h1>
+            <p className="text-sm text-slate-500">{t('admin.uat.subtitle')}</p>
           </div>
         </div>
         <button
@@ -220,7 +223,7 @@ export default function UatPage() {
           className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
         >
           <Play className="w-4 h-4" />
-          Lancer un test
+          {t('admin.uat.launchTest')}
         </button>
       </div>
 
@@ -228,7 +231,7 @@ export default function UatPage() {
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
-            <h2 className="text-lg font-bold text-slate-800 mb-4">Nouveau run UAT</h2>
+            <h2 className="text-lg font-bold text-slate-800 mb-4">{t('admin.uat.newRunTitle')}</h2>
             <div className="space-y-4">
               <label className="flex items-center gap-3 cursor-pointer">
                 <input
@@ -238,9 +241,9 @@ export default function UatPage() {
                   className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
                 />
                 <div>
-                  <span className="text-sm font-medium text-slate-700">Canada seulement</span>
+                  <span className="text-sm font-medium text-slate-700">{t('admin.uat.canadaOnly')}</span>
                   <p className="text-xs text-slate-500">
-                    {canadaOnly ? '34 scenarios (toutes les provinces)' : '49 scenarios (Canada + International)'}
+                    {canadaOnly ? t('admin.uat.canadaOnlyDesc34') : t('admin.uat.canadaOnlyDesc49')}
                   </p>
                 </div>
               </label>
@@ -249,16 +252,16 @@ export default function UatPage() {
                 <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
                   <div className="flex items-center gap-2 text-amber-700 text-xs">
                     <AlertTriangle className="w-4 h-4" />
-                    Les scenarios internationaux ne calculent pas de taxes canadiennes. Multi-devises non encore supporte.
+                    {t('admin.uat.intlWarning')}
                   </div>
                 </div>
               )}
 
               <div className="bg-slate-50 rounded-lg p-3">
                 <div className="text-xs text-slate-500 space-y-1">
-                  <p>Provinces couvertes: QC, ON, BC, AB, SK, MB, NS, NB, NL, PE, NT, YT, NU</p>
-                  <p>Scenarios: vente simple, multi-produit, remboursement, re-expedition, arrondis</p>
-                  <p>Verifications: taxes, inventaire, COGS, ecritures, factures, equilibre D/C</p>
+                  <p>{t('admin.uat.provincesInfo')}</p>
+                  <p>{t('admin.uat.scenariosInfo')}</p>
+                  <p>{t('admin.uat.verificationsInfo')}</p>
                 </div>
               </div>
             </div>
@@ -268,7 +271,7 @@ export default function UatPage() {
                 onClick={() => setShowModal(false)}
                 className="flex-1 px-4 py-2 border border-slate-300 rounded-lg text-sm text-slate-600 hover:bg-slate-50"
               >
-                Annuler
+                {t('admin.uat.cancelBtn')}
               </button>
               <button
                 onClick={handleLaunch}
@@ -276,7 +279,7 @@ export default function UatPage() {
                 className="flex-1 flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50"
               >
                 {launching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
-                Demarrer ({canadaOnly ? 34 : 49} scenarios)
+                {t('admin.uat.startBtn', { count: canadaOnly ? 34 : 49 })}
               </button>
             </div>
           </div>
@@ -286,7 +289,7 @@ export default function UatPage() {
       {/* Runs List */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-200">
         <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
-          <h2 className="font-semibold text-slate-800">Historique des runs</h2>
+          <h2 className="font-semibold text-slate-800">{t('admin.uat.runHistory')}</h2>
           <button onClick={fetchRuns} className="text-slate-400 hover:text-slate-600">
             <RefreshCw className="w-4 h-4" />
           </button>
@@ -298,7 +301,7 @@ export default function UatPage() {
           </div>
         ) : runs.length === 0 ? (
           <div className="p-8 text-center text-slate-400">
-            Aucun run UAT. Lancez votre premier test!
+            {t('admin.uat.noRuns')}
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -306,14 +309,14 @@ export default function UatPage() {
               <thead>
                 <tr className="text-left text-xs text-slate-500 uppercase tracking-wider border-b border-slate-100">
                   <th className="px-5 py-3">#</th>
-                  <th className="px-5 py-3">Date</th>
-                  <th className="px-5 py-3">Statut</th>
-                  <th className="px-5 py-3">Scope</th>
-                  <th className="px-5 py-3 text-center">Scenarios</th>
-                  <th className="px-5 py-3 text-center">Passes</th>
-                  <th className="px-5 py-3 text-center">Echoues</th>
-                  <th className="px-5 py-3">Duree</th>
-                  <th className="px-5 py-3">Actions</th>
+                  <th className="px-5 py-3">{t('admin.uat.dateCol')}</th>
+                  <th className="px-5 py-3">{t('admin.uat.statusCol')}</th>
+                  <th className="px-5 py-3">{t('admin.uat.scopeCol')}</th>
+                  <th className="px-5 py-3 text-center">{t('admin.uat.scenariosCol')}</th>
+                  <th className="px-5 py-3 text-center">{t('admin.uat.passedCol')}</th>
+                  <th className="px-5 py-3 text-center">{t('admin.uat.failedCol')}</th>
+                  <th className="px-5 py-3">{t('admin.uat.durationCol')}</th>
+                  <th className="px-5 py-3">{t('admin.uat.actionsCol')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
@@ -321,7 +324,7 @@ export default function UatPage() {
                   <tr key={run.id} className="hover:bg-slate-50">
                     <td className="px-5 py-3 font-mono text-slate-600">#{run.runNumber}</td>
                     <td className="px-5 py-3 text-slate-600">
-                      {new Date(run.startedAt).toLocaleDateString('fr-CA', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                      {new Date(run.startedAt).toLocaleDateString(locale, { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
                     </td>
                     <td className="px-5 py-3">
                       <StatusBadge status={run.status} />
@@ -329,7 +332,7 @@ export default function UatPage() {
                     <td className="px-5 py-3">
                       <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
                         <MapPin className="w-3 h-3" />
-                        {run.canadaOnly ? 'Canada' : 'Global'}
+                        {run.canadaOnly ? t('admin.uat.canada') : t('admin.uat.global')}
                       </span>
                     </td>
                     <td className="px-5 py-3 text-center font-mono">{run.totalScenarios}</td>
@@ -343,7 +346,7 @@ export default function UatPage() {
                         <button
                           onClick={() => handleViewDetail(run.id)}
                           className="p-1.5 hover:bg-slate-100 rounded-md text-slate-500 hover:text-slate-700"
-                          title="Voir detail"
+                          title={t('admin.uat.viewDetail')}
                         >
                           <Eye className="w-4 h-4" />
                         </button>
@@ -352,13 +355,13 @@ export default function UatPage() {
                             onClick={() => handleCleanup(run.id)}
                             disabled={cleaningUp === run.id}
                             className="p-1.5 hover:bg-red-50 rounded-md text-slate-400 hover:text-red-600 disabled:opacity-50"
-                            title="Nettoyer donnees"
+                            title={t('admin.uat.cleanData')}
                           >
                             {cleaningUp === run.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                           </button>
                         )}
                         {run.cleanedUp && (
-                          <span className="text-xs text-slate-400 ml-1">nettoye</span>
+                          <span className="text-xs text-slate-400 ml-1">{t('admin.uat.cleanedUp')}</span>
                         )}
                       </div>
                     </td>
@@ -422,6 +425,7 @@ function RunDetailPanel({
   onCleanup: () => void;
   cleaningUp: boolean;
 }) {
+  const { t } = useI18n();
   const [expandedCase, setExpandedCase] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'cases' | 'taxes' | 'errors'>('cases');
 
@@ -429,7 +433,7 @@ function RunDetailPanel({
     return (
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8 text-center">
         <Loader2 className="w-6 h-6 animate-spin mx-auto text-purple-500" />
-        <p className="text-sm text-slate-400 mt-2">Chargement du detail...</p>
+        <p className="text-sm text-slate-400 mt-2">{t('admin.uat.loadingDetail')}</p>
       </div>
     );
   }
@@ -458,21 +462,21 @@ function RunDetailPanel({
               className="flex items-center gap-1 text-xs px-3 py-1.5 border border-red-200 text-red-600 rounded-lg hover:bg-red-50 disabled:opacity-50"
             >
               {cleaningUp ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
-              Nettoyer
+              {t('admin.uat.cleanup')}
             </button>
           )}
           <button onClick={onClose} className="text-slate-400 hover:text-slate-600 text-xs px-3 py-1.5 border border-slate-200 rounded-lg">
-            Fermer
+            {t('admin.uat.close')}
           </button>
         </div>
       </div>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-4 gap-4 p-5">
-        <SummaryCard label="Total" value={run.totalScenarios} color="text-slate-700" />
-        <SummaryCard label="Passes" value={run.passedCount} color="text-green-600" />
-        <SummaryCard label="Echoues" value={run.failedCount} color="text-red-600" />
-        <SummaryCard label="Sautes" value={run.skippedCount} color="text-amber-600" />
+        <SummaryCard label={t('admin.uat.totalLabel')} value={run.totalScenarios} color="text-slate-700" />
+        <SummaryCard label={t('admin.uat.passedLabel')} value={run.passedCount} color="text-green-600" />
+        <SummaryCard label={t('admin.uat.failedLabel')} value={run.failedCount} color="text-red-600" />
+        <SummaryCard label={t('admin.uat.skippedLabel')} value={run.skippedCount} color="text-amber-600" />
       </div>
 
       {/* Progress Bar */}
@@ -487,9 +491,9 @@ function RunDetailPanel({
       {/* Tabs */}
       <div className="border-b border-slate-100 px-5 flex gap-4">
         {[
-          { key: 'cases', label: 'Test Cases', count: testCases.length },
-          { key: 'taxes', label: 'Rapport Taxes', count: taxReport.rows.length },
-          { key: 'errors', label: 'Erreurs', count: allErrors.length },
+          { key: 'cases', label: t('admin.uat.testCasesTab'), count: testCases.length },
+          { key: 'taxes', label: t('admin.uat.taxReportTab'), count: taxReport.rows.length },
+          { key: 'errors', label: t('admin.uat.errorsTab'), count: allErrors.length },
         ].map(tab => (
           <button
             key={tab.key}
@@ -540,6 +544,7 @@ function TestCasesTable({
   expandedCase: string | null;
   onToggle: (id: string | null) => void;
 }) {
+  const { t } = useI18n();
   return (
     <div className="space-y-1">
       {testCases.map(tc => (
@@ -565,25 +570,25 @@ function TestCasesTable({
               {/* Taxes comparison */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-xs font-medium text-slate-500 mb-1">Taxes attendues</p>
+                  <p className="text-xs font-medium text-slate-500 mb-1">{t('admin.uat.expectedTaxes')}</p>
                   <TaxDisplay taxes={tc.expectedTaxes} />
                 </div>
                 <div>
-                  <p className="text-xs font-medium text-slate-500 mb-1">Taxes reelles</p>
+                  <p className="text-xs font-medium text-slate-500 mb-1">{t('admin.uat.actualTaxes')}</p>
                   <TaxDisplay taxes={tc.actualTaxes} />
                 </div>
               </div>
 
               {/* Totals */}
               <div className="flex gap-4 text-xs">
-                <span className="text-slate-500">Total attendu: <strong>{tc.expectedTotal ? `${Number(tc.expectedTotal).toFixed(2)}$` : '-'}</strong></span>
-                <span className="text-slate-500">Total reel: <strong>{tc.actualTotal ? `${Number(tc.actualTotal).toFixed(2)}$` : '-'}</strong></span>
+                <span className="text-slate-500">{t('admin.uat.expectedTotal')}: <strong>{tc.expectedTotal ? `${Number(tc.expectedTotal).toFixed(2)}$` : '-'}</strong></span>
+                <span className="text-slate-500">{t('admin.uat.actualTotal')}: <strong>{tc.actualTotal ? `${Number(tc.actualTotal).toFixed(2)}$` : '-'}</strong></span>
               </div>
 
               {/* Verifications */}
               {tc.verifications && (
                 <div>
-                  <p className="text-xs font-medium text-slate-500 mb-1">Verifications</p>
+                  <p className="text-xs font-medium text-slate-500 mb-1">{t('admin.uat.verifications')}</p>
                   <div className="flex flex-wrap gap-2">
                     {Object.entries(tc.verifications).map(([key, passed]) => (
                       <span
@@ -603,7 +608,7 @@ function TestCasesTable({
               {/* Errors */}
               {tc.errors.length > 0 && (
                 <div>
-                  <p className="text-xs font-medium text-red-500 mb-1">Erreurs ({tc.errors.length})</p>
+                  <p className="text-xs font-medium text-red-500 mb-1">{t('admin.uat.errorsCount', { count: tc.errors.length })}</p>
                   <div className="space-y-1">
                     {tc.errors.map(err => (
                       <ErrorCard key={err.id} error={err} />
@@ -633,21 +638,22 @@ function TaxDisplay({ taxes }: { taxes: Record<string, number> | null }) {
 }
 
 function TaxReportTable({ taxReport }: { taxReport: TaxReport }) {
+  const { t } = useI18n();
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
           <tr className="text-left text-xs text-slate-500 uppercase tracking-wider border-b border-slate-200">
-            <th className="px-3 py-2">Region</th>
-            <th className="px-3 py-2 text-right">Ventes</th>
-            <th className="px-3 py-2 text-right">Total ventes</th>
+            <th className="px-3 py-2">{t('admin.uat.region')}</th>
+            <th className="px-3 py-2 text-right">{t('admin.uat.sales')}</th>
+            <th className="px-3 py-2 text-right">{t('admin.uat.totalSales')}</th>
             <th className="px-3 py-2 text-right">TPS</th>
             <th className="px-3 py-2 text-right">TVQ</th>
             <th className="px-3 py-2 text-right">TVH</th>
             <th className="px-3 py-2 text-right">PST</th>
-            <th className="px-3 py-2 text-right">Total taxes</th>
-            <th className="px-3 py-2 text-right">Attendu</th>
-            <th className="px-3 py-2 text-right">Ecart</th>
+            <th className="px-3 py-2 text-right">{t('admin.uat.totalTaxes')}</th>
+            <th className="px-3 py-2 text-right">{t('admin.uat.expectedCol')}</th>
+            <th className="px-3 py-2 text-right">{t('admin.uat.difference')}</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-50">
@@ -670,7 +676,7 @@ function TaxReportTable({ taxReport }: { taxReport: TaxReport }) {
         </tbody>
         <tfoot>
           <tr className="border-t-2 border-slate-200 font-bold">
-            <td className="px-3 py-2">TOTAL</td>
+            <td className="px-3 py-2">{t('admin.uat.totalRow')}</td>
             <td className="px-3 py-2 text-right">{taxReport.rows.reduce((s, r) => s + r.salesCount, 0)}</td>
             <td className="px-3 py-2 text-right font-mono">{taxReport.totalSales.toFixed(2)}$</td>
             <td className="px-3 py-2" colSpan={4}></td>
@@ -687,13 +693,14 @@ function TaxReportTable({ taxReport }: { taxReport: TaxReport }) {
 }
 
 function ErrorsList({ errors }: { errors: (UatTestError & { scenarioCode: string; region: string })[] }) {
+  const { t } = useI18n();
   const [expandedError, setExpandedError] = useState<string | null>(null);
 
   if (errors.length === 0) {
     return (
       <div className="text-center py-8 text-slate-400">
         <CheckCircle2 className="w-8 h-8 mx-auto text-green-400" />
-        <p className="mt-2 text-sm">Aucune erreur!</p>
+        <p className="mt-2 text-sm">{t('admin.uat.noErrors')}</p>
       </div>
     );
   }
@@ -734,6 +741,7 @@ function ErrorCard({
   onToggle?: () => void;
   showScenario?: boolean;
 }) {
+  const { t } = useI18n();
   const severityColor = {
     ERROR: 'border-red-200 bg-red-50',
     WARNING: 'border-amber-200 bg-amber-50',
@@ -757,8 +765,8 @@ function ErrorCard({
           <p className="text-xs text-slate-700">{error.message}</p>
           <div className="flex gap-3 mt-1 text-[10px] text-slate-500">
             {showScenario && error.scenarioCode && <span>{error.scenarioCode} ({error.region})</span>}
-            {error.expected && <span>Attendu: <strong>{error.expected}</strong></span>}
-            {error.actual && <span>Obtenu: <strong>{error.actual}</strong></span>}
+            {error.expected && <span>{t('admin.uat.expected')}: <strong>{error.expected}</strong></span>}
+            {error.actual && <span>{t('admin.uat.actual')}: <strong>{error.actual}</strong></span>}
           </div>
         </div>
       </div>

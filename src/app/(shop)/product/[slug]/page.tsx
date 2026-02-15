@@ -7,6 +7,8 @@ import { prisma } from '@/lib/db';
 import { getServerLocale } from '@/i18n/server';
 import { withTranslation, getTranslatedFields } from '@/lib/translation';
 import { defaultLocale } from '@/i18n/config';
+import { JsonLd } from '@/components/seo/JsonLd';
+import { productSchema, breadcrumbSchema } from '@/lib/structured-data';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -25,6 +27,9 @@ async function getProductFromDB(slug: string) {
       formats: {
         where: { isActive: true },
         orderBy: { sortOrder: 'asc' },
+      },
+      quantityDiscounts: {
+        orderBy: { minQty: 'asc' },
       },
     },
   });
@@ -47,6 +52,23 @@ async function getRelatedProductsFromDB(categoryId: string, excludeId: string) {
     take: 4,
   });
   return related;
+}
+
+async function getActivePromotionForProduct(productId: string) {
+  const now = new Date();
+  const promotion = await prisma.discount.findFirst({
+    where: {
+      OR: [
+        { productId },
+        { appliesToAll: true },
+      ],
+      isActive: true,
+      startsAt: { lte: now },
+      endsAt: { gte: now },
+    },
+    orderBy: { value: 'desc' }, // Get the best promotion
+  });
+  return promotion;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -72,14 +94,44 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     }
   }
 
+  const primaryImage = product.images.find(img => img.isPrimary) || product.images[0];
+  const imageUrl = primaryImage?.url || product.imageUrl || '/images/og-default.jpg';
+
   return {
-    title: `${name} - ${subtitle} | Peptide Plus+`,
+    title: `${name} - ${subtitle}`,
     description,
+    alternates: {
+      canonical: `https://biocyclepeptides.com/product/${slug}`,
+    },
+    openGraph: {
+      title: `${name} - ${subtitle}`,
+      description,
+      url: `https://biocyclepeptides.com/product/${slug}`,
+      type: 'website',
+      images: [
+        {
+          url: imageUrl,
+          width: 800,
+          height: 800,
+          alt: name,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${name} - ${subtitle}`,
+      description,
+      images: [imageUrl],
+    },
   };
 }
 
 // Transform DB product for the client component
-function transformProductForClient(product: NonNullable<Awaited<ReturnType<typeof getProductFromDB>>>, relatedProducts: Awaited<ReturnType<typeof getRelatedProductsFromDB>>) {
+function transformProductForClient(
+  product: NonNullable<Awaited<ReturnType<typeof getProductFromDB>>>,
+  relatedProducts: Awaited<ReturnType<typeof getRelatedProductsFromDB>>,
+  promotion: Awaited<ReturnType<typeof getActivePromotionForProduct>>
+) {
   // Find primary image or first image
   const primaryImage = product.images.find(img => img.isPrimary) || product.images[0];
   const productImage = primaryImage?.url || product.imageUrl || undefined;
@@ -109,6 +161,7 @@ function transformProductForClient(product: NonNullable<Awaited<ReturnType<typeo
     isNew: product.isNew,
     isBestseller: product.isBestseller,
     productImage,
+    videoUrl: product.videoUrl || undefined,
     images: product.images.map(img => ({
       id: img.id,
       url: img.url,
@@ -135,6 +188,23 @@ function transformProductForClient(product: NonNullable<Awaited<ReturnType<typeo
       purity: rp.purity ? Number(rp.purity) : undefined,
       image: rp.images[0]?.url || rp.imageUrl || undefined,
     })),
+    quantityDiscounts: product.quantityDiscounts.map(qd => ({
+      id: qd.id,
+      minQty: qd.minQty,
+      maxQty: qd.maxQty,
+      discount: Number(qd.discount),
+    })),
+    createdAt: product.createdAt,
+    purchaseCount: product.purchaseCount,
+    averageRating: product.averageRating ? Number(product.averageRating) : undefined,
+    reviewCount: product.reviewCount,
+    restockedAt: product.restockedAt,
+    promotion: promotion ? {
+      id: promotion.id,
+      name: promotion.name,
+      endsAt: promotion.endsAt?.toISOString() || null,
+      badge: promotion.badge || null,
+    } : null,
   };
 }
 
@@ -154,7 +224,50 @@ export default async function ProductPage({ params }: PageProps) {
   }
 
   const relatedProducts = await getRelatedProductsFromDB(product.categoryId, product.id);
-  const transformedProduct = transformProductForClient(translatedProduct, relatedProducts);
+  const promotion = await getActivePromotionForProduct(product.id);
+  const transformedProduct = transformProductForClient(translatedProduct, relatedProducts, promotion);
 
-  return <ProductPageClient product={transformedProduct} />;
+  // Build JSON-LD structured data
+  const primaryImage = product.images.find(img => img.isPrimary) || product.images[0];
+  const lowestPrice = product.formats.length > 0
+    ? Math.min(...product.formats.map(f => Number(f.price)))
+    : Number(product.price);
+  const hasStock = product.formats.some(f => f.inStock);
+
+  const productJsonLd = productSchema({
+    name: translatedProduct.name,
+    description: translatedProduct.shortDescription || translatedProduct.description?.substring(0, 300) || '',
+    slug: product.slug,
+    image: primaryImage?.url || product.imageUrl || undefined,
+    images: product.images.map(img => ({ url: img.url })),
+    price: lowestPrice,
+    purity: product.purity ? Number(product.purity) : undefined,
+    sku: product.formats[0]?.sku || product.id,
+    inStock: hasStock,
+    categoryName: product.category?.name || undefined,
+  });
+
+  const breadcrumbItems = [
+    { name: 'Home', url: '/' },
+  ];
+  if (product.category) {
+    breadcrumbItems.push({
+      name: product.category.name,
+      url: `/shop?category=${product.category.slug}`,
+    });
+  }
+  breadcrumbItems.push({
+    name: translatedProduct.name,
+    url: `/product/${product.slug}`,
+  });
+
+  const breadcrumbJsonLd = breadcrumbSchema(breadcrumbItems);
+
+  return (
+    <>
+      <JsonLd data={productJsonLd} />
+      <JsonLd data={breadcrumbJsonLd} />
+      <ProductPageClient product={transformedProduct} />
+    </>
+  );
 }

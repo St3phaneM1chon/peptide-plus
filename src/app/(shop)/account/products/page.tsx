@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/contexts/CartContext';
 import SubscriptionOfferModal from '@/components/SubscriptionOfferModal';
+import { useTranslations } from '@/hooks/useTranslations';
 
 interface ProductHistoryItem {
   productId: string;
@@ -33,6 +35,7 @@ export default function ProductHistoryPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const { addItem } = useCart();
+  const { t } = useTranslations();
   const [categories, setCategories] = useState<CategoryGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [subscriptionOffer, setSubscriptionOffer] = useState<ProductHistoryItem | null>(null);
@@ -138,15 +141,15 @@ export default function ProductHistoryPage() {
         {/* Header */}
         <div className="mb-8">
           <nav className="text-sm text-gray-500 mb-2">
-            <Link href="/" className="hover:text-orange-600">Accueil</Link>
+            <Link href="/" className="hover:text-orange-600">{t('account.home')}</Link>
             <span className="mx-2">/</span>
-            <Link href="/account" className="hover:text-orange-600">Mon compte</Link>
+            <Link href="/account" className="hover:text-orange-600">{t('account.myAccount')}</Link>
             <span className="mx-2">/</span>
-            <span className="text-gray-900">Mes produits</span>
+            <span className="text-gray-900">{t('account.myProducts')}</span>
           </nav>
-          <h1 className="text-3xl font-bold text-gray-900">Mes produits</h1>
+          <h1 className="text-3xl font-bold text-gray-900">{t('account.myProducts')}</h1>
           <p className="text-gray-500 mt-1">
-            Tous les produits que vous avez commandes, organises par categorie.
+            {t('account.myProductsDesc')}
           </p>
         </div>
 
@@ -158,15 +161,15 @@ export default function ProductHistoryPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
               </svg>
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">Aucun produit commande</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">{t('account.noProductsOrdered')}</h2>
             <p className="text-gray-600 mb-6">
-              Vos produits commandes apparaitront ici pour faciliter vos reorders.
+              {t('account.noProductsOrderedDesc')}
             </p>
             <Link
               href="/shop"
               className="inline-block bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-medium transition-colors"
             >
-              Decouvrir nos produits
+              {t('account.discoverProducts')}
             </Link>
           </div>
         ) : (
@@ -177,7 +180,7 @@ export default function ProductHistoryPage() {
                 <div className="flex items-center gap-3 mb-4">
                   <h2 className="text-xl font-bold text-gray-900">{category.name}</h2>
                   <span className="text-sm text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
-                    {category.products.length} produit{category.products.length > 1 ? 's' : ''}
+                    {category.products.length} {category.products.length > 1 ? t('account.products') : t('account.product')}
                   </span>
                 </div>
 
@@ -198,10 +201,13 @@ export default function ProductHistoryPage() {
                           <div className="flex items-start gap-3 mb-3">
                             <div className="w-14 h-14 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
                               {product.imageUrl ? (
-                                <img
+                                <Image
                                   src={product.imageUrl}
                                   alt={product.productName}
+                                  width={56}
+                                  height={56}
                                   className="w-full h-full object-cover"
+                                  unoptimized
                                 />
                               ) : (
                                 <svg className="w-7 h-7 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -226,11 +232,11 @@ export default function ProductHistoryPage() {
                           <div className="grid grid-cols-2 gap-3 mb-4">
                             <div className="bg-gray-50 rounded-lg p-2 text-center">
                               <p className="text-lg font-bold text-gray-900">{product.totalOrdered}</p>
-                              <p className="text-xs text-gray-500">Qte totale</p>
+                              <p className="text-xs text-gray-500">{t('account.totalQty')}</p>
                             </div>
                             <div className="bg-gray-50 rounded-lg p-2 text-center">
                               <p className="text-lg font-bold text-gray-900">{product.orderCount}</p>
-                              <p className="text-xs text-gray-500">Commande{product.orderCount > 1 ? 's' : ''}</p>
+                              <p className="text-xs text-gray-500">{product.orderCount > 1 ? t('account.orders') : t('account.order')}</p>
                             </div>
                           </div>
 
@@ -238,7 +244,7 @@ export default function ProductHistoryPage() {
                           <div className="flex items-center justify-between mb-4 text-sm">
                             <div>
                               <p className="font-bold text-gray-900">${product.currentPrice.toFixed(2)}</p>
-                              <p className="text-xs text-gray-400">Prix actuel</p>
+                              <p className="text-xs text-gray-400">{t('account.currentPrice')}</p>
                             </div>
                             <div className="text-right">
                               <p className="text-gray-600">
@@ -248,7 +254,7 @@ export default function ProductHistoryPage() {
                                   year: 'numeric',
                                 })}
                               </p>
-                              <p className="text-xs text-gray-400">Derniere commande</p>
+                              <p className="text-xs text-gray-400">{t('account.lastOrder')}</p>
                             </div>
                           </div>
 
@@ -256,12 +262,12 @@ export default function ProductHistoryPage() {
                           <div className="flex items-center gap-2">
                             {!product.isActive && (
                               <span className="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
-                                Indisponible
+                                {t('account.unavailable')}
                               </span>
                             )}
                             {product.isActive && !product.inStock && (
                               <span className="px-2 py-1 text-xs font-medium bg-red-100 text-red-600 rounded-full">
-                                Rupture
+                                {t('account.outOfStock')}
                               </span>
                             )}
                             <button
@@ -280,7 +286,7 @@ export default function ProductHistoryPage() {
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" />
                                 </svg>
                               )}
-                              Ajouter au panier
+                              {t('account.addToCart')}
                             </button>
                           </div>
                         </div>

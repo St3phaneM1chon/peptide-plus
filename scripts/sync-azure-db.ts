@@ -4,6 +4,7 @@
  * SAFE: Does not delete existing data with orders/purchases
  */
 
+/* eslint-disable @typescript-eslint/ban-ts-comment, @typescript-eslint/no-explicit-any */
 // @ts-nocheck
 import { PrismaClient } from '@prisma/client';
 
@@ -25,7 +26,7 @@ async function compareAndSync() {
   const azureCatSlugs = new Set(azureCats.map(c => c.slug));
   const missingCats = localCats.filter(c => !azureCatSlugs.has(c.slug));
   for (const cat of missingCats) {
-    const { id, createdAt, updatedAt, ...data } = cat;
+    const { id: _id, createdAt: _createdAt, updatedAt: _updatedAt, ...data } = cat;
     await azure.category.create({ data });
     console.log(`  ✅ Added category: ${cat.name}`);
   }
@@ -40,12 +41,12 @@ async function compareAndSync() {
 
   let addedProds = 0, updatedProds = 0;
   for (const prod of localProds) {
-    const { id, createdAt, updatedAt, formats, images, ...prodData } = prod;
+    const { id: _id, createdAt: _createdAt, updatedAt: _updatedAt, formats, images, ...prodData } = prod;
     const azureId = azureProdMap.get(prod.slug);
 
     if (!azureId) {
       // Product doesn't exist on Azure - get the categoryId on Azure
-      const azureCat = await azure.category.findFirst({ where: { slug: { not: undefined } } });
+      const _azureCat = await azure.category.findFirst({ where: { slug: { not: undefined } } });
       if (prod.categoryId) {
         const localCat = await local.category.findUnique({ where: { id: prod.categoryId } });
         if (localCat) {
@@ -60,10 +61,10 @@ async function compareAndSync() {
         data: {
           ...prodData,
           formats: {
-            create: formats.map(({ id, productId, createdAt, updatedAt, ...f }) => f),
+            create: formats.map(({ id: _id, productId: _productId, createdAt: _createdAt, updatedAt: _updatedAt, ...f }) => f),
           },
           images: {
-            create: images.map(({ id, productId, createdAt, updatedAt, ...i }) => i),
+            create: images.map(({ id: _id, productId: _productId, createdAt: _createdAt, updatedAt: _updatedAt, ...i }) => i),
           },
         },
       });
@@ -80,7 +81,7 @@ async function compareAndSync() {
       const azureFormats = await azure.productFormat.findMany({ where: { productId: azureId } });
       if (azureFormats.length === 0 && formats.length > 0) {
         for (const fmt of formats) {
-          const { id, productId, createdAt, updatedAt, ...fmtData } = fmt;
+          const { id: _id, productId: _productId, createdAt: _createdAt, updatedAt: _updatedAt, ...fmtData } = fmt;
           await azure.productFormat.create({ data: { ...fmtData, productId: azureId } });
         }
         console.log(`  🔄 Added ${formats.length} formats for: ${prod.slug}`);
@@ -90,7 +91,7 @@ async function compareAndSync() {
       const azureImages = await azure.productImage.findMany({ where: { productId: azureId } });
       if (azureImages.length === 0 && images.length > 0) {
         for (const img of images) {
-          const { id, productId, createdAt, updatedAt, ...imgData } = img;
+          const { id: _id, productId: _productId, createdAt: _createdAt, updatedAt: _updatedAt, ...imgData } = img;
           await azure.productImage.create({ data: { ...imgData, productId: azureId } });
         }
         console.log(`  🔄 Added ${images.length} images for: ${prod.slug}`);
@@ -109,12 +110,12 @@ async function compareAndSync() {
 
   if (azureFaqs.length === 0 && localFaqs.length > 0) {
     for (const faq of localFaqs) {
-      const { id, createdAt, updatedAt, translations, ...faqData } = faq;
+      const { id: _id, createdAt: _createdAt, updatedAt: _updatedAt, translations, ...faqData } = faq;
       await (azure as any).faq.create({
         data: {
           ...faqData,
           translations: {
-            create: translations.map(({ id, faqId, createdAt, updatedAt, ...t }) => t),
+            create: translations.map(({ id: _id, faqId: _faqId, createdAt: _createdAt, updatedAt: _updatedAt, ...t }) => t),
           },
         },
       });
@@ -132,12 +133,12 @@ async function compareAndSync() {
 
   if (azurePages.length === 0 && localPages.length > 0) {
     for (const page of localPages) {
-      const { id, createdAt, updatedAt, translations, ...pageData } = page;
+      const { id: _id, createdAt: _createdAt, updatedAt: _updatedAt, translations, ...pageData } = page;
       await azure.page.create({
         data: {
           ...pageData,
           translations: {
-            create: translations.map(({ id, pageId, createdAt, updatedAt, ...t }) => t),
+            create: translations.map(({ id: _id, pageId: _pageId, createdAt: _createdAt, updatedAt: _updatedAt, ...t }) => t),
           },
         },
       });
@@ -161,7 +162,7 @@ async function compareAndSync() {
 
   if (azureZones.length === 0 && localZones.length > 0) {
     for (const zone of localZones) {
-      const { id, createdAt, updatedAt, ...zoneData } = zone;
+      const { id: _id, createdAt: _createdAt, updatedAt: _updatedAt, ...zoneData } = zone;
       await azure.shippingZone.create({ data: zoneData });
     }
     console.log(`  ✅ Synced ${localZones.length} zones`);
@@ -179,7 +180,7 @@ async function compareAndSync() {
     const azureDiscountCodes = new Set(azureDiscounts.map((d: any) => d.name));
     for (const disc of localDiscounts) {
       if (!azureDiscountCodes.has(disc.name)) {
-        const { id, createdAt, updatedAt, ...discData } = disc;
+        const { id: _id, createdAt: _createdAt, updatedAt: _updatedAt, ...discData } = disc;
         await azure.discount.create({ data: discData });
         console.log(`  ✅ Added discount: ${disc.name}`);
       }
@@ -196,7 +197,7 @@ async function compareAndSync() {
 
   if (azureAccounts.length === 0 && localAccounts.length > 0) {
     for (const acc of localAccounts) {
-      const { id, createdAt, updatedAt, ...accData } = acc;
+      const { id: _id, createdAt: _createdAt, updatedAt: _updatedAt, ...accData } = acc;
       await azure.chartOfAccount.create({ data: accData });
     }
     console.log(`  ✅ Synced ${localAccounts.length} accounts`);
@@ -210,7 +211,7 @@ async function compareAndSync() {
 
   if (azurePeriods.length === 0 && localPeriods.length > 0) {
     for (const per of localPeriods) {
-      const { id, createdAt, updatedAt, ...perData } = per;
+      const { id: _id, createdAt: _createdAt, updatedAt: _updatedAt, ...perData } = per;
       await azure.accountingPeriod.create({ data: perData });
     }
     console.log(`  ✅ Synced ${localPeriods.length} periods`);
@@ -224,7 +225,7 @@ async function compareAndSync() {
 
   if (azureSettings.length === 0 && localSettings.length > 0) {
     for (const setting of localSettings) {
-      const { id, createdAt, updatedAt, ...settingData } = setting;
+      const { id: _id, createdAt: _createdAt, updatedAt: _updatedAt, ...settingData } = setting;
       await azure.siteSetting.create({ data: settingData });
     }
     console.log(`  ✅ Synced ${localSettings.length} settings`);
@@ -240,12 +241,12 @@ async function compareAndSync() {
 
   if (azurePermGroups.length === 0 && localPermGroups.length > 0) {
     for (const pg of localPermGroups) {
-      const { id, createdAt, updatedAt, permissions, ...pgData } = pg;
+      const { id: _id, createdAt: _createdAt, updatedAt: _updatedAt, permissions, ...pgData } = pg;
       await azure.permissionGroup.create({
         data: {
           ...pgData,
           permissions: {
-            create: permissions.map(({ id, groupId, createdAt, ...p }: any) => p),
+            create: permissions.map(({ id: _id, groupId: _groupId, createdAt: _createdAt, ...p }: any) => p),
           },
         },
       });

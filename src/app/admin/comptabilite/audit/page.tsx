@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useI18n } from '@/i18n/client';
 
 interface AuditEntry {
   id: string;
@@ -11,33 +12,12 @@ interface AuditEntry {
   entityNumber?: string;
   userName: string;
   ipAddress?: string;
-  changes: { field: string; oldValue: any; newValue: any }[];
+  changes: { field: string; oldValue: unknown; newValue: unknown }[];
 }
 
-const actionLabels: Record<string, string> = {
-  CREATE: 'Création',
-  UPDATE: 'Modification',
-  DELETE: 'Suppression',
-  POST: 'Validation',
-  VOID: 'Annulation',
-  APPROVE: 'Approbation',
-  RECONCILE: 'Rapprochement',
-  CLOSE_PERIOD: 'Clôture',
-  LOGIN: 'Connexion',
-  LOGOUT: 'Déconnexion',
-  EXPORT: 'Export',
-};
+// actionLabels will be resolved inside component via t()
 
-const entityLabels: Record<string, string> = {
-  JOURNAL_ENTRY: 'Écriture',
-  CUSTOMER_INVOICE: 'Facture client',
-  SUPPLIER_INVOICE: 'Facture fournisseur',
-  BANK_TRANSACTION: 'Transaction bancaire',
-  CHART_OF_ACCOUNT: 'Compte',
-  TAX_REPORT: 'Déclaration fiscale',
-  SETTINGS: 'Paramètres',
-  USER: 'Utilisateur',
-};
+// entityLabels will be resolved inside component via t()
 
 const actionColors: Record<string, string> = {
   CREATE: 'bg-green-900/30 text-green-400',
@@ -52,6 +32,33 @@ const actionColors: Record<string, string> = {
 };
 
 export default function AuditTrailPage() {
+  const { t } = useI18n();
+
+  const actionLabels: Record<string, string> = {
+    CREATE: t('admin.audit.actionCreate'),
+    UPDATE: t('admin.audit.actionUpdate'),
+    DELETE: t('admin.audit.actionDelete'),
+    POST: t('admin.audit.actionPost'),
+    VOID: t('admin.audit.actionVoid'),
+    APPROVE: t('admin.audit.actionApprove'),
+    RECONCILE: t('admin.audit.actionReconcile'),
+    CLOSE_PERIOD: t('admin.audit.actionClosePeriod'),
+    LOGIN: t('admin.audit.actionLogin'),
+    LOGOUT: t('admin.audit.actionLogout'),
+    EXPORT: t('admin.audit.actionExport'),
+  };
+
+  const entityLabels: Record<string, string> = {
+    JOURNAL_ENTRY: t('admin.audit.entityEntry'),
+    CUSTOMER_INVOICE: t('admin.audit.entityCustomerInvoice'),
+    SUPPLIER_INVOICE: t('admin.audit.entitySupplierInvoice'),
+    BANK_TRANSACTION: t('admin.audit.entityBankTransaction'),
+    CHART_OF_ACCOUNT: t('admin.audit.entityAccount'),
+    TAX_REPORT: t('admin.audit.entityTaxReport'),
+    SETTINGS: t('admin.audit.entitySettings'),
+    USER: t('admin.audit.entityUser'),
+  };
+
   const [entries, setEntries] = useState<AuditEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
@@ -69,6 +76,7 @@ export default function AuditTrailPage() {
 
   useEffect(() => {
     loadEntries();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Refetch when date filters change
@@ -76,6 +84,7 @@ export default function AuditTrailPage() {
     if (filters.dateFrom || filters.dateTo) {
       loadEntries();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters.dateFrom, filters.dateTo]);
 
   const loadEntries = async () => {
@@ -90,12 +99,12 @@ export default function AuditTrailPage() {
 
       const queryStr = params.toString();
       const response = await fetch(`/api/accounting/audit${queryStr ? `?${queryStr}` : ''}`);
-      if (!response.ok) throw new Error(`Erreur ${response.status}`);
+      if (!response.ok) throw new Error(`${t('common.error')} ${response.status}`);
       const data = await response.json();
       setEntries(data.entries || data.data || []);
     } catch (err) {
       console.error('Error loading audit entries:', err);
-      setError('Impossible de charger la piste d\'audit.');
+      setError(t('admin.audit.errorLoadAudit'));
       setEntries([]);
     } finally {
       setLoading(false);
@@ -119,7 +128,7 @@ export default function AuditTrailPage() {
     await new Promise(resolve => setTimeout(resolve, 1000));
     
     // Generate CSV
-    const headers = ['Date/Heure', 'Action', 'Type', 'Document', 'Utilisateur', 'IP', 'Modifications'];
+    const headers = [t('admin.audit.csvDateHeader'), t('admin.audit.csvActionHeader'), t('admin.audit.csvTypeHeader'), t('admin.audit.csvDocumentHeader'), t('admin.audit.csvUserHeader'), t('admin.audit.csvIPHeader'), t('admin.audit.csvChangesHeader')];
     const rows = filteredEntries.map(e => [
       new Date(e.timestamp).toISOString(),
       actionLabels[e.action] || e.action,
@@ -148,14 +157,14 @@ export default function AuditTrailPage() {
   const uniqueUsers = new Set(entries.map(e => e.userName)).size;
 
   if (loading) {
-    return <div className="p-8 text-center">Chargement...</div>;
+    return <div className="p-8 text-center">{t('admin.audit.loading')}</div>;
   }
 
   if (error) {
     return (
       <div className="p-8 text-center">
         <p className="text-red-400 mb-4">{error}</p>
-        <button onClick={loadEntries} className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg">Réessayer</button>
+        <button onClick={loadEntries} className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg">{t('admin.audit.retry')}</button>
       </div>
     );
   }
@@ -165,34 +174,34 @@ export default function AuditTrailPage() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-white">Piste d'audit</h1>
-          <p className="text-neutral-400 mt-1">Historique complet de toutes les actions comptables</p>
+          <h1 className="text-2xl font-bold text-white">{t('admin.audit.title')}</h1>
+          <p className="text-neutral-400 mt-1">{t('admin.audit.subtitle')}</p>
         </div>
         <button
           onClick={handleExport}
           disabled={exporting}
           className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg flex items-center gap-2 disabled:opacity-50"
         >
-          {exporting ? 'Export...' : '📥 Exporter CSV'}
+          {exporting ? t('admin.audit.exporting') : '📥 ' + t('admin.audit.exportCSV')}
         </button>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-neutral-800 rounded-xl p-4 border border-neutral-700">
-          <p className="text-sm text-neutral-400">Actions aujourd'hui</p>
+          <p className="text-sm text-neutral-400">{t('admin.audit.actionsToday')}</p>
           <p className="text-2xl font-bold text-white mt-1">{todayCount}</p>
         </div>
         <div className="bg-neutral-800 rounded-xl p-4 border border-neutral-700">
-          <p className="text-sm text-neutral-400">Total actions</p>
+          <p className="text-sm text-neutral-400">{t('admin.audit.totalActions')}</p>
           <p className="text-2xl font-bold text-sky-400 mt-1">{entries.length}</p>
         </div>
         <div className="bg-neutral-800 rounded-xl p-4 border border-neutral-700">
-          <p className="text-sm text-neutral-400">Utilisateurs actifs</p>
+          <p className="text-sm text-neutral-400">{t('admin.audit.activeUsers')}</p>
           <p className="text-2xl font-bold text-white mt-1">{uniqueUsers}</p>
         </div>
         <div className="bg-neutral-800 rounded-xl p-4 border border-neutral-700">
-          <p className="text-sm text-neutral-400">Après filtres</p>
+          <p className="text-sm text-neutral-400">{t('admin.audit.afterFilters')}</p>
           <p className="text-2xl font-bold text-white mt-1">{filteredEntries.length}</p>
         </div>
       </div>
@@ -201,48 +210,48 @@ export default function AuditTrailPage() {
       <div className="bg-neutral-800 rounded-xl p-4 border border-neutral-700">
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           <div>
-            <label className="block text-xs text-neutral-400 mb-1">Action</label>
+            <label className="block text-xs text-neutral-400 mb-1">{t('admin.audit.actionLabel')}</label>
             <select
               value={filters.action}
               onChange={e => setFilters(prev => ({ ...prev, action: e.target.value }))}
               className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-white text-sm"
             >
-              <option value="">Toutes</option>
+              <option value="">{t('admin.audit.allActions')}</option>
               {Object.entries(actionLabels).map(([val, label]) => (
                 <option key={val} value={val}>{label}</option>
               ))}
             </select>
           </div>
           <div>
-            <label className="block text-xs text-neutral-400 mb-1">Type d'entité</label>
+            <label className="block text-xs text-neutral-400 mb-1">{t('admin.audit.entityTypeLabel')}</label>
             <select
               value={filters.entityType}
               onChange={e => setFilters(prev => ({ ...prev, entityType: e.target.value }))}
               className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-white text-sm"
             >
-              <option value="">Tous</option>
+              <option value="">{t('admin.audit.allTypes')}</option>
               {Object.entries(entityLabels).map(([val, label]) => (
                 <option key={val} value={val}>{label}</option>
               ))}
             </select>
           </div>
           <div>
-            <label className="block text-xs text-neutral-400 mb-1">Utilisateur</label>
+            <label className="block text-xs text-neutral-400 mb-1">{t('admin.audit.userLabel')}</label>
             <input
               type="text"
               value={filters.user}
               onChange={e => setFilters(prev => ({ ...prev, user: e.target.value }))}
-              placeholder="Rechercher..."
+              placeholder={t('admin.audit.searchPlaceholder')}
               className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-white text-sm"
             />
           </div>
           <div>
-            <label className="block text-xs text-neutral-400 mb-1">Recherche</label>
+            <label className="block text-xs text-neutral-400 mb-1">{t('admin.audit.searchLabel')}</label>
             <input
               type="text"
               value={filters.search}
               onChange={e => setFilters(prev => ({ ...prev, search: e.target.value }))}
-              placeholder="N° document..."
+              placeholder={t('admin.audit.docNumberPlaceholder')}
               className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-white text-sm"
             />
           </div>
@@ -251,7 +260,7 @@ export default function AuditTrailPage() {
               onClick={() => setFilters({ action: '', entityType: '', user: '', dateFrom: '', dateTo: '', search: '' })}
               className="px-4 py-2 text-neutral-400 hover:text-white text-sm"
             >
-              Réinitialiser
+              {t('admin.audit.reset')}
             </button>
           </div>
         </div>
@@ -288,7 +297,7 @@ export default function AuditTrailPage() {
                   {entry.changes.length > 0 && (
                     <p className="text-sm text-neutral-400 mt-1">
                       {entry.changes.slice(0, 2).map(c => c.field).join(', ')}
-                      {entry.changes.length > 2 && ` +${entry.changes.length - 2} autres`}
+                      {entry.changes.length > 2 && ` +${entry.changes.length - 2} ${t('admin.audit.others')}`}
                     </p>
                   )}
                 </div>
@@ -310,49 +319,49 @@ export default function AuditTrailPage() {
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
           <div className="bg-neutral-800 rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-neutral-700 flex justify-between items-center">
-              <h2 className="text-xl font-bold text-white">Détails de l'audit</h2>
+              <h2 className="text-xl font-bold text-white">{t('admin.audit.auditDetails')}</h2>
               <button onClick={() => setSelectedEntry(null)} className="text-neutral-400 hover:text-white">✕</button>
             </div>
             <div className="p-6 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-xs text-neutral-400">Date/Heure</p>
+                  <p className="text-xs text-neutral-400">{t('admin.audit.dateTimeLabel')}</p>
                   <p className="text-white">{new Date(selectedEntry.timestamp).toLocaleString('fr-CA')}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-neutral-400">Action</p>
+                  <p className="text-xs text-neutral-400">{t('admin.audit.actionLabel')}</p>
                   <span className={`px-2 py-1 rounded text-xs font-medium ${actionColors[selectedEntry.action]}`}>
                     {actionLabels[selectedEntry.action]}
                   </span>
                 </div>
                 <div>
-                  <p className="text-xs text-neutral-400">Type</p>
+                  <p className="text-xs text-neutral-400">{t('admin.audit.typeLabel')}</p>
                   <p className="text-white">{entityLabels[selectedEntry.entityType]}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-neutral-400">Document</p>
+                  <p className="text-xs text-neutral-400">{t('admin.audit.documentLabel')}</p>
                   <p className="text-white font-mono">{selectedEntry.entityNumber || selectedEntry.entityId}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-neutral-400">Utilisateur</p>
+                  <p className="text-xs text-neutral-400">{t('admin.audit.userLabel')}</p>
                   <p className="text-white">{selectedEntry.userName}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-neutral-400">Adresse IP</p>
+                  <p className="text-xs text-neutral-400">{t('admin.audit.ipAddressLabel')}</p>
                   <p className="text-white font-mono">{selectedEntry.ipAddress || '-'}</p>
                 </div>
               </div>
 
               {selectedEntry.changes.length > 0 && (
                 <div>
-                  <p className="text-sm font-medium text-neutral-300 mb-2">Modifications</p>
+                  <p className="text-sm font-medium text-neutral-300 mb-2">{t('admin.audit.modificationsLabel')}</p>
                   <div className="bg-neutral-900 rounded-lg overflow-hidden">
                     <table className="w-full text-sm">
                       <thead className="bg-neutral-700/50">
                         <tr>
-                          <th className="px-3 py-2 text-left text-xs text-neutral-400">Champ</th>
-                          <th className="px-3 py-2 text-left text-xs text-neutral-400">Ancienne valeur</th>
-                          <th className="px-3 py-2 text-left text-xs text-neutral-400">Nouvelle valeur</th>
+                          <th className="px-3 py-2 text-left text-xs text-neutral-400">{t('admin.audit.fieldCol')}</th>
+                          <th className="px-3 py-2 text-left text-xs text-neutral-400">{t('admin.audit.oldValueCol')}</th>
+                          <th className="px-3 py-2 text-left text-xs text-neutral-400">{t('admin.audit.newValueCol')}</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-neutral-700">
@@ -360,7 +369,7 @@ export default function AuditTrailPage() {
                           <tr key={i}>
                             <td className="px-3 py-2 text-white">{change.field}</td>
                             <td className="px-3 py-2 text-red-400 font-mono text-xs">
-                              {change.oldValue === null ? <span className="text-neutral-500 italic">vide</span> : String(change.oldValue)}
+                              {change.oldValue === null ? <span className="text-neutral-500 italic">{t('admin.audit.empty')}</span> : String(change.oldValue)}
                             </td>
                             <td className="px-3 py-2 text-green-400 font-mono text-xs">
                               {String(change.newValue)}

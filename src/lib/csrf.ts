@@ -6,7 +6,7 @@
 import { randomBytes, createHmac } from 'crypto';
 import { cookies } from 'next/headers';
 
-const CSRF_SECRET = process.env.CSRF_SECRET || process.env.NEXTAUTH_SECRET;
+const CSRF_SECRET: string = process.env.CSRF_SECRET || process.env.NEXTAUTH_SECRET || '';
 if (!CSRF_SECRET) {
   throw new Error('CSRF_SECRET or NEXTAUTH_SECRET must be set in environment variables');
 }

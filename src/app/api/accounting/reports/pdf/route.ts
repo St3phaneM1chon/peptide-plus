@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { UserRole } from '@/types';
@@ -40,6 +42,11 @@ export async function GET(request: NextRequest) {
         }
         html = generateTaxReportHTML({
           ...taxReport,
+          periodType: taxReport.periodType as 'MONTHLY' | 'QUARTERLY' | 'ANNUAL',
+          month: taxReport.month ?? undefined,
+          quarter: taxReport.quarter ?? undefined,
+          filedAt: taxReport.filedAt ?? undefined,
+          paidAt: taxReport.paidAt ?? undefined,
           tpsCollected: Number(taxReport.tpsCollected),
           tvqCollected: Number(taxReport.tvqCollected),
           tvhCollected: Number(taxReport.tvhCollected),

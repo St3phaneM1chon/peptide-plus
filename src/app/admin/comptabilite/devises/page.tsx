@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useI18n } from '@/i18n/client';
+import { toast } from 'sonner';
 
 interface Currency {
   id?: string;
@@ -26,12 +28,24 @@ interface ForeignAccount {
 }
 
 export default function CurrencyPage() {
+  const { t, locale } = useI18n();
   const [activeTab, setActiveTab] = useState<'rates' | 'accounts' | 'history'>('rates');
   const [currencies, setCurrencies] = useState<Currency[]>([]);
   const [foreignAccounts, setForeignAccounts] = useState<ForeignAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [, setSelectedCurrency] = useState<string | null>(null);
+  // Converter state
+  const [converterAmount, setConverterAmount] = useState<number>(100);
+  const [converterCurrency, setConverterCurrency] = useState<string>('');
+  // History tab selected currency
+  const [historyCurrency, setHistoryCurrency] = useState<string>('USD');
+
+  const tabs = [
+    { id: 'rates', label: t('admin.multiCurrency.exchangeRates') },
+    { id: 'accounts', label: t('admin.multiCurrency.foreignAccounts') },
+    { id: 'history', label: t('admin.multiCurrency.history') },
+  ];
 
   useEffect(() => {
     loadData();
@@ -42,6 +56,10 @@ export default function CurrencyPage() {
       // Fetch currencies from API
       const res = await fetch('/api/accounting/currencies');
       const json = await res.json();
+
+      // Build a rate lookup map from fetched currencies for use in foreign accounts
+      const rateMap = new Map<string, number>();
+
       if (json.currencies) {
         const mapped: Currency[] = json.currencies
           .filter((c: Record<string, unknown>) => (c.code as string) !== 'CAD')
@@ -52,10 +70,12 @@ export default function CurrencyPage() {
             symbol: c.symbol as string,
             rate: Number(c.exchangeRate) || 1,
             lastUpdated: c.rateUpdatedAt ? new Date(c.rateUpdatedAt as string) : new Date(),
+            // No historical rates API available — trend and change24h are placeholder values
             trend: 'STABLE' as const,
             change24h: 0,
           }));
         setCurrencies(mapped);
+        mapped.forEach(c => rateMap.set(c.code, c.rate));
       }
 
       // Fetch foreign accounts from bank-accounts API (filter non-CAD)
@@ -66,17 +86,21 @@ export default function CurrencyPage() {
           .filter((a: Record<string, unknown>) => (a.currency as string) !== 'CAD')
           .map((a: Record<string, unknown>) => {
             const balance = Number(a.currentBalance) || 0;
-            const currentRate = 1.35; // Will be updated with real rate below
+            const currencyCode = (a.currency as string) || 'USD';
+            // Use the actual exchange rate from fetched currencies; fall back to 1 if not found
+            const currentRate = rateMap.get(currencyCode) ?? 1;
             const cadEquivalent = balance * currentRate;
             return {
               id: a.id as string,
               accountCode: (a.accountNumber as string) || '',
               accountName: a.name as string,
-              currency: (a.currency as string) || 'USD',
+              currency: currencyCode,
               balance,
               cadEquivalent,
+              // originalRate: uses current rate as initial baseline (no stored historical rate available)
               originalRate: currentRate,
               currentRate,
+              // unrealizedGainLoss starts at 0; recalculated on revaluation
               unrealizedGainLoss: 0,
             };
           });
@@ -105,6 +129,7 @@ export default function CurrencyPage() {
             symbol: c.symbol as string,
             rate: Number(c.exchangeRate) || 1,
             lastUpdated: c.rateUpdatedAt ? new Date(c.rateUpdatedAt as string) : new Date(),
+            // No historical rates API available — trend and change24h are placeholder values
             trend: 'STABLE' as const,
             change24h: 0,
           }));
@@ -118,7 +143,7 @@ export default function CurrencyPage() {
   };
 
   const handleRevaluation = async () => {
-    const confirm = window.confirm('Voulez-vous effectuer une r\u00e9\u00e9valuation des comptes en devises \u00e9trang\u00e8res?');
+    const confirm = window.confirm(t('admin.multiCurrency.revaluationConfirm'));
     if (!confirm) return;
 
     // Revaluation using current rates from currencies
@@ -135,11 +160,11 @@ export default function CurrencyPage() {
       };
     }));
 
-    alert('R\u00e9\u00e9valuation effectu\u00e9e. Une \u00e9criture de r\u00e9gularisation a \u00e9t\u00e9 cr\u00e9\u00e9e.');
+    toast.success(t('admin.multiCurrency.revaluationDone'));
   };
 
   const formatCurrency = (amount: number, currency: string = 'CAD') =>
-    amount.toLocaleString('fr-CA', { style: 'currency', currency });
+    amount.toLocaleString(locale, { style: 'currency', currency });
 
   const getTrendIcon = (trend: string) => {
     switch (trend) {
@@ -168,8 +193,8 @@ export default function CurrencyPage() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-white">Multi-devises</h1>
-          <p className="text-neutral-400 mt-1">Taux de change et comptes en devises \u00e9trang\u00e8res</p>
+          <h1 className="text-2xl font-bold text-white">{t('admin.multiCurrency.title')}</h1>
+          <p className="text-neutral-400 mt-1">{t('admin.multiCurrency.subtitle')}</p>
         </div>
         <div className="flex gap-2">
           <button
@@ -177,13 +202,13 @@ export default function CurrencyPage() {
             disabled={refreshing}
             className="px-4 py-2 bg-neutral-700 hover:bg-neutral-600 text-white rounded-lg flex items-center gap-2 disabled:opacity-50"
           >
-            {refreshing ? '\u23f3' : '\ud83d\udd04'} Actualiser les taux
+            {refreshing ? '\u23f3' : '\ud83d\udd04'} {t('admin.multiCurrency.refreshRates')}
           </button>
           <button
             onClick={handleRevaluation}
             className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg"
           >
-            \ud83d\udcb1 R\u00e9\u00e9valuation
+            \ud83d\udcb1 {t('admin.multiCurrency.revaluation')}
           </button>
         </div>
       </div>
@@ -191,20 +216,20 @@ export default function CurrencyPage() {
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-neutral-800 rounded-xl p-4 border border-neutral-700">
-          <p className="text-sm text-neutral-400">Devise de base</p>
+          <p className="text-sm text-neutral-400">{t('admin.multiCurrency.baseCurrency')}</p>
           <p className="text-2xl font-bold text-white mt-1">CAD \ud83c\udde8\ud83c\udde6</p>
-          <p className="text-xs text-neutral-500">Dollar canadien</p>
+          <p className="text-xs text-neutral-500">{t('admin.multiCurrency.canadianDollar')}</p>
         </div>
         <div className="bg-neutral-800 rounded-xl p-4 border border-neutral-700">
-          <p className="text-sm text-neutral-400">Devises actives</p>
+          <p className="text-sm text-neutral-400">{t('admin.multiCurrency.activeCurrencies')}</p>
           <p className="text-2xl font-bold text-sky-400 mt-1">{currencies.length}</p>
         </div>
         <div className="bg-neutral-800 rounded-xl p-4 border border-neutral-700">
-          <p className="text-sm text-neutral-400">Avoirs en devises</p>
+          <p className="text-sm text-neutral-400">{t('admin.multiCurrency.foreignHoldings')}</p>
           <p className="text-2xl font-bold text-white mt-1">{formatCurrency(totalForeignCAD)}</p>
         </div>
         <div className="bg-neutral-800 rounded-xl p-4 border border-neutral-700">
-          <p className="text-sm text-neutral-400">Gain/Perte non r\u00e9alis\u00e9</p>
+          <p className="text-sm text-neutral-400">{t('admin.multiCurrency.unrealizedGainLoss')}</p>
           <p className={`text-2xl font-bold mt-1 ${totalUnrealizedGainLoss >= 0 ? 'text-green-400' : 'text-red-400'}`}>
             {totalUnrealizedGainLoss >= 0 ? '+' : ''}{formatCurrency(totalUnrealizedGainLoss)}
           </p>
@@ -213,11 +238,7 @@ export default function CurrencyPage() {
 
       {/* Tabs */}
       <div className="flex gap-1 bg-neutral-800 p-1 rounded-lg w-fit">
-        {[
-          { id: 'rates', label: 'Taux de change' },
-          { id: 'accounts', label: 'Comptes en devises' },
-          { id: 'history', label: 'Historique' },
-        ].map(tab => (
+        {tabs.map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id as typeof activeTab)}
@@ -264,7 +285,7 @@ export default function CurrencyPage() {
               </div>
 
               <p className="text-xs text-neutral-500 mt-2">
-                Mis \u00e0 jour: {currency.lastUpdated.toLocaleTimeString('fr-CA')}
+                {t('admin.multiCurrency.updatedAt', { time: currency.lastUpdated.toLocaleTimeString(locale) })}
               </p>
             </div>
           ))}
@@ -273,7 +294,7 @@ export default function CurrencyPage() {
           <div className="bg-neutral-800 rounded-xl p-4 border border-dashed border-neutral-600 flex items-center justify-center min-h-[160px]">
             <button className="text-neutral-400 hover:text-white flex flex-col items-center gap-2">
               <span className="text-3xl">+</span>
-              <span className="text-sm">Ajouter une devise</span>
+              <span className="text-sm">{t('admin.multiCurrency.addCurrency')}</span>
             </button>
           </div>
         </div>
@@ -286,13 +307,13 @@ export default function CurrencyPage() {
             <table className="w-full">
               <thead className="bg-neutral-900/50">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-neutral-400 uppercase">Compte</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-neutral-400 uppercase">Devise</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-neutral-400 uppercase">Solde original</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-neutral-400 uppercase">\u00c9quivalent CAD</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-neutral-400 uppercase">Taux original</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-neutral-400 uppercase">Taux actuel</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-neutral-400 uppercase">Gain/Perte</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-neutral-400 uppercase">{t('admin.multiCurrency.account')}</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-neutral-400 uppercase">{t('admin.multiCurrency.currency')}</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-neutral-400 uppercase">{t('admin.multiCurrency.originalBalance')}</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-neutral-400 uppercase">{t('admin.multiCurrency.cadEquivalent')}</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-neutral-400 uppercase">{t('admin.multiCurrency.originalRate')}</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-neutral-400 uppercase">{t('admin.multiCurrency.currentRate')}</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-neutral-400 uppercase">{t('admin.multiCurrency.gainLoss')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-700">
@@ -308,7 +329,7 @@ export default function CurrencyPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-right font-mono text-white">
-                      {account.balance.toLocaleString('fr-CA', { minimumFractionDigits: 2 })} {account.currency}
+                      {account.balance.toLocaleString(locale, { minimumFractionDigits: 2 })} {account.currency}
                     </td>
                     <td className="px-4 py-3 text-right font-mono text-sky-400">
                       {formatCurrency(account.cadEquivalent)}
@@ -327,7 +348,7 @@ export default function CurrencyPage() {
               </tbody>
               <tfoot className="bg-neutral-900/50">
                 <tr>
-                  <td colSpan={3} className="px-4 py-3 text-right font-medium text-neutral-300">Total</td>
+                  <td colSpan={3} className="px-4 py-3 text-right font-medium text-neutral-300">{t('admin.supplierInvoices.total')}</td>
                   <td className="px-4 py-3 text-right font-bold text-sky-400">
                     {formatCurrency(totalForeignCAD)}
                   </td>
@@ -342,88 +363,97 @@ export default function CurrencyPage() {
 
           {/* Add account */}
           <button className="w-full py-3 border border-dashed border-neutral-600 rounded-xl text-neutral-400 hover:text-white hover:border-neutral-500">
-            + Ajouter un compte en devise \u00e9trang\u00e8re
+            {t('admin.multiCurrency.addForeignAccount')}
           </button>
         </div>
       )}
 
       {/* History Tab */}
-      {activeTab === 'history' && (
+      {activeTab === 'history' && (() => {
+        const selectedRate = currencies.find(c => c.code === historyCurrency)?.rate;
+        return (
         <div className="bg-neutral-800 rounded-xl border border-neutral-700 overflow-hidden">
           <div className="p-4 border-b border-neutral-700">
             <div className="flex gap-4">
-              <select className="px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-white text-sm">
-                <option value="USD">USD / CAD</option>
-                <option value="EUR">EUR / CAD</option>
-                <option value="GBP">GBP / CAD</option>
+              <select
+                value={historyCurrency}
+                onChange={(e) => setHistoryCurrency(e.target.value)}
+                className="px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-white text-sm"
+              >
+                {currencies.map(c => (
+                  <option key={c.code} value={c.code}>{c.code} / CAD</option>
+                ))}
               </select>
               <select className="px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-white text-sm">
-                <option value="7">7 derniers jours</option>
-                <option value="30">30 derniers jours</option>
-                <option value="90">90 derniers jours</option>
+                <option value="7">{t('admin.multiCurrency.last7Days')}</option>
+                <option value="30">{t('admin.multiCurrency.last30Days')}</option>
+                <option value="90">{t('admin.multiCurrency.last90Days')}</option>
               </select>
             </div>
           </div>
 
-          {/* Simple chart representation */}
+          {/* No historical data available — show current rate as reference */}
           <div className="p-6">
-            <div className="h-48 flex items-end gap-1">
-              {Array.from({ length: 30 }, (_, i) => {
-                const baseRate = currencies.find(c => c.code === 'USD')?.rate || 1.35;
-                const variation = Math.sin(i * 0.5) * 0.02 + (Math.random() - 0.5) * 0.01;
-                const rate = baseRate + variation;
-                const height = ((rate - (baseRate - 0.05)) / 0.10) * 100;
-
-                return (
-                  <div
-                    key={i}
-                    className="flex-1 bg-sky-500/50 hover:bg-sky-500 rounded-t transition-colors"
-                    style={{ height: `${Math.max(10, height)}%` }}
-                    title={`${rate.toFixed(4)} CAD`}
-                  />
-                );
-              })}
-            </div>
-            <div className="flex justify-between text-xs text-neutral-500 mt-2">
-              <span>Il y a 30 jours</span>
-              <span>Aujourd&apos;hui</span>
+            <div className="h-48 flex flex-col items-center justify-center text-center">
+              <p className="text-neutral-400 text-sm mb-4">
+                {t('admin.multiCurrency.noHistoricalData')}
+              </p>
+              {selectedRate != null && (
+                <div>
+                  <p className="text-xs text-neutral-500 mb-1">{t('admin.multiCurrency.currentRate')}</p>
+                  <p className="text-3xl font-bold text-sky-400">
+                    {selectedRate.toFixed(4)} <span className="text-sm text-neutral-400">CAD</span>
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Stats */}
+          {/* Stats — only current rate is available, no historical min/max/volatility */}
           <div className="grid grid-cols-4 gap-4 p-4 border-t border-neutral-700">
             <div>
-              <p className="text-xs text-neutral-400">Moyenne</p>
-              <p className="font-medium text-white">{(currencies.find(c => c.code === 'USD')?.rate || 1.35).toFixed(4)}</p>
+              <p className="text-xs text-neutral-400">{t('admin.multiCurrency.average')}</p>
+              <p className="font-medium text-white">{selectedRate != null ? selectedRate.toFixed(4) : '\u2014'}</p>
             </div>
             <div>
-              <p className="text-xs text-neutral-400">Plus haut</p>
-              <p className="font-medium text-green-400">{((currencies.find(c => c.code === 'USD')?.rate || 1.35) * 1.01).toFixed(4)}</p>
+              <p className="text-xs text-neutral-400">{t('admin.multiCurrency.highest')}</p>
+              <p className="font-medium text-neutral-500">{'\u2014'}</p>
             </div>
             <div>
-              <p className="text-xs text-neutral-400">Plus bas</p>
-              <p className="font-medium text-red-400">{((currencies.find(c => c.code === 'USD')?.rate || 1.35) * 0.99).toFixed(4)}</p>
+              <p className="text-xs text-neutral-400">{t('admin.multiCurrency.lowest')}</p>
+              <p className="font-medium text-neutral-500">{'\u2014'}</p>
             </div>
             <div>
-              <p className="text-xs text-neutral-400">Volatilit\u00e9</p>
-              <p className="font-medium text-white">2.1%</p>
+              <p className="text-xs text-neutral-400">{t('admin.multiCurrency.volatility')}</p>
+              <p className="font-medium text-neutral-500">{'\u2014'}</p>
             </div>
           </div>
         </div>
-      )}
+        );
+      })()}
 
       {/* Currency converter */}
+      {(() => {
+        const selectedConverterCurrency = converterCurrency || currencies[0]?.code || '';
+        const converterRate = currencies.find(c => c.code === selectedConverterCurrency)?.rate ?? 0;
+        const convertedAmount = converterAmount * converterRate;
+        return (
       <div className="bg-neutral-800 rounded-xl p-6 border border-neutral-700">
-        <h3 className="font-medium text-white mb-4">\ud83d\udd04 Convertisseur rapide</h3>
+        <h3 className="font-medium text-white mb-4">\ud83d\udd04 {t('admin.multiCurrency.quickConverter')}</h3>
         <div className="flex items-center gap-4">
           <div className="flex-1">
             <input
               type="number"
-              defaultValue={100}
+              value={converterAmount}
+              onChange={(e) => setConverterAmount(Number(e.target.value) || 0)}
               className="w-full px-4 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-white text-lg"
             />
           </div>
-          <select className="px-4 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-white">
+          <select
+            value={selectedConverterCurrency}
+            onChange={(e) => setConverterCurrency(e.target.value)}
+            className="px-4 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-white"
+          >
             {currencies.map(c => (
               <option key={c.code} value={c.code}>{c.code}</option>
             ))}
@@ -431,12 +461,14 @@ export default function CurrencyPage() {
           <span className="text-2xl">\u2192</span>
           <div className="flex-1 px-4 py-2 bg-neutral-900 rounded-lg">
             <p className="text-2xl font-bold text-sky-400">
-              {((currencies[0]?.rate || 1.35) * 100).toFixed(2)} CAD
+              {convertedAmount.toFixed(2)} CAD
             </p>
-            <p className="text-xs text-neutral-500">Taux: {(currencies[0]?.rate || 1.35).toFixed(4)}</p>
+            <p className="text-xs text-neutral-500">{t('admin.multiCurrency.rate', { rate: converterRate.toFixed(4) })}</p>
           </div>
         </div>
       </div>
+        );
+      })()}
     </div>
   );
 }

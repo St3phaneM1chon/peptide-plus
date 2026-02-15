@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * API Chat - Gestion des conversations
  * GET /api/chat - Liste des conversations (admin)
@@ -24,6 +26,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50');
 
     const conversations = await db.chatConversation.findMany({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Prisma enum type from query string
       where: status ? { status: status as any } : undefined,
       orderBy: { lastMessageAt: 'desc' },
       take: limit,

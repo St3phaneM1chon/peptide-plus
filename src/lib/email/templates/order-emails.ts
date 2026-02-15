@@ -38,6 +38,9 @@ export interface OrderData {
   carrier?: string;
   estimatedDelivery?: string;
   locale?: 'fr' | 'en';
+  cancellationReason?: string;
+  refundAmount?: number;
+  refundIsPartial?: boolean;
 }
 
 // Helpers
@@ -536,9 +539,216 @@ export function satisfactionSurveyEmail(data: OrderData): { subject: string; htm
   return {
     subject,
     html: baseTemplate({
-      preheader: isFr 
+      preheader: isFr
         ? `Donnez votre avis et gagnez 50 points de fidélité!`
         : `Give your feedback and earn 50 loyalty points!`,
+      content,
+      locale: data.locale,
+    }),
+  };
+}
+
+// ============================================
+// 6. EMAIL DE COMMANDE ANNULÉE
+// ============================================
+export function orderCancelledEmail(data: OrderData): { subject: string; html: string } {
+  const isFr = data.locale !== 'en';
+  const currency = data.currency || 'CAD';
+
+  const subject = isFr
+    ? `❌ Commande #${data.orderNumber} annulée`
+    : `❌ Order #${data.orderNumber} cancelled`;
+
+  const itemsHtml = data.items.map(item =>
+    emailComponents.orderItem(item.name, item.quantity, formatPrice(item.price, currency), item.imageUrl)
+  ).join('');
+
+  const content = `
+    <h1 style="color: #dc2626; margin-bottom: 8px;">
+      ${isFr ? '❌ Commande annulée' : '❌ Order cancelled'}
+    </h1>
+    <p style="font-size: 16px; color: #4b5563;">
+      ${isFr
+        ? `Bonjour ${data.customerName}, nous vous confirmons que votre commande #${data.orderNumber} a été annulée.`
+        : `Hello ${data.customerName}, we confirm that your order #${data.orderNumber} has been cancelled.`}
+    </p>
+
+    ${data.cancellationReason ? `
+    <div style="background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 16px; margin: 20px 0;">
+      <p style="margin: 0; color: #991b1b;">
+        <strong>${isFr ? 'Raison de l\'annulation' : 'Cancellation reason'}:</strong><br>
+        ${data.cancellationReason}
+      </p>
+    </div>
+    ` : ''}
+
+    <div style="background-color: #f9fafb; border-radius: 8px; padding: 20px; margin: 24px 0;">
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+        <tr>
+          <td>
+            <p style="margin: 0; font-size: 14px; color: #6b7280;">${isFr ? 'Numéro de commande' : 'Order number'}</p>
+            <p style="margin: 4px 0 0 0; font-size: 20px; font-weight: bold; color: #1f2937;">${data.orderNumber}</p>
+          </td>
+          <td align="right">
+            <p style="margin: 0; font-size: 14px; color: #6b7280;">${isFr ? 'Statut' : 'Status'}</p>
+            <p style="margin: 4px 0 0 0; font-size: 16px; font-weight: bold; color: #dc2626;">${isFr ? 'Annulée' : 'Cancelled'}</p>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <h2 style="font-size: 18px; margin-top: 32px;">${isFr ? 'Articles de la commande' : 'Order items'}</h2>
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 24px;">
+      ${itemsHtml}
+    </table>
+
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f9fafb; border-radius: 8px; padding: 16px;">
+      <tr>
+        <td style="padding: 8px 16px;">
+          <span style="color: #6b7280;">${isFr ? 'Total de la commande' : 'Order total'}</span>
+        </td>
+        <td align="right" style="padding: 8px 16px;">
+          <span style="font-weight: bold; color: #1f2937; text-decoration: line-through;">${formatPrice(data.total, currency)}</span>
+        </td>
+      </tr>
+    </table>
+
+    ${emailComponents.infoBox(`
+      <p style="margin: 0; color: #166534;">
+        <strong>${isFr ? 'Remboursement' : 'Refund'}:</strong><br>
+        ${isFr
+          ? 'Si un paiement avait été effectué, un remboursement sera traité automatiquement. Vous recevrez un email de confirmation du remboursement séparément.'
+          : 'If a payment was made, a refund will be processed automatically. You will receive a separate refund confirmation email.'}
+      </p>
+    `)}
+
+    ${emailComponents.button(
+      isFr ? 'Parcourir nos produits' : 'Browse our products',
+      'https://biocyclepeptides.com/shop'
+    )}
+
+    <p style="font-size: 14px; color: #6b7280; text-align: center;">
+      ${isFr
+        ? 'Des questions? Contactez-nous à support@biocyclepeptides.com'
+        : 'Questions? Contact us at support@biocyclepeptides.com'}
+    </p>
+  `;
+
+  return {
+    subject,
+    html: baseTemplate({
+      preheader: isFr
+        ? `Votre commande #${data.orderNumber} a été annulée`
+        : `Your order #${data.orderNumber} has been cancelled`,
+      content,
+      locale: data.locale,
+    }),
+  };
+}
+
+// ============================================
+// 7. EMAIL DE REMBOURSEMENT TRAITÉ
+// ============================================
+export function orderRefundEmail(data: OrderData): { subject: string; html: string } {
+  const isFr = data.locale !== 'en';
+  const currency = data.currency || 'CAD';
+  const refundAmount = data.refundAmount ?? data.total;
+  const isPartial = data.refundIsPartial ?? (refundAmount < data.total);
+
+  const subject = isFr
+    ? `💰 Remboursement ${isPartial ? 'partiel ' : ''}traité - Commande #${data.orderNumber}`
+    : `💰 ${isPartial ? 'Partial r' : 'R'}efund processed - Order #${data.orderNumber}`;
+
+  const content = `
+    <h1 style="color: #059669; margin-bottom: 8px;">
+      ${isFr ? '💰 Remboursement traité' : '💰 Refund processed'}
+    </h1>
+    <p style="font-size: 16px; color: #4b5563;">
+      ${isFr
+        ? `Bonjour ${data.customerName}, nous vous confirmons qu'un remboursement ${isPartial ? 'partiel ' : ''}a été traité pour votre commande #${data.orderNumber}.`
+        : `Hello ${data.customerName}, we confirm that a ${isPartial ? 'partial ' : ''}refund has been processed for your order #${data.orderNumber}.`}
+    </p>
+
+    <div style="background-color: #d1fae5; border-radius: 12px; padding: 32px; margin: 24px 0; text-align: center;">
+      <p style="margin: 0 0 8px 0; font-size: 14px; color: #065f46;">
+        ${isFr ? 'Montant remboursé' : 'Refund amount'}
+      </p>
+      <p style="margin: 0; font-size: 36px; font-weight: bold; color: #059669;">
+        ${formatPrice(refundAmount, currency)}
+      </p>
+      ${isPartial ? `
+      <p style="margin: 12px 0 0 0; font-size: 14px; color: #065f46;">
+        ${isFr ? '(Remboursement partiel)' : '(Partial refund)'}
+      </p>
+      ` : ''}
+    </div>
+
+    <div style="background-color: #f9fafb; border-radius: 8px; padding: 20px; margin: 24px 0;">
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+        <tr>
+          <td style="padding: 8px 0;">
+            <span style="color: #6b7280;">${isFr ? 'Numéro de commande' : 'Order number'}</span>
+          </td>
+          <td align="right" style="padding: 8px 0;">
+            <span style="font-weight: bold; color: #1f2937;">${data.orderNumber}</span>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 0; border-top: 1px solid #e5e7eb;">
+            <span style="color: #6b7280;">${isFr ? 'Total original' : 'Original total'}</span>
+          </td>
+          <td align="right" style="padding: 8px 0; border-top: 1px solid #e5e7eb;">
+            <span style="color: #1f2937;">${formatPrice(data.total, currency)}</span>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 0; border-top: 1px solid #e5e7eb;">
+            <span style="color: #6b7280;">${isFr ? 'Montant remboursé' : 'Amount refunded'}</span>
+          </td>
+          <td align="right" style="padding: 8px 0; border-top: 1px solid #e5e7eb;">
+            <span style="font-weight: bold; color: #059669;">${formatPrice(refundAmount, currency)}</span>
+          </td>
+        </tr>
+        ${isPartial ? `
+        <tr>
+          <td style="padding: 8px 0; border-top: 1px solid #e5e7eb;">
+            <span style="color: #6b7280;">${isFr ? 'Solde restant' : 'Remaining balance'}</span>
+          </td>
+          <td align="right" style="padding: 8px 0; border-top: 1px solid #e5e7eb;">
+            <span style="font-weight: bold; color: #1f2937;">${formatPrice(data.total - refundAmount, currency)}</span>
+          </td>
+        </tr>
+        ` : ''}
+      </table>
+    </div>
+
+    ${emailComponents.infoBox(`
+      <p style="margin: 0; color: #166534;">
+        <strong>${isFr ? 'Quand recevrai-je mon remboursement?' : 'When will I receive my refund?'}:</strong><br>
+        ${isFr
+          ? 'Le remboursement sera crédité sur votre moyen de paiement original dans un délai de 5 à 10 jours ouvrables, selon votre institution financière.'
+          : 'The refund will be credited to your original payment method within 5 to 10 business days, depending on your financial institution.'}
+      </p>
+    `)}
+
+    ${emailComponents.button(
+      isFr ? 'Voir mes commandes' : 'View my orders',
+      'https://biocyclepeptides.com/account/orders'
+    )}
+
+    <p style="font-size: 14px; color: #6b7280; text-align: center;">
+      ${isFr
+        ? 'Des questions sur votre remboursement? Contactez-nous à support@biocyclepeptides.com'
+        : 'Questions about your refund? Contact us at support@biocyclepeptides.com'}
+    </p>
+  `;
+
+  return {
+    subject,
+    html: baseTemplate({
+      preheader: isFr
+        ? `Votre remboursement de ${formatPrice(refundAmount, currency)} a été traité`
+        : `Your refund of ${formatPrice(refundAmount, currency)} has been processed`,
       content,
       locale: data.locale,
     }),

@@ -99,7 +99,7 @@ export async function consumeReservation(
   orderId: string,
   cartId?: string
 ): Promise<void> {
-  const where: any = { status: 'RESERVED' as const };
+  const where: Record<string, unknown> = { status: 'RESERVED' as const };
   if (cartId) where.cartId = cartId;
   else where.orderId = orderId;
 

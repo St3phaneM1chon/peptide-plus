@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * API Route - Création de session Stripe Checkout
  * Supporte: Carte, Apple Pay, Google Pay
@@ -54,7 +56,7 @@ export async function POST(request: NextRequest) {
     const {
       items,
       shippingInfo,
-      currency = 'cad',
+      currency: currencyCode = 'CAD',
       promoCode,
       cartId,
     } = body;
@@ -64,9 +66,45 @@ export async function POST(request: NextRequest) {
     }
 
     // =====================================================
+    // MULTI-CURRENCY: Look up exchange rate from DB
+    // All product prices in DB are in CAD (base currency).
+    // If the user selected a different currency, we convert
+    // amounts using the stored exchange rate and tell Stripe
+    // to charge in that currency.
+    // =====================================================
+    const currencyUpper = currencyCode.toUpperCase();
+    let dbCurrency = await prisma.currency.findUnique({
+      where: { code: currencyUpper },
+    });
+
+    // Fallback to CAD if requested currency not found
+    if (!dbCurrency || !dbCurrency.isActive) {
+      dbCurrency = await prisma.currency.findFirst({
+        where: { isDefault: true },
+      });
+    }
+
+    // If still no currency (empty DB), create CAD as default
+    if (!dbCurrency) {
+      dbCurrency = await prisma.currency.create({
+        data: {
+          code: 'CAD',
+          name: 'Dollar canadien',
+          symbol: '$',
+          exchangeRate: 1,
+          isDefault: true,
+          isActive: true,
+        },
+      });
+    }
+
+    const exchangeRate = Number(dbCurrency.exchangeRate);
+    const stripeCurrency = dbCurrency.code.toLowerCase();
+
+    // =====================================================
     // SECURITY: Validate ALL prices from the database
     // =====================================================
-    const verifiedItems: { productId: string; formatId: string | null; name: string; formatName: string | null; quantity: number; price: number; image: string | null }[] = [];
+    const verifiedItems: { productId: string; formatId: string | null; name: string; formatName: string | null; quantity: number; price: number; priceConverted: number; imageUrl: string | null }[] = [];
     let serverSubtotal = 0;
 
     for (const item of items) {
@@ -76,7 +114,7 @@ export async function POST(request: NextRequest) {
 
       const product = await prisma.product.findUnique({
         where: { id: item.productId },
-        select: { id: true, name: true, price: true, image: true, isActive: true },
+        select: { id: true, name: true, price: true, imageUrl: true, isActive: true },
       });
 
       if (!product || !product.isActive) {
@@ -90,7 +128,7 @@ export async function POST(request: NextRequest) {
       if (item.formatId) {
         const format = await prisma.productFormat.findUnique({
           where: { id: item.formatId },
-          select: { id: true, name: true, price: true, image: true },
+          select: { id: true, name: true, price: true, imageUrl: true },
         });
         if (!format) {
           return NextResponse.json({ error: `Format introuvable: ${item.formatId}` }, { status: 400 });
@@ -102,14 +140,18 @@ export async function POST(request: NextRequest) {
       const quantity = Math.max(1, Math.floor(item.quantity));
       serverSubtotal += verifiedPrice * quantity;
 
+      // Convert price to selected currency for Stripe display
+      const priceConverted = Math.round(verifiedPrice * exchangeRate * 100) / 100;
+
       verifiedItems.push({
         productId: product.id,
         formatId: item.formatId || null,
         name: product.name,
         formatName,
         quantity,
-        price: verifiedPrice,
-        image: product.image,
+        price: verifiedPrice, // CAD price (for accounting)
+        priceConverted,       // Converted price (for Stripe)
+        imageUrl: product.imageUrl,
       });
     }
 
@@ -195,16 +237,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create line items for Stripe using VERIFIED prices
+    // Create line items for Stripe using CONVERTED prices
     const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = verifiedItems.map((item) => ({
       price_data: {
-        currency: currency.toLowerCase(),
+        currency: stripeCurrency,
         product_data: {
           name: item.name,
           description: item.formatName || undefined,
-          images: item.image ? [item.image] : undefined,
+          images: item.imageUrl ? [item.imageUrl] : undefined,
         },
-        unit_amount: Math.round(item.price * 100),
+        unit_amount: Math.round(item.priceConverted * 100),
       },
       quantity: item.quantity,
     }));
@@ -213,9 +255,9 @@ export async function POST(request: NextRequest) {
     if (serverPromoDiscount > 0) {
       lineItems.push({
         price_data: {
-          currency: currency.toLowerCase(),
+          currency: stripeCurrency,
           product_data: { name: `Réduction (${validatedPromoCode})` },
-          unit_amount: Math.round(serverPromoDiscount * 100),
+          unit_amount: Math.round(serverPromoDiscount * exchangeRate * 100),
         },
         quantity: 1,
       });
@@ -232,29 +274,34 @@ export async function POST(request: NextRequest) {
       lineItems.forEach((li) => {
         const originalAmount = li.price_data!.unit_amount!;
         const discountAmount = Math.round(originalAmount * discountRatio);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Stripe line item type does not expose writable unit_amount
         (li.price_data as any).unit_amount = originalAmount - discountAmount;
       });
     }
 
+    // Convert shipping and taxes to selected currency for Stripe
+    const convertedShipping = Math.round(serverShipping * exchangeRate * 100) / 100;
+    const convertedTaxTotal = Math.round(serverTaxes.total * exchangeRate * 100) / 100;
+
     // Add shipping
-    if (serverShipping > 0) {
+    if (convertedShipping > 0) {
       lineItems.push({
         price_data: {
-          currency: currency.toLowerCase(),
+          currency: stripeCurrency,
           product_data: { name: 'Frais de livraison' },
-          unit_amount: Math.round(serverShipping * 100),
+          unit_amount: Math.round(convertedShipping * 100),
         },
         quantity: 1,
       });
     }
 
     // Add taxes
-    if (serverTaxes.total > 0) {
+    if (convertedTaxTotal > 0) {
       lineItems.push({
         price_data: {
-          currency: currency.toLowerCase(),
+          currency: stripeCurrency,
           product_data: { name: 'Taxes' },
-          unit_amount: Math.round(serverTaxes.total * 100),
+          unit_amount: Math.round(convertedTaxTotal * 100),
         },
         quantity: 1,
       });
@@ -305,6 +352,10 @@ export async function POST(request: NextRequest) {
         promoCode: validatedPromoCode,
         promoDiscount: String(serverPromoDiscount),
         cartId: cartId || '',
+        // Multi-currency metadata
+        currencyCode: dbCurrency!.code,
+        currencyId: dbCurrency!.id,
+        exchangeRate: String(exchangeRate),
       },
       shipping_address_collection: {
         allowed_countries: ['CA', 'US', 'FR', 'DE', 'GB', 'AU', 'JP', 'MX', 'CL', 'PE', 'CO'],

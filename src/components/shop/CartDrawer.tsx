@@ -1,11 +1,13 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { useCart } from '@/contexts/CartContext';
 import { useCurrency } from '@/contexts/CurrencyContext';
+import { useTranslations } from '@/hooks/useTranslations';
+import CartCrossSell from './CartCrossSell';
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -16,6 +18,12 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
   const { data: session } = useSession();
   const { items, removeItem, updateQuantity, subtotal, itemCount } = useCart();
   const { formatPrice } = useCurrency();
+  const { t } = useTranslations();
+
+  // Extract unique product IDs for cross-sell recommendations
+  const cartProductIds = useMemo(() => {
+    return [...new Set(items.map(item => item.productId))];
+  }, [items]);
 
   // Close on escape key
   useEffect(() => {
@@ -42,15 +50,22 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
       <div
         className="fixed inset-0 bg-black/50 z-50 transition-opacity"
         onClick={onClose}
+        aria-hidden="true"
       />
 
       {/* Drawer */}
-      <div className="fixed right-0 top-0 h-full w-full max-w-md bg-white z-50 shadow-2xl flex flex-col">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Shopping cart"
+        className="fixed right-0 top-0 h-full w-full max-w-md bg-white z-50 shadow-2xl flex flex-col"
+      >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-neutral-200">
-          <h2 className="text-lg font-bold">Your Cart ({itemCount})</h2>
+          <h2 className="text-lg font-bold">{t('cart.titleWithCount', { count: itemCount })}</h2>
           <button
             onClick={onClose}
+            aria-label="Close cart"
             className="p-2 hover:bg-neutral-100 rounded-lg transition-colors"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -68,12 +83,12 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
               </div>
-              <p className="text-neutral-500 mb-4">Your cart is empty</p>
+              <p className="text-neutral-500 mb-4">{t('cart.emptyTitle')}</p>
               <button
                 onClick={onClose}
                 className="text-orange-600 font-medium hover:underline"
               >
-                Continue shopping
+                {t('cart.continueShopping')}
               </button>
             </div>
           ) : (
@@ -107,16 +122,18 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
 
                     {/* Quantity Controls */}
                     <div className="flex items-center gap-3 mt-2">
-                      <div className="flex items-center border border-neutral-300 rounded-lg">
+                      <div className="flex items-center border border-neutral-300 rounded-lg" role="group" aria-label={`Quantity for ${item.name}`}>
                         <button
                           onClick={() => updateQuantity(item.productId, item.formatId, item.quantity - 1)}
+                          aria-label={`Decrease quantity of ${item.name}`}
                           className="w-7 h-7 flex items-center justify-center text-neutral-600 hover:bg-neutral-100"
                         >
                           −
                         </button>
-                        <span className="w-8 text-center text-sm">{item.quantity}</span>
+                        <span className="w-8 text-center text-sm" aria-live="polite" aria-atomic="true">{item.quantity}</span>
                         <button
                           onClick={() => updateQuantity(item.productId, item.formatId, item.quantity + 1)}
+                          aria-label={`Increase quantity of ${item.name}`}
                           className="w-7 h-7 flex items-center justify-center text-neutral-600 hover:bg-neutral-100"
                         >
                           +
@@ -124,9 +141,10 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                       </div>
                       <button
                         onClick={() => removeItem(item.productId, item.formatId)}
+                        aria-label={`Remove ${item.name} from cart`}
                         className="text-red-500 text-sm hover:underline"
                       >
-                        Remove
+                        {t('cart.remove')}
                       </button>
                     </div>
                   </div>
@@ -134,19 +152,24 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
               ))}
             </div>
           )}
+
+          {/* Cross-sell Recommendations */}
+          {items.length > 0 && (
+            <CartCrossSell cartProductIds={cartProductIds} />
+          )}
         </div>
 
         {/* Footer */}
         {items.length > 0 && (
-          <div className="border-t border-neutral-200 p-4 space-y-4">
+          <div className="border-t border-neutral-200 p-4 space-y-4" aria-live="polite" aria-atomic="true">
             {/* Subtotal */}
             <div className="flex items-center justify-between">
-              <span className="text-neutral-600">Subtotal</span>
+              <span className="text-neutral-600">{t('cart.subtotal')}</span>
               <span className="text-xl font-bold">{formatPrice(subtotal)}</span>
             </div>
 
             <p className="text-xs text-neutral-500">
-              Shipping & taxes calculated at checkout
+              {t('cart.taxesNote')}
             </p>
 
             {/* Checkout Button */}
@@ -155,7 +178,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
               onClick={onClose}
               className="block w-full py-3 bg-orange-500 text-white font-semibold text-center rounded-lg hover:bg-orange-600 transition-colors"
             >
-              Checkout
+              {t('cart.proceedToCheckout')}
             </Link>
 
             {/* Continue Shopping */}
@@ -163,7 +186,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
               onClick={onClose}
               className="block w-full py-3 border border-neutral-300 text-neutral-700 font-medium text-center rounded-lg hover:bg-neutral-50 transition-colors"
             >
-              Continue shopping
+              {t('cart.continueShopping')}
             </button>
           </div>
         )}

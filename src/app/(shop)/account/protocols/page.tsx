@@ -9,6 +9,7 @@ import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from '@/hooks/useTranslations';
 
 // Types
 interface ProtocolEntry {
@@ -49,128 +50,71 @@ interface ProtocolTemplate {
   instructions: string;
 }
 
-// Templates de protocoles populaires
-const PROTOCOL_TEMPLATES: ProtocolTemplate[] = [
-  {
-    id: 'recovery',
-    name: 'Récupération Tissulaire',
-    description: 'Protocole BPC-157 + TB-500 pour la récupération musculaire et articulaire',
-    peptides: ['BPC-157', 'TB-500'],
-    duration: '8-12 semaines',
-    goal: 'Accélérer la guérison des tissus',
-    instructions: `**Semaine 1-4:**
-- BPC-157: 250-500mcg/jour (divisé en 2 doses)
-- TB-500: 2mg 2x/semaine
-
-**Semaine 5-8:**
-- BPC-157: 250mcg/jour
-- TB-500: 2mg 1x/semaine
-
-**Conseils:**
-- Injecter proche de la zone à traiter
-- Maintenir une alimentation riche en protéines
-- Éviter les anti-inflammatoires`,
-  },
-  {
-    id: 'weight-loss',
-    name: 'Gestion du Poids',
-    description: 'Protocole Semaglutide/Tirzepatide pour la perte de poids',
-    peptides: ['Semaglutide', 'Tirzepatide'],
-    duration: '12-16 semaines',
-    goal: 'Perte de poids et contrôle de l\'appétit',
-    instructions: `**Titration progressive (Semaglutide):**
-- Semaine 1-4: 0.25mg/semaine
-- Semaine 5-8: 0.5mg/semaine
-- Semaine 9-12: 1mg/semaine
-- Semaine 13+: 1.7-2.4mg/semaine si toléré
-
-**Conseils:**
-- Toujours injecter le même jour
-- Manger lentement, petites portions
-- Hydratation importante (2L+/jour)
-- Protéines prioritaires à chaque repas`,
-  },
-  {
-    id: 'anti-aging',
-    name: 'Anti-Âge & Longévité',
-    description: 'Protocole GHK-Cu + Epithalon pour la régénération cellulaire',
-    peptides: ['GHK-Cu', 'Epithalon', 'NAD+'],
-    duration: '10-20 jours (cycles)',
-    goal: 'Rajeunissement cellulaire et télomères',
-    instructions: `**Epithalon (cycles de 10-20 jours):**
-- 5-10mg/jour en injection SC
-- Pause de 4-6 mois entre cycles
-
-**GHK-Cu:**
-- Topique: 2x/jour sur zones cibles
-- Injectable: 1-2mg/jour
-
-**NAD+:**
-- 250-500mg sublingual ou IV
-
-**Conseils:**
-- Combiner avec jeûne intermittent
-- Antioxydants et sommeil optimal`,
-  },
-  {
-    id: 'cognitive',
-    name: 'Fonction Cognitive',
-    description: 'Protocole nootropique avec Semax et Selank',
-    peptides: ['Semax', 'Selank', 'Dihexa'],
-    duration: '4-8 semaines',
-    goal: 'Améliorer mémoire et concentration',
-    instructions: `**Semax:**
-- 200-600mcg/jour intranasal
-- Diviser en 2-3 doses
-
-**Selank:**
-- 250-500mcg/jour intranasal
-- Pour l'anxiété et le focus
-
-**Dihexa:**
-- 10-20mg/jour oral
-- Puissant effet neuroplasticité
-
-**Conseils:**
-- Utiliser le matin pour éviter insomnie
-- Combiner avec exercice cognitif
-- Stack avec choline/omega-3`,
-  },
-  {
-    id: 'muscle-growth',
-    name: 'Croissance Musculaire',
-    description: 'Protocole GHRP-6 + CJC-1295 pour la masse musculaire',
-    peptides: ['CJC-1295', 'Ipamorelin', 'GHRP-6'],
-    duration: '12-16 semaines',
-    goal: 'Augmenter la masse musculaire maigre',
-    instructions: `**CJC-1295 DAC:**
-- 2mg 1-2x/semaine
-
-**Ipamorelin:**
-- 200-300mcg 2-3x/jour
-- Au réveil, post-entraînement, avant coucher
-
-**GHRP-6:**
-- 100-200mcg 2-3x/jour
-- À jeun pour meilleure efficacité
-
-**Conseils:**
-- Entraînement résistance 4-5x/semaine
-- Protéines 2g/kg de poids corporel
-- Sommeil 7-9h/nuit essentiel`,
-  },
-];
+// Templates de protocoles populaires - function to allow i18n
+function getProtocolTemplates(t: (key: string) => string): ProtocolTemplate[] {
+  return [
+    {
+      id: 'recovery',
+      name: t('protocols.templateRecoveryName'),
+      description: t('protocols.templateRecoveryDesc'),
+      peptides: ['BPC-157', 'TB-500'],
+      duration: t('protocols.templateRecoveryDuration'),
+      goal: t('protocols.templateRecoveryGoal'),
+      instructions: t('protocols.templateRecoveryInstructions'),
+    },
+    {
+      id: 'weight-loss',
+      name: t('protocols.templateWeightLossName'),
+      description: t('protocols.templateWeightLossDesc'),
+      peptides: ['Semaglutide', 'Tirzepatide'],
+      duration: t('protocols.templateWeightLossDuration'),
+      goal: t('protocols.templateWeightLossGoal'),
+      instructions: t('protocols.templateWeightLossInstructions'),
+    },
+    {
+      id: 'anti-aging',
+      name: t('protocols.templateAntiAgingName'),
+      description: t('protocols.templateAntiAgingDesc'),
+      peptides: ['GHK-Cu', 'Epithalon', 'NAD+'],
+      duration: t('protocols.templateAntiAgingDuration'),
+      goal: t('protocols.templateAntiAgingGoal'),
+      instructions: t('protocols.templateAntiAgingInstructions'),
+    },
+    {
+      id: 'cognitive',
+      name: t('protocols.templateCognitiveName'),
+      description: t('protocols.templateCognitiveDesc'),
+      peptides: ['Semax', 'Selank', 'Dihexa'],
+      duration: t('protocols.templateCognitiveDuration'),
+      goal: t('protocols.templateCognitiveGoal'),
+      instructions: t('protocols.templateCognitiveInstructions'),
+    },
+    {
+      id: 'muscle-growth',
+      name: t('protocols.templateMuscleGrowthName'),
+      description: t('protocols.templateMuscleGrowthDesc'),
+      peptides: ['CJC-1295', 'Ipamorelin', 'GHRP-6'],
+      duration: t('protocols.templateMuscleGrowthDuration'),
+      goal: t('protocols.templateMuscleGrowthGoal'),
+      instructions: t('protocols.templateMuscleGrowthInstructions'),
+    },
+  ];
+}
 
 export default function ProtocolsPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const { t } = useTranslations();
+
+  // Memoized templates with translations
+  const PROTOCOL_TEMPLATES = useMemo(() => getProtocolTemplates(t), [t]);
 
   // State
   const [protocols, setProtocols] = useState<Protocol[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'my-protocols' | 'templates' | 'new'>('my-protocols');
   const [selectedProtocol, setSelectedProtocol] = useState<Protocol | null>(null);
-  const [showNewEntry, setShowNewEntry] = useState(false);
+  const [_showNewEntry, _setShowNewEntry] = useState(false);
   const [showNewProtocol, setShowNewProtocol] = useState(false);
 
   // Auth check
@@ -201,7 +145,7 @@ export default function ProtocolsPage() {
   const createProtocol = (template?: ProtocolTemplate) => {
     const newProtocol: Protocol = {
       id: `protocol_${Date.now()}`,
-      name: template?.name || 'Nouveau protocole',
+      name: template?.name || t('protocols.newProtocolDefault'),
       description: template?.description || '',
       peptides: template?.peptides || [],
       startDate: new Date().toISOString(),
@@ -248,7 +192,7 @@ export default function ProtocolsPage() {
 
   // Delete protocol
   const deleteProtocol = (protocolId: string) => {
-    if (confirm('Êtes-vous sûr de vouloir supprimer ce protocole?')) {
+    if (confirm(t('protocols.confirmDelete'))) {
       saveProtocols(protocols.filter(p => p.id !== protocolId));
       setSelectedProtocol(null);
     }
@@ -279,32 +223,32 @@ export default function ProtocolsPage() {
         {/* Header */}
         <div className="mb-8">
           <nav className="text-sm text-gray-500 mb-2">
-            <Link href="/" className="hover:text-orange-600">Accueil</Link>
+            <Link href="/" className="hover:text-orange-600">{t('account.home')}</Link>
             <span className="mx-2">/</span>
-            <Link href="/account" className="hover:text-orange-600">Mon compte</Link>
+            <Link href="/account" className="hover:text-orange-600">{t('account.myAccount')}</Link>
             <span className="mx-2">/</span>
-            <span className="text-gray-900">Protocoles</span>
+            <span className="text-gray-900">{t('protocols.title')}</span>
           </nav>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">📋 Mes Protocoles de Recherche</h1>
-              <p className="text-gray-600 mt-1">Suivez vos protocoles pour maximiser vos résultats</p>
+              <h1 className="text-3xl font-bold text-gray-900">{t('protocols.pageTitle')}</h1>
+              <p className="text-gray-600 mt-1">{t('protocols.pageSubtitle')}</p>
             </div>
             <button
               onClick={() => setShowNewProtocol(true)}
               className="inline-flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-colors"
             >
-              ➕ Nouveau protocole
+              {t('protocols.newProtocol')}
             </button>
           </div>
         </div>
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <StatCard icon="🔬" label="Protocoles actifs" value={stats.active} color="green" />
-          <StatCard icon="✅" label="Complétés" value={stats.completed} color="blue" />
-          <StatCard icon="📝" label="Entrées totales" value={stats.totalEntries} color="purple" />
-          <StatCard icon="🧪" label="Peptides utilisés" value={stats.uniquePeptides} color="orange" />
+          <StatCard icon="🔬" label={t('protocols.activeProtocols')} value={stats.active} color="green" />
+          <StatCard icon="✅" label={t('protocols.completed')} value={stats.completed} color="blue" />
+          <StatCard icon="📝" label={t('protocols.totalEntries')} value={stats.totalEntries} color="purple" />
+          <StatCard icon="🧪" label={t('protocols.peptidesUsed')} value={stats.uniquePeptides} color="orange" />
         </div>
 
         {/* Tabs */}
@@ -318,7 +262,7 @@ export default function ProtocolsPage() {
                   : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
               }`}
             >
-              📋 Mes protocoles ({protocols.length})
+              {t('protocols.myProtocols')} ({protocols.length})
             </button>
             <button
               onClick={() => setActiveTab('templates')}
@@ -328,7 +272,7 @@ export default function ProtocolsPage() {
                   : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
               }`}
             >
-              📚 Protocoles suggérés
+              {t('protocols.suggestedProtocols')}
             </button>
           </div>
 
@@ -341,15 +285,15 @@ export default function ProtocolsPage() {
                     <div className="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
                       <span className="text-4xl">📋</span>
                     </div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Aucun protocole</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('protocols.noProtocols')}</h3>
                     <p className="text-gray-600 mb-6">
-                      Créez votre premier protocole pour suivre vos recherches
+                      {t('protocols.noProtocolsDesc')}
                     </p>
                     <button
                       onClick={() => setActiveTab('templates')}
                       className="inline-block bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-medium transition-colors"
                     >
-                      Voir les protocoles suggérés
+                      {t('protocols.viewSuggested')}
                     </button>
                   </div>
                 ) : (
@@ -411,38 +355,38 @@ export default function ProtocolsPage() {
         {/* Tips Section */}
         <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
           <h3 className="font-bold text-blue-900 mb-4 flex items-center gap-2">
-            💡 Conseils pour maximiser vos résultats
+            {t('protocols.tipsTitle')}
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <TipCard
               icon="📅"
-              title="Consistance"
-              text="Respectez les horaires d'administration pour des résultats optimaux"
+              title={t('protocols.tipConsistencyTitle')}
+              text={t('protocols.tipConsistencyText')}
             />
             <TipCard
               icon="📝"
-              title="Documentation"
-              text="Notez tous les effets, même mineurs, pour ajuster le protocole"
+              title={t('protocols.tipDocumentationTitle')}
+              text={t('protocols.tipDocumentationText')}
             />
             <TipCard
               icon="⚖️"
-              title="Dosage progressif"
-              text="Commencez bas et augmentez graduellement pour évaluer la tolérance"
+              title={t('protocols.tipDosageTitle')}
+              text={t('protocols.tipDosageText')}
             />
             <TipCard
               icon="🍎"
-              title="Nutrition"
-              text="Optimisez votre alimentation pour soutenir le protocole"
+              title={t('protocols.tipNutritionTitle')}
+              text={t('protocols.tipNutritionText')}
             />
             <TipCard
               icon="😴"
-              title="Récupération"
-              text="Le sommeil est crucial - visez 7-9h de qualité"
+              title={t('protocols.tipRecoveryTitle')}
+              text={t('protocols.tipRecoveryText')}
             />
             <TipCard
               icon="💧"
-              title="Hydratation"
-              text="Buvez 2-3L d'eau par jour minimum"
+              title={t('protocols.tipHydrationTitle')}
+              text={t('protocols.tipHydrationText')}
             />
           </div>
         </div>
@@ -489,24 +433,25 @@ function TipCard({ icon, title, text }: { icon: string; title: string; text: str
   );
 }
 
-function ProtocolCard({ 
-  protocol, 
-  onClick, 
-  onStatusChange 
-}: { 
-  protocol: Protocol; 
+function ProtocolCard({
+  protocol,
+  onClick,
+  onStatusChange
+}: {
+  protocol: Protocol;
   onClick: () => void;
   onStatusChange: (status: Protocol['status']) => void;
 }) {
+  const { t } = useTranslations();
   const statusColors: Record<string, string> = {
     active: 'bg-green-100 text-green-800',
     completed: 'bg-blue-100 text-blue-800',
     paused: 'bg-yellow-100 text-yellow-800',
   };
   const statusLabels: Record<string, string> = {
-    active: '🟢 Actif',
-    completed: '✅ Terminé',
-    paused: '⏸️ En pause',
+    active: t('protocols.statusActive'),
+    completed: t('protocols.statusCompleted'),
+    paused: t('protocols.statusPaused'),
   };
 
   const daysSinceStart = Math.floor(
@@ -544,8 +489,8 @@ function ProtocolCard({
         </div>
 
         <div className="flex items-center justify-between text-sm text-gray-500">
-          <span>📅 Jour {daysSinceStart}</span>
-          <span>📝 {protocol.entries.length} entrées</span>
+          <span>📅 {t('protocols.day')} {daysSinceStart}</span>
+          <span>📝 {protocol.entries.length} {t('protocols.entries')}</span>
         </div>
       </div>
 
@@ -556,13 +501,13 @@ function ProtocolCard({
               onClick={() => onStatusChange('paused')}
               className="flex-1 py-2 text-xs font-medium text-yellow-600 hover:bg-yellow-50 rounded transition-colors"
             >
-              Pause
+              {t('protocols.pause')}
             </button>
             <button
               onClick={() => onStatusChange('completed')}
               className="flex-1 py-2 text-xs font-medium text-green-600 hover:bg-green-50 rounded transition-colors"
             >
-              Terminer
+              {t('protocols.finish')}
             </button>
           </>
         )}
@@ -571,7 +516,7 @@ function ProtocolCard({
             onClick={() => onStatusChange('active')}
             className="flex-1 py-2 text-xs font-medium text-green-600 hover:bg-green-50 rounded transition-colors"
           >
-            Reprendre
+            {t('protocols.resume')}
           </button>
         )}
         {protocol.status === 'completed' && (
@@ -579,7 +524,7 @@ function ProtocolCard({
             onClick={() => onStatusChange('active')}
             className="flex-1 py-2 text-xs font-medium text-orange-600 hover:bg-orange-50 rounded transition-colors"
           >
-            Recommencer
+            {t('protocols.restart')}
           </button>
         )}
       </div>
@@ -588,6 +533,7 @@ function ProtocolCard({
 }
 
 function TemplateCard({ template, onStart }: { template: ProtocolTemplate; onStart: () => void }) {
+  const { t } = useTranslations();
   const [showDetails, setShowDetails] = useState(false);
 
   return (
@@ -611,7 +557,7 @@ function TemplateCard({ template, onStart }: { template: ProtocolTemplate; onSta
 
         {showDetails && (
           <div className="bg-gray-50 rounded-lg p-4 mb-4">
-            <h4 className="font-medium text-gray-900 mb-2">Instructions détaillées:</h4>
+            <h4 className="font-medium text-gray-900 mb-2">{t('protocols.detailedInstructions')}</h4>
             <div className="text-sm text-gray-700 whitespace-pre-line">
               {template.instructions}
             </div>
@@ -623,13 +569,13 @@ function TemplateCard({ template, onStart }: { template: ProtocolTemplate; onSta
             onClick={() => setShowDetails(!showDetails)}
             className="flex-1 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
           >
-            {showDetails ? 'Masquer' : 'Voir détails'}
+            {showDetails ? t('protocols.hide') : t('protocols.viewDetails')}
           </button>
           <button
             onClick={onStart}
             className="flex-1 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition-colors"
           >
-            Démarrer ce protocole
+            {t('protocols.startProtocol')}
           </button>
         </div>
       </div>
@@ -642,7 +588,7 @@ function ProtocolDetailModal({
   onClose,
   onAddEntry,
   onDelete,
-  onStatusChange,
+  onStatusChange: _onStatusChange,
 }: {
   protocol: Protocol;
   onClose: () => void;
@@ -650,12 +596,13 @@ function ProtocolDetailModal({
   onDelete: () => void;
   onStatusChange: (status: Protocol['status']) => void;
 }) {
+  const { t } = useTranslations();
   const [activeTab, setActiveTab] = useState<'journal' | 'stats' | 'add'>('journal');
   const [newEntry, setNewEntry] = useState({
     date: new Date().toISOString().split('T')[0],
     peptide: protocol.peptides[0] || '',
     dosage: 0,
-    unit: 'mcg' as const,
+    unit: 'mcg' as 'mcg' | 'mg' | 'IU',
     frequency: 'daily',
     time: '08:00',
     notes: '',
@@ -723,7 +670,7 @@ function ProtocolDetailModal({
               activeTab === 'journal' ? 'text-orange-600 border-b-2 border-orange-500' : 'text-gray-500'
             }`}
           >
-            📝 Journal ({protocol.entries.length})
+            {t('protocols.journal')} ({protocol.entries.length})
           </button>
           <button
             onClick={() => setActiveTab('stats')}
@@ -731,7 +678,7 @@ function ProtocolDetailModal({
               activeTab === 'stats' ? 'text-orange-600 border-b-2 border-orange-500' : 'text-gray-500'
             }`}
           >
-            📊 Statistiques
+            {t('protocols.statistics')}
           </button>
           <button
             onClick={() => setActiveTab('add')}
@@ -739,7 +686,7 @@ function ProtocolDetailModal({
               activeTab === 'add' ? 'text-orange-600 border-b-2 border-orange-500' : 'text-gray-500'
             }`}
           >
-            ➕ Nouvelle entrée
+            {t('protocols.newEntry')}
           </button>
         </div>
 
@@ -750,12 +697,12 @@ function ProtocolDetailModal({
             <>
               {protocol.entries.length === 0 ? (
                 <div className="text-center py-12">
-                  <p className="text-gray-500 mb-4">Aucune entrée pour ce protocole</p>
+                  <p className="text-gray-500 mb-4">{t('protocols.noEntries')}</p>
                   <button
                     onClick={() => setActiveTab('add')}
                     className="text-orange-600 hover:text-orange-700 font-medium"
                   >
-                    Ajouter une entrée →
+                    {t('protocols.addEntry')}
                   </button>
                 </div>
               ) : (
@@ -770,7 +717,7 @@ function ProtocolDetailModal({
                               weekday: 'long', 
                               day: 'numeric', 
                               month: 'long' 
-                            })} à {entry.time}
+                            })} {t('protocols.at')} {entry.time}
                           </p>
                         </div>
                         <span className="px-3 py-1 bg-white border border-gray-200 rounded-full text-sm">
@@ -784,7 +731,7 @@ function ProtocolDetailModal({
                       
                       <div className="flex items-center gap-4">
                         <div className="flex items-center gap-1">
-                          <span className="text-sm text-gray-500">Efficacité:</span>
+                          <span className="text-sm text-gray-500">{t('protocols.effectiveness')}:</span>
                           {[1, 2, 3, 4, 5].map(star => (
                             <span key={star} className={entry.effectiveness >= star ? 'text-yellow-400' : 'text-gray-300'}>
                               ★
@@ -793,7 +740,7 @@ function ProtocolDetailModal({
                         </div>
                         {entry.sideEffects.length > 0 && (
                           <div className="flex items-center gap-1">
-                            <span className="text-sm text-gray-500">Effets:</span>
+                            <span className="text-sm text-gray-500">{t('protocols.effects')}:</span>
                             {entry.sideEffects.map(se => (
                               <span key={se} className="px-2 py-0.5 bg-red-50 text-red-600 rounded text-xs">
                                 {se}
@@ -814,34 +761,34 @@ function ProtocolDetailModal({
             <>
               {!stats ? (
                 <div className="text-center py-12">
-                  <p className="text-gray-500">Pas assez de données pour les statistiques</p>
+                  <p className="text-gray-500">{t('protocols.notEnoughData')}</p>
                 </div>
               ) : (
                 <div className="space-y-6">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="bg-gray-50 rounded-lg p-4 text-center">
                       <p className="text-2xl font-bold text-gray-900">{stats.totalDoses}</p>
-                      <p className="text-xs text-gray-500">Doses totales</p>
+                      <p className="text-xs text-gray-500">{t('protocols.totalDoses')}</p>
                     </div>
                     <div className="bg-gray-50 rounded-lg p-4 text-center">
                       <p className="text-2xl font-bold text-gray-900">{stats.uniqueDays}</p>
-                      <p className="text-xs text-gray-500">Jours actifs</p>
+                      <p className="text-xs text-gray-500">{t('protocols.activeDays')}</p>
                     </div>
                     <div className="bg-gray-50 rounded-lg p-4 text-center">
                       <p className="text-2xl font-bold text-yellow-600">{stats.avgEffectiveness.toFixed(1)}/5</p>
-                      <p className="text-xs text-gray-500">Efficacité moy.</p>
+                      <p className="text-xs text-gray-500">{t('protocols.avgEffectiveness')}</p>
                     </div>
                     <div className="bg-gray-50 rounded-lg p-4 text-center">
                       <p className="text-2xl font-bold text-gray-900">
                         {Object.keys(stats.sideEffectCounts).length}
                       </p>
-                      <p className="text-xs text-gray-500">Effets notés</p>
+                      <p className="text-xs text-gray-500">{t('protocols.notedEffects')}</p>
                     </div>
                   </div>
 
                   {Object.keys(stats.sideEffectCounts).length > 0 && (
                     <div>
-                      <h4 className="font-medium text-gray-900 mb-3">Effets secondaires reportés</h4>
+                      <h4 className="font-medium text-gray-900 mb-3">{t('protocols.reportedSideEffects')}</h4>
                       <div className="flex flex-wrap gap-2">
                         {Object.entries(stats.sideEffectCounts).map(([effect, count]) => (
                           <span key={effect} className="px-3 py-1 bg-red-50 text-red-700 rounded-full text-sm">
@@ -861,7 +808,7 @@ function ProtocolDetailModal({
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('protocols.date')}</label>
                   <input
                     type="date"
                     value={newEntry.date}
@@ -871,7 +818,7 @@ function ProtocolDetailModal({
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Heure</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('protocols.time')}</label>
                   <input
                     type="time"
                     value={newEntry.time}
@@ -883,7 +830,7 @@ function ProtocolDetailModal({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Peptide</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('protocols.peptide')}</label>
                 <select
                   value={newEntry.peptide}
                   onChange={e => setNewEntry({ ...newEntry, peptide: e.target.value })}
@@ -893,13 +840,13 @@ function ProtocolDetailModal({
                   {protocol.peptides.map(p => (
                     <option key={p} value={p}>{p}</option>
                   ))}
-                  <option value="other">Autre...</option>
+                  <option value="other">{t('protocols.other')}</option>
                 </select>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Dosage</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('protocols.dosage')}</label>
                   <input
                     type="number"
                     step="0.01"
@@ -910,22 +857,22 @@ function ProtocolDetailModal({
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Unité</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('protocols.unit')}</label>
                   <select
                     value={newEntry.unit}
                     onChange={e => setNewEntry({ ...newEntry, unit: e.target.value as 'mcg' | 'mg' | 'IU' })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
                   >
-                    <option value="mcg">mcg (microgrammes)</option>
-                    <option value="mg">mg (milligrammes)</option>
-                    <option value="IU">IU (unités internationales)</option>
+                    <option value="mcg">{t('protocols.unitMcg')}</option>
+                    <option value="mg">{t('protocols.unitMg')}</option>
+                    <option value="IU">{t('protocols.unitIU')}</option>
                   </select>
                 </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Efficacité ressentie: {newEntry.effectiveness}/5
+                  {t('protocols.perceivedEffectiveness')}: {newEntry.effectiveness}/5
                 </label>
                 <input
                   type="range"
@@ -936,15 +883,15 @@ function ProtocolDetailModal({
                   className="w-full accent-orange-500"
                 />
                 <div className="flex justify-between text-xs text-gray-500">
-                  <span>Pas d&apos;effet</span>
-                  <span>Très efficace</span>
+                  <span>{t('protocols.noEffect')}</span>
+                  <span>{t('protocols.veryEffective')}</span>
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Effets secondaires</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('protocols.sideEffects')}</label>
                 <div className="flex flex-wrap gap-2">
-                  {['Nausée', 'Fatigue', 'Maux de tête', 'Rougeur', 'Douleur injection', 'Autre'].map(effect => (
+                  {[t('protocols.effectNausea'), t('protocols.effectFatigue'), t('protocols.effectHeadache'), t('protocols.effectRedness'), t('protocols.effectInjectionPain'), t('protocols.effectOther')].map(effect => (
                     <button
                       key={effect}
                       type="button"
@@ -967,11 +914,11 @@ function ProtocolDetailModal({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('protocols.notes')}</label>
                 <textarea
                   value={newEntry.notes}
                   onChange={e => setNewEntry({ ...newEntry, notes: e.target.value })}
-                  placeholder="Observations, ressenti, conditions particulières..."
+                  placeholder={t('protocols.notesPlaceholder')}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 resize-none"
                   rows={3}
                 />
@@ -981,7 +928,7 @@ function ProtocolDetailModal({
                 type="submit"
                 className="w-full py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-colors"
               >
-                Enregistrer l&apos;entrée
+                {t('protocols.saveEntry')}
               </button>
             </form>
           )}
@@ -993,14 +940,14 @@ function ProtocolDetailModal({
             onClick={onDelete}
             className="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg text-sm font-medium transition-colors"
           >
-            Supprimer
+            {t('protocols.delete')}
           </button>
           <div className="flex-1"></div>
           <button
             onClick={onClose}
             className="px-6 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
           >
-            Fermer
+            {t('protocols.close')}
           </button>
         </div>
       </div>
@@ -1015,6 +962,7 @@ function NewProtocolModal({
   onClose: () => void;
   onCreate: (protocol: Protocol) => void;
 }) {
+  const { t } = useTranslations();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [goal, setGoal] = useState('');
@@ -1048,52 +996,52 @@ function NewProtocolModal({
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl max-w-lg w-full">
         <div className="p-6 border-b border-gray-200">
-          <h2 className="text-xl font-bold text-gray-900">Créer un nouveau protocole</h2>
+          <h2 className="text-xl font-bold text-gray-900">{t('protocols.createNewProtocol')}</h2>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Nom du protocole *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('protocols.protocolName')} *</label>
             <input
               type="text"
               value={name}
               onChange={e => setName(e.target.value)}
-              placeholder="Ex: Mon protocole récupération"
+              placeholder={t('protocols.protocolNamePlaceholder')}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Objectif</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('protocols.objective')}</label>
             <input
               type="text"
               value={goal}
               onChange={e => setGoal(e.target.value)}
-              placeholder="Ex: Récupération après blessure"
+              placeholder={t('protocols.objectivePlaceholder')}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('protocols.description')}</label>
             <textarea
               value={description}
               onChange={e => setDescription(e.target.value)}
-              placeholder="Détails du protocole..."
+              placeholder={t('protocols.descriptionPlaceholder')}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 resize-none"
               rows={3}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Peptides utilisés</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('protocols.peptidesUsedLabel')}</label>
             <div className="flex gap-2 mb-2">
               <input
                 type="text"
                 value={newPeptide}
                 onChange={e => setNewPeptide(e.target.value)}
-                placeholder="Nom du peptide"
+                placeholder={t('protocols.peptideNamePlaceholder')}
                 className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
                 onKeyPress={e => e.key === 'Enter' && (e.preventDefault(), addPeptide())}
               />
@@ -1102,7 +1050,7 @@ function NewProtocolModal({
                 onClick={addPeptide}
                 className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
               >
-                Ajouter
+                {t('protocols.add')}
               </button>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -1130,14 +1078,14 @@ function NewProtocolModal({
               onClick={onClose}
               className="flex-1 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
             >
-              Annuler
+              {t('protocols.cancel')}
             </button>
             <button
               type="submit"
               disabled={!name || peptides.length === 0}
               className="flex-1 py-2 bg-orange-500 hover:bg-orange-600 disabled:bg-gray-300 text-white rounded-lg text-sm font-medium transition-colors"
             >
-              Créer le protocole
+              {t('protocols.createProtocol')}
             </button>
           </div>
         </form>

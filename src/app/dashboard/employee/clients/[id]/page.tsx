@@ -11,8 +11,8 @@ import { prisma } from '@/lib/db';
 import { UserRole } from '@/types';
 
 interface PageProps {
-  params: { id: string };
-  searchParams: { tab?: string };
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ tab?: string }>;
 }
 
 async function getClientDetails(clientId: string) {
@@ -80,6 +80,8 @@ async function getClientDetails(clientId: string) {
 }
 
 export default async function ClientDetailPage({ params, searchParams }: PageProps) {
+  const { id } = await params;
+  const resolvedSearchParams = await searchParams;
   const session = await auth();
 
   if (!session?.user) {
@@ -90,14 +92,14 @@ export default async function ClientDetailPage({ params, searchParams }: PagePro
     redirect('/dashboard');
   }
 
-  const data = await getClientDetails(params.id);
+  const data = await getClientDetails(id);
 
   if (!data) {
     notFound();
   }
 
   const { company, stats } = data;
-  const activeTab = searchParams.tab || 'etudiants';
+  const activeTab = resolvedSearchParams.tab || 'etudiants';
 
   return (
     <div className="min-h-screen bg-gray-50">

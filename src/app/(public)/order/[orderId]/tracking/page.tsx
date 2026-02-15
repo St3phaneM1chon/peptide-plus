@@ -4,13 +4,14 @@ export const dynamic = 'force-dynamic';
  * Redirige vers le bon type de suivi selon le produit
  */
 
+import React from 'react';
 import { redirect, notFound } from 'next/navigation';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { PhysicalDeliveryTracking } from '@/components/order/PhysicalDeliveryTracking';
 
 interface TrackingPageProps {
-  params: { orderId: string };
+  params: Promise<{ orderId: string }>;
 }
 
 async function getOrder(orderId: string, userId: string) {
@@ -40,13 +41,14 @@ async function getOrder(orderId: string, userId: string) {
 }
 
 export default async function TrackingPage({ params }: TrackingPageProps) {
+  const { orderId } = await params;
   const session = await auth();
 
   if (!session?.user) {
-    redirect(`/auth/signin?callbackUrl=/order/${params.orderId}/tracking`);
+    redirect(`/auth/signin?callbackUrl=/order/${orderId}/tracking`);
   }
 
-  const order = await getOrder(params.orderId, session.user.id);
+  const order = await getOrder(orderId, session.user.id);
 
   if (!order) {
     notFound();
@@ -60,12 +62,13 @@ export default async function TrackingPage({ params }: TrackingPageProps) {
 
       {/* Contenu - suivi de livraison physique */}
       <div style={{ maxWidth: '900px', margin: '0 auto', padding: '32px 24px' }}>
-        <PhysicalDeliveryTracking order={order} />
+        <PhysicalDeliveryTracking order={{ ...order, amount: Number(order.amount), createdAt: new Date(order.createdAt) } as React.ComponentProps<typeof PhysicalDeliveryTracking>['order']} />
       </div>
     </div>
   );
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Order object has deep nested structure from Prisma
 function TrackingHeader({ order }: { order: any }) {
   const isDigital = order.product.productType === 'DIGITAL';
   const statusLabel = isDigital

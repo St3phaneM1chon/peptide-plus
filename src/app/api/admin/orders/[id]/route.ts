@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * Admin Single Order API
  * GET  - Full order detail
@@ -14,10 +16,11 @@ import {
   createInventoryLossEntry,
 } from '@/lib/accounting/webhook-accounting.service';
 import { generateCOGSEntry } from '@/lib/inventory';
+import { sendOrderLifecycleEmail } from '@/lib/email';
 
 // GET /api/admin/orders/[id] - Full order detail
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -196,6 +199,25 @@ export async function PUT(
       },
     });
 
+    // ── Send lifecycle email on status change (fire-and-forget) ──────────
+    if (status && status !== existingOrder.status) {
+      const emailEvent = status as string;
+      const validEmailEvents = ['CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'];
+
+      if (validEmailEvents.includes(emailEvent)) {
+        sendOrderLifecycleEmail(
+          id,
+          emailEvent as 'CONFIRMED' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED',
+          {
+            trackingNumber: trackingNumber || undefined,
+            carrier: carrier || undefined,
+          },
+        ).catch((err) => {
+          console.error(`Failed to send ${emailEvent} email for order ${id}:`, err);
+        });
+      }
+    }
+
     return NextResponse.json({ order });
   } catch (error) {
     console.error('Admin order PUT error:', error);
@@ -300,7 +322,7 @@ async function handleRefund(
   const refundTps = Math.round(Number(order.taxTps) * refundRatio * 100) / 100;
   const refundTvq = Math.round(Number(order.taxTvq) * refundRatio * 100) / 100;
   const refundTvh = Math.round(Number(order.taxTvh) * refundRatio * 100) / 100;
-  const refundPst = Math.round(Number((order as any).taxPst || 0) * refundRatio * 100) / 100;
+  const refundPst = Math.round(Number((order as Record<string, unknown>).taxPst || 0) * refundRatio * 100) / 100;
 
   // Create refund accounting entries
   const entryId = await createRefundAccountingEntries(
@@ -392,6 +414,23 @@ async function handleRefund(
     journalEntryId: entryId,
     issuedBy: session.user.id,
   });
+
+  // ── Send refund email (fire-and-forget) ──────────────────────────────
+  sendOrderLifecycleEmail(orderId, 'REFUNDED', {
+    refundAmount: amount,
+    refundIsPartial: !isFullRefund,
+  }).catch((err) => {
+    console.error(`Failed to send REFUNDED email for order ${orderId}:`, err);
+  });
+
+  // If full refund also triggers a cancellation, send the cancelled email too
+  if (isFullRefund) {
+    sendOrderLifecycleEmail(orderId, 'CANCELLED', {
+      cancellationReason: reason,
+    }).catch((err) => {
+      console.error(`Failed to send CANCELLED email for order ${orderId}:`, err);
+    });
+  }
 
   return NextResponse.json({
     success: true,

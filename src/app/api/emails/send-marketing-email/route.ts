@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * API pour envoyer des emails marketing
  * POST /api/emails/send-marketing-email
@@ -105,7 +107,7 @@ export async function POST(request: NextRequest) {
         // Générer un code de parrainage si nécessaire
         let referralCode = user.referralCode;
         if (!referralCode) {
-          referralCode = `${user.name?.split(' ')[0]?.toUpperCase().slice(0, 3) || 'BC'}${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+          referralCode = `${user.name?.split(' ')[0]?.toUpperCase().slice(0, 3) || 'BC'}${crypto.randomUUID().replace(/-/g, '').substring(0, 4).toUpperCase()}`;
           await db.user.update({
             where: { id: user.id },
             data: { referralCode },

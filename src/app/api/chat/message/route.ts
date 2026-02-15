@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * API Chat Messages
  * POST /api/chat/message - Envoyer un message
@@ -156,6 +158,7 @@ export async function POST(request: NextRequest) {
         conversationId,
         content: messageToSave.content,
         contentOriginal: messageToSave.contentOriginal,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Prisma enum type mismatch
         sender: sender as any,
         senderName: sender === 'ADMIN' ? (session?.user?.name || 'Support') : undefined,
         language: messageToSave.language,

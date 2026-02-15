@@ -56,6 +56,7 @@ export function CheckoutForm({ product, user: _user, savedCards }: CheckoutFormP
     if (paymentMethod === 'card') {
       createPaymentIntent();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [paymentMethod]);
 
   const createPaymentIntent = async () => {

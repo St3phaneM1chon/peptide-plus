@@ -178,7 +178,7 @@ export default function WebinarsPage() {
             {pastWebinars.map((webinar) => (
               <Link
                 key={webinar.id}
-                href="#"
+                href={`/webinars/${webinar.id}`}
                 style={{
                   backgroundColor: 'var(--gray-50)',
                   borderRadius: '12px',

@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { UserRole } from '@/types';
@@ -33,7 +35,7 @@ export async function GET(request: NextRequest) {
       invoiceNumber: string;
       type: 'RECEIVABLE' | 'PAYABLE';
       customerOrVendor: string;
-      email: string | null;
+      email?: string;
       invoiceDate: Date;
       dueDate: Date;
       amount: number;
@@ -52,7 +54,7 @@ export async function GET(request: NextRequest) {
         invoiceNumber: i.invoiceNumber,
         type: 'RECEIVABLE' as const,
         customerOrVendor: i.customerName,
-        email: i.customerEmail,
+        email: i.customerEmail ?? undefined,
         invoiceDate: i.invoiceDate,
         dueDate: i.dueDate,
         amount: Number(i.total),
@@ -70,7 +72,7 @@ export async function GET(request: NextRequest) {
         invoiceNumber: i.invoiceNumber,
         type: 'PAYABLE' as const,
         customerOrVendor: i.supplierName,
-        email: i.supplierEmail,
+        email: i.supplierEmail ?? undefined,
         invoiceDate: i.invoiceDate,
         dueDate: i.dueDate,
         amount: Number(i.total),

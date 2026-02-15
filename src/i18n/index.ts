@@ -30,7 +30,9 @@ import ru from './locales/ru.json';
 import ht from './locales/ht.json';
 import gcr from './locales/gcr.json';
 
-const messages: Record<string, typeof en> = {
+// Use a flexible type for locale files that may have partial translations.
+// The fallback mechanism in getRequestConfig handles missing keys.
+const messages: Record<string, Record<string, unknown>> = {
   en,
   fr,
   zh,
@@ -68,7 +70,7 @@ export default getRequestConfig(async ({ locale }) => {
   }
 
   return {
-    messages: localeMessages,
+    messages: localeMessages as Record<string, string>,
     timeZone: 'America/Toronto',
     now: new Date(),
   };

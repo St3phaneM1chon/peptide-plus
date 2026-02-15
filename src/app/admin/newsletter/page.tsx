@@ -17,12 +17,12 @@ import {
   PageHeader,
   Button,
   Modal,
-  EmptyState,
   StatusBadge,
   FormField,
   Input,
   Textarea,
 } from '@/components/admin';
+import { useI18n } from '@/i18n/client';
 
 interface Subscriber {
   id: string;
@@ -56,6 +56,7 @@ const statusVariant: Record<string, 'success' | 'neutral' | 'error' | 'info' | '
 };
 
 export default function NewsletterPage() {
+  const { t, locale } = useI18n();
   const [activeTab, setActiveTab] = useState<'subscribers' | 'campaigns'>('subscribers');
   const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
@@ -97,6 +98,10 @@ export default function NewsletterPage() {
     fromCheckout: subscribers.filter((s) => s.source === 'checkout' && s.status === 'ACTIVE').length,
   };
 
+  const formatDate = (dateStr: string) => {
+    return new Date(dateStr).toLocaleDateString(locale);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -108,23 +113,23 @@ export default function NewsletterPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Newsletter"
-        subtitle="Gerez vos abonnes et campagnes email"
+        title={t('admin.newsletter.title')}
+        subtitle={t('admin.newsletter.subtitle')}
         actions={
           <Button variant="primary" icon={Send} onClick={() => setShowComposer(true)}>
-            Nouvelle campagne
+            {t('admin.newsletter.newCampaign')}
           </Button>
         }
       />
 
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4">
-        <StatMini icon={Users} label="Abonnes actifs" value={stats.totalSubscribers} bg="bg-sky-50 text-sky-600" />
-        <StatMini icon={UserMinus} label="Desabonnes" value={stats.unsubscribed} bg="bg-slate-50 text-slate-500" />
-        <StatMini icon={Mail} label="Campagnes" value={stats.totalCampaigns} bg="bg-indigo-50 text-indigo-600" />
+        <StatMini icon={Users} label={t('admin.newsletter.activeSubscribers')} value={stats.totalSubscribers} bg="bg-sky-50 text-sky-600" />
+        <StatMini icon={UserMinus} label={t('admin.newsletter.unsubscribed')} value={stats.unsubscribed} bg="bg-slate-50 text-slate-500" />
+        <StatMini icon={Mail} label={t('admin.newsletter.campaigns')} value={stats.totalCampaigns} bg="bg-indigo-50 text-indigo-600" />
         <StatMini
           icon={BarChart3}
-          label="Taux d'ouverture moy."
+          label={t('admin.newsletter.avgOpenRate')}
           value={`${stats.avgOpenRate.toFixed(1)}%`}
           bg="bg-emerald-50 text-emerald-600"
         />
@@ -132,11 +137,11 @@ export default function NewsletterPage() {
 
       {/* Source breakdown */}
       <div className="bg-white rounded-xl p-6 border border-slate-200">
-        <h3 className="text-base font-semibold text-slate-900 mb-4">Inscriptions par source</h3>
+        <h3 className="text-base font-semibold text-slate-900 mb-4">{t('admin.newsletter.subscriptionsBySource')}</h3>
         <div className="grid grid-cols-3 gap-4">
-          <SourceCard label="Popup d'accueil" value={stats.fromPopup} total={stats.totalSubscribers} color="violet" />
-          <SourceCard label="Pied de page" value={stats.fromFooter} total={stats.totalSubscribers} color="sky" />
-          <SourceCard label="Checkout" value={stats.fromCheckout} total={stats.totalSubscribers} color="amber" />
+          <SourceCard label={t('admin.newsletter.welcomePopup')} value={stats.fromPopup} total={stats.totalSubscribers} color="violet" tOfTotal={t} />
+          <SourceCard label={t('admin.newsletter.footer')} value={stats.fromFooter} total={stats.totalSubscribers} color="sky" tOfTotal={t} />
+          <SourceCard label={t('admin.newsletter.checkout')} value={stats.fromCheckout} total={stats.totalSubscribers} color="amber" tOfTotal={t} />
         </div>
       </div>
 
@@ -153,7 +158,9 @@ export default function NewsletterPage() {
                   : 'border-transparent text-slate-500 hover:text-slate-700'
               }`}
             >
-              {tab === 'subscribers' ? `Abonnes (${subscribers.length})` : `Campagnes (${campaigns.length})`}
+              {tab === 'subscribers'
+                ? t('admin.newsletter.tabSubscribers', { count: subscribers.length })
+                : t('admin.newsletter.tabCampaigns', { count: campaigns.length })}
             </button>
           ))}
         </nav>
@@ -165,22 +172,22 @@ export default function NewsletterPage() {
           <div className="p-4 border-b border-slate-200 flex items-center justify-between">
             <input
               type="text"
-              placeholder="Rechercher un email..."
+              placeholder={t('admin.newsletter.searchEmail')}
               className="px-4 py-2 border border-slate-300 rounded-lg w-64 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
             />
             <Button variant="secondary" icon={Download}>
-              Exporter CSV
+              {t('admin.newsletter.exportCSV')}
             </Button>
           </div>
           <table className="w-full">
             <thead className="bg-slate-50">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Email</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Langue</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Source</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Statut</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Inscrit le</th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">Actions</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.newsletter.colEmail')}</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.newsletter.colLanguage')}</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.newsletter.colSource')}</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.newsletter.colStatus')}</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.newsletter.colSubscribedAt')}</th>
+                <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.newsletter.colActions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -199,7 +206,7 @@ export default function NewsletterPage() {
                     <StatusBadge variant={statusVariant[sub.status]}>{sub.status}</StatusBadge>
                   </td>
                   <td className="px-4 py-3 text-slate-500">
-                    {new Date(sub.subscribedAt).toLocaleDateString('fr-CA')}
+                    {formatDate(sub.subscribedAt)}
                   </td>
                   <td className="px-4 py-3 text-center">
                     <Button variant="ghost" size="sm" icon={Trash2} className="text-slate-400 hover:text-red-600" />
@@ -221,35 +228,35 @@ export default function NewsletterPage() {
                   </div>
                   <div className="flex flex-wrap gap-4 text-sm text-slate-500">
                     {campaign.sentAt && (
-                      <span>Envoye le {new Date(campaign.sentAt).toLocaleDateString('fr-CA')}</span>
+                      <span>{t('admin.newsletter.sentOn', { date: formatDate(campaign.sentAt) })}</span>
                     )}
                     {campaign.scheduledFor && (
-                      <span>Programme pour {new Date(campaign.scheduledFor).toLocaleDateString('fr-CA')}</span>
+                      <span>{t('admin.newsletter.scheduledFor', { date: formatDate(campaign.scheduledFor) })}</span>
                     )}
-                    {campaign.recipientCount > 0 && <span>{campaign.recipientCount} destinataires</span>}
-                    {campaign.openRate && <span className="text-emerald-600">{campaign.openRate}% ouverture</span>}
-                    {campaign.clickRate && <span className="text-sky-600">{campaign.clickRate}% clics</span>}
+                    {campaign.recipientCount > 0 && <span>{t('admin.newsletter.recipients', { count: campaign.recipientCount })}</span>}
+                    {campaign.openRate && <span className="text-emerald-600">{t('admin.newsletter.openRate', { rate: campaign.openRate })}</span>}
+                    {campaign.clickRate && <span className="text-sky-600">{t('admin.newsletter.clickRate', { rate: campaign.clickRate })}</span>}
                   </div>
                 </div>
                 <div className="flex gap-2">
                   {campaign.status === 'DRAFT' && (
                     <>
                       <Button variant="ghost" size="sm" icon={Pencil}>
-                        Modifier
+                        {t('admin.newsletter.edit')}
                       </Button>
                       <Button variant="primary" size="sm" icon={Send}>
-                        Envoyer
+                        {t('admin.newsletter.send')}
                       </Button>
                     </>
                   )}
                   {campaign.status === 'SCHEDULED' && (
                     <Button variant="ghost" size="sm" icon={XCircle} className="text-red-600">
-                      Annuler
+                      {t('admin.newsletter.cancel')}
                     </Button>
                   )}
                   {campaign.status === 'SENT' && (
                     <Button variant="ghost" size="sm" icon={BarChart3}>
-                      Statistiques
+                      {t('admin.newsletter.statistics')}
                     </Button>
                   )}
                 </div>
@@ -260,34 +267,34 @@ export default function NewsletterPage() {
       )}
 
       {/* Composer Modal */}
-      <Modal isOpen={showComposer} onClose={() => setShowComposer(false)} title="Nouvelle campagne" size="lg">
+      <Modal isOpen={showComposer} onClose={() => setShowComposer(false)} title={t('admin.newsletter.modalTitle')} size="lg">
         <div className="space-y-4">
-          <FormField label="Sujet" required>
+          <FormField label={t('admin.newsletter.subject')} required>
             <Input
               type="text"
               value={newCampaign.subject}
               onChange={(e) => setNewCampaign({ ...newCampaign, subject: e.target.value })}
-              placeholder="Sujet de l'email"
+              placeholder={t('admin.newsletter.subjectPlaceholder')}
             />
           </FormField>
-          <FormField label="Contenu" required>
+          <FormField label={t('admin.newsletter.content')} required>
             <Textarea
               rows={10}
               value={newCampaign.content}
               onChange={(e) => setNewCampaign({ ...newCampaign, content: e.target.value })}
-              placeholder="Contenu de l'email (HTML supporte)"
+              placeholder={t('admin.newsletter.contentPlaceholder')}
               className="font-mono text-sm"
             />
           </FormField>
           <div className="flex gap-3 pt-4 border-t border-slate-200">
             <Button variant="secondary" className="flex-1">
-              Sauvegarder brouillon
+              {t('admin.newsletter.saveDraft')}
             </Button>
             <Button variant="outline" icon={Clock} className="flex-1">
-              Programmer
+              {t('admin.newsletter.schedule')}
             </Button>
             <Button variant="primary" icon={Send} className="flex-1">
-              Envoyer maintenant
+              {t('admin.newsletter.sendNow')}
             </Button>
           </div>
         </div>
@@ -325,11 +332,13 @@ function SourceCard({
   value,
   total,
   color,
+  tOfTotal,
 }: {
   label: string;
   value: number;
   total: number;
   color: 'violet' | 'sky' | 'amber';
+  tOfTotal: (key: string, params?: Record<string, string | number>) => string;
 }) {
   const pct = total > 0 ? ((value / total) * 100).toFixed(1) : '0';
   const colors = {
@@ -341,7 +350,7 @@ function SourceCard({
     <div className={`rounded-lg p-4 border ${colors[color]}`}>
       <p className="text-sm font-medium mb-1">{label}</p>
       <p className="text-3xl font-bold">{value}</p>
-      <p className="text-xs mt-1 opacity-75">{pct}% du total</p>
+      <p className="text-xs mt-1 opacity-75">{tOfTotal('admin.newsletter.ofTotal', { pct })}</p>
     </div>
   );
 }

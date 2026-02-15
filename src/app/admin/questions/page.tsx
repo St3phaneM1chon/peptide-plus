@@ -18,6 +18,7 @@ import { StatusBadge } from '@/components/admin/StatusBadge';
 import { EmptyState } from '@/components/admin/EmptyState';
 import { FilterBar, SelectFilter } from '@/components/admin/FilterBar';
 import { FormField, Textarea } from '@/components/admin/FormField';
+import { useI18n } from '@/i18n/client';
 
 interface Question {
   id: string;
@@ -35,6 +36,7 @@ interface Question {
 }
 
 export default function QuestionsPage() {
+  const { t, locale } = useI18n();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState({ answered: '', search: '' });
@@ -83,7 +85,7 @@ export default function QuestionsPage() {
   };
 
   const deleteQuestion = async (id: string) => {
-    if (!confirm('Supprimer cette question?')) return;
+    if (!confirm(t('admin.questions.deleteConfirm'))) return;
     setQuestions(questions.filter(q => q.id !== id));
   };
 
@@ -117,30 +119,30 @@ export default function QuestionsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Questions produits"
-        subtitle="Repondez aux questions des clients"
+        title={t('admin.questions.title')}
+        subtitle={t('admin.questions.subtitle')}
       />
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
-        <StatCard label="Total questions" value={stats.total} icon={MessageCircleQuestion} />
-        <StatCard label="Sans reponse" value={stats.unanswered} icon={AlertCircle} />
-        <StatCard label="Repondues" value={stats.answered} icon={CheckCircle} />
+        <StatCard label={t('admin.questions.totalQuestions')} value={stats.total} icon={MessageCircleQuestion} />
+        <StatCard label={t('admin.questions.unanswered')} value={stats.unanswered} icon={AlertCircle} />
+        <StatCard label={t('admin.questions.answered')} value={stats.answered} icon={CheckCircle} />
       </div>
 
       {/* Filters */}
       <FilterBar
         searchValue={filter.search}
         onSearchChange={(v) => setFilter({ ...filter, search: v })}
-        searchPlaceholder="Rechercher..."
+        searchPlaceholder={t('admin.questions.searchPlaceholder')}
       >
         <SelectFilter
-          label="Toutes"
+          label={t('admin.questions.filterAll')}
           value={filter.answered}
           onChange={(v) => setFilter({ ...filter, answered: v })}
           options={[
-            { value: 'unanswered', label: 'Sans reponse' },
-            { value: 'answered', label: 'Repondues' },
+            { value: 'unanswered', label: t('admin.questions.filterUnanswered') },
+            { value: 'answered', label: t('admin.questions.filterAnswered') },
           ]}
         />
       </FilterBar>
@@ -150,8 +152,8 @@ export default function QuestionsPage() {
         <div className="bg-white border border-slate-200 rounded-lg">
           <EmptyState
             icon={MessageCircleQuestion}
-            title="Aucune question trouvee"
-            description="Aucune question ne correspond aux filtres selectionnes"
+            title={t('admin.questions.emptyTitle')}
+            description={t('admin.questions.emptyDescription')}
           />
         </div>
       ) : (
@@ -166,11 +168,11 @@ export default function QuestionsPage() {
               <div className="flex items-start justify-between mb-3">
                 <div>
                   <p className="text-sm text-slate-500 mb-1">
-                    {question.userName} &bull; {question.productName} &bull; {new Date(question.createdAt).toLocaleDateString('fr-CA')}
+                    {question.userName} &bull; {question.productName} &bull; {new Date(question.createdAt).toLocaleDateString(locale)}
                   </p>
                   {!question.answer && (
                     <StatusBadge variant="warning">
-                      En attente de reponse
+                      {t('admin.questions.awaitingAnswer')}
                     </StatusBadge>
                   )}
                 </div>
@@ -179,7 +181,7 @@ export default function QuestionsPage() {
                     onClick={() => togglePublic(question.id, question.isPublic)}
                   >
                     <StatusBadge variant={question.isPublic ? 'success' : 'neutral'}>
-                      {question.isPublic ? 'Public' : 'Prive'}
+                      {question.isPublic ? t('admin.questions.public') : t('admin.questions.private')}
                     </StatusBadge>
                   </button>
                 </div>
@@ -199,7 +201,7 @@ export default function QuestionsPage() {
                     {question.answer}
                   </p>
                   <p className="text-xs text-emerald-600 mt-2">
-                    {question.answeredBy} &bull; {question.answeredAt && new Date(question.answeredAt).toLocaleDateString('fr-CA')}
+                    {question.answeredBy} &bull; {question.answeredAt && new Date(question.answeredAt).toLocaleDateString(locale)}
                   </p>
                 </div>
               )}
@@ -211,7 +213,7 @@ export default function QuestionsPage() {
                   icon={question.answer ? Pencil : MessageSquare}
                   onClick={() => { setSelectedQuestion(question); setAnswerText(question.answer || ''); }}
                 >
-                  {question.answer ? 'Modifier reponse' : 'Repondre'}
+                  {question.answer ? t('admin.questions.editAnswer') : t('admin.questions.answer')}
                 </Button>
                 <Button
                   variant="danger"
@@ -219,7 +221,7 @@ export default function QuestionsPage() {
                   icon={Trash2}
                   onClick={() => deleteQuestion(question.id)}
                 >
-                  Supprimer
+                  {t('admin.questions.delete')}
                 </Button>
               </div>
             </div>
@@ -231,18 +233,18 @@ export default function QuestionsPage() {
       <Modal
         isOpen={!!selectedQuestion}
         onClose={() => setSelectedQuestion(null)}
-        title="Repondre a la question"
+        title={t('admin.questions.modalTitle')}
         footer={
           <>
             <Button variant="secondary" onClick={() => setSelectedQuestion(null)}>
-              Annuler
+              {t('admin.questions.cancel')}
             </Button>
             <Button
               variant="primary"
               disabled={!answerText.trim()}
               onClick={() => selectedQuestion && submitAnswer(selectedQuestion.id)}
             >
-              Publier la reponse
+              {t('admin.questions.publishAnswer')}
             </Button>
           </>
         }
@@ -254,12 +256,12 @@ export default function QuestionsPage() {
             </p>
             <p className="font-medium text-slate-900">{selectedQuestion?.question}</p>
           </div>
-          <FormField label="Votre reponse">
+          <FormField label={t('admin.questions.yourAnswer')}>
             <Textarea
               rows={4}
               value={answerText}
               onChange={(e) => setAnswerText(e.target.value)}
-              placeholder="Repondez a la question..."
+              placeholder={t('admin.questions.answerPlaceholder')}
             />
           </FormField>
         </div>

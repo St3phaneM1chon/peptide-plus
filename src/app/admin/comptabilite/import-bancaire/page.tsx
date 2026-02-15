@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { useI18n } from '@/i18n/client';
+import { toast } from 'sonner';
 
 interface BankConnection {
   id: string;
@@ -43,6 +45,7 @@ interface ImportHistoryItem {
 }
 
 export default function BankImportPage() {
+  const { t } = useI18n();
   const [activeTab, setActiveTab] = useState<'connections' | 'import' | 'history'>('connections');
   const [connections, setConnections] = useState<BankConnection[]>([]);
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
@@ -64,7 +67,7 @@ export default function BankImportPage() {
       setError(null);
       try {
         const res = await fetch('/api/accounting/bank-accounts');
-        if (!res.ok) throw new Error('Erreur chargement comptes bancaires');
+        if (!res.ok) throw new Error(t('admin.bankImport.errorLoadAccounts'));
         const data = await res.json();
         const accounts = data.accounts || [];
         setBankAccounts(accounts);
@@ -83,7 +86,7 @@ export default function BankImportPage() {
           status: 'ACTIVE' as const,
         })));
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Erreur de chargement');
+        setError(err instanceof Error ? err.message : t('admin.bankImport.errorLoading'));
       } finally {
         setLoading(false);
       }
@@ -169,14 +172,14 @@ export default function BankImportPage() {
     ));
 
     setSyncing(false);
-    alert('Synchronisation terminée! 12 nouvelles transactions importées.');
+    toast.success(t('admin.bankImport.syncComplete'));
   };
 
   const handleImportSelected = async () => {
     const selected = importedTransactions.filter(t => t.selected);
     if (selected.length === 0) return;
     if (!selectedBankAccountId) {
-      alert('Veuillez sélectionner un compte bancaire.');
+      toast.error(t('admin.bankImport.selectAccountAlert'));
       return;
     }
 
@@ -198,14 +201,14 @@ export default function BankImportPage() {
 
       if (!res.ok) {
         const errData = await res.json();
-        throw new Error(errData.error || 'Erreur import');
+        throw new Error(errData.error || t('admin.bankImport.errorImport'));
       }
 
       const data = await res.json();
-      alert(`${data.imported} transactions importées avec succès!`);
+      toast.success(t('admin.bankImport.importSuccess', { count: data.imported }));
       setImportedTransactions([]);
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Erreur lors de l\'import');
+      toast.error(err instanceof Error ? err.message : t('admin.bankImport.errorDuringImport'));
     } finally {
       setImporting(false);
     }
@@ -228,25 +231,25 @@ export default function BankImportPage() {
     return 'text-red-400';
   };
 
-  if (loading) return <div className="p-8 text-center">Chargement...</div>;
-  if (error) return <div className="p-8 text-center text-red-400">Erreur: {error}</div>;
+  if (loading) return <div className="p-8 text-center">{t('admin.bankImport.loading')}</div>;
+  if (error) return <div className="p-8 text-center text-red-400">{t('admin.bankImport.errorPrefix')} {error}</div>;
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-white">Import bancaire</h1>
-          <p className="text-neutral-400 mt-1">Connectez vos comptes ou importez des relevés CSV</p>
+          <h1 className="text-2xl font-bold text-white">{t('admin.bankImport.title')}</h1>
+          <p className="text-neutral-400 mt-1">{t('admin.bankImport.subtitle')}</p>
         </div>
       </div>
 
       {/* Tabs */}
       <div className="flex gap-1 bg-neutral-800 p-1 rounded-lg w-fit">
         {[
-          { id: 'connections', label: 'Connexions bancaires' },
-          { id: 'import', label: 'Import CSV' },
-          { id: 'history', label: 'Historique' },
+          { id: 'connections', label: t('admin.bankImport.tabConnections') },
+          { id: 'import', label: t('admin.bankImport.tabImportCSV') },
+          { id: 'history', label: t('admin.bankImport.tabHistory') },
         ].map(tab => (
           <button
             key={tab.id}
@@ -278,7 +281,7 @@ export default function BankImportPage() {
                       <h3 className="font-semibold text-white">{conn.bankName}</h3>
                       <p className="text-sm text-neutral-400">{conn.accountName} • {conn.accountMask}</p>
                       <p className="text-xs text-neutral-500 mt-1">
-                        Dernière sync: {conn.lastSync.toLocaleString('fr-CA')}
+                        {t('admin.bankImport.lastSync')} {conn.lastSync.toLocaleString('fr-CA')}
                       </p>
                     </div>
                   </div>
@@ -291,8 +294,8 @@ export default function BankImportPage() {
                       conn.status === 'REQUIRES_REAUTH' ? 'bg-yellow-900/30 text-yellow-400' :
                       'bg-red-900/30 text-red-400'
                     }`}>
-                      {conn.status === 'ACTIVE' ? 'Connecté' :
-                       conn.status === 'REQUIRES_REAUTH' ? 'Réauthentification requise' : 'Erreur'}
+                      {conn.status === 'ACTIVE' ? t('admin.bankImport.connected') :
+                       conn.status === 'REQUIRES_REAUTH' ? t('admin.bankImport.reauthRequired') : t('admin.bankImport.errorStatus')}
                     </span>
                   </div>
                 </div>
@@ -302,20 +305,20 @@ export default function BankImportPage() {
                     disabled={syncing}
                     className="px-3 py-1.5 bg-sky-600 hover:bg-sky-700 text-white text-sm rounded-lg disabled:opacity-50"
                   >
-                    {syncing ? 'Synchronisation...' : '🔄 Synchroniser'}
+                    {syncing ? t('admin.bankImport.syncing') : '🔄 ' + t('admin.bankImport.syncBtn')}
                   </button>
                   <button className="px-3 py-1.5 bg-neutral-700 hover:bg-neutral-600 text-white text-sm rounded-lg">
-                    ⚙️ Paramètres
+                    ⚙️ {t('admin.bankImport.settingsBtn')}
                   </button>
                   <button className="px-3 py-1.5 bg-red-900/30 hover:bg-red-900/50 text-red-400 text-sm rounded-lg">
-                    Déconnecter
+                    {t('admin.bankImport.disconnect')}
                   </button>
                 </div>
               </div>
             ))}
             {connections.length === 0 && (
               <div className="bg-neutral-800 rounded-xl p-6 border border-neutral-700 text-center text-neutral-400">
-                Aucun compte bancaire configuré.
+                {t('admin.bankImport.noAccountsConfigured')}
               </div>
             )}
           </div>
@@ -323,15 +326,15 @@ export default function BankImportPage() {
           {/* Add new connection */}
           <div className="bg-neutral-800 rounded-xl p-6 border border-dashed border-neutral-600">
             <div className="text-center">
-              <p className="text-lg font-medium text-white mb-2">Connecter un nouveau compte</p>
-              <p className="text-sm text-neutral-400 mb-4">Synchronisation automatique via Plaid (Desjardins, TD, RBC, BMO, etc.)</p>
+              <p className="text-lg font-medium text-white mb-2">{t('admin.bankImport.connectNewAccount')}</p>
+              <p className="text-sm text-neutral-400 mb-4">{t('admin.bankImport.connectNewAccountDesc')}</p>
               <div className="flex justify-center gap-4">
                 <button className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg">
-                  + Connecter via Plaid
+                  {t('admin.bankImport.connectViaPlaid')}
                 </button>
               </div>
               <p className="text-xs text-neutral-500 mt-4">
-                Connexion sécurisée • Vos identifiants ne sont jamais stockés
+                {t('admin.bankImport.secureConnection')}
               </p>
             </div>
           </div>
@@ -345,8 +348,8 @@ export default function BankImportPage() {
             <div className="bg-neutral-800 rounded-xl p-8 border border-dashed border-neutral-600">
               <div className="text-center">
                 <div className="text-4xl mb-4">📄</div>
-                <h3 className="text-lg font-medium text-white mb-2">Importer un relevé bancaire</h3>
-                <p className="text-sm text-neutral-400 mb-4">Formats supportés: Desjardins, TD, RBC, CSV générique</p>
+                <h3 className="text-lg font-medium text-white mb-2">{t('admin.bankImport.importBankStatement')}</h3>
+                <p className="text-sm text-neutral-400 mb-4">{t('admin.bankImport.supportedFormats')}</p>
 
                 <div className="flex justify-center gap-4 mb-4">
                   <select
@@ -357,7 +360,7 @@ export default function BankImportPage() {
                     <option value="desjardins">Desjardins</option>
                     <option value="td">TD Canada Trust</option>
                     <option value="rbc">RBC</option>
-                    <option value="generic">CSV Générique</option>
+                    <option value="generic">{t('admin.bankImport.genericCSV')}</option>
                   </select>
 
                   {bankAccounts.length > 0 && (
@@ -386,12 +389,12 @@ export default function BankImportPage() {
                     disabled={importing}
                     className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg disabled:opacity-50"
                   >
-                    {importing ? 'Analyse en cours...' : 'Sélectionner un fichier CSV'}
+                    {importing ? t('admin.bankImport.analyzing') : t('admin.bankImport.selectCSVFile')}
                   </button>
                 </div>
 
                 <p className="text-xs text-neutral-500">
-                  Le système catégorisera automatiquement vos transactions
+                  {t('admin.bankImport.autoCategorize')}
                 </p>
               </div>
             </div>
@@ -400,7 +403,7 @@ export default function BankImportPage() {
               {/* Bank account selector for import */}
               {bankAccounts.length > 0 && (
                 <div className="bg-neutral-800 rounded-xl p-4 border border-neutral-700">
-                  <label className="text-sm text-neutral-300 mr-3">Compte de destination:</label>
+                  <label className="text-sm text-neutral-300 mr-3">{t('admin.bankImport.destinationAccount')}</label>
                   <select
                     value={selectedBankAccountId}
                     onChange={e => setSelectedBankAccountId(e.target.value)}
@@ -418,21 +421,21 @@ export default function BankImportPage() {
               {/* Stats */}
               <div className="grid grid-cols-4 gap-4">
                 <div className="bg-neutral-800 rounded-xl p-4 border border-neutral-700">
-                  <p className="text-sm text-neutral-400">Transactions</p>
+                  <p className="text-sm text-neutral-400">{t('admin.bankImport.transactions')}</p>
                   <p className="text-2xl font-bold text-white">{importedTransactions.length}</p>
                 </div>
                 <div className="bg-neutral-800 rounded-xl p-4 border border-neutral-700">
-                  <p className="text-sm text-neutral-400">Sélectionnées</p>
+                  <p className="text-sm text-neutral-400">{t('admin.bankImport.selected')}</p>
                   <p className="text-2xl font-bold text-sky-400">{importedTransactions.filter(t => t.selected).length}</p>
                 </div>
                 <div className="bg-neutral-800 rounded-xl p-4 border border-neutral-700">
-                  <p className="text-sm text-neutral-400">Confiance moyenne</p>
+                  <p className="text-sm text-neutral-400">{t('admin.bankImport.avgConfidence')}</p>
                   <p className="text-2xl font-bold text-green-400">
                     {Math.round(importedTransactions.reduce((sum, t) => sum + t.confidence, 0) / importedTransactions.length * 100)}%
                   </p>
                 </div>
                 <div className="bg-neutral-800 rounded-xl p-4 border border-neutral-700">
-                  <p className="text-sm text-neutral-400">À vérifier</p>
+                  <p className="text-sm text-neutral-400">{t('admin.bankImport.toReview')}</p>
                   <p className="text-2xl font-bold text-yellow-400">
                     {importedTransactions.filter(t => t.confidence < 0.7).length}
                   </p>
@@ -449,21 +452,21 @@ export default function BankImportPage() {
                       onChange={toggleAll}
                       className="rounded border-neutral-600 bg-neutral-700 text-sky-500"
                     />
-                    <span className="text-sm text-neutral-300">Tout sélectionner</span>
+                    <span className="text-sm text-neutral-300">{t('admin.bankImport.selectAll')}</span>
                   </label>
                   <div className="flex gap-2">
                     <button
                       onClick={() => setImportedTransactions([])}
                       className="px-3 py-1.5 text-neutral-400 hover:text-white text-sm"
                     >
-                      Annuler
+                      {t('admin.bankImport.cancelImport')}
                     </button>
                     <button
                       onClick={handleImportSelected}
                       disabled={importing || !importedTransactions.some(t => t.selected)}
                       className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg disabled:opacity-50"
                     >
-                      {importing ? 'Import...' : `Importer ${importedTransactions.filter(t => t.selected).length} transactions`}
+                      {importing ? t('admin.bankImport.importing') : t('admin.bankImport.importCount', { count: importedTransactions.filter(tx => tx.selected).length })}
                     </button>
                   </div>
                 </div>
@@ -472,11 +475,11 @@ export default function BankImportPage() {
                   <thead className="bg-neutral-900/50">
                     <tr>
                       <th className="px-4 py-3 text-left text-xs font-medium text-neutral-400 uppercase w-10"></th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-neutral-400 uppercase">Date</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-neutral-400 uppercase">Description</th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-neutral-400 uppercase">Montant</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-neutral-400 uppercase">Catégorie suggérée</th>
-                      <th className="px-4 py-3 text-center text-xs font-medium text-neutral-400 uppercase">Confiance</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-neutral-400 uppercase">{t('admin.bankImport.dateCol')}</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-neutral-400 uppercase">{t('admin.bankImport.descriptionCol')}</th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-neutral-400 uppercase">{t('admin.bankImport.amountCol')}</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-neutral-400 uppercase">{t('admin.bankImport.suggestedCategory')}</th>
+                      <th className="px-4 py-3 text-center text-xs font-medium text-neutral-400 uppercase">{t('admin.bankImport.confidence')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-neutral-700">
@@ -507,12 +510,12 @@ export default function BankImportPage() {
                             defaultValue={tx.suggestedAccount || ''}
                             className="px-2 py-1 bg-neutral-700 border border-neutral-600 rounded text-sm text-white"
                           >
-                            <option value="">Non classé</option>
+                            <option value="">{t('admin.bankImport.unclassified')}</option>
                             <option value="1040">1040 - Stripe</option>
-                            <option value="4010">4010 - Ventes</option>
-                            <option value="6010">6010 - Livraison</option>
-                            <option value="6210">6210 - Marketing</option>
-                            <option value="6310">6310 - Hébergement</option>
+                            <option value="4010">4010 - {t('admin.bankImport.accountSales')}</option>
+                            <option value="6010">6010 - {t('admin.bankImport.accountShipping')}</option>
+                            <option value="6210">6210 - {t('admin.bankImport.accountMarketing')}</option>
+                            <option value="6310">6310 - {t('admin.bankImport.accountHosting')}</option>
                           </select>
                         </td>
                         <td className="px-4 py-3 text-center">
@@ -536,10 +539,10 @@ export default function BankImportPage() {
           <table className="w-full">
             <thead className="bg-neutral-900/50">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-neutral-400 uppercase">Date</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-neutral-400 uppercase">Source</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-neutral-400 uppercase">Transactions</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-neutral-400 uppercase">Statut</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-neutral-400 uppercase">{t('admin.bankImport.dateCol')}</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-neutral-400 uppercase">{t('admin.bankImport.sourceCol')}</th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-neutral-400 uppercase">{t('admin.bankImport.transactionsCol')}</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-neutral-400 uppercase">{t('admin.bankImport.statusCol')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-700">
@@ -549,13 +552,13 @@ export default function BankImportPage() {
                   <td className="px-4 py-3 text-neutral-300">{item.source}</td>
                   <td className="px-4 py-3 text-right text-white">{item.count}</td>
                   <td className="px-4 py-3">
-                    <span className="px-2 py-1 bg-green-900/30 text-green-400 rounded text-sm">Complété</span>
+                    <span className="px-2 py-1 bg-green-900/30 text-green-400 rounded text-sm">{t('admin.bankImport.completed')}</span>
                   </td>
                 </tr>
               ))}
               {importHistory.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="px-4 py-8 text-center text-neutral-400">Aucun historique d&apos;import</td>
+                  <td colSpan={4} className="px-4 py-8 text-center text-neutral-400">{t('admin.bankImport.noImportHistory')}</td>
                 </tr>
               )}
             </tbody>

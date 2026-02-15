@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import { useI18n } from '@/i18n/client';
 
 interface CashFlowProjection {
   period: string;
@@ -21,6 +22,7 @@ interface Scenario {
 }
 
 export default function ForecastingPage() {
+  const { t } = useI18n();
   const [activeTab, setActiveTab] = useState<'cashflow' | 'scenarios' | 'alerts'>('cashflow');
   const [forecastPeriod, setForecastPeriod] = useState(6);
   const [minimumCash, setMinimumCash] = useState(10000);
@@ -38,14 +40,14 @@ export default function ForecastingPage() {
       setError(null);
       try {
         const res = await fetch('/api/accounting/dashboard');
-        if (!res.ok) throw new Error('Erreur chargement données');
+        if (!res.ok) throw new Error(t('admin.forecasts.errorLoadData'));
         const data = await res.json();
 
         setCurrentBalance(data.bankBalance || 0);
         setMonthlyRevenue(data.totalRevenue || 0);
         setMonthlyExpenses(data.totalExpenses || 0);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Erreur de chargement');
+        setError(err instanceof Error ? err.message : t('admin.forecasts.errorLoading'));
       } finally {
         setLoading(false);
       }
@@ -84,7 +86,7 @@ export default function ForecastingPage() {
     const scenarioDefs = [
       {
         id: 'base',
-        name: 'Scénario de base',
+        name: t('admin.forecasts.baseScenario'),
         revenueGrowth: 5,
         expenseGrowth: 3,
         color: 'sky',
@@ -92,7 +94,7 @@ export default function ForecastingPage() {
       },
       {
         id: 'aggressive',
-        name: 'Croissance agressive',
+        name: t('admin.forecasts.aggressiveGrowth'),
         revenueGrowth: 15,
         expenseGrowth: 8,
         color: 'green',
@@ -100,7 +102,7 @@ export default function ForecastingPage() {
       },
       {
         id: 'conservative',
-        name: 'Conservateur',
+        name: t('admin.forecasts.conservative'),
         revenueGrowth: 2,
         expenseGrowth: 2,
         color: 'blue',
@@ -108,7 +110,7 @@ export default function ForecastingPage() {
       },
       {
         id: 'worst',
-        name: 'Pire scénario',
+        name: t('admin.forecasts.worstCase'),
         revenueGrowth: -20,
         expenseGrowth: 5,
         color: 'red',
@@ -157,16 +159,16 @@ export default function ForecastingPage() {
   const formatCurrency = (amount: number) =>
     amount.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' });
 
-  if (loading) return <div className="p-8 text-center">Chargement...</div>;
-  if (error) return <div className="p-8 text-center text-red-400">Erreur: {error}</div>;
+  if (loading) return <div className="p-8 text-center">{t('admin.forecasts.loading')}</div>;
+  if (error) return <div className="p-8 text-center text-red-400">{t('admin.forecasts.errorPrefix')} {error}</div>;
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-white">Prévisions de trésorerie</h1>
-          <p className="text-neutral-400 mt-1">Analysez et planifiez vos flux de trésorerie</p>
+          <h1 className="text-2xl font-bold text-white">{t('admin.forecasts.title')}</h1>
+          <p className="text-neutral-400 mt-1">{t('admin.forecasts.subtitle')}</p>
         </div>
         <div className="flex gap-2">
           <select
@@ -174,12 +176,12 @@ export default function ForecastingPage() {
             onChange={e => setForecastPeriod(parseInt(e.target.value))}
             className="px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-white"
           >
-            <option value={3}>3 mois</option>
-            <option value={6}>6 mois</option>
-            <option value={12}>12 mois</option>
+            <option value={3}>{t('admin.forecasts.months3')}</option>
+            <option value={6}>{t('admin.forecasts.months6')}</option>
+            <option value={12}>{t('admin.forecasts.months12')}</option>
           </select>
           <button className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg">
-            📊 Exporter
+            📊 {t('admin.forecasts.exportBtn')}
           </button>
         </div>
       </div>
@@ -187,25 +189,25 @@ export default function ForecastingPage() {
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <div className="bg-neutral-800 rounded-xl p-4 border border-neutral-700">
-          <p className="text-sm text-neutral-400">Solde actuel</p>
+          <p className="text-sm text-neutral-400">{t('admin.forecasts.currentBalance')}</p>
           <p className="text-xl font-bold text-white mt-1">{formatCurrency(currentBalance)}</p>
         </div>
         <div className="bg-neutral-800 rounded-xl p-4 border border-neutral-700">
-          <p className="text-sm text-neutral-400">Entrées prévues</p>
+          <p className="text-sm text-neutral-400">{t('admin.forecasts.expectedInflows')}</p>
           <p className="text-xl font-bold text-green-400 mt-1">{formatCurrency(totalInflows)}</p>
         </div>
         <div className="bg-neutral-800 rounded-xl p-4 border border-neutral-700">
-          <p className="text-sm text-neutral-400">Sorties prévues</p>
+          <p className="text-sm text-neutral-400">{t('admin.forecasts.expectedOutflows')}</p>
           <p className="text-xl font-bold text-red-400 mt-1">{formatCurrency(totalOutflows)}</p>
         </div>
         <div className="bg-neutral-800 rounded-xl p-4 border border-neutral-700">
-          <p className="text-sm text-neutral-400">Solde final projeté</p>
+          <p className="text-sm text-neutral-400">{t('admin.forecasts.projectedFinalBalance')}</p>
           <p className="text-xl font-bold text-sky-400 mt-1">
             {formatCurrency(baseProjections[baseProjections.length - 1]?.closingBalance || 0)}
           </p>
         </div>
         <div className="bg-neutral-800 rounded-xl p-4 border border-neutral-700">
-          <p className="text-sm text-neutral-400">Point le plus bas</p>
+          <p className="text-sm text-neutral-400">{t('admin.forecasts.lowestPoint')}</p>
           <p className={`text-xl font-bold mt-1 ${lowestPoint < minimumCash ? 'text-red-400' : 'text-white'}`}>
             {formatCurrency(lowestPoint)}
           </p>
@@ -216,9 +218,9 @@ export default function ForecastingPage() {
       {/* Tabs */}
       <div className="flex gap-1 bg-neutral-800 p-1 rounded-lg w-fit">
         {[
-          { id: 'cashflow', label: 'Flux de trésorerie' },
-          { id: 'scenarios', label: 'Scénarios' },
-          { id: 'alerts', label: `Alertes (${alerts.length})` },
+          { id: 'cashflow', label: t('admin.forecasts.tabCashFlow') },
+          { id: 'scenarios', label: t('admin.forecasts.tabScenarios') },
+          { id: 'alerts', label: t('admin.forecasts.tabAlerts', { count: alerts.length }) },
         ].map(tab => (
           <button
             key={tab.id}
@@ -239,7 +241,7 @@ export default function ForecastingPage() {
         <div className="space-y-6">
           {/* Visual Chart (simplified bar representation) */}
           <div className="bg-neutral-800 rounded-xl p-6 border border-neutral-700">
-            <h3 className="font-medium text-white mb-4">Évolution du solde</h3>
+            <h3 className="font-medium text-white mb-4">{t('admin.forecasts.balanceEvolution')}</h3>
             <div className="flex items-end gap-2 h-48">
               {baseProjections.map((p, i) => {
                 const maxBalance = Math.max(...baseProjections.map(p => Math.abs(p.closingBalance)), 1);
@@ -262,7 +264,7 @@ export default function ForecastingPage() {
             {minimumCash > 0 && (
               <div className="mt-2 flex items-center gap-2 text-sm text-neutral-400">
                 <div className="w-4 h-0.5 bg-red-500"></div>
-                <span>Seuil minimum: {formatCurrency(minimumCash)}</span>
+                <span>{t('admin.forecasts.minimumThreshold')} {formatCurrency(minimumCash)}</span>
               </div>
             )}
           </div>
@@ -272,12 +274,12 @@ export default function ForecastingPage() {
             <table className="w-full">
               <thead className="bg-neutral-900/50">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-neutral-400 uppercase">Période</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-neutral-400 uppercase">Solde ouverture</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-neutral-400 uppercase">Entrées</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-neutral-400 uppercase">Sorties</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-neutral-400 uppercase">Flux net</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-neutral-400 uppercase">Solde clôture</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-neutral-400 uppercase">{t('admin.forecasts.periodCol')}</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-neutral-400 uppercase">{t('admin.forecasts.openingBalance')}</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-neutral-400 uppercase">{t('admin.forecasts.inflows')}</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-neutral-400 uppercase">{t('admin.forecasts.outflows')}</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-neutral-400 uppercase">{t('admin.forecasts.netFlow')}</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-neutral-400 uppercase">{t('admin.forecasts.closingBalance')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-700">
@@ -317,17 +319,17 @@ export default function ForecastingPage() {
                   <div className={`w-3 h-3 rounded-full bg-${scenario.color}-500 mb-2`}></div>
                   <h4 className="font-medium text-white">{scenario.name}</h4>
                   <p className="text-xs text-neutral-400 mb-3">
-                    Rev: {scenario.revenueGrowth > 0 ? '+' : ''}{scenario.revenueGrowth}% • Dép: +{scenario.expenseGrowth}%
+                    {t('admin.forecasts.revLabel')} {scenario.revenueGrowth > 0 ? '+' : ''}{scenario.revenueGrowth}% • {t('admin.forecasts.expLabel')} +{scenario.expenseGrowth}%
                   </p>
                   <div className="space-y-1">
                     <div className="flex justify-between text-sm">
-                      <span className="text-neutral-400">Solde final</span>
+                      <span className="text-neutral-400">{t('admin.forecasts.finalBalance')}</span>
                       <span className={finalBalance >= 0 ? 'text-green-400' : 'text-red-400'}>
                         {formatCurrency(finalBalance)}
                       </span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-neutral-400">Point bas</span>
+                      <span className="text-neutral-400">{t('admin.forecasts.lowPoint')}</span>
                       <span className={lowestBalance < minimumCash ? 'text-red-400' : 'text-white'}>
                         {formatCurrency(lowestBalance)}
                       </span>
@@ -343,7 +345,7 @@ export default function ForecastingPage() {
             <table className="w-full">
               <thead className="bg-neutral-900/50">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-neutral-400 uppercase">Période</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-neutral-400 uppercase">{t('admin.forecasts.periodCol')}</th>
                   {scenarios.map(s => (
                     <th key={s.id} className="px-4 py-3 text-right text-xs font-medium text-neutral-400 uppercase">
                       {s.name}
@@ -378,7 +380,7 @@ export default function ForecastingPage() {
         <div className="space-y-4">
           <div className="bg-neutral-800 rounded-xl p-4 border border-neutral-700">
             <div className="flex items-center gap-4">
-              <label className="text-sm text-neutral-300">Seuil d&apos;alerte minimum:</label>
+              <label className="text-sm text-neutral-300">{t('admin.forecasts.alertThreshold')}</label>
               <input
                 type="number"
                 value={minimumCash}
@@ -392,9 +394,9 @@ export default function ForecastingPage() {
           {alerts.length === 0 ? (
             <div className="bg-green-900/20 border border-green-500/30 rounded-xl p-8 text-center">
               <div className="text-4xl mb-2">✅</div>
-              <h3 className="text-lg font-medium text-green-400">Aucune alerte</h3>
+              <h3 className="text-lg font-medium text-green-400">{t('admin.forecasts.noAlerts')}</h3>
               <p className="text-sm text-neutral-400 mt-1">
-                Votre trésorerie reste au-dessus du seuil minimum sur toute la période
+                {t('admin.forecasts.noAlertsDesc')}
               </p>
             </div>
           ) : (
@@ -412,22 +414,22 @@ export default function ForecastingPage() {
                     <span className="text-2xl">{alert.type === 'CRITICAL' ? '🚨' : '⚠️'}</span>
                     <div>
                       <h4 className={`font-medium ${alert.type === 'CRITICAL' ? 'text-red-400' : 'text-yellow-400'}`}>
-                        {alert.type === 'CRITICAL' ? 'Solde négatif' : 'Solde sous le seuil'} - {alert.period}
+                        {alert.type === 'CRITICAL' ? t('admin.forecasts.negativeBalance') : t('admin.forecasts.belowThreshold')} - {alert.period}
                       </h4>
                       <p className="text-sm text-neutral-300 mt-1">
-                        Solde projeté: <strong>{formatCurrency(alert.balance)}</strong>
+                        {t('admin.forecasts.projectedBalance')} <strong>{formatCurrency(alert.balance)}</strong>
                         {alert.type === 'WARNING' && (
                           <span className="text-neutral-400 ml-2">
-                            ({formatCurrency(minimumCash - alert.balance)} sous le minimum)
+                            {t('admin.forecasts.belowMinimum', { amount: formatCurrency(minimumCash - alert.balance) })}
                           </span>
                         )}
                       </p>
                       <div className="mt-2 flex gap-2">
                         <button className="px-3 py-1 bg-neutral-700 hover:bg-neutral-600 text-white text-sm rounded-lg">
-                          Voir le détail
+                          {t('admin.forecasts.viewDetails')}
                         </button>
                         <button className="px-3 py-1 bg-sky-600/20 hover:bg-sky-600/30 text-sky-400 text-sm rounded-lg">
-                          Suggestions
+                          {t('admin.forecasts.suggestions')}
                         </button>
                       </div>
                     </div>
@@ -439,23 +441,23 @@ export default function ForecastingPage() {
 
           {/* Recommendations */}
           <div className="bg-neutral-800 rounded-xl p-6 border border-neutral-700">
-            <h3 className="font-medium text-white mb-4">💡 Recommandations</h3>
+            <h3 className="font-medium text-white mb-4">💡 {t('admin.forecasts.recommendationsTitle')}</h3>
             <ul className="space-y-2 text-sm text-neutral-300">
               <li className="flex items-start gap-2">
                 <span className="text-green-400">•</span>
-                Maintenir un coussin de sécurité de 3 mois de dépenses (~{formatCurrency(monthlyExpenses * 3)})
+                {t('admin.forecasts.rec1', { amount: formatCurrency(monthlyExpenses * 3) })}
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-green-400">•</span>
-                Négocier des délais de paiement plus longs avec les fournisseurs
+                {t('admin.forecasts.rec2')}
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-green-400">•</span>
-                Envisager une ligne de crédit pour les périodes creuses
+                {t('admin.forecasts.rec3')}
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-green-400">•</span>
-                Optimiser les coûts récurrents (hébergement, marketing)
+                {t('admin.forecasts.rec4')}
               </li>
             </ul>
           </div>

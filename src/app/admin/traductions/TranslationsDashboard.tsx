@@ -18,6 +18,7 @@ import {
   ChevronDown,
   ChevronUp,
 } from 'lucide-react';
+import { useI18n } from '@/i18n/client';
 
 interface ModelCoverage {
   totalEntities: number;
@@ -46,15 +47,15 @@ interface QueueJob {
   createdAt: string;
 }
 
-const MODEL_LABELS: Record<string, string> = {
-  Product: 'Produits',
-  ProductFormat: 'Formats produit',
-  Category: 'Catégories',
-  Article: 'Articles',
-  BlogPost: 'Articles de blog',
-  Video: 'Vidéos',
-  Webinar: 'Webinaires',
-  QuickReply: 'Réponses rapides',
+const MODEL_KEYS: Record<string, string> = {
+  Product: 'modelProduct',
+  ProductFormat: 'modelProductFormat',
+  Category: 'modelCategory',
+  Article: 'modelArticle',
+  BlogPost: 'modelBlogPost',
+  Video: 'modelVideo',
+  Webinar: 'modelWebinar',
+  QuickReply: 'modelQuickReply',
 };
 
 const MODEL_ICONS: Record<string, string> = {
@@ -69,6 +70,7 @@ const MODEL_ICONS: Record<string, string> = {
 };
 
 export default function TranslationsDashboard() {
+  const { t } = useI18n();
   const [overview, setOverview] = useState<Record<string, ModelCoverage>>({});
   const [queue, setQueue] = useState<QueueStats | null>(null);
   const [recentJobs, setRecentJobs] = useState<QueueJob[]>([]);
@@ -109,6 +111,11 @@ export default function TranslationsDashboard() {
     if (showQueue) fetchQueue();
   }, [showQueue, fetchQueue]);
 
+  const getModelLabel = (model: string) => {
+    const key = MODEL_KEYS[model];
+    return key ? t(`admin.translationsDashboard.${key}`) : model;
+  };
+
   const triggerTranslation = async (model: string) => {
     setTranslating(prev => ({ ...prev, [model]: true }));
     setMessage(null);
@@ -122,14 +129,14 @@ export default function TranslationsDashboard() {
       const data = await res.json();
 
       if (res.ok) {
-        setMessage({ type: 'success', text: data.message || `Traduction lancée pour ${MODEL_LABELS[model]}` });
+        setMessage({ type: 'success', text: data.message || t('admin.translationsDashboard.translationStarted', { model: getModelLabel(model) }) });
         // Refresh after delay
         setTimeout(fetchStatus, 3000);
       } else {
-        setMessage({ type: 'error', text: data.error || 'Erreur lors du déclenchement' });
+        setMessage({ type: 'error', text: data.error || t('admin.translationsDashboard.triggerError') });
       }
     } catch (error) {
-      setMessage({ type: 'error', text: 'Erreur réseau' });
+      setMessage({ type: 'error', text: t('admin.translationsDashboard.networkError') });
     } finally {
       setTranslating(prev => ({ ...prev, [model]: false }));
     }
@@ -143,7 +150,7 @@ export default function TranslationsDashboard() {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
-        <span className="ml-3 text-gray-500">Chargement des statistiques...</span>
+        <span className="ml-3 text-gray-500">{t('admin.translationsDashboard.loadingStats')}</span>
       </div>
     );
   }
@@ -155,10 +162,10 @@ export default function TranslationsDashboard() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
             <Languages className="w-7 h-7 text-blue-600" />
-            Traductions automatiques
+            {t('admin.translationsDashboard.title')}
           </h1>
           <p className="text-gray-500 mt-1">
-            Gestion des traductions de contenu en 22 langues via GPT-4o-mini
+            {t('admin.translationsDashboard.subtitle')}
           </p>
         </div>
         <button
@@ -166,7 +173,7 @@ export default function TranslationsDashboard() {
           className="flex items-center gap-2 px-4 py-2 bg-white border rounded-lg hover:bg-gray-50 transition"
         >
           <RefreshCw className="w-4 h-4" />
-          Actualiser
+          {t('admin.translationsDashboard.refresh')}
         </button>
       </div>
 
@@ -188,7 +195,7 @@ export default function TranslationsDashboard() {
               <Globe className="w-5 h-5 text-blue-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-500">Couverture globale</p>
+              <p className="text-sm text-gray-500">{t('admin.translationsDashboard.globalCoverage')}</p>
               <p className="text-2xl font-bold text-gray-900">{globalCoverage}%</p>
             </div>
           </div>
@@ -200,7 +207,7 @@ export default function TranslationsDashboard() {
               <CheckCircle2 className="w-5 h-5 text-green-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-500">Enti. traduits</p>
+              <p className="text-sm text-gray-500">{t('admin.translationsDashboard.translatedEntities')}</p>
               <p className="text-2xl font-bold text-gray-900">{totalFullyTranslated}</p>
             </div>
           </div>
@@ -212,7 +219,7 @@ export default function TranslationsDashboard() {
               <BarChart3 className="w-5 h-5 text-yellow-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-500">Total contenus</p>
+              <p className="text-sm text-gray-500">{t('admin.translationsDashboard.totalContent')}</p>
               <p className="text-2xl font-bold text-gray-900">{totalEntities}</p>
             </div>
           </div>
@@ -224,7 +231,7 @@ export default function TranslationsDashboard() {
               <Clock className="w-5 h-5 text-purple-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-500">File d&apos;attente</p>
+              <p className="text-sm text-gray-500">{t('admin.translationsDashboard.queue')}</p>
               <p className="text-2xl font-bold text-gray-900">
                 {queue ? queue.pending + queue.processing : 0}
               </p>
@@ -236,19 +243,19 @@ export default function TranslationsDashboard() {
       {/* Model Coverage Table */}
       <div className="bg-white rounded-xl border overflow-hidden">
         <div className="px-6 py-4 border-b">
-          <h2 className="font-semibold text-gray-900">Couverture par type de contenu</h2>
+          <h2 className="font-semibold text-gray-900">{t('admin.translationsDashboard.coverageByType')}</h2>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Total</th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Traduits</th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Partiels</th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Non traduits</th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Couverture</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Action</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('admin.translationsDashboard.colType')}</th>
+                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">{t('admin.translationsDashboard.colTotal')}</th>
+                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">{t('admin.translationsDashboard.colTranslated')}</th>
+                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">{t('admin.translationsDashboard.colPartial')}</th>
+                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">{t('admin.translationsDashboard.colUntranslated')}</th>
+                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">{t('admin.translationsDashboard.colCoverage')}</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">{t('admin.translationsDashboard.colAction')}</th>
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -256,7 +263,7 @@ export default function TranslationsDashboard() {
                 <tr key={model} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className="mr-2">{MODEL_ICONS[model] || '📋'}</span>
-                    <span className="font-medium text-gray-900">{MODEL_LABELS[model] || model}</span>
+                    <span className="font-medium text-gray-900">{getModelLabel(model)}</span>
                   </td>
                   <td className="px-6 py-4 text-center text-gray-600">
                     {coverage.totalEntities}
@@ -300,7 +307,7 @@ export default function TranslationsDashboard() {
                       ) : (
                         <Play className="w-3.5 h-3.5" />
                       )}
-                      Traduire tout
+                      {t('admin.translationsDashboard.translateAll')}
                     </button>
                   </td>
                 </tr>
@@ -318,10 +325,10 @@ export default function TranslationsDashboard() {
         >
           <h2 className="font-semibold text-gray-900 flex items-center gap-2">
             <Clock className="w-5 h-5 text-gray-400" />
-            File d&apos;attente de traduction
+            {t('admin.translationsDashboard.translationQueue')}
             {queue && (queue.pending + queue.processing > 0) && (
               <span className="ml-2 px-2 py-0.5 text-xs bg-blue-100 text-blue-700 rounded-full">
-                {queue.pending + queue.processing} en cours
+                {t('admin.translationsDashboard.inProgress', { count: queue.pending + queue.processing })}
               </span>
             )}
           </h2>
@@ -334,19 +341,19 @@ export default function TranslationsDashboard() {
               <div className="grid grid-cols-4 gap-3 mb-4">
                 <div className="text-center p-3 bg-yellow-50 rounded-lg">
                   <p className="text-lg font-bold text-yellow-700">{queue.pending}</p>
-                  <p className="text-xs text-yellow-600">En attente</p>
+                  <p className="text-xs text-yellow-600">{t('admin.translationsDashboard.pending')}</p>
                 </div>
                 <div className="text-center p-3 bg-blue-50 rounded-lg">
                   <p className="text-lg font-bold text-blue-700">{queue.processing}</p>
-                  <p className="text-xs text-blue-600">En cours</p>
+                  <p className="text-xs text-blue-600">{t('admin.translationsDashboard.processing')}</p>
                 </div>
                 <div className="text-center p-3 bg-green-50 rounded-lg">
                   <p className="text-lg font-bold text-green-700">{queue.completed}</p>
-                  <p className="text-xs text-green-600">Terminés</p>
+                  <p className="text-xs text-green-600">{t('admin.translationsDashboard.completed')}</p>
                 </div>
                 <div className="text-center p-3 bg-red-50 rounded-lg">
                   <p className="text-lg font-bold text-red-700">{queue.failed}</p>
-                  <p className="text-xs text-red-600">Échoués</p>
+                  <p className="text-xs text-red-600">{t('admin.translationsDashboard.failed')}</p>
                 </div>
               </div>
             )}
@@ -356,11 +363,11 @@ export default function TranslationsDashboard() {
                 <table className="w-full text-sm">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">Job ID</th>
-                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">Modèle</th>
-                      <th className="px-3 py-2 text-center text-xs font-medium text-gray-500">Priorité</th>
-                      <th className="px-3 py-2 text-center text-xs font-medium text-gray-500">Statut</th>
-                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">Erreur</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">{t('admin.translationsDashboard.colJobId')}</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">{t('admin.translationsDashboard.colModel')}</th>
+                      <th className="px-3 py-2 text-center text-xs font-medium text-gray-500">{t('admin.translationsDashboard.colPriority')}</th>
+                      <th className="px-3 py-2 text-center text-xs font-medium text-gray-500">{t('admin.translationsDashboard.colStatus')}</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">{t('admin.translationsDashboard.colError')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
@@ -401,7 +408,7 @@ export default function TranslationsDashboard() {
             )}
 
             {recentJobs.length === 0 && (
-              <p className="text-center text-gray-400 py-4">Aucun job récent</p>
+              <p className="text-center text-gray-400 py-4">{t('admin.translationsDashboard.noRecentJobs')}</p>
             )}
           </div>
         )}

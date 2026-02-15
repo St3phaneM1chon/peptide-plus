@@ -181,12 +181,16 @@ function checkLearnedPatterns(bankTx: BankTransaction, entry: JournalEntry): num
     let score = 0;
     let matchCount = 0;
 
-    // Check description regex
+    // Check description regex (wrapped in try/catch to handle malformed patterns)
     if (rule.pattern.bankDescriptionRegex) {
-      const regex = new RegExp(rule.pattern.bankDescriptionRegex, 'i');
-      if (regex.test(bankTx.description)) {
-        score += 0.4;
-        matchCount++;
+      try {
+        const regex = new RegExp(rule.pattern.bankDescriptionRegex, 'i');
+        if (regex.test(bankTx.description)) {
+          score += 0.4;
+          matchCount++;
+        }
+      } catch {
+        // Skip invalid regex patterns gracefully
       }
     }
 
@@ -388,7 +392,9 @@ export function learnFromMatch(
 ): void {
   // Extract pattern features
   const descriptionWords = bankTx.description.split(/\s+/).filter(w => w.length > 3);
-  const significantWords = descriptionWords.slice(0, 3).join('|');
+  const significantWords = descriptionWords.slice(0, 3)
+    .map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+    .join('|');
   const accountCodes = entry.lines.map(l => l.accountCode);
 
   const ruleId = `rule-${significantWords.toLowerCase().replace(/[^a-z]/g, '')}`;

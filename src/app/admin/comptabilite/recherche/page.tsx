@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import DOMPurify from 'isomorphic-dompurify';
+import { useI18n } from '@/i18n/client';
 
 interface SearchResult {
   id: string;
@@ -19,15 +20,16 @@ interface SavedSearch {
   id: string;
   name: string;
   query: string;
-  filters: any;
+  filters: Record<string, unknown>;
   useCount: number;
 }
 
-const typeLabels: Record<string, string> = {
-  ENTRY: 'Écriture',
-  INVOICE: 'Facture client',
-  SUPPLIER: 'Facture fournisseur',
-  TRANSACTION: 'Transaction bancaire',
+// Type labels will be resolved via t() inside the component
+const typeLabelsKeys: Record<string, string> = {
+  ENTRY: 'admin.search.typeEntry',
+  INVOICE: 'admin.search.typeCustomerInvoice',
+  SUPPLIER: 'admin.search.typeSupplierInvoice',
+  TRANSACTION: 'admin.search.typeBankTransaction',
 };
 
 const typeColors: Record<string, string> = {
@@ -38,6 +40,10 @@ const typeColors: Record<string, string> = {
 };
 
 export default function SearchPage() {
+  const { t } = useI18n();
+  const typeLabels: Record<string, string> = Object.fromEntries(
+    Object.entries(typeLabelsKeys).map(([k, v]) => [k, t(v)])
+  );
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -54,7 +60,7 @@ export default function SearchPage() {
   const [suggestions, setSuggestions] = useState<string[]>([]);
 
   // Popular search terms
-  const popularTerms = ['Stripe', 'TPS', 'Remboursement', 'Postes Canada', 'Azure', 'Marketing'];
+  const popularTerms = ['Stripe', 'TPS', t('admin.search.termRefund'), 'Postes Canada', 'Azure', 'Marketing'];
 
   // Debounced search
   useEffect(() => {
@@ -69,6 +75,7 @@ export default function SearchPage() {
     }, 300);
 
     return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query]);
 
   const [searchError, setSearchError] = useState<string | null>(null);
@@ -87,12 +94,12 @@ export default function SearchPage() {
       if (filters.status) params.set('status', filters.status);
 
       const response = await fetch(`/api/accounting/search?${params}`);
-      if (!response.ok) throw new Error(`Erreur ${response.status}`);
+      if (!response.ok) throw new Error(`${t('admin.search.searchError')} (${response.status})`);
       const data = await response.json();
       setResults(data.results || data.data || []);
     } catch (err) {
       console.error('Error searching:', err);
-      setSearchError('Erreur lors de la recherche.');
+      setSearchError(t('admin.search.searchError'));
       setResults([]);
     } finally {
       setLoading(false);
@@ -100,7 +107,7 @@ export default function SearchPage() {
   };
 
   const handleSaveSearch = () => {
-    const name = prompt('Nom de la recherche sauvegardée:');
+    const name = prompt(t('admin.search.saveSearchPrompt'));
     if (!name) return;
 
     const newSearch: SavedSearch = {
@@ -117,7 +124,7 @@ export default function SearchPage() {
   const applySavedSearch = (saved: SavedSearch) => {
     setQuery(saved.query);
     if (saved.filters.types) {
-      setFilters(prev => ({ ...prev, types: saved.filters.types }));
+      setFilters(prev => ({ ...prev, types: saved.filters.types as string[] }));
     }
     
     // Update use count
@@ -149,8 +156,8 @@ export default function SearchPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-white">Recherche avancée</h1>
-        <p className="text-neutral-400 mt-1">Trouvez rapidement vos écritures, factures et transactions</p>
+        <h1 className="text-2xl font-bold text-white">{t('admin.search.title')}</h1>
+        <p className="text-neutral-400 mt-1">{t('admin.search.subtitle')}</p>
       </div>
 
       {/* Search Bar */}
@@ -161,7 +168,7 @@ export default function SearchPage() {
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Rechercher par numéro, description, montant, référence..."
+              placeholder={t('admin.search.searchPlaceholder')}
               className="w-full px-4 py-3 pl-12 bg-neutral-800 border border-neutral-700 rounded-xl text-white text-lg focus:border-sky-500 focus:outline-none"
               autoFocus
             />
@@ -180,7 +187,7 @@ export default function SearchPage() {
               showFilters ? 'bg-sky-600 border-sky-600 text-white' : 'bg-neutral-800 border-neutral-700 text-neutral-300'
             }`}
           >
-            ⚙️ Filtres
+            ⚙️ {t('admin.search.filters')}
           </button>
           
           {query && (
@@ -188,7 +195,7 @@ export default function SearchPage() {
               onClick={handleSaveSearch}
               className="px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-xl text-neutral-300 hover:text-white"
             >
-              ⭐ Sauvegarder
+              ⭐ {t('admin.search.save')}
             </button>
           )}
         </div>
@@ -214,7 +221,7 @@ export default function SearchPage() {
         <div className="bg-neutral-800 rounded-xl p-4 border border-neutral-700">
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             <div className="col-span-2">
-              <label className="block text-xs text-neutral-400 mb-2">Type de document</label>
+              <label className="block text-xs text-neutral-400 mb-2">{t('admin.search.documentType')}</label>
               <div className="flex flex-wrap gap-2">
                 {Object.entries(typeLabels).map(([type, label]) => (
                   <button
@@ -232,7 +239,7 @@ export default function SearchPage() {
               </div>
             </div>
             <div>
-              <label className="block text-xs text-neutral-400 mb-1">Date du</label>
+              <label className="block text-xs text-neutral-400 mb-1">{t('admin.search.dateFrom')}</label>
               <input
                 type="date"
                 value={filters.dateFrom}
@@ -241,7 +248,7 @@ export default function SearchPage() {
               />
             </div>
             <div>
-              <label className="block text-xs text-neutral-400 mb-1">Date au</label>
+              <label className="block text-xs text-neutral-400 mb-1">{t('admin.search.dateTo')}</label>
               <input
                 type="date"
                 value={filters.dateTo}
@@ -250,17 +257,17 @@ export default function SearchPage() {
               />
             </div>
             <div>
-              <label className="block text-xs text-neutral-400 mb-1">Statut</label>
+              <label className="block text-xs text-neutral-400 mb-1">{t('admin.search.statusLabel')}</label>
               <select
                 value={filters.status}
                 onChange={e => setFilters(prev => ({ ...prev, status: e.target.value }))}
                 className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-white text-sm"
               >
-                <option value="">Tous</option>
-                <option value="POSTED">Validé</option>
-                <option value="DRAFT">Brouillon</option>
-                <option value="PAID">Payé</option>
-                <option value="PENDING">En attente</option>
+                <option value="">{t('admin.search.all')}</option>
+                <option value="POSTED">{t('admin.search.validated')}</option>
+                <option value="DRAFT">{t('admin.search.draft')}</option>
+                <option value="PAID">{t('admin.search.paid')}</option>
+                <option value="PENDING">{t('admin.search.pendingStatus')}</option>
               </select>
             </div>
           </div>
@@ -272,7 +279,7 @@ export default function SearchPage() {
         <div className="space-y-6">
           {/* Popular terms */}
           <div>
-            <h3 className="text-sm text-neutral-400 mb-2">Recherches populaires</h3>
+            <h3 className="text-sm text-neutral-400 mb-2">{t('admin.search.popularSearches')}</h3>
             <div className="flex flex-wrap gap-2">
               {popularTerms.map(term => (
                 <button
@@ -289,7 +296,7 @@ export default function SearchPage() {
           {/* Saved searches */}
           {savedSearches.length > 0 && (
             <div>
-              <h3 className="text-sm text-neutral-400 mb-2">Recherches sauvegardées</h3>
+              <h3 className="text-sm text-neutral-400 mb-2">{t('admin.search.savedSearches')}</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 {savedSearches.map(saved => (
                   <button
@@ -336,13 +343,13 @@ export default function SearchPage() {
         <div className="space-y-4">
           <div className="flex justify-between items-center">
             <p className="text-sm text-neutral-400">
-              {results.length} résultat{results.length > 1 ? 's' : ''} pour "{query}"
+              {t('admin.search.resultCount', { count: results.length, query })}
             </p>
             <div className="flex gap-2">
               <select className="px-3 py-1 bg-neutral-800 border border-neutral-700 rounded text-sm text-white">
-                <option value="relevance">Pertinence</option>
-                <option value="date">Date</option>
-                <option value="amount">Montant</option>
+                <option value="relevance">{t('admin.search.relevance')}</option>
+                <option value="date">{t('admin.search.sortDate')}</option>
+                <option value="amount">{t('admin.search.sortAmount')}</option>
               </select>
             </div>
           </div>
@@ -405,9 +412,9 @@ export default function SearchPage() {
       {query && !loading && !searchError && results.length === 0 && (
         <div className="bg-neutral-800 rounded-xl p-8 border border-neutral-700 text-center">
           <div className="text-4xl mb-4">🔍</div>
-          <h3 className="text-lg font-medium text-white mb-2">Aucun résultat</h3>
+          <h3 className="text-lg font-medium text-white mb-2">{t('admin.search.noResults')}</h3>
           <p className="text-sm text-neutral-400">
-            Essayez avec d'autres termes ou ajustez vos filtres
+            {t('admin.search.noResultsHint')}
           </p>
         </div>
       )}

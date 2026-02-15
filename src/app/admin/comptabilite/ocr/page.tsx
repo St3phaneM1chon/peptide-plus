@@ -1,6 +1,9 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import Image from 'next/image';
+import { useI18n } from '@/i18n/client';
+import { toast } from 'sonner';
 
 interface ExtractedInvoice {
   invoiceNumber?: string;
@@ -27,12 +30,13 @@ interface ScanHistory {
 }
 
 export default function OCRPage() {
+  const { t, locale } = useI18n();
   const [scanning, setScanning] = useState(false);
   const [extractedData, setExtractedData] = useState<ExtractedInvoice | null>(null);
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   const [history, setHistory] = useState<ScanHistory[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -46,12 +50,12 @@ export default function OCRPage() {
     setError(null);
     try {
       const response = await fetch('/api/accounting/ocr/history');
-      if (!response.ok) throw new Error(`Erreur ${response.status}`);
+      if (!response.ok) throw new Error(t('admin.ocrScan.apiError', { status: response.status }));
       const data = await response.json();
       setHistory(data.scans || data.history || data.data || []);
     } catch (err) {
       console.error('Error loading OCR history:', err);
-      setError('Impossible de charger l\'historique des scans.');
+      setError(t('admin.ocrScan.loadError'));
       setHistory([]);
     } finally {
       setLoadingHistory(false);
@@ -64,13 +68,13 @@ export default function OCRPage() {
     // Validate file type
     const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'application/pdf'];
     if (!validTypes.includes(file.type)) {
-      alert('Type de fichier non supporté. Utilisez PNG, JPG, WEBP ou PDF.');
+      toast.error(t('admin.ocrScan.unsupportedType'));
       return;
     }
 
     // Validate file size (max 20MB)
     if (file.size > 20 * 1024 * 1024) {
-      alert('Le fichier est trop volumineux (max 20 Mo).');
+      toast.error(t('admin.ocrScan.fileTooLarge'));
       return;
     }
 
@@ -93,7 +97,7 @@ export default function OCRPage() {
         method: 'POST',
         body: formData,
       });
-      if (!response.ok) throw new Error(`Erreur ${response.status}`);
+      if (!response.ok) throw new Error(t('admin.ocrScan.apiError', { status: response.status }));
       const data = await response.json();
       setExtractedData(data.data || data.extractedData || null);
     } catch (error) {
@@ -107,7 +111,7 @@ export default function OCRPage() {
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setDragActive(false);
-    
+
     const file = e.dataTransfer.files[0];
     if (file) handleFileSelect(file);
   };
@@ -121,17 +125,17 @@ export default function OCRPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(extractedData),
       });
-      if (!response.ok) throw new Error(`Erreur ${response.status}`);
+      if (!response.ok) throw new Error(t('admin.ocrScan.apiError', { status: response.status }));
 
       // Reset
       setExtractedData(null);
       setUploadedImage(null);
 
-      alert('Facture enregistrée et écriture créée!');
+      toast.success(t('admin.ocrScan.invoiceSaved'));
       await loadHistory();
     } catch (err) {
       console.error('Error saving invoice:', err);
-      alert('Erreur lors de l\'enregistrement de la facture.');
+      toast.error(t('admin.ocrScan.saveError'));
     }
   };
 
@@ -141,40 +145,40 @@ export default function OCRPage() {
     return 'text-red-400';
   };
 
-  const formatCurrency = (amount?: number) => 
-    (amount || 0).toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' });
+  const formatCurrency = (amount?: number) =>
+    (amount || 0).toLocaleString(locale, { style: 'currency', currency: 'CAD' });
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-white">Scan de factures (OCR)</h1>
-          <p className="text-neutral-400 mt-1">Numérisez vos factures pour extraction automatique</p>
+          <h1 className="text-2xl font-bold text-white">{t('admin.ocrScan.title')}</h1>
+          <p className="text-neutral-400 mt-1">{t('admin.ocrScan.subtitle')}</p>
         </div>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-neutral-800 rounded-xl p-4 border border-neutral-700">
-          <p className="text-sm text-neutral-400">Factures scannées</p>
+          <p className="text-sm text-neutral-400">{t('admin.ocrScan.scannedInvoices')}</p>
           <p className="text-2xl font-bold text-white mt-1">{history.length}</p>
         </div>
         <div className="bg-neutral-800 rounded-xl p-4 border border-neutral-700">
-          <p className="text-sm text-neutral-400">Taux de réussite</p>
+          <p className="text-sm text-neutral-400">{t('admin.ocrScan.successRate')}</p>
           <p className="text-2xl font-bold text-green-400 mt-1">
             {history.length > 0 ? Math.round(history.filter(h => h.status === 'SUCCESS').length / history.length * 100) : 0}%
           </p>
         </div>
         <div className="bg-neutral-800 rounded-xl p-4 border border-neutral-700">
-          <p className="text-sm text-neutral-400">À vérifier</p>
+          <p className="text-sm text-neutral-400">{t('admin.ocrScan.toReview')}</p>
           <p className="text-2xl font-bold text-yellow-400 mt-1">
             {history.filter(h => h.status === 'NEEDS_REVIEW').length}
           </p>
         </div>
         <div className="bg-neutral-800 rounded-xl p-4 border border-neutral-700">
-          <p className="text-sm text-neutral-400">Temps gagné estimé</p>
-          <p className="text-2xl font-bold text-white mt-1">{history.length * 5} min</p>
+          <p className="text-sm text-neutral-400">{t('admin.ocrScan.estimatedTimeSaved')}</p>
+          <p className="text-2xl font-bold text-white mt-1">{t('admin.ocrScan.minutesSuffix', { count: history.length * 5 })}</p>
         </div>
       </div>
 
@@ -187,7 +191,7 @@ export default function OCRPage() {
             onDrop={handleDrop}
             onClick={() => fileInputRef.current?.click()}
             className={`bg-neutral-800 rounded-xl p-8 border-2 border-dashed cursor-pointer transition-all ${
-              dragActive 
+              dragActive
                 ? 'border-sky-500 bg-sky-500/10'
                 : 'border-neutral-600 hover:border-neutral-500'
             }`}
@@ -199,56 +203,60 @@ export default function OCRPage() {
               onChange={(e) => e.target.files?.[0] && handleFileSelect(e.target.files[0])}
               className="hidden"
             />
-            
+
             {scanning ? (
               <div className="text-center py-8">
                 <div className="animate-spin h-12 w-12 border-4 border-sky-500 border-t-transparent rounded-full mx-auto"></div>
-                <p className="text-white mt-4">Analyse en cours...</p>
-                <p className="text-sm text-neutral-400 mt-1">Extraction des données avec IA</p>
+                <p className="text-white mt-4">{t('admin.ocrScan.analyzing')}</p>
+                <p className="text-sm text-neutral-400 mt-1">{t('admin.ocrScan.aiExtraction')}</p>
               </div>
             ) : uploadedImage ? (
               <div className="text-center">
-                <img 
-                  src={uploadedImage} 
-                  alt="Preview" 
+                <Image
+                  src={uploadedImage}
+                  alt="Preview"
+                  width={400}
+                  height={256}
                   className="max-h-64 mx-auto rounded-lg"
+                  style={{ width: 'auto', height: 'auto', maxHeight: '16rem' }}
+                  unoptimized
                 />
-                <p className="text-sm text-neutral-400 mt-4">Cliquez pour changer de fichier</p>
+                <p className="text-sm text-neutral-400 mt-4">{t('admin.ocrScan.clickToChange')}</p>
               </div>
             ) : (
               <div className="text-center py-8">
-                <div className="text-5xl mb-4">📄</div>
-                <h3 className="text-lg font-medium text-white mb-2">Déposez votre facture ici</h3>
-                <p className="text-sm text-neutral-400 mb-4">ou cliquez pour sélectionner un fichier</p>
+                <div className="text-5xl mb-4">&#128196;</div>
+                <h3 className="text-lg font-medium text-white mb-2">{t('admin.ocrScan.dropInvoice')}</h3>
+                <p className="text-sm text-neutral-400 mb-4">{t('admin.ocrScan.orClickToSelect')}</p>
                 <div className="flex justify-center gap-2">
                   <span className="px-2 py-1 bg-neutral-700 rounded text-xs text-neutral-300">PNG</span>
                   <span className="px-2 py-1 bg-neutral-700 rounded text-xs text-neutral-300">JPG</span>
                   <span className="px-2 py-1 bg-neutral-700 rounded text-xs text-neutral-300">PDF</span>
                 </div>
-                <p className="text-xs text-neutral-500 mt-4">Max 20 Mo</p>
+                <p className="text-xs text-neutral-500 mt-4">{t('admin.ocrScan.maxFileSize')}</p>
               </div>
             )}
           </div>
 
           {/* How it works */}
           <div className="bg-neutral-800 rounded-xl p-6 border border-neutral-700">
-            <h3 className="font-medium text-white mb-4">💡 Comment ça marche</h3>
+            <h3 className="font-medium text-white mb-4">&#128161; {t('admin.ocrScan.howItWorks')}</h3>
             <ol className="space-y-3 text-sm">
               <li className="flex gap-3">
                 <span className="w-6 h-6 bg-sky-600 rounded-full flex items-center justify-center text-xs font-bold">1</span>
-                <span className="text-neutral-300">Téléversez une photo ou PDF de votre facture</span>
+                <span className="text-neutral-300">{t('admin.ocrScan.step1')}</span>
               </li>
               <li className="flex gap-3">
                 <span className="w-6 h-6 bg-sky-600 rounded-full flex items-center justify-center text-xs font-bold">2</span>
-                <span className="text-neutral-300">L'IA analyse et extrait les informations</span>
+                <span className="text-neutral-300">{t('admin.ocrScan.step2')}</span>
               </li>
               <li className="flex gap-3">
                 <span className="w-6 h-6 bg-sky-600 rounded-full flex items-center justify-center text-xs font-bold">3</span>
-                <span className="text-neutral-300">Vérifiez et validez les données extraites</span>
+                <span className="text-neutral-300">{t('admin.ocrScan.step3')}</span>
               </li>
               <li className="flex gap-3">
                 <span className="w-6 h-6 bg-sky-600 rounded-full flex items-center justify-center text-xs font-bold">4</span>
-                <span className="text-neutral-300">La facture et l'écriture comptable sont créées</span>
+                <span className="text-neutral-300">{t('admin.ocrScan.step4')}</span>
               </li>
             </ol>
           </div>
@@ -260,20 +268,20 @@ export default function OCRPage() {
             <div className="bg-neutral-800 rounded-xl border border-neutral-700 overflow-hidden">
               <div className="p-4 border-b border-neutral-700 flex justify-between items-center">
                 <div>
-                  <h3 className="font-medium text-white">Données extraites</h3>
-                  <p className="text-sm text-neutral-400">Vérifiez et corrigez si nécessaire</p>
+                  <h3 className="font-medium text-white">{t('admin.ocrScan.extractedData')}</h3>
+                  <p className="text-sm text-neutral-400">{t('admin.ocrScan.verifyAndCorrect')}</p>
                 </div>
                 <div className="text-right">
                   <span className={`text-sm font-medium ${getConfidenceColor(extractedData.confidence)}`}>
-                    {Math.round(extractedData.confidence * 100)}% confiance
+                    {t('admin.ocrScan.confidence', { percent: Math.round(extractedData.confidence * 100) })}
                   </span>
                 </div>
               </div>
-              
+
               <div className="p-4 space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs text-neutral-400 mb-1">N° Facture</label>
+                    <label className="block text-xs text-neutral-400 mb-1">{t('admin.ocrScan.invoiceNumber')}</label>
                     <input
                       type="text"
                       defaultValue={extractedData.invoiceNumber}
@@ -281,7 +289,7 @@ export default function OCRPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-neutral-400 mb-1">Fournisseur</label>
+                    <label className="block text-xs text-neutral-400 mb-1">{t('admin.ocrScan.supplier')}</label>
                     <input
                       type="text"
                       defaultValue={extractedData.supplierName}
@@ -289,7 +297,7 @@ export default function OCRPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-neutral-400 mb-1">Date facture</label>
+                    <label className="block text-xs text-neutral-400 mb-1">{t('admin.ocrScan.invoiceDate')}</label>
                     <input
                       type="date"
                       defaultValue={extractedData.invoiceDate}
@@ -297,7 +305,7 @@ export default function OCRPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-neutral-400 mb-1">Échéance</label>
+                    <label className="block text-xs text-neutral-400 mb-1">{t('admin.ocrScan.dueDate')}</label>
                     <input
                       type="date"
                       defaultValue={extractedData.dueDate}
@@ -309,15 +317,15 @@ export default function OCRPage() {
                 {/* Items */}
                 {extractedData.items && extractedData.items.length > 0 && (
                   <div>
-                    <label className="block text-xs text-neutral-400 mb-2">Articles</label>
+                    <label className="block text-xs text-neutral-400 mb-2">{t('admin.ocrScan.items')}</label>
                     <div className="bg-neutral-900 rounded-lg overflow-hidden">
                       <table className="w-full text-sm">
                         <thead className="bg-neutral-700/50">
                           <tr>
-                            <th className="px-3 py-2 text-left text-xs text-neutral-400">Description</th>
-                            <th className="px-3 py-2 text-right text-xs text-neutral-400">Qté</th>
-                            <th className="px-3 py-2 text-right text-xs text-neutral-400">P.U.</th>
-                            <th className="px-3 py-2 text-right text-xs text-neutral-400">Total</th>
+                            <th className="px-3 py-2 text-left text-xs text-neutral-400">{t('admin.ocrScan.description')}</th>
+                            <th className="px-3 py-2 text-right text-xs text-neutral-400">{t('admin.ocrScan.qty')}</th>
+                            <th className="px-3 py-2 text-right text-xs text-neutral-400">{t('admin.ocrScan.unitPrice')}</th>
+                            <th className="px-3 py-2 text-right text-xs text-neutral-400">{t('admin.ocrScan.total')}</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-neutral-700">
@@ -338,7 +346,7 @@ export default function OCRPage() {
                 {/* Totals */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs text-neutral-400 mb-1">Sous-total</label>
+                    <label className="block text-xs text-neutral-400 mb-1">{t('admin.ocrScan.subtotal')}</label>
                     <input
                       type="number"
                       step="0.01"
@@ -347,7 +355,7 @@ export default function OCRPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-neutral-400 mb-1">TPS</label>
+                    <label className="block text-xs text-neutral-400 mb-1">{t('admin.ocrScan.tps')}</label>
                     <input
                       type="number"
                       step="0.01"
@@ -356,7 +364,7 @@ export default function OCRPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-neutral-400 mb-1">TVQ</label>
+                    <label className="block text-xs text-neutral-400 mb-1">{t('admin.ocrScan.tvq')}</label>
                     <input
                       type="number"
                       step="0.01"
@@ -365,7 +373,7 @@ export default function OCRPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-neutral-400 mb-1">Total</label>
+                    <label className="block text-xs text-neutral-400 mb-1">{t('admin.ocrScan.total')}</label>
                     <input
                       type="number"
                       step="0.01"
@@ -377,13 +385,13 @@ export default function OCRPage() {
 
                 {/* Category */}
                 <div>
-                  <label className="block text-xs text-neutral-400 mb-1">Catégorie de dépense</label>
+                  <label className="block text-xs text-neutral-400 mb-1">{t('admin.ocrScan.expenseCategory')}</label>
                   <select className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-white">
-                    <option value="6310">6310 - Hébergement cloud</option>
-                    <option value="6330">6330 - Services SaaS</option>
-                    <option value="6210">6210 - Marketing</option>
-                    <option value="6010">6010 - Livraison</option>
-                    <option value="5010">5010 - Achats</option>
+                    <option value="6310">{t('admin.ocrScan.opt6310')}</option>
+                    <option value="6330">{t('admin.ocrScan.opt6330')}</option>
+                    <option value="6210">{t('admin.ocrScan.opt6210')}</option>
+                    <option value="6010">{t('admin.ocrScan.opt6010')}</option>
+                    <option value="5010">{t('admin.ocrScan.opt5010')}</option>
                   </select>
                 </div>
               </div>
@@ -393,34 +401,34 @@ export default function OCRPage() {
                   onClick={() => { setExtractedData(null); setUploadedImage(null); }}
                   className="px-4 py-2 text-neutral-400 hover:text-white"
                 >
-                  Annuler
+                  {t('admin.ocrScan.cancel')}
                 </button>
                 <button
                   onClick={handleSaveInvoice}
                   className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg"
                 >
-                  ✓ Enregistrer la facture
+                  &#10003; {t('admin.ocrScan.saveInvoice')}
                 </button>
               </div>
             </div>
           ) : (
             <div className="bg-neutral-800 rounded-xl p-8 border border-neutral-700 text-center">
-              <div className="text-4xl mb-4">📋</div>
-              <p className="text-neutral-400">Téléversez une facture pour voir les données extraites</p>
+              <div className="text-4xl mb-4">&#128203;</div>
+              <p className="text-neutral-400">{t('admin.ocrScan.uploadPrompt')}</p>
             </div>
           )}
 
           {/* Recent scans */}
           <div className="bg-neutral-800 rounded-xl border border-neutral-700 overflow-hidden">
             <div className="p-4 border-b border-neutral-700">
-              <h3 className="font-medium text-white">Scans récents</h3>
+              <h3 className="font-medium text-white">{t('admin.ocrScan.recentScans')}</h3>
             </div>
             {loadingHistory ? (
-              <div className="p-4 text-center text-neutral-400">Chargement...</div>
+              <div className="p-4 text-center text-neutral-400">{t('admin.ocrScan.loading')}</div>
             ) : error ? (
               <div className="p-4 text-center text-red-400">{error}</div>
             ) : history.length === 0 ? (
-              <div className="p-4 text-center text-neutral-400">Aucun scan pour le moment</div>
+              <div className="p-4 text-center text-neutral-400">{t('admin.ocrScan.noScansYet')}</div>
             ) : null}
             <div className="divide-y divide-neutral-700">
               {history.slice(0, 5).map(scan => (
@@ -436,7 +444,7 @@ export default function OCRPage() {
                         scan.status === 'SUCCESS' ? 'text-green-400' :
                         scan.status === 'NEEDS_REVIEW' ? 'text-yellow-400' : 'text-red-400'
                       }`}>
-                        {scan.status === 'SUCCESS' ? '✓' : scan.status === 'NEEDS_REVIEW' ? '⚠' : '✗'}
+                        {scan.status === 'SUCCESS' ? '&#10003;' : scan.status === 'NEEDS_REVIEW' ? '&#9888;' : '&#10007;'}
                       </span>
                     </div>
                   </div>

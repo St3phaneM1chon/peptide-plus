@@ -39,7 +39,8 @@ const LOCALES = [
 
 async function countEntities(model: TranslatableModel): Promise<number> {
   const sourceModel = model === 'ProductFormat' ? 'productFormat' : model.charAt(0).toLowerCase() + model.slice(1);
-  return (prisma as any)[sourceModel].count();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic Prisma model access
+  return ((prisma as Record<string, any>)[sourceModel]).count();
 }
 
 async function main() {
@@ -162,7 +163,8 @@ async function main() {
     const translated: Record<string, string> = {};
 
     for (const field of nonEmpty) {
-      const regex = new RegExp(`\\[FIELD:${field.name}\\]\\n?([\\s\\S]*?)\\n?\\[/FIELD:${field.name}\\]`);
+      const escapedName = field.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(`\\[FIELD:${escapedName}\\]\\n?([\\s\\S]*?)\\n?\\[/FIELD:${escapedName}\\]`);
       const match = result.match(regex);
       translated[field.name] = match ? match[1].trim() : field.value;
     }
@@ -177,7 +179,7 @@ async function main() {
 
   for (const model of models) {
     const sourceModel = model === 'ProductFormat' ? 'productFormat' : model.charAt(0).toLowerCase() + model.slice(1);
-    const entities = await (prisma as any)[sourceModel].findMany();
+    const entities = await ((prisma as Record<string, any>)[sourceModel]).findMany() // eslint-disable-line @typescript-eslint/no-explicit-any
 
     console.log(`\n--- ${model} (${entities.length} entités) ---`);
 
@@ -207,7 +209,7 @@ async function main() {
           // Check if translation already exists and is current
           if (!force) {
             try {
-              const existing = await (prisma as any)[tableName].findUnique({
+              const existing = await ((prisma as Record<string, any>)[tableName]).findUnique({ // eslint-disable-line @typescript-eslint/no-explicit-any
                 where: { [`${fkField}_locale`]: { [fkField]: entity.id, locale } },
               });
               if (existing && existing.contentHash === hash) {
@@ -221,7 +223,7 @@ async function main() {
           try {
             const translated = await translateFields(fields, locale);
 
-            await (prisma as any)[tableName].upsert({
+            await ((prisma as Record<string, any>)[tableName]).upsert({ // eslint-disable-line @typescript-eslint/no-explicit-any
               where: { [`${fkField}_locale`]: { [fkField]: entity.id, locale } },
               create: {
                 [fkField]: entity.id,

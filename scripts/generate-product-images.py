@@ -4,10 +4,13 @@ Generate professional placeholder product images for BioCycle Peptides.
 Each product gets a main image + one image per format.
 """
 
+import logging
 import os
 import json
 from PIL import Image, ImageDraw, ImageFont
 import math
+
+log = logging.getLogger(__name__)
 
 # Output directory
 OUTPUT_DIR = "/Volumes/AI_Project/peptide-plus/public/images/products"
@@ -254,7 +257,8 @@ def get_font(size, bold=False):
     for path in font_paths:
         try:
             return ImageFont.truetype(path, size)
-        except (IOError, OSError):
+        except (IOError, OSError) as e:
+            log.debug("Suppressed in loop: %s", e)
             continue
     return ImageFont.load_default()
 

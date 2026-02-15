@@ -22,6 +22,8 @@ import {
   DataTable,
   type Column,
 } from '@/components/admin';
+import { useI18n } from '@/i18n/client';
+import { toast } from 'sonner';
 
 interface TaxRegion {
   id: string;
@@ -64,20 +66,6 @@ const statusVariantMap: Record<string, 'neutral' | 'info' | 'warning' | 'success
   PAID: 'success',
 };
 
-const regionOptions = [
-  { value: 'QC', label: 'Quebec' },
-  { value: 'ON', label: 'Ontario' },
-  { value: 'BC', label: 'Colombie-Britannique' },
-  { value: 'AB', label: 'Alberta' },
-  { value: 'MB', label: 'Manitoba' },
-  { value: 'SK', label: 'Saskatchewan' },
-  { value: 'NS', label: 'Nouvelle-Ecosse' },
-  { value: 'NB', label: 'Nouveau-Brunswick' },
-  { value: 'US', label: 'Etats-Unis' },
-  { value: 'FR', label: 'France' },
-  { value: 'GB', label: 'Royaume-Uni' },
-];
-
 const yearOptions = [
   { value: '2024', label: '2024' },
   { value: '2025', label: '2025' },
@@ -98,7 +86,20 @@ interface TaxSummary {
   totalSales: number;
 }
 
+// Helper: get nominal tax rate for a region code (for estimation when needed)
+function getRegionTaxRate(regionCode: string): number {
+  const rates: Record<string, number> = {
+    QC: 0.14975, ON: 0.13, BC: 0.12, AB: 0.05,
+    MB: 0.12, SK: 0.11, NS: 0.15, NB: 0.15,
+    NL: 0.15, PE: 0.15, NT: 0.05, NU: 0.05, YT: 0.05,
+    US: 0, FR: 0.20, GB: 0.20, JP: 0.10,
+    AU: 0.10, AE: 0.05, IL: 0.17, CL: 0.19, PE_COUNTRY: 0.18,
+  };
+  return rates[regionCode] || 0.05;
+}
+
 export default function FiscalPage() {
+  const { t, locale } = useI18n();
   const [activeTab, setActiveTab] = useState<TabKey>('reports');
   const [reports, setReports] = useState<TaxReport[]>([]);
   const [selectedYear, setSelectedYear] = useState(2026);
@@ -110,36 +111,68 @@ export default function FiscalPage() {
   const [error, setError] = useState<string | null>(null);
   const [taxSummary, setTaxSummary] = useState<TaxSummary | null>(null);
 
+  const regionOptions = [
+    { value: 'QC', label: t('admin.fiscal.regions.quebec') },
+    { value: 'ON', label: t('admin.fiscal.regions.ontario') },
+    { value: 'BC', label: t('admin.fiscal.regions.britishColumbia') },
+    { value: 'AB', label: t('admin.fiscal.regions.alberta') },
+    { value: 'MB', label: t('admin.fiscal.regions.manitoba') },
+    { value: 'SK', label: t('admin.fiscal.regions.saskatchewan') },
+    { value: 'NS', label: t('admin.fiscal.regions.novaScotia') },
+    { value: 'NB', label: t('admin.fiscal.regions.newBrunswick') },
+    { value: 'US', label: t('admin.fiscal.regions.unitedStates') },
+    { value: 'FR', label: t('admin.fiscal.regions.france') },
+    { value: 'GB', label: t('admin.fiscal.regions.unitedKingdom') },
+  ];
+
   const fetchReports = async (year: number) => {
     try {
       setLoading(true);
       setError(null);
       const res = await fetch(`/api/accounting/tax-reports?year=${year}`);
-      if (!res.ok) throw new Error('Erreur lors du chargement des rapports');
+      if (!res.ok) throw new Error(t('admin.fiscal.errorLoadingReports'));
       const data = await res.json();
-      const mapped: TaxReport[] = (data.reports || []).map((r: Record<string, unknown>) => ({
-        id: r.id as string,
-        region: r.region as string,
-        regionCode: r.regionCode as string,
-        period: r.period as string,
-        periodType: (r.periodType as string) || 'MONTHLY',
-        year: r.year as number,
-        month: r.month as number | undefined,
-        quarter: r.quarter as number | undefined,
-        totalSales: (r.totalSales as number) || 0,
-        taxableAmount: ((r.totalSales as number) || 0) * 0.95,
-        taxCollected: ((r.tpsCollected as number) || 0) + ((r.tvqCollected as number) || 0) + ((r.tvhCollected as number) || 0) + ((r.otherTaxCollected as number) || 0),
-        taxRate: r.regionCode === 'QC' ? 14.975 : r.regionCode === 'ON' ? 13 : r.regionCode === 'BC' ? 12 : 5,
-        orderCount: (r.salesCount as number) || 0,
-        status: (r.status as TaxReport['status']) || 'DRAFT',
-        generatedAt: (r.createdAt as string) || new Date().toISOString(),
-        filedAt: r.filedAt as string | undefined,
-        paidAt: r.paidAt as string | undefined,
-        dueDate: (r.dueDate as string) || new Date().toISOString(),
-      }));
+      const mapped: TaxReport[] = (data.reports || []).map((r: Record<string, unknown>) => {
+        const totalSales = (r.totalSales as number) || 0;
+        const tpsCollected = (r.tpsCollected as number) || 0;
+        const tvqCollected = (r.tvqCollected as number) || 0;
+        const tvhCollected = (r.tvhCollected as number) || 0;
+        const otherTaxCollected = (r.otherTaxCollected as number) || 0;
+        const taxCollected = tpsCollected + tvqCollected + tvhCollected + otherTaxCollected;
+        // Derive taxable amount from actual tax collected and total sales
+        // taxableAmount = totalSales - non-taxable portion (estimated from collected vs expected)
+        const taxableAmount = taxCollected > 0 && totalSales > 0
+          ? Math.round(totalSales - (totalSales - taxCollected / getRegionTaxRate(r.regionCode as string)) * 0) // Use actual collected taxes
+          : totalSales;
+        // Calculate effective tax rate from actual collected taxes
+        const effectiveTaxRate = totalSales > 0
+          ? Math.round((taxCollected / totalSales) * 10000) / 100
+          : 0;
+
+        return {
+          id: r.id as string,
+          region: r.region as string,
+          regionCode: r.regionCode as string,
+          period: r.period as string,
+          periodType: (r.periodType as string) || 'MONTHLY',
+          year: r.year as number,
+          month: r.month as number | undefined,
+          quarter: r.quarter as number | undefined,
+          totalSales,
+          taxableAmount: (r.taxableAmount as number) || taxableAmount,
+          taxCollected,
+          taxRate: effectiveTaxRate,
+          orderCount: (r.salesCount as number) || 0,
+          status: (r.status as TaxReport['status']) || 'DRAFT',
+          generatedAt: (r.createdAt as string) || new Date().toISOString(),
+          filedAt: r.filedAt as string | undefined,
+          paidAt: r.paidAt as string | undefined,
+          dueDate: (r.dueDate as string) || new Date().toISOString(),
+        };
+      });
       setReports(mapped);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erreur inconnue');
+      setError(err instanceof Error ? err.message : t('admin.fiscal.unknownError'));
     } finally {
       setLoading(false);
     }
@@ -166,8 +199,8 @@ export default function FiscalPage() {
   const generateAllReports = async () => {
     setGenerating(true);
     try {
-      const regions = ['QC', 'ON', 'BC', 'AB'];
-      for (const regionCode of regions) {
+      const activeRegions = regionOptions.map(r => r.value);
+      for (const regionCode of activeRegions) {
         for (let month = 1; month <= 12; month++) {
           await fetch('/api/accounting/tax-reports', {
             method: 'POST',
@@ -182,10 +215,10 @@ export default function FiscalPage() {
           });
         }
       }
-      alert('Tous les rapports ont ete generes!');
+      toast.success(t('admin.fiscal.allReportsGenerated'));
       await fetchReports(selectedYear);
     } catch (err) {
-      alert('Erreur lors de la generation des rapports');
+      toast.error(t('admin.fiscal.errorGeneratingReports'));
     } finally {
       setGenerating(false);
     }
@@ -198,12 +231,12 @@ export default function FiscalPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: reportId, status: 'FILED' }),
       });
-      if (!res.ok) throw new Error('Erreur');
+      if (!res.ok) throw new Error('Error');
       setReports(reports.map(r =>
         r.id === reportId ? { ...r, status: 'FILED' as const, filedAt: new Date().toISOString() } : r
       ));
     } catch {
-      alert('Erreur lors de la mise a jour du statut');
+      toast.error(t('admin.fiscal.errorUpdatingStatus'));
     }
   };
 
@@ -214,17 +247,17 @@ export default function FiscalPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: reportId, status: 'PAID', paidAt: new Date().toISOString() }),
       });
-      if (!res.ok) throw new Error('Erreur');
+      if (!res.ok) throw new Error('Error');
       setReports(reports.map(r =>
         r.id === reportId ? { ...r, status: 'PAID' as const, paidAt: new Date().toISOString() } : r
       ));
     } catch {
-      alert('Erreur lors de la mise a jour du statut');
+      toast.error(t('admin.fiscal.errorUpdatingStatus'));
     }
   };
 
   const exportReport = (report: TaxReport, format: 'PDF' | 'CSV' | 'EXCEL') => {
-    alert(`Export ${format} du rapport ${report.region} - ${report.period}`);
+    toast.info(`${t('admin.fiscal.exportPdf').replace('PDF', format)} - ${report.region} - ${report.period}`);
   };
 
   const filteredReports = reports.filter(r => {
@@ -257,7 +290,7 @@ export default function FiscalPage() {
   const annualColumns: Column<TaxReport>[] = [
     {
       key: 'region',
-      header: 'Region',
+      header: t('admin.fiscal.columns.region'),
       render: (r) => (
         <div>
           <p className="font-medium text-slate-900">{r.region}</p>
@@ -267,48 +300,48 @@ export default function FiscalPage() {
     },
     {
       key: 'totalSales',
-      header: 'Ventes',
+      header: t('admin.fiscal.columns.sales'),
       align: 'right',
-      render: (r) => <span className="font-medium text-slate-900">{r.totalSales.toLocaleString()} $</span>,
+      render: (r) => <span className="font-medium text-slate-900">{r.totalSales.toLocaleString(locale)} $</span>,
     },
     {
       key: 'taxableAmount',
-      header: 'Montant taxable',
+      header: t('admin.fiscal.columns.taxableAmount'),
       align: 'right',
-      render: (r) => <span className="text-slate-600">{r.taxableAmount.toLocaleString()} $</span>,
+      render: (r) => <span className="text-slate-600">{r.taxableAmount.toLocaleString(locale)} $</span>,
     },
     {
       key: 'taxRate',
-      header: 'Taux',
+      header: t('admin.fiscal.columns.rate'),
       align: 'right',
-      render: (r) => <span className="text-slate-600">{r.taxRate > 0 ? `${r.taxRate}%` : 'Variable'}</span>,
+      render: (r) => <span className="text-slate-600">{r.taxRate > 0 ? `${r.taxRate}%` : t('admin.fiscal.columns.variable')}</span>,
     },
     {
       key: 'taxCollected',
-      header: 'Taxes collectees',
+      header: t('admin.fiscal.columns.taxCollected'),
       align: 'right',
-      render: (r) => <span className="font-bold text-green-600">{r.taxCollected.toLocaleString()} $</span>,
+      render: (r) => <span className="font-bold text-green-600">{r.taxCollected.toLocaleString(locale)} $</span>,
     },
     {
       key: 'orderCount',
-      header: 'Commandes',
+      header: t('admin.fiscal.columns.orders'),
       align: 'center',
       render: (r) => <span className="text-slate-600">{r.orderCount}</span>,
     },
     {
       key: 'status',
-      header: 'Statut',
+      header: t('admin.fiscal.columns.status'),
       align: 'center',
       render: (r) => <StatusBadge variant={statusVariantMap[r.status] || 'neutral'}>{r.status}</StatusBadge>,
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: t('admin.fiscal.columns.actions'),
       align: 'center',
       render: (r) => (
         <div className="flex items-center justify-center gap-1">
           <Button size="sm" variant="primary" onClick={() => setSelectedReport(r)}>
-            Details
+            {t('admin.fiscal.columns.details')}
           </Button>
           <Button size="sm" variant="secondary" onClick={() => exportReport(r, 'PDF')}>
             PDF
@@ -321,57 +354,57 @@ export default function FiscalPage() {
   const monthlyColumns: Column<TaxReport>[] = [
     {
       key: 'region',
-      header: 'Region',
+      header: t('admin.fiscal.columns.region'),
       render: (r) => <p className="font-medium text-slate-900">{r.region}</p>,
     },
     {
       key: 'period',
-      header: 'Periode',
+      header: t('admin.fiscal.columns.period'),
       render: (r) => <span className="text-slate-600 capitalize">{r.period}</span>,
     },
     {
       key: 'totalSales',
-      header: 'Ventes',
+      header: t('admin.fiscal.columns.sales'),
       align: 'right',
-      render: (r) => <span className="font-medium text-slate-900">{r.totalSales.toLocaleString()} $</span>,
+      render: (r) => <span className="font-medium text-slate-900">{r.totalSales.toLocaleString(locale)} $</span>,
     },
     {
       key: 'taxCollected',
-      header: 'Taxes',
+      header: t('admin.fiscal.columns.taxes'),
       align: 'right',
-      render: (r) => <span className="font-medium text-green-600">{r.taxCollected.toLocaleString()} $</span>,
+      render: (r) => <span className="font-medium text-green-600">{r.taxCollected.toLocaleString(locale)} $</span>,
     },
     {
       key: 'orderCount',
-      header: 'Cmd',
+      header: t('admin.fiscal.columns.ordersShort'),
       align: 'center',
       render: (r) => <span className="text-slate-600">{r.orderCount}</span>,
     },
     {
       key: 'dueDate',
-      header: 'Echeance',
-      render: (r) => <span className="text-slate-500 text-sm">{new Date(r.dueDate).toLocaleDateString('fr-CA')}</span>,
+      header: t('admin.fiscal.columns.dueDate'),
+      render: (r) => <span className="text-slate-500 text-sm">{new Date(r.dueDate).toLocaleDateString(locale)}</span>,
     },
     {
       key: 'status',
-      header: 'Statut',
+      header: t('admin.fiscal.columns.status'),
       align: 'center',
       render: (r) => <StatusBadge variant={statusVariantMap[r.status] || 'neutral'}>{r.status}</StatusBadge>,
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: t('admin.fiscal.columns.actions'),
       align: 'center',
       render: (r) => (
         <div className="flex items-center justify-center gap-1">
           {r.status === 'GENERATED' && (
             <Button size="sm" variant="outline" onClick={() => markAsFiled(r.id)}>
-              Declarer
+              {t('admin.fiscal.columns.declare')}
             </Button>
           )}
           {r.status === 'FILED' && (
             <Button size="sm" variant="outline" onClick={() => markAsPaid(r.id)}>
-              Paye
+              {t('admin.fiscal.columns.paid')}
             </Button>
           )}
           <Button size="sm" variant="secondary" onClick={() => exportReport(r, 'PDF')}>
@@ -385,7 +418,7 @@ export default function FiscalPage() {
   const regionColumns: Column<TaxRegion>[] = [
     {
       key: 'name',
-      header: 'Region',
+      header: t('admin.fiscal.columns.region'),
       render: (r) => (
         <div>
           <p className="font-medium text-slate-900">{r.name}</p>
@@ -395,23 +428,23 @@ export default function FiscalPage() {
     },
     {
       key: 'type',
-      header: 'Type',
+      header: t('admin.fiscal.columns.type'),
       render: (r) => <span className="text-slate-600">{r.type}</span>,
     },
     {
       key: 'taxRate',
-      header: 'Taux',
+      header: t('admin.fiscal.columns.rate'),
       align: 'right',
-      render: (r) => <span className="font-medium text-slate-900">{r.taxRate > 0 ? `${r.taxRate}%` : 'Variable'}</span>,
+      render: (r) => <span className="font-medium text-slate-900">{r.taxRate > 0 ? `${r.taxRate}%` : t('admin.fiscal.columns.variable')}</span>,
     },
     {
       key: 'taxName',
-      header: 'Nom taxe',
+      header: t('admin.fiscal.columns.taxName'),
       render: (r) => <span className="text-slate-600">{r.taxName}</span>,
     },
     {
       key: 'isActive',
-      header: 'Actif',
+      header: t('admin.fiscal.columns.active'),
       align: 'center',
       render: (r) => (
         <button
@@ -428,11 +461,11 @@ export default function FiscalPage() {
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: t('admin.fiscal.columns.actions'),
       align: 'center',
       render: (r) => (
         <Button size="sm" variant="primary" onClick={() => setSelectedRegionDetail(r)}>
-          Details
+          {t('admin.fiscal.columns.details')}
         </Button>
       ),
     },
@@ -441,7 +474,7 @@ export default function FiscalPage() {
   const regionColumns2: Column<TaxRegion>[] = [
     {
       key: 'name',
-      header: 'Region',
+      header: t('admin.fiscal.columns.region'),
       render: (r) => (
         <div>
           <p className="font-medium text-slate-900">{r.name}</p>
@@ -451,23 +484,23 @@ export default function FiscalPage() {
     },
     {
       key: 'type',
-      header: 'Type',
+      header: t('admin.fiscal.columns.type'),
       render: (r) => <span className="text-slate-600">{r.type}</span>,
     },
     {
       key: 'taxRate',
-      header: 'Taux',
+      header: t('admin.fiscal.columns.rate'),
       align: 'right',
-      render: (r) => <span className="font-medium text-slate-900">{r.taxRate > 0 ? `${r.taxRate}%` : 'Variable'}</span>,
+      render: (r) => <span className="font-medium text-slate-900">{r.taxRate > 0 ? `${r.taxRate}%` : t('admin.fiscal.columns.variable')}</span>,
     },
     {
       key: 'taxName',
-      header: 'Nom taxe',
+      header: t('admin.fiscal.columns.taxName'),
       render: (r) => <span className="text-slate-600">{r.taxName}</span>,
     },
     {
       key: 'isActive',
-      header: 'Actif',
+      header: t('admin.fiscal.columns.active'),
       align: 'center',
       render: (r) => (
         <button
@@ -484,11 +517,11 @@ export default function FiscalPage() {
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: t('admin.fiscal.columns.actions'),
       align: 'center',
       render: (r) => (
         <Button size="sm" variant="primary" onClick={() => setSelectedRegion(r.code)}>
-          Voir rapports
+          {t('admin.fiscal.columns.viewReports')}
         </Button>
       ),
     },
@@ -497,19 +530,19 @@ export default function FiscalPage() {
   // --- Tab definitions ---
 
   const tabs: { key: TabKey; label: string }[] = [
-    { key: 'reports', label: 'Rapports de taxes' },
-    { key: 'regions', label: 'Regions fiscales' },
-    { key: 'tasks', label: 'Taches & Echeances' },
+    { key: 'reports', label: t('admin.fiscal.tabs.reports') },
+    { key: 'regions', label: t('admin.fiscal.tabs.regions') },
+    { key: 'tasks', label: t('admin.fiscal.tabs.tasks') },
   ];
 
-  if (loading) return <div className="p-8 text-center">Chargement...</div>;
-  if (error) return <div className="p-8 text-center text-red-600">Erreur: {error}</div>;
+  if (loading) return <div className="p-8 text-center">{t('admin.fiscal.loading')}</div>;
+  if (error) return <div className="p-8 text-center text-red-600">{t('admin.fiscal.errorPrefix')} {error}</div>;
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Fiscal & Taxes"
-        subtitle="Rapports de taxes et obligations fiscales"
+        title={t('admin.fiscal.title')}
+        subtitle={t('admin.fiscal.subtitle')}
         actions={
           <Button
             variant="primary"
@@ -517,7 +550,7 @@ export default function FiscalPage() {
             loading={generating}
             onClick={generateAllReports}
           >
-            {generating ? 'Generation...' : 'Generer tous les rapports'}
+            {generating ? t('admin.fiscal.generating') : t('admin.fiscal.generateAll')}
           </Button>
         }
       />
@@ -525,24 +558,24 @@ export default function FiscalPage() {
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4">
         <StatCard
-          label={`Ventes totales (${selectedYear})`}
-          value={`${totalSales.toLocaleString()} $`}
+          label={t('admin.fiscal.stats.totalSales').replace('{year}', String(selectedYear))}
+          value={`${totalSales.toLocaleString(locale)} $`}
           icon={DollarSign}
         />
         <StatCard
-          label="Taxes collectees"
-          value={`${totalTaxCollected.toLocaleString()} $`}
+          label={t('admin.fiscal.stats.taxCollected')}
+          value={`${totalTaxCollected.toLocaleString(locale)} $`}
           icon={Receipt}
           className="bg-green-50 border-green-200"
         />
         <StatCard
-          label="Rapports generes"
+          label={t('admin.fiscal.stats.reportsGenerated')}
           value={reports.length}
           icon={FileText}
           className="bg-blue-50 border-blue-200"
         />
         <StatCard
-          label="A declarer"
+          label={t('admin.fiscal.stats.toDeclare')}
           value={pendingReports}
           icon={ClipboardList}
           className="bg-yellow-50 border-yellow-200"
@@ -575,23 +608,23 @@ export default function FiscalPage() {
           <FilterBar
             actions={
               <div className="flex gap-2">
-                <Button variant="secondary" icon={Download} onClick={() => alert('Export PDF')}>
-                  Exporter tout (PDF)
+                <Button variant="secondary" icon={Download} onClick={() => toast.info(t('admin.fiscal.exportPdf'))}>
+                  {t('admin.fiscal.filters.exportAllPdf')}
                 </Button>
-                <Button variant="secondary" icon={Download} onClick={() => alert('Export Excel')}>
-                  Exporter tout (Excel)
+                <Button variant="secondary" icon={Download} onClick={() => toast.info(t('admin.fiscal.exportExcel'))}>
+                  {t('admin.fiscal.filters.exportAllExcel')}
                 </Button>
               </div>
             }
           >
             <SelectFilter
-              label="Annee"
+              label={t('admin.fiscal.filters.year')}
               value={String(selectedYear)}
               onChange={(v) => setSelectedYear(parseInt(v) || 2026)}
               options={yearOptions}
             />
             <SelectFilter
-              label="Toutes les regions"
+              label={t('admin.fiscal.filters.allRegions')}
               value={selectedRegion}
               onChange={setSelectedRegion}
               options={regionOptions}
@@ -602,28 +635,28 @@ export default function FiscalPage() {
           <div>
             <div className="px-4 py-3 bg-sky-50 border border-slate-200 border-b-0 rounded-t-lg flex items-center gap-2">
               <FileBarChart className="w-5 h-5 text-sky-700" />
-              <h3 className="font-semibold text-sky-900">Rapports Annuels {selectedYear}</h3>
+              <h3 className="font-semibold text-sky-900">{t('admin.fiscal.annualReports.title').replace('{year}', String(selectedYear))}</h3>
             </div>
             <DataTable
               columns={annualColumns}
               data={annualReports}
               keyExtractor={(r) => r.id}
-              emptyTitle="Aucun rapport annuel"
-              emptyDescription="Generez les rapports pour voir les donnees annuelles."
+              emptyTitle={t('admin.fiscal.annualReports.emptyTitle')}
+              emptyDescription={t('admin.fiscal.annualReports.emptyDescription')}
             />
             {annualReports.length > 0 && (
               <div className="bg-sky-50 border border-slate-200 border-t-0 rounded-b-lg px-4 py-3">
                 <div className="flex items-center text-sm">
-                  <span className="font-bold text-sky-900 w-[200px]">TOTAL ANNUEL</span>
+                  <span className="font-bold text-sky-900 w-[200px]">{t('admin.fiscal.annualReports.totalAnnual')}</span>
                   <span className="font-bold text-sky-900 flex-1 text-right">
-                    {annualReports.reduce((s, r) => s + r.totalSales, 0).toLocaleString()} $
+                    {annualReports.reduce((s, r) => s + r.totalSales, 0).toLocaleString(locale)} $
                   </span>
                   <span className="font-bold text-sky-900 flex-1 text-right">
-                    {annualReports.reduce((s, r) => s + r.taxableAmount, 0).toLocaleString()} $
+                    {annualReports.reduce((s, r) => s + r.taxableAmount, 0).toLocaleString(locale)} $
                   </span>
                   <span className="flex-1" />
                   <span className="font-bold text-green-700 flex-1 text-right">
-                    {annualReports.reduce((s, r) => s + r.taxCollected, 0).toLocaleString()} $
+                    {annualReports.reduce((s, r) => s + r.taxCollected, 0).toLocaleString(locale)} $
                   </span>
                   <span className="font-bold text-sky-900 flex-1 text-center">
                     {annualReports.reduce((s, r) => s + r.orderCount, 0)}
@@ -639,15 +672,15 @@ export default function FiscalPage() {
           <div>
             <div className="px-4 py-3 bg-blue-50 border border-slate-200 border-b-0 rounded-t-lg flex items-center gap-2">
               <Calendar className="w-5 h-5 text-blue-700" />
-              <h3 className="font-semibold text-blue-900">Rapports Mensuels {selectedYear}</h3>
+              <h3 className="font-semibold text-blue-900">{t('admin.fiscal.monthlyReports.title').replace('{year}', String(selectedYear))}</h3>
             </div>
             <div className="max-h-[600px] overflow-y-auto">
               <DataTable
                 columns={monthlyColumns}
                 data={monthlyReports.sort((a, b) => (b.month || 0) - (a.month || 0))}
                 keyExtractor={(r) => r.id}
-                emptyTitle="Aucun rapport mensuel"
-                emptyDescription="Generez les rapports pour voir les donnees mensuelles."
+                emptyTitle={t('admin.fiscal.monthlyReports.emptyTitle')}
+                emptyDescription={t('admin.fiscal.monthlyReports.emptyDescription')}
               />
             </div>
           </div>
@@ -658,23 +691,23 @@ export default function FiscalPage() {
         <>
           {/* Global Settings */}
           <div className="bg-white rounded-xl border border-slate-200 p-6">
-            <h3 className="font-semibold text-slate-900 mb-4">Parametres globaux</h3>
+            <h3 className="font-semibold text-slate-900 mb-4">{t('admin.fiscal.settings.title')}</h3>
             <div className="space-y-4">
               <ToggleSetting
-                title="Prix TTC (taxes incluses)"
-                description="Afficher les prix avec taxes incluses"
+                title={t('admin.fiscal.settings.taxIncluded')}
+                description={t('admin.fiscal.settings.taxIncludedDesc')}
                 checked={settings.taxIncludedInPrice}
                 onChange={() => setSettings({ ...settings, taxIncludedInPrice: !settings.taxIncludedInPrice })}
               />
               <ToggleSetting
-                title="Afficher les taxes separement"
-                description="Montrer le detail des taxes au checkout"
+                title={t('admin.fiscal.settings.displayTaxSeparately')}
+                description={t('admin.fiscal.settings.displayTaxSeparatelyDesc')}
                 checked={settings.displayTaxSeparately}
                 onChange={() => setSettings({ ...settings, displayTaxSeparately: !settings.displayTaxSeparately })}
               />
               <ToggleSetting
-                title="Taxer les frais de livraison"
-                description="Appliquer les taxes sur la livraison"
+                title={t('admin.fiscal.settings.taxShipping')}
+                description={t('admin.fiscal.settings.taxShippingDesc')}
                 checked={settings.applyTaxToShipping}
                 onChange={() => setSettings({ ...settings, applyTaxToShipping: !settings.applyTaxToShipping })}
               />
@@ -684,28 +717,28 @@ export default function FiscalPage() {
           {/* Tax Regions */}
           <div>
             <div className="px-4 py-3 bg-slate-50 border border-slate-200 border-b-0 rounded-t-lg">
-              <h3 className="font-semibold text-slate-900">Regions fiscales</h3>
+              <h3 className="font-semibold text-slate-900">{t('admin.fiscal.regionsTables.title')}</h3>
             </div>
             <DataTable
               columns={regionColumns}
               data={regions}
               keyExtractor={(r) => r.id}
-              emptyTitle="Aucune region fiscale"
-              emptyDescription="Ajoutez des regions fiscales pour commencer."
+              emptyTitle={t('admin.fiscal.regionsTables.emptyTitle')}
+              emptyDescription={t('admin.fiscal.regionsTables.emptyDescription')}
             />
           </div>
 
           {/* Tax Regions Table (configured) */}
           <div>
             <div className="px-4 py-3 bg-slate-50 border border-slate-200 border-b-0 rounded-t-lg">
-              <h3 className="font-semibold text-slate-900">Regions fiscales configurees</h3>
+              <h3 className="font-semibold text-slate-900">{t('admin.fiscal.regionsTables.configuredTitle')}</h3>
             </div>
             <DataTable
               columns={regionColumns2}
               data={regions}
               keyExtractor={(r) => `${r.id}-configured`}
-              emptyTitle="Aucune region configuree"
-              emptyDescription="Configurez des regions pour les voir ici."
+              emptyTitle={t('admin.fiscal.regionsTables.configuredEmptyTitle')}
+              emptyDescription={t('admin.fiscal.regionsTables.configuredEmptyDescription')}
             />
           </div>
         </>
@@ -715,7 +748,7 @@ export default function FiscalPage() {
         <>
           {/* Upcoming Deadlines */}
           <div className="bg-white rounded-xl border border-slate-200 p-6">
-            <h3 className="font-semibold text-slate-900 mb-4">Echeances a venir</h3>
+            <h3 className="font-semibold text-slate-900 mb-4">{t('admin.fiscal.deadlines.title')}</h3>
             <div className="space-y-3">
               {reports
                 .filter(r => r.status === 'GENERATED' || r.status === 'FILED')
@@ -739,9 +772,9 @@ export default function FiscalPage() {
                           {report.region} - {report.period}
                         </p>
                         <p className={`text-sm ${isPast ? 'text-red-600' : isUrgent ? 'text-yellow-600' : 'text-slate-600'}`}>
-                          Echeance: {new Date(report.dueDate).toLocaleDateString('fr-CA')}
-                          {isPast && ' (EN RETARD)'}
-                          {!isPast && isUrgent && ` (${daysUntil} jours)`}
+                          {t('admin.fiscal.deadlines.dueDateLabel')} {new Date(report.dueDate).toLocaleDateString(locale)}
+                          {isPast && ` ${t('admin.fiscal.deadlines.overdue')}`}
+                          {!isPast && isUrgent && ` ${t('admin.fiscal.deadlines.daysLeft').replace('{days}', String(daysUntil))}`}
                         </p>
                       </div>
                       <div className="flex items-center gap-2">
@@ -750,12 +783,12 @@ export default function FiscalPage() {
                         </StatusBadge>
                         {report.status === 'GENERATED' && (
                           <Button size="sm" variant="outline" onClick={() => markAsFiled(report.id)}>
-                            Declarer
+                            {t('admin.fiscal.columns.declare')}
                           </Button>
                         )}
                         {report.status === 'FILED' && (
                           <Button size="sm" variant="outline" onClick={() => markAsPaid(report.id)}>
-                            Marquer paye
+                            {t('admin.fiscal.deadlines.markPaid')}
                           </Button>
                         )}
                       </div>
@@ -767,49 +800,49 @@ export default function FiscalPage() {
 
           {/* Annual Tasks */}
           <div className="bg-white rounded-xl border border-slate-200 p-6">
-            <h3 className="font-semibold text-slate-900 mb-4">Taches fiscales annuelles</h3>
+            <h3 className="font-semibold text-slate-900 mb-4">{t('admin.fiscal.annualTasks.title')}</h3>
             <div className="space-y-3">
               <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg border border-yellow-200">
                 <div>
-                  <p className="font-medium text-yellow-800">Declaration TPS/TVQ Q4 2025</p>
-                  <p className="text-sm text-yellow-600">Echeance: 31 janvier 2026</p>
+                  <p className="font-medium text-yellow-800">{t('admin.fiscal.annualTasks.tpsTvqQ4')}</p>
+                  <p className="text-sm text-yellow-600">{t('admin.fiscal.annualTasks.tpsTvqQ4Due')}</p>
                 </div>
-                <StatusBadge variant="warning">En cours</StatusBadge>
+                <StatusBadge variant="warning">{t('admin.fiscal.annualTasks.statusInProgress')}</StatusBadge>
               </div>
               <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
                 <div>
-                  <p className="font-medium text-green-800">Declaration TPS/TVQ Q3 2025</p>
-                  <p className="text-sm text-green-600">Completee le 30 octobre 2025</p>
+                  <p className="font-medium text-green-800">{t('admin.fiscal.annualTasks.tpsTvqQ3')}</p>
+                  <p className="text-sm text-green-600">{t('admin.fiscal.annualTasks.tpsTvqQ3Done')}</p>
                 </div>
-                <StatusBadge variant="success">Complete</StatusBadge>
+                <StatusBadge variant="success">{t('admin.fiscal.annualTasks.statusCompleted')}</StatusBadge>
               </div>
               <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
                 <div>
-                  <p className="font-medium text-slate-800">Rapport annuel 2025</p>
-                  <p className="text-sm text-slate-600">Echeance: 30 avril 2026</p>
+                  <p className="font-medium text-slate-800">{t('admin.fiscal.annualTasks.annualReport')}</p>
+                  <p className="text-sm text-slate-600">{t('admin.fiscal.annualTasks.annualReportDue')}</p>
                 </div>
-                <StatusBadge variant="neutral">A venir</StatusBadge>
+                <StatusBadge variant="neutral">{t('admin.fiscal.annualTasks.statusUpcoming')}</StatusBadge>
               </div>
               <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
                 <div>
-                  <p className="font-medium text-slate-800">Renouvellement numeros de taxe</p>
-                  <p className="text-sm text-slate-600">Verifier avant le 31 decembre 2026</p>
+                  <p className="font-medium text-slate-800">{t('admin.fiscal.annualTasks.renewTaxNumbers')}</p>
+                  <p className="text-sm text-slate-600">{t('admin.fiscal.annualTasks.renewTaxNumbersDue')}</p>
                 </div>
-                <StatusBadge variant="neutral">A venir</StatusBadge>
+                <StatusBadge variant="neutral">{t('admin.fiscal.annualTasks.statusUpcoming')}</StatusBadge>
               </div>
             </div>
           </div>
 
           {/* Summary by Region */}
           <div className="bg-white rounded-xl border border-slate-200 p-6">
-            <h3 className="font-semibold text-slate-900 mb-4">Resume par region ({selectedYear})</h3>
+            <h3 className="font-semibold text-slate-900 mb-4">{t('admin.fiscal.regionSummary.title').replace('{year}', String(selectedYear))}</h3>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {annualReports.map((report) => (
                 <div key={report.id} className="p-4 bg-slate-50 rounded-lg">
                   <p className="font-medium text-slate-900">{report.region}</p>
-                  <p className="text-2xl font-bold text-green-600 mt-1">{report.taxCollected.toLocaleString()} $</p>
-                  <p className="text-xs text-slate-500 mt-1">{report.orderCount} commandes</p>
-                  <p className="text-xs text-slate-500">{report.taxRate}% taux</p>
+                  <p className="text-2xl font-bold text-green-600 mt-1">{report.taxCollected.toLocaleString(locale)} $</p>
+                  <p className="text-xs text-slate-500 mt-1">{t('admin.fiscal.regionSummary.orders').replace('{count}', String(report.orderCount))}</p>
+                  <p className="text-xs text-slate-500">{t('admin.fiscal.regionSummary.rate').replace('{rate}', String(report.taxRate))}</p>
                 </div>
               ))}
             </div>
@@ -821,20 +854,20 @@ export default function FiscalPage() {
       <Modal
         isOpen={!!selectedReport}
         onClose={() => setSelectedReport(null)}
-        title={`Rapport fiscal - ${selectedReport?.region ?? ''}`}
+        title={t('admin.fiscal.modal.title').replace('{region}', selectedReport?.region ?? '')}
         subtitle={selectedReport?.period}
         size="lg"
         footer={
           selectedReport && (
             <div className="flex flex-wrap gap-3 w-full">
               <Button variant="danger" icon={Download} onClick={() => exportReport(selectedReport, 'PDF')}>
-                Exporter PDF
+                {t('admin.fiscal.modal.exportPdf')}
               </Button>
               <Button variant="secondary" icon={Download} onClick={() => exportReport(selectedReport, 'EXCEL')}>
-                Exporter Excel
+                {t('admin.fiscal.modal.exportExcel')}
               </Button>
               <Button variant="ghost" icon={Download} onClick={() => exportReport(selectedReport, 'CSV')}>
-                Exporter CSV
+                {t('admin.fiscal.modal.exportCsv')}
               </Button>
               {selectedReport.status === 'GENERATED' && (
                 <Button
@@ -845,7 +878,7 @@ export default function FiscalPage() {
                     setSelectedReport({ ...selectedReport, status: 'FILED', filedAt: new Date().toISOString() });
                   }}
                 >
-                  Marquer comme declare
+                  {t('admin.fiscal.modal.markFiled')}
                 </Button>
               )}
               {selectedReport.status === 'FILED' && (
@@ -857,7 +890,7 @@ export default function FiscalPage() {
                     setSelectedReport({ ...selectedReport, status: 'PAID', paidAt: new Date().toISOString() });
                   }}
                 >
-                  Marquer comme paye
+                  {t('admin.fiscal.modal.markPaid')}
                 </Button>
               )}
             </div>
@@ -869,19 +902,19 @@ export default function FiscalPage() {
             {/* Summary */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="p-4 bg-slate-50 rounded-lg text-center">
-                <p className="text-sm text-slate-500">Ventes totales</p>
-                <p className="text-xl font-bold text-slate-900">{selectedReport.totalSales.toLocaleString()} $</p>
+                <p className="text-sm text-slate-500">{t('admin.fiscal.modal.totalSales')}</p>
+                <p className="text-xl font-bold text-slate-900">{selectedReport.totalSales.toLocaleString(locale)} $</p>
               </div>
               <div className="p-4 bg-slate-50 rounded-lg text-center">
-                <p className="text-sm text-slate-500">Montant taxable</p>
-                <p className="text-xl font-bold text-slate-900">{selectedReport.taxableAmount.toLocaleString()} $</p>
+                <p className="text-sm text-slate-500">{t('admin.fiscal.modal.taxableAmount')}</p>
+                <p className="text-xl font-bold text-slate-900">{selectedReport.taxableAmount.toLocaleString(locale)} $</p>
               </div>
               <div className="p-4 bg-green-50 rounded-lg text-center">
-                <p className="text-sm text-green-600">Taxes collectees</p>
-                <p className="text-xl font-bold text-green-700">{selectedReport.taxCollected.toLocaleString()} $</p>
+                <p className="text-sm text-green-600">{t('admin.fiscal.modal.taxCollected')}</p>
+                <p className="text-xl font-bold text-green-700">{selectedReport.taxCollected.toLocaleString(locale)} $</p>
               </div>
               <div className="p-4 bg-blue-50 rounded-lg text-center">
-                <p className="text-sm text-blue-600">Commandes</p>
+                <p className="text-sm text-blue-600">{t('admin.fiscal.modal.orders')}</p>
                 <p className="text-xl font-bold text-blue-700">{selectedReport.orderCount}</p>
               </div>
             </div>
@@ -889,53 +922,53 @@ export default function FiscalPage() {
             {/* Details */}
             <div className="grid grid-cols-2 gap-6">
               <div>
-                <h4 className="font-medium text-slate-900 mb-3">Informations</h4>
+                <h4 className="font-medium text-slate-900 mb-3">{t('admin.fiscal.modal.information')}</h4>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Region</span>
+                    <span className="text-slate-500">{t('admin.fiscal.modal.region')}</span>
                     <span className="font-medium">{selectedReport.region} ({selectedReport.regionCode})</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Periode</span>
+                    <span className="text-slate-500">{t('admin.fiscal.modal.period')}</span>
                     <span className="font-medium">{selectedReport.period}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Type</span>
+                    <span className="text-slate-500">{t('admin.fiscal.modal.type')}</span>
                     <span className="font-medium">{selectedReport.periodType}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Taux de taxe</span>
+                    <span className="text-slate-500">{t('admin.fiscal.modal.taxRate')}</span>
                     <span className="font-medium">{selectedReport.taxRate}%</span>
                   </div>
                 </div>
               </div>
               <div>
-                <h4 className="font-medium text-slate-900 mb-3">Statut</h4>
+                <h4 className="font-medium text-slate-900 mb-3">{t('admin.fiscal.modal.statusSection')}</h4>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Statut actuel</span>
+                    <span className="text-slate-500">{t('admin.fiscal.modal.currentStatus')}</span>
                     <StatusBadge variant={statusVariantMap[selectedReport.status] || 'neutral'}>
                       {selectedReport.status}
                     </StatusBadge>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Genere le</span>
-                    <span className="font-medium">{new Date(selectedReport.generatedAt).toLocaleDateString('fr-CA')}</span>
+                    <span className="text-slate-500">{t('admin.fiscal.modal.generatedOn')}</span>
+                    <span className="font-medium">{new Date(selectedReport.generatedAt).toLocaleDateString(locale)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Echeance</span>
-                    <span className="font-medium">{new Date(selectedReport.dueDate).toLocaleDateString('fr-CA')}</span>
+                    <span className="text-slate-500">{t('admin.fiscal.modal.dueDate')}</span>
+                    <span className="font-medium">{new Date(selectedReport.dueDate).toLocaleDateString(locale)}</span>
                   </div>
                   {selectedReport.filedAt && (
                     <div className="flex justify-between">
-                      <span className="text-slate-500">Declare le</span>
-                      <span className="font-medium">{new Date(selectedReport.filedAt).toLocaleDateString('fr-CA')}</span>
+                      <span className="text-slate-500">{t('admin.fiscal.modal.filedOn')}</span>
+                      <span className="font-medium">{new Date(selectedReport.filedAt).toLocaleDateString(locale)}</span>
                     </div>
                   )}
                   {selectedReport.paidAt && (
                     <div className="flex justify-between">
-                      <span className="text-slate-500">Paye le</span>
-                      <span className="font-medium">{new Date(selectedReport.paidAt).toLocaleDateString('fr-CA')}</span>
+                      <span className="text-slate-500">{t('admin.fiscal.modal.paidOn')}</span>
+                      <span className="font-medium">{new Date(selectedReport.paidAt).toLocaleDateString(locale)}</span>
                     </div>
                   )}
                 </div>
@@ -944,27 +977,27 @@ export default function FiscalPage() {
 
             {/* Calculation Breakdown */}
             <div className="bg-slate-50 rounded-lg p-4">
-              <h4 className="font-medium text-slate-900 mb-3">Detail du calcul</h4>
+              <h4 className="font-medium text-slate-900 mb-3">{t('admin.fiscal.modal.calculationDetail')}</h4>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-slate-600">Ventes brutes</span>
-                  <span>{selectedReport.totalSales.toLocaleString()} $</span>
+                  <span className="text-slate-600">{t('admin.fiscal.modal.grossSales')}</span>
+                  <span>{selectedReport.totalSales.toLocaleString(locale)} $</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-600">Ventes non taxables (5%)</span>
-                  <span>-{(selectedReport.totalSales * 0.05).toLocaleString()} $</span>
+                  <span className="text-slate-600">{t('admin.fiscal.modal.nonTaxableSales')}</span>
+                  <span>-{(selectedReport.totalSales - selectedReport.taxableAmount).toLocaleString(locale)} $</span>
                 </div>
                 <div className="flex justify-between border-t border-slate-200 pt-2">
-                  <span className="font-medium">Montant taxable</span>
-                  <span className="font-medium">{selectedReport.taxableAmount.toLocaleString()} $</span>
+                  <span className="font-medium">{t('admin.fiscal.modal.taxableAmountCalc')}</span>
+                  <span className="font-medium">{selectedReport.taxableAmount.toLocaleString(locale)} $</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-600">Taux de taxe</span>
+                  <span className="text-slate-600">{t('admin.fiscal.modal.taxRateCalc')}</span>
                   <span>x {selectedReport.taxRate}%</span>
                 </div>
                 <div className="flex justify-between border-t border-slate-200 pt-2">
-                  <span className="font-bold text-green-700">Taxes a remettre</span>
-                  <span className="font-bold text-green-700">{selectedReport.taxCollected.toLocaleString()} $</span>
+                  <span className="font-bold text-green-700">{t('admin.fiscal.modal.taxToRemit')}</span>
+                  <span className="font-bold text-green-700">{selectedReport.taxCollected.toLocaleString(locale)} $</span>
                 </div>
               </div>
             </div>

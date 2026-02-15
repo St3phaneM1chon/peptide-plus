@@ -129,10 +129,10 @@ Retourne UNIQUEMENT le JSON, sans markdown ni explication.`,
         processingTime: Date.now() - startTime,
       };
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       success: false,
-      error: error.message || 'Unknown error',
+      error: error instanceof Error ? error.message : 'Unknown error',
       processingTime: Date.now() - startTime,
     };
   }
@@ -305,10 +305,10 @@ export async function processInvoiceFromText(
       data,
       processingTime: Date.now() - startTime,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       success: false,
-      error: error.message,
+      error: error instanceof Error ? error.message : 'Unknown error',
       processingTime: Date.now() - startTime,
     };
   }

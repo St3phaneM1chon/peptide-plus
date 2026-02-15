@@ -11,14 +11,14 @@ import { prisma } from '@/lib/db';
 import { UserRole } from '@/types';
 
 interface PageProps {
-  searchParams: { search?: string; page?: string; status?: string };
+  searchParams: Promise<{ search?: string; page?: string; status?: string }>;
 }
 
 async function getClients(search?: string, page = 1, status?: string) {
   const limit = 20;
   const skip = (page - 1) * limit;
 
-  const where: any = {};
+  const where: Record<string, unknown> = {};
   
   if (search) {
     where.OR = [
@@ -56,6 +56,7 @@ async function getClients(search?: string, page = 1, status?: string) {
 }
 
 export default async function ClientsListPage({ searchParams }: PageProps) {
+  const resolvedSearchParams = await searchParams;
   const session = await auth();
 
   if (!session?.user) {
@@ -66,11 +67,11 @@ export default async function ClientsListPage({ searchParams }: PageProps) {
     redirect('/dashboard');
   }
 
-  const page = parseInt(searchParams.page || '1');
+  const page = parseInt(resolvedSearchParams.page || '1');
   const { companies, total, totalPages, currentPage } = await getClients(
-    searchParams.search,
+    resolvedSearchParams.search,
     page,
-    searchParams.status
+    resolvedSearchParams.status
   );
 
   return (
@@ -103,13 +104,13 @@ export default async function ClientsListPage({ searchParams }: PageProps) {
               <input
                 type="text"
                 name="search"
-                defaultValue={searchParams.search}
+                defaultValue={resolvedSearchParams.search}
                 placeholder="Rechercher par nom ou email..."
                 className="form-input w-full"
               />
             </div>
             <div>
-              <select name="status" defaultValue={searchParams.status || ''} className="form-input form-select">
+              <select name="status" defaultValue={resolvedSearchParams.status || ''} className="form-input form-select">
                 <option value="">Tous les statuts</option>
                 <option value="active">Actifs</option>
                 <option value="inactive">Inactifs</option>
@@ -118,7 +119,7 @@ export default async function ClientsListPage({ searchParams }: PageProps) {
             <button type="submit" className="btn-secondary">
               Filtrer
             </button>
-            {(searchParams.search || searchParams.status) && (
+            {(resolvedSearchParams.search || resolvedSearchParams.status) && (
               <Link href="/dashboard/employee/clients" className="btn-outline text-gray-600">
                 Réinitialiser
               </Link>
@@ -214,7 +215,7 @@ export default async function ClientsListPage({ searchParams }: PageProps) {
               <div className="flex space-x-2">
                 {currentPage > 1 && (
                   <Link
-                    href={`/dashboard/employee/clients?page=${currentPage - 1}${searchParams.search ? `&search=${searchParams.search}` : ''}${searchParams.status ? `&status=${searchParams.status}` : ''}`}
+                    href={`/dashboard/employee/clients?page=${currentPage - 1}${resolvedSearchParams.search ? `&search=${resolvedSearchParams.search}` : ''}${resolvedSearchParams.status ? `&status=${resolvedSearchParams.status}` : ''}`}
                     className="btn-outline px-4 py-2 text-sm"
                   >
                     ← Précédent
@@ -222,7 +223,7 @@ export default async function ClientsListPage({ searchParams }: PageProps) {
                 )}
                 {currentPage < totalPages && (
                   <Link
-                    href={`/dashboard/employee/clients?page=${currentPage + 1}${searchParams.search ? `&search=${searchParams.search}` : ''}${searchParams.status ? `&status=${searchParams.status}` : ''}`}
+                    href={`/dashboard/employee/clients?page=${currentPage + 1}${resolvedSearchParams.search ? `&search=${resolvedSearchParams.search}` : ''}${resolvedSearchParams.status ? `&status=${resolvedSearchParams.status}` : ''}`}
                     className="btn-outline px-4 py-2 text-sm"
                   >
                     Suivant →

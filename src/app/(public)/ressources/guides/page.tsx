@@ -1,75 +1,119 @@
+'use client';
 export const dynamic = 'force-dynamic';
 /**
  * PAGE GUIDES & RESSOURCES
  */
 
-export const metadata = {
-  title: 'Guides | Formations Pro',
-  description: 'Guides pratiques, ebooks et ressources téléchargeables.',
-};
+import { useState, useEffect } from 'react';
 
-const guides = [
-  {
-    id: 'guide-lms-2026',
-    title: 'Guide complet pour choisir votre LMS en 2026',
-    description: 'Critères, comparatifs et checklist pour sélectionner la plateforme idéale.',
-    category: 'Achat',
-    pages: 45,
-    format: 'PDF',
-    featured: true,
-  },
-  {
-    id: 'roi-formation',
-    title: 'Comment mesurer le ROI de vos formations',
-    description: 'Méthodes, KPIs et outils pour évaluer l\'impact de vos programmes.',
-    category: 'Stratégie',
-    pages: 32,
-    format: 'PDF',
-    featured: true,
-  },
-  {
-    id: 'onboarding-efficace',
-    title: 'Template: Parcours d\'onboarding efficace',
-    description: 'Modèle prêt à l\'emploi pour intégrer vos nouveaux employés.',
-    category: 'Template',
-    pages: 15,
-    format: 'PDF + Excel',
-    featured: false,
-  },
-  {
-    id: 'microlearning',
-    title: 'Microlearning: Guide de mise en œuvre',
-    description: 'Stratégies et bonnes pratiques pour des formations courtes et efficaces.',
-    category: 'Pédagogie',
-    pages: 28,
-    format: 'PDF',
-    featured: false,
-  },
-  {
-    id: 'conformite-formation',
-    title: 'Checklist conformité formation',
-    description: 'Vérifiez que vos programmes respectent les obligations réglementaires.',
-    category: 'Conformité',
-    pages: 12,
-    format: 'PDF + Checklist',
-    featured: false,
-  },
-  {
-    id: 'engagement-apprenants',
-    title: '50 techniques pour engager vos apprenants',
-    description: 'Idées concrètes pour améliorer la participation et la complétion.',
-    category: 'Pédagogie',
-    pages: 38,
-    format: 'PDF',
-    featured: false,
-  },
-];
-
-const categories = ['Tous', 'Stratégie', 'Pédagogie', 'Achat', 'Template', 'Conformité'];
+interface Guide {
+  id: string;
+  title: string;
+  slug: string;
+  description: string | null;
+  category: string | null;
+  fileUrl: string | null;
+  thumbnailUrl: string | null;
+  format: string | null;
+  pageCount: number | null;
+  isFeatured: boolean;
+  downloadCount: number;
+  locale: string | null;
+}
 
 export default function GuidesPage() {
-  const featured = guides.filter(g => g.featured);
-  const others = guides.filter(g => !g.featured);
+  const [guides, setGuides] = useState<Guide[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/guides')
+      .then((res) => res.json())
+      .then((data) => {
+        setGuides(data.guides ?? []);
+      })
+      .catch((err) => {
+        console.error('Failed to fetch guides:', err);
+        setGuides([]);
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  const categories: string[] = ['Tous', ...Array.from(new Set(guides.map((g) => g.category).filter(Boolean) as string[]))];
+
+  const featured = guides.filter((g) => g.isFeatured);
+  const others = guides.filter((g) => !g.isFeatured);
+
+  if (loading) {
+    return (
+      <div style={{ backgroundColor: 'var(--gray-100)' }}>
+        {/* Hero */}
+        <section
+          style={{
+            backgroundColor: 'var(--gray-500)',
+            color: 'white',
+            padding: '64px 24px',
+            textAlign: 'center',
+          }}
+        >
+          <h1 style={{ fontSize: '42px', fontWeight: 700, marginBottom: '16px' }}>
+            Guides & Ressources
+          </h1>
+          <p style={{ fontSize: '18px', opacity: 0.9 }}>
+            Ebooks, templates et guides pratiques pour optimiser vos formations.
+          </p>
+        </section>
+
+        <section style={{ padding: '64px 24px', textAlign: 'center' }}>
+          <p style={{ fontSize: '16px', color: 'var(--gray-400)' }}>Chargement des guides...</p>
+        </section>
+      </div>
+    );
+  }
+
+  if (guides.length === 0) {
+    return (
+      <div style={{ backgroundColor: 'var(--gray-100)' }}>
+        {/* Hero */}
+        <section
+          style={{
+            backgroundColor: 'var(--gray-500)',
+            color: 'white',
+            padding: '64px 24px',
+            textAlign: 'center',
+          }}
+        >
+          <h1 style={{ fontSize: '42px', fontWeight: 700, marginBottom: '16px' }}>
+            Guides & Ressources
+          </h1>
+          <p style={{ fontSize: '18px', opacity: 0.9 }}>
+            Ebooks, templates et guides pratiques pour optimiser vos formations.
+          </p>
+        </section>
+
+        <section style={{ padding: '64px 24px', textAlign: 'center' }}>
+          <p style={{ fontSize: '16px', color: 'var(--gray-400)' }}>
+            Aucun guide disponible pour le moment. Revenez bientôt !
+          </p>
+        </section>
+
+        {/* Newsletter */}
+        <section style={{ backgroundColor: 'white', padding: '64px 24px', textAlign: 'center' }}>
+          <div style={{ maxWidth: '500px', margin: '0 auto' }}>
+            <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '16px', color: 'var(--gray-500)' }}>
+              Recevez nos nouvelles ressources
+            </h2>
+            <p style={{ fontSize: '14px', color: 'var(--gray-400)', marginBottom: '24px' }}>
+              Inscrivez-vous pour recevoir nos guides et templates dès leur publication.
+            </p>
+            <form style={{ display: 'flex', gap: '12px' }}>
+              <input type="email" placeholder="Votre courriel" className="form-input" style={{ flex: 1 }} />
+              <button type="submit" className="btn btn-primary">S&apos;inscrire</button>
+            </form>
+          </div>
+        </section>
+      </div>
+    );
+  }
 
   return (
     <div style={{ backgroundColor: 'var(--gray-100)' }}>
@@ -131,7 +175,7 @@ export default function GuidesPage() {
                   </p>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ fontSize: '12px', color: 'var(--gray-400)' }}>
-                      {guide.pages} pages • {guide.format}
+                      {guide.pageCount} pages {guide.format ? `\u2022 ${guide.format}` : ''}
                     </span>
                     <button className="btn btn-primary" style={{ padding: '8px 16px', fontSize: '13px' }}>
                       Télécharger
@@ -199,7 +243,7 @@ export default function GuidesPage() {
                     </p>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span style={{ fontSize: '12px', color: 'var(--gray-400)' }}>
-                        {guide.pages} pages
+                        {guide.pageCount} pages
                       </span>
                       <button className="btn btn-secondary" style={{ padding: '6px 12px', fontSize: '12px' }}>
                         Télécharger
@@ -224,7 +268,7 @@ export default function GuidesPage() {
           </p>
           <form style={{ display: 'flex', gap: '12px' }}>
             <input type="email" placeholder="Votre courriel" className="form-input" style={{ flex: 1 }} />
-            <button type="submit" className="btn btn-primary">S'inscrire</button>
+            <button type="submit" className="btn btn-primary">S&apos;inscrire</button>
           </form>
         </div>
       </section>

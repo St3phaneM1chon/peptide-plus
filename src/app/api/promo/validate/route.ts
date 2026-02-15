@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * API Validation Code Promo - BioCycle Peptides
  * Valide les codes promotionnels depuis la base de données

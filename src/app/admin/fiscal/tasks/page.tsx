@@ -21,6 +21,7 @@ import {
   StatusBadge,
 } from '@/components/admin';
 import { getAllCountriesWithCompliance } from '@/lib/countryObligations';
+import { useI18n } from '@/i18n/client';
 
 interface TaskWithCountry {
   id: string;
@@ -45,7 +46,8 @@ interface TaxReportTask {
 }
 
 export default function FiscalTasksPage() {
-  const countries = getAllCountriesWithCompliance();
+  const { t, locale } = useI18n();
+  const countries = useMemo(() => getAllCountriesWithCompliance(), []);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [apiReportTasks, setApiReportTasks] = useState<TaxReportTask[]>([]);
@@ -71,7 +73,7 @@ export default function FiscalTasksPage() {
           setApiReportTasks(reports);
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Erreur inconnue');
+        setError(err instanceof Error ? err.message : t('admin.fiscalTasks.unknownError'));
       } finally {
         setLoading(false);
       }
@@ -101,11 +103,11 @@ export default function FiscalTasksPage() {
         const daysUntil = Math.ceil((new Date(report.dueDate).getTime() - Date.now()) / 86400000);
         tasks.push({
           id: `report-${report.id}`,
-          name: `${report.status === 'GENERATED' ? 'Declarer' : 'Payer'} ${report.region} - ${report.period}`,
-          nameFr: `${report.status === 'GENERATED' ? 'Declarer' : 'Payer'} ${report.region} - ${report.period}`,
-          description: `Rapport fiscal ${report.region} pour la periode ${report.period}. Echeance: ${new Date(report.dueDate).toLocaleDateString('fr-CA')}`,
-          descriptionFr: `Rapport fiscal ${report.region} pour la periode ${report.period}`,
-          dueDate: new Date(report.dueDate).toLocaleDateString('fr-CA'),
+          name: `${report.status === 'GENERATED' ? t('admin.fiscalTasks.declare') : t('admin.fiscalTasks.pay')} ${report.region} - ${report.period}`,
+          nameFr: `${report.status === 'GENERATED' ? t('admin.fiscalTasks.declare') : t('admin.fiscalTasks.pay')} ${report.region} - ${report.period}`,
+          description: t('admin.fiscalTasks.fiscalReport').replace('{region}', report.region).replace('{period}', report.period).replace('{date}', new Date(report.dueDate).toLocaleDateString(locale)),
+          descriptionFr: t('admin.fiscalTasks.fiscalReportShort').replace('{region}', report.region).replace('{period}', report.period),
+          dueDate: new Date(report.dueDate).toLocaleDateString(locale),
           frequency: 'monthly',
           countryCode: report.regionCode,
           countryName: report.region,
@@ -116,15 +118,20 @@ export default function FiscalTasksPage() {
     return tasks;
   }, [countries, apiReportTasks]);
 
-  const [tasks, setTasks] = useState<TaskWithCountry[]>([]);
+  const [toggledTasks, setToggledTasks] = useState<Set<string>>(new Set());
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterFrequency, setFilterFrequency] = useState<string>('all');
   const [filterCountry, setFilterCountry] = useState<string>('all');
 
-  // Update tasks when allTasks changes
-  useEffect(() => {
-    setTasks(allTasks);
-  }, [allTasks]);
+  // Apply toggled status overrides to allTasks
+  const tasks = useMemo(() => {
+    return allTasks.map(task => {
+      if (toggledTasks.has(task.id)) {
+        return { ...task, status: task.status === 'completed' ? 'pending' as const : 'completed' as const };
+      }
+      return task;
+    });
+  }, [allTasks, toggledTasks]);
 
   // Filter tasks
   const filteredTasks = useMemo(() => {
@@ -136,7 +143,7 @@ export default function FiscalTasksPage() {
     });
   }, [tasks, filterStatus, filterFrequency, filterCountry]);
 
-  // Group tasks by due date period
+  // Group tasks by real due date proximity
   const groupedTasks = useMemo(() => {
     const groups: Record<string, TaskWithCountry[]> = {
       'urgent': [],
@@ -145,23 +152,71 @@ export default function FiscalTasksPage() {
       'later': [],
     };
 
-    // For demo, we'll just distribute them
-    filteredTasks.forEach((task, index) => {
-      if (index % 4 === 0) groups.urgent.push(task);
-      else if (index % 4 === 1) groups.thisMonth.push(task);
-      else if (index % 4 === 2) groups.thisQuarter.push(task);
-      else groups.later.push(task);
+    const now = new Date();
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    const endOfQuarter = new Date(now.getFullYear(), Math.ceil((now.getMonth() + 1) / 3) * 3, 0);
+
+    filteredTasks.forEach((task) => {
+      // Overdue tasks are always urgent
+      if (task.status === 'overdue') {
+        groups.urgent.push(task);
+        return;
+      }
+
+      // Parse the due date - try ISO format first, then localized
+      let dueDate: Date | null = null;
+      const isoMatch = task.dueDate.match(/\d{4}-\d{2}-\d{2}/);
+      if (isoMatch) {
+        dueDate = new Date(isoMatch[0]);
+      } else {
+        // Try parsing localized date
+        const parsed = new Date(task.dueDate);
+        if (!isNaN(parsed.getTime())) {
+          dueDate = parsed;
+        }
+      }
+
+      if (!dueDate || isNaN(dueDate.getTime())) {
+        // Can't parse date - put in later
+        groups.later.push(task);
+        return;
+      }
+
+      const daysUntil = Math.ceil((dueDate.getTime() - now.getTime()) / 86400000);
+
+      if (daysUntil < 0 || daysUntil <= 7) {
+        groups.urgent.push(task);
+      } else if (dueDate <= endOfMonth) {
+        groups.thisMonth.push(task);
+      } else if (dueDate <= endOfQuarter) {
+        groups.thisQuarter.push(task);
+      } else {
+        groups.later.push(task);
+      }
     });
+
+    // Sort each group by due date (earliest first)
+    const sortByDate = (a: TaskWithCountry, b: TaskWithCountry) => {
+      return a.dueDate.localeCompare(b.dueDate);
+    };
+    groups.urgent.sort(sortByDate);
+    groups.thisMonth.sort(sortByDate);
+    groups.thisQuarter.sort(sortByDate);
+    groups.later.sort(sortByDate);
 
     return groups;
   }, [filteredTasks]);
 
   const toggleTaskStatus = (taskId: string) => {
-    setTasks(prev => prev.map(t =>
-      t.id === taskId
-        ? { ...t, status: t.status === 'completed' ? 'pending' : 'completed' as const }
-        : t
-    ));
+    setToggledTasks(prev => {
+      const next = new Set(prev);
+      if (next.has(taskId)) {
+        next.delete(taskId);
+      } else {
+        next.add(taskId);
+      }
+      return next;
+    });
   };
 
   const stats = useMemo(() => ({
@@ -171,55 +226,61 @@ export default function FiscalTasksPage() {
     overdue: tasks.filter(t => t.status === 'overdue').length,
   }), [tasks]);
 
-  if (loading) return <div className="p-8 text-center">Chargement...</div>;
-  if (error) return <div className="p-8 text-center text-red-600">Erreur: {error}</div>;
+  const frequencyLabel = (freq: string) => {
+    if (freq === 'monthly') return t('admin.fiscalTasks.frequency.monthly');
+    if (freq === 'quarterly') return t('admin.fiscalTasks.frequency.quarterly');
+    return t('admin.fiscalTasks.frequency.annual');
+  };
+
+  if (loading) return <div className="p-8 text-center">{t('admin.fiscalTasks.loading')}</div>;
+  if (error) return <div className="p-8 text-center text-red-600">{t('admin.fiscalTasks.errorPrefix')} {error}</div>;
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Taches & Echeances Fiscales"
-        subtitle="Suivi des declarations et obligations pour tous les pays"
+        title={t('admin.fiscalTasks.title')}
+        subtitle={t('admin.fiscalTasks.subtitle')}
         backHref="/admin/fiscal"
-        backLabel="Obligations Fiscales"
+        backLabel={t('admin.fiscalTasks.backLabel')}
         actions={
           <Button variant="primary" icon={Plus}>
-            Ajouter une tache
+            {t('admin.fiscalTasks.addTask')}
           </Button>
         }
       />
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <StatCard label="Taches totales" value={stats.total} icon={ListTodo} />
-        <StatCard label="En attente" value={stats.pending} icon={Clock} />
-        <StatCard label="Completees" value={stats.completed} icon={CheckCircle2} />
-        <StatCard label="En retard" value={stats.overdue} icon={AlertTriangle} />
+        <StatCard label={t('admin.fiscalTasks.stats.totalTasks')} value={stats.total} icon={ListTodo} />
+        <StatCard label={t('admin.fiscalTasks.stats.pending')} value={stats.pending} icon={Clock} />
+        <StatCard label={t('admin.fiscalTasks.stats.completed')} value={stats.completed} icon={CheckCircle2} />
+        <StatCard label={t('admin.fiscalTasks.stats.overdue')} value={stats.overdue} icon={AlertTriangle} />
       </div>
 
       {/* Filters */}
       <FilterBar>
         <SelectFilter
-          label="Tous les statuts"
+          label={t('admin.fiscalTasks.filters.allStatuses')}
           value={filterStatus === 'all' ? '' : filterStatus}
           onChange={(v) => setFilterStatus(v || 'all')}
           options={[
-            { value: 'pending', label: 'En attente' },
-            { value: 'completed', label: 'Completees' },
-            { value: 'overdue', label: 'En retard' },
+            { value: 'pending', label: t('admin.fiscalTasks.filters.pending') },
+            { value: 'completed', label: t('admin.fiscalTasks.filters.completed') },
+            { value: 'overdue', label: t('admin.fiscalTasks.filters.overdue') },
           ]}
         />
         <SelectFilter
-          label="Toutes les frequences"
+          label={t('admin.fiscalTasks.filters.allFrequencies')}
           value={filterFrequency === 'all' ? '' : filterFrequency}
           onChange={(v) => setFilterFrequency(v || 'all')}
           options={[
-            { value: 'monthly', label: 'Mensuelle' },
-            { value: 'quarterly', label: 'Trimestrielle' },
-            { value: 'annually', label: 'Annuelle' },
+            { value: 'monthly', label: t('admin.fiscalTasks.filters.monthly') },
+            { value: 'quarterly', label: t('admin.fiscalTasks.filters.quarterly') },
+            { value: 'annually', label: t('admin.fiscalTasks.filters.annually') },
           ]}
         />
         <SelectFilter
-          label="Tous les pays"
+          label={t('admin.fiscalTasks.filters.allCountries')}
           value={filterCountry === 'all' ? '' : filterCountry}
           onChange={(v) => setFilterCountry(v || 'all')}
           options={countries.map(c => ({ value: c.code, label: c.name }))}
@@ -230,45 +291,49 @@ export default function FiscalTasksPage() {
       <div className="space-y-6">
         {groupedTasks.urgent.length > 0 && (
           <TaskGroup
-            title="Urgent - Cette semaine"
+            title={t('admin.fiscalTasks.groups.urgent')}
             icon={<AlertTriangle className="w-5 h-5 text-red-500" />}
             tasks={groupedTasks.urgent}
             onToggle={toggleTaskStatus}
             bgColor="bg-red-50"
             borderColor="border-red-200"
+            frequencyLabel={frequencyLabel}
           />
         )}
 
         {groupedTasks.thisMonth.length > 0 && (
           <TaskGroup
-            title="Ce mois-ci"
+            title={t('admin.fiscalTasks.groups.thisMonth')}
             icon={<CalendarDays className="w-5 h-5 text-yellow-600" />}
             tasks={groupedTasks.thisMonth}
             onToggle={toggleTaskStatus}
             bgColor="bg-yellow-50"
             borderColor="border-yellow-200"
+            frequencyLabel={frequencyLabel}
           />
         )}
 
         {groupedTasks.thisQuarter.length > 0 && (
           <TaskGroup
-            title="Ce trimestre"
+            title={t('admin.fiscalTasks.groups.thisQuarter')}
             icon={<Clock className="w-5 h-5 text-sky-600" />}
             tasks={groupedTasks.thisQuarter}
             onToggle={toggleTaskStatus}
             bgColor="bg-sky-50"
             borderColor="border-sky-200"
+            frequencyLabel={frequencyLabel}
           />
         )}
 
         {groupedTasks.later.length > 0 && (
           <TaskGroup
-            title="Plus tard"
+            title={t('admin.fiscalTasks.groups.later')}
             icon={<ListTodo className="w-5 h-5 text-slate-500" />}
             tasks={groupedTasks.later}
             onToggle={toggleTaskStatus}
             bgColor="bg-slate-50"
             borderColor="border-slate-200"
+            frequencyLabel={frequencyLabel}
           />
         )}
       </div>
@@ -276,8 +341,8 @@ export default function FiscalTasksPage() {
       {filteredTasks.length === 0 && (
         <EmptyState
           icon={ListTodo}
-          title="Aucune tache trouvee"
-          description="Aucune tache trouvee avec ces criteres"
+          title={t('admin.fiscalTasks.emptyTitle')}
+          description={t('admin.fiscalTasks.emptyDescription')}
         />
       )}
     </div>
@@ -290,7 +355,8 @@ function TaskGroup({
   tasks,
   onToggle,
   bgColor,
-  borderColor
+  borderColor,
+  frequencyLabel
 }: {
   title: string;
   icon: React.ReactNode;
@@ -298,6 +364,7 @@ function TaskGroup({
   onToggle: (id: string) => void;
   bgColor: string;
   borderColor: string;
+  frequencyLabel: (freq: string) => string;
 }) {
   return (
     <div className={`rounded-xl ${bgColor} border ${borderColor} overflow-hidden`}>
@@ -338,8 +405,7 @@ function TaskGroup({
                       task.frequency === 'quarterly' ? 'primary' :
                       'warning'
                     }>
-                      {task.frequency === 'monthly' ? 'Mensuel' :
-                       task.frequency === 'quarterly' ? 'Trimestriel' : 'Annuel'}
+                      {frequencyLabel(task.frequency)}
                     </StatusBadge>
                     <Link
                       href={`/admin/fiscal/country/${task.countryCode}`}
@@ -352,7 +418,7 @@ function TaskGroup({
                 <p className="text-sm text-slate-600 mt-1">{task.description}</p>
                 <div className="flex items-center gap-1.5 mt-2 text-xs text-slate-500">
                   <CalendarDays className="w-3.5 h-3.5" />
-                  <span>Echeance: {task.dueDate}</span>
+                  <span>{task.dueDate}</span>
                 </div>
               </div>
             </div>

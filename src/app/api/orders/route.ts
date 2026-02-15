@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * API Commandes utilisateur
  * GET /api/orders - Liste les commandes de l'utilisateur connecté
@@ -35,7 +37,47 @@ export async function GET() {
       },
     });
 
-    return NextResponse.json({ orders });
+    // Format orders with properly structured addresses
+    const formattedOrders = orders.map((order) => {
+      // Parse name into first and last name
+      const nameParts = (order.shippingName || '').split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+
+      return {
+        ...order,
+        shippingAddress: {
+          firstName,
+          lastName,
+          address1: order.shippingAddress1,
+          address2: order.shippingAddress2,
+          city: order.shippingCity,
+          province: order.shippingState,
+          postalCode: order.shippingPostal,
+          country: order.shippingCountry,
+          phone: order.shippingPhone,
+        },
+        billingAddress: {
+          firstName,
+          lastName,
+          address1: order.shippingAddress1,
+          address2: order.shippingAddress2,
+          city: order.shippingCity,
+          province: order.shippingState,
+          postalCode: order.shippingPostal,
+          country: order.shippingCountry,
+          phone: order.shippingPhone,
+        },
+        taxDetails: {
+          gst: order.taxTps,
+          pst: order.taxPst,
+          qst: order.taxTvq,
+          hst: order.taxTvh,
+        },
+      };
+    });
+
+    return NextResponse.json({ orders: formattedOrders });
 
   } catch (error) {
     console.error('Get orders error:', error);

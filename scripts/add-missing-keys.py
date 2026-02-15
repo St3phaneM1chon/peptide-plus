@@ -106,10 +106,10 @@ def update_locale(locale_path, locale_code):
     """Add missing keys to a locale file"""
     with open(locale_path, 'r', encoding='utf-8') as f:
         data = json.load(f)
-    
+
     # Map locale to base language code
     base_locale = locale_code.split('-')[0]  # ar-dz -> ar
-    
+
     # Add missing keys
     for section, keys in MISSING_KEYS.items():
         if section not in data:
@@ -117,19 +117,19 @@ def update_locale(locale_path, locale_code):
         for key, translations in keys.items():
             if key not in data[section]:
                 data[section][key] = get_translation(translations, base_locale)
-    
+
     with open(locale_path, 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
-    
+
     print(f"Updated: {locale_code}")
 
 def main():
     locale_dir = "/Volumes/AI_Project/peptide-plus/src/i18n/locales"
-    
+
     for locale_file in glob.glob(f"{locale_dir}/*.json"):
         locale_code = os.path.basename(locale_file).replace('.json', '')
         update_locale(locale_file, locale_code)
-    
+
     print("\nAll missing keys added!")
 
 if __name__ == "__main__":

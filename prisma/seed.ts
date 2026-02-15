@@ -118,6 +118,18 @@ async function main() {
         isActive: true,
       },
     }),
+    prisma.currency.upsert({
+      where: { code: 'GBP' },
+      update: {},
+      create: {
+        code: 'GBP',
+        name: 'British Pound',
+        symbol: '£',
+        exchangeRate: 0.580000,
+        isDefault: false,
+        isActive: true,
+      },
+    }),
   ]);
 
   // =====================================================

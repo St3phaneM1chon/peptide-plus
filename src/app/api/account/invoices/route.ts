@@ -1,77 +1,127 @@
+export const dynamic = 'force-dynamic';
 /**
- * API Factures client
- * GET /api/account/invoices - Liste les factures du client connecté
+ * API - List user invoices (paid orders)
+ * GET /api/account/invoices
+ * Supports: ?page=1&limit=10&from=2025-01-01&to=2025-12-31
  */
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
-import { db } from '@/lib/db';
+import { prisma } from '@/lib/db';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const session = await auth();
 
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
-    const user = await db.user.findUnique({
-      where: { email: session.user.email },
-      select: { id: true },
-    });
+    const { searchParams } = new URL(request.url);
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
+    const limit = Math.min(50, Math.max(1, parseInt(searchParams.get('limit') || '10', 10)));
+    const from = searchParams.get('from');
+    const to = searchParams.get('to');
 
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    // Build date range filter
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const dateFilter: Record<string, any> = {};
+    if (from) {
+      const fromDate = new Date(from);
+      if (!isNaN(fromDate.getTime())) {
+        dateFilter.gte = fromDate;
+      }
+    }
+    if (to) {
+      const toDate = new Date(to);
+      if (!isNaN(toDate.getTime())) {
+        toDate.setHours(23, 59, 59, 999);
+        dateFilter.lte = toDate;
+      }
     }
 
-    const invoices = await db.customerInvoice.findMany({
-      where: { customerId: user.id },
+    const where = {
+      userId: session.user.id,
+      paymentStatus: 'PAID',
+      ...(Object.keys(dateFilter).length > 0 ? { createdAt: dateFilter } : {}),
+    };
+
+    // Get total count for pagination
+    const total = await prisma.order.count({ where });
+
+    // Fetch paginated orders with items
+    const orders = await prisma.order.findMany({
+      where,
       include: {
-        items: true,
+        items: {
+          select: {
+            id: true,
+            productName: true,
+            formatName: true,
+            quantity: true,
+            unitPrice: true,
+            total: true,
+          },
+        },
+        currency: {
+          select: {
+            code: true,
+            symbol: true,
+          },
+        },
       },
-      orderBy: { invoiceDate: 'desc' },
+      orderBy: { createdAt: 'desc' },
+      skip: (page - 1) * limit,
+      take: limit,
     });
+
+    // Convert Decimal fields to Number
+    const invoices = orders.map((order) => ({
+      id: order.id,
+      orderNumber: order.orderNumber,
+      invoiceNumber: `INV-${order.orderNumber}`,
+      date: order.createdAt.toISOString(),
+      subtotal: Number(order.subtotal),
+      shippingCost: Number(order.shippingCost),
+      discount: Number(order.discount),
+      taxTps: Number(order.taxTps),
+      taxTvq: Number(order.taxTvq),
+      taxTvh: Number(order.taxTvh),
+      taxPst: Number(order.taxPst),
+      total: Number(order.total),
+      paymentStatus: order.paymentStatus,
+      paymentMethod: order.paymentMethod,
+      currency: order.currency ? {
+        code: order.currency.code,
+        symbol: order.currency.symbol,
+      } : { code: 'CAD', symbol: '$' },
+      itemCount: order.items.length,
+      items: order.items.map((item) => ({
+        id: item.id,
+        productName: item.productName,
+        formatName: item.formatName,
+        quantity: item.quantity,
+        unitPrice: Number(item.unitPrice),
+        total: Number(item.total),
+      })),
+    }));
 
     return NextResponse.json({
-      invoices: invoices.map((inv) => ({
-        id: inv.id,
-        invoiceNumber: inv.invoiceNumber,
-        orderId: inv.orderId,
-        customerName: inv.customerName,
-        customerEmail: inv.customerEmail,
-        subtotal: Number(inv.subtotal),
-        shippingCost: Number(inv.shippingCost),
-        discount: Number(inv.discount),
-        taxTps: Number(inv.taxTps),
-        taxTvq: Number(inv.taxTvq),
-        taxTvh: Number(inv.taxTvh),
-        taxPst: Number(inv.taxPst),
-        total: Number(inv.total),
-        amountPaid: Number(inv.amountPaid),
-        balance: Number(inv.balance),
-        currency: inv.currency,
-        invoiceDate: inv.invoiceDate.toISOString(),
-        dueDate: inv.dueDate.toISOString(),
-        paidAt: inv.paidAt?.toISOString() || null,
-        status: inv.status,
-        pdfUrl: inv.pdfUrl,
-        notes: inv.notes,
-        items: inv.items.map((item) => ({
-          id: item.id,
-          description: item.description,
-          quantity: item.quantity,
-          unitPrice: Number(item.unitPrice),
-          discount: Number(item.discount),
-          total: Number(item.total),
-          productId: item.productId,
-          productSku: item.productSku,
-        })),
-      })),
+      invoices,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
     });
   } catch (error) {
     console.error('Error fetching invoices:', error);
     return NextResponse.json(
-      { error: 'Erreur lors de la récupération des factures' },
+      { error: 'Failed to fetch invoices' },
       { status: 500 }
     );
   }

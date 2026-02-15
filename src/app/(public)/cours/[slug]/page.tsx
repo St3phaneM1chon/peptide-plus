@@ -7,11 +7,12 @@ export const dynamic = 'force-dynamic';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import DOMPurify from 'isomorphic-dompurify';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth-config';
 
 interface CoursePageProps {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }
 
 async function getProduct(slug: string) {
@@ -27,7 +28,8 @@ async function getProduct(slug: string) {
 }
 
 export default async function CoursePage({ params }: CoursePageProps) {
-  const product = await getProduct(params.slug);
+  const { slug } = await params;
+  const product = await getProduct(slug);
   const session = await auth();
 
   if (!product) {

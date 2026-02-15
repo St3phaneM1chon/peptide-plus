@@ -1,27 +1,94 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useI18n } from '@/i18n/client';
+import { toast } from 'sonner';
+import { CANADIAN_PROVINCES } from '@/lib/canadianTaxes';
 
 /**
- * SECURITY: Safe formula evaluator - replaces eval()
- * Only supports basic arithmetic: +, -, *, /, (, ), and named variables
+ * SECURITY: Safe formula evaluator using a recursive descent parser.
+ * Only supports basic arithmetic: +, -, *, /, (, ), and named variables.
+ * No eval() or new Function() - fully parsed and computed manually.
  */
 function safeEvalFormula(formula: string, vars: Record<string, number>): number {
   try {
-    // Replace variable names with their values
+    // Replace variable names with their values (word-boundary safe)
     let expr = formula;
-    for (const [key, value] of Object.entries(vars)) {
-      expr = expr.replace(new RegExp(`\\b${key}\\b`, 'g'), String(value));
+    // Sort variable names by length descending to avoid partial replacements
+    const sortedKeys = Object.keys(vars).sort((a, b) => b.length - a.length);
+    for (const key of sortedKeys) {
+      expr = expr.replace(new RegExp(`\\b${key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'g'), String(vars[key]));
     }
     // Validate: only allow digits, decimal points, arithmetic operators, parentheses, spaces
     if (!/^[\d\s+\-*/().]+$/.test(expr)) {
       return 0;
     }
-    // Use Function with validated expression (safe because we verified the character set)
-    return Number(new Function(`"use strict"; return (${expr})`)()) || 0;
+    return Number(parseArithmeticExpr(expr)) || 0;
   } catch {
     return 0;
   }
+}
+
+/**
+ * Recursive descent parser for safe arithmetic evaluation.
+ * Grammar: expr = term (('+' | '-') term)*
+ *          term = factor (('*' | '/') factor)*
+ *          factor = unary | '(' expr ')' | number
+ *          unary = ('-' | '+') factor
+ */
+function parseArithmeticExpr(input: string): number {
+  const tokens = input.match(/(\d+\.?\d*|[+\-*/()])/g) || [];
+  let pos = 0;
+
+  function peek(): string | undefined { return tokens[pos]; }
+  function consume(): string { return tokens[pos++]; }
+
+  function parseExpr(): number {
+    let result = parseTerm();
+    while (peek() === '+' || peek() === '-') {
+      const op = consume();
+      const right = parseTerm();
+      result = op === '+' ? result + right : result - right;
+    }
+    return result;
+  }
+
+  function parseTerm(): number {
+    let result = parseFactor();
+    while (peek() === '*' || peek() === '/') {
+      const op = consume();
+      const right = parseFactor();
+      result = op === '*' ? result * right : right !== 0 ? result / right : 0;
+    }
+    return result;
+  }
+
+  function parseFactor(): number {
+    // Unary minus / plus
+    if (peek() === '-') {
+      consume();
+      return -parseFactor();
+    }
+    if (peek() === '+') {
+      consume();
+      return parseFactor();
+    }
+    // Parenthesized expression
+    if (peek() === '(') {
+      consume(); // '('
+      const result = parseExpr();
+      if (peek() === ')') consume(); // ')'
+      return result;
+    }
+    // Number
+    const token = consume();
+    const num = parseFloat(token);
+    if (isNaN(num)) return 0;
+    return num;
+  }
+
+  const result = parseExpr();
+  return result;
 }
 
 interface Template {
@@ -51,29 +118,37 @@ const categoryColors: Record<string, string> = {
   OTHER: 'bg-neutral-700 text-neutral-300',
 };
 
-const categoryLabels: Record<string, string> = {
-  SALES: 'Ventes',
-  PURCHASES: 'Achats',
-  PAYROLL: 'Salaires',
-  TAXES: 'Taxes',
-  ADJUSTMENTS: 'Ajustements',
-  OTHER: 'Autres',
-};
-
 export default function QuickEntryPage() {
+  const { t, locale } = useI18n();
+
+  const categoryLabels: Record<string, string> = {
+    SALES: t('admin.quickEntry.categorySales'),
+    PURCHASES: t('admin.quickEntry.categoryPurchases'),
+    PAYROLL: t('admin.quickEntry.categoryPayroll'),
+    TAXES: t('admin.quickEntry.categoryTaxes'),
+    ADJUSTMENTS: t('admin.quickEntry.categoryAdjustments'),
+    OTHER: t('admin.quickEntry.categoryOther'),
+  };
+
+  // Use real tax rates from the Canadian provinces library
+  const qcTax = CANADIAN_PROVINCES.QC;
+  const gstRate = qcTax.gst || 0.05;
+  const qstRate = qcTax.qst || 0.09975;
+  const totalTaxRate = qcTax.totalRate || 0.14975;
+
   const defaultTemplates: Template[] = [
     {
       id: 'tpl-1',
       name: 'Vente avec taxes (QC)',
       category: 'SALES',
-      description: 'Vente à un client québécois avec TPS/TVQ',
+      description: 'Vente \u00e0 un client qu\u00e9b\u00e9cois avec TPS/TVQ',
       shortcut: 'Ctrl+Shift+V',
       frequency: 45,
       lines: [
-        { accountCode: '1110', accountName: 'Comptes clients', debitFormula: 'amount * 1.14975' },
+        { accountCode: '1110', accountName: 'Comptes clients', debitFormula: `amount * ${1 + totalTaxRate}` },
         { accountCode: '4010', accountName: 'Ventes', creditFormula: 'amount' },
-        { accountCode: '2110', accountName: 'TPS à payer', creditFormula: 'amount * 0.05' },
-        { accountCode: '2120', accountName: 'TVQ à payer', creditFormula: 'amount * 0.09975' },
+        { accountCode: '2110', accountName: 'TPS \u00e0 payer', creditFormula: `amount * ${gstRate}` },
+        { accountCode: '2120', accountName: 'TVQ \u00e0 payer', creditFormula: `amount * ${qstRate}` },
       ],
     },
     {
@@ -85,9 +160,9 @@ export default function QuickEntryPage() {
       frequency: 32,
       lines: [
         { accountCode: '5010', accountName: 'Achats', debitFormula: 'amount' },
-        { accountCode: '1115', accountName: 'TPS à recevoir', debitFormula: 'amount * 0.05' },
-        { accountCode: '1116', accountName: 'TVQ à recevoir', debitFormula: 'amount * 0.09975' },
-        { accountCode: '2000', accountName: 'Fournisseurs', creditFormula: 'amount * 1.14975' },
+        { accountCode: '1115', accountName: 'TPS \u00e0 recevoir', debitFormula: `amount * ${gstRate}` },
+        { accountCode: '1116', accountName: 'TVQ \u00e0 recevoir', debitFormula: `amount * ${qstRate}` },
+        { accountCode: '2000', accountName: 'Fournisseurs', creditFormula: `amount * ${1 + totalTaxRate}` },
       ],
     },
     {
@@ -106,7 +181,7 @@ export default function QuickEntryPage() {
       id: 'tpl-4',
       name: 'Frais de livraison',
       category: 'PURCHASES',
-      description: 'Frais de livraison payés',
+      description: 'Frais de livraison pay\u00e9s',
       frequency: 22,
       lines: [
         { accountCode: '6010', accountName: 'Frais de livraison', debitFormula: 'amount' },
@@ -117,11 +192,11 @@ export default function QuickEntryPage() {
       id: 'tpl-5',
       name: 'Paiement TPS/TVQ',
       category: 'TAXES',
-      description: 'Paiement des taxes à Revenu Québec',
+      description: 'Paiement des taxes \u00e0 Revenu Qu\u00e9bec',
       frequency: 4,
       lines: [
-        { accountCode: '2110', accountName: 'TPS à payer', debitFormula: 'gst' },
-        { accountCode: '2120', accountName: 'TVQ à payer', debitFormula: 'qst' },
+        { accountCode: '2110', accountName: 'TPS \u00e0 payer', debitFormula: 'gst' },
+        { accountCode: '2120', accountName: 'TVQ \u00e0 payer', debitFormula: 'qst' },
         { accountCode: '1010', accountName: 'Compte bancaire', creditFormula: 'gst + qst' },
       ],
     },
@@ -133,7 +208,7 @@ export default function QuickEntryPage() {
       frequency: 12,
       lines: [
         { accountCode: '6800', accountName: 'Amortissement', debitFormula: 'amount' },
-        { accountCode: '1590', accountName: 'Amort. cumulé', creditFormula: 'amount' },
+        { accountCode: '1590', accountName: 'Amort. cumul\u00e9', creditFormula: 'amount' },
       ],
     },
   ];
@@ -153,12 +228,12 @@ export default function QuickEntryPage() {
         const res = await fetch('/api/accounting/entries?limit=5');
         if (res.ok) {
           const data = await res.json();
-          const mapped: RecentEntry[] = (data.entries || []).slice(0, 5).map((e: any) => ({
-            id: e.id,
-            date: new Date(e.createdAt || e.date),
-            description: e.description,
-            amount: e.totalDebits || e.lines?.reduce((s: number, l: any) => s + (Number(l.debit) || 0), 0) || 0,
-            status: e.status,
+          const mapped: RecentEntry[] = (data.entries || []).slice(0, 5).map((e: Record<string, unknown>) => ({
+            id: e.id as string,
+            date: new Date((e.createdAt || e.date) as string),
+            description: e.description as string,
+            amount: (e.totalDebits as number) || (e.lines as Record<string, unknown>[])?.reduce((s: number, l: Record<string, unknown>) => s + (Number(l.debit) || 0), 0) || 0,
+            status: e.status as string,
           }));
           setRecentEntries(mapped);
         }
@@ -180,7 +255,7 @@ export default function QuickEntryPage() {
           const data = await res.json();
           if (data.accounts && Array.isArray(data.accounts)) {
             const accountMap = new Map<string, string>();
-            data.accounts.forEach((a: any) => accountMap.set(a.code, a.name));
+            data.accounts.forEach((a: Record<string, string>) => accountMap.set(a.code, a.name));
 
             // Update template account names from real chart of accounts
             setTemplates(prev => prev.map(tpl => ({
@@ -202,7 +277,7 @@ export default function QuickEntryPage() {
   // Keyboard shortcuts
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.ctrlKey && e.shiftKey) {
-      const template = templates.find(t => 
+      const template = templates.find(t =>
         t.shortcut?.toLowerCase() === `ctrl+shift+${e.key.toLowerCase()}`
       );
       if (template) {
@@ -210,7 +285,7 @@ export default function QuickEntryPage() {
         setSelectedTemplate(template);
       }
     }
-    
+
     if (e.key === 'Escape') {
       setSelectedTemplate(null);
     }
@@ -269,11 +344,11 @@ export default function QuickEntryPage() {
         ));
       } else {
         const errData = await res.json();
-        alert(errData.error || 'Erreur lors de la création');
+        toast.error(errData.error || t('admin.quickEntry.createError'));
       }
     } catch (err) {
       console.error('Error saving entry:', err);
-      alert('Erreur lors de la création de l\'écriture');
+      toast.error(t('admin.quickEntry.createEntryError'));
     } finally {
       setSaving(false);
     }
@@ -281,16 +356,16 @@ export default function QuickEntryPage() {
 
   const calculatePreview = () => {
     if (!selectedTemplate) return [];
-    
+
     const amount = parseFloat(formValues.amount || '0');
     const gst = parseFloat(formValues.gst || '0');
     const qst = parseFloat(formValues.qst || '0');
-    const total = amount * 1.14975;
-    
+    const total = amount * (1 + totalTaxRate);
+
     return selectedTemplate.lines.map(line => {
       let debit = 0;
       let credit = 0;
-      
+
       // SECURITY FIX: Replace eval() with safe arithmetic parser
       if (line.debitFormula) {
         debit = safeEvalFormula(line.debitFormula, { amount, gst, qst, total });
@@ -298,7 +373,7 @@ export default function QuickEntryPage() {
       if (line.creditFormula) {
         credit = safeEvalFormula(line.creditFormula, { amount, gst, qst, total });
       }
-      
+
       return {
         ...line,
         debit: Math.round(debit * 100) / 100,
@@ -309,32 +384,32 @@ export default function QuickEntryPage() {
 
   const sortedTemplates = [...templates].sort((a, b) => b.frequency - a.frequency);
 
-  if (loading) return <div className="p-8 text-center">Chargement...</div>;
+  if (loading) return <div className="p-8 text-center">{t('admin.quickEntry.loading')}</div>;
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-white">Saisie rapide</h1>
-          <p className="text-neutral-400 mt-1">Templates et raccourcis pour accélérer la saisie</p>
+          <h1 className="text-2xl font-bold text-white">{t('admin.quickEntry.title')}</h1>
+          <p className="text-neutral-400 mt-1">{t('admin.quickEntry.subtitle')}</p>
         </div>
         <button className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg">
-          + Nouveau template
+          {t('admin.quickEntry.newTemplate')}
         </button>
       </div>
 
       {/* Keyboard shortcuts help */}
       <div className="bg-neutral-800/50 rounded-xl p-4 border border-neutral-700">
         <div className="flex items-center gap-4 text-sm">
-          <span className="text-neutral-400">Raccourcis clavier:</span>
+          <span className="text-neutral-400">{t('admin.quickEntry.keyboardShortcuts')}</span>
           {templates.filter(t => t.shortcut).map(t => (
             <span key={t.id} className="px-2 py-1 bg-neutral-700 rounded text-neutral-300 font-mono text-xs">
               {t.shortcut} → {t.name}
             </span>
           ))}
           <span className="px-2 py-1 bg-neutral-700 rounded text-neutral-300 font-mono text-xs">
-            Ctrl+Enter → Sauvegarder et valider
+            {t('admin.quickEntry.ctrlEnterSave')}
           </span>
         </div>
       </div>
@@ -342,8 +417,8 @@ export default function QuickEntryPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Templates */}
         <div className="lg:col-span-2 space-y-4">
-          <h2 className="text-lg font-medium text-white">Templates (par fréquence d'utilisation)</h2>
-          
+          <h2 className="text-lg font-medium text-white">{t('admin.quickEntry.templatesByFrequency')}</h2>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {sortedTemplates.map(template => (
               <button
@@ -371,7 +446,7 @@ export default function QuickEntryPage() {
                     </span>
                   )}
                   <span className="text-xs text-neutral-500">
-                    Utilisé {template.frequency}x
+                    {t('admin.quickEntry.usedCount', { count: template.frequency })}
                   </span>
                 </div>
               </button>
@@ -381,11 +456,11 @@ export default function QuickEntryPage() {
 
         {/* Recent entries */}
         <div className="space-y-4">
-          <h2 className="text-lg font-medium text-white">Écritures récentes</h2>
-          
+          <h2 className="text-lg font-medium text-white">{t('admin.quickEntry.recentEntries')}</h2>
+
           <div className="bg-neutral-800 rounded-xl border border-neutral-700">
             {recentEntries.map((entry, i) => (
-              <div 
+              <div
                 key={entry.id}
                 className={`p-3 ${i < recentEntries.length - 1 ? 'border-b border-neutral-700' : ''}`}
               >
@@ -393,15 +468,15 @@ export default function QuickEntryPage() {
                   <div>
                     <p className="text-sm text-white">{entry.description}</p>
                     <p className="text-xs text-neutral-500">
-                      {entry.date.toLocaleTimeString('fr-CA', { hour: '2-digit', minute: '2-digit' })}
+                      {entry.date.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-medium text-white">
-                      {entry.amount.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}
+                      {entry.amount.toLocaleString(locale, { style: 'currency', currency: 'CAD' })}
                     </p>
                     <span className={`text-xs ${entry.status === 'POSTED' ? 'text-green-400' : 'text-yellow-400'}`}>
-                      {entry.status === 'POSTED' ? 'Validée' : 'Brouillon'}
+                      {entry.status === 'POSTED' ? t('admin.quickEntry.statusPosted') : t('admin.quickEntry.statusDraft')}
                     </span>
                   </div>
                 </div>
@@ -412,7 +487,7 @@ export default function QuickEntryPage() {
           {/* Quick duplicate */}
           <div className="bg-neutral-800 rounded-xl p-4 border border-dashed border-neutral-600">
             <p className="text-sm text-neutral-400 text-center">
-              Cliquez sur une écriture récente pour la dupliquer
+              {t('admin.quickEntry.duplicateHint')}
             </p>
           </div>
         </div>
@@ -429,12 +504,12 @@ export default function QuickEntryPage() {
               </div>
               <button onClick={() => setSelectedTemplate(null)} className="text-neutral-400 hover:text-white text-xl">✕</button>
             </div>
-            
+
             <div className="p-6 space-y-6">
               {/* Form inputs */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-neutral-300 mb-1">Date</label>
+                  <label className="block text-sm font-medium text-neutral-300 mb-1">{t('admin.quickEntry.date')}</label>
                   <input
                     type="date"
                     value={entryDate}
@@ -444,15 +519,15 @@ export default function QuickEntryPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-neutral-300 mb-1">
-                    {selectedTemplate.category === 'TAXES' ? 'TPS' : 'Montant HT'}
+                    {selectedTemplate.category === 'TAXES' ? t('admin.quickEntry.tps') : t('admin.quickEntry.amountExclTax')}
                   </label>
                   <input
                     type="number"
                     step="0.01"
                     value={formValues.amount || formValues.gst || ''}
-                    onChange={e => setFormValues(prev => ({ 
-                      ...prev, 
-                      [selectedTemplate.category === 'TAXES' ? 'gst' : 'amount']: e.target.value 
+                    onChange={e => setFormValues(prev => ({
+                      ...prev,
+                      [selectedTemplate.category === 'TAXES' ? 'gst' : 'amount']: e.target.value
                     }))}
                     className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-white"
                     placeholder="0.00"
@@ -461,7 +536,7 @@ export default function QuickEntryPage() {
                 </div>
                 {selectedTemplate.category === 'TAXES' && (
                   <div>
-                    <label className="block text-sm font-medium text-neutral-300 mb-1">TVQ</label>
+                    <label className="block text-sm font-medium text-neutral-300 mb-1">{t('admin.quickEntry.tvq')}</label>
                     <input
                       type="number"
                       step="0.01"
@@ -473,27 +548,27 @@ export default function QuickEntryPage() {
                   </div>
                 )}
                 <div className={selectedTemplate.category === 'TAXES' ? '' : 'col-span-2'}>
-                  <label className="block text-sm font-medium text-neutral-300 mb-1">Référence</label>
+                  <label className="block text-sm font-medium text-neutral-300 mb-1">{t('admin.quickEntry.reference')}</label>
                   <input
                     type="text"
                     value={formValues.reference || ''}
                     onChange={e => setFormValues(prev => ({ ...prev, reference: e.target.value }))}
                     className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-white"
-                    placeholder="N° commande, facture..."
+                    placeholder={t('admin.quickEntry.referencePlaceholder')}
                   />
                 </div>
               </div>
 
               {/* Preview */}
               <div>
-                <h3 className="text-sm font-medium text-neutral-300 mb-2">Aperçu de l'écriture</h3>
+                <h3 className="text-sm font-medium text-neutral-300 mb-2">{t('admin.quickEntry.entryPreview')}</h3>
                 <div className="bg-neutral-900 rounded-lg overflow-hidden">
                   <table className="w-full text-sm">
                     <thead className="bg-neutral-700/50">
                       <tr>
-                        <th className="px-3 py-2 text-left text-xs text-neutral-400">Compte</th>
-                        <th className="px-3 py-2 text-right text-xs text-neutral-400">Débit</th>
-                        <th className="px-3 py-2 text-right text-xs text-neutral-400">Crédit</th>
+                        <th className="px-3 py-2 text-left text-xs text-neutral-400">{t('admin.quickEntry.account')}</th>
+                        <th className="px-3 py-2 text-right text-xs text-neutral-400">{t('admin.quickEntry.debit')}</th>
+                        <th className="px-3 py-2 text-right text-xs text-neutral-400">{t('admin.quickEntry.credit')}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-neutral-700">
@@ -514,7 +589,7 @@ export default function QuickEntryPage() {
                     </tbody>
                     <tfoot className="bg-neutral-700/30">
                       <tr>
-                        <td className="px-3 py-2 font-medium text-white">Total</td>
+                        <td className="px-3 py-2 font-medium text-white">{t('admin.quickEntry.totalRow')}</td>
                         <td className="px-3 py-2 text-right font-mono font-medium text-green-400">
                           {calculatePreview().reduce((sum, l) => sum + l.debit, 0).toFixed(2)}
                         </td>
@@ -533,7 +608,7 @@ export default function QuickEntryPage() {
                 onClick={() => setSelectedTemplate(null)}
                 className="px-4 py-2 text-neutral-400 hover:text-white"
               >
-                Annuler (Esc)
+                {t('admin.quickEntry.cancelEsc')}
               </button>
               <div className="flex gap-2">
                 <button
@@ -541,14 +616,14 @@ export default function QuickEntryPage() {
                   disabled={saving || !formValues.amount}
                   className="px-4 py-2 bg-neutral-700 hover:bg-neutral-600 text-white rounded-lg disabled:opacity-50"
                 >
-                  {saving ? 'Enregistrement...' : 'Enregistrer brouillon'}
+                  {saving ? t('admin.quickEntry.saving') : t('admin.quickEntry.saveDraft')}
                 </button>
                 <button
                   onClick={() => handleSave(true)}
                   disabled={saving || !formValues.amount}
                   className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg disabled:opacity-50"
                 >
-                  {saving ? 'Enregistrement...' : 'Enregistrer et valider (Ctrl+Enter)'}
+                  {saving ? t('admin.quickEntry.saving') : t('admin.quickEntry.saveAndPost')}
                 </button>
               </div>
             </div>

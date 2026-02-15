@@ -10,13 +10,14 @@ import { I18nProvider } from '@/i18n/client';
 import { CartProvider } from '@/components/cart/CartDrawer';
 import { CurrencyProvider } from '@/contexts/CurrencyContext';
 import { LoyaltyProvider } from '@/contexts/LoyaltyContext';
+import { WishlistProvider } from '@/contexts/WishlistContext';
 import { type Locale, defaultLocale } from '@/i18n/config';
 import type { ReactNode } from 'react';
 
 interface ProvidersProps {
   children: ReactNode;
   locale?: Locale;
-  messages?: Record<string, any>;
+  messages?: Record<string, unknown>;
 }
 
 export function Providers({ children, locale = defaultLocale, messages = {} }: ProvidersProps) {
@@ -25,9 +26,11 @@ export function Providers({ children, locale = defaultLocale, messages = {} }: P
       <I18nProvider locale={locale} messages={messages}>
         <CurrencyProvider>
           <LoyaltyProvider>
-            <CartProvider>
-              {children}
-            </CartProvider>
+            <WishlistProvider>
+              <CartProvider>
+                {children}
+              </CartProvider>
+            </WishlistProvider>
           </LoyaltyProvider>
         </CurrencyProvider>
       </I18nProvider>

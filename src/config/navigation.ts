@@ -274,7 +274,7 @@ export const navigationByBusinessType: Record<BusinessType, Partial<typeof mainN
   ],
 };
 
-export default {
+const navigation = {
   main: mainNavigation,
   utility: utilityNavigation,
   cta: ctaNavigation,
@@ -283,3 +283,5 @@ export default {
   social: socialLinks,
   dashboard: dashboardNavigation,
 };
+
+export default navigation;

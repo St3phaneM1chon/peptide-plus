@@ -1,6 +1,9 @@
+export const dynamic = 'force-dynamic';
+
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { db as prisma } from '@/lib/db';
+import { sendOrderLifecycleEmail } from '@/lib/email';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
   apiVersion: '2023-10-16',
@@ -72,7 +75,7 @@ async function handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
 
   if (orderId) {
     try {
-      await prisma.order.update({
+      const order = await prisma.order.update({
         where: { id: orderId },
         data: {
           paymentStatus: 'PAID',
@@ -81,13 +84,18 @@ async function handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
         },
       });
       console.log(`Order ${orderId} marked as paid`);
+
+      // Create ambassador commission if the order used a referral code
+      await createAmbassadorCommission(order.id, order.orderNumber, Number(order.total), order.promoCode);
+
+      // Send order confirmation email (fire-and-forget)
+      sendOrderLifecycleEmail(orderId, 'CONFIRMED').catch((err) => {
+        console.error(`Failed to send confirmation email for order ${orderId}:`, err);
+      });
     } catch (error) {
       console.error('Error updating order:', error);
     }
   }
-
-  // TODO: Generate accounting entry when models exist
-  // await generateSaleEntry(paymentIntent);
 }
 
 /**
@@ -124,7 +132,7 @@ async function handleRefund(charge: Stripe.Charge) {
 
   if (orderId) {
     try {
-      await prisma.order.update({
+      const order = await prisma.order.update({
         where: { id: orderId },
         data: {
           paymentStatus: 'REFUNDED',
@@ -132,13 +140,24 @@ async function handleRefund(charge: Stripe.Charge) {
         },
       });
       console.log(`Order ${orderId} marked as refunded`);
+
+      // Determine refund amount from Stripe charge data
+      const refundAmount = charge.amount_refunded
+        ? charge.amount_refunded / 100  // Stripe amounts are in cents
+        : Number(order.total);
+      const isPartial = charge.amount_refunded < charge.amount;
+
+      // Send refund email (fire-and-forget)
+      sendOrderLifecycleEmail(orderId, 'REFUNDED', {
+        refundAmount,
+        refundIsPartial: isPartial,
+      }).catch((err) => {
+        console.error(`Failed to send refund email for order ${orderId}:`, err);
+      });
     } catch (error) {
       console.error('Error updating order:', error);
     }
   }
-
-  // TODO: Generate refund entry when models exist
-  // await generateRefundEntry(charge);
 }
 
 /**
@@ -151,7 +170,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 
   if (orderId) {
     try {
-      await prisma.order.update({
+      const order = await prisma.order.update({
         where: { id: orderId },
         data: {
           paymentStatus: 'PAID',
@@ -160,8 +179,65 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         },
       });
       console.log(`Order ${orderId} confirmed from checkout session`);
+
+      // Create ambassador commission if the order used a referral code
+      await createAmbassadorCommission(order.id, order.orderNumber, Number(order.total), order.promoCode);
+
+      // Send order confirmation email (fire-and-forget)
+      sendOrderLifecycleEmail(orderId, 'CONFIRMED').catch((err) => {
+        console.error(`Failed to send confirmation email for order ${orderId}:`, err);
+      });
     } catch (error) {
       console.error('Error updating order:', error);
     }
+  }
+}
+
+/**
+ * Create an ambassador commission record when a paid order used a referral code.
+ * Silently skips if the promo code doesn't match an ambassador or if a commission already exists.
+ */
+async function createAmbassadorCommission(
+  orderId: string,
+  orderNumber: string,
+  orderTotal: number,
+  promoCode: string | null
+) {
+  if (!promoCode) return;
+
+  try {
+    // Look up ambassador by referral code
+    const ambassador = await prisma.ambassador.findUnique({
+      where: { referralCode: promoCode },
+    });
+
+    if (!ambassador || ambassador.status !== 'ACTIVE') return;
+
+    const rate = Number(ambassador.commissionRate);
+    const commissionAmount = Math.round(orderTotal * rate) / 100;
+
+    // Use upsert to avoid duplicates (idempotent for webhook retries)
+    await prisma.ambassadorCommission.upsert({
+      where: {
+        ambassadorId_orderId: {
+          ambassadorId: ambassador.id,
+          orderId,
+        },
+      },
+      create: {
+        ambassadorId: ambassador.id,
+        orderId,
+        orderNumber,
+        orderTotal,
+        commissionRate: rate,
+        commissionAmount,
+      },
+      update: {}, // No-op if already exists
+    });
+
+    console.log(`Ambassador commission created: ${commissionAmount}$ for ${ambassador.name} (order ${orderNumber})`);
+  } catch (error) {
+    // Non-fatal: log but don't fail the webhook
+    console.error('Error creating ambassador commission:', error);
   }
 }

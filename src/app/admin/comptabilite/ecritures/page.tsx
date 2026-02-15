@@ -30,13 +30,15 @@ import {
   Input,
   type Column,
 } from '@/components/admin';
+import { useI18n } from '@/i18n/client';
+import { toast } from 'sonner';
 
 interface JournalEntry {
   id: string;
   entryNumber: string;
   date: string;
   description: string;
-  type: 'MANUAL' | 'AUTO_SALE' | 'AUTO_PURCHASE' | 'AUTO_PAYMENT' | 'RECURRING';
+  type: string;
   status: 'DRAFT' | 'POSTED' | 'VOIDED';
   lines: JournalLine[];
   createdBy: string;
@@ -54,34 +56,6 @@ interface JournalLine {
   credit: number;
 }
 
-const typeConfig: Record<string, { label: string; variant: 'info' | 'success' | 'warning' | 'neutral' | 'primary' | 'error' }> = {
-  MANUAL: { label: 'Manuelle', variant: 'info' },
-  AUTO_SALE: { label: 'Vente auto', variant: 'success' },
-  AUTO_PURCHASE: { label: 'Achat auto', variant: 'warning' },
-  AUTO_PAYMENT: { label: 'Paiement auto', variant: 'primary' },
-  RECURRING: { label: 'Récurrent', variant: 'neutral' },
-};
-
-const statusConfig: Record<string, { label: string; variant: 'success' | 'warning' | 'error' | 'neutral' }> = {
-  DRAFT: { label: 'Brouillon', variant: 'warning' },
-  POSTED: { label: 'Comptabilisé', variant: 'success' },
-  VOIDED: { label: 'Annulé', variant: 'error' },
-};
-
-const typeFilterOptions = [
-  { value: 'MANUAL', label: 'Manuelle' },
-  { value: 'AUTO_SALE', label: 'Vente auto' },
-  { value: 'AUTO_PURCHASE', label: 'Achat auto' },
-  { value: 'AUTO_PAYMENT', label: 'Paiement auto' },
-  { value: 'RECURRING', label: 'Récurrent' },
-];
-
-const statusFilterOptions = [
-  { value: 'DRAFT', label: 'Brouillon' },
-  { value: 'POSTED', label: 'Comptabilisé' },
-  { value: 'VOIDED', label: 'Annulé' },
-];
-
 const defaultAccountOptions = [
   { value: '1010', label: '1010 - Compte bancaire principal' },
   { value: '1030', label: '1030 - Compte PayPal' },
@@ -89,10 +63,44 @@ const defaultAccountOptions = [
   { value: '6210', label: '6210 - Google Ads' },
 ];
 
-const fmtCurrency = (n: number) => n.toLocaleString('fr-CA', { minimumFractionDigits: 2 }) + ' $';
-const fmtDate = (d: string) => new Date(d).toLocaleDateString('fr-CA');
-
 export default function EcrituresPage() {
+  const { t, locale } = useI18n();
+
+  const typeConfig: Record<string, { label: string; variant: 'info' | 'success' | 'warning' | 'neutral' | 'primary' | 'error' }> = {
+    MANUAL: { label: t('admin.entries.typeManual'), variant: 'info' },
+    AUTO_SALE: { label: t('admin.entries.typeAutoSale'), variant: 'success' },
+    AUTO_REFUND: { label: t('admin.entries.typeAutoRefund', 'Remboursement auto'), variant: 'error' },
+    AUTO_STRIPE_FEE: { label: t('admin.entries.typeAutoStripeFee', 'Frais Stripe'), variant: 'warning' },
+    AUTO_PAYPAL_FEE: { label: t('admin.entries.typeAutoPaypalFee', 'Frais PayPal'), variant: 'warning' },
+    AUTO_SHIPPING: { label: t('admin.entries.typeAutoShipping', 'Livraison auto'), variant: 'primary' },
+    AUTO_PURCHASE: { label: t('admin.entries.typeAutoPurchase'), variant: 'warning' },
+    AUTO_PAYMENT: { label: t('admin.entries.typeAutoPayment'), variant: 'primary' },
+    RECURRING: { label: t('admin.entries.typeRecurring'), variant: 'neutral' },
+    ADJUSTMENT: { label: t('admin.entries.typeAdjustment', 'Ajustement'), variant: 'info' },
+    CLOSING: { label: t('admin.entries.typeClosing', 'Clôture'), variant: 'neutral' },
+  };
+  const defaultTypeConfig = { label: 'Autre', variant: 'neutral' as const };
+
+  const statusConfig: Record<string, { label: string; variant: 'success' | 'warning' | 'error' | 'neutral' }> = {
+    DRAFT: { label: t('admin.entries.statusDraft'), variant: 'warning' },
+    POSTED: { label: t('admin.entries.statusPosted'), variant: 'success' },
+    VOIDED: { label: t('admin.entries.statusVoided'), variant: 'error' },
+  };
+
+  const typeFilterOptions = Object.entries(typeConfig).map(([value, cfg]) => ({
+    value,
+    label: cfg.label,
+  }));
+
+  const statusFilterOptions = [
+    { value: 'DRAFT', label: t('admin.entries.statusDraft') },
+    { value: 'POSTED', label: t('admin.entries.statusPosted') },
+    { value: 'VOIDED', label: t('admin.entries.statusVoided') },
+  ];
+
+  const fmtCurrency = (n: number) => n.toLocaleString(locale, { minimumFractionDigits: 2 }) + ' $';
+  const fmtDate = (d: string) => new Date(d).toLocaleDateString(locale);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
@@ -122,7 +130,7 @@ export default function EcrituresPage() {
       const res = await fetch(`/api/accounting/entries?${params.toString()}`);
       if (res.ok) {
         const data = await res.json();
-        const mapped: JournalEntry[] = (data.entries || []).map((e: any) => ({
+        const mapped: JournalEntry[] = (data.entries || []).map((e: Record<string, unknown>) => ({
           id: e.id,
           entryNumber: e.entryNumber,
           date: e.date,
@@ -130,10 +138,10 @@ export default function EcrituresPage() {
           type: e.type,
           status: e.status,
           reference: e.reference || undefined,
-          createdBy: e.createdBy || 'Système',
+          createdBy: e.createdBy || t('admin.entries.systemUser'),
           createdAt: e.createdAt,
           attachments: e.attachments || 0,
-          lines: (e.lines || []).map((l: any, idx: number) => ({
+          lines: ((e.lines || []) as Record<string, unknown>[]).map((l: Record<string, unknown>, idx: number) => ({
             id: l.id || String(idx),
             accountCode: l.accountCode,
             accountName: l.accountName,
@@ -153,6 +161,7 @@ export default function EcrituresPage() {
 
   useEffect(() => {
     fetchEntries();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedStatus, selectedType, searchTerm]);
 
   // Fetch chart of accounts for new entry form
@@ -164,7 +173,7 @@ export default function EcrituresPage() {
           const data = await res.json();
           if (data.accounts && Array.isArray(data.accounts)) {
             setAccountOptions(
-              data.accounts.map((a: any) => ({
+              data.accounts.map((a: Record<string, string>) => ({
                 value: a.code,
                 label: `${a.code} - ${a.name}`,
               }))
@@ -190,11 +199,11 @@ export default function EcrituresPage() {
         setShowDetailModal(false);
       } else {
         const errData = await res.json();
-        alert(errData.error || 'Erreur lors de la validation');
+        toast.error(errData.error || t('admin.entries.validationError'));
       }
     } catch (err) {
       console.error('Error posting entry:', err);
-      alert('Erreur lors de la validation');
+      toast.error(t('admin.entries.validationError'));
     } finally {
       setSubmitting(false);
     }
@@ -237,11 +246,11 @@ export default function EcrituresPage() {
         await fetchEntries();
       } else {
         const errData = await res.json();
-        alert(errData.error || 'Erreur lors de la création');
+        toast.error(errData.error || t('admin.entries.creationError'));
       }
     } catch (err) {
       console.error('Error creating entry:', err);
-      alert('Erreur lors de la création');
+      toast.error(t('admin.entries.creationError'));
     } finally {
       setSubmitting(false);
     }
@@ -287,7 +296,7 @@ export default function EcrituresPage() {
   const columns: Column<JournalEntry>[] = [
     {
       key: 'entryNumber',
-      header: 'N\u00b0 \u00c9criture',
+      header: t('admin.entries.entryNumberHeader'),
       render: (entry) => (
         <button
           onClick={(e) => { e.stopPropagation(); openDetail(entry); }}
@@ -299,7 +308,7 @@ export default function EcrituresPage() {
     },
     {
       key: 'date',
-      header: 'Date',
+      header: t('admin.entries.dateHeader'),
       sortable: true,
       render: (entry) => (
         <span className="text-sm text-slate-900">{fmtDate(entry.date)}</span>
@@ -307,28 +316,28 @@ export default function EcrituresPage() {
     },
     {
       key: 'description',
-      header: 'Description',
+      header: t('admin.entries.descriptionHeader'),
       render: (entry) => (
         <div>
           <p className="text-sm text-slate-900 truncate max-w-xs">{entry.description}</p>
           {entry.reference && (
-            <p className="text-xs text-slate-500">Réf: {entry.reference}</p>
+            <p className="text-xs text-slate-500">{t('admin.entries.refPrefix')} {entry.reference}</p>
           )}
         </div>
       ),
     },
     {
       key: 'type',
-      header: 'Type',
+      header: t('admin.entries.typeHeader'),
       align: 'center',
       render: (entry) => {
-        const cfg = typeConfig[entry.type];
+        const cfg = typeConfig[entry.type] || defaultTypeConfig;
         return <StatusBadge variant={cfg.variant}>{cfg.label}</StatusBadge>;
       },
     },
     {
       key: 'debit',
-      header: 'Débit',
+      header: t('admin.entries.debitHeader'),
       align: 'right',
       render: (entry) => (
         <span className="font-medium text-slate-900">{fmtCurrency(totalDebit(entry))}</span>
@@ -336,7 +345,7 @@ export default function EcrituresPage() {
     },
     {
       key: 'credit',
-      header: 'Crédit',
+      header: t('admin.entries.creditHeader'),
       align: 'right',
       render: (entry) => (
         <span className="font-medium text-slate-900">{fmtCurrency(totalCredit(entry))}</span>
@@ -344,23 +353,23 @@ export default function EcrituresPage() {
     },
     {
       key: 'status',
-      header: 'Statut',
+      header: t('admin.entries.statusHeader'),
       align: 'center',
       render: (entry) => {
-        const cfg = statusConfig[entry.status];
+        const cfg = statusConfig[entry.status] || defaultTypeConfig;
         return <StatusBadge variant={cfg.variant} dot>{cfg.label}</StatusBadge>;
       },
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: t('admin.entries.actionsHeader'),
       align: 'center',
       render: (entry) => (
         <div className="flex items-center justify-center gap-1">
           <button
             onClick={(e) => { e.stopPropagation(); openDetail(entry); }}
             className="p-1.5 text-slate-500 hover:text-sky-600 hover:bg-sky-50 rounded"
-            title="Voir détails"
+            title={t('admin.entries.viewDetails')}
           >
             <Eye className="w-4 h-4" />
           </button>
@@ -368,7 +377,7 @@ export default function EcrituresPage() {
             <button
               onClick={(e) => { e.stopPropagation(); handlePostEntry(entry.id); }}
               className="p-1.5 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded"
-              title="Comptabiliser"
+              title={t('admin.entries.postEntry')}
             >
               <Check className="w-4 h-4" />
             </button>
@@ -394,16 +403,16 @@ export default function EcrituresPage() {
           onClick={() => handlePostEntry(selectedEntry.id)}
           disabled={submitting}
         >
-          {submitting ? 'Validation...' : 'Comptabiliser'}
+          {submitting ? t('admin.entries.validating') : t('admin.entries.postEntry')}
         </Button>
       )}
       {selectedEntry.status === 'POSTED' && (
         <Button variant="danger" icon={RotateCcw} className="bg-red-100 text-red-700 hover:bg-red-200 border-transparent shadow-none">
-          Contre-passer
+          {t('admin.entries.reverseEntry')}
         </Button>
       )}
-      <Button variant="secondary" icon={Copy}>Dupliquer</Button>
-      <Button variant="secondary" icon={Printer} className="ml-auto">Imprimer</Button>
+      <Button variant="secondary" icon={Copy}>{t('admin.entries.duplicate')}</Button>
+      <Button variant="secondary" icon={Printer} className="ml-auto">{t('admin.entries.print')}</Button>
     </div>
   ) : null;
 
@@ -411,10 +420,10 @@ export default function EcrituresPage() {
   const newEntryFooter = (
     <div className="flex gap-2 w-full">
       <Button variant="ghost" onClick={() => setShowNewEntryModal(false)}>
-        Annuler
+        {t('admin.entries.cancel')}
       </Button>
       <Button variant="secondary" onClick={() => handleCreateEntry(false)} disabled={submitting}>
-        {submitting ? 'Enregistrement...' : 'Sauvegarder brouillon'}
+        {submitting ? t('admin.entries.saving') : t('admin.entries.saveDraft')}
       </Button>
       <Button
         variant="primary"
@@ -423,22 +432,22 @@ export default function EcrituresPage() {
         onClick={() => handleCreateEntry(true)}
         disabled={submitting}
       >
-        {submitting ? 'Enregistrement...' : 'Comptabiliser'}
+        {submitting ? t('admin.entries.saving') : t('admin.entries.postEntry')}
       </Button>
     </div>
   );
 
-  if (loading) return <div className="p-8 text-center">Chargement...</div>;
+  if (loading) return <div className="p-8 text-center">{t('admin.entries.loading')}</div>;
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <PageHeader
-        title="Écritures de journal"
-        subtitle="Gérez les écritures comptables"
+        title={t('admin.entries.title')}
+        subtitle={t('admin.entries.subtitle')}
         actions={
           <Button variant="primary" icon={Plus} className="bg-emerald-600 hover:bg-emerald-700 border-transparent" onClick={() => setShowNewEntryModal(true)}>
-            Nouvelle écriture
+            {t('admin.entries.newEntry')}
           </Button>
         }
       />
@@ -446,24 +455,24 @@ export default function EcrituresPage() {
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
-          label="Total ce mois"
+          label={t('admin.entries.totalThisMonth')}
           value={entries.length}
           icon={FileText}
         />
         <StatCard
-          label="Comptabilisées"
+          label={t('admin.entries.posted')}
           value={entries.filter((e) => e.status === 'POSTED').length}
           icon={BookOpen}
           className="bg-emerald-50 border-emerald-200"
         />
         <StatCard
-          label="Brouillons"
+          label={t('admin.entries.drafts')}
           value={entries.filter((e) => e.status === 'DRAFT').length}
           icon={Clock}
           className="bg-yellow-50 border-yellow-200"
         />
         <StatCard
-          label="Automatiques"
+          label={t('admin.entries.automatic')}
           value={entries.filter((e) => e.type.startsWith('AUTO')).length}
           icon={Zap}
           className="bg-sky-50 border-sky-200"
@@ -474,16 +483,16 @@ export default function EcrituresPage() {
       <FilterBar
         searchValue={searchTerm}
         onSearchChange={setSearchTerm}
-        searchPlaceholder="Rechercher par description ou numéro..."
+        searchPlaceholder={t('admin.entries.searchPlaceholder')}
       >
         <SelectFilter
-          label="Tous les types"
+          label={t('admin.entries.allTypes')}
           value={selectedType}
           onChange={setSelectedType}
           options={typeFilterOptions}
         />
         <SelectFilter
-          label="Tous les statuts"
+          label={t('admin.entries.allStatuses')}
           value={selectedStatus}
           onChange={setSelectedStatus}
           options={statusFilterOptions}
@@ -495,8 +504,8 @@ export default function EcrituresPage() {
         columns={columns}
         data={filteredEntries}
         keyExtractor={(entry) => entry.id}
-        emptyTitle="Aucune écriture trouvée"
-        emptyDescription="Modifiez vos filtres ou créez une nouvelle écriture."
+        emptyTitle={t('admin.entries.noEntriesTitle')}
+        emptyDescription={t('admin.entries.noEntriesDescription')}
         onRowClick={openDetail}
       />
 
@@ -514,38 +523,38 @@ export default function EcrituresPage() {
             {/* Header Info */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <div>
-                <p className="text-xs text-slate-500">Date</p>
+                <p className="text-xs text-slate-500">{t('admin.entries.dateLabel')}</p>
                 <p className="font-medium text-slate-900">{fmtDate(selectedEntry.date)}</p>
               </div>
               <div>
-                <p className="text-xs text-slate-500">Type</p>
-                <StatusBadge variant={typeConfig[selectedEntry.type].variant}>
-                  {typeConfig[selectedEntry.type].label}
+                <p className="text-xs text-slate-500">{t('admin.entries.typeLabel')}</p>
+                <StatusBadge variant={(typeConfig[selectedEntry.type] || defaultTypeConfig).variant}>
+                  {(typeConfig[selectedEntry.type] || defaultTypeConfig).label}
                 </StatusBadge>
               </div>
               <div>
-                <p className="text-xs text-slate-500">Statut</p>
-                <StatusBadge variant={statusConfig[selectedEntry.status].variant} dot>
-                  {statusConfig[selectedEntry.status].label}
+                <p className="text-xs text-slate-500">{t('admin.entries.statusLabel')}</p>
+                <StatusBadge variant={(statusConfig[selectedEntry.status] || defaultTypeConfig).variant} dot>
+                  {(statusConfig[selectedEntry.status] || defaultTypeConfig).label}
                 </StatusBadge>
               </div>
               <div>
-                <p className="text-xs text-slate-500">Créé par</p>
+                <p className="text-xs text-slate-500">{t('admin.entries.createdByLabel')}</p>
                 <p className="font-medium text-slate-900">{selectedEntry.createdBy}</p>
               </div>
             </div>
 
             {/* Journal Lines */}
             <div>
-              <h4 className="font-medium text-slate-900 mb-3">Lignes d&apos;écriture</h4>
+              <h4 className="font-medium text-slate-900 mb-3">{t('admin.entries.entryLines')}</h4>
               <div className="border border-slate-200 rounded-lg overflow-hidden">
                 <table className="w-full">
                   <thead className="bg-slate-50">
                     <tr>
-                      <th className="px-4 py-2 text-left text-xs font-semibold text-slate-500">Compte</th>
-                      <th className="px-4 py-2 text-left text-xs font-semibold text-slate-500">Description</th>
-                      <th className="px-4 py-2 text-right text-xs font-semibold text-slate-500">Débit</th>
-                      <th className="px-4 py-2 text-right text-xs font-semibold text-slate-500">Crédit</th>
+                      <th className="px-4 py-2 text-left text-xs font-semibold text-slate-500">{t('admin.entries.accountHeader')}</th>
+                      <th className="px-4 py-2 text-left text-xs font-semibold text-slate-500">{t('admin.entries.descriptionHeader')}</th>
+                      <th className="px-4 py-2 text-right text-xs font-semibold text-slate-500">{t('admin.entries.debitHeader')}</th>
+                      <th className="px-4 py-2 text-right text-xs font-semibold text-slate-500">{t('admin.entries.creditHeader')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -571,7 +580,7 @@ export default function EcrituresPage() {
                   </tbody>
                   <tfoot className="bg-slate-100">
                     <tr>
-                      <td colSpan={2} className="px-4 py-2 font-semibold text-slate-900">Total</td>
+                      <td colSpan={2} className="px-4 py-2 font-semibold text-slate-900">{t('admin.entries.total')}</td>
                       <td className="px-4 py-2 text-right font-bold text-slate-900">
                         {fmtCurrency(totalDebit(selectedEntry))}
                       </td>
@@ -585,12 +594,12 @@ export default function EcrituresPage() {
               {totalDebit(selectedEntry) === totalCredit(selectedEntry) ? (
                 <p className="text-sm text-emerald-600 mt-2 flex items-center gap-1">
                   <CheckCircle className="w-4 h-4" />
-                  Écriture équilibrée
+                  {t('admin.entries.entryBalanced')}
                 </p>
               ) : (
                 <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
                   <AlertTriangle className="w-4 h-4" />
-                  Écriture déséquilibrée!
+                  {t('admin.entries.entryUnbalanced')}
                 </p>
               )}
             </div>
@@ -602,19 +611,19 @@ export default function EcrituresPage() {
       <Modal
         isOpen={showNewEntryModal}
         onClose={() => setShowNewEntryModal(false)}
-        title="Nouvelle écriture de journal"
+        title={t('admin.entries.newEntryModalTitle')}
         size="xl"
         footer={newEntryFooter}
       >
         <div className="space-y-6">
           {/* Header Fields */}
           <div className="grid grid-cols-3 gap-4">
-            <FormField label="Date">
+            <FormField label={t('admin.entries.dateLabel')}>
               <Input type="date" value={newEntryDate} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewEntryDate(e.target.value)} />
             </FormField>
             <div className="col-span-2">
-              <FormField label="Description">
-                <Input type="text" placeholder="Description de l'écriture..." value={newEntryDescription} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewEntryDescription(e.target.value)} />
+              <FormField label={t('admin.entries.descriptionHeader')}>
+                <Input type="text" placeholder={t('admin.entries.descriptionPlaceholder')} value={newEntryDescription} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewEntryDescription(e.target.value)} />
               </FormField>
             </div>
           </div>
@@ -622,19 +631,19 @@ export default function EcrituresPage() {
           {/* Journal Lines */}
           <div>
             <div className="flex items-center justify-between mb-3">
-              <h4 className="font-medium text-slate-900">Lignes d&apos;écriture</h4>
+              <h4 className="font-medium text-slate-900">{t('admin.entries.entryLines')}</h4>
               <Button variant="ghost" size="sm" icon={Plus} className="text-emerald-600 hover:text-emerald-700" onClick={addNewLine}>
-                Ajouter une ligne
+                {t('admin.entries.addLine')}
               </Button>
             </div>
             <div className="border border-slate-200 rounded-lg overflow-hidden">
               <table className="w-full">
                 <thead className="bg-slate-50">
                   <tr>
-                    <th className="px-4 py-2 text-left text-xs font-semibold text-slate-500">Compte</th>
-                    <th className="px-4 py-2 text-left text-xs font-semibold text-slate-500">Description</th>
-                    <th className="px-4 py-2 text-right text-xs font-semibold text-slate-500 w-32">Débit</th>
-                    <th className="px-4 py-2 text-right text-xs font-semibold text-slate-500 w-32">Crédit</th>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-slate-500">{t('admin.entries.accountHeader')}</th>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-slate-500">{t('admin.entries.descriptionHeader')}</th>
+                    <th className="px-4 py-2 text-right text-xs font-semibold text-slate-500 w-32">{t('admin.entries.debitHeader')}</th>
+                    <th className="px-4 py-2 text-right text-xs font-semibold text-slate-500 w-32">{t('admin.entries.creditHeader')}</th>
                     <th className="w-10" />
                   </tr>
                 </thead>
@@ -647,7 +656,7 @@ export default function EcrituresPage() {
                           value={line.accountCode}
                           onChange={(e) => updateNewLine(idx, 'accountCode', e.target.value)}
                         >
-                          <option value="">Sélectionner...</option>
+                          <option value="">{t('admin.entries.selectAccount')}</option>
                           {accountOptions.map((opt) => (
                             <option key={opt.value} value={opt.value}>{opt.label}</option>
                           ))}
@@ -657,7 +666,7 @@ export default function EcrituresPage() {
                         <input
                           type="text"
                           className="w-full px-2 py-1 border border-slate-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
-                          placeholder="Description..."
+                          placeholder={t('admin.entries.descriptionLinePlaceholder')}
                           value={line.description}
                           onChange={(e) => updateNewLine(idx, 'description', e.target.value)}
                         />
@@ -692,7 +701,7 @@ export default function EcrituresPage() {
                 </tbody>
                 <tfoot className="bg-slate-100">
                   <tr>
-                    <td colSpan={2} className="px-4 py-2 font-semibold text-slate-900">Total</td>
+                    <td colSpan={2} className="px-4 py-2 font-semibold text-slate-900">{t('admin.entries.total')}</td>
                     <td className="px-4 py-2 text-right font-bold text-slate-900">{fmtCurrency(newLinesTotalDebit)}</td>
                     <td className="px-4 py-2 text-right font-bold text-slate-900">{fmtCurrency(newLinesTotalCredit)}</td>
                     <td />
@@ -704,12 +713,12 @@ export default function EcrituresPage() {
 
           {/* Reference and Attachments */}
           <div className="grid grid-cols-2 gap-4">
-            <FormField label="Référence (optionnel)">
-              <Input type="text" placeholder="N° facture, commande..." value={newEntryReference} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewEntryReference(e.target.value)} />
+            <FormField label={t('admin.entries.referenceLabel')}>
+              <Input type="text" placeholder={t('admin.entries.referencePlaceholder')} value={newEntryReference} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewEntryReference(e.target.value)} />
             </FormField>
-            <FormField label="Pièce jointe">
+            <FormField label={t('admin.entries.attachmentLabel')}>
               <div className="border-2 border-dashed border-slate-300 rounded-lg p-4 text-center hover:border-emerald-400 cursor-pointer transition-colors">
-                <p className="text-sm text-slate-500">Glisser un fichier ou cliquer pour téléverser</p>
+                <p className="text-sm text-slate-500">{t('admin.entries.attachmentHint')}</p>
               </div>
             </FormField>
           </div>

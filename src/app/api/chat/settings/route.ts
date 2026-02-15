@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * API Chat Settings
  * GET /api/chat/settings - Obtenir les paramètres

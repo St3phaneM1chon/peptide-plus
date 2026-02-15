@@ -4,13 +4,16 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import { useTranslations } from '@/hooks/useTranslations';
+import { Toaster } from 'sonner';
+import { useAdminNotifications } from '@/hooks/useAdminNotifications';
 import type { LucideIcon } from 'lucide-react';
 import {
   LayoutDashboard, ShoppingCart, Users, Package, FolderOpen, Archive,
   Tag, Percent, Mail, ImageIcon, Star, HelpCircle, MessageCircle, Award,
   Gift, RefreshCw, Video, Truck, DollarSign, Send, Search, FileText,
   Briefcase, Calculator, PenLine, FileSpreadsheet, Landmark, TrendingUp,
-  BarChart2, Activity, UserCheck, Settings, Menu, X, ChevronDown,
+  BarChart2, Activity, UserCheck, Settings, Menu, ChevronDown,
   ChevronLeft, ExternalLink, Shield, Bell, FlaskConical, Languages
 } from 'lucide-react';
 
@@ -55,91 +58,92 @@ const iconMap: Record<string, LucideIcon> = {
 
 interface NavItem {
   href: string;
-  label: string;
+  labelKey: string;
   icon: string;
   badge?: boolean;
 }
 
 interface NavSection {
-  title: string;
+  titleKey: string;
   items: NavItem[];
 }
 
 const navSections: NavSection[] = [
   {
-    title: 'Principal',
+    titleKey: 'admin.nav.main',
     items: [
-      { href: '/admin/dashboard', label: 'Dashboard', icon: 'home' },
-      { href: '/admin/commandes', label: 'Commandes', icon: 'shopping-cart', badge: true },
-      { href: '/admin/clients', label: 'Clients', icon: 'users' },
+      { href: '/admin/dashboard', labelKey: 'admin.nav.dashboard', icon: 'home' },
+      { href: '/admin/commandes', labelKey: 'admin.nav.orders', icon: 'shopping-cart', badge: true },
+      { href: '/admin/customers', labelKey: 'admin.nav.customers', icon: 'users' },
+      { href: '/admin/clients', labelKey: 'admin.nav.distributors', icon: 'briefcase' },
     ],
   },
   {
-    title: 'Catalogue',
+    titleKey: 'admin.nav.catalog',
     items: [
-      { href: '/admin/produits', label: 'Produits', icon: 'package' },
-      { href: '/admin/categories', label: 'Categories', icon: 'folder' },
-      { href: '/admin/inventaire', label: 'Inventaire', icon: 'archive' },
+      { href: '/admin/produits', labelKey: 'admin.nav.products', icon: 'package' },
+      { href: '/admin/categories', labelKey: 'admin.nav.categories', icon: 'folder' },
+      { href: '/admin/inventaire', labelKey: 'admin.nav.inventory', icon: 'archive' },
     ],
   },
   {
-    title: 'Marketing',
+    titleKey: 'admin.nav.marketing',
     items: [
-      { href: '/admin/promo-codes', label: 'Codes Promo', icon: 'tag' },
-      { href: '/admin/promotions', label: 'Promotions', icon: 'percent' },
-      { href: '/admin/newsletter', label: 'Newsletter', icon: 'mail' },
-      { href: '/admin/bannieres', label: 'Bannieres', icon: 'image' },
+      { href: '/admin/promo-codes', labelKey: 'admin.nav.promoCodes', icon: 'tag' },
+      { href: '/admin/promotions', labelKey: 'admin.nav.promotions', icon: 'percent' },
+      { href: '/admin/newsletter', labelKey: 'admin.nav.newsletter', icon: 'mail' },
+      { href: '/admin/bannieres', labelKey: 'admin.nav.banners', icon: 'image' },
     ],
   },
   {
-    title: 'Communaute',
+    titleKey: 'admin.nav.community',
     items: [
-      { href: '/admin/avis', label: 'Avis', icon: 'star' },
-      { href: '/admin/questions', label: 'Questions', icon: 'help-circle' },
-      { href: '/admin/chat', label: 'Chat Support', icon: 'message-circle' },
-      { href: '/admin/ambassadeurs', label: 'Ambassadeurs', icon: 'award' },
+      { href: '/admin/avis', labelKey: 'admin.nav.reviews', icon: 'star' },
+      { href: '/admin/questions', labelKey: 'admin.nav.questions', icon: 'help-circle' },
+      { href: '/admin/chat', labelKey: 'admin.nav.chatSupport', icon: 'message-circle' },
+      { href: '/admin/ambassadeurs', labelKey: 'admin.nav.ambassadors', icon: 'award' },
     ],
   },
   {
-    title: 'Fidelite',
+    titleKey: 'admin.nav.loyalty',
     items: [
-      { href: '/admin/fidelite', label: 'Programme Fidelite', icon: 'gift' },
-      { href: '/admin/abonnements', label: 'Abonnements', icon: 'refresh-cw' },
-      { href: '/admin/webinaires', label: 'Webinaires', icon: 'video' },
+      { href: '/admin/fidelite', labelKey: 'admin.nav.loyaltyProgram', icon: 'gift' },
+      { href: '/admin/abonnements', labelKey: 'admin.nav.subscriptions', icon: 'refresh-cw' },
+      { href: '/admin/webinaires', labelKey: 'admin.nav.webinars', icon: 'video' },
     ],
   },
   {
-    title: 'Configuration',
+    titleKey: 'admin.nav.configuration',
     items: [
-      { href: '/admin/livraison', label: 'Zones Livraison', icon: 'truck' },
-      { href: '/admin/devises', label: 'Devises', icon: 'dollar-sign' },
-      { href: '/admin/emails', label: 'Emails', icon: 'send' },
-      { href: '/admin/seo', label: 'SEO', icon: 'search' },
-      { href: '/admin/traductions', label: 'Traductions', icon: 'languages' },
-      { href: '/admin/contenu', label: 'Contenu/Pages', icon: 'file-text' },
-      { href: '/admin/medias', label: 'Medias', icon: 'image' },
+      { href: '/admin/livraison', labelKey: 'admin.nav.shippingZones', icon: 'truck' },
+      { href: '/admin/devises', labelKey: 'admin.nav.currencies', icon: 'dollar-sign' },
+      { href: '/admin/emails', labelKey: 'admin.nav.emails', icon: 'send' },
+      { href: '/admin/seo', labelKey: 'admin.nav.seo', icon: 'search' },
+      { href: '/admin/traductions', labelKey: 'admin.nav.translations', icon: 'languages' },
+      { href: '/admin/contenu', labelKey: 'admin.nav.contentPages', icon: 'file-text' },
+      { href: '/admin/medias', labelKey: 'admin.nav.media', icon: 'image' },
     ],
   },
   {
-    title: 'Comptabilite',
+    titleKey: 'admin.nav.accounting',
     items: [
-      { href: '/admin/comptabilite', label: 'Dashboard Comptable', icon: 'calculator' },
-      { href: '/admin/comptabilite/ecritures', label: 'Ecritures', icon: 'edit-3' },
-      { href: '/admin/comptabilite/factures-clients', label: 'Factures Clients', icon: 'file-invoice' },
-      { href: '/admin/comptabilite/banques', label: 'Banques', icon: 'bank' },
-      { href: '/admin/comptabilite/etats-financiers', label: 'Etats Financiers', icon: 'trending-up' },
+      { href: '/admin/comptabilite', labelKey: 'admin.nav.accountingDashboard', icon: 'calculator' },
+      { href: '/admin/comptabilite/ecritures', labelKey: 'admin.nav.entries', icon: 'edit-3' },
+      { href: '/admin/comptabilite/factures-clients', labelKey: 'admin.nav.customerInvoices', icon: 'file-invoice' },
+      { href: '/admin/comptabilite/banques', labelKey: 'admin.nav.banks', icon: 'bank' },
+      { href: '/admin/comptabilite/etats-financiers', labelKey: 'admin.nav.financialStatements', icon: 'trending-up' },
     ],
   },
   {
-    title: 'Systeme',
+    titleKey: 'admin.nav.system',
     items: [
-      { href: '/admin/permissions', label: 'Permissions', icon: 'shield' },
-      { href: '/admin/fiscal', label: 'Fiscal & Taxes', icon: 'briefcase' },
-      { href: '/admin/rapports', label: 'Rapports', icon: 'bar-chart-2' },
-      { href: '/admin/logs', label: 'Logs/Audit', icon: 'activity' },
-      { href: '/admin/employes', label: 'Employes', icon: 'user-check' },
-      { href: '/admin/parametres', label: 'Parametres', icon: 'settings' },
-      { href: '/admin/uat', label: 'UAT Testing', icon: 'flask' },
+      { href: '/admin/permissions', labelKey: 'admin.nav.permissions', icon: 'shield' },
+      { href: '/admin/fiscal', labelKey: 'admin.nav.fiscalTaxes', icon: 'briefcase' },
+      { href: '/admin/rapports', labelKey: 'admin.nav.reports', icon: 'bar-chart-2' },
+      { href: '/admin/logs', labelKey: 'admin.nav.logsAudit', icon: 'activity' },
+      { href: '/admin/employes', labelKey: 'admin.nav.employees', icon: 'user-check' },
+      { href: '/admin/parametres', labelKey: 'admin.nav.settings', icon: 'settings' },
+      { href: '/admin/uat', labelKey: 'admin.nav.uatTesting', icon: 'flask' },
     ],
   },
 ];
@@ -153,14 +157,16 @@ function NavIcon({ name, className = 'w-[18px] h-[18px]' }: { name: string; clas
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [expandedSections, setExpandedSections] = useState<string[]>(['Principal', 'Catalogue']);
+  const [expandedSections, setExpandedSections] = useState<string[]>(['admin.nav.main', 'admin.nav.catalog']);
   const pathname = usePathname();
   const { data: session } = useSession();
+  const { t } = useTranslations();
+  const { pendingOrders, unreadChats } = useAdminNotifications();
 
   const toggleSection = (title: string) => {
     setExpandedSections(prev =>
       prev.includes(title)
-        ? prev.filter(t => t !== title)
+        ? prev.filter(s => s !== title)
         : [...prev, title]
     );
   };
@@ -191,7 +197,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <div className="w-7 h-7 bg-sky-500 rounded-md flex items-center justify-center flex-shrink-0">
                 <span className="text-white font-bold text-xs">BC</span>
               </div>
-              <span className="font-semibold text-[15px] text-slate-100">BioCycle Admin</span>
+              <span className="font-semibold text-[15px] text-slate-100">{t('admin.brandName')}</span>
             </Link>
           ) : (
             <Link href="/admin/dashboard" className="mx-auto">
@@ -211,20 +217,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {/* Navigation */}
         <nav className="px-3 py-3 overflow-y-auto h-[calc(100vh-7rem)] scrollbar-thin scrollbar-thumb-slate-700">
           {navSections.map((section) => (
-            <div key={section.title} className="mb-1">
+            <div key={section.titleKey} className="mb-1">
               {sidebarOpen && (
                 <button
-                  onClick={() => toggleSection(section.title)}
+                  onClick={() => toggleSection(section.titleKey)}
                   className="w-full flex items-center justify-between px-2 py-1.5 text-[11px] font-semibold text-slate-500 uppercase tracking-wider hover:text-slate-400 transition-colors"
                 >
-                  {section.title}
+                  {t(section.titleKey)}
                   <ChevronDown
-                    className={`w-3.5 h-3.5 transition-transform duration-200 ${expandedSections.includes(section.title) ? '' : '-rotate-90'}`}
+                    className={`w-3.5 h-3.5 transition-transform duration-200 ${expandedSections.includes(section.titleKey) ? '' : '-rotate-90'}`}
                   />
                 </button>
               )}
 
-              {(expandedSections.includes(section.title) || !sidebarOpen) && (
+              {(expandedSections.includes(section.titleKey) || !sidebarOpen) && (
                 <div className="space-y-0.5 mt-0.5">
                   {section.items.map((item) => (
                     <Link
@@ -237,13 +243,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         }
                         ${!sidebarOpen ? 'justify-center px-0' : ''}
                       `}
-                      title={!sidebarOpen ? item.label : undefined}
+                      title={!sidebarOpen ? t(item.labelKey) : undefined}
                     >
                       <NavIcon name={item.icon} className="w-[18px] h-[18px] flex-shrink-0" />
-                      {sidebarOpen && <span className="text-[13px] font-medium truncate">{item.label}</span>}
-                      {item.badge && sidebarOpen && (
+                      {sidebarOpen && <span className="text-[13px] font-medium truncate">{t(item.labelKey)}</span>}
+                      {item.badge && sidebarOpen && pendingOrders > 0 && (
                         <span className="ml-auto bg-red-500 text-white text-[10px] font-semibold px-1.5 py-0.5 rounded-full leading-none">
-                          3
+                          {pendingOrders}
                         </span>
                       )}
                     </Link>
@@ -261,7 +267,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             className="flex items-center gap-2 text-slate-500 hover:text-slate-300 text-[13px] transition-colors px-2.5 py-1.5"
           >
             <ExternalLink className="w-4 h-4 flex-shrink-0" />
-            {sidebarOpen && <span>Voir le site</span>}
+            {sidebarOpen && <span>{t('admin.viewSite')}</span>}
           </Link>
         </div>
       </aside>
@@ -281,7 +287,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
           <div className="flex items-center gap-2">
             {/* Notifications */}
-            <button className="relative p-2 hover:bg-slate-100 rounded-lg transition-colors" title="Notifications">
+            <button className="relative p-2 hover:bg-slate-100 rounded-lg transition-colors" title={t('admin.notifications')}>
               <Bell className="w-[18px] h-[18px] text-slate-500" />
               <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
             </button>
@@ -290,24 +296,28 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <Link
               href="/admin/commandes"
               className="relative p-2 hover:bg-slate-100 rounded-lg transition-colors"
-              title="Commandes"
+              title={t('admin.nav.orders')}
             >
               <ShoppingCart className="w-[18px] h-[18px] text-slate-500" />
-              <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-semibold rounded-full flex items-center justify-center leading-none px-1">
-                3
-              </span>
+              {pendingOrders > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-semibold rounded-full flex items-center justify-center leading-none px-1">
+                  {pendingOrders}
+                </span>
+              )}
             </Link>
 
             {/* Chat */}
             <Link
               href="/admin/chat"
               className="relative p-2 hover:bg-slate-100 rounded-lg transition-colors"
-              title="Chat"
+              title={t('admin.chat')}
             >
               <MessageCircle className="w-[18px] h-[18px] text-slate-500" />
-              <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-sky-500 text-white text-[10px] font-semibold rounded-full flex items-center justify-center leading-none px-1">
-                2
-              </span>
+              {unreadChats > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-sky-500 text-white text-[10px] font-semibold rounded-full flex items-center justify-center leading-none px-1">
+                  {unreadChats}
+                </span>
+              )}
             </Link>
 
             {/* Separator */}
@@ -337,6 +347,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           {children}
         </main>
       </div>
+      <Toaster position="top-right" richColors closeButton />
     </div>
   );
 }

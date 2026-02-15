@@ -98,7 +98,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     const { name, image, role } = body;
 
     // Seul un admin peut changer le rôle
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
     
     if (name !== undefined) updateData.name = name;
     if (image !== undefined) updateData.image = image;

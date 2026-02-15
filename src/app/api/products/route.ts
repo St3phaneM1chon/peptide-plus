@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
     const includeInactive = searchParams.get('includeInactive') === 'true';
     const locale = searchParams.get('locale') || defaultLocale;
 
-    const where: any = {};
+    const where: Record<string, unknown> = {};
 
     if (!includeInactive) {
       where.isActive = true;
@@ -65,7 +65,9 @@ export async function GET(request: NextRequest) {
       products = await withTranslations(products, 'Product', locale);
     }
 
-    return NextResponse.json({ products });
+    return NextResponse.json({ products }, {
+      headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600' },
+    });
   } catch (error) {
     console.error('Error fetching products:', error);
     return NextResponse.json(
@@ -123,6 +125,11 @@ export async function POST(request: NextRequest) {
       // SEO
       metaTitle,
       metaDescription,
+      // Research content
+      researchSays,
+      relatedResearch,
+      participateResearch,
+      customSections,
       // Status
       isFeatured,
       isActive,
@@ -187,12 +194,17 @@ export async function POST(request: NextRequest) {
         // SEO
         metaTitle,
         metaDescription,
+        // Research content
+        researchSays,
+        relatedResearch,
+        participateResearch,
+        customSections,
         // Status
         isFeatured: isFeatured || false,
         isActive: isActive !== undefined ? isActive : true,
         // Images
         images: images && images.length > 0 ? {
-          create: images.map((img: any, index: number) => ({
+          create: images.map((img: Record<string, unknown>, index: number) => ({
             url: img.url,
             alt: img.alt || '',
             caption: img.caption || '',
@@ -202,17 +214,26 @@ export async function POST(request: NextRequest) {
         } : undefined,
         // Formats
         formats: formats && formats.length > 0 ? {
-          create: formats.map((f: any, index: number) => ({
+          create: formats.map((f: Record<string, unknown>, index: number) => ({
+            formatType: f.formatType || 'VIAL_2ML',
             name: f.name,
             description: f.description || '',
-            price: f.price || null,
-            sku: f.sku || '',
-            downloadUrl: f.downloadUrl || '',
-            fileSize: f.fileSize || '',
+            imageUrl: f.imageUrl || null,
+            dosageMg: f.dosageMg || null,
+            volumeMl: f.volumeMl || null,
+            unitCount: f.unitCount || null,
+            costPrice: f.costPrice || null,
+            price: f.price || 0,
+            comparePrice: f.comparePrice || null,
+            sku: f.sku || null,
+            barcode: f.barcode || null,
             inStock: f.inStock !== false,
-            stockQuantity: f.stockQuantity || null,
+            stockQuantity: f.stockQuantity || 0,
+            lowStockThreshold: f.lowStockThreshold ?? 5,
+            availability: f.availability || 'IN_STOCK',
             sortOrder: f.sortOrder ?? index,
             isDefault: f.isDefault || false,
+            isActive: f.isActive !== false,
           })),
         } : undefined,
       },

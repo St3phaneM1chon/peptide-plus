@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * API FORGOT PASSWORD
  * Envoie un email de réinitialisation de mot de passe

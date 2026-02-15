@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * PayPal Webhook Handler
  * Handles payment events from PayPal with idempotence via WebhookEvent model
@@ -177,6 +179,7 @@ export async function POST(request: NextRequest) {
  * - Create accounting entries
  * - Consume inventory reservations
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- PayPal webhook event has deeply nested dynamic structure
 async function handleCaptureCompleted(event: any, webhookRecordId: string) {
   const capture = event.resource;
   const paypalOrderId = capture.supplementary_data?.related_ids?.order_id || capture.id;
@@ -228,6 +231,14 @@ async function handleCaptureCompleted(event: any, webhookRecordId: string) {
     console.error(`Failed to consume inventory for order ${order.id}:`, invError);
     // Don't throw - order is still valid even if inventory consumption fails
   }
+
+  // Create ambassador commission if the order used a referral code
+  try {
+    await createAmbassadorCommission(order.id, order.orderNumber, Number(order.total), order.promoCode);
+  } catch (commError) {
+    console.error(`Failed to create ambassador commission for order ${order.id}:`, commError);
+    // Don't throw - order is still valid even if commission creation fails
+  }
 }
 
 /**
@@ -236,6 +247,7 @@ async function handleCaptureCompleted(event: any, webhookRecordId: string) {
  * - Create refund accounting entries
  * - Restore stock via RETURN inventory transactions
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- PayPal webhook event has deeply nested dynamic structure
 async function handleCaptureRefunded(event: any, webhookRecordId: string) {
   const capture = event.resource;
   const paypalOrderId = capture.supplementary_data?.related_ids?.order_id || capture.id;
@@ -341,6 +353,7 @@ async function handleCaptureRefunded(event: any, webhookRecordId: string) {
  * Handle PAYMENT.CAPTURE.DENIED
  * - Update order status to failed
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- PayPal webhook event has deeply nested dynamic structure
 async function handleCaptureDenied(event: any, webhookRecordId: string) {
   const capture = event.resource;
   const paypalOrderId = capture.supplementary_data?.related_ids?.order_id || capture.id;
@@ -370,4 +383,47 @@ async function handleCaptureDenied(event: any, webhookRecordId: string) {
   });
 
   console.log(`Order ${order.orderNumber} marked as failed (PayPal capture denied)`);
+}
+
+/**
+ * Create an ambassador commission record when a paid order used a referral code.
+ * Silently skips if the promo code doesn't match an ambassador or if a commission already exists.
+ */
+async function createAmbassadorCommission(
+  orderId: string,
+  orderNumber: string,
+  orderTotal: number,
+  promoCode: string | null
+) {
+  if (!promoCode) return;
+
+  const ambassador = await prisma.ambassador.findUnique({
+    where: { referralCode: promoCode },
+  });
+
+  if (!ambassador || ambassador.status !== 'ACTIVE') return;
+
+  const rate = Number(ambassador.commissionRate);
+  const commissionAmount = Math.round(orderTotal * rate) / 100;
+
+  // Use upsert to avoid duplicates (idempotent for webhook retries)
+  await prisma.ambassadorCommission.upsert({
+    where: {
+      ambassadorId_orderId: {
+        ambassadorId: ambassador.id,
+        orderId,
+      },
+    },
+    create: {
+      ambassadorId: ambassador.id,
+      orderId,
+      orderNumber,
+      orderTotal,
+      commissionRate: rate,
+      commissionAmount,
+    },
+    update: {}, // No-op if already exists
+  });
+
+  console.log(`Ambassador commission created: ${commissionAmount}$ for ${ambassador.name} (order ${orderNumber})`);
 }

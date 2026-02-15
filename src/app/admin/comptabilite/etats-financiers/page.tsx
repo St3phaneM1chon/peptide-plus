@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { Download, Loader2 } from 'lucide-react';
 import { PageHeader, Button } from '@/components/admin';
+import { useI18n } from '@/i18n/client';
+import { toast } from 'sonner';
 
 interface FinancialData {
   incomeStatement: {
@@ -29,6 +31,7 @@ interface FinancialData {
 }
 
 export default function EtatsFinanciersPage() {
+  const { t } = useI18n();
   const [selectedPeriod, setSelectedPeriod] = useState('2026-01');
   const [activeTab, setActiveTab] = useState<'bilan' | 'resultats' | 'flux'>('resultats');
   const [loading, setLoading] = useState(true);
@@ -63,7 +66,7 @@ export default function EtatsFinanciersPage() {
       // The API returns HTML, so we parse the data from the general-ledger endpoint instead
       // Let's use the general-ledger to construct financial statements
       const glRes = await fetch('/api/accounting/general-ledger?posted=true');
-      if (!glRes.ok) throw new Error('Erreur lors du chargement des données');
+      if (!glRes.ok) throw new Error(t('admin.financialStatements.errorLoadData'));
       const glData = await glRes.json();
 
       const revenue: Record<string, number> = {};
@@ -131,7 +134,7 @@ export default function EtatsFinanciersPage() {
       void incomeRes;
       void balanceRes;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erreur inconnue');
+      setError(err instanceof Error ? err.message : t('admin.financialStatements.errorUnknown'));
     } finally {
       setLoading(false);
     }
@@ -150,16 +153,21 @@ export default function EtatsFinanciersPage() {
       const res = await fetch(`/api/accounting/reports/pdf?type=${reportType}&period=${selectedPeriod}`);
       if (!res.ok) {
         const errorData = await res.json().catch(() => null);
-        throw new Error(errorData?.error || 'Erreur lors de la génération du PDF');
+        throw new Error(errorData?.error || t('admin.financialStatements.errorGeneratingPdf'));
       }
       const html = await res.text();
-      const newWindow = window.open('', '_blank');
+      // SECURITY: Use Blob URL instead of document.write to avoid XSS vectors
+      const blob = new Blob([html], { type: 'text/html; charset=utf-8' });
+      const blobUrl = URL.createObjectURL(blob);
+      const newWindow = window.open(blobUrl, '_blank');
+      // Clean up the Blob URL after a delay to allow the window to load
       if (newWindow) {
-        newWindow.document.write(html);
-        newWindow.document.close();
+        newWindow.addEventListener('load', () => URL.revokeObjectURL(blobUrl));
+      } else {
+        URL.revokeObjectURL(blobUrl);
       }
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Erreur');
+      toast.error(err instanceof Error ? err.message : 'Erreur');
     } finally {
       setExportingPdf(false);
     }
@@ -170,8 +178,8 @@ export default function EtatsFinanciersPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedPeriod]);
 
-  if (loading) return <div className="p-8 text-center">Chargement...</div>;
-  if (error) return <div className="p-8 text-center text-red-600">Erreur: {error}</div>;
+  if (loading) return <div className="p-8 text-center">{t('admin.financialStatements.loading')}</div>;
+  if (error) return <div className="p-8 text-center text-red-600">{t('admin.financialStatements.errorPrefix')} {error}</div>;
 
   // Income statement calculations
   const { incomeStatement, balanceSheet, cashFlow } = data;
@@ -197,18 +205,18 @@ export default function EtatsFinanciersPage() {
   const netCashFlow = operatingCashFlow + investingCashFlow + financingCashFlow;
 
   const periodLabel = selectedPeriod === '2025'
-    ? 'Année 2025'
+    ? t('admin.financialStatements.periodYear2025')
     : selectedPeriod === '2025-Q4'
-    ? 'Q4 2025'
+    ? t('admin.financialStatements.periodQ42025')
     : selectedPeriod === '2026-01'
-    ? 'Janvier 2026'
+    ? t('admin.financialStatements.periodJan2026')
     : selectedPeriod;
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="États financiers"
-        subtitle="Bilan, état des résultats et flux de trésorerie"
+        title={t('admin.financialStatements.title')}
+        subtitle={t('admin.financialStatements.subtitle')}
         actions={
           <div className="flex gap-3">
             <select
@@ -216,9 +224,9 @@ export default function EtatsFinanciersPage() {
               onChange={(e) => setSelectedPeriod(e.target.value)}
               className="h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
             >
-              <option value="2026-01">Janvier 2026</option>
-              <option value="2025-Q4">Q4 2025</option>
-              <option value="2025">Année 2025</option>
+              <option value="2026-01">{t('admin.financialStatements.january2026')}</option>
+              <option value="2025-Q4">{t('admin.financialStatements.q42025')}</option>
+              <option value="2025">{t('admin.financialStatements.year2025')}</option>
             </select>
             <Button
               variant="primary"
@@ -227,7 +235,7 @@ export default function EtatsFinanciersPage() {
               onClick={handleExportPdf}
               disabled={exportingPdf}
             >
-              {exportingPdf ? 'Génération...' : 'Exporter PDF'}
+              {exportingPdf ? t('admin.financialStatements.generatingPdf') : t('admin.financialStatements.exportPdf')}
             </Button>
           </div>
         }
@@ -242,7 +250,7 @@ export default function EtatsFinanciersPage() {
               activeTab === 'resultats' ? 'border-emerald-500 text-emerald-600' : 'border-transparent text-slate-500'
             }`}
           >
-            État des résultats
+            {t('admin.financialStatements.tabIncomeStatement')}
           </button>
           <button
             onClick={() => setActiveTab('bilan')}
@@ -250,7 +258,7 @@ export default function EtatsFinanciersPage() {
               activeTab === 'bilan' ? 'border-emerald-500 text-emerald-600' : 'border-transparent text-slate-500'
             }`}
           >
-            Bilan
+            {t('admin.financialStatements.tabBalanceSheet')}
           </button>
           <button
             onClick={() => setActiveTab('flux')}
@@ -258,7 +266,7 @@ export default function EtatsFinanciersPage() {
               activeTab === 'flux' ? 'border-emerald-500 text-emerald-600' : 'border-transparent text-slate-500'
             }`}
           >
-            Flux de trésorerie
+            {t('admin.financialStatements.tabCashFlow')}
           </button>
         </nav>
       </div>
@@ -267,20 +275,20 @@ export default function EtatsFinanciersPage() {
       {activeTab === 'resultats' && (
         <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
           <div className="p-6 bg-emerald-50 border-b border-emerald-200">
-            <h2 className="text-xl font-bold text-emerald-900">État des résultats</h2>
+            <h2 className="text-xl font-bold text-emerald-900">{t('admin.financialStatements.incomeStatementTitle')}</h2>
             <p className="text-emerald-700">BioCycle Peptides Inc. - {periodLabel}</p>
           </div>
           <div className="p-6">
             {totalRevenue === 0 && totalCogs === 0 && totalExpenses === 0 ? (
               <div className="text-center py-8 text-slate-500">
-                Aucune écriture comptable pour cette période
+                {t('admin.financialStatements.noEntriesForPeriod')}
               </div>
             ) : (
               <table className="w-full">
                 <tbody>
                   {/* Revenus */}
                   <tr className="bg-slate-50">
-                    <td colSpan={2} className="px-4 py-3 font-bold text-slate-900">REVENUS</td>
+                    <td colSpan={2} className="px-4 py-3 font-bold text-slate-900">{t('admin.financialStatements.revenue')}</td>
                   </tr>
                   {Object.entries(incomeStatement.revenue).map(([name, amount]) => (
                     <tr key={name}>
@@ -289,7 +297,7 @@ export default function EtatsFinanciersPage() {
                     </tr>
                   ))}
                   <tr className="border-t border-slate-200">
-                    <td className="px-4 py-3 font-semibold text-slate-900">Total revenus</td>
+                    <td className="px-4 py-3 font-semibold text-slate-900">{t('admin.financialStatements.totalRevenue')}</td>
                     <td className="px-4 py-3 text-right font-bold text-emerald-600">{totalRevenue.toLocaleString()} $</td>
                   </tr>
 
@@ -297,7 +305,7 @@ export default function EtatsFinanciersPage() {
                   {Object.keys(incomeStatement.cogs).length > 0 && (
                     <>
                       <tr className="bg-slate-50">
-                        <td colSpan={2} className="px-4 py-3 font-bold text-slate-900">COÛT DES MARCHANDISES VENDUES</td>
+                        <td colSpan={2} className="px-4 py-3 font-bold text-slate-900">{t('admin.financialStatements.cogs')}</td>
                       </tr>
                       {Object.entries(incomeStatement.cogs).map(([name, amount]) => (
                         <tr key={name}>
@@ -306,7 +314,7 @@ export default function EtatsFinanciersPage() {
                         </tr>
                       ))}
                       <tr className="border-t border-slate-200">
-                        <td className="px-4 py-3 font-semibold text-slate-900">Total CMV</td>
+                        <td className="px-4 py-3 font-semibold text-slate-900">{t('admin.financialStatements.totalCogs')}</td>
                         <td className="px-4 py-3 text-right font-bold text-red-600">({totalCogs.toLocaleString()}) $</td>
                       </tr>
                     </>
@@ -314,7 +322,7 @@ export default function EtatsFinanciersPage() {
 
                   {/* Marge brute */}
                   <tr className="bg-emerald-100">
-                    <td className="px-4 py-3 font-bold text-emerald-900">MARGE BRUTE</td>
+                    <td className="px-4 py-3 font-bold text-emerald-900">{t('admin.financialStatements.grossMargin')}</td>
                     <td className="px-4 py-3 text-right font-bold text-emerald-700">
                       {grossProfit.toLocaleString()} $ {totalRevenue > 0 ? `(${((grossProfit / totalRevenue) * 100).toFixed(1)}%)` : ''}
                     </td>
@@ -324,7 +332,7 @@ export default function EtatsFinanciersPage() {
                   {Object.keys(incomeStatement.expenses).length > 0 && (
                     <>
                       <tr className="bg-slate-50">
-                        <td colSpan={2} className="px-4 py-3 font-bold text-slate-900">DÉPENSES D&apos;EXPLOITATION</td>
+                        <td colSpan={2} className="px-4 py-3 font-bold text-slate-900">{t('admin.financialStatements.operatingExpenses')}</td>
                       </tr>
                       {Object.entries(incomeStatement.expenses).map(([name, amount]) => (
                         <tr key={name}>
@@ -333,7 +341,7 @@ export default function EtatsFinanciersPage() {
                         </tr>
                       ))}
                       <tr className="border-t border-slate-200">
-                        <td className="px-4 py-3 font-semibold text-slate-900">Total dépenses</td>
+                        <td className="px-4 py-3 font-semibold text-slate-900">{t('admin.financialStatements.totalExpenses')}</td>
                         <td className="px-4 py-3 text-right font-bold text-red-600">({totalExpenses.toLocaleString()}) $</td>
                       </tr>
                     </>
@@ -341,7 +349,7 @@ export default function EtatsFinanciersPage() {
 
                   {/* Bénéfice d'exploitation */}
                   <tr className="bg-blue-100">
-                    <td className="px-4 py-3 font-bold text-blue-900">BÉNÉFICE D&apos;EXPLOITATION</td>
+                    <td className="px-4 py-3 font-bold text-blue-900">{t('admin.financialStatements.operatingProfit')}</td>
                     <td className="px-4 py-3 text-right font-bold text-blue-700">{operatingProfit.toLocaleString()} $</td>
                   </tr>
 
@@ -349,7 +357,7 @@ export default function EtatsFinanciersPage() {
                   {Object.keys(incomeStatement.other).length > 0 && (
                     <>
                       <tr className="bg-slate-50">
-                        <td colSpan={2} className="px-4 py-3 font-bold text-slate-900">AUTRES PRODUITS / CHARGES</td>
+                        <td colSpan={2} className="px-4 py-3 font-bold text-slate-900">{t('admin.financialStatements.otherIncomeExpense')}</td>
                       </tr>
                       {Object.entries(incomeStatement.other).map(([name, amount]) => (
                         <tr key={name}>
@@ -364,7 +372,7 @@ export default function EtatsFinanciersPage() {
 
                   {/* Bénéfice net */}
                   <tr className="bg-emerald-600 text-white">
-                    <td className="px-4 py-4 font-bold text-lg">BÉNÉFICE NET</td>
+                    <td className="px-4 py-4 font-bold text-lg">{t('admin.financialStatements.netProfit')}</td>
                     <td className="px-4 py-4 text-right font-bold text-lg">{netProfit.toLocaleString()} $</td>
                   </tr>
                 </tbody>
@@ -380,17 +388,17 @@ export default function EtatsFinanciersPage() {
           {/* Actifs */}
           <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
             <div className="p-6 bg-blue-50 border-b border-blue-200">
-              <h2 className="text-xl font-bold text-blue-900">ACTIFS</h2>
+              <h2 className="text-xl font-bold text-blue-900">{t('admin.financialStatements.assetsTitle')}</h2>
             </div>
             <div className="p-6">
               {totalAssets === 0 ? (
-                <div className="text-center py-8 text-slate-500">Aucun actif enregistré</div>
+                <div className="text-center py-8 text-slate-500">{t('admin.financialStatements.noAssetsRecorded')}</div>
               ) : (
                 <table className="w-full">
                   <tbody>
                     {Object.keys(balanceSheet.assets.current).length > 0 && (
                       <>
-                        <tr className="bg-slate-50"><td colSpan={2} className="px-4 py-2 font-semibold text-slate-700">Actifs courants</td></tr>
+                        <tr className="bg-slate-50"><td colSpan={2} className="px-4 py-2 font-semibold text-slate-700">{t('admin.financialStatements.currentAssets')}</td></tr>
                         {Object.entries(balanceSheet.assets.current).map(([name, amount]) => (
                           <tr key={name}>
                             <td className="px-6 py-2 text-slate-600">{name}</td>
@@ -399,13 +407,13 @@ export default function EtatsFinanciersPage() {
                             </td>
                           </tr>
                         ))}
-                        <tr className="border-t"><td className="px-4 py-2 font-medium">Total actifs courants</td><td className="px-4 py-2 text-right font-medium">{totalCurrentAssets.toLocaleString()} $</td></tr>
+                        <tr className="border-t"><td className="px-4 py-2 font-medium">{t('admin.financialStatements.totalCurrentAssets')}</td><td className="px-4 py-2 text-right font-medium">{totalCurrentAssets.toLocaleString()} $</td></tr>
                       </>
                     )}
 
                     {Object.keys(balanceSheet.assets.nonCurrent).length > 0 && (
                       <>
-                        <tr className="bg-slate-50"><td colSpan={2} className="px-4 py-2 font-semibold text-slate-700 mt-4">Actifs non courants</td></tr>
+                        <tr className="bg-slate-50"><td colSpan={2} className="px-4 py-2 font-semibold text-slate-700 mt-4">{t('admin.financialStatements.nonCurrentAssets')}</td></tr>
                         {Object.entries(balanceSheet.assets.nonCurrent).map(([name, amount]) => (
                           <tr key={name}>
                             <td className="px-6 py-2 text-slate-600">{name}</td>
@@ -414,11 +422,11 @@ export default function EtatsFinanciersPage() {
                             </td>
                           </tr>
                         ))}
-                        <tr className="border-t"><td className="px-4 py-2 font-medium">Total actifs non courants</td><td className="px-4 py-2 text-right font-medium">{totalNonCurrentAssets.toLocaleString()} $</td></tr>
+                        <tr className="border-t"><td className="px-4 py-2 font-medium">{t('admin.financialStatements.totalNonCurrentAssets')}</td><td className="px-4 py-2 text-right font-medium">{totalNonCurrentAssets.toLocaleString()} $</td></tr>
                       </>
                     )}
 
-                    <tr className="bg-blue-100"><td className="px-4 py-3 font-bold text-blue-900">TOTAL ACTIFS</td><td className="px-4 py-3 text-right font-bold text-blue-700">{totalAssets.toLocaleString()} $</td></tr>
+                    <tr className="bg-blue-100"><td className="px-4 py-3 font-bold text-blue-900">{t('admin.financialStatements.totalAssets')}</td><td className="px-4 py-3 text-right font-bold text-blue-700">{totalAssets.toLocaleString()} $</td></tr>
                   </tbody>
                 </table>
               )}
@@ -428,41 +436,41 @@ export default function EtatsFinanciersPage() {
           {/* Passifs et Capitaux */}
           <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
             <div className="p-6 bg-red-50 border-b border-red-200">
-              <h2 className="text-xl font-bold text-red-900">PASSIFS & CAPITAUX PROPRES</h2>
+              <h2 className="text-xl font-bold text-red-900">{t('admin.financialStatements.liabilitiesEquityTitle')}</h2>
             </div>
             <div className="p-6">
               {totalLiabilities === 0 && totalEquity === 0 ? (
-                <div className="text-center py-8 text-slate-500">Aucun passif enregistré</div>
+                <div className="text-center py-8 text-slate-500">{t('admin.financialStatements.noLiabilitiesRecorded')}</div>
               ) : (
                 <table className="w-full">
                   <tbody>
                     {Object.keys(balanceSheet.liabilities.current).length > 0 && (
                       <>
-                        <tr className="bg-slate-50"><td colSpan={2} className="px-4 py-2 font-semibold text-slate-700">Passifs courants</td></tr>
+                        <tr className="bg-slate-50"><td colSpan={2} className="px-4 py-2 font-semibold text-slate-700">{t('admin.financialStatements.currentLiabilities')}</td></tr>
                         {Object.entries(balanceSheet.liabilities.current).map(([name, amount]) => (
                           <tr key={name}>
                             <td className="px-6 py-2 text-slate-600">{name}</td>
                             <td className="px-4 py-2 text-right">{amount.toLocaleString()} $</td>
                           </tr>
                         ))}
-                        <tr className="border-t"><td className="px-4 py-2 font-medium">Total passifs</td><td className="px-4 py-2 text-right font-medium">{totalLiabilities.toLocaleString()} $</td></tr>
+                        <tr className="border-t"><td className="px-4 py-2 font-medium">{t('admin.financialStatements.totalLiabilities')}</td><td className="px-4 py-2 text-right font-medium">{totalLiabilities.toLocaleString()} $</td></tr>
                       </>
                     )}
 
                     {Object.keys(balanceSheet.equity).length > 0 && (
                       <>
-                        <tr className="bg-slate-50"><td colSpan={2} className="px-4 py-2 font-semibold text-slate-700 mt-4">Capitaux propres</td></tr>
+                        <tr className="bg-slate-50"><td colSpan={2} className="px-4 py-2 font-semibold text-slate-700 mt-4">{t('admin.financialStatements.equity')}</td></tr>
                         {Object.entries(balanceSheet.equity).map(([name, amount]) => (
                           <tr key={name}>
                             <td className="px-6 py-2 text-slate-600">{name}</td>
                             <td className="px-4 py-2 text-right">{amount.toLocaleString()} $</td>
                           </tr>
                         ))}
-                        <tr className="border-t"><td className="px-4 py-2 font-medium">Total capitaux propres</td><td className="px-4 py-2 text-right font-medium">{totalEquity.toLocaleString()} $</td></tr>
+                        <tr className="border-t"><td className="px-4 py-2 font-medium">{t('admin.financialStatements.totalEquity')}</td><td className="px-4 py-2 text-right font-medium">{totalEquity.toLocaleString()} $</td></tr>
                       </>
                     )}
 
-                    <tr className="bg-red-100"><td className="px-4 py-3 font-bold text-red-900">TOTAL PASSIFS & CAPITAUX</td><td className="px-4 py-3 text-right font-bold text-red-700">{(totalLiabilities + totalEquity).toLocaleString()} $</td></tr>
+                    <tr className="bg-red-100"><td className="px-4 py-3 font-bold text-red-900">{t('admin.financialStatements.totalLiabilitiesEquity')}</td><td className="px-4 py-3 text-right font-bold text-red-700">{(totalLiabilities + totalEquity).toLocaleString()} $</td></tr>
                   </tbody>
                 </table>
               )}
@@ -475,14 +483,14 @@ export default function EtatsFinanciersPage() {
       {activeTab === 'flux' && (
         <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
           <div className="p-6 bg-purple-50 border-b border-purple-200">
-            <h2 className="text-xl font-bold text-purple-900">État des flux de trésorerie</h2>
+            <h2 className="text-xl font-bold text-purple-900">{t('admin.financialStatements.cashFlowTitle')}</h2>
             <p className="text-purple-700">BioCycle Peptides Inc. - {periodLabel}</p>
           </div>
           <div className="p-6">
             <table className="w-full">
               <tbody>
-                <tr className="bg-slate-50"><td colSpan={2} className="px-4 py-3 font-bold text-slate-900">ACTIVITÉS D&apos;EXPLOITATION</td></tr>
-                <tr><td className="px-8 py-2 text-slate-600">Bénéfice net</td><td className="px-4 py-2 text-right">{netProfit.toLocaleString()} $</td></tr>
+                <tr className="bg-slate-50"><td colSpan={2} className="px-4 py-3 font-bold text-slate-900">{t('admin.financialStatements.operatingActivities')}</td></tr>
+                <tr><td className="px-8 py-2 text-slate-600">{t('admin.financialStatements.netIncome')}</td><td className="px-4 py-2 text-right">{netProfit.toLocaleString()} $</td></tr>
                 {Object.entries(cashFlow.operating).filter(([key]) => key !== 'netIncome').map(([name, amount]) => (
                   <tr key={name}>
                     <td className="px-8 py-2 text-slate-600">{name}</td>
@@ -492,11 +500,11 @@ export default function EtatsFinanciersPage() {
                   </tr>
                 ))}
                 <tr className="border-t border-slate-200 bg-green-50">
-                  <td className="px-4 py-3 font-semibold text-green-900">Flux net d&apos;exploitation</td>
+                  <td className="px-4 py-3 font-semibold text-green-900">{t('admin.financialStatements.netOperatingCashFlow')}</td>
                   <td className="px-4 py-3 text-right font-bold text-green-700">{operatingCashFlow.toLocaleString()} $</td>
                 </tr>
 
-                <tr className="bg-slate-50"><td colSpan={2} className="px-4 py-3 font-bold text-slate-900">ACTIVITÉS D&apos;INVESTISSEMENT</td></tr>
+                <tr className="bg-slate-50"><td colSpan={2} className="px-4 py-3 font-bold text-slate-900">{t('admin.financialStatements.investingActivities')}</td></tr>
                 {Object.entries(cashFlow.investing).map(([name, amount]) => (
                   <tr key={name}>
                     <td className="px-8 py-2 text-slate-600">{name}</td>
@@ -506,14 +514,14 @@ export default function EtatsFinanciersPage() {
                   </tr>
                 ))}
                 {Object.keys(cashFlow.investing).length === 0 && (
-                  <tr><td className="px-8 py-2 text-slate-400 italic" colSpan={2}>Aucune activité d&apos;investissement</td></tr>
+                  <tr><td className="px-8 py-2 text-slate-400 italic" colSpan={2}>{t('admin.financialStatements.noInvestingActivities')}</td></tr>
                 )}
                 <tr className="border-t border-slate-200 bg-red-50">
-                  <td className="px-4 py-3 font-semibold text-red-900">Flux net d&apos;investissement</td>
+                  <td className="px-4 py-3 font-semibold text-red-900">{t('admin.financialStatements.netInvestingCashFlow')}</td>
                   <td className="px-4 py-3 text-right font-bold text-red-700">{investingCashFlow.toLocaleString()} $</td>
                 </tr>
 
-                <tr className="bg-slate-50"><td colSpan={2} className="px-4 py-3 font-bold text-slate-900">ACTIVITÉS DE FINANCEMENT</td></tr>
+                <tr className="bg-slate-50"><td colSpan={2} className="px-4 py-3 font-bold text-slate-900">{t('admin.financialStatements.financingActivities')}</td></tr>
                 {Object.entries(cashFlow.financing).map(([name, amount]) => (
                   <tr key={name}>
                     <td className="px-8 py-2 text-slate-600">{name}</td>
@@ -521,15 +529,15 @@ export default function EtatsFinanciersPage() {
                   </tr>
                 ))}
                 {Object.keys(cashFlow.financing).length === 0 && (
-                  <tr><td className="px-8 py-2 text-slate-400 italic" colSpan={2}>Aucune activité de financement</td></tr>
+                  <tr><td className="px-8 py-2 text-slate-400 italic" colSpan={2}>{t('admin.financialStatements.noFinancingActivities')}</td></tr>
                 )}
                 <tr className="border-t border-slate-200 bg-blue-50">
-                  <td className="px-4 py-3 font-semibold text-blue-900">Flux net de financement</td>
+                  <td className="px-4 py-3 font-semibold text-blue-900">{t('admin.financialStatements.netFinancingCashFlow')}</td>
                   <td className="px-4 py-3 text-right font-bold text-blue-700">{financingCashFlow.toLocaleString()} $</td>
                 </tr>
 
                 <tr className="bg-purple-600 text-white">
-                  <td className="px-4 py-4 font-bold text-lg">VARIATION NETTE DE TRÉSORERIE</td>
+                  <td className="px-4 py-4 font-bold text-lg">{t('admin.financialStatements.netCashChange')}</td>
                   <td className="px-4 py-4 text-right font-bold text-lg">{netCashFlow.toLocaleString()} $</td>
                 </tr>
               </tbody>

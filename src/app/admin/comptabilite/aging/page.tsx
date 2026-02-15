@@ -9,6 +9,7 @@ import {
   Download,
   Loader2,
 } from 'lucide-react';
+import { useI18n } from '@/i18n/client';
 import {
   PageHeader,
   Button,
@@ -53,6 +54,7 @@ interface AgingStats {
 }
 
 export default function AgingPage() {
+  const { t } = useI18n();
   const [reportType, setReportType] = useState<'RECEIVABLE' | 'PAYABLE'>('RECEIVABLE');
   const [report, setReport] = useState<AgingReport | null>(null);
   const [stats, setStats] = useState<AgingStats | null>(null);
@@ -61,6 +63,7 @@ export default function AgingPage() {
 
   useEffect(() => {
     fetchAgingReport();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reportType]);
 
   const fetchAgingReport = async () => {
@@ -117,8 +120,8 @@ export default function AgingPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Rapport d'aging"
-        subtitle="Analyse de l'age des creances et dettes"
+        title={t('admin.aging.title')}
+        subtitle={t('admin.aging.subtitle')}
         actions={
           <div className="flex items-center gap-3">
             {/* Type Selector */}
@@ -131,7 +134,7 @@ export default function AgingPage() {
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                Comptes clients
+                {t('admin.aging.receivables')}
               </button>
               <button
                 onClick={() => setReportType('PAYABLE')}
@@ -141,7 +144,7 @@ export default function AgingPage() {
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                Comptes fournisseurs
+                {t('admin.aging.payables')}
               </button>
             </div>
 
@@ -152,7 +155,7 @@ export default function AgingPage() {
               onClick={exportCSV}
               disabled={exporting}
             >
-              Exporter CSV
+              {t('admin.aging.exportCSV')}
             </Button>
           </div>
         }
@@ -167,22 +170,22 @@ export default function AgingPage() {
           {/* Summary Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <StatCard
-              label="Total en souffrance"
+              label={t('admin.aging.totalOutstanding')}
               value={report.totalOutstanding.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}
               icon={DollarSign}
             />
             <StatCard
-              label="Total en retard"
+              label={t('admin.aging.totalOverdue')}
               value={report.totalOverdue.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}
               icon={AlertTriangle}
             />
             <StatCard
-              label="Jours moyens"
-              value={`${report.averageDaysOutstanding} jours`}
+              label={t('admin.aging.averageDays')}
+              value={`${report.averageDaysOutstanding} ${t('admin.aging.daysUnit')}`}
               icon={Calendar}
             />
             <StatCard
-              label="Score de sante"
+              label={t('admin.aging.healthScore')}
               value={`${stats.healthScore}/100`}
               icon={Activity}
             />
@@ -191,7 +194,7 @@ export default function AgingPage() {
           {/* Health Score Bar (custom, not in StatCard) */}
           <div className="bg-white border border-slate-200 rounded-lg p-5">
             <div className="flex items-center gap-3">
-              <span className="text-sm font-medium text-slate-500">Score de sante:</span>
+              <span className="text-sm font-medium text-slate-500">{t('admin.aging.healthScoreLabel')}</span>
               <span className={`text-lg font-bold ${getHealthScoreColor(stats.healthScore)}`}>
                 {stats.healthScore}/100
               </span>
@@ -211,7 +214,7 @@ export default function AgingPage() {
           {/* Aging Buckets Chart */}
           <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
             <h2 className="text-lg font-semibold text-slate-900 mb-4">
-              Repartition par age
+              {t('admin.aging.distributionByAge')}
             </h2>
 
             {/* Visual Bar Chart */}
@@ -244,9 +247,9 @@ export default function AgingPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-slate-200">
-                  <th className="text-left py-3 px-4 text-sm font-medium text-slate-500">Periode</th>
-                  <th className="text-right py-3 px-4 text-sm font-medium text-slate-500">Factures</th>
-                  <th className="text-right py-3 px-4 text-sm font-medium text-slate-500">Montant</th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-slate-500">{t('admin.aging.periodCol')}</th>
+                  <th className="text-right py-3 px-4 text-sm font-medium text-slate-500">{t('admin.aging.invoicesCol')}</th>
+                  <th className="text-right py-3 px-4 text-sm font-medium text-slate-500">{t('admin.aging.amountCol')}</th>
                   <th className="text-right py-3 px-4 text-sm font-medium text-slate-500">%</th>
                 </tr>
               </thead>
@@ -282,15 +285,15 @@ export default function AgingPage() {
           {/* By Customer/Supplier */}
           <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
             <h2 className="text-lg font-semibold text-slate-900 mb-4">
-              Par {reportType === 'RECEIVABLE' ? 'client' : 'fournisseur'}
+              {reportType === 'RECEIVABLE' ? t('admin.aging.byCustomer') : t('admin.aging.bySupplier')}
             </h2>
 
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-slate-200">
-                    <th className="text-left py-3 px-4 text-sm font-medium text-slate-500">Nom</th>
-                    <th className="text-right py-3 px-4 text-sm font-medium text-slate-500">Courant</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-slate-500">{t('admin.aging.nameCol')}</th>
+                    <th className="text-right py-3 px-4 text-sm font-medium text-slate-500">{t('admin.aging.currentCol')}</th>
                     <th className="text-right py-3 px-4 text-sm font-medium text-slate-500">1-30j</th>
                     <th className="text-right py-3 px-4 text-sm font-medium text-slate-500">31-60j</th>
                     <th className="text-right py-3 px-4 text-sm font-medium text-slate-500">61-90j</th>
@@ -340,7 +343,7 @@ export default function AgingPage() {
               <div className="flex items-start gap-3">
                 <AlertTriangle className="w-6 h-6 text-amber-500 mt-0.5" />
                 <div>
-                  <h3 className="font-semibold text-amber-800 mb-2">Recommandations</h3>
+                  <h3 className="font-semibold text-amber-800 mb-2">{t('admin.aging.recommendations')}</h3>
                   <ul className="space-y-1">
                     {stats.recommendations.map((rec, i) => (
                       <li key={i} className="text-amber-700 text-sm flex items-center gap-2">
@@ -357,8 +360,8 @@ export default function AgingPage() {
       ) : (
         <EmptyState
           icon={DollarSign}
-          title="Aucune donnee disponible"
-          description="Aucune donnee d'aging n'a ete trouvee"
+          title={t('admin.aging.noDataTitle')}
+          description={t('admin.aging.noDataDescription')}
         />
       )}
     </div>

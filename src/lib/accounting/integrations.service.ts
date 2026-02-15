@@ -101,23 +101,56 @@ export async function exportToQuickBooks(
     errors: [] as { entryNumber: string; error: string }[],
   };
 
-  // In production, use QuickBooks SDK
-  // const qbo = new QuickBooks(config);
-  
+  if (!_config.clientId || !_config.clientSecret) {
+    return {
+      success: false,
+      exported: 0,
+      failed: entries.length,
+      errors: [{ entryNumber: 'N/A', error: 'QuickBooks credentials not configured. Set QBO_CLIENT_ID and QBO_CLIENT_SECRET environment variables.' }],
+    };
+  }
+
+  if (!_config.accessToken || !_config.realmId) {
+    return {
+      success: false,
+      exported: 0,
+      failed: entries.length,
+      errors: [{ entryNumber: 'N/A', error: 'QuickBooks OAuth not completed. Connect your QuickBooks account first.' }],
+    };
+  }
+
+  const baseUrl = _config.environment === 'production'
+    ? 'https://quickbooks.api.intuit.com'
+    : 'https://sandbox-quickbooks.api.intuit.com';
+
   for (const entry of entries) {
     try {
       const qboEntry = convertToQBOFormat(entry);
-      
-      // Simulate API call
-      // await qbo.createJournalEntry(qboEntry);
-      
-      console.log('Would export to QBO:', qboEntry);
+
+      const response = await fetch(
+        `${baseUrl}/v3/company/${_config.realmId}/journalentry`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${_config.accessToken}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+          body: JSON.stringify(qboEntry),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(`QBO API ${response.status}: ${JSON.stringify(errorData)}`);
+      }
+
       result.exported++;
-    } catch (error: any) {
+    } catch (error: unknown) {
       result.failed++;
       result.errors.push({
         entryNumber: entry.entryNumber,
-        error: error.message || 'Unknown error',
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   }
@@ -285,13 +318,29 @@ export async function syncInventoryValuation(
   adjustment?: {
     type: 'INCREASE' | 'DECREASE';
     amount: number;
-    journalEntry: any;
+    journalEntry: {
+      description: string;
+      lines: { accountCode: string; accountName: string; debit: number; credit: number }[];
+    };
   };
 }> {
+  const { prisma } = await import('@/lib/db');
   const totalValue = inventoryItems.reduce((sum, item) => sum + item.totalValue, 0);
-  
-  // In production, fetch from chart of accounts
-  const accountBalance = 35600; // Mock current book value
+
+  // Fetch real inventory account balance from chart of accounts (account 1210 = Stock de marchandises)
+  const inventoryAccount = await prisma.chartOfAccount.findFirst({
+    where: { code: '1210' },
+  });
+
+  let accountBalance = 0;
+  if (inventoryAccount) {
+    // Calculate balance from journal lines
+    const journalLines = await prisma.journalLine.aggregate({
+      where: { accountId: inventoryAccount.id },
+      _sum: { debit: true, credit: true },
+    });
+    accountBalance = Number(journalLines._sum.debit || 0) - Number(journalLines._sum.credit || 0);
+  }
   
   const difference = totalValue - accountBalance;
 
@@ -446,8 +495,8 @@ export function processPayPalWebhook(
  * Sync PayPal transactions
  */
 export async function syncPayPalTransactions(
-  _startDate: Date,
-  _endDate: Date,
+  startDate: Date,
+  endDate: Date,
   _accessToken: string
 ): Promise<{
   transactions: PayPalTransaction[];
@@ -455,35 +504,60 @@ export async function syncPayPalTransactions(
   totalFees: number;
   netAmount: number;
 }> {
-  // In production, use PayPal SDK
-  // const paypal = require('@paypal/checkout-server-sdk');
-  
-  // Simulated response
-  const transactions: PayPalTransaction[] = [
-    {
-      id: 'PAY-1234567890',
-      create_time: new Date().toISOString(),
-      update_time: new Date().toISOString(),
-      amount: { currency_code: 'CAD', value: '150.00' },
-      payee: { email_address: 'business@biocycle.ca' },
-      payer: {
-        email_address: 'customer@example.com',
-        name: { given_name: 'Jean', surname: 'Tremblay' },
-      },
-      status: 'COMPLETED',
-      transaction_info: {
-        transaction_id: 'TXN-1234567890',
-        transaction_event_code: 'T0006',
-        transaction_amount: { currency_code: 'CAD', value: '150.00' },
-        fee_amount: { currency_code: 'CAD', value: '4.65' },
-      },
+  const { prisma } = await import('@/lib/db');
+
+  // Fetch real PayPal orders from the database
+  const paypalOrders = await prisma.order.findMany({
+    where: {
+      paymentMethod: 'PAYPAL',
+      createdAt: { gte: startDate, lte: endDate },
+      paymentStatus: { in: ['PAID', 'REFUNDED'] },
     },
-  ];
+    include: {
+      user: { select: { email: true, name: true } },
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+
+  // Also fetch PayPal settings for payee email
+  const settings = await prisma.accountingSettings.findFirst();
+  const payeeEmail = settings?.email || 'business@biocycle.ca';
+
+  const transactions: PayPalTransaction[] = paypalOrders.map((order) => {
+    const amount = Number(order.total);
+    // PayPal standard fee: 2.9% + $0.30 CAD
+    const estimatedFee = Math.round((amount * 0.029 + 0.30) * 100) / 100;
+
+    return {
+      id: order.paypalOrderId || order.id,
+      create_time: order.createdAt.toISOString(),
+      update_time: order.updatedAt.toISOString(),
+      amount: {
+        currency_code: 'CAD',
+        value: amount.toFixed(2),
+      },
+      payee: { email_address: payeeEmail },
+      payer: {
+        email_address: order.user?.email || 'noreply@biocyclepeptides.com',
+        name: {
+          given_name: order.user?.name?.split(' ')[0] || '',
+          surname: order.user?.name?.split(' ').slice(1).join(' ') || '',
+        },
+      },
+      status: order.paymentStatus === 'PAID' ? 'COMPLETED' : 'REFUNDED',
+      transaction_info: {
+        transaction_id: order.paypalOrderId || order.id,
+        transaction_event_code: 'T0006',
+        transaction_amount: { currency_code: 'CAD', value: amount.toFixed(2) },
+        fee_amount: { currency_code: 'CAD', value: estimatedFee.toFixed(2) },
+      },
+    };
+  });
 
   const totalReceived = transactions
     .filter(t => t.status === 'COMPLETED')
     .reduce((sum, t) => sum + parseFloat(t.amount.value), 0);
-  
+
   const totalFees = transactions
     .filter(t => t.transaction_info?.fee_amount)
     .reduce((sum, t) => sum + parseFloat(t.transaction_info!.fee_amount!.value), 0);
@@ -532,7 +606,7 @@ export function exportToIIF(entries: JournalEntry[]): string {
  */
 export function exportToExcel(entries: JournalEntry[]): {
   headers: string[];
-  rows: any[][];
+  rows: (string | number)[][];
 } {
   const headers = [
     'N° Écriture',
@@ -547,7 +621,7 @@ export function exportToExcel(entries: JournalEntry[]): {
     'Crédit',
   ];
 
-  const rows: any[][] = [];
+  const rows: (string | number)[][] = [];
 
   for (const entry of entries) {
     for (const line of entry.lines) {

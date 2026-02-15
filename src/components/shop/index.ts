@@ -15,3 +15,5 @@ export { default as CookieConsent } from './CookieConsent';
 export { default as TrustBadges, TrustBadgesHero } from './TrustBadges';
 export { default as ProductReviews } from './ProductReviews';
 export { default as ProductQA } from './ProductQA';
+export { default as WishlistButton } from './WishlistButton';
+export { default as PriceDropButton } from './PriceDropButton';

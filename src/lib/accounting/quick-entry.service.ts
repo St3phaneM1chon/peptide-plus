@@ -26,7 +26,7 @@ export interface EntryTemplate {
     label: string;
     type: 'number' | 'text' | 'date' | 'select';
     options?: string[];
-    defaultValue?: any;
+    defaultValue?: string | number | Date;
     required: boolean;
   }[];
   shortcut?: string; // Keyboard shortcut like "Ctrl+Shift+V"
@@ -155,7 +155,8 @@ export const DEFAULT_TEMPLATES: EntryTemplate[] = [
 ];
 
 /**
- * Parse formula and calculate value
+ * Parse formula and calculate value using a safe recursive descent parser.
+ * No eval() or new Function() - fully parsed and computed manually.
  */
 export function evaluateFormula(
   formula: string,
@@ -164,9 +165,14 @@ export function evaluateFormula(
   if (!formula) return 0;
 
   // Replace variable names with values
+  // Sort by name length descending to avoid partial replacements (e.g., "total" before "t")
   let expression = formula;
-  for (const [name, value] of Object.entries(variables)) {
-    expression = expression.replace(new RegExp(name, 'g'), String(value));
+  const sortedNames = Object.keys(variables).sort((a, b) => b.length - a.length);
+  for (const name of sortedNames) {
+    expression = expression.replace(
+      new RegExp(name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'),
+      String(variables[name])
+    );
   }
 
   // Calculate 'total' if needed
@@ -176,17 +182,74 @@ export function evaluateFormula(
     expression = expression.replace(/total/g, String(total));
   }
 
+  // Validate: only allow digits, decimals, arithmetic operators, parentheses, spaces
+  if (!/^[\d\s+\-*/().]+$/.test(expression)) {
+    return 0;
+  }
+
   try {
-    // SECURITY FIX: Validate expression contains only safe characters
-    // Only allow digits, decimals, arithmetic operators, parentheses, spaces
-    if (!/^[\d\s+\-*/().]+$/.test(expression)) {
-      return 0;
-    }
-    // eslint-disable-next-line no-new-func
-    return new Function(`"use strict"; return (${expression})`)();
+    return safeArithmeticParse(expression);
   } catch {
     return 0;
   }
+}
+
+/**
+ * Recursive descent parser for safe arithmetic evaluation.
+ * Grammar: expr = term (('+' | '-') term)*
+ *          term = factor (('*' | '/') factor)*
+ *          factor = unary | '(' expr ')' | number
+ *          unary = ('-' | '+') factor
+ */
+function safeArithmeticParse(input: string): number {
+  const tokens = input.match(/(\d+\.?\d*|[+\-*/()])/g) || [];
+  let pos = 0;
+
+  function peek(): string | undefined { return tokens[pos]; }
+  function consume(): string { return tokens[pos++]; }
+
+  function parseExpr(): number {
+    let result = parseTerm();
+    while (peek() === '+' || peek() === '-') {
+      const op = consume();
+      const right = parseTerm();
+      result = op === '+' ? result + right : result - right;
+    }
+    return result;
+  }
+
+  function parseTerm(): number {
+    let result = parseFactor();
+    while (peek() === '*' || peek() === '/') {
+      const op = consume();
+      const right = parseFactor();
+      result = op === '*' ? result * right : right !== 0 ? result / right : 0;
+    }
+    return result;
+  }
+
+  function parseFactor(): number {
+    if (peek() === '-') {
+      consume();
+      return -parseFactor();
+    }
+    if (peek() === '+') {
+      consume();
+      return parseFactor();
+    }
+    if (peek() === '(') {
+      consume();
+      const result = parseExpr();
+      if (peek() === ')') consume();
+      return result;
+    }
+    const token = consume();
+    const num = parseFloat(token);
+    if (isNaN(num)) return 0;
+    return num;
+  }
+
+  return parseExpr();
 }
 
 /**
@@ -194,7 +257,7 @@ export function evaluateFormula(
  */
 export function generateEntryFromTemplate(
   template: EntryTemplate,
-  values: Record<string, any>,
+  values: Record<string, string | number | Date>,
   entryNumber: string
 ): Omit<JournalEntry, 'id' | 'createdAt' | 'createdBy'> {
   const numericValues: Record<string, number> = {};
@@ -202,7 +265,7 @@ export function generateEntryFromTemplate(
   // Extract numeric values
   for (const variable of template.variables) {
     if (variable.type === 'number' && values[variable.name] !== undefined) {
-      numericValues[variable.name] = parseFloat(values[variable.name]) || 0;
+      numericValues[variable.name] = parseFloat(String(values[variable.name])) || 0;
     }
   }
 
@@ -217,7 +280,7 @@ export function generateEntryFromTemplate(
     
     // Handle dynamic account codes (e.g., for transfers)
     if (!accountCode && values[`${index === 0 ? 'toAccount' : 'fromAccount'}`]) {
-      accountCode = values[`${index === 0 ? 'toAccount' : 'fromAccount'}`];
+      accountCode = String(values[`${index === 0 ? 'toAccount' : 'fromAccount'}`]);
     }
 
     return {
@@ -242,7 +305,7 @@ export function generateEntryFromTemplate(
     description,
     type: 'MANUAL',
     status: 'DRAFT',
-    reference: values.reference || values.invoice,
+    reference: String(values.reference || values.invoice || ''),
     lines,
   };
 }

@@ -14,11 +14,13 @@ import {
   EmptyState,
   type Column,
 } from '@/components/admin';
+import { useI18n } from '@/i18n/client';
 
 type OrderItem = { id: string; date: string; customer: string; total: number; status: string; taxCollected: number };
 type MonthlySummaryItem = { month: string; orders: number; revenue: number; taxCollected: number; avgOrder: number };
 
 export default function CountryDetailPage({ params }: { params: Promise<{ code: string }> }) {
+  const { t, locale } = useI18n();
   const resolvedParams = use(params);
   const countryCode = resolvedParams.code.toUpperCase();
   const country = getCountryCompliance(countryCode);
@@ -69,14 +71,14 @@ export default function CountryDetailPage({ params }: { params: Promise<{ code: 
         // Orders are not available via a dedicated country-specific API, keep empty
         setOrders([]);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Erreur inconnue');
+        setError(err instanceof Error ? err.message : t('admin.fiscalCountry.unknownError'));
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, [countryCode]);
+  }, [countryCode, t]);
 
   // Calculate totals - must be before conditional return to respect hooks rules
   const totals = useMemo(() => {
@@ -86,17 +88,17 @@ export default function CountryDetailPage({ params }: { params: Promise<{ code: 
     return { totalRevenue, totalTax, totalOrders };
   }, [monthlySummary]);
 
-  if (loading) return <div className="p-8 text-center">Chargement...</div>;
-  if (error) return <div className="p-8 text-center text-red-600">Erreur: {error}</div>;
+  if (loading) return <div className="p-8 text-center">{t('admin.fiscalCountry.loading')}</div>;
+  if (error) return <div className="p-8 text-center text-red-600">{t('admin.fiscalCountry.errorPrefix')} {error}</div>;
 
   if (!country) {
     return (
       <div className="p-6 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-slate-900 mb-4">Pays non trouve</h1>
-          <p className="text-slate-600 mb-6">Le code pays &quot;{countryCode}&quot; n&apos;est pas configure.</p>
+          <h1 className="text-2xl font-bold text-slate-900 mb-4">{t('admin.fiscalCountry.countryNotFound')}</h1>
+          <p className="text-slate-600 mb-6">{t('admin.fiscalCountry.countryNotConfigured', { code: countryCode })}</p>
           <Link href="/admin/fiscal" className="text-blue-600 hover:underline">
-            &larr; Retour a la liste
+            &larr; {t('admin.fiscalCountry.backToList')}
           </Link>
         </div>
       </div>
@@ -110,13 +112,13 @@ export default function CountryDetailPage({ params }: { params: Promise<{ code: 
         title={country.name}
         subtitle={`${country.region}${country.hasFTA ? ` \u2022 ${country.ftaName}` : ''}`}
         backHref="/admin/fiscal"
-        backLabel="Obligations Fiscales"
+        backLabel={t('admin.fiscalCountry.backLabel')}
         badge={
           <>
             <span className="text-4xl">{getCountryFlag(country.code)}</span>
             {country.hasFTA && (
               <StatusBadge variant="success">
-                Accord de libre-echange
+                {t('admin.fiscalCountry.freeTradeAgreement')}
               </StatusBadge>
             )}
           </>
@@ -126,23 +128,23 @@ export default function CountryDetailPage({ params }: { params: Promise<{ code: 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
         <StatCard
-          label="Commandes totales"
+          label={t('admin.fiscalCountry.totalOrders')}
           value={totals.totalOrders}
           icon={ShoppingCart}
         />
         <StatCard
-          label={`Revenus ${country.localCurrency}`}
-          value={`$${totals.totalRevenue.toLocaleString()}`}
+          label={t('admin.fiscalCountry.revenueLabel', { currency: country.localCurrency })}
+          value={`$${totals.totalRevenue.toLocaleString(locale)}`}
           icon={DollarSign}
         />
         <StatCard
-          label="Taxes percues"
-          value={`$${totals.totalTax.toLocaleString()}`}
+          label={t('admin.fiscalCountry.taxCollected')}
+          value={`$${totals.totalTax.toLocaleString(locale)}`}
           icon={Receipt}
         />
         <StatCard
-          label="Delai livraison"
-          value={`${country.shippingDays} j`}
+          label={t('admin.fiscalCountry.deliveryTime')}
+          value={t('admin.fiscalCountry.daysShort', { days: country.shippingDays })}
           icon={Truck}
         />
       </div>
@@ -152,11 +154,11 @@ export default function CountryDetailPage({ params }: { params: Promise<{ code: 
         <div className="border-b border-slate-200">
           <nav className="flex -mb-px">
             {[
-              { id: 'overview', label: 'Vue d\'ensemble' },
-              { id: 'obligations', label: 'Obligations fiscales' },
-              { id: 'tasks', label: 'Taches & Echeances' },
-              { id: 'orders', label: 'Commandes' },
-              { id: 'reports', label: 'Rapports' },
+              { id: 'overview', label: t('admin.fiscalCountry.tabOverview') },
+              { id: 'obligations', label: t('admin.fiscalCountry.tabObligations') },
+              { id: 'tasks', label: t('admin.fiscalCountry.tabTasks') },
+              { id: 'orders', label: t('admin.fiscalCountry.tabOrders') },
+              { id: 'reports', label: t('admin.fiscalCountry.tabReports') },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -175,19 +177,19 @@ export default function CountryDetailPage({ params }: { params: Promise<{ code: 
 
         <div className="p-6">
           {activeTab === 'overview' && (
-            <OverviewTab country={country} />
+            <OverviewTab country={country} t={t} />
           )}
           {activeTab === 'obligations' && (
-            <ObligationsTab country={country} />
+            <ObligationsTab country={country} t={t} />
           )}
           {activeTab === 'tasks' && (
-            <TasksTab country={country} />
+            <TasksTab country={country} t={t} />
           )}
           {activeTab === 'orders' && (
-            <OrdersTab country={country} orders={orders} />
+            <OrdersTab country={country} orders={orders} t={t} />
           )}
           {activeTab === 'reports' && (
-            <ReportsTab country={country} monthlyData={monthlySummary} />
+            <ReportsTab country={country} monthlyData={monthlySummary} t={t} locale={locale} />
           )}
         </div>
       </div>
@@ -195,38 +197,40 @@ export default function CountryDetailPage({ params }: { params: Promise<{ code: 
   );
 }
 
+type TFunc = (key: string, params?: Record<string, string | number>) => string;
+
 // Overview Tab Component
-function OverviewTab({ country }: { country: CountryCompliance }) {
+function OverviewTab({ country, t }: { country: CountryCompliance; t: TFunc }) {
   return (
     <div className="space-y-6">
       {/* Canadian Export Obligations */}
       <div className="bg-blue-50 rounded-lg p-6">
         <h3 className="text-lg font-semibold text-blue-900 mb-4">
-          Obligations d&apos;exportation canadiennes
+          {t('admin.fiscalCountry.canadianExportObligations')}
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="bg-white rounded-lg p-4">
-            <div className="text-sm text-slate-500">Taxes canadiennes</div>
+            <div className="text-sm text-slate-500">{t('admin.fiscalCountry.canadianTaxes')}</div>
             <div className={`font-bold ${country.canadianObligations.zeroRated ? 'text-green-600' : 'text-sky-600'}`}>
-              {country.canadianObligations.zeroRated ? '0% (Detaxe)' : 'Taxable'}
+              {country.canadianObligations.zeroRated ? t('admin.fiscalCountry.zeroRated') : t('admin.fiscalCountry.taxable')}
             </div>
           </div>
           <div className="bg-white rounded-lg p-4">
-            <div className="text-sm text-slate-500">Declaration SCDE</div>
+            <div className="text-sm text-slate-500">{t('admin.fiscalCountry.cersDeclaration')}</div>
             <div className={`font-bold ${country.canadianObligations.cersRequired ? 'text-purple-600' : 'text-slate-600'}`}>
-              {country.canadianObligations.cersRequired ? `Requis (>${country.canadianObligations.cersThreshold}$)` : 'Non requis'}
+              {country.canadianObligations.cersRequired ? t('admin.fiscalCountry.cersRequired', { threshold: country.canadianObligations.cersThreshold }) : t('admin.fiscalCountry.notRequired')}
             </div>
           </div>
           <div className="bg-white rounded-lg p-4">
-            <div className="text-sm text-slate-500">Certificat d&apos;origine</div>
+            <div className="text-sm text-slate-500">{t('admin.fiscalCountry.certificateOfOrigin')}</div>
             <div className={`font-bold ${country.canadianObligations.certificateOfOrigin ? 'text-green-600' : 'text-slate-600'}`}>
-              {country.canadianObligations.certificateOfOrigin ? 'Requis' : 'Non requis'}
+              {country.canadianObligations.certificateOfOrigin ? t('admin.fiscalCountry.required') : t('admin.fiscalCountry.notRequired')}
             </div>
           </div>
           <div className="bg-white rounded-lg p-4">
-            <div className="text-sm text-slate-500">Permis d&apos;exportation</div>
+            <div className="text-sm text-slate-500">{t('admin.fiscalCountry.exportPermit')}</div>
             <div className={`font-bold ${country.canadianObligations.exportPermit ? 'text-red-600' : 'text-slate-600'}`}>
-              {country.canadianObligations.exportPermit ? 'Requis' : 'Non requis'}
+              {country.canadianObligations.exportPermit ? t('admin.fiscalCountry.required') : t('admin.fiscalCountry.notRequired')}
             </div>
           </div>
         </div>
@@ -235,19 +239,19 @@ function OverviewTab({ country }: { country: CountryCompliance }) {
       {/* Shipping Info */}
       <div className="bg-slate-50 rounded-lg p-6">
         <h3 className="text-lg font-semibold text-slate-900 mb-4">
-          Informations de livraison
+          {t('admin.fiscalCountry.shippingInfo')}
         </h3>
         <div className="grid grid-cols-3 gap-4">
           <div>
-            <div className="text-sm text-slate-500">Delai estime</div>
-            <div className="font-bold">{country.shippingDays} jours ouvrables</div>
+            <div className="text-sm text-slate-500">{t('admin.fiscalCountry.estimatedDelay')}</div>
+            <div className="font-bold">{t('admin.fiscalCountry.businessDays', { days: country.shippingDays })}</div>
           </div>
           <div>
-            <div className="text-sm text-slate-500">Frais de base</div>
+            <div className="text-sm text-slate-500">{t('admin.fiscalCountry.baseCost')}</div>
             <div className="font-bold">${country.shippingCost} CAD</div>
           </div>
           <div>
-            <div className="text-sm text-slate-500">Devise locale</div>
+            <div className="text-sm text-slate-500">{t('admin.fiscalCountry.localCurrency')}</div>
             <div className="font-bold">{country.localCurrencySymbol} {country.localCurrency}</div>
           </div>
         </div>
@@ -256,7 +260,7 @@ function OverviewTab({ country }: { country: CountryCompliance }) {
       {/* Notes */}
       <div className="bg-yellow-50 rounded-lg p-6">
         <h3 className="text-lg font-semibold text-yellow-900 mb-4">
-          Notes importantes
+          {t('admin.fiscalCountry.importantNotes')}
         </h3>
         <ul className="space-y-2">
           {country.notes.map((note, index) => (
@@ -272,18 +276,18 @@ function OverviewTab({ country }: { country: CountryCompliance }) {
 }
 
 // Obligations Tab Component
-function ObligationsTab({ country }: { country: CountryCompliance }) {
+function ObligationsTab({ country, t }: { country: CountryCompliance; t: TFunc }) {
   return (
     <div className="space-y-6">
       <h3 className="text-lg font-semibold text-slate-900">
-        Obligations fiscales pour {country.name}
+        {t('admin.fiscalCountry.obligationsFor', { name: country.name })}
       </h3>
 
       {country.destinationObligations.length === 0 ? (
         <EmptyState
           icon={ClipboardList}
-          title="Aucune obligation fiscale"
-          description="Aucune obligation fiscale specifique configuree pour ce pays"
+          title={t('admin.fiscalCountry.noObligationTitle')}
+          description={t('admin.fiscalCountry.noObligationDescription')}
         />
       ) : (
         <div className="space-y-4">
@@ -295,7 +299,7 @@ function ObligationsTab({ country }: { country: CountryCompliance }) {
                   <p className="text-sm text-slate-500">{obligation.nameFr}</p>
                 </div>
                 <StatusBadge variant={obligation.required ? 'error' : 'neutral'}>
-                  {obligation.required ? 'Obligatoire' : 'Optionnel'}
+                  {obligation.required ? t('admin.fiscalCountry.obligatory') : t('admin.fiscalCountry.optional')}
                 </StatusBadge>
               </div>
 
@@ -304,19 +308,19 @@ function ObligationsTab({ country }: { country: CountryCompliance }) {
               <div className="grid grid-cols-3 gap-4 text-sm">
                 {obligation.rate && (
                   <div>
-                    <span className="text-slate-500">Taux:</span>
+                    <span className="text-slate-500">{t('admin.fiscalCountry.rateLabel')}</span>
                     <span className="ml-2 font-medium">{obligation.rate}</span>
                   </div>
                 )}
                 {obligation.threshold && (
                   <div>
-                    <span className="text-slate-500">Seuil:</span>
+                    <span className="text-slate-500">{t('admin.fiscalCountry.thresholdLabel')}</span>
                     <span className="ml-2 font-medium">{obligation.threshold}</span>
                   </div>
                 )}
                 {obligation.frequency && (
                   <div>
-                    <span className="text-slate-500">Frequence:</span>
+                    <span className="text-slate-500">{t('admin.fiscalCountry.frequencyLabel')}</span>
                     <span className="ml-2 font-medium capitalize">{obligation.frequency}</span>
                   </div>
                 )}
@@ -330,16 +334,16 @@ function ObligationsTab({ country }: { country: CountryCompliance }) {
 }
 
 // Tasks Tab Component
-function TasksTab({ country }: { country: CountryCompliance }) {
+function TasksTab({ country, t }: { country: CountryCompliance; t: TFunc }) {
   const [tasks, setTasks] = useState<(AnnualTask & { status: string })[]>(
-    country.annualTasks.map(t => ({ ...t, status: t.status || 'pending' }))
+    country.annualTasks.map(tk => ({ ...tk, status: tk.status || 'pending' }))
   );
 
   const toggleTaskStatus = (taskId: string) => {
-    setTasks(prev => prev.map(t =>
-      t.id === taskId
-        ? { ...t, status: t.status === 'completed' ? 'pending' : 'completed' }
-        : t
+    setTasks(prev => prev.map(tk =>
+      tk.id === taskId
+        ? { ...tk, status: tk.status === 'completed' ? 'pending' : 'completed' }
+        : tk
     ));
   };
 
@@ -347,18 +351,18 @@ function TasksTab({ country }: { country: CountryCompliance }) {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-slate-900">
-          Taches et echeances
+          {t('admin.fiscalCountry.tasksAndDeadlines')}
         </h3>
         <div className="text-sm text-slate-500">
-          {tasks.filter(t => t.status === 'completed').length}/{tasks.length} completees
+          {t('admin.fiscalCountry.completedCount', { completed: tasks.filter(tk => tk.status === 'completed').length, total: tasks.length })}
         </div>
       </div>
 
       {tasks.length === 0 ? (
         <EmptyState
           icon={Calendar}
-          title="Aucune tache recurrente"
-          description="Aucune tache recurrente configuree pour ce pays"
+          title={t('admin.fiscalCountry.noRecurringTaskTitle')}
+          description={t('admin.fiscalCountry.noRecurringTaskDescription')}
         />
       ) : (
         <div className="space-y-3">
@@ -395,14 +399,14 @@ function TasksTab({ country }: { country: CountryCompliance }) {
                       task.frequency === 'quarterly' ? 'primary' :
                       'warning'
                     }>
-                      {task.frequency === 'monthly' ? 'Mensuel' :
-                       task.frequency === 'quarterly' ? 'Trimestriel' :
-                       task.frequency === 'annually' ? 'Annuel' : 'Unique'}
+                      {task.frequency === 'monthly' ? t('admin.fiscalCountry.frequencyMonthly') :
+                       task.frequency === 'quarterly' ? t('admin.fiscalCountry.frequencyQuarterly') :
+                       task.frequency === 'annually' ? t('admin.fiscalCountry.frequencyAnnually') : t('admin.fiscalCountry.frequencyOnce')}
                     </StatusBadge>
                   </div>
                   <p className="text-sm text-slate-600 mt-1">{task.description}</p>
                   <div className="flex items-center gap-4 mt-2 text-xs text-slate-500">
-                    <span>Echeance: {task.dueDate}</span>
+                    <span>{t('admin.fiscalCountry.deadlineLabel', { date: task.dueDate })}</span>
                   </div>
                 </div>
               </div>
@@ -415,45 +419,45 @@ function TasksTab({ country }: { country: CountryCompliance }) {
 }
 
 // Orders Tab Component
-function OrdersTab({ country, orders }: { country: CountryCompliance; orders: OrderItem[] }) {
+function OrdersTab({ country, orders, t }: { country: CountryCompliance; orders: OrderItem[]; t: TFunc }) {
   const orderColumns: Column<OrderItem>[] = [
     {
       key: 'id',
-      header: 'N Commande',
+      header: t('admin.fiscalCountry.orderNumberCol'),
       render: (order) => <span className="font-medium text-blue-600">{order.id}</span>,
     },
     {
       key: 'date',
-      header: 'Date',
+      header: t('admin.fiscalCountry.dateCol'),
       render: (order) => <span className="text-slate-600">{order.date}</span>,
     },
     {
       key: 'customer',
-      header: 'Client',
+      header: t('admin.fiscalCountry.customerCol'),
       render: (order) => <span className="text-slate-900">{order.customer}</span>,
     },
     {
       key: 'total',
-      header: 'Total',
+      header: t('admin.fiscalCountry.totalCol'),
       align: 'right',
       render: (order) => <span className="font-medium">${order.total.toFixed(2)}</span>,
     },
     {
       key: 'taxCollected',
-      header: 'Taxes',
+      header: t('admin.fiscalCountry.taxesCol'),
       align: 'right',
       render: (order) => <span className="text-slate-600">${order.taxCollected.toFixed(2)}</span>,
     },
     {
       key: 'status',
-      header: 'Statut',
+      header: t('admin.fiscalCountry.statusCol'),
       align: 'center',
       render: (order) => {
         const variant = order.status === 'delivered' ? 'success' as const
           : order.status === 'shipped' ? 'info' as const
           : 'warning' as const;
-        const label = order.status === 'delivered' ? 'Livre'
-          : order.status === 'shipped' ? 'Expedie' : 'En traitement';
+        const label = order.status === 'delivered' ? t('admin.fiscalCountry.statusDelivered')
+          : order.status === 'shipped' ? t('admin.fiscalCountry.statusShipped') : t('admin.fiscalCountry.statusProcessing');
         return <StatusBadge variant={variant}>{label}</StatusBadge>;
       },
     },
@@ -463,10 +467,10 @@ function OrdersTab({ country, orders }: { country: CountryCompliance; orders: Or
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-slate-900">
-          Commandes recentes - {country.name}
+          {t('admin.fiscalCountry.recentOrders', { name: country.name })}
         </h3>
         <Button variant="primary" icon={FileSpreadsheet} size="sm">
-          Exporter CSV
+          {t('admin.fiscalCountry.exportCsv')}
         </Button>
       </div>
 
@@ -474,15 +478,31 @@ function OrdersTab({ country, orders }: { country: CountryCompliance; orders: Or
         columns={orderColumns}
         data={orders}
         keyExtractor={(order) => order.id}
-        emptyTitle="Aucune commande"
-        emptyDescription="Aucune commande enregistree pour ce pays"
+        emptyTitle={t('admin.fiscalCountry.emptyOrdersTitle')}
+        emptyDescription={t('admin.fiscalCountry.emptyOrdersDescription')}
       />
     </div>
   );
 }
 
+// Helper: calculate next fiscal deadline dynamically
+function getNextFiscalDeadline(locale: string): string {
+  const now = new Date();
+  // Standard quarterly filing: end of month following quarter end
+  // Q1 (Jan-Mar) -> Apr 30, Q2 (Apr-Jun) -> Jul 31, Q3 (Jul-Sep) -> Oct 31, Q4 (Oct-Dec) -> Jan 31
+  const quarterDeadlines = [
+    new Date(now.getFullYear(), 0, 31),   // Jan 31 (for Q4 of prev year)
+    new Date(now.getFullYear(), 3, 30),   // Apr 30 (for Q1)
+    new Date(now.getFullYear(), 6, 31),   // Jul 31 (for Q2)
+    new Date(now.getFullYear(), 9, 31),   // Oct 31 (for Q3)
+    new Date(now.getFullYear() + 1, 0, 31), // Jan 31 next year (for Q4)
+  ];
+  const nextDeadline = quarterDeadlines.find(d => d > now) || quarterDeadlines[quarterDeadlines.length - 1];
+  return nextDeadline.toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
 // Reports Tab Component
-function ReportsTab({ country, monthlyData }: { country: CountryCompliance; monthlyData: MonthlySummaryItem[] }) {
+function ReportsTab({ country, monthlyData, t, locale }: { country: CountryCompliance; monthlyData: MonthlySummaryItem[]; t: TFunc; locale: string }) {
   const totals = {
     orders: monthlyData.reduce((sum, m) => sum + m.orders, 0),
     revenue: monthlyData.reduce((sum, m) => sum + m.revenue, 0),
@@ -492,30 +512,30 @@ function ReportsTab({ country, monthlyData }: { country: CountryCompliance; mont
   const monthColumns: Column<MonthlySummaryItem>[] = [
     {
       key: 'month',
-      header: 'Mois',
+      header: t('admin.fiscalCountry.monthCol'),
       render: (m) => <span className="font-medium">{m.month}</span>,
     },
     {
       key: 'orders',
-      header: 'Commandes',
+      header: t('admin.fiscalCountry.ordersCol'),
       align: 'right',
       render: (m) => m.orders,
     },
     {
       key: 'revenue',
-      header: 'Revenus',
+      header: t('admin.fiscalCountry.revenueCol'),
       align: 'right',
-      render: (m) => <span className="font-medium text-green-600">${m.revenue.toLocaleString()}</span>,
+      render: (m) => <span className="font-medium text-green-600">${m.revenue.toLocaleString(locale)}</span>,
     },
     {
       key: 'taxCollected',
-      header: 'Taxes percues',
+      header: t('admin.fiscalCountry.taxCollectedCol'),
       align: 'right',
-      render: (m) => <span className="text-sky-600">${m.taxCollected.toLocaleString()}</span>,
+      render: (m) => <span className="text-sky-600">${m.taxCollected.toLocaleString(locale)}</span>,
     },
     {
       key: 'avgOrder',
-      header: 'Panier moyen',
+      header: t('admin.fiscalCountry.avgBasket'),
       align: 'right',
       render: (m) => `$${m.avgOrder.toFixed(2)}`,
     },
@@ -525,14 +545,14 @@ function ReportsTab({ country, monthlyData }: { country: CountryCompliance; mont
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-slate-900">
-          Rapports mensuels - {country.name}
+          {t('admin.fiscalCountry.monthlyReports', { name: country.name })}
         </h3>
         <div className="flex gap-2">
           <Button variant="primary" icon={FileSpreadsheet} size="sm">
-            Exporter Excel
+            {t('admin.fiscalCountry.exportExcel')}
           </Button>
           <Button variant="secondary" icon={Printer} size="sm">
-            Imprimer PDF
+            {t('admin.fiscalCountry.printPdf')}
           </Button>
         </div>
       </div>
@@ -542,8 +562,8 @@ function ReportsTab({ country, monthlyData }: { country: CountryCompliance; mont
         columns={monthColumns}
         data={monthlyData}
         keyExtractor={(m) => m.month}
-        emptyTitle="Aucune donnee"
-        emptyDescription="Aucune donnee mensuelle disponible"
+        emptyTitle={t('admin.fiscalCountry.emptyDataTitle')}
+        emptyDescription={t('admin.fiscalCountry.emptyDataDescription')}
       />
 
       {/* Totals row displayed separately when data exists */}
@@ -551,31 +571,31 @@ function ReportsTab({ country, monthlyData }: { country: CountryCompliance; mont
         <div className="bg-slate-100 rounded-lg p-4 grid grid-cols-5 gap-4 text-sm font-bold">
           <div>TOTAL</div>
           <div className="text-right">{totals.orders}</div>
-          <div className="text-right text-green-600">${totals.revenue.toLocaleString()}</div>
-          <div className="text-right text-sky-600">${totals.tax.toLocaleString()}</div>
+          <div className="text-right text-green-600">${totals.revenue.toLocaleString(locale)}</div>
+          <div className="text-right text-sky-600">${totals.tax.toLocaleString(locale)}</div>
           <div className="text-right">${totals.orders > 0 ? (totals.revenue / totals.orders).toFixed(2) : '0.00'}</div>
         </div>
       )}
 
       {/* Tax Remittance Summary */}
       <div className="bg-sky-50 rounded-lg p-6 border border-sky-200">
-        <h4 className="font-semibold text-sky-900 mb-4">Resume des taxes a remettre</h4>
+        <h4 className="font-semibold text-sky-900 mb-4">{t('admin.fiscalCountry.taxRemittanceSummary')}</h4>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div>
-            <div className="text-sm text-sky-600">Taxes percues (6 mois)</div>
-            <div className="text-2xl font-bold text-sky-900">${totals.tax.toLocaleString()}</div>
+            <div className="text-sm text-sky-600">{t('admin.fiscalCountry.taxCollected6months')}</div>
+            <div className="text-2xl font-bold text-sky-900">${totals.tax.toLocaleString(locale)}</div>
           </div>
           <div>
-            <div className="text-sm text-sky-600">Devise</div>
+            <div className="text-sm text-sky-600">{t('admin.fiscalCountry.currency')}</div>
             <div className="text-2xl font-bold text-sky-900">{country.localCurrency}</div>
           </div>
           <div>
-            <div className="text-sm text-sky-600">Prochaine echeance</div>
-            <div className="text-2xl font-bold text-sky-900">31 Jan 2026</div>
+            <div className="text-sm text-sky-600">{t('admin.fiscalCountry.nextDeadline')}</div>
+            <div className="text-2xl font-bold text-sky-900">{getNextFiscalDeadline(locale)}</div>
           </div>
           <div>
-            <div className="text-sm text-sky-600">Statut</div>
-            <div className="text-lg font-bold text-green-600">A jour</div>
+            <div className="text-sm text-sky-600">{t('admin.fiscalCountry.statusLabel')}</div>
+            <div className="text-lg font-bold text-green-600">{t('admin.fiscalCountry.upToDate')}</div>
           </div>
         </div>
       </div>

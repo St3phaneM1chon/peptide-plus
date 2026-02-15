@@ -9,8 +9,44 @@ import Link from 'next/link';
 import { TrackingTimeline } from './TrackingTimeline';
 import { OrderSummary } from './OrderSummary';
 
+interface ShippingInfo {
+  status: string;
+  carrier?: string;
+  trackingNumber?: string;
+  trackingUrl?: string;
+  shippedAt?: Date | string;
+  deliveredAt?: Date | string;
+  estimatedDelivery?: Date | string;
+  recipientName?: string;
+  addressLine1?: string;
+  addressLine2?: string;
+  city?: string;
+  state?: string;
+  postalCode?: string;
+  country?: string;
+  phone?: string;
+}
+
 interface PhysicalDeliveryTrackingProps {
-  order: any;
+  order: {
+    id: string;
+    createdAt: Date | string;
+    amount: number;
+    currency: string;
+    paymentMethod: string;
+    product: {
+      id: string;
+      name: string;
+      slug: string;
+      imageUrl: string | null;
+      category: { name: string } | null;
+    };
+    user: {
+      name: string | null;
+      email: string;
+    };
+    shipping?: ShippingInfo | null;
+  };
 }
 
 export function PhysicalDeliveryTracking({ order }: PhysicalDeliveryTrackingProps) {
@@ -382,7 +418,7 @@ export function PhysicalDeliveryTracking({ order }: PhysicalDeliveryTrackingProp
       )}
 
       {/* Résumé commande */}
-      <OrderSummary order={order} />
+      <OrderSummary order={{ ...order, createdAt: new Date(order.createdAt) }} />
 
       {/* Actions */}
       <div
@@ -460,7 +496,7 @@ export function PhysicalDeliveryTracking({ order }: PhysicalDeliveryTrackingProp
   );
 }
 
-function generateShippingSteps(shipping: any, purchaseDate: Date) {
+function generateShippingSteps(shipping: ShippingInfo | null | undefined, purchaseDate: Date) {
   const steps = [
     {
       id: 'confirmed',
@@ -487,7 +523,7 @@ function generateShippingSteps(shipping: any, purchaseDate: Date) {
         ? `Prise en charge par ${shipping.carrier}`
         : 'Remis au transporteur',
       timestamp: shipping?.shippedAt ? new Date(shipping.shippedAt) : null,
-      status: ['SHIPPED', 'IN_TRANSIT', 'OUT_FOR_DELIVERY', 'DELIVERED'].includes(shipping?.status)
+      status: ['SHIPPED', 'IN_TRANSIT', 'OUT_FOR_DELIVERY', 'DELIVERED'].includes(shipping?.status ?? '')
         ? 'completed' as const
         : 'pending' as const,
       icon: 'truck',
@@ -497,7 +533,7 @@ function generateShippingSteps(shipping: any, purchaseDate: Date) {
       title: 'En transit',
       description: 'En route vers vous',
       timestamp: null,
-      status: ['IN_TRANSIT', 'OUT_FOR_DELIVERY', 'DELIVERED'].includes(shipping?.status)
+      status: ['IN_TRANSIT', 'OUT_FOR_DELIVERY', 'DELIVERED'].includes(shipping?.status ?? '')
         ? 'completed' as const
         : 'pending' as const,
       icon: 'transit',
@@ -507,7 +543,7 @@ function generateShippingSteps(shipping: any, purchaseDate: Date) {
       title: 'En cours de livraison',
       description: 'Le livreur est en chemin',
       timestamp: null,
-      status: ['OUT_FOR_DELIVERY', 'DELIVERED'].includes(shipping?.status)
+      status: ['OUT_FOR_DELIVERY', 'DELIVERED'].includes(shipping?.status ?? '')
         ? 'completed' as const
         : 'pending' as const,
       icon: 'delivery',

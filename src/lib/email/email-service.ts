@@ -183,7 +183,7 @@ async function logEmail(options: SendEmailOptions): Promise<EmailResult> {
 
   return { 
     success: true, 
-    messageId: `dev-${Date.now()}-${Math.random().toString(36).substring(7)}` 
+    messageId: `dev-${Date.now()}-${crypto.randomUUID().substring(0, 8)}`
   };
 }
 

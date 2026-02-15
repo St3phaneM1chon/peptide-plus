@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import {
   Download,
@@ -26,6 +26,7 @@ import { DataTable, type Column } from '@/components/admin/DataTable';
 import { StatCard } from '@/components/admin/StatCard';
 import { Modal } from '@/components/admin/Modal';
 import { FormField, Input, Textarea } from '@/components/admin/FormField';
+import { useI18n } from '@/i18n/client';
 
 interface Order {
   id: string;
@@ -78,26 +79,10 @@ interface CreditNoteRef {
   issuedAt: string | null;
 }
 
-const statusOptions = [
-  { value: 'PENDING', label: 'Pending' },
-  { value: 'CONFIRMED', label: 'Confirmed' },
-  { value: 'PROCESSING', label: 'Processing' },
-  { value: 'SHIPPED', label: 'Shipped' },
-  { value: 'DELIVERED', label: 'Delivered' },
-  { value: 'CANCELLED', label: 'Cancelled' },
-];
-
 const statusOptionValues = ['PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'];
 
-const reshipReasons = [
-  'Colis perdu en transit',
-  'Colis endommage',
-  'Colis retourne a l\'expediteur',
-  'Adresse incorrecte - renvoi',
-  'Contenu manquant dans le colis',
-];
-
 export default function OrdersPage() {
+  const { t, locale } = useI18n();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -119,6 +104,23 @@ export default function OrdersPage() {
 
   // Enriched detail data
   const [creditNotes, setCreditNotes] = useState<CreditNoteRef[]>([]);
+
+  const statusOptions = useMemo(() => [
+    { value: 'PENDING', label: t('admin.commandes.statusPending') },
+    { value: 'CONFIRMED', label: t('admin.commandes.statusConfirmed') },
+    { value: 'PROCESSING', label: t('admin.commandes.statusProcessing') },
+    { value: 'SHIPPED', label: t('admin.commandes.statusShipped') },
+    { value: 'DELIVERED', label: t('admin.commandes.statusDelivered') },
+    { value: 'CANCELLED', label: t('admin.commandes.statusCancelled') },
+  ], [t]);
+
+  const reshipReasons = useMemo(() => [
+    t('admin.commandes.reshipReasonLost'),
+    t('admin.commandes.reshipReasonDamaged'),
+    t('admin.commandes.reshipReasonReturned'),
+    t('admin.commandes.reshipReasonAddress'),
+    t('admin.commandes.reshipReasonMissing'),
+  ], [t]);
 
   useEffect(() => {
     fetchOrders();
@@ -225,11 +227,11 @@ export default function OrdersPage() {
     if (!selectedOrder) return;
     const amount = parseFloat(refundAmount);
     if (isNaN(amount) || amount <= 0) {
-      setRefundError('Montant invalide');
+      setRefundError(t('admin.commandes.invalidAmount'));
       return;
     }
     if (!refundReason.trim()) {
-      setRefundError('La raison est requise');
+      setRefundError(t('admin.commandes.reasonRequired'));
       return;
     }
 
@@ -243,15 +245,15 @@ export default function OrdersPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setRefundError(data.error || 'Erreur lors du remboursement');
+        setRefundError(data.error || t('admin.commandes.refundError'));
         return;
       }
       // Refresh
       setShowRefundModal(false);
       await fetchOrders();
       await fetchOrderDetail(selectedOrder.id);
-    } catch (err) {
-      setRefundError('Erreur reseau');
+    } catch {
+      setRefundError(t('admin.commandes.networkError'));
     } finally {
       setRefunding(false);
     }
@@ -268,7 +270,7 @@ export default function OrdersPage() {
   const handleReship = async () => {
     if (!selectedOrder) return;
     if (!reshipReason.trim()) {
-      setReshipError('La raison est requise');
+      setReshipError(t('admin.commandes.reasonRequired'));
       return;
     }
 
@@ -282,14 +284,14 @@ export default function OrdersPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setReshipError(data.error || 'Erreur lors de la re-expedition');
+        setReshipError(data.error || t('admin.commandes.reshipError'));
         return;
       }
       setShowReshipModal(false);
       await fetchOrders();
       await fetchOrderDetail(selectedOrder.id);
-    } catch (err) {
-      setReshipError('Erreur reseau');
+    } catch {
+      setReshipError(t('admin.commandes.networkError'));
     } finally {
       setReshipping(false);
     }
@@ -334,23 +336,23 @@ export default function OrdersPage() {
   const columns: Column<Order>[] = [
     {
       key: 'orderNumber',
-      header: 'Commande',
+      header: t('admin.commandes.colOrder'),
       sortable: true,
       render: (order) => (
         <div>
           <p className="font-semibold text-slate-900">
             {order.orderNumber}
             {order.orderType === 'REPLACEMENT' && (
-              <span className="ml-1 text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded">RESHIP</span>
+              <span className="ml-1 text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded">{t('admin.commandes.reship')}</span>
             )}
           </p>
-          <p className="text-xs text-slate-500">{order.items.length} article(s)</p>
+          <p className="text-xs text-slate-500">{t('admin.commandes.itemCount', { count: order.items.length })}</p>
         </div>
       ),
     },
     {
       key: 'customer',
-      header: 'Client',
+      header: t('admin.commandes.colCustomer'),
       sortable: true,
       render: (order) => (
         <div>
@@ -361,41 +363,41 @@ export default function OrdersPage() {
     },
     {
       key: 'total',
-      header: 'Total',
+      header: t('admin.commandes.colTotal'),
       sortable: true,
       align: 'right',
       render: (order) => (
         <div>
           <p className="font-semibold text-slate-900">{order.total.toFixed(2)} {order.currencyCode}</p>
           {order.promoCode && (
-            <p className="text-xs text-emerald-600">Code: {order.promoCode}</p>
+            <p className="text-xs text-emerald-600">{t('admin.commandes.codeLabel')}: {order.promoCode}</p>
           )}
         </div>
       ),
     },
     {
       key: 'paymentStatus',
-      header: 'Paiement',
+      header: t('admin.commandes.colPayment'),
       render: (order) => <PaymentStatusBadge status={order.paymentStatus} />,
     },
     {
       key: 'status',
-      header: 'Statut',
+      header: t('admin.commandes.colStatus'),
       render: (order) => <OrderStatusBadge status={order.status} />,
     },
     {
       key: 'createdAt',
-      header: 'Date',
+      header: t('admin.commandes.colDate'),
       sortable: true,
       render: (order) => (
         <span className="text-slate-500">
-          {new Date(order.createdAt).toLocaleDateString('fr-CA')}
+          {new Date(order.createdAt).toLocaleDateString(locale)}
         </span>
       ),
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: t('admin.commandes.colActions'),
       align: 'center',
       render: (order) => (
         <Button
@@ -407,7 +409,7 @@ export default function OrdersPage() {
             openOrderDetail(order);
           }}
         >
-          Details
+          {t('admin.commandes.details')}
         </Button>
       ),
     },
@@ -417,32 +419,32 @@ export default function OrdersPage() {
     <div className="space-y-6">
       {/* Header */}
       <PageHeader
-        title="Commandes"
-        subtitle="Gerez toutes les commandes clients"
+        title={t('admin.commandes.title')}
+        subtitle={t('admin.commandes.subtitle')}
         actions={
           <Button variant="secondary" icon={Download}>
-            Exporter CSV
+            {t('admin.commandes.exportCsv')}
           </Button>
         }
       />
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <StatCard label="Total" value={stats.total} icon={ShoppingBag} />
-        <StatCard label="En attente" value={stats.pending} icon={Clock} />
-        <StatCard label="En traitement" value={stats.processing} icon={Cog} />
-        <StatCard label="Expediees" value={stats.shipped} icon={Truck} />
-        <StatCard label="Livrees" value={stats.delivered} icon={PackageCheck} />
+        <StatCard label={t('admin.commandes.statTotal')} value={stats.total} icon={ShoppingBag} />
+        <StatCard label={t('admin.commandes.statPending')} value={stats.pending} icon={Clock} />
+        <StatCard label={t('admin.commandes.statProcessing')} value={stats.processing} icon={Cog} />
+        <StatCard label={t('admin.commandes.statShipped')} value={stats.shipped} icon={Truck} />
+        <StatCard label={t('admin.commandes.statDelivered')} value={stats.delivered} icon={PackageCheck} />
       </div>
 
       {/* Filters */}
       <FilterBar
         searchValue={filter.search}
         onSearchChange={(value) => setFilter({ ...filter, search: value })}
-        searchPlaceholder="Rechercher (no commande, client, email)..."
+        searchPlaceholder={t('admin.commandes.searchPlaceholder')}
       >
         <SelectFilter
-          label="Tous les statuts"
+          label={t('admin.commandes.allStatuses')}
           value={filter.status}
           onChange={(value) => setFilter({ ...filter, status: value })}
           options={statusOptions}
@@ -467,33 +469,33 @@ export default function OrdersPage() {
         data={filteredOrders}
         keyExtractor={(order) => order.id}
         onRowClick={(order) => openOrderDetail(order)}
-        emptyTitle="Aucune commande trouvee"
-        emptyDescription="Aucune commande ne correspond a vos filtres."
+        emptyTitle={t('admin.commandes.emptyTitle')}
+        emptyDescription={t('admin.commandes.emptyDescription')}
       />
 
       {/* Order Detail Modal */}
       <Modal
         isOpen={!!selectedOrder}
         onClose={() => { setSelectedOrder(null); setCreditNotes([]); }}
-        title={`Commande ${selectedOrder?.orderNumber ?? ''}`}
-        subtitle={selectedOrder ? new Date(selectedOrder.createdAt).toLocaleString('fr-CA') : undefined}
+        title={t('admin.commandes.orderTitle', { orderNumber: selectedOrder?.orderNumber ?? '' })}
+        subtitle={selectedOrder ? new Date(selectedOrder.createdAt).toLocaleString(locale) : undefined}
         size="xl"
         footer={
           <>
             <Button variant="primary" icon={Mail}>
-              Envoyer email confirmation
+              {t('admin.commandes.sendConfirmationEmail')}
             </Button>
             <Button variant="secondary" icon={Printer}>
-              Imprimer bon de livraison
+              {t('admin.commandes.printDeliverySlip')}
             </Button>
             {canReship && (
               <Button variant="secondary" icon={Package} onClick={openReshipModal}>
-                Re-expedier (colis perdu)
+                {t('admin.commandes.reshipLostPackage')}
               </Button>
             )}
             {canRefund && (
               <Button variant="danger" icon={RotateCcw} className="ml-auto" onClick={openRefundModal}>
-                Rembourser
+                {t('admin.commandes.refund')}
               </Button>
             )}
           </>
@@ -506,14 +508,14 @@ export default function OrdersPage() {
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-center gap-2">
                 <Package className="w-5 h-5 text-amber-600" />
                 <span className="text-sm text-amber-800">
-                  Re-expedition de <strong>{selectedOrder.parentOrder.orderNumber}</strong>
+                  {t('admin.commandes.reshipBanner')} <strong>{selectedOrder.parentOrder.orderNumber}</strong>
                 </span>
               </div>
             )}
 
             {/* Status & Actions */}
             <div className="flex flex-wrap gap-4 items-center">
-              <FormField label="Statut commande">
+              <FormField label={t('admin.commandes.orderStatusLabel')}>
                 <select
                   value={selectedOrder.status}
                   onChange={(e) => updateOrderStatus(selectedOrder.id, e.target.value)}
@@ -533,15 +535,15 @@ export default function OrdersPage() {
             {/* Customer Info */}
             <div className="grid grid-cols-2 gap-6">
               <div>
-                <h3 className="font-semibold text-slate-900 mb-2">Client</h3>
+                <h3 className="font-semibold text-slate-900 mb-2">{t('admin.commandes.customerTitle')}</h3>
                 <p className="text-slate-700">{selectedOrder.userName}</p>
                 <p className="text-slate-500 text-sm">{selectedOrder.userEmail}</p>
                 <Link href={`/admin/clients/${selectedOrder.userId}`} className="text-sky-600 text-sm hover:underline">
-                  Voir le profil &rarr;
+                  {t('admin.commandes.viewProfile')} &rarr;
                 </Link>
               </div>
               <div>
-                <h3 className="font-semibold text-slate-900 mb-2">Adresse de livraison</h3>
+                <h3 className="font-semibold text-slate-900 mb-2">{t('admin.commandes.shippingAddressTitle')}</h3>
                 <p className="text-slate-700">{selectedOrder.shippingName}</p>
                 <p className="text-slate-500 text-sm">{selectedOrder.shippingAddress1}</p>
                 <p className="text-slate-500 text-sm">
@@ -553,15 +555,15 @@ export default function OrdersPage() {
 
             {/* Tracking */}
             <div className="bg-slate-50 rounded-lg p-4">
-              <h3 className="font-semibold text-slate-900 mb-3">Suivi de livraison</h3>
+              <h3 className="font-semibold text-slate-900 mb-3">{t('admin.commandes.trackingTitle')}</h3>
               <div className="grid grid-cols-2 gap-4">
-                <FormField label="Transporteur">
+                <FormField label={t('admin.commandes.carrierLabel')}>
                   <select
                     defaultValue={selectedOrder.carrier || ''}
                     onChange={(e) => updateTracking(selectedOrder.id, e.target.value, selectedOrder.trackingNumber || '')}
                     className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
                   >
-                    <option value="">Selectionner...</option>
+                    <option value="">{t('admin.commandes.carrierSelect')}</option>
                     <option value="Postes Canada">Postes Canada</option>
                     <option value="FedEx">FedEx</option>
                     <option value="UPS">UPS</option>
@@ -569,11 +571,11 @@ export default function OrdersPage() {
                     <option value="DHL">DHL</option>
                   </select>
                 </FormField>
-                <FormField label="Numero de suivi">
+                <FormField label={t('admin.commandes.trackingNumberLabel')}>
                   <Input
                     type="text"
                     defaultValue={selectedOrder.trackingNumber || ''}
-                    placeholder="Ex: 1234567890"
+                    placeholder={t('admin.commandes.trackingPlaceholder')}
                     onBlur={(e) => updateTracking(selectedOrder.id, selectedOrder.carrier || '', e.target.value)}
                   />
                 </FormField>
@@ -582,15 +584,15 @@ export default function OrdersPage() {
 
             {/* Items */}
             <div>
-              <h3 className="font-semibold text-slate-900 mb-3">Articles</h3>
+              <h3 className="font-semibold text-slate-900 mb-3">{t('admin.commandes.itemsTitle')}</h3>
               <div className="border border-slate-200 rounded-lg overflow-hidden">
                 <table className="w-full">
                   <thead className="bg-slate-50">
                     <tr>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Produit</th>
-                      <th className="px-4 py-2 text-center text-xs font-medium text-slate-500 uppercase">Qte</th>
-                      <th className="px-4 py-2 text-right text-xs font-medium text-slate-500 uppercase">Prix unit.</th>
-                      <th className="px-4 py-2 text-right text-xs font-medium text-slate-500 uppercase">Total</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">{t('admin.commandes.colProduct')}</th>
+                      <th className="px-4 py-2 text-center text-xs font-medium text-slate-500 uppercase">{t('admin.commandes.colQty')}</th>
+                      <th className="px-4 py-2 text-right text-xs font-medium text-slate-500 uppercase">{t('admin.commandes.colUnitPrice')}</th>
+                      <th className="px-4 py-2 text-right text-xs font-medium text-slate-500 uppercase">{t('admin.commandes.colTotal')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -616,25 +618,25 @@ export default function OrdersPage() {
             <div className="bg-slate-50 rounded-lg p-4">
               <div className="space-y-2">
                 <div className="flex justify-between text-slate-600 text-sm">
-                  <span>Sous-total</span>
+                  <span>{t('admin.commandes.subtotal')}</span>
                   <span>{selectedOrder.subtotal.toFixed(2)} $</span>
                 </div>
                 <div className="flex justify-between text-slate-600 text-sm">
-                  <span>Livraison</span>
-                  <span>{selectedOrder.shippingCost === 0 ? 'GRATUIT' : `${selectedOrder.shippingCost.toFixed(2)} $`}</span>
+                  <span>{t('admin.commandes.shipping')}</span>
+                  <span>{selectedOrder.shippingCost === 0 ? t('admin.commandes.shippingFree') : `${selectedOrder.shippingCost.toFixed(2)} $`}</span>
                 </div>
                 {selectedOrder.discount > 0 && (
                   <div className="flex justify-between text-emerald-600 text-sm">
-                    <span>Reduction {selectedOrder.promoCode && `(${selectedOrder.promoCode})`}</span>
+                    <span>{t('admin.commandes.discount')} {selectedOrder.promoCode && `(${selectedOrder.promoCode})`}</span>
                     <span>-{selectedOrder.discount.toFixed(2)} $</span>
                   </div>
                 )}
                 <div className="flex justify-between text-slate-600 text-sm">
-                  <span>Taxes</span>
+                  <span>{t('admin.commandes.taxes')}</span>
                   <span>{selectedOrder.tax.toFixed(2)} $</span>
                 </div>
                 <div className="flex justify-between text-lg font-bold text-slate-900 pt-2 border-t border-slate-300">
-                  <span>Total</span>
+                  <span>{t('admin.commandes.total')}</span>
                   <span>{selectedOrder.total.toFixed(2)} {selectedOrder.currencyCode}</span>
                 </div>
               </div>
@@ -645,7 +647,7 @@ export default function OrdersPage() {
               <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                 <h3 className="font-semibold text-red-800 mb-3 flex items-center gap-2">
                   <FileText className="w-4 h-4" />
-                  Notes de credit ({creditNotes.length})
+                  {t('admin.commandes.creditNotesTitle', { count: creditNotes.length })}
                 </h3>
                 <div className="space-y-2">
                   {creditNotes.map((cn) => (
@@ -671,7 +673,7 @@ export default function OrdersPage() {
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
                 <h3 className="font-semibold text-amber-800 mb-3 flex items-center gap-2">
                   <Package className="w-4 h-4" />
-                  Re-expeditions ({selectedOrder.replacementOrders.length})
+                  {t('admin.commandes.reshipmentsTitle', { count: selectedOrder.replacementOrders.length })}
                 </h3>
                 <div className="space-y-2">
                   {selectedOrder.replacementOrders.map((ro) => (
@@ -681,7 +683,7 @@ export default function OrdersPage() {
                         <span className="text-amber-600 ml-2">{ro.replacementReason}</span>
                       </div>
                       <span className="text-xs text-amber-600">
-                        {new Date(ro.createdAt).toLocaleDateString('fr-CA')} - {ro.status}
+                        {new Date(ro.createdAt).toLocaleDateString(locale)} - {ro.status}
                       </span>
                     </div>
                   ))}
@@ -690,11 +692,11 @@ export default function OrdersPage() {
             )}
 
             {/* Admin Notes */}
-            <FormField label="Notes internes">
+            <FormField label={t('admin.commandes.adminNotesLabel')}>
               <Textarea
                 rows={3}
                 defaultValue={selectedOrder.adminNotes || ''}
-                placeholder="Notes visibles uniquement par l'admin..."
+                placeholder={t('admin.commandes.adminNotesPlaceholder')}
               />
             </FormField>
           </div>
@@ -705,16 +707,16 @@ export default function OrdersPage() {
       <Modal
         isOpen={showRefundModal}
         onClose={() => setShowRefundModal(false)}
-        title="Remboursement"
-        subtitle={`Commande ${selectedOrder?.orderNumber || ''}`}
+        title={t('admin.commandes.refundTitle')}
+        subtitle={t('admin.commandes.refundOrderSubtitle', { orderNumber: selectedOrder?.orderNumber || '' })}
         size="md"
         footer={
           <>
             <Button variant="secondary" onClick={() => setShowRefundModal(false)}>
-              Annuler
+              {t('admin.commandes.cancel')}
             </Button>
             <Button variant="danger" icon={RotateCcw} onClick={handleRefund} disabled={refunding}>
-              {refunding ? 'Traitement...' : 'Confirmer le remboursement'}
+              {refunding ? t('admin.commandes.processing') : t('admin.commandes.confirmRefund')}
             </Button>
           </>
         }
@@ -723,12 +725,11 @@ export default function OrdersPage() {
           <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-start gap-2">
             <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5" />
             <p className="text-sm text-amber-800">
-              Remboursement comptable uniquement. Aucun remboursement Stripe ne sera effectue.
-              La note de credit sera generee automatiquement.
+              {t('admin.commandes.refundWarning')}
             </p>
           </div>
 
-          <FormField label="Montant du remboursement ($)">
+          <FormField label={t('admin.commandes.refundAmountLabel')}>
             <Input
               type="number"
               step="0.01"
@@ -739,12 +740,12 @@ export default function OrdersPage() {
             />
           </FormField>
 
-          <FormField label="Raison du remboursement">
+          <FormField label={t('admin.commandes.refundReasonLabel')}>
             <Textarea
               rows={3}
               value={refundReason}
               onChange={(e) => setRefundReason(e.target.value)}
-              placeholder="Ex: Produit defectueux, erreur de commande..."
+              placeholder={t('admin.commandes.refundReasonPlaceholder')}
             />
           </FormField>
 
@@ -758,16 +759,16 @@ export default function OrdersPage() {
       <Modal
         isOpen={showReshipModal}
         onClose={() => setShowReshipModal(false)}
-        title="Re-expedition (colis perdu)"
-        subtitle={`Commande ${selectedOrder?.orderNumber || ''}`}
+        title={t('admin.commandes.reshipTitle')}
+        subtitle={t('admin.commandes.refundOrderSubtitle', { orderNumber: selectedOrder?.orderNumber || '' })}
         size="md"
         footer={
           <>
             <Button variant="secondary" onClick={() => setShowReshipModal(false)}>
-              Annuler
+              {t('admin.commandes.cancel')}
             </Button>
             <Button variant="primary" icon={Package} onClick={handleReship} disabled={reshipping}>
-              {reshipping ? 'Traitement...' : 'Confirmer la re-expedition'}
+              {reshipping ? t('admin.commandes.processing') : t('admin.commandes.confirmReship')}
             </Button>
           </>
         }
@@ -775,12 +776,11 @@ export default function OrdersPage() {
         <div className="space-y-4">
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
             <p className="text-sm text-blue-800">
-              Une nouvelle commande de remplacement a $0 sera creee. Le stock sera decremente
-              et une perte inventaire sera comptabilisee.
+              {t('admin.commandes.reshipInfo')}
             </p>
           </div>
 
-          <FormField label="Raison de la re-expedition">
+          <FormField label={t('admin.commandes.reshipReasonLabel')}>
             <select
               value={reshipReason}
               onChange={(e) => setReshipReason(e.target.value)}
@@ -794,7 +794,7 @@ export default function OrdersPage() {
 
           {selectedOrder && (
             <div>
-              <h4 className="text-sm font-medium text-slate-700 mb-2">Articles a re-expedier</h4>
+              <h4 className="text-sm font-medium text-slate-700 mb-2">{t('admin.commandes.itemsToReship')}</h4>
               <div className="border border-slate-200 rounded-lg divide-y divide-slate-100">
                 {selectedOrder.items.map((item) => (
                   <div key={item.id} className="px-3 py-2 flex justify-between text-sm">

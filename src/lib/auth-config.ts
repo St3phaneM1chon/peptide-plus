@@ -23,6 +23,8 @@ type AuthProvider = any;
 // =====================================================
 
 // Providers OAuth (ajoutés seulement si configurés)
+// allowDangerousEmailAccountLinking: permet aux utilisateurs qui se sont inscrits
+// par email/password de lier ensuite un compte OAuth avec le même email
 const oauthProviders: AuthProvider[] = [
   // Google
   ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
@@ -30,6 +32,7 @@ const oauthProviders: AuthProvider[] = [
         GoogleProvider({
           clientId: process.env.GOOGLE_CLIENT_ID,
           clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+          allowDangerousEmailAccountLinking: true,
           authorization: {
             params: {
               prompt: 'consent',
@@ -47,6 +50,7 @@ const oauthProviders: AuthProvider[] = [
         AppleProvider({
           clientId: process.env.APPLE_CLIENT_ID,
           clientSecret: process.env.APPLE_CLIENT_SECRET,
+          allowDangerousEmailAccountLinking: true,
         }),
       ]
     : []),
@@ -57,16 +61,27 @@ const oauthProviders: AuthProvider[] = [
         FacebookProvider({
           clientId: process.env.FACEBOOK_CLIENT_ID,
           clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
+          allowDangerousEmailAccountLinking: true,
         }),
       ]
     : []),
 
-  // X (Twitter)
+  // X (Twitter) — OAuth 2.0 does NOT return email
+  // We generate a placeholder email from the Twitter user ID so PrismaAdapter can create the User row
   ...(process.env.TWITTER_CLIENT_ID && process.env.TWITTER_CLIENT_SECRET
     ? [
         TwitterProvider({
           clientId: process.env.TWITTER_CLIENT_ID,
           clientSecret: process.env.TWITTER_CLIENT_SECRET,
+          allowDangerousEmailAccountLinking: true,
+          profile({ data }) {
+            return {
+              id: data.id,
+              name: data.name,
+              email: data.email ?? `twitter_${data.id}@noemail.biocyclepeptides.com`,
+              image: data.profile_image_url,
+            };
+          },
         }),
       ]
     : []),
@@ -157,7 +172,8 @@ const providers = [
         image: user.image,
         role: user.role,
         mfaEnabled: user.mfaEnabled,
-      } as any; // Next-Auth v5 User type extended via callbacks
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Next-Auth v5 User type extended via callbacks
+      } as any;
     },
   }),
 ];
@@ -225,12 +241,29 @@ export const authConfig: NextAuthConfig = {
     },
 
     // Enrichissement du JWT
-    async jwt({ token, user, trigger }) {
+    async jwt({ token, user, account, trigger }) {
       try {
         if (user) {
           token.id = user.id || '';
-          token.role = (user as any).role || UserRole.CUSTOMER;
-          token.mfaEnabled = (user as any).mfaEnabled || false;
+
+          // Pour OAuth, le user object de l'adapter n'a pas le role custom
+          // On fetch toujours depuis la DB pour avoir le role correct
+          if (account?.provider !== 'credentials') {
+            try {
+              const dbUser = await prisma.user.findUnique({
+                where: { id: user.id! },
+                select: { role: true, mfaEnabled: true },
+              });
+              token.role = (dbUser?.role as UserRole) || UserRole.CUSTOMER;
+              token.mfaEnabled = dbUser?.mfaEnabled || false;
+            } catch {
+              token.role = UserRole.CUSTOMER;
+              token.mfaEnabled = false;
+            }
+          } else {
+            token.role = ((user as unknown as Record<string, unknown>).role as UserRole) || UserRole.CUSTOMER;
+            token.mfaEnabled = (user as unknown as Record<string, unknown>).mfaEnabled as boolean || false;
+          }
         }
 
         // Rafraîchir les données utilisateur périodiquement
@@ -238,6 +271,7 @@ export const authConfig: NextAuthConfig = {
           try {
             const dbUser = await prisma.user.findUnique({
               where: { id: token.id as string },
+              select: { role: true, mfaEnabled: true },
             });
             if (dbUser) {
               token.role = dbUser.role as UserRole;
@@ -245,7 +279,6 @@ export const authConfig: NextAuthConfig = {
             }
           } catch (dbError) {
             console.error('Database error in jwt callback:', dbError);
-            // Continue with existing token data
           }
         }
 
@@ -303,6 +336,38 @@ export const authConfig: NextAuthConfig = {
         }));
       } catch (error) {
         console.error('Error in signIn event:', error);
+      }
+    },
+    async createUser({ user }) {
+      try {
+        // New OAuth user created by PrismaAdapter: ensure role is CUSTOMER
+        // (Prisma @default handles this, but we enforce it explicitly as a safeguard)
+        if (user.id) {
+          await prisma.user.update({
+            where: { id: user.id },
+            data: { role: UserRole.CUSTOMER },
+          });
+        }
+        console.log(JSON.stringify({
+          event: 'user_created_oauth',
+          timestamp: new Date().toISOString(),
+          userId: user.id,
+          email: user.email,
+        }));
+      } catch (error) {
+        console.error('Error in createUser event:', error);
+      }
+    },
+    async linkAccount({ user, account }) {
+      try {
+        console.log(JSON.stringify({
+          event: 'account_linked',
+          timestamp: new Date().toISOString(),
+          userId: user.id,
+          provider: account.provider,
+        }));
+      } catch (error) {
+        console.error('Error in linkAccount event:', error);
       }
     },
     async signOut(message) {

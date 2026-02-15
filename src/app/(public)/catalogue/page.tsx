@@ -7,6 +7,7 @@ export const dynamic = 'force-dynamic';
 import Link from 'next/link';
 import { db as prisma } from '@/lib/db';
 import { ProductCard } from '@/components/products/ProductCard';
+import { Product } from '@/types';
 
 interface CataloguePageProps {
   searchParams: Promise<{
@@ -18,7 +19,7 @@ interface CataloguePageProps {
 }
 
 async function getProducts(filters: { category?: string; type?: string; sort?: string; search?: string }) {
-  const where: any = { isActive: true };
+  const where: Record<string, unknown> = { isActive: true };
 
   if (filters.category) {
     where.category = { slug: filters.category };
@@ -35,7 +36,7 @@ async function getProducts(filters: { category?: string; type?: string; sort?: s
     ];
   }
 
-  const orderBy: any = {};
+  const orderBy: Record<string, string> = {};
   switch (filters.sort) {
     case 'price-asc':
       orderBy.price = 'asc';
@@ -226,7 +227,7 @@ export default async function CataloguePage({ searchParams }: CataloguePageProps
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 {products.map((product) => (
-                  <ProductCard key={product.id} product={product as any} />
+                  <ProductCard key={product.id} product={product as unknown as Product} />
                 ))}
               </div>
             )}

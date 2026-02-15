@@ -6,11 +6,11 @@
 'use client';
 
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { type Locale, defaultLocale, locales, localeNames, localeFlags, localeDirections } from './config';
 
 // Messages type
-type Messages = Record<string, any>;
+type Messages = Record<string, unknown>;
 
 interface I18nContextType {
   locale: Locale;
@@ -33,7 +33,6 @@ interface I18nProviderProps {
 
 export function I18nProvider({ children, locale: initialLocale, messages }: I18nProviderProps) {
   const [locale, setLocaleState] = useState<Locale>(initialLocale);
-  const router = useRouter();
   usePathname(); // For router updates
 
   // Charger la locale sauvegardée
@@ -42,6 +41,7 @@ export function I18nProvider({ children, locale: initialLocale, messages }: I18n
     if (savedLocale && locales.includes(savedLocale) && savedLocale !== locale) {
       setLocaleState(savedLocale);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Mettre à jour la direction du document
@@ -79,10 +79,10 @@ export function I18nProvider({ children, locale: initialLocale, messages }: I18n
   // Fonction de traduction
   const t = useCallback((key: string, params?: Record<string, string | number>): string => {
     const keys = key.split('.');
-    let value: any = messages;
+    let value: unknown = messages;
 
     for (const k of keys) {
-      value = value?.[k];
+      value = (value as Record<string, unknown>)?.[k];
       if (value === undefined) {
         console.warn(`Translation key not found: ${key}`);
         return key;

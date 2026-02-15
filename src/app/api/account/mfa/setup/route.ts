@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * API MFA SETUP - Initialize MFA configuration
  * Returns QR code and manual entry key

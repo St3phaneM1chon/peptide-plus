@@ -202,14 +202,15 @@ export async function createCheckoutSession({
   successUrl,
   cancelUrl,
   metadata = {},
-}: CreateCheckoutSessionParams): Promise<Stripe.Checkout.Session> {
+  currency = 'cad',
+}: CreateCheckoutSessionParams & { currency?: string }): Promise<Stripe.Checkout.Session> {
   return stripe.checkout.sessions.create({
     mode: 'payment',
     customer: customerId,
     line_items: [
       {
         price_data: {
-          currency: 'cad',
+          currency: currency.toLowerCase(),
           unit_amount: priceAmount,
           product_data: {
             name: productName,
@@ -332,13 +333,14 @@ export async function handlePaymentFailed(
 export async function createInvoice(
   customerId: string,
   amount: number,
-  description: string
+  description: string,
+  currency = 'cad'
 ): Promise<Stripe.Invoice> {
   // Créer un invoice item
   await stripe.invoiceItems.create({
     customer: customerId,
     amount,
-    currency: 'cad',
+    currency: currency.toLowerCase(),
     description,
   });
   

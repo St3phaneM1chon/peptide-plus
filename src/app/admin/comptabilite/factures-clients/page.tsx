@@ -9,6 +9,7 @@ import { StatusBadge } from '@/components/admin/StatusBadge';
 import { StatCard } from '@/components/admin/StatCard';
 import { FilterBar, SelectFilter } from '@/components/admin/FilterBar';
 import { DataTable, type Column } from '@/components/admin/DataTable';
+import { useI18n } from '@/i18n/client';
 
 interface Invoice {
   id: string;
@@ -40,25 +41,27 @@ interface InvoiceItem {
 
 type BadgeVariant = 'success' | 'warning' | 'error' | 'info' | 'neutral';
 
-const statusConfig: Record<string, { label: string; variant: BadgeVariant }> = {
-  DRAFT: { label: 'Brouillon', variant: 'neutral' },
-  SENT: { label: 'Envoyee', variant: 'info' },
-  PAID: { label: 'Payee', variant: 'success' },
-  OVERDUE: { label: 'En retard', variant: 'error' },
-  CANCELLED: { label: 'Annulee', variant: 'neutral' },
-};
-
-const statusFilterOptions = [
-  { value: 'DRAFT', label: 'Brouillon' },
-  { value: 'SENT', label: 'Envoyee' },
-  { value: 'PAID', label: 'Payee' },
-  { value: 'OVERDUE', label: 'En retard' },
-];
-
-const formatCAD = (amount: number) =>
-  amount.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' });
-
 export default function FacturesClientsPage() {
+  const { t, locale } = useI18n();
+
+  const statusConfig: Record<string, { label: string; variant: BadgeVariant }> = {
+    DRAFT: { label: t('admin.customerInvoices.statusDraft'), variant: 'neutral' },
+    SENT: { label: t('admin.customerInvoices.statusSent'), variant: 'info' },
+    PAID: { label: t('admin.customerInvoices.statusPaid'), variant: 'success' },
+    OVERDUE: { label: t('admin.customerInvoices.statusOverdue'), variant: 'error' },
+    CANCELLED: { label: t('admin.customerInvoices.statusCancelled'), variant: 'neutral' },
+  };
+
+  const statusFilterOptions = [
+    { value: 'DRAFT', label: t('admin.customerInvoices.statusDraft') },
+    { value: 'SENT', label: t('admin.customerInvoices.statusSent') },
+    { value: 'PAID', label: t('admin.customerInvoices.statusPaid') },
+    { value: 'OVERDUE', label: t('admin.customerInvoices.statusOverdue') },
+  ];
+
+  const formatCAD = (amount: number) =>
+    amount.toLocaleString(locale, { style: 'currency', currency: 'CAD' });
+
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
@@ -73,17 +76,17 @@ export default function FacturesClientsPage() {
       const params = new URLSearchParams();
       if (selectedStatus) params.set('status', selectedStatus);
       const response = await fetch(`/api/accounting/customer-invoices?${params.toString()}`);
-      if (!response.ok) throw new Error(`Erreur ${response.status}`);
+      if (!response.ok) throw new Error(`${t('admin.customerInvoices.errorPrefix')} ${response.status}`);
       const data = await response.json();
       setInvoices(data.invoices ?? []);
     } catch (err) {
       console.error('Error fetching customer invoices:', err);
-      setError(err instanceof Error ? err.message : 'Erreur lors du chargement des factures');
+      setError(err instanceof Error ? err.message : t('admin.customerInvoices.loadError'));
       setInvoices([]);
     } finally {
       setLoading(false);
     }
-  }, [selectedStatus]);
+  }, [selectedStatus, t]);
 
   useEffect(() => {
     fetchInvoices();
@@ -96,15 +99,15 @@ export default function FacturesClientsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: invoiceId, status: 'PAID', paidAt: new Date().toISOString() }),
       });
-      if (!response.ok) throw new Error(`Erreur ${response.status}`);
+      if (!response.ok) throw new Error(`${t('admin.customerInvoices.errorPrefix')} ${response.status}`);
       await fetchInvoices();
     } catch (err) {
       console.error('Error updating invoice:', err);
     }
   };
 
-  if (loading) return <div className="p-8 text-center">Chargement...</div>;
-  if (error) return <div className="p-8 text-center text-red-600">Erreur: {error}</div>;
+  if (loading) return <div className="p-8 text-center">{t('admin.customerInvoices.loading')}</div>;
+  if (error) return <div className="p-8 text-center text-red-600">{t('admin.customerInvoices.errorPrefix')} {error}</div>;
 
   const filteredInvoices = invoices.filter(invoice => {
     if (searchTerm && !invoice.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase()) &&
@@ -121,7 +124,7 @@ export default function FacturesClientsPage() {
   const columns: Column<Invoice>[] = [
     {
       key: 'invoiceNumber',
-      header: 'N\u00b0 Facture',
+      header: t('admin.customerInvoices.invoiceNumber'),
       render: (invoice) => (
         <div>
           <button
@@ -130,13 +133,13 @@ export default function FacturesClientsPage() {
           >
             {invoice.invoiceNumber}
           </button>
-          <p className="text-xs text-slate-500">Commande: {invoice.orderId}</p>
+          <p className="text-xs text-slate-500">{t('admin.customerInvoices.order')}: {invoice.orderId}</p>
         </div>
       ),
     },
     {
       key: 'customer',
-      header: 'Client',
+      header: t('admin.customerInvoices.client'),
       render: (invoice) => (
         <div>
           <p className="text-sm font-medium text-slate-900">{invoice.customer.name}</p>
@@ -146,17 +149,17 @@ export default function FacturesClientsPage() {
     },
     {
       key: 'date',
-      header: 'Date',
-      render: (invoice) => new Date(invoice.date).toLocaleDateString('fr-CA'),
+      header: t('admin.customerInvoices.date'),
+      render: (invoice) => new Date(invoice.date).toLocaleDateString(locale),
     },
     {
       key: 'dueDate',
-      header: 'Echeance',
-      render: (invoice) => new Date(invoice.dueDate).toLocaleDateString('fr-CA'),
+      header: t('admin.customerInvoices.dueDate'),
+      render: (invoice) => new Date(invoice.dueDate).toLocaleDateString(locale),
     },
     {
       key: 'total',
-      header: 'Total',
+      header: t('admin.customerInvoices.total'),
       align: 'right',
       render: (invoice) => (
         <span className="font-medium text-slate-900">{formatCAD(invoice.total)}</span>
@@ -164,7 +167,7 @@ export default function FacturesClientsPage() {
     },
     {
       key: 'status',
-      header: 'Statut',
+      header: t('admin.customerInvoices.status'),
       align: 'center',
       render: (invoice) => {
         const cfg = statusConfig[invoice.status];
@@ -173,20 +176,20 @@ export default function FacturesClientsPage() {
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: t('admin.customerInvoices.actions'),
       align: 'center',
       render: (invoice) => (
         <div className="flex items-center justify-center gap-1" onClick={(e) => e.stopPropagation()}>
           <button
             onClick={() => setSelectedInvoice(invoice)}
             className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded"
-            title="Voir"
+            title={t('admin.customerInvoices.view')}
           >
             <Eye className="w-4 h-4" />
           </button>
           <button
             className="p-1.5 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded"
-            title="Telecharger PDF"
+            title={t('admin.customerInvoices.downloadPdf')}
           >
             <Download className="w-4 h-4" />
           </button>
@@ -194,7 +197,7 @@ export default function FacturesClientsPage() {
             <button
               onClick={() => handleMarkAsPaid(invoice.id)}
               className="p-1.5 text-slate-500 hover:text-green-600 hover:bg-green-50 rounded"
-              title="Marquer payee"
+              title={t('admin.customerInvoices.markPaid')}
             >
               <Check className="w-4 h-4" />
             </button>
@@ -209,36 +212,36 @@ export default function FacturesClientsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Factures clients"
-        subtitle="Gerez les factures de vente"
+        title={t('admin.customerInvoices.title')}
+        subtitle={t('admin.customerInvoices.subtitle')}
         actions={
           <Button variant="primary" icon={Plus}>
-            Nouvelle facture
+            {t('admin.customerInvoices.newInvoice')}
           </Button>
         }
       />
 
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4">
-        <StatCard label="Total factures" value={invoices.length} icon={FileText} />
-        <StatCard label="Payees" value={formatCAD(totalPaid)} icon={DollarSign} className="!bg-green-50 !border-green-200" />
-        <StatCard label="En attente" value={formatCAD(totalPending)} icon={Clock} className="!bg-blue-50 !border-blue-200" />
-        <StatCard label="En retard" value={formatCAD(totalOverdue)} icon={AlertTriangle} className="!bg-red-50 !border-red-200" />
+        <StatCard label={t('admin.customerInvoices.totalInvoices')} value={invoices.length} icon={FileText} />
+        <StatCard label={t('admin.customerInvoices.paid')} value={formatCAD(totalPaid)} icon={DollarSign} className="!bg-green-50 !border-green-200" />
+        <StatCard label={t('admin.customerInvoices.pending')} value={formatCAD(totalPending)} icon={Clock} className="!bg-blue-50 !border-blue-200" />
+        <StatCard label={t('admin.customerInvoices.overdue')} value={formatCAD(totalOverdue)} icon={AlertTriangle} className="!bg-red-50 !border-red-200" />
       </div>
 
       {/* Filters */}
       <FilterBar
         searchValue={searchTerm}
         onSearchChange={setSearchTerm}
-        searchPlaceholder="Rechercher par numero ou client..."
+        searchPlaceholder={t('admin.customerInvoices.searchPlaceholder')}
         actions={
           <Button variant="secondary">
-            Exporter
+            {t('admin.customerInvoices.export')}
           </Button>
         }
       >
         <SelectFilter
-          label="Tous les statuts"
+          label={t('admin.customerInvoices.allStatuses')}
           value={selectedStatus}
           onChange={setSelectedStatus}
           options={statusFilterOptions}
@@ -250,8 +253,8 @@ export default function FacturesClientsPage() {
         columns={columns}
         data={filteredInvoices}
         keyExtractor={(inv) => inv.id}
-        emptyTitle="Aucune facture"
-        emptyDescription="Aucune facture ne correspond aux filtres selectionnes."
+        emptyTitle={t('admin.customerInvoices.noInvoices')}
+        emptyDescription={t('admin.customerInvoices.noInvoicesDesc')}
       />
 
       {/* Invoice Detail Modal */}
@@ -259,20 +262,20 @@ export default function FacturesClientsPage() {
         isOpen={!!inv}
         onClose={() => setSelectedInvoice(null)}
         title={inv?.invoiceNumber ?? ''}
-        subtitle={inv ? `Commande: ${inv.orderId}` : ''}
+        subtitle={inv ? `${t('admin.customerInvoices.order')}: ${inv.orderId}` : ''}
         size="xl"
         footer={
           inv && (
             <>
               <Button variant="primary" icon={Download}>
-                Telecharger PDF
+                {t('admin.customerInvoices.downloadPdf')}
               </Button>
               <Button variant="secondary" icon={Mail}>
-                Envoyer par email
+                {t('admin.customerInvoices.sendByEmail')}
               </Button>
               {inv.status !== 'PAID' && inv.status !== 'CANCELLED' && (
                 <Button variant="secondary" className="ml-auto" onClick={() => { handleMarkAsPaid(inv.id); setSelectedInvoice(null); }}>
-                  Marquer comme payee
+                  {t('admin.customerInvoices.markAsPaid')}
                 </Button>
               )}
             </>
@@ -284,7 +287,7 @@ export default function FacturesClientsPage() {
             {/* Customer Info */}
             <div className="grid grid-cols-2 gap-6">
               <div>
-                <h4 className="text-sm font-medium text-slate-500 mb-2">Facturer a</h4>
+                <h4 className="text-sm font-medium text-slate-500 mb-2">{t('admin.customerInvoices.billTo')}</h4>
                 <p className="font-medium text-slate-900">{inv.customer.name}</p>
                 <p className="text-sm text-slate-600">{inv.customer.email}</p>
                 <p className="text-sm text-slate-600">{inv.customer.address}</p>
@@ -295,10 +298,10 @@ export default function FacturesClientsPage() {
                     {statusConfig[inv.status].label}
                   </StatusBadge>
                 </div>
-                <p className="text-sm text-slate-500">Date: {new Date(inv.date).toLocaleDateString('fr-CA')}</p>
-                <p className="text-sm text-slate-500">Echeance: {new Date(inv.dueDate).toLocaleDateString('fr-CA')}</p>
+                <p className="text-sm text-slate-500">{t('admin.customerInvoices.date')}: {new Date(inv.date).toLocaleDateString(locale)}</p>
+                <p className="text-sm text-slate-500">{t('admin.customerInvoices.dueDate')}: {new Date(inv.dueDate).toLocaleDateString(locale)}</p>
                 {inv.paidAt && (
-                  <p className="text-sm text-green-600">Payee le: {new Date(inv.paidAt).toLocaleDateString('fr-CA')}</p>
+                  <p className="text-sm text-green-600">{t('admin.customerInvoices.paidOn')}: {new Date(inv.paidAt).toLocaleDateString(locale)}</p>
                 )}
               </div>
             </div>
@@ -307,10 +310,10 @@ export default function FacturesClientsPage() {
             <table className="w-full border border-slate-200 rounded-lg overflow-hidden">
               <thead className="bg-slate-50">
                 <tr>
-                  <th className="px-4 py-2 text-left text-xs font-semibold text-slate-500">Description</th>
-                  <th className="px-4 py-2 text-center text-xs font-semibold text-slate-500">Qte</th>
-                  <th className="px-4 py-2 text-right text-xs font-semibold text-slate-500">Prix unitaire</th>
-                  <th className="px-4 py-2 text-right text-xs font-semibold text-slate-500">Total</th>
+                  <th className="px-4 py-2 text-left text-xs font-semibold text-slate-500">{t('admin.customerInvoices.description')}</th>
+                  <th className="px-4 py-2 text-center text-xs font-semibold text-slate-500">{t('admin.customerInvoices.qty')}</th>
+                  <th className="px-4 py-2 text-right text-xs font-semibold text-slate-500">{t('admin.customerInvoices.unitPrice')}</th>
+                  <th className="px-4 py-2 text-right text-xs font-semibold text-slate-500">{t('admin.customerInvoices.total')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
@@ -329,19 +332,19 @@ export default function FacturesClientsPage() {
             <div className="flex justify-end">
               <div className="w-64 space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-slate-500">Sous-total</span>
+                  <span className="text-slate-500">{t('admin.customerInvoices.subtotal')}</span>
                   <span className="text-slate-900">{inv.subtotal.toFixed(2)} $</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-slate-500">TPS (5%)</span>
+                  <span className="text-slate-500">{t('admin.customerInvoices.tps')}</span>
                   <span className="text-slate-900">{inv.tps.toFixed(2)} $</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-slate-500">TVQ (9.975%)</span>
+                  <span className="text-slate-500">{t('admin.customerInvoices.tvq')}</span>
                   <span className="text-slate-900">{inv.tvq.toFixed(2)} $</span>
                 </div>
                 <div className="flex justify-between text-lg font-bold border-t border-slate-200 pt-2">
-                  <span>Total</span>
+                  <span>{t('admin.customerInvoices.total')}</span>
                   <span className="text-emerald-600">{inv.total.toFixed(2)} $</span>
                 </div>
               </div>

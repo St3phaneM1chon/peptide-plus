@@ -268,8 +268,8 @@ async function main() {
           title: tr.title,
           subtitle: tr.subtitle,
           ctaText: tr.ctaText,
-          cta2Text: 'cta2Text' in tr ? (tr as any).cta2Text : undefined,
-          statsJson: 'statsJson' in tr ? (tr as any).statsJson : undefined,
+          cta2Text: 'cta2Text' in tr ? (tr as Record<string, unknown>).cta2Text as string | undefined : undefined,
+          statsJson: 'statsJson' in tr ? (tr as Record<string, unknown>).statsJson as string | undefined : undefined,
         },
         create: {
           slideId: slide.id,
@@ -278,8 +278,8 @@ async function main() {
           title: tr.title,
           subtitle: tr.subtitle,
           ctaText: tr.ctaText,
-          cta2Text: 'cta2Text' in tr ? (tr as any).cta2Text : undefined,
-          statsJson: 'statsJson' in tr ? (tr as any).statsJson : undefined,
+          cta2Text: 'cta2Text' in tr ? (tr as Record<string, unknown>).cta2Text as string | undefined : undefined,
+          statsJson: 'statsJson' in tr ? (tr as Record<string, unknown>).statsJson as string | undefined : undefined,
         },
       });
 

@@ -39,13 +39,22 @@ interface ShippingUpdateData {
   estimatedDelivery?: Date;
 }
 
+interface BackInStockData {
+  productName: string;
+  productSlug: string;
+  formatName?: string;
+  price: number;
+  currency?: string;
+  imageUrl?: string;
+}
+
 // Configuration email de base
 const emailConfig = {
   companyName: process.env.BUSINESS_NAME || 'Formations Pro',
   supportEmail: process.env.NEXT_PUBLIC_SUPPORT_EMAIL || 'support@biocyclepeptides.com',
   logoUrl: process.env.LOGO_URL || '',
   primaryColor: '#333333',
-  baseUrl: process.env.NEXTAUTH_URL || 'https://example.com',
+  baseUrl: process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || 'https://biocyclepeptides.com',
 };
 
 /**
@@ -135,8 +144,8 @@ function baseTemplate(content: string, locale: Locale = 'fr'): string {
     <div class="footer">
       <p>${t('footer.allRightsReserved')} © ${new Date().getFullYear()} ${emailConfig.companyName}</p>
       <p>
-        <a href="${emailConfig.baseUrl}/terms">${t('footer.terms')}</a> | 
-        <a href="${emailConfig.baseUrl}/privacy">${t('footer.privacy')}</a>
+        <a href="${emailConfig.baseUrl}/mentions-legales/conditions">${t('footer.terms')}</a> |
+        <a href="${emailConfig.baseUrl}/mentions-legales/confidentialite">${t('footer.privacy')}</a>
       </p>
       <p>${emailConfig.supportEmail}</p>
     </div>
@@ -255,7 +264,7 @@ export function welcomeEmail(data: WelcomeEmailData, locale: Locale = 'fr'): { s
     </ul>
     
     <p style="text-align: center;">
-      <a href="${emailConfig.baseUrl}/catalogue" class="button">
+      <a href="${emailConfig.baseUrl}/shop" class="button">
         ${t('products.catalog')}
       </a>
     </p>
@@ -437,6 +446,150 @@ export function receiptEmail(
 
   return {
     subject: `${t('order.receipt.title')} #${data.orderNumber}`,
+    html: baseTemplate(content, locale),
+  };
+}
+
+/**
+ * Email de retour en stock
+ */
+export function backInStockEmail(data: BackInStockData, locale: Locale = 'fr'): { subject: string; html: string } {
+  const t = createServerTranslator(locale);
+  const formattedPrice = formatCurrencyServer(data.price, locale, data.currency);
+  const productUrl = `${emailConfig.baseUrl}/product/${data.productSlug}`;
+
+  const content = `
+    <h2 style="margin-top: 0;">✨ ${locale === 'fr' ? 'Bonne nouvelle!' : locale === 'en' ? 'Good news!' : '¡Buenas noticias!'}</h2>
+
+    <p>
+      ${locale === 'fr' ? 'Le produit que vous attendiez est de nouveau disponible!' :
+        locale === 'en' ? 'The product you were waiting for is back in stock!' :
+        '¡El producto que esperaba está de nuevo en stock!'}
+    </p>
+
+    <div class="order-box" style="background-color: #f9f9f9; border-radius: 8px; padding: 20px; margin: 20px 0;">
+      ${data.imageUrl ? `
+        <div style="text-align: center; margin-bottom: 16px;">
+          <img src="${data.imageUrl}" alt="${data.productName}" style="max-width: 200px; height: auto; border-radius: 8px;" />
+        </div>
+      ` : ''}
+
+      <h3 style="margin: 0 0 8px 0; color: #333; font-size: 20px;">
+        ${data.productName}${data.formatName ? ` - ${data.formatName}` : ''}
+      </h3>
+
+      <p style="margin: 0; font-size: 24px; color: #ff6b35; font-weight: bold;">
+        ${formattedPrice}
+      </p>
+    </div>
+
+    <div style="background-color: #e8f5e9; padding: 16px; border-radius: 8px; margin: 20px 0;">
+      <p style="margin: 0; color: #2e7d32; font-weight: 600;">
+        🎉 ${locale === 'fr' ? 'Disponible maintenant - Commandez avant qu\'il ne soit à nouveau en rupture!' :
+              locale === 'en' ? 'Available now - Order before it sells out again!' :
+              '¡Disponible ahora - Ordene antes de que se agote nuevamente!'}
+      </p>
+    </div>
+
+    <p style="text-align: center;">
+      <a href="${productUrl}" class="button" style="display: inline-block; padding: 14px 28px; background-color: ${emailConfig.primaryColor}; color: #ffffff !important; text-decoration: none; border-radius: 6px; font-weight: 600; margin: 16px 0;">
+        ${locale === 'fr' ? 'Voir le produit' : locale === 'en' ? 'View Product' : 'Ver producto'}
+      </a>
+    </p>
+
+    <p style="color: #666; font-size: 14px; margin-top: 24px;">
+      ${locale === 'fr' ? 'Vous recevez cet email car vous avez demandé à être notifié lorsque ce produit serait de nouveau disponible.' :
+        locale === 'en' ? 'You are receiving this email because you requested to be notified when this product is back in stock.' :
+        'Está recibiendo este correo electrónico porque solicitó ser notificado cuando este producto esté nuevamente en stock.'}
+    </p>
+  `;
+
+  return {
+    subject: `🔔 ${data.productName} ${locale === 'fr' ? 'est de nouveau disponible!' : locale === 'en' ? 'is back in stock!' : '¡está de nuevo en stock!'}`,
+    html: baseTemplate(content, locale),
+  };
+}
+
+/**
+ * Email de confirmation d'annulation de commande
+ */
+export function orderCancellationEmail(
+  data: {
+    customerName: string;
+    orderNumber: string;
+    total: number;
+    currency?: string;
+    items: { name: string; quantity: number }[];
+    refundAmount?: number;
+    refundMethod?: string;
+  },
+  locale: Locale = 'fr'
+): { subject: string; html: string } {
+  const t = createServerTranslator(locale);
+  const formattedTotal = formatCurrencyServer(data.total, locale, data.currency);
+  const formattedRefund = data.refundAmount ? formatCurrencyServer(data.refundAmount, locale, data.currency) : null;
+
+  const itemsList = data.items.map(item => `
+    <li>${item.name} (${locale === 'fr' ? 'Quantité' : locale === 'en' ? 'Quantity' : 'Cantidad'}: ${item.quantity})</li>
+  `).join('');
+
+  const content = `
+    <h2 style="margin-top: 0;">${locale === 'fr' ? 'Commande annulée' : locale === 'en' ? 'Order Cancelled' : 'Pedido cancelado'}</h2>
+    <p>${t('dashboard.welcome', { name: data.customerName })},</p>
+    <p>
+      ${locale === 'fr' ? 'Votre commande a été annulée avec succès.' :
+        locale === 'en' ? 'Your order has been successfully cancelled.' :
+        'Su pedido ha sido cancelado con éxito.'}
+    </p>
+
+    <div class="order-box">
+      <div class="order-row">
+        <span>${t('order.number')}</span>
+        <span><strong>${data.orderNumber}</strong></span>
+      </div>
+      <div class="order-row">
+        <span>${locale === 'fr' ? 'Statut' : locale === 'en' ? 'Status' : 'Estado'}</span>
+        <span style="color: #d32f2f; font-weight: 600;">${locale === 'fr' ? 'Annulée' : locale === 'en' ? 'Cancelled' : 'Cancelado'}</span>
+      </div>
+      <div class="order-row">
+        <span>${t('cart.total')}</span>
+        <span><strong>${formattedTotal}</strong></span>
+      </div>
+    </div>
+
+    <h3 style="margin-top: 24px;">${locale === 'fr' ? 'Articles annulés' : locale === 'en' ? 'Cancelled Items' : 'Artículos cancelados'}</h3>
+    <ul style="color: #666;">
+      ${itemsList}
+    </ul>
+
+    ${data.refundAmount && data.refundAmount > 0 ? `
+      <div style="background-color: #e8f5e9; padding: 16px; border-radius: 8px; margin: 20px 0;">
+        <p style="margin: 0; color: #2e7d32;">
+          <strong>💰 ${locale === 'fr' ? 'Remboursement' : locale === 'en' ? 'Refund' : 'Reembolso'}</strong>
+        </p>
+        <p style="margin: 8px 0 0 0; color: #388e3c;">
+          ${locale === 'fr' ? `Un remboursement de ${formattedRefund} sera traité sur votre ${data.refundMethod || 'mode de paiement original'} dans les 5-10 jours ouvrables.` :
+            locale === 'en' ? `A refund of ${formattedRefund} will be processed to your ${data.refundMethod || 'original payment method'} within 5-10 business days.` :
+            `Un reembolso de ${formattedRefund} se procesará en su ${data.refundMethod || 'método de pago original'} dentro de 5-10 días hábiles.`}
+        </p>
+      </div>
+    ` : ''}
+
+    <p style="color: #666; font-size: 14px;">
+      ${locale === 'fr' ? 'Si vous avez des questions concernant cette annulation, n\'hésitez pas à nous contacter.' :
+        locale === 'en' ? 'If you have any questions about this cancellation, please don\'t hesitate to contact us.' :
+        'Si tiene alguna pregunta sobre esta cancelación, no dude en contactarnos.'}
+    </p>
+
+    <p style="text-align: center; margin-top: 24px;">
+      <a href="${emailConfig.baseUrl}/shop" class="button">
+        ${locale === 'fr' ? 'Continuer mes achats' : locale === 'en' ? 'Continue Shopping' : 'Seguir comprando'}
+      </a>
+    </p>
+  `;
+
+  return {
+    subject: `${locale === 'fr' ? 'Commande annulée' : locale === 'en' ? 'Order Cancelled' : 'Pedido cancelado'} #${data.orderNumber}`,
     html: baseTemplate(content, locale),
   };
 }

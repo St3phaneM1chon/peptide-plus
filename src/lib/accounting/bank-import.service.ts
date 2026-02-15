@@ -155,85 +155,64 @@ export function convertPlaidTransactions(
 }
 
 /**
- * Simulate Plaid API call for bank transactions
- * In production, replace with actual Plaid SDK calls
+ * Fetch bank transactions from the database
+ * Queries real BankTransaction records and converts them to Plaid-compatible format
  */
 export async function fetchPlaidTransactions(
-  _accessToken: string,
-  _startDate: Date,
-  _endDate: Date
+  bankAccountId: string,
+  startDate: Date,
+  endDate: Date
 ): Promise<{ transactions: PlaidTransaction[]; accounts: PlaidAccount[] }> {
-  // Simulated response for demo
-  // In production: const plaidClient = new PlaidApi(configuration);
-  // return plaidClient.transactionsGet({ access_token, start_date, end_date });
-  
-  return {
-    accounts: [
-      {
-        account_id: 'desjardins-main',
-        name: 'Compte courant',
-        official_name: 'Compte Entreprise Desjardins',
-        type: 'depository',
-        subtype: 'checking',
-        mask: '4589',
-        balances: {
-          available: 42500.00,
-          current: 45230.50,
-          iso_currency_code: 'CAD',
-        },
+  const { prisma } = await import('@/lib/db');
+
+  // Fetch real bank account
+  const bankAccount = await prisma.bankAccount.findUnique({
+    where: { id: bankAccountId },
+  });
+
+  if (!bankAccount) {
+    return { transactions: [], accounts: [] };
+  }
+
+  // Fetch real transactions from database
+  const dbTransactions = await prisma.bankTransaction.findMany({
+    where: {
+      bankAccountId,
+      date: { gte: startDate, lte: endDate },
+    },
+    orderBy: { date: 'desc' },
+  });
+
+  const accounts: PlaidAccount[] = [
+    {
+      account_id: bankAccount.id,
+      name: bankAccount.name,
+      official_name: `${bankAccount.institution} - ${bankAccount.name}`,
+      type: 'depository',
+      subtype: bankAccount.type.toLowerCase() === 'savings' ? 'savings' : 'checking',
+      mask: bankAccount.accountNumber?.slice(-4) || undefined,
+      balances: {
+        available: Number(bankAccount.currentBalance),
+        current: Number(bankAccount.currentBalance),
+        iso_currency_code: bankAccount.currency,
       },
-    ],
-    transactions: [
-      {
-        transaction_id: 'plaid-tx-001',
-        account_id: 'desjardins-main',
-        date: new Date().toISOString().split('T')[0],
-        name: 'STRIPE TRANSFER',
-        merchant_name: 'Stripe',
-        amount: -2500.00,
-        iso_currency_code: 'CAD',
-        category: ['Transfer', 'Credit'],
-        pending: false,
-        payment_channel: 'online',
-      },
-      {
-        transaction_id: 'plaid-tx-002',
-        account_id: 'desjardins-main',
-        date: new Date().toISOString().split('T')[0],
-        name: 'MICROSOFT AZURE',
-        merchant_name: 'Microsoft Azure',
-        amount: 185.50,
-        iso_currency_code: 'CAD',
-        category: ['Service', 'Web Hosting'],
-        pending: false,
-        payment_channel: 'online',
-      },
-      {
-        transaction_id: 'plaid-tx-003',
-        account_id: 'desjardins-main',
-        date: new Date(Date.now() - 86400000).toISOString().split('T')[0],
-        name: 'GOOGLE ADS',
-        merchant_name: 'Google Ads',
-        amount: 125.00,
-        iso_currency_code: 'CAD',
-        category: ['Service', 'Marketing'],
-        pending: false,
-        payment_channel: 'online',
-      },
-      {
-        transaction_id: 'plaid-tx-004',
-        account_id: 'desjardins-main',
-        date: new Date(Date.now() - 172800000).toISOString().split('T')[0],
-        name: 'POSTES CANADA',
-        merchant_name: 'Postes Canada',
-        amount: 342.80,
-        iso_currency_code: 'CAD',
-        category: ['Shops', 'Shipping'],
-        pending: false,
-        payment_channel: 'online',
-      },
-    ],
-  };
+    },
+  ];
+
+  const transactions: PlaidTransaction[] = dbTransactions.map((tx) => ({
+    transaction_id: tx.id,
+    account_id: bankAccountId,
+    date: tx.date.toISOString().split('T')[0],
+    name: tx.description,
+    merchant_name: tx.description,
+    amount: tx.type === 'DEBIT' ? Number(tx.amount) : -Number(tx.amount),
+    iso_currency_code: bankAccount.currency,
+    category: tx.category ? [tx.category] : undefined,
+    pending: false,
+    payment_channel: 'online' as const,
+  }));
+
+  return { transactions, accounts };
 }
 
 /**
@@ -260,8 +239,10 @@ export async function syncBankAccount(
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - daysBack);
 
+    // Use the first account ID from the connection
+    const primaryAccountId = connection.accounts[0]?.account_id || '';
     const { transactions, accounts } = await fetchPlaidTransactions(
-      connection.accessToken || '',
+      primaryAccountId,
       startDate,
       endDate
     );
@@ -435,32 +416,49 @@ function parseDate(dateStr: string): Date {
 }
 
 /**
- * Get bank connection status
+ * Get bank connections from database
+ * Queries real BankAccount records and groups them by institution
  */
 export async function getBankConnections(): Promise<BankConnection[]> {
-  // Mock data for demo
-  return [
-    {
-      id: 'conn-1',
-      provider: 'PLAID',
-      institutionId: 'ins_desjardins',
-      institutionName: 'Desjardins',
-      accounts: [
-        {
-          account_id: 'desjardins-main',
-          name: 'Compte courant entreprise',
-          type: 'depository',
-          subtype: 'checking',
-          mask: '4589',
-          balances: {
-            available: 42500,
-            current: 45230.50,
-            iso_currency_code: 'CAD',
-          },
+  const { prisma } = await import('@/lib/db');
+
+  const bankAccounts = await prisma.bankAccount.findMany({
+    where: { isActive: true },
+    orderBy: { institution: 'asc' },
+  });
+
+  // Group accounts by institution
+  const byInstitution = new Map<string, typeof bankAccounts>();
+  for (const account of bankAccounts) {
+    const existing = byInstitution.get(account.institution) || [];
+    existing.push(account);
+    byInstitution.set(account.institution, existing);
+  }
+
+  const connections: BankConnection[] = [];
+  for (const [institution, accounts] of byInstitution) {
+    connections.push({
+      id: `conn-${accounts[0].id}`,
+      provider: accounts[0].type === 'STRIPE' || accounts[0].type === 'PAYPAL' ? 'MANUAL' : 'PLAID',
+      institutionId: `ins_${institution.toLowerCase().replace(/\s+/g, '_')}`,
+      institutionName: institution,
+      accounts: accounts.map((acc) => ({
+        account_id: acc.id,
+        name: acc.name,
+        official_name: `${institution} - ${acc.name}`,
+        type: 'depository' as const,
+        subtype: acc.type.toLowerCase() === 'savings' ? 'savings' : 'checking',
+        mask: acc.accountNumber?.slice(-4) || undefined,
+        balances: {
+          available: Number(acc.currentBalance),
+          current: Number(acc.currentBalance),
+          iso_currency_code: acc.currency,
         },
-      ],
-      lastSync: new Date(Date.now() - 3600000), // 1 hour ago
+      })),
+      lastSync: accounts[0].lastSyncAt || accounts[0].updatedAt || new Date(),
       status: 'ACTIVE',
-    },
-  ];
+    });
+  }
+
+  return connections;
 }

@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useI18n } from '@/i18n/client';
+import { toast } from 'sonner';
 
 interface ExportJob {
   id: string;
@@ -14,6 +16,7 @@ interface ExportJob {
 }
 
 export default function ExportsPage() {
+  const { t } = useI18n();
   const [, setActiveExport] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
   const [exportConfig, setExportConfig] = useState({
@@ -27,9 +30,13 @@ export default function ExportsPage() {
   const [history, setHistory] = useState<ExportJob[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [dataCounts, setDataCounts] = useState<Record<string, number>>({
+    entries: 0, accounts: 0, customers: 0, suppliers: 0, transactions: 0,
+  });
 
   useEffect(() => {
     loadHistory();
+    fetchDataCounts();
   }, []);
 
   const loadHistory = async () => {
@@ -37,15 +44,35 @@ export default function ExportsPage() {
     setError(null);
     try {
       const response = await fetch('/api/accounting/exports');
-      if (!response.ok) throw new Error(`Erreur ${response.status}`);
+      if (!response.ok) throw new Error(`Error ${response.status}`);
       const data = await response.json();
       setHistory(data.exports || data.history || data.data || []);
     } catch (err) {
       console.error('Error loading export history:', err);
-      setError('Impossible de charger l\'historique des exports.');
+      setError(t('admin.exports.errorLoadHistory'));
       setHistory([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchDataCounts = async () => {
+    try {
+      const [entriesRes, accountsRes, customersRes, transactionsRes] = await Promise.all([
+        fetch('/api/accounting/entries?limit=1').then(r => r.ok ? r.json() : null),
+        fetch('/api/accounting/chart-of-accounts').then(r => r.ok ? r.json() : null),
+        fetch('/api/accounting/customer-invoices?limit=1').then(r => r.ok ? r.json() : null),
+        fetch('/api/accounting/bank-transactions?limit=1').then(r => r.ok ? r.json() : null),
+      ]);
+      setDataCounts({
+        entries: entriesRes?.total ?? entriesRes?.entries?.length ?? 0,
+        accounts: accountsRes?.accounts?.length ?? 0,
+        customers: customersRes?.total ?? customersRes?.invoices?.length ?? 0,
+        suppliers: 0, // No supplier invoices API yet
+        transactions: transactionsRes?.total ?? transactionsRes?.transactions?.length ?? 0,
+      });
+    } catch {
+      // Keep default counts of 0
     }
   };
 
@@ -54,45 +81,45 @@ export default function ExportsPage() {
       id: 'quickbooks',
       name: 'QuickBooks Online',
       icon: '📊',
-      description: 'Format JSON pour import direct dans QBO',
+      description: t('admin.exports.qboDesc'),
       fileType: 'JSON',
     },
     {
       id: 'sage',
       name: 'Sage 50',
       icon: '📈',
-      description: 'Format CSV compatible Sage 50 Canada',
+      description: t('admin.exports.sageDesc'),
       fileType: 'CSV',
     },
     {
       id: 'iif',
       name: 'QuickBooks Desktop (IIF)',
       icon: '💾',
-      description: 'Format IIF pour versions desktop',
+      description: t('admin.exports.iifDesc'),
       fileType: 'IIF',
     },
     {
       id: 'excel',
       name: 'Excel',
       icon: '📗',
-      description: 'Tableur Excel avec toutes les données',
+      description: t('admin.exports.excelDesc'),
       fileType: 'XLSX',
     },
     {
       id: 'csv',
-      name: 'CSV Générique',
+      name: t('admin.exports.csvGenerique'),
       icon: '📄',
-      description: 'Format CSV standard',
+      description: t('admin.exports.csvDesc'),
       fileType: 'CSV',
     },
   ];
 
   const dataTypes = [
-    { id: 'entries', name: 'Écritures de journal', count: 156 },
-    { id: 'accounts', name: 'Plan comptable', count: 55 },
-    { id: 'customers', name: 'Factures clients', count: 89 },
-    { id: 'suppliers', name: 'Factures fournisseurs', count: 34 },
-    { id: 'transactions', name: 'Transactions bancaires', count: 245 },
+    { id: 'entries', name: t('admin.exports.journalEntries'), count: dataCounts.entries },
+    { id: 'accounts', name: t('admin.exports.chartOfAccounts'), count: dataCounts.accounts },
+    { id: 'customers', name: t('admin.exports.customerInvoices'), count: dataCounts.customers },
+    { id: 'suppliers', name: t('admin.exports.supplierInvoices'), count: dataCounts.suppliers },
+    { id: 'transactions', name: t('admin.exports.bankTransactions'), count: dataCounts.transactions },
   ];
 
   const handleExport = async () => {
@@ -110,7 +137,7 @@ export default function ExportsPage() {
           includeDraft: exportConfig.includeDraft,
         }),
       });
-      if (!response.ok) throw new Error(`Erreur ${response.status}`);
+      if (!response.ok) throw new Error(`${t('common.error')} ${response.status}`);
       const data = await response.json();
 
       // Trigger download if URL returned
@@ -127,21 +154,21 @@ export default function ExportsPage() {
       await loadHistory();
     } catch (err) {
       console.error('Error exporting:', err);
-      alert('Erreur lors de l\'export.');
+      toast.error(t('admin.exports.errorExporting'));
     } finally {
       setExporting(false);
     }
   };
 
   if (loading) {
-    return <div className="p-8 text-center">Chargement...</div>;
+    return <div className="p-8 text-center">{t('admin.exports.loading')}</div>;
   }
 
   if (error && history.length === 0) {
     return (
       <div className="p-8 text-center">
         <p className="text-red-400 mb-4">{error}</p>
-        <button onClick={loadHistory} className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg">Réessayer</button>
+        <button onClick={loadHistory} className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg">{t('admin.exports.retry')}</button>
       </div>
     );
   }
@@ -151,8 +178,8 @@ export default function ExportsPage() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-white">Exports comptables</h1>
-          <p className="text-neutral-400 mt-1">Exportez vos données vers QuickBooks, Sage et autres</p>
+          <h1 className="text-2xl font-bold text-white">{t('admin.exports.title')}</h1>
+          <p className="text-neutral-400 mt-1">{t('admin.exports.subtitle')}</p>
         </div>
       </div>
 
@@ -183,12 +210,12 @@ export default function ExportsPage() {
 
       {/* Export Configuration */}
       <div className="bg-neutral-800 rounded-xl border border-neutral-700 p-6">
-        <h2 className="text-lg font-medium text-white mb-4">Configuration de l'export</h2>
+        <h2 className="text-lg font-medium text-white mb-4">{t('admin.exports.exportConfig')}</h2>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Data to export */}
           <div>
-            <h3 className="text-sm font-medium text-neutral-300 mb-3">Données à exporter</h3>
+            <h3 className="text-sm font-medium text-neutral-300 mb-3">{t('admin.exports.dataToExport')}</h3>
             <div className="space-y-2">
               {dataTypes.map(type => (
                 <label key={type.id} className="flex items-center justify-between p-3 bg-neutral-700/50 rounded-lg cursor-pointer hover:bg-neutral-700">
@@ -200,7 +227,7 @@ export default function ExportsPage() {
                     />
                     <span className="text-white">{type.name}</span>
                   </div>
-                  <span className="text-sm text-neutral-400">{type.count} enr.</span>
+                  <span className="text-sm text-neutral-400">{type.count} {t('admin.exports.records')}</span>
                 </label>
               ))}
             </div>
@@ -209,10 +236,10 @@ export default function ExportsPage() {
           {/* Options */}
           <div className="space-y-4">
             <div>
-              <h3 className="text-sm font-medium text-neutral-300 mb-3">Période</h3>
+              <h3 className="text-sm font-medium text-neutral-300 mb-3">{t('admin.exports.periodLabel')}</h3>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs text-neutral-400 mb-1">Du</label>
+                  <label className="block text-xs text-neutral-400 mb-1">{t('admin.exports.fromLabel')}</label>
                   <input
                     type="date"
                     value={exportConfig.dateFrom}
@@ -221,7 +248,7 @@ export default function ExportsPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-neutral-400 mb-1">Au</label>
+                  <label className="block text-xs text-neutral-400 mb-1">{t('admin.exports.toLabel')}</label>
                   <input
                     type="date"
                     value={exportConfig.dateTo}
@@ -233,7 +260,7 @@ export default function ExportsPage() {
             </div>
 
             <div>
-              <h3 className="text-sm font-medium text-neutral-300 mb-3">Options</h3>
+              <h3 className="text-sm font-medium text-neutral-300 mb-3">{t('admin.exports.options')}</h3>
               <div className="space-y-2">
                 <label className="flex items-center gap-3 cursor-pointer">
                   <input
@@ -242,7 +269,7 @@ export default function ExportsPage() {
                     onChange={e => setExportConfig(prev => ({ ...prev, includePosted: e.target.checked }))}
                     className="rounded border-neutral-600 bg-neutral-700 text-sky-500"
                   />
-                  <span className="text-neutral-300">Inclure les écritures validées</span>
+                  <span className="text-neutral-300">{t('admin.exports.includePosted')}</span>
                 </label>
                 <label className="flex items-center gap-3 cursor-pointer">
                   <input
@@ -251,7 +278,7 @@ export default function ExportsPage() {
                     onChange={e => setExportConfig(prev => ({ ...prev, includeDraft: e.target.checked }))}
                     className="rounded border-neutral-600 bg-neutral-700 text-sky-500"
                   />
-                  <span className="text-neutral-300">Inclure les brouillons</span>
+                  <span className="text-neutral-300">{t('admin.exports.includeDrafts')}</span>
                 </label>
               </div>
             </div>
@@ -264,11 +291,11 @@ export default function ExportsPage() {
               {exporting ? (
                 <>
                   <span className="animate-spin">⏳</span>
-                  Export en cours...
+                  {t('admin.exports.exportInProgress')}
                 </>
               ) : (
                 <>
-                  📥 Générer l'export
+                  📥 {t('admin.exports.generateExport')}
                 </>
               )}
             </button>
@@ -283,14 +310,14 @@ export default function ExportsPage() {
             <div className="w-10 h-10 bg-green-900/30 rounded-lg flex items-center justify-center text-xl">📊</div>
             <div>
               <h3 className="font-medium text-white">QuickBooks Online</h3>
-              <p className="text-xs text-neutral-400">Synchronisation en temps réel</p>
+              <p className="text-xs text-neutral-400">{t('admin.exports.realtimeSync')}</p>
             </div>
           </div>
           <p className="text-sm text-neutral-400 mb-4">
-            Connectez votre compte QuickBooks pour une synchronisation automatique des écritures.
+            {t('admin.exports.qboSyncDesc')}
           </p>
           <button className="w-full py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm">
-            Connecter QuickBooks
+            {t('admin.exports.connectQuickBooks')}
           </button>
         </div>
 
@@ -299,14 +326,14 @@ export default function ExportsPage() {
             <div className="w-10 h-10 bg-blue-900/30 rounded-lg flex items-center justify-center text-xl">📈</div>
             <div>
               <h3 className="font-medium text-white">Sage 50</h3>
-              <p className="text-xs text-neutral-400">Export manuel</p>
+              <p className="text-xs text-neutral-400">{t('admin.exports.manualExport')}</p>
             </div>
           </div>
           <p className="text-sm text-neutral-400 mb-4">
-            Exportez vos données au format CSV compatible Sage 50 Canada.
+            {t('admin.exports.sageExportDesc')}
           </p>
           <button className="w-full py-2 bg-neutral-700 hover:bg-neutral-600 text-white rounded-lg text-sm">
-            Exporter pour Sage
+            {t('admin.exports.exportForSage')}
           </button>
         </div>
       </div>
@@ -314,18 +341,18 @@ export default function ExportsPage() {
       {/* Export History */}
       <div className="bg-neutral-800 rounded-xl border border-neutral-700 overflow-hidden">
         <div className="p-4 border-b border-neutral-700">
-          <h2 className="font-medium text-white">Historique des exports</h2>
+          <h2 className="font-medium text-white">{t('admin.exports.exportHistory')}</h2>
         </div>
         <table className="w-full">
           <thead className="bg-neutral-900/50">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-medium text-neutral-400 uppercase">Date</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-neutral-400 uppercase">Type</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-neutral-400 uppercase">Format</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-neutral-400 uppercase">Période</th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-neutral-400 uppercase">Enregistrements</th>
-              <th className="px-4 py-3 text-center text-xs font-medium text-neutral-400 uppercase">Statut</th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-neutral-400 uppercase">Action</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-neutral-400 uppercase">{t('admin.exports.dateCol')}</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-neutral-400 uppercase">{t('admin.exports.typeCol')}</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-neutral-400 uppercase">{t('admin.exports.formatCol')}</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-neutral-400 uppercase">{t('admin.exports.periodCol')}</th>
+              <th className="px-4 py-3 text-right text-xs font-medium text-neutral-400 uppercase">{t('admin.exports.recordsCol')}</th>
+              <th className="px-4 py-3 text-center text-xs font-medium text-neutral-400 uppercase">{t('admin.exports.statusCol')}</th>
+              <th className="px-4 py-3 text-right text-xs font-medium text-neutral-400 uppercase">{t('admin.exports.actionCol')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-neutral-700">
@@ -344,7 +371,7 @@ export default function ExportsPage() {
                     job.status === 'PROCESSING' ? 'bg-yellow-900/30 text-yellow-400' :
                     'bg-red-900/30 text-red-400'
                   }`}>
-                    {job.status === 'COMPLETED' ? 'Terminé' : job.status === 'PROCESSING' ? 'En cours' : 'Échoué'}
+                    {job.status === 'COMPLETED' ? t('admin.exports.statusCompleted') : job.status === 'PROCESSING' ? t('admin.exports.statusProcessing') : t('admin.exports.statusFailed')}
                   </span>
                 </td>
                 <td className="px-4 py-3 text-right">
@@ -354,7 +381,7 @@ export default function ExportsPage() {
                       download
                       className="px-3 py-1 bg-neutral-700 hover:bg-neutral-600 text-white text-sm rounded inline-block"
                     >
-                      Telecharger
+                      {t('admin.exports.download')}
                     </a>
                   )}
                 </td>

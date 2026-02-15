@@ -6,6 +6,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { CheckoutForm } from '@/components/payment/CheckoutForm';
 import { ShippingAddressForm } from '@/components/checkout/ShippingAddressForm';
 
@@ -57,7 +58,17 @@ export function CheckoutPageClient({
   savedAddresses,
   isPhysical,
 }: CheckoutPageClientProps) {
-  const [shippingAddress, setShippingAddress] = useState<any>(null);
+  const [shippingAddress, setShippingAddress] = useState<{
+    recipientName: string;
+    addressLine1: string;
+    addressLine2: string;
+    city: string;
+    state: string;
+    postalCode: string;
+    country: string;
+    phone: string;
+    saveAddress: boolean;
+  } | null>(null);
   const [currentStep, setCurrentStep] = useState<'shipping' | 'payment'>(
     isPhysical ? 'shipping' : 'payment'
   );
@@ -275,13 +286,16 @@ export function CheckoutPageClient({
                   overflow: 'hidden',
                   backgroundColor: 'var(--gray-100)',
                   flexShrink: 0,
+                  position: 'relative',
                 }}
               >
                 {product.imageUrl ? (
-                  <img
+                  <Image
                     src={product.imageUrl}
                     alt={product.name}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    fill
+                    style={{ objectFit: 'cover' }}
+                    unoptimized
                   />
                 ) : (
                   <div

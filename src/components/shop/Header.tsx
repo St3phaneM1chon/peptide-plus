@@ -1,15 +1,17 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import Image from 'next/image';
+import { usePathname } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import { useCart } from '@/contexts/CartContext';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useTranslations } from '@/hooks/useTranslations';
-import { locales, localeNames, localeFlags, isValidLocale, type Locale } from '@/i18n/config';
+import { locales, localeNames, localeFlags, isValidLocale } from '@/i18n/config';
 import CartDrawer from './CartDrawer';
 import SearchModal from './SearchModal';
+import MegaMenu from './MegaMenu';
 
 // Build languages array from config (all 22 languages)
 const LANGUAGES = locales.map(code => ({
@@ -30,7 +32,6 @@ function detectBrowserLanguage(): string {
 }
 
 export default function Header() {
-  const router = useRouter();
   const { itemCount } = useCart();
   const { t } = useTranslations();
   const { currency, currencies, setCurrency } = useCurrency();
@@ -42,6 +43,7 @@ export default function Header() {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [currentLang, setCurrentLang] = useState('en');
   const [shopCategories, setShopCategories] = useState<{name: string; slug: string}[]>([]);
+  const [isMegaMenuOpen, setIsMegaMenuOpen] = useState(false);
 
   const pathname = usePathname();
 
@@ -51,7 +53,7 @@ export default function Header() {
       .then(res => res.ok ? res.json() : null)
       .then(data => {
         if (data?.categories) {
-          setShopCategories(data.categories.filter((c: any) => c.isActive !== false));
+          setShopCategories(data.categories.filter((c: { name: string; slug: string; isActive?: boolean }) => c.isActive !== false));
         }
       })
       .catch(() => {});
@@ -61,14 +63,21 @@ export default function Header() {
   useEffect(() => {
     setOpenDropdown(null);
     setIsMobileMenuOpen(false);
+    setIsMegaMenuOpen(false);
   }, [pathname]);
 
   // Close dropdowns on ESC key or scroll
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpenDropdown(null);
+      if (e.key === 'Escape') {
+        setOpenDropdown(null);
+        setIsMegaMenuOpen(false);
+      }
     };
-    const handleScroll = () => setOpenDropdown(null);
+    const handleScroll = () => {
+      setOpenDropdown(null);
+      setIsMegaMenuOpen(false);
+    };
     document.addEventListener('keydown', handleEsc);
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => {
@@ -142,7 +151,7 @@ export default function Header() {
 
   return (
     <>
-      <header className="bg-black text-white sticky top-0 z-50">
+      <header className="bg-black text-white sticky top-0 z-50 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             
@@ -155,35 +164,26 @@ export default function Header() {
             </Link>
 
             {/* Desktop Navigation - Simplified */}
-            <nav className="hidden lg:flex items-center gap-1">
+            <nav aria-label="Main navigation" className="hidden lg:flex items-center gap-1">
               <NavLink href="/">{t('nav.home') || 'Home'}</NavLink>
-              
-              {/* Shop Dropdown */}
-              <div className="relative" data-dropdown="shop">
+
+              {/* Shop with MegaMenu */}
+              <div
+                className="relative"
+                data-dropdown="shop"
+                onMouseEnter={() => setIsMegaMenuOpen(true)}
+              >
                 <button
-                  onClick={() => toggleDropdown('shop')}
+                  onClick={() => setIsMegaMenuOpen(!isMegaMenuOpen)}
                   className={`flex items-center gap-1 px-3 py-2 text-sm font-semibold rounded-lg transition-all whitespace-nowrap ${
-                    openDropdown === 'shop' 
-                      ? 'text-orange-400 bg-white/10' 
+                    isMegaMenuOpen
+                      ? 'text-orange-400 bg-white/10'
                       : 'text-gray-100 hover:text-orange-400 hover:bg-white/10'
                   }`}
                 >
                   {t('nav.shop') || 'Shop'}
-                  <ChevronIcon isOpen={openDropdown === 'shop'} />
+                  <ChevronIcon isOpen={isMegaMenuOpen} />
                 </button>
-                {openDropdown === 'shop' && (
-                  <DropdownMenu>
-                    <DropdownItem href="/shop">
-                      {t('nav.allProducts') || 'All Products'}
-                    </DropdownItem>
-                    {shopCategories.length > 0 && <DropdownDivider />}
-                    {shopCategories.map(cat => (
-                      <DropdownItem key={cat.slug} href={`/category/${cat.slug}`}>
-                        {cat.name}
-                      </DropdownItem>
-                    ))}
-                  </DropdownMenu>
-                )}
               </div>
 
               <NavLink href="/calculator">{t('nav.calculator') || 'Calculator'}</NavLink>
@@ -310,12 +310,15 @@ export default function Header() {
                   <>
                     <button
                       onClick={() => toggleDropdown('profile')}
+                      aria-label="Account menu"
+                      aria-expanded={openDropdown === 'profile'}
+                      aria-haspopup="true"
                       className={`flex items-center p-1.5 rounded-lg transition-all ${
                         openDropdown === 'profile' ? 'bg-white/10' : 'hover:bg-white/10'
                       }`}
                     >
                       {session.user.image ? (
-                        <img src={session.user.image} alt="" className="w-7 h-7 rounded-full border-2 border-orange-500" />
+                        <Image src={session.user.image} alt="" width={28} height={28} className="w-7 h-7 rounded-full border-2 border-orange-500" unoptimized />
                       ) : (
                         <div className="w-7 h-7 bg-orange-500 rounded-full flex items-center justify-center">
                           <span className="text-white text-xs font-bold">
@@ -348,6 +351,9 @@ export default function Header() {
                           <DropdownItem href="/account/profile" icon="👤">
                             {t('account.profile') || 'Profile'}
                           </DropdownItem>
+                          <DropdownItem href="/account/referrals" icon="🎁">
+                            {t('customerRewards.referral') || 'Refer Friends'}
+                          </DropdownItem>
                         </div>
                         <div className="border-t py-1">
                           <button
@@ -362,7 +368,7 @@ export default function Header() {
                     )}
                   </>
                 ) : (
-                  <Link href="/auth/signin" className="p-1.5 hover:bg-white/10 rounded transition-colors">
+                  <Link href="/auth/signin" aria-label="Sign in" className="p-1.5 hover:bg-white/10 rounded transition-colors">
                     <UserIcon />
                   </Link>
                 )}
@@ -371,11 +377,12 @@ export default function Header() {
               {/* Cart */}
               <button
                 onClick={() => setIsCartOpen(true)}
+                aria-label={itemCount > 0 ? `Cart (${itemCount} ${itemCount === 1 ? 'item' : 'items'})` : 'Cart (empty)'}
                 className="relative p-1.5 hover:bg-white/10 rounded transition-colors"
               >
                 <CartIcon />
                 {itemCount > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-orange-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-orange-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center" aria-hidden="true">
                     {itemCount > 9 ? '9+' : itemCount}
                   </span>
                 )}
@@ -384,6 +391,8 @@ export default function Header() {
               {/* Mobile Menu Toggle */}
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
+                aria-expanded={isMobileMenuOpen}
                 className="lg:hidden p-2 text-gray-200 hover:text-orange-400 hover:bg-white/10 rounded-lg transition-all"
               >
                 {isMobileMenuOpen ? <CloseIcon /> : <MenuIcon />}
@@ -394,7 +403,7 @@ export default function Header() {
           {/* Mobile Menu */}
           {isMobileMenuOpen && (
             <div className="lg:hidden py-4 border-t border-white/10">
-              <nav className="flex flex-col gap-1">
+              <nav aria-label="Mobile navigation" className="flex flex-col gap-1">
                 <MobileNavLink href="/" onClick={() => setIsMobileMenuOpen(false)}>
                   {t('nav.home') || 'Home'}
                 </MobileNavLink>
@@ -425,6 +434,26 @@ export default function Header() {
                   {t('nav.contact') || 'Contact'}
                 </MobileNavLink>
                 
+                {/* Mobile Currency Selector */}
+                <div className="border-t border-white/10 pt-3 mt-2 mb-2">
+                  <p className="text-xs text-gray-400 px-3 mb-1">{t('nav.currency') || 'Currency'}</p>
+                  <div className="flex flex-wrap gap-1 px-3">
+                    {currencies.map((curr) => (
+                      <button
+                        key={curr.code}
+                        onClick={() => { setCurrency(curr); setIsMobileMenuOpen(false); }}
+                        className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                          currency.code === curr.code
+                            ? 'bg-orange-500 text-white'
+                            : 'bg-white/10 text-gray-300 hover:bg-white/20'
+                        }`}
+                      >
+                        {curr.symbol} {curr.code}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 {/* Mobile Account */}
                 <div className="border-t border-white/10 pt-3 mt-2">
                   {status === 'authenticated' && session?.user ? (
@@ -454,6 +483,9 @@ export default function Header() {
                       <MobileNavLink href="/account/inventory" onClick={() => setIsMobileMenuOpen(false)}>
                         🔬 {t('account.inventory') || 'My Inventory'}
                       </MobileNavLink>
+                      <MobileNavLink href="/account/referrals" onClick={() => setIsMobileMenuOpen(false)}>
+                        🎁 {t('customerRewards.referral') || 'Refer Friends'}
+                      </MobileNavLink>
                       <button
                         onClick={handleSignOut}
                         className="w-full text-left px-3 py-2 text-red-400 hover:bg-white/5 rounded text-sm"
@@ -473,6 +505,7 @@ export default function Header() {
         </div>
       </header>
 
+      <MegaMenu isOpen={isMegaMenuOpen} onClose={() => setIsMegaMenuOpen(false)} />
       <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
       <SearchModal open={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
     </>

@@ -8,22 +8,25 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { useI18n } from '@/i18n/client';
 
 function LoadingFallback() {
+  const { t } = useI18n();
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
       <div className="text-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
-        <p className="mt-4 text-gray-600">Chargement...</p>
+        <p className="mt-4 text-gray-600">{t('auth.loading')}</p>
       </div>
     </div>
   );
 }
 
 function ResetPasswordContent() {
+  const { t } = useI18n();
   const router = useRouter();
   const searchParams = useSearchParams();
-  
+
   const token = searchParams.get('token');
   const email = searchParams.get('email');
 
@@ -36,23 +39,23 @@ function ResetPasswordContent() {
   // Vérifier que les paramètres sont présents
   useEffect(() => {
     if (!token || !email) {
-      setError('Lien de réinitialisation invalide ou expiré.');
+      setError(t('auth.errorGeneric'));
     }
-  }, [token, email]);
+  }, [token, email, t]);
 
   // Validation du mot de passe
   const validatePassword = (pwd: string): string | null => {
     if (pwd.length < 8) {
-      return 'Le mot de passe doit contenir au moins 8 caractères';
+      return t('auth.passwordMinLength');
     }
     if (!/[A-Z]/.test(pwd)) {
-      return 'Le mot de passe doit contenir au moins une majuscule';
+      return t('auth.passwordUppercase');
     }
     if (!/[a-z]/.test(pwd)) {
-      return 'Le mot de passe doit contenir au moins une minuscule';
+      return t('auth.passwordLowercase');
     }
     if (!/[0-9]/.test(pwd)) {
-      return 'Le mot de passe doit contenir au moins un chiffre';
+      return t('auth.passwordDigit');
     }
     return null;
   };
@@ -69,7 +72,7 @@ function ResetPasswordContent() {
     }
 
     if (password !== confirmPassword) {
-      setError('Les mots de passe ne correspondent pas');
+      setError(t('auth.passwordsNoMatch'));
       return;
     }
 
@@ -85,7 +88,7 @@ function ResetPasswordContent() {
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.error || 'Une erreur est survenue');
+        setError(data.error || t('auth.errorGeneric'));
         setIsLoading(false);
         return;
       }
@@ -96,7 +99,7 @@ function ResetPasswordContent() {
       }, 3000);
 
     } catch {
-      setError('Une erreur réseau est survenue');
+      setError(t('auth.errorNetworkGeneric'));
     } finally {
       setIsLoading(false);
     }
@@ -112,12 +115,12 @@ function ResetPasswordContent() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Mot de passe modifié !</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('account.passwordUpdated')}</h2>
           <p className="text-gray-600 mb-6">
-            Votre mot de passe a été réinitialisé avec succès.
+            {t('auth.forgotPasswordTitle')}
           </p>
           <p className="text-sm text-gray-500">
-            Redirection vers la page de connexion...
+            {t('auth.redirectingToSignIn')}
           </p>
         </div>
       </div>
@@ -134,15 +137,15 @@ function ResetPasswordContent() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Lien invalide</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('auth.errorGeneric')}</h2>
           <p className="text-gray-600 mb-6">
-            Ce lien de réinitialisation est invalide ou a expiré.
+            {t('auth.errorNetworkGeneric')}
           </p>
           <Link
             href="/auth/forgot-password"
             className="inline-block px-6 py-3 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 transition-colors"
           >
-            Demander un nouveau lien
+            {t('auth.sendResetLink')}
           </Link>
         </div>
       </div>
@@ -161,10 +164,10 @@ function ResetPasswordContent() {
             <span className="font-bold text-2xl text-gray-900">BioCycle Peptides</span>
           </Link>
           <h2 className="mt-6 text-2xl font-bold text-gray-900">
-            Nouveau mot de passe
+            {t('auth.forgotPasswordTitle')}
           </h2>
           <p className="mt-2 text-gray-600">
-            Choisissez un nouveau mot de passe sécurisé
+            {t('auth.password')}
           </p>
         </div>
 
@@ -179,7 +182,7 @@ function ResetPasswordContent() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                Nouveau mot de passe
+                {t('account.newPassword')}
               </label>
               <input
                 id="password"
@@ -192,23 +195,23 @@ function ResetPasswordContent() {
               />
               <div className="mt-2 text-xs text-gray-500 space-y-1">
                 <p className={password.length >= 8 ? 'text-green-600' : ''}>
-                  {password.length >= 8 ? '✓' : '○'} Min. 8 caractères
+                  {password.length >= 8 ? '✓' : '○'} {t('auth.passwordMinChars')}
                 </p>
                 <p className={/[A-Z]/.test(password) ? 'text-green-600' : ''}>
-                  {/[A-Z]/.test(password) ? '✓' : '○'} Une majuscule
+                  {/[A-Z]/.test(password) ? '✓' : '○'} {t('auth.passwordOneUppercase')}
                 </p>
                 <p className={/[a-z]/.test(password) ? 'text-green-600' : ''}>
-                  {/[a-z]/.test(password) ? '✓' : '○'} Une minuscule
+                  {/[a-z]/.test(password) ? '✓' : '○'} {t('auth.passwordOneLowercase')}
                 </p>
                 <p className={/[0-9]/.test(password) ? 'text-green-600' : ''}>
-                  {/[0-9]/.test(password) ? '✓' : '○'} Un chiffre
+                  {/[0-9]/.test(password) ? '✓' : '○'} {t('auth.passwordOneDigit')}
                 </p>
               </div>
             </div>
 
             <div>
               <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
-                Confirmer le mot de passe
+                {t('auth.confirmPassword')}
               </label>
               <input
                 id="confirmPassword"
@@ -220,10 +223,10 @@ function ResetPasswordContent() {
                 placeholder="••••••••"
               />
               {confirmPassword && password !== confirmPassword && (
-                <p className="mt-1 text-xs text-red-500">Les mots de passe ne correspondent pas</p>
+                <p className="mt-1 text-xs text-red-500">{t('auth.passwordsNoMatch')}</p>
               )}
               {confirmPassword && password === confirmPassword && (
-                <p className="mt-1 text-xs text-green-600">✓ Les mots de passe correspondent</p>
+                <p className="mt-1 text-xs text-green-600">✓ {t('auth.passwordsMatch')}</p>
               )}
             </div>
 
@@ -238,10 +241,10 @@ function ResetPasswordContent() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
-                  Modification en cours...
+                  {t('auth.loading')}
                 </span>
               ) : (
-                'Réinitialiser le mot de passe'
+                t('auth.forgotPasswordTitle')
               )}
             </button>
           </form>
@@ -250,7 +253,7 @@ function ResetPasswordContent() {
         {/* Retour */}
         <div className="mt-4 text-center">
           <Link href="/auth/signin" className="text-sm text-gray-500 hover:text-orange-600">
-            ← Retour à la connexion
+            {t('auth.backToSignIn')}
           </Link>
         </div>
       </div>

@@ -3,6 +3,7 @@
  * 9 categories of verification for the complete accounting pipeline
  */
 
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { ACCOUNT_CODES } from '@/lib/accounting/types';
 
@@ -61,7 +62,7 @@ export async function verifyTestCase(testCaseId: string): Promise<VerificationRe
   if (!orderCheck) errorCount++;
 
   // 2. TAX_CALCULATION
-  const taxCheck = await verifyTaxCalculation(testCase.orderId, testCaseId, testCase.expectedTaxes as any);
+  const taxCheck = await verifyTaxCalculation(testCase.orderId, testCaseId, testCase.expectedTaxes as { tps: number; tvq: number; tvh: number; pst: number; total: number } | null);
   checks.taxCalculation = taxCheck;
   if (!taxCheck) errorCount++;
 
@@ -589,7 +590,7 @@ export async function generateTaxReport(runId: string): Promise<TaxReport> {
     row.totalTaxCollected += Number(order.tax);
 
     // Expected taxes from test case
-    const expected = tc.expectedTaxes as any;
+    const expected = tc.expectedTaxes as Record<string, number> | null;
     if (expected?.total) {
       row.expectedTotalTax += expected.total;
     }
@@ -627,9 +628,9 @@ async function createError(
   message: string,
   expected: string | null,
   actual: string | null,
-  context: Record<string, any>
+  context: Record<string, unknown>
 ): Promise<void> {
   await prisma.uatTestError.create({
-    data: { testCaseId, category, severity, message, expected, actual, context },
+    data: { testCaseId, category, severity, message, expected, actual, context: context as Prisma.InputJsonValue },
   });
 }

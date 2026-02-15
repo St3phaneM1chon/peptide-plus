@@ -19,6 +19,7 @@ import { StatusBadge } from '@/components/admin/StatusBadge';
 import { FilterBar, SelectFilter } from '@/components/admin/FilterBar';
 import { DataTable, type Column } from '@/components/admin/DataTable';
 import { Input } from '@/components/admin/FormField';
+import { useI18n } from '@/i18n/client';
 
 interface LogEntry {
   id: string;
@@ -40,6 +41,7 @@ const levelVariant: Record<string, 'info' | 'warning' | 'error' | 'neutral'> = {
 };
 
 export default function LogsPage() {
+  const { t, locale } = useI18n();
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState({ level: '', search: '', action: '' });
@@ -89,32 +91,32 @@ export default function LogsPage() {
   };
 
   const actionLabels: Record<string, string> = {
-    USER_LOGIN: 'Connexion utilisateur',
-    ADMIN_LOGIN: 'Connexion admin',
-    ORDER_CREATED: 'Commande creee',
-    ORDER_PAYMENT_SUCCESS: 'Paiement reussi',
-    PAYMENT_RETRY: 'Tentative paiement',
-    EMAIL_SEND_FAILED: 'Echec email',
-    PROMO_CODE_USED: 'Code promo utilise',
-    PRODUCT_UPDATED: 'Produit modifie',
-    LOW_STOCK_ALERT: 'Alerte stock bas',
-    CRON_JOB_RUN: 'Tache planifiee',
+    USER_LOGIN: t('admin.logs.actionUserLogin'),
+    ADMIN_LOGIN: t('admin.logs.actionAdminLogin'),
+    ORDER_CREATED: t('admin.logs.actionOrderCreated'),
+    ORDER_PAYMENT_SUCCESS: t('admin.logs.actionPaymentSuccess'),
+    PAYMENT_RETRY: t('admin.logs.actionPaymentRetry'),
+    EMAIL_SEND_FAILED: t('admin.logs.actionEmailFailed'),
+    PROMO_CODE_USED: t('admin.logs.actionPromoUsed'),
+    PRODUCT_UPDATED: t('admin.logs.actionProductUpdated'),
+    LOW_STOCK_ALERT: t('admin.logs.actionLowStock'),
+    CRON_JOB_RUN: t('admin.logs.actionCronJob'),
   };
 
   const columns: Column<LogEntry>[] = [
     {
       key: 'timestamp',
-      header: 'Date/Heure',
+      header: t('admin.logs.colTimestamp'),
       sortable: true,
       render: (log) => (
         <span className="text-slate-500">
-          {new Date(log.timestamp).toLocaleString('fr-CA')}
+          {new Date(log.timestamp).toLocaleString(locale)}
         </span>
       ),
     },
     {
       key: 'level',
-      header: 'Niveau',
+      header: t('admin.logs.colLevel'),
       align: 'center',
       render: (log) => (
         <StatusBadge variant={levelVariant[log.level]}>
@@ -124,7 +126,7 @@ export default function LogsPage() {
     },
     {
       key: 'action',
-      header: 'Action',
+      header: t('admin.logs.colAction'),
       render: (log) => (
         <div>
           <p className="text-slate-900">{actionLabels[log.action] || log.action}</p>
@@ -134,25 +136,25 @@ export default function LogsPage() {
     },
     {
       key: 'userName',
-      header: 'Utilisateur',
+      header: t('admin.logs.colUser'),
       render: (log) => (
         <span className="text-slate-600">{log.userName || '-'}</span>
       ),
     },
     {
       key: 'ipAddress',
-      header: 'IP',
+      header: t('admin.logs.colIp'),
       render: (log) => (
         <span className="text-slate-500">{log.ipAddress || '-'}</span>
       ),
     },
     {
       key: 'details',
-      header: 'Details',
+      header: t('admin.logs.colDetails'),
       align: 'center',
       render: (log) => log.details ? (
         <Button variant="ghost" size="sm" icon={Eye} onClick={() => setSelectedLog(log)}>
-          Voir
+          {t('admin.logs.view')}
         </Button>
       ) : null,
     },
@@ -161,8 +163,8 @@ export default function LogsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Logs & Audit"
-        subtitle="Suivez toutes les activites du systeme"
+        title={t('admin.logs.title')}
+        subtitle={t('admin.logs.subtitle')}
         actions={
           <div className="flex items-center gap-3">
             <label className="flex items-center gap-2 text-sm text-slate-600">
@@ -172,13 +174,13 @@ export default function LogsPage() {
                 onChange={(e) => setAutoRefresh(e.target.checked)}
                 className="w-4 h-4 rounded border-slate-300 text-sky-500 focus:ring-sky-500"
               />
-              Auto-refresh
+              {t('admin.logs.autoRefresh')}
             </label>
             <Button variant="secondary" icon={RefreshCw} onClick={fetchLogs}>
-              Actualiser
+              {t('admin.logs.refresh')}
             </Button>
             <Button variant="secondary" icon={Download}>
-              Exporter
+              {t('admin.logs.export')}
             </Button>
           </div>
         }
@@ -186,20 +188,20 @@ export default function LogsPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4">
-        <StatCard label="Total (24h)" value={stats.total} icon={FileText} />
-        <StatCard label="Info" value={stats.info} icon={Info} />
-        <StatCard label="Avertissements" value={stats.warnings} icon={AlertTriangle} />
-        <StatCard label="Erreurs" value={stats.errors} icon={AlertCircle} />
+        <StatCard label={t('admin.logs.total24h')} value={stats.total} icon={FileText} />
+        <StatCard label={t('admin.logs.info')} value={stats.info} icon={Info} />
+        <StatCard label={t('admin.logs.warnings')} value={stats.warnings} icon={AlertTriangle} />
+        <StatCard label={t('admin.logs.errors')} value={stats.errors} icon={AlertCircle} />
       </div>
 
       {/* Filters */}
       <FilterBar
         searchValue={filter.search}
         onSearchChange={(v) => setFilter({ ...filter, search: v })}
-        searchPlaceholder="Rechercher..."
+        searchPlaceholder={t('admin.logs.searchPlaceholder')}
       >
         <SelectFilter
-          label="Tous les niveaux"
+          label={t('admin.logs.allLevels')}
           value={filter.level}
           onChange={(v) => setFilter({ ...filter, level: v })}
           options={[
@@ -211,7 +213,7 @@ export default function LogsPage() {
         />
         <Input
           type="text"
-          placeholder="Filtrer par action..."
+          placeholder={t('admin.logs.filterByAction')}
           value={filter.action}
           onChange={(e) => setFilter({ ...filter, action: e.target.value })}
           className="!w-48"
@@ -224,8 +226,8 @@ export default function LogsPage() {
         data={filteredLogs}
         keyExtractor={(log) => log.id}
         loading={loading}
-        emptyTitle="Aucun log trouve"
-        emptyDescription="Aucune entree ne correspond aux filtres selectionnes"
+        emptyTitle={t('admin.logs.emptyTitle')}
+        emptyDescription={t('admin.logs.emptyDescription')}
       />
 
       {/* Detail Modal */}
@@ -233,7 +235,7 @@ export default function LogsPage() {
         isOpen={!!selectedLog}
         onClose={() => setSelectedLog(null)}
         title={selectedLog ? (actionLabels[selectedLog.action] || selectedLog.action) : ''}
-        subtitle={selectedLog ? new Date(selectedLog.timestamp).toLocaleString('fr-CA') : ''}
+        subtitle={selectedLog ? new Date(selectedLog.timestamp).toLocaleString(locale) : ''}
       >
         <pre className="bg-slate-50 rounded-lg p-4 text-sm overflow-x-auto">
           {selectedLog && JSON.stringify(selectedLog, null, 2)}

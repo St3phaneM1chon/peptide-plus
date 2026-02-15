@@ -17,7 +17,7 @@ export interface AuditEntry {
   ipAddress?: string;
   userAgent?: string;
   changes: ChangeDetail[];
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export type AuditAction = 
@@ -53,8 +53,8 @@ export type EntityType =
 export interface ChangeDetail {
   field: string;
   fieldLabel: string;
-  oldValue: any;
-  newValue: any;
+  oldValue: unknown;
+  newValue: unknown;
   changeType: 'ADD' | 'MODIFY' | 'REMOVE';
 }
 
@@ -72,11 +72,11 @@ export async function logAuditEntry(
     entityNumber?: string;
     ipAddress?: string;
     userAgent?: string;
-    metadata?: Record<string, any>;
+    metadata?: Record<string, unknown>;
   } = {}
 ): Promise<AuditEntry> {
   const entry: AuditEntry = {
-    id: `audit-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    id: `audit-${Date.now()}-${crypto.randomUUID().replace(/-/g, '').substring(0, 9)}`,
     timestamp: new Date(),
     action,
     entityType,
@@ -113,7 +113,7 @@ export async function logAuditEntry(
 /**
  * Compare two objects and generate change details
  */
-export function generateChanges<T extends Record<string, any>>(
+export function generateChanges<T extends Record<string, unknown>>(
   oldObj: T | null,
   newObj: T | null,
   fieldLabels: Record<string, string> = {}
@@ -175,7 +175,7 @@ export function generateChanges<T extends Record<string, any>>(
 /**
  * Deep equality check
  */
-function deepEqual(a: any, b: any): boolean {
+function deepEqual(a: unknown, b: unknown): boolean {
   if (a === b) return true;
   if (a instanceof Date && b instanceof Date) {
     return a.getTime() === b.getTime();
@@ -183,10 +183,12 @@ function deepEqual(a: any, b: any): boolean {
   if (typeof a !== 'object' || typeof b !== 'object' || a === null || b === null) {
     return false;
   }
-  const keysA = Object.keys(a);
-  const keysB = Object.keys(b);
+  const objA = a as Record<string, unknown>;
+  const objB = b as Record<string, unknown>;
+  const keysA = Object.keys(objA);
+  const keysB = Object.keys(objB);
   if (keysA.length !== keysB.length) return false;
-  return keysA.every(key => deepEqual(a[key], b[key]));
+  return keysA.every(key => deepEqual(objA[key], objB[key]));
 }
 
 /**
@@ -203,15 +205,16 @@ export async function getAuditHistory(
 ): Promise<AuditEntry[]> {
   const { limit = 100, startDate, endDate } = options;
 
-  const where: any = {
+  const where: Record<string, unknown> = {
     entityType,
     entityId,
   };
 
   if (startDate || endDate) {
-    where.createdAt = {};
-    if (startDate) where.createdAt.gte = startDate;
-    if (endDate) where.createdAt.lte = endDate;
+    const createdAt: Record<string, Date> = {};
+    if (startDate) createdAt.gte = startDate;
+    if (endDate) createdAt.lte = endDate;
+    where.createdAt = createdAt;
   }
 
   const logs = await prisma.auditLog.findMany({
@@ -259,7 +262,7 @@ export async function generateAuditReport(
   };
   entries: AuditEntry[];
 }> {
-  const where: any = {
+  const where: Record<string, unknown> = {
     createdAt: {
       gte: startDate,
       lte: endDate,

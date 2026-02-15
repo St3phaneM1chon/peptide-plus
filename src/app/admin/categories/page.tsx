@@ -22,6 +22,7 @@ import {
   Textarea,
   type Column,
 } from '@/components/admin';
+import { useI18n } from '@/i18n/client';
 
 interface Category {
   id: string;
@@ -35,6 +36,7 @@ interface Category {
 }
 
 export default function CategoriesPage() {
+  const { t, locale } = useI18n();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -88,7 +90,7 @@ export default function CategoriesPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || 'Erreur');
+        setError(data.error || t('admin.categories.error'));
         setSaving(false);
         return;
       }
@@ -96,7 +98,7 @@ export default function CategoriesPage() {
       await fetchCategories();
       resetForm();
     } catch (err) {
-      setError('Erreur de connexion');
+      setError(t('admin.categories.connectionError'));
     }
     setSaving(false);
   };
@@ -137,7 +139,7 @@ export default function CategoriesPage() {
   const columns: Column<Category>[] = useMemo(() => [
     {
       key: 'name',
-      header: 'Categorie',
+      header: t('admin.categories.colCategory'),
       render: (cat) => (
         <div className="flex items-center gap-3">
           <div
@@ -155,7 +157,7 @@ export default function CategoriesPage() {
     },
     {
       key: 'products',
-      header: 'Produits',
+      header: t('admin.categories.colProducts'),
       align: 'center',
       width: '100px',
       render: (cat) => (
@@ -164,7 +166,7 @@ export default function CategoriesPage() {
     },
     {
       key: 'sortOrder',
-      header: 'Ordre',
+      header: t('admin.categories.colOrder'),
       align: 'center',
       width: '80px',
       render: (cat) => (
@@ -173,7 +175,7 @@ export default function CategoriesPage() {
     },
     {
       key: 'isActive',
-      header: 'Actif',
+      header: t('admin.categories.colActive'),
       align: 'center',
       width: '80px',
       render: (cat) => (
@@ -192,7 +194,7 @@ export default function CategoriesPage() {
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: t('admin.categories.colActions'),
       align: 'center',
       width: '100px',
       render: (cat) => (
@@ -202,26 +204,27 @@ export default function CategoriesPage() {
           icon={Pencil}
           onClick={(e) => { e.stopPropagation(); startEdit(cat); }}
         >
-          Modifier
+          {t('admin.categories.edit')}
         </Button>
       ),
     },
-  ], []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  ], [locale]);
 
   return (
     <>
       <PageHeader
-        title="Categories"
-        subtitle="Organisez vos produits par categories"
+        title={t('admin.categories.title')}
+        subtitle={t('admin.categories.subtitle')}
         backHref="/admin/produits"
-        backLabel="Retour aux produits"
+        backLabel={t('admin.categories.backToProducts')}
         actions={
           <Button
             variant="primary"
             icon={Plus}
             onClick={() => { resetForm(); setShowForm(true); }}
           >
-            Nouvelle categorie
+            {t('admin.categories.newCategory')}
           </Button>
         }
       />
@@ -230,12 +233,12 @@ export default function CategoriesPage() {
       <Modal
         isOpen={showForm}
         onClose={resetForm}
-        title={editingId ? 'Modifier la categorie' : 'Nouvelle categorie'}
+        title={editingId ? t('admin.categories.editCategory') : t('admin.categories.newCategory')}
         size="md"
         footer={
           <>
             <Button variant="secondary" onClick={resetForm}>
-              Annuler
+              {t('admin.categories.cancel')}
             </Button>
             <Button
               variant="primary"
@@ -245,7 +248,7 @@ export default function CategoriesPage() {
                 form?.requestSubmit();
               }}
             >
-              {saving ? 'Enregistrement...' : editingId ? 'Enregistrer' : 'Creer'}
+              {saving ? t('admin.categories.saving') : editingId ? t('admin.categories.save') : t('admin.categories.create')}
             </Button>
           </>
         }
@@ -257,7 +260,7 @@ export default function CategoriesPage() {
         )}
 
         <form id="category-form" onSubmit={handleSubmit} className="space-y-4">
-          <FormField label="Nom" required>
+          <FormField label={t('admin.categories.fieldName')} required>
             <Input
               type="text"
               required
@@ -267,31 +270,31 @@ export default function CategoriesPage() {
                 name: e.target.value,
                 slug: !editingId ? generateSlug(e.target.value) : formData.slug,
               })}
-              placeholder="Ex: Vente et negociation"
+              placeholder={t('admin.categories.fieldNamePlaceholder')}
             />
           </FormField>
 
-          <FormField label="Slug (URL)" required>
+          <FormField label={t('admin.categories.fieldSlug')} required>
             <Input
               type="text"
               required
               value={formData.slug}
               onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-              placeholder="vente-negociation"
+              placeholder={t('admin.categories.fieldSlugPlaceholder')}
             />
           </FormField>
 
-          <FormField label="Description">
+          <FormField label={t('admin.categories.fieldDescription')}>
             <Textarea
               rows={3}
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              placeholder="Description de la categorie..."
+              placeholder={t('admin.categories.fieldDescriptionPlaceholder')}
             />
           </FormField>
 
           <div className="grid grid-cols-[2fr_1fr] gap-4">
-            <FormField label="URL de l'image">
+            <FormField label={t('admin.categories.fieldImageUrl')}>
               <Input
                 type="url"
                 value={formData.imageUrl}
@@ -299,7 +302,7 @@ export default function CategoriesPage() {
                 placeholder="https://..."
               />
             </FormField>
-            <FormField label="Ordre d'affichage">
+            <FormField label={t('admin.categories.fieldSortOrder')}>
               <Input
                 type="number"
                 value={formData.sortOrder}
@@ -316,15 +319,15 @@ export default function CategoriesPage() {
         data={categories}
         keyExtractor={(cat) => cat.id}
         loading={loading}
-        emptyTitle="Aucune categorie"
-        emptyDescription="Creez votre premiere categorie pour organiser vos produits."
+        emptyTitle={t('admin.categories.emptyTitle')}
+        emptyDescription={t('admin.categories.emptyDescription')}
         emptyAction={
           <Button
             variant="primary"
             icon={Plus}
             onClick={() => { resetForm(); setShowForm(true); }}
           >
-            Nouvelle categorie
+            {t('admin.categories.newCategory')}
           </Button>
         }
       />

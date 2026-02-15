@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * API Loyalty - BioCycle Peptides
  * Récupère les données de fidélité de l'utilisateur
@@ -28,7 +30,8 @@ function pointsToNextTier(lifetimePoints: number): { nextTier: string; pointsNee
 // Génère un code de parrainage unique
 function generateReferralCode(name: string | null): string {
   const prefix = name?.split(' ')[0]?.toUpperCase().slice(0, 3) || 'BC';
-  const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+  // SECURITY: Use crypto.randomUUID for non-guessable referral codes
+  const random = crypto.randomUUID().replace(/-/g, '').substring(0, 4).toUpperCase();
   return `${prefix}${random}`;
 }
 

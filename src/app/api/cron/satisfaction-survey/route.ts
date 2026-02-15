@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * CRON Job - Emails de satisfaction
  * Envoie un email de demande d'avis 5 jours après la livraison

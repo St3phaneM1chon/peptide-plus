@@ -71,13 +71,20 @@ export async function POST(request: NextRequest) {
     // Hash du mot de passe (cost factor 12 pour NYDFS)
     const hashedPassword = await hash(password, 12);
 
-    // Créer l'utilisateur
+    // Check if this email has a newsletter subscription with birthDate
+    const newsletterSub = await prisma.newsletterSubscriber.findUnique({
+      where: { email: email.toLowerCase() },
+      select: { birthDate: true },
+    }).catch(() => null);
+
+    // Créer l'utilisateur (transfer birthDate from newsletter if available)
     const user = await prisma.user.create({
       data: {
         name,
         email: email.toLowerCase(),
         password: hashedPassword,
         role: 'CUSTOMER', // Rôle par défaut
+        ...(newsletterSub?.birthDate && { birthDate: newsletterSub.birthDate }),
       },
     });
 

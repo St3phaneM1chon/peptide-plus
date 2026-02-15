@@ -35,13 +35,13 @@ async function main() {
 
   // 3. Create slides on Azure
   for (const slide of localSlides) {
-    const { translations, id, createdAt, updatedAt, ...slideData } = slide;
+    const { translations, id: _id, createdAt: _createdAt, updatedAt: _updatedAt, ...slideData } = slide;
 
     await azurePrisma.heroSlide.create({
       data: {
         ...slideData,
         translations: {
-          create: translations.map(({ id, slideId, createdAt, updatedAt, ...t }) => t),
+          create: translations.map(({ id: _id, slideId: _slideId, createdAt: _createdAt, updatedAt: _updatedAt, ...t }) => t),
         },
       },
     });
