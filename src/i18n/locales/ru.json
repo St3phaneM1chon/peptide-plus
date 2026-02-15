@@ -64,7 +64,8 @@
     "storage": "Хранение",
     "relatedProducts": "Похожие товары",
     "recentlyViewed": "Недавно просмотренные",
-    "verifiedBuyer": "Проверенный покупатель"
+    "verifiedBuyer": "Проверенный покупатель",
+    "shop": "Магазин"
   },
   "home": {
     "heroTitle": "Лучшие исследовательские пептиды в Канаде",
@@ -1243,7 +1244,16 @@
     "shipping": "Быстрая доставка",
     "shippingDesc": "1-3 рабочих дня",
     "support": "Поддержка 24/7",
-    "supportDesc": "Всегда на связи"
+    "supportDesc": "Всегда на связи",
+    "madeInCanada": "Сделано в Канаде",
+    "madeInCanadaDesc": "Монреаль, QC",
+    "coaAvailable": "COA доступен",
+    "coaAvailableDesc": "Каждая партия проверена",
+    "fastShipping": "Быстрая доставка",
+    "fastShippingDesc": "1-3 рабочих дня",
+    "securePayment": "Безопасная оплата",
+    "securePaymentDesc": "SSL шифрование",
+    "freeShipping": "Бесплатная доставка от $150"
   },
   "protocols": {
     "title": "Мои протоколы",

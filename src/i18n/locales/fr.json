@@ -1,5 +1,6 @@
 {
   "shop": {
+    "shop": "Boutique",
     "title": "BioCycle Peptides",
     "tagline": "Les meilleurs peptides au Canada",
     "subtitle": "Dépassez vos limites, sans vous ruiner",
@@ -1316,7 +1317,16 @@
     "shipping": "Livraison rapide",
     "shippingDesc": "1-3 jours ouvrables",
     "support": "Support 24/7",
-    "supportDesc": "Toujours là pour aider"
+    "supportDesc": "Toujours là pour aider",
+    "madeInCanada": "Fabriqué au Canada",
+    "madeInCanadaDesc": "Montréal, QC",
+    "coaAvailable": "COA disponible",
+    "coaAvailableDesc": "Chaque lot testé",
+    "fastShipping": "Livraison rapide",
+    "fastShippingDesc": "1-3 jours ouvrables",
+    "securePayment": "Paiement sécurisé",
+    "securePaymentDesc": "Cryptage SSL",
+    "freeShipping": "Livraison gratuite 150$+"
   },
   "protocols": {
     "title": "Mes protocoles de recherche",

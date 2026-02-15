@@ -64,7 +64,8 @@
     "storage": "Storage",
     "relatedProducts": "Related Products",
     "recentlyViewed": "Recently Viewed",
-    "verifiedBuyer": "Verified Buyer"
+    "verifiedBuyer": "Verified Buyer",
+    "shop": "கடை"
   },
   "home": {
     "heroTitle": "கனடாவின் சிறந்த ஆராய்ச்சி பெப்டைடுகள்",
@@ -1243,7 +1244,16 @@
     "shipping": "Fast Shipping",
     "shippingDesc": "1-3 business days",
     "support": "24/7 Support",
-    "supportDesc": "Always here to help"
+    "supportDesc": "Always here to help",
+    "madeInCanada": "கனடாவில் தயாரிக்கப்பட்டது",
+    "madeInCanadaDesc": "மாண்ட்ரியல், QC",
+    "coaAvailable": "COA கிடைக்கும்",
+    "coaAvailableDesc": "ஒவ்வொரு தொகுதியும் சோதிக்கப்பட்டது",
+    "fastShipping": "விரைவான அனுப்புதல்",
+    "fastShippingDesc": "1-3 வணிக நாட்கள்",
+    "securePayment": "பாதுகாப்பான கட்டணம்",
+    "securePaymentDesc": "SSL குறியாக்கம்",
+    "freeShipping": "$150+ இலவச அனுப்புதல்"
   },
   "protocols": {
     "title": "My Research Protocols",

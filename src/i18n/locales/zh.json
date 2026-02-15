@@ -64,7 +64,8 @@
     "storage": "储存",
     "relatedProducts": "相关产品",
     "recentlyViewed": "最近浏览",
-    "verifiedBuyer": "认证买家"
+    "verifiedBuyer": "认证买家",
+    "shop": "商店"
   },
   "home": {
     "heroTitle": "加拿大最佳研究用多肽",
@@ -1243,7 +1244,16 @@
     "shipping": "快速配送",
     "shippingDesc": "1-3个工作日",
     "support": "全天候支持",
-    "supportDesc": "随时为您服务"
+    "supportDesc": "随时为您服务",
+    "madeInCanada": "加拿大制造",
+    "madeInCanadaDesc": "蒙特利尔, QC",
+    "coaAvailable": "COA可用",
+    "coaAvailableDesc": "每批次经测试",
+    "fastShipping": "快速配送",
+    "fastShippingDesc": "1-3个工作日",
+    "securePayment": "安全支付",
+    "securePaymentDesc": "SSL加密",
+    "freeShipping": "满$150免运费"
   },
   "protocols": {
     "title": "我的研究方案",

@@ -64,7 +64,8 @@
     "storage": "Storage",
     "relatedProducts": "Related Products",
     "recentlyViewed": "Recently Viewed",
-    "verifiedBuyer": "Verified Buyer"
+    "verifiedBuyer": "Verified Buyer",
+    "shop": "Butik"
   },
   "home": {
     "heroTitle": "De basta forskningspeptiderna i Kanada",
@@ -1243,7 +1244,16 @@
     "shipping": "Fast Shipping",
     "shippingDesc": "1-3 business days",
     "support": "24/7 Support",
-    "supportDesc": "Always here to help"
+    "supportDesc": "Always here to help",
+    "madeInCanada": "Tillverkad i Kanada",
+    "madeInCanadaDesc": "Montreal, QC",
+    "coaAvailable": "COA tillgänglig",
+    "coaAvailableDesc": "Varje sats testad",
+    "fastShipping": "Snabb leverans",
+    "fastShippingDesc": "1-3 arbetsdagar",
+    "securePayment": "Säker betalning",
+    "securePaymentDesc": "SSL-krypterad",
+    "freeShipping": "Fri frakt över $150"
   },
   "protocols": {
     "title": "My Research Protocols",

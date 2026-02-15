@@ -64,7 +64,8 @@
     "storage": "Lagerung",
     "relatedProducts": "Ähnliche Produkte",
     "recentlyViewed": "Zuletzt angesehen",
-    "verifiedBuyer": "Verifizierter Käufer"
+    "verifiedBuyer": "Verifizierter Käufer",
+    "shop": "Shop"
   },
   "home": {
     "heroTitle": "Die besten Forschungspeptide in Kanada",
@@ -1243,7 +1244,16 @@
     "shipping": "Schneller Versand",
     "shippingDesc": "1-3 Werktage",
     "support": "24/7 Support",
-    "supportDesc": "Immer für Sie da"
+    "supportDesc": "Immer für Sie da",
+    "madeInCanada": "Hergestellt in Kanada",
+    "madeInCanadaDesc": "Montreal, QC",
+    "coaAvailable": "COA verfügbar",
+    "coaAvailableDesc": "Jede Charge getestet",
+    "fastShipping": "Schneller Versand",
+    "fastShippingDesc": "1-3 Werktage",
+    "securePayment": "Sichere Zahlung",
+    "securePaymentDesc": "SSL verschlüsselt",
+    "freeShipping": "Kostenloser Versand ab $150"
   },
   "protocols": {
     "title": "Meine Forschungsprotokolle",
