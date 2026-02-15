@@ -8,6 +8,7 @@
 import Link from 'next/link';
 import { TrackingTimeline } from './TrackingTimeline';
 import { OrderSummary } from './OrderSummary';
+import { useTranslations } from '@/hooks/useTranslations';
 
 interface ShippingInfo {
   status: string;
@@ -50,11 +51,12 @@ interface PhysicalDeliveryTrackingProps {
 }
 
 export function PhysicalDeliveryTracking({ order }: PhysicalDeliveryTrackingProps) {
+  const { t } = useTranslations();
   const shipping = order.shipping;
   const purchaseDate = new Date(order.createdAt);
 
   // Générer les étapes selon le statut d'expédition
-  const steps = generateShippingSteps(shipping, purchaseDate);
+  const steps = generateShippingSteps(shipping, purchaseDate, t);
 
   // Calculer la progression
   const completedSteps = steps.filter(s => s.status === 'completed').length;
@@ -82,7 +84,7 @@ export function PhysicalDeliveryTracking({ order }: PhysicalDeliveryTrackingProp
               }}
             >
               <span style={{ fontSize: '14px', color: 'var(--gray-400)' }}>
-                Progression
+                {t('order.tracking.progress')}
               </span>
               <span
                 style={{
@@ -135,7 +137,7 @@ export function PhysicalDeliveryTracking({ order }: PhysicalDeliveryTrackingProp
                   marginBottom: '4px',
                 }}
               >
-                Transporteur
+                {t('order.tracking.carrier')}
               </p>
               <p
                 style={{
@@ -144,7 +146,7 @@ export function PhysicalDeliveryTracking({ order }: PhysicalDeliveryTrackingProp
                   color: 'var(--gray-500)',
                 }}
               >
-                {shipping.carrier || 'Non assigné'}
+                {shipping.carrier || t('order.tracking.notAssigned')}
               </p>
             </div>
             <div style={{ textAlign: 'right' }}>
@@ -155,7 +157,7 @@ export function PhysicalDeliveryTracking({ order }: PhysicalDeliveryTrackingProp
                   marginBottom: '4px',
                 }}
               >
-                Numéro de suivi
+                {t('order.tracking.trackingNumber')}
               </p>
               <p
                 style={{
@@ -175,7 +177,7 @@ export function PhysicalDeliveryTracking({ order }: PhysicalDeliveryTrackingProp
                 className="btn btn-secondary"
                 style={{ padding: '10px 16px', fontSize: '13px' }}
               >
-                Suivre le colis
+                {t('order.tracking.trackPackage')}
               </a>
             )}
           </div>
@@ -210,7 +212,7 @@ export function PhysicalDeliveryTracking({ order }: PhysicalDeliveryTrackingProp
               </svg>
               <div>
                 <p style={{ fontSize: '13px', color: '#1976D2' }}>
-                  Livraison estimée
+                  {t('order.tracking.estimatedDelivery')}
                 </p>
                 <p
                   style={{
@@ -241,7 +243,7 @@ export function PhysicalDeliveryTracking({ order }: PhysicalDeliveryTrackingProp
               marginBottom: '16px',
             }}
           >
-            Historique
+            {t('order.tracking.history')}
           </h3>
           <TrackingTimeline steps={steps} />
         </div>
@@ -304,11 +306,10 @@ export function PhysicalDeliveryTracking({ order }: PhysicalDeliveryTrackingProp
                   marginBottom: '4px',
                 }}
               >
-                En cours de préparation
+                {t('order.tracking.beingPrepared')}
               </h3>
               <p style={{ fontSize: '14px', color: '#F57C00' }}>
-                Votre commande est en cours de traitement. Vous recevrez un
-                email avec le numéro de suivi dès l'expédition.
+                {t('order.tracking.beingPreparedDesc')}
               </p>
             </div>
           </div>
@@ -321,7 +322,7 @@ export function PhysicalDeliveryTracking({ order }: PhysicalDeliveryTrackingProp
               marginBottom: '16px',
             }}
           >
-            Étapes de livraison
+            {t('order.tracking.deliverySteps')}
           </h3>
           <TrackingTimeline steps={steps} />
         </div>
@@ -368,7 +369,7 @@ export function PhysicalDeliveryTracking({ order }: PhysicalDeliveryTrackingProp
                 d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"
               />
             </svg>
-            Adresse de livraison
+            {t('order.tracking.shippingAddress')}
           </h2>
 
           <div
@@ -410,7 +411,7 @@ export function PhysicalDeliveryTracking({ order }: PhysicalDeliveryTrackingProp
                   marginTop: '8px',
                 }}
               >
-                Tél: {shipping.phone}
+                {t('order.tracking.phone')}: {shipping.phone}
               </p>
             )}
           </div>
@@ -437,7 +438,7 @@ export function PhysicalDeliveryTracking({ order }: PhysicalDeliveryTrackingProp
             marginBottom: '16px',
           }}
         >
-          Besoin d'aide?
+          {t('order.tracking.needHelp')}
         </h2>
 
         <div
@@ -460,7 +461,7 @@ export function PhysicalDeliveryTracking({ order }: PhysicalDeliveryTrackingProp
               gap: '8px',
             }}
           >
-            Télécharger le reçu
+            {t('order.tracking.downloadReceipt')}
           </a>
 
           <Link
@@ -474,7 +475,7 @@ export function PhysicalDeliveryTracking({ order }: PhysicalDeliveryTrackingProp
               gap: '8px',
             }}
           >
-            Contacter le support
+            {t('order.tracking.contactSupport')}
           </Link>
 
           <Link
@@ -488,7 +489,7 @@ export function PhysicalDeliveryTracking({ order }: PhysicalDeliveryTrackingProp
               gap: '8px',
             }}
           >
-            FAQ Livraison
+            {t('order.tracking.faqDelivery')}
           </Link>
         </div>
       </div>
@@ -496,32 +497,32 @@ export function PhysicalDeliveryTracking({ order }: PhysicalDeliveryTrackingProp
   );
 }
 
-function generateShippingSteps(shipping: ShippingInfo | null | undefined, purchaseDate: Date) {
+function generateShippingSteps(shipping: ShippingInfo | null | undefined, purchaseDate: Date, t: (key: string) => string) {
   const steps = [
     {
       id: 'confirmed',
-      title: 'Commande confirmée',
-      description: 'Paiement reçu',
+      title: t('order.tracking.orderConfirmed'),
+      description: t('order.tracking.paymentReceived'),
       timestamp: purchaseDate,
       status: 'completed' as const,
       icon: 'check',
     },
     {
       id: 'processing',
-      title: 'En préparation',
-      description: 'Votre commande est emballée',
-      timestamp: shipping?.status !== 'PENDING' 
-        ? new Date(purchaseDate.getTime() + 3600000) 
+      title: t('order.tracking.inPreparation'),
+      description: t('order.tracking.orderBeingPacked'),
+      timestamp: shipping?.status !== 'PENDING'
+        ? new Date(purchaseDate.getTime() + 3600000)
         : null,
       status: shipping?.status !== 'PENDING' ? 'completed' as const : 'current' as const,
       icon: 'package',
     },
     {
       id: 'shipped',
-      title: 'Expédiée',
-      description: shipping?.carrier 
-        ? `Prise en charge par ${shipping.carrier}`
-        : 'Remis au transporteur',
+      title: t('order.tracking.shipped'),
+      description: shipping?.carrier
+        ? t('order.tracking.handledByCarrier').replace('{carrier}', shipping.carrier)
+        : t('order.tracking.givenToCarrier'),
       timestamp: shipping?.shippedAt ? new Date(shipping.shippedAt) : null,
       status: ['SHIPPED', 'IN_TRANSIT', 'OUT_FOR_DELIVERY', 'DELIVERED'].includes(shipping?.status ?? '')
         ? 'completed' as const
@@ -530,8 +531,8 @@ function generateShippingSteps(shipping: ShippingInfo | null | undefined, purcha
     },
     {
       id: 'transit',
-      title: 'En transit',
-      description: 'En route vers vous',
+      title: t('order.tracking.inTransit'),
+      description: t('order.tracking.enRoute'),
       timestamp: null,
       status: ['IN_TRANSIT', 'OUT_FOR_DELIVERY', 'DELIVERED'].includes(shipping?.status ?? '')
         ? 'completed' as const
@@ -540,8 +541,8 @@ function generateShippingSteps(shipping: ShippingInfo | null | undefined, purcha
     },
     {
       id: 'delivery',
-      title: 'En cours de livraison',
-      description: 'Le livreur est en chemin',
+      title: t('order.tracking.outForDelivery'),
+      description: t('order.tracking.driverOnWay'),
       timestamp: null,
       status: ['OUT_FOR_DELIVERY', 'DELIVERED'].includes(shipping?.status ?? '')
         ? 'completed' as const
@@ -550,10 +551,10 @@ function generateShippingSteps(shipping: ShippingInfo | null | undefined, purcha
     },
     {
       id: 'delivered',
-      title: 'Livré',
-      description: shipping?.deliveredAt 
-        ? `Livré le ${new Date(shipping.deliveredAt).toLocaleDateString('fr-CA')}`
-        : 'À votre adresse',
+      title: t('order.tracking.delivered'),
+      description: shipping?.deliveredAt
+        ? t('order.tracking.deliveredOn').replace('{date}', new Date(shipping.deliveredAt).toLocaleDateString())
+        : t('order.tracking.toYourAddress'),
       timestamp: shipping?.deliveredAt ? new Date(shipping.deliveredAt) : null,
       status: shipping?.status === 'DELIVERED' ? 'completed' as const : 'pending' as const,
       icon: 'home',

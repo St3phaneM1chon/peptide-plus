@@ -39,7 +39,7 @@ export function OrderSummary({ order }: OrderSummaryProps) {
   const total = subtotal + tps + tvq;
 
   const paymentMethodLabels: Record<string, string> = {
-    STRIPE_CARD: 'Carte de crédit',
+    STRIPE_CARD: t('checkout.creditCard'),
     APPLE_PAY: 'Apple Pay',
     GOOGLE_PAY: 'Google Pay',
     PAYPAL: 'PayPal',
@@ -64,7 +64,7 @@ export function OrderSummary({ order }: OrderSummaryProps) {
           marginBottom: '20px',
         }}
       >
-        Détails de la commande
+        {t('order.orderDetails')}
       </h2>
 
       {/* Produit */}
@@ -151,7 +151,7 @@ export function OrderSummary({ order }: OrderSummaryProps) {
             {order.product.name}
           </h3>
           <p style={{ fontSize: '14px', color: 'var(--gray-400)' }}>
-            Formation en ligne
+            {t('order.onlineCourse')}
           </p>
         </div>
 
@@ -178,7 +178,7 @@ export function OrderSummary({ order }: OrderSummaryProps) {
           }}
         >
           <span style={{ fontSize: '14px', color: 'var(--gray-400)' }}>
-            Sous-total
+            {t('order.subtotal')}
           </span>
           <span style={{ fontSize: '14px', color: 'var(--gray-500)' }}>
             {subtotal.toFixed(2)} $
@@ -192,7 +192,7 @@ export function OrderSummary({ order }: OrderSummaryProps) {
           }}
         >
           <span style={{ fontSize: '14px', color: 'var(--gray-400)' }}>
-            TPS (5%)
+            {t('order.gst')}
           </span>
           <span style={{ fontSize: '14px', color: 'var(--gray-500)' }}>
             {tps.toFixed(2)} $
@@ -206,7 +206,7 @@ export function OrderSummary({ order }: OrderSummaryProps) {
           }}
         >
           <span style={{ fontSize: '14px', color: 'var(--gray-400)' }}>
-            TVQ (9.975%)
+            {t('order.qst')}
           </span>
           <span style={{ fontSize: '14px', color: 'var(--gray-500)' }}>
             {tvq.toFixed(2)} $
@@ -264,7 +264,7 @@ export function OrderSummary({ order }: OrderSummaryProps) {
                 marginBottom: '4px',
               }}
             >
-              Date de commande
+              {t('order.orderDate')}
             </p>
             <p style={{ fontSize: '14px', color: 'var(--gray-500)' }}>
               {new Date(order.createdAt).toLocaleDateString('fr-CA', {
@@ -296,7 +296,7 @@ export function OrderSummary({ order }: OrderSummaryProps) {
                 marginBottom: '4px',
               }}
             >
-              Client
+              {t('order.customer')}
             </p>
             <p style={{ fontSize: '14px', color: 'var(--gray-500)' }}>
               {order.user.name || order.user.email}

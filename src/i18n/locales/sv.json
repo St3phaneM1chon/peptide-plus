@@ -315,7 +315,8 @@
     "securePayments": "Secure Payments",
     "allRightsReserved": "All rights reserved",
     "help": "Help",
-    "subscribeNewsletter": "Subscribe to our newsletter"
+    "subscribeNewsletter": "Subscribe to our newsletter",
+    "newsletterDescription": "Get our latest news and exclusive offers."
   },
   "common": {
     "loading": "Laddar...",
@@ -511,7 +512,21 @@
     "checkout": "Checkout",
     "errors": {
       "paymentFailed": "Payment failed. Please try again."
-    }
+    },
+    "savedCard": "Saved card",
+    "newCard": "New card",
+    "payNow": "Pay now",
+    "payWithPayPal": "Pay with PayPal",
+    "payWithApplePay": "Pay with Apple Pay",
+    "payWithGooglePay": "Pay with Google Pay",
+    "redirecting": "Redirecting...",
+    "saveCardForFuture": "Save this card for my future purchases",
+    "saveAddressForFuture": "Save this address for my future orders",
+    "savedAddresses": "Saved addresses",
+    "defaultAddress": "Default",
+    "useNewAddress": "Use a new address",
+    "enterAddress": "Enter my address",
+    "recipientName": "Recipient full name"
   },
   "rewards": {
     "title": "Rewards Program",
@@ -5050,8 +5065,58 @@
     "status": "Order Status",
     "tracking": {
       "preparing": "Preparing your order",
-      "title": "Order Tracking"
-    }
+      "title": "Order Tracking",
+      "paymentConfirmed": "Payment confirmed",
+      "paymentConfirmedDesc": "Your payment has been processed successfully",
+      "accessActivated": "Access activated",
+      "accessActivatedDesc": "Your content is now available",
+      "readyToUse": "Ready to use",
+      "readyToUseDesc": "Start right now",
+      "immediateAccess": "Immediate access available",
+      "courseReady": "Your course \"{name}\" is ready. No wait required!",
+      "startNow": "Start now",
+      "digitalDelivery": "Digital delivery",
+      "yourContent": "Your content",
+      "accessCourse": "Access course",
+      "downloadReceipt": "Download receipt",
+      "myCertificates": "My certificates",
+      "progress": "Progress",
+      "carrier": "Carrier",
+      "notAssigned": "Not assigned",
+      "trackingNumber": "Tracking number",
+      "trackPackage": "Track package",
+      "estimatedDelivery": "Estimated delivery",
+      "history": "History",
+      "beingPrepared": "Being prepared",
+      "beingPreparedDesc": "Your order is being processed. You will receive an email with the tracking number once shipped.",
+      "deliverySteps": "Delivery steps",
+      "shippingAddress": "Shipping address",
+      "phone": "Phone",
+      "needHelp": "Need help?",
+      "contactSupport": "Contact support",
+      "faqDelivery": "Shipping FAQ",
+      "orderConfirmed": "Order confirmed",
+      "paymentReceived": "Payment received",
+      "inPreparation": "In preparation",
+      "orderBeingPacked": "Your order is being packed",
+      "shipped": "Shipped",
+      "handledByCarrier": "Handled by {carrier}",
+      "givenToCarrier": "Given to carrier",
+      "inTransit": "In transit",
+      "enRoute": "On its way to you",
+      "outForDelivery": "Out for delivery",
+      "driverOnWay": "The driver is on the way",
+      "delivered": "Delivered",
+      "deliveredOn": "Delivered on {date}",
+      "toYourAddress": "To your address"
+    },
+    "orderDetails": "Order details",
+    "onlineCourse": "Online course",
+    "subtotal": "Subtotal",
+    "gst": "GST (5%)",
+    "qst": "QST (9.975%)",
+    "orderDate": "Order date",
+    "customer": "Customer"
   },
   "profile": {
     "changePassword": "Change Password",
@@ -5079,5 +5144,29 @@
   "validation": {
     "emailRequired": "Email is required",
     "invalidEmail": "Invalid email address"
+  },
+  "translation": {
+    "aiNotice": "This page has been automatically translated by AI. Some translations may be imperfect.",
+    "reportIssue": "See an error? Help us improve by reporting it.",
+    "quality": {
+      "draft": "AI translated",
+      "improved": "AI improved",
+      "verified": "AI verified",
+      "human": "Human reviewed"
+    },
+    "feedbackTitle": "Translation Quality",
+    "feedbackQuestion": "How is the translation quality on this page?",
+    "feedbackPlaceholder": "Any specific issues? (optional)",
+    "feedbackSubmit": "Send Feedback",
+    "feedbackThanks": "Thank you for your feedback!"
+  },
+  "pwa": {
+    "installTitle": "Install BioCycle App",
+    "installDescription": "Get faster access and a better shopping experience",
+    "homeScreenAccess": "Quick access from your home screen",
+    "fasterPerformance": "Faster performance",
+    "worksOffline": "Works offline",
+    "installNow": "Install Now",
+    "notNow": "Not now"
   }
 }

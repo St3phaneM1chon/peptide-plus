@@ -8,6 +8,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useCart } from '@/components/cart/CartDrawer';
+import { useTranslations } from '@/hooks/useTranslations';
 
 interface Product {
   id: string;
@@ -27,6 +28,7 @@ interface ProductCardShopifyProps {
 
 export function ProductCardShopify({ product }: ProductCardShopifyProps) {
   const { addItem } = useCart();
+  const { t } = useTranslations();
 
   const hasDiscount = product.compareAtPrice && product.compareAtPrice > product.price;
   const discountPercent = hasDiscount
@@ -98,7 +100,7 @@ export function ProductCardShopify({ product }: ProductCardShopifyProps) {
             className="btn btn-primary btn-full"
             style={{ padding: '12px 16px' }}
           >
-            Ajouter au panier
+            {t('shop.addToCart')}
           </button>
         </div>
       </Link>

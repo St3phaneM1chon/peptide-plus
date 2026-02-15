@@ -594,7 +594,12 @@
     "saveAddressForFuture": "Sauvegarder cette adresse pour mes prochaines commandes",
     "errors": {
       "paymentFailed": "Le paiement a echoue. Veuillez reessayer."
-    }
+    },
+    "savedAddresses": "Adresses enregistrées",
+    "defaultAddress": "Par défaut",
+    "useNewAddress": "Utiliser une nouvelle adresse",
+    "enterAddress": "Entrer mon adresse",
+    "recipientName": "Nom complet du destinataire"
   },
   "rewards": {
     "title": "Programme de récompenses",
@@ -5279,8 +5284,58 @@
     "status": "Statut de la commande",
     "tracking": {
       "preparing": "Préparation de votre commande",
-      "title": "Suivi de commande"
-    }
+      "title": "Suivi de commande",
+      "paymentConfirmed": "Paiement confirmé",
+      "paymentConfirmedDesc": "Votre paiement a été traité avec succès",
+      "accessActivated": "Accès activé",
+      "accessActivatedDesc": "Votre contenu est maintenant disponible",
+      "readyToUse": "Prêt à utiliser",
+      "readyToUseDesc": "Commencez dès maintenant",
+      "immediateAccess": "Accès immédiat disponible",
+      "courseReady": "Votre formation \"{name}\" est prête. Aucune attente requise!",
+      "startNow": "Commencer maintenant",
+      "digitalDelivery": "Livraison numérique",
+      "yourContent": "Votre contenu",
+      "accessCourse": "Accéder au cours",
+      "downloadReceipt": "Télécharger le reçu",
+      "myCertificates": "Mes certificats",
+      "progress": "Progression",
+      "carrier": "Transporteur",
+      "notAssigned": "Non assigné",
+      "trackingNumber": "Numéro de suivi",
+      "trackPackage": "Suivre le colis",
+      "estimatedDelivery": "Livraison estimée",
+      "history": "Historique",
+      "beingPrepared": "En cours de préparation",
+      "beingPreparedDesc": "Votre commande est en cours de traitement. Vous recevrez un email avec le numéro de suivi dès l'expédition.",
+      "deliverySteps": "Étapes de livraison",
+      "shippingAddress": "Adresse de livraison",
+      "phone": "Tél",
+      "needHelp": "Besoin d'aide?",
+      "contactSupport": "Contacter le support",
+      "faqDelivery": "FAQ Livraison",
+      "orderConfirmed": "Commande confirmée",
+      "paymentReceived": "Paiement reçu",
+      "inPreparation": "En préparation",
+      "orderBeingPacked": "Votre commande est emballée",
+      "shipped": "Expédiée",
+      "handledByCarrier": "Prise en charge par {carrier}",
+      "givenToCarrier": "Remis au transporteur",
+      "inTransit": "En transit",
+      "enRoute": "En route vers vous",
+      "outForDelivery": "En cours de livraison",
+      "driverOnWay": "Le livreur est en chemin",
+      "delivered": "Livré",
+      "deliveredOn": "Livré le {date}",
+      "toYourAddress": "À votre adresse"
+    },
+    "orderDetails": "Détails de la commande",
+    "onlineCourse": "Formation en ligne",
+    "subtotal": "Sous-total",
+    "gst": "TPS (5%)",
+    "qst": "TVQ (9,975%)",
+    "orderDate": "Date de commande",
+    "customer": "Client"
   },
   "profile": {
     "changePassword": "Changer le mot de passe",
@@ -5323,5 +5378,14 @@
   "validation": {
     "emailRequired": "Le courriel est requis",
     "invalidEmail": "Adresse courriel invalide"
+  },
+  "pwa": {
+    "installTitle": "Installer l'app BioCycle",
+    "installDescription": "Accédez plus rapidement et profitez d'une meilleure expérience d'achat",
+    "homeScreenAccess": "Accès rapide depuis votre écran d'accueil",
+    "fasterPerformance": "Performance accrue",
+    "worksOffline": "Fonctionne hors-ligne",
+    "installNow": "Installer",
+    "notNow": "Plus tard"
   }
 }

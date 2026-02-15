@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { X, Download, Smartphone } from 'lucide-react';
+import { useTranslations } from '@/hooks/useTranslations';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -9,6 +10,7 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 export default function InstallPWA() {
+  const { t } = useTranslations();
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showBanner, setShowBanner] = useState(false);
 
@@ -105,9 +107,9 @@ export default function InstallPWA() {
               <Smartphone className="w-6 h-6 text-white" />
             </div>
             <div className="flex-1 text-white">
-              <h3 className="font-bold text-lg mb-1">Install BioCycle App</h3>
+              <h3 className="font-bold text-lg mb-1">{t('pwa.installTitle')}</h3>
               <p className="text-sm text-white/90">
-                Get faster access and a better shopping experience
+                {t('pwa.installDescription')}
               </p>
             </div>
           </div>
@@ -117,15 +119,15 @@ export default function InstallPWA() {
           <ul className="space-y-2 mb-4 text-sm text-gray-700">
             <li className="flex items-center gap-2">
               <span className="text-orange-500">✓</span>
-              <span>Quick access from your home screen</span>
+              <span>{t('pwa.homeScreenAccess')}</span>
             </li>
             <li className="flex items-center gap-2">
               <span className="text-orange-500">✓</span>
-              <span>Faster performance</span>
+              <span>{t('pwa.fasterPerformance')}</span>
             </li>
             <li className="flex items-center gap-2">
               <span className="text-orange-500">✓</span>
-              <span>Works offline</span>
+              <span>{t('pwa.worksOffline')}</span>
             </li>
           </ul>
 
@@ -135,13 +137,13 @@ export default function InstallPWA() {
               className="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
             >
               <Download className="w-4 h-4" />
-              Install Now
+              {t('pwa.installNow')}
             </button>
             <button
               onClick={handleDismiss}
               className="px-4 py-3 text-gray-600 hover:text-gray-800 font-medium transition-colors"
             >
-              Not now
+              {t('pwa.notNow')}
             </button>
           </div>
         </div>

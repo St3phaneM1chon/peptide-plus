@@ -9,6 +9,7 @@
 import Link from 'next/link';
 import { TrackingTimeline } from './TrackingTimeline';
 import { OrderSummary } from './OrderSummary';
+import { useTranslations } from '@/hooks/useTranslations';
 
 interface DigitalDeliveryTrackingProps {
   order: {
@@ -35,22 +36,23 @@ interface DigitalDeliveryTrackingProps {
 }
 
 export function DigitalDeliveryTracking({ order }: DigitalDeliveryTrackingProps) {
+  const { t } = useTranslations();
   const purchaseDate = new Date(order.createdAt);
-  
+
   // Étapes pour produit numérique (accès immédiat)
   const steps = [
     {
       id: 'payment',
-      title: 'Paiement confirmé',
-      description: 'Votre paiement a été traité avec succès',
+      title: t('order.tracking.paymentConfirmed'),
+      description: t('order.tracking.paymentConfirmedDesc'),
       timestamp: purchaseDate,
       status: 'completed' as const,
       icon: 'check',
     },
     {
       id: 'access',
-      title: 'Accès activé',
-      description: 'Votre contenu est maintenant disponible',
+      title: t('order.tracking.accessActivated'),
+      description: t('order.tracking.accessActivatedDesc'),
       timestamp: order.courseAccess
         ? new Date(order.courseAccess.createdAt)
         : new Date(purchaseDate.getTime() + 1000),
@@ -59,8 +61,8 @@ export function DigitalDeliveryTracking({ order }: DigitalDeliveryTrackingProps)
     },
     {
       id: 'ready',
-      title: 'Prêt à utiliser',
-      description: 'Commencez dès maintenant',
+      title: t('order.tracking.readyToUse'),
+      description: t('order.tracking.readyToUseDesc'),
       timestamp: order.courseAccess
         ? new Date(order.courseAccess.createdAt)
         : null,
@@ -120,10 +122,10 @@ export function DigitalDeliveryTracking({ order }: DigitalDeliveryTrackingProps)
               marginBottom: '4px',
             }}
           >
-            Accès immédiat disponible
+            {t('order.tracking.immediateAccess')}
           </h3>
           <p style={{ fontSize: '14px', color: '#388E3C' }}>
-            Votre formation "{order.product.name}" est prête. Aucune attente requise!
+            {t('order.tracking.courseReady').replace('{name}', order.product.name)}
           </p>
         </div>
         <Link
@@ -134,7 +136,7 @@ export function DigitalDeliveryTracking({ order }: DigitalDeliveryTrackingProps)
             padding: '12px 24px',
           }}
         >
-          Commencer maintenant
+          {t('order.tracking.startNow')}
         </Link>
       </div>
 
@@ -166,7 +168,7 @@ export function DigitalDeliveryTracking({ order }: DigitalDeliveryTrackingProps)
             }}
           >
             <span>📱</span>
-            Livraison numérique
+            {t('order.tracking.digitalDelivery')}
           </h2>
           <TrackingTimeline steps={steps} />
         </div>
@@ -192,7 +194,7 @@ export function DigitalDeliveryTracking({ order }: DigitalDeliveryTrackingProps)
             marginBottom: '16px',
           }}
         >
-          Votre contenu
+          {t('order.tracking.yourContent')}
         </h2>
 
         <div
@@ -228,7 +230,7 @@ export function DigitalDeliveryTracking({ order }: DigitalDeliveryTrackingProps)
                 d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"
               />
             </svg>
-            Accéder au cours
+            {t('order.tracking.accessCourse')}
           </Link>
 
           <a
@@ -259,7 +261,7 @@ export function DigitalDeliveryTracking({ order }: DigitalDeliveryTrackingProps)
                 d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"
               />
             </svg>
-            Télécharger le reçu
+            {t('order.tracking.downloadReceipt')}
           </a>
 
           <Link
@@ -288,7 +290,7 @@ export function DigitalDeliveryTracking({ order }: DigitalDeliveryTrackingProps)
                 d="M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.746 3.746 0 0 1 3.296-1.043A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043 3.746 3.746 0 0 1 1.043 3.296A3.745 3.745 0 0 1 21 12Z"
               />
             </svg>
-            Mes certificats
+            {t('order.tracking.myCertificates')}
           </Link>
         </div>
       </div>
