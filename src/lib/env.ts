@@ -185,6 +185,7 @@ type Env = z.infer<typeof combined>;
 function validateEnv(): Env {
   const raw = buildEnvObject();
   const isProd = process.env.NODE_ENV === 'production';
+  const isBuildPhase = !!process.env.NEXT_PHASE;
 
   // ---- Warn about important vars ----
   for (const key of IMPORTANT_VARS) {
@@ -203,14 +204,15 @@ function validateEnv(): Env {
 
     const message = `Environment validation failed:\n${formatted}`;
 
-    if (isProd) {
+    // During Next.js build phase, env vars may not be available -- warn only
+    if (isProd && !isBuildPhase) {
       throw new Error(message);
     }
 
-    // In development, log and return a best-effort object
+    // In development or build phase, log and return a best-effort object
     console.warn(`[env] ${message}`);
 
-    // Return raw values cast to the type -- the dev is warned
+    // Return raw values cast to the type -- the dev/build is warned
     return raw as unknown as Env;
   }
 
