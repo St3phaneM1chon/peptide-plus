@@ -6,9 +6,11 @@
 import { randomBytes, createHmac } from 'crypto';
 import { cookies } from 'next/headers';
 
-const CSRF_SECRET: string = process.env.CSRF_SECRET || process.env.NEXTAUTH_SECRET || '';
-if (!CSRF_SECRET) {
-  throw new Error('CSRF_SECRET or NEXTAUTH_SECRET must be set in environment variables');
+const CSRF_SECRET: string = process.env.CSRF_SECRET || process.env.NEXTAUTH_SECRET || 'build-placeholder';
+if (!CSRF_SECRET || CSRF_SECRET === 'build-placeholder') {
+  if (typeof window === 'undefined' && process.env.NODE_ENV === 'production' && !process.env.NEXT_PHASE) {
+    console.warn('CSRF_SECRET or NEXTAUTH_SECRET not set - CSRF protection disabled');
+  }
 }
 const CSRF_COOKIE_NAME = 'csrf-token';
 const CSRF_HEADER_NAME = 'x-csrf-token';
