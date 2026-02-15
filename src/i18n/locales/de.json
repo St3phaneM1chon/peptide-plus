@@ -134,7 +134,9 @@
     "viewFullDetails": "Alle Details anzeigen",
     "whatsIncluded": "Was ist enthalten",
     "youSave": "Sie sparen",
-    "qty": "Qty"
+    "qty": "Qty",
+    "buyCourse": "Buy this course",
+    "buyNow": "Buy now"
   },
   "home": {
     "heroTitle": "Die besten Forschungspeptide in Kanada",
@@ -401,7 +403,8 @@
     "saving": "Speichern...",
     "search": "Suche",
     "redirecting": "Weiterleitung...",
-    "tryAgain": "Erneut versuchen"
+    "tryAgain": "Erneut versuchen",
+    "download": "Download"
   },
   "cart": {
     "title": "Ihr Warenkorb",
@@ -656,7 +659,10 @@
     "perDelivery": "pro Lieferung",
     "decline": "Nein danke",
     "subscribe": "Abonnieren",
-    "confirmCancel": "Sind Sie sicher, dass Sie dieses Abonnement kündigen möchten?"
+    "confirmCancel": "Sind Sie sicher, dass Sie dieses Abonnement kündigen möchten?",
+    "resume": "Resume",
+    "pause": "Pause",
+    "cancel": "Cancel"
   },
   "videos": {
     "title": "Video-Tutorials",
@@ -5300,7 +5306,8 @@
     "security": "Sicherheit",
     "timezone": "Zeitzone",
     "title": "Mein Profil",
-    "twoFactor": "Zwei-Faktor-Authentifizierung"
+    "twoFactor": "Zwei-Faktor-Authentifizierung",
+    "changePasswordDesc": "Change your password"
   },
   "promotion": {
     "endsIn": "Endet in"
@@ -5387,5 +5394,10 @@
     "worksOffline": "Works offline",
     "installNow": "Install Now",
     "notNow": "Not now"
+  },
+  "dashboard": {
+    "companyDashboard": "Company dashboard",
+    "addStudent": "Add a student",
+    "buyCourses": "Buy courses"
   }
 }

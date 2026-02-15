@@ -504,13 +504,13 @@ export default function SubscriptionsPage() {
                             onClick={() => handlePauseSubscription(sub.id)}
                             className="px-4 py-2 border border-neutral-300 rounded-lg text-sm font-medium hover:bg-neutral-100"
                           >
-                            {sub.status === 'PAUSED' ? 'Reprendre' : 'Pause'}
+                            {sub.status === 'PAUSED' ? t('subscriptions.resume') : t('subscriptions.pause')}
                           </button>
                           <button
                             onClick={() => handleCancelSubscription(sub.id)}
                             className="px-4 py-2 border border-red-300 text-red-600 rounded-lg text-sm font-medium hover:bg-red-50"
                           >
-                            Annuler
+                            {t('subscriptions.cancel')}
                           </button>
                         </div>
                       </div>

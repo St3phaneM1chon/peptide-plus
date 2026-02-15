@@ -6,23 +6,33 @@
 import { headers, cookies } from 'next/headers';
 import { type Locale, defaultLocale, isValidLocale, getLocaleFromHeaders } from './config';
 
-// Import des messages
+// Import des messages (toutes les 22 locales)
 import fr from './locales/fr.json';
 import en from './locales/en.json';
+import ar from './locales/ar.json';
+import arDz from './locales/ar-dz.json';
+import arLb from './locales/ar-lb.json';
+import arMa from './locales/ar-ma.json';
+import de from './locales/de.json';
 import es from './locales/es.json';
+import gcr from './locales/gcr.json';
+import hi from './locales/hi.json';
+import ht from './locales/ht.json';
+import it from './locales/it.json';
+import ko from './locales/ko.json';
+import pa from './locales/pa.json';
+import pl from './locales/pl.json';
+import pt from './locales/pt.json';
+import ru from './locales/ru.json';
+import sv from './locales/sv.json';
+import ta from './locales/ta.json';
+import tl from './locales/tl.json';
+import vi from './locales/vi.json';
+import zh from './locales/zh.json';
 
-// Partial messages - only include actively maintained translations.
-// Use a flexible type to accommodate partial translation files.
 const allMessages: Partial<Record<Locale, Record<string, unknown>>> = {
-  fr,
-  en,
-  es,
-  // Fallback pour les langues non encore traduites
-  de: en,
-  it: en,
-  pt: en,
-  zh: en,
-  ar: en,
+  en, fr, ar, 'ar-dz': arDz, 'ar-lb': arLb, 'ar-ma': arMa,
+  de, es, gcr, hi, ht, it, ko, pa, pl, pt, ru, sv, ta, tl, vi, zh,
 };
 
 /**
@@ -60,21 +70,28 @@ export function getMessages(locale: Locale = defaultLocale): Record<string, unkn
  */
 export function createServerTranslator(locale: Locale = defaultLocale) {
   const messages = getMessages(locale);
+  const fallback = locale !== 'en' ? getMessages('en' as Locale) : messages;
 
   return function t(key: string, params?: Record<string, string | number>): string {
     const keys = key.split('.');
-    let value: unknown = messages;
 
+    // Try current locale
+    let value: unknown = messages;
     for (const k of keys) {
       value = (value as Record<string, unknown>)?.[k];
-      if (value === undefined) {
-        console.warn(`[i18n] Translation key not found: ${key}`);
-        return key;
+      if (value === undefined) break;
+    }
+
+    // Fallback to English
+    if (value === undefined || typeof value !== 'string') {
+      value = fallback;
+      for (const k of keys) {
+        value = (value as Record<string, unknown>)?.[k];
+        if (value === undefined) break;
       }
     }
 
     if (typeof value !== 'string') {
-      console.warn(`[i18n] Translation key is not a string: ${key}`);
       return key;
     }
 

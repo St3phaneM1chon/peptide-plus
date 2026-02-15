@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { UserRole } from '@/types';
+import { getApiTranslator } from '@/i18n/server';
 
 async function getClientData(userId: string) {
   // Récupérer la compagnie
@@ -81,6 +82,7 @@ export default async function ClientDashboard() {
     redirect('/dashboard');
   }
 
+  const { t } = await getApiTranslator();
   const data = await getClientData(session.user.id);
 
   if (!data) {
@@ -106,14 +108,14 @@ export default async function ClientDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">{company.name}</h1>
-              <p className="text-gray-600">Tableau de bord entreprise</p>
+              <p className="text-gray-600">{t('dashboard.companyDashboard')}</p>
             </div>
             <div className="flex space-x-3">
               <Link href="/client/etudiants/ajouter" className="btn-secondary">
-                Ajouter un étudiant
+                {t('dashboard.addStudent')}
               </Link>
               <Link href="/catalogue" className="btn-primary">
-                Acheter des formations
+                {t('dashboard.buyCourses')}
               </Link>
             </div>
           </div>

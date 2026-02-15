@@ -134,7 +134,9 @@
     "viewFullDetails": "Visualizza Dettagli Completi",
     "whatsIncluded": "Cosa è Incluso",
     "youSave": "Risparmi",
-    "qty": "Qty"
+    "qty": "Qty",
+    "buyCourse": "Buy this course",
+    "buyNow": "Buy now"
   },
   "home": {
     "heroTitle": "I migliori peptidi per la ricerca in Canada",
@@ -401,7 +403,8 @@
     "saving": "Salvataggio...",
     "search": "Cerca",
     "redirecting": "Reindirizzando...",
-    "tryAgain": "Riprova"
+    "tryAgain": "Riprova",
+    "download": "Download"
   },
   "cart": {
     "title": "Il tuo carrello",
@@ -647,7 +650,10 @@
     "perDelivery": "per consegna",
     "decline": "No grazie",
     "subscribe": "Abbonati",
-    "confirmCancel": "Sei sicuro di voler annullare questo abbonamento?"
+    "confirmCancel": "Sei sicuro di voler annullare questo abbonamento?",
+    "resume": "Resume",
+    "pause": "Pause",
+    "cancel": "Cancel"
   },
   "videos": {
     "title": "Video tutorial",
@@ -5241,7 +5247,8 @@
     "security": "Sicurezza",
     "timezone": "Fuso Orario",
     "title": "Il Mio Profilo",
-    "twoFactor": "Autenticazione a Due Fattori"
+    "twoFactor": "Autenticazione a Due Fattori",
+    "changePasswordDesc": "Change your password"
   },
   "promotion": {
     "endsIn": "Scade in"
@@ -5319,5 +5326,10 @@
     "reviews": "recensioni",
     "stock": "Disponibilità",
     "sku": "SKU"
+  },
+  "dashboard": {
+    "companyDashboard": "Company dashboard",
+    "addStudent": "Add a student",
+    "buyCourses": "Buy courses"
   }
 }

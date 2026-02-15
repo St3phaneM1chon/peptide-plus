@@ -134,7 +134,9 @@
     "viewFullDetails": "Gade Detay Konplè",
     "whatsIncluded": "Ki sa ki enkli",
     "youSave": "Ou ekonomize",
-    "qty": "Qty"
+    "qty": "Qty",
+    "buyCourse": "Buy this course",
+    "buyNow": "Buy now"
   },
   "home": {
     "heroTitle": "Pi Bon Peptid Rechech nan Kanada",
@@ -401,7 +403,8 @@
     "saving": "Ap sove...",
     "search": "Rechèch",
     "redirecting": "Rekòmande...",
-    "tryAgain": "Eseye ankò"
+    "tryAgain": "Eseye ankò",
+    "download": "Download"
   },
   "cart": {
     "title": "Panyen ou",
@@ -647,7 +650,10 @@
     "perDelivery": "pa livrezon",
     "decline": "Non mèsi",
     "subscribe": "Abòne",
-    "confirmCancel": "Eske ou sèten ou vle anile abònman sa a?"
+    "confirmCancel": "Eske ou sèten ou vle anile abònman sa a?",
+    "resume": "Resume",
+    "pause": "Pause",
+    "cancel": "Cancel"
   },
   "videos": {
     "title": "Videyo Tutorial",
@@ -5291,7 +5297,8 @@
     "security": "Sekirite",
     "timezone": "Tan Zòn",
     "title": "Profil Mwen",
-    "twoFactor": "Otantifikasyon De Faktè"
+    "twoFactor": "Otantifikasyon De Faktè",
+    "changePasswordDesc": "Change your password"
   },
   "promotion": {
     "endsIn": "Fini nan"
@@ -5378,5 +5385,10 @@
     "worksOffline": "Works offline",
     "installNow": "Install Now",
     "notNow": "Not now"
+  },
+  "dashboard": {
+    "companyDashboard": "Company dashboard",
+    "addStudent": "Add a student",
+    "buyCourses": "Buy courses"
   }
 }

@@ -103,7 +103,9 @@
     "units": "Units",
     "video": "Video",
     "videoDescription": "Watch our product overview and usage guide",
-    "viewHPLC": "View HPLC Report"
+    "viewHPLC": "View HPLC Report",
+    "buyCourse": "Buy this course",
+    "buyNow": "Buy now"
   },
   "home": {
     "heroTitle": "Ang Pinakamahusay na Research Peptides sa Canada",
@@ -367,7 +369,8 @@
     "nextSlide": "Next slide",
     "total": "Kabuuan",
     "saving": "Saving...",
-    "search": "Search"
+    "search": "Search",
+    "download": "Download"
   },
   "cart": {
     "title": "Your Cart",
@@ -621,7 +624,10 @@
     "perDelivery": "per delivery",
     "decline": "No thanks",
     "subscribe": "Subscribe",
-    "confirmCancel": "Are you sure you want to cancel this subscription?"
+    "confirmCancel": "Are you sure you want to cancel this subscription?",
+    "resume": "Resume",
+    "pause": "Pause",
+    "cancel": "Cancel"
   },
   "videos": {
     "title": "Video Tutorials",
@@ -5127,7 +5133,8 @@
     "security": "Security",
     "timezone": "Timezone",
     "title": "My Profile",
-    "twoFactor": "Two-Factor Authentication"
+    "twoFactor": "Two-Factor Authentication",
+    "changePasswordDesc": "Change your password"
   },
   "promotion": {
     "endsIn": "Ends in"
@@ -5168,5 +5175,10 @@
     "worksOffline": "Works offline",
     "installNow": "Install Now",
     "notNow": "Not now"
+  },
+  "dashboard": {
+    "companyDashboard": "Company dashboard",
+    "addStudent": "Add a student",
+    "buyCourses": "Buy courses"
   }
 }

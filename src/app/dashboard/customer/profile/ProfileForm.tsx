@@ -365,7 +365,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
                 {t('profile.changePassword')}
               </p>
               <p style={{ fontSize: '13px', color: 'var(--gray-400)' }}>
-                Modifier votre mot de passe
+                {t('profile.changePasswordDesc')}
               </p>
             </div>
             <svg

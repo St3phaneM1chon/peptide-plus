@@ -134,7 +134,9 @@
     "viewFullDetails": "عرض التفاصيل الكاملة",
     "whatsIncluded": "ما هو متضمن",
     "youSave": "أنت توفر",
-    "qty": "Qty"
+    "qty": "Qty",
+    "buyCourse": "Buy this course",
+    "buyNow": "Buy now"
   },
   "home": {
     "heroTitle": "أحسن ببتيدات البحث في كندا",
@@ -400,7 +402,8 @@
     "saving": "جارٍ الحفظ...",
     "search": "بحث",
     "redirecting": "جارٍ إعادة التوجيه...",
-    "tryAgain": "حاول مرة أخرى"
+    "tryAgain": "حاول مرة أخرى",
+    "download": "Download"
   },
   "cart": {
     "title": "عربة التسوق الخاصة بك",
@@ -655,7 +658,10 @@
     "perDelivery": "لكل توصيل",
     "decline": "لا شكرًا",
     "subscribe": "اشترك",
-    "confirmCancel": "هل أنت متأكد أنك تريد إلغاء هذا الاشتراك؟"
+    "confirmCancel": "هل أنت متأكد أنك تريد إلغاء هذا الاشتراك؟",
+    "resume": "Resume",
+    "pause": "Pause",
+    "cancel": "Cancel"
   },
   "videos": {
     "title": "دروس فيديو",
@@ -5299,7 +5305,8 @@
     "security": "الأمان",
     "timezone": "المنطقة الزمنية",
     "title": "ملفي الشخصي",
-    "twoFactor": "المصادقة الثنائية"
+    "twoFactor": "المصادقة الثنائية",
+    "changePasswordDesc": "Change your password"
   },
   "promotion": {
     "endsIn": "ينتهي في"
@@ -5371,5 +5378,10 @@
     "worksOffline": "Works offline",
     "installNow": "Install Now",
     "notNow": "Not now"
+  },
+  "dashboard": {
+    "companyDashboard": "Company dashboard",
+    "addStudent": "Add a student",
+    "buyCourses": "Buy courses"
   }
 }

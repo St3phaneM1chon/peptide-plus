@@ -134,7 +134,9 @@
     "units": "Unités",
     "video": "Vidéo",
     "videoDescription": "Regardez notre présentation du produit et guide d'utilisation",
-    "viewHPLC": "Voir le rapport HPLC"
+    "viewHPLC": "Voir le rapport HPLC",
+    "buyCourse": "Acheter cette formation",
+    "buyNow": "Acheter maintenant"
   },
   "home": {
     "heroTitle": "Les meilleurs peptides de recherche au Canada",
@@ -439,7 +441,8 @@
     "redirecting": "Redirection...",
     "tryAgain": "Réessayer",
     "saving": "Sauvegarde...",
-    "search": "Rechercher"
+    "search": "Rechercher",
+    "download": "Télécharger"
   },
   "cart": {
     "title": "Votre panier",
@@ -694,7 +697,10 @@
     "perDelivery": "par livraison",
     "decline": "Non merci",
     "subscribe": "S'abonner",
-    "confirmCancel": "Êtes-vous sûr de vouloir annuler cet abonnement?"
+    "confirmCancel": "Êtes-vous sûr de vouloir annuler cet abonnement?",
+    "resume": "Reprendre",
+    "pause": "Pause",
+    "cancel": "Annuler"
   },
   "videos": {
     "title": "Tutoriels vidéo",
@@ -5346,7 +5352,8 @@
     "security": "Sécurité",
     "timezone": "Fuseau horaire",
     "title": "Mon profil",
-    "twoFactor": "Authentification à deux facteurs"
+    "twoFactor": "Authentification à deux facteurs",
+    "changePasswordDesc": "Modifier votre mot de passe"
   },
   "promotion": {
     "endsIn": "Se termine dans"
@@ -5387,5 +5394,10 @@
     "worksOffline": "Fonctionne hors-ligne",
     "installNow": "Installer",
     "notNow": "Plus tard"
+  },
+  "dashboard": {
+    "companyDashboard": "Tableau de bord entreprise",
+    "addStudent": "Ajouter un étudiant",
+    "buyCourses": "Acheter des formations"
   }
 }

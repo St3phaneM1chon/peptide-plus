@@ -134,7 +134,9 @@
     "viewFullDetails": "पूर्ण विवरण देखें",
     "whatsIncluded": "क्या शामिल है",
     "youSave": "आप बचाते हैं",
-    "qty": "Qty"
+    "qty": "Qty",
+    "buyCourse": "Buy this course",
+    "buyNow": "Buy now"
   },
   "home": {
     "heroTitle": "कनाडा में सर्वश्रेष्ठ अनुसंधान पेप्टाइड्स",
@@ -401,7 +403,8 @@
     "saving": "सहेज रहा है...",
     "search": "खोजें",
     "redirecting": "पुनर्निर्देशित कर रहा है...",
-    "tryAgain": "फिर से प्रयास करें"
+    "tryAgain": "फिर से प्रयास करें",
+    "download": "Download"
   },
   "cart": {
     "title": "आपकी कार्ट",
@@ -647,7 +650,10 @@
     "perDelivery": "प्रति डिलीवरी",
     "decline": "नहीं धन्यवाद",
     "subscribe": "सदस्यता लें",
-    "confirmCancel": "क्या आप वास्तव में इस सदस्यता को रद्द करना चाहते हैं?"
+    "confirmCancel": "क्या आप वास्तव में इस सदस्यता को रद्द करना चाहते हैं?",
+    "resume": "Resume",
+    "pause": "Pause",
+    "cancel": "Cancel"
   },
   "videos": {
     "title": "वीडियो ट्यूटोरियल",
@@ -5291,7 +5297,8 @@
     "security": "सुरक्षा",
     "timezone": "समय क्षेत्र",
     "title": "मेरा प्रोफ़ाइल",
-    "twoFactor": "दो-चरणीय प्रमाणीकरण"
+    "twoFactor": "दो-चरणीय प्रमाणीकरण",
+    "changePasswordDesc": "Change your password"
   },
   "promotion": {
     "endsIn": "समाप्त होगा"
@@ -5378,5 +5385,10 @@
     "worksOffline": "Works offline",
     "installNow": "Install Now",
     "notNow": "Not now"
+  },
+  "dashboard": {
+    "companyDashboard": "Company dashboard",
+    "addStudent": "Add a student",
+    "buyCourses": "Buy courses"
   }
 }

@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { useState, useEffect } from 'react';
+import { useTranslations } from '@/hooks/useTranslations';
 
 interface Guide {
   id: string;
@@ -22,6 +23,7 @@ interface Guide {
 }
 
 export default function GuidesPage() {
+  const { t } = useTranslations();
   const [guides, setGuides] = useState<Guide[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -178,7 +180,7 @@ export default function GuidesPage() {
                       {guide.pageCount} pages {guide.format ? `\u2022 ${guide.format}` : ''}
                     </span>
                     <button className="btn btn-primary" style={{ padding: '8px 16px', fontSize: '13px' }}>
-                      Télécharger
+                      {t('common.download')}
                     </button>
                   </div>
                 </div>
@@ -246,7 +248,7 @@ export default function GuidesPage() {
                         {guide.pageCount} pages
                       </span>
                       <button className="btn btn-secondary" style={{ padding: '6px 12px', fontSize: '12px' }}>
-                        Télécharger
+                        {t('common.download')}
                       </button>
                     </div>
                   </div>

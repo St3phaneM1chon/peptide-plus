@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { UserRole } from '@/types';
+import { getApiTranslator } from '@/i18n/server';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -83,6 +84,7 @@ export default async function ClientDetailPage({ params, searchParams }: PagePro
   const { id } = await params;
   const resolvedSearchParams = await searchParams;
   const session = await auth();
+  const { t } = await getApiTranslator();
 
   if (!session?.user) {
     redirect('/auth/signin');
@@ -128,13 +130,13 @@ export default async function ClientDetailPage({ params, searchParams }: PagePro
                 href={`/dashboard/employee/clients/${company.id}/ajouter-etudiant`}
                 className="btn-secondary"
               >
-                + Ajouter un étudiant
+                + {t('dashboard.addStudent')}
               </Link>
               <Link 
                 href={`/dashboard/employee/clients/${company.id}/edit`}
                 className="btn-primary"
               >
-                Modifier
+                {t('common.edit')}
               </Link>
             </div>
           </div>

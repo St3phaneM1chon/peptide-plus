@@ -10,6 +10,7 @@ import Image from 'next/image';
 import DOMPurify from 'isomorphic-dompurify';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth-config';
+import { getApiTranslator } from '@/i18n/server';
 
 interface CoursePageProps {
   params: Promise<{ slug: string }>;
@@ -31,6 +32,7 @@ export default async function CoursePage({ params }: CoursePageProps) {
   const { slug } = await params;
   const product = await getProduct(slug);
   const session = await auth();
+  const { t } = await getApiTranslator();
 
   if (!product) {
     notFound();
@@ -143,14 +145,14 @@ export default async function CoursePage({ params }: CoursePageProps) {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  Accéder au cours
+                  {t('order.tracking.accessCourse')}
                 </Link>
               ) : (
                 <Link
                   href={`/checkout/${product.slug}`}
                   className="inline-flex items-center px-8 py-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
                 >
-                  Acheter cette formation
+                  {t('shop.buyCourse')}
                 </Link>
               )}
             </div>
@@ -290,14 +292,14 @@ export default async function CoursePage({ params }: CoursePageProps) {
                   href={`/cours/${product.slug}/learn`}
                   className="w-full btn-primary py-3 text-center block"
                 >
-                  Accéder au cours
+                  {t('order.tracking.accessCourse')}
                 </Link>
               ) : (
                 <Link
                   href={`/checkout/${product.slug}`}
                   className="w-full btn-primary py-3 text-center block"
                 >
-                  Acheter maintenant
+                  {t('shop.buyNow')}
                 </Link>
               )}
             </div>
