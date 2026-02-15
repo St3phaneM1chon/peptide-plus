@@ -165,7 +165,7 @@ model Article {
   metaDescription    String?
   createdAt          DateTime             @default(now())
   updatedAt          DateTime
-  ArticleTranslation ArticleTranslation[]
+  translations       ArticleTranslation[]
 
   @@index([category])
   @@index([isPublished])
@@ -186,7 +186,7 @@ model ArticleTranslation {
   isApproved      Boolean  @default(false)
   createdAt       DateTime @default(now())
   updatedAt       DateTime
-  Article         Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  article         Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
 
   @@unique([articleId, locale])
   @@index([articleId])
@@ -273,7 +273,7 @@ model BlogPost {
   metaDescription     String?
   createdAt           DateTime              @default(now())
   updatedAt           DateTime
-  BlogPostTranslation BlogPostTranslation[]
+  translations        BlogPostTranslation[]
 
   @@index([category])
   @@index([isPublished])
@@ -294,7 +294,7 @@ model BlogPostTranslation {
   isApproved      Boolean  @default(false)
   createdAt       DateTime @default(now())
   updatedAt       DateTime
-  BlogPost        BlogPost @relation(fields: [blogPostId], references: [id], onDelete: Cascade)
+  blogPost        BlogPost @relation(fields: [blogPostId], references: [id], onDelete: Cascade)
 
   @@unique([blogPostId, locale])
   @@index([blogPostId])
@@ -409,8 +409,8 @@ model Category {
   isActive            Boolean               @default(true)
   createdAt           DateTime              @default(now())
   updatedAt           DateTime
-  CategoryTranslation CategoryTranslation[]
-  Product             Product[]
+  translations        CategoryTranslation[]
+  products            Product[]
 
   @@index([slug])
 }
@@ -426,7 +426,7 @@ model CategoryTranslation {
   isApproved   Boolean  @default(false)
   createdAt    DateTime @default(now())
   updatedAt    DateTime
-  Category     Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  category     Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
   @@unique([categoryId, locale])
   @@index([categoryId])
@@ -768,7 +768,7 @@ model Faq {
   isPublished    Boolean          @default(true)
   createdAt      DateTime         @default(now())
   updatedAt      DateTime
-  FaqTranslation FaqTranslation[]
+  translations   FaqTranslation[]
 
   @@index([category])
   @@index([isPublished])
@@ -782,7 +782,7 @@ model FaqTranslation {
   answer    String
   createdAt DateTime @default(now())
   updatedAt DateTime
-  Faq       Faq      @relation(fields: [faqId], references: [id], onDelete: Cascade)
+  faq       Faq      @relation(fields: [faqId], references: [id], onDelete: Cascade)
 
   @@unique([faqId, locale])
   @@index([faqId])
@@ -844,7 +844,7 @@ model Guide {
   downloadCount    Int                @default(0)
   createdAt        DateTime           @default(now())
   updatedAt        DateTime
-  GuideTranslation GuideTranslation[]
+  translations     GuideTranslation[]
 
   @@index([category])
   @@index([isPublished])
@@ -859,7 +859,7 @@ model GuideTranslation {
   description String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime
-  Guide       Guide    @relation(fields: [guideId], references: [id], onDelete: Cascade)
+  guide       Guide    @relation(fields: [guideId], references: [id], onDelete: Cascade)
 
   @@unique([guideId, locale])
   @@index([guideId])
@@ -889,7 +889,7 @@ model HeroSlide {
   endDate              DateTime?
   createdAt            DateTime               @default(now())
   updatedAt            DateTime
-  HeroSlideTranslation HeroSlideTranslation[]
+  translations         HeroSlideTranslation[]
 
   @@index([isActive, sortOrder])
 }
@@ -906,7 +906,7 @@ model HeroSlideTranslation {
   statsJson String?
   createdAt DateTime  @default(now())
   updatedAt DateTime
-  HeroSlide HeroSlide @relation(fields: [slideId], references: [id], onDelete: Cascade)
+  heroSlide HeroSlide @relation(fields: [slideId], references: [id], onDelete: Cascade)
 
   @@unique([slideId, locale])
   @@index([locale])
@@ -1084,7 +1084,7 @@ model NewsArticle {
   locale                 String                   @default("en")
   createdAt              DateTime                 @default(now())
   updatedAt              DateTime
-  NewsArticleTranslation NewsArticleTranslation[]
+  translations           NewsArticleTranslation[]
 
   @@index([isPublished])
   @@index([slug])
@@ -1100,7 +1100,7 @@ model NewsArticleTranslation {
   content       String?
   createdAt     DateTime    @default(now())
   updatedAt     DateTime
-  NewsArticle   NewsArticle @relation(fields: [newsArticleId], references: [id], onDelete: Cascade)
+  newsArticle   NewsArticle @relation(fields: [newsArticleId], references: [id], onDelete: Cascade)
 
   @@unique([newsArticleId, locale])
   @@index([newsArticleId])
@@ -1231,7 +1231,7 @@ model Page {
   updatedAt       DateTime
   createdBy       String?
   template        String            @default("default")
-  PageTranslation PageTranslation[]
+  translations    PageTranslation[]
 
   @@index([isPublished])
   @@index([slug])
@@ -1247,7 +1247,7 @@ model PageTranslation {
   metaDescription String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime
-  Page            Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  page            Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
 
   @@unique([pageId, locale])
   @@index([locale])
@@ -1396,14 +1396,14 @@ model Product {
   Grade               Grade[]
   Module              Module[]
   PriceWatch          PriceWatch[]
-  Category            Category             @relation(fields: [categoryId], references: [id])
-  ProductFormat       ProductFormat[]
-  ProductImage        ProductImage[]
+  category            Category             @relation(fields: [categoryId], references: [id])
+  formats             ProductFormat[]
+  images              ProductImage[]
   ProductQuestion     ProductQuestion[]
-  ProductTranslation  ProductTranslation[]
+  translations        ProductTranslation[]
   Purchase            Purchase[]
   QuantityDiscount    QuantityDiscount[]
-  Review              Review[]
+  reviews             Review[]
   StockAlert          StockAlert[]
 
   @@index([categoryId])
@@ -1443,8 +1443,8 @@ model ProductFormat {
   volumeMl                 Decimal?                   @db.Decimal(10, 2)
   weightGrams              Int?
   costPrice                Decimal?                   @db.Decimal(10, 2)
-  Product                  Product                    @relation(fields: [productId], references: [id], onDelete: Cascade)
-  ProductFormatTranslation ProductFormatTranslation[]
+  product                  Product                    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  translations             ProductFormatTranslation[]
 
   @@index([availability])
   @@index([formatType])
@@ -1463,7 +1463,7 @@ model ProductFormatTranslation {
   isApproved    Boolean       @default(false)
   createdAt     DateTime      @default(now())
   updatedAt     DateTime
-  ProductFormat ProductFormat @relation(fields: [formatId], references: [id], onDelete: Cascade)
+  productFormat ProductFormat @relation(fields: [formatId], references: [id], onDelete: Cascade)
 
   @@unique([formatId, locale])
   @@index([formatId])
@@ -1481,7 +1481,7 @@ model ProductImage {
   width     Int?
   height    Int?
   createdAt DateTime @default(now())
-  Product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@index([productId])
 }
@@ -1525,7 +1525,7 @@ model ProductTranslation {
   participateResearch String?
   relatedResearch     String?
   researchSays        String?
-  Product             Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product             Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@unique([productId, locale])
   @@index([locale])
@@ -1749,7 +1749,7 @@ model Review {
   updatedAt    DateTime
   Product      Product       @relation(fields: [productId], references: [id])
   User         User          @relation(fields: [userId], references: [id])
-  ReviewImage  ReviewImage[]
+  images       ReviewImage[]
 
   @@index([isApproved])
   @@index([productId])
@@ -1763,7 +1763,7 @@ model ReviewImage {
   alt       String?
   order     Int      @default(0)
   createdAt DateTime @default(now())
-  Review    Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  review    Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
 
   @@index([reviewId])
 }
@@ -2036,7 +2036,7 @@ model Testimonial {
   sortOrder              Int                      @default(0)
   createdAt              DateTime                 @default(now())
   updatedAt              DateTime
-  TestimonialTranslation TestimonialTranslation[]
+  translations           TestimonialTranslation[]
 
   @@index([isPublished])
   @@index([locale])
@@ -2050,7 +2050,7 @@ model TestimonialTranslation {
   role          String?
   createdAt     DateTime    @default(now())
   updatedAt     DateTime
-  Testimonial   Testimonial @relation(fields: [testimonialId], references: [id], onDelete: Cascade)
+  testimonial   Testimonial @relation(fields: [testimonialId], references: [id], onDelete: Cascade)
 
   @@unique([testimonialId, locale])
   @@index([testimonialId])
@@ -2247,7 +2247,7 @@ model Video {
   sortOrder        Int                @default(0)
   createdAt        DateTime           @default(now())
   updatedAt        DateTime
-  VideoTranslation VideoTranslation[]
+  translations     VideoTranslation[]
 
   @@index([category])
   @@index([isPublished])
@@ -2265,7 +2265,7 @@ model VideoTranslation {
   isApproved   Boolean  @default(false)
   createdAt    DateTime @default(now())
   updatedAt    DateTime
-  Video        Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  video        Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
 
   @@unique([videoId, locale])
   @@index([locale])
@@ -2314,7 +2314,7 @@ model Webinar {
   sortOrder          Int                  @default(0)
   createdAt          DateTime             @default(now())
   updatedAt          DateTime
-  WebinarTranslation WebinarTranslation[]
+  translations       WebinarTranslation[]
 
   @@index([isPublished])
   @@index([scheduledAt])
@@ -2333,7 +2333,7 @@ model WebinarTranslation {
   isApproved   Boolean  @default(false)
   createdAt    DateTime @default(now())
   updatedAt    DateTime
-  Webinar      Webinar  @relation(fields: [webinarId], references: [id], onDelete: Cascade)
+  webinar      Webinar  @relation(fields: [webinarId], references: [id], onDelete: Cascade)
 
   @@unique([webinarId, locale])
   @@index([locale])
