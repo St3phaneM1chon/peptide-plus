@@ -583,8 +583,17 @@
     "address1": "Adresse ligne 1",
     "address2": "Adresse ligne 2",
     "checkout": "Paiement",
+    "savedCard": "Carte enregistree",
+    "newCard": "Nouvelle carte",
+    "payNow": "Payer maintenant",
+    "payWithPayPal": "Payer avec PayPal",
+    "payWithApplePay": "Payer avec Apple Pay",
+    "payWithGooglePay": "Payer avec Google Pay",
+    "redirecting": "Redirection...",
+    "saveCardForFuture": "Sauvegarder cette carte pour mes prochains achats",
+    "saveAddressForFuture": "Sauvegarder cette adresse pour mes prochaines commandes",
     "errors": {
-      "paymentFailed": "Le paiement a échoué. Veuillez réessayer."
+      "paymentFailed": "Le paiement a echoue. Veuillez reessayer."
     }
   },
   "rewards": {

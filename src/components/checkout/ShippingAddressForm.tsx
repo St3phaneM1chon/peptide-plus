@@ -6,6 +6,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useTranslations } from '@/hooks/useTranslations';
 import { AddressAutocomplete } from '@/components/ui/AddressAutocomplete';
 
 interface ShippingAddress {
@@ -61,6 +62,7 @@ export function ShippingAddressForm({
   onAddressChange,
   userName,
 }: ShippingAddressFormProps) {
+  const { t } = useTranslations();
   const [selectedAddressId, setSelectedAddressId] = useState<string | 'new'>(
     savedAddresses.find((a) => a.isDefault)?.id || savedAddresses[0]?.id || 'new'
   );
@@ -425,7 +427,7 @@ export function ShippingAddressForm({
                 }
               />
               <span style={{ fontSize: '14px', color: 'var(--gray-500)' }}>
-                Sauvegarder cette adresse pour mes prochaines commandes
+                {t('checkout.saveAddressForFuture')}
               </span>
             </label>
           </div>

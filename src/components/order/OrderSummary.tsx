@@ -6,6 +6,7 @@
 'use client';
 
 import Image from 'next/image';
+import { useTranslations } from '@/hooks/useTranslations';
 
 interface OrderSummaryProps {
   order: {
@@ -31,6 +32,7 @@ interface OrderSummaryProps {
 }
 
 export function OrderSummary({ order }: OrderSummaryProps) {
+  const { t } = useTranslations();
   const subtotal = Number(order.amount);
   const tps = subtotal * 0.05;
   const tvq = subtotal * 0.09975;
@@ -280,7 +282,7 @@ export function OrderSummary({ order }: OrderSummaryProps) {
                 marginBottom: '4px',
               }}
             >
-              Mode de paiement
+              {t('checkout.paymentMethod')}
             </p>
             <p style={{ fontSize: '14px', color: 'var(--gray-500)' }}>
               {paymentMethodLabels[order.paymentMethod] || order.paymentMethod}

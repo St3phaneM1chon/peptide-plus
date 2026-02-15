@@ -7,6 +7,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from '@/hooks/useTranslations';
 import { loadStripe } from '@stripe/stripe-js';
 import {
   Elements,
@@ -42,6 +43,7 @@ interface CheckoutFormProps {
 type PaymentMethodType = 'card' | 'saved-card' | 'apple-pay' | 'google-pay' | 'paypal';
 
 export function CheckoutForm({ product, user: _user, savedCards }: CheckoutFormProps) {
+  const { t } = useTranslations();
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>(
     savedCards.length > 0 ? 'saved-card' : 'card'
   );
@@ -79,7 +81,7 @@ export function CheckoutForm({ product, user: _user, savedCards }: CheckoutFormP
   return (
     <div className="bg-white rounded-xl p-6 border border-gray-200">
       <h2 className="text-lg font-semibold text-gray-900 mb-6">
-        Mode de paiement
+        {t('checkout.paymentMethod')}
       </h2>
 
       {/* Sélection du mode de paiement */}
@@ -162,7 +164,7 @@ export function CheckoutForm({ product, user: _user, savedCards }: CheckoutFormP
                   : 'border-gray-200 hover:border-gray-300'
               }`}
             >
-              <p className="font-medium text-gray-900">Carte enregistrée</p>
+              <p className="font-medium text-gray-900">{t('checkout.savedCard')}</p>
               {paymentMethod === 'saved-card' && (
                 <div className="mt-3 space-y-2">
                   {savedCards.map((card) => (
@@ -211,7 +213,7 @@ export function CheckoutForm({ product, user: _user, savedCards }: CheckoutFormP
             <svg className="w-8 h-8 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
             </svg>
-            <span className="font-medium text-gray-900">Nouvelle carte</span>
+            <span className="font-medium text-gray-900">{t('checkout.newCard')}</span>
           </div>
         </button>
       </div>
@@ -277,6 +279,7 @@ function StripeCheckoutForm({
   const stripe = useStripe();
   const elements = useElements();
   const router = useRouter();
+  const { t } = useTranslations();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -320,7 +323,7 @@ function StripeCheckoutForm({
           className="mr-2"
         />
         <span className="text-sm text-gray-600">
-          Sauvegarder cette carte pour mes prochains achats
+          {t('checkout.saveCardForFuture')}
         </span>
       </label>
 
@@ -335,7 +338,7 @@ function StripeCheckoutForm({
         disabled={!stripe || isLoading}
         className="w-full btn-primary py-3 disabled:opacity-50"
       >
-        {isLoading ? 'Traitement...' : 'Payer maintenant'}
+        {isLoading ? t('checkout.processing') : t('checkout.payNow')}
       </button>
     </form>
   );
@@ -343,6 +346,7 @@ function StripeCheckoutForm({
 
 // Composant PayPal
 function PayPalCheckout({ productId, price: _price }: { productId: string; price: number }) {
+  const { t } = useTranslations();
   const [isLoading, setIsLoading] = useState(false);
 
   const handlePayPal = async () => {
@@ -367,7 +371,7 @@ function PayPalCheckout({ productId, price: _price }: { productId: string; price
       disabled={isLoading}
       className="w-full py-3 bg-[#FFC439] hover:bg-[#f0b429] text-black font-semibold rounded-lg transition-colors disabled:opacity-50"
     >
-      {isLoading ? 'Redirection...' : 'Payer avec PayPal'}
+      {isLoading ? t('checkout.redirecting') : t('checkout.payWithPayPal')}
     </button>
   );
 }
@@ -382,6 +386,7 @@ function ExpressCheckout({
   productId: string;
   price: number;
 }) {
+  const { t } = useTranslations();
   const [isLoading, setIsLoading] = useState(false);
 
   const handleExpressCheckout = async () => {
@@ -412,10 +417,10 @@ function ExpressCheckout({
       }`}
     >
       {isLoading
-        ? 'Chargement...'
+        ? t('common.loading')
         : type === 'apple-pay'
-        ? 'Payer avec Apple Pay'
-        : 'Payer avec Google Pay'}
+        ? t('checkout.payWithApplePay')
+        : t('checkout.payWithGooglePay')}
     </button>
   );
 }
@@ -431,6 +436,7 @@ function SavedCardCheckout({
   price: number;
 }) {
   const router = useRouter();
+  const { t } = useTranslations();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -450,10 +456,10 @@ function SavedCardCheckout({
       if (data.success) {
         router.push(`/checkout/success?product=${productId}`);
       } else {
-        setError(data.error || 'Une erreur est survenue');
+        setError(data.error || t('common.errorOccurred'));
       }
     } catch (err) {
-      setError('Une erreur est survenue');
+      setError(t('common.errorOccurred'));
     } finally {
       setIsLoading(false);
     }
@@ -471,7 +477,7 @@ function SavedCardCheckout({
         disabled={isLoading}
         className="w-full btn-primary py-3 disabled:opacity-50"
       >
-        {isLoading ? 'Traitement...' : 'Payer maintenant'}
+        {isLoading ? t('checkout.processing') : t('checkout.payNow')}
       </button>
     </div>
   );
