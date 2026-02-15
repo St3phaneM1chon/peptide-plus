@@ -23,6 +23,7 @@
     "stripe:webhook": "stripe listen --forward-to localhost:3000/api/payments/webhook"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.74.0",
     "@auth/prisma-adapter": "^1.2.0",
     "@azure/identity": "^4.0.0",
     "@azure/keyvault-secrets": "^4.7.0",

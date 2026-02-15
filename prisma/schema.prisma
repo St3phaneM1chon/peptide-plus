@@ -2443,6 +2443,19 @@ enum TranslationJobStatus {
   failed
 }
 
+model TranslationFeedback {
+  id        String   @id @default(cuid())
+  locale    String
+  rating    String   // 'good' | 'bad'
+  comment   String?
+  page      String
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@index([locale, rating])
+  @@index([createdAt])
+}
+
 enum AccountType {
   ASSET
   LIABILITY

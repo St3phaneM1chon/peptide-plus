@@ -51,7 +51,7 @@ export function FooterCorporate() {
               {t('footer.subscribeNewsletter')}
             </h3>
             <p style={{ fontSize: '14px', opacity: 0.8 }}>
-              Recevez nos dernières actualités et offres exclusives.
+              {t('footer.newsletterDescription')}
             </p>
           </div>
           <form

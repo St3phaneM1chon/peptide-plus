@@ -347,7 +347,8 @@
     "securePayments": "Paiements sécurisés",
     "allRightsReserved": "Tous droits réservés",
     "help": "Aide",
-    "subscribeNewsletter": "Abonnez-vous à notre infolettre"
+    "subscribeNewsletter": "Abonnez-vous à notre infolettre",
+    "newsletterDescription": "Recevez nos dernières actualités et offres exclusives."
   },
   "compare": {
     "compare": "Comparer",
@@ -5294,6 +5295,21 @@
     "searching": "Recherche en cours...",
     "subtitle": "Entrez les détails de votre commande pour suivre votre colis",
     "title": "Suivre votre commande"
+  },
+  "translation": {
+    "aiNotice": "Cette page a ete traduite automatiquement par IA. Certaines traductions peuvent etre imparfaites.",
+    "reportIssue": "Vous voyez une erreur ? Aidez-nous a ameliorer en la signalant.",
+    "feedbackTitle": "Qualite de la traduction",
+    "feedbackQuestion": "Comment trouvez-vous la qualite de la traduction sur cette page ?",
+    "feedbackPlaceholder": "Un probleme specifique ? (optionnel)",
+    "feedbackSubmit": "Envoyer",
+    "feedbackThanks": "Merci pour votre retour !",
+    "quality": {
+      "draft": "Traduction IA",
+      "improved": "IA amelioree",
+      "verified": "IA verifiee",
+      "human": "Revue humaine"
+    }
   },
   "validation": {
     "emailRequired": "Le courriel est requis",

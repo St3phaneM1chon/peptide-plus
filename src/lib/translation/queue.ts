@@ -20,9 +20,14 @@
 import { prisma } from '@/lib/db';
 import {
   translateEntityAllLocales,
+  TRANSLATABLE_FIELDS,
   type TranslatableModel,
 } from './auto-translate';
+import { buildGlossaryPrompt, getLanguageName } from './glossary';
+import { locales, defaultLocale } from '@/i18n/config';
 import type { TranslationJob as PrismaTranslationJob, TranslationJobStatus } from '@prisma/client';
+import type OpenAI from 'openai';
+import type Anthropic from '@anthropic-ai/sdk';
 
 // ============================================
 // TYPES
@@ -394,31 +399,299 @@ async function updateQualityLevel(
   });
 }
 
+// ============================================
+// LAZY AI CLIENT INITIALIZATION
+// ============================================
+
+let anthropicInstance: Anthropic | null = null;
+let openaiInstance: OpenAI | null = null;
+
+async function getAnthropic(): Promise<Anthropic> {
+  if (!anthropicInstance) {
+    if (!process.env.ANTHROPIC_API_KEY) {
+      throw new Error('ANTHROPIC_API_KEY is not configured. Pass 2 requires Claude.');
+    }
+    const { default: AnthropicClient } = await import('@anthropic-ai/sdk');
+    anthropicInstance = new AnthropicClient({ apiKey: process.env.ANTHROPIC_API_KEY });
+  }
+  return anthropicInstance;
+}
+
+async function getOpenAI(): Promise<OpenAI> {
+  if (!openaiInstance) {
+    if (!process.env.OPENAI_API_KEY) {
+      throw new Error('OPENAI_API_KEY is not configured. Pass 3 requires GPT-4o.');
+    }
+    const { default: OpenAIClient } = await import('openai');
+    openaiInstance = new OpenAIClient({ apiKey: process.env.OPENAI_API_KEY });
+  }
+  return openaiInstance;
+}
+
+// ============================================
+// HELPERS FOR PASS 2/3
+// ============================================
+
+/** Prisma table + FK maps (duplicated from auto-translate for independence) */
+const TABLE_MAP: Record<string, string> = {
+  Product: 'productTranslation', ProductFormat: 'productFormatTranslation',
+  Category: 'categoryTranslation', Article: 'articleTranslation',
+  BlogPost: 'blogPostTranslation', Video: 'videoTranslation',
+  Webinar: 'webinarTranslation', QuickReply: 'quickReplyTranslation',
+};
+const FK_MAP: Record<string, string> = {
+  Product: 'productId', ProductFormat: 'formatId',
+  Category: 'categoryId', Article: 'articleId',
+  BlogPost: 'blogPostId', Video: 'videoId',
+  Webinar: 'webinarId', QuickReply: 'quickReplyId',
+};
+
+/** Read all existing translations for an entity */
+async function readExistingTranslations(
+  model: TranslatableModel,
+  entityId: string
+): Promise<Array<{ locale: string; fields: Record<string, string | null> }>> {
+  const tableName = TABLE_MAP[model];
+  const fkField = FK_MAP[model];
+  if (!tableName || !fkField) return [];
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const translations = await ((prisma as Record<string, any>)[tableName]).findMany({
+    where: { [fkField]: entityId },
+  });
+
+  const fieldNames = TRANSLATABLE_FIELDS[model] || [];
+  return translations.map((t: Record<string, unknown>) => ({
+    locale: t.locale as string,
+    fields: Object.fromEntries(fieldNames.map(f => [f, (t[f] as string) || null])),
+  }));
+}
+
+/** Read source entity fields (French/default locale) */
+async function readSourceFields(
+  model: TranslatableModel,
+  entityId: string
+): Promise<Record<string, string>> {
+  const sourceModel = model === 'ProductFormat' ? 'productFormat' : model.charAt(0).toLowerCase() + model.slice(1);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const entity = await ((prisma as Record<string, any>)[sourceModel]).findUnique({
+    where: { id: entityId },
+  });
+  if (!entity) return {};
+
+  const fieldNames = TRANSLATABLE_FIELDS[model] || [];
+  const result: Record<string, string> = {};
+  for (const f of fieldNames) {
+    if (entity[f]) result[f] = entity[f];
+  }
+  return result;
+}
+
+/** Update a single translation in DB */
+async function updateTranslationFields(
+  model: TranslatableModel,
+  entityId: string,
+  locale: string,
+  fields: Record<string, string>
+): Promise<void> {
+  const tableName = TABLE_MAP[model];
+  const fkField = FK_MAP[model];
+  if (!tableName || !fkField) return;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await ((prisma as Record<string, any>)[tableName]).update({
+    where: { [`${fkField}_locale`]: { [fkField]: entityId, locale } },
+    data: fields,
+  });
+}
+
+// ============================================
+// PASS 2: CLAUDE HAIKU IMPROVEMENT
+// ============================================
+
 /**
  * Pass 2: Read existing draft translations, send to Claude Haiku for improvement.
- * Claude reads the source (FR) + draft translation and improves quality.
+ * Claude reads the source (French) + draft translation and improves quality.
+ * Processes 3 locales in parallel for efficiency.
  */
 async function improveTranslationsWithClaude(
-  _model: TranslatableModel,
-  _entityId: string
+  model: TranslatableModel,
+  entityId: string
 ): Promise<void> {
-  // TODO: Implement Claude Haiku improvement pass
-  // For now, this is a placeholder that will be implemented
-  // when ANTHROPIC_API_KEY is configured
-  console.log(`[Pass2] Claude Haiku improvement - placeholder for ${_model}#${_entityId}`);
+  if (!process.env.ANTHROPIC_API_KEY) {
+    console.log(`[Pass2] Skipping - ANTHROPIC_API_KEY not configured for ${model}#${entityId}`);
+    return;
+  }
+
+  const anthropic = await getAnthropic();
+  const sourceFields = await readSourceFields(model, entityId);
+  if (Object.keys(sourceFields).length === 0) return;
+
+  const translations = await readExistingTranslations(model, entityId);
+  const targetLocales = locales.filter(l => l !== defaultLocale);
+
+  // Process locales in batches of 3
+  for (let i = 0; i < targetLocales.length; i += 3) {
+    const batch = targetLocales.slice(i, i + 3);
+    await Promise.allSettled(
+      batch.map(async (locale) => {
+        const existing = translations.find(t => t.locale === locale);
+        if (!existing) return;
+
+        const languageName = getLanguageName(locale);
+
+        // Build the improvement prompt with source + draft
+        const fieldPairs = Object.entries(sourceFields)
+          .filter(([key]) => existing.fields[key])
+          .map(([key, sourceValue]) => (
+            `[FIELD:${key}]\nSOURCE (French): ${sourceValue}\nDRAFT (${languageName}): ${existing.fields[key]}\n[/FIELD:${key}]`
+          ))
+          .join('\n\n');
+
+        if (!fieldPairs) return;
+
+        const response = await anthropic.messages.create({
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 4096,
+          messages: [{
+            role: 'user',
+            content: `You are improving AI-translated content for a Canadian peptide research company.
+
+Target language: ${languageName}
+
+For each field below, you have the French SOURCE and a DRAFT translation. Improve the draft:
+- Fix grammar, fluency, and naturalness
+- Ensure scientific terminology is accurate
+- Keep the same tone and formatting
+- Return ONLY the improved translation using the same [FIELD:name] markers
+
+${buildGlossaryPrompt()}
+
+${fieldPairs}
+
+Return each improved field using [FIELD:name]...[/FIELD:name] markers. Only output the improved ${languageName} text, nothing else.`,
+          }],
+        });
+
+        // Parse response
+        const result = response.content[0]?.type === 'text' ? response.content[0].text : '';
+        const updatedFields: Record<string, string> = {};
+        const fieldNames = TRANSLATABLE_FIELDS[model] || [];
+
+        for (const fieldName of fieldNames) {
+          const escaped = fieldName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const regex = new RegExp(`\\[FIELD:${escaped}\\]\\n?([\\s\\S]*?)\\n?\\[/FIELD:${escaped}\\]`);
+          const match = result.match(regex);
+          if (match && match[1]?.trim()) {
+            updatedFields[fieldName] = match[1].trim();
+          }
+        }
+
+        if (Object.keys(updatedFields).length > 0) {
+          await updateTranslationFields(model, entityId, locale, updatedFields);
+        }
+      })
+    );
+
+    // Rate limit between batches
+    if (i + 3 < targetLocales.length) {
+      await new Promise(resolve => setTimeout(resolve, 300));
+    }
+  }
+
+  console.log(`[Pass2] Claude Haiku improved ${model}#${entityId} across ${targetLocales.length} locales`);
 }
+
+// ============================================
+// PASS 3: GPT-4o VERIFICATION
+// ============================================
 
 /**
  * Pass 3: Read improved translation, send to GPT-4o for verification.
- * GPT-4o checks fluency, accuracy, and flags potential issues.
+ * GPT-4o checks fluency, accuracy, and fixes remaining issues.
+ * Processes 3 locales in parallel.
  */
 async function verifyTranslationsWithGPT4o(
-  _model: TranslatableModel,
-  _entityId: string
+  model: TranslatableModel,
+  entityId: string
 ): Promise<void> {
-  // TODO: Implement GPT-4o verification pass
-  // Will be implemented to run at 4AM nightly
-  console.log(`[Pass3] GPT-4o verification - placeholder for ${_model}#${_entityId}`);
+  const openai = await getOpenAI();
+  const sourceFields = await readSourceFields(model, entityId);
+  if (Object.keys(sourceFields).length === 0) return;
+
+  const translations = await readExistingTranslations(model, entityId);
+  const targetLocales = locales.filter(l => l !== defaultLocale);
+
+  for (let i = 0; i < targetLocales.length; i += 3) {
+    const batch = targetLocales.slice(i, i + 3);
+    await Promise.allSettled(
+      batch.map(async (locale) => {
+        const existing = translations.find(t => t.locale === locale);
+        if (!existing) return;
+
+        const languageName = getLanguageName(locale);
+
+        const fieldPairs = Object.entries(sourceFields)
+          .filter(([key]) => existing.fields[key])
+          .map(([key, sourceValue]) => (
+            `[FIELD:${key}]\nSOURCE (French): ${sourceValue}\nCURRENT (${languageName}): ${existing.fields[key]}\n[/FIELD:${key}]`
+          ))
+          .join('\n\n');
+
+        if (!fieldPairs) return;
+
+        const response = await openai.chat.completions.create({
+          model: 'gpt-4o',
+          messages: [
+            {
+              role: 'system',
+              content: `You are a professional translator verifying translations for a Canadian peptide research company.
+Your job is to verify and finalize the ${languageName} translations.
+
+Rules:
+1. Check for grammatical errors, awkward phrasing, or incorrect terminology
+2. Verify scientific terms are used correctly
+3. Ensure the translation is natural and fluent in ${languageName}
+4. Preserve all items from the glossary exactly
+5. Return ONLY corrected translations using [FIELD:name] markers
+6. If a translation is already perfect, return it unchanged
+
+${buildGlossaryPrompt()}`,
+            },
+            {
+              role: 'user',
+              content: `Verify and finalize these ${languageName} translations:\n\n${fieldPairs}`,
+            },
+          ],
+          temperature: 0.1,
+          max_tokens: 4096,
+        });
+
+        const result = response.choices[0]?.message?.content || '';
+        const updatedFields: Record<string, string> = {};
+        const fieldNames = TRANSLATABLE_FIELDS[model] || [];
+
+        for (const fieldName of fieldNames) {
+          const escaped = fieldName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const regex = new RegExp(`\\[FIELD:${escaped}\\]\\n?([\\s\\S]*?)\\n?\\[/FIELD:${escaped}\\]`);
+          const match = result.match(regex);
+          if (match && match[1]?.trim()) {
+            updatedFields[fieldName] = match[1].trim();
+          }
+        }
+
+        if (Object.keys(updatedFields).length > 0) {
+          await updateTranslationFields(model, entityId, locale, updatedFields);
+        }
+      })
+    );
+
+    if (i + 3 < targetLocales.length) {
+      await new Promise(resolve => setTimeout(resolve, 300));
+    }
+  }
+
+  console.log(`[Pass3] GPT-4o verified ${model}#${entityId} across ${targetLocales.length} locales`);
 }
 
 // ============================================

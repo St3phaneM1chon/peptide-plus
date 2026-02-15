@@ -347,7 +347,8 @@
     "securePayments": "Secure Payments",
     "allRightsReserved": "All rights reserved",
     "help": "Help",
-    "subscribeNewsletter": "Subscribe to our newsletter"
+    "subscribeNewsletter": "Subscribe to our newsletter",
+    "newsletterDescription": "Get our latest news and exclusive offers."
   },
   "compare": {
     "compare": "Compare",
@@ -5294,6 +5295,21 @@
     "searching": "Searching...",
     "subtitle": "Enter your order details to track your package",
     "title": "Track Your Order"
+  },
+  "translation": {
+    "aiNotice": "This page has been automatically translated by AI. Some translations may be imperfect.",
+    "reportIssue": "See an error? Help us improve by reporting it.",
+    "feedbackTitle": "Translation Quality",
+    "feedbackQuestion": "How is the translation quality on this page?",
+    "feedbackPlaceholder": "Any specific issues? (optional)",
+    "feedbackSubmit": "Send Feedback",
+    "feedbackThanks": "Thank you for your feedback!",
+    "quality": {
+      "draft": "AI translated",
+      "improved": "AI improved",
+      "verified": "AI verified",
+      "human": "Human reviewed"
+    }
   },
   "validation": {
     "emailRequired": "Email is required",

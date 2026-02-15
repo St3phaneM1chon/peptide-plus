@@ -13,6 +13,8 @@ import { cookies, headers } from 'next/headers';
 import { defaultLocale, isValidLocale, type Locale, localeDirections } from '@/i18n/config';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { organizationSchema, websiteSchema } from '@/lib/structured-data';
+import { TranslationNotice } from '@/components/ui/TranslationNotice';
+import { TranslationFeedback } from '@/components/ui/TranslationFeedback';
 
 // Import all locale files
 import fr from '@/i18n/locales/fr.json';
@@ -210,6 +212,8 @@ export default async function RootLayout({
           <main className="min-h-screen bg-gray-50">
             {children}
           </main>
+          <TranslationNotice />
+          <TranslationFeedback />
         </Providers>
       </body>
     </html>
