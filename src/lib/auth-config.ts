@@ -187,6 +187,11 @@ export const authConfig: NextAuthConfig = {
   adapter: PrismaAdapter(prisma) as any,
   providers,
 
+  // CRITICAL: Trust proxy headers (Azure App Service terminates TLS at load balancer)
+  // Without this, Auth.js generates http:// callback URLs instead of https://
+  // causing redirect_uri_mismatch errors with Google OAuth
+  trustHost: true,
+
   // Pages personnalisées
   pages: {
     signIn: '/auth/signin',
@@ -199,7 +204,7 @@ export const authConfig: NextAuthConfig = {
   // Callbacks
   callbacks: {
     // Autorisation de connexion
-    async signIn({ user, account }) {
+    async signIn({ user, account, profile }) {
       try {
         // Log d'audit
         console.log(
@@ -211,6 +216,15 @@ export const authConfig: NextAuthConfig = {
             provider: account?.provider,
           })
         );
+
+        // SECURITY: For Google OAuth, require verified email (OWASP recommendation)
+        if (account?.provider === 'google') {
+          const googleProfile = profile as { email_verified?: boolean } | undefined;
+          if (!googleProfile?.email_verified) {
+            console.error('Google sign-in rejected: email not verified');
+            return false;
+          }
+        }
 
         // Pour les providers OAuth, vérifier l'utilisateur
         if (account?.provider !== 'credentials') {
