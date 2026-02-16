@@ -1,6 +1,6 @@
 # =====================================================
 # AZURE DEPLOYMENT PIPELINE - BioCycle Peptides
-# Déploiement sécurisé sur Azure App Service
+# Déploiement standalone Next.js sur Azure App Service
 # =====================================================
 
 name: Deploy to Azure
@@ -47,31 +47,35 @@ jobs:
         run: npx prisma generate
 
       - name: Build
-        run: |
-          npm run build
-          # Copy standalone server.js to project root for Azure startup
-          cp .next/standalone/server.js ./server.js
-          # Copy public and static assets to standalone (needed for static file serving)
-          cp -r public .next/standalone/public
-          cp -r .next/static .next/standalone/.next/static
+        run: npm run build
         env:
           NEXT_TELEMETRY_DISABLED: 1
           NEXT_PUBLIC_SITE_NAME: "BioCycle Peptides"
           NEXT_PUBLIC_APP_URL: "https://biocyclepeptides.com"
 
-      - name: Upload build artifacts
+      - name: Assemble standalone package
+        run: |
+          # Copy static assets into standalone
+          cp -r public .next/standalone/public
+          cp -r .next/static .next/standalone/.next/static
+          # Copy Prisma schema for DB sync
+          mkdir -p .next/standalone/prisma
+          cp prisma/schema.prisma .next/standalone/prisma/
+          # Copy package.json for prisma CLI
+          cp package.json .next/standalone/
+          cp package-lock.json .next/standalone/
+          echo "Standalone package assembled:"
+          du -sh .next/standalone/
+          du -sh .next/standalone/node_modules/ || true
+          du -sh .next/standalone/.next/static/
+          du -sh .next/standalone/public/
+
+      - name: Upload standalone artifact
         uses: actions/upload-artifact@v4
         with:
-          name: build-output
+          name: standalone-package
           include-hidden-files: true
-          path: |
-            .next/
-            package.json
-            package-lock.json
-            public/
-            prisma/
-            next.config.js
-            server.js
+          path: .next/standalone/
           retention-days: 1
 
   # =====================================================
@@ -85,21 +89,10 @@ jobs:
       name: ${{ github.event.inputs.environment || 'production' }}
       url: https://biocyclepeptides.com
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Download build artifacts
+      - name: Download standalone artifact
         uses: actions/download-artifact@v4
         with:
-          name: build-output
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-
-      - name: Install production dependencies
-        run: npm ci --production
+          name: standalone-package
 
       - name: Login to Azure
         uses: azure/login@v2
@@ -119,6 +112,7 @@ jobs:
             --name ${{ env.AZURE_WEBAPP_NAME }} \
             --settings \
               NODE_ENV=production \
+              SCM_DO_BUILD_DURING_DEPLOYMENT=false \
               NEXTAUTH_URL=https://biocyclepeptides.com \
               NEXT_PUBLIC_APP_URL=https://biocyclepeptides.com \
               "NEXT_PUBLIC_SITE_NAME=BioCycle Peptides" \
@@ -162,20 +156,22 @@ jobs:
           SMTP_U: ${{ secrets.SMTP_USER }}
           SMTP_P: ${{ secrets.SMTP_PASSWORD }}
 
-      - name: Verify build artifacts
+      - name: Verify standalone package
         run: |
-          echo "Checking .next/ directory..."
-          ls -la .next/BUILD_ID .next/server server.js 2>&1 || true
-          if [ ! -f ".next/BUILD_ID" ]; then
-            echo "ERROR: .next/BUILD_ID not found! Build artifacts missing."
+          echo "Checking standalone package..."
+          ls -la server.js .next/BUILD_ID 2>&1 || true
+          if [ ! -f "server.js" ]; then
+            echo "ERROR: server.js not found in standalone package!"
             exit 1
           fi
-          if [ ! -f "server.js" ]; then
-            echo "Copying standalone server.js to root..."
-            cp .next/standalone/server.js . 2>/dev/null || true
+          if [ ! -f ".next/BUILD_ID" ]; then
+            echo "ERROR: .next/BUILD_ID not found!"
+            exit 1
           fi
           echo "BUILD_ID: $(cat .next/BUILD_ID)"
-          echo "Build artifacts verified."
+          echo "Package size:"
+          du -sh .
+          echo "Standalone package verified."
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
@@ -187,29 +183,10 @@ jobs:
       - name: Sync Database Schema
         if: env.DB_URL != ''
         run: |
+          # Install prisma CLI for DB sync
+          npm install --no-save prisma@5
           echo "Pushing Prisma schema to production database..."
           npx prisma db push --accept-data-loss --skip-generate 2>&1 || echo "WARNING: prisma db push failed - check manually"
-        env:
-          DB_URL: ${{ secrets.DATABASE_URL }}
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-
-      - name: Seed Database (if empty)
-        if: env.DB_URL != ''
-        run: |
-          if [ -f "prisma/seed-data.sql" ]; then
-            echo "Checking if database needs seeding..."
-            PRODUCT_COUNT=$(psql "$DATABASE_URL" -t -c "SELECT count(*) FROM \"Product\";" 2>/dev/null | tr -d ' ' || echo "0")
-            echo "Current product count: $PRODUCT_COUNT"
-            if [ "$PRODUCT_COUNT" = "0" ] || [ "$PRODUCT_COUNT" = "" ]; then
-              echo "Database is empty - seeding with initial data..."
-              psql "$DATABASE_URL" -f prisma/seed-data.sql 2>&1 | tail -20
-              echo "Database seeded successfully!"
-            else
-              echo "Database already has $PRODUCT_COUNT products - skipping seed"
-            fi
-          else
-            echo "No seed-data.sql found - skipping"
-          fi
         env:
           DB_URL: ${{ secrets.DATABASE_URL }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
@@ -241,11 +218,11 @@ jobs:
       - name: Notify on success
         if: needs.deploy.result == 'success'
         run: |
-          echo "✅ BioCycle Peptides deployed successfully!"
+          echo "BioCycle Peptides deployed successfully!"
           echo "URL: https://biocyclepeptides.com"
 
       - name: Notify on failure
         if: needs.deploy.result == 'failure'
         run: |
-          echo "❌ Deployment failed!"
+          echo "Deployment failed!"
           exit 1
