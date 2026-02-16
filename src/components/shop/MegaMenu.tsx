@@ -40,7 +40,7 @@ interface MegaMenuProps {
 }
 
 export default function MegaMenu({ isOpen, onClose }: MegaMenuProps) {
-  const { t } = useTranslations();
+  const { t, locale } = useTranslations();
   const { formatPrice } = useCurrency();
   const [categories, setCategories] = useState<Category[]>([]);
   const [featuredProducts, setFeaturedProducts] = useState<FeaturedProduct[]>([]);
@@ -52,8 +52,8 @@ export default function MegaMenu({ isOpen, onClose }: MegaMenuProps) {
   useEffect(() => {
     if (isOpen) {
       Promise.all([
-        fetch('/api/categories').then(res => res.ok ? res.json() : { categories: [] }),
-        fetch('/api/products?featured=true&limit=3').then(res => res.ok ? res.json() : { products: [] }),
+        fetch(`/api/categories?locale=${locale}`).then(res => res.ok ? res.json() : { categories: [] }),
+        fetch(`/api/products?featured=true&limit=3&locale=${locale}`).then(res => res.ok ? res.json() : { products: [] }),
       ])
         .then(([catData, prodData]) => {
           setCategories(catData.categories || []);

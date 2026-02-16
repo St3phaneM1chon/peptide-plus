@@ -63,7 +63,7 @@ type SortOption = 'relevance' | 'price-asc' | 'price-desc' | 'newest';
 function SearchPageInner() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { t } = useTranslations();
+  const { t, locale } = useTranslations();
   const { formatPrice } = useCurrency();
 
   // Read query from URL
@@ -93,6 +93,7 @@ function SearchPageInner() {
         if (query) params.set('q', query);
         params.set('limit', '100');
 
+        params.set('locale', locale);
         const res = await fetch(`/api/products/search?${params.toString()}`);
         if (!res.ok) throw new Error('Failed to fetch');
         const data = await res.json();

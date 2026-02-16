@@ -150,7 +150,7 @@ export async function POST(request: NextRequest) {
           landing_page: 'LOGIN',
           user_action: 'PAY_NOW',
           return_url: `${process.env.NEXT_PUBLIC_APP_URL}/checkout/success`,
-          cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/checkout/cart`,
+          cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/checkout`,
         },
       }),
     });

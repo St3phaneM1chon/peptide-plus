@@ -56,9 +56,12 @@ export async function POST(request: NextRequest) {
     const {
       items,
       shippingInfo,
+      billingInfo,
+      billingSameAsShipping,
       currency: currencyCode = 'CAD',
       promoCode,
       cartId,
+      paymentMethod: clientPaymentMethod,
     } = body;
 
     if (!items || !Array.isArray(items) || items.length === 0) {
@@ -307,7 +310,11 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const paymentMethodTypes: Stripe.Checkout.SessionCreateParams.PaymentMethodType[] = ['card'];
+    // Determine payment method types based on client selection
+    const paymentMethodTypes: Stripe.Checkout.SessionCreateParams.PaymentMethodType[] =
+      clientPaymentMethod === 'interac'
+        ? ['acss_debit']
+        : ['card'];
 
     // Prepare cart items for metadata using VERIFIED data
     const cartItemsData = verifiedItems.map((item) => ({
@@ -338,11 +345,24 @@ export async function POST(request: NextRequest) {
       line_items: lineItems,
       mode: 'payment',
       success_url: `${process.env.NEXT_PUBLIC_APP_URL}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/checkout/cart`,
+      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/checkout`,
       customer_email: session?.user?.email || shippingInfo?.email,
+      ...(clientPaymentMethod === 'interac' ? {
+        payment_intent_data: {
+          payment_method_options: {
+            acss_debit: {
+              mandate_options: {
+                payment_schedule: 'sporadic' as const,
+                transaction_type: 'personal' as const,
+              },
+            },
+          },
+        },
+      } : {}),
       metadata: {
         userId: session?.user?.id || 'guest',
         shippingAddress: JSON.stringify(shippingInfo),
+        billingAddress: JSON.stringify(billingSameAsShipping ? shippingInfo : billingInfo),
         subtotal: String(serverSubtotal),
         shippingCost: String(serverShipping),
         taxTps: String(serverTaxes.tps),

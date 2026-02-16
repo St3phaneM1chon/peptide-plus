@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useCart } from '@/contexts/CartContext';
+import { useUpsell } from '@/contexts/UpsellContext';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useTranslations } from '@/hooks/useTranslations';
 import { getPeptideChemistry } from '@/data/peptideChemistry';
@@ -130,6 +131,7 @@ const formatIcons: Record<string, string> = {
 
 export default function ProductPageClient({ product }: ProductPageClientProps) {
   const { addItem } = useCart();
+  const { addItemWithUpsell } = useUpsell();
   const { formatPrice } = useCurrency();
   const { t } = useTranslations();
   const { addViewed } = useRecentlyViewed();
@@ -229,7 +231,7 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
     const formatName = getFormatName(selectedFormat);
     const fullProductName = `${productName} ${formatName}`;
 
-    addItem({
+    addItemWithUpsell({
       productId: product.id,
       formatId: selectedFormat.id,
       name: fullProductName,

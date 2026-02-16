@@ -41,21 +41,7 @@ interface ShippingAddressFormProps {
   userName: string;
 }
 
-const PROVINCES_CANADA = [
-  { code: 'AB', name: 'Alberta' },
-  { code: 'BC', name: 'Colombie-Britannique' },
-  { code: 'MB', name: 'Manitoba' },
-  { code: 'NB', name: 'Nouveau-Brunswick' },
-  { code: 'NL', name: 'Terre-Neuve-et-Labrador' },
-  { code: 'NS', name: 'Nouvelle-Écosse' },
-  { code: 'NT', name: 'Territoires du Nord-Ouest' },
-  { code: 'NU', name: 'Nunavut' },
-  { code: 'ON', name: 'Ontario' },
-  { code: 'PE', name: 'Île-du-Prince-Édouard' },
-  { code: 'QC', name: 'Québec' },
-  { code: 'SK', name: 'Saskatchewan' },
-  { code: 'YT', name: 'Yukon' },
-];
+const PROVINCE_CODES = ['AB', 'BC', 'MB', 'NB', 'NL', 'NS', 'NT', 'NU', 'ON', 'PE', 'QC', 'SK', 'YT'] as const;
 
 export function ShippingAddressForm({
   savedAddresses,
@@ -297,7 +283,7 @@ export function ShippingAddressForm({
                 setNewAddress({ ...newAddress, recipientName: e.target.value })
               }
               className="form-input"
-              placeholder="Jean Dupont"
+              placeholder={t('checkout.namePlaceholder')}
               required
             />
           </div>
@@ -352,7 +338,7 @@ export function ShippingAddressForm({
                 setNewAddress({ ...newAddress, city: e.target.value })
               }
               className="form-input"
-              placeholder="Montréal"
+              placeholder={t('checkout.cityPlaceholder')}
               required
             />
           </div>
@@ -368,9 +354,9 @@ export function ShippingAddressForm({
               className="form-input form-select"
               required
             >
-              {PROVINCES_CANADA.map((p) => (
-                <option key={p.code} value={p.code}>
-                  {p.name}
+              {PROVINCE_CODES.map((code) => (
+                <option key={code} value={code}>
+                  {t(`provinces.${code}`)}
                 </option>
               ))}
             </select>

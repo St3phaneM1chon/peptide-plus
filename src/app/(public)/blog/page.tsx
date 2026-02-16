@@ -6,6 +6,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useTranslations } from '@/hooks/useTranslations';
 
 // metadata moved to layout or head for client components
 
@@ -36,11 +37,12 @@ function formatDate(dateString: string | null): string {
 export default function BlogPage() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
+  const { locale } = useTranslations();
 
   useEffect(() => {
     async function fetchPosts() {
       try {
-        const res = await fetch('/api/blog');
+        const res = await fetch(`/api/blog?locale=${locale}`);
         const data = await res.json();
         setPosts(data.posts ?? []);
       } catch (error) {

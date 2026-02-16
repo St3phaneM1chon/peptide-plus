@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useCart } from '@/contexts/CartContext';
+import { useUpsell } from '@/contexts/UpsellContext';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useTranslations } from '@/hooks/useTranslations';
 import { toast } from 'sonner';
@@ -72,8 +73,9 @@ export default function QuickViewModal({ slug, isOpen, onClose }: QuickViewModal
   const [isAdding, setIsAdding] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
   const { addItem } = useCart();
+  const { addItemWithUpsell } = useUpsell();
   const { formatPrice } = useCurrency();
-  const { t } = useTranslations();
+  const { t, locale } = useTranslations();
 
   // Fetch product data when modal opens
   useEffect(() => {
@@ -82,7 +84,7 @@ export default function QuickViewModal({ slug, isOpen, onClose }: QuickViewModal
     const fetchProduct = async () => {
       setIsLoading(true);
       try {
-        const res = await fetch(`/api/products/by-slug/${slug}`);
+        const res = await fetch(`/api/products/by-slug/${slug}?locale=${locale}`);
         if (res.ok) {
           const data = await res.json();
           setProduct(data.product);
@@ -90,12 +92,12 @@ export default function QuickViewModal({ slug, isOpen, onClose }: QuickViewModal
           const availableFormat = data.product.formats?.find((f: ProductFormat) => f.inStock && f.stockQuantity > 0);
           setSelectedFormat(availableFormat || data.product.formats?.[0]);
         } else {
-          toast.error('Failed to load product');
+          toast.error(t('shop.failedToLoadProduct'));
           onClose();
         }
       } catch (error) {
         console.error('Error fetching product:', error);
-        toast.error('Failed to load product');
+        toast.error(t('shop.failedToLoadProduct'));
         onClose();
       } finally {
         setIsLoading(false);
@@ -150,7 +152,7 @@ export default function QuickViewModal({ slug, isOpen, onClose }: QuickViewModal
     const formatName = getFormatName(selectedFormat);
     const fullProductName = `${getProductName()} ${formatName}`;
 
-    addItem({
+    addItemWithUpsell({
       productId: product.id,
       formatId: selectedFormat.id,
       name: fullProductName,

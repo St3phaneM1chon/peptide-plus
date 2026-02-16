@@ -151,6 +151,9 @@ export const enqueue = {
 
   quickReply: (entityId: string, force = false) =>
     enqueueTranslation('QuickReply', entityId, { priority: 3, force }),
+
+  faq: (entityId: string, force = false) =>
+    enqueueTranslation('Faq', entityId, { priority: 3, force }),
 };
 
 /**
@@ -376,6 +379,7 @@ async function updateQualityLevel(
     Video: 'videoTranslation',
     Webinar: 'webinarTranslation',
     QuickReply: 'quickReplyTranslation',
+    Faq: 'faqTranslation',
   };
   const fkMap: Record<string, string> = {
     Product: 'productId',
@@ -386,6 +390,7 @@ async function updateQualityLevel(
     Video: 'videoId',
     Webinar: 'webinarId',
     QuickReply: 'quickReplyId',
+    Faq: 'faqId',
   };
 
   const tableName = tableMap[model];
@@ -438,12 +443,14 @@ const TABLE_MAP: Record<string, string> = {
   Category: 'categoryTranslation', Article: 'articleTranslation',
   BlogPost: 'blogPostTranslation', Video: 'videoTranslation',
   Webinar: 'webinarTranslation', QuickReply: 'quickReplyTranslation',
+  Faq: 'faqTranslation',
 };
 const FK_MAP: Record<string, string> = {
   Product: 'productId', ProductFormat: 'formatId',
   Category: 'categoryId', Article: 'articleId',
   BlogPost: 'blogPostId', Video: 'videoId',
   Webinar: 'webinarId', QuickReply: 'quickReplyId',
+  Faq: 'faqId',
 };
 
 /** Read all existing translations for an entity */

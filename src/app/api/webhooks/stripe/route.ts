@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { db as prisma } from '@/lib/db';
 import { sendOrderLifecycleEmail } from '@/lib/email';
+import { sendOrderNotificationSms, sendPaymentFailureAlertSms } from '@/lib/sms';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
   apiVersion: '2023-10-16',
@@ -92,6 +93,11 @@ async function handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
       sendOrderLifecycleEmail(orderId, 'CONFIRMED').catch((err) => {
         console.error(`Failed to send confirmation email for order ${orderId}:`, err);
       });
+
+      // Send SMS notification to admin (fire-and-forget)
+      sendOrderNotificationSms(Number(order.total), order.orderNumber).catch((err) => {
+        console.error(`Failed to send SMS for order ${orderId}:`, err);
+      });
     } catch (error) {
       console.error('Error updating order:', error);
     }
@@ -105,6 +111,37 @@ async function handlePaymentFailure(paymentIntent: Stripe.PaymentIntent) {
   console.log('Payment failed:', paymentIntent.id);
 
   const orderId = paymentIntent.metadata?.orderId;
+  const errorMessage = paymentIntent.last_payment_error?.message || 'Unknown error';
+  const errorCode = paymentIntent.last_payment_error?.code || 'unknown';
+  const customerEmail = paymentIntent.receipt_email || paymentIntent.metadata?.customerEmail;
+  const amount = paymentIntent.amount / 100;
+
+  // Log payment error to database
+  try {
+    await prisma.paymentError.create({
+      data: {
+        orderId: orderId || null,
+        stripePaymentId: paymentIntent.id,
+        errorType: errorCode,
+        errorMessage: errorMessage,
+        amount: amount,
+        currency: paymentIntent.currency?.toUpperCase() || 'CAD',
+        customerEmail: customerEmail || null,
+        metadata: JSON.stringify({
+          paymentMethodType: paymentIntent.payment_method_types,
+          declineCode: paymentIntent.last_payment_error?.decline_code,
+        }),
+      },
+    });
+  } catch (logError) {
+    // Table may not exist yet, log to console
+    console.error('Failed to log payment error to DB (table may not exist):', logError);
+  }
+
+  // Send SMS alert for failed payment (fire-and-forget)
+  sendPaymentFailureAlertSms(errorCode, amount, customerEmail || undefined).catch((err) => {
+    console.error('Failed to send payment failure SMS:', err);
+  });
 
   if (orderId) {
     try {
@@ -186,6 +223,11 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       // Send order confirmation email (fire-and-forget)
       sendOrderLifecycleEmail(orderId, 'CONFIRMED').catch((err) => {
         console.error(`Failed to send confirmation email for order ${orderId}:`, err);
+      });
+
+      // Send SMS notification to admin (fire-and-forget)
+      sendOrderNotificationSms(Number(order.total), order.orderNumber).catch((err) => {
+        console.error(`Failed to send SMS for checkout ${orderId}:`, err);
       });
     } catch (error) {
       console.error('Error updating order:', error);

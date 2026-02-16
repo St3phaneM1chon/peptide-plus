@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
+import { useTranslations } from '@/hooks/useTranslations';
 
 interface StickyAddToCartProps {
   productName: string;
@@ -24,6 +25,7 @@ export default function StickyAddToCart({
   addedToCart,
   targetRef,
 }: StickyAddToCartProps) {
+  const { t } = useTranslations();
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -88,7 +90,7 @@ export default function StickyAddToCart({
                 : 'bg-orange-500 text-white active:bg-orange-600'
             }`}
           >
-            {addedToCart ? '✓ Added' : isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
+            {addedToCart ? `✓ ${t('shop.added')}` : isOutOfStock ? t('shop.outOfStock') : t('shop.addToCart')}
           </button>
         </div>
       </div>

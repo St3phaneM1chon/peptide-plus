@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth-config';
+import { enqueue } from '@/lib/translation';
 
 // GET all formats for a product
 export async function GET(
@@ -101,6 +102,9 @@ export async function POST(
         sortOrder: (maxSort._max.sortOrder ?? 0) + 1,
       },
     });
+
+    // Auto-enqueue translation for all 21 locales
+    enqueue.productFormat(format.id);
 
     return NextResponse.json(format, { status: 201 });
   } catch (error) {

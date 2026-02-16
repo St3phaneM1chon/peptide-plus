@@ -23,7 +23,6 @@ const protectedRoutes = [
 // Routes publiques même si dans un chemin protégé
 const publicRoutes = [
   '/checkout',
-  '/checkout/cart',
   '/checkout/success',
 ];
 

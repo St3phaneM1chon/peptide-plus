@@ -7,16 +7,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { UserRole } from '@/types';
-import { enqueue } from '@/lib/translation';
+import { enqueue, withTranslation } from '@/lib/translation';
+import { defaultLocale } from '@/i18n/config';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
 }
 
 // GET - Détail d'un produit
-export async function GET(_request: Request, { params }: RouteParams) {
+export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params;
+    const locale = request.nextUrl.searchParams.get('locale') || defaultLocale;
     const product = await prisma.product.findUnique({
       where: { id },
       include: {
@@ -38,7 +40,12 @@ export async function GET(_request: Request, { params }: RouteParams) {
       return NextResponse.json({ error: 'Produit non trouvé' }, { status: 404 });
     }
 
-    return NextResponse.json({ product });
+    // Apply translations
+    const translated = locale !== defaultLocale
+      ? await withTranslation(product, 'Product', locale)
+      : product;
+
+    return NextResponse.json({ product: translated });
   } catch (error) {
     console.error('Error fetching product:', error);
     return NextResponse.json(

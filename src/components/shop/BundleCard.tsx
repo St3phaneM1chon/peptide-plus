@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useTranslations } from '@/hooks/useTranslations';
+import { useCurrency } from '@/contexts/CurrencyContext';
 
 interface BundleCardProps {
   bundle: {
@@ -26,6 +27,7 @@ interface BundleCardProps {
 
 export default function BundleCard({ bundle }: BundleCardProps) {
   const { t } = useTranslations();
+  const { formatPrice } = useCurrency();
 
   return (
     <Link
@@ -63,7 +65,7 @@ export default function BundleCard({ bundle }: BundleCardProps) {
         {/* Savings Badge */}
         {bundle.discount > 0 && (
           <div className="absolute top-3 right-3 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold shadow-md">
-            Save {bundle.discount}%
+            {t('shop.savePercent').replace('{percent}', String(bundle.discount))}
           </div>
         )}
       </div>
@@ -82,7 +84,9 @@ export default function BundleCard({ bundle }: BundleCardProps) {
 
         {/* Item Count */}
         <div className="text-sm text-gray-500 mb-3">
-          {bundle.itemCount} {bundle.itemCount === 1 ? 'product' : 'products'} included
+          {bundle.itemCount === 1
+            ? t('shop.productIncluded').replace('{count}', '1')
+            : t('shop.productsIncluded').replace('{count}', String(bundle.itemCount))}
         </div>
 
         {/* Mini Product Thumbnails */}
@@ -130,14 +134,14 @@ export default function BundleCard({ bundle }: BundleCardProps) {
         <div className="border-t pt-3">
           <div className="flex items-baseline justify-between mb-1">
             <span className="text-sm text-gray-500 line-through">
-              ${bundle.originalPrice.toFixed(2)}
+              {formatPrice(bundle.originalPrice)}
             </span>
             <span className="text-2xl font-bold text-blue-600">
-              ${bundle.bundlePrice.toFixed(2)}
+              {formatPrice(bundle.bundlePrice)}
             </span>
           </div>
           <div className="text-sm text-green-600 font-medium text-right">
-            You save ${bundle.savings.toFixed(2)}
+            {t('shop.youSave').replace('{amount}', formatPrice(bundle.savings))}
           </div>
         </div>
       </div>

@@ -79,6 +79,18 @@ interface CreditNoteRef {
   issuedAt: string | null;
 }
 
+interface PaymentErrorRef {
+  id: string;
+  stripePaymentId: string;
+  errorType: string;
+  errorMessage: string;
+  amount: number;
+  currency: string;
+  customerEmail: string | null;
+  metadata: { paymentMethodType?: string[]; declineCode?: string } | null;
+  createdAt: string;
+}
+
 const statusOptionValues = ['PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'];
 
 export default function OrdersPage() {
@@ -104,6 +116,7 @@ export default function OrdersPage() {
 
   // Enriched detail data
   const [creditNotes, setCreditNotes] = useState<CreditNoteRef[]>([]);
+  const [paymentErrors, setPaymentErrors] = useState<PaymentErrorRef[]>([]);
 
   const statusOptions = useMemo(() => [
     { value: 'PENDING', label: t('admin.commandes.statusPending') },
@@ -165,6 +178,7 @@ export default function OrdersPage() {
         };
         setSelectedOrder(enrichedOrder);
         setCreditNotes(data.creditNotes || []);
+        setPaymentErrors(data.paymentErrors || []);
       }
     } catch (err) {
       console.error('Error fetching order detail:', err);
@@ -174,6 +188,7 @@ export default function OrdersPage() {
   const openOrderDetail = (order: Order) => {
     setSelectedOrder(order);
     setCreditNotes([]);
+    setPaymentErrors([]);
     fetchOrderDetail(order.id);
   };
 
@@ -476,7 +491,7 @@ export default function OrdersPage() {
       {/* Order Detail Modal */}
       <Modal
         isOpen={!!selectedOrder}
-        onClose={() => { setSelectedOrder(null); setCreditNotes([]); }}
+        onClose={() => { setSelectedOrder(null); setCreditNotes([]); setPaymentErrors([]); }}
         title={t('admin.commandes.orderTitle', { orderNumber: selectedOrder?.orderNumber ?? '' })}
         subtitle={selectedOrder ? new Date(selectedOrder.createdAt).toLocaleString(locale) : undefined}
         size="xl"
@@ -662,6 +677,52 @@ export default function OrdersPage() {
                         <span className="text-red-600 ml-2">{cn.reason}</span>
                       </div>
                       <span className="font-medium text-red-700">-{cn.total.toFixed(2)} $</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Payment Errors Section */}
+            {paymentErrors.length > 0 && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <h3 className="font-semibold text-red-800 mb-3 flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4" />
+                  {t('admin.commandes.paymentErrors')} ({paymentErrors.length})
+                </h3>
+                <div className="space-y-3">
+                  {paymentErrors.map((pe) => (
+                    <div key={pe.id} className="bg-white rounded-lg p-3 border border-red-100">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <p className="font-mono text-xs text-slate-500">{pe.stripePaymentId}</p>
+                          <p className="font-medium text-red-700">{pe.errorType}</p>
+                        </div>
+                        <span className="text-xs text-slate-500">
+                          {new Date(pe.createdAt).toLocaleString(locale)}
+                        </span>
+                      </div>
+                      <p className="text-sm text-slate-700 mb-2">{pe.errorMessage}</p>
+                      <div className="grid grid-cols-3 gap-4 text-xs text-slate-600">
+                        <div>
+                          <span className="text-slate-400">{t('admin.commandes.peAmount')}: </span>
+                          <span className="font-mono">{pe.amount.toFixed(2)} {pe.currency}</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-400">{t('admin.commandes.peEmail')}: </span>
+                          <span className="font-mono">{pe.customerEmail || 'N/A'}</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-400">{t('admin.commandes.peMethod')}: </span>
+                          <span className="font-mono">{pe.metadata?.paymentMethodType?.join(', ') || 'N/A'}</span>
+                        </div>
+                      </div>
+                      {pe.metadata?.declineCode && (
+                        <div className="mt-2 text-xs">
+                          <span className="text-slate-400">{t('admin.commandes.peDeclineCode')}: </span>
+                          <span className="font-mono text-red-600">{pe.metadata.declineCode}</span>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>

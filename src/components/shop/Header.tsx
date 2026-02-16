@@ -8,10 +8,10 @@ import { useSession, signOut } from 'next-auth/react';
 import { useCart } from '@/contexts/CartContext';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useTranslations } from '@/hooks/useTranslations';
-import { locales, localeNames, localeFlags, isValidLocale } from '@/i18n/config';
+import { locales, localeNames, localeFlags } from '@/i18n/config';
 import CartDrawer from './CartDrawer';
 import SearchModal from './SearchModal';
-import MegaMenu from './MegaMenu';
+
 
 // Build languages array from config (all 22 languages)
 const LANGUAGES = locales.map(code => ({
@@ -20,20 +20,10 @@ const LANGUAGES = locales.map(code => ({
   flag: localeFlags[code],
 }));
 
-function detectBrowserLanguage(): string {
-  if (typeof window === 'undefined') return 'en';
-  const browserLang = navigator.language?.toLowerCase();
-  // Check exact match first (e.g., ar-ma)
-  if (isValidLocale(browserLang)) return browserLang;
-  // Then check prefix (e.g., fr-CA -> fr)
-  const prefix = browserLang?.split('-')[0];
-  if (prefix && isValidLocale(prefix)) return prefix;
-  return 'en';
-}
 
 export default function Header() {
   const { itemCount } = useCart();
-  const { t } = useTranslations();
+  const { t, locale } = useTranslations();
   const { currency, currencies, setCurrency } = useCurrency();
   const { data: session, status } = useSession();
   
@@ -41,29 +31,15 @@ export default function Header() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
-  const [currentLang, setCurrentLang] = useState('en');
-  const [shopCategories, setShopCategories] = useState<{name: string; slug: string}[]>([]);
-  const [isMegaMenuOpen, setIsMegaMenuOpen] = useState(false);
 
   const pathname = usePathname();
 
-  // Fetch categories for shop dropdown
-  useEffect(() => {
-    fetch('/api/categories')
-      .then(res => res.ok ? res.json() : null)
-      .then(data => {
-        if (data?.categories) {
-          setShopCategories(data.categories.filter((c: { name: string; slug: string; isActive?: boolean }) => c.isActive !== false));
-        }
-      })
-      .catch(() => {});
-  }, []);
 
   // Close dropdowns on route change
   useEffect(() => {
     setOpenDropdown(null);
     setIsMobileMenuOpen(false);
-    setIsMegaMenuOpen(false);
+
   }, [pathname]);
 
   // Close dropdowns on ESC key or scroll
@@ -71,12 +47,12 @@ export default function Header() {
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setOpenDropdown(null);
-        setIsMegaMenuOpen(false);
+    
       }
     };
     const handleScroll = () => {
       setOpenDropdown(null);
-      setIsMegaMenuOpen(false);
+  
     };
     document.addEventListener('keydown', handleEsc);
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -86,55 +62,34 @@ export default function Header() {
     };
   }, []);
 
-  // Initialize language from cookie/localStorage
-  useEffect(() => {
-    // Check cookie first
-    const cookieLocale = document.cookie
-      .split('; ')
-      .find(row => row.startsWith('locale='))
-      ?.split('=')[1];
-    
-    if (cookieLocale && isValidLocale(cookieLocale)) {
-      setCurrentLang(cookieLocale);
-    } else {
-      // Fallback to localStorage
-      const saved = localStorage.getItem('locale');
-      if (saved && isValidLocale(saved)) {
-        setCurrentLang(saved);
-      } else {
-        // Detect from browser
-        const detected = detectBrowserLanguage();
-        setCurrentLang(detected);
-      }
-    }
-  }, []);
-
   const handleLanguageChange = (code: string) => {
-    // Update state immediately
-    setCurrentLang(code);
     setOpenDropdown(null);
-    
-    // Save to localStorage as backup
+    setIsMobileMenuOpen(false);
+
+    // Save to localStorage
     localStorage.setItem('locale', code);
-    
-    // Set cookie - CRITICAL: must work on HTTPS Azure
-    // Use Secure flag for HTTPS and SameSite=Strict for security
+
+    // Set cookie (1 year, works on both HTTP and HTTPS)
     const isSecure = window.location.protocol === 'https:';
     const cookieOptions = [
       `locale=${code}`,
       'path=/',
-      'max-age=31536000', // 1 year
+      'max-age=31536000',
       'SameSite=Lax',
     ];
-    
-    if (isSecure) {
-      cookieOptions.push('Secure');
-    }
-    
+    if (isSecure) cookieOptions.push('Secure');
     document.cookie = cookieOptions.join(';');
-    
-    // Force navigation to reload with new locale
-    // Using assign instead of reload to ensure fresh request
+
+    // Save to DB if user is authenticated
+    if (session?.user) {
+      fetch('/api/user/locale', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ locale: code }),
+      }).catch(() => {});
+    }
+
+    // Reload to apply new locale
     window.location.assign(window.location.href);
   };
 
@@ -147,7 +102,7 @@ export default function Header() {
     setOpenDropdown(openDropdown === name ? null : name);
   };
 
-  const currentLanguage = LANGUAGES.find(l => l.code === currentLang) || LANGUAGES[0];
+  const currentLanguage = LANGUAGES.find(l => l.code === locale) || LANGUAGES[0];
 
   return (
     <>
@@ -167,24 +122,7 @@ export default function Header() {
             <nav aria-label="Main navigation" className="hidden lg:flex items-center gap-1">
               <NavLink href="/">{t('nav.home') || 'Home'}</NavLink>
 
-              {/* Shop with MegaMenu */}
-              <div
-                className="relative"
-                data-dropdown="shop"
-                onMouseEnter={() => setIsMegaMenuOpen(true)}
-              >
-                <button
-                  onClick={() => setIsMegaMenuOpen(!isMegaMenuOpen)}
-                  className={`flex items-center gap-1 px-3 py-2 text-sm font-semibold rounded-lg transition-all whitespace-nowrap ${
-                    isMegaMenuOpen
-                      ? 'text-orange-400 bg-white/10'
-                      : 'text-gray-100 hover:text-orange-400 hover:bg-white/10'
-                  }`}
-                >
-                  {t('nav.shop') || 'Shop'}
-                  <ChevronIcon isOpen={isMegaMenuOpen} />
-                </button>
-              </div>
+              <NavLink href="/shop">{t('nav.shop') || 'Shop'}</NavLink>
 
               <NavLink href="/calculator">{t('nav.calculator') || 'Calculator'}</NavLink>
 
@@ -287,12 +225,12 @@ export default function Header() {
                           key={lang.code}
                           onClick={() => handleLanguageChange(lang.code)}
                           className={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-100 transition-colors ${
-                            currentLang === lang.code ? 'bg-orange-50 text-orange-600 font-medium' : ''
+                            locale === lang.code ? 'bg-orange-50 text-orange-600 font-medium' : ''
                           }`}
                         >
                           <span className="text-base">{lang.flag}</span>
                           <span className="truncate">{lang.name}</span>
-                          {currentLang === lang.code && (
+                          {locale === lang.code && (
                             <svg className="w-4 h-4 ml-auto text-orange-500" fill="currentColor" viewBox="0 0 20 20">
                               <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                             </svg>
@@ -334,9 +272,14 @@ export default function Header() {
                           <p className="text-xs text-gray-500 truncate">{session.user.email}</p>
                         </div>
                         <div className="py-1">
-                          {(session.user.role === 'OWNER' || session.user.role === 'EMPLOYEE') && (
+                          {session.user.role === 'OWNER' && (
                             <DropdownItem href="/admin" icon="⚙️" highlight>
-                              Admin Panel
+                              {t('nav.adminPanel')}
+                            </DropdownItem>
+                          )}
+                          {session.user.role === 'EMPLOYEE' && (
+                            <DropdownItem href="/dashboard/employee" icon="⚙️" highlight>
+                              {t('nav.adminPanel')}
                             </DropdownItem>
                           )}
                           <DropdownItem href="/account" icon="🏠">
@@ -410,11 +353,7 @@ export default function Header() {
                 <MobileNavLink href="/shop" onClick={() => setIsMobileMenuOpen(false)}>
                   {t('nav.shop') || 'Shop'}
                 </MobileNavLink>
-                {shopCategories.map(cat => (
-                  <MobileNavLink key={cat.slug} href={`/category/${cat.slug}`} onClick={() => setIsMobileMenuOpen(false)} indent>
-                    {cat.name}
-                  </MobileNavLink>
-                ))}
+
                 <MobileNavLink href="/calculator" onClick={() => setIsMobileMenuOpen(false)}>
                   🧮 {t('nav.calculator') || 'Calculator'}
                 </MobileNavLink>
@@ -454,6 +393,32 @@ export default function Header() {
                   </div>
                 </div>
 
+                {/* Mobile Language Selector */}
+                <div className="border-t border-white/10 pt-3 mt-2 mb-2">
+                  <p className="text-xs text-gray-400 px-3 mb-1">{t('nav.language') || 'Language'}</p>
+                  <div className="max-h-48 overflow-y-auto px-1">
+                    {LANGUAGES.map((lang) => (
+                      <button
+                        key={lang.code}
+                        onClick={() => handleLanguageChange(lang.code)}
+                        className={`w-full flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg transition-colors ${
+                          locale === lang.code
+                            ? 'bg-orange-500/20 text-orange-400 font-medium'
+                            : 'text-gray-300 hover:bg-white/5'
+                        }`}
+                      >
+                        <span className="text-base">{lang.flag}</span>
+                        <span className="truncate">{lang.name}</span>
+                        {locale === lang.code && (
+                          <svg className="w-4 h-4 ml-auto text-orange-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 {/* Mobile Account */}
                 <div className="border-t border-white/10 pt-3 mt-2">
                   {status === 'authenticated' && session?.user ? (
@@ -470,8 +435,8 @@ export default function Header() {
                         </div>
                       </div>
                       {(session.user.role === 'OWNER' || session.user.role === 'EMPLOYEE') && (
-                        <MobileNavLink href="/admin" onClick={() => setIsMobileMenuOpen(false)}>
-                          ⚙️ Admin Panel
+                        <MobileNavLink href={session.user.role === 'OWNER' ? '/admin' : '/dashboard/employee'} onClick={() => setIsMobileMenuOpen(false)}>
+                          ⚙️ {t('nav.adminPanel')}
                         </MobileNavLink>
                       )}
                       <MobileNavLink href="/account" onClick={() => setIsMobileMenuOpen(false)}>
@@ -505,7 +470,6 @@ export default function Header() {
         </div>
       </header>
 
-      <MegaMenu isOpen={isMegaMenuOpen} onClose={() => setIsMegaMenuOpen(false)} />
       <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
       <SearchModal open={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
     </>

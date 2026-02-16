@@ -7,6 +7,8 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { Prisma } from '@prisma/client';
+import { withTranslations } from '@/lib/translation';
+import { defaultLocale } from '@/i18n/config';
 
 export async function GET(request: NextRequest) {
   try {
@@ -19,6 +21,7 @@ export async function GET(request: NextRequest) {
     const purity = searchParams.get('purity');
     const sort = searchParams.get('sort') || 'relevance';
     const limit = parseInt(searchParams.get('limit') || '50');
+    const locale = searchParams.get('locale') || defaultLocale;
 
     // Build where clause
     const where: Prisma.ProductWhereInput = {
@@ -97,6 +100,11 @@ export async function GET(request: NextRequest) {
       products = products.filter((p) =>
         p.formats.some((f) => f.stockQuantity > 0)
       );
+    }
+
+    // Apply translations
+    if (locale !== defaultLocale) {
+      products = await withTranslations(products, 'Product', locale);
     }
 
     // Get categories with product counts for facets

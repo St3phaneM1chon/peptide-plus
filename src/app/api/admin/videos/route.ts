@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth-config';
+import { enqueue } from '@/lib/translation';
 
 // GET /api/admin/videos - List all videos
 export async function GET(request: NextRequest) {
@@ -196,6 +197,9 @@ export async function POST(request: NextRequest) {
         translations: true,
       },
     });
+
+    // Auto-enqueue translation for all 21 locales
+    enqueue.video(video.id);
 
     return NextResponse.json({ video }, { status: 201 });
   } catch (error) {

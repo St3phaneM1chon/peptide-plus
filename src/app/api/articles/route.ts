@@ -7,11 +7,14 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { withTranslations } from '@/lib/translation';
+import { defaultLocale } from '@/i18n/config';
 
 // GET - List published articles
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
+    const locale = searchParams.get('locale') || defaultLocale;
     const category = searchParams.get('category');
     const search = searchParams.get('search');
     const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
@@ -69,8 +72,14 @@ export async function GET(request: NextRequest) {
       prisma.article.count({ where }),
     ]);
 
+    // Apply translations for non-default locales
+    let translatedArticles = articles;
+    if (locale !== defaultLocale) {
+      translatedArticles = await withTranslations(articles, 'Article', locale);
+    }
+
     // Parse tags for frontend
-    const enrichedArticles = articles.map(a => {
+    const enrichedArticles = translatedArticles.map(a => {
       let parsedTags: string[] = [];
       if (a.tags) {
         try {

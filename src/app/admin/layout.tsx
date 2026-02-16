@@ -93,6 +93,7 @@ const navSections: NavSection[] = [
       { href: '/admin/promotions', labelKey: 'admin.nav.promotions', icon: 'percent' },
       { href: '/admin/newsletter', labelKey: 'admin.nav.newsletter', icon: 'mail' },
       { href: '/admin/bannieres', labelKey: 'admin.nav.banners', icon: 'image' },
+      { href: '/admin/upsell', labelKey: 'admin.nav.upsell', icon: 'trending-up' },
     ],
   },
   {

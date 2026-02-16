@@ -1204,7 +1204,16 @@ model Order {
   currency          Currency        @relation(fields: [currencyId], references: [id])
   parentOrder       Order?          @relation("OrderToOrder", fields: [parentOrderId], references: [id])
   childOrders       Order[]         @relation("OrderToOrder")
+  billingName       String?
+  billingAddress1   String?
+  billingAddress2   String?
+  billingCity       String?
+  billingState      String?
+  billingPostal     String?
+  billingCountry    String?
+  billingSameAsShipping Boolean       @default(true)
   items             OrderItem[]
+  paymentErrors     PaymentError[]
   returnRequests    ReturnRequest[]
 
   @@index([createdAt])
@@ -1213,6 +1222,24 @@ model Order {
   @@index([paymentStatus])
   @@index([status])
   @@index([userId])
+}
+
+model PaymentError {
+  id              String   @id @default(cuid())
+  orderId         String?
+  stripePaymentId String?
+  errorType       String
+  errorMessage    String
+  amount          Float    @default(0)
+  currency        String   @default("CAD")
+  customerEmail   String?
+  metadata        String?
+  createdAt       DateTime @default(now())
+  order           Order?   @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([orderId])
+  @@index([errorType])
 }
 
 model OrderItem {
@@ -1428,6 +1455,7 @@ model Product {
   quantityDiscounts   QuantityDiscount[]
   reviews             Review[]
   stockAlerts         StockAlert[]
+  upsellConfig        UpsellConfig?
 
   @@index([categoryId])
   @@index([isBestseller])
@@ -2454,6 +2482,27 @@ model TranslationFeedback {
 
   @@index([locale, rating])
   @@index([createdAt])
+}
+
+model UpsellConfig {
+  id                   String   @id @default(cuid())
+  productId            String?  @unique
+  isEnabled            Boolean  @default(true)
+  showQuantityDiscount Boolean  @default(true)
+  showSubscription     Boolean  @default(true)
+  displayRule          String   @default("ALWAYS")
+  quantityTitle        String?
+  quantitySubtitle     String?
+  subscriptionTitle    String?
+  subscriptionSubtitle String?
+  suggestedQuantity    Int?
+  suggestedFrequency   String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  product              Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@index([isEnabled])
 }
 
 enum AccountType {

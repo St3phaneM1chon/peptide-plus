@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth-config';
+import { enqueue } from '@/lib/translation';
 
 // GET /api/admin/blog - List all blog posts
 export async function GET(request: NextRequest) {
@@ -206,6 +207,9 @@ export async function POST(request: NextRequest) {
         translations: true,
       },
     });
+
+    // Auto-enqueue translation for all 21 locales
+    enqueue.blogPost(post.id);
 
     return NextResponse.json({ post }, { status: 201 });
   } catch (error) {

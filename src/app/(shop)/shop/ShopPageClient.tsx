@@ -65,11 +65,13 @@ export default function ShopPage() {
   const [showInStockOnly, setShowInStockOnly] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
 
-  // Fetch products from API
+  const { locale } = useTranslations();
+
+  // Fetch products from API with locale for translations
   useEffect(() => {
     async function fetchProducts() {
       try {
-        const res = await fetch('/api/products');
+        const res = await fetch(`/api/products?locale=${locale}`);
         if (!res.ok) throw new Error('Failed to fetch products');
         const data = await res.json();
         const list = Array.isArray(data) ? data : data.products || data.data || [];
@@ -82,7 +84,7 @@ export default function ShopPage() {
       }
     }
     fetchProducts();
-  }, []);
+  }, [locale]);
 
   // Build dynamic categories from loaded products
   const categories = useMemo<CategoryCount[]>(() => {

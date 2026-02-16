@@ -90,12 +90,12 @@ const testimonials = [
 ];
 
 export default function HomePage() {
-  const { t } = useTranslations();
+  const { t, locale } = useTranslations();
   const [products, setProducts] = useState<ApiProduct[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/products')
+    fetch(`/api/products?locale=${locale}`)
       .then((res) => res.ok ? res.json() : null)
       .then((data) => {
         if (data) {
@@ -105,7 +105,7 @@ export default function HomePage() {
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, []);
+  }, [locale]);
 
   const featuredProducts = useMemo(
     () => products.filter((p) => p.isFeatured).slice(0, 4).map(toCardProps),

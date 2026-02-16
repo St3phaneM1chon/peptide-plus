@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
+import { enqueue } from '@/lib/translation';
 
 // GET /api/admin/content/faqs - List all FAQs
 export async function GET() {
@@ -47,6 +48,9 @@ export async function POST(request: NextRequest) {
     },
   });
 
+  // Auto-enqueue translation for all 21 locales
+  enqueue.faq(faq.id);
+
   return NextResponse.json({ faq }, { status: 201 });
 }
 
@@ -74,6 +78,9 @@ export async function PUT(request: NextRequest) {
       ...(isPublished !== undefined && { isPublished }),
     },
   });
+
+  // Auto-enqueue translation (force re-translate on update)
+  enqueue.faq(faq.id, true);
 
   return NextResponse.json({ faq });
 }

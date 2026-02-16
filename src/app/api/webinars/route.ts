@@ -5,23 +5,30 @@ export const dynamic = 'force-dynamic';
  * GET: Fetch all published webinars, ordered by scheduledAt desc
  */
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { withTranslations } from '@/lib/translation';
+import { defaultLocale } from '@/i18n/config';
 
 // GET - List published webinars
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const webinars = await prisma.webinar.findMany({
+    const { searchParams } = new URL(request.url);
+    const locale = searchParams.get('locale') || defaultLocale;
+
+    let webinars = await prisma.webinar.findMany({
       where: {
         isPublished: true,
-      },
-      include: {
-        translations: true,
       },
       orderBy: {
         scheduledAt: 'desc',
       },
     });
+
+    // Apply translations
+    if (locale !== defaultLocale) {
+      webinars = await withTranslations(webinars, 'Webinar', locale);
+    }
 
     return NextResponse.json({ webinars }, {
       headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600' },

@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth-config';
+import { enqueue } from '@/lib/translation';
 
 // GET single format
 export async function GET(
@@ -117,6 +118,9 @@ export async function PUT(
         isActive: isActive ?? undefined,
       },
     });
+
+    // Auto-enqueue translation (force re-translate on update)
+    enqueue.productFormat(formatId, true);
 
     return NextResponse.json(format);
   } catch (error) {

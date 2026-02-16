@@ -30,7 +30,7 @@ export function HeaderShopify() {
         {/* Navigation Desktop */}
         <nav className="header__nav hidden md:flex">
           <Link href="/catalogue">{t('nav.catalog')}</Link>
-          <Link href="/catalogue/securite">Sécurité</Link>
+          <Link href="/catalogue/securite">{t('nav.security')}</Link>
           <Link href="/catalogue/formation">{t('nav.courses')}</Link>
           <Link href="/contact">{t('nav.contact')}</Link>
         </nav>
@@ -142,7 +142,7 @@ export function HeaderShopify() {
               className="text-gray-500 hover:text-gray-900 font-medium"
               onClick={() => setMobileMenuOpen(false)}
             >
-              Sécurité
+              {t('nav.security')}
             </Link>
             <Link
               href="/catalogue/formation"

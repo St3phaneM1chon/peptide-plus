@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useCart } from '@/contexts/CartContext';
+import { useUpsell } from '@/contexts/UpsellContext';
 import { useTranslations } from '@/hooks/useTranslations';
 import WishlistButton from './WishlistButton';
 import QuickViewButton from './QuickViewButton';
@@ -97,6 +98,7 @@ export default function ProductCard({
 }: ProductCardProps) {
   const { formatPrice } = useCurrency();
   const { addItem } = useCart();
+  const { addItemWithUpsell } = useUpsell();
   const { t } = useTranslations();
   
   // Filter out formats with stockQuantity <= 0
@@ -160,7 +162,7 @@ export default function ProductCard({
     const formatName = getFormatName(selectedFormat);
     const fullProductName = `${productName} ${formatName}`;
     
-    addItem({
+    addItemWithUpsell({
       productId: id,
       formatId: selectedFormat.id,
       name: fullProductName,

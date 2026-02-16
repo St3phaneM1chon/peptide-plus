@@ -1,10 +1,15 @@
 export const dynamic = 'force-dynamic';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { withTranslations } from '@/lib/translation';
+import { defaultLocale } from '@/i18n/config';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const posts = await prisma.blogPost.findMany({
+    const { searchParams } = new URL(request.url);
+    const locale = searchParams.get('locale') || defaultLocale;
+
+    let posts = await prisma.blogPost.findMany({
       where: { isPublished: true },
       orderBy: { publishedAt: 'desc' },
       select: {
@@ -13,6 +18,12 @@ export async function GET() {
         publishedAt: true, locale: true,
       },
     });
+
+    // Apply translations
+    if (locale !== defaultLocale) {
+      posts = await withTranslations(posts, 'BlogPost', locale);
+    }
+
     return NextResponse.json({ posts }, {
       headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600' },
     });

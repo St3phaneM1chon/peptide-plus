@@ -25,7 +25,7 @@ const MAX_SHOWN = 8;
 
 export default function RecentlyViewed({ excludeSlug }: RecentlyViewedProps) {
   const { recentSlugs } = useRecentlyViewed();
-  const { t } = useTranslations();
+  const { t, locale } = useTranslations();
   const { formatPrice } = useCurrency();
 
   const [products, setProducts] = useState<RecentProduct[]>([]);
@@ -48,7 +48,7 @@ export default function RecentlyViewed({ excludeSlug }: RecentlyViewedProps) {
       setLoading(true);
       try {
         // Fetch all products and filter by slugs client-side
-        const res = await fetch('/api/products');
+        const res = await fetch(`/api/products?locale=${locale}`);
         if (!res.ok) throw new Error('Failed to fetch products');
         const data = await res.json();
         const allProducts = Array.isArray(data) ? data : data.products || data.data || [];

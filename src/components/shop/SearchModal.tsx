@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from '@/hooks/useTranslations';
 
 interface SearchResult {
   id: string;
@@ -24,6 +25,7 @@ export default function SearchModal({ open, onClose }: SearchModalProps) {
   const [isLoading, setIsLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
+  const { t, locale } = useTranslations();
 
   // Focus input when modal opens
   useEffect(() => {
@@ -46,7 +48,7 @@ export default function SearchModal({ open, onClose }: SearchModalProps) {
     const timer = setTimeout(async () => {
       setIsLoading(true);
       try {
-        const res = await fetch(`/api/products/search?q=${encodeURIComponent(query)}`);
+        const res = await fetch(`/api/products/search?q=${encodeURIComponent(query)}&locale=${locale}`);
         if (res.ok) {
           const data = await res.json();
           setResults(data.products || []);
@@ -107,7 +109,7 @@ export default function SearchModal({ open, onClose }: SearchModalProps) {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Rechercher un peptide..."
+            placeholder={t('search.placeholder')}
             aria-label="Search products"
             className="flex-1 text-lg outline-none placeholder:text-neutral-400"
           />
@@ -148,7 +150,7 @@ export default function SearchModal({ open, onClose }: SearchModalProps) {
                     <div className="text-right">
                       <p className="font-semibold text-neutral-900">${result.price.toFixed(2)}</p>
                       {result.purity && (
-                        <p className="text-xs text-emerald-600">{result.purity}% pureté</p>
+                        <p className="text-xs text-emerald-600">{t('search.purityPercent').replace('{purity}', String(result.purity))}</p>
                       )}
                     </div>
                   </Link>
@@ -163,7 +165,7 @@ export default function SearchModal({ open, onClose }: SearchModalProps) {
                   }}
                   className="w-full flex items-center justify-center gap-2 py-2 text-sm font-medium text-orange-600 hover:text-orange-700 transition-colors"
                 >
-                  View all {results.length} results
+                  {t('search.viewAllResults').replace('{count}', String(results.length))}
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                   </svg>
@@ -172,7 +174,7 @@ export default function SearchModal({ open, onClose }: SearchModalProps) {
             </>
           ) : query ? (
             <div className="py-12 text-center">
-              <p className="text-neutral-500 mb-3">Aucun résultat pour &quot;{query}&quot;</p>
+              <p className="text-neutral-500 mb-3">{t('search.noResultsFor').replace('{query}', query)}</p>
               <button
                 onClick={() => {
                   router.push(`/search?q=${encodeURIComponent(query)}`);
@@ -180,12 +182,12 @@ export default function SearchModal({ open, onClose }: SearchModalProps) {
                 }}
                 className="text-sm text-orange-600 hover:text-orange-700 font-medium transition-colors"
               >
-                Try advanced search
+                {t('search.tryAdvancedSearch')}
               </button>
             </div>
           ) : (
             <div className="p-6">
-              <p className="text-sm font-medium text-neutral-500 mb-3">Recherches populaires</p>
+              <p className="text-sm font-medium text-neutral-500 mb-3">{t('search.popularSearches')}</p>
               <div className="flex flex-wrap gap-2">
                 {popularSearches.map((term) => (
                   <button

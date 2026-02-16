@@ -12,19 +12,17 @@ import { auth } from '@/lib/auth-config';
 import { db } from '@/lib/db';
 
 const FREQUENCY_DISCOUNTS: Record<string, number> = {
-  WEEKLY: 20,
-  BIWEEKLY: 15,
-  MONTHLY: 10,
-  BIMONTHLY: 5,
-  QUARTERLY: 5,
+  EVERY_2_MONTHS: 15,
+  EVERY_4_MONTHS: 12,
+  EVERY_6_MONTHS: 10,
+  EVERY_12_MONTHS: 5,
 };
 
 const FREQUENCY_DAYS: Record<string, number> = {
-  WEEKLY: 7,
-  BIWEEKLY: 14,
-  MONTHLY: 30,
-  BIMONTHLY: 60,
-  QUARTERLY: 90,
+  EVERY_2_MONTHS: 60,
+  EVERY_4_MONTHS: 120,
+  EVERY_6_MONTHS: 180,
+  EVERY_12_MONTHS: 365,
 };
 
 async function getUser(session: { user?: { email?: string | null } }) {

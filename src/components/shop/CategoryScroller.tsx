@@ -3,6 +3,7 @@
 import { useRef } from 'react';
 import Link from 'next/link';
 import ProductCard from './ProductCard';
+import { useTranslations } from '@/hooks/useTranslations';
 
 interface Product {
   id: string;
@@ -33,6 +34,7 @@ interface CategoryScrollerProps {
 }
 
 export default function CategoryScroller({ title, slug, products }: CategoryScrollerProps) {
+  const { t } = useTranslations();
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const scroll = (direction: 'left' | 'right') => {
@@ -58,7 +60,7 @@ export default function CategoryScroller({ title, slug, products }: CategoryScro
               <button
                 onClick={() => scroll('left')}
                 className="p-2 border border-neutral-300 rounded-lg text-neutral-600 hover:bg-neutral-100 transition-colors"
-                aria-label="Défiler vers la gauche"
+                aria-label={t('common.scrollLeft')}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -67,7 +69,7 @@ export default function CategoryScroller({ title, slug, products }: CategoryScro
               <button
                 onClick={() => scroll('right')}
                 className="p-2 border border-neutral-300 rounded-lg text-neutral-600 hover:bg-neutral-100 transition-colors"
-                aria-label="Défiler vers la droite"
+                aria-label={t('common.scrollRight')}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -79,7 +81,7 @@ export default function CategoryScroller({ title, slug, products }: CategoryScro
               href={`/category/${slug}`}
               className="flex items-center gap-1 text-emerald-600 font-medium hover:text-emerald-700 transition-colors"
             >
-              Voir tout
+              {t('shop.viewAll')}
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>

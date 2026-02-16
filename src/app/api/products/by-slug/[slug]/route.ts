@@ -1,16 +1,19 @@
 export const dynamic = 'force-dynamic';
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { withTranslation } from '@/lib/translation';
+import { defaultLocale } from '@/i18n/config';
 
 interface RouteParams {
   params: Promise<{ slug: string }>;
 }
 
 // GET - Fetch product by slug (for QuickView)
-export async function GET(_request: Request, { params }: RouteParams) {
+export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const { slug } = await params;
+    const locale = request.nextUrl.searchParams.get('locale') || defaultLocale;
 
     const product = await prisma.product.findUnique({
       where: { slug },
@@ -37,25 +40,30 @@ export async function GET(_request: Request, { params }: RouteParams) {
       return NextResponse.json({ error: 'Product not found' }, { status: 404 });
     }
 
+    // Apply translations
+    const translated = locale !== defaultLocale
+      ? await withTranslation(product, 'Product', locale)
+      : product;
+
     // Transform for client
-    const primaryImage = product.images[0];
+    const primaryImage = translated.images[0];
     const lowestPrice = product.formats.length > 0
       ? Math.min(...product.formats.map(f => Number(f.price)))
       : Number(product.price);
 
     const transformedProduct = {
-      id: product.id,
-      name: product.name,
-      subtitle: product.subtitle || '',
-      slug: product.slug,
-      shortDescription: product.shortDescription || '',
+      id: translated.id,
+      name: translated.name,
+      subtitle: translated.subtitle || '',
+      slug: translated.slug,
+      shortDescription: translated.shortDescription || '',
       price: lowestPrice,
-      purity: product.purity ? Number(product.purity) : undefined,
-      avgMass: product.molecularWeight ? `${Number(product.molecularWeight)} Da` : undefined,
-      categoryName: product.category?.name || '',
-      productImage: primaryImage?.url || product.imageUrl || '/images/products/peptide-default.png',
-      videoUrl: product.videoUrl || undefined,
-      formats: product.formats.map(f => ({
+      purity: translated.purity ? Number(translated.purity) : undefined,
+      avgMass: translated.molecularWeight ? `${Number(translated.molecularWeight)} Da` : undefined,
+      categoryName: translated.category?.name || '',
+      productImage: primaryImage?.url || translated.imageUrl || '/images/products/peptide-default.png',
+      videoUrl: translated.videoUrl || undefined,
+      formats: translated.formats.map(f => ({
         id: f.id,
         name: f.name,
         type: f.formatType?.toLowerCase() || 'vial_2ml',

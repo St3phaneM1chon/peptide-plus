@@ -136,7 +136,11 @@
     "youSave": "절약한 금액",
     "qty": "Qty",
     "buyCourse": "Buy this course",
-    "buyNow": "Buy now"
+    "buyNow": "Buy now",
+    "stockLeft": "{count} left",
+    "savePercent": "Save {percent}%",
+    "productIncluded": "{count} product included",
+    "failedToLoadProduct": "Failed to load product"
   },
   "home": {
     "heroTitle": "캐나다 최고의 연구용 펩타이드",
@@ -220,7 +224,11 @@
     "dashboard": "대시보드",
     "myAccount": "내 계정",
     "quickLinks": "빠른 링크",
-    "bundles": "번들"
+    "bundles": "번들",
+    "adminPanel": "Admin Panel",
+    "closeMenu": "Close menu",
+    "openMenu": "Open menu",
+    "security": "Security"
   },
   "categories": {
     "all": "모든 제품",
@@ -299,7 +307,11 @@
     "standardKit": "스탠다드 키트",
     "deluxeKit": "디럭스 키트",
     "basicKit": "베이직 키트",
-    "proKit": "프로 키트"
+    "proKit": "프로 키트",
+    "bundle": "Bundle",
+    "accessory": "Accessory",
+    "nasalSpray": "Nasal Spray",
+    "cream": "Cream"
   },
   "units": {
     "mg": "mg",
@@ -316,7 +328,18 @@
     "step2Desc": "재구성에 사용할 정균수 양(mL)을 입력하세요.",
     "step3Title": "원하는 용량",
     "step3Desc": "주사당 원하는 용량을 mcg 또는 mg로 입력하세요.",
-    "disclaimer": "이 계산기는 체외 연구 정보 제공 목적으로만 제공됩니다."
+    "disclaimer": "이 계산기는 체외 연구 정보 제공 목적으로만 제공됩니다.",
+    "inVial": "in the vial",
+    "bacteriostaticWater": "bacteriostatic water",
+    "perInjection": "per injection",
+    "result": "Result",
+    "concentration": "Concentration:",
+    "volumeToInject": "Volume to inject:",
+    "unitsToInject": "Units to inject",
+    "unitsU100": "units (U-100)",
+    "syringe3mlRequired": "3 mL syringe required",
+    "mlSyringe3ml": "mL (3 mL syringe)",
+    "unitsU100Count": "{count} units U-100"
   },
   "disclaimer": {
     "title": "연구 전용",
@@ -350,7 +373,8 @@
     "allRightsReserved": "모든 권리 보유",
     "help": "도움",
     "subscribeNewsletter": "뉴스레터 구독하기",
-    "newsletterDescription": "Get our latest news and exclusive offers."
+    "newsletterDescription": "Get our latest news and exclusive offers.",
+    "location": "Montreal, Quebec, Canada"
   },
   "common": {
     "loading": "로딩 중...",
@@ -404,7 +428,11 @@
     "search": "검색",
     "redirecting": "리디렉션 중...",
     "tryAgain": "다시 시도",
-    "download": "Download"
+    "download": "Download",
+    "scrollLeft": "Scroll left",
+    "scrollRight": "Scroll right",
+    "genericError": "An error occurred",
+    "connectionError": "Connection error"
   },
   "cart": {
     "title": "장바구니",
@@ -436,7 +464,8 @@
     "decreaseQuantity": "수량 줄이기",
     "increaseQuantity": "수량 늘리기",
     "discount": "할인",
-    "customersAlsoBought": "고객들이 함께 구매한 상품"
+    "customersAlsoBought": "고객들이 함께 구매한 상품",
+    "addThis": "Add this"
   },
   "checkout": {
     "emptyCart": "장바구니가 비어 있습니다",
@@ -559,7 +588,27 @@
     "payWithGooglePay": "Pay with Google Pay",
     "redirecting": "Redirecting...",
     "saveCardForFuture": "Save this card for my future purchases",
-    "saveAddressForFuture": "Save this address for my future orders"
+    "saveAddressForFuture": "Save this address for my future orders",
+    "namePlaceholder": "John Doe",
+    "cityPlaceholder": "Montreal",
+    "billingAddress": "Billing Address",
+    "billingAddressSameAsShipping": "Billing address is the same as shipping address",
+    "interac": "Interac e-Transfer",
+    "interacDescription": "Pay securely with your bank account",
+    "creditCardDescription": "Visa, Mastercard, American Express",
+    "paypalDescription": "Pay with your PayPal account",
+    "applePayDescription": "Quick and secure payment",
+    "googlePayDescription": "Quick and secure payment",
+    "paymentDeclined": "Payment declined by your bank. Please try another card or contact your bank.",
+    "paymentExpiredCard": "Your card has expired. Please use a different card.",
+    "paymentInsufficientFunds": "Insufficient funds. Please try another payment method.",
+    "paymentSystemError": "A system error occurred. Please try again. If the problem persists, contact us.",
+    "paymentNetworkError": "Connection error. Please check your internet connection and try again.",
+    "paymentInvalidCard": "Invalid card number. Please check and try again.",
+    "paymentGenericError": "Payment could not be processed. Please try again or use a different payment method.",
+    "needHelp": "Need help? Contact us",
+    "billingFirstName": "First name",
+    "billingLastName": "Last name"
   },
   "rewards": {
     "title": "리워드 프로그램",
@@ -1157,7 +1206,8 @@
     },
     "removeFromWishlist": "위시리스트에서 제거",
     "savedProducts": "저장된 제품",
-    "wishlist": "위시리스트"
+    "wishlist": "위시리스트",
+    "connectedAs": "Connected as {email}"
   },
   "reviews": {
     "customerReviews": "고객 리뷰",
@@ -1192,7 +1242,19 @@
     "showingAllReviews": "모든 {count}개 리뷰 표시",
     "clearFilter": "필터 지우기",
     "rewardsInfo": "리뷰를 작성하고 100 포인트를 적립하세요",
-    "rewardsTitle": "보상 받기"
+    "rewardsTitle": "보상 받기",
+    "pointsEarned": "You earned {points} loyalty points!",
+    "submitSuccess": "Review submitted successfully! It will be published after admin approval.",
+    "showingFiltered": "Showing {rating}-star reviews",
+    "showingAll": "Showing all reviews",
+    "clearFilters": "Clear filters",
+    "withPhotos": "With Photos ({count})",
+    "loading": "Loading reviews...",
+    "noMatchingReviews": "No reviews match your filters",
+    "noReviewsYet": "No reviews yet. Be the first to review!",
+    "storeResponse": "Response from BioCycle Peptides+",
+    "titlePlaceholder": "Summarize your experience",
+    "contentPlaceholder": "Tell us about your experience..."
   },
   "qa": {
     "questionsAnswers": "질문 & 답변",
@@ -2123,7 +2185,8 @@
       "logsAudit": "로그/감사",
       "employees": "직원",
       "settings": "설정",
-      "uatTesting": "UAT 테스트"
+      "uatTesting": "UAT 테스트",
+      "upsell": "Upsell Offers"
     },
     "viewSite": "사이트 보기",
     "notifications": "알림",
@@ -2381,7 +2444,12 @@
       "reshipReasonReturned": "발신자에게 반송된 패키지",
       "reshipReasonAddress": "잘못된 주소 - 재발송",
       "reshipReasonMissing": "패키지에 내용물이 누락되었습니다",
-      "reship": "재발송"
+      "reship": "재발송",
+      "paymentErrors": "결제 오류",
+      "peAmount": "금액",
+      "peEmail": "이메일",
+      "peMethod": "방법",
+      "peDeclineCode": "거부 코드"
     },
     "reviews": {
       "title": "고객 리뷰",
@@ -5161,6 +5229,37 @@
       "totalRevenue": "총 수익",
       "viewProfile": "프로필 보기",
       "vipGoldPlus": "VIP (골드+)"
+    },
+    "upsell": {
+      "title": "Upsell Offers",
+      "subtitle": "Configure pre-cart upsell offers to increase average order value",
+      "globalConfig": "Global Configuration",
+      "productOverrides": "Product Overrides",
+      "addOverride": "Add Product Override",
+      "enabled": "Enabled",
+      "disabled": "Disabled",
+      "showQuantityDiscount": "Show Volume Discounts",
+      "showSubscription": "Show Subscription Offer",
+      "displayRule": "Display Rule",
+      "displayRuleAlways": "Always show",
+      "displayRuleOnceSession": "Once per session",
+      "displayRuleOnceProduct": "Once per product",
+      "quantityTitle": "Volume Title (custom)",
+      "quantitySubtitle": "Volume Subtitle (custom)",
+      "subscriptionTitle": "Subscription Title (custom)",
+      "subscriptionSubtitle": "Subscription Subtitle (custom)",
+      "suggestedQuantity": "Suggested Quantity",
+      "suggestedFrequency": "Suggested Frequency",
+      "selectProduct": "Select a product",
+      "noConfig": "No upsell configuration yet",
+      "noConfigDesc": "Create a global config or product-specific overrides to start showing upsell offers",
+      "globalLabel": "Global (default)",
+      "activeConfigs": "Active Configs",
+      "productOverrideCount": "Product Overrides",
+      "globalStatus": "Global Status",
+      "confirmDelete": "Delete this upsell configuration?",
+      "saveSuccess": "Upsell configuration saved",
+      "deleteSuccess": "Upsell configuration deleted"
     }
   },
   "countdown": {
@@ -5175,7 +5274,14 @@
       "title": "페이지를 찾을 수 없습니다"
     },
     "forbidden": "접근 금지",
-    "unauthorized": "권한이 없는 접근"
+    "unauthorized": "권한이 없는 접근",
+    "pageNotFound": "Page Not Found",
+    "pageNotFoundDesc": "The page you are looking for doesn't exist or has been moved.",
+    "goToHomepage": "Go to Homepage",
+    "browseProducts": "Browse Products",
+    "somethingWentWrong": "Something went wrong!",
+    "errorDescription": "We apologize for the inconvenience. Please try again.",
+    "errorId": "Error ID: {id}"
   },
   "flashSale": {
     "endsIn": "종료까지",
@@ -5335,5 +5441,93 @@
     "companyDashboard": "Company dashboard",
     "addStudent": "Add a student",
     "buyCourses": "Buy courses"
-  }
+  },
+  "upsell": {
+    "title": "Special Offer Before Checkout",
+    "subtitle": "Save more with these exclusive deals",
+    "quantity": {
+      "title": "Buy More, Save More",
+      "subtitle": "Volume discounts available for this product",
+      "savePercent": "Save {percent}%",
+      "perUnit": "{price}/unit",
+      "totalSavings": "You save {amount}",
+      "accept": "Buy {qty} and save {percent}%",
+      "bestDeal": "Best Deal",
+      "researchCenter": "Research Center?",
+      "researchCenterDesc": "High volumes? Contact us for custom pricing."
+    },
+    "subscription": {
+      "title": "Subscribe & Save",
+      "subtitle": "Never run out — automatic delivery at a discount",
+      "selectFrequency": "Select delivery frequency",
+      "savings": "Save {percent}% per delivery",
+      "accept": "Subscribe and save {percent}%",
+      "cancelAnytime": "Cancel anytime, no commitment",
+      "every2months": "Every 2 months",
+      "every4months": "Every 4 months",
+      "every6months": "Every 6 months",
+      "every12months": "Every 12 months"
+    },
+    "decline": "No thanks, add to cart",
+    "reassurance": "You can always change your mind later",
+    "loading": "Loading offers..."
+  },
+  "search": {
+    "placeholder": "Search for a peptide...",
+    "purityPercent": "{purity}% purity",
+    "viewAllResults": "View all {count} results",
+    "noResultsFor": "No results for \"{query}\"",
+    "tryAdvancedSearch": "Try advanced search",
+    "popularSearches": "Popular searches"
+  },
+  "giftCard": {
+    "title": "Gift Card",
+    "enterCode": "Please enter a gift card code",
+    "linkedSuccess": "Gift card linked to your account!",
+    "balance": "Balance: {amount}",
+    "checkBalance": "Check Balance",
+    "redeem": "Redeem",
+    "note": "Gift cards can be used for any product on our site"
+  },
+  "provinces": {
+    "AB": "Alberta",
+    "BC": "British Columbia",
+    "MB": "Manitoba",
+    "NB": "New Brunswick",
+    "NL": "Newfoundland and Labrador",
+    "NS": "Nova Scotia",
+    "NT": "Northwest Territories",
+    "NU": "Nunavut",
+    "ON": "Ontario",
+    "PE": "Prince Edward Island",
+    "QC": "Quebec",
+    "SK": "Saskatchewan",
+    "YT": "Yukon"
+  },
+  "video": {
+    "loadPlayer": "Load video player",
+    "thumbnail": "Video thumbnail",
+    "productVideo": "Product video"
+  },
+  "share": {
+    "copyLink": "Copy link"
+  },
+  "ownerDashboard": {
+    "title": "Owner Dashboard",
+    "subtitle": "Complete overview",
+    "students": "{count} students",
+    "employees": "Employees",
+    "recentTransactions": "Recent Transactions"
+  },
+  "orderStatus": {
+    "completed": "Paid",
+    "pending": "Pending",
+    "failed": "Failed"
+  },
+  "tts.listen": "이 페이지 듣기",
+  "tts.pause": "일시정지",
+  "tts.resume": "계속",
+  "tts.stop": "중지",
+  "tts.loading": "음성 로딩 중...",
+  "tts.unsupported": "브라우저에서 음성 읽기를 지원하지 않습니다"
 }

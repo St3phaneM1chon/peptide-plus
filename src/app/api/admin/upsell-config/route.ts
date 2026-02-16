@@ -1,0 +1,149 @@
+export const dynamic = 'force-dynamic';
+
+import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/lib/auth-config';
+import { db } from '@/lib/db';
+
+async function checkAdmin() {
+  const session = await auth();
+  if (!session?.user?.email) return false;
+  const user = await db.user.findUnique({
+    where: { email: session.user.email },
+    select: { role: true },
+  });
+  return user?.role === 'OWNER' || user?.role === 'EMPLOYEE';
+}
+
+// GET — List all upsell configs
+export async function GET() {
+  try {
+    if (!(await checkAdmin())) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const configs = await db.upsellConfig.findMany({
+      include: {
+        product: { select: { id: true, name: true, slug: true, imageUrl: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return NextResponse.json({
+      configs: configs.map((c) => ({
+        id: c.id,
+        productId: c.productId,
+        productName: c.product?.name || null,
+        productSlug: c.product?.slug || null,
+        productImage: c.product?.imageUrl || null,
+        isEnabled: c.isEnabled,
+        showQuantityDiscount: c.showQuantityDiscount,
+        showSubscription: c.showSubscription,
+        displayRule: c.displayRule,
+        quantityTitle: c.quantityTitle,
+        quantitySubtitle: c.quantitySubtitle,
+        subscriptionTitle: c.subscriptionTitle,
+        subscriptionSubtitle: c.subscriptionSubtitle,
+        suggestedQuantity: c.suggestedQuantity,
+        suggestedFrequency: c.suggestedFrequency,
+        createdAt: c.createdAt.toISOString(),
+        updatedAt: c.updatedAt.toISOString(),
+      })),
+    });
+  } catch (error) {
+    console.error('Error fetching upsell configs:', error);
+    return NextResponse.json({ error: 'Server error' }, { status: 500 });
+  }
+}
+
+// POST — Create or update upsell config (upsert on productId)
+export async function POST(request: NextRequest) {
+  try {
+    if (!(await checkAdmin())) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const {
+      productId,
+      isEnabled,
+      showQuantityDiscount,
+      showSubscription,
+      displayRule,
+      quantityTitle,
+      quantitySubtitle,
+      subscriptionTitle,
+      subscriptionSubtitle,
+      suggestedQuantity,
+      suggestedFrequency,
+    } = body;
+
+    const data = {
+      isEnabled: isEnabled ?? true,
+      showQuantityDiscount: showQuantityDiscount ?? true,
+      showSubscription: showSubscription ?? true,
+      displayRule: displayRule || 'ALWAYS',
+      quantityTitle: quantityTitle || null,
+      quantitySubtitle: quantitySubtitle || null,
+      subscriptionTitle: subscriptionTitle || null,
+      subscriptionSubtitle: subscriptionSubtitle || null,
+      suggestedQuantity: suggestedQuantity ? Number(suggestedQuantity) : null,
+      suggestedFrequency: suggestedFrequency || null,
+    };
+
+    // productId can be null for global config, or a string for product-specific
+    const pId = productId || null;
+
+    let config;
+    if (pId) {
+      // Product-specific config: upsert on productId
+      config = await db.upsellConfig.upsert({
+        where: { productId: pId },
+        create: { productId: pId, ...data },
+        update: data,
+      });
+    } else {
+      // Global config: find existing or create
+      const existing = await db.upsellConfig.findFirst({
+        where: { productId: null },
+      });
+      if (existing) {
+        config = await db.upsellConfig.update({
+          where: { id: existing.id },
+          data,
+        });
+      } else {
+        config = await db.upsellConfig.create({
+          data: { productId: null, ...data },
+        });
+      }
+    }
+
+    return NextResponse.json({ config });
+  } catch (error) {
+    console.error('Error saving upsell config:', error);
+    return NextResponse.json({ error: 'Server error' }, { status: 500 });
+  }
+}
+
+// DELETE — Delete an upsell config by ID
+export async function DELETE(request: NextRequest) {
+  try {
+    if (!(await checkAdmin())) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return NextResponse.json({ error: 'id is required' }, { status: 400 });
+    }
+
+    await db.upsellConfig.delete({ where: { id } });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting upsell config:', error);
+    return NextResponse.json({ error: 'Server error' }, { status: 500 });
+  }
+}

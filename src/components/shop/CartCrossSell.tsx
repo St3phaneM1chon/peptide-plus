@@ -33,7 +33,7 @@ export default function CartCrossSell({ cartProductIds }: CartCrossSellProps) {
   const [addingProductId, setAddingProductId] = useState<string | null>(null);
   const { addItem } = useCart();
   const { formatPrice } = useCurrency();
-  const { t } = useTranslations();
+  const { t, locale } = useTranslations();
 
   useEffect(() => {
     if (cartProductIds.length === 0) {
@@ -71,14 +71,16 @@ export default function CartCrossSell({ cartProductIds }: CartCrossSellProps) {
 
     try {
       // Fetch product details to get first available format
-      const response = await fetch(`/api/products/${product.id}`);
+      const response = await fetch(`/api/products/${product.id}?locale=${locale}`);
       if (!response.ok) {
         throw new Error('Failed to fetch product details');
       }
 
       const productData = await response.json();
-      const availableFormat = productData.formats?.find(
-        (f: any) => f.isActive && f.stockQuantity > 0
+      const availableFormat = productData.product?.formats?.find(
+        (f: { isActive: boolean; stockQuantity: number }) => f.isActive && f.stockQuantity > 0
+      ) || productData.formats?.find(
+        (f: { isActive: boolean; stockQuantity: number }) => f.isActive && f.stockQuantity > 0
       );
 
       if (!availableFormat) {
@@ -86,6 +88,7 @@ export default function CartCrossSell({ cartProductIds }: CartCrossSellProps) {
         return;
       }
 
+      // Direct add to cart (no upsell interstitial for cross-sell items)
       addItem({
         productId: product.id,
         formatId: availableFormat.id,
@@ -115,86 +118,77 @@ export default function CartCrossSell({ cartProductIds }: CartCrossSellProps) {
   }
 
   return (
-    <div className="bg-neutral-50 rounded-lg p-4 my-4">
-      <h3 className="font-bold text-lg text-neutral-900 mb-3">
+    <div className="bg-orange-50/60 border-t border-orange-100 rounded-b-lg px-4 py-3">
+      <h3 className="font-semibold text-sm text-neutral-700 mb-2">
         {t('cart.customersAlsoBought') || 'Customers Also Bought'}
       </h3>
 
       {isLoading ? (
-        // Loading skeleton
-        <div className="flex gap-3 overflow-x-auto pb-2">
-          {[1, 2, 3, 4].map((i) => (
-            <div
-              key={i}
-              className="flex-shrink-0 w-40 bg-white rounded-lg p-3 animate-pulse"
-            >
-              <div className="aspect-square bg-neutral-200 rounded-lg mb-2" />
-              <div className="h-4 bg-neutral-200 rounded mb-2" />
-              <div className="h-6 bg-neutral-200 rounded mb-2" />
-              <div className="h-9 bg-neutral-200 rounded" />
+        // Loading skeleton - compact
+        <div className="space-y-2">
+          {[1, 2].map((i) => (
+            <div key={i} className="flex items-center gap-3 animate-pulse">
+              <div className="w-14 h-14 bg-orange-100 rounded-lg flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <div className="h-3 bg-orange-100 rounded w-3/4 mb-1.5" />
+                <div className="h-3 bg-orange-100 rounded w-1/3" />
+              </div>
+              <div className="h-7 w-20 bg-orange-100 rounded-lg flex-shrink-0" />
             </div>
           ))}
         </div>
       ) : (
-        <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-thin scrollbar-thumb-neutral-300 scrollbar-track-transparent">
+        <div className="space-y-2">
           {recommendations.map((product) => (
             <div
               key={product.id}
-              className="flex-shrink-0 w-40 bg-white rounded-lg p-3 border border-neutral-200 hover:border-orange-300 transition-all duration-200 hover:shadow-md"
+              className="flex items-center gap-3 bg-white/70 rounded-lg p-2 border border-orange-100/50"
             >
-              {/* Product Image */}
-              <Link href={`/product/${product.slug}`}>
-                <div className="relative aspect-square bg-neutral-100 rounded-lg overflow-hidden mb-2 group">
+              {/* Product Image - compact, same or smaller than cart items */}
+              <Link href={`/product/${product.slug}`} className="flex-shrink-0">
+                <div className="relative w-14 h-14 bg-neutral-100 rounded-lg overflow-hidden">
                   <Image
                     src={product.imageUrl || '/images/products/peptide-default.png'}
                     alt={product.name}
                     fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-200"
+                    className="object-cover"
+                    sizes="56px"
                   />
-                  {product.purity && (
-                    <span className="absolute top-1 right-1 px-2 py-0.5 bg-green-500 text-white text-xs font-bold rounded">
-                      {product.purity}%
-                    </span>
-                  )}
                 </div>
               </Link>
 
-              {/* Product Name */}
-              <Link href={`/product/${product.slug}`}>
-                <h4 className="text-sm font-semibold text-neutral-900 line-clamp-2 hover:text-orange-600 transition-colors mb-1 min-h-[2.5rem]">
-                  {product.name}
-                </h4>
-              </Link>
-
-              {/* Price */}
-              <div className="flex items-center gap-1 mb-2">
-                <span className="text-orange-600 font-bold text-sm">
-                  {formatPrice(product.price)}
-                </span>
-                {product.comparePrice && product.comparePrice > product.price && (
-                  <span className="text-xs text-neutral-400 line-through">
-                    {formatPrice(product.comparePrice)}
+              {/* Product Info - compact */}
+              <div className="flex-1 min-w-0">
+                <Link href={`/product/${product.slug}`}>
+                  <p className="text-xs font-medium text-neutral-900 truncate hover:text-orange-600 transition-colors">
+                    {product.name}
+                  </p>
+                </Link>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span className="text-xs font-bold text-orange-600">
+                    {formatPrice(product.price)}
                   </span>
-                )}
+                  {product.comparePrice && product.comparePrice > product.price && (
+                    <span className="text-xs text-neutral-400 line-through">
+                      {formatPrice(product.comparePrice)}
+                    </span>
+                  )}
+                </div>
               </div>
 
-              {/* Add to Cart Button */}
+              {/* Add button - compact */}
               <button
                 onClick={() => handleAddToCart(product)}
                 disabled={addingProductId === product.id}
-                className={`w-full py-2 px-3 rounded-lg font-semibold text-xs transition-all ${
+                className={`flex-shrink-0 px-3 py-1.5 rounded-lg font-medium text-xs transition-all whitespace-nowrap ${
                   addingProductId === product.id
                     ? 'bg-green-600 text-white'
-                    : 'bg-orange-500 text-white hover:bg-orange-600'
+                    : 'bg-orange-500 text-white hover:bg-orange-600 active:scale-95'
                 }`}
               >
                 {addingProductId === product.id ? (
-                  <span className="flex items-center justify-center gap-1">
-                    <svg
-                      className="w-3 h-3"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
+                  <span className="flex items-center gap-1">
+                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                       <path
                         fillRule="evenodd"
                         d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
@@ -204,7 +198,7 @@ export default function CartCrossSell({ cartProductIds }: CartCrossSellProps) {
                     {t('shop.added')}
                   </span>
                 ) : (
-                  t('shop.addToCart')
+                  t('cart.addThis')
                 )}
               </button>
             </div>

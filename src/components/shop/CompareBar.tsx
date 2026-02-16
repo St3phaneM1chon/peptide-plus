@@ -14,7 +14,7 @@ interface CompareProduct {
 
 export default function CompareBar() {
   const { productSlugs, count, removeFromCompare, clearCompare, getCompareUrl } = useCompare();
-  const { t } = useTranslations();
+  const { t, locale } = useTranslations();
   const [products, setProducts] = useState<CompareProduct[]>([]);
   const [isVisible, setIsVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -30,7 +30,7 @@ export default function CompareBar() {
     const fetchProducts = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch(`/api/products/compare?slugs=${productSlugs.join(',')}`);
+        const response = await fetch(`/api/products/compare?slugs=${productSlugs.join(',')}&locale=${locale}`);
         if (response.ok) {
           const data = await response.json();
           setProducts(data.products || []);

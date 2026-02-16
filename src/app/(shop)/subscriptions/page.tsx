@@ -49,7 +49,7 @@ const frequencyLabels: Record<string, string> = {
 
 export default function SubscriptionsPage() {
   const { data: session } = useSession();
-  const { t } = useTranslations();
+  const { t, locale } = useTranslations();
   const { formatPrice } = useCurrency();
 
   const [activeTab, setActiveTab] = useState<'browse' | 'manage'>('browse');
@@ -64,7 +64,7 @@ export default function SubscriptionsPage() {
 
   // Load products from API
   useEffect(() => {
-    fetch('/api/products?limit=20&active=true')
+    fetch(`/api/products?limit=20&active=true&locale=${locale}`)
       .then(res => res.json())
       .then(data => {
         const products = (data.products || data || []).map((p: Record<string, unknown>) => ({

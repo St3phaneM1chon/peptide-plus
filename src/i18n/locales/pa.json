@@ -136,7 +136,11 @@
     "youSave": "ਤੁਸੀਂ ਬਚਾਉਂਦੇ ਹੋ",
     "qty": "Qty",
     "buyCourse": "Buy this course",
-    "buyNow": "Buy now"
+    "buyNow": "Buy now",
+    "stockLeft": "{count} left",
+    "savePercent": "Save {percent}%",
+    "productIncluded": "{count} product included",
+    "failedToLoadProduct": "Failed to load product"
   },
   "home": {
     "heroTitle": "ਕੈਨੇਡਾ ਵਿੱਚ ਸਭ ਤੋਂ ਵਧੀਆ ਖੋਜ ਪੇਪਟਾਈਡ",
@@ -220,7 +224,11 @@
     "dashboard": "ਡੈਸ਼ਬੋਰਡ",
     "myAccount": "ਮੇਰਾ ਖਾਤਾ",
     "quickLinks": "ਤੁਰੰਤ ਲਿੰਕ",
-    "bundles": "ਬੰਡਲ"
+    "bundles": "ਬੰਡਲ",
+    "adminPanel": "Admin Panel",
+    "closeMenu": "Close menu",
+    "openMenu": "Open menu",
+    "security": "Security"
   },
   "categories": {
     "all": "ਸਾਰੇ ਉਤਪਾਦ",
@@ -299,7 +307,11 @@
     "standardKit": "ਮਿਆਰੀ ਕਿੱਟ",
     "deluxeKit": "ਡਿਲਕਸ ਕਿੱਟ",
     "basicKit": "ਬੇਸਿਕ ਕਿੱਟ",
-    "proKit": "ਪ੍ਰੋ ਕਿੱਟ"
+    "proKit": "ਪ੍ਰੋ ਕਿੱਟ",
+    "bundle": "Bundle",
+    "accessory": "Accessory",
+    "nasalSpray": "Nasal Spray",
+    "cream": "Cream"
   },
   "units": {
     "mg": "mg",
@@ -316,7 +328,18 @@
     "step2Desc": "Enter the amount of bacteriostatic water (in mL).",
     "step3Title": "ਚਾਹੀਦੀ ਡੋਜ਼",
     "step3Desc": "Enter the dose you want per injection in mcg or mg.",
-    "disclaimer": "This calculator is provided for informational purposes only for in vitro research."
+    "disclaimer": "This calculator is provided for informational purposes only for in vitro research.",
+    "inVial": "in the vial",
+    "bacteriostaticWater": "bacteriostatic water",
+    "perInjection": "per injection",
+    "result": "Result",
+    "concentration": "Concentration:",
+    "volumeToInject": "Volume to inject:",
+    "unitsToInject": "Units to inject",
+    "unitsU100": "units (U-100)",
+    "syringe3mlRequired": "3 mL syringe required",
+    "mlSyringe3ml": "mL (3 mL syringe)",
+    "unitsU100Count": "{count} units U-100"
   },
   "disclaimer": {
     "title": "ਸਿਰਫ਼ ਖੋਜ ਲਈ",
@@ -350,7 +373,8 @@
     "allRightsReserved": "ਸਾਰੇ ਹੱਕ ਰਾਖਵੇਂ ਹਨ",
     "help": "ਮਦਦ",
     "subscribeNewsletter": "ਸਾਡੇ ਨਿਊਜ਼ਲੈਟਰ ਲਈ ਸਬਸਕ੍ਰਾਈਬ ਕਰੋ",
-    "newsletterDescription": "Get our latest news and exclusive offers."
+    "newsletterDescription": "Get our latest news and exclusive offers.",
+    "location": "Montreal, Quebec, Canada"
   },
   "common": {
     "loading": "ਲੋਡ ਹੋ ਰਿਹਾ ਹੈ...",
@@ -404,7 +428,11 @@
     "search": "ਖੋਜੋ",
     "redirecting": "ਮੁੜ ਰੁਖ ਕਰ ਰਹੇ ਹਾਂ...",
     "tryAgain": "ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ",
-    "download": "Download"
+    "download": "Download",
+    "scrollLeft": "Scroll left",
+    "scrollRight": "Scroll right",
+    "genericError": "An error occurred",
+    "connectionError": "Connection error"
   },
   "cart": {
     "title": "ਤੁਹਾਡਾ ਕਾਰਟ",
@@ -436,7 +464,8 @@
     "decreaseQuantity": "ਮਾਤਰਾ ਘਟਾਓ",
     "increaseQuantity": "ਮਾਤਰਾ ਵਧਾਓ",
     "discount": "ਛੂਟ",
-    "customersAlsoBought": "ਗਾਹਕਾਂ ਨੇ ਵੀ ਖਰੀਦਿਆ"
+    "customersAlsoBought": "ਗਾਹਕਾਂ ਨੇ ਵੀ ਖਰੀਦਿਆ",
+    "addThis": "Add this"
   },
   "checkout": {
     "emptyCart": "ਤੁਹਾਡਾ ਕਾਰਟ ਖਾਲੀ ਹੈ",
@@ -559,7 +588,27 @@
     "payWithGooglePay": "Pay with Google Pay",
     "redirecting": "Redirecting...",
     "saveCardForFuture": "Save this card for my future purchases",
-    "saveAddressForFuture": "Save this address for my future orders"
+    "saveAddressForFuture": "Save this address for my future orders",
+    "namePlaceholder": "John Doe",
+    "cityPlaceholder": "Montreal",
+    "billingAddress": "Billing Address",
+    "billingAddressSameAsShipping": "Billing address is the same as shipping address",
+    "interac": "Interac e-Transfer",
+    "interacDescription": "Pay securely with your bank account",
+    "creditCardDescription": "Visa, Mastercard, American Express",
+    "paypalDescription": "Pay with your PayPal account",
+    "applePayDescription": "Quick and secure payment",
+    "googlePayDescription": "Quick and secure payment",
+    "paymentDeclined": "Payment declined by your bank. Please try another card or contact your bank.",
+    "paymentExpiredCard": "Your card has expired. Please use a different card.",
+    "paymentInsufficientFunds": "Insufficient funds. Please try another payment method.",
+    "paymentSystemError": "A system error occurred. Please try again. If the problem persists, contact us.",
+    "paymentNetworkError": "Connection error. Please check your internet connection and try again.",
+    "paymentInvalidCard": "Invalid card number. Please check and try again.",
+    "paymentGenericError": "Payment could not be processed. Please try again or use a different payment method.",
+    "needHelp": "Need help? Contact us",
+    "billingFirstName": "First name",
+    "billingLastName": "Last name"
   },
   "rewards": {
     "title": "ਇਨਾਮ ਪ੍ਰੋਗਰਾਮ",
@@ -1157,7 +1206,8 @@
     },
     "removeFromWishlist": "ਵਿਸ਼ਲਿਸਟ ਤੋਂ ਹਟਾਓ",
     "savedProducts": "ਸੁਰੱਖਿਅਤ ਉਤਪਾਦ",
-    "wishlist": "ਵਿਸ਼ਲਿਸਟ"
+    "wishlist": "ਵਿਸ਼ਲਿਸਟ",
+    "connectedAs": "Connected as {email}"
   },
   "reviews": {
     "customerReviews": "ਗਾਹਕਾਂ ਦੀ ਸਮੀਖਿਆ",
@@ -1192,7 +1242,19 @@
     "showingAllReviews": "{count} ਸਮੀਖਿਆਵਾਂ ਦਿਖਾਈ ਜਾ ਰਹੀਆਂ ਹਨ",
     "clearFilter": "ਫਿਲਟਰ ਸਾਫ ਕਰੋ",
     "rewardsInfo": "ਸਮੀਖਿਆ ਲਿਖੋ ਅਤੇ 100 ਵਫਾਦਾਰੀ ਅੰਕ ਪ੍ਰਾਪਤ ਕਰੋ",
-    "rewardsTitle": "ਇਨਾਮ ਪ੍ਰਾਪਤ ਕਰੋ"
+    "rewardsTitle": "ਇਨਾਮ ਪ੍ਰਾਪਤ ਕਰੋ",
+    "pointsEarned": "You earned {points} loyalty points!",
+    "submitSuccess": "Review submitted successfully! It will be published after admin approval.",
+    "showingFiltered": "Showing {rating}-star reviews",
+    "showingAll": "Showing all reviews",
+    "clearFilters": "Clear filters",
+    "withPhotos": "With Photos ({count})",
+    "loading": "Loading reviews...",
+    "noMatchingReviews": "No reviews match your filters",
+    "noReviewsYet": "No reviews yet. Be the first to review!",
+    "storeResponse": "Response from BioCycle Peptides+",
+    "titlePlaceholder": "Summarize your experience",
+    "contentPlaceholder": "Tell us about your experience..."
   },
   "qa": {
     "questionsAnswers": "ਸਵਾਲ & ਜਵਾਬ",
@@ -2123,7 +2185,8 @@
       "logsAudit": "ਲੌਗ/ਆਡੀਟ",
       "employees": "ਕਰਮਚਾਰੀ",
       "settings": "ਸੈਟਿੰਗਜ਼",
-      "uatTesting": "UAT ਟੈਸਟਿੰਗ"
+      "uatTesting": "UAT ਟੈਸਟਿੰਗ",
+      "upsell": "Upsell Offers"
     },
     "viewSite": "ਸਾਈਟ ਵੇਖੋ",
     "notifications": "ਸੂਚਨਾਵਾਂ",
@@ -2381,7 +2444,12 @@
       "reshipReasonReturned": "ਪੈਕੇਜ ਭੇਜਣ ਵਾਲੇ ਕੋਲ ਵਾਪਸ",
       "reshipReasonAddress": "ਗਲਤ ਪਤਾ - ਦੁਬਾਰਾ ਭੇਜੋ",
       "reshipReasonMissing": "ਪੈਕੇਜ ਵਿੱਚ ਸਮੱਗਰੀ ਗੁੰਮ",
-      "reship": "ਦੁਬਾਰਾ ਭੇਜੋ"
+      "reship": "ਦੁਬਾਰਾ ਭੇਜੋ",
+      "paymentErrors": "ਭੁਗਤਾਨ ਗਲਤੀਆਂ",
+      "peAmount": "ਰਕਮ",
+      "peEmail": "ਈਮੇਲ",
+      "peMethod": "ਢੰਗ",
+      "peDeclineCode": "ਅਸਵੀਕਾਰ ਕੋਡ"
     },
     "reviews": {
       "title": "ਗਾਹਕ ਸਮੀਖਿਆਵਾਂ",
@@ -5161,6 +5229,37 @@
       "totalRevenue": "ਕੁੱਲ ਆਮਦਨ",
       "viewProfile": "ਪ੍ਰੋਫਾਈਲ ਵੇਖੋ",
       "vipGoldPlus": "VIP (ਗੋਲਡ+)"
+    },
+    "upsell": {
+      "title": "Upsell Offers",
+      "subtitle": "Configure pre-cart upsell offers to increase average order value",
+      "globalConfig": "Global Configuration",
+      "productOverrides": "Product Overrides",
+      "addOverride": "Add Product Override",
+      "enabled": "Enabled",
+      "disabled": "Disabled",
+      "showQuantityDiscount": "Show Volume Discounts",
+      "showSubscription": "Show Subscription Offer",
+      "displayRule": "Display Rule",
+      "displayRuleAlways": "Always show",
+      "displayRuleOnceSession": "Once per session",
+      "displayRuleOnceProduct": "Once per product",
+      "quantityTitle": "Volume Title (custom)",
+      "quantitySubtitle": "Volume Subtitle (custom)",
+      "subscriptionTitle": "Subscription Title (custom)",
+      "subscriptionSubtitle": "Subscription Subtitle (custom)",
+      "suggestedQuantity": "Suggested Quantity",
+      "suggestedFrequency": "Suggested Frequency",
+      "selectProduct": "Select a product",
+      "noConfig": "No upsell configuration yet",
+      "noConfigDesc": "Create a global config or product-specific overrides to start showing upsell offers",
+      "globalLabel": "Global (default)",
+      "activeConfigs": "Active Configs",
+      "productOverrideCount": "Product Overrides",
+      "globalStatus": "Global Status",
+      "confirmDelete": "Delete this upsell configuration?",
+      "saveSuccess": "Upsell configuration saved",
+      "deleteSuccess": "Upsell configuration deleted"
     }
   },
   "countdown": {
@@ -5175,7 +5274,14 @@
       "title": "ਪੰਨਾ ਨਹੀਂ ਮਿਲਿਆ"
     },
     "forbidden": "ਪਹੁੰਚ ਮਨਾਹੀ",
-    "unauthorized": "ਅਧਿਕਾਰਿਤ ਪਹੁੰਚ ਨਹੀਂ"
+    "unauthorized": "ਅਧਿਕਾਰਿਤ ਪਹੁੰਚ ਨਹੀਂ",
+    "pageNotFound": "Page Not Found",
+    "pageNotFoundDesc": "The page you are looking for doesn't exist or has been moved.",
+    "goToHomepage": "Go to Homepage",
+    "browseProducts": "Browse Products",
+    "somethingWentWrong": "Something went wrong!",
+    "errorDescription": "We apologize for the inconvenience. Please try again.",
+    "errorId": "Error ID: {id}"
   },
   "flashSale": {
     "endsIn": "ਇਸ ਵਿੱਚ ਖਤਮ ਹੁੰਦਾ ਹੈ",
@@ -5335,5 +5441,93 @@
     "companyDashboard": "Company dashboard",
     "addStudent": "Add a student",
     "buyCourses": "Buy courses"
-  }
+  },
+  "upsell": {
+    "title": "Special Offer Before Checkout",
+    "subtitle": "Save more with these exclusive deals",
+    "quantity": {
+      "title": "Buy More, Save More",
+      "subtitle": "Volume discounts available for this product",
+      "savePercent": "Save {percent}%",
+      "perUnit": "{price}/unit",
+      "totalSavings": "You save {amount}",
+      "accept": "Buy {qty} and save {percent}%",
+      "bestDeal": "Best Deal",
+      "researchCenter": "Research Center?",
+      "researchCenterDesc": "High volumes? Contact us for custom pricing."
+    },
+    "subscription": {
+      "title": "Subscribe & Save",
+      "subtitle": "Never run out — automatic delivery at a discount",
+      "selectFrequency": "Select delivery frequency",
+      "savings": "Save {percent}% per delivery",
+      "accept": "Subscribe and save {percent}%",
+      "cancelAnytime": "Cancel anytime, no commitment",
+      "every2months": "Every 2 months",
+      "every4months": "Every 4 months",
+      "every6months": "Every 6 months",
+      "every12months": "Every 12 months"
+    },
+    "decline": "No thanks, add to cart",
+    "reassurance": "You can always change your mind later",
+    "loading": "Loading offers..."
+  },
+  "search": {
+    "placeholder": "Search for a peptide...",
+    "purityPercent": "{purity}% purity",
+    "viewAllResults": "View all {count} results",
+    "noResultsFor": "No results for \"{query}\"",
+    "tryAdvancedSearch": "Try advanced search",
+    "popularSearches": "Popular searches"
+  },
+  "giftCard": {
+    "title": "Gift Card",
+    "enterCode": "Please enter a gift card code",
+    "linkedSuccess": "Gift card linked to your account!",
+    "balance": "Balance: {amount}",
+    "checkBalance": "Check Balance",
+    "redeem": "Redeem",
+    "note": "Gift cards can be used for any product on our site"
+  },
+  "provinces": {
+    "AB": "Alberta",
+    "BC": "British Columbia",
+    "MB": "Manitoba",
+    "NB": "New Brunswick",
+    "NL": "Newfoundland and Labrador",
+    "NS": "Nova Scotia",
+    "NT": "Northwest Territories",
+    "NU": "Nunavut",
+    "ON": "Ontario",
+    "PE": "Prince Edward Island",
+    "QC": "Quebec",
+    "SK": "Saskatchewan",
+    "YT": "Yukon"
+  },
+  "video": {
+    "loadPlayer": "Load video player",
+    "thumbnail": "Video thumbnail",
+    "productVideo": "Product video"
+  },
+  "share": {
+    "copyLink": "Copy link"
+  },
+  "ownerDashboard": {
+    "title": "Owner Dashboard",
+    "subtitle": "Complete overview",
+    "students": "{count} students",
+    "employees": "Employees",
+    "recentTransactions": "Recent Transactions"
+  },
+  "orderStatus": {
+    "completed": "Paid",
+    "pending": "Pending",
+    "failed": "Failed"
+  },
+  "tts.listen": "ਇਸ ਪੰਨੇ ਨੂੰ ਸੁਣੋ",
+  "tts.pause": "ਰੋਕੋ",
+  "tts.resume": "ਜਾਰੀ ਰੱਖੋ",
+  "tts.stop": "ਬੰਦ ਕਰੋ",
+  "tts.loading": "ਆਵਾਜ਼ ਲੋਡ ਹੋ ਰਹੀ ਹੈ...",
+  "tts.unsupported": "ਤੁਹਾਡਾ ਬ੍ਰਾਊਜ਼ਰ ਟੈਕਸਟ-ਟੂ-ਸਪੀਚ ਦਾ ਸਮਰਥਨ ਨਹੀਂ ਕਰਦਾ"
 }

@@ -112,6 +112,23 @@ export async function GET(
       orderBy: { createdAt: 'desc' },
     });
 
+    // Fetch payment errors for this order
+    const paymentErrors = await prisma.paymentError.findMany({
+      where: { orderId: order.id },
+      select: {
+        id: true,
+        stripePaymentId: true,
+        errorType: true,
+        errorMessage: true,
+        amount: true,
+        currency: true,
+        customerEmail: true,
+        metadata: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
     return NextResponse.json({
       order,
       customer: user,
@@ -120,6 +137,10 @@ export async function GET(
       creditNotes: creditNotes.map((cn) => ({
         ...cn,
         total: Number(cn.total),
+      })),
+      paymentErrors: paymentErrors.map((pe) => ({
+        ...pe,
+        metadata: pe.metadata ? JSON.parse(pe.metadata) : null,
       })),
     });
   } catch (error) {

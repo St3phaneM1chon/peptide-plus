@@ -3,6 +3,8 @@ export const dynamic = 'force-dynamic';
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import { prisma } from '@/lib/db';
+import { withTranslation, withTranslations } from '@/lib/translation';
+import { getServerLocale } from '@/i18n/server';
 import CategoryPageClient from './CategoryPageClient';
 
 interface PageProps {
@@ -13,16 +15,19 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { slug } = await params;
   const category = await prisma.category.findUnique({
     where: { slug },
-    select: { name: true, description: true },
+    select: { id: true, name: true, description: true },
   });
 
   if (!category) {
     return { title: 'Catégorie non trouvée' };
   }
 
+  const locale = await getServerLocale();
+  const translated = await withTranslation(category, 'Category', locale);
+
   return {
-    title: `${category.name} | BioCycle Peptides`,
-    description: category.description || '',
+    title: `${translated.name} | BioCycle Peptides`,
+    description: translated.description || '',
   };
 }
 
@@ -68,19 +73,24 @@ export default async function CategoryPage({ params }: PageProps) {
     ],
   });
 
+  // Apply translations for current locale
+  const locale = await getServerLocale();
+  const translatedCategory = await withTranslation(category, 'Category', locale);
+  const translatedProducts = await withTranslations(dbProducts, 'Product', locale);
+
   // Mapper vers le format attendu par CategoryPageClient
-  const products = dbProducts.map((p) => ({
+  const products = translatedProducts.map((p) => ({
     id: p.id,
     name: p.name,
     subtitle: p.subtitle || undefined,
     slug: p.slug,
     price: Number(p.price),
     purity: p.purity ? Number(p.purity) : undefined,
-    imageUrl: p.images?.find((img) => img.isPrimary)?.url || p.images?.[0]?.url || p.imageUrl || undefined,
+    imageUrl: p.images?.find((img: { isPrimary: boolean; url: string }) => img.isPrimary)?.url || p.images?.[0]?.url || p.imageUrl || undefined,
     isNew: p.isNew || undefined,
     isBestseller: p.isBestseller || undefined,
-    inStock: p.formats.some((f) => f.inStock),
-    formats: p.formats.map((f) => ({
+    inStock: p.formats.some((f: { inStock: boolean }) => f.inStock),
+    formats: p.formats.map((f: { id: string; name: string; price: number | { toNumber?: () => number }; comparePrice: number | { toNumber?: () => number } | null; inStock: boolean; stockQuantity: number }) => ({
       id: f.id,
       name: f.name,
       price: Number(f.price),
@@ -93,10 +103,10 @@ export default async function CategoryPage({ params }: PageProps) {
   return (
     <CategoryPageClient
       category={{
-        slug: category.slug,
-        name: category.name,
-        description: category.description || '',
-        longDescription: category.description || '',
+        slug: translatedCategory.slug,
+        name: translatedCategory.name,
+        description: translatedCategory.description || '',
+        longDescription: translatedCategory.description || '',
       }}
       products={products}
     />

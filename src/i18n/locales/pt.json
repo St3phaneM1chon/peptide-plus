@@ -136,7 +136,11 @@
     "youSave": "Você economiza",
     "qty": "Qty",
     "buyCourse": "Buy this course",
-    "buyNow": "Buy now"
+    "buyNow": "Buy now",
+    "stockLeft": "{count} left",
+    "savePercent": "Save {percent}%",
+    "productIncluded": "{count} product included",
+    "failedToLoadProduct": "Failed to load product"
   },
   "home": {
     "heroTitle": "Os melhores peptideos de pesquisa no Canada",
@@ -220,7 +224,11 @@
     "dashboard": "Painel",
     "myAccount": "Minha Conta",
     "quickLinks": "Links Rápidos",
-    "bundles": "Pacotes"
+    "bundles": "Pacotes",
+    "adminPanel": "Admin Panel",
+    "closeMenu": "Close menu",
+    "openMenu": "Open menu",
+    "security": "Security"
   },
   "categories": {
     "all": "Todos os produtos",
@@ -299,7 +307,11 @@
     "standardKit": "Kit Padrão",
     "deluxeKit": "Kit Deluxe",
     "basicKit": "Kit Básico",
-    "proKit": "Kit Profissional"
+    "proKit": "Kit Profissional",
+    "bundle": "Bundle",
+    "accessory": "Accessory",
+    "nasalSpray": "Nasal Spray",
+    "cream": "Cream"
   },
   "units": {
     "mg": "mg",
@@ -316,7 +328,18 @@
     "step2Desc": "Insira a quantidade de água bacteriostática (em mL).",
     "step3Title": "Dose desejada",
     "step3Desc": "Insira a dose desejada por injeção em mcg ou mg.",
-    "disclaimer": "Esta calculadora é fornecida apenas para fins informativos para pesquisa in vitro."
+    "disclaimer": "Esta calculadora é fornecida apenas para fins informativos para pesquisa in vitro.",
+    "inVial": "in the vial",
+    "bacteriostaticWater": "bacteriostatic water",
+    "perInjection": "per injection",
+    "result": "Result",
+    "concentration": "Concentration:",
+    "volumeToInject": "Volume to inject:",
+    "unitsToInject": "Units to inject",
+    "unitsU100": "units (U-100)",
+    "syringe3mlRequired": "3 mL syringe required",
+    "mlSyringe3ml": "mL (3 mL syringe)",
+    "unitsU100Count": "{count} units U-100"
   },
   "disclaimer": {
     "title": "Apenas para uso em pesquisa",
@@ -350,7 +373,8 @@
     "allRightsReserved": "Todos os direitos reservados",
     "help": "Ajuda",
     "subscribeNewsletter": "Inscreva-se na nossa newsletter",
-    "newsletterDescription": "Get our latest news and exclusive offers."
+    "newsletterDescription": "Get our latest news and exclusive offers.",
+    "location": "Montreal, Quebec, Canada"
   },
   "common": {
     "loading": "Carregando...",
@@ -404,7 +428,11 @@
     "search": "Buscar",
     "redirecting": "Redirecionando...",
     "tryAgain": "Tente Novamente",
-    "download": "Download"
+    "download": "Download",
+    "scrollLeft": "Scroll left",
+    "scrollRight": "Scroll right",
+    "genericError": "An error occurred",
+    "connectionError": "Connection error"
   },
   "cart": {
     "title": "Seu carrinho",
@@ -436,7 +464,8 @@
     "decreaseQuantity": "Diminuir quantidade",
     "increaseQuantity": "Aumentar quantidade",
     "discount": "Desconto",
-    "customersAlsoBought": "Clientes Também Compraram"
+    "customersAlsoBought": "Clientes Também Compraram",
+    "addThis": "Add this"
   },
   "checkout": {
     "emptyCart": "Seu carrinho está vazio",
@@ -564,7 +593,27 @@
     "defaultAddress": "Default",
     "useNewAddress": "Use a new address",
     "enterAddress": "Enter my address",
-    "recipientName": "Recipient full name"
+    "recipientName": "Recipient full name",
+    "namePlaceholder": "John Doe",
+    "cityPlaceholder": "Montreal",
+    "billingAddress": "Billing Address",
+    "billingAddressSameAsShipping": "Billing address is the same as shipping address",
+    "interac": "Interac e-Transfer",
+    "interacDescription": "Pay securely with your bank account",
+    "creditCardDescription": "Visa, Mastercard, American Express",
+    "paypalDescription": "Pay with your PayPal account",
+    "applePayDescription": "Quick and secure payment",
+    "googlePayDescription": "Quick and secure payment",
+    "paymentDeclined": "Payment declined by your bank. Please try another card or contact your bank.",
+    "paymentExpiredCard": "Your card has expired. Please use a different card.",
+    "paymentInsufficientFunds": "Insufficient funds. Please try another payment method.",
+    "paymentSystemError": "A system error occurred. Please try again. If the problem persists, contact us.",
+    "paymentNetworkError": "Connection error. Please check your internet connection and try again.",
+    "paymentInvalidCard": "Invalid card number. Please check and try again.",
+    "paymentGenericError": "Payment could not be processed. Please try again or use a different payment method.",
+    "needHelp": "Need help? Contact us",
+    "billingFirstName": "First name",
+    "billingLastName": "Last name"
   },
   "rewards": {
     "title": "Programa de recompensas",
@@ -1162,7 +1211,8 @@
     },
     "removeFromWishlist": "Remover da lista de desejos",
     "savedProducts": "Produtos Salvos",
-    "wishlist": "Lista de Desejos"
+    "wishlist": "Lista de Desejos",
+    "connectedAs": "Connected as {email}"
   },
   "reviews": {
     "customerReviews": "Avaliações de clientes",
@@ -1197,7 +1247,19 @@
     "showingAllReviews": "Mostrando todas as {count} avaliações",
     "clearFilter": "Limpar filtro",
     "rewardsInfo": "Escreva uma avaliação e ganhe 100 pontos de fidelidade",
-    "rewardsTitle": "Ganhe Recompensas"
+    "rewardsTitle": "Ganhe Recompensas",
+    "pointsEarned": "You earned {points} loyalty points!",
+    "submitSuccess": "Review submitted successfully! It will be published after admin approval.",
+    "showingFiltered": "Showing {rating}-star reviews",
+    "showingAll": "Showing all reviews",
+    "clearFilters": "Clear filters",
+    "withPhotos": "With Photos ({count})",
+    "loading": "Loading reviews...",
+    "noMatchingReviews": "No reviews match your filters",
+    "noReviewsYet": "No reviews yet. Be the first to review!",
+    "storeResponse": "Response from BioCycle Peptides+",
+    "titlePlaceholder": "Summarize your experience",
+    "contentPlaceholder": "Tell us about your experience..."
   },
   "qa": {
     "questionsAnswers": "Perguntas e respostas",
@@ -2128,7 +2190,8 @@
       "logsAudit": "Logs/Auditoria",
       "employees": "Funcionários",
       "settings": "Configurações",
-      "uatTesting": "Teste UAT"
+      "uatTesting": "Teste UAT",
+      "upsell": "Upsell Offers"
     },
     "viewSite": "Ver site",
     "notifications": "Notificações",
@@ -2386,7 +2449,12 @@
       "reshipReasonReturned": "Pacote devolvido ao remetente",
       "reshipReasonAddress": "Endereço incorreto - reenvio",
       "reshipReasonMissing": "Conteúdo faltando no pacote",
-      "reship": "REENVIAR"
+      "reship": "REENVIAR",
+      "paymentErrors": "Erros de pagamento",
+      "peAmount": "Valor",
+      "peEmail": "Email",
+      "peMethod": "Método",
+      "peDeclineCode": "Código de recusa"
     },
     "reviews": {
       "title": "Avaliações de Clientes",
@@ -5166,6 +5234,37 @@
       "totalRevenue": "Receita total",
       "viewProfile": "Ver perfil",
       "vipGoldPlus": "VIP (Gold+)"
+    },
+    "upsell": {
+      "title": "Upsell Offers",
+      "subtitle": "Configure pre-cart upsell offers to increase average order value",
+      "globalConfig": "Global Configuration",
+      "productOverrides": "Product Overrides",
+      "addOverride": "Add Product Override",
+      "enabled": "Enabled",
+      "disabled": "Disabled",
+      "showQuantityDiscount": "Show Volume Discounts",
+      "showSubscription": "Show Subscription Offer",
+      "displayRule": "Display Rule",
+      "displayRuleAlways": "Always show",
+      "displayRuleOnceSession": "Once per session",
+      "displayRuleOnceProduct": "Once per product",
+      "quantityTitle": "Volume Title (custom)",
+      "quantitySubtitle": "Volume Subtitle (custom)",
+      "subscriptionTitle": "Subscription Title (custom)",
+      "subscriptionSubtitle": "Subscription Subtitle (custom)",
+      "suggestedQuantity": "Suggested Quantity",
+      "suggestedFrequency": "Suggested Frequency",
+      "selectProduct": "Select a product",
+      "noConfig": "No upsell configuration yet",
+      "noConfigDesc": "Create a global config or product-specific overrides to start showing upsell offers",
+      "globalLabel": "Global (default)",
+      "activeConfigs": "Active Configs",
+      "productOverrideCount": "Product Overrides",
+      "globalStatus": "Global Status",
+      "confirmDelete": "Delete this upsell configuration?",
+      "saveSuccess": "Upsell configuration saved",
+      "deleteSuccess": "Upsell configuration deleted"
     }
   },
   "countdown": {
@@ -5180,7 +5279,14 @@
       "title": "Página Não Encontrada"
     },
     "forbidden": "Acesso Proibido",
-    "unauthorized": "Acesso Não Autorizado"
+    "unauthorized": "Acesso Não Autorizado",
+    "pageNotFound": "Page Not Found",
+    "pageNotFoundDesc": "The page you are looking for doesn't exist or has been moved.",
+    "goToHomepage": "Go to Homepage",
+    "browseProducts": "Browse Products",
+    "somethingWentWrong": "Something went wrong!",
+    "errorDescription": "We apologize for the inconvenience. Please try again.",
+    "errorId": "Error ID: {id}"
   },
   "flashSale": {
     "endsIn": "Termina em",
@@ -5399,5 +5505,93 @@
     "companyDashboard": "Company dashboard",
     "addStudent": "Add a student",
     "buyCourses": "Buy courses"
-  }
+  },
+  "upsell": {
+    "title": "Special Offer Before Checkout",
+    "subtitle": "Save more with these exclusive deals",
+    "quantity": {
+      "title": "Buy More, Save More",
+      "subtitle": "Volume discounts available for this product",
+      "savePercent": "Save {percent}%",
+      "perUnit": "{price}/unit",
+      "totalSavings": "You save {amount}",
+      "accept": "Buy {qty} and save {percent}%",
+      "bestDeal": "Best Deal",
+      "researchCenter": "Research Center?",
+      "researchCenterDesc": "High volumes? Contact us for custom pricing."
+    },
+    "subscription": {
+      "title": "Subscribe & Save",
+      "subtitle": "Never run out — automatic delivery at a discount",
+      "selectFrequency": "Select delivery frequency",
+      "savings": "Save {percent}% per delivery",
+      "accept": "Subscribe and save {percent}%",
+      "cancelAnytime": "Cancel anytime, no commitment",
+      "every2months": "Every 2 months",
+      "every4months": "Every 4 months",
+      "every6months": "Every 6 months",
+      "every12months": "Every 12 months"
+    },
+    "decline": "No thanks, add to cart",
+    "reassurance": "You can always change your mind later",
+    "loading": "Loading offers..."
+  },
+  "search": {
+    "placeholder": "Search for a peptide...",
+    "purityPercent": "{purity}% purity",
+    "viewAllResults": "View all {count} results",
+    "noResultsFor": "No results for \"{query}\"",
+    "tryAdvancedSearch": "Try advanced search",
+    "popularSearches": "Popular searches"
+  },
+  "giftCard": {
+    "title": "Gift Card",
+    "enterCode": "Please enter a gift card code",
+    "linkedSuccess": "Gift card linked to your account!",
+    "balance": "Balance: {amount}",
+    "checkBalance": "Check Balance",
+    "redeem": "Redeem",
+    "note": "Gift cards can be used for any product on our site"
+  },
+  "provinces": {
+    "AB": "Alberta",
+    "BC": "British Columbia",
+    "MB": "Manitoba",
+    "NB": "New Brunswick",
+    "NL": "Newfoundland and Labrador",
+    "NS": "Nova Scotia",
+    "NT": "Northwest Territories",
+    "NU": "Nunavut",
+    "ON": "Ontario",
+    "PE": "Prince Edward Island",
+    "QC": "Quebec",
+    "SK": "Saskatchewan",
+    "YT": "Yukon"
+  },
+  "video": {
+    "loadPlayer": "Load video player",
+    "thumbnail": "Video thumbnail",
+    "productVideo": "Product video"
+  },
+  "share": {
+    "copyLink": "Copy link"
+  },
+  "ownerDashboard": {
+    "title": "Owner Dashboard",
+    "subtitle": "Complete overview",
+    "students": "{count} students",
+    "employees": "Employees",
+    "recentTransactions": "Recent Transactions"
+  },
+  "orderStatus": {
+    "completed": "Paid",
+    "pending": "Pending",
+    "failed": "Failed"
+  },
+  "tts.listen": "Ouvir esta página",
+  "tts.pause": "Pausar",
+  "tts.resume": "Retomar",
+  "tts.stop": "Parar",
+  "tts.loading": "Carregando voz...",
+  "tts.unsupported": "A leitura de voz não é suportada pelo seu navegador"
 }

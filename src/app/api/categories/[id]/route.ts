@@ -6,6 +6,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
+import { enqueue } from '@/lib/translation';
 import { UserRole } from '@/types';
 
 interface RouteParams {
@@ -94,6 +95,9 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       where: { id },
       data: updateData,
     });
+
+    // Auto-enqueue translation (force re-translate on update)
+    enqueue.category(category.id, true);
 
     // Log d'audit
     await prisma.auditLog.create({

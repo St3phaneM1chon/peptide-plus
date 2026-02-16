@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import { useCurrency } from '@/contexts/CurrencyContext';
+import { useTranslations } from '@/hooks/useTranslations';
 
 export type FormatType = 
   | 'VIAL_2ML' 
@@ -43,77 +44,29 @@ interface FormatDropdownProps {
   className?: string;
 }
 
-// Images par défaut pour chaque type de format
-const FORMAT_DEFAULTS: Record<FormatType, { icon: string; label: string; image: string }> = {
-  VIAL_2ML: { 
-    icon: '💉', 
-    label: 'Vial 2ml', 
-    image: '/images/formats/vial-2ml.png' 
-  },
-  VIAL_10ML: { 
-    icon: '🧪', 
-    label: 'Vial 10ml', 
-    image: '/images/formats/vial-10ml.png' 
-  },
-  CARTRIDGE_3ML: { 
-    icon: '💊', 
-    label: 'Cartouche 3ml', 
-    image: '/images/formats/cartridge.png' 
-  },
-  KIT_12: { 
-    icon: '📦', 
-    label: 'Kit de 12', 
-    image: '/images/formats/kit-12.png' 
-  },
-  CAPSULE_60: { 
-    icon: '💊', 
-    label: 'Capsules (60)', 
-    image: '/images/formats/capsules-60.png' 
-  },
-  CAPSULE_120: { 
-    icon: '💊', 
-    label: 'Capsules (120)', 
-    image: '/images/formats/capsules-120.png' 
-  },
-  PACK_5: { 
-    icon: '📦', 
-    label: 'Pack de 5', 
-    image: '/images/formats/pack-5.png' 
-  },
-  PACK_10: { 
-    icon: '📦', 
-    label: 'Pack de 10', 
-    image: '/images/formats/pack-10.png' 
-  },
-  BUNDLE: { 
-    icon: '🎁', 
-    label: 'Bundle', 
-    image: '/images/formats/bundle.png' 
-  },
-  ACCESSORY: { 
-    icon: '🔧', 
-    label: 'Accessoire', 
-    image: '/images/formats/accessory.png' 
-  },
-  NASAL_SPRAY: { 
-    icon: '💨', 
-    label: 'Spray nasal', 
-    image: '/images/formats/nasal-spray.png' 
-  },
-  CREAM: { 
-    icon: '🧴', 
-    label: 'Crème', 
-    image: '/images/formats/cream.png' 
-  },
+// Icons and images for each format type (labels come from i18n)
+const FORMAT_DEFAULTS: Record<FormatType, { icon: string; labelKey: string; image: string }> = {
+  VIAL_2ML: { icon: '💉', labelKey: 'formats.vial2ml', image: '/images/formats/vial-2ml.png' },
+  VIAL_10ML: { icon: '🧪', labelKey: 'formats.vial10ml', image: '/images/formats/vial-10ml.png' },
+  CARTRIDGE_3ML: { icon: '💊', labelKey: 'formats.cartridge3ml', image: '/images/formats/cartridge.png' },
+  KIT_12: { icon: '📦', labelKey: 'formats.kit12', image: '/images/formats/kit-12.png' },
+  CAPSULE_60: { icon: '💊', labelKey: 'formats.capsules60', image: '/images/formats/capsules-60.png' },
+  CAPSULE_120: { icon: '💊', labelKey: 'formats.capsules120', image: '/images/formats/capsules-120.png' },
+  PACK_5: { icon: '📦', labelKey: 'formats.pack5', image: '/images/formats/pack-5.png' },
+  PACK_10: { icon: '📦', labelKey: 'formats.pack10', image: '/images/formats/pack-10.png' },
+  BUNDLE: { icon: '🎁', labelKey: 'formats.bundle', image: '/images/formats/bundle.png' },
+  ACCESSORY: { icon: '🔧', labelKey: 'formats.accessory', image: '/images/formats/accessory.png' },
+  NASAL_SPRAY: { icon: '💨', labelKey: 'formats.nasalSpray', image: '/images/formats/nasal-spray.png' },
+  CREAM: { icon: '🧴', labelKey: 'formats.cream', image: '/images/formats/cream.png' },
 };
 
-const AVAILABILITY_LABELS: Record<string, { label: string; color: string }> = {
-  IN_STOCK: { label: 'En stock', color: 'text-green-600' },
-  OUT_OF_STOCK: { label: 'Rupture', color: 'text-red-600' },
-  DISCONTINUED: { label: 'Arrêté', color: 'text-gray-500' },
-  COMING_SOON: { label: 'Bientôt', color: 'text-blue-600' },
-  PRE_ORDER: { label: 'Pré-commande', color: 'text-purple-600' },
-  LIMITED: { label: 'Stock limité', color: 'text-orange-600' },
+const AVAILABILITY_COLORS: Record<string, { labelKey: string; color: string }> = {
+  IN_STOCK: { labelKey: 'shop.inStock', color: 'text-green-600' },
+  OUT_OF_STOCK: { labelKey: 'shop.outOfStock', color: 'text-red-600' },
+  DISCONTINUED: { labelKey: 'shop.discontinued', color: 'text-gray-500' },
+  COMING_SOON: { labelKey: 'shop.comingSoon', color: 'text-blue-600' },
+  PRE_ORDER: { labelKey: 'shop.preOrder', color: 'text-purple-600' },
+  LIMITED: { labelKey: 'shop.limitedStock', color: 'text-orange-600' },
 };
 
 export default function FormatDropdown({
@@ -126,6 +79,7 @@ export default function FormatDropdown({
   className = '',
 }: FormatDropdownProps) {
   const { formatPrice } = useCurrency();
+  const { t } = useTranslations();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -148,7 +102,8 @@ export default function FormatDropdown({
   };
 
   const getAvailabilityInfo = (availability: string) => {
-    return AVAILABILITY_LABELS[availability] || AVAILABILITY_LABELS.IN_STOCK;
+    const info = AVAILABILITY_COLORS[availability] || AVAILABILITY_COLORS.IN_STOCK;
+    return { label: t(info.labelKey), color: info.color };
   };
 
   const isAvailable = (format: FormatOption) => {
@@ -160,7 +115,7 @@ export default function FormatDropdown({
     return (
       <div className={`space-y-3 ${className}`}>
         <label className="text-sm text-neutral-500 uppercase tracking-wider block">
-          Sélectionner le format:
+          {t('shop.selectFormat')}:
         </label>
         <div className="grid grid-cols-2 gap-3">
           {visibleFormats.map((format) => {
@@ -239,7 +194,7 @@ export default function FormatDropdown({
   // Default dropdown variant
   return (
     <div className={`relative ${className}`} ref={dropdownRef}>
-      <label className="text-xs text-neutral-500 uppercase tracking-wider">Packaging:</label>
+      <label className="text-xs text-neutral-500 uppercase tracking-wider">{t('shop.packaging')}:</label>
       
       {/* Trigger Button */}
       <button
@@ -361,7 +316,7 @@ export default function FormatDropdown({
                     </span>
                   ) : format.stockQuantity <= 10 ? (
                     <span className="text-xs text-orange-600 font-medium">
-                      {format.stockQuantity} left
+                      {t('shop.stockLeft').replace('{count}', String(format.stockQuantity))}
                     </span>
                   ) : null}
                 </div>

@@ -1,17 +1,24 @@
 export const dynamic = 'force-dynamic';
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { withTranslations } from '@/lib/translation';
+import { defaultLocale } from '@/i18n/config';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const faqs = await prisma.faq.findMany({
+    const { searchParams } = new URL(request.url);
+    const locale = searchParams.get('locale') || defaultLocale;
+
+    let faqs = await prisma.faq.findMany({
       where: { isPublished: true },
       orderBy: [{ category: 'asc' }, { sortOrder: 'asc' }],
-      include: {
-        translations: true,
-      },
     });
+
+    // Apply translations
+    if (locale !== defaultLocale) {
+      faqs = await withTranslations(faqs, 'Faq', locale);
+    }
 
     // Group by category
     const byCategory: Record<string, { question: string; answer: string }[]> = {};

@@ -4,12 +4,14 @@ import { SessionProvider } from 'next-auth/react';
 import { CartProvider } from '@/contexts/CartContext';
 import { CurrencyProvider } from '@/contexts/CurrencyContext';
 import { LoyaltyProvider } from '@/contexts/LoyaltyContext';
+import { UpsellProvider } from '@/contexts/UpsellContext';
 import { Header, Footer, DisclaimerModal, NewsletterPopup, CookieConsent } from '@/components/shop';
 import FreeShippingBanner from '@/components/shop/FreeShippingBanner';
 import ChatWidget from '@/components/chat/ChatWidget';
 import BackToTop from '@/components/ui/BackToTop';
 import CompareBar from '@/components/shop/CompareBar';
 import InstallPWA from '@/components/ui/InstallPWA';
+import TextToSpeechButton from '@/components/shop/TextToSpeechButton';
 import { Toaster } from 'sonner';
 
 export default function ShopLayout({
@@ -21,7 +23,8 @@ export default function ShopLayout({
     <SessionProvider>
       <CurrencyProvider>
         <CartProvider>
-          <LoyaltyProvider>
+          <UpsellProvider>
+            <LoyaltyProvider>
             <div className="min-h-screen flex flex-col bg-white">
               <a
                 href="#main-content"
@@ -37,12 +40,14 @@ export default function ShopLayout({
               <NewsletterPopup />
               <CookieConsent />
               <ChatWidget />
+              <TextToSpeechButton />
               <BackToTop />
               <CompareBar />
               <InstallPWA />
               <Toaster position="bottom-right" richColors closeButton />
             </div>
-          </LoyaltyProvider>
+            </LoyaltyProvider>
+          </UpsellProvider>
         </CartProvider>
       </CurrencyProvider>
     </SessionProvider>

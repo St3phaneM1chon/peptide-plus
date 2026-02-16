@@ -6,6 +6,7 @@ import { useCompare } from '@/hooks/useCompare';
 import { useTranslations } from '@/hooks/useTranslations';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useCart } from '@/contexts/CartContext';
+import { useUpsell } from '@/contexts/UpsellContext';
 import Image from 'next/image';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -52,6 +53,7 @@ function ComparePageContent() {
   const { t } = useTranslations();
   const { formatPrice } = useCurrency();
   const { addItem } = useCart();
+  const { addItemWithUpsell } = useUpsell();
 
   const [products, setProducts] = useState<CompareProduct[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -112,7 +114,7 @@ function ComparePageContent() {
       return;
     }
 
-    addItem({
+    addItemWithUpsell({
       productId: product.id,
       formatId: defaultFormat.id,
       name: `${product.name} ${defaultFormat.name}`,

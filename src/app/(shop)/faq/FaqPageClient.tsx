@@ -36,7 +36,7 @@ interface FaqCategory {
 }
 
 export default function FAQPage() {
-  const { t } = useTranslations();
+  const { t, locale } = useTranslations();
   const [activeCategory, setActiveCategory] = useState(0);
   const [openQuestions, setOpenQuestions] = useState<Set<string>>(new Set());
   const [faqCategories, setFaqCategories] = useState<FaqCategory[]>([]);
@@ -45,7 +45,7 @@ export default function FAQPage() {
   useEffect(() => {
     async function fetchFaqs() {
       try {
-        const res = await fetch('/api/faq');
+        const res = await fetch(`/api/faq?locale=${locale}`);
         const data = await res.json();
         const byCategory: Record<string, { question: string; answer: string }[]> = data.byCategory || {};
 

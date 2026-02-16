@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { useTranslations } from '@/hooks/useTranslations';
 
 interface PeptideCalculatorProps {
   className?: string;
@@ -9,6 +10,7 @@ interface PeptideCalculatorProps {
 }
 
 export default function PeptideCalculator({ className = '', onClose, isModal = false }: PeptideCalculatorProps) {
+  const { t } = useTranslations();
   // États des inputs avec sliders
   const [peptideAmount, setPeptideAmount] = useState(10); // mg (1-500)
   const [solventVolume, setSolventVolume] = useState(3); // ml (1-10)
@@ -181,8 +183,8 @@ export default function PeptideCalculator({ className = '', onClose, isModal = f
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-xl md:text-2xl font-bold text-white">Calculatrice de Peptides</h3>
-                  <p className="text-sm text-amber-400/70">Calculez votre dosage précis</p>
+                  <h3 className="text-xl md:text-2xl font-bold text-white">{t('calculator.title')}</h3>
+                  <p className="text-sm text-amber-400/70">{t('calculator.subtitle')}</p>
                 </div>
               </div>
               
@@ -230,9 +232,9 @@ export default function PeptideCalculator({ className = '', onClose, isModal = f
                         {/* Ligne 1: Badge numéroté */}
                         <span className="inline-flex items-center justify-center w-7 h-7 md:w-8 md:h-8 rounded-full bg-orange-500 text-neutral-900 font-bold text-sm md:text-base shadow-lg mb-1">1</span>
                         {/* Ligne 2: Titre coloré */}
-                        <p className="text-xs md:text-sm text-orange-400 font-semibold drop-shadow-lg">Quantité de peptide</p>
+                        <p className="text-xs md:text-sm text-orange-400 font-semibold drop-shadow-lg">{t('calculator.step1Title')}</p>
                         {/* Ligne 3: Sous-titre blanc */}
-                        <p className="text-xs md:text-sm text-white font-bold drop-shadow-lg">dans le vial</p>
+                        <p className="text-xs md:text-sm text-white font-bold drop-shadow-lg">{t('calculator.inVial')}</p>
                       </div>
                       
                       {/* ===== GROUPE 2 - VALUES (Valeur affichée) ===== */}
@@ -261,8 +263,8 @@ export default function PeptideCalculator({ className = '', onClose, isModal = f
                       {/* ===== GROUPE 1 - HEADER (Badge + Titre + Sous-titre) ===== */}
                       <div className="text-center" style={{ marginBottom: '56px' }}>
                         <span className="inline-flex items-center justify-center w-7 h-7 md:w-8 md:h-8 rounded-full bg-white text-neutral-900 font-bold text-sm md:text-base shadow-lg mb-1">2</span>
-                        <p className="text-xs md:text-sm text-white font-semibold drop-shadow-lg">Quantité de solvant</p>
-                        <p className="text-xs md:text-sm text-white font-bold drop-shadow-lg">eau bactériostatique</p>
+                        <p className="text-xs md:text-sm text-white font-semibold drop-shadow-lg">{t('calculator.step2Title')}</p>
+                        <p className="text-xs md:text-sm text-white font-bold drop-shadow-lg">{t('calculator.bacteriostaticWater')}</p>
                       </div>
                       
                       {/* ===== GROUPE 2 - VALUES (Valeur affichée) ===== */}
@@ -291,8 +293,8 @@ export default function PeptideCalculator({ className = '', onClose, isModal = f
                       {/* ===== GROUPE 1 - HEADER (Badge + Titre + Sous-titre) ===== */}
                       <div className="text-center" style={{ marginBottom: '56px' }}>
                         <span className="inline-flex items-center justify-center w-7 h-7 md:w-8 md:h-8 rounded-full bg-yellow-400 text-neutral-900 font-bold text-sm md:text-base shadow-lg mb-1">3</span>
-                        <p className="text-xs md:text-sm text-yellow-400 font-semibold drop-shadow-lg">Dosage désiré</p>
-                        <p className="text-xs md:text-sm text-white font-bold drop-shadow-lg">par injection</p>
+                        <p className="text-xs md:text-sm text-yellow-400 font-semibold drop-shadow-lg">{t('calculator.step3Title')}</p>
+                        <p className="text-xs md:text-sm text-white font-bold drop-shadow-lg">{t('calculator.perInjection')}</p>
                       </div>
                       
                       {/* ===== GROUPE 2 - VALUES (Valeur affichée) ===== */}
@@ -352,11 +354,11 @@ export default function PeptideCalculator({ className = '', onClose, isModal = f
 
               {/* Section Résultat */}
               <div className="bg-neutral-900/90 rounded-xl p-4 h-full flex flex-col">
-                <h4 className="text-lg font-bold text-white mb-3 text-center">Résultat</h4>
+                <h4 className="text-lg font-bold text-white mb-3 text-center">{t('calculator.result')}</h4>
                 
                 {/* Concentration */}
                 <div className="mb-2 p-2 bg-neutral-800/50 rounded-lg">
-                  <p className="text-xs text-neutral-400 mb-0.5">Concentration :</p>
+                  <p className="text-xs text-neutral-400 mb-0.5">{t('calculator.concentration')}</p>
                   <p className="text-amber-400 whitespace-nowrap">
                     <span className="text-xl font-bold">{calculations.concentrationMgPerMl.toFixed(2)}</span>
                     <span className="text-xs ml-1">mg/mL</span>
@@ -365,7 +367,7 @@ export default function PeptideCalculator({ className = '', onClose, isModal = f
                 
                 {/* Volume à injecter */}
                 <div className="mb-2 p-2 bg-neutral-800/50 rounded-lg">
-                  <p className="text-xs text-neutral-400 mb-0.5">Volume à injecter :</p>
+                  <p className="text-xs text-neutral-400 mb-0.5">{t('calculator.volumeToInject')}</p>
                   <p className="text-amber-400 whitespace-nowrap">
                     <span className="text-xl font-bold">{calculations.volumeToInjectMl.toFixed(2)}</span>
                     <span className="text-xs ml-1">mL</span>
@@ -375,11 +377,11 @@ export default function PeptideCalculator({ className = '', onClose, isModal = f
                 {/* Unités à injecter */}
                 {calculations.unitsU100 <= 100 ? (
                   <div className="p-3 bg-gradient-to-br from-neutral-800 to-neutral-900 rounded-lg flex-grow text-center">
-                    <p className="text-xs text-neutral-400 mb-1">Unités à injecter</p>
+                    <p className="text-xs text-neutral-400 mb-1">{t('calculator.unitsToInject')}</p>
                     <p className="text-4xl font-bold text-amber-400 mb-0.5">
                       {calculations.unitsU100.toFixed(1)}
                     </p>
-                    <p className="text-xs text-neutral-500">unités (U-100)</p>
+                    <p className="text-xs text-neutral-500">{t('calculator.unitsU100')}</p>
                   </div>
                 ) : (
                   <div className="space-y-2 flex-grow">
@@ -387,17 +389,17 @@ export default function PeptideCalculator({ className = '', onClose, isModal = f
                       <svg className="w-3 h-3 text-red-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                       </svg>
-                      <span className="text-xs text-red-400">Seringue 3 mL requise</span>
+                      <span className="text-xs text-red-400">{t('calculator.syringe3mlRequired')}</span>
                     </div>
                     
                     <div className="p-3 bg-gradient-to-br from-neutral-800 to-neutral-900 rounded-lg text-center">
-                      <p className="text-xs text-neutral-400 mb-1">Volume à injecter</p>
+                      <p className="text-xs text-neutral-400 mb-1">{t('calculator.volumeToInject')}</p>
                       <p className="text-4xl font-bold text-blue-400 mb-0.5">
                         {calculations.volumeToInjectMl.toFixed(2)}
                       </p>
-                      <p className="text-xs text-neutral-500">mL (seringue 3 mL)</p>
+                      <p className="text-xs text-neutral-500">{t('calculator.mlSyringe3ml')}</p>
                       <p className="text-xs text-neutral-600 mt-1">
-                        ({calculations.unitsU100.toFixed(0)} unités U-100)
+                        ({t('calculator.unitsU100Count').replace('{count}', calculations.unitsU100.toFixed(0))})
                       </p>
                     </div>
                   </div>
@@ -410,7 +412,7 @@ export default function PeptideCalculator({ className = '', onClose, isModal = f
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
               </svg>
-              <span>Cette calculatrice est fournie à titre informatif uniquement pour la recherche in vitro.</span>
+              <span>{t('calculator.disclaimer')}</span>
             </div>
           </div>
           

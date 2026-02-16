@@ -151,7 +151,7 @@ export async function PATCH(
 
     // Frequency change
     if (body.frequency !== undefined) {
-      const validFrequencies = ['WEEKLY', 'BIWEEKLY', 'MONTHLY', 'BIMONTHLY', 'QUARTERLY'];
+      const validFrequencies = ['EVERY_2_MONTHS', 'EVERY_4_MONTHS', 'EVERY_6_MONTHS', 'EVERY_12_MONTHS'];
       if (!validFrequencies.includes(body.frequency)) {
         return NextResponse.json(
           { error: `Invalid frequency. Must be one of: ${validFrequencies.join(', ')}` },
@@ -164,11 +164,10 @@ export async function PATCH(
       if (existing.status === 'ACTIVE' || body.status === 'ACTIVE') {
         const now = new Date();
         const daysMap: Record<string, number> = {
-          WEEKLY: 7,
-          BIWEEKLY: 14,
-          MONTHLY: 30,
-          BIMONTHLY: 60,
-          QUARTERLY: 90,
+          EVERY_2_MONTHS: 60,
+          EVERY_4_MONTHS: 120,
+          EVERY_6_MONTHS: 180,
+          EVERY_12_MONTHS: 365,
         };
         const nextDate = new Date(now.getTime() + daysMap[body.frequency] * 24 * 60 * 60 * 1000);
         updateData.nextDelivery = nextDate;

@@ -3,9 +3,11 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { useCurrency } from '@/contexts/CurrencyContext';
+import { useTranslations } from '@/hooks/useTranslations';
 
 export default function GiftCardRedeem() {
   const { formatPrice } = useCurrency();
+  const { t } = useTranslations();
   const [code, setCode] = useState('');
   const [isChecking, setIsChecking] = useState(false);
   const [isRedeeming, setIsRedeeming] = useState(false);
@@ -14,7 +16,7 @@ export default function GiftCardRedeem() {
 
   const handleCheckBalance = async () => {
     if (!code.trim()) {
-      toast.error('Please enter a gift card code');
+      toast.error(t('giftCard.enterCode'));
       return;
     }
 
@@ -43,7 +45,7 @@ export default function GiftCardRedeem() {
 
   const handleRedeem = async () => {
     if (!code.trim()) {
-      toast.error('Please enter a gift card code');
+      toast.error(t('giftCard.enterCode'));
       return;
     }
 
@@ -64,7 +66,7 @@ export default function GiftCardRedeem() {
       }
 
       setBalance(data.balance);
-      toast.success(data.message || 'Gift card linked to your account!');
+      toast.success(data.message || t('giftCard.linkedSuccess'));
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Failed to redeem gift card';
       setError(errorMsg);
@@ -80,7 +82,7 @@ export default function GiftCardRedeem() {
         <svg className="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
-        <h3 className="font-semibold text-gray-900">Gift Card</h3>
+        <h3 className="font-semibold text-gray-900">{t('giftCard.title')}</h3>
       </div>
 
       <div className="space-y-3">
@@ -101,7 +103,7 @@ export default function GiftCardRedeem() {
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
-              <span className="font-medium">Balance: {formatPrice(balance)}</span>
+              <span className="font-medium">{t('giftCard.balance').replace('{amount}', formatPrice(balance))}</span>
             </div>
           </div>
         )}
@@ -126,7 +128,7 @@ export default function GiftCardRedeem() {
                 </svg>
               </span>
             ) : (
-              'Check Balance'
+              t('giftCard.checkBalance')
             )}
           </button>
 
@@ -143,13 +145,13 @@ export default function GiftCardRedeem() {
                 </svg>
               </span>
             ) : (
-              'Redeem'
+              t('giftCard.redeem')
             )}
           </button>
         </div>
 
         <p className="text-xs text-gray-500 text-center">
-          Gift cards can be used for any product on our site
+          {t('giftCard.note')}
         </p>
       </div>
     </div>

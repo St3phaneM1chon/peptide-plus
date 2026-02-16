@@ -44,7 +44,8 @@ export type TranslatableModel =
   | 'BlogPost'
   | 'Video'
   | 'Webinar'
-  | 'QuickReply';
+  | 'QuickReply'
+  | 'Faq';
 
 export type TranslationContext = 'product' | 'article' | 'general';
 
@@ -116,6 +117,7 @@ export const TRANSLATABLE_FIELDS: Record<TranslatableModel, string[]> = {
   Video: ['title', 'description'],
   Webinar: ['title', 'description', 'speakerTitle'],
   QuickReply: ['title', 'content'],
+  Faq: ['question', 'answer'],
 };
 
 /** Prisma model name to translation table mapping */
@@ -128,6 +130,7 @@ const TRANSLATION_TABLE_MAP: Record<TranslatableModel, string> = {
   Video: 'videoTranslation',
   Webinar: 'webinarTranslation',
   QuickReply: 'quickReplyTranslation',
+  Faq: 'faqTranslation',
 };
 
 /** Foreign key field name in translation table */
@@ -140,6 +143,7 @@ const FK_FIELD_MAP: Record<TranslatableModel, string> = {
   Video: 'videoId',
   Webinar: 'webinarId',
   QuickReply: 'quickReplyId',
+  Faq: 'faqId',
 };
 
 // ============================================

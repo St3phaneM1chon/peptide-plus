@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/contexts/CartContext';
+import { useUpsell } from '@/contexts/UpsellContext';
 import SubscriptionOfferModal from '@/components/SubscriptionOfferModal';
 import { useTranslations } from '@/hooks/useTranslations';
 
@@ -35,6 +36,7 @@ export default function ProductHistoryPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const { addItem } = useCart();
+  const { addItemWithUpsell } = useUpsell();
   const { t } = useTranslations();
   const [categories, setCategories] = useState<CategoryGroup[]>([]);
   const [loading, setLoading] = useState(true);
@@ -90,7 +92,7 @@ export default function ProductHistoryPage() {
         }),
       });
 
-      // Add to cart
+      // Add to cart (subscription already created, bypass upsell)
       addItem({
         productId: subscriptionOffer.productId,
         formatId: subscriptionOffer.formatId || undefined,
@@ -110,8 +112,8 @@ export default function ProductHistoryPage() {
   const handleSubscriptionDecline = () => {
     if (!subscriptionOffer) return;
 
-    // Just add to cart without subscription
-    addItem({
+    // Add to cart without subscription (use upsell for potential volume discount)
+    addItemWithUpsell({
       productId: subscriptionOffer.productId,
       formatId: subscriptionOffer.formatId || undefined,
       name: subscriptionOffer.productName,

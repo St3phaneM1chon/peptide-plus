@@ -174,7 +174,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
 
             {/* Checkout Button */}
             <Link
-              href={session ? '/checkout/cart' : '/auth/signin?callbackUrl=/checkout'}
+              href={session ? '/checkout' : '/auth/signin?callbackUrl=/checkout'}
               onClick={onClose}
               className="block w-full py-3 bg-orange-500 text-white font-semibold text-center rounded-lg hover:bg-orange-600 transition-colors"
             >

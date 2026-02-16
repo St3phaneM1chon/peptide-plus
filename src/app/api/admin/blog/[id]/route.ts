@@ -10,6 +10,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth-config';
+import { enqueue } from '@/lib/translation';
 
 // GET /api/admin/blog/[id] - Get single blog post
 export async function GET(
@@ -162,6 +163,9 @@ export async function PATCH(
         translations: true,
       },
     });
+
+    // Auto-enqueue translation (force re-translate on update)
+    enqueue.blogPost(id, true);
 
     // Handle translations if provided
     if (translations && Array.isArray(translations)) {

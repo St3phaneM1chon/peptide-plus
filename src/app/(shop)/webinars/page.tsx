@@ -82,7 +82,7 @@ function mapDbWebinar(w: Record<string, unknown>): Webinar {
 
 export default function WebinarsPage() {
   const { data: session } = useSession();
-  const { t } = useTranslations();
+  const { t, locale } = useTranslations();
   const [activeFilter, setActiveFilter] = useState<'all' | 'upcoming' | 'recorded'>('all');
   const [activeCategory, setActiveCategory] = useState('All');
   const [registeredWebinars, setRegisteredWebinars] = useState<string[]>([]);
@@ -94,7 +94,7 @@ export default function WebinarsPage() {
   useEffect(() => {
     async function fetchWebinars() {
       try {
-        const res = await fetch('/api/webinars');
+        const res = await fetch(`/api/webinars?locale=${locale}`);
         if (!res.ok) throw new Error('Failed to fetch webinars');
         const data = await res.json();
         const mapped = (data.webinars || []).map(mapDbWebinar);
