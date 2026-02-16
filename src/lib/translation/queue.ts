@@ -24,7 +24,8 @@ import {
   type TranslatableModel,
 } from './auto-translate';
 import { buildGlossaryPrompt, getLanguageName } from './glossary';
-import { locales, defaultLocale } from '@/i18n/config';
+import { locales } from '@/i18n/config';
+import { DB_SOURCE_LOCALE } from './auto-translate';
 import type { TranslationJob as PrismaTranslationJob, TranslationJobStatus } from '@prisma/client';
 import type OpenAI from 'openai';
 import type Anthropic from '@anthropic-ai/sdk';
@@ -535,7 +536,7 @@ async function improveTranslationsWithClaude(
   if (Object.keys(sourceFields).length === 0) return;
 
   const translations = await readExistingTranslations(model, entityId);
-  const targetLocales = locales.filter(l => l !== defaultLocale);
+  const targetLocales = locales.filter(l => l !== DB_SOURCE_LOCALE);
 
   // Process locales in batches of 3
   for (let i = 0; i < targetLocales.length; i += 3) {
@@ -627,7 +628,7 @@ async function verifyTranslationsWithGPT4o(
   if (Object.keys(sourceFields).length === 0) return;
 
   const translations = await readExistingTranslations(model, entityId);
-  const targetLocales = locales.filter(l => l !== defaultLocale);
+  const targetLocales = locales.filter(l => l !== DB_SOURCE_LOCALE);
 
   for (let i = 0; i < targetLocales.length; i += 3) {
     const batch = targetLocales.slice(i, i + 3);
