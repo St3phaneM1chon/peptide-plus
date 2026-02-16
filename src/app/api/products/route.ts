@@ -10,8 +10,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { UserRole } from '@/types';
-import { withTranslations, getTranslatedFields, enqueue } from '@/lib/translation';
-import { isValidLocale, defaultLocale } from '@/i18n/config';
+import { withTranslations, getTranslatedFields, enqueue, DB_SOURCE_LOCALE } from '@/lib/translation';
+import { isValidLocale } from '@/i18n/config';
 
 // GET - Liste des produits
 export async function GET(request: NextRequest) {
@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Apply translations if locale is not default
-    if (isValidLocale(locale) && locale !== defaultLocale) {
+    if (isValidLocale(locale) && locale !== DB_SOURCE_LOCALE) {
       products = await withTranslations(products, 'Product', locale);
 
       // Also translate nested category names

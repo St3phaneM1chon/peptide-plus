@@ -5,8 +5,7 @@ import { Metadata } from 'next';
 import ProductPageClient from './ProductPageClient';
 import { prisma } from '@/lib/db';
 import { getServerLocale } from '@/i18n/server';
-import { withTranslation, getTranslatedFields } from '@/lib/translation';
-import { defaultLocale } from '@/i18n/config';
+import { withTranslation, getTranslatedFields, DB_SOURCE_LOCALE } from '@/lib/translation';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { productSchema, breadcrumbSchema } from '@/lib/structured-data';
 
@@ -85,7 +84,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   let subtitle = product.subtitle || '';
   let description = product.shortDescription || product.description?.substring(0, 160) || '';
 
-  if (locale !== defaultLocale) {
+  if (locale !== DB_SOURCE_LOCALE) {
     const translated = await getTranslatedFields('Product', product.id, locale);
     if (translated) {
       name = translated.name || name;
@@ -219,7 +218,7 @@ export default async function ProductPage({ params }: PageProps) {
   // Apply translations to product and its category
   const locale = await getServerLocale();
   let translatedProduct = product;
-  if (locale !== defaultLocale) {
+  if (locale !== DB_SOURCE_LOCALE) {
     translatedProduct = await withTranslation(product, 'Product', locale) as typeof product;
     // Also translate the category name
     if (translatedProduct.category) {

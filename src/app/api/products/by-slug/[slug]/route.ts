@@ -2,8 +2,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { withTranslation, getTranslatedFields } from '@/lib/translation';
-import { defaultLocale } from '@/i18n/config';
+import { withTranslation, getTranslatedFields, DB_SOURCE_LOCALE } from '@/lib/translation';
 
 interface RouteParams {
   params: Promise<{ slug: string }>;
@@ -41,12 +40,12 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
 
     // Apply translations
-    let translated = locale !== defaultLocale
+    let translated = locale !== DB_SOURCE_LOCALE
       ? await withTranslation(product, 'Product', locale)
       : product;
 
     // Also translate nested category
-    if (locale !== defaultLocale && translated.category) {
+    if (locale !== DB_SOURCE_LOCALE && translated.category) {
       const catTrans = await getTranslatedFields('Category', translated.category.id, locale);
       if (catTrans?.name) {
         translated = { ...translated, category: { ...translated.category, name: catTrans.name } };

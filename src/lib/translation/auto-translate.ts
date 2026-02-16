@@ -16,7 +16,14 @@ import { createHash } from 'crypto';
 import { prisma } from '@/lib/db';
 import { cacheGet, cacheSet, CacheTTL } from '@/lib/cache';
 import { buildTranslationSystemPrompt, getLanguageName } from './glossary';
-import { locales, defaultLocale } from '@/i18n/config';
+import { locales } from '@/i18n/config';
+
+/**
+ * DB content source locale: all original content in the database is written in French.
+ * This is different from the i18n defaultLocale ('en') which is the website's default display language.
+ * The translation system uses this to know which locale doesn't need translation (content is already in FR).
+ */
+export const DB_SOURCE_LOCALE = 'fr';
 
 // Lazy OpenAI initialization (same pattern as chat)
 let openaiInstance: OpenAI | null = null;
@@ -353,7 +360,7 @@ export async function translateEntityAllLocales(
   entityId: string,
   options: { force?: boolean; sourceLocale?: string; concurrency?: number } = {}
 ): Promise<TranslationResult[]> {
-  const sourceLocale = options.sourceLocale || defaultLocale;
+  const sourceLocale = options.sourceLocale || DB_SOURCE_LOCALE;
   const targetLocales = locales.filter(l => l !== sourceLocale);
   const concurrency = options.concurrency || 3; // Parallel translations
 
@@ -396,8 +403,8 @@ export async function getTranslatedFields(
   entityId: string,
   locale: string
 ): Promise<Record<string, string> | null> {
-  // If requesting default locale, no translation needed
-  if (locale === defaultLocale) return null;
+  // If requesting DB source locale, no translation needed (content is already in French)
+  if (locale === DB_SOURCE_LOCALE) return null;
 
   const tableName = TRANSLATION_TABLE_MAP[model];
   const fkField = FK_FIELD_MAP[model];
@@ -439,7 +446,7 @@ export async function withTranslation<T extends Record<string, unknown> & { id: 
   model: TranslatableModel,
   locale: string
 ): Promise<T> {
-  if (locale === defaultLocale) return entity;
+  if (locale === DB_SOURCE_LOCALE) return entity;
 
   const translated = await getTranslatedFields(model, entity.id, locale);
   if (!translated) return entity;
@@ -455,7 +462,7 @@ export async function withTranslations<T extends Record<string, unknown> & { id:
   model: TranslatableModel,
   locale: string
 ): Promise<T[]> {
-  if (locale === defaultLocale) return entities;
+  if (locale === DB_SOURCE_LOCALE) return entities;
 
   return Promise.all(
     entities.map(entity => withTranslation(entity, model, locale))
@@ -475,7 +482,7 @@ export async function getTranslationStatus(
 ): Promise<TranslationStatus> {
   const tableName = TRANSLATION_TABLE_MAP[model];
   const fkField = FK_FIELD_MAP[model];
-  const allLocales = locales.filter(l => l !== defaultLocale);
+  const allLocales = locales.filter(l => l !== DB_SOURCE_LOCALE);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic Prisma model access requires runtime key indexing
   const translations: { locale: string; isApproved: boolean }[] = await ((prisma as Record<string, any>)[tableName]).findMany({

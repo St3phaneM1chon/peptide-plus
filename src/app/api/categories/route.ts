@@ -8,7 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { UserRole } from '@/types';
-import { withTranslations, enqueue } from '@/lib/translation';
+import { withTranslations, enqueue, DB_SOURCE_LOCALE } from '@/lib/translation';
 import { isValidLocale, defaultLocale } from '@/i18n/config';
 
 // GET - Liste des catégories
@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Apply translations if locale is not default
-    if (isValidLocale(locale) && locale !== defaultLocale) {
+    if (isValidLocale(locale) && locale !== DB_SOURCE_LOCALE) {
       categories = await withTranslations(categories, 'Category', locale);
     }
 

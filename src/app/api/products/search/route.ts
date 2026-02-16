@@ -7,8 +7,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { Prisma } from '@prisma/client';
-import { withTranslations, getTranslatedFields } from '@/lib/translation';
-import { defaultLocale } from '@/i18n/config';
+import { withTranslations, getTranslatedFields, DB_SOURCE_LOCALE } from '@/lib/translation';
 
 export async function GET(request: NextRequest) {
   try {
@@ -103,7 +102,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Apply translations
-    if (locale !== defaultLocale) {
+    if (locale !== DB_SOURCE_LOCALE) {
       products = await withTranslations(products, 'Product', locale);
 
       // Translate nested category names on products
@@ -146,7 +145,7 @@ export async function GET(request: NextRequest) {
       slug: c.slug,
       count: c._count.products,
     }));
-    if (locale !== defaultLocale) {
+    if (locale !== DB_SOURCE_LOCALE) {
       translatedCategories = await Promise.all(
         translatedCategories.map(async (c) => {
           const trans = await getTranslatedFields('Category', c.id, locale);

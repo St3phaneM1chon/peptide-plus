@@ -34,6 +34,7 @@ export {
   // Helpers
   contentHash,
   TRANSLATABLE_FIELDS,
+  DB_SOURCE_LOCALE,
 
   // Types
   type TranslatableModel,

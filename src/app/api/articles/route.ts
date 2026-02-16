@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { withTranslations } from '@/lib/translation';
+import { withTranslations, DB_SOURCE_LOCALE } from '@/lib/translation';
 import { defaultLocale } from '@/i18n/config';
 
 // GET - List published articles
@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
 
     // Apply translations for non-default locales
     let translatedArticles = articles;
-    if (locale !== defaultLocale) {
+    if (locale !== DB_SOURCE_LOCALE) {
       translatedArticles = await withTranslations(articles, 'Article', locale);
     }
 
