@@ -2105,6 +2105,9 @@
     "myProfile": "Meu perfil",
     "errorOccurred": "Ocorreu um erro",
     "resetPassword": "Redefinir Senha",
+    "signInWithPasskey": "Entrar com Passkey",
+    "passkeyLoading": "Autenticando...",
+    "passkeyError": "Falha na autenticação por Passkey. Tente novamente.",
     "welcomeMessage": "Sua conta foi criada com sucesso. Você está sendo redirecionado...",
     "welcomeTitle": "Bem-vindo!"
   },

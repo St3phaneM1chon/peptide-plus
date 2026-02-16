@@ -2105,6 +2105,9 @@
     "myProfile": "Mon profil",
     "errorOccurred": "On té un erè",
     "resetPassword": "Réinitialisé mot de passe",
+    "signInWithPasskey": "Sign in with Passkey",
+    "passkeyLoading": "Authenticating...",
+    "passkeyError": "Passkey authentication failed. Please try again.",
     "welcomeMessage": "Kont ou te kreye avèk siksè. Ou ap redireksyonnen...",
     "welcomeTitle": "Byenveni!"
   },

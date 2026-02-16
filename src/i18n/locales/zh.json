@@ -2105,6 +2105,9 @@
     "myProfile": "我的个人资料",
     "errorOccurred": "发生错误",
     "resetPassword": "重置密码",
+    "signInWithPasskey": "使用通行密钥登录",
+    "passkeyLoading": "正在验证...",
+    "passkeyError": "通行密钥验证失败，请重试。",
     "welcomeMessage": "您的账户已成功创建。正在重定向...",
     "welcomeTitle": "欢迎！"
   },

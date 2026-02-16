@@ -2144,7 +2144,10 @@
     "home": "Home",
     "myProfile": "My profile",
     "errorOccurred": "An error occurred",
-    "resetPassword": "Reset Password"
+    "resetPassword": "Reset Password",
+    "signInWithPasskey": "Sign in with Passkey",
+    "passkeyLoading": "Authenticating...",
+    "passkeyError": "Passkey authentication failed. Please try again."
   },
   "admin": {
     "brandName": "BioCycle Admin",

@@ -2105,6 +2105,9 @@
     "myProfile": "Hồ sơ của tôi",
     "errorOccurred": "Đã xảy ra lỗi",
     "resetPassword": "Đặt lại mật khẩu",
+    "signInWithPasskey": "Đăng nhập bằng Passkey",
+    "passkeyLoading": "Đang xác thực...",
+    "passkeyError": "Xác thực Passkey thất bại. Vui lòng thử lại.",
     "welcomeMessage": "Tài khoản của bạn đã được tạo thành công. Bạn đang được chuyển hướng...",
     "welcomeTitle": "Chào mừng!"
   },

@@ -2100,6 +2100,9 @@
     "myProfile": "Mój profil",
     "errorOccurred": "Wystąpił błąd",
     "resetPassword": "Zresetuj hasło",
+    "signInWithPasskey": "Zaloguj się kluczem dostępu",
+    "passkeyLoading": "Uwierzytelnianie...",
+    "passkeyError": "Uwierzytelnianie kluczem dostępu nie powiodło się. Spróbuj ponownie.",
     "welcomeMessage": "Twoje konto zostało pomyślnie utworzone. Jesteś przekierowywany...",
     "welcomeTitle": "Witaj!"
   },

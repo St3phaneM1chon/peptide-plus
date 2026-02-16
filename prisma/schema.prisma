@@ -2225,9 +2225,29 @@ model User {
   sessions               Session[]
   addresses              UserAddress[]
   wishlistCollections    WishlistCollection[]
+  authenticators         Authenticator[]
 
   @@index([email])
   @@index([role])
+}
+
+model Authenticator {
+  credentialID         String    @unique
+  userId               String
+  providerAccountId    String    @default("")
+  credentialPublicKey  String
+  counter              Int
+  credentialDeviceType String
+  credentialBackedUp   Boolean
+  transports           String?
+  deviceName           String?
+  createdAt            DateTime  @default(now())
+  lastUsedAt           DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, credentialID])
+  @@index([userId])
 }
 
 model UserAddress {

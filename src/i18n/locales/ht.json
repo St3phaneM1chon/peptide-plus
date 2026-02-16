@@ -2096,6 +2096,9 @@
     "myProfile": "Pwofil mwen",
     "errorOccurred": "Yon erè te rive",
     "resetPassword": "Reyajiste Modpas",
+    "signInWithPasskey": "Konekte ak Passkey",
+    "passkeyLoading": "Otantifikasyon...",
+    "passkeyError": "Otantifikasyon Passkey echwe. Tanpri eseye ankò.",
     "welcomeMessage": "Kont ou a te kreye avèk siksè. Ou ap redireksyonnen...",
     "welcomeTitle": "Byenveni!"
   },

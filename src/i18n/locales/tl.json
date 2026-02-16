@@ -2099,6 +2099,9 @@
     "myProfile": "Aking profile",
     "errorOccurred": "Isang error ang nangyari",
     "resetPassword": "I-reset ang Password",
+    "signInWithPasskey": "Mag-sign in gamit ang Passkey",
+    "passkeyLoading": "Nagpapatunay...",
+    "passkeyError": "Nabigo ang Passkey authentication. Pakisubukan muli.",
     "welcomeMessage": "Matagumpay na nalikha ang iyong account. Ikaw ay ire-redirect...",
     "welcomeTitle": "Maligayang pagdating!"
   },

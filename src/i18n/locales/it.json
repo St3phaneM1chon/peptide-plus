@@ -2096,6 +2096,9 @@
     "myProfile": "Il mio profilo",
     "errorOccurred": "Si è verificato un errore",
     "resetPassword": "Reimposta Password",
+    "signInWithPasskey": "Accedi con Passkey",
+    "passkeyLoading": "Autenticazione...",
+    "passkeyError": "Autenticazione Passkey fallita. Riprova.",
     "welcomeMessage": "Il tuo account è stato creato con successo. Stai per essere reindirizzato...",
     "welcomeTitle": "Benvenuto!"
   },

@@ -2099,6 +2099,9 @@
     "myProfile": "Min profil",
     "errorOccurred": "Ett fel inträffade",
     "resetPassword": "Återställ lösenord",
+    "signInWithPasskey": "Logga in med Passkey",
+    "passkeyLoading": "Autentiserar...",
+    "passkeyError": "Passkey-autentisering misslyckades. Försök igen.",
     "welcomeMessage": "Ditt konto har skapats framgångsrikt. Du omdirigeras...",
     "welcomeTitle": "Välkommen!"
   },

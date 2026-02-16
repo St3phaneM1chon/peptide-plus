@@ -11,6 +11,7 @@ import { signIn, getProviders } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useI18n } from '@/i18n/client';
+import PasskeyButton from '@/components/auth/PasskeyButton';
 
 function LoadingFallback() {
   return (
@@ -199,6 +200,9 @@ function SignInContent() {
             </button>
             )}
           </div>
+
+          {/* Passkey / Biometric */}
+          <PasskeyButton callbackUrl={callbackUrl} />
 
           {/* Séparateur */}
           <div className="relative my-6">
