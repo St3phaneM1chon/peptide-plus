@@ -10,7 +10,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { UserRole } from '@/types';
-import { withTranslations, enqueue } from '@/lib/translation';
+import { withTranslations, getTranslatedFields, enqueue } from '@/lib/translation';
 import { isValidLocale, defaultLocale } from '@/i18n/config';
 
 // GET - Liste des produits
@@ -63,6 +63,32 @@ export async function GET(request: NextRequest) {
     // Apply translations if locale is not default
     if (isValidLocale(locale) && locale !== defaultLocale) {
       products = await withTranslations(products, 'Product', locale);
+
+      // Also translate nested category names
+      const categoryIds = [...new Set(products.map(p => (p as Record<string, unknown> & { category?: { id: string } }).category?.id).filter(Boolean))] as string[];
+      const categoryTranslations = new Map<string, Record<string, string>>();
+      await Promise.all(
+        categoryIds.map(async (catId) => {
+          const translated = await getTranslatedFields('Category', catId, locale);
+          if (translated) categoryTranslations.set(catId, translated);
+        })
+      );
+
+      // Apply category translations to each product
+      products = products.map(p => {
+        const product = p as Record<string, unknown> & { category?: { id: string; name: string; slug: string } };
+        if (product.category && categoryTranslations.has(product.category.id)) {
+          const catTrans = categoryTranslations.get(product.category.id)!;
+          return {
+            ...p,
+            category: {
+              ...product.category,
+              name: catTrans.name || product.category.name,
+            },
+          };
+        }
+        return p;
+      });
     }
 
     return NextResponse.json({ products }, {

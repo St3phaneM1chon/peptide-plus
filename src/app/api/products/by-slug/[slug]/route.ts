@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { withTranslation } from '@/lib/translation';
+import { withTranslation, getTranslatedFields } from '@/lib/translation';
 import { defaultLocale } from '@/i18n/config';
 
 interface RouteParams {
@@ -41,9 +41,17 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
 
     // Apply translations
-    const translated = locale !== defaultLocale
+    let translated = locale !== defaultLocale
       ? await withTranslation(product, 'Product', locale)
       : product;
+
+    // Also translate nested category
+    if (locale !== defaultLocale && translated.category) {
+      const catTrans = await getTranslatedFields('Category', translated.category.id, locale);
+      if (catTrans?.name) {
+        translated = { ...translated, category: { ...translated.category, name: catTrans.name } };
+      }
+    }
 
     // Transform for client
     const primaryImage = translated.images[0];

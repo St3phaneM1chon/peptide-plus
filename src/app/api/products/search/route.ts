@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { Prisma } from '@prisma/client';
-import { withTranslations } from '@/lib/translation';
+import { withTranslations, getTranslatedFields } from '@/lib/translation';
 import { defaultLocale } from '@/i18n/config';
 
 export async function GET(request: NextRequest) {
@@ -105,6 +105,24 @@ export async function GET(request: NextRequest) {
     // Apply translations
     if (locale !== defaultLocale) {
       products = await withTranslations(products, 'Product', locale);
+
+      // Translate nested category names on products
+      const categoryIds = [...new Set(products.map(p => (p as Record<string, unknown> & { category?: { id: string } }).category?.id).filter(Boolean))] as string[];
+      const categoryTranslations = new Map<string, Record<string, string>>();
+      await Promise.all(
+        categoryIds.map(async (catId) => {
+          const translated = await getTranslatedFields('Category', catId, locale);
+          if (translated) categoryTranslations.set(catId, translated);
+        })
+      );
+      products = products.map(p => {
+        const product = p as Record<string, unknown> & { category?: { id: string; name: string; slug: string } };
+        if (product.category && categoryTranslations.has(product.category.id)) {
+          const catTrans = categoryTranslations.get(product.category.id)!;
+          return { ...p, category: { ...product.category, name: catTrans.name || product.category.name } };
+        }
+        return p;
+      });
     }
 
     // Get categories with product counts for facets
@@ -121,15 +139,26 @@ export async function GET(request: NextRequest) {
       orderBy: { sortOrder: 'asc' },
     });
 
+    // Translate category facet names
+    let translatedCategories = categories.map((c) => ({
+      id: c.id,
+      name: c.name,
+      slug: c.slug,
+      count: c._count.products,
+    }));
+    if (locale !== defaultLocale) {
+      translatedCategories = await Promise.all(
+        translatedCategories.map(async (c) => {
+          const trans = await getTranslatedFields('Category', c.id, locale);
+          return { ...c, name: trans?.name || c.name };
+        })
+      );
+    }
+
     return NextResponse.json(
       {
         products,
-        categories: categories.map((c) => ({
-          id: c.id,
-          name: c.name,
-          slug: c.slug,
-          count: c._count.products,
-        })),
+        categories: translatedCategories,
         total: products.length,
         query: q,
       },

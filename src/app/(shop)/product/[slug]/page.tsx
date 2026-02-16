@@ -216,11 +216,21 @@ export default async function ProductPage({ params }: PageProps) {
     notFound();
   }
 
-  // Apply translations to product
+  // Apply translations to product and its category
   const locale = await getServerLocale();
   let translatedProduct = product;
   if (locale !== defaultLocale) {
     translatedProduct = await withTranslation(product, 'Product', locale) as typeof product;
+    // Also translate the category name
+    if (translatedProduct.category) {
+      const catTrans = await getTranslatedFields('Category', translatedProduct.category.id, locale);
+      if (catTrans?.name) {
+        translatedProduct = {
+          ...translatedProduct,
+          category: { ...translatedProduct.category, name: catTrans.name },
+        } as typeof product;
+      }
+    }
   }
 
   const relatedProducts = await getRelatedProductsFromDB(product.categoryId, product.id);
