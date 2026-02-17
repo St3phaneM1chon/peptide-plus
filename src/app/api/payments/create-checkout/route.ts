@@ -40,12 +40,16 @@ function calculateServerTaxes(subtotal: number, province: string) {
   return { tps, tvq, tvh, total: Math.round((tps + tvq + tvh) * 100) / 100 };
 }
 
-// Server-side shipping calculation
-function calculateServerShipping(subtotal: number, country: string): number {
-  if (country === 'CA' && subtotal >= 100) return 0; // Free shipping over $100 CAD
-  if (country === 'CA') return 9.99;
-  if (country === 'US') return 14.99;
-  return 24.99; // International
+// Server-side shipping calculation (product-type aware)
+function calculateServerShipping(subtotal: number, country: string, productTypes?: string[]): number {
+  if (country === 'CA') {
+    const hasLabSupply = productTypes?.some(t => t === 'LAB_SUPPLY');
+    const threshold = hasLabSupply ? 300 : 150;
+    if (subtotal >= threshold) return 0;
+    return 15;
+  }
+  if (country === 'US') return 25;
+  return 45; // International
 }
 
 export async function POST(request: NextRequest) {
@@ -107,7 +111,7 @@ export async function POST(request: NextRequest) {
     // =====================================================
     // SECURITY: Validate ALL prices from the database
     // =====================================================
-    const verifiedItems: { productId: string; formatId: string | null; name: string; formatName: string | null; quantity: number; price: number; priceConverted: number; imageUrl: string | null }[] = [];
+    const verifiedItems: { productId: string; formatId: string | null; name: string; formatName: string | null; quantity: number; price: number; priceConverted: number; imageUrl: string | null; productType: string }[] = [];
     let serverSubtotal = 0;
 
     for (const item of items) {
@@ -117,7 +121,7 @@ export async function POST(request: NextRequest) {
 
       const product = await prisma.product.findUnique({
         where: { id: item.productId },
-        select: { id: true, name: true, price: true, imageUrl: true, isActive: true },
+        select: { id: true, name: true, price: true, imageUrl: true, isActive: true, productType: true },
       });
 
       if (!product || !product.isActive) {
@@ -155,6 +159,7 @@ export async function POST(request: NextRequest) {
         price: verifiedPrice, // CAD price (for accounting)
         priceConverted,       // Converted price (for Stripe)
         imageUrl: product.imageUrl,
+        productType: product.productType,
       });
     }
 
@@ -195,7 +200,8 @@ export async function POST(request: NextRequest) {
     const province = shippingInfo?.province || 'QC';
     const country = shippingInfo?.country || 'CA';
     const serverTaxes = calculateServerTaxes(discountedSubtotal, province);
-    const serverShipping = calculateServerShipping(serverSubtotal, country);
+    const cartProductTypes = verifiedItems.map(i => i.productType);
+    const serverShipping = calculateServerShipping(serverSubtotal, country, cartProductTypes);
 
     // Reserve inventory before creating payment session
     const reservationIds: string[] = [];

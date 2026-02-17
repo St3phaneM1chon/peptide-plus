@@ -1414,6 +1414,7 @@ model Product {
   barcode             String?
   manufacturer        String?
   origin              String?
+  supplierUrl         String?
   purchaseCount       Int                  @default(0)
   averageRating       Decimal?             @db.Decimal(2, 1)
   reviewCount         Int                  @default(0)
@@ -2664,6 +2665,7 @@ enum ProductType {
   ACCESSORY
   BUNDLE
   CAPSULE
+  LAB_SUPPLY
 }
 
 enum PurchaseStatus {

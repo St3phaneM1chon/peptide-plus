@@ -91,7 +91,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       'coaUrl', 'msdsUrl', 'hplcUrl',
       'categoryId',
       'trackInventory', 'allowBackorder',
-      'weight', 'dimensions', 'requiresShipping', 'sku', 'barcode', 'manufacturer', 'origin',
+      'weight', 'dimensions', 'requiresShipping', 'sku', 'barcode', 'manufacturer', 'origin', 'supplierUrl',
       'metaTitle', 'metaDescription', 'tags',
       'researchSays', 'relatedResearch', 'participateResearch', 'customSections',
       'isActive', 'isFeatured', 'isNew', 'isBestseller',

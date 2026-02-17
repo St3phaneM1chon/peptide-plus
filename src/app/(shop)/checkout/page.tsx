@@ -218,10 +218,11 @@ export default function CheckoutPage() {
     return calculateTaxes(subtotal, shippingInfo.province, shippingInfo.country);
   }, [subtotal, shippingInfo.province, shippingInfo.country]);
 
-  // Calculate shipping based on country
+  // Calculate shipping based on country and product types in cart
+  const cartProductTypes = useMemo(() => items.map(i => i.productType).filter(Boolean) as string[], [items]);
   const shippingCalc = useMemo(() => {
-    return calculateShipping(subtotal, shippingInfo.country);
-  }, [subtotal, shippingInfo.country]);
+    return calculateShipping(subtotal, shippingInfo.country, cartProductTypes);
+  }, [subtotal, shippingInfo.country, cartProductTypes]);
 
   // Get countries and provinces/states lists
   const countries = useMemo(() => getCountriesList(locale?.startsWith('fr') ? 'fr' : 'en'), [locale]);

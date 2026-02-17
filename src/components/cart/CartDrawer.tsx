@@ -23,6 +23,7 @@ interface CartItem {
   quantity: number;
   imageUrl?: string;
   variant?: string;
+  productType?: string;
 }
 
 interface CartContextType {

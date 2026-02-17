@@ -489,7 +489,7 @@ export const SHIPPING_RATES: Record<string, ShippingRates> = {
     region: 'Canada',
     regionFr: 'Canada',
     baseRate: 15,
-    freeShippingThreshold: 200,  // Free shipping over $200 CAD in Canada
+    freeShippingThreshold: 150,  // Free shipping over $150 CAD in Canada (default; $300 for LAB_SUPPLY)
     estimatedDays: '2-5',
     requiresCERS: false,
     hasFTA: true,
@@ -712,23 +712,51 @@ export function calculateTaxes(subtotal: number, regionCode: string, country: st
 }
 
 /**
+ * Free shipping thresholds by product type (CAD, Canada only).
+ * LAB_SUPPLY requires $300, everything else $150.
+ */
+export const FREE_SHIPPING_THRESHOLDS: Record<string, number> = {
+  PEPTIDE: 150,
+  SUPPLEMENT: 150,
+  ACCESSORY: 150,
+  BUNDLE: 150,
+  CAPSULE: 150,
+  LAB_SUPPLY: 300,
+};
+
+/**
+ * Determine the effective free-shipping threshold for a cart.
+ * If any item is LAB_SUPPLY the threshold is $300, otherwise $150.
+ */
+export function getFreeShippingThreshold(productTypes?: string[]): number {
+  if (!productTypes || productTypes.length === 0) return 150;
+  const hasLabSupply = productTypes.some(t => t === 'LAB_SUPPLY');
+  return hasLabSupply ? 300 : 150;
+}
+
+/**
  * Calculate shipping cost based on destination country/region
  */
-export function calculateShipping(subtotal: number, countryOrRegion: string): { 
-  shippingCAD: number; 
-  shippingUSD: number; 
+export function calculateShipping(subtotal: number, countryOrRegion: string, productTypes?: string[]): {
+  shippingCAD: number;
+  shippingUSD: number;
   isFree: boolean;
   estimatedDays: string;
   requiresCERS: boolean;
   regionName: string;
+  freeShippingThreshold: number | null;
 } {
   const region = getShippingRegion(countryOrRegion);
   const rates = SHIPPING_RATES[region] || SHIPPING_RATES.LATAM;
-  
-  // Check for free shipping (only for Canada)
-  const isFree = rates.freeShippingThreshold !== null && subtotal >= rates.freeShippingThreshold;
+
+  // Product-type-aware threshold for Canada
+  const threshold = region === 'CA'
+    ? getFreeShippingThreshold(productTypes)
+    : rates.freeShippingThreshold;
+
+  const isFree = threshold !== null && subtotal >= threshold;
   const shippingCAD = isFree ? 0 : rates.baseRate;
-  
+
   return {
     shippingCAD,
     shippingUSD: shippingCAD * CAD_TO_USD_RATE,
@@ -736,6 +764,7 @@ export function calculateShipping(subtotal: number, countryOrRegion: string): {
     estimatedDays: rates.estimatedDays,
     requiresCERS: rates.requiresCERS,
     regionName: rates.region,
+    freeShippingThreshold: threshold,
   };
 }
 

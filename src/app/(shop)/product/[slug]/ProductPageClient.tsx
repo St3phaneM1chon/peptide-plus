@@ -84,6 +84,7 @@ interface Product {
   casNumber?: string;
   molecularFormula?: string;
   storageConditions?: string;
+  productType?: string;
   categoryName: string;
   categoryKey?: string;
   categorySlug: string;
@@ -241,6 +242,7 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
       sku: selectedFormat.sku,
       image: product.productImage || '/images/products/peptide-default.png',
       maxQuantity: selectedFormat.stockQuantity,
+      productType: product.productType,
       quantity,
     });
 

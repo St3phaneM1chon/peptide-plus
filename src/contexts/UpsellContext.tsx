@@ -15,6 +15,7 @@ interface CartItemParams {
   image?: string;
   sku?: string;
   maxQuantity?: number;
+  productType?: string;
 }
 
 interface UpsellContextType {

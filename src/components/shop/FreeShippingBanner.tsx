@@ -27,7 +27,7 @@ export default function FreeShippingBanner() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const freeShippingThreshold = 150; // CAD
+  const freeShippingThreshold = 150; // CAD ($150 for peptides/accessories, $300 for lab supplies)
 
   return (
     <div

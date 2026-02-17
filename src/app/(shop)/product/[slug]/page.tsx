@@ -155,6 +155,7 @@ function transformProductForClient(
     casNumber: product.casNumber || undefined,
     molecularFormula: product.molecularFormula || undefined,
     storageConditions: product.storageConditions || undefined,
+    productType: product.productType,
     categoryName: product.category?.name || '',
     categorySlug: product.category?.slug || '',
     isNew: product.isNew,

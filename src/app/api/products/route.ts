@@ -148,6 +148,7 @@ export async function POST(request: NextRequest) {
       barcode,
       manufacturer,
       origin,
+      supplierUrl,
       // SEO
       metaTitle,
       metaDescription,
@@ -217,6 +218,7 @@ export async function POST(request: NextRequest) {
         barcode,
         manufacturer,
         origin,
+        supplierUrl,
         // SEO
         metaTitle,
         metaDescription,

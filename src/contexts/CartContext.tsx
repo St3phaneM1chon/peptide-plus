@@ -14,6 +14,7 @@ interface CartItem {
   image?: string;
   sku?: string;
   maxQuantity?: number;
+  productType?: string;
 }
 
 interface CartContextType {
