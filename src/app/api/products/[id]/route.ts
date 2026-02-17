@@ -8,6 +8,7 @@ import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { UserRole } from '@/types';
 import { enqueue, withTranslation, getTranslatedFields, DB_SOURCE_LOCALE } from '@/lib/translation';
+import { defaultLocale } from '@/i18n/config';
 
 interface RouteParams {
   params: Promise<{ id: string }>;

@@ -11,7 +11,7 @@ import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { UserRole } from '@/types';
 import { withTranslations, getTranslatedFields, enqueue, DB_SOURCE_LOCALE } from '@/lib/translation';
-import { isValidLocale } from '@/i18n/config';
+import { isValidLocale, defaultLocale } from '@/i18n/config';
 
 // GET - Liste des produits
 export async function GET(request: NextRequest) {

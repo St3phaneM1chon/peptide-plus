@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { Prisma } from '@prisma/client';
 import { withTranslations, getTranslatedFields, DB_SOURCE_LOCALE } from '@/lib/translation';
+import { defaultLocale } from '@/i18n/config';
 
 export async function GET(request: NextRequest) {
   try {

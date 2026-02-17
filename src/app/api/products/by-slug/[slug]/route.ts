@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withTranslation, getTranslatedFields, DB_SOURCE_LOCALE } from '@/lib/translation';
+import { defaultLocale } from '@/i18n/config';
 
 interface RouteParams {
   params: Promise<{ slug: string }>;
