@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
     const category = searchParams.get('category');
     const featured = searchParams.get('featured');
     const productType = searchParams.get('type');
-    const limit = parseInt(searchParams.get('limit') || '50');
+    const limit = parseInt(searchParams.get('limit') || '200');
     const includeInactive = searchParams.get('includeInactive') === 'true';
     const locale = searchParams.get('locale') || defaultLocale;
 

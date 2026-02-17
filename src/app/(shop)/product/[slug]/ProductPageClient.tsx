@@ -146,8 +146,19 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
   // Filter out formats with stockQuantity <= 0
   const availableFormats = product.formats.filter(f => f.stockQuantity > 0);
 
+  // Fallback format when product has no formats (e.g. single-price products)
+  const fallbackFormat: ProductFormat = {
+    id: 'default',
+    name: product.name,
+    type: 'vial_2ml',
+    price: product.price,
+    sku: '',
+    inStock: true,
+    stockQuantity: 99,
+  };
+
   const [selectedFormat, setSelectedFormat] = useState<ProductFormat>(
-    availableFormats.find(f => f.inStock) || availableFormats[0] || product.formats[0]
+    availableFormats.find(f => f.inStock) || availableFormats[0] || product.formats[0] || fallbackFormat
   );
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState<'description' | 'specs' | 'research' | 'reconstitution' | 'video'>('description');
