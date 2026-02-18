@@ -140,6 +140,7 @@ jobs:
           if [ -n "$STR_PK" ]; then ARGS="$ARGS NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=$STR_PK"; fi
           if [ -n "$SMTP_U" ]; then ARGS="$ARGS SMTP_USER=$SMTP_U"; fi
           if [ -n "$SMTP_P" ]; then ARGS="$ARGS SMTP_PASSWORD=$SMTP_P"; fi
+          if [ -n "$ENC_KEY" ]; then ARGS="$ARGS ENCRYPTION_KEY=$ENC_KEY"; fi
 
           if [ -n "$ARGS" ]; then
             az webapp config appsettings set \
@@ -162,6 +163,7 @@ jobs:
           STR_PK: ${{ secrets.STRIPE_PUBLISHABLE_KEY }}
           SMTP_U: ${{ secrets.SMTP_USER }}
           SMTP_P: ${{ secrets.SMTP_PASSWORD }}
+          ENC_KEY: ${{ secrets.ENCRYPTION_KEY }}
 
       - name: Verify standalone package
         run: |

@@ -129,9 +129,9 @@ export default function SettingsPage() {
         setMessage({ type: 'success', text: t('account.profileUpdated') });
         toast.success('Profile updated successfully');
       } else {
-        const error = await res.json();
-        setMessage({ type: 'error', text: error.message || t('account.errorUpdateProfile') });
-        toast.error('Failed to update profile');
+        const data = await res.json();
+        setMessage({ type: 'error', text: data.error || data.message || t('account.errorUpdateProfile') });
+        toast.error(data.error || 'Failed to update profile');
       }
     } catch (error) {
       setMessage({ type: 'error', text: t('account.errorGeneric') });
