@@ -18,6 +18,24 @@ function fixAzureRequest(req: NextRequest): NextRequest {
   const xArrSsl = req.headers.get('x-arr-ssl');
   const proto = req.headers.get('x-forwarded-proto');
 
+  // TEMPORARY DEBUG: Log all cookies and headers on auth routes
+  const url = req.nextUrl.pathname;
+  if (url.includes('/callback/') || url.includes('/signin/')) {
+    const cookieNames = req.cookies.getAll().map(c => `${c.name}(${c.value.length})`);
+    console.log(JSON.stringify({
+      event: 'auth_debug',
+      url,
+      proto: proto || 'MISSING',
+      xArrSsl: xArrSsl ? 'PRESENT' : 'ABSENT',
+      host: req.headers.get('host'),
+      cookies: cookieNames,
+      hasPkce: !!req.cookies.get('authjs.pkce.code_verifier'),
+      hasSecurePkce: !!req.cookies.get('__Secure-authjs.pkce.code_verifier'),
+      hasState: !!req.cookies.get('authjs.state'),
+      hasSecureState: !!req.cookies.get('__Secure-authjs.state'),
+    }));
+  }
+
   // Azure terminates TLS and uses x-arr-ssl instead of x-forwarded-proto
   if (xArrSsl && !proto) {
     const host = req.headers.get('x-forwarded-host') || req.headers.get('host');

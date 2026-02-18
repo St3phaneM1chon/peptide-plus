@@ -1,30 +1,42 @@
 /**
  * TEMPORARY DEBUG ENDPOINT - DELETE AFTER OAUTH IS WORKING
- * Checks environment variables and headers relevant to Auth.js on Azure
+ * Checks environment variables, headers, and cookies relevant to Auth.js on Azure
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
-  // Only allow in production for debugging, but mask sensitive values
   const mask = (val: string | undefined) => {
-    if (!val) return '❌ MISSING';
-    if (val.length <= 8) return '✅ SET (short)';
-    return `✅ SET (${val.length} chars, starts: ${val.substring(0, 4)}...)`;
+    if (!val) return 'MISSING';
+    if (val.length <= 8) return `SET (${val.length} chars)`;
+    return `SET (${val.length} chars, starts: ${val.substring(0, 4)}...)`;
   };
 
-  const boolCheck = (val: string | undefined) => {
-    if (!val) return '❌ MISSING';
-    return `✅ ${val}`;
+  // Show ALL cookies currently in the request (names + value length)
+  const allCookies: Record<string, string> = {};
+  for (const cookie of request.cookies.getAll()) {
+    allCookies[cookie.name] = `${cookie.value.length} chars, starts: ${cookie.value.substring(0, 20)}...`;
+  }
+
+  // Check for both prefixed and non-prefixed auth cookies
+  const authCookieCheck = {
+    // Non-prefixed (our explicit config)
+    'authjs.pkce.code_verifier': request.cookies.get('authjs.pkce.code_verifier')?.value ? 'PRESENT' : 'ABSENT',
+    'authjs.state': request.cookies.get('authjs.state')?.value ? 'PRESENT' : 'ABSENT',
+    'authjs.session-token': request.cookies.get('authjs.session-token')?.value ? 'PRESENT' : 'ABSENT',
+    'authjs.callback-url': request.cookies.get('authjs.callback-url')?.value ? 'PRESENT' : 'ABSENT',
+    'authjs.csrf-token': request.cookies.get('authjs.csrf-token')?.value ? 'PRESENT' : 'ABSENT',
+    // Prefixed (default Auth.js behavior - should NOT be present with our config)
+    '__Secure-authjs.pkce.code_verifier': request.cookies.get('__Secure-authjs.pkce.code_verifier')?.value ? 'PRESENT (BAD!)' : 'ABSENT (good)',
+    '__Secure-authjs.session-token': request.cookies.get('__Secure-authjs.session-token')?.value ? 'PRESENT (BAD!)' : 'ABSENT (good)',
+    '__Secure-authjs.callback-url': request.cookies.get('__Secure-authjs.callback-url')?.value ? 'PRESENT (BAD!)' : 'ABSENT (good)',
   };
 
   const headers: Record<string, string | null> = {
     host: request.headers.get('host'),
-    'x-forwarded-for': request.headers.get('x-forwarded-for'),
     'x-forwarded-proto': request.headers.get('x-forwarded-proto'),
     'x-forwarded-host': request.headers.get('x-forwarded-host'),
-    'x-original-url': request.headers.get('x-original-url'),
-    'x-arr-ssl': request.headers.get('x-arr-ssl'),
+    'x-arr-ssl': request.headers.get('x-arr-ssl') ? 'PRESENT' : 'ABSENT',
   };
 
   const diagnostics = {
@@ -33,23 +45,19 @@ export async function GET(request: NextRequest) {
     auth: {
       AUTH_SECRET: mask(process.env.AUTH_SECRET),
       NEXTAUTH_SECRET: mask(process.env.NEXTAUTH_SECRET),
-      AUTH_URL: process.env.AUTH_URL || '❌ MISSING',
-      NEXTAUTH_URL: process.env.NEXTAUTH_URL || '❌ MISSING',
-      AUTH_TRUST_HOST: boolCheck(process.env.AUTH_TRUST_HOST),
+      AUTH_URL: process.env.AUTH_URL || 'MISSING',
+      AUTH_TRUST_HOST: process.env.AUTH_TRUST_HOST || 'MISSING',
     },
-    oauth_providers: {
+    providers: {
       GOOGLE_CLIENT_ID: mask(process.env.GOOGLE_CLIENT_ID),
-      GOOGLE_CLIENT_SECRET: mask(process.env.GOOGLE_CLIENT_SECRET),
       TWITTER_CLIENT_ID: mask(process.env.TWITTER_CLIENT_ID),
-      TWITTER_CLIENT_SECRET: mask(process.env.TWITTER_CLIENT_SECRET),
-      FACEBOOK_CLIENT_ID: mask(process.env.FACEBOOK_CLIENT_ID),
-      FACEBOOK_CLIENT_SECRET: mask(process.env.FACEBOOK_CLIENT_SECRET),
     },
     server: {
-      HOSTNAME: process.env.HOSTNAME || '❌ MISSING (standalone may bind to localhost only)',
-      PORT: process.env.PORT || '3000 (default)',
+      HOSTNAME: process.env.HOSTNAME || 'MISSING',
     },
     azure_headers: headers,
+    all_cookies: allCookies,
+    auth_cookie_check: authCookieCheck,
     request_url: request.url,
   };
 
