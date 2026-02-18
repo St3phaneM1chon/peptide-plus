@@ -87,6 +87,19 @@ export default function SettingsPage() {
         email: session.user.email || '',
         phone: '',
       });
+      // Fetch full profile (includes phone) from API
+      fetch('/api/account/profile')
+        .then((res) => res.ok ? res.json() : null)
+        .then((data) => {
+          if (data?.user) {
+            setProfileData((prev) => ({
+              ...prev,
+              name: data.user.name || prev.name,
+              phone: data.user.phone || '',
+            }));
+          }
+        })
+        .catch(() => {});
       // Load saved address from localStorage or API
       const savedAddress = localStorage.getItem('shipping_address');
       if (savedAddress) {
