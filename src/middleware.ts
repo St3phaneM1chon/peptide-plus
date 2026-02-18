@@ -99,12 +99,38 @@ export async function middleware(request: NextRequest) {
   // Récupérer le token d'authentification
   // Cookie name matches the explicit config in auth-config.ts (no __Secure- prefix)
   // to avoid name mismatch on Azure where TLS terminates at the load balancer.
-  const token = await getToken({
-    req: request,
-    secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
-    secureCookie: false,
-    cookieName: 'authjs.session-token',
-  });
+  let token = null;
+  try {
+    token = await getToken({
+      req: request,
+      secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
+      secureCookie: false,
+      cookieName: 'authjs.session-token',
+    });
+  } catch (err) {
+    console.error(JSON.stringify({
+      event: 'middleware_getToken_error',
+      pathname,
+      error: String(err),
+      hasCookie: !!request.cookies.get('authjs.session-token'),
+      cookieLength: request.cookies.get('authjs.session-token')?.value?.length || 0,
+      secret: process.env.AUTH_SECRET ? `SET(${process.env.AUTH_SECRET.length})` : 'MISSING',
+    }));
+  }
+
+  // TEMPORARY DEBUG: Log middleware token status for protected routes
+  const isProtectedPath = ['/dashboard', '/admin', '/owner', '/account', '/checkout/payment', '/order', '/profile'].some(r => pathname.startsWith(r));
+  if (isProtectedPath) {
+    console.log(JSON.stringify({
+      event: 'middleware_debug',
+      pathname,
+      hasToken: !!token,
+      tokenRole: token?.role || null,
+      hasCookie: !!request.cookies.get('authjs.session-token'),
+      cookieLength: request.cookies.get('authjs.session-token')?.value?.length || 0,
+      proto: request.headers.get('x-forwarded-proto'),
+    }));
+  }
 
   // Récupérer la locale
   let locale: Locale = defaultLocale;
