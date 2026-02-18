@@ -60,11 +60,11 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https: blob:",
               "font-src 'self' data:",
-              "connect-src 'self' https://*.azure.com https://login.microsoftonline.com https://api.stripe.com https://www.paypal.com https://api.openai.com https://accounts.google.com https://oauth.googleapis.com https://appleid.apple.com https://graph.facebook.com https://api.x.com",
+              "connect-src 'self' https://*.azure.com https://login.microsoftonline.com https://api.stripe.com https://www.paypal.com https://api.openai.com https://accounts.google.com https://oauth.googleapis.com https://appleid.apple.com https://graph.facebook.com https://api.x.com https://api.twitter.com https://twitter.com",
               "frame-src https://js.stripe.com https://www.paypal.com https://hooks.stripe.com https://accounts.google.com",
               "frame-ancestors 'none'",
               "base-uri 'self'",
-              "form-action 'self' https://accounts.google.com https://appleid.apple.com https://www.facebook.com https://x.com",
+              "form-action 'self' https://accounts.google.com https://appleid.apple.com https://www.facebook.com https://x.com https://twitter.com",
               ...(process.env.NODE_ENV === 'production' ? ["upgrade-insecure-requests"] : [])
             ].join('; ')
           }
@@ -122,6 +122,14 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: 'biocyclepeptides.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'pbs.twimg.com',
       },
     ],
     // Formats modernes pour performance

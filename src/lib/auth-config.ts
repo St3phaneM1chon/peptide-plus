@@ -259,6 +259,10 @@ export const authConfig: NextAuthConfig = {
       try {
         if (user) {
           token.id = user.id || '';
+          // Preserve name/email/picture from OAuth profile for session
+          if (user.name) token.name = user.name;
+          if (user.email) token.email = user.email;
+          if (user.image) token.picture = user.image;
 
           // Pour OAuth, le user object de l'adapter n'a pas le role custom
           // On fetch toujours depuis la DB pour avoir le role correct
@@ -266,10 +270,13 @@ export const authConfig: NextAuthConfig = {
             try {
               const dbUser = await prisma.user.findUnique({
                 where: { id: user.id! },
-                select: { role: true, mfaEnabled: true },
+                select: { role: true, mfaEnabled: true, name: true, image: true },
               });
               token.role = (dbUser?.role as UserRole) || UserRole.CUSTOMER;
               token.mfaEnabled = dbUser?.mfaEnabled || false;
+              // Use DB values for name/image if available (most up-to-date)
+              if (dbUser?.name) token.name = dbUser.name;
+              if (dbUser?.image) token.picture = dbUser.image;
             } catch {
               token.role = UserRole.CUSTOMER;
               token.mfaEnabled = false;
@@ -310,6 +317,10 @@ export const authConfig: NextAuthConfig = {
         session.user.role = token.role as UserRole;
         session.user.mfaEnabled = token.mfaEnabled as boolean;
         session.user.mfaVerified = true; // Si on arrive ici, MFA est vérifié
+        // Ensure name/email/image are passed through from JWT
+        if (token.name) session.user.name = token.name as string;
+        if (token.email) session.user.email = token.email as string;
+        if (token.picture) session.user.image = token.picture as string;
       }
       return session;
     },

@@ -40,10 +40,16 @@ function SignInContent() {
     mfaCode: '',
   });
   const [formError, setFormError] = useState('');
-  const [providers, setProviders] = useState<Record<string, unknown>>({});
+  // Show OAuth buttons immediately (they're always configured in production)
+  // getProviders() is too slow (~3s) causing buttons to flash in late
+  const [providersLoaded, setProvidersLoaded] = useState(false);
+  const [availableProviders, setAvailableProviders] = useState<Record<string, unknown>>({});
 
   useEffect(() => {
-    getProviders().then(p => { if (p) setProviders(p); });
+    getProviders().then(p => {
+      if (p) setAvailableProviders(p);
+      setProvidersLoaded(true);
+    });
   }, []);
 
   // Connexion OAuth - use post-login redirect for role-based routing
@@ -143,9 +149,9 @@ function SignInContent() {
         )}
 
         <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-8">
-          {/* Boutons OAuth - only show configured providers */}
+          {/* Boutons OAuth - always visible, hide only if provider confirmed absent */}
           <div className="space-y-3 mb-6">
-            {'google' in providers && (
+            {(!providersLoaded || 'google' in availableProviders) && (
             <button
               onClick={() => handleOAuthSignIn('google')}
               disabled={isLoading}
@@ -161,7 +167,7 @@ function SignInContent() {
             </button>
             )}
 
-            {'apple' in providers && (
+            {providersLoaded && 'apple' in availableProviders && (
             <button
               onClick={() => handleOAuthSignIn('apple')}
               disabled={isLoading}
@@ -174,7 +180,7 @@ function SignInContent() {
             </button>
             )}
 
-            {'facebook' in providers && (
+            {providersLoaded && 'facebook' in availableProviders && (
             <button
               onClick={() => handleOAuthSignIn('facebook')}
               disabled={isLoading}
@@ -187,7 +193,7 @@ function SignInContent() {
             </button>
             )}
 
-            {'twitter' in providers && (
+            {(!providersLoaded || 'twitter' in availableProviders) && (
             <button
               onClick={() => handleOAuthSignIn('twitter')}
               disabled={isLoading}

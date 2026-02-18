@@ -13,17 +13,22 @@ export default function PostLoginPage() {
   useEffect(() => {
     if (status === 'loading') return;
 
-    if (!session) {
-      router.replace('/auth/signin');
-      return;
+    if (status === 'unauthenticated') {
+      // Wait a moment before redirecting - session may still be establishing after OAuth callback
+      const timeout = setTimeout(() => {
+        router.replace('/auth/signin');
+      }, 2000);
+      return () => clearTimeout(timeout);
     }
 
-    const role = (session.user as Record<string, unknown>)?.role;
-    if (role === 'OWNER' || role === 'EMPLOYEE' || role === 'CLIENT') {
-      router.replace('/admin');
-    } else {
-      // CUSTOMER -> page d'accueil
-      router.replace('/');
+    if (session?.user) {
+      const role = (session.user as Record<string, unknown>)?.role;
+      if (role === 'OWNER' || role === 'EMPLOYEE' || role === 'CLIENT') {
+        router.replace('/admin');
+      } else {
+        // CUSTOMER -> page d'accueil
+        router.replace('/');
+      }
     }
   }, [session, status, router]);
 
