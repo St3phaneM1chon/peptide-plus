@@ -192,6 +192,32 @@ export const authConfig: NextAuthConfig = {
   // causing redirect_uri_mismatch errors with Google OAuth
   trustHost: true,
 
+  // PKCE cookies: explicit config for Azure proxy environment
+  // Twitter OAuth 2.0 uses PKCE; without explicit cookie config, __Secure- prefix
+  // and SameSite settings can cause silent failures behind Azure's reverse proxy
+  cookies: {
+    pkceCodeVerifier: {
+      name: '__Secure-authjs.pkce.code_verifier',
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: true,
+        maxAge: 60 * 15, // 15 minutes
+      },
+    },
+    state: {
+      name: '__Secure-authjs.state',
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: true,
+        maxAge: 60 * 15, // 15 minutes
+      },
+    },
+  },
+
   // Pages personnalisées
   pages: {
     signIn: '/auth/signin',

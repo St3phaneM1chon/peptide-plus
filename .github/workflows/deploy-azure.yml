@@ -114,6 +114,9 @@ jobs:
               NODE_ENV=production \
               SCM_DO_BUILD_DURING_DEPLOYMENT=false \
               NEXTAUTH_URL=https://biocyclepeptides.com \
+              AUTH_URL=https://biocyclepeptides.com \
+              AUTH_TRUST_HOST=true \
+              HOSTNAME=0.0.0.0 \
               NEXT_PUBLIC_APP_URL=https://biocyclepeptides.com \
               "NEXT_PUBLIC_SITE_NAME=BioCycle Peptides" \
               NEXT_PUBLIC_CONTACT_EMAIL=contact@biocyclepeptides.com \
@@ -126,10 +129,12 @@ jobs:
         run: |
           ARGS=""
           if [ -n "$DB_URL" ]; then ARGS="$ARGS DATABASE_URL=$DB_URL"; fi
-          if [ -n "$AUTH_SEC" ]; then ARGS="$ARGS NEXTAUTH_SECRET=$AUTH_SEC"; fi
+          if [ -n "$AUTH_SEC" ]; then ARGS="$ARGS NEXTAUTH_SECRET=$AUTH_SEC AUTH_SECRET=$AUTH_SEC"; fi
           if [ -n "$OAI_KEY" ]; then ARGS="$ARGS OPENAI_API_KEY=$OAI_KEY"; fi
           if [ -n "$G_CID" ]; then ARGS="$ARGS GOOGLE_CLIENT_ID=$G_CID"; fi
           if [ -n "$G_CSEC" ]; then ARGS="$ARGS GOOGLE_CLIENT_SECRET=$G_CSEC"; fi
+          if [ -n "$TW_CID" ]; then ARGS="$ARGS TWITTER_CLIENT_ID=$TW_CID"; fi
+          if [ -n "$TW_CSEC" ]; then ARGS="$ARGS TWITTER_CLIENT_SECRET=$TW_CSEC"; fi
           if [ -n "$STR_SK" ]; then ARGS="$ARGS STRIPE_SECRET_KEY=$STR_SK"; fi
           if [ -n "$STR_WH" ]; then ARGS="$ARGS STRIPE_WEBHOOK_SECRET=$STR_WH"; fi
           if [ -n "$STR_PK" ]; then ARGS="$ARGS NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=$STR_PK"; fi
@@ -150,6 +155,8 @@ jobs:
           OAI_KEY: ${{ secrets.OPENAI_API_KEY }}
           G_CID: ${{ secrets.GOOGLE_CLIENT_ID }}
           G_CSEC: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          TW_CID: ${{ secrets.TWITTER_CLIENT_ID }}
+          TW_CSEC: ${{ secrets.TWITTER_CLIENT_SECRET }}
           STR_SK: ${{ secrets.STRIPE_SECRET_KEY }}
           STR_WH: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
           STR_PK: ${{ secrets.STRIPE_PUBLISHABLE_KEY }}
