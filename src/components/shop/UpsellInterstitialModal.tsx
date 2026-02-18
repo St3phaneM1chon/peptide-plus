@@ -139,7 +139,7 @@ export default function UpsellInterstitialModal({
   const discountedPrice = basePrice * (1 - selectedDiscount / 100);
   const totalSavings = (basePrice - discountedPrice) * selectedQuantity;
 
-  const selectedSubOption = upsellData?.subscriptionOptions.find(
+  const selectedSubOption = upsellData?.subscriptionOptions?.find(
     (o) => o.frequency === selectedFrequency
   );
   const subDiscountPercent = selectedSubOption?.discountPercent || 10;
@@ -227,7 +227,7 @@ export default function UpsellInterstitialModal({
 
                   {/* Quantity tiers */}
                   <div className="space-y-2">
-                    {upsellData.quantityDiscounts.map((tier) => {
+                    {upsellData.quantityDiscounts?.map((tier) => {
                       const qty = tier.minQty;
                       const tierPrice = basePrice * (1 - tier.discount / 100);
                       const isBest = bestTier && tier.discount === bestTier.discount;
@@ -332,7 +332,7 @@ export default function UpsellInterstitialModal({
 
                   {/* Frequency options */}
                   <div className="space-y-2">
-                    {upsellData.subscriptionOptions.map((opt) => {
+                    {upsellData.subscriptionOptions?.map((opt) => {
                       const isSelected = selectedFrequency === opt.frequency;
                       const freqPrice = basePrice * (1 - opt.discountPercent / 100);
 
