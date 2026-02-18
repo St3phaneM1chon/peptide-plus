@@ -97,9 +97,15 @@ export async function middleware(request: NextRequest) {
   }
 
   // Récupérer le token d'authentification
+  // CRITICAL: Azure App Service terminates TLS at the load balancer, so internal URL is http://
+  // But Auth.js with trustHost:true sets __Secure- prefixed cookies. We must tell getToken()
+  // to look for the secure cookie name explicitly.
+  const isProduction = process.env.NODE_ENV === 'production';
   const token = await getToken({
     req: request,
     secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
+    secureCookie: isProduction,
+    cookieName: isProduction ? '__Secure-authjs.session-token' : 'authjs.session-token',
   });
 
   // Récupérer la locale
