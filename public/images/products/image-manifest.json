@@ -68,6 +68,10 @@
   {
     "slug": "eau-bacteriostatique",
     "main_image": "/images/products/eau-bacteriostatique/main.png",
+    "gallery": [
+      "/images/products/eau-bacteriostatique/gallery-1.png",
+      "/images/products/eau-bacteriostatique/gallery-2.png"
+    ],
     "formats": [
       {
         "sku": "BAC-WATER-10ML",
@@ -128,6 +132,10 @@
   {
     "slug": "kit-seringues-insuline",
     "main_image": "/images/products/kit-seringues-insuline/main.png",
+    "gallery": [
+      "/images/products/kit-seringues-insuline/gallery-1.png",
+      "/images/products/kit-seringues-insuline/gallery-2.png"
+    ],
     "formats": [
       {
         "sku": "SYRINGE-29G-10PK",
@@ -408,6 +416,11 @@
   {
     "slug": "injection-pen",
     "main_image": "/images/products/injection-pen/main.png",
+    "gallery": [
+      "/images/products/injection-pen/gallery-1.png",
+      "/images/products/injection-pen/gallery-2.png",
+      "/images/products/injection-pen/gallery-3.png"
+    ],
     "formats": [
       {
         "sku": "PEN-1",
