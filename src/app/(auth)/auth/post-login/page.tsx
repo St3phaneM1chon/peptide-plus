@@ -1,43 +1,26 @@
-'use client';
+import { redirect } from 'next/navigation';
+import { auth } from '@/lib/auth-config';
 
-import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
-import { useI18n } from '@/i18n/client';
+/**
+ * Post-login page - Server Component
+ * Checks session server-side and redirects based on role.
+ * This avoids the race condition where client-side useSession()
+ * returns "unauthenticated" before the session cookie is detected.
+ */
+export default async function PostLoginPage() {
+  const session = await auth();
 
-export default function PostLoginPage() {
-  const { data: session, status } = useSession();
-  const router = useRouter();
-  const { t } = useI18n();
+  if (!session?.user) {
+    // Not authenticated - redirect to signin
+    redirect('/auth/signin');
+  }
 
-  useEffect(() => {
-    if (status === 'loading') return;
+  const role = (session.user as Record<string, unknown>)?.role;
 
-    if (status === 'unauthenticated') {
-      // Wait a moment before redirecting - session may still be establishing after OAuth callback
-      const timeout = setTimeout(() => {
-        router.replace('/auth/signin');
-      }, 2000);
-      return () => clearTimeout(timeout);
-    }
-
-    if (session?.user) {
-      const role = (session.user as Record<string, unknown>)?.role;
-      if (role === 'OWNER' || role === 'EMPLOYEE' || role === 'CLIENT') {
-        router.replace('/admin');
-      } else {
-        // CUSTOMER -> page d'accueil
-        router.replace('/');
-      }
-    }
-  }, [session, status, router]);
-
-  return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
-        <p className="mt-4 text-gray-600">{t('common.redirecting')}</p>
-      </div>
-    </div>
-  );
+  if (role === 'OWNER' || role === 'EMPLOYEE' || role === 'CLIENT') {
+    redirect('/admin');
+  } else {
+    // CUSTOMER -> page d'accueil
+    redirect('/');
+  }
 }
