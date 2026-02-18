@@ -192,29 +192,36 @@ export const authConfig: NextAuthConfig = {
   // causing redirect_uri_mismatch errors with Google OAuth
   trustHost: true,
 
-  // PKCE cookies: explicit config for Azure proxy environment
-  // Twitter OAuth 2.0 uses PKCE; without explicit cookie config, __Secure- prefix
-  // and SameSite settings can cause silent failures behind Azure's reverse proxy
+  // CRITICAL: Force consistent cookie names WITHOUT __Secure- prefix.
+  // Azure App Service terminates TLS at the load balancer and forwards HTTP internally.
+  // Auth.js v5 encrypts cookies using the cookie NAME as salt for key derivation.
+  // If the name changes between set (__Secure- when HTTPS detected) and read (no prefix
+  // when HTTP detected internally), decryption fails with "could not be parsed".
+  // Solution: force all cookies to use non-prefixed names with secure: true.
   cookies: {
     pkceCodeVerifier: {
-      name: '__Secure-authjs.pkce.code_verifier',
-      options: {
-        httpOnly: true,
-        sameSite: 'lax',
-        path: '/',
-        secure: true,
-        maxAge: 60 * 15, // 15 minutes
-      },
+      name: 'authjs.pkce.code_verifier',
+      options: { httpOnly: true, sameSite: 'lax' as const, path: '/', secure: true, maxAge: 900 },
     },
     state: {
-      name: '__Secure-authjs.state',
-      options: {
-        httpOnly: true,
-        sameSite: 'lax',
-        path: '/',
-        secure: true,
-        maxAge: 60 * 15, // 15 minutes
-      },
+      name: 'authjs.state',
+      options: { httpOnly: true, sameSite: 'lax' as const, path: '/', secure: true, maxAge: 900 },
+    },
+    nonce: {
+      name: 'authjs.nonce',
+      options: { httpOnly: true, sameSite: 'lax' as const, path: '/', secure: true },
+    },
+    callbackUrl: {
+      name: 'authjs.callback-url',
+      options: { httpOnly: true, sameSite: 'lax' as const, path: '/', secure: true },
+    },
+    csrfToken: {
+      name: 'authjs.csrf-token',
+      options: { httpOnly: true, sameSite: 'lax' as const, path: '/', secure: true },
+    },
+    sessionToken: {
+      name: 'authjs.session-token',
+      options: { httpOnly: true, sameSite: 'lax' as const, path: '/', secure: true },
     },
   },
 
