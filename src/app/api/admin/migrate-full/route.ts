@@ -411,6 +411,42 @@ export async function POST(req: NextRequest) {
     // ---------------------------------------------------------------
     log('\n--- STEP 8: Translations ---');
 
+    // Build productIdMap: local product ID → Azure product ID (by slug matching)
+    const productIdMap = new Map<string, string>();
+    const allAzureProducts = await prisma.product.findMany({ select: { id: true, slug: true } });
+    const azureProductBySlug = new Map(allAzureProducts.map(p => [p.slug, p.id]));
+    const localProdsForMap = getLocalProducts();
+    for (const lp of localProdsForMap) {
+      const slug = lp.slug as string;
+      const localId = lp.id as string;
+      const azureId = azureProductBySlug.get(slug);
+      if (azureId && azureId !== localId) {
+        productIdMap.set(localId, azureId);
+      }
+    }
+    log(`  Product ID map: ${productIdMap.size} remapped`);
+
+    // Build formatIdMap: local format ID → Azure format ID (by matching productId+sku or name)
+    const formatIdMap = new Map<string, string>();
+    const allAzureFormats = await prisma.productFormat.findMany({ select: { id: true, productId: true, sku: true, name: true } });
+    const localFmtsForMap = getLocalFormats();
+    for (const lf of localFmtsForMap) {
+      const localFmtId = lf.id as string;
+      const localProdId = lf.productId as string;
+      const realProdId = productIdMap.get(localProdId) || localProdId;
+      // Match by productId + sku or productId + name
+      const match = allAzureFormats.find(af =>
+        af.productId === realProdId && (
+          (af.sku && af.sku === (lf.sku as string)) ||
+          (af.name && af.name === (lf.name as string))
+        )
+      );
+      if (match && match.id !== localFmtId) {
+        formatIdMap.set(localFmtId, match.id);
+      }
+    }
+    log(`  Format ID map: ${formatIdMap.size} remapped`);
+
     // Category translations (use catIdMap for remapped categories)
     const catTrans = getLocalCategoryTranslations();
     let catTransOk = 0;
@@ -444,21 +480,22 @@ export async function POST(req: NextRequest) {
     }
     log(`  Category translations: ${catTransOk} (skipped ${catTransSkip})`);
 
-    // Product translations
+    // Product translations (use productIdMap for remapped products)
     const prodTrans = getLocalProductTranslations();
     let prodTransOk = 0;
     let prodTransSkip = 0;
     for (const t of prodTrans) {
-      const prodExists = await prisma.product.findUnique({ where: { id: t.productId as string } });
+      const realProdId = productIdMap.get(t.productId as string) || (t.productId as string);
+      const prodExists = await prisma.product.findUnique({ where: { id: realProdId } });
       if (!prodExists) { prodTransSkip++; continue; }
       const existing = await prisma.productTranslation.findFirst({
-        where: { productId: t.productId as string, locale: t.locale as string },
+        where: { productId: realProdId, locale: t.locale as string },
       });
       if (!existing) {
         try {
           await prisma.productTranslation.create({
             data: {
-              id: t.id as string, productId: t.productId as string, locale: t.locale as string,
+              id: t.id as string, productId: realProdId, locale: t.locale as string,
               name: t.name as string, subtitle: t.subtitle as string,
               shortDescription: t.shortDescription as string, description: t.description as string,
               fullDetails: t.fullDetails as string, specifications: t.specifications as string,
@@ -510,21 +547,22 @@ export async function POST(req: NextRequest) {
     }
     log(`  Article translations: ${artTransOk} (skipped ${artTransSkip})`);
 
-    // Format translations (batch - largest dataset)
+    // Format translations (batch - largest dataset, use formatIdMap)
     const fmtTrans = getLocalFormatTranslations();
     let fmtTransOk = 0;
     let fmtTransSkip = 0;
     for (const t of fmtTrans) {
       try {
-        const fmtExists = await prisma.productFormat.findUnique({ where: { id: t.formatId as string } });
+        const realFmtId = formatIdMap.get(t.formatId as string) || (t.formatId as string);
+        const fmtExists = await prisma.productFormat.findUnique({ where: { id: realFmtId } });
         if (!fmtExists) { fmtTransSkip++; continue; }
         const existing = await prisma.productFormatTranslation.findFirst({
-          where: { formatId: t.formatId as string, locale: t.locale as string },
+          where: { formatId: realFmtId, locale: t.locale as string },
         });
         if (!existing) {
           await prisma.productFormatTranslation.create({
             data: {
-              id: t.id as string, formatId: t.formatId as string,
+              id: t.id as string, formatId: realFmtId,
               locale: t.locale as string, name: t.name as string, updatedAt: new Date(),
             },
           });
