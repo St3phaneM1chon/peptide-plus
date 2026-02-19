@@ -125,7 +125,7 @@ export default function HomePage() {
         .then((res) => res.ok ? res.json() : null)
         .then((data) => {
           if (data) {
-            const list = Array.isArray(data) ? data : data.products || data.data || [];
+            const list = Array.isArray(data) ? data : data.products || data.data?.products || data.data || [];
             setProducts(list.filter((p: ApiProduct) => p.isActive));
           }
         })

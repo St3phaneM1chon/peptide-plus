@@ -33,6 +33,14 @@
 - After schema changes, verify BOTH databases have matching structures
 - Use `prisma db push` for dev, `prisma migrate` for production
 
+### 5. Azure Deployment (NON NEGOCIABLE)
+- **SEARCH BEFORE SOLVE**: Chercher en memoire vectorielle + knowledge islands AVANT tout troubleshooting
+- **Checklist pre-deploy**: Build local, env CI, lazy init SDKs, schema sync, generalisation fixes
+- **Compte-rendu post-deploy**: Obligatoire apres chaque deploy (reussi ou echoue) + sauvegarde vectorielle
+- **KEDB**: 4 erreurs connues documentees (KB-PP-BUILD-001 a 004) dans `.claude/rules/deployment-azure.md`
+- **Pipeline ordering**: Schema sync AVANT deploy, build local AVANT push
+- **Reference complete**: `.claude/rules/deployment-azure.md` et `memory/deployment-azure-peptide.md`
+
 ## Architecture
 
 ### Directory Structure

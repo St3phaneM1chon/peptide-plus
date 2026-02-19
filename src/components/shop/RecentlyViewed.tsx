@@ -52,7 +52,7 @@ export default function RecentlyViewed({ excludeSlug }: RecentlyViewedProps) {
         const res = await fetch(`/api/products?slugs=${encodeURIComponent(slugsParam)}&locale=${locale}`);
         if (!res.ok) throw new Error('Failed to fetch products');
         const data = await res.json();
-        const fetchedProducts = Array.isArray(data) ? data : data.products || data.data || [];
+        const fetchedProducts = Array.isArray(data) ? data : data.products || data.data?.products || data.data || [];
 
         // Build a map for quick lookup
         const productMap = new Map<string, RecentProduct>();

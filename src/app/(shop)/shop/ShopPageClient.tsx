@@ -111,7 +111,7 @@ export default function ShopPage() {
         const res = await fetch(`/api/products?locale=${locale}`);
         if (!res.ok) throw new Error('Failed to fetch products');
         const data = await res.json();
-        const list = Array.isArray(data) ? data : data.products || data.data || [];
+        const list = Array.isArray(data) ? data : data.products || data.data?.products || data.data || [];
         setProducts(list.filter((p: ApiProduct) => p.isActive));
       } catch (err) {
         console.error('Error fetching products:', err);
