@@ -105,81 +105,84 @@ const providers = [
       password: { label: 'Mot de passe', type: 'password' },
       mfaCode: { label: 'Code MFA', type: 'text' },
     },
-    async authorize(credentials, request) {
+    async authorize(credentials) {
+      // NextAuth v5 beta: returning null shows "CredentialsSignin" error
+      // throwing Error shows "Configuration" error (misleading)
+      // So we return null for all auth failures
       if (!credentials?.email || !credentials?.password) {
-        throw new Error('Email et mot de passe requis');
+        return null;
       }
 
-      const email = (credentials.email as string).toLowerCase();
-      const ipAddress = request?.headers?.get?.('x-forwarded-for') || 'unknown';
-      const userAgent = request?.headers?.get?.('user-agent') || 'unknown';
+      const email = String(credentials.email).toLowerCase();
+      const password = String(credentials.password);
 
-      // SECURITY: Check brute-force lockout before any DB query
-      const { checkLoginAttempt, recordFailedAttempt, clearFailedAttempts } = await import('./brute-force-protection');
-      const lockCheck = await checkLoginAttempt(email, ipAddress, userAgent);
-      if (!lockCheck.allowed) {
-        throw new Error(lockCheck.message || 'Compte temporairement verrouillé');
-      }
-
-      const user = await prisma.user.findUnique({
-        where: { email },
-      });
-
-      if (!user || !user.password) {
-        await recordFailedAttempt(email, ipAddress, userAgent);
-        throw new Error('Identifiants invalides');
-      }
-
-      const isPasswordValid = await compare(
-        credentials.password as string,
-        user.password
-      );
-
-      if (!isPasswordValid) {
-        await recordFailedAttempt(email, ipAddress, userAgent);
-        throw new Error('Identifiants invalides');
-      }
-
-      // Si MFA activé, vérifier le code
-      if (user.mfaEnabled) {
-        if (!credentials.mfaCode) {
-          throw new Error('MFA_REQUIRED');
+      try {
+        // SECURITY: Check brute-force lockout before any DB query
+        const { checkLoginAttempt, recordFailedAttempt, clearFailedAttempts } = await import('./brute-force-protection');
+        const lockCheck = await checkLoginAttempt(email, 'unknown', 'unknown');
+        if (!lockCheck.allowed) {
+          return null;
         }
 
-        const { verifyTOTP } = await import('./mfa');
-        // SECURITY FIX: Decrypt the MFA secret before verification
-        let mfaSecret = user.mfaSecret!;
-        try {
-          const { decrypt } = await import('./security');
-          mfaSecret = await decrypt(user.mfaSecret!);
-        } catch {
-          // If decryption fails (ENCRYPTION_KEY missing), use raw value as fallback
-          // This handles the migration period before ENCRYPTION_KEY is set
+        const user = await prisma.user.findUnique({
+          where: { email },
+        });
+
+        if (!user || !user.password) {
+          await recordFailedAttempt(email, 'unknown', 'unknown');
+          return null;
         }
 
-        const isValidMFA = verifyTOTP(
-          mfaSecret,
-          credentials.mfaCode as string
-        );
+        const isPasswordValid = await compare(password, user.password);
 
-        if (!isValidMFA) {
-          throw new Error('Code MFA invalide');
+        if (!isPasswordValid) {
+          await recordFailedAttempt(email, 'unknown', 'unknown');
+          return null;
         }
+
+        // Si MFA activé, vérifier le code
+        if (user.mfaEnabled) {
+          if (!credentials.mfaCode) {
+            // Return null - frontend should handle MFA flow separately
+            return null;
+          }
+
+          const { verifyTOTP } = await import('./mfa');
+          let mfaSecret = user.mfaSecret!;
+          try {
+            const { decrypt } = await import('./security');
+            mfaSecret = await decrypt(user.mfaSecret!);
+          } catch {
+            // If decryption fails, use raw value as fallback
+          }
+
+          const isValidMFA = verifyTOTP(
+            mfaSecret,
+            String(credentials.mfaCode)
+          );
+
+          if (!isValidMFA) {
+            return null;
+          }
+        }
+
+        // SECURITY: Clear failed attempts on successful login
+        clearFailedAttempts(email);
+
+        // Return user object
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          image: user.image,
+          role: user.role,
+          mfaEnabled: user.mfaEnabled,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any;
+      } catch (error) {
+        console.error('[auth] authorize error:', error);
+        return null;
       }
-
-      // SECURITY: Clear failed attempts on successful login
-      clearFailedAttempts(email);
-
-      // Return user object (custom fields like role/mfaEnabled handled by callbacks)
-      return {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        image: user.image,
-        role: user.role,
-        mfaEnabled: user.mfaEnabled,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Next-Auth v5 User type extended via callbacks
-      } as any;
     },
   }),
 ];
