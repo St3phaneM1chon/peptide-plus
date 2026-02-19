@@ -7,13 +7,19 @@ import Stripe from 'stripe';
 import { generateSaleEntry, generateFeeEntry, generateRefundEntry, generateStripePayoutEntry } from './auto-entries.service';
 import { JournalEntry, BankTransaction } from './types';
 
-// Initialize Stripe with API key
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('STRIPE_SECRET_KEY is required');
+// Lazy-initialized Stripe client to avoid crashing during Next.js build/SSG
+let _stripe: Stripe | null = null;
+function getStripe(): Stripe {
+  if (!_stripe) {
+    if (!process.env.STRIPE_SECRET_KEY) {
+      throw new Error('STRIPE_SECRET_KEY is required');
+    }
+    _stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: '2023-10-16',
+    });
+  }
+  return _stripe;
 }
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2023-10-16',
-});
 
 interface StripeSyncResult {
   success: boolean;
@@ -63,7 +69,7 @@ export async function syncStripeCharges(
 
   try {
     // Fetch charges from Stripe
-    const charges = await stripe.charges.list({
+    const charges = await getStripe().charges.list({
       created: {
         gte: Math.floor(startDate.getTime() / 1000),
         lte: Math.floor(endDate.getTime() / 1000),
@@ -171,7 +177,7 @@ export async function syncStripeRefunds(
   };
 
   try {
-    const refunds = await stripe.refunds.list({
+    const refunds = await getStripe().refunds.list({
       created: {
         gte: Math.floor(startDate.getTime() / 1000),
         lte: Math.floor(endDate.getTime() / 1000),
@@ -251,7 +257,7 @@ export async function syncStripePayouts(
   };
 
   try {
-    const payouts = await stripe.payouts.list({
+    const payouts = await getStripe().payouts.list({
       created: {
         gte: Math.floor(startDate.getTime() / 1000),
         lte: Math.floor(endDate.getTime() / 1000),
@@ -315,7 +321,7 @@ export async function getStripeBalance(): Promise<{
   currency: string;
 }> {
   try {
-    const balance = await stripe.balance.retrieve();
+    const balance = await getStripe().balance.retrieve();
     
     const cadBalance = balance.available.find(b => b.currency === 'cad') || 
                        balance.available[0];

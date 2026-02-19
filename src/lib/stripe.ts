@@ -6,10 +6,28 @@
 import Stripe from 'stripe';
 import { PaymentMethod } from '@/types';
 
-// Client Stripe
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2023-10-16',
-  typescript: true,
+// Lazy-initialized Stripe client to avoid crashing during Next.js build/SSG
+// when STRIPE_SECRET_KEY is not available in the CI environment.
+let _stripe: Stripe | null = null;
+
+function getStripe(): Stripe {
+  if (!_stripe) {
+    if (!process.env.STRIPE_SECRET_KEY) {
+      throw new Error('STRIPE_SECRET_KEY is required');
+    }
+    _stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: '2023-10-16',
+      typescript: true,
+    });
+  }
+  return _stripe;
+}
+
+/** @deprecated Use getStripe() internally. Kept for external imports. */
+const stripe = new Proxy({} as Stripe, {
+  get(_target, prop) {
+    return (getStripe() as Record<string | symbol, unknown>)[prop];
+  },
 });
 
 // =====================================================
