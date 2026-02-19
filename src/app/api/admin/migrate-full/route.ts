@@ -348,17 +348,23 @@ export async function POST(req: NextRequest) {
 
     const localFaqs = getLocalFaqs();
     for (const faq of localFaqs) {
-      await prisma.faq.create({
-        data: {
-          id: faq.id,
-          question: faq.question,
-          answer: faq.answer,
-          category: faq.category,
-          productSlug: faq.productSlug,
-          sortOrder: faq.sortOrder,
-          isActive: faq.isActive,
-        },
-      });
+      try {
+        await prisma.faq.create({
+          data: {
+            id: faq.id,
+            question: faq.question as string,
+            answer: faq.answer as string,
+            category: (faq.category as string) || 'General',
+            productSlug: (faq.productSlug as string) || null,
+            sortOrder: (faq.sortOrder as number) || 0,
+            isActive: faq.isActive !== false && faq.isActive !== undefined ? true : false,
+            updatedAt: new Date(),
+          },
+        });
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        log(`  ERROR FAQ ${(faq.id as string || '?').slice(0,20)}: ${msg.slice(0, 80)}`);
+      }
     }
     log(`  Imported ${localFaqs.length} FAQs`);
 
@@ -378,18 +384,19 @@ export async function POST(req: NextRequest) {
         await prisma.article.create({
           data: {
             id: art.id,
-            title: art.title,
-            slug: art.slug,
-            excerpt: art.excerpt,
-            content: art.content,
-            category: art.category,
-            imageUrl: art.imageUrl,
-            author: art.author,
-            tags: art.tags,
-            isPublished: art.isPublished,
-            publishedAt: art.publishedAt ? new Date(art.publishedAt) : null,
-            metaTitle: art.metaTitle,
-            metaDescription: art.metaDescription,
+            title: art.title as string,
+            slug: art.slug as string,
+            excerpt: (art.excerpt as string) || null,
+            content: (art.content as string) || '',
+            category: (art.category as string) || 'General',
+            imageUrl: (art.imageUrl as string) || null,
+            author: (art.author as string) || null,
+            tags: (art.tags as string) || null,
+            isPublished: art.isPublished !== false && art.isPublished !== undefined,
+            publishedAt: art.publishedAt ? new Date(art.publishedAt as string) : null,
+            metaTitle: (art.metaTitle as string) || null,
+            metaDescription: (art.metaDescription as string) || null,
+            updatedAt: new Date(),
           },
         });
       } catch (e: unknown) {
