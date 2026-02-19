@@ -4,11 +4,16 @@ import { prisma } from '@/lib/db';
 export const revalidate = 3600;
 
 export async function generateStaticParams() {
-  const bundles = await prisma.bundle.findMany({
-    where: { isActive: true },
-    select: { slug: true },
-  });
-  return bundles.map((b) => ({ slug: b.slug }));
+  try {
+    const bundles = await prisma.bundle.findMany({
+      where: { isActive: true },
+      select: { slug: true },
+    });
+    return bundles.map((b) => ({ slug: b.slug }));
+  } catch {
+    // DB unavailable during build - pages will be generated on first request via ISR
+    return [];
+  }
 }
 
 export async function generateMetadata({

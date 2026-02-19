@@ -32,6 +32,8 @@ function getDatasourceUrl(): string | undefined {
   return `${baseUrl}${separator}connection_limit=${connectionLimit}&pool_timeout=${poolTimeout}`;
 }
 
+const datasourceUrl = getDatasourceUrl();
+
 export const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({
@@ -39,11 +41,12 @@ export const prisma =
       process.env.NODE_ENV === 'development'
         ? ['query', 'error', 'warn']
         : ['error'],
-    datasources: {
-      db: {
-        url: getDatasourceUrl(),
-      },
-    },
+    // Only override datasources when URL is available; otherwise let Prisma
+    // use the default from schema.prisma (which reads DATABASE_URL from env).
+    // This prevents "Invalid value undefined" errors during CI builds.
+    ...(datasourceUrl
+      ? { datasources: { db: { url: datasourceUrl } } }
+      : {}),
   });
 
 if (process.env.NODE_ENV !== 'production') {

@@ -52,6 +52,7 @@ jobs:
           NEXT_TELEMETRY_DISABLED: 1
           NEXT_PUBLIC_SITE_NAME: "BioCycle Peptides"
           NEXT_PUBLIC_APP_URL: "https://biocyclepeptides.com"
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
       - name: Assemble standalone package
         run: |

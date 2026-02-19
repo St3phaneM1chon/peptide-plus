@@ -12,11 +12,16 @@ interface PageProps {
 }
 
 export async function generateStaticParams() {
-  const categories = await prisma.category.findMany({
-    where: { isActive: true },
-    select: { slug: true },
-  });
-  return categories.map((c) => ({ slug: c.slug }));
+  try {
+    const categories = await prisma.category.findMany({
+      where: { isActive: true },
+      select: { slug: true },
+    });
+    return categories.map((c) => ({ slug: c.slug }));
+  } catch {
+    // DB unavailable during build - pages will be generated on first request via ISR
+    return [];
+  }
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
