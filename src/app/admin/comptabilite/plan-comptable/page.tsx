@@ -11,6 +11,7 @@ import {
   FormField,
   Input,
   StatusBadge,
+  SectionCard,
 } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
 import { sectionThemes } from '@/lib/admin/section-themes';
@@ -269,7 +270,7 @@ export default function PlanComptablePage() {
       </FilterBar>
 
       {/* Accounts Table */}
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+      <SectionCard title={t('admin.chartOfAccounts.title')} theme={theme} noPadding>
         <table className="w-full">
           <thead className="bg-slate-50">
             <tr>
@@ -297,7 +298,7 @@ export default function PlanComptablePage() {
                           <button
                             onClick={() => toggleCategory(account.code)}
                             className="p-0.5 hover:bg-slate-200 rounded"
-                            aria-label={isExpanded ? 'Réduire' : 'Développer'}
+                            aria-label={isExpanded ? 'Reduire' : 'Developper'}
                           >
                             <ChevronRight
                               className={`w-4 h-4 text-slate-500 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
@@ -330,7 +331,7 @@ export default function PlanComptablePage() {
                       <div className="flex items-center justify-center gap-1">
                         <button
                           onClick={() => { setEditingAccount(account); setShowModal(true); }}
-                          className="p-1.5 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded"
+                          className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded"
                           title={t('admin.chartOfAccounts.edit')}
                           aria-label={t('admin.chartOfAccounts.edit')}
                         >
@@ -375,7 +376,7 @@ export default function PlanComptablePage() {
                         <div className="flex items-center justify-center gap-1">
                           <button
                             onClick={() => { setEditingAccount(child); setShowModal(true); }}
-                            className="p-1 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded"
+                            className="p-1 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded"
                           >
                             <Pencil className="w-3.5 h-3.5" />
                           </button>
@@ -388,7 +389,7 @@ export default function PlanComptablePage() {
             })}
           </tbody>
         </table>
-      </div>
+      </SectionCard>
 
       {/* Account Modal */}
       <Modal

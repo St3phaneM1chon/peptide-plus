@@ -2,13 +2,18 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Plus, Eye, Check, FileText, DollarSign, Clock, AlertTriangle, Download } from 'lucide-react';
-import { PageHeader } from '@/components/admin/PageHeader';
-import { Button } from '@/components/admin/Button';
-import { Modal } from '@/components/admin/Modal';
-import { StatusBadge } from '@/components/admin/StatusBadge';
-import { StatCard } from '@/components/admin/StatCard';
-import { FilterBar, SelectFilter } from '@/components/admin/FilterBar';
-import { DataTable, type Column } from '@/components/admin/DataTable';
+import {
+  PageHeader,
+  Button,
+  Modal,
+  StatusBadge,
+  StatCard,
+  FilterBar,
+  SelectFilter,
+  DataTable,
+  type Column,
+  SectionCard,
+} from '@/components/admin';
 import { useI18n } from '@/i18n/client';
 import { sectionThemes } from '@/lib/admin/section-themes';
 
@@ -240,7 +245,7 @@ export default function FacturesFournisseursPage() {
         subtitle={t('admin.supplierInvoices.subtitle')}
         theme={theme}
         actions={
-          <Button variant="primary" icon={Plus}>
+          <Button variant="primary" icon={Plus} className={`${theme.btnPrimary} border-transparent text-white`}>
             {t('admin.supplierInvoices.addInvoice')}
           </Button>
         }
@@ -288,12 +293,12 @@ export default function FacturesFournisseursPage() {
           inv && (
             <>
               {inv.status === 'PENDING' && (
-                <Button variant="primary" onClick={() => { handleApprove(inv.id); setSelectedInvoice(null); }}>
+                <Button variant="primary" onClick={() => { handleApprove(inv.id); setSelectedInvoice(null); }} className={`${theme.btnPrimary} border-transparent text-white`}>
                   {t('admin.supplierInvoices.approve')}
                 </Button>
               )}
               {(inv.status === 'APPROVED' || inv.status === 'OVERDUE') && (
-                <Button variant="primary" onClick={() => { handleMarkAsPaid(inv.id); setSelectedInvoice(null); }}>
+                <Button variant="primary" onClick={() => { handleMarkAsPaid(inv.id); setSelectedInvoice(null); }} className={`${theme.btnPrimary} border-transparent text-white`}>
                   {t('admin.supplierInvoices.markPaid')}
                 </Button>
               )}
@@ -327,22 +332,24 @@ export default function FacturesFournisseursPage() {
               </div>
             </div>
 
-            <table className="w-full border border-slate-200 rounded-lg overflow-hidden">
-              <thead className="bg-slate-50">
-                <tr>
-                  <th scope="col" className="px-4 py-2 text-start text-xs font-semibold text-slate-500">{t('admin.supplierInvoices.description')}</th>
-                  <th scope="col" className="px-4 py-2 text-end text-xs font-semibold text-slate-500">{t('admin.supplierInvoices.amount')}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200">
-                {inv.items.map((item, index) => (
-                  <tr key={index}>
-                    <td className="px-4 py-3 text-slate-900">{item.description}</td>
-                    <td className="px-4 py-3 text-end font-medium text-slate-900">{formatCurrency(item.amount)}</td>
+            <SectionCard theme={theme} noPadding>
+              <table className="w-full">
+                <thead className="bg-slate-50">
+                  <tr>
+                    <th scope="col" className="px-4 py-2 text-start text-xs font-semibold text-slate-500">{t('admin.supplierInvoices.description')}</th>
+                    <th scope="col" className="px-4 py-2 text-end text-xs font-semibold text-slate-500">{t('admin.supplierInvoices.amount')}</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-slate-200">
+                  {inv.items.map((item, index) => (
+                    <tr key={index}>
+                      <td className="px-4 py-3 text-slate-900">{item.description}</td>
+                      <td className="px-4 py-3 text-end font-medium text-slate-900">{formatCurrency(item.amount)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </SectionCard>
 
             <div className="flex justify-end">
               <div className="w-64 space-y-2">

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Check, Loader2, Info, Save, Lock } from 'lucide-react';
-import { PageHeader, StatusBadge, Button } from '@/components/admin';
+import { PageHeader, StatusBadge, Button, SectionCard } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
 import { sectionThemes } from '@/lib/admin/section-themes';
 import { toast } from 'sonner';
@@ -204,19 +204,17 @@ export default function CloturePage() {
 
       {/* Current Period Details */}
       {currentPeriod && (
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-          <div className="p-6 border-b border-slate-200 bg-emerald-50">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-xl font-bold text-emerald-900">{currentPeriod.name}</h2>
-                <p className="text-emerald-700">{t('admin.closing.closingChecklist')}</p>
-              </div>
-              <div className="text-end">
-                <p className="text-sm text-emerald-600">{t('admin.closing.progressLabel')}</p>
-                <p className="text-2xl font-bold text-emerald-900">{okTasks}/{checklist.length}</p>
-              </div>
+        <SectionCard
+          title={currentPeriod.name}
+          theme={theme}
+          headerAction={
+            <div className="text-end">
+              <p className="text-sm text-slate-500">{t('admin.closing.progressLabel')}</p>
+              <p className="text-2xl font-bold text-amber-700">{okTasks}/{checklist.length}</p>
             </div>
-          </div>
+          }
+          noPadding
+        >
 
           <div className="p-6">
             {checklistLoading ? (
@@ -313,7 +311,7 @@ export default function CloturePage() {
               </Button>
             </div>
           </div>
-        </div>
+        </SectionCard>
       )}
 
       {/* Tips */}

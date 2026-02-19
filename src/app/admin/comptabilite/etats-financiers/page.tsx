@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Download, Loader2 } from 'lucide-react';
-import { PageHeader, Button } from '@/components/admin';
+import { PageHeader, Button, SectionCard } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
 import { sectionThemes } from '@/lib/admin/section-themes';
 import { toast } from 'sonner';
@@ -259,7 +259,7 @@ export default function EtatsFinanciersPage() {
           <button
             onClick={() => setActiveTab('resultats')}
             className={`py-3 border-b-2 font-medium text-sm ${
-              activeTab === 'resultats' ? 'border-emerald-500 text-emerald-600' : 'border-transparent text-slate-500'
+              activeTab === 'resultats' ? 'border-violet-500 text-violet-600' : 'border-transparent text-slate-500'
             }`}
           >
             {t('admin.financialStatements.tabIncomeStatement')}
@@ -267,7 +267,7 @@ export default function EtatsFinanciersPage() {
           <button
             onClick={() => setActiveTab('bilan')}
             className={`py-3 border-b-2 font-medium text-sm ${
-              activeTab === 'bilan' ? 'border-emerald-500 text-emerald-600' : 'border-transparent text-slate-500'
+              activeTab === 'bilan' ? 'border-violet-500 text-violet-600' : 'border-transparent text-slate-500'
             }`}
           >
             {t('admin.financialStatements.tabBalanceSheet')}
@@ -275,7 +275,7 @@ export default function EtatsFinanciersPage() {
           <button
             onClick={() => setActiveTab('flux')}
             className={`py-3 border-b-2 font-medium text-sm ${
-              activeTab === 'flux' ? 'border-emerald-500 text-emerald-600' : 'border-transparent text-slate-500'
+              activeTab === 'flux' ? 'border-violet-500 text-violet-600' : 'border-transparent text-slate-500'
             }`}
           >
             {t('admin.financialStatements.tabCashFlow')}
@@ -285,277 +285,265 @@ export default function EtatsFinanciersPage() {
 
       {/* État des résultats */}
       {activeTab === 'resultats' && (
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-          <div className="p-6 bg-emerald-50 border-b border-emerald-200">
-            <h2 className="text-xl font-bold text-emerald-900">{t('admin.financialStatements.incomeStatementTitle')}</h2>
-            <p className="text-emerald-700">BioCycle Peptides Inc. - {periodLabel}</p>
-          </div>
-          <div className="p-6">
-            {totalRevenue === 0 && totalCogs === 0 && totalExpenses === 0 ? (
-              <div className="text-center py-8 text-slate-500">
-                {t('admin.financialStatements.noEntriesForPeriod')}
-              </div>
-            ) : (
-              <table className="w-full">
-                <tbody>
-                  {/* Revenus */}
-                  <tr className="bg-slate-50">
-                    <td colSpan={2} className="px-4 py-3 font-bold text-slate-900">{t('admin.financialStatements.revenue')}</td>
+        <SectionCard
+          title={t('admin.financialStatements.incomeStatementTitle')}
+          theme={theme}
+          headerAction={<span className="text-sm text-slate-500">BioCycle Peptides Inc. - {periodLabel}</span>}
+          noPadding
+        >
+          {totalRevenue === 0 && totalCogs === 0 && totalExpenses === 0 ? (
+            <div className="text-center py-8 text-slate-500">
+              {t('admin.financialStatements.noEntriesForPeriod')}
+            </div>
+          ) : (
+            <table className="w-full">
+              <tbody>
+                {/* Revenus */}
+                <tr className="bg-slate-50">
+                  <td colSpan={2} className="px-4 py-3 font-bold text-slate-900">{t('admin.financialStatements.revenue')}</td>
+                </tr>
+                {Object.entries(incomeStatement.revenue).map(([name, amount]) => (
+                  <tr key={name}>
+                    <td className="px-8 py-2 text-slate-600">{name}</td>
+                    <td className="px-4 py-2 text-end">{formatCurrency(amount)}</td>
                   </tr>
-                  {Object.entries(incomeStatement.revenue).map(([name, amount]) => (
-                    <tr key={name}>
-                      <td className="px-8 py-2 text-slate-600">{name}</td>
-                      <td className="px-4 py-2 text-end">{formatCurrency(amount)}</td>
+                ))}
+                <tr className="border-t border-slate-200">
+                  <td className="px-4 py-3 font-semibold text-slate-900">{t('admin.financialStatements.totalRevenue')}</td>
+                  <td className="px-4 py-3 text-end font-bold text-emerald-600">{formatCurrency(totalRevenue)}</td>
+                </tr>
+
+                {/* CMV */}
+                {Object.keys(incomeStatement.cogs).length > 0 && (
+                  <>
+                    <tr className="bg-slate-50">
+                      <td colSpan={2} className="px-4 py-3 font-bold text-slate-900">{t('admin.financialStatements.cogs')}</td>
                     </tr>
-                  ))}
-                  <tr className="border-t border-slate-200">
-                    <td className="px-4 py-3 font-semibold text-slate-900">{t('admin.financialStatements.totalRevenue')}</td>
-                    <td className="px-4 py-3 text-end font-bold text-emerald-600">{formatCurrency(totalRevenue)}</td>
-                  </tr>
-
-                  {/* CMV */}
-                  {Object.keys(incomeStatement.cogs).length > 0 && (
-                    <>
-                      <tr className="bg-slate-50">
-                        <td colSpan={2} className="px-4 py-3 font-bold text-slate-900">{t('admin.financialStatements.cogs')}</td>
+                    {Object.entries(incomeStatement.cogs).map(([name, amount]) => (
+                      <tr key={name}>
+                        <td className="px-8 py-2 text-slate-600">{name}</td>
+                        <td className="px-4 py-2 text-end">{formatCurrency(amount)}</td>
                       </tr>
-                      {Object.entries(incomeStatement.cogs).map(([name, amount]) => (
-                        <tr key={name}>
-                          <td className="px-8 py-2 text-slate-600">{name}</td>
-                          <td className="px-4 py-2 text-end">{formatCurrency(amount)}</td>
-                        </tr>
-                      ))}
-                      <tr className="border-t border-slate-200">
-                        <td className="px-4 py-3 font-semibold text-slate-900">{t('admin.financialStatements.totalCogs')}</td>
-                        <td className="px-4 py-3 text-end font-bold text-red-600">({formatCurrency(totalCogs)})</td>
+                    ))}
+                    <tr className="border-t border-slate-200">
+                      <td className="px-4 py-3 font-semibold text-slate-900">{t('admin.financialStatements.totalCogs')}</td>
+                      <td className="px-4 py-3 text-end font-bold text-red-600">({formatCurrency(totalCogs)})</td>
+                    </tr>
+                  </>
+                )}
+
+                {/* Marge brute */}
+                <tr className="bg-emerald-100">
+                  <td className="px-4 py-3 font-bold text-emerald-900">{t('admin.financialStatements.grossMargin')}</td>
+                  <td className="px-4 py-3 text-end font-bold text-emerald-700">
+                    {formatCurrency(grossProfit)} {totalRevenue > 0 ? `(${((grossProfit / totalRevenue) * 100).toFixed(1)}%)` : ''}
+                  </td>
+                </tr>
+
+                {/* Dépenses */}
+                {Object.keys(incomeStatement.expenses).length > 0 && (
+                  <>
+                    <tr className="bg-slate-50">
+                      <td colSpan={2} className="px-4 py-3 font-bold text-slate-900">{t('admin.financialStatements.operatingExpenses')}</td>
+                    </tr>
+                    {Object.entries(incomeStatement.expenses).map(([name, amount]) => (
+                      <tr key={name}>
+                        <td className="px-8 py-2 text-slate-600">{name}</td>
+                        <td className="px-4 py-2 text-end">{formatCurrency(amount)}</td>
                       </tr>
-                    </>
-                  )}
+                    ))}
+                    <tr className="border-t border-slate-200">
+                      <td className="px-4 py-3 font-semibold text-slate-900">{t('admin.financialStatements.totalExpenses')}</td>
+                      <td className="px-4 py-3 text-end font-bold text-red-600">({formatCurrency(totalExpenses)})</td>
+                    </tr>
+                  </>
+                )}
 
-                  {/* Marge brute */}
-                  <tr className="bg-emerald-100">
-                    <td className="px-4 py-3 font-bold text-emerald-900">{t('admin.financialStatements.grossMargin')}</td>
-                    <td className="px-4 py-3 text-end font-bold text-emerald-700">
-                      {formatCurrency(grossProfit)} {totalRevenue > 0 ? `(${((grossProfit / totalRevenue) * 100).toFixed(1)}%)` : ''}
-                    </td>
-                  </tr>
+                {/* Bénéfice d'exploitation */}
+                <tr className="bg-blue-100">
+                  <td className="px-4 py-3 font-bold text-blue-900">{t('admin.financialStatements.operatingProfit')}</td>
+                  <td className="px-4 py-3 text-end font-bold text-blue-700">{formatCurrency(operatingProfit)}</td>
+                </tr>
 
-                  {/* Dépenses */}
-                  {Object.keys(incomeStatement.expenses).length > 0 && (
-                    <>
-                      <tr className="bg-slate-50">
-                        <td colSpan={2} className="px-4 py-3 font-bold text-slate-900">{t('admin.financialStatements.operatingExpenses')}</td>
+                {/* Autres */}
+                {Object.keys(incomeStatement.other).length > 0 && (
+                  <>
+                    <tr className="bg-slate-50">
+                      <td colSpan={2} className="px-4 py-3 font-bold text-slate-900">{t('admin.financialStatements.otherIncomeExpense')}</td>
+                    </tr>
+                    {Object.entries(incomeStatement.other).map(([name, amount]) => (
+                      <tr key={name}>
+                        <td className="px-8 py-2 text-slate-600">{name}</td>
+                        <td className={`px-4 py-2 text-end ${amount < 0 ? 'text-red-600' : ''}`}>
+                          {formatCurrency(amount)}
+                        </td>
                       </tr>
-                      {Object.entries(incomeStatement.expenses).map(([name, amount]) => (
-                        <tr key={name}>
-                          <td className="px-8 py-2 text-slate-600">{name}</td>
-                          <td className="px-4 py-2 text-end">{formatCurrency(amount)}</td>
-                        </tr>
-                      ))}
-                      <tr className="border-t border-slate-200">
-                        <td className="px-4 py-3 font-semibold text-slate-900">{t('admin.financialStatements.totalExpenses')}</td>
-                        <td className="px-4 py-3 text-end font-bold text-red-600">({formatCurrency(totalExpenses)})</td>
-                      </tr>
-                    </>
-                  )}
+                    ))}
+                  </>
+                )}
 
-                  {/* Bénéfice d'exploitation */}
-                  <tr className="bg-blue-100">
-                    <td className="px-4 py-3 font-bold text-blue-900">{t('admin.financialStatements.operatingProfit')}</td>
-                    <td className="px-4 py-3 text-end font-bold text-blue-700">{formatCurrency(operatingProfit)}</td>
-                  </tr>
-
-                  {/* Autres */}
-                  {Object.keys(incomeStatement.other).length > 0 && (
-                    <>
-                      <tr className="bg-slate-50">
-                        <td colSpan={2} className="px-4 py-3 font-bold text-slate-900">{t('admin.financialStatements.otherIncomeExpense')}</td>
-                      </tr>
-                      {Object.entries(incomeStatement.other).map(([name, amount]) => (
-                        <tr key={name}>
-                          <td className="px-8 py-2 text-slate-600">{name}</td>
-                          <td className={`px-4 py-2 text-end ${amount < 0 ? 'text-red-600' : ''}`}>
-                            {formatCurrency(amount)}
-                          </td>
-                        </tr>
-                      ))}
-                    </>
-                  )}
-
-                  {/* Bénéfice net */}
-                  <tr className="bg-emerald-600 text-white">
-                    <td className="px-4 py-4 font-bold text-lg">{t('admin.financialStatements.netProfit')}</td>
-                    <td className="px-4 py-4 text-end font-bold text-lg">{formatCurrency(netProfit)}</td>
-                  </tr>
-                </tbody>
-              </table>
-            )}
-          </div>
-        </div>
+                {/* Bénéfice net */}
+                <tr className="bg-violet-600 text-white">
+                  <td className="px-4 py-4 font-bold text-lg">{t('admin.financialStatements.netProfit')}</td>
+                  <td className="px-4 py-4 text-end font-bold text-lg">{formatCurrency(netProfit)}</td>
+                </tr>
+              </tbody>
+            </table>
+          )}
+        </SectionCard>
       )}
 
       {/* Bilan */}
       {activeTab === 'bilan' && (
         <div className="grid grid-cols-2 gap-6">
           {/* Actifs */}
-          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-            <div className="p-6 bg-blue-50 border-b border-blue-200">
-              <h2 className="text-xl font-bold text-blue-900">{t('admin.financialStatements.assetsTitle')}</h2>
-            </div>
-            <div className="p-6">
-              {totalAssets === 0 ? (
-                <div className="text-center py-8 text-slate-500">{t('admin.financialStatements.noAssetsRecorded')}</div>
-              ) : (
-                <table className="w-full">
-                  <tbody>
-                    {Object.keys(balanceSheet.assets.current).length > 0 && (
-                      <>
-                        <tr className="bg-slate-50"><td colSpan={2} className="px-4 py-2 font-semibold text-slate-700">{t('admin.financialStatements.currentAssets')}</td></tr>
-                        {Object.entries(balanceSheet.assets.current).map(([name, amount]) => (
-                          <tr key={name}>
-                            <td className="px-6 py-2 text-slate-600">{name}</td>
-                            <td className={`px-4 py-2 text-end ${amount < 0 ? 'text-red-600' : ''}`}>
-                              {formatCurrency(amount)}
-                            </td>
-                          </tr>
-                        ))}
-                        <tr className="border-t"><td className="px-4 py-2 font-medium">{t('admin.financialStatements.totalCurrentAssets')}</td><td className="px-4 py-2 text-end font-medium">{formatCurrency(totalCurrentAssets)}</td></tr>
-                      </>
-                    )}
+          <SectionCard title={t('admin.financialStatements.assetsTitle')} theme={theme} noPadding>
+            {totalAssets === 0 ? (
+              <div className="text-center py-8 text-slate-500">{t('admin.financialStatements.noAssetsRecorded')}</div>
+            ) : (
+              <table className="w-full">
+                <tbody>
+                  {Object.keys(balanceSheet.assets.current).length > 0 && (
+                    <>
+                      <tr className="bg-slate-50"><td colSpan={2} className="px-4 py-2 font-semibold text-slate-700">{t('admin.financialStatements.currentAssets')}</td></tr>
+                      {Object.entries(balanceSheet.assets.current).map(([name, amount]) => (
+                        <tr key={name}>
+                          <td className="px-6 py-2 text-slate-600">{name}</td>
+                          <td className={`px-4 py-2 text-end ${amount < 0 ? 'text-red-600' : ''}`}>
+                            {formatCurrency(amount)}
+                          </td>
+                        </tr>
+                      ))}
+                      <tr className="border-t"><td className="px-4 py-2 font-medium">{t('admin.financialStatements.totalCurrentAssets')}</td><td className="px-4 py-2 text-end font-medium">{formatCurrency(totalCurrentAssets)}</td></tr>
+                    </>
+                  )}
 
-                    {Object.keys(balanceSheet.assets.nonCurrent).length > 0 && (
-                      <>
-                        <tr className="bg-slate-50"><td colSpan={2} className="px-4 py-2 font-semibold text-slate-700 mt-4">{t('admin.financialStatements.nonCurrentAssets')}</td></tr>
-                        {Object.entries(balanceSheet.assets.nonCurrent).map(([name, amount]) => (
-                          <tr key={name}>
-                            <td className="px-6 py-2 text-slate-600">{name}</td>
-                            <td className={`px-4 py-2 text-end ${amount < 0 ? 'text-red-600' : ''}`}>
-                              {formatCurrency(amount)}
-                            </td>
-                          </tr>
-                        ))}
-                        <tr className="border-t"><td className="px-4 py-2 font-medium">{t('admin.financialStatements.totalNonCurrentAssets')}</td><td className="px-4 py-2 text-end font-medium">{formatCurrency(totalNonCurrentAssets)}</td></tr>
-                      </>
-                    )}
+                  {Object.keys(balanceSheet.assets.nonCurrent).length > 0 && (
+                    <>
+                      <tr className="bg-slate-50"><td colSpan={2} className="px-4 py-2 font-semibold text-slate-700 mt-4">{t('admin.financialStatements.nonCurrentAssets')}</td></tr>
+                      {Object.entries(balanceSheet.assets.nonCurrent).map(([name, amount]) => (
+                        <tr key={name}>
+                          <td className="px-6 py-2 text-slate-600">{name}</td>
+                          <td className={`px-4 py-2 text-end ${amount < 0 ? 'text-red-600' : ''}`}>
+                            {formatCurrency(amount)}
+                          </td>
+                        </tr>
+                      ))}
+                      <tr className="border-t"><td className="px-4 py-2 font-medium">{t('admin.financialStatements.totalNonCurrentAssets')}</td><td className="px-4 py-2 text-end font-medium">{formatCurrency(totalNonCurrentAssets)}</td></tr>
+                    </>
+                  )}
 
-                    <tr className="bg-blue-100"><td className="px-4 py-3 font-bold text-blue-900">{t('admin.financialStatements.totalAssets')}</td><td className="px-4 py-3 text-end font-bold text-blue-700">{formatCurrency(totalAssets)}</td></tr>
-                  </tbody>
-                </table>
-              )}
-            </div>
-          </div>
+                  <tr className="bg-blue-100"><td className="px-4 py-3 font-bold text-blue-900">{t('admin.financialStatements.totalAssets')}</td><td className="px-4 py-3 text-end font-bold text-blue-700">{formatCurrency(totalAssets)}</td></tr>
+                </tbody>
+              </table>
+            )}
+          </SectionCard>
 
           {/* Passifs et Capitaux */}
-          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-            <div className="p-6 bg-red-50 border-b border-red-200">
-              <h2 className="text-xl font-bold text-red-900">{t('admin.financialStatements.liabilitiesEquityTitle')}</h2>
-            </div>
-            <div className="p-6">
-              {totalLiabilities === 0 && totalEquity === 0 ? (
-                <div className="text-center py-8 text-slate-500">{t('admin.financialStatements.noLiabilitiesRecorded')}</div>
-              ) : (
-                <table className="w-full">
-                  <tbody>
-                    {Object.keys(balanceSheet.liabilities.current).length > 0 && (
-                      <>
-                        <tr className="bg-slate-50"><td colSpan={2} className="px-4 py-2 font-semibold text-slate-700">{t('admin.financialStatements.currentLiabilities')}</td></tr>
-                        {Object.entries(balanceSheet.liabilities.current).map(([name, amount]) => (
-                          <tr key={name}>
-                            <td className="px-6 py-2 text-slate-600">{name}</td>
-                            <td className="px-4 py-2 text-end">{formatCurrency(amount)}</td>
-                          </tr>
-                        ))}
-                        <tr className="border-t"><td className="px-4 py-2 font-medium">{t('admin.financialStatements.totalLiabilities')}</td><td className="px-4 py-2 text-end font-medium">{formatCurrency(totalLiabilities)}</td></tr>
-                      </>
-                    )}
+          <SectionCard title={t('admin.financialStatements.liabilitiesEquityTitle')} theme={theme} noPadding>
+            {totalLiabilities === 0 && totalEquity === 0 ? (
+              <div className="text-center py-8 text-slate-500">{t('admin.financialStatements.noLiabilitiesRecorded')}</div>
+            ) : (
+              <table className="w-full">
+                <tbody>
+                  {Object.keys(balanceSheet.liabilities.current).length > 0 && (
+                    <>
+                      <tr className="bg-slate-50"><td colSpan={2} className="px-4 py-2 font-semibold text-slate-700">{t('admin.financialStatements.currentLiabilities')}</td></tr>
+                      {Object.entries(balanceSheet.liabilities.current).map(([name, amount]) => (
+                        <tr key={name}>
+                          <td className="px-6 py-2 text-slate-600">{name}</td>
+                          <td className="px-4 py-2 text-end">{formatCurrency(amount)}</td>
+                        </tr>
+                      ))}
+                      <tr className="border-t"><td className="px-4 py-2 font-medium">{t('admin.financialStatements.totalLiabilities')}</td><td className="px-4 py-2 text-end font-medium">{formatCurrency(totalLiabilities)}</td></tr>
+                    </>
+                  )}
 
-                    {Object.keys(balanceSheet.equity).length > 0 && (
-                      <>
-                        <tr className="bg-slate-50"><td colSpan={2} className="px-4 py-2 font-semibold text-slate-700 mt-4">{t('admin.financialStatements.equity')}</td></tr>
-                        {Object.entries(balanceSheet.equity).map(([name, amount]) => (
-                          <tr key={name}>
-                            <td className="px-6 py-2 text-slate-600">{name}</td>
-                            <td className="px-4 py-2 text-end">{formatCurrency(amount)}</td>
-                          </tr>
-                        ))}
-                        <tr className="border-t"><td className="px-4 py-2 font-medium">{t('admin.financialStatements.totalEquity')}</td><td className="px-4 py-2 text-end font-medium">{formatCurrency(totalEquity)}</td></tr>
-                      </>
-                    )}
+                  {Object.keys(balanceSheet.equity).length > 0 && (
+                    <>
+                      <tr className="bg-slate-50"><td colSpan={2} className="px-4 py-2 font-semibold text-slate-700 mt-4">{t('admin.financialStatements.equity')}</td></tr>
+                      {Object.entries(balanceSheet.equity).map(([name, amount]) => (
+                        <tr key={name}>
+                          <td className="px-6 py-2 text-slate-600">{name}</td>
+                          <td className="px-4 py-2 text-end">{formatCurrency(amount)}</td>
+                        </tr>
+                      ))}
+                      <tr className="border-t"><td className="px-4 py-2 font-medium">{t('admin.financialStatements.totalEquity')}</td><td className="px-4 py-2 text-end font-medium">{formatCurrency(totalEquity)}</td></tr>
+                    </>
+                  )}
 
-                    <tr className="bg-red-100"><td className="px-4 py-3 font-bold text-red-900">{t('admin.financialStatements.totalLiabilitiesEquity')}</td><td className="px-4 py-3 text-end font-bold text-red-700">{formatCurrency((totalLiabilities + totalEquity))}</td></tr>
-                  </tbody>
-                </table>
-              )}
-            </div>
-          </div>
+                  <tr className="bg-red-100"><td className="px-4 py-3 font-bold text-red-900">{t('admin.financialStatements.totalLiabilitiesEquity')}</td><td className="px-4 py-3 text-end font-bold text-red-700">{formatCurrency((totalLiabilities + totalEquity))}</td></tr>
+                </tbody>
+              </table>
+            )}
+          </SectionCard>
         </div>
       )}
 
       {/* Flux de trésorerie */}
       {activeTab === 'flux' && (
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-          <div className="p-6 bg-purple-50 border-b border-purple-200">
-            <h2 className="text-xl font-bold text-purple-900">{t('admin.financialStatements.cashFlowTitle')}</h2>
-            <p className="text-purple-700">BioCycle Peptides Inc. - {periodLabel}</p>
-          </div>
-          <div className="p-6">
-            <table className="w-full">
-              <tbody>
-                <tr className="bg-slate-50"><td colSpan={2} className="px-4 py-3 font-bold text-slate-900">{t('admin.financialStatements.operatingActivities')}</td></tr>
-                <tr><td className="px-8 py-2 text-slate-600">{t('admin.financialStatements.netIncome')}</td><td className="px-4 py-2 text-end">{formatCurrency(netProfit)}</td></tr>
-                {Object.entries(cashFlow.operating).filter(([key]) => key !== 'netIncome').map(([name, amount]) => (
-                  <tr key={name}>
-                    <td className="px-8 py-2 text-slate-600">{name}</td>
-                    <td className={`px-4 py-2 text-end ${amount < 0 ? 'text-red-600' : ''}`}>
-                      {formatCurrency(amount)}
-                    </td>
-                  </tr>
-                ))}
-                <tr className="border-t border-slate-200 bg-green-50">
-                  <td className="px-4 py-3 font-semibold text-green-900">{t('admin.financialStatements.netOperatingCashFlow')}</td>
-                  <td className="px-4 py-3 text-end font-bold text-green-700">{formatCurrency(operatingCashFlow)}</td>
+        <SectionCard
+          title={t('admin.financialStatements.cashFlowTitle')}
+          theme={theme}
+          headerAction={<span className="text-sm text-slate-500">BioCycle Peptides Inc. - {periodLabel}</span>}
+          noPadding
+        >
+          <table className="w-full">
+            <tbody>
+              <tr className="bg-slate-50"><td colSpan={2} className="px-4 py-3 font-bold text-slate-900">{t('admin.financialStatements.operatingActivities')}</td></tr>
+              <tr><td className="px-8 py-2 text-slate-600">{t('admin.financialStatements.netIncome')}</td><td className="px-4 py-2 text-end">{formatCurrency(netProfit)}</td></tr>
+              {Object.entries(cashFlow.operating).filter(([key]) => key !== 'netIncome').map(([name, amount]) => (
+                <tr key={name}>
+                  <td className="px-8 py-2 text-slate-600">{name}</td>
+                  <td className={`px-4 py-2 text-end ${amount < 0 ? 'text-red-600' : ''}`}>
+                    {formatCurrency(amount)}
+                  </td>
                 </tr>
+              ))}
+              <tr className="border-t border-slate-200 bg-green-50">
+                <td className="px-4 py-3 font-semibold text-green-900">{t('admin.financialStatements.netOperatingCashFlow')}</td>
+                <td className="px-4 py-3 text-end font-bold text-green-700">{formatCurrency(operatingCashFlow)}</td>
+              </tr>
 
-                <tr className="bg-slate-50"><td colSpan={2} className="px-4 py-3 font-bold text-slate-900">{t('admin.financialStatements.investingActivities')}</td></tr>
-                {Object.entries(cashFlow.investing).map(([name, amount]) => (
-                  <tr key={name}>
-                    <td className="px-8 py-2 text-slate-600">{name}</td>
-                    <td className={`px-4 py-2 text-end ${amount < 0 ? 'text-red-600' : ''}`}>
-                      {formatCurrency(amount)}
-                    </td>
-                  </tr>
-                ))}
-                {Object.keys(cashFlow.investing).length === 0 && (
-                  <tr><td className="px-8 py-2 text-slate-400 italic" colSpan={2}>{t('admin.financialStatements.noInvestingActivities')}</td></tr>
-                )}
-                <tr className="border-t border-slate-200 bg-red-50">
-                  <td className="px-4 py-3 font-semibold text-red-900">{t('admin.financialStatements.netInvestingCashFlow')}</td>
-                  <td className="px-4 py-3 text-end font-bold text-red-700">{formatCurrency(investingCashFlow)}</td>
+              <tr className="bg-slate-50"><td colSpan={2} className="px-4 py-3 font-bold text-slate-900">{t('admin.financialStatements.investingActivities')}</td></tr>
+              {Object.entries(cashFlow.investing).map(([name, amount]) => (
+                <tr key={name}>
+                  <td className="px-8 py-2 text-slate-600">{name}</td>
+                  <td className={`px-4 py-2 text-end ${amount < 0 ? 'text-red-600' : ''}`}>
+                    {formatCurrency(amount)}
+                  </td>
                 </tr>
+              ))}
+              {Object.keys(cashFlow.investing).length === 0 && (
+                <tr><td className="px-8 py-2 text-slate-400 italic" colSpan={2}>{t('admin.financialStatements.noInvestingActivities')}</td></tr>
+              )}
+              <tr className="border-t border-slate-200 bg-red-50">
+                <td className="px-4 py-3 font-semibold text-red-900">{t('admin.financialStatements.netInvestingCashFlow')}</td>
+                <td className="px-4 py-3 text-end font-bold text-red-700">{formatCurrency(investingCashFlow)}</td>
+              </tr>
 
-                <tr className="bg-slate-50"><td colSpan={2} className="px-4 py-3 font-bold text-slate-900">{t('admin.financialStatements.financingActivities')}</td></tr>
-                {Object.entries(cashFlow.financing).map(([name, amount]) => (
-                  <tr key={name}>
-                    <td className="px-8 py-2 text-slate-600">{name}</td>
-                    <td className="px-4 py-2 text-end">{formatCurrency(amount)}</td>
-                  </tr>
-                ))}
-                {Object.keys(cashFlow.financing).length === 0 && (
-                  <tr><td className="px-8 py-2 text-slate-400 italic" colSpan={2}>{t('admin.financialStatements.noFinancingActivities')}</td></tr>
-                )}
-                <tr className="border-t border-slate-200 bg-blue-50">
-                  <td className="px-4 py-3 font-semibold text-blue-900">{t('admin.financialStatements.netFinancingCashFlow')}</td>
-                  <td className="px-4 py-3 text-end font-bold text-blue-700">{formatCurrency(financingCashFlow)}</td>
+              <tr className="bg-slate-50"><td colSpan={2} className="px-4 py-3 font-bold text-slate-900">{t('admin.financialStatements.financingActivities')}</td></tr>
+              {Object.entries(cashFlow.financing).map(([name, amount]) => (
+                <tr key={name}>
+                  <td className="px-8 py-2 text-slate-600">{name}</td>
+                  <td className="px-4 py-2 text-end">{formatCurrency(amount)}</td>
                 </tr>
+              ))}
+              {Object.keys(cashFlow.financing).length === 0 && (
+                <tr><td className="px-8 py-2 text-slate-400 italic" colSpan={2}>{t('admin.financialStatements.noFinancingActivities')}</td></tr>
+              )}
+              <tr className="border-t border-slate-200 bg-blue-50">
+                <td className="px-4 py-3 font-semibold text-blue-900">{t('admin.financialStatements.netFinancingCashFlow')}</td>
+                <td className="px-4 py-3 text-end font-bold text-blue-700">{formatCurrency(financingCashFlow)}</td>
+              </tr>
 
-                <tr className="bg-purple-600 text-white">
-                  <td className="px-4 py-4 font-bold text-lg">{t('admin.financialStatements.netCashChange')}</td>
-                  <td className="px-4 py-4 text-end font-bold text-lg">{formatCurrency(netCashFlow)}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
+              <tr className="bg-violet-600 text-white">
+                <td className="px-4 py-4 font-bold text-lg">{t('admin.financialStatements.netCashChange')}</td>
+                <td className="px-4 py-4 text-end font-bold text-lg">{formatCurrency(netCashFlow)}</td>
+              </tr>
+            </tbody>
+          </table>
+        </SectionCard>
       )}
     </div>
   );

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useI18n } from '@/i18n/client';
 import { sectionThemes } from '@/lib/admin/section-themes';
+import { PageHeader, SectionCard } from '@/components/admin';
 import { toast } from 'sonner';
 
 interface BankConnection {
@@ -227,9 +228,9 @@ export default function BankImportPage() {
   };
 
   const getConfidenceColor = (confidence: number) => {
-    if (confidence >= 0.8) return 'text-green-400';
-    if (confidence >= 0.6) return 'text-yellow-400';
-    return 'text-red-400';
+    if (confidence >= 0.8) return 'text-green-600';
+    if (confidence >= 0.6) return 'text-yellow-600';
+    return 'text-red-600';
   };
 
   const theme = sectionThemes.bank;
@@ -248,15 +249,14 @@ export default function BankImportPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
-        <div className={`border-l-4 ${theme.accentBar} pl-4`}>
-          <h1 className="text-2xl font-bold text-white">{t('admin.bankImport.title')}</h1>
-          <p className="text-neutral-400 mt-1">{t('admin.bankImport.subtitle')}</p>
-        </div>
-      </div>
+      <PageHeader
+        title={t('admin.bankImport.title')}
+        subtitle={t('admin.bankImport.subtitle')}
+        theme={theme}
+      />
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-neutral-800 p-1 rounded-lg w-fit">
+      <div className="flex gap-1 bg-slate-100 p-1 rounded-lg w-fit">
         {[
           { id: 'connections', label: t('admin.bankImport.tabConnections') },
           { id: 'import', label: t('admin.bankImport.tabImportCSV') },
@@ -267,8 +267,8 @@ export default function BankImportPage() {
             onClick={() => setActiveTab(tab.id as typeof activeTab)}
             className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
               activeTab === tab.id
-                ? 'bg-sky-600 text-white'
-                : 'text-neutral-400 hover:text-white'
+                ? `${theme.btnPrimary} text-white`
+                : 'text-slate-500 hover:text-slate-900'
             }`}
           >
             {tab.label}
@@ -282,28 +282,28 @@ export default function BankImportPage() {
           {/* Existing connections */}
           <div className="grid gap-4">
             {connections.map(conn => (
-              <div key={conn.id} className="bg-neutral-800 rounded-xl p-6 border border-neutral-700">
+              <SectionCard key={conn.id} theme={theme}>
                 <div className="flex justify-between items-start">
                   <div className="flex gap-4">
-                    <div className="w-12 h-12 bg-green-900/30 rounded-xl flex items-center justify-center text-2xl">
-                      🏦
+                    <div className={`w-12 h-12 ${theme.statIconBg} rounded-xl flex items-center justify-center`}>
+                      <span className={`text-lg font-bold ${theme.statIconColor}`}>B</span>
                     </div>
                     <div>
-                      <h3 className="font-semibold text-white">{conn.bankName}</h3>
-                      <p className="text-sm text-neutral-400">{conn.accountName} • {conn.accountMask}</p>
-                      <p className="text-xs text-neutral-500 mt-1">
+                      <h3 className="font-semibold text-slate-900">{conn.bankName}</h3>
+                      <p className="text-sm text-slate-500">{conn.accountName} &bull; {conn.accountMask}</p>
+                      <p className="text-xs text-slate-400 mt-1">
                         {t('admin.bankImport.lastSync')} {new Intl.DateTimeFormat(locale, { dateStyle: 'short', timeStyle: 'short' }).format(conn.lastSync)}
                       </p>
                     </div>
                   </div>
                   <div className="text-end">
-                    <p className="text-xl font-bold text-white">
+                    <p className="text-xl font-bold text-slate-900">
                       {new Intl.NumberFormat(locale, { style: 'currency', currency: conn.currency }).format(conn.balance)}
                     </p>
-                    <span className={`text-xs px-2 py-1 rounded ${
-                      conn.status === 'ACTIVE' ? 'bg-green-900/30 text-green-400' :
-                      conn.status === 'REQUIRES_REAUTH' ? 'bg-yellow-900/30 text-yellow-400' :
-                      'bg-red-900/30 text-red-400'
+                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                      conn.status === 'ACTIVE' ? 'bg-green-50 text-green-700' :
+                      conn.status === 'REQUIRES_REAUTH' ? 'bg-yellow-50 text-yellow-700' :
+                      'bg-red-50 text-red-700'
                     }`}>
                       {conn.status === 'ACTIVE' ? t('admin.bankImport.connected') :
                        conn.status === 'REQUIRES_REAUTH' ? t('admin.bankImport.reauthRequired') : t('admin.bankImport.errorStatus')}
@@ -314,37 +314,37 @@ export default function BankImportPage() {
                   <button
                     onClick={() => handleSync(conn.id)}
                     disabled={syncing}
-                    className="px-3 py-1.5 bg-sky-600 hover:bg-sky-700 text-white text-sm rounded-lg disabled:opacity-50"
+                    className={`px-3 py-1.5 ${theme.btnPrimary} text-white text-sm rounded-lg disabled:opacity-50`}
                   >
-                    {syncing ? t('admin.bankImport.syncing') : '🔄 ' + t('admin.bankImport.syncBtn')}
+                    {syncing ? t('admin.bankImport.syncing') : t('admin.bankImport.syncBtn')}
                   </button>
-                  <button className="px-3 py-1.5 bg-neutral-700 hover:bg-neutral-600 text-white text-sm rounded-lg">
-                    ⚙️ {t('admin.bankImport.settingsBtn')}
+                  <button className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm rounded-lg">
+                    {t('admin.bankImport.settingsBtn')}
                   </button>
-                  <button className="px-3 py-1.5 bg-red-900/30 hover:bg-red-900/50 text-red-400 text-sm rounded-lg">
+                  <button className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 text-sm rounded-lg">
                     {t('admin.bankImport.disconnect')}
                   </button>
                 </div>
-              </div>
+              </SectionCard>
             ))}
             {connections.length === 0 && (
-              <div className="bg-neutral-800 rounded-xl p-6 border border-neutral-700 text-center text-neutral-400">
-                {t('admin.bankImport.noAccountsConfigured')}
-              </div>
+              <SectionCard theme={theme} className="text-center">
+                <p className="text-slate-400">{t('admin.bankImport.noAccountsConfigured')}</p>
+              </SectionCard>
             )}
           </div>
 
           {/* Add new connection */}
-          <div className="bg-neutral-800 rounded-xl p-6 border border-dashed border-neutral-600">
+          <div className="bg-white rounded-xl p-6 border-2 border-dashed border-slate-300">
             <div className="text-center">
-              <p className="text-lg font-medium text-white mb-2">{t('admin.bankImport.connectNewAccount')}</p>
-              <p className="text-sm text-neutral-400 mb-4">{t('admin.bankImport.connectNewAccountDesc')}</p>
+              <p className="text-lg font-medium text-slate-900 mb-2">{t('admin.bankImport.connectNewAccount')}</p>
+              <p className="text-sm text-slate-500 mb-4">{t('admin.bankImport.connectNewAccountDesc')}</p>
               <div className="flex justify-center gap-4">
-                <button className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg">
+                <button className={`px-4 py-2 ${theme.btnPrimary} text-white rounded-lg`}>
                   {t('admin.bankImport.connectViaPlaid')}
                 </button>
               </div>
-              <p className="text-xs text-neutral-500 mt-4">
+              <p className="text-xs text-slate-400 mt-4">
                 {t('admin.bankImport.secureConnection')}
               </p>
             </div>
@@ -356,17 +356,19 @@ export default function BankImportPage() {
       {activeTab === 'import' && (
         <div className="space-y-6">
           {importedTransactions.length === 0 ? (
-            <div className="bg-neutral-800 rounded-xl p-8 border border-dashed border-neutral-600">
+            <div className="bg-white rounded-xl p-8 border-2 border-dashed border-slate-300">
               <div className="text-center">
-                <div className="text-4xl mb-4">📄</div>
-                <h3 className="text-lg font-medium text-white mb-2">{t('admin.bankImport.importBankStatement')}</h3>
-                <p className="text-sm text-neutral-400 mb-4">{t('admin.bankImport.supportedFormats')}</p>
+                <div className={`w-16 h-16 mx-auto mb-4 ${theme.statIconBg} rounded-2xl flex items-center justify-center`}>
+                  <span className={`text-2xl font-bold ${theme.statIconColor}`}>CSV</span>
+                </div>
+                <h3 className="text-lg font-medium text-slate-900 mb-2">{t('admin.bankImport.importBankStatement')}</h3>
+                <p className="text-sm text-slate-500 mb-4">{t('admin.bankImport.supportedFormats')}</p>
 
                 <div className="flex justify-center gap-4 mb-4">
                   <select
                     value={csvFormat}
                     onChange={e => setCsvFormat(e.target.value as typeof csvFormat)}
-                    className="px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-white"
+                    className="px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
                   >
                     <option value="desjardins">Desjardins</option>
                     <option value="td">TD Canada Trust</option>
@@ -378,7 +380,7 @@ export default function BankImportPage() {
                     <select
                       value={selectedBankAccountId}
                       onChange={e => setSelectedBankAccountId(e.target.value)}
-                      className="px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-white"
+                      className="px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
                     >
                       {bankAccounts.map(acc => (
                         <option key={acc.id} value={acc.id}>
@@ -398,13 +400,13 @@ export default function BankImportPage() {
                   <button
                     onClick={() => fileInputRef.current?.click()}
                     disabled={importing}
-                    className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg disabled:opacity-50"
+                    className={`px-4 py-2 ${theme.btnPrimary} text-white rounded-lg disabled:opacity-50`}
                   >
                     {importing ? t('admin.bankImport.analyzing') : t('admin.bankImport.selectCSVFile')}
                   </button>
                 </div>
 
-                <p className="text-xs text-neutral-500">
+                <p className="text-xs text-slate-400">
                   {t('admin.bankImport.autoCategorize')}
                 </p>
               </div>
@@ -413,12 +415,12 @@ export default function BankImportPage() {
             <>
               {/* Bank account selector for import */}
               {bankAccounts.length > 0 && (
-                <div className="bg-neutral-800 rounded-xl p-4 border border-neutral-700">
-                  <label className="text-sm text-neutral-300 me-3">{t('admin.bankImport.destinationAccount')}</label>
+                <SectionCard theme={theme}>
+                  <label className="text-sm text-slate-600 me-3">{t('admin.bankImport.destinationAccount')}</label>
                   <select
                     value={selectedBankAccountId}
                     onChange={e => setSelectedBankAccountId(e.target.value)}
-                    className="px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-white"
+                    className="px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
                   >
                     {bankAccounts.map(acc => (
                       <option key={acc.id} value={acc.id}>
@@ -426,100 +428,100 @@ export default function BankImportPage() {
                       </option>
                     ))}
                   </select>
-                </div>
+                </SectionCard>
               )}
 
               {/* Stats */}
               <div className="grid grid-cols-4 gap-4">
-                <div className="bg-neutral-800 rounded-xl p-4 border border-neutral-700">
-                  <p className="text-sm text-neutral-400">{t('admin.bankImport.transactions')}</p>
-                  <p className="text-2xl font-bold text-white">{importedTransactions.length}</p>
-                </div>
-                <div className="bg-neutral-800 rounded-xl p-4 border border-neutral-700">
-                  <p className="text-sm text-neutral-400">{t('admin.bankImport.selected')}</p>
-                  <p className="text-2xl font-bold text-sky-400">{importedTransactions.filter(t => t.selected).length}</p>
-                </div>
-                <div className="bg-neutral-800 rounded-xl p-4 border border-neutral-700">
-                  <p className="text-sm text-neutral-400">{t('admin.bankImport.avgConfidence')}</p>
-                  <p className="text-2xl font-bold text-green-400">
+                <SectionCard theme={theme}>
+                  <p className="text-sm text-slate-500">{t('admin.bankImport.transactions')}</p>
+                  <p className="text-2xl font-bold text-slate-900">{importedTransactions.length}</p>
+                </SectionCard>
+                <SectionCard theme={theme}>
+                  <p className="text-sm text-slate-500">{t('admin.bankImport.selected')}</p>
+                  <p className="text-2xl font-bold text-sky-600">{importedTransactions.filter(t => t.selected).length}</p>
+                </SectionCard>
+                <SectionCard theme={theme}>
+                  <p className="text-sm text-slate-500">{t('admin.bankImport.avgConfidence')}</p>
+                  <p className="text-2xl font-bold text-green-600">
                     {Math.round(importedTransactions.reduce((sum, t) => sum + t.confidence, 0) / importedTransactions.length * 100)}%
                   </p>
-                </div>
-                <div className="bg-neutral-800 rounded-xl p-4 border border-neutral-700">
-                  <p className="text-sm text-neutral-400">{t('admin.bankImport.toReview')}</p>
-                  <p className="text-2xl font-bold text-yellow-400">
+                </SectionCard>
+                <SectionCard theme={theme}>
+                  <p className="text-sm text-slate-500">{t('admin.bankImport.toReview')}</p>
+                  <p className="text-2xl font-bold text-yellow-600">
                     {importedTransactions.filter(t => t.confidence < 0.7).length}
                   </p>
-                </div>
+                </SectionCard>
               </div>
 
               {/* Transaction list */}
-              <div className="bg-neutral-800 rounded-xl border border-neutral-700 overflow-hidden">
-                <div className="p-4 border-b border-neutral-700 flex justify-between items-center">
+              <SectionCard theme={theme} noPadding headerAction={
+                <div className="flex items-center gap-4">
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={importedTransactions.every(t => t.selected)}
                       onChange={toggleAll}
-                      className="rounded border-neutral-600 bg-neutral-700 text-sky-500"
+                      className="rounded border-slate-300 text-sky-600 focus:ring-sky-500"
                     />
-                    <span className="text-sm text-neutral-300">{t('admin.bankImport.selectAll')}</span>
+                    <span className="text-sm text-slate-600">{t('admin.bankImport.selectAll')}</span>
                   </label>
                   <div className="flex gap-2">
                     <button
                       onClick={() => setImportedTransactions([])}
-                      className="px-3 py-1.5 text-neutral-400 hover:text-white text-sm"
+                      className="px-3 py-1.5 text-slate-500 hover:text-slate-700 text-sm"
                     >
                       {t('admin.bankImport.cancelImport')}
                     </button>
                     <button
                       onClick={handleImportSelected}
                       disabled={importing || !importedTransactions.some(t => t.selected)}
-                      className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg disabled:opacity-50"
+                      className="px-4 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm disabled:opacity-50"
                     >
                       {importing ? t('admin.bankImport.importing') : t('admin.bankImport.importCount', { count: importedTransactions.filter(tx => tx.selected).length })}
                     </button>
                   </div>
                 </div>
-
+              }>
                 <table className="w-full">
-                  <thead className="bg-neutral-900/50">
+                  <thead className="bg-slate-50">
                     <tr>
-                      <th className="px-4 py-3 text-start text-xs font-medium text-neutral-400 uppercase w-10"></th>
-                      <th className="px-4 py-3 text-start text-xs font-medium text-neutral-400 uppercase">{t('admin.bankImport.dateCol')}</th>
-                      <th className="px-4 py-3 text-start text-xs font-medium text-neutral-400 uppercase">{t('admin.bankImport.descriptionCol')}</th>
-                      <th className="px-4 py-3 text-end text-xs font-medium text-neutral-400 uppercase">{t('admin.bankImport.amountCol')}</th>
-                      <th className="px-4 py-3 text-start text-xs font-medium text-neutral-400 uppercase">{t('admin.bankImport.suggestedCategory')}</th>
-                      <th className="px-4 py-3 text-center text-xs font-medium text-neutral-400 uppercase">{t('admin.bankImport.confidence')}</th>
+                      <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase w-10"></th>
+                      <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.bankImport.dateCol')}</th>
+                      <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.bankImport.descriptionCol')}</th>
+                      <th className="px-4 py-3 text-end text-xs font-semibold text-slate-500 uppercase">{t('admin.bankImport.amountCol')}</th>
+                      <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.bankImport.suggestedCategory')}</th>
+                      <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.bankImport.confidence')}</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-neutral-700">
+                  <tbody className="divide-y divide-slate-200">
                     {importedTransactions.map(tx => (
                       <tr
                         key={tx.id}
-                        className={`hover:bg-neutral-700/30 ${tx.confidence < 0.7 ? 'bg-yellow-900/10' : ''}`}
+                        className={`hover:bg-slate-50 ${tx.confidence < 0.7 ? 'bg-yellow-50/50' : ''}`}
                       >
                         <td className="px-4 py-3">
                           <input
                             type="checkbox"
                             checked={tx.selected}
                             onChange={() => toggleTransaction(tx.id)}
-                            className="rounded border-neutral-600 bg-neutral-700 text-sky-500"
+                            className="rounded border-slate-300 text-sky-600 focus:ring-sky-500"
                           />
                         </td>
-                        <td className="px-4 py-3 text-white">
+                        <td className="px-4 py-3 text-sm text-slate-900">
                           {formatDate(tx.date instanceof Date ? tx.date : new Date(tx.date))}
                         </td>
                         <td className="px-4 py-3">
-                          <p className="text-white">{tx.description}</p>
+                          <p className="text-sm text-slate-900">{tx.description}</p>
                         </td>
-                        <td className={`px-4 py-3 text-end font-medium ${tx.type === 'CREDIT' ? 'text-green-400' : 'text-red-400'}`}>
+                        <td className={`px-4 py-3 text-end font-medium ${tx.type === 'CREDIT' ? 'text-green-600' : 'text-red-600'}`}>
                           {tx.type === 'CREDIT' ? '+' : '-'}{formatCurrency(tx.amount)}
                         </td>
                         <td className="px-4 py-3">
                           <select
                             defaultValue={tx.suggestedAccount || ''}
-                            className="px-2 py-1 bg-neutral-700 border border-neutral-600 rounded text-sm text-white"
+                            className="px-2 py-1 bg-white border border-slate-300 rounded text-sm text-slate-700 focus:outline-none focus:ring-1 focus:ring-sky-500"
                           >
                             <option value="">{t('admin.bankImport.unclassified')}</option>
                             <option value="1040">1040 - Stripe</option>
@@ -538,7 +540,7 @@ export default function BankImportPage() {
                     ))}
                   </tbody>
                 </table>
-              </div>
+              </SectionCard>
             </>
           )}
         </div>
@@ -546,35 +548,35 @@ export default function BankImportPage() {
 
       {/* History Tab */}
       {activeTab === 'history' && (
-        <div className="bg-neutral-800 rounded-xl border border-neutral-700 overflow-hidden">
+        <SectionCard title={t('admin.bankImport.tabHistory')} theme={theme} noPadding>
           <table className="w-full">
-            <thead className="bg-neutral-900/50">
+            <thead className="bg-slate-50">
               <tr>
-                <th className="px-4 py-3 text-start text-xs font-medium text-neutral-400 uppercase">{t('admin.bankImport.dateCol')}</th>
-                <th className="px-4 py-3 text-start text-xs font-medium text-neutral-400 uppercase">{t('admin.bankImport.sourceCol')}</th>
-                <th className="px-4 py-3 text-end text-xs font-medium text-neutral-400 uppercase">{t('admin.bankImport.transactionsCol')}</th>
-                <th className="px-4 py-3 text-start text-xs font-medium text-neutral-400 uppercase">{t('admin.bankImport.statusCol')}</th>
+                <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.bankImport.dateCol')}</th>
+                <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.bankImport.sourceCol')}</th>
+                <th className="px-4 py-3 text-end text-xs font-semibold text-slate-500 uppercase">{t('admin.bankImport.transactionsCol')}</th>
+                <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.bankImport.statusCol')}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-700">
+            <tbody className="divide-y divide-slate-200">
               {importHistory.map((item, i) => (
-                <tr key={i} className="hover:bg-neutral-700/30">
-                  <td className="px-4 py-3 text-white">{formatDate(item.date)}</td>
-                  <td className="px-4 py-3 text-neutral-300">{item.source}</td>
-                  <td className="px-4 py-3 text-end text-white">{item.count}</td>
+                <tr key={i} className="hover:bg-slate-50">
+                  <td className="px-4 py-3 text-sm text-slate-900">{formatDate(item.date)}</td>
+                  <td className="px-4 py-3 text-sm text-slate-600">{item.source}</td>
+                  <td className="px-4 py-3 text-end text-sm font-medium text-slate-900">{item.count}</td>
                   <td className="px-4 py-3">
-                    <span className="px-2 py-1 bg-green-900/30 text-green-400 rounded text-sm">{t('admin.bankImport.completed')}</span>
+                    <span className="px-2 py-1 bg-green-50 text-green-700 rounded-full text-xs font-medium">{t('admin.bankImport.completed')}</span>
                   </td>
                 </tr>
               ))}
               {importHistory.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="px-4 py-8 text-center text-neutral-400">{t('admin.bankImport.noImportHistory')}</td>
+                  <td colSpan={4} className="px-4 py-8 text-center text-slate-400">{t('admin.bankImport.noImportHistory')}</td>
                 </tr>
               )}
             </tbody>
           </table>
-        </div>
+        </SectionCard>
       )}
     </div>
   );

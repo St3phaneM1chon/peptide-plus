@@ -2,9 +2,11 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
+import { ScanLine, CheckCircle2, AlertTriangle, Clock } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import { sectionThemes } from '@/lib/admin/section-themes';
+import { SectionCard, StatCard } from '@/components/admin';
 
 interface ExtractedInvoice {
   invoiceNumber?: string;
@@ -142,9 +144,9 @@ export default function OCRPage() {
   };
 
   const getConfidenceColor = (confidence: number) => {
-    if (confidence >= 0.9) return 'text-green-400';
-    if (confidence >= 0.7) return 'text-yellow-400';
-    return 'text-red-400';
+    if (confidence >= 0.9) return 'text-emerald-600';
+    if (confidence >= 0.7) return 'text-amber-500';
+    return 'text-red-500';
   };
 
   // formatCurrency is now provided by useI18n()
@@ -155,33 +157,22 @@ export default function OCRPage() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-white">{t('admin.ocrScan.title')}</h1>
-          <p className="text-neutral-400 mt-1">{t('admin.ocrScan.subtitle')}</p>
+          <h1 className="text-2xl font-bold text-slate-900">{t('admin.ocrScan.title')}</h1>
+          <p className="text-slate-500 mt-1">{t('admin.ocrScan.subtitle')}</p>
         </div>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-neutral-800 rounded-xl p-4 border border-neutral-700">
-          <p className="text-sm text-neutral-400">{t('admin.ocrScan.scannedInvoices')}</p>
-          <p className="text-2xl font-bold text-white mt-1">{history.length}</p>
-        </div>
-        <div className="bg-neutral-800 rounded-xl p-4 border border-neutral-700">
-          <p className="text-sm text-neutral-400">{t('admin.ocrScan.successRate')}</p>
-          <p className="text-2xl font-bold text-green-400 mt-1">
-            {history.length > 0 ? Math.round(history.filter(h => h.status === 'SUCCESS').length / history.length * 100) : 0}%
-          </p>
-        </div>
-        <div className="bg-neutral-800 rounded-xl p-4 border border-neutral-700">
-          <p className="text-sm text-neutral-400">{t('admin.ocrScan.toReview')}</p>
-          <p className="text-2xl font-bold text-yellow-400 mt-1">
-            {history.filter(h => h.status === 'NEEDS_REVIEW').length}
-          </p>
-        </div>
-        <div className="bg-neutral-800 rounded-xl p-4 border border-neutral-700">
-          <p className="text-sm text-neutral-400">{t('admin.ocrScan.estimatedTimeSaved')}</p>
-          <p className="text-2xl font-bold text-white mt-1">{t('admin.ocrScan.minutesSuffix', { count: history.length * 5 })}</p>
-        </div>
+        <StatCard label={t('admin.ocrScan.scannedInvoices')} value={history.length} icon={ScanLine} theme={theme} />
+        <StatCard
+          label={t('admin.ocrScan.successRate')}
+          value={`${history.length > 0 ? Math.round(history.filter(h => h.status === 'SUCCESS').length / history.length * 100) : 0}%`}
+          icon={CheckCircle2}
+          theme={theme}
+        />
+        <StatCard label={t('admin.ocrScan.toReview')} value={history.filter(h => h.status === 'NEEDS_REVIEW').length} icon={AlertTriangle} theme={theme} />
+        <StatCard label={t('admin.ocrScan.estimatedTimeSaved')} value={t('admin.ocrScan.minutesSuffix', { count: history.length * 5 })} icon={Clock} theme={theme} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -192,10 +183,10 @@ export default function OCRPage() {
             onDragLeave={() => setDragActive(false)}
             onDrop={handleDrop}
             onClick={() => fileInputRef.current?.click()}
-            className={`bg-neutral-800 rounded-xl p-8 border-2 border-dashed cursor-pointer transition-all ${
+            className={`bg-white rounded-xl p-8 border-2 border-dashed cursor-pointer transition-all ${
               dragActive
-                ? 'border-sky-500 bg-sky-500/10'
-                : 'border-neutral-600 hover:border-neutral-500'
+                ? 'border-emerald-500 bg-emerald-50'
+                : 'border-slate-300 hover:border-slate-400'
             }`}
           >
             <input
@@ -208,9 +199,9 @@ export default function OCRPage() {
 
             {scanning ? (
               <div className="text-center py-8">
-                <div className="animate-spin h-12 w-12 border-4 border-sky-500 border-t-transparent rounded-full mx-auto"></div>
-                <p className="text-white mt-4">{t('admin.ocrScan.analyzing')}</p>
-                <p className="text-sm text-neutral-400 mt-1">{t('admin.ocrScan.aiExtraction')}</p>
+                <div className="animate-spin h-12 w-12 border-4 border-emerald-500 border-t-transparent rounded-full mx-auto"></div>
+                <p className="text-slate-900 font-medium mt-4">{t('admin.ocrScan.analyzing')}</p>
+                <p className="text-sm text-slate-500 mt-1">{t('admin.ocrScan.aiExtraction')}</p>
               </div>
             ) : uploadedImage ? (
               <div className="text-center">
@@ -223,95 +214,92 @@ export default function OCRPage() {
                   style={{ width: 'auto', height: 'auto', maxHeight: '16rem' }}
                   unoptimized
                 />
-                <p className="text-sm text-neutral-400 mt-4">{t('admin.ocrScan.clickToChange')}</p>
+                <p className="text-sm text-slate-500 mt-4">{t('admin.ocrScan.clickToChange')}</p>
               </div>
             ) : (
               <div className="text-center py-8">
                 <div className="text-5xl mb-4">&#128196;</div>
-                <h3 className="text-lg font-medium text-white mb-2">{t('admin.ocrScan.dropInvoice')}</h3>
-                <p className="text-sm text-neutral-400 mb-4">{t('admin.ocrScan.orClickToSelect')}</p>
+                <h3 className="text-lg font-medium text-slate-900 mb-2">{t('admin.ocrScan.dropInvoice')}</h3>
+                <p className="text-sm text-slate-500 mb-4">{t('admin.ocrScan.orClickToSelect')}</p>
                 <div className="flex justify-center gap-2">
-                  <span className="px-2 py-1 bg-neutral-700 rounded text-xs text-neutral-300">PNG</span>
-                  <span className="px-2 py-1 bg-neutral-700 rounded text-xs text-neutral-300">JPG</span>
-                  <span className="px-2 py-1 bg-neutral-700 rounded text-xs text-neutral-300">PDF</span>
+                  <span className="px-2 py-1 bg-slate-100 rounded text-xs text-slate-600">PNG</span>
+                  <span className="px-2 py-1 bg-slate-100 rounded text-xs text-slate-600">JPG</span>
+                  <span className="px-2 py-1 bg-slate-100 rounded text-xs text-slate-600">PDF</span>
                 </div>
-                <p className="text-xs text-neutral-500 mt-4">{t('admin.ocrScan.maxFileSize')}</p>
+                <p className="text-xs text-slate-400 mt-4">{t('admin.ocrScan.maxFileSize')}</p>
               </div>
             )}
           </div>
 
           {/* How it works */}
-          <div className="bg-neutral-800 rounded-xl p-6 border border-neutral-700">
-            <h3 className="font-medium text-white mb-4">&#128161; {t('admin.ocrScan.howItWorks')}</h3>
+          <SectionCard title={`&#128161; ${t('admin.ocrScan.howItWorks')}`} theme={theme}>
             <ol className="space-y-3 text-sm">
               <li className="flex gap-3">
-                <span className="w-6 h-6 bg-sky-600 rounded-full flex items-center justify-center text-xs font-bold">1</span>
-                <span className="text-neutral-300">{t('admin.ocrScan.step1')}</span>
+                <span className="w-6 h-6 bg-emerald-600 text-white rounded-full flex items-center justify-center text-xs font-bold shrink-0">1</span>
+                <span className="text-slate-600">{t('admin.ocrScan.step1')}</span>
               </li>
               <li className="flex gap-3">
-                <span className="w-6 h-6 bg-sky-600 rounded-full flex items-center justify-center text-xs font-bold">2</span>
-                <span className="text-neutral-300">{t('admin.ocrScan.step2')}</span>
+                <span className="w-6 h-6 bg-emerald-600 text-white rounded-full flex items-center justify-center text-xs font-bold shrink-0">2</span>
+                <span className="text-slate-600">{t('admin.ocrScan.step2')}</span>
               </li>
               <li className="flex gap-3">
-                <span className="w-6 h-6 bg-sky-600 rounded-full flex items-center justify-center text-xs font-bold">3</span>
-                <span className="text-neutral-300">{t('admin.ocrScan.step3')}</span>
+                <span className="w-6 h-6 bg-emerald-600 text-white rounded-full flex items-center justify-center text-xs font-bold shrink-0">3</span>
+                <span className="text-slate-600">{t('admin.ocrScan.step3')}</span>
               </li>
               <li className="flex gap-3">
-                <span className="w-6 h-6 bg-sky-600 rounded-full flex items-center justify-center text-xs font-bold">4</span>
-                <span className="text-neutral-300">{t('admin.ocrScan.step4')}</span>
+                <span className="w-6 h-6 bg-emerald-600 text-white rounded-full flex items-center justify-center text-xs font-bold shrink-0">4</span>
+                <span className="text-slate-600">{t('admin.ocrScan.step4')}</span>
               </li>
             </ol>
-          </div>
+          </SectionCard>
         </div>
 
         {/* Extracted Data */}
         <div className="space-y-4">
           {extractedData ? (
-            <div className="bg-neutral-800 rounded-xl border border-neutral-700 overflow-hidden">
-              <div className="p-4 border-b border-neutral-700 flex justify-between items-center">
-                <div>
-                  <h3 className="font-medium text-white">{t('admin.ocrScan.extractedData')}</h3>
-                  <p className="text-sm text-neutral-400">{t('admin.ocrScan.verifyAndCorrect')}</p>
-                </div>
-                <div className="text-end">
-                  <span className={`text-sm font-medium ${getConfidenceColor(extractedData.confidence)}`}>
-                    {t('admin.ocrScan.confidence', { percent: Math.round(extractedData.confidence * 100) })}
-                  </span>
-                </div>
-              </div>
-
+            <SectionCard
+              title={t('admin.ocrScan.extractedData')}
+              theme={theme}
+              headerAction={
+                <span className={`text-sm font-medium ${getConfidenceColor(extractedData.confidence)}`}>
+                  {t('admin.ocrScan.confidence', { percent: Math.round(extractedData.confidence * 100) })}
+                </span>
+              }
+              noPadding
+            >
               <div className="p-4 space-y-4">
+                <p className="text-sm text-slate-500">{t('admin.ocrScan.verifyAndCorrect')}</p>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs text-neutral-400 mb-1">{t('admin.ocrScan.invoiceNumber')}</label>
+                    <label className="block text-xs font-medium text-slate-500 mb-1">{t('admin.ocrScan.invoiceNumber')}</label>
                     <input
                       type="text"
                       defaultValue={extractedData.invoiceNumber}
-                      className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-white"
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-neutral-400 mb-1">{t('admin.ocrScan.supplier')}</label>
+                    <label className="block text-xs font-medium text-slate-500 mb-1">{t('admin.ocrScan.supplier')}</label>
                     <input
                       type="text"
                       defaultValue={extractedData.supplierName}
-                      className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-white"
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-neutral-400 mb-1">{t('admin.ocrScan.invoiceDate')}</label>
+                    <label className="block text-xs font-medium text-slate-500 mb-1">{t('admin.ocrScan.invoiceDate')}</label>
                     <input
                       type="date"
                       defaultValue={extractedData.invoiceDate}
-                      className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-white"
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-neutral-400 mb-1">{t('admin.ocrScan.dueDate')}</label>
+                    <label className="block text-xs font-medium text-slate-500 mb-1">{t('admin.ocrScan.dueDate')}</label>
                     <input
                       type="date"
                       defaultValue={extractedData.dueDate}
-                      className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-white"
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                     />
                   </div>
                 </div>
@@ -319,24 +307,24 @@ export default function OCRPage() {
                 {/* Items */}
                 {extractedData.items && extractedData.items.length > 0 && (
                   <div>
-                    <label className="block text-xs text-neutral-400 mb-2">{t('admin.ocrScan.items')}</label>
-                    <div className="bg-neutral-900 rounded-lg overflow-hidden">
+                    <label className="block text-xs font-medium text-slate-500 mb-2">{t('admin.ocrScan.items')}</label>
+                    <div className="bg-slate-50 rounded-lg overflow-hidden border border-slate-200">
                       <table className="w-full text-sm">
-                        <thead className="bg-neutral-700/50">
+                        <thead className="bg-slate-100">
                           <tr>
-                            <th scope="col" className="px-3 py-2 text-start text-xs text-neutral-400">{t('admin.ocrScan.description')}</th>
-                            <th scope="col" className="px-3 py-2 text-end text-xs text-neutral-400">{t('admin.ocrScan.qty')}</th>
-                            <th scope="col" className="px-3 py-2 text-end text-xs text-neutral-400">{t('admin.ocrScan.unitPrice')}</th>
-                            <th scope="col" className="px-3 py-2 text-end text-xs text-neutral-400">{t('admin.ocrScan.total')}</th>
+                            <th scope="col" className="px-3 py-2 text-start text-xs font-medium text-slate-500 uppercase">{t('admin.ocrScan.description')}</th>
+                            <th scope="col" className="px-3 py-2 text-end text-xs font-medium text-slate-500 uppercase">{t('admin.ocrScan.qty')}</th>
+                            <th scope="col" className="px-3 py-2 text-end text-xs font-medium text-slate-500 uppercase">{t('admin.ocrScan.unitPrice')}</th>
+                            <th scope="col" className="px-3 py-2 text-end text-xs font-medium text-slate-500 uppercase">{t('admin.ocrScan.total')}</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-neutral-700">
+                        <tbody className="divide-y divide-slate-200 bg-white">
                           {extractedData.items.map((item, i) => (
                             <tr key={i}>
-                              <td className="px-3 py-2 text-white">{item.description}</td>
-                              <td className="px-3 py-2 text-end text-neutral-300">{item.quantity}</td>
-                              <td className="px-3 py-2 text-end text-neutral-300">{formatCurrency(item.unitPrice)}</td>
-                              <td className="px-3 py-2 text-end text-white">{formatCurrency(item.total)}</td>
+                              <td className="px-3 py-2 text-slate-900">{item.description}</td>
+                              <td className="px-3 py-2 text-end text-slate-600">{item.quantity}</td>
+                              <td className="px-3 py-2 text-end text-slate-600">{formatCurrency(item.unitPrice)}</td>
+                              <td className="px-3 py-2 text-end font-medium text-slate-900">{formatCurrency(item.total)}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -348,47 +336,47 @@ export default function OCRPage() {
                 {/* Totals */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs text-neutral-400 mb-1">{t('admin.ocrScan.subtotal')}</label>
+                    <label className="block text-xs font-medium text-slate-500 mb-1">{t('admin.ocrScan.subtotal')}</label>
                     <input
                       type="number"
                       step="0.01"
                       defaultValue={extractedData.subtotal}
-                      className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-white"
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-neutral-400 mb-1">{t('admin.ocrScan.tps')}</label>
+                    <label className="block text-xs font-medium text-slate-500 mb-1">{t('admin.ocrScan.tps')}</label>
                     <input
                       type="number"
                       step="0.01"
                       defaultValue={extractedData.taxTps}
-                      className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-white"
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-neutral-400 mb-1">{t('admin.ocrScan.tvq')}</label>
+                    <label className="block text-xs font-medium text-slate-500 mb-1">{t('admin.ocrScan.tvq')}</label>
                     <input
                       type="number"
                       step="0.01"
                       defaultValue={extractedData.taxTvq}
-                      className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-white"
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-neutral-400 mb-1">{t('admin.ocrScan.total')}</label>
+                    <label className="block text-xs font-medium text-slate-500 mb-1">{t('admin.ocrScan.total')}</label>
                     <input
                       type="number"
                       step="0.01"
                       defaultValue={extractedData.total}
-                      className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-white font-bold"
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 font-bold focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                     />
                   </div>
                 </div>
 
                 {/* Category */}
                 <div>
-                  <label className="block text-xs text-neutral-400 mb-1">{t('admin.ocrScan.expenseCategory')}</label>
-                  <select className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-white">
+                  <label className="block text-xs font-medium text-slate-500 mb-1">{t('admin.ocrScan.expenseCategory')}</label>
+                  <select className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
                     <option value="6310">{t('admin.ocrScan.opt6310')}</option>
                     <option value="6330">{t('admin.ocrScan.opt6330')}</option>
                     <option value="6210">{t('admin.ocrScan.opt6210')}</option>
@@ -398,10 +386,10 @@ export default function OCRPage() {
                 </div>
               </div>
 
-              <div className="p-4 border-t border-neutral-700 flex justify-between">
+              <div className="p-4 border-t border-slate-200 flex justify-between">
                 <button
                   onClick={() => { setExtractedData(null); setUploadedImage(null); }}
-                  className="px-4 py-2 text-neutral-400 hover:text-white"
+                  className="px-4 py-2 text-slate-500 hover:text-slate-700"
                 >
                   {t('admin.ocrScan.cancel')}
                 </button>
@@ -412,39 +400,38 @@ export default function OCRPage() {
                   &#10003; {t('admin.ocrScan.saveInvoice')}
                 </button>
               </div>
-            </div>
+            </SectionCard>
           ) : (
-            <div className="bg-neutral-800 rounded-xl p-8 border border-neutral-700 text-center">
-              <div className="text-4xl mb-4">&#128203;</div>
-              <p className="text-neutral-400">{t('admin.ocrScan.uploadPrompt')}</p>
-            </div>
+            <SectionCard theme={theme}>
+              <div className="text-center py-4">
+                <div className="text-4xl mb-4">&#128203;</div>
+                <p className="text-slate-500">{t('admin.ocrScan.uploadPrompt')}</p>
+              </div>
+            </SectionCard>
           )}
 
           {/* Recent scans */}
-          <div className="bg-neutral-800 rounded-xl border border-neutral-700 overflow-hidden">
-            <div className="p-4 border-b border-neutral-700">
-              <h3 className="font-medium text-white">{t('admin.ocrScan.recentScans')}</h3>
-            </div>
+          <SectionCard title={t('admin.ocrScan.recentScans')} theme={theme} noPadding>
             {loadingHistory ? (
-              <div className="p-4 text-center text-neutral-400">{t('admin.ocrScan.loading')}</div>
+              <div className="p-4 text-center text-slate-400">{t('admin.ocrScan.loading')}</div>
             ) : error ? (
-              <div className="p-4 text-center text-red-400">{error}</div>
+              <div className="p-4 text-center text-red-500">{error}</div>
             ) : history.length === 0 ? (
-              <div className="p-4 text-center text-neutral-400">{t('admin.ocrScan.noScansYet')}</div>
+              <div className="p-4 text-center text-slate-400">{t('admin.ocrScan.noScansYet')}</div>
             ) : null}
-            <div className="divide-y divide-neutral-700">
+            <div className="divide-y divide-slate-100">
               {history.slice(0, 5).map(scan => (
-                <div key={scan.id} className="p-3 hover:bg-neutral-700/30">
+                <div key={scan.id} className="px-4 py-3 hover:bg-slate-50">
                   <div className="flex justify-between items-center">
                     <div>
-                      <p className="text-sm text-white">{scan.supplierName}</p>
-                      <p className="text-xs text-neutral-500">{scan.fileName}</p>
+                      <p className="text-sm font-medium text-slate-900">{scan.supplierName}</p>
+                      <p className="text-xs text-slate-400">{scan.fileName}</p>
                     </div>
                     <div className="text-end">
-                      <p className="text-sm font-medium text-white">{fmtCurrency(scan.total)}</p>
-                      <span className={`text-xs ${
-                        scan.status === 'SUCCESS' ? 'text-green-400' :
-                        scan.status === 'NEEDS_REVIEW' ? 'text-yellow-400' : 'text-red-400'
+                      <p className="text-sm font-semibold text-slate-900">{fmtCurrency(scan.total)}</p>
+                      <span className={`text-xs font-medium ${
+                        scan.status === 'SUCCESS' ? 'text-emerald-600' :
+                        scan.status === 'NEEDS_REVIEW' ? 'text-amber-500' : 'text-red-500'
                       }`}>
                         {scan.status === 'SUCCESS' ? '&#10003;' : scan.status === 'NEEDS_REVIEW' ? '&#9888;' : '&#10007;'}
                       </span>
@@ -453,7 +440,7 @@ export default function OCRPage() {
                 </div>
               ))}
             </div>
-          </div>
+          </SectionCard>
         </div>
       </div>
     </div>

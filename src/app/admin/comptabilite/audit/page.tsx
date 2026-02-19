@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useI18n } from '@/i18n/client';
+import { PageHeader, SectionCard, Button } from '@/components/admin';
 import { sectionThemes } from '@/lib/admin/section-themes';
 
 interface AuditEntry {
@@ -182,43 +183,44 @@ export default function AuditTrailPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">{t('admin.audit.title')}</h1>
-          <p className="text-slate-500 mt-1">{t('admin.audit.subtitle')}</p>
-        </div>
-        <button
-          onClick={handleExport}
-          disabled={exporting}
-          className={`px-4 py-2 ${theme.btnPrimary} border-transparent text-white rounded-lg flex items-center gap-2 disabled:opacity-50`}
-        >
-          {exporting ? t('admin.audit.exporting') : '📥 ' + t('admin.audit.exportCSV')}
-        </button>
-      </div>
+      <PageHeader
+        title={t('admin.audit.title')}
+        subtitle={t('admin.audit.subtitle')}
+        theme={theme}
+        actions={
+          <Button
+            variant="primary"
+            onClick={handleExport}
+            disabled={exporting}
+            className={`${theme.btnPrimary} border-transparent text-white`}
+          >
+            {exporting ? t('admin.audit.exporting') : t('admin.audit.exportCSV')}
+          </Button>
+        }
+      />
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl p-4 border border-slate-200">
+        <SectionCard theme={theme}>
           <p className="text-sm text-slate-500">{t('admin.audit.actionsToday')}</p>
           <p className="text-2xl font-bold text-slate-900 mt-1">{todayCount}</p>
-        </div>
-        <div className="bg-white rounded-xl p-4 border border-slate-200">
+        </SectionCard>
+        <SectionCard theme={theme}>
           <p className="text-sm text-slate-500">{t('admin.audit.totalActions')}</p>
-          <p className="text-2xl font-bold text-sky-600 mt-1">{entries.length}</p>
-        </div>
-        <div className="bg-white rounded-xl p-4 border border-slate-200">
+          <p className="text-2xl font-bold text-amber-600 mt-1">{entries.length}</p>
+        </SectionCard>
+        <SectionCard theme={theme}>
           <p className="text-sm text-slate-500">{t('admin.audit.activeUsers')}</p>
           <p className="text-2xl font-bold text-slate-900 mt-1">{uniqueUsers}</p>
-        </div>
-        <div className="bg-white rounded-xl p-4 border border-slate-200">
+        </SectionCard>
+        <SectionCard theme={theme}>
           <p className="text-sm text-slate-500">{t('admin.audit.afterFilters')}</p>
           <p className="text-2xl font-bold text-slate-900 mt-1">{filteredEntries.length}</p>
-        </div>
+        </SectionCard>
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-xl p-4 border border-slate-200">
+      <SectionCard theme={theme}>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           <div>
             <label className="block text-xs text-slate-500 mb-1">{t('admin.audit.actionLabel')}</label>
@@ -275,10 +277,10 @@ export default function AuditTrailPage() {
             </button>
           </div>
         </div>
-      </div>
+      </SectionCard>
 
       {/* Timeline */}
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+      <SectionCard title={t('admin.audit.title')} theme={theme} noPadding>
         <div className="divide-y divide-slate-200">
           {filteredEntries.map(entry => (
             <div
@@ -323,7 +325,7 @@ export default function AuditTrailPage() {
             </div>
           ))}
         </div>
-      </div>
+      </SectionCard>
 
       {/* Detail Modal */}
       {selectedEntry && (

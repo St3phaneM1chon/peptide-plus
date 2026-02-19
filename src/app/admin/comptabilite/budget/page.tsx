@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Pencil } from 'lucide-react';
-import { PageHeader, Button } from '@/components/admin';
+import { PageHeader, Button, SectionCard } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
 import { sectionThemes } from '@/lib/admin/section-themes';
 
@@ -225,10 +225,7 @@ export default function BudgetPage() {
       </div>
 
       {/* Revenue Budget */}
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-        <div className="p-4 border-b border-slate-200 bg-emerald-50">
-          <h3 className="font-semibold text-emerald-900">{t('admin.budget.revenueBudgetTitle')}</h3>
-        </div>
+      <SectionCard title={t('admin.budget.revenueBudgetTitle')} theme={theme} noPadding>
         {revenueBudget.length === 0 ? (
           <div className="p-8 text-center text-slate-400">{t('admin.budget.noRevenueBudget').replace('{year}', selectedYear)}</div>
         ) : (
@@ -281,13 +278,10 @@ export default function BudgetPage() {
             </tfoot>
           </table>
         )}
-      </div>
+      </SectionCard>
 
       {/* Expense Budget */}
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-        <div className="p-4 border-b border-slate-200 bg-red-50">
-          <h3 className="font-semibold text-red-900">{t('admin.budget.expenseBudgetTitle')}</h3>
-        </div>
+      <SectionCard title={t('admin.budget.expenseBudgetTitle')} theme={theme} noPadding>
         {expenseBudget.length === 0 ? (
           <div className="p-8 text-center text-slate-400">{t('admin.budget.noExpenseBudget').replace('{year}', selectedYear)}</div>
         ) : (
@@ -338,11 +332,10 @@ export default function BudgetPage() {
             </tfoot>
           </table>
         )}
-      </div>
+      </SectionCard>
 
       {/* Monthly Trend */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6">
-        <h3 className="font-semibold text-slate-900 mb-4">{t('admin.budget.monthlyTrend')}</h3>
+      <SectionCard title={t('admin.budget.monthlyTrend')} theme={theme}>
         <div className="h-48 flex items-end gap-4">
           {months.map((month) => {
             // Simplified monthly trend visualization based on overall budget progress
@@ -369,7 +362,7 @@ export default function BudgetPage() {
             <span className="text-sm text-slate-600">{t('admin.budget.actualLegend')}</span>
           </div>
         </div>
-      </div>
+      </SectionCard>
     </div>
   );
 }

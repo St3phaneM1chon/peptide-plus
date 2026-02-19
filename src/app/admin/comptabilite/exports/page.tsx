@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useI18n } from '@/i18n/client';
+import { PageHeader, SectionCard, Button } from '@/components/admin';
 import { sectionThemes } from '@/lib/admin/section-themes';
 import { toast } from 'sonner';
 
@@ -186,13 +187,11 @@ export default function ExportsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div className={`border-l-4 ${theme.accentBar} pl-4`}>
-          <h1 className="text-2xl font-bold text-white">{t('admin.exports.title')}</h1>
-          <p className="text-neutral-400 mt-1">{t('admin.exports.subtitle')}</p>
-        </div>
-      </div>
+      <PageHeader
+        title={t('admin.exports.title')}
+        subtitle={t('admin.exports.subtitle')}
+        theme={theme}
+      />
 
       {/* Format Selection */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -205,14 +204,14 @@ export default function ExportsPage() {
             }}
             className={`p-4 rounded-xl border transition-all text-start ${
               exportConfig.format === format.id
-                ? 'bg-sky-600/20 border-sky-500'
-                : 'bg-neutral-800 border-neutral-700 hover:border-neutral-600'
+                ? `${theme.surfaceLight} ${theme.borderLight} ring-2 ring-violet-200`
+                : 'bg-white border-slate-200 hover:border-slate-300'
             }`}
           >
             <div className="text-2xl mb-2">{format.icon}</div>
-            <h3 className="font-medium text-white">{format.name}</h3>
-            <p className="text-xs text-neutral-400 mt-1">{format.description}</p>
-            <span className="inline-block mt-2 px-2 py-0.5 bg-neutral-700 rounded text-xs text-neutral-300">
+            <h3 className="font-medium text-slate-900">{format.name}</h3>
+            <p className="text-xs text-slate-500 mt-1">{format.description}</p>
+            <span className="inline-block mt-2 px-2 py-0.5 bg-slate-100 rounded text-xs text-slate-600">
               .{format.fileType.toLowerCase()}
             </span>
           </button>
@@ -220,25 +219,23 @@ export default function ExportsPage() {
       </div>
 
       {/* Export Configuration */}
-      <div className="bg-neutral-800 rounded-xl border border-neutral-700 p-6">
-        <h2 className="text-lg font-medium text-white mb-4">{t('admin.exports.exportConfig')}</h2>
-        
+      <SectionCard title={t('admin.exports.exportConfig')} theme={theme}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Data to export */}
           <div>
-            <h3 className="text-sm font-medium text-neutral-300 mb-3">{t('admin.exports.dataToExport')}</h3>
+            <h3 className="text-sm font-medium text-slate-700 mb-3">{t('admin.exports.dataToExport')}</h3>
             <div className="space-y-2">
               {dataTypes.map(type => (
-                <label key={type.id} className="flex items-center justify-between p-3 bg-neutral-700/50 rounded-lg cursor-pointer hover:bg-neutral-700">
+                <label key={type.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg cursor-pointer hover:bg-slate-100">
                   <div className="flex items-center gap-3">
                     <input
                       type="checkbox"
                       defaultChecked={type.id === 'entries'}
-                      className="rounded border-neutral-600 bg-neutral-700 text-sky-500"
+                      className="rounded border-slate-300 bg-white text-violet-600"
                     />
-                    <span className="text-white">{type.name}</span>
+                    <span className="text-slate-900">{type.name}</span>
                   </div>
-                  <span className="text-sm text-neutral-400">{type.count} {t('admin.exports.records')}</span>
+                  <span className="text-sm text-slate-500">{type.count} {t('admin.exports.records')}</span>
                 </label>
               ))}
             </div>
@@ -247,49 +244,49 @@ export default function ExportsPage() {
           {/* Options */}
           <div className="space-y-4">
             <div>
-              <h3 className="text-sm font-medium text-neutral-300 mb-3">{t('admin.exports.periodLabel')}</h3>
+              <h3 className="text-sm font-medium text-slate-700 mb-3">{t('admin.exports.periodLabel')}</h3>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs text-neutral-400 mb-1">{t('admin.exports.fromLabel')}</label>
+                  <label className="block text-xs text-slate-500 mb-1">{t('admin.exports.fromLabel')}</label>
                   <input
                     type="date"
                     value={exportConfig.dateFrom}
                     onChange={e => setExportConfig(prev => ({ ...prev, dateFrom: e.target.value }))}
-                    className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-white"
+                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-neutral-400 mb-1">{t('admin.exports.toLabel')}</label>
+                  <label className="block text-xs text-slate-500 mb-1">{t('admin.exports.toLabel')}</label>
                   <input
                     type="date"
                     value={exportConfig.dateTo}
                     onChange={e => setExportConfig(prev => ({ ...prev, dateTo: e.target.value }))}
-                    className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-white"
+                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
                   />
                 </div>
               </div>
             </div>
 
             <div>
-              <h3 className="text-sm font-medium text-neutral-300 mb-3">{t('admin.exports.options')}</h3>
+              <h3 className="text-sm font-medium text-slate-700 mb-3">{t('admin.exports.options')}</h3>
               <div className="space-y-2">
                 <label className="flex items-center gap-3 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={exportConfig.includePosted}
                     onChange={e => setExportConfig(prev => ({ ...prev, includePosted: e.target.checked }))}
-                    className="rounded border-neutral-600 bg-neutral-700 text-sky-500"
+                    className="rounded border-slate-300 bg-white text-violet-600"
                   />
-                  <span className="text-neutral-300">{t('admin.exports.includePosted')}</span>
+                  <span className="text-slate-700">{t('admin.exports.includePosted')}</span>
                 </label>
                 <label className="flex items-center gap-3 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={exportConfig.includeDraft}
                     onChange={e => setExportConfig(prev => ({ ...prev, includeDraft: e.target.checked }))}
-                    className="rounded border-neutral-600 bg-neutral-700 text-sky-500"
+                    className="rounded border-slate-300 bg-white text-violet-600"
                   />
-                  <span className="text-neutral-300">{t('admin.exports.includeDrafts')}</span>
+                  <span className="text-slate-700">{t('admin.exports.includeDrafts')}</span>
                 </label>
               </div>
             </div>
@@ -297,90 +294,85 @@ export default function ExportsPage() {
             <button
               onClick={handleExport}
               disabled={exporting}
-              className="w-full py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-lg font-medium disabled:opacity-50 flex items-center justify-center gap-2"
+              className={`w-full py-3 ${theme.btnPrimary} text-white rounded-lg font-medium disabled:opacity-50 flex items-center justify-center gap-2`}
             >
               {exporting ? (
                 <>
-                  <span className="animate-spin">⏳</span>
+                  <span className="animate-spin">&#8987;</span>
                   {t('admin.exports.exportInProgress')}
                 </>
               ) : (
-                <>
-                  📥 {t('admin.exports.generateExport')}
-                </>
+                t('admin.exports.generateExport')
               )}
             </button>
           </div>
         </div>
-      </div>
+      </SectionCard>
 
       {/* API Integration */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-neutral-800 rounded-xl border border-neutral-700 p-6">
+        <SectionCard theme={theme}>
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 bg-green-900/30 rounded-lg flex items-center justify-center text-xl">📊</div>
+            <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center text-xl">&#128202;</div>
             <div>
-              <h3 className="font-medium text-white">QuickBooks Online</h3>
-              <p className="text-xs text-neutral-400">{t('admin.exports.realtimeSync')}</p>
+              <h3 className="font-medium text-slate-900">QuickBooks Online</h3>
+              <p className="text-xs text-slate-500">{t('admin.exports.realtimeSync')}</p>
             </div>
           </div>
-          <p className="text-sm text-neutral-400 mb-4">
+          <p className="text-sm text-slate-500 mb-4">
             {t('admin.exports.qboSyncDesc')}
           </p>
-          <button className="w-full py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm">
+          <Button variant="primary" className="w-full bg-green-600 hover:bg-green-700 border-transparent text-white">
             {t('admin.exports.connectQuickBooks')}
-          </button>
-        </div>
+          </Button>
+        </SectionCard>
 
-        <div className="bg-neutral-800 rounded-xl border border-neutral-700 p-6">
+        <SectionCard theme={theme}>
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 bg-blue-900/30 rounded-lg flex items-center justify-center text-xl">📈</div>
+            <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center text-xl">&#128200;</div>
             <div>
-              <h3 className="font-medium text-white">Sage 50</h3>
-              <p className="text-xs text-neutral-400">{t('admin.exports.manualExport')}</p>
+              <h3 className="font-medium text-slate-900">Sage 50</h3>
+              <p className="text-xs text-slate-500">{t('admin.exports.manualExport')}</p>
             </div>
           </div>
-          <p className="text-sm text-neutral-400 mb-4">
+          <p className="text-sm text-slate-500 mb-4">
             {t('admin.exports.sageExportDesc')}
           </p>
-          <button className="w-full py-2 bg-neutral-700 hover:bg-neutral-600 text-white rounded-lg text-sm">
+          <Button variant="secondary" className="w-full">
             {t('admin.exports.exportForSage')}
-          </button>
-        </div>
+          </Button>
+        </SectionCard>
       </div>
 
       {/* Export History */}
-      <div className="bg-neutral-800 rounded-xl border border-neutral-700 overflow-hidden">
-        <div className="p-4 border-b border-neutral-700">
-          <h2 className="font-medium text-white">{t('admin.exports.exportHistory')}</h2>
-        </div>
+      <SectionCard title={t('admin.exports.exportHistory')} theme={theme} noPadding>
         <table className="w-full">
-          <thead className="bg-neutral-900/50">
+          <thead className="bg-slate-50">
             <tr>
-              <th scope="col" className="px-4 py-3 text-start text-xs font-medium text-neutral-400 uppercase">{t('admin.exports.dateCol')}</th>
-              <th scope="col" className="px-4 py-3 text-start text-xs font-medium text-neutral-400 uppercase">{t('admin.exports.typeCol')}</th>
-              <th scope="col" className="px-4 py-3 text-start text-xs font-medium text-neutral-400 uppercase">{t('admin.exports.formatCol')}</th>
-              <th scope="col" className="px-4 py-3 text-start text-xs font-medium text-neutral-400 uppercase">{t('admin.exports.periodCol')}</th>
-              <th scope="col" className="px-4 py-3 text-end text-xs font-medium text-neutral-400 uppercase">{t('admin.exports.recordsCol')}</th>
-              <th scope="col" className="px-4 py-3 text-center text-xs font-medium text-neutral-400 uppercase">{t('admin.exports.statusCol')}</th>
-              <th scope="col" className="px-4 py-3 text-end text-xs font-medium text-neutral-400 uppercase">{t('admin.exports.actionCol')}</th>
+              <th scope="col" className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.exports.dateCol')}</th>
+              <th scope="col" className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.exports.typeCol')}</th>
+              <th scope="col" className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.exports.formatCol')}</th>
+              <th scope="col" className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.exports.periodCol')}</th>
+              <th scope="col" className="px-4 py-3 text-end text-xs font-semibold text-slate-500 uppercase">{t('admin.exports.recordsCol')}</th>
+              <th scope="col" className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.exports.statusCol')}</th>
+              <th scope="col" className="px-4 py-3 text-end text-xs font-semibold text-slate-500 uppercase">{t('admin.exports.actionCol')}</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-neutral-700">
+          <tbody className="divide-y divide-slate-200">
             {history.map(job => (
-              <tr key={job.id} className="hover:bg-neutral-700/30">
-                <td className="px-4 py-3 text-neutral-300">
+              <tr key={job.id} className="hover:bg-slate-50">
+                <td className="px-4 py-3 text-slate-600">
                   {new Intl.DateTimeFormat(locale, { dateStyle: 'short', timeStyle: 'short' }).format(new Date(job.createdAt))}
                 </td>
-                <td className="px-4 py-3 text-white">{job.type}</td>
-                <td className="px-4 py-3 text-neutral-300">{job.format}</td>
-                <td className="px-4 py-3 text-neutral-300">{job.dateRange}</td>
-                <td className="px-4 py-3 text-end text-white">{job.records}</td>
+                <td className="px-4 py-3 text-slate-900">{job.type}</td>
+                <td className="px-4 py-3 text-slate-600">{job.format}</td>
+                <td className="px-4 py-3 text-slate-600">{job.dateRange}</td>
+                <td className="px-4 py-3 text-end text-slate-900">{job.records}</td>
                 <td className="px-4 py-3 text-center">
                   <span className={`px-2 py-1 rounded text-xs ${
-                    job.status === 'COMPLETED' ? 'bg-green-900/30 text-green-400' :
-                    job.status === 'PROCESSING' ? 'bg-yellow-900/30 text-yellow-400' :
-                    'bg-red-900/30 text-red-400'
+                    job.status === 'COMPLETED' ? 'bg-green-50 text-green-700' :
+                    job.status === 'PROCESSING' ? 'bg-yellow-50 text-yellow-700' :
+                    'bg-red-50 text-red-700'
                   }`}>
                     {job.status === 'COMPLETED' ? t('admin.exports.statusCompleted') : job.status === 'PROCESSING' ? t('admin.exports.statusProcessing') : t('admin.exports.statusFailed')}
                   </span>
@@ -390,7 +382,7 @@ export default function ExportsPage() {
                     <a
                       href={job.fileUrl}
                       download
-                      className="px-3 py-1 bg-neutral-700 hover:bg-neutral-600 text-white text-sm rounded inline-block"
+                      className="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm rounded inline-block border border-slate-200"
                     >
                       {t('admin.exports.download')}
                     </a>
@@ -400,7 +392,7 @@ export default function ExportsPage() {
             ))}
           </tbody>
         </table>
-      </div>
+      </SectionCard>
     </div>
   );
 }

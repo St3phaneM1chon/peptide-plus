@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { RefreshCw, Plus, CreditCard, Landmark, PiggyBank, Check } from 'lucide-react';
-import { PageHeader, Button, StatusBadge } from '@/components/admin';
+import { PageHeader, Button, StatusBadge, SectionCard } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
 import { sectionThemes } from '@/lib/admin/section-themes';
 
@@ -293,13 +293,16 @@ export default function BanquesPage() {
       </div>
 
       {/* Recent Transactions */}
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-        <div className="p-4 border-b border-slate-200 flex items-center justify-between">
-          <h3 className="font-semibold text-slate-900">{t('admin.bankAccounts.recentTransactions')}</h3>
-          <a href="/admin/comptabilite/rapprochement" className="text-sm text-emerald-600 hover:text-emerald-700">
+      <SectionCard
+        title={t('admin.bankAccounts.recentTransactions')}
+        theme={theme}
+        noPadding
+        headerAction={
+          <a href="/admin/comptabilite/rapprochement" className="text-sm text-sky-600 hover:text-sky-700 font-medium">
             {t('admin.bankAccounts.viewAll')} &rarr;
           </a>
-        </div>
+        }
+      >
         <table className="w-full">
           <thead className="bg-slate-50">
             <tr>
@@ -342,11 +345,10 @@ export default function BanquesPage() {
             ))}
           </tbody>
         </table>
-      </div>
+      </SectionCard>
 
       {/* Cash Flow Forecast */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6">
-        <h3 className="font-semibold text-slate-900 mb-4">{t('admin.bankAccounts.cashFlowForecast')}</h3>
+      <SectionCard title={t('admin.bankAccounts.cashFlowForecast')} theme={theme}>
         <div className="grid grid-cols-4 gap-4">
           <div className="p-4 bg-slate-50 rounded-lg">
             <p className="text-sm text-slate-500">{t('admin.bankAccounts.currentBalance')}</p>
@@ -367,7 +369,7 @@ export default function BanquesPage() {
             <p className="text-xl font-bold text-blue-700">{formatCurrency(totalBalance + expectedInflows - expectedOutflows)}</p>
           </div>
         </div>
-      </div>
+      </SectionCard>
     </div>
   );
 }

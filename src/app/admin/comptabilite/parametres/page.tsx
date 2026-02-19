@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Plus, RefreshCw, Settings, Download } from 'lucide-react';
-import { PageHeader, Button, StatusBadge, FormField, Input } from '@/components/admin';
+import { PageHeader, Button, StatusBadge, SectionCard, FormField, Input } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
 import { sectionThemes } from '@/lib/admin/section-themes';
 import { toast } from 'sonner';
@@ -250,7 +250,7 @@ export default function ParametresComptablesPage() {
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`py-3 border-b-2 font-medium text-sm ${
-                activeTab === tab.id ? 'border-emerald-500 text-emerald-600' : 'border-transparent text-slate-500'
+                activeTab === tab.id ? 'border-amber-500 text-amber-600' : 'border-transparent text-slate-500'
               }`}
             >
               {tab.label}
@@ -262,8 +262,7 @@ export default function ParametresComptablesPage() {
       {/* General Settings */}
       {activeTab === 'general' && (
         <div className="space-y-6">
-          <div className="bg-white rounded-xl border border-slate-200 p-6">
-            <h3 className="font-semibold text-slate-900 mb-4">{t('admin.accountingSettings.companyInfo')}</h3>
+          <SectionCard title={t('admin.accountingSettings.companyInfo')} theme={theme}>
             <div className="grid grid-cols-2 gap-6">
               <FormField label={t('admin.accountingSettings.companyName')}>
                 <Input
@@ -280,10 +279,9 @@ export default function ParametresComptablesPage() {
                 />
               </FormField>
             </div>
-          </div>
+          </SectionCard>
 
-          <div className="bg-white rounded-xl border border-slate-200 p-6">
-            <h3 className="font-semibold text-slate-900 mb-4">{t('admin.accountingSettings.accountingParams')}</h3>
+          <SectionCard title={t('admin.accountingSettings.accountingParams')} theme={theme}>
             <div className="grid grid-cols-2 gap-6">
               <FormField label={t('admin.accountingSettings.fiscalYearEnd')}>
                 <select
@@ -318,10 +316,9 @@ export default function ParametresComptablesPage() {
                 </select>
               </FormField>
             </div>
-          </div>
+          </SectionCard>
 
-          <div className="bg-white rounded-xl border border-slate-200 p-6">
-            <h3 className="font-semibold text-slate-900 mb-4">{t('admin.accountingSettings.automations')}</h3>
+          <SectionCard title={t('admin.accountingSettings.automations')} theme={theme}>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -356,15 +353,14 @@ export default function ParametresComptablesPage() {
                 </button>
               </div>
             </div>
-          </div>
+          </SectionCard>
         </div>
       )}
 
       {/* Fiscal Settings */}
       {activeTab === 'fiscal' && (
         <div className="space-y-6">
-          <div className="bg-white rounded-xl border border-slate-200 p-6">
-            <h3 className="font-semibold text-slate-900 mb-4">{t('admin.accountingSettings.taxNumbers')}</h3>
+          <SectionCard title={t('admin.accountingSettings.taxNumbers')} theme={theme}>
             <div className="grid grid-cols-2 gap-6">
               <FormField label={t('admin.accountingSettings.tpsNumber')}>
                 <Input
@@ -383,10 +379,9 @@ export default function ParametresComptablesPage() {
                 />
               </FormField>
             </div>
-          </div>
+          </SectionCard>
 
-          <div className="bg-white rounded-xl border border-slate-200 p-6">
-            <h3 className="font-semibold text-slate-900 mb-4">{t('admin.accountingSettings.taxRates')}</h3>
+          <SectionCard title={t('admin.accountingSettings.taxRates')} theme={theme} noPadding>
             <table className="w-full">
               <thead className="bg-slate-50">
                 <tr>
@@ -411,16 +406,15 @@ export default function ParametresComptablesPage() {
                 <tr><td className="px-4 py-3">{t('admin.accounting.tax.pst')}</td><td className="px-4 py-3 text-slate-600">{t('admin.accountingSettings.britishColumbia')}</td><td className="px-4 py-3 text-end">7%</td><td className="px-4 py-3 text-center text-green-600">&#10003;</td></tr>
               </tbody>
             </table>
-          </div>
+          </SectionCard>
 
-          <div className="bg-white rounded-xl border border-slate-200 p-6">
-            <h3 className="font-semibold text-slate-900 mb-4">{t('admin.accountingSettings.filingFrequency')}</h3>
+          <SectionCard title={t('admin.accountingSettings.filingFrequency')} theme={theme}>
             <div className="grid grid-cols-2 gap-6">
               <FormField label={t('admin.accountingSettings.tpsTvq')}>
                 <select
                   value={settings.taxFilingFrequency}
                   onChange={(e) => setSettings({ ...settings, taxFilingFrequency: e.target.value })}
-                  className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
                 >
                   <option value="MONTHLY">{t('admin.accountingSettings.monthly')}</option>
                   <option value="QUARTERLY">{t('admin.accountingSettings.quarterly')}</option>
@@ -428,20 +422,23 @@ export default function ParametresComptablesPage() {
                 </select>
               </FormField>
             </div>
-          </div>
+          </SectionCard>
         </div>
       )}
 
       {/* Currencies */}
       {activeTab === 'currencies' && (
         <div className="space-y-6">
-          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-            <div className="p-4 border-b border-slate-200 flex items-center justify-between">
-              <h3 className="font-semibold text-slate-900">{t('admin.accountingSettings.configuredCurrencies')}</h3>
-              <Button variant="ghost" size="sm" icon={Plus} className="text-emerald-700 hover:bg-emerald-50">
+          <SectionCard
+            title={t('admin.accountingSettings.configuredCurrencies')}
+            theme={theme}
+            headerAction={
+              <Button variant="ghost" size="sm" icon={Plus} className="text-amber-700 hover:bg-amber-50">
                 {t('admin.accountingSettings.addCurrency')}
               </Button>
-            </div>
+            }
+            noPadding
+          >
             <table className="w-full">
               <thead className="bg-slate-50">
                 <tr>
@@ -473,7 +470,7 @@ export default function ParametresComptablesPage() {
                 ))}
               </tbody>
             </table>
-          </div>
+          </SectionCard>
 
           <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
             <div className="flex items-center gap-3">
@@ -492,7 +489,7 @@ export default function ParametresComptablesPage() {
         <div className="space-y-6">
           <div className="grid grid-cols-2 gap-4">
             {integrations.map((integration) => (
-              <div key={integration.id} className="bg-white rounded-xl border border-slate-200 p-5">
+              <SectionCard key={integration.id} theme={theme}>
                 <div className="flex items-start gap-4">
                   <span className="text-3xl">{integration.icon}</span>
                   <div className="flex-1">
@@ -528,19 +525,18 @@ export default function ParametresComptablesPage() {
                     </div>
                   </div>
                 </div>
-              </div>
+              </SectionCard>
             ))}
           </div>
 
-          <div className="bg-white rounded-xl border border-slate-200 p-6">
-            <h3 className="font-semibold text-slate-900 mb-4">{t('admin.accountingSettings.accountingExport')}</h3>
+          <SectionCard title={t('admin.accountingSettings.accountingExport')} theme={theme}>
             <p className="text-slate-600 mb-4">{t('admin.accountingSettings.accountingExportDesc')}</p>
             <div className="flex gap-3">
               <Button variant="secondary" icon={Download}>{t('admin.accountingSettings.exportQuickBooks')}</Button>
               <Button variant="secondary" icon={Download}>{t('admin.accountingSettings.exportSage')}</Button>
               <Button variant="secondary" icon={Download}>{t('admin.accountingSettings.exportExcel')}</Button>
             </div>
-          </div>
+          </SectionCard>
         </div>
       )}
 

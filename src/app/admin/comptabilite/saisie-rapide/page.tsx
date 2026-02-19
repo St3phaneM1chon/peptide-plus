@@ -1,10 +1,12 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { Keyboard } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import { CANADIAN_PROVINCES } from '@/lib/canadianTaxes';
 import { sectionThemes } from '@/lib/admin/section-themes';
+import { SectionCard } from '@/components/admin';
 
 /**
  * SECURITY: Safe formula evaluator using a recursive descent parser.
@@ -111,12 +113,12 @@ interface RecentEntry {
 }
 
 const categoryColors: Record<string, string> = {
-  SALES: 'bg-green-900/30 text-green-400',
-  PURCHASES: 'bg-blue-900/30 text-blue-400',
-  PAYROLL: 'bg-purple-900/30 text-purple-400',
-  TAXES: 'bg-yellow-900/30 text-yellow-400',
-  ADJUSTMENTS: 'bg-red-900/30 text-red-400',
-  OTHER: 'bg-neutral-700 text-neutral-300',
+  SALES: 'bg-emerald-50 text-emerald-700',
+  PURCHASES: 'bg-blue-50 text-blue-700',
+  PAYROLL: 'bg-purple-50 text-purple-700',
+  TAXES: 'bg-amber-50 text-amber-700',
+  ADJUSTMENTS: 'bg-red-50 text-red-700',
+  OTHER: 'bg-slate-100 text-slate-600',
 };
 
 export default function QuickEntryPage() {
@@ -401,8 +403,8 @@ export default function QuickEntryPage() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-white">{t('admin.quickEntry.title')}</h1>
-          <p className="text-neutral-400 mt-1">{t('admin.quickEntry.subtitle')}</p>
+          <h1 className="text-2xl font-bold text-slate-900">{t('admin.quickEntry.title')}</h1>
+          <p className="text-slate-500 mt-1">{t('admin.quickEntry.subtitle')}</p>
         </div>
         <button className={`px-4 py-2 ${theme.btnPrimary} border-transparent text-white rounded-lg`}>
           {t('admin.quickEntry.newTemplate')}
@@ -410,93 +412,92 @@ export default function QuickEntryPage() {
       </div>
 
       {/* Keyboard shortcuts help */}
-      <div className="bg-neutral-800/50 rounded-xl p-4 border border-neutral-700">
+      <SectionCard theme={theme}>
         <div className="flex items-center gap-4 text-sm">
-          <span className="text-neutral-400">{t('admin.quickEntry.keyboardShortcuts')}</span>
+          <Keyboard className="w-4 h-4 text-slate-400" />
+          <span className="text-slate-500 font-medium">{t('admin.quickEntry.keyboardShortcuts')}</span>
           {templates.filter(t => t.shortcut).map(t => (
-            <span key={t.id} className="px-2 py-1 bg-neutral-700 rounded text-neutral-300 font-mono text-xs">
+            <span key={t.id} className="px-2 py-1 bg-slate-100 rounded text-slate-600 font-mono text-xs">
               {t.shortcut} → {t.name}
             </span>
           ))}
-          <span className="px-2 py-1 bg-neutral-700 rounded text-neutral-300 font-mono text-xs">
+          <span className="px-2 py-1 bg-slate-100 rounded text-slate-600 font-mono text-xs">
             {t('admin.quickEntry.ctrlEnterSave')}
           </span>
         </div>
-      </div>
+      </SectionCard>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Templates */}
-        <div className="lg:col-span-2 space-y-4">
-          <h2 className="text-lg font-medium text-white">{t('admin.quickEntry.templatesByFrequency')}</h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {sortedTemplates.map(template => (
-              <button
-                key={template.id}
-                onClick={() => setSelectedTemplate(template)}
-                className={`p-4 rounded-xl border text-start transition-all ${
-                  selectedTemplate?.id === template.id
-                    ? 'bg-sky-600/20 border-sky-500'
-                    : 'bg-neutral-800 border-neutral-700 hover:border-neutral-600'
-                }`}
-              >
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="font-medium text-white">{template.name}</h3>
-                    <p className="text-sm text-neutral-400 mt-1">{template.description}</p>
-                  </div>
-                  <span className={`px-2 py-1 rounded text-xs ${categoryColors[template.category]}`}>
-                    {categoryLabels[template.category]}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center mt-3">
-                  {template.shortcut && (
-                    <span className="px-2 py-0.5 bg-neutral-700 rounded text-xs text-neutral-400 font-mono">
-                      {template.shortcut}
+        <div className="lg:col-span-2">
+          <SectionCard title={t('admin.quickEntry.templatesByFrequency')} theme={theme}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {sortedTemplates.map(template => (
+                <button
+                  key={template.id}
+                  onClick={() => setSelectedTemplate(template)}
+                  className={`p-4 rounded-xl border text-start transition-all ${
+                    selectedTemplate?.id === template.id
+                      ? `${theme.surfaceLight} ${theme.borderLight}`
+                      : 'bg-slate-50 border-slate-200 hover:border-slate-300 hover:shadow-sm'
+                  }`}
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="font-medium text-slate-900">{template.name}</h3>
+                      <p className="text-sm text-slate-500 mt-1">{template.description}</p>
+                    </div>
+                    <span className={`px-2 py-1 rounded text-xs ${categoryColors[template.category]}`}>
+                      {categoryLabels[template.category]}
                     </span>
-                  )}
-                  <span className="text-xs text-neutral-500">
-                    {t('admin.quickEntry.usedCount', { count: template.frequency })}
-                  </span>
-                </div>
-              </button>
-            ))}
-          </div>
+                  </div>
+                  <div className="flex justify-between items-center mt-3">
+                    {template.shortcut && (
+                      <span className="px-2 py-0.5 bg-slate-200 rounded text-xs text-slate-500 font-mono">
+                        {template.shortcut}
+                      </span>
+                    )}
+                    <span className="text-xs text-slate-400">
+                      {t('admin.quickEntry.usedCount', { count: template.frequency })}
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </SectionCard>
         </div>
 
         {/* Recent entries */}
         <div className="space-y-4">
-          <h2 className="text-lg font-medium text-white">{t('admin.quickEntry.recentEntries')}</h2>
-
-          <div className="bg-neutral-800 rounded-xl border border-neutral-700">
+          <SectionCard title={t('admin.quickEntry.recentEntries')} theme={theme} noPadding>
             {recentEntries.map((entry, i) => (
               <div
                 key={entry.id}
-                className={`p-3 ${i < recentEntries.length - 1 ? 'border-b border-neutral-700' : ''}`}
+                className={`px-4 py-3 ${i < recentEntries.length - 1 ? 'border-b border-slate-100' : ''}`}
               >
                 <div className="flex justify-between items-start">
                   <div>
-                    <p className="text-sm text-white">{entry.description}</p>
-                    <p className="text-xs text-neutral-500">
+                    <p className="text-sm font-medium text-slate-900">{entry.description}</p>
+                    <p className="text-xs text-slate-400">
                       {entry.date.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </div>
                   <div className="text-end">
-                    <p className="text-sm font-medium text-white">
+                    <p className="text-sm font-semibold text-slate-900">
                       {formatCurrency(entry.amount)}
                     </p>
-                    <span className={`text-xs ${entry.status === 'POSTED' ? 'text-green-400' : 'text-yellow-400'}`}>
+                    <span className={`text-xs font-medium ${entry.status === 'POSTED' ? 'text-emerald-600' : 'text-amber-500'}`}>
                       {entry.status === 'POSTED' ? t('admin.quickEntry.statusPosted') : t('admin.quickEntry.statusDraft')}
                     </span>
                   </div>
                 </div>
               </div>
             ))}
-          </div>
+          </SectionCard>
 
           {/* Quick duplicate */}
-          <div className="bg-neutral-800 rounded-xl p-4 border border-dashed border-neutral-600">
-            <p className="text-sm text-neutral-400 text-center">
+          <div className="bg-white rounded-xl p-4 border-2 border-dashed border-slate-200">
+            <p className="text-sm text-slate-400 text-center">
               {t('admin.quickEntry.duplicateHint')}
             </p>
           </div>
@@ -505,30 +506,30 @@ export default function QuickEntryPage() {
 
       {/* Entry Modal */}
       {selectedTemplate && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4" role="presentation" onClick={(e) => { if (e.target === e.currentTarget) setSelectedTemplate(null); }}>
-          <div className="bg-neutral-800 rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="quickentry-modal-title" onKeyDown={(e) => e.key === 'Escape' && setSelectedTemplate(null)}>
-            <div className="p-6 border-b border-neutral-700 flex justify-between items-center">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" role="presentation" onClick={(e) => { if (e.target === e.currentTarget) setSelectedTemplate(null); }}>
+          <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="quickentry-modal-title" onKeyDown={(e) => e.key === 'Escape' && setSelectedTemplate(null)}>
+            <div className="p-6 border-b border-slate-200 flex justify-between items-center">
               <div>
-                <h2 id="quickentry-modal-title" className="text-xl font-bold text-white">{selectedTemplate.name}</h2>
-                <p className="text-sm text-neutral-400">{selectedTemplate.description}</p>
+                <h2 id="quickentry-modal-title" className="text-xl font-bold text-slate-900">{selectedTemplate.name}</h2>
+                <p className="text-sm text-slate-500">{selectedTemplate.description}</p>
               </div>
-              <button onClick={() => setSelectedTemplate(null)} className="text-neutral-400 hover:text-white text-xl" aria-label="Fermer">✕</button>
+              <button onClick={() => setSelectedTemplate(null)} className="text-slate-400 hover:text-slate-600 text-xl" aria-label="Fermer">&#10005;</button>
             </div>
 
             <div className="p-6 space-y-6">
               {/* Form inputs */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-neutral-300 mb-1">{t('admin.quickEntry.date')}</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.quickEntry.date')}</label>
                   <input
                     type="date"
                     value={entryDate}
                     onChange={(e) => setEntryDate(e.target.value)}
-                    className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-white"
+                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-neutral-300 mb-1">
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
                     {selectedTemplate.category === 'TAXES' ? t('admin.quickEntry.tps') : t('admin.quickEntry.amountExclTax')}
                   </label>
                   <input
@@ -539,31 +540,31 @@ export default function QuickEntryPage() {
                       ...prev,
                       [selectedTemplate.category === 'TAXES' ? 'gst' : 'amount']: e.target.value
                     }))}
-                    className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-white"
+                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                     placeholder="0.00"
                     autoFocus
                   />
                 </div>
                 {selectedTemplate.category === 'TAXES' && (
                   <div>
-                    <label className="block text-sm font-medium text-neutral-300 mb-1">{t('admin.quickEntry.tvq')}</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.quickEntry.tvq')}</label>
                     <input
                       type="number"
                       step="0.01"
                       value={formValues.qst || ''}
                       onChange={e => setFormValues(prev => ({ ...prev, qst: e.target.value }))}
-                      className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-white"
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                       placeholder="0.00"
                     />
                   </div>
                 )}
                 <div className={selectedTemplate.category === 'TAXES' ? '' : 'col-span-2'}>
-                  <label className="block text-sm font-medium text-neutral-300 mb-1">{t('admin.quickEntry.reference')}</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.quickEntry.reference')}</label>
                   <input
                     type="text"
                     value={formValues.reference || ''}
                     onChange={e => setFormValues(prev => ({ ...prev, reference: e.target.value }))}
-                    className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-white"
+                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                     placeholder={t('admin.quickEntry.referencePlaceholder')}
                   />
                 </div>
@@ -571,39 +572,39 @@ export default function QuickEntryPage() {
 
               {/* Preview */}
               <div>
-                <h3 className="text-sm font-medium text-neutral-300 mb-2">{t('admin.quickEntry.entryPreview')}</h3>
-                <div className="bg-neutral-900 rounded-lg overflow-hidden">
+                <h3 className="text-sm font-medium text-slate-700 mb-2">{t('admin.quickEntry.entryPreview')}</h3>
+                <div className="bg-slate-50 rounded-lg overflow-hidden border border-slate-200">
                   <table className="w-full text-sm">
-                    <thead className="bg-neutral-700/50">
+                    <thead className="bg-slate-100">
                       <tr>
-                        <th className="px-3 py-2 text-start text-xs text-neutral-400">{t('admin.quickEntry.account')}</th>
-                        <th className="px-3 py-2 text-end text-xs text-neutral-400">{t('admin.quickEntry.debit')}</th>
-                        <th className="px-3 py-2 text-end text-xs text-neutral-400">{t('admin.quickEntry.credit')}</th>
+                        <th className="px-3 py-2 text-start text-xs font-medium text-slate-500 uppercase">{t('admin.quickEntry.account')}</th>
+                        <th className="px-3 py-2 text-end text-xs font-medium text-slate-500 uppercase">{t('admin.quickEntry.debit')}</th>
+                        <th className="px-3 py-2 text-end text-xs font-medium text-slate-500 uppercase">{t('admin.quickEntry.credit')}</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-neutral-700">
+                    <tbody className="divide-y divide-slate-200 bg-white">
                       {calculatePreview().map((line, i) => (
                         <tr key={i}>
                           <td className="px-3 py-2">
-                            <span className="text-neutral-400 me-2">{line.accountCode}</span>
-                            <span className="text-white">{line.accountName}</span>
+                            <span className="text-slate-400 me-2">{line.accountCode}</span>
+                            <span className="text-slate-900">{line.accountName}</span>
                           </td>
-                          <td className="px-3 py-2 text-end font-mono text-green-400">
+                          <td className="px-3 py-2 text-end font-mono text-emerald-600">
                             {line.debit > 0 ? formatNumber(line.debit) : ''}
                           </td>
-                          <td className="px-3 py-2 text-end font-mono text-red-400">
+                          <td className="px-3 py-2 text-end font-mono text-red-500">
                             {line.credit > 0 ? formatNumber(line.credit) : ''}
                           </td>
                         </tr>
                       ))}
                     </tbody>
-                    <tfoot className="bg-neutral-700/30">
+                    <tfoot className="bg-slate-50">
                       <tr>
-                        <td className="px-3 py-2 font-medium text-white">{t('admin.quickEntry.totalRow')}</td>
-                        <td className="px-3 py-2 text-end font-mono font-medium text-green-400">
+                        <td className="px-3 py-2 font-semibold text-slate-900">{t('admin.quickEntry.totalRow')}</td>
+                        <td className="px-3 py-2 text-end font-mono font-semibold text-emerald-600">
                           {formatNumber(calculatePreview().reduce((sum, l) => sum + l.debit, 0))}
                         </td>
-                        <td className="px-3 py-2 text-end font-mono font-medium text-red-400">
+                        <td className="px-3 py-2 text-end font-mono font-semibold text-red-500">
                           {formatNumber(calculatePreview().reduce((sum, l) => sum + l.credit, 0))}
                         </td>
                       </tr>
@@ -613,10 +614,10 @@ export default function QuickEntryPage() {
               </div>
             </div>
 
-            <div className="p-6 border-t border-neutral-700 flex justify-between">
+            <div className="p-6 border-t border-slate-200 flex justify-between">
               <button
                 onClick={() => setSelectedTemplate(null)}
-                className="px-4 py-2 text-neutral-400 hover:text-white"
+                className="px-4 py-2 text-slate-500 hover:text-slate-700"
               >
                 {t('admin.quickEntry.cancelEsc')}
               </button>
@@ -624,7 +625,7 @@ export default function QuickEntryPage() {
                 <button
                   onClick={() => handleSave(false)}
                   disabled={saving || !formValues.amount}
-                  className="px-4 py-2 bg-neutral-700 hover:bg-neutral-600 text-white rounded-lg disabled:opacity-50"
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg disabled:opacity-50 border border-slate-200"
                 >
                   {saving ? t('admin.quickEntry.saving') : t('admin.quickEntry.saveDraft')}
                 </button>

@@ -16,6 +16,7 @@ import {
   Button,
   StatCard,
   EmptyState,
+  SectionCard,
 } from '@/components/admin';
 
 interface AgingBucket {
@@ -158,6 +159,7 @@ export default function AgingPage() {
               loading={exporting}
               onClick={exportCSV}
               disabled={exporting}
+              className={`${theme.btnPrimary} border-transparent text-white`}
             >
               {t('admin.aging.exportCSV')}
             </Button>
@@ -200,7 +202,7 @@ export default function AgingPage() {
           </div>
 
           {/* Health Score Bar (custom, not in StatCard) */}
-          <div className="bg-white border border-slate-200 rounded-lg p-5">
+          <SectionCard theme={theme}>
             <div className="flex items-center gap-3">
               <span className="text-sm font-medium text-slate-500">{t('admin.aging.healthScoreLabel')}</span>
               <span className={`text-lg font-bold ${getHealthScoreColor(stats.healthScore)}`}>
@@ -217,14 +219,10 @@ export default function AgingPage() {
                 />
               </div>
             </div>
-          </div>
+          </SectionCard>
 
           {/* Aging Buckets Chart */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
-            <h2 className="text-lg font-semibold text-slate-900 mb-4">
-              {t('admin.aging.distributionByAge')}
-            </h2>
-
+          <SectionCard title={t('admin.aging.distributionByAge')} theme={theme}>
             {/* Visual Bar Chart */}
             <div className="mb-6">
               <div className="flex h-8 rounded-lg overflow-hidden">
@@ -288,14 +286,14 @@ export default function AgingPage() {
                 </tr>
               </tfoot>
             </table>
-          </div>
+          </SectionCard>
 
           {/* By Customer/Supplier */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
-            <h2 className="text-lg font-semibold text-slate-900 mb-4">
-              {reportType === 'RECEIVABLE' ? t('admin.aging.byCustomer') : t('admin.aging.bySupplier')}
-            </h2>
-
+          <SectionCard
+            title={reportType === 'RECEIVABLE' ? t('admin.aging.byCustomer') : t('admin.aging.bySupplier')}
+            theme={theme}
+            noPadding
+          >
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
@@ -343,26 +341,23 @@ export default function AgingPage() {
                 </tbody>
               </table>
             </div>
-          </div>
+          </SectionCard>
 
           {/* Recommendations */}
           {stats.recommendations.length > 0 && (
-            <div className="bg-amber-50 border border-amber-200 rounded-xl p-6">
+            <SectionCard title={t('admin.aging.recommendations')} theme={theme} className="!bg-amber-50 !border-amber-200">
               <div className="flex items-start gap-3">
-                <AlertTriangle className="w-6 h-6 text-amber-500 mt-0.5" />
-                <div>
-                  <h3 className="font-semibold text-amber-800 mb-2">{t('admin.aging.recommendations')}</h3>
-                  <ul className="space-y-1">
-                    {stats.recommendations.map((rec, i) => (
-                      <li key={i} className="text-amber-700 text-sm flex items-center gap-2">
-                        <span className="w-1.5 h-1.5 bg-amber-500 rounded-full" />
-                        {rec}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                <AlertTriangle className="w-6 h-6 text-amber-500 mt-0.5 shrink-0" />
+                <ul className="space-y-1">
+                  {stats.recommendations.map((rec, i) => (
+                    <li key={i} className="text-amber-700 text-sm flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 bg-amber-500 rounded-full shrink-0" />
+                      {rec}
+                    </li>
+                  ))}
+                </ul>
               </div>
-            </div>
+            </SectionCard>
           )}
         </>
       ) : (

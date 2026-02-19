@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Printer, Download, Check, Clock } from 'lucide-react';
-import { PageHeader, Button } from '@/components/admin';
+import { PageHeader, Button, SectionCard } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
 import { sectionThemes } from '@/lib/admin/section-themes';
 
@@ -181,13 +181,13 @@ export default function GrandLivrePage() {
         actions={
           <>
             <Button variant="secondary" icon={Printer}>{t('admin.generalLedger.print')}</Button>
-            <Button variant="primary" icon={Download}>{t('admin.generalLedger.exportPDF')}</Button>
+            <Button variant="primary" icon={Download} className={`${theme.btnPrimary} border-transparent text-white`}>{t('admin.generalLedger.exportPDF')}</Button>
           </>
         }
       />
 
       {/* Filters */}
-      <div className="bg-white rounded-xl border border-slate-200 p-4">
+      <SectionCard theme={theme}>
         <div className="grid grid-cols-5 gap-4">
           <div className="col-span-2">
             <label className="block text-xs font-medium text-slate-500 mb-1">{t('admin.generalLedger.accountLabel')}</label>
@@ -195,7 +195,7 @@ export default function GrandLivrePage() {
               value={selectedAccount}
               onChange={(e) => setSelectedAccount(e.target.value)}
               className="w-full h-9 px-3 border border-slate-300 rounded-lg bg-white text-sm text-slate-700
-                focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
             >
               {accounts.map(account => (
                 <option key={account.code} value={account.code}>
@@ -211,7 +211,7 @@ export default function GrandLivrePage() {
               value={dateFrom}
               onChange={(e) => setDateFrom(e.target.value)}
               className="w-full h-9 px-3 border border-slate-300 rounded-lg text-sm text-slate-700
-                focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
             />
           </div>
           <div>
@@ -221,7 +221,7 @@ export default function GrandLivrePage() {
               value={dateTo}
               onChange={(e) => setDateTo(e.target.value)}
               className="w-full h-9 px-3 border border-slate-300 rounded-lg text-sm text-slate-700
-                focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
             />
           </div>
           <div>
@@ -232,27 +232,27 @@ export default function GrandLivrePage() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full h-9 px-3 border border-slate-300 rounded-lg text-sm text-slate-700
-                placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
             />
           </div>
         </div>
-      </div>
+      </SectionCard>
 
       {/* Account Summary */}
-      <div className="bg-emerald-50 rounded-xl border border-emerald-200 p-6">
+      <SectionCard theme={theme} className={`${theme.surfaceLight} !border-indigo-200`}>
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm text-emerald-600 font-medium">{t('admin.generalLedger.selectedAccount')}</p>
-            <h2 className="text-xl font-bold text-emerald-900">{currentAccount?.code} - {currentAccount?.name}</h2>
+            <p className="text-sm text-indigo-600 font-medium">{t('admin.generalLedger.selectedAccount')}</p>
+            <h2 className="text-xl font-bold text-indigo-900">{currentAccount?.code} - {currentAccount?.name}</h2>
           </div>
           <div className="text-end">
-            <p className="text-sm text-emerald-600">{t('admin.generalLedger.currentBalance')}</p>
-            <p className="text-3xl font-bold text-emerald-900">
+            <p className="text-sm text-indigo-600">{t('admin.generalLedger.currentBalance')}</p>
+            <p className="text-3xl font-bold text-indigo-900">
               {formatCurrency(ledgerSummary.balance || currentAccount?.balance || 0)}
             </p>
           </div>
         </div>
-      </div>
+      </SectionCard>
 
       {/* Loading indicator for entries */}
       {loading && (
@@ -260,7 +260,7 @@ export default function GrandLivrePage() {
       )}
 
       {/* Transactions Table */}
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+      <SectionCard title={t('admin.generalLedger.totalPeriod')} theme={theme} noPadding>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-slate-50">
@@ -330,7 +330,7 @@ export default function GrandLivrePage() {
             <tfoot className="bg-slate-100">
               <tr>
                 <td colSpan={4} className="px-4 py-3 text-sm font-semibold text-slate-900">
-                  {t('admin.generalLedger.totalPeriod')}
+                  Total
                 </td>
                 <td className="px-4 py-3 text-end font-bold text-slate-900">
                   {formatCurrency(totalDebit)}
@@ -346,7 +346,7 @@ export default function GrandLivrePage() {
             </tfoot>
           </table>
         </div>
-      </div>
+      </SectionCard>
 
       {/* Legend */}
       <div className="flex items-center gap-6 text-sm text-slate-500">

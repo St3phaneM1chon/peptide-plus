@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Upload, Zap, Check, CheckCircle } from 'lucide-react';
-import { PageHeader, Button, Modal, StatusBadge } from '@/components/admin';
+import { PageHeader, Button, Modal, StatusBadge, SectionCard } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
 import { sectionThemes } from '@/lib/admin/section-themes';
 import { toast } from 'sonner';
@@ -211,7 +211,7 @@ export default function RapprochementPage() {
       />
 
       {/* Filters */}
-      <div className="bg-white rounded-xl border border-slate-200 p-4">
+      <SectionCard theme={theme}>
         <div className="flex gap-4">
           <div>
             <label className="block text-xs text-slate-500 mb-1">{t('admin.reconciliation.accountLabel')}</label>
@@ -239,38 +239,39 @@ export default function RapprochementPage() {
             />
           </div>
         </div>
-      </div>
+      </SectionCard>
 
       {/* Summary */}
       <div className="grid grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl p-4 border border-slate-200">
+        <SectionCard theme={theme}>
           <p className="text-sm text-slate-500">{t('admin.reconciliation.statementBalance')}</p>
           <p className="text-2xl font-bold text-slate-900">{formatCurrency(bankBalance)}</p>
-        </div>
-        <div className="bg-white rounded-xl p-4 border border-slate-200">
+        </SectionCard>
+        <SectionCard theme={theme}>
           <p className="text-sm text-slate-500">{t('admin.reconciliation.bookBalance')}</p>
           <p className="text-2xl font-bold text-slate-900">{formatCurrency(bookBalance)}</p>
-        </div>
+        </SectionCard>
         <div className={`rounded-xl p-4 border ${difference === 0 ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
           <p className={`text-sm ${difference === 0 ? 'text-green-600' : 'text-red-600'}`}>{t('admin.reconciliation.difference')}</p>
           <p className={`text-2xl font-bold ${difference === 0 ? 'text-green-700' : 'text-red-700'}`}>
             {formatCurrency(difference)}
           </p>
         </div>
-        <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
-          <p className="text-sm text-blue-600">{t('admin.reconciliation.progress')}</p>
-          <p className="text-2xl font-bold text-blue-700">{bankTransactions.length > 0 ? Math.round((matchedCount / bankTransactions.length) * 100) : 0}%</p>
-          <p className="text-xs text-blue-600">{matchedCount}/{bankTransactions.length} {t('admin.reconciliation.reconciled')}</p>
+        <div className={`rounded-xl p-4 border ${theme.borderLight} ${theme.surfaceLight}`}>
+          <p className="text-sm text-sky-600">{t('admin.reconciliation.progress')}</p>
+          <p className="text-2xl font-bold text-sky-700">{bankTransactions.length > 0 ? Math.round((matchedCount / bankTransactions.length) * 100) : 0}%</p>
+          <p className="text-xs text-sky-600">{matchedCount}/{bankTransactions.length} {t('admin.reconciliation.reconciled')}</p>
         </div>
       </div>
 
       {/* Two Column Layout */}
       <div className="grid grid-cols-2 gap-6">
         {/* Bank Transactions */}
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-          <div className="p-4 border-b border-slate-200 bg-blue-50">
-            <h3 className="font-semibold text-blue-900">{t('admin.reconciliation.bankStatement')} ({unmatchedBank.length} {t('admin.reconciliation.unreconciled')})</h3>
-          </div>
+        <SectionCard
+          title={`${t('admin.reconciliation.bankStatement')} (${unmatchedBank.length} ${t('admin.reconciliation.unreconciled')})`}
+          theme={theme}
+          noPadding
+        >
           <div className="max-h-[500px] overflow-y-auto">
             <table className="w-full">
               <thead className="bg-slate-50 sticky top-0">
@@ -297,7 +298,7 @@ export default function RapprochementPage() {
                       ) : (
                         <button
                           onClick={() => handleMatch(tx)}
-                          className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs hover:bg-blue-200"
+                          className={`px-2 py-1 ${theme.surfaceLight} text-sky-700 rounded text-xs hover:bg-sky-100`}
                         >
                           {t('admin.reconciliation.reconcileBtn')}
                         </button>
@@ -311,13 +312,14 @@ export default function RapprochementPage() {
               </tbody>
             </table>
           </div>
-        </div>
+        </SectionCard>
 
         {/* Journal Entries */}
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-          <div className="p-4 border-b border-slate-200 bg-emerald-50">
-            <h3 className="font-semibold text-emerald-900">{t('admin.reconciliation.journalEntries')} ({unmatchedJournal.length} {t('admin.reconciliation.unreconciledEntries')})</h3>
-          </div>
+        <SectionCard
+          title={`${t('admin.reconciliation.journalEntries')} (${unmatchedJournal.length} ${t('admin.reconciliation.unreconciledEntries')})`}
+          theme={theme}
+          noPadding
+        >
           <div className="max-h-[500px] overflow-y-auto">
             <table className="w-full">
               <thead className="bg-slate-50 sticky top-0">
@@ -360,7 +362,7 @@ export default function RapprochementPage() {
               </tbody>
             </table>
           </div>
-        </div>
+        </SectionCard>
       </div>
 
       {/* Complete Reconciliation Button */}

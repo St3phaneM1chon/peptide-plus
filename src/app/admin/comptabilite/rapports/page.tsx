@@ -13,7 +13,7 @@ import {
   ArrowRight,
   Loader2,
 } from 'lucide-react';
-import { PageHeader, StatusBadge, Button, type Column, DataTable } from '@/components/admin';
+import { PageHeader, StatusBadge, Button, SectionCard, type Column, DataTable } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
 import { sectionThemes } from '@/lib/admin/section-themes';
 import { toast } from 'sonner';
@@ -278,16 +278,16 @@ export default function RapportsComptablesPage() {
       />
 
       {/* Tax Reports Section */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <div>
-            <h2 className="font-semibold text-sky-900">{t('admin.reports.taxReportsTitle')}</h2>
-            <p className="text-sm text-sky-700">{t('admin.reports.taxReportsSubtitle')}</p>
-          </div>
-          <Link href="/admin/fiscal" className="text-sm text-sky-600 hover:text-sky-700 inline-flex items-center gap-1">
+      <SectionCard
+        title={t('admin.reports.taxReportsTitle')}
+        theme={theme}
+        headerAction={
+          <Link href="/admin/fiscal" className="text-sm text-violet-600 hover:text-violet-700 inline-flex items-center gap-1">
             {t('admin.reports.fullFiscalModule')} <ArrowRight className="w-3.5 h-3.5" />
           </Link>
-        </div>
+        }
+        noPadding
+      >
         {taxReports.length > 0 ? (
           <DataTable
             columns={taxColumns}
@@ -295,11 +295,11 @@ export default function RapportsComptablesPage() {
             keyExtractor={(r) => r.id}
           />
         ) : (
-          <div className="bg-white rounded-xl border border-slate-200 p-8 text-center text-slate-500">
+          <div className="p-8 text-center text-slate-500">
             {t('admin.reports.noTaxReports', { year: selectedYear })}
           </div>
         )}
-      </div>
+      </SectionCard>
 
       {/* Management Reports Grid */}
       <div>
@@ -315,16 +315,16 @@ export default function RapportsComptablesPage() {
             };
             const apiType = reportTypeMap[report.id];
             return (
-              <div key={report.id} className="bg-white rounded-xl border border-slate-200 p-5 hover:shadow-md transition-shadow cursor-pointer">
+              <SectionCard key={report.id} theme={theme} className="hover:shadow-md transition-shadow cursor-pointer">
                 <div className="flex items-start gap-4">
-                  <div className="p-2.5 bg-slate-50 rounded-lg">
-                    <Icon className="w-6 h-6 text-slate-600" />
+                  <div className={`p-2.5 ${theme.surfaceLight} rounded-lg`}>
+                    <Icon className={`w-6 h-6 ${theme.statIconColor}`} />
                   </div>
                   <div className="flex-1">
                     <h3 className="font-medium text-slate-900">{report.name}</h3>
                     <p className="text-sm text-slate-500 mt-1">{report.description}</p>
                     <button
-                      className="mt-3 text-sm text-emerald-600 hover:text-emerald-700 font-medium inline-flex items-center gap-1"
+                      className="mt-3 text-sm text-violet-600 hover:text-violet-700 font-medium inline-flex items-center gap-1"
                       onClick={() => {
                         if (apiType) {
                           handleGeneratePdf(apiType);
@@ -344,15 +344,14 @@ export default function RapportsComptablesPage() {
                     </button>
                   </div>
                 </div>
-              </div>
+              </SectionCard>
             );
           })}
         </div>
       </div>
 
       {/* Annual Reports */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6">
-        <h2 className="font-semibold text-slate-900 mb-4">{t('admin.reports.annualReports')}</h2>
+      <SectionCard title={t('admin.reports.annualReports')} theme={theme}>
         <div className="grid grid-cols-4 gap-4">
           <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
             <p className="text-sm text-blue-600">{t('admin.reports.federalDeclaration')}</p>
@@ -384,7 +383,7 @@ export default function RapportsComptablesPage() {
             <button className="mt-3 text-sm text-sky-700 hover:underline inline-flex items-center gap-1">{t('admin.reports.request')} <ArrowRight className="w-3.5 h-3.5" /></button>
           </div>
         </div>
-      </div>
+      </SectionCard>
 
       {/* Quick Stats */}
       <div className="bg-gradient-to-r from-emerald-600 to-emerald-700 rounded-xl p-6 text-white">
