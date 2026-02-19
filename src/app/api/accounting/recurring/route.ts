@@ -1,8 +1,7 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth-config';
-import { UserRole } from '@/types';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import {
   getRecurringTemplates,
   createRecurringTemplate,
@@ -12,30 +11,13 @@ import {
 
 /**
  * GET /api/accounting/recurring
- * List recurring entry templates and optionally process due entries
+ * List recurring entry templates.
+ *
+ * NOTE: The previous `?action=process` mutation-via-GET has been moved
+ * to PUT /api/accounting/recurring for correctness (GET should be idempotent).
  */
-export async function GET(request: NextRequest) {
+export const GET = withAdminGuard(async () => {
   try {
-    const session = await auth();
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
-    }
-    if (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER) {
-      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
-    }
-
-    const { searchParams } = new URL(request.url);
-    const action = searchParams.get('action');
-
-    // Process due entries if requested
-    if (action === 'process') {
-      const result = await processDueRecurringEntries();
-      return NextResponse.json({
-        success: true,
-        ...result,
-      });
-    }
-
     // List templates
     const templates = await getRecurringTemplates();
 
@@ -52,22 +34,14 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
 /**
  * POST /api/accounting/recurring
  * Create a new recurring entry template
  */
-export async function POST(request: NextRequest) {
+export const POST = withAdminGuard(async (request) => {
   try {
-    const session = await auth();
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
-    }
-    if (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER) {
-      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
-    }
-
     const body = await request.json();
     const {
       name,
@@ -131,4 +105,25 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
+
+/**
+ * PUT /api/accounting/recurring
+ * Process due recurring entries (previously was GET ?action=process).
+ * Moved to PUT because it's a mutation operation.
+ */
+export const PUT = withAdminGuard(async () => {
+  try {
+    const result = await processDueRecurringEntries();
+    return NextResponse.json({
+      success: true,
+      ...result,
+    });
+  } catch (error) {
+    console.error('Process recurring entries error:', error);
+    return NextResponse.json(
+      { error: 'Erreur lors du traitement des écritures récurrentes' },
+      { status: 500 }
+    );
+  }
+});

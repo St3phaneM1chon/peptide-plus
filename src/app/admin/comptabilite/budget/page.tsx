@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Pencil } from 'lucide-react';
 import { PageHeader, Button } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
+import { sectionThemes } from '@/lib/admin/section-themes';
 
 interface BudgetLine {
   id: string;
@@ -44,7 +45,7 @@ interface ApiBudget {
 }
 
 export default function BudgetPage() {
-  const { t, locale } = useI18n();
+  const { t, locale, formatCurrency } = useI18n();
   const [selectedYear, setSelectedYear] = useState('2026');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -151,7 +152,17 @@ export default function BudgetPage() {
     t('admin.budget.monthOct'), t('admin.budget.monthNov'), t('admin.budget.monthDec'),
   ];
 
-  if (loading) return <div className="p-8 text-center">{t('admin.budget.loading')}</div>;
+  const theme = sectionThemes.reports;
+
+  if (loading) return (
+    <div aria-live="polite" aria-busy="true" className="p-8 space-y-4 animate-pulse">
+      <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-1/3"></div>
+      <div className="grid grid-cols-4 gap-4">
+        {[1,2,3,4].map(i => <div key={i} className="h-24 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>)}
+      </div>
+      <div className="h-64 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
+    </div>
+  );
   if (error) return <div className="p-8 text-center text-red-600">{t('admin.budget.errorPrefix')} {error}</div>;
 
   return (
@@ -159,6 +170,7 @@ export default function BudgetPage() {
       <PageHeader
         title={t('admin.budget.title')}
         subtitle={t('admin.budget.subtitle')}
+        theme={theme}
         actions={
           <div className="flex gap-3">
             <select
@@ -169,7 +181,7 @@ export default function BudgetPage() {
               <option value="2026">2026</option>
               <option value="2025">2025</option>
             </select>
-            <Button variant="primary" icon={Pencil} className="bg-emerald-600 hover:bg-emerald-700">
+            <Button variant="primary" icon={Pencil} className={`${theme.btnPrimary} border-transparent text-white`}>
               {t('admin.budget.editBudget')}
             </Button>
           </div>
@@ -180,7 +192,7 @@ export default function BudgetPage() {
       <div className="grid grid-cols-4 gap-4">
         <div className="bg-white rounded-xl p-5 border border-slate-200">
           <p className="text-sm text-slate-500">{t('admin.budget.budgetedRevenue')}</p>
-          <p className="text-2xl font-bold text-slate-900">{totalRevenueBudget.toLocaleString(locale)} $</p>
+          <p className="text-2xl font-bold text-slate-900">{formatCurrency(totalRevenueBudget)}</p>
           <div className="mt-2 flex items-center gap-2">
             <div className="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden">
               <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${totalRevenueBudget > 0 ? (totalRevenueActual/totalRevenueBudget)*100 : 0}%` }} />
@@ -190,7 +202,7 @@ export default function BudgetPage() {
         </div>
         <div className="bg-white rounded-xl p-5 border border-slate-200">
           <p className="text-sm text-slate-500">{t('admin.budget.budgetedExpenses')}</p>
-          <p className="text-2xl font-bold text-slate-900">{totalExpenseBudgetVal.toLocaleString(locale)} $</p>
+          <p className="text-2xl font-bold text-slate-900">{formatCurrency(totalExpenseBudgetVal)}</p>
           <div className="mt-2 flex items-center gap-2">
             <div className="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden">
               <div className="h-full bg-red-500 rounded-full" style={{ width: `${totalExpenseBudgetVal > 0 ? (totalExpenseActual/totalExpenseBudgetVal)*100 : 0}%` }} />
@@ -200,14 +212,14 @@ export default function BudgetPage() {
         </div>
         <div className="bg-emerald-50 rounded-xl p-5 border border-emerald-200">
           <p className="text-sm text-emerald-600">{t('admin.budget.budgetedProfit')}</p>
-          <p className="text-2xl font-bold text-emerald-700">{budgetedProfit.toLocaleString(locale)} $</p>
+          <p className="text-2xl font-bold text-emerald-700">{formatCurrency(budgetedProfit)}</p>
           <p className="text-xs text-emerald-600 mt-2">{t('admin.budget.margin').replace('{value}', totalRevenueBudget > 0 ? ((budgetedProfit/totalRevenueBudget)*100).toFixed(1) : '0.0')}</p>
         </div>
         <div className={`rounded-xl p-5 border ${actualProfit >= budgetedProfit ? 'bg-green-50 border-green-200' : 'bg-yellow-50 border-yellow-200'}`}>
           <p className={`text-sm ${actualProfit >= budgetedProfit ? 'text-green-600' : 'text-yellow-600'}`}>{t('admin.budget.actualProfit')}</p>
-          <p className={`text-2xl font-bold ${actualProfit >= budgetedProfit ? 'text-green-700' : 'text-yellow-700'}`}>{actualProfit.toLocaleString(locale)} $</p>
+          <p className={`text-2xl font-bold ${actualProfit >= budgetedProfit ? 'text-green-700' : 'text-yellow-700'}`}>{formatCurrency(actualProfit)}</p>
           <p className={`text-xs mt-2 ${actualProfit >= budgetedProfit ? 'text-green-600' : 'text-yellow-600'}`}>
-            {actualProfit >= budgetedProfit ? '+' : ''}{(actualProfit - budgetedProfit).toLocaleString(locale)} $ {t('admin.budget.vsBudget')}
+            {actualProfit >= budgetedProfit ? '+' : ''}{formatCurrency((actualProfit - budgetedProfit))} {t('admin.budget.vsBudget')}
           </p>
         </div>
       </div>
@@ -223,12 +235,12 @@ export default function BudgetPage() {
           <table className="w-full">
             <thead className="bg-slate-50">
               <tr>
-                <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.budget.categoryHeader')}</th>
-                <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.budget.accountHeader')}</th>
-                <th className="px-4 py-3 text-end text-xs font-semibold text-slate-500 uppercase">{t('admin.budget.budgetHeader')}</th>
-                <th className="px-4 py-3 text-end text-xs font-semibold text-slate-500 uppercase">{t('admin.budget.actualHeader')}</th>
-                <th className="px-4 py-3 text-end text-xs font-semibold text-slate-500 uppercase">{t('admin.budget.varianceHeader')}</th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.budget.percentAchieved')}</th>
+                <th scope="col" className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.budget.categoryHeader')}</th>
+                <th scope="col" className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.budget.accountHeader')}</th>
+                <th scope="col" className="px-4 py-3 text-end text-xs font-semibold text-slate-500 uppercase">{t('admin.budget.budgetHeader')}</th>
+                <th scope="col" className="px-4 py-3 text-end text-xs font-semibold text-slate-500 uppercase">{t('admin.budget.actualHeader')}</th>
+                <th scope="col" className="px-4 py-3 text-end text-xs font-semibold text-slate-500 uppercase">{t('admin.budget.varianceHeader')}</th>
+                <th scope="col" className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.budget.percentAchieved')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200">
@@ -236,10 +248,10 @@ export default function BudgetPage() {
                 <tr key={line.id} className="hover:bg-slate-50">
                   <td className="px-4 py-3 font-medium text-slate-900">{line.category}</td>
                   <td className="px-4 py-3 font-mono text-sm text-slate-500">{line.accountCode}</td>
-                  <td className="px-4 py-3 text-end text-slate-900">{line.budget.toLocaleString(locale)} $</td>
-                  <td className="px-4 py-3 text-end text-slate-900">{line.actual.toLocaleString(locale)} $</td>
+                  <td className="px-4 py-3 text-end text-slate-900">{formatCurrency(line.budget)}</td>
+                  <td className="px-4 py-3 text-end text-slate-900">{formatCurrency(line.actual)}</td>
                   <td className={`px-4 py-3 text-end font-medium ${line.variance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {line.variance >= 0 ? '+' : ''}{line.variance.toLocaleString(locale)} $
+                    {line.variance >= 0 ? '+' : ''}{formatCurrency(line.variance)}
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-center gap-2">
@@ -259,10 +271,10 @@ export default function BudgetPage() {
               <tr>
                 <td className="px-4 py-3 font-bold text-emerald-900">{t('admin.budget.totalRevenue')}</td>
                 <td></td>
-                <td className="px-4 py-3 text-end font-bold text-emerald-900">{totalRevenueBudget.toLocaleString(locale)} $</td>
-                <td className="px-4 py-3 text-end font-bold text-emerald-900">{totalRevenueActual.toLocaleString(locale)} $</td>
+                <td className="px-4 py-3 text-end font-bold text-emerald-900">{formatCurrency(totalRevenueBudget)}</td>
+                <td className="px-4 py-3 text-end font-bold text-emerald-900">{formatCurrency(totalRevenueActual)}</td>
                 <td className={`px-4 py-3 text-end font-bold ${(totalRevenueActual - totalRevenueBudget) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {(totalRevenueActual - totalRevenueBudget) >= 0 ? '+' : ''}{(totalRevenueActual - totalRevenueBudget).toLocaleString(locale)} $
+                  {(totalRevenueActual - totalRevenueBudget) >= 0 ? '+' : ''}{formatCurrency((totalRevenueActual - totalRevenueBudget))}
                 </td>
                 <td className="px-4 py-3 text-center font-bold text-emerald-900">{totalRevenueBudget > 0 ? ((totalRevenueActual/totalRevenueBudget)*100).toFixed(1) : '0.0'}%</td>
               </tr>
@@ -282,12 +294,12 @@ export default function BudgetPage() {
           <table className="w-full">
             <thead className="bg-slate-50">
               <tr>
-                <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.budget.categoryHeader')}</th>
-                <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.budget.accountHeader')}</th>
-                <th className="px-4 py-3 text-end text-xs font-semibold text-slate-500 uppercase">{t('admin.budget.budgetHeader')}</th>
-                <th className="px-4 py-3 text-end text-xs font-semibold text-slate-500 uppercase">{t('admin.budget.actualHeader')}</th>
-                <th className="px-4 py-3 text-end text-xs font-semibold text-slate-500 uppercase">{t('admin.budget.varianceHeader')}</th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.budget.percentUsed')}</th>
+                <th scope="col" className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.budget.categoryHeader')}</th>
+                <th scope="col" className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.budget.accountHeader')}</th>
+                <th scope="col" className="px-4 py-3 text-end text-xs font-semibold text-slate-500 uppercase">{t('admin.budget.budgetHeader')}</th>
+                <th scope="col" className="px-4 py-3 text-end text-xs font-semibold text-slate-500 uppercase">{t('admin.budget.actualHeader')}</th>
+                <th scope="col" className="px-4 py-3 text-end text-xs font-semibold text-slate-500 uppercase">{t('admin.budget.varianceHeader')}</th>
+                <th scope="col" className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.budget.percentUsed')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200">
@@ -295,10 +307,10 @@ export default function BudgetPage() {
                 <tr key={line.id} className="hover:bg-slate-50">
                   <td className="px-4 py-3 font-medium text-slate-900">{line.category}</td>
                   <td className="px-4 py-3 font-mono text-sm text-slate-500">{line.accountCode}</td>
-                  <td className="px-4 py-3 text-end text-slate-900">{line.budget.toLocaleString(locale)} $</td>
-                  <td className="px-4 py-3 text-end text-slate-900">{line.actual.toLocaleString(locale)} $</td>
+                  <td className="px-4 py-3 text-end text-slate-900">{formatCurrency(line.budget)}</td>
+                  <td className="px-4 py-3 text-end text-slate-900">{formatCurrency(line.actual)}</td>
                   <td className={`px-4 py-3 text-end font-medium ${line.variance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {line.variance >= 0 ? '+' : ''}{line.variance.toLocaleString(locale)} $
+                    {line.variance >= 0 ? '+' : ''}{formatCurrency(line.variance)}
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-center gap-2">
@@ -318,9 +330,9 @@ export default function BudgetPage() {
               <tr>
                 <td className="px-4 py-3 font-bold text-red-900">{t('admin.budget.totalExpenses')}</td>
                 <td></td>
-                <td className="px-4 py-3 text-end font-bold text-red-900">{totalExpenseBudgetVal.toLocaleString(locale)} $</td>
-                <td className="px-4 py-3 text-end font-bold text-red-900">{totalExpenseActual.toLocaleString(locale)} $</td>
-                <td className="px-4 py-3 text-end font-bold text-green-600">+{(totalExpenseBudgetVal - totalExpenseActual).toLocaleString(locale)} $</td>
+                <td className="px-4 py-3 text-end font-bold text-red-900">{formatCurrency(totalExpenseBudgetVal)}</td>
+                <td className="px-4 py-3 text-end font-bold text-red-900">{formatCurrency(totalExpenseActual)}</td>
+                <td className="px-4 py-3 text-end font-bold text-green-600">+{formatCurrency((totalExpenseBudgetVal - totalExpenseActual))}</td>
                 <td className="px-4 py-3 text-center font-bold text-red-900">{totalExpenseBudgetVal > 0 ? ((totalExpenseActual/totalExpenseBudgetVal)*100).toFixed(1) : '0.0'}%</td>
               </tr>
             </tfoot>

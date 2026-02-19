@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
+import { sectionThemes } from '@/lib/admin/section-themes';
 
 interface ExtractedInvoice {
   invoiceNumber?: string;
@@ -30,7 +31,8 @@ interface ScanHistory {
 }
 
 export default function OCRPage() {
-  const { t, locale } = useI18n();
+  const { t, locale, formatCurrency } = useI18n();
+  const theme = sectionThemes.entry;
   const [scanning, setScanning] = useState(false);
   const [extractedData, setExtractedData] = useState<ExtractedInvoice | null>(null);
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
@@ -145,8 +147,8 @@ export default function OCRPage() {
     return 'text-red-400';
   };
 
-  const formatCurrency = (amount?: number) =>
-    (amount || 0).toLocaleString(locale, { style: 'currency', currency: 'CAD' });
+  // formatCurrency is now provided by useI18n()
+  const fmtCurrency = (amount?: number) => formatCurrency(amount || 0);
 
   return (
     <div className="space-y-6">
@@ -322,10 +324,10 @@ export default function OCRPage() {
                       <table className="w-full text-sm">
                         <thead className="bg-neutral-700/50">
                           <tr>
-                            <th className="px-3 py-2 text-start text-xs text-neutral-400">{t('admin.ocrScan.description')}</th>
-                            <th className="px-3 py-2 text-end text-xs text-neutral-400">{t('admin.ocrScan.qty')}</th>
-                            <th className="px-3 py-2 text-end text-xs text-neutral-400">{t('admin.ocrScan.unitPrice')}</th>
-                            <th className="px-3 py-2 text-end text-xs text-neutral-400">{t('admin.ocrScan.total')}</th>
+                            <th scope="col" className="px-3 py-2 text-start text-xs text-neutral-400">{t('admin.ocrScan.description')}</th>
+                            <th scope="col" className="px-3 py-2 text-end text-xs text-neutral-400">{t('admin.ocrScan.qty')}</th>
+                            <th scope="col" className="px-3 py-2 text-end text-xs text-neutral-400">{t('admin.ocrScan.unitPrice')}</th>
+                            <th scope="col" className="px-3 py-2 text-end text-xs text-neutral-400">{t('admin.ocrScan.total')}</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-neutral-700">
@@ -405,7 +407,7 @@ export default function OCRPage() {
                 </button>
                 <button
                   onClick={handleSaveInvoice}
-                  className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg"
+                  className={`px-4 py-2 ${theme.btnPrimary} border-transparent text-white rounded-lg`}
                 >
                   &#10003; {t('admin.ocrScan.saveInvoice')}
                 </button>
@@ -439,7 +441,7 @@ export default function OCRPage() {
                       <p className="text-xs text-neutral-500">{scan.fileName}</p>
                     </div>
                     <div className="text-end">
-                      <p className="text-sm font-medium text-white">{formatCurrency(scan.total)}</p>
+                      <p className="text-sm font-medium text-white">{fmtCurrency(scan.total)}</p>
                       <span className={`text-xs ${
                         scan.status === 'SUCCESS' ? 'text-green-400' :
                         scan.status === 'NEEDS_REVIEW' ? 'text-yellow-400' : 'text-red-400'

@@ -1,8 +1,7 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth-config';
-import { UserRole } from '@/types';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import {
   processInvoiceWithVision,
   validateOCRFile,
@@ -13,16 +12,8 @@ import {
  * POST /api/accounting/ocr/scan
  * Upload and scan an invoice image via OCR
  */
-export async function POST(request: NextRequest) {
+export const POST = withAdminGuard(async (request) => {
   try {
-    const session = await auth();
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
-    }
-    if (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER) {
-      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
-    }
-
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
 
@@ -70,4 +61,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

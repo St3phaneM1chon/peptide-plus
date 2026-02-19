@@ -1,8 +1,7 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth-config';
-import { UserRole } from '@/types';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { roundCurrency } from '@/lib/financial';
 
@@ -10,16 +9,8 @@ import { roundCurrency } from '@/lib/financial';
  * GET /api/accounting/tax-summary
  * Generate a tax summary for a given period
  */
-export async function GET(request: NextRequest) {
+export const GET = withAdminGuard(async (request) => {
   try {
-    const session = await auth();
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
-    }
-    if (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER) {
-      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
-    }
-
     const { searchParams } = new URL(request.url);
     const from = searchParams.get('from');
     const to = searchParams.get('to');
@@ -85,4 +76,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

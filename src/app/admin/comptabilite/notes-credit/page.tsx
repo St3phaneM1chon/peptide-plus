@@ -10,6 +10,7 @@ import { StatCard } from '@/components/admin/StatCard';
 import { FilterBar, SelectFilter } from '@/components/admin/FilterBar';
 import { DataTable, type Column } from '@/components/admin/DataTable';
 import { useI18n } from '@/i18n/client';
+import { sectionThemes } from '@/lib/admin/section-themes';
 
 interface CreditNote {
   id: string;
@@ -45,7 +46,7 @@ interface Stats {
 type BadgeVariant = 'success' | 'warning' | 'error' | 'info' | 'neutral';
 
 export default function NotesCreditPage() {
-  const { t, locale } = useI18n();
+  const { t, locale, formatCurrency } = useI18n();
 
   const statusConfig: Record<string, { label: string; variant: BadgeVariant }> = {
     DRAFT: { label: t('admin.creditNotes.statusDraft'), variant: 'neutral' },
@@ -59,8 +60,8 @@ export default function NotesCreditPage() {
     { value: 'DRAFT', label: t('admin.creditNotes.statusDraft') },
   ];
 
-  const formatCAD = (amount: number) =>
-    amount.toLocaleString(locale, { style: 'currency', currency: 'CAD' });
+  // Use formatCurrency from useI18n instead of local formatCAD
+  const formatCAD = formatCurrency;
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
@@ -95,7 +96,17 @@ export default function NotesCreditPage() {
     fetchCreditNotes();
   }, [fetchCreditNotes]);
 
-  if (loading) return <div className="p-8 text-center">{t('admin.creditNotes.loading')}</div>;
+  const theme = sectionThemes.accounts;
+
+  if (loading) return (
+    <div aria-live="polite" aria-busy="true" className="p-8 space-y-4 animate-pulse">
+      <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-1/3"></div>
+      <div className="grid grid-cols-4 gap-4">
+        {[1,2,3,4].map(i => <div key={i} className="h-24 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>)}
+      </div>
+      <div className="h-64 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
+    </div>
+  );
   if (error) return <div className="p-8 text-center text-red-600">{t('admin.creditNotes.errorPrefix')} {error}</div>;
 
   const columns: Column<CreditNote>[] = [
@@ -171,12 +182,14 @@ export default function NotesCreditPage() {
             onClick={() => setSelectedNote(cn)}
             className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded"
             title={t('admin.creditNotes.view')}
+            aria-label={t('admin.creditNotes.view')}
           >
             <Eye className="w-4 h-4" />
           </button>
           <button
             className="p-1.5 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded"
             title={t('admin.creditNotes.downloadPdf')}
+            aria-label={t('admin.creditNotes.downloadPdf')}
           >
             <Download className="w-4 h-4" />
           </button>
@@ -192,14 +205,15 @@ export default function NotesCreditPage() {
       <PageHeader
         title={t('admin.creditNotes.title')}
         subtitle={t('admin.creditNotes.subtitle')}
+        theme={theme}
       />
 
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4">
-        <StatCard label={t('admin.creditNotes.totalNotes')} value={stats.totalCount} icon={FileText} />
-        <StatCard label={t('admin.creditNotes.totalAmount')} value={formatCAD(stats.totalAmount)} icon={DollarSign} className="!bg-red-50 !border-red-200" />
-        <StatCard label={t('admin.creditNotes.inEffect')} value={stats.issuedCount} icon={CheckCircle} className="!bg-green-50 !border-green-200" />
-        <StatCard label={t('admin.creditNotes.voided')} value={stats.voidCount} icon={XCircle} className="!bg-slate-50 !border-slate-200" />
+        <StatCard label={t('admin.creditNotes.totalNotes')} value={stats.totalCount} icon={FileText} theme={theme} />
+        <StatCard label={t('admin.creditNotes.totalAmount')} value={formatCAD(stats.totalAmount)} icon={DollarSign} theme={theme} />
+        <StatCard label={t('admin.creditNotes.inEffect')} value={stats.issuedCount} icon={CheckCircle} theme={theme} />
+        <StatCard label={t('admin.creditNotes.voided')} value={stats.voidCount} icon={XCircle} theme={theme} />
       </div>
 
       {/* Filters */}
@@ -282,29 +296,29 @@ export default function NotesCreditPage() {
               <div className="w-64 space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-500">{t('admin.creditNotes.subtotal')}</span>
-                  <span className="text-slate-900">-{cn.subtotal.toFixed(2)} $</span>
+                  <span className="text-slate-900">-{formatCurrency(cn.subtotal)}</span>
                 </div>
                 {cn.taxTps > 0 && (
                   <div className="flex justify-between text-sm">
                     <span className="text-slate-500">{t('admin.creditNotes.tps')}</span>
-                    <span className="text-slate-900">-{cn.taxTps.toFixed(2)} $</span>
+                    <span className="text-slate-900">-{formatCurrency(cn.taxTps)}</span>
                   </div>
                 )}
                 {cn.taxTvq > 0 && (
                   <div className="flex justify-between text-sm">
                     <span className="text-slate-500">{t('admin.creditNotes.tvq')}</span>
-                    <span className="text-slate-900">-{cn.taxTvq.toFixed(2)} $</span>
+                    <span className="text-slate-900">-{formatCurrency(cn.taxTvq)}</span>
                   </div>
                 )}
                 {cn.taxTvh > 0 && (
                   <div className="flex justify-between text-sm">
                     <span className="text-slate-500">{t('admin.creditNotes.tvh')}</span>
-                    <span className="text-slate-900">-{cn.taxTvh.toFixed(2)} $</span>
+                    <span className="text-slate-900">-{formatCurrency(cn.taxTvh)}</span>
                   </div>
                 )}
                 <div className="flex justify-between text-lg font-bold border-t border-slate-200 pt-2">
                   <span>{t('admin.creditNotes.total')}</span>
-                  <span className="text-red-600">-{cn.total.toFixed(2)} $</span>
+                  <span className="text-red-600">-{formatCurrency(cn.total)}</span>
                 </div>
               </div>
             </div>

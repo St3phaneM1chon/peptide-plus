@@ -10,6 +10,7 @@ import { StatCard } from '@/components/admin/StatCard';
 import { FilterBar, SelectFilter } from '@/components/admin/FilterBar';
 import { DataTable, type Column } from '@/components/admin/DataTable';
 import { useI18n } from '@/i18n/client';
+import { sectionThemes } from '@/lib/admin/section-themes';
 
 interface SupplierInvoice {
   id: string;
@@ -32,7 +33,7 @@ interface SupplierInvoice {
 type BadgeVariant = 'success' | 'warning' | 'error' | 'info' | 'neutral';
 
 export default function FacturesFournisseursPage() {
-  const { t, locale } = useI18n();
+  const { t, locale, formatCurrency } = useI18n();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
   const [selectedInvoice, setSelectedInvoice] = useState<SupplierInvoice | null>(null);
@@ -54,8 +55,8 @@ export default function FacturesFournisseursPage() {
     { value: 'OVERDUE', label: t('admin.supplierInvoices.statusOverdue') },
   ];
 
-  const formatCAD = (amount: number) =>
-    amount.toLocaleString(locale, { style: 'currency', currency: 'CAD' });
+  // Use formatCurrency from useI18n instead of local formatCAD
+  const formatCAD = formatCurrency;
 
   const fetchInvoices = useCallback(async () => {
     setLoading(true);
@@ -108,8 +109,17 @@ export default function FacturesFournisseursPage() {
     }
   };
 
-  if (loading) return <div className="p-8 text-center">{t('admin.supplierInvoices.loading')}</div>;
-  if (error) return <div className="p-8 text-center text-red-600">{t('admin.supplierInvoices.errorPrefix')} {error}</div>;
+  const theme = sectionThemes.accounts;
+
+  if (loading) return (
+    <div aria-live="polite" aria-busy="true" className="p-8 space-y-4 animate-pulse">
+      <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-1/3"></div>
+      <div className="grid grid-cols-4 gap-4">
+        {[1,2,3,4].map(i => <div key={i} className="h-24 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>)}
+      </div>
+      <div className="h-64 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
+    </div>
+  );
 
   const filteredInvoices = invoices.filter(invoice => {
     if (searchTerm && !invoice.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase()) &&
@@ -189,6 +199,7 @@ export default function FacturesFournisseursPage() {
             onClick={() => setSelectedInvoice(invoice)}
             className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded"
             title={t('admin.supplierInvoices.view')}
+            aria-label={t('admin.supplierInvoices.view')}
           >
             <Eye className="w-4 h-4" />
           </button>
@@ -197,6 +208,7 @@ export default function FacturesFournisseursPage() {
               onClick={() => handleMarkAsPaid(invoice.id)}
               className="p-1.5 text-slate-500 hover:text-green-600 hover:bg-green-50 rounded"
               title={t('admin.supplierInvoices.markPaid')}
+              aria-label={t('admin.supplierInvoices.markPaid')}
             >
               <Check className="w-4 h-4" />
             </button>
@@ -210,9 +222,23 @@ export default function FacturesFournisseursPage() {
 
   return (
     <div className="space-y-6">
+      {/* Error Banner */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg mb-4 flex items-center justify-between">
+          <span>{error}</span>
+          <button
+            onClick={() => { setError(null); fetchInvoices(); }}
+            className="text-red-700 underline font-medium hover:text-red-800"
+          >
+            R&eacute;essayer
+          </button>
+        </div>
+      )}
+
       <PageHeader
         title={t('admin.supplierInvoices.title')}
         subtitle={t('admin.supplierInvoices.subtitle')}
+        theme={theme}
         actions={
           <Button variant="primary" icon={Plus}>
             {t('admin.supplierInvoices.addInvoice')}
@@ -222,10 +248,10 @@ export default function FacturesFournisseursPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4">
-        <StatCard label={t('admin.supplierInvoices.totalInvoices')} value={invoices.length} icon={FileText} />
-        <StatCard label={t('admin.supplierInvoices.toPay')} value={formatCAD(totalPending)} icon={Clock} className="!bg-yellow-50 !border-yellow-200" />
-        <StatCard label={t('admin.supplierInvoices.overdue')} value={formatCAD(totalOverdue)} icon={AlertTriangle} className="!bg-red-50 !border-red-200" />
-        <StatCard label={t('admin.supplierInvoices.paidThisMonth')} value={formatCAD(totalPaid)} icon={DollarSign} className="!bg-green-50 !border-green-200" />
+        <StatCard label={t('admin.supplierInvoices.totalInvoices')} value={invoices.length} icon={FileText} theme={theme} />
+        <StatCard label={t('admin.supplierInvoices.toPay')} value={formatCAD(totalPending)} icon={Clock} theme={theme} />
+        <StatCard label={t('admin.supplierInvoices.overdue')} value={formatCAD(totalOverdue)} icon={AlertTriangle} theme={theme} />
+        <StatCard label={t('admin.supplierInvoices.paidThisMonth')} value={formatCAD(totalPaid)} icon={DollarSign} theme={theme} />
       </div>
 
       {/* Filters */}
@@ -304,15 +330,15 @@ export default function FacturesFournisseursPage() {
             <table className="w-full border border-slate-200 rounded-lg overflow-hidden">
               <thead className="bg-slate-50">
                 <tr>
-                  <th className="px-4 py-2 text-start text-xs font-semibold text-slate-500">{t('admin.supplierInvoices.description')}</th>
-                  <th className="px-4 py-2 text-end text-xs font-semibold text-slate-500">{t('admin.supplierInvoices.amount')}</th>
+                  <th scope="col" className="px-4 py-2 text-start text-xs font-semibold text-slate-500">{t('admin.supplierInvoices.description')}</th>
+                  <th scope="col" className="px-4 py-2 text-end text-xs font-semibold text-slate-500">{t('admin.supplierInvoices.amount')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
                 {inv.items.map((item, index) => (
                   <tr key={index}>
                     <td className="px-4 py-3 text-slate-900">{item.description}</td>
-                    <td className="px-4 py-3 text-end font-medium text-slate-900">{item.amount.toFixed(2)} $</td>
+                    <td className="px-4 py-3 text-end font-medium text-slate-900">{formatCurrency(item.amount)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -322,17 +348,17 @@ export default function FacturesFournisseursPage() {
               <div className="w-64 space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-500">{t('admin.supplierInvoices.subtotal')}</span>
-                  <span>{inv.subtotal.toFixed(2)} $</span>
+                  <span>{formatCurrency(inv.subtotal)}</span>
                 </div>
                 {inv.taxes > 0 && (
                   <div className="flex justify-between text-sm">
                     <span className="text-slate-500">{t('admin.supplierInvoices.taxes')}</span>
-                    <span>{inv.taxes.toFixed(2)} $</span>
+                    <span>{formatCurrency(inv.taxes)}</span>
                   </div>
                 )}
                 <div className="flex justify-between text-lg font-bold border-t border-slate-200 pt-2">
                   <span>{t('admin.supplierInvoices.total')}</span>
-                  <span className="text-emerald-600">{inv.total.toFixed(2)} $</span>
+                  <span className="text-emerald-600">{formatCurrency(inv.total)}</span>
                 </div>
               </div>
             </div>

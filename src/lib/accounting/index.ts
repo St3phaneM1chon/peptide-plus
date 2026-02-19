@@ -60,6 +60,12 @@
  * - Quick entry templates
  * - OCR invoice scanning
  * - Advanced search
+ *
+ * PHASE 8: Automation
+ * - Alert rules engine (budget, overdue, reconciliation, tax, unusual amounts)
+ * - Auto-reconciliation (by reference, by amount, batch processing)
+ * - Recurring entries processing with audit trail
+ * - Scheduler service for cron-triggered batch tasks
  */
 
 // Types
@@ -129,6 +135,7 @@ export {
   createRecurringTemplate,
   calculateNextRunDate,
   processDueRecurringEntries,
+  processRecurringEntries,
   previewRecurringSchedule,
   getFrequencyLabel,
   PREDEFINED_TEMPLATES,
@@ -174,6 +181,8 @@ export {
   exportAuditToCSV,
   getActionLabel,
   getEntityLabel,
+  logAuditTrail,
+  logAuditTrailBatch,
 } from './audit-trail.service';
 export type { AuditAction, EntityType } from './audit-trail.service';
 
@@ -249,3 +258,69 @@ export {
   getPopularSearchTerms,
   getFilterOptions,
 } from './search.service';
+
+// Error Handler
+export {
+  handlePrismaError,
+  safeJsonParse,
+} from './error-handler';
+
+// Validation Schemas
+export {
+  createJournalEntrySchema,
+  updateJournalEntrySchema,
+  createCustomerInvoiceSchema,
+  createExpenseSchema,
+  createBudgetSchema,
+  formatZodErrors,
+} from './validation';
+
+// PHASE 8: Alert Rules Service
+export {
+  evaluateAlertRules,
+  getActiveAlerts,
+} from './alert-rules.service';
+export type { AlertRuleType, AlertRuleResult } from './alert-rules.service';
+
+// PHASE 8: Auto-Reconciliation Service
+export {
+  autoReconcileByReference,
+  autoReconcileByAmount,
+  runAutoReconciliation,
+} from './auto-reconciliation.service';
+export type { ReconciliationMatch, AutoReconciliationResult } from './auto-reconciliation.service';
+
+// PHASE 8: Scheduler Service
+export {
+  runScheduledTasks,
+} from './scheduler.service';
+export type { ScheduledTaskResult, SchedulerRunResult } from './scheduler.service';
+
+// PHASE 10: KPI Service
+export {
+  calculateKPIs,
+  getKPITrend,
+} from './kpi.service';
+export type { FinancialKPIs, KPITrendPoint } from './kpi.service';
+
+// PHASE 10: Payment Matching Service
+export {
+  findPaymentMatches,
+  applyPaymentMatch,
+  suggestUnmatchedPayments,
+} from './payment-matching.service';
+export type { PaymentMatch, MatchResult, UnmatchedSuggestion } from './payment-matching.service';
+
+// PHASE 10: Report Templates Service
+export {
+  generateBalanceSheet as generateBalanceSheetData,
+  generateIncomeStatement as generateIncomeStatementData,
+  generateCashFlowStatement,
+} from './report-templates.service';
+export type {
+  BalanceSheetData,
+  IncomeStatementData,
+  CashFlowStatementData,
+  ReportLineItem,
+  ReportCategory,
+} from './report-templates.service';

@@ -114,7 +114,7 @@
     "newArrival": "New Arrival",
     "noDescription": "No description available",
     "premiumPeptides": "Premium Research Peptides",
-    "productVideo": "Product Video",
+    "productVideo": "Product video",
     "recommendedSolvent": "Recommended Solvent",
     "recommendedVolume": "Recommended Volume",
     "reconstitution": "Reconstitution",
@@ -192,7 +192,6 @@
     "gallery": {
       "clickToZoom": "Click to zoom"
     },
-    "productVideo": "Product video",
     "giftCard": {
       "placeholderCode": "XXXX-XXXX-XXXX-XXXX",
       "placeholderAmount": "Enter amount",
@@ -580,7 +579,6 @@
     "required": "This field is required",
     "noResults": "No results found",
     "previous": "Previous",
-    "submitting": "Submitting...",
     "aria": {
       "close": "Close",
       "dismiss": "Dismiss",
@@ -592,8 +590,7 @@
       "nextSlide": "Next slide",
       "googleLogo": "Google",
       "skipToContent": "Skip to main content"
-    },
-    "edit": "Edit"
+    }
   },
   "cart": {
     "title": "Your Cart",
@@ -1699,7 +1696,7 @@
     "connectionError": "Connection error. Please try again.",
     "placeholderName": "Jean Dupont",
     "placeholderEmail": "jean@example.com",
-    "placeholderOrganization": "Universit\u00e9 McGill"
+    "placeholderOrganization": "Université McGill"
   },
   "trackOrder": {
     "title": "Track Your Order",
@@ -4051,7 +4048,20 @@
       "monthSep": "Sep",
       "monthOct": "Oct",
       "monthNov": "Nov",
-      "monthDec": "Dec"
+      "monthDec": "Dec",
+      "tax": {
+        "tps": "GST",
+        "tvq": "QST",
+        "tvh": "HST",
+        "pst": "PST",
+        "tpsTvq": "GST/QST",
+        "tpsPayable": "GST payable",
+        "tvqPayable": "QST payable",
+        "tpsReceivable": "GST receivable",
+        "tvqReceivable": "QST receivable",
+        "paymentTpsTvq": "GST/QST Payment",
+        "saleWithTpsTvq": "Sale to a Quebec client with GST/QST"
+      }
     },
     "accountingLayout": {
       "sectionOverview": "Overview",

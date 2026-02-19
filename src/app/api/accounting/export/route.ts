@@ -1,8 +1,7 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth-config';
-import { UserRole } from '@/types';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { roundCurrency } from '@/lib/financial';
 
@@ -15,22 +14,17 @@ import { roundCurrency } from '@/lib/financial';
  *   from: ISO date string (optional)
  *   to: ISO date string (optional)
  *   status: 'DRAFT' | 'POSTED' | 'VOIDED' (optional, for journal)
+ *   format: 'csv' | 'json' (default 'csv') - Phase 9
  */
-export async function GET(request: NextRequest) {
+export const GET = withAdminGuard(async (request, { session }) => {
   try {
-    const session = await auth();
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
-    }
-    if (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER) {
-      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
-    }
-
     const { searchParams } = new URL(request.url);
     const exportType = searchParams.get('type') || 'journal';
     const from = searchParams.get('from');
     const to = searchParams.get('to');
     const status = searchParams.get('status');
+    // Phase 9: Support 'csv' (default) or 'json' output format
+    const format = searchParams.get('format') || 'csv';
 
     const exportStartTime = Date.now();
     let csv = '';
@@ -78,10 +72,34 @@ export async function GET(request: NextRequest) {
     console.info('Export completed:', {
       type: exportType,
       filename,
+      format,
       sizeBytes: exportSizeBytes,
       durationMs: exportDuration,
       exportedBy: session.user.id || session.user.email,
     });
+
+    // Phase 9: JSON format support - parse CSV rows back to structured data
+    if (format === 'json') {
+      const lines = csv.split('\n');
+      const headers = lines[0]?.split(',').map(h => h.replace(/^"|"$/g, '').trim()) || [];
+      const rows = lines.slice(1).filter(l => l.trim()).map(line => {
+        const values = line.match(/("([^"]|"")*"|[^,]*)/g) || [];
+        const row: Record<string, string> = {};
+        headers.forEach((h, i) => {
+          row[h] = (values[i] || '').replace(/^"|"$/g, '').replace(/""/g, '"').trim();
+        });
+        return row;
+      });
+      return NextResponse.json({
+        data: rows,
+        meta: {
+          type: exportType,
+          filename: filename.replace('.csv', '.json'),
+          rowCount: rows.length,
+          exportDurationMs: exportDuration,
+        },
+      });
+    }
 
     // Add BOM for Excel UTF-8 compatibility
     const bom = '\uFEFF';
@@ -100,7 +118,7 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
 // ---------------------------------------------------------------------------
 // Export helpers
@@ -226,6 +244,7 @@ async function exportGeneralLedger(
       { account: { code: 'asc' } },
       { entry: { date: 'asc' } },
     ],
+    take: MAX_EXPORT_ROWS,
   });
 
   const headers = [
@@ -314,6 +333,7 @@ async function exportTaxSummary(
   const reports = await prisma.taxReport.findMany({
     where,
     orderBy: { generatedAt: 'desc' },
+    take: MAX_EXPORT_ROWS,
   });
 
   const headers = [

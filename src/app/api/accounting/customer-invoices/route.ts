@@ -1,24 +1,16 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth-config';
-import { UserRole } from '@/types';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
+import { createCustomerInvoiceSchema, formatZodErrors, logAuditTrail } from '@/lib/accounting';
 
 /**
  * GET /api/accounting/customer-invoices
  * List customer invoices with filters
  */
-export async function GET(request: NextRequest) {
+export const GET = withAdminGuard(async (request) => {
   try {
-    const session = await auth();
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
-    }
-    if (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER) {
-      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
-    }
-
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
     const customerId = searchParams.get('customerId');
@@ -102,31 +94,27 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
 /**
  * POST /api/accounting/customer-invoices
  * Create a manual customer invoice
  */
-export async function POST(request: NextRequest) {
+export const POST = withAdminGuard(async (request) => {
   try {
-    const session = await auth();
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
-    }
-    if (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER) {
-      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
-    }
-
     const body = await request.json();
-    const { customerName, customerEmail, items, taxTps, taxTvq, taxTvh, dueDate } = body;
 
-    if (!customerName || !items || !Array.isArray(items) || items.length === 0 || !dueDate) {
+    // Zod validation
+    const parsed = createCustomerInvoiceSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'customerName, items et dueDate sont requis' },
+        { error: 'Données invalides', details: formatZodErrors(parsed.error) },
         { status: 400 }
       );
     }
+    const { customerName, customerEmail, items, taxTps, taxTvq, taxTvh, dueDate } = parsed.data;
+
+    // Validation handled by Zod schema above
 
     // #36 Validate dueDate >= invoiceDate (today)
     const invoiceDateNow = new Date();
@@ -148,7 +136,7 @@ export async function POST(request: NextRequest) {
 
     // #37 Calculate subtotal from items: quantity * unitPrice - discount
     const subtotal = items.reduce(
-      (sum: number, item: { quantity: number; unitPrice: number; discount?: number }) =>
+      (sum: number, item) =>
         sum + (item.quantity * item.unitPrice - (item.discount || 0)),
       0
     );
@@ -192,7 +180,7 @@ export async function POST(request: NextRequest) {
           dueDate: new Date(dueDate),
           status: 'SENT',
           items: {
-            create: items.map((item: { description: string; quantity: number; unitPrice: number; discount?: number }) => ({
+            create: items.map((item) => ({
               description: item.description,
               quantity: item.quantity,
               unitPrice: item.unitPrice,
@@ -213,22 +201,14 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
 /**
  * PUT /api/accounting/customer-invoices
  * Update invoice status
  */
-export async function PUT(request: NextRequest) {
+export const PUT = withAdminGuard(async (request, { session }) => {
   try {
-    const session = await auth();
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
-    }
-    if (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER) {
-      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
-    }
-
     const body = await request.json();
     const { id, status, paidAt, amountPaid } = body;
 
@@ -305,6 +285,18 @@ export async function PUT(request: NextRequest) {
         changedAt: new Date().toISOString(),
         ...(amountPaid !== undefined && { amountPaid }),
       });
+
+      // Phase 4 Compliance: Granular audit trail logging
+      logAuditTrail({
+        entityType: 'CustomerInvoice',
+        entityId: id,
+        action: 'STATUS_CHANGE',
+        field: 'status',
+        oldValue: existing.status,
+        newValue: status,
+        userId: session.user.id || session.user.email || 'unknown',
+        userName: session.user.name || undefined,
+      });
     }
 
     return NextResponse.json({ success: true, invoice });
@@ -315,22 +307,14 @@ export async function PUT(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
 /**
  * DELETE /api/accounting/customer-invoices
  * Soft-delete a customer invoice (audit trail preservation)
  */
-export async function DELETE(request: NextRequest) {
+export const DELETE = withAdminGuard(async (request) => {
   try {
-    const session = await auth();
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
-    }
-    if (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER) {
-      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
-    }
-
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
@@ -364,4 +348,4 @@ export async function DELETE(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

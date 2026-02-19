@@ -70,7 +70,11 @@ interface StripePayoutData {
   currency: string;
 }
 
-// WARNING: In-memory counter - entry numbers are not persisted via this path
+// WARNING: This counter is for in-memory object generation ONLY. It resets to 0 on
+// every server restart, so it WILL produce duplicate numbers across restarts.
+// Never persist entries using this number directly. Always use the
+// SELECT MAX ... FOR UPDATE pattern in a transaction before persisting
+// (see webhook-accounting.service.ts getNextEntryNumber()).
 let entryCounter = 0;
 
 function generateEntryNumber(): string {

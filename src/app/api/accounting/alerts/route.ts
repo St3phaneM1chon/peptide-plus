@@ -1,30 +1,43 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth-config';
-import { UserRole } from '@/types';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import {
   generateAlerts,
   generateClosingAlerts,
   getNextTaxDeadline,
   detectExpenseAnomalies,
+  getActiveAlerts,
+  evaluateAlertRules,
 } from '@/lib/accounting';
 
 /**
  * GET /api/accounting/alerts
- * Get all active alerts from real data
+ * Get all active alerts from real data.
+ * Query params:
+ *   - type: filter by alert type (e.g. BUDGET_EXCEEDED, PAYMENT_OVERDUE)
+ *   - acknowledged: "true" or "false" to filter by read status
+ *   - source: "rules" to return only rule-based alerts from DB,
+ *             omit for legacy computed alerts
  */
-export async function GET() {
+export const GET = withAdminGuard(async (request) => {
   try {
-    const session = await auth();
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
-    }
-    if (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER) {
-      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
+    const url = new URL(request.url);
+    const typeFilter = url.searchParams.get('type') || undefined;
+    const ackParam = url.searchParams.get('acknowledged');
+    const source = url.searchParams.get('source');
+
+    // If source=rules, return alerts from the AccountingAlert table (Phase 8)
+    if (source === 'rules') {
+      const acknowledged =
+        ackParam === 'true' ? true : ackParam === 'false' ? false : undefined;
+
+      const result = await getActiveAlerts({ type: typeFilter, acknowledged });
+      return NextResponse.json(result);
     }
 
+    // Legacy computed alerts (Phase 1-7)
     // Fetch overdue invoices
     const overdueInvoices = await prisma.customerInvoice.findMany({
       where: { status: 'OVERDUE' },
@@ -166,7 +179,7 @@ export async function GET() {
     const expenseAnomalies = detectExpenseAnomalies(currentExpenses, historicalAverages);
 
     // Generate all alerts
-    const alerts = generateAlerts(
+    let alerts = generateAlerts(
       overdueInvoices.map((i) => ({
         ...i,
         total: Number(i.total),
@@ -189,7 +202,12 @@ export async function GET() {
       lastPeriod?.code || ''
     );
 
-    const allAlerts = [...alerts, ...closingAlerts];
+    let allAlerts = [...alerts, ...closingAlerts];
+
+    // Apply type filter if provided
+    if (typeFilter) {
+      allAlerts = allAlerts.filter((a) => a.type === typeFilter);
+    }
 
     // Get next tax deadline info
     const settings = await prisma.accountingSettings.findFirst();
@@ -211,26 +229,81 @@ export async function GET() {
   } catch (error) {
     console.error('Get alerts error:', error);
     return NextResponse.json(
-      { error: 'Erreur lors de la récupération des alertes' },
+      { error: 'Erreur lors de la r\u00e9cup\u00e9ration des alertes' },
       { status: 500 }
     );
   }
-}
+});
 
 /**
  * POST /api/accounting/alerts
- * Mark alert as read or resolved
+ * Create a custom alert rule (manual alert).
+ * Body: { type, severity?, title, message, entityType?, entityId?, link? }
  */
-export async function POST(request: NextRequest) {
+export const POST = withAdminGuard(async (request) => {
   try {
-    const session = await auth();
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
-    }
-    if (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER) {
-      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
+    const body = await request.json();
+    const { type, severity, title, message, entityType, entityId, link } = body;
+
+    if (!type || !title || !message) {
+      return NextResponse.json(
+        { error: 'type, title et message sont requis' },
+        { status: 400 }
+      );
     }
 
+    const validTypes = [
+      'BUDGET_EXCEEDED',
+      'PAYMENT_OVERDUE',
+      'RECONCILIATION_GAP',
+      'TAX_DEADLINE',
+      'UNUSUAL_AMOUNT',
+      'OVERDUE_INVOICE',
+      'LOW_CASH',
+      'TAX_DUE',
+      'RECONCILIATION_PENDING',
+      'EXPENSE_ANOMALY',
+      'CUSTOM',
+    ];
+    if (!validTypes.includes(type)) {
+      return NextResponse.json(
+        { error: `Type invalide. Types accept\u00e9s: ${validTypes.join(', ')}` },
+        { status: 400 }
+      );
+    }
+
+    const alertId = `custom-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+
+    const alert = await prisma.accountingAlert.create({
+      data: {
+        id: alertId,
+        type,
+        severity: severity || 'MEDIUM',
+        title,
+        message,
+        entityType: entityType || null,
+        entityId: entityId || null,
+        link: link || null,
+      },
+    });
+
+    return NextResponse.json({ success: true, alert }, { status: 201 });
+  } catch (error) {
+    console.error('Create alert error:', error);
+    return NextResponse.json(
+      { error: 'Erreur lors de la cr\u00e9ation de l\'alerte' },
+      { status: 500 }
+    );
+  }
+});
+
+/**
+ * PATCH /api/accounting/alerts
+ * Acknowledge (read) or dismiss (resolve) an alert.
+ * Body: { alertId, action: 'read' | 'resolve' }
+ */
+export const PATCH = withAdminGuard(async (request, { session }) => {
+  try {
     const body = await request.json();
     const { alertId, action } = body;
 
@@ -239,6 +312,20 @@ export async function POST(request: NextRequest) {
         { error: 'alertId et action sont requis' },
         { status: 400 }
       );
+    }
+
+    if (!['read', 'resolve'].includes(action)) {
+      return NextResponse.json(
+        { error: 'action doit \u00eatre "read" ou "resolve"' },
+        { status: 400 }
+      );
+    }
+
+    const existingAlert = await prisma.accountingAlert.findUnique({
+      where: { id: alertId },
+    });
+    if (!existingAlert) {
+      return NextResponse.json({ error: 'Alerte non trouv\u00e9e' }, { status: 404 });
     }
 
     const updateData: Record<string, unknown> = {};
@@ -250,27 +337,25 @@ export async function POST(request: NextRequest) {
       updateData.resolvedBy = session.user.id || session.user.email;
     }
 
-    const existingAlert = await prisma.accountingAlert.findUnique({
-      where: { id: alertId },
-    });
-    if (!existingAlert) {
-      return NextResponse.json({ error: 'Alerte non trouvée' }, { status: 404 });
-    }
-
-    await prisma.accountingAlert.update({
+    const updated = await prisma.accountingAlert.update({
       where: { id: alertId },
       data: updateData,
     });
 
     return NextResponse.json({
       success: true,
-      result: { alertId, action, timestamp: new Date().toISOString() },
+      result: {
+        alertId,
+        action,
+        timestamp: new Date().toISOString(),
+        alert: updated,
+      },
     });
   } catch (error) {
     console.error('Update alert error:', error);
     return NextResponse.json(
-      { error: 'Erreur lors de la mise à jour de l\'alerte' },
+      { error: 'Erreur lors de la mise \u00e0 jour de l\'alerte' },
       { status: 500 }
     );
   }
-}
+});

@@ -1,24 +1,15 @@
 export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
-import { auth } from '@/lib/auth-config';
-import { UserRole } from '@/types';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 
 /**
  * GET /api/accounting/ocr/history
  * List recent supplier invoices created via OCR
  */
-export async function GET() {
+export const GET = withAdminGuard(async () => {
   try {
-    const session = await auth();
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
-    }
-    if (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER) {
-      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
-    }
-
     // Fetch recent supplier invoices that were created via OCR
     const invoices = await prisma.supplierInvoice.findMany({
       where: {
@@ -48,4 +39,4 @@ export async function GET() {
       { status: 500 }
     );
   }
-}
+});

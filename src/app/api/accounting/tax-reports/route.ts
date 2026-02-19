@@ -1,8 +1,7 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth-config';
-import { UserRole } from '@/types';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { roundCurrency } from '@/lib/financial';
 import { createHash } from 'crypto';
@@ -11,16 +10,8 @@ import { createHash } from 'crypto';
  * GET /api/accounting/tax-reports
  * List tax reports with filters
  */
-export async function GET(request: NextRequest) {
+export const GET = withAdminGuard(async (request) => {
   try {
-    const session = await auth();
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
-    }
-    if (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER) {
-      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
-    }
-
     const { searchParams } = new URL(request.url);
     const year = searchParams.get('year');
     const status = searchParams.get('status');
@@ -71,22 +62,14 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
 /**
  * POST /api/accounting/tax-reports
  * Generate a new tax report from journal data
  */
-export async function POST(request: NextRequest) {
+export const POST = withAdminGuard(async (request) => {
   try {
-    const session = await auth();
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
-    }
-    if (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER) {
-      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
-    }
-
     const body = await request.json();
     const { period, periodType, year, month, quarter, regionCode } = body;
 
@@ -216,22 +199,14 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
 /**
  * PUT /api/accounting/tax-reports
  * Update tax report status
  */
-export async function PUT(request: NextRequest) {
+export const PUT = withAdminGuard(async (request) => {
   try {
-    const session = await auth();
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
-    }
-    if (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER) {
-      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
-    }
-
     const body = await request.json();
     const { id, status, filingNumber, paidAt } = body;
 
@@ -326,4 +301,4 @@ export async function PUT(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

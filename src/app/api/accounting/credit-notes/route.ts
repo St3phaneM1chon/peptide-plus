@@ -1,8 +1,7 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth-config';
-import { UserRole } from '@/types';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 
 // #65 Audit: Valid status transitions for credit notes
@@ -17,16 +16,8 @@ const VALID_CREDIT_NOTE_TRANSITIONS: Record<string, string[]> = {
  * GET /api/accounting/credit-notes
  * List credit notes with filters
  */
-export async function GET(request: NextRequest) {
+export const GET = withAdminGuard(async (request) => {
   try {
-    const session = await auth();
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
-    }
-    if (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER) {
-      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
-    }
-
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
     const from = searchParams.get('from');
@@ -35,7 +26,7 @@ export async function GET(request: NextRequest) {
     const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
     const limit = Math.min(Math.max(1, parseInt(searchParams.get('limit') || '20') || 20), 200);
 
-    const where: Record<string, unknown> = {};
+    const where: Record<string, unknown> = { deletedAt: null };
     if (status) where.status = status;
     if (from || to) {
       where.createdAt = {};
@@ -66,13 +57,17 @@ export async function GET(request: NextRequest) {
     ]);
 
     // Aggregate stats using DB-level aggregation instead of fetching all records
+    // Filter out soft-deleted credit notes from stats as well
+    const statsWhere = { deletedAt: null };
     const [totalAgg, statusGroups] = await Promise.all([
       prisma.creditNote.aggregate({
+        where: statsWhere,
         _count: true,
         _sum: { total: true },
       }),
       prisma.creditNote.groupBy({
         by: ['status'],
+        where: statsWhere,
         _count: true,
         _sum: { total: true },
       }),
@@ -110,4 +105,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

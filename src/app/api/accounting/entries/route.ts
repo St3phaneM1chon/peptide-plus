@@ -1,25 +1,17 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth-config';
-import { UserRole } from '@/types';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { roundCurrency } from '@/lib/financial';
-
+import { formatZodErrors, logAuditTrail } from '@/lib/accounting';
+import { z } from 'zod';
 /**
  * GET /api/accounting/entries
  * List journal entries with filters
  */
-export async function GET(request: NextRequest) {
+export const GET = withAdminGuard(async (request, { session }) => {
   try {
-    const session = await auth();
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
-    }
-    if (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER) {
-      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
-    }
-
     const { searchParams } = new URL(request.url);
     const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
     const limit = Math.min(Math.max(1, parseInt(searchParams.get('limit') || '50') || 50), 200);
@@ -97,12 +89,13 @@ export async function GET(request: NextRequest) {
     });
 
     return NextResponse.json({
-      entries: mapped,
+      data: mapped,
+      entries: mapped, // backward-compat alias
       pagination: {
         page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit),
+        pageSize: limit,
+        totalCount: total,
+        totalPages: Math.ceil(total / limit),
       },
     });
   } catch (error) {
@@ -112,34 +105,45 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
 /**
  * POST /api/accounting/entries
  * Create a new journal entry
  */
-export async function POST(request: NextRequest) {
+export const POST = withAdminGuard(async (request, { session }) => {
   try {
-    const session = await auth();
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
-    }
-    if (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER) {
-      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
-    }
     if (!session.user.id) {
       return NextResponse.json({ error: 'ID utilisateur manquant dans la session' }, { status: 401 });
     }
 
     const body = await request.json();
-    const { date, description, type, reference, lines, postImmediately } = body;
 
-    if (!date || !description || !lines || lines.length < 2) {
+    // Zod validation (route-specific: lines use accountCode, not accountId)
+    const entryLineSchema = z.object({
+      accountCode: z.string().min(1, 'accountCode requis'),
+      debit: z.number().min(0).default(0).optional(),
+      credit: z.number().min(0).default(0).optional(),
+      description: z.string().optional(),
+    });
+    const postEntrySchema = z.object({
+      description: z.string().min(1, 'Description requise').max(500),
+      date: z.string().refine((d) => !isNaN(Date.parse(d)), 'Date invalide'),
+      type: z.enum(['MANUAL', 'AUTO_SALE', 'AUTO_REFUND', 'AUTO_STRIPE_FEE', 'AUTO_PAYPAL_FEE', 'AUTO_SHIPPING', 'AUTO_PURCHASE', 'RECURRING', 'ADJUSTMENT', 'CLOSING']).default('MANUAL'),
+      reference: z.string().max(100).optional(),
+      postImmediately: z.boolean().optional(),
+      lines: z.array(entryLineSchema).min(2, 'Minimum 2 lignes requises'),
+    });
+    const parsed = postEntrySchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Date, description et au moins 2 lignes sont requis' },
+        { error: 'Données invalides', details: formatZodErrors(parsed.error) },
         { status: 400 }
       );
     }
+    const { date, description, type, reference, lines, postImmediately } = parsed.data;
+
+    // Validation handled by Zod schema above
 
     // Validate balance
     const totalDebits = roundCurrency(lines.reduce((sum: number, line: { debit?: number }) => sum + (Number(line.debit) || 0), 0));
@@ -251,6 +255,17 @@ export async function POST(request: NextRequest) {
       });
     });
 
+    
+    // Phase 4 Compliance: Audit trail logging
+    logAuditTrail({
+      entityType: 'JournalEntry',
+      entityId: entry.id,
+      action: 'CREATE',
+      userId: session.user.id || session.user.email || 'unknown',
+      userName: session.user.name || undefined,
+      metadata: { entryNumber: entry.entryNumber, status: entry.status },
+    });
+
     console.info('Journal entry created:', {
       entryId: entry.id,
       entryNumber: entry.entryNumber,
@@ -268,24 +283,16 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
 /**
  * PUT /api/accounting/entries
  * Update an existing draft entry
  */
-export async function PUT(request: NextRequest) {
+export const PUT = withAdminGuard(async (request, { session }) => {
   try {
-    const session = await auth();
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
-    }
-    if (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER) {
-      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
-    }
-
     const body = await request.json();
-    const { id, date, description, reference, lines } = body;
+    const { id, date, description, reference, lines, updatedAt: clientUpdatedAt } = body;
 
     if (!id) {
       return NextResponse.json({ error: 'ID requis' }, { status: 400 });
@@ -293,11 +300,20 @@ export async function PUT(request: NextRequest) {
 
     const existing = await prisma.journalEntry.findFirst({
       where: { id, deletedAt: null },
-      select: { status: true, date: true, description: true, reference: true },
+      select: { status: true, date: true, description: true, reference: true, updatedAt: true },
     });
 
     if (!existing) {
       return NextResponse.json({ error: 'Écriture non trouvée' }, { status: 404 });
+    }
+
+    // Optimistic locking: verify the entry has not been modified by another user
+    // since the client last fetched it. Prevents silent data loss from concurrent edits.
+    if (clientUpdatedAt && existing.updatedAt.toISOString() !== clientUpdatedAt) {
+      return NextResponse.json(
+        { error: 'Écriture modifiée par un autre utilisateur. Veuillez recharger.' },
+        { status: 409 }
+      );
     }
 
     if (existing.status !== 'DRAFT') {
@@ -458,22 +474,14 @@ export async function PUT(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
 /**
  * DELETE /api/accounting/entries
  * Delete a draft entry or void a posted entry
  */
-export async function DELETE(request: NextRequest) {
+export const DELETE = withAdminGuard(async (request, { session }) => {
   try {
-    const session = await auth();
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
-    }
-    if (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER) {
-      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
-    }
-
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
     const action = searchParams.get('action') || 'delete';
@@ -607,4 +615,4 @@ export async function DELETE(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

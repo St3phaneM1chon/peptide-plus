@@ -1,25 +1,18 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth-config';
-import { UserRole } from '@/types';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import {
   createExpenseEntry,
   getExpensesByDepartment,
   DEPARTMENTS,
   type DepartmentCode,
 } from '@/lib/accounting/expense.service';
+import { formatZodErrors } from '@/lib/accounting';
+import { z } from 'zod';
 
-export async function GET(request: NextRequest) {
+export const GET = withAdminGuard(async (request) => {
   try {
-    const session = await auth();
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
-    }
-    if (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER) {
-      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
-    }
-
     const { searchParams } = new URL(request.url);
     const department = searchParams.get('department') as DepartmentCode | null;
     const fromStr = searchParams.get('from');
@@ -66,32 +59,37 @@ export async function GET(request: NextRequest) {
     console.error('Error fetching expenses:', error);
     return NextResponse.json({ error: 'Failed to fetch expenses' }, { status: 500 });
   }
-}
+});
 
-export async function POST(request: NextRequest) {
+export const POST = withAdminGuard(async (request) => {
   try {
-    const session = await auth();
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
-    }
-    if (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER) {
-      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
-    }
-
     const body = await request.json();
-    const { description, accountCode, amount, date, department, reference, createdBy = 'system' } = body;
 
-    if (!description || !accountCode || !amount || !department) {
+    // Zod validation (route-specific: matches expense service contract)
+    const expenseSchema = z.object({
+      description: z.string().min(1, 'Description requise').max(500),
+      accountCode: z.string().min(1, 'accountCode requis'),
+      amount: z.union([z.number().positive('Montant doit être positif'), z.string().min(1)]),
+      department: z.enum(['OPS', 'MKT', 'TECH', 'ADMIN', 'FULFIL', 'RD'], { errorMap: () => ({ message: 'department invalide' }) }),
+      date: z.string().refine((d) => !isNaN(Date.parse(d)), 'Date invalide').optional(),
+      reference: z.string().optional(),
+      createdBy: z.string().default('system'),
+    });
+    const parsed = expenseSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'description, accountCode, amount, and department are required' },
+        { error: 'Données invalides', details: formatZodErrors(parsed.error) },
         { status: 400 }
       );
     }
+    const { description, accountCode, amount, date, department, reference, createdBy } = parsed.data;
+
+    // Validation handled by Zod schema above
 
     const entryId = await createExpenseEntry({
       description,
       accountCode,
-      amount: parseFloat(amount),
+      amount: typeof amount === 'number' ? amount : parseFloat(amount),
       date: date ? new Date(date) : new Date(),
       department,
       reference,
@@ -103,4 +101,4 @@ export async function POST(request: NextRequest) {
     console.error('Error creating expense:', error);
     return NextResponse.json({ error: 'Une erreur est survenue' }, { status: 500 });
   }
-}
+});

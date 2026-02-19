@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import DOMPurify from 'isomorphic-dompurify';
 import { useI18n } from '@/i18n/client';
+import { sectionThemes } from '@/lib/admin/section-themes';
 
 interface SearchResult {
   id: string;
@@ -40,7 +41,7 @@ const typeColors: Record<string, string> = {
 };
 
 export default function SearchPage() {
-  const { t } = useI18n();
+  const { t, formatCurrency, formatDate } = useI18n();
   const typeLabels: Record<string, string> = Object.fromEntries(
     Object.entries(typeLabelsKeys).map(([k, v]) => [k, t(v)])
   );
@@ -60,7 +61,7 @@ export default function SearchPage() {
   const [suggestions, setSuggestions] = useState<string[]>([]);
 
   // Popular search terms
-  const popularTerms = ['Stripe', 'TPS', t('admin.search.termRefund'), 'Postes Canada', 'Azure', 'Marketing'];
+  const popularTerms = ['Stripe', t('admin.accounting.tax.tps'), t('admin.search.termRefund'), 'Postes Canada', 'Azure', 'Marketing'];
 
   // Debounced search
   useEffect(() => {
@@ -142,8 +143,7 @@ export default function SearchPage() {
     }));
   };
 
-  const formatCurrency = (amount: number) => 
-    amount.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' });
+  // formatCurrency is now provided by useI18n()
 
   // Facets (empty until loaded from API)
   const facets = {
@@ -152,10 +152,12 @@ export default function SearchPage() {
     byMonth: {} as Record<string, number>,
   };
 
+  const theme = sectionThemes.overview;
+
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
+      <div className={`border-l-4 ${theme.accentBar} pl-4 mb-6`}>
         <h1 className="text-2xl font-bold text-slate-900">{t('admin.search.title')}</h1>
         <p className="text-slate-500 mt-1">{t('admin.search.subtitle')}</p>
       </div>
@@ -186,6 +188,8 @@ export default function SearchPage() {
             className={`px-4 py-3 rounded-xl border ${
               showFilters ? 'bg-sky-600 border-sky-600 text-white' : 'bg-white border-slate-200 text-slate-600'
             }`}
+            aria-label={t('admin.search.filters')}
+            aria-expanded={showFilters}
           >
             ⚙️ {t('admin.search.filters')}
           </button>
@@ -384,7 +388,7 @@ export default function SearchPage() {
                   <div className="text-end ms-4">
                     <p className="font-bold text-slate-900">{formatCurrency(result.amount)}</p>
                     <p className="text-sm text-slate-400">
-                      {new Date(result.date).toLocaleDateString('fr-CA')}
+                      {formatDate(result.date)}
                     </p>
                     <span className={`text-xs ${
                       result.status === 'POSTED' || result.status === 'PAID' || result.status === 'MATCHED'

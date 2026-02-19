@@ -4,6 +4,7 @@
  */
 
 import { db as prisma } from '@/lib/db';
+import { Prisma } from '@prisma/client';
 
 export interface AuditEntry {
   id: string;
@@ -396,4 +397,79 @@ export function getEntityLabel(entityType: EntityType): string {
     RECONCILIATION: 'Rapprochement',
   };
   return labels[entityType] || entityType;
+}
+
+
+// =====================================================
+// PHASE 4 COMPLIANCE: Granular AuditTrail logging
+// Uses the new AuditTrail model for per-field change tracking
+// =====================================================
+
+interface AuditTrailInput {
+  entityType: string;
+  entityId: string;
+  action: string;
+  field?: string;
+  oldValue?: string | null;
+  newValue?: string | null;
+  userId: string;
+  userName?: string;
+  ipAddress?: string;
+  userAgent?: string;
+  metadata?: Record<string, unknown>;
+}
+
+/**
+ * Log an audit trail entry. Fire-and-forget by default to avoid
+ * slowing down the main operation.
+ */
+export async function logAuditTrail(entry: AuditTrailInput): Promise<void> {
+  try {
+    await prisma.auditTrail.create({
+      data: {
+        entityType: entry.entityType,
+        entityId: entry.entityId,
+        action: entry.action,
+        field: entry.field || null,
+        oldValue: entry.oldValue || null,
+        newValue: entry.newValue || null,
+        userId: entry.userId,
+        userName: entry.userName || null,
+        ipAddress: entry.ipAddress || null,
+        userAgent: entry.userAgent || null,
+        metadata: entry.metadata ? (entry.metadata as unknown as Prisma.InputJsonValue) : undefined,
+      },
+    });
+  } catch (error) {
+    // Audit logging must never break the main operation
+    console.error('Failed to log audit trail:', error);
+  }
+}
+
+/**
+ * Log multiple field changes in a single batch (for updates).
+ */
+export async function logAuditTrailBatch(
+  entityType: string,
+  entityId: string,
+  changes: Array<{ field: string; oldValue: string | null; newValue: string | null }>,
+  userId: string,
+  userName?: string
+): Promise<void> {
+  try {
+    await prisma.auditTrail.createMany({
+      data: changes.map((c) => ({
+        entityType,
+        entityId,
+        action: 'UPDATE',
+        field: c.field,
+        oldValue: c.oldValue,
+        newValue: c.newValue,
+        userId,
+        userName: userName || null,
+      })),
+    });
+  } catch (error) {
+    console.error('Failed to log audit trail batch:', error);
+  }
 }

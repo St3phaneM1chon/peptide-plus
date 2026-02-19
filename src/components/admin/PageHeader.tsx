@@ -3,6 +3,7 @@
 import type { ReactNode } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+import type { SectionTheme } from '@/lib/admin/section-themes';
 
 interface PageHeaderProps {
   title: string;
@@ -11,11 +12,13 @@ interface PageHeaderProps {
   backLabel?: string;
   actions?: ReactNode;
   badge?: ReactNode;
+  /** Section theme for accent styling */
+  theme?: SectionTheme;
 }
 
-export function PageHeader({ title, subtitle, backHref, backLabel, actions, badge }: PageHeaderProps) {
+export function PageHeader({ title, subtitle, backHref, backLabel, actions, badge, theme }: PageHeaderProps) {
   return (
-    <div className="mb-6">
+    <div className={`mb-6 ${theme ? `border-l-4 ${theme.accentBar} pl-4` : ''}`}>
       {backHref && (
         <Link
           href={backHref}

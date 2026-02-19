@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Printer, Download, Check, Clock } from 'lucide-react';
 import { PageHeader, Button } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
+import { sectionThemes } from '@/lib/admin/section-themes';
 
 interface Transaction {
   id: string;
@@ -44,7 +45,7 @@ interface LedgerAccount {
 }
 
 export default function GrandLivrePage() {
-  const { t } = useI18n();
+  const { t, formatCurrency, formatDate } = useI18n();
   const [selectedAccount, setSelectedAccount] = useState('1010');
   const [dateFrom, setDateFrom] = useState('2026-01-01');
   const [dateTo, setDateTo] = useState('2026-01-31');
@@ -52,6 +53,7 @@ export default function GrandLivrePage() {
   const [accounts, setAccounts] = useState<AccountOption[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [ledgerSummary, setLedgerSummary] = useState<{ totalDebits: number; totalCredits: number; balance: number }>({ totalDebits: 0, totalCredits: 0, balance: 0 });
 
   // Fetch chart of accounts for dropdown
@@ -78,6 +80,7 @@ export default function GrandLivrePage() {
 
   const fetchLedgerEntries = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const params = new URLSearchParams();
       if (selectedAccount) params.set('accountCode', selectedAccount);
@@ -85,6 +88,9 @@ export default function GrandLivrePage() {
       if (dateTo) params.set('to', dateTo);
 
       const res = await fetch(`/api/accounting/general-ledger?${params.toString()}`);
+      if (!res.ok) {
+        throw new Error(`Erreur serveur (${res.status})`);
+      }
       const json = await res.json();
 
       if (json.accounts && json.accounts.length > 0) {
@@ -119,6 +125,7 @@ export default function GrandLivrePage() {
       }
     } catch (err) {
       console.error('Error fetching general ledger:', err);
+      setError(err instanceof Error ? err.message : 'Impossible de charger les donn\u00e9es');
     } finally {
       setLoading(false);
     }
@@ -140,13 +147,37 @@ export default function GrandLivrePage() {
   const totalCredit = filteredTransactions.reduce((sum, t) => sum + t.credit, 0);
   const currentAccount = accounts.find(a => a.code === selectedAccount);
 
-  if (loading && accounts.length === 0) return <div className="p-8 text-center">{t('admin.generalLedger.loading')}</div>;
+  const theme = sectionThemes.accounts;
+
+  if (loading && accounts.length === 0) return (
+    <div aria-live="polite" aria-busy="true" className="p-8 space-y-4 animate-pulse">
+      <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-1/3"></div>
+      <div className="grid grid-cols-4 gap-4">
+        {[1,2,3,4].map(i => <div key={i} className="h-24 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>)}
+      </div>
+      <div className="h-64 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
+    </div>
+  );
 
   return (
     <div className="space-y-6">
+      {/* Error Banner */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg mb-4 flex items-center justify-between">
+          <span>{error}</span>
+          <button
+            onClick={() => { setError(null); fetchLedgerEntries(); }}
+            className="text-red-700 underline font-medium hover:text-red-800"
+          >
+            R&eacute;essayer
+          </button>
+        </div>
+      )}
+
       <PageHeader
         title={t('admin.generalLedger.title')}
         subtitle={t('admin.generalLedger.subtitle')}
+        theme={theme}
         actions={
           <>
             <Button variant="secondary" icon={Printer}>{t('admin.generalLedger.print')}</Button>
@@ -217,7 +248,7 @@ export default function GrandLivrePage() {
           <div className="text-end">
             <p className="text-sm text-emerald-600">{t('admin.generalLedger.currentBalance')}</p>
             <p className="text-3xl font-bold text-emerald-900">
-              {(ledgerSummary.balance || currentAccount?.balance || 0).toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}
+              {formatCurrency(ledgerSummary.balance || currentAccount?.balance || 0)}
             </p>
           </div>
         </div>
@@ -234,21 +265,21 @@ export default function GrandLivrePage() {
           <table className="w-full">
             <thead className="bg-slate-50">
               <tr>
-                <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.generalLedger.dateCol')}</th>
-                <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.generalLedger.entryNumberCol')}</th>
-                <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.generalLedger.descriptionCol')}</th>
-                <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.generalLedger.referenceCol')}</th>
-                <th className="px-4 py-3 text-end text-xs font-semibold text-slate-500 uppercase">{t('admin.generalLedger.debitCol')}</th>
-                <th className="px-4 py-3 text-end text-xs font-semibold text-slate-500 uppercase">{t('admin.generalLedger.creditCol')}</th>
-                <th className="px-4 py-3 text-end text-xs font-semibold text-slate-500 uppercase">{t('admin.generalLedger.balanceCol')}</th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.generalLedger.reconciledCol')}</th>
+                <th scope="col" className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.generalLedger.dateCol')}</th>
+                <th scope="col" className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.generalLedger.entryNumberCol')}</th>
+                <th scope="col" className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.generalLedger.descriptionCol')}</th>
+                <th scope="col" className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.generalLedger.referenceCol')}</th>
+                <th scope="col" className="px-4 py-3 text-end text-xs font-semibold text-slate-500 uppercase">{t('admin.generalLedger.debitCol')}</th>
+                <th scope="col" className="px-4 py-3 text-end text-xs font-semibold text-slate-500 uppercase">{t('admin.generalLedger.creditCol')}</th>
+                <th scope="col" className="px-4 py-3 text-end text-xs font-semibold text-slate-500 uppercase">{t('admin.generalLedger.balanceCol')}</th>
+                <th scope="col" className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.generalLedger.reconciledCol')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200">
               {filteredTransactions.map((transaction) => (
                 <tr key={transaction.id} className="hover:bg-slate-50">
                   <td className="px-4 py-3 text-sm text-slate-900">
-                    {new Date(transaction.date).toLocaleDateString('fr-CA')}
+                    {formatDate(transaction.date)}
                   </td>
                   <td className="px-4 py-3">
                     <span className="font-mono text-sm text-blue-600 hover:underline cursor-pointer">
@@ -268,19 +299,19 @@ export default function GrandLivrePage() {
                   <td className="px-4 py-3 text-end">
                     {transaction.debit > 0 && (
                       <span className="font-medium text-slate-900">
-                        {transaction.debit.toLocaleString('fr-CA', { minimumFractionDigits: 2 })} $
+                        {formatCurrency(transaction.debit)}
                       </span>
                     )}
                   </td>
                   <td className="px-4 py-3 text-end">
                     {transaction.credit > 0 && (
                       <span className="font-medium text-red-600">
-                        {transaction.credit.toLocaleString('fr-CA', { minimumFractionDigits: 2 })} $
+                        {formatCurrency(transaction.credit)}
                       </span>
                     )}
                   </td>
                   <td className="px-4 py-3 text-end font-medium text-slate-900">
-                    {transaction.balance.toLocaleString('fr-CA', { minimumFractionDigits: 2 })} $
+                    {formatCurrency(transaction.balance)}
                   </td>
                   <td className="px-4 py-3 text-center">
                     {transaction.reconciled ? (
@@ -302,13 +333,13 @@ export default function GrandLivrePage() {
                   {t('admin.generalLedger.totalPeriod')}
                 </td>
                 <td className="px-4 py-3 text-end font-bold text-slate-900">
-                  {totalDebit.toLocaleString('fr-CA', { minimumFractionDigits: 2 })} $
+                  {formatCurrency(totalDebit)}
                 </td>
                 <td className="px-4 py-3 text-end font-bold text-red-600">
-                  {totalCredit.toLocaleString('fr-CA', { minimumFractionDigits: 2 })} $
+                  {formatCurrency(totalCredit)}
                 </td>
                 <td className="px-4 py-3 text-end font-bold text-emerald-600">
-                  {(totalDebit - totalCredit).toLocaleString('fr-CA', { minimumFractionDigits: 2 })} $
+                  {formatCurrency(totalDebit - totalCredit)}
                 </td>
                 <td></td>
               </tr>

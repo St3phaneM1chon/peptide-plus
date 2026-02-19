@@ -10,6 +10,7 @@ import { StatCard } from '@/components/admin/StatCard';
 import { FilterBar, SelectFilter } from '@/components/admin/FilterBar';
 import { DataTable, type Column } from '@/components/admin/DataTable';
 import { useI18n } from '@/i18n/client';
+import { sectionThemes } from '@/lib/admin/section-themes';
 
 interface Invoice {
   id: string;
@@ -42,7 +43,7 @@ interface InvoiceItem {
 type BadgeVariant = 'success' | 'warning' | 'error' | 'info' | 'neutral';
 
 export default function FacturesClientsPage() {
-  const { t, locale } = useI18n();
+  const { t, locale, formatCurrency } = useI18n();
 
   const statusConfig: Record<string, { label: string; variant: BadgeVariant }> = {
     DRAFT: { label: t('admin.customerInvoices.statusDraft'), variant: 'neutral' },
@@ -59,8 +60,8 @@ export default function FacturesClientsPage() {
     { value: 'OVERDUE', label: t('admin.customerInvoices.statusOverdue') },
   ];
 
-  const formatCAD = (amount: number) =>
-    amount.toLocaleString(locale, { style: 'currency', currency: 'CAD' });
+  // Use formatCurrency from useI18n instead of local formatCAD
+  const formatCAD = formatCurrency;
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
@@ -106,8 +107,17 @@ export default function FacturesClientsPage() {
     }
   };
 
-  if (loading) return <div className="p-8 text-center">{t('admin.customerInvoices.loading')}</div>;
-  if (error) return <div className="p-8 text-center text-red-600">{t('admin.customerInvoices.errorPrefix')} {error}</div>;
+  const theme = sectionThemes.accounts;
+
+  if (loading) return (
+    <div aria-live="polite" aria-busy="true" className="p-8 space-y-4 animate-pulse">
+      <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-1/3"></div>
+      <div className="grid grid-cols-4 gap-4">
+        {[1,2,3,4].map(i => <div key={i} className="h-24 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>)}
+      </div>
+      <div className="h-64 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
+    </div>
+  );
 
   const filteredInvoices = invoices.filter(invoice => {
     if (searchTerm && !invoice.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase()) &&
@@ -184,12 +194,14 @@ export default function FacturesClientsPage() {
             onClick={() => setSelectedInvoice(invoice)}
             className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded"
             title={t('admin.customerInvoices.view')}
+            aria-label={t('admin.customerInvoices.view')}
           >
             <Eye className="w-4 h-4" />
           </button>
           <button
             className="p-1.5 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded"
             title={t('admin.customerInvoices.downloadPdf')}
+            aria-label={t('admin.customerInvoices.downloadPdf')}
           >
             <Download className="w-4 h-4" />
           </button>
@@ -198,6 +210,7 @@ export default function FacturesClientsPage() {
               onClick={() => handleMarkAsPaid(invoice.id)}
               className="p-1.5 text-slate-500 hover:text-green-600 hover:bg-green-50 rounded"
               title={t('admin.customerInvoices.markPaid')}
+              aria-label={t('admin.customerInvoices.markPaid')}
             >
               <Check className="w-4 h-4" />
             </button>
@@ -211,11 +224,25 @@ export default function FacturesClientsPage() {
 
   return (
     <div className="space-y-6">
+      {/* Error Banner */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg mb-4 flex items-center justify-between">
+          <span>{error}</span>
+          <button
+            onClick={() => { setError(null); fetchInvoices(); }}
+            className="text-red-700 underline font-medium hover:text-red-800"
+          >
+            R&eacute;essayer
+          </button>
+        </div>
+      )}
+
       <PageHeader
         title={t('admin.customerInvoices.title')}
         subtitle={t('admin.customerInvoices.subtitle')}
+        theme={theme}
         actions={
-          <Button variant="primary" icon={Plus}>
+          <Button variant="primary" icon={Plus} className={`${theme.btnPrimary} border-transparent text-white`}>
             {t('admin.customerInvoices.newInvoice')}
           </Button>
         }
@@ -223,10 +250,10 @@ export default function FacturesClientsPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4">
-        <StatCard label={t('admin.customerInvoices.totalInvoices')} value={invoices.length} icon={FileText} />
-        <StatCard label={t('admin.customerInvoices.paid')} value={formatCAD(totalPaid)} icon={DollarSign} className="!bg-green-50 !border-green-200" />
-        <StatCard label={t('admin.customerInvoices.pending')} value={formatCAD(totalPending)} icon={Clock} className="!bg-blue-50 !border-blue-200" />
-        <StatCard label={t('admin.customerInvoices.overdue')} value={formatCAD(totalOverdue)} icon={AlertTriangle} className="!bg-red-50 !border-red-200" />
+        <StatCard label={t('admin.customerInvoices.totalInvoices')} value={invoices.length} icon={FileText} theme={theme} />
+        <StatCard label={t('admin.customerInvoices.paid')} value={formatCAD(totalPaid)} icon={DollarSign} theme={theme} />
+        <StatCard label={t('admin.customerInvoices.pending')} value={formatCAD(totalPending)} icon={Clock} theme={theme} />
+        <StatCard label={t('admin.customerInvoices.overdue')} value={formatCAD(totalOverdue)} icon={AlertTriangle} theme={theme} />
       </div>
 
       {/* Filters */}
@@ -310,10 +337,10 @@ export default function FacturesClientsPage() {
             <table className="w-full border border-slate-200 rounded-lg overflow-hidden">
               <thead className="bg-slate-50">
                 <tr>
-                  <th className="px-4 py-2 text-start text-xs font-semibold text-slate-500">{t('admin.customerInvoices.description')}</th>
-                  <th className="px-4 py-2 text-center text-xs font-semibold text-slate-500">{t('admin.customerInvoices.qty')}</th>
-                  <th className="px-4 py-2 text-end text-xs font-semibold text-slate-500">{t('admin.customerInvoices.unitPrice')}</th>
-                  <th className="px-4 py-2 text-end text-xs font-semibold text-slate-500">{t('admin.customerInvoices.total')}</th>
+                  <th scope="col" className="px-4 py-2 text-start text-xs font-semibold text-slate-500">{t('admin.customerInvoices.description')}</th>
+                  <th scope="col" className="px-4 py-2 text-center text-xs font-semibold text-slate-500">{t('admin.customerInvoices.qty')}</th>
+                  <th scope="col" className="px-4 py-2 text-end text-xs font-semibold text-slate-500">{t('admin.customerInvoices.unitPrice')}</th>
+                  <th scope="col" className="px-4 py-2 text-end text-xs font-semibold text-slate-500">{t('admin.customerInvoices.total')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
@@ -321,8 +348,8 @@ export default function FacturesClientsPage() {
                   <tr key={index}>
                     <td className="px-4 py-3 text-slate-900">{item.description}</td>
                     <td className="px-4 py-3 text-center text-slate-600">{item.quantity}</td>
-                    <td className="px-4 py-3 text-end text-slate-600">{item.unitPrice.toFixed(2)} $</td>
-                    <td className="px-4 py-3 text-end font-medium text-slate-900">{item.total.toFixed(2)} $</td>
+                    <td className="px-4 py-3 text-end text-slate-600">{formatCurrency(item.unitPrice)}</td>
+                    <td className="px-4 py-3 text-end font-medium text-slate-900">{formatCurrency(item.total)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -333,19 +360,19 @@ export default function FacturesClientsPage() {
               <div className="w-64 space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-500">{t('admin.customerInvoices.subtotal')}</span>
-                  <span className="text-slate-900">{inv.subtotal.toFixed(2)} $</span>
+                  <span className="text-slate-900">{formatCurrency(inv.subtotal)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-500">{t('admin.customerInvoices.tps')}</span>
-                  <span className="text-slate-900">{inv.tps.toFixed(2)} $</span>
+                  <span className="text-slate-900">{formatCurrency(inv.tps)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-500">{t('admin.customerInvoices.tvq')}</span>
-                  <span className="text-slate-900">{inv.tvq.toFixed(2)} $</span>
+                  <span className="text-slate-900">{formatCurrency(inv.tvq)}</span>
                 </div>
                 <div className="flex justify-between text-lg font-bold border-t border-slate-200 pt-2">
                   <span>{t('admin.customerInvoices.total')}</span>
-                  <span className="text-emerald-600">{inv.total.toFixed(2)} $</span>
+                  <span className="text-emerald-600">{formatCurrency(inv.total)}</span>
                 </div>
               </div>
             </div>

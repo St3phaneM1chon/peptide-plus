@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Check, Loader2, Info, Save, Lock } from 'lucide-react';
 import { PageHeader, StatusBadge, Button } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
+import { sectionThemes } from '@/lib/admin/section-themes';
 import { toast } from 'sonner';
 
 interface ChecklistItem {
@@ -27,7 +28,7 @@ interface Period {
 type BadgeVariant = 'info' | 'warning' | 'success' | 'neutral';
 
 export default function CloturePage() {
-  const { t } = useI18n();
+  const { t, formatDate } = useI18n();
   const [periods, setPeriods] = useState<Period[]>([]);
   const [selectedPeriod, setSelectedPeriod] = useState<string>('');
   const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
@@ -119,7 +120,17 @@ export default function CloturePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedPeriod]);
 
-  if (loading) return <div className="p-8 text-center">{t('admin.closing.loading')}</div>;
+  const theme = sectionThemes.compliance;
+
+  if (loading) return (
+    <div aria-live="polite" aria-busy="true" className="p-8 space-y-4 animate-pulse">
+      <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-1/3"></div>
+      <div className="grid grid-cols-4 gap-4">
+        {[1,2,3,4].map(i => <div key={i} className="h-24 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>)}
+      </div>
+      <div className="h-64 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
+    </div>
+  );
   if (error) return <div className="p-8 text-center text-red-600">{t('admin.closing.errorPrefix')} {error}</div>;
 
   const currentPeriod = periods.find(p => p.code === selectedPeriod) || periods[0];
@@ -146,6 +157,7 @@ export default function CloturePage() {
       <PageHeader
         title={t('admin.closing.title')}
         subtitle={t('admin.closing.subtitle')}
+        theme={theme}
       />
 
       {/* Period Cards */}
@@ -170,7 +182,7 @@ export default function CloturePage() {
                 </StatusBadge>
               </div>
               <p className="text-sm text-slate-500 mb-3">
-                {new Date(period.startDate).toLocaleDateString('fr-CA')} - {new Date(period.endDate).toLocaleDateString('fr-CA')}
+                {formatDate(period.startDate)} - {formatDate(period.endDate)}
               </p>
               {savedChecklist.length > 0 && (
                 <div className="flex items-center gap-2">
@@ -295,7 +307,7 @@ export default function CloturePage() {
                 icon={Lock}
                 disabled={!canLock || lockingPeriod}
                 onClick={handleLockPeriod}
-                className={!canLock ? 'bg-slate-300 text-slate-500 cursor-not-allowed hover:bg-slate-300 border-slate-300' : 'bg-emerald-600 hover:bg-emerald-700 border-emerald-600'}
+                className={!canLock ? 'bg-slate-300 text-slate-500 cursor-not-allowed hover:bg-slate-300 border-slate-300' : `${theme.btnPrimary} border-transparent text-white`}
               >
                 {lockingPeriod ? t('admin.closing.locking') : t('admin.closing.closePeriod')}
               </Button>

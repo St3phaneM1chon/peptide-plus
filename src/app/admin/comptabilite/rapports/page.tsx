@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { PageHeader, StatusBadge, Button, type Column, DataTable } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
+import { sectionThemes } from '@/lib/admin/section-themes';
 import { toast } from 'sonner';
 
 interface TaxReport {
@@ -53,7 +54,7 @@ interface TaxSummary {
 type BadgeVariant = 'neutral' | 'info' | 'warning' | 'success';
 
 export default function RapportsComptablesPage() {
-  const { t } = useI18n();
+  const { t, formatCurrency, formatDate } = useI18n();
   const [selectedYear, setSelectedYear] = useState('2026');
   const [taxReports, setTaxReports] = useState<TaxReport[]>([]);
   const [taxSummary, setTaxSummary] = useState<TaxSummary | null>(null);
@@ -148,7 +149,17 @@ export default function RapportsComptablesPage() {
     loadData();
   }, [selectedYear]);
 
-  if (loading) return <div className="p-8 text-center">{t('admin.reports.loading')}</div>;
+  const theme = sectionThemes.reports;
+
+  if (loading) return (
+    <div aria-live="polite" aria-busy="true" className="p-8 space-y-4 animate-pulse">
+      <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-1/3"></div>
+      <div className="grid grid-cols-4 gap-4">
+        {[1,2,3,4].map(i => <div key={i} className="h-24 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>)}
+      </div>
+      <div className="h-64 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
+    </div>
+  );
   if (error) return <div className="p-8 text-center text-red-600">{t('admin.reports.errorPrefix')} {error}</div>;
 
   const statusConfig: Record<string, { label: string; variant: BadgeVariant }> = {
@@ -169,7 +180,7 @@ export default function RapportsComptablesPage() {
       header: t('admin.reports.reportCol'),
       render: (report) => (
         <div>
-          <p className="font-medium text-slate-900">TPS/TVQ - {report.period}</p>
+          <p className="font-medium text-slate-900">{t('admin.accounting.tax.tpsTvq')} - {report.period}</p>
           <p className="text-xs text-slate-500">{report.region}</p>
         </div>
       ),
@@ -178,20 +189,20 @@ export default function RapportsComptablesPage() {
       key: 'tpsCollected',
       header: t('admin.reports.tpsCollected'),
       align: 'right',
-      render: (report) => <span className="text-slate-900">{report.tpsCollected.toFixed(2)} $</span>,
+      render: (report) => <span className="text-slate-900">{formatCurrency(report.tpsCollected)}</span>,
     },
     {
       key: 'tvqCollected',
       header: t('admin.reports.tvqCollected'),
       align: 'right',
-      render: (report) => <span className="text-slate-900">{report.tvqCollected.toFixed(2)} $</span>,
+      render: (report) => <span className="text-slate-900">{formatCurrency(report.tvqCollected)}</span>,
     },
     {
       key: 'ctirti',
       header: t('admin.reports.ctiRti'),
       align: 'right',
       render: (report) => (
-        <span className="text-red-600">-{(report.tpsPaid + report.tvqPaid).toFixed(2)} $</span>
+        <span className="text-red-600">-{formatCurrency(report.tpsPaid + report.tvqPaid)}</span>
       ),
     },
     {
@@ -199,7 +210,7 @@ export default function RapportsComptablesPage() {
       header: t('admin.reports.netToPay'),
       align: 'right',
       render: (report) => {
-        return <span className="font-bold text-emerald-600">{report.netTotal.toFixed(2)} $</span>;
+        return <span className="font-bold text-emerald-600">{formatCurrency(report.netTotal)}</span>;
       },
     },
     {
@@ -207,7 +218,7 @@ export default function RapportsComptablesPage() {
       header: t('admin.reports.dueDate'),
       align: 'center',
       render: (report) => (
-        <span className="text-sm text-slate-600">{report.dueDate ? new Date(report.dueDate).toLocaleDateString('fr-CA') : '-'}</span>
+        <span className="text-sm text-slate-600">{report.dueDate ? formatDate(report.dueDate) : '-'}</span>
       ),
     },
     {
@@ -252,6 +263,7 @@ export default function RapportsComptablesPage() {
       <PageHeader
         title={t('admin.reports.title')}
         subtitle={t('admin.reports.subtitle')}
+        theme={theme}
         actions={
           <select
             value={selectedYear}
@@ -380,19 +392,19 @@ export default function RapportsComptablesPage() {
         <div className="grid grid-cols-4 gap-6">
           <div>
             <p className="text-emerald-200 text-sm">{t('admin.reports.tpsCollected')}</p>
-            <p className="text-2xl font-bold">{Math.round(totalTpsCollected).toLocaleString()} $</p>
+            <p className="text-2xl font-bold">{formatCurrency(totalTpsCollected)}</p>
           </div>
           <div>
             <p className="text-emerald-200 text-sm">{t('admin.reports.tvqCollected')}</p>
-            <p className="text-2xl font-bold">{Math.round(totalTvqCollected).toLocaleString()} $</p>
+            <p className="text-2xl font-bold">{formatCurrency(totalTvqCollected)}</p>
           </div>
           <div>
             <p className="text-emerald-200 text-sm">{t('admin.reports.ctiRtiClaimed')}</p>
-            <p className="text-2xl font-bold">{Math.round(totalCtiRti).toLocaleString()} $</p>
+            <p className="text-2xl font-bold">{formatCurrency(totalCtiRti)}</p>
           </div>
           <div>
             <p className="text-emerald-200 text-sm">{t('admin.reports.netToRemit')}</p>
-            <p className="text-2xl font-bold">{Math.round(totalNetRemit).toLocaleString()} $</p>
+            <p className="text-2xl font-bold">{formatCurrency(totalNetRemit)}</p>
           </div>
         </div>
       </div>

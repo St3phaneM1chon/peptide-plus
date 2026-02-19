@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth-config';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import { UserRole } from '@/types';
 import { prisma } from '@/lib/db';
 import { z } from 'zod';
@@ -27,16 +27,8 @@ const accountingSettingsSchema = z.object({
  * GET /api/accounting/settings
  * Get accounting settings
  */
-export async function GET() {
+export const GET = withAdminGuard(async () => {
   try {
-    const session = await auth();
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
-    }
-    if (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER) {
-      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
-    }
-
     let settings = await prisma.accountingSettings.findUnique({
       where: { id: 'default' },
     });
@@ -56,18 +48,14 @@ export async function GET() {
       { status: 500 }
     );
   }
-}
+});
 
 /**
  * PUT /api/accounting/settings
  * Update accounting settings
  */
-export async function PUT(request: NextRequest) {
+export const PUT = withAdminGuard(async (request, { session }) => {
   try {
-    const session = await auth();
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
-    }
     // #78 Compliance: Restrict settings modification to OWNER role only
     if (session.user.role !== UserRole.OWNER) {
       return NextResponse.json(
@@ -133,4 +121,4 @@ export async function PUT(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

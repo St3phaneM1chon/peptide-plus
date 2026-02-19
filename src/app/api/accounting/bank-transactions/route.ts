@@ -1,8 +1,7 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth-config';
-import { UserRole } from '@/types';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 
 /**
@@ -14,16 +13,8 @@ import { prisma } from '@/lib/db';
  *   CREATE INDEX idx_bank_tx_account_date ON "BankTransaction" ("bankAccountId", "date" DESC) WHERE "deletedAt" IS NULL;
  *   CREATE INDEX idx_bank_tx_reconciliation ON "BankTransaction" ("reconciliationStatus", "date" DESC) WHERE "deletedAt" IS NULL;
  */
-export async function GET(request: NextRequest) {
+export const GET = withAdminGuard(async (request) => {
   try {
-    const session = await auth();
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
-    }
-    if (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER) {
-      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
-    }
-
     const { searchParams } = new URL(request.url);
     const bankAccountId = searchParams.get('bankAccountId');
     const reconciliationStatus = searchParams.get('reconciliationStatus');
@@ -77,8 +68,14 @@ export async function GET(request: NextRequest) {
     }));
 
     return NextResponse.json({
-      transactions: mapped,
-      pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+      data: mapped,
+      transactions: mapped, // backward-compat alias
+      pagination: {
+        page,
+        pageSize: limit,
+        totalCount: total,
+        totalPages: Math.ceil(total / limit),
+      },
     });
   } catch (error) {
     console.error('Get bank transactions error:', error);
@@ -87,22 +84,14 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
 /**
  * POST /api/accounting/bank-transactions
  * Import bank transactions
  */
-export async function POST(request: NextRequest) {
+export const POST = withAdminGuard(async (request) => {
   try {
-    const session = await auth();
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
-    }
-    if (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER) {
-      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
-    }
-
     const body = await request.json();
     const { bankAccountId, transactions } = body;
 
@@ -144,22 +133,14 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
 /**
  * PUT /api/accounting/bank-transactions
  * Update a bank transaction (match/unmatch reconciliation)
  */
-export async function PUT(request: NextRequest) {
+export const PUT = withAdminGuard(async (request) => {
   try {
-    const session = await auth();
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
-    }
-    if (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER) {
-      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
-    }
-
     const body = await request.json();
     const { id, reconciliationStatus, matchedEntryId } = body;
 
@@ -195,4 +176,4 @@ export async function PUT(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

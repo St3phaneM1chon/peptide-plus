@@ -1,28 +1,21 @@
 export const dynamic = 'force-dynamic';
 
-import { NextResponse } from 'next/server';
-import { auth } from '@/lib/auth-config';
-import { UserRole } from '@/types';
+import { NextRequest, NextResponse } from 'next/server';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
+import { logAuditTrail } from '@/lib/accounting';
 
 /**
  * POST /api/accounting/entries/[id]/post
  * Post a draft journal entry
  */
-export async function POST(
-  _request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const POST = withAdminGuard(async (_request, { session, params }) => {
   try {
-    const session = await auth();
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
-    }
-    if (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER) {
-      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
-    }
+    const id = params?.id;
 
-    const { id } = await params;
+    if (!id) {
+      return NextResponse.json({ error: 'ID requis' }, { status: 400 });
+    }
 
     const existing = await prisma.journalEntry.findUnique({
       where: { id },
@@ -76,6 +69,15 @@ export async function POST(
       },
     });
 
+    // Phase 4 Compliance: Audit trail logging
+    logAuditTrail({
+      entityType: 'JournalEntry',
+      entityId: id,
+      action: 'POST',
+      userId: session.user.id || session.user.email || 'unknown',
+      userName: session.user.name || undefined,
+    });
+
     return NextResponse.json({
       success: true,
       entry: {
@@ -94,4 +96,4 @@ export async function POST(
       { status: 500 }
     );
   }
-}
+});

@@ -75,15 +75,15 @@ model AccountingPeriod {
 }
 
 model FiscalYear {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   name      String
   startDate DateTime
   endDate   DateTime
-  isClosed  Boolean  @default(false)
+  isClosed  Boolean   @default(false)
   closedAt  DateTime?
   closedBy  String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
   @@index([startDate])
   @@index([isClosed])
@@ -266,12 +266,12 @@ model BankTransaction {
   category             String?
   reference            String?
   reconciliationStatus ReconciliationStatus @default(PENDING)
-  matchedEntryId       String?              // TODO #53: Add foreign key constraint: @relation(fields: [matchedEntryId], references: [id]) to JournalEntry
+  matchedEntryId       String? // TODO #53: Add foreign key constraint: @relation(fields: [matchedEntryId], references: [id]) to JournalEntry
   matchedAt            DateTime?
   matchedBy            String?
   importBatch          String?
   importedAt           DateTime             @default(now())
-  rawData              String?              // TODO #59: Change from String? to Json? for proper structured data storage and querying
+  rawData              String? // TODO #59: Change from String? to Json? for proper structured data storage and querying
   createdAt            DateTime             @default(now())
   deletedAt            DateTime?
   bankAccount          BankAccount          @relation(fields: [bankAccountId], references: [id], onDelete: Cascade)
@@ -280,6 +280,8 @@ model BankTransaction {
   @@index([date])
   @@index([reconciliationStatus])
   @@index([deletedAt])
+  @@index([reconciliationStatus, date]) // Phase 9: Composite for unreconciled transaction queries
+  @@index([bankAccountId, date]) // Phase 9: Composite for bank statement queries
 }
 
 model BlogPost {
@@ -730,6 +732,8 @@ model CustomerInvoice {
   @@index([orderId])
   @@index([status])
   @@index([deletedAt])
+  @@index([status, dueDate]) // Phase 9: Composite for overdue invoice queries
+  @@index([customerId, status]) // Phase 9: Composite for customer invoice listing
 }
 
 model CustomerInvoiceItem {
@@ -1204,63 +1208,63 @@ model NotificationPreference {
 }
 
 model Order {
-  id                String          @id
-  orderNumber       String          @unique
-  userId            String
-  subtotal          Decimal         @db.Decimal(10, 2)
-  shippingCost      Decimal         @default(0) @db.Decimal(10, 2)
-  discount          Decimal         @default(0) @db.Decimal(10, 2)
-  tax               Decimal         @default(0) @db.Decimal(10, 2)
-  total             Decimal         @db.Decimal(10, 2)
-  currencyId        String
-  exchangeRate      Decimal         @default(1) @db.Decimal(10, 6)
-  promoCode         String?
-  promoDiscount     Decimal?        @db.Decimal(10, 2)
-  paymentMethod     PaymentMethod?
-  paymentStatus     String          @default("PENDING")
-  stripePaymentId   String?
-  paypalOrderId     String?
-  status            String          @default("PENDING")
-  shippingName      String
-  shippingAddress1  String
-  shippingAddress2  String?
-  shippingCity      String
-  shippingState     String
-  shippingPostal    String
-  shippingCountry   String          @default("CA")
-  shippingPhone     String?
-  carrier           String?
-  trackingNumber    String?
-  trackingUrl       String?
-  shippedAt         DateTime?
-  deliveredAt       DateTime?
-  customerNotes     String?
-  adminNotes        String?
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime
-  taxTps            Decimal         @default(0) @db.Decimal(10, 2)
-  taxTvh            Decimal         @default(0) @db.Decimal(10, 2)
-  taxTvq            Decimal         @default(0) @db.Decimal(10, 2)
-  orderType         String          @default("STANDARD")
-  parentOrderId     String?
-  replacementReason String?
-  taxPst            Decimal         @default(0) @db.Decimal(10, 2)
-  idempotencyKey    String?         @unique
-  user              User            @relation(fields: [userId], references: [id])
-  currency          Currency        @relation(fields: [currencyId], references: [id])
-  parentOrder       Order?          @relation("OrderToOrder", fields: [parentOrderId], references: [id])
-  replacementOrders Order[]         @relation("OrderToOrder")
-  billingName       String?
-  billingAddress1   String?
-  billingAddress2   String?
-  billingCity       String?
-  billingState      String?
-  billingPostal     String?
-  billingCountry    String?
-  billingSameAsShipping Boolean       @default(true)
-  items             OrderItem[]
-  paymentErrors     PaymentError[]
-  returnRequests    ReturnRequest[]
+  id                    String          @id
+  orderNumber           String          @unique
+  userId                String
+  subtotal              Decimal         @db.Decimal(10, 2)
+  shippingCost          Decimal         @default(0) @db.Decimal(10, 2)
+  discount              Decimal         @default(0) @db.Decimal(10, 2)
+  tax                   Decimal         @default(0) @db.Decimal(10, 2)
+  total                 Decimal         @db.Decimal(10, 2)
+  currencyId            String
+  exchangeRate          Decimal         @default(1) @db.Decimal(10, 6)
+  promoCode             String?
+  promoDiscount         Decimal?        @db.Decimal(10, 2)
+  paymentMethod         PaymentMethod?
+  paymentStatus         String          @default("PENDING")
+  stripePaymentId       String?
+  paypalOrderId         String?
+  status                String          @default("PENDING")
+  shippingName          String
+  shippingAddress1      String
+  shippingAddress2      String?
+  shippingCity          String
+  shippingState         String
+  shippingPostal        String
+  shippingCountry       String          @default("CA")
+  shippingPhone         String?
+  carrier               String?
+  trackingNumber        String?
+  trackingUrl           String?
+  shippedAt             DateTime?
+  deliveredAt           DateTime?
+  customerNotes         String?
+  adminNotes            String?
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime
+  taxTps                Decimal         @default(0) @db.Decimal(10, 2)
+  taxTvh                Decimal         @default(0) @db.Decimal(10, 2)
+  taxTvq                Decimal         @default(0) @db.Decimal(10, 2)
+  orderType             String          @default("STANDARD")
+  parentOrderId         String?
+  replacementReason     String?
+  taxPst                Decimal         @default(0) @db.Decimal(10, 2)
+  idempotencyKey        String?         @unique
+  user                  User            @relation(fields: [userId], references: [id])
+  currency              Currency        @relation(fields: [currencyId], references: [id])
+  parentOrder           Order?          @relation("OrderToOrder", fields: [parentOrderId], references: [id])
+  replacementOrders     Order[]         @relation("OrderToOrder")
+  billingName           String?
+  billingAddress1       String?
+  billingAddress2       String?
+  billingCity           String?
+  billingState          String?
+  billingPostal         String?
+  billingCountry        String?
+  billingSameAsShipping Boolean         @default(true)
+  items                 OrderItem[]
+  paymentErrors         PaymentError[]
+  returnRequests        ReturnRequest[]
 
   @@index([createdAt])
   @@index([orderNumber])
@@ -1275,18 +1279,18 @@ model Order {
 }
 
 model PaymentError {
-  id              String   @id @default(cuid())
+  id              String    @id @default(cuid())
   orderId         String?
   stripePaymentId String?
   errorType       String
   errorMessage    String
-  amount          Decimal  @default(0) @db.Decimal(10, 2)
-  currency        String   @default("CAD")
+  amount          Decimal   @default(0) @db.Decimal(10, 2)
+  currency        String    @default("CAD")
   customerEmail   String?
   metadata        String?
-  createdAt       DateTime @default(now())
+  createdAt       DateTime  @default(now())
   deletedAt       DateTime?
-  order           Order?   @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  order           Order?    @relation(fields: [orderId], references: [id], onDelete: SetNull)
 
   @@index([createdAt])
   @@index([orderId])
@@ -1845,19 +1849,19 @@ model ReturnRequest {
 }
 
 model Refund {
-  id              String   @id @default(cuid())
+  id              String    @id @default(cuid())
   orderId         String
   returnRequestId String?
-  amount          Decimal  @db.Decimal(10, 2)
-  status          String   @default("PENDING")
+  amount          Decimal   @db.Decimal(10, 2)
+  status          String    @default("PENDING")
   reason          String
   processedAt     DateTime?
   processedBy     String?
   stripeRefundId  String?
   paypalRefundId  String?
   notes           String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   @@index([orderId])
   @@index([returnRequestId])
@@ -2579,7 +2583,7 @@ enum TranslationJobStatus {
 model TranslationFeedback {
   id        String   @id @default(cuid())
   locale    String
-  rating    String   // 'good' | 'bad'
+  rating    String // 'good' | 'bad'
   comment   String?
   page      String
   userAgent String?
@@ -2817,7 +2821,7 @@ model SearchLog {
   userId      String?
   filters     Json?
   locale      String?
-  duration    Int?     // ms
+  duration    Int? // ms
   createdAt   DateTime @default(now())
 
   @@index([query])
@@ -2852,7 +2856,7 @@ model WebhookDelivery {
   attempts    Int             @default(0)
   lastAttempt DateTime?
   response    String?
-  duration    Int?            // ms
+  duration    Int? // ms
   createdAt   DateTime        @default(now())
   endpoint    WebhookEndpoint @relation(fields: [endpointId], references: [id], onDelete: Cascade)
 
@@ -2867,4 +2871,49 @@ enum WebhookDeliveryStatus {
   SUCCESS
   FAILED
   RETRYING
+}
+
+// =====================================================
+// PHASE 4 COMPLIANCE: Audit Trail + Recurring Templates
+// =====================================================
+
+model AuditTrail {
+  id         String   @id @default(cuid())
+  entityType String // e.g. "JournalEntry", "CustomerInvoice", "CreditNote"
+  entityId   String
+  action     String // CREATE, UPDATE, DELETE, POST, VOID, etc.
+  field      String? // specific field changed (null for create/delete)
+  oldValue   String? // previous value (JSON string for complex types)
+  newValue   String? // new value
+  userId     String // who made the change
+  userName   String? // cached display name
+  ipAddress  String?
+  userAgent  String?
+  metadata   Json? // additional context
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([userId])
+  @@index([createdAt])
+  @@index([action]) // Phase 9: Index for action-based filtering
+  @@index([action, createdAt]) // Phase 9: Composite for action + time range queries
+}
+
+model RecurringEntryTemplate {
+  id           String    @id @default(cuid())
+  name         String
+  description  String?
+  frequency    String // DAILY, WEEKLY, MONTHLY, QUARTERLY, YEARLY
+  dayOfMonth   Int? // for MONTHLY
+  dayOfWeek    Int? // for WEEKLY (0=Sun, 6=Sat)
+  nextRunDate  DateTime
+  lastRunDate  DateTime?
+  isActive     Boolean   @default(true)
+  templateData Json // { lines: [{accountId, debit, credit}], description, type }
+  createdBy    String
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([isActive, nextRunDate])
+  @@index([frequency])
 }

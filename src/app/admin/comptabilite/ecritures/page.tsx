@@ -32,6 +32,7 @@ import {
 } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
+import { sectionThemes } from '@/lib/admin/section-themes';
 
 interface JournalEntry {
   id: string;
@@ -64,7 +65,7 @@ const defaultAccountOptions = [
 ];
 
 export default function EcrituresPage() {
-  const { t, locale } = useI18n();
+  const { t, locale, formatCurrency } = useI18n();
 
   const typeConfig: Record<string, { label: string; variant: 'info' | 'success' | 'warning' | 'neutral' | 'primary' | 'error' }> = {
     MANUAL: { label: t('admin.entries.typeManual'), variant: 'info' },
@@ -98,7 +99,7 @@ export default function EcrituresPage() {
     { value: 'VOIDED', label: t('admin.entries.statusVoided') },
   ];
 
-  const fmtCurrency = (n: number) => n.toLocaleString(locale, { minimumFractionDigits: 2 }) + ' $';
+  const fmtCurrency = formatCurrency;
   const fmtDate = (d: string) => new Date(d).toLocaleDateString(locale);
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -109,6 +110,7 @@ export default function EcrituresPage() {
   const [showNewEntryModal, setShowNewEntryModal] = useState(false);
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [accountOptions, setAccountOptions] = useState(defaultAccountOptions);
   const [submitting, setSubmitting] = useState(false);
 
@@ -122,38 +124,42 @@ export default function EcrituresPage() {
   ]);
 
   const fetchEntries = async () => {
+    setError(null);
     try {
       const params = new URLSearchParams();
       if (selectedStatus) params.set('status', selectedStatus);
       if (selectedType) params.set('type', selectedType);
       if (searchTerm) params.set('search', searchTerm);
       const res = await fetch(`/api/accounting/entries?${params.toString()}`);
-      if (res.ok) {
-        const data = await res.json();
-        const mapped: JournalEntry[] = (data.entries || []).map((e: Record<string, unknown>) => ({
-          id: e.id,
-          entryNumber: e.entryNumber,
-          date: e.date,
-          description: e.description,
-          type: e.type,
-          status: e.status,
-          reference: e.reference || undefined,
-          createdBy: e.createdBy || t('admin.entries.systemUser'),
-          createdAt: e.createdAt,
-          attachments: e.attachments || 0,
-          lines: ((e.lines || []) as Record<string, unknown>[]).map((l: Record<string, unknown>, idx: number) => ({
-            id: l.id || String(idx),
-            accountCode: l.accountCode,
-            accountName: l.accountName,
-            description: l.description || undefined,
-            debit: Number(l.debit) || 0,
-            credit: Number(l.credit) || 0,
-          })),
-        }));
-        setEntries(mapped);
+      if (!res.ok) {
+        throw new Error(`Erreur serveur (${res.status})`);
       }
+      const data = await res.json();
+      const mapped: JournalEntry[] = (data.entries || []).map((e: Record<string, unknown>) => ({
+        id: e.id,
+        entryNumber: e.entryNumber,
+        date: e.date,
+        description: e.description,
+        type: e.type,
+        status: e.status,
+        reference: e.reference || undefined,
+        createdBy: e.createdBy || t('admin.entries.systemUser'),
+        createdAt: e.createdAt,
+        attachments: e.attachments || 0,
+        lines: ((e.lines || []) as Record<string, unknown>[]).map((l: Record<string, unknown>, idx: number) => ({
+          id: l.id || String(idx),
+          accountCode: l.accountCode,
+          accountName: l.accountName,
+          description: l.description || undefined,
+          debit: Number(l.debit) || 0,
+          credit: Number(l.credit) || 0,
+        })),
+      }));
+      setEntries(mapped);
     } catch (err) {
       console.error('Error fetching entries:', err);
+      setError(err instanceof Error ? err.message : 'Impossible de charger les \u00e9critures');
+      toast.error('Impossible de charger les \u00e9critures comptables');
     } finally {
       setLoading(false);
     }
@@ -370,6 +376,7 @@ export default function EcrituresPage() {
             onClick={(e) => { e.stopPropagation(); openDetail(entry); }}
             className="p-1.5 text-slate-500 hover:text-sky-600 hover:bg-sky-50 rounded"
             title={t('admin.entries.viewDetails')}
+            aria-label={t('admin.entries.viewDetails')}
           >
             <Eye className="w-4 h-4" />
           </button>
@@ -378,6 +385,7 @@ export default function EcrituresPage() {
               onClick={(e) => { e.stopPropagation(); handlePostEntry(entry.id); }}
               className="p-1.5 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded"
               title={t('admin.entries.postEntry')}
+              aria-label={t('admin.entries.postEntry')}
             >
               <Check className="w-4 h-4" />
             </button>
@@ -437,16 +445,40 @@ export default function EcrituresPage() {
     </div>
   );
 
-  if (loading) return <div className="p-8 text-center">{t('admin.entries.loading')}</div>;
+  const theme = sectionThemes.entry;
+
+  if (loading) return (
+    <div aria-live="polite" aria-busy="true" className="p-8 space-y-4 animate-pulse">
+      <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-1/3"></div>
+      <div className="grid grid-cols-4 gap-4">
+        {[1,2,3,4].map(i => <div key={i} className="h-24 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>)}
+      </div>
+      <div className="h-64 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
+    </div>
+  );
 
   return (
     <div className="space-y-6">
+      {/* Error Banner */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg mb-4 flex items-center justify-between">
+          <span>{error}</span>
+          <button
+            onClick={() => { setError(null); fetchEntries(); }}
+            className="text-red-700 underline font-medium hover:text-red-800"
+          >
+            R&eacute;essayer
+          </button>
+        </div>
+      )}
+
       {/* Header */}
       <PageHeader
         title={t('admin.entries.title')}
         subtitle={t('admin.entries.subtitle')}
+        theme={theme}
         actions={
-          <Button variant="primary" icon={Plus} className="bg-emerald-600 hover:bg-emerald-700 border-transparent" onClick={() => setShowNewEntryModal(true)}>
+          <Button variant="primary" icon={Plus} className={`${theme.btnPrimary} border-transparent text-white`} onClick={() => setShowNewEntryModal(true)}>
             {t('admin.entries.newEntry')}
           </Button>
         }
@@ -458,24 +490,25 @@ export default function EcrituresPage() {
           label={t('admin.entries.totalThisMonth')}
           value={entries.length}
           icon={FileText}
+          theme={theme}
         />
         <StatCard
           label={t('admin.entries.posted')}
           value={entries.filter((e) => e.status === 'POSTED').length}
           icon={BookOpen}
-          className="bg-emerald-50 border-emerald-200"
+          theme={theme}
         />
         <StatCard
           label={t('admin.entries.drafts')}
           value={entries.filter((e) => e.status === 'DRAFT').length}
           icon={Clock}
-          className="bg-yellow-50 border-yellow-200"
+          theme={theme}
         />
         <StatCard
           label={t('admin.entries.automatic')}
           value={entries.filter((e) => e.type.startsWith('AUTO')).length}
           icon={Zap}
-          className="bg-sky-50 border-sky-200"
+          theme={theme}
         />
       </div>
 
@@ -551,10 +584,10 @@ export default function EcrituresPage() {
                 <table className="w-full">
                   <thead className="bg-slate-50">
                     <tr>
-                      <th className="px-4 py-2 text-start text-xs font-semibold text-slate-500">{t('admin.entries.accountHeader')}</th>
-                      <th className="px-4 py-2 text-start text-xs font-semibold text-slate-500">{t('admin.entries.descriptionHeader')}</th>
-                      <th className="px-4 py-2 text-end text-xs font-semibold text-slate-500">{t('admin.entries.debitHeader')}</th>
-                      <th className="px-4 py-2 text-end text-xs font-semibold text-slate-500">{t('admin.entries.creditHeader')}</th>
+                      <th scope="col" className="px-4 py-2 text-start text-xs font-semibold text-slate-500">{t('admin.entries.accountHeader')}</th>
+                      <th scope="col" className="px-4 py-2 text-start text-xs font-semibold text-slate-500">{t('admin.entries.descriptionHeader')}</th>
+                      <th scope="col" className="px-4 py-2 text-end text-xs font-semibold text-slate-500">{t('admin.entries.debitHeader')}</th>
+                      <th scope="col" className="px-4 py-2 text-end text-xs font-semibold text-slate-500">{t('admin.entries.creditHeader')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -640,8 +673,8 @@ export default function EcrituresPage() {
               <table className="w-full">
                 <thead className="bg-slate-50">
                   <tr>
-                    <th className="px-4 py-2 text-start text-xs font-semibold text-slate-500">{t('admin.entries.accountHeader')}</th>
-                    <th className="px-4 py-2 text-start text-xs font-semibold text-slate-500">{t('admin.entries.descriptionHeader')}</th>
+                    <th scope="col" className="px-4 py-2 text-start text-xs font-semibold text-slate-500">{t('admin.entries.accountHeader')}</th>
+                    <th scope="col" className="px-4 py-2 text-start text-xs font-semibold text-slate-500">{t('admin.entries.descriptionHeader')}</th>
                     <th className="px-4 py-2 text-end text-xs font-semibold text-slate-500 w-32">{t('admin.entries.debitHeader')}</th>
                     <th className="px-4 py-2 text-end text-xs font-semibold text-slate-500 w-32">{t('admin.entries.creditHeader')}</th>
                     <th className="w-10" />
@@ -692,7 +725,7 @@ export default function EcrituresPage() {
                         />
                       </td>
                       <td className="px-2">
-                        <button className="p-1 text-red-500 hover:bg-red-50 rounded" onClick={() => removeNewLine(idx)}>
+                        <button className="p-1 text-red-500 hover:bg-red-50 rounded" onClick={() => removeNewLine(idx)} aria-label="Supprimer">
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </td>

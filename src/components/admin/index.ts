@@ -1,5 +1,6 @@
 export { PageHeader } from './PageHeader';
 export { StatCard } from './StatCard';
+export { SectionCard } from './SectionCard';
 export { StatusBadge, OrderStatusBadge, PaymentStatusBadge } from './StatusBadge';
 export { Modal } from './Modal';
 export { EmptyState } from './EmptyState';

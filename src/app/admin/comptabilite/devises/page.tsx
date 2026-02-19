@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useI18n } from '@/i18n/client';
+import { sectionThemes } from '@/lib/admin/section-themes';
 import { toast } from 'sonner';
 
 interface Currency {
@@ -28,7 +29,7 @@ interface ForeignAccount {
 }
 
 export default function CurrencyPage() {
-  const { t, locale } = useI18n();
+  const { t, locale, formatCurrency: _formatCAD } = useI18n();
   const [activeTab, setActiveTab] = useState<'rates' | 'accounts' | 'history'>('rates');
   const [currencies, setCurrencies] = useState<Currency[]>([]);
   const [foreignAccounts, setForeignAccounts] = useState<ForeignAccount[]>([]);
@@ -184,6 +185,8 @@ export default function CurrencyPage() {
   const totalForeignCAD = foreignAccounts.reduce((sum, a) => sum + a.cadEquivalent, 0);
   const totalUnrealizedGainLoss = foreignAccounts.reduce((sum, a) => sum + a.unrealizedGainLoss, 0);
 
+  const theme = sectionThemes.bank;
+
   if (loading) {
     return <div className="flex items-center justify-center h-64"><div className="animate-spin h-8 w-8 border-4 border-sky-500 border-t-transparent rounded-full"></div></div>;
   }
@@ -192,7 +195,7 @@ export default function CurrencyPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
-        <div>
+        <div className={`border-l-4 ${theme.accentBar} pl-4`}>
           <h1 className="text-2xl font-bold text-slate-900">{t('admin.multiCurrency.title')}</h1>
           <p className="text-slate-500 mt-1">{t('admin.multiCurrency.subtitle')}</p>
         </div>
@@ -292,7 +295,7 @@ export default function CurrencyPage() {
 
           {/* Add currency card */}
           <div className="bg-white rounded-xl p-4 border border-dashed border-slate-300 flex items-center justify-center min-h-[160px]">
-            <button className="text-slate-500 hover:text-slate-900 flex flex-col items-center gap-2">
+            <button className="text-slate-500 hover:text-slate-900 flex flex-col items-center gap-2" aria-label={t('admin.multiCurrency.addCurrency')}>
               <span className="text-3xl">+</span>
               <span className="text-sm">{t('admin.multiCurrency.addCurrency')}</span>
             </button>
@@ -307,13 +310,13 @@ export default function CurrencyPage() {
             <table className="w-full">
               <thead className="bg-slate-50">
                 <tr>
-                  <th className="px-4 py-3 text-start text-xs font-medium text-slate-500 uppercase">{t('admin.multiCurrency.account')}</th>
-                  <th className="px-4 py-3 text-start text-xs font-medium text-slate-500 uppercase">{t('admin.multiCurrency.currency')}</th>
-                  <th className="px-4 py-3 text-end text-xs font-medium text-slate-500 uppercase">{t('admin.multiCurrency.originalBalance')}</th>
-                  <th className="px-4 py-3 text-end text-xs font-medium text-slate-500 uppercase">{t('admin.multiCurrency.cadEquivalent')}</th>
-                  <th className="px-4 py-3 text-end text-xs font-medium text-slate-500 uppercase">{t('admin.multiCurrency.originalRate')}</th>
-                  <th className="px-4 py-3 text-end text-xs font-medium text-slate-500 uppercase">{t('admin.multiCurrency.currentRate')}</th>
-                  <th className="px-4 py-3 text-end text-xs font-medium text-slate-500 uppercase">{t('admin.multiCurrency.gainLoss')}</th>
+                  <th scope="col" className="px-4 py-3 text-start text-xs font-medium text-slate-500 uppercase">{t('admin.multiCurrency.account')}</th>
+                  <th scope="col" className="px-4 py-3 text-start text-xs font-medium text-slate-500 uppercase">{t('admin.multiCurrency.currency')}</th>
+                  <th scope="col" className="px-4 py-3 text-end text-xs font-medium text-slate-500 uppercase">{t('admin.multiCurrency.originalBalance')}</th>
+                  <th scope="col" className="px-4 py-3 text-end text-xs font-medium text-slate-500 uppercase">{t('admin.multiCurrency.cadEquivalent')}</th>
+                  <th scope="col" className="px-4 py-3 text-end text-xs font-medium text-slate-500 uppercase">{t('admin.multiCurrency.originalRate')}</th>
+                  <th scope="col" className="px-4 py-3 text-end text-xs font-medium text-slate-500 uppercase">{t('admin.multiCurrency.currentRate')}</th>
+                  <th scope="col" className="px-4 py-3 text-end text-xs font-medium text-slate-500 uppercase">{t('admin.multiCurrency.gainLoss')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
@@ -362,7 +365,7 @@ export default function CurrencyPage() {
           </div>
 
           {/* Add account */}
-          <button className="w-full py-3 border border-dashed border-slate-300 rounded-xl text-slate-500 hover:text-slate-900 hover:border-slate-400">
+          <button className="w-full py-3 border border-dashed border-slate-300 rounded-xl text-slate-500 hover:text-slate-900 hover:border-slate-400" aria-label={t('admin.multiCurrency.addForeignAccount')}>
             {t('admin.multiCurrency.addForeignAccount')}
           </button>
         </div>
@@ -461,7 +464,7 @@ export default function CurrencyPage() {
           <span className="text-2xl">\u2192</span>
           <div className="flex-1 px-4 py-2 bg-slate-50 rounded-lg">
             <p className="text-2xl font-bold text-sky-600">
-              {convertedAmount.toFixed(2)} CAD
+              {formatCurrency(convertedAmount)}
             </p>
             <p className="text-xs text-slate-400">{t('admin.multiCurrency.rate', { rate: converterRate.toFixed(4) })}</p>
           </div>

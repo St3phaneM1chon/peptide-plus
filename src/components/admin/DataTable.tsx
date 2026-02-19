@@ -110,11 +110,11 @@ export function DataTable<T>({
   }
 
   return (
-    <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
+    <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="bg-slate-50 border-b border-slate-200">
+            <tr className="bg-slate-50/80 border-b border-slate-200">
               {selectable && (
                 <th className="w-10 px-3 py-3">
                   <input
@@ -160,9 +160,9 @@ export function DataTable<T>({
                 <tr
                   key={id}
                   className={`
-                    transition-colors
-                    ${onRowClick ? 'cursor-pointer hover:bg-slate-50' : ''}
-                    ${selectedIds?.has(id) ? 'bg-sky-50' : ''}
+                    transition-colors duration-150
+                    ${onRowClick ? 'cursor-pointer hover:bg-slate-50/70' : ''}
+                    ${selectedIds?.has(id) ? 'bg-sky-50/60' : ''}
                   `}
                   onClick={() => onRowClick?.(row)}
                 >

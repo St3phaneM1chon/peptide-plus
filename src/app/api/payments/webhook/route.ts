@@ -17,11 +17,29 @@ import { sendOrderNotificationSms, sendPaymentFailureAlertSms } from '@/lib/sms'
 import { sanitizeWebhookPayload } from '@/lib/sanitize';
 import { getRedisClient, isRedisAvailable } from '@/lib/redis';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2023-10-16',
-});
+// Lazy-initialized Stripe client to avoid crashing during Next.js build/SSG
+// when STRIPE_SECRET_KEY is not available in the CI environment.
+// See KB-PP-BUILD-002 in deployment-azure.md.
+let _stripeWebhook: Stripe | null = null;
 
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
+function getStripeWebhook(): Stripe {
+  if (!_stripeWebhook) {
+    if (!process.env.STRIPE_SECRET_KEY) {
+      throw new Error('STRIPE_SECRET_KEY is required');
+    }
+    _stripeWebhook = new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: '2023-10-16',
+    });
+  }
+  return _stripeWebhook;
+}
+
+function getWebhookSecret(): string {
+  if (!process.env.STRIPE_WEBHOOK_SECRET) {
+    throw new Error('STRIPE_WEBHOOK_SECRET is required');
+  }
+  return process.env.STRIPE_WEBHOOK_SECRET;
+}
 
 // ---------------------------------------------------------------------------
 // Event Deduplication (in-memory + Redis)
@@ -192,7 +210,7 @@ export async function POST(request: NextRequest) {
     let event: Stripe.Event;
 
     try {
-      event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+      event = getStripeWebhook().webhooks.constructEvent(body, signature, getWebhookSecret());
     } catch (err) {
       logger.error('Webhook signature verification failed', {
         error: err instanceof Error ? err.message : String(err),

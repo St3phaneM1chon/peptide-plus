@@ -10,6 +10,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
+import { sectionThemes } from '@/lib/admin/section-themes';
 import {
   PageHeader,
   Button,
@@ -54,7 +55,7 @@ interface AgingStats {
 }
 
 export default function AgingPage() {
-  const { t } = useI18n();
+  const { t, formatCurrency } = useI18n();
   const [reportType, setReportType] = useState<'RECEIVABLE' | 'PAYABLE'>('RECEIVABLE');
   const [report, setReport] = useState<AgingReport | null>(null);
   const [stats, setStats] = useState<AgingStats | null>(null);
@@ -117,11 +118,14 @@ export default function AgingPage() {
     return colors[index] || colors[0];
   };
 
+  const theme = sectionThemes.accounts;
+
   return (
     <div className="space-y-6">
       <PageHeader
         title={t('admin.aging.title')}
         subtitle={t('admin.aging.subtitle')}
+        theme={theme}
         actions={
           <div className="flex items-center gap-3">
             {/* Type Selector */}
@@ -171,23 +175,27 @@ export default function AgingPage() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <StatCard
               label={t('admin.aging.totalOutstanding')}
-              value={report.totalOutstanding.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}
+              value={formatCurrency(report.totalOutstanding)}
               icon={DollarSign}
+              theme={theme}
             />
             <StatCard
               label={t('admin.aging.totalOverdue')}
-              value={report.totalOverdue.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}
+              value={formatCurrency(report.totalOverdue)}
               icon={AlertTriangle}
+              theme={theme}
             />
             <StatCard
               label={t('admin.aging.averageDays')}
               value={`${report.averageDaysOutstanding} ${t('admin.aging.daysUnit')}`}
               icon={Calendar}
+              theme={theme}
             />
             <StatCard
               label={t('admin.aging.healthScore')}
               value={`${stats.healthScore}/100`}
               icon={Activity}
+              theme={theme}
             />
           </div>
 
@@ -247,10 +255,10 @@ export default function AgingPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-slate-200">
-                  <th className="text-start py-3 px-4 text-sm font-medium text-slate-500">{t('admin.aging.periodCol')}</th>
-                  <th className="text-end py-3 px-4 text-sm font-medium text-slate-500">{t('admin.aging.invoicesCol')}</th>
-                  <th className="text-end py-3 px-4 text-sm font-medium text-slate-500">{t('admin.aging.amountCol')}</th>
-                  <th className="text-end py-3 px-4 text-sm font-medium text-slate-500">%</th>
+                  <th scope="col" className="text-start py-3 px-4 text-sm font-medium text-slate-500">{t('admin.aging.periodCol')}</th>
+                  <th scope="col" className="text-end py-3 px-4 text-sm font-medium text-slate-500">{t('admin.aging.invoicesCol')}</th>
+                  <th scope="col" className="text-end py-3 px-4 text-sm font-medium text-slate-500">{t('admin.aging.amountCol')}</th>
+                  <th scope="col" className="text-end py-3 px-4 text-sm font-medium text-slate-500">%</th>
                 </tr>
               </thead>
               <tbody>
@@ -263,7 +271,7 @@ export default function AgingPage() {
                     </td>
                     <td className="text-end py-3 px-4 font-medium">{bucket.count}</td>
                     <td className="text-end py-3 px-4 font-medium">
-                      {bucket.total.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}
+                      {formatCurrency(bucket.total)}
                     </td>
                     <td className="text-end py-3 px-4 text-slate-500">{bucket.percentage.toFixed(1)}%</td>
                   </tr>
@@ -274,7 +282,7 @@ export default function AgingPage() {
                   <td className="py-3 px-4">Total</td>
                   <td className="text-end py-3 px-4">{report.buckets.reduce((s, b) => s + b.count, 0)}</td>
                   <td className="text-end py-3 px-4">
-                    {report.totalOutstanding.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}
+                    {formatCurrency(report.totalOutstanding)}
                   </td>
                   <td className="text-end py-3 px-4">100%</td>
                 </tr>
@@ -292,13 +300,13 @@ export default function AgingPage() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-slate-200">
-                    <th className="text-start py-3 px-4 text-sm font-medium text-slate-500">{t('admin.aging.nameCol')}</th>
-                    <th className="text-end py-3 px-4 text-sm font-medium text-slate-500">{t('admin.aging.currentCol')}</th>
-                    <th className="text-end py-3 px-4 text-sm font-medium text-slate-500">1-30j</th>
-                    <th className="text-end py-3 px-4 text-sm font-medium text-slate-500">31-60j</th>
-                    <th className="text-end py-3 px-4 text-sm font-medium text-slate-500">61-90j</th>
-                    <th className="text-end py-3 px-4 text-sm font-medium text-slate-500">90j+</th>
-                    <th className="text-end py-3 px-4 text-sm font-medium text-slate-500">Total</th>
+                    <th scope="col" className="text-start py-3 px-4 text-sm font-medium text-slate-500">{t('admin.aging.nameCol')}</th>
+                    <th scope="col" className="text-end py-3 px-4 text-sm font-medium text-slate-500">{t('admin.aging.currentCol')}</th>
+                    <th scope="col" className="text-end py-3 px-4 text-sm font-medium text-slate-500">1-30j</th>
+                    <th scope="col" className="text-end py-3 px-4 text-sm font-medium text-slate-500">31-60j</th>
+                    <th scope="col" className="text-end py-3 px-4 text-sm font-medium text-slate-500">61-90j</th>
+                    <th scope="col" className="text-end py-3 px-4 text-sm font-medium text-slate-500">90j+</th>
+                    <th scope="col" className="text-end py-3 px-4 text-sm font-medium text-slate-500">Total</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -313,22 +321,22 @@ export default function AgingPage() {
                         </div>
                       </td>
                       <td className="text-end py-3 px-4 text-green-600">
-                        {customer.current > 0 ? customer.current.toFixed(2) + ' $' : '-'}
+                        {customer.current > 0 ? formatCurrency(customer.current) : '-'}
                       </td>
                       <td className="text-end py-3 px-4 text-blue-600">
-                        {customer.days1to30 > 0 ? customer.days1to30.toFixed(2) + ' $' : '-'}
+                        {customer.days1to30 > 0 ? formatCurrency(customer.days1to30) : '-'}
                       </td>
                       <td className="text-end py-3 px-4 text-yellow-600">
-                        {customer.days31to60 > 0 ? customer.days31to60.toFixed(2) + ' $' : '-'}
+                        {customer.days31to60 > 0 ? formatCurrency(customer.days31to60) : '-'}
                       </td>
                       <td className="text-end py-3 px-4 text-amber-600">
-                        {customer.days61to90 > 0 ? customer.days61to90.toFixed(2) + ' $' : '-'}
+                        {customer.days61to90 > 0 ? formatCurrency(customer.days61to90) : '-'}
                       </td>
                       <td className="text-end py-3 px-4 text-red-600 font-medium">
-                        {customer.over90 > 0 ? customer.over90.toFixed(2) + ' $' : '-'}
+                        {customer.over90 > 0 ? formatCurrency(customer.over90) : '-'}
                       </td>
                       <td className="text-end py-3 px-4 font-semibold">
-                        {customer.total.toFixed(2)} $
+                        {formatCurrency(customer.total)}
                       </td>
                     </tr>
                   ))}

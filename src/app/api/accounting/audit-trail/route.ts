@@ -1,8 +1,7 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth-config';
-import { UserRole } from '@/types';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import {
   getAuditHistory,
   generateAuditReport,
@@ -25,16 +24,8 @@ import {
  *   limit: number (default 100)
  *   format: 'json' | 'csv' (default json)
  */
-export async function GET(request: NextRequest) {
+export const GET = withAdminGuard(async (request) => {
   try {
-    const session = await auth();
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
-    }
-    if (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER) {
-      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
-    }
-
     const { searchParams } = new URL(request.url);
     const entityType = searchParams.get('entityType') as EntityType | null;
     const entityId = searchParams.get('entityId');
@@ -42,7 +33,9 @@ export async function GET(request: NextRequest) {
     const endDateStr = searchParams.get('endDate');
     const action = searchParams.get('action') as AuditAction | null;
     const userId = searchParams.get('userId');
-    const limit = parseInt(searchParams.get('limit') || '100');
+    // Phase 9: proper pagination with page + pageSize
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
+    const pageSize = Math.min(Math.max(1, parseInt(searchParams.get('pageSize') || searchParams.get('limit') || '100') || 100), 200);
     const format = searchParams.get('format') || 'json';
 
     const startDate = startDateStr ? new Date(startDateStr) : undefined;
@@ -51,7 +44,7 @@ export async function GET(request: NextRequest) {
     // If requesting history for a specific entity
     if (entityType && entityId) {
       const entries = await getAuditHistory(entityType, entityId, {
-        limit,
+        limit: pageSize,
         startDate,
         endDate,
       });
@@ -71,6 +64,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         entries,
         total: entries.length,
+        pagination: {
+          page: 1,
+          pageSize,
+          totalCount: entries.length,
+          totalPages: 1,
+        },
       });
     }
 
@@ -101,12 +100,23 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    // Phase 9: Apply pagination to audit report entries
+    const totalCount = report.entries.length;
+    const totalPages = Math.ceil(totalCount / pageSize);
+    const paginatedEntries = report.entries.slice((page - 1) * pageSize, page * pageSize);
+
     return NextResponse.json({
       summary: report.summary,
-      entries: report.entries,
+      entries: paginatedEntries,
       period: {
         from: startDate.toISOString(),
         to: endDate.toISOString(),
+      },
+      pagination: {
+        page,
+        pageSize,
+        totalCount,
+        totalPages,
       },
     });
   } catch (error) {
@@ -116,4 +126,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

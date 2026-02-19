@@ -110,7 +110,7 @@ export const TAX_RATES = {
   AB: { TPS: 0.05, combined: 0.05 },
   SK: { TPS: 0.05, PST: 0.06, combined: 0.11 },
   MB: { TPS: 0.05, PST: 0.07, combined: 0.12 },
-  NS: { TVH: 0.15, combined: 0.15 },
+  NS: { TVH: 0.14, combined: 0.14 },
   NB: { TVH: 0.15, combined: 0.15 },
   NL: { TVH: 0.15, combined: 0.15 },
   PE: { TVH: 0.15, combined: 0.15 },

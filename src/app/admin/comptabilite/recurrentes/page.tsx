@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
+import { sectionThemes } from '@/lib/admin/section-themes';
 
 interface RecurringEntry {
   id: string;
@@ -20,7 +21,8 @@ interface RecurringEntry {
 }
 
 export default function RecurringEntriesPage() {
-  const { t, locale } = useI18n();
+  const { t, locale, formatCurrency } = useI18n();
+  const theme = sectionThemes.entry;
   const [entries, setEntries] = useState<RecurringEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -182,14 +184,22 @@ export default function RecurringEntriesPage() {
   )[0];
 
   if (loading) {
-    return <div className="p-8 text-center">{t('admin.recurringEntries.loading')}</div>;
+    return (
+      <div aria-live="polite" aria-busy="true" className="p-8 space-y-4 animate-pulse">
+        <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-1/3"></div>
+        <div className="grid grid-cols-4 gap-4">
+          {[1,2,3,4].map(i => <div key={i} className="h-24 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>)}
+        </div>
+        <div className="h-64 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
+      </div>
+    );
   }
 
   if (error) {
     return (
       <div className="p-8 text-center">
         <p className="text-red-400 mb-4">{error}</p>
-        <button onClick={loadEntries} className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg">{t('admin.recurringEntries.retry')}</button>
+        <button onClick={loadEntries} className={`px-4 py-2 ${theme.btnPrimary} border-transparent text-white rounded-lg`}>{t('admin.recurringEntries.retry')}</button>
       </div>
     );
   }
@@ -216,7 +226,7 @@ export default function RecurringEntriesPage() {
           </button>
           <button
             onClick={() => setShowModal(true)}
-            className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg flex items-center gap-2"
+            className={`px-4 py-2 ${theme.btnPrimary} border-transparent text-white rounded-lg flex items-center gap-2`}
           >
             <span>+</span> {t('admin.recurringEntries.newRecurrence')}
           </button>
@@ -231,7 +241,7 @@ export default function RecurringEntriesPage() {
         </div>
         <div className="bg-neutral-800 rounded-xl p-4 border border-neutral-700">
           <p className="text-sm text-neutral-400">{t('admin.recurringEntries.estimatedMonthlyCost')}</p>
-          <p className="text-2xl font-bold text-sky-400 mt-1">{totalMonthly.toLocaleString(locale, { style: 'currency', currency: 'CAD' })}</p>
+          <p className="text-2xl font-bold text-sky-400 mt-1">{formatCurrency(totalMonthly)}</p>
         </div>
         <div className="bg-neutral-800 rounded-xl p-4 border border-neutral-700">
           <p className="text-sm text-neutral-400">{t('admin.recurringEntries.nextExecution')}</p>
@@ -251,13 +261,13 @@ export default function RecurringEntriesPage() {
         <table className="w-full">
           <thead className="bg-neutral-900/50">
             <tr>
-              <th className="px-4 py-3 text-start text-xs font-medium text-neutral-400 uppercase">{t('admin.recurringEntries.name')}</th>
-              <th className="px-4 py-3 text-start text-xs font-medium text-neutral-400 uppercase">{t('admin.recurringEntries.frequency')}</th>
-              <th className="px-4 py-3 text-end text-xs font-medium text-neutral-400 uppercase">{t('admin.recurringEntries.amount')}</th>
-              <th className="px-4 py-3 text-start text-xs font-medium text-neutral-400 uppercase">{t('admin.recurringEntries.next')}</th>
-              <th className="px-4 py-3 text-center text-xs font-medium text-neutral-400 uppercase">{t('admin.recurringEntries.autoPost')}</th>
-              <th className="px-4 py-3 text-center text-xs font-medium text-neutral-400 uppercase">{t('admin.recurringEntries.status')}</th>
-              <th className="px-4 py-3 text-end text-xs font-medium text-neutral-400 uppercase">{t('admin.recurringEntries.actions')}</th>
+              <th scope="col" className="px-4 py-3 text-start text-xs font-medium text-neutral-400 uppercase">{t('admin.recurringEntries.name')}</th>
+              <th scope="col" className="px-4 py-3 text-start text-xs font-medium text-neutral-400 uppercase">{t('admin.recurringEntries.frequency')}</th>
+              <th scope="col" className="px-4 py-3 text-end text-xs font-medium text-neutral-400 uppercase">{t('admin.recurringEntries.amount')}</th>
+              <th scope="col" className="px-4 py-3 text-start text-xs font-medium text-neutral-400 uppercase">{t('admin.recurringEntries.next')}</th>
+              <th scope="col" className="px-4 py-3 text-center text-xs font-medium text-neutral-400 uppercase">{t('admin.recurringEntries.autoPost')}</th>
+              <th scope="col" className="px-4 py-3 text-center text-xs font-medium text-neutral-400 uppercase">{t('admin.recurringEntries.status')}</th>
+              <th scope="col" className="px-4 py-3 text-end text-xs font-medium text-neutral-400 uppercase">{t('admin.recurringEntries.actions')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-neutral-700">
@@ -276,7 +286,7 @@ export default function RecurringEntriesPage() {
                   )}
                 </td>
                 <td className="px-4 py-3 text-end font-medium text-white">
-                  {entry.amount.toLocaleString(locale, { style: 'currency', currency: 'CAD' })}
+                  {formatCurrency(entry.amount)}
                 </td>
                 <td className="px-4 py-3">
                   <p className="text-white">{new Date(entry.nextRunDate).toLocaleDateString(locale)}</p>
@@ -309,6 +319,7 @@ export default function RecurringEntriesPage() {
                       onClick={() => setShowPreview(entry)}
                       className="p-1 hover:bg-neutral-700 rounded text-neutral-400 hover:text-white"
                       title={t('admin.recurringEntries.preview')}
+                      aria-label={t('admin.recurringEntries.preview')}
                     >
                       &#128065;
                     </button>
@@ -316,6 +327,7 @@ export default function RecurringEntriesPage() {
                       onClick={() => setEditingEntry(entry)}
                       className="p-1 hover:bg-neutral-700 rounded text-neutral-400 hover:text-white"
                       title={t('admin.recurringEntries.edit')}
+                      aria-label={t('admin.recurringEntries.edit')}
                     >
                       &#9999;&#65039;
                     </button>
@@ -337,6 +349,7 @@ export default function RecurringEntriesPage() {
                       }}
                       className="p-1 hover:bg-neutral-700 rounded text-neutral-400 hover:text-red-400"
                       title={t('admin.recurringEntries.delete')}
+                      aria-label={t('admin.recurringEntries.delete')}
                     >
                       &#128465;
                     </button>
@@ -350,10 +363,10 @@ export default function RecurringEntriesPage() {
 
       {/* Create Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="bg-neutral-800 rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4" role="presentation" onClick={(e) => { if (e.target === e.currentTarget) setShowModal(false); }}>
+          <div className="bg-neutral-800 rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="create-modal-title" onKeyDown={(e) => e.key === 'Escape' && setShowModal(false)}>
             <div className="p-6 border-b border-neutral-700">
-              <h2 className="text-xl font-bold text-white">{t('admin.recurringEntries.newRecurringEntry')}</h2>
+              <h2 id="create-modal-title" className="text-xl font-bold text-white">{t('admin.recurringEntries.newRecurringEntry')}</h2>
             </div>
 
             <div className="p-6 space-y-6">
@@ -492,7 +505,7 @@ export default function RecurringEntriesPage() {
               <button
                 onClick={handleSave}
                 disabled={!formData.name || !formData.amount}
-                className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg disabled:opacity-50"
+                className={`px-4 py-2 ${theme.btnPrimary} border-transparent text-white rounded-lg disabled:opacity-50`}
               >
                 {t('admin.recurringEntries.createRecurrence')}
               </button>
@@ -503,11 +516,11 @@ export default function RecurringEntriesPage() {
 
       {/* Preview Modal */}
       {showPreview && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="bg-neutral-800 rounded-xl max-w-lg w-full">
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4" role="presentation" onClick={(e) => { if (e.target === e.currentTarget) setShowPreview(null); }}>
+          <div className="bg-neutral-800 rounded-xl max-w-lg w-full" role="dialog" aria-modal="true" aria-labelledby="preview-modal-title" onKeyDown={(e) => e.key === 'Escape' && setShowPreview(null)}>
             <div className="p-6 border-b border-neutral-700 flex justify-between items-center">
-              <h2 className="text-xl font-bold text-white">{t('admin.recurringEntries.previewTitle')}</h2>
-              <button onClick={() => setShowPreview(null)} className="text-neutral-400 hover:text-white">&#10005;</button>
+              <h2 id="preview-modal-title" className="text-xl font-bold text-white">{t('admin.recurringEntries.previewTitle')}</h2>
+              <button onClick={() => setShowPreview(null)} className="text-neutral-400 hover:text-white" aria-label="Fermer">&#10005;</button>
             </div>
             <div className="p-6">
               <h3 className="font-medium text-white mb-4">{showPreview.name}</h3>
@@ -522,12 +535,12 @@ export default function RecurringEntriesPage() {
                   return (
                     <div key={i} className="flex justify-between items-center p-3 bg-neutral-700/50 rounded-lg">
                       <span className="text-neutral-300">{date.toLocaleDateString(locale, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
-                      <span className="font-medium text-sky-400">{showPreview.amount.toLocaleString(locale, { style: 'currency', currency: 'CAD' })}</span>
+                      <span className="font-medium text-sky-400">{formatCurrency(showPreview.amount)}</span>
                     </div>
                   );
                 })}
               </div>
-              <p className="text-sm text-neutral-500 mt-4">{t('admin.recurringEntries.estimatedAnnualCost', { amount: (showPreview.amount * (showPreview.frequency === 'MONTHLY' ? 12 : showPreview.frequency === 'WEEKLY' ? 52 : showPreview.frequency === 'QUARTERLY' ? 4 : 1)).toLocaleString(locale, { style: 'currency', currency: 'CAD' }) })}</p>
+              <p className="text-sm text-neutral-500 mt-4">{t('admin.recurringEntries.estimatedAnnualCost', { amount: formatCurrency(showPreview.amount * (showPreview.frequency === 'MONTHLY' ? 12 : showPreview.frequency === 'WEEKLY' ? 52 : showPreview.frequency === 'QUARTERLY' ? 4 : 1)) })}</p>
             </div>
           </div>
         </div>

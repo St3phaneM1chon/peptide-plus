@@ -13,6 +13,7 @@ import {
   StatusBadge,
 } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
+import { sectionThemes } from '@/lib/admin/section-themes';
 import { toast } from 'sonner';
 
 interface Account {
@@ -28,7 +29,7 @@ interface Account {
 }
 
 export default function PlanComptablePage() {
-  const { t, locale } = useI18n();
+  const { t, locale, formatCurrency } = useI18n();
 
   const accountTypes: Record<string, { label: string; color: string; prefix: string }> = {
     ASSET: { label: t('admin.chartOfAccounts.typeAsset'), color: 'blue', prefix: '1' },
@@ -200,19 +201,30 @@ export default function PlanComptablePage() {
     sky: { bg: 'bg-sky-50', border: 'border-sky-200', text: 'text-sky-600', value: 'text-sky-900' },
   };
 
-  if (loading) return <div className="p-8 text-center">{t('admin.chartOfAccounts.loading')}</div>;
+  const theme = sectionThemes.accounts;
+
+  if (loading) return (
+    <div aria-live="polite" aria-busy="true" className="p-8 space-y-4 animate-pulse">
+      <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-1/3"></div>
+      <div className="grid grid-cols-5 gap-4">
+        {[1,2,3,4,5].map(i => <div key={i} className="h-24 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>)}
+      </div>
+      <div className="h-64 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
+    </div>
+  );
 
   return (
     <div className="space-y-6">
       <PageHeader
         title={t('admin.chartOfAccounts.title')}
         subtitle={t('admin.chartOfAccounts.subtitle')}
+        theme={theme}
         actions={
           <Button
             variant="primary"
             icon={Plus}
             onClick={() => { setEditingAccount(null); setShowModal(true); }}
-            className="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800"
+            className={`${theme.btnPrimary} border-transparent text-white`}
           >
             {t('admin.chartOfAccounts.newAccount')}
           </Button>
@@ -227,7 +239,7 @@ export default function PlanComptablePage() {
             <div key={key} className={`${colors.bg} rounded-xl p-4 border ${colors.border}`}>
               <p className={`text-sm ${colors.text}`}>{value.label}</p>
               <p className={`text-xl font-bold ${colors.value}`}>
-                {totals[key as keyof typeof totals].toLocaleString(locale, { style: 'currency', currency: 'CAD' })}
+                {formatCurrency(totals[key as keyof typeof totals])}
               </p>
               <p className="text-xs text-slate-500 mt-1">
                 {accounts.filter(a => a.type === key && !a.parentId).length} {t('admin.chartOfAccounts.accounts')}
@@ -261,13 +273,13 @@ export default function PlanComptablePage() {
         <table className="w-full">
           <thead className="bg-slate-50">
             <tr>
-              <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.chartOfAccounts.code')}</th>
-              <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.chartOfAccounts.accountName')}</th>
-              <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.chartOfAccounts.type')}</th>
-              <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.chartOfAccounts.category')}</th>
-              <th className="px-4 py-3 text-end text-xs font-semibold text-slate-500 uppercase">{t('admin.chartOfAccounts.balance')}</th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.chartOfAccounts.statusCol')}</th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.chartOfAccounts.actionsCol')}</th>
+              <th scope="col" className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.chartOfAccounts.code')}</th>
+              <th scope="col" className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.chartOfAccounts.accountName')}</th>
+              <th scope="col" className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.chartOfAccounts.type')}</th>
+              <th scope="col" className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.chartOfAccounts.category')}</th>
+              <th scope="col" className="px-4 py-3 text-end text-xs font-semibold text-slate-500 uppercase">{t('admin.chartOfAccounts.balance')}</th>
+              <th scope="col" className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.chartOfAccounts.statusCol')}</th>
+              <th scope="col" className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.chartOfAccounts.actionsCol')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-200">
@@ -285,6 +297,7 @@ export default function PlanComptablePage() {
                           <button
                             onClick={() => toggleCategory(account.code)}
                             className="p-0.5 hover:bg-slate-200 rounded"
+                            aria-label={isExpanded ? 'Réduire' : 'Développer'}
                           >
                             <ChevronRight
                               className={`w-4 h-4 text-slate-500 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
@@ -305,7 +318,7 @@ export default function PlanComptablePage() {
                     <td className="px-4 py-3 text-slate-600 text-sm">{account.category}</td>
                     <td className="px-4 py-3 text-end">
                       <span className={`font-medium ${account.balance >= 0 ? 'text-slate-900' : 'text-red-600'}`}>
-                        {account.balance.toLocaleString(locale, { style: 'currency', currency: 'CAD' })}
+                        {formatCurrency(account.balance)}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-center">
@@ -319,12 +332,14 @@ export default function PlanComptablePage() {
                           onClick={() => { setEditingAccount(account); setShowModal(true); }}
                           className="p-1.5 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded"
                           title={t('admin.chartOfAccounts.edit')}
+                          aria-label={t('admin.chartOfAccounts.edit')}
                         >
                           <Pencil className="w-4 h-4" />
                         </button>
                         <button
                           className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded"
                           title={t('admin.chartOfAccounts.viewTransactions')}
+                          aria-label={t('admin.chartOfAccounts.viewTransactions')}
                         >
                           <ClipboardList className="w-4 h-4" />
                         </button>
@@ -348,7 +363,7 @@ export default function PlanComptablePage() {
                       <td className="px-4 py-2 text-slate-500 text-sm">{child.category}</td>
                       <td className="px-4 py-2 text-end">
                         <span className={`text-sm ${child.balance >= 0 ? 'text-slate-700' : 'text-red-600'}`}>
-                          {child.balance.toLocaleString(locale, { style: 'currency', currency: 'CAD' })}
+                          {formatCurrency(child.balance)}
                         </span>
                       </td>
                       <td className="px-4 py-2 text-center">
@@ -387,7 +402,7 @@ export default function PlanComptablePage() {
             </Button>
             <Button
               onClick={handleSaveAccount}
-              className="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white border-transparent shadow-sm"
+              className={`${theme.btnPrimary} border-transparent text-white shadow-sm`}
             >
               {editingAccount ? t('admin.chartOfAccounts.updateAccount') : t('admin.chartOfAccounts.createAccount')}
             </Button>

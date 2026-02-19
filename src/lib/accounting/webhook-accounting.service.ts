@@ -599,42 +599,45 @@ export async function createCreditNote(params: {
     }
   }
 
-  const year = new Date().getFullYear();
-  const prefix = `NC-${year}-`;
+  // Wrap number generation + create inside a transaction so FOR UPDATE lock is effective
+  const creditNote = await prisma.$transaction(async (tx) => {
+    const year = new Date().getFullYear();
+    const prefix = `NC-${year}-`;
 
-  // Use MAX() FOR UPDATE for safe sequential numbering
-  const [maxRow] = await prisma.$queryRaw<{ max_num: string | null }[]>`
-    SELECT MAX("creditNoteNumber") as max_num
-    FROM "CreditNote"
-    WHERE "creditNoteNumber" LIKE ${prefix + '%'}
-    FOR UPDATE
-  `;
-  let nextNum = 1;
-  if (maxRow?.max_num) {
-    const parsed = parseInt(maxRow.max_num.split('-').pop() || '0');
-    if (!isNaN(parsed)) nextNum = parsed + 1;
-  }
-  const creditNoteNumber = `${prefix}${String(nextNum).padStart(4, '0')}`;
+    // Use MAX() FOR UPDATE for safe sequential numbering (must be inside transaction)
+    const [maxRow] = await tx.$queryRaw<{ max_num: string | null }[]>`
+      SELECT MAX("creditNoteNumber") as max_num
+      FROM "CreditNote"
+      WHERE "creditNoteNumber" LIKE ${prefix + '%'}
+      FOR UPDATE
+    `;
+    let nextNum = 1;
+    if (maxRow?.max_num) {
+      const parsed = parseInt(maxRow.max_num.split('-').pop() || '0');
+      if (!isNaN(parsed)) nextNum = parsed + 1;
+    }
+    const creditNoteNumber = `${prefix}${String(nextNum).padStart(4, '0')}`;
 
-  const creditNote = await prisma.creditNote.create({
-    data: {
-      creditNoteNumber,
-      invoiceId: params.invoiceId || null,
-      orderId: params.orderId,
-      customerName: params.customerName,
-      customerEmail: params.customerEmail || null,
-      subtotal: params.subtotal,
-      taxTps: params.taxTps,
-      taxTvq: params.taxTvq,
-      taxTvh: params.taxTvh,
-      taxPst: params.taxPst || 0,
-      total: params.total,
-      reason: params.reason,
-      status: 'ISSUED',
-      issuedAt: new Date(),
-      issuedBy: params.issuedBy,
-      journalEntryId: params.journalEntryId,
-    },
+    return tx.creditNote.create({
+      data: {
+        creditNoteNumber,
+        invoiceId: params.invoiceId || null,
+        orderId: params.orderId,
+        customerName: params.customerName,
+        customerEmail: params.customerEmail || null,
+        subtotal: params.subtotal,
+        taxTps: params.taxTps,
+        taxTvq: params.taxTvq,
+        taxTvh: params.taxTvh,
+        taxPst: params.taxPst || 0,
+        total: params.total,
+        reason: params.reason,
+        status: 'ISSUED',
+        issuedAt: new Date(),
+        issuedBy: params.issuedBy,
+        journalEntryId: params.journalEntryId,
+      },
+    });
   });
 
   return creditNote.id;

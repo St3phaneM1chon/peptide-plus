@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useI18n } from '@/i18n/client';
+import { sectionThemes } from '@/lib/admin/section-themes';
 import { toast } from 'sonner';
 
 interface ExportJob {
@@ -16,7 +17,7 @@ interface ExportJob {
 }
 
 export default function ExportsPage() {
-  const { t } = useI18n();
+  const { t, formatDate, locale } = useI18n();
   const [, setActiveExport] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
   const [exportConfig, setExportConfig] = useState({
@@ -160,8 +161,18 @@ export default function ExportsPage() {
     }
   };
 
+  const theme = sectionThemes.reports;
+
   if (loading) {
-    return <div className="p-8 text-center">{t('admin.exports.loading')}</div>;
+    return (
+      <div aria-live="polite" aria-busy="true" className="p-8 space-y-4 animate-pulse">
+        <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-1/3"></div>
+        <div className="grid grid-cols-4 gap-4">
+          {[1,2,3,4].map(i => <div key={i} className="h-24 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>)}
+        </div>
+        <div className="h-64 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
+      </div>
+    );
   }
 
   if (error && history.length === 0) {
@@ -177,7 +188,7 @@ export default function ExportsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
-        <div>
+        <div className={`border-l-4 ${theme.accentBar} pl-4`}>
           <h1 className="text-2xl font-bold text-white">{t('admin.exports.title')}</h1>
           <p className="text-neutral-400 mt-1">{t('admin.exports.subtitle')}</p>
         </div>
@@ -346,20 +357,20 @@ export default function ExportsPage() {
         <table className="w-full">
           <thead className="bg-neutral-900/50">
             <tr>
-              <th className="px-4 py-3 text-start text-xs font-medium text-neutral-400 uppercase">{t('admin.exports.dateCol')}</th>
-              <th className="px-4 py-3 text-start text-xs font-medium text-neutral-400 uppercase">{t('admin.exports.typeCol')}</th>
-              <th className="px-4 py-3 text-start text-xs font-medium text-neutral-400 uppercase">{t('admin.exports.formatCol')}</th>
-              <th className="px-4 py-3 text-start text-xs font-medium text-neutral-400 uppercase">{t('admin.exports.periodCol')}</th>
-              <th className="px-4 py-3 text-end text-xs font-medium text-neutral-400 uppercase">{t('admin.exports.recordsCol')}</th>
-              <th className="px-4 py-3 text-center text-xs font-medium text-neutral-400 uppercase">{t('admin.exports.statusCol')}</th>
-              <th className="px-4 py-3 text-end text-xs font-medium text-neutral-400 uppercase">{t('admin.exports.actionCol')}</th>
+              <th scope="col" className="px-4 py-3 text-start text-xs font-medium text-neutral-400 uppercase">{t('admin.exports.dateCol')}</th>
+              <th scope="col" className="px-4 py-3 text-start text-xs font-medium text-neutral-400 uppercase">{t('admin.exports.typeCol')}</th>
+              <th scope="col" className="px-4 py-3 text-start text-xs font-medium text-neutral-400 uppercase">{t('admin.exports.formatCol')}</th>
+              <th scope="col" className="px-4 py-3 text-start text-xs font-medium text-neutral-400 uppercase">{t('admin.exports.periodCol')}</th>
+              <th scope="col" className="px-4 py-3 text-end text-xs font-medium text-neutral-400 uppercase">{t('admin.exports.recordsCol')}</th>
+              <th scope="col" className="px-4 py-3 text-center text-xs font-medium text-neutral-400 uppercase">{t('admin.exports.statusCol')}</th>
+              <th scope="col" className="px-4 py-3 text-end text-xs font-medium text-neutral-400 uppercase">{t('admin.exports.actionCol')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-neutral-700">
             {history.map(job => (
               <tr key={job.id} className="hover:bg-neutral-700/30">
                 <td className="px-4 py-3 text-neutral-300">
-                  {new Date(job.createdAt).toLocaleDateString('fr-CA')} {new Date(job.createdAt).toLocaleTimeString('fr-CA', { hour: '2-digit', minute: '2-digit' })}
+                  {new Intl.DateTimeFormat(locale, { dateStyle: 'short', timeStyle: 'short' }).format(new Date(job.createdAt))}
                 </td>
                 <td className="px-4 py-3 text-white">{job.type}</td>
                 <td className="px-4 py-3 text-neutral-300">{job.format}</td>

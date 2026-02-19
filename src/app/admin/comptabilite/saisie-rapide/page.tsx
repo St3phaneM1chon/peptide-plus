@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import { CANADIAN_PROVINCES } from '@/lib/canadianTaxes';
+import { sectionThemes } from '@/lib/admin/section-themes';
 
 /**
  * SECURITY: Safe formula evaluator using a recursive descent parser.
@@ -119,7 +120,8 @@ const categoryColors: Record<string, string> = {
 };
 
 export default function QuickEntryPage() {
-  const { t, locale } = useI18n();
+  const { t, locale, formatCurrency, formatNumber } = useI18n();
+  const theme = sectionThemes.entry;
 
   const categoryLabels: Record<string, string> = {
     SALES: t('admin.quickEntry.categorySales'),
@@ -141,14 +143,14 @@ export default function QuickEntryPage() {
       id: 'tpl-1',
       name: 'Vente avec taxes (QC)',
       category: 'SALES',
-      description: 'Vente \u00e0 un client qu\u00e9b\u00e9cois avec TPS/TVQ',
+      description: t('admin.accounting.tax.saleWithTpsTvq'),
       shortcut: 'Ctrl+Shift+V',
       frequency: 45,
       lines: [
         { accountCode: '1110', accountName: 'Comptes clients', debitFormula: `amount * ${1 + totalTaxRate}` },
         { accountCode: '4010', accountName: 'Ventes', creditFormula: 'amount' },
-        { accountCode: '2110', accountName: 'TPS \u00e0 payer', creditFormula: `amount * ${gstRate}` },
-        { accountCode: '2120', accountName: 'TVQ \u00e0 payer', creditFormula: `amount * ${qstRate}` },
+        { accountCode: '2110', accountName: t('admin.accounting.tax.tpsPayable'), creditFormula: `amount * ${gstRate}` },
+        { accountCode: '2120', accountName: t('admin.accounting.tax.tvqPayable'), creditFormula: `amount * ${qstRate}` },
       ],
     },
     {
@@ -160,8 +162,8 @@ export default function QuickEntryPage() {
       frequency: 32,
       lines: [
         { accountCode: '5010', accountName: 'Achats', debitFormula: 'amount' },
-        { accountCode: '1115', accountName: 'TPS \u00e0 recevoir', debitFormula: `amount * ${gstRate}` },
-        { accountCode: '1116', accountName: 'TVQ \u00e0 recevoir', debitFormula: `amount * ${qstRate}` },
+        { accountCode: '1115', accountName: t('admin.accounting.tax.tpsReceivable'), debitFormula: `amount * ${gstRate}` },
+        { accountCode: '1116', accountName: t('admin.accounting.tax.tvqReceivable'), debitFormula: `amount * ${qstRate}` },
         { accountCode: '2000', accountName: 'Fournisseurs', creditFormula: `amount * ${1 + totalTaxRate}` },
       ],
     },
@@ -190,13 +192,13 @@ export default function QuickEntryPage() {
     },
     {
       id: 'tpl-5',
-      name: 'Paiement TPS/TVQ',
+      name: t('admin.accounting.tax.paymentTpsTvq'),
       category: 'TAXES',
       description: 'Paiement des taxes \u00e0 Revenu Qu\u00e9bec',
       frequency: 4,
       lines: [
-        { accountCode: '2110', accountName: 'TPS \u00e0 payer', debitFormula: 'gst' },
-        { accountCode: '2120', accountName: 'TVQ \u00e0 payer', debitFormula: 'qst' },
+        { accountCode: '2110', accountName: t('admin.accounting.tax.tpsPayable'), debitFormula: 'gst' },
+        { accountCode: '2120', accountName: t('admin.accounting.tax.tvqPayable'), debitFormula: 'qst' },
         { accountCode: '1010', accountName: 'Compte bancaire', creditFormula: 'gst + qst' },
       ],
     },
@@ -384,7 +386,15 @@ export default function QuickEntryPage() {
 
   const sortedTemplates = [...templates].sort((a, b) => b.frequency - a.frequency);
 
-  if (loading) return <div className="p-8 text-center">{t('admin.quickEntry.loading')}</div>;
+  if (loading) return (
+    <div aria-live="polite" aria-busy="true" className="p-8 space-y-4 animate-pulse">
+      <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-1/3"></div>
+      <div className="grid grid-cols-4 gap-4">
+        {[1,2,3,4].map(i => <div key={i} className="h-24 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>)}
+      </div>
+      <div className="h-64 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
+    </div>
+  );
 
   return (
     <div className="space-y-6">
@@ -394,7 +404,7 @@ export default function QuickEntryPage() {
           <h1 className="text-2xl font-bold text-white">{t('admin.quickEntry.title')}</h1>
           <p className="text-neutral-400 mt-1">{t('admin.quickEntry.subtitle')}</p>
         </div>
-        <button className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg">
+        <button className={`px-4 py-2 ${theme.btnPrimary} border-transparent text-white rounded-lg`}>
           {t('admin.quickEntry.newTemplate')}
         </button>
       </div>
@@ -473,7 +483,7 @@ export default function QuickEntryPage() {
                   </div>
                   <div className="text-end">
                     <p className="text-sm font-medium text-white">
-                      {entry.amount.toLocaleString(locale, { style: 'currency', currency: 'CAD' })}
+                      {formatCurrency(entry.amount)}
                     </p>
                     <span className={`text-xs ${entry.status === 'POSTED' ? 'text-green-400' : 'text-yellow-400'}`}>
                       {entry.status === 'POSTED' ? t('admin.quickEntry.statusPosted') : t('admin.quickEntry.statusDraft')}
@@ -495,14 +505,14 @@ export default function QuickEntryPage() {
 
       {/* Entry Modal */}
       {selectedTemplate && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="bg-neutral-800 rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4" role="presentation" onClick={(e) => { if (e.target === e.currentTarget) setSelectedTemplate(null); }}>
+          <div className="bg-neutral-800 rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="quickentry-modal-title" onKeyDown={(e) => e.key === 'Escape' && setSelectedTemplate(null)}>
             <div className="p-6 border-b border-neutral-700 flex justify-between items-center">
               <div>
-                <h2 className="text-xl font-bold text-white">{selectedTemplate.name}</h2>
+                <h2 id="quickentry-modal-title" className="text-xl font-bold text-white">{selectedTemplate.name}</h2>
                 <p className="text-sm text-neutral-400">{selectedTemplate.description}</p>
               </div>
-              <button onClick={() => setSelectedTemplate(null)} className="text-neutral-400 hover:text-white text-xl">✕</button>
+              <button onClick={() => setSelectedTemplate(null)} className="text-neutral-400 hover:text-white text-xl" aria-label="Fermer">✕</button>
             </div>
 
             <div className="p-6 space-y-6">
@@ -579,10 +589,10 @@ export default function QuickEntryPage() {
                             <span className="text-white">{line.accountName}</span>
                           </td>
                           <td className="px-3 py-2 text-end font-mono text-green-400">
-                            {line.debit > 0 ? line.debit.toFixed(2) : ''}
+                            {line.debit > 0 ? formatNumber(line.debit) : ''}
                           </td>
                           <td className="px-3 py-2 text-end font-mono text-red-400">
-                            {line.credit > 0 ? line.credit.toFixed(2) : ''}
+                            {line.credit > 0 ? formatNumber(line.credit) : ''}
                           </td>
                         </tr>
                       ))}
@@ -591,10 +601,10 @@ export default function QuickEntryPage() {
                       <tr>
                         <td className="px-3 py-2 font-medium text-white">{t('admin.quickEntry.totalRow')}</td>
                         <td className="px-3 py-2 text-end font-mono font-medium text-green-400">
-                          {calculatePreview().reduce((sum, l) => sum + l.debit, 0).toFixed(2)}
+                          {formatNumber(calculatePreview().reduce((sum, l) => sum + l.debit, 0))}
                         </td>
                         <td className="px-3 py-2 text-end font-mono font-medium text-red-400">
-                          {calculatePreview().reduce((sum, l) => sum + l.credit, 0).toFixed(2)}
+                          {formatNumber(calculatePreview().reduce((sum, l) => sum + l.credit, 0))}
                         </td>
                       </tr>
                     </tfoot>
@@ -621,7 +631,7 @@ export default function QuickEntryPage() {
                 <button
                   onClick={() => handleSave(true)}
                   disabled={saving || !formValues.amount}
-                  className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg disabled:opacity-50"
+                  className={`px-4 py-2 ${theme.btnPrimary} border-transparent text-white rounded-lg disabled:opacity-50`}
                 >
                   {saving ? t('admin.quickEntry.saving') : t('admin.quickEntry.saveAndPost')}
                 </button>

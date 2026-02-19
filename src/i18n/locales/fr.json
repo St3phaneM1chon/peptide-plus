@@ -192,7 +192,6 @@
     "gallery": {
       "clickToZoom": "Cliquez pour agrandir"
     },
-    "productVideo": "Vidéo du produit",
     "giftCard": {
       "placeholderCode": "XXXX-XXXX-XXXX-XXXX",
       "placeholderAmount": "Entrez le montant",
@@ -580,7 +579,6 @@
     "required": "Ce champ est requis",
     "noResults": "Aucun résultat trouvé",
     "previous": "Précédent",
-    "submitting": "Envoi...",
     "aria": {
       "close": "Fermer",
       "dismiss": "Ignorer",
@@ -592,8 +590,7 @@
       "nextSlide": "Diapositive suivante",
       "googleLogo": "Google",
       "skipToContent": "Aller au contenu principal"
-    },
-    "edit": "Modifier"
+    }
   },
   "cart": {
     "title": "Votre panier",
@@ -1699,7 +1696,7 @@
     "connectionError": "Erreur de connexion. Veuillez réessayer.",
     "placeholderName": "Jean Dupont",
     "placeholderEmail": "jean@exemple.com",
-    "placeholderOrganization": "Universit\u00e9 McGill"
+    "placeholderOrganization": "Université McGill"
   },
   "trackOrder": {
     "title": "Suivre votre commande",
@@ -4051,7 +4048,20 @@
       "monthSep": "Sep",
       "monthOct": "Oct",
       "monthNov": "Nov",
-      "monthDec": "Déc"
+      "monthDec": "Déc",
+      "tax": {
+        "tps": "TPS",
+        "tvq": "TVQ",
+        "tvh": "TVH",
+        "pst": "TVP",
+        "tpsTvq": "TPS/TVQ",
+        "tpsPayable": "TPS à payer",
+        "tvqPayable": "TVQ à payer",
+        "tpsReceivable": "TPS à recevoir",
+        "tvqReceivable": "TVQ à recevoir",
+        "paymentTpsTvq": "Paiement TPS/TVQ",
+        "saleWithTpsTvq": "Vente à un client québécois avec TPS/TVQ"
+      }
     },
     "accountingLayout": {
       "sectionOverview": "Vue d'ensemble",

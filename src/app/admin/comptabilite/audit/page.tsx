@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useI18n } from '@/i18n/client';
+import { sectionThemes } from '@/lib/admin/section-themes';
 
 interface AuditEntry {
   id: string;
@@ -32,7 +33,7 @@ const actionColors: Record<string, string> = {
 };
 
 export default function AuditTrailPage() {
-  const { t } = useI18n();
+  const { t, formatDate, locale } = useI18n();
 
   const actionLabels: Record<string, string> = {
     CREATE: t('admin.audit.actionCreate'),
@@ -156,15 +157,25 @@ export default function AuditTrailPage() {
   ).length;
   const uniqueUsers = new Set(entries.map(e => e.userName)).size;
 
+  const theme = sectionThemes.compliance;
+
   if (loading) {
-    return <div className="p-8 text-center">{t('admin.audit.loading')}</div>;
+    return (
+      <div aria-live="polite" aria-busy="true" className="p-8 space-y-4 animate-pulse">
+        <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-1/3"></div>
+        <div className="grid grid-cols-4 gap-4">
+          {[1,2,3,4].map(i => <div key={i} className="h-24 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>)}
+        </div>
+        <div className="h-64 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
+      </div>
+    );
   }
 
   if (error) {
     return (
       <div className="p-8 text-center">
         <p className="text-red-400 mb-4">{error}</p>
-        <button onClick={loadEntries} className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg">{t('admin.audit.retry')}</button>
+        <button onClick={loadEntries} className={`px-4 py-2 ${theme.btnPrimary} border-transparent text-white rounded-lg`}>{t('admin.audit.retry')}</button>
       </div>
     );
   }
@@ -180,7 +191,7 @@ export default function AuditTrailPage() {
         <button
           onClick={handleExport}
           disabled={exporting}
-          className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg flex items-center gap-2 disabled:opacity-50"
+          className={`px-4 py-2 ${theme.btnPrimary} border-transparent text-white rounded-lg flex items-center gap-2 disabled:opacity-50`}
         >
           {exporting ? t('admin.audit.exporting') : '📥 ' + t('admin.audit.exportCSV')}
         </button>
@@ -278,10 +289,10 @@ export default function AuditTrailPage() {
               <div className="flex items-start gap-4">
                 <div className="text-center min-w-[60px]">
                   <p className="text-xs text-slate-400">
-                    {new Date(entry.timestamp).toLocaleDateString('fr-CA')}
+                    {formatDate(entry.timestamp)}
                   </p>
                   <p className="text-sm text-slate-600">
-                    {new Date(entry.timestamp).toLocaleTimeString('fr-CA', { hour: '2-digit', minute: '2-digit' })}
+                    {new Intl.DateTimeFormat(locale, { hour: '2-digit', minute: '2-digit' }).format(new Date(entry.timestamp))}
                   </p>
                 </div>
 
@@ -316,17 +327,17 @@ export default function AuditTrailPage() {
 
       {/* Detail Modal */}
       {selectedEntry && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" role="presentation" onClick={(e) => { if (e.target === e.currentTarget) setSelectedEntry(null); }}>
+          <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="audit-detail-title" onKeyDown={(e) => e.key === 'Escape' && setSelectedEntry(null)}>
             <div className="p-6 border-b border-slate-200 flex justify-between items-center">
-              <h2 className="text-xl font-bold text-slate-900">{t('admin.audit.auditDetails')}</h2>
-              <button onClick={() => setSelectedEntry(null)} className="text-slate-500 hover:text-slate-900">✕</button>
+              <h2 id="audit-detail-title" className="text-xl font-bold text-slate-900">{t('admin.audit.auditDetails')}</h2>
+              <button onClick={() => setSelectedEntry(null)} className="text-slate-500 hover:text-slate-900" aria-label="Fermer">✕</button>
             </div>
             <div className="p-6 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-xs text-slate-500">{t('admin.audit.dateTimeLabel')}</p>
-                  <p className="text-slate-900">{new Date(selectedEntry.timestamp).toLocaleString('fr-CA')}</p>
+                  <p className="text-slate-900">{new Intl.DateTimeFormat(locale, { dateStyle: 'long', timeStyle: 'short' }).format(new Date(selectedEntry.timestamp))}</p>
                 </div>
                 <div>
                   <p className="text-xs text-slate-500">{t('admin.audit.actionLabel')}</p>
@@ -359,9 +370,9 @@ export default function AuditTrailPage() {
                     <table className="w-full text-sm">
                       <thead className="bg-slate-100">
                         <tr>
-                          <th className="px-3 py-2 text-start text-xs text-slate-500">{t('admin.audit.fieldCol')}</th>
-                          <th className="px-3 py-2 text-start text-xs text-slate-500">{t('admin.audit.oldValueCol')}</th>
-                          <th className="px-3 py-2 text-start text-xs text-slate-500">{t('admin.audit.newValueCol')}</th>
+                          <th scope="col" className="px-3 py-2 text-start text-xs text-slate-500">{t('admin.audit.fieldCol')}</th>
+                          <th scope="col" className="px-3 py-2 text-start text-xs text-slate-500">{t('admin.audit.oldValueCol')}</th>
+                          <th scope="col" className="px-3 py-2 text-start text-xs text-slate-500">{t('admin.audit.newValueCol')}</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-200">

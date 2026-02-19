@@ -238,13 +238,18 @@ export async function reopenPeriod(
     reopenedAt: new Date().toISOString(),
   });
 
+  // NOTE: We intentionally preserve the original closedAt/closedBy values
+  // for audit trail purposes. The reopen event is tracked in the log above.
+  // TODO: Add reopenedAt/reopenedBy fields to the AccountingPeriod schema
+  // (separate migration task) to formally track reopen events in the DB.
+  // For now, the console.info log above serves as the audit trail.
   await prisma.accountingPeriod.update({
     where: { code: periodCode },
     data: {
       status: 'OPEN',
-      closedAt: null,
-      closedBy: null,
-      // Preserve the checklist so it can be re-evaluated
+      // Keep closedAt and closedBy for audit trail - do NOT nullify them.
+      // The status change to 'OPEN' indicates the period was reopened,
+      // while closedAt/closedBy preserve who originally closed it and when.
     },
   });
 }
@@ -380,83 +385,90 @@ export async function runYearEndClose(year: number, closedBy: string): Promise<{
     credit: netIncome > 0 ? Math.round(netIncome * 100) / 100 : 0,
   });
 
-  // Generate closing entry number using MAX() FOR UPDATE for safe numbering
-  const prefix = `JV-${year}-`;
-  const [maxRow] = await prisma.$queryRaw<{ max_num: string | null }[]>`
-    SELECT MAX("entryNumber") as max_num
-    FROM "JournalEntry"
-    WHERE "entryNumber" LIKE ${prefix + '%'}
-    FOR UPDATE
-  `;
-  let nextNum = 1;
-  if (maxRow?.max_num) {
-    const parsed = parseInt(maxRow.max_num.split('-').pop() || '0');
-    if (!isNaN(parsed)) nextNum = parsed + 1;
-  }
-  const entryNumber = `${prefix}${String(nextNum).padStart(4, '0')}`;
-
-  const closingEntry = await prisma.journalEntry.create({
-    data: {
-      entryNumber,
-      date: yearEnd,
-      description: `Écriture de fermeture - Exercice ${year}`,
-      type: 'CLOSING',
-      status: 'POSTED',
-      reference: `CLOSE-${year}`,
-      createdBy: closedBy,
-      postedBy: closedBy,
-      postedAt: new Date(),
-      lines: {
-        create: closingLines,
-      },
-    },
-  });
-
-  // 5. Create next year's 12 periods
-  // #88 Error Recovery: Batch 12 period creations into createMany for efficiency
-  const nextYear = year + 1;
-  const monthNames = [
-    'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
-    'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre',
-  ];
-
-  // Check which periods already exist in a single query
-  const existingPeriods = await prisma.accountingPeriod.findMany({
-    where: { code: { startsWith: `${nextYear}-` } },
-    select: { code: true },
-  });
-  const existingCodes = new Set(existingPeriods.map((p) => p.code));
-
-  // Build list of new periods to create
-  const newPeriods = [];
-  for (let i = 0; i < 12; i++) {
-    const month = i + 1;
-    const code = `${nextYear}-${String(month).padStart(2, '0')}`;
-    if (!existingCodes.has(code)) {
-      newPeriods.push({
-        name: `${monthNames[i]} ${nextYear}`,
-        code,
-        startDate: new Date(nextYear, i, 1),
-        endDate: new Date(nextYear, i + 1, 0),
-        status: 'OPEN',
-      });
+  // Wrap closing entry creation + fiscal year + period creation in a single
+  // atomic transaction. If any step fails, everything is rolled back to
+  // prevent inconsistent state (e.g., closing entry created but periods missing).
+  const result = await prisma.$transaction(async (tx) => {
+    // Generate closing entry number using MAX() FOR UPDATE for safe numbering
+    const prefix = `JV-${year}-`;
+    const [maxRow] = await tx.$queryRaw<{ max_num: string | null }[]>`
+      SELECT MAX("entryNumber") as max_num
+      FROM "JournalEntry"
+      WHERE "entryNumber" LIKE ${prefix + '%'}
+      FOR UPDATE
+    `;
+    let nextNum = 1;
+    if (maxRow?.max_num) {
+      const parsed = parseInt(maxRow.max_num.split('-').pop() || '0');
+      if (!isNaN(parsed)) nextNum = parsed + 1;
     }
-  }
+    const entryNumber = `${prefix}${String(nextNum).padStart(4, '0')}`;
 
-  let periodsCreated = 0;
-  if (newPeriods.length > 0) {
-    const result = await prisma.accountingPeriod.createMany({
-      data: newPeriods,
-      skipDuplicates: true,
+    const closingEntry = await tx.journalEntry.create({
+      data: {
+        entryNumber,
+        date: yearEnd,
+        description: `Écriture de fermeture - Exercice ${year}`,
+        type: 'CLOSING',
+        status: 'POSTED',
+        reference: `CLOSE-${year}`,
+        createdBy: closedBy,
+        postedBy: closedBy,
+        postedAt: new Date(),
+        lines: {
+          create: closingLines,
+        },
+      },
     });
-    periodsCreated = result.count;
-  }
 
-  return {
-    netIncome,
-    closingEntryId: closingEntry.id,
-    periodsCreated,
-  };
+    // 5. Create next year's 12 periods
+    // #88 Error Recovery: Batch 12 period creations into createMany for efficiency
+    const nextYear = year + 1;
+    const monthNames = [
+      'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+      'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre',
+    ];
+
+    // Check which periods already exist in a single query
+    const existingPeriods = await tx.accountingPeriod.findMany({
+      where: { code: { startsWith: `${nextYear}-` } },
+      select: { code: true },
+    });
+    const existingCodes = new Set(existingPeriods.map((p) => p.code));
+
+    // Build list of new periods to create
+    const newPeriods = [];
+    for (let i = 0; i < 12; i++) {
+      const month = i + 1;
+      const code = `${nextYear}-${String(month).padStart(2, '0')}`;
+      if (!existingCodes.has(code)) {
+        newPeriods.push({
+          name: `${monthNames[i]} ${nextYear}`,
+          code,
+          startDate: new Date(nextYear, i, 1),
+          endDate: new Date(nextYear, i + 1, 0),
+          status: 'OPEN',
+        });
+      }
+    }
+
+    let periodsCreated = 0;
+    if (newPeriods.length > 0) {
+      const createResult = await tx.accountingPeriod.createMany({
+        data: newPeriods,
+        skipDuplicates: true,
+      });
+      periodsCreated = createResult.count;
+    }
+
+    return {
+      netIncome,
+      closingEntryId: closingEntry.id,
+      periodsCreated,
+    };
+  });
+
+  return result;
 }
 
 /**
@@ -472,64 +484,67 @@ export async function rollbackYearEndClose(
   closingEntryVoided: boolean;
   periodsReopened: number;
 }> {
-  // 1. Find and void the closing entry
-  const closingEntry = await prisma.journalEntry.findFirst({
-    where: {
-      reference: `CLOSE-${year}`,
-      type: 'CLOSING',
-      status: 'POSTED',
-      deletedAt: null,
-    },
-  });
-
-  let closingEntryVoided = false;
-  if (closingEntry) {
-    await prisma.journalEntry.update({
-      where: { id: closingEntry.id },
-      data: {
-        status: 'VOIDED',
-        voidedBy: rolledBackBy,
-        voidedAt: new Date(),
-        voidReason: `Annulation clôture ${year}: ${reason}`,
+  // Wrap everything in a single atomic transaction to prevent inconsistent state
+  // (e.g., closing entry voided but periods still locked if one update fails).
+  const result = await prisma.$transaction(async (tx) => {
+    // 1. Find and void the closing entry
+    const closingEntry = await tx.journalEntry.findFirst({
+      where: {
+        reference: `CLOSE-${year}`,
+        type: 'CLOSING',
+        status: 'POSTED',
+        deletedAt: null,
       },
     });
-    closingEntryVoided = true;
-  }
 
-  // 2. Reopen all 12 periods for the year
-  const periods = await prisma.accountingPeriod.findMany({
-    where: {
-      code: { startsWith: `${year}-` },
-      status: 'LOCKED',
-    },
-  });
+    let closingEntryVoided = false;
+    if (closingEntry) {
+      await tx.journalEntry.update({
+        where: { id: closingEntry.id },
+        data: {
+          status: 'VOIDED',
+          voidedBy: rolledBackBy,
+          voidedAt: new Date(),
+          voidReason: `Annulation clôture ${year}: ${reason}`,
+        },
+      });
+      closingEntryVoided = true;
+    }
 
-  let periodsReopened = 0;
-  for (const period of periods) {
-    await prisma.accountingPeriod.update({
-      where: { code: period.code },
+    // 2. Reopen all 12 periods for the year using updateMany for atomicity
+    // instead of individual updates in a loop
+    const periodsResult = await tx.accountingPeriod.updateMany({
+      where: {
+        code: { startsWith: `${year}-` },
+        status: 'LOCKED',
+      },
       data: {
         status: 'OPEN',
         closedAt: null,
         closedBy: null,
       },
     });
-    periodsReopened++;
-  }
 
-  // 3. Audit log
+    return {
+      closingEntryVoided,
+      closingEntryId: closingEntry?.id,
+      periodsReopened: periodsResult.count,
+    };
+  });
+
+  // 3. Audit log (outside transaction - logging should not affect the rollback)
   console.info('Year-end close rollback:', {
     year,
     rolledBackBy,
     reason,
-    closingEntryVoided,
-    closingEntryId: closingEntry?.id,
-    periodsReopened,
+    closingEntryVoided: result.closingEntryVoided,
+    closingEntryId: result.closingEntryId,
+    periodsReopened: result.periodsReopened,
     rolledBackAt: new Date().toISOString(),
   });
 
   return {
-    closingEntryVoided,
-    periodsReopened,
+    closingEntryVoided: result.closingEntryVoided,
+    periodsReopened: result.periodsReopened,
   };
 }

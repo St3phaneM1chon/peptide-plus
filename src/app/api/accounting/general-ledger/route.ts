@@ -1,8 +1,7 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth-config';
-import { UserRole } from '@/types';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { roundCurrency } from '@/lib/financial';
 
@@ -10,16 +9,8 @@ import { roundCurrency } from '@/lib/financial';
  * GET /api/accounting/general-ledger
  * General ledger data grouped by account with running balances
  */
-export async function GET(request: NextRequest) {
+export const GET = withAdminGuard(async (request) => {
   try {
-    const session = await auth();
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
-    }
-    if (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER) {
-      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
-    }
-
     const { searchParams } = new URL(request.url);
     const accountCode = searchParams.get('accountCode');
     const from = searchParams.get('from');
@@ -67,12 +58,17 @@ export async function GET(request: NextRequest) {
     // #80 Audit: All filtering (account, date, status) is done at the DB level.
     // Grouping by account with running balances must be computed in JS since
     // PostgreSQL window functions are not easily accessible via Prisma.
+    // Phase 9: Using select to fetch only needed JournalLine fields (debit, credit, description).
+    // Ordering uses indexed fields: account.code (@@index([accountId])) and entry.date (@@index([date])).
     const [lines, totalLines] = await Promise.all([
       prisma.journalLine.findMany({
         where,
-        include: {
+        select: {
+          debit: true,
+          credit: true,
+          description: true,
           account: { select: { code: true, name: true, type: true, normalBalance: true } },
-          entry: { select: { entryNumber: true, date: true, description: true, status: true } },
+          entry: { select: { entryNumber: true, date: true, description: true } },
         },
         orderBy: [
           { account: { code: 'asc' } },
@@ -151,7 +147,12 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       accounts,
-      pagination: { page, limit, total: totalLines, pages: Math.ceil(totalLines / limit) },
+      pagination: {
+        page,
+        pageSize: limit,
+        totalCount: totalLines,
+        totalPages: Math.ceil(totalLines / limit),
+      },
     });
   } catch (error) {
     console.error('General ledger error:', error);
@@ -160,4 +161,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

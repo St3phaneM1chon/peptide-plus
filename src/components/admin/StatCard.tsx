@@ -2,6 +2,7 @@
 
 import type { LucideIcon } from 'lucide-react';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import type { SectionTheme } from '@/lib/admin/section-themes';
 
 interface StatCardProps {
   label: string;
@@ -13,9 +14,11 @@ interface StatCardProps {
   };
   format?: 'number' | 'currency' | 'percent';
   className?: string;
+  /** Section theme for icon accent */
+  theme?: SectionTheme;
 }
 
-export function StatCard({ label, value, icon: Icon, trend, className = '' }: StatCardProps) {
+export function StatCard({ label, value, icon: Icon, trend, className = '', theme }: StatCardProps) {
   const TrendIcon = trend
     ? trend.value > 0
       ? TrendingUp
@@ -32,6 +35,9 @@ export function StatCard({ label, value, icon: Icon, trend, className = '' }: St
         : 'text-slate-400'
     : '';
 
+  const iconBg = theme ? theme.statIconBg : 'bg-slate-50';
+  const iconColor = theme ? theme.statIconColor : 'text-slate-600';
+
   return (
     <div className={`bg-white border border-slate-200 rounded-lg p-5 ${className}`}>
       <div className="flex items-start justify-between">
@@ -39,8 +45,8 @@ export function StatCard({ label, value, icon: Icon, trend, className = '' }: St
           <p className="text-sm font-medium text-slate-500">{label}</p>
           <p className="mt-1.5 text-2xl font-semibold text-slate-900 tabular-nums">{value}</p>
         </div>
-        <div className="p-2 bg-slate-50 rounded-lg">
-          <Icon className="w-5 h-5 text-slate-600" />
+        <div className={`p-2 rounded-lg ${iconBg}`}>
+          <Icon className={`w-5 h-5 ${iconColor}`} />
         </div>
       </div>
       {trend && TrendIcon && (

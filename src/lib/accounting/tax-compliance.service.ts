@@ -16,7 +16,7 @@ export const PROVINCIAL_TAX_RATES = {
   ON: { HST: 0.13, combined: 0.13, name: 'TVH 13%' },
   NB: { HST: 0.15, combined: 0.15, name: 'TVH 15%' },
   NL: { HST: 0.15, combined: 0.15, name: 'TVH 15%' },
-  NS: { HST: 0.15, combined: 0.15, name: 'TVH 15%' },
+  NS: { HST: 0.14, combined: 0.14, name: 'TVH 14%' },
   PE: { HST: 0.15, combined: 0.15, name: 'TVH 15%' },
   
   // GST + PST Provinces
@@ -184,12 +184,11 @@ export async function generateTaxSummary(
       
       if (rates && 'HST' in rates) {
         hstCollected += Number(order.tax);
-      } else if (province === 'QC') {
-        // Approximate split for QC
-        gstCollected += Number(order.tax) * 0.333;
-        qstCollected += Number(order.tax) * 0.667;
       } else {
-        gstCollected += Number(order.tax);
+        // Use exact taxTps and taxTvq fields from the Order model
+        // instead of approximating the GST/QST split from the total tax
+        gstCollected += Number(order.taxTps);
+        qstCollected += Number(order.taxTvq);
       }
     }
   }

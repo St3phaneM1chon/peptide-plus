@@ -4,6 +4,7 @@
  */
 
 import { db as prisma } from '@/lib/db';
+import { logAuditTrail } from './audit-trail.service';
 
 // #95 Retry configuration for failed recurring entries
 const RETRY_CONFIG = {
@@ -371,6 +372,26 @@ export async function processDueRecurringEntries(): Promise<{
       result.created.push(entry.entryNumber);
       result.processed++;
 
+      // Log audit trail for each recurring entry creation
+      logAuditTrail({
+        entityType: 'JOURNAL_ENTRY',
+        entityId: entry.id,
+        action: 'CREATE',
+        field: 'recurring',
+        oldValue: null,
+        newValue: JSON.stringify({
+          entryNumber: entry.entryNumber,
+          templateId: template.id,
+          templateName: template.name,
+          frequency: template.frequency,
+        }),
+        userId: 'system',
+        userName: 'Syst\u00e8me (r\u00e9current)',
+        metadata: { source: 'processRecurringEntries', templateId: template.id },
+      }).catch(() => {
+        // Audit logging must never break recurring processing
+      });
+
       // Update template (in production, save to database)
       template.lastRunDate = now;
       template.nextRunDate = calculateNextRunDate(
@@ -432,4 +453,19 @@ export function getFrequencyLabel(frequency: RecurringEntryTemplate['frequency']
     YEARLY: 'Annuel',
   };
   return labels[frequency];
+}
+
+/**
+ * Phase 8: processRecurringEntries
+ * Convenience wrapper around processDueRecurringEntries.
+ * Queries active templates where nextRunDate <= now, creates journal entries,
+ * updates nextRunDate, and logs to audit trail.
+ */
+export async function processRecurringEntries(): Promise<{
+  processed: number;
+  created: string[];
+  errors: string[];
+  retried: number;
+}> {
+  return processDueRecurringEntries();
 }

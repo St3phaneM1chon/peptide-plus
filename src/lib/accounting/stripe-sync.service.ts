@@ -319,11 +319,13 @@ export async function getStripeBalance(): Promise<{
   available: number;
   pending: number;
   currency: string;
+  error?: boolean;
+  errorMessage?: string;
 }> {
   try {
     const balance = await getStripe().balance.retrieve();
-    
-    const cadBalance = balance.available.find(b => b.currency === 'cad') || 
+
+    const cadBalance = balance.available.find(b => b.currency === 'cad') ||
                        balance.available[0];
     const cadPending = balance.pending.find(b => b.currency === 'cad') ||
                        balance.pending[0];
@@ -335,7 +337,14 @@ export async function getStripeBalance(): Promise<{
     };
   } catch (error) {
     console.error('Error fetching Stripe balance:', error);
-    return { available: 0, pending: 0, currency: 'CAD' };
+    const message = error instanceof Error ? error.message : 'Unknown Stripe error';
+    return {
+      available: 0,
+      pending: 0,
+      currency: 'CAD',
+      error: true,
+      errorMessage: message,
+    };
   }
 }
 

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Plus, RefreshCw, Settings, Download } from 'lucide-react';
 import { PageHeader, Button, StatusBadge, FormField, Input } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
+import { sectionThemes } from '@/lib/admin/section-themes';
 import { toast } from 'sonner';
 
 interface AccountingSettingsData {
@@ -38,7 +39,7 @@ interface Integration {
 }
 
 export default function ParametresComptablesPage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [activeTab, setActiveTab] = useState<'general' | 'fiscal' | 'currencies' | 'integrations'>('general');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -206,7 +207,17 @@ export default function ParametresComptablesPage() {
     setSettings({ ...settings, fiscalYearStart: reverseMap[endDate] || 1 });
   };
 
-  if (loading) return <div className="p-8 text-center">{t('admin.accountingSettings.loading')}</div>;
+  const theme = sectionThemes.compliance;
+
+  if (loading) return (
+    <div aria-live="polite" aria-busy="true" className="p-8 space-y-4 animate-pulse">
+      <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-1/3"></div>
+      <div className="grid grid-cols-4 gap-4">
+        {[1,2,3,4].map(i => <div key={i} className="h-24 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>)}
+      </div>
+      <div className="h-64 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
+    </div>
+  );
   if (error) return <div className="p-8 text-center text-red-600">{t('admin.accountingSettings.errorPrefix')} {error}</div>;
 
   const tabs = [
@@ -221,6 +232,7 @@ export default function ParametresComptablesPage() {
       <PageHeader
         title={t('admin.accountingSettings.title')}
         subtitle={t('admin.accountingSettings.subtitle')}
+        theme={theme}
       />
 
       {/* Save success message */}
@@ -378,10 +390,10 @@ export default function ParametresComptablesPage() {
             <table className="w-full">
               <thead className="bg-slate-50">
                 <tr>
-                  <th className="px-4 py-2 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.accountingSettings.taxCol')}</th>
-                  <th className="px-4 py-2 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.accountingSettings.jurisdictionCol')}</th>
-                  <th className="px-4 py-2 text-end text-xs font-semibold text-slate-500 uppercase">{t('admin.accountingSettings.rateCol')}</th>
-                  <th className="px-4 py-2 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.accountingSettings.activeCol')}</th>
+                  <th scope="col" className="px-4 py-2 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.accountingSettings.taxCol')}</th>
+                  <th scope="col" className="px-4 py-2 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.accountingSettings.jurisdictionCol')}</th>
+                  <th scope="col" className="px-4 py-2 text-end text-xs font-semibold text-slate-500 uppercase">{t('admin.accountingSettings.rateCol')}</th>
+                  <th scope="col" className="px-4 py-2 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.accountingSettings.activeCol')}</th>
                 </tr>
               </thead>
               {/*
@@ -392,11 +404,11 @@ export default function ParametresComptablesPage() {
                 If rates change, update them here directly.
               */}
               <tbody className="divide-y divide-slate-200">
-                <tr><td className="px-4 py-3">TPS</td><td className="px-4 py-3 text-slate-600">{t('admin.accountingSettings.canadaFederal')}</td><td className="px-4 py-3 text-end">5%</td><td className="px-4 py-3 text-center text-green-600">&#10003;</td></tr>
-                <tr><td className="px-4 py-3">TVQ</td><td className="px-4 py-3 text-slate-600">{t('admin.accountingSettings.quebec')}</td><td className="px-4 py-3 text-end">9.975%</td><td className="px-4 py-3 text-center text-green-600">&#10003;</td></tr>
-                <tr><td className="px-4 py-3">TVH</td><td className="px-4 py-3 text-slate-600">{t('admin.accountingSettings.ontario')}</td><td className="px-4 py-3 text-end">13%</td><td className="px-4 py-3 text-center text-green-600">&#10003;</td></tr>
-                <tr><td className="px-4 py-3">TVH</td><td className="px-4 py-3 text-slate-600">{t('admin.accountingSettings.novaScotia')}</td><td className="px-4 py-3 text-end">15%</td><td className="px-4 py-3 text-center text-green-600">&#10003;</td></tr>
-                <tr><td className="px-4 py-3">PST</td><td className="px-4 py-3 text-slate-600">{t('admin.accountingSettings.britishColumbia')}</td><td className="px-4 py-3 text-end">7%</td><td className="px-4 py-3 text-center text-green-600">&#10003;</td></tr>
+                <tr><td className="px-4 py-3">{t('admin.accounting.tax.tps')}</td><td className="px-4 py-3 text-slate-600">{t('admin.accountingSettings.canadaFederal')}</td><td className="px-4 py-3 text-end">5%</td><td className="px-4 py-3 text-center text-green-600">&#10003;</td></tr>
+                <tr><td className="px-4 py-3">{t('admin.accounting.tax.tvq')}</td><td className="px-4 py-3 text-slate-600">{t('admin.accountingSettings.quebec')}</td><td className="px-4 py-3 text-end">9.975%</td><td className="px-4 py-3 text-center text-green-600">&#10003;</td></tr>
+                <tr><td className="px-4 py-3">{t('admin.accounting.tax.tvh')}</td><td className="px-4 py-3 text-slate-600">{t('admin.accountingSettings.ontario')}</td><td className="px-4 py-3 text-end">13%</td><td className="px-4 py-3 text-center text-green-600">&#10003;</td></tr>
+                <tr><td className="px-4 py-3">{t('admin.accounting.tax.tvh')}</td><td className="px-4 py-3 text-slate-600">{t('admin.accountingSettings.novaScotia')}</td><td className="px-4 py-3 text-end">15%</td><td className="px-4 py-3 text-center text-green-600">&#10003;</td></tr>
+                <tr><td className="px-4 py-3">{t('admin.accounting.tax.pst')}</td><td className="px-4 py-3 text-slate-600">{t('admin.accountingSettings.britishColumbia')}</td><td className="px-4 py-3 text-end">7%</td><td className="px-4 py-3 text-center text-green-600">&#10003;</td></tr>
               </tbody>
             </table>
           </div>
@@ -433,11 +445,11 @@ export default function ParametresComptablesPage() {
             <table className="w-full">
               <thead className="bg-slate-50">
                 <tr>
-                  <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.accountingSettings.currencyCol')}</th>
-                  <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.accountingSettings.symbolCol')}</th>
-                  <th className="px-4 py-3 text-end text-xs font-semibold text-slate-500 uppercase">{t('admin.accountingSettings.rateVsCAD')}</th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.accountingSettings.defaultCol')}</th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.accountingSettings.activeCol')}</th>
+                  <th scope="col" className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.accountingSettings.currencyCol')}</th>
+                  <th scope="col" className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.accountingSettings.symbolCol')}</th>
+                  <th scope="col" className="px-4 py-3 text-end text-xs font-semibold text-slate-500 uppercase">{t('admin.accountingSettings.rateVsCAD')}</th>
+                  <th scope="col" className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.accountingSettings.defaultCol')}</th>
+                  <th scope="col" className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.accountingSettings.activeCol')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
@@ -495,7 +507,7 @@ export default function ParametresComptablesPage() {
                     </div>
                     {integration.lastSync && (
                       <p className="text-sm text-slate-500 mt-1">
-                        {t('admin.accountingSettings.lastSyncPrefix')} {new Date(integration.lastSync).toLocaleString('fr-CA')}
+                        {t('admin.accountingSettings.lastSyncPrefix')} {new Intl.DateTimeFormat(locale, { dateStyle: 'short', timeStyle: 'short' }).format(new Date(integration.lastSync))}
                       </p>
                     )}
                     <div className="mt-3">
@@ -509,7 +521,7 @@ export default function ParametresComptablesPage() {
                           </Button>
                         </div>
                       ) : (
-                        <Button variant="primary" size="sm" className="bg-emerald-600 hover:bg-emerald-700">
+                        <Button variant="primary" size="sm" className={`${theme.btnPrimary} border-transparent text-white`}>
                           {t('admin.accountingSettings.connectBtn')}
                         </Button>
                       )}
@@ -536,7 +548,7 @@ export default function ParametresComptablesPage() {
       <div className="flex justify-end">
         <Button
           variant="primary"
-          className="bg-emerald-600 hover:bg-emerald-700"
+          className={`${theme.btnPrimary} border-transparent text-white`}
           onClick={handleSave}
           disabled={saving}
         >

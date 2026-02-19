@@ -1,0 +1,65 @@
+export const dynamic = 'force-dynamic';
+
+import { NextRequest, NextResponse } from 'next/server';
+import { runScheduledTasks } from '@/lib/accounting';
+
+/**
+ * POST /api/accounting/cron
+ * Execute all scheduled accounting tasks.
+ *
+ * Authentication: Requires `X-Cron-Secret` header matching the
+ * `CRON_SECRET` environment variable.  This endpoint is NOT protected
+ * by withAdminGuard because it is called by an external scheduler
+ * (Azure App Service cron job, GitHub Actions, etc.) that does not
+ * have a user session.
+ *
+ * Responses:
+ *   200 - Tasks executed successfully
+ *   401 - Missing or invalid X-Cron-Secret
+ *   405 - Method not allowed (only POST)
+ *   500 - Internal error during task execution
+ */
+export async function POST(request: NextRequest): Promise<NextResponse> {
+  // ---------------------------------------------------------------
+  // 1. API key authentication
+  // ---------------------------------------------------------------
+  const cronSecret = process.env.CRON_SECRET;
+
+  if (!cronSecret) {
+    console.error('[cron] CRON_SECRET environment variable is not configured');
+    return NextResponse.json(
+      { error: 'Cron non configur\u00e9 (CRON_SECRET manquant)' },
+      { status: 500 }
+    );
+  }
+
+  const providedSecret = request.headers.get('X-Cron-Secret');
+
+  if (!providedSecret || providedSecret !== cronSecret) {
+    return NextResponse.json(
+      { error: 'Non autoris\u00e9: cl\u00e9 cron invalide' },
+      { status: 401 }
+    );
+  }
+
+  // ---------------------------------------------------------------
+  // 2. Execute scheduled tasks
+  // ---------------------------------------------------------------
+  try {
+    const result = await runScheduledTasks();
+
+    return NextResponse.json({
+      success: true,
+      ...result,
+    });
+  } catch (error) {
+    console.error('[cron] Scheduler error:', error);
+    return NextResponse.json(
+      {
+        error: 'Erreur lors de l\u2019ex\u00e9cution des t\u00e2ches planifi\u00e9es',
+        details: error instanceof Error ? error.message : String(error),
+      },
+      { status: 500 }
+    );
+  }
+}

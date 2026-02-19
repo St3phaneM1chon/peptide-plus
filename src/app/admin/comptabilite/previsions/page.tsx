@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useI18n } from '@/i18n/client';
+import { sectionThemes } from '@/lib/admin/section-themes';
 
 interface CashFlowProjection {
   period: string;
@@ -22,7 +23,7 @@ interface Scenario {
 }
 
 export default function ForecastingPage() {
-  const { t } = useI18n();
+  const { t, formatCurrency, locale } = useI18n();
   const [activeTab, setActiveTab] = useState<'cashflow' | 'scenarios' | 'alerts'>('cashflow');
   const [forecastPeriod, setForecastPeriod] = useState(6);
   const [minimumCash, setMinimumCash] = useState(10000);
@@ -60,7 +61,7 @@ export default function ForecastingPage() {
     const projections: CashFlowProjection[] = Array.from({ length: forecastPeriod }, (_, i) => {
       const date = new Date();
       date.setMonth(date.getMonth() + i + 1);
-      const period = date.toLocaleDateString('fr-CA', { month: 'short', year: 'numeric' });
+      const period = new Intl.DateTimeFormat(locale, { month: 'short', year: 'numeric' }).format(date);
       const growthFactor = Math.pow(1.05, i);
       const inflows = monthlyRevenue * growthFactor;
       const outflows = monthlyExpenses * Math.pow(1.03, i);
@@ -126,7 +127,7 @@ export default function ForecastingPage() {
       scenario.projections = Array.from({ length: forecastPeriod }, (_, i) => {
         const date = new Date();
         date.setMonth(date.getMonth() + i + 1);
-        const period = date.toLocaleDateString('fr-CA', { month: 'short', year: 'numeric' });
+        const period = new Intl.DateTimeFormat(locale, { month: 'short', year: 'numeric' }).format(date);
         const inflows = monthlyRevenue * Math.pow(1 + scenario.revenueGrowth / 100, i);
         const outflows = monthlyExpenses * Math.pow(1 + scenario.expenseGrowth / 100, i);
         const netCashFlow = inflows - outflows;
@@ -156,17 +157,26 @@ export default function ForecastingPage() {
   const totalInflows = baseProjections.reduce((sum, p) => sum + p.inflows, 0);
   const totalOutflows = baseProjections.reduce((sum, p) => sum + p.outflows, 0);
 
-  const formatCurrency = (amount: number) =>
-    amount.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' });
+  // formatCurrency is now provided by useI18n()
 
-  if (loading) return <div className="p-8 text-center">{t('admin.forecasts.loading')}</div>;
+  const theme = sectionThemes.reports;
+
+  if (loading) return (
+    <div aria-live="polite" aria-busy="true" className="p-8 space-y-4 animate-pulse">
+      <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-1/3"></div>
+      <div className="grid grid-cols-4 gap-4">
+        {[1,2,3,4].map(i => <div key={i} className="h-24 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>)}
+      </div>
+      <div className="h-64 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
+    </div>
+  );
   if (error) return <div className="p-8 text-center text-red-400">{t('admin.forecasts.errorPrefix')} {error}</div>;
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
-        <div>
+        <div className={`border-l-4 ${theme.accentBar} pl-4`}>
           <h1 className="text-2xl font-bold text-white">{t('admin.forecasts.title')}</h1>
           <p className="text-neutral-400 mt-1">{t('admin.forecasts.subtitle')}</p>
         </div>

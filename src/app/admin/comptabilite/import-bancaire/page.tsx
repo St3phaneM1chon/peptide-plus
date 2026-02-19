@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useI18n } from '@/i18n/client';
+import { sectionThemes } from '@/lib/admin/section-themes';
 import { toast } from 'sonner';
 
 interface BankConnection {
@@ -45,7 +46,7 @@ interface ImportHistoryItem {
 }
 
 export default function BankImportPage() {
-  const { t } = useI18n();
+  const { t, formatCurrency, formatDate, locale } = useI18n();
   const [activeTab, setActiveTab] = useState<'connections' | 'import' | 'history'>('connections');
   const [connections, setConnections] = useState<BankConnection[]>([]);
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
@@ -231,14 +232,24 @@ export default function BankImportPage() {
     return 'text-red-400';
   };
 
-  if (loading) return <div className="p-8 text-center">{t('admin.bankImport.loading')}</div>;
+  const theme = sectionThemes.bank;
+
+  if (loading) return (
+    <div aria-live="polite" aria-busy="true" className="p-8 space-y-4 animate-pulse">
+      <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-1/3"></div>
+      <div className="grid grid-cols-4 gap-4">
+        {[1,2,3,4].map(i => <div key={i} className="h-24 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>)}
+      </div>
+      <div className="h-64 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
+    </div>
+  );
   if (error) return <div className="p-8 text-center text-red-400">{t('admin.bankImport.errorPrefix')} {error}</div>;
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
-        <div>
+        <div className={`border-l-4 ${theme.accentBar} pl-4`}>
           <h1 className="text-2xl font-bold text-white">{t('admin.bankImport.title')}</h1>
           <p className="text-neutral-400 mt-1">{t('admin.bankImport.subtitle')}</p>
         </div>
@@ -281,13 +292,13 @@ export default function BankImportPage() {
                       <h3 className="font-semibold text-white">{conn.bankName}</h3>
                       <p className="text-sm text-neutral-400">{conn.accountName} • {conn.accountMask}</p>
                       <p className="text-xs text-neutral-500 mt-1">
-                        {t('admin.bankImport.lastSync')} {conn.lastSync.toLocaleString('fr-CA')}
+                        {t('admin.bankImport.lastSync')} {new Intl.DateTimeFormat(locale, { dateStyle: 'short', timeStyle: 'short' }).format(conn.lastSync)}
                       </p>
                     </div>
                   </div>
                   <div className="text-end">
                     <p className="text-xl font-bold text-white">
-                      {conn.balance.toLocaleString('fr-CA', { style: 'currency', currency: conn.currency })}
+                      {new Intl.NumberFormat(locale, { style: 'currency', currency: conn.currency }).format(conn.balance)}
                     </p>
                     <span className={`text-xs px-2 py-1 rounded ${
                       conn.status === 'ACTIVE' ? 'bg-green-900/30 text-green-400' :
@@ -497,13 +508,13 @@ export default function BankImportPage() {
                           />
                         </td>
                         <td className="px-4 py-3 text-white">
-                          {tx.date instanceof Date ? tx.date.toLocaleDateString('fr-CA') : new Date(tx.date).toLocaleDateString('fr-CA')}
+                          {formatDate(tx.date instanceof Date ? tx.date : new Date(tx.date))}
                         </td>
                         <td className="px-4 py-3">
                           <p className="text-white">{tx.description}</p>
                         </td>
                         <td className={`px-4 py-3 text-end font-medium ${tx.type === 'CREDIT' ? 'text-green-400' : 'text-red-400'}`}>
-                          {tx.type === 'CREDIT' ? '+' : '-'}{tx.amount.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}
+                          {tx.type === 'CREDIT' ? '+' : '-'}{formatCurrency(tx.amount)}
                         </td>
                         <td className="px-4 py-3">
                           <select
@@ -548,7 +559,7 @@ export default function BankImportPage() {
             <tbody className="divide-y divide-neutral-700">
               {importHistory.map((item, i) => (
                 <tr key={i} className="hover:bg-neutral-700/30">
-                  <td className="px-4 py-3 text-white">{new Date(item.date).toLocaleDateString('fr-CA')}</td>
+                  <td className="px-4 py-3 text-white">{formatDate(item.date)}</td>
                   <td className="px-4 py-3 text-neutral-300">{item.source}</td>
                   <td className="px-4 py-3 text-end text-white">{item.count}</td>
                   <td className="px-4 py-3">

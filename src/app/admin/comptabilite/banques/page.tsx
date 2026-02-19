@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { RefreshCw, Plus, CreditCard, Landmark, PiggyBank, Check } from 'lucide-react';
 import { PageHeader, Button, StatusBadge } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
+import { sectionThemes } from '@/lib/admin/section-themes';
 
 interface BankAccount {
   id: string;
@@ -28,7 +29,7 @@ interface Transaction {
 }
 
 export default function BanquesPage() {
-  const { t } = useI18n();
+  const { t, formatCurrency, formatDate, locale } = useI18n();
   const [selectedAccount, setSelectedAccount] = useState<BankAccount | null>(null);
   const [accounts, setAccounts] = useState<BankAccount[]>([]);
   const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
@@ -208,13 +209,24 @@ export default function BanquesPage() {
     }
   };
 
-  if (loading) return <div className="p-8 text-center">{t('admin.bankAccounts.loading')}</div>;
+  const theme = sectionThemes.bank;
+
+  if (loading) return (
+    <div aria-live="polite" aria-busy="true" className="p-8 space-y-4 animate-pulse">
+      <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-1/3"></div>
+      <div className="grid grid-cols-4 gap-4">
+        {[1,2,3,4].map(i => <div key={i} className="h-24 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>)}
+      </div>
+      <div className="h-64 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
+    </div>
+  );
 
   return (
     <div className="space-y-6">
       <PageHeader
         title={t('admin.bankAccounts.title')}
         subtitle={t('admin.bankAccounts.subtitle')}
+        theme={theme}
         actions={
           <>
             <Button variant="secondary" icon={RefreshCw}>{t('admin.bankAccounts.sync')}</Button>
@@ -228,7 +240,7 @@ export default function BanquesPage() {
         <div className="flex items-center justify-between">
           <div>
             <p className="text-emerald-100">{t('admin.bankAccounts.totalBalanceCAD')}</p>
-            <p className="text-4xl font-bold mt-1">{totalBalance.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}</p>
+            <p className="text-4xl font-bold mt-1">{formatCurrency(totalBalance)}</p>
             <p className="text-emerald-200 text-sm mt-2">{accounts.length} {t('admin.bankAccounts.activeAccounts')}</p>
           </div>
           <div className="text-end">
@@ -270,10 +282,10 @@ export default function BanquesPage() {
                 </span>
               </div>
               <p className="text-2xl font-bold text-slate-900">
-                {account.balance.toLocaleString('fr-CA', { style: 'currency', currency: account.currency })}
+                {new Intl.NumberFormat(locale, { style: 'currency', currency: account.currency }).format(account.balance)}
               </p>
               <p className="text-xs text-slate-500 mt-2">
-                {t('admin.bankAccounts.syncPrefix')} {account.lastSync ? new Date(account.lastSync).toLocaleString('fr-CA') : t('admin.bankAccounts.never')}
+                {t('admin.bankAccounts.syncPrefix')} {account.lastSync ? new Intl.DateTimeFormat(locale, { dateStyle: 'short', timeStyle: 'short' }).format(new Date(account.lastSync)) : t('admin.bankAccounts.never')}
               </p>
             </div>
           );
@@ -291,18 +303,18 @@ export default function BanquesPage() {
         <table className="w-full">
           <thead className="bg-slate-50">
             <tr>
-              <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.bankAccounts.dateCol')}</th>
-              <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.bankAccounts.descriptionCol')}</th>
-              <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.bankAccounts.categoryCol')}</th>
-              <th className="px-4 py-3 text-end text-xs font-semibold text-slate-500 uppercase">{t('admin.bankAccounts.amountCol')}</th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.bankAccounts.statusCol')}</th>
+              <th scope="col" className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.bankAccounts.dateCol')}</th>
+              <th scope="col" className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.bankAccounts.descriptionCol')}</th>
+              <th scope="col" className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.bankAccounts.categoryCol')}</th>
+              <th scope="col" className="px-4 py-3 text-end text-xs font-semibold text-slate-500 uppercase">{t('admin.bankAccounts.amountCol')}</th>
+              <th scope="col" className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.bankAccounts.statusCol')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-200">
             {recentTransactions.map((transaction) => (
               <tr key={transaction.id} className="hover:bg-slate-50">
                 <td className="px-4 py-3 text-sm text-slate-900">
-                  {transaction.date ? new Date(transaction.date).toLocaleDateString('fr-CA') : '-'}
+                  {transaction.date ? formatDate(transaction.date) : '-'}
                 </td>
                 <td className="px-4 py-3 text-sm text-slate-900">{transaction.description}</td>
                 <td className="px-4 py-3">
@@ -315,7 +327,7 @@ export default function BanquesPage() {
                 <td className={`px-4 py-3 text-end font-medium ${
                   transaction.type === 'CREDIT' ? 'text-green-600' : 'text-red-600'
                 }`}>
-                  {transaction.type === 'CREDIT' ? '+' : '-'}{transaction.amount.toFixed(2)} $
+                  {transaction.type === 'CREDIT' ? '+' : '-'}{formatCurrency(transaction.amount)}
                 </td>
                 <td className="px-4 py-3 text-center">
                   {transaction.reconciled ? (
@@ -338,21 +350,21 @@ export default function BanquesPage() {
         <div className="grid grid-cols-4 gap-4">
           <div className="p-4 bg-slate-50 rounded-lg">
             <p className="text-sm text-slate-500">{t('admin.bankAccounts.currentBalance')}</p>
-            <p className="text-xl font-bold text-slate-900">{totalBalance.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}</p>
+            <p className="text-xl font-bold text-slate-900">{formatCurrency(totalBalance)}</p>
           </div>
           <div className="p-4 bg-green-50 rounded-lg">
             <p className="text-sm text-green-600">{t('admin.bankAccounts.expectedInflows')}</p>
-            <p className="text-xl font-bold text-green-700">+{expectedInflows.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}</p>
+            <p className="text-xl font-bold text-green-700">+{formatCurrency(expectedInflows)}</p>
             <p className="text-xs text-green-600 mt-1">{t('admin.bankAccounts.estimatedSales')}</p>
           </div>
           <div className="p-4 bg-red-50 rounded-lg">
             <p className="text-sm text-red-600">{t('admin.bankAccounts.expectedOutflows')}</p>
-            <p className="text-xl font-bold text-red-700">-{expectedOutflows.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}</p>
+            <p className="text-xl font-bold text-red-700">-{formatCurrency(expectedOutflows)}</p>
             <p className="text-xs text-red-600 mt-1">{t('admin.bankAccounts.invoicesAndRecurring')}</p>
           </div>
           <div className="p-4 bg-blue-50 rounded-lg">
             <p className="text-sm text-blue-600">{t('admin.bankAccounts.projectedBalance30d')}</p>
-            <p className="text-xl font-bold text-blue-700">{(totalBalance + expectedInflows - expectedOutflows).toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}</p>
+            <p className="text-xl font-bold text-blue-700">{formatCurrency(totalBalance + expectedInflows - expectedOutflows)}</p>
           </div>
         </div>
       </div>

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Upload, Zap, Check, CheckCircle } from 'lucide-react';
 import { PageHeader, Button, Modal, StatusBadge } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
+import { sectionThemes } from '@/lib/admin/section-themes';
 import { toast } from 'sonner';
 
 interface BankTransaction {
@@ -36,7 +37,7 @@ interface BankAccount {
 }
 
 export default function RapprochementPage() {
-  const { t } = useI18n();
+  const { t, formatCurrency, formatDate } = useI18n();
   const [selectedAccount, setSelectedAccount] = useState('');
   const [selectedMonth, setSelectedMonth] = useState('2026-01');
   const [showMatchModal, setShowMatchModal] = useState(false);
@@ -64,6 +65,7 @@ export default function RapprochementPage() {
         }
       } catch (err) {
         console.error('Fetch bank accounts error:', err);
+        setError(err instanceof Error ? err.message : 'Impossible de charger les comptes bancaires');
       }
     }
     fetchAccounts();
@@ -167,14 +169,37 @@ export default function RapprochementPage() {
     }
   };
 
-  if (loading) return <div className="p-8 text-center">{t('admin.reconciliation.loading')}</div>;
-  if (error) return <div className="p-8 text-center text-red-600">{t('admin.reconciliation.errorPrefix')} {error}</div>;
+  const theme = sectionThemes.bank;
+
+  if (loading) return (
+    <div aria-live="polite" aria-busy="true" className="p-8 space-y-4 animate-pulse">
+      <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-1/3"></div>
+      <div className="grid grid-cols-4 gap-4">
+        {[1,2,3,4].map(i => <div key={i} className="h-24 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>)}
+      </div>
+      <div className="h-64 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
+    </div>
+  );
 
   return (
     <div className="space-y-6">
+      {/* Error Banner */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg mb-4 flex items-center justify-between">
+          <span>{error}</span>
+          <button
+            onClick={() => { setError(null); fetchData(); }}
+            className="text-red-700 underline font-medium hover:text-red-800"
+          >
+            R&eacute;essayer
+          </button>
+        </div>
+      )}
+
       <PageHeader
         title={t('admin.reconciliation.title')}
         subtitle={t('admin.reconciliation.subtitle')}
+        theme={theme}
         actions={
           <>
             <Button variant="secondary" icon={Upload}>{t('admin.reconciliation.importStatement')}</Button>
@@ -220,16 +245,16 @@ export default function RapprochementPage() {
       <div className="grid grid-cols-4 gap-4">
         <div className="bg-white rounded-xl p-4 border border-slate-200">
           <p className="text-sm text-slate-500">{t('admin.reconciliation.statementBalance')}</p>
-          <p className="text-2xl font-bold text-slate-900">{bankBalance.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}</p>
+          <p className="text-2xl font-bold text-slate-900">{formatCurrency(bankBalance)}</p>
         </div>
         <div className="bg-white rounded-xl p-4 border border-slate-200">
           <p className="text-sm text-slate-500">{t('admin.reconciliation.bookBalance')}</p>
-          <p className="text-2xl font-bold text-slate-900">{bookBalance.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}</p>
+          <p className="text-2xl font-bold text-slate-900">{formatCurrency(bookBalance)}</p>
         </div>
         <div className={`rounded-xl p-4 border ${difference === 0 ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
           <p className={`text-sm ${difference === 0 ? 'text-green-600' : 'text-red-600'}`}>{t('admin.reconciliation.difference')}</p>
           <p className={`text-2xl font-bold ${difference === 0 ? 'text-green-700' : 'text-red-700'}`}>
-            {difference.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}
+            {formatCurrency(difference)}
           </p>
         </div>
         <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
@@ -250,19 +275,19 @@ export default function RapprochementPage() {
             <table className="w-full">
               <thead className="bg-slate-50 sticky top-0">
                 <tr>
-                  <th className="px-3 py-2 text-start text-xs font-semibold text-slate-500">{t('admin.reconciliation.dateCol')}</th>
-                  <th className="px-3 py-2 text-start text-xs font-semibold text-slate-500">{t('admin.reconciliation.descriptionCol')}</th>
-                  <th className="px-3 py-2 text-end text-xs font-semibold text-slate-500">{t('admin.reconciliation.amountCol')}</th>
-                  <th className="px-3 py-2 text-center text-xs font-semibold text-slate-500">{t('admin.reconciliation.actionCol')}</th>
+                  <th scope="col" className="px-3 py-2 text-start text-xs font-semibold text-slate-500">{t('admin.reconciliation.dateCol')}</th>
+                  <th scope="col" className="px-3 py-2 text-start text-xs font-semibold text-slate-500">{t('admin.reconciliation.descriptionCol')}</th>
+                  <th scope="col" className="px-3 py-2 text-end text-xs font-semibold text-slate-500">{t('admin.reconciliation.amountCol')}</th>
+                  <th scope="col" className="px-3 py-2 text-center text-xs font-semibold text-slate-500">{t('admin.reconciliation.actionCol')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
                 {bankTransactions.map((tx) => (
                   <tr key={tx.id} className={tx.reconciliationStatus === 'MATCHED' ? 'bg-green-50/50' : 'bg-yellow-50/50'}>
-                    <td className="px-3 py-2 text-sm">{new Date(tx.date).toLocaleDateString('fr-CA')}</td>
+                    <td className="px-3 py-2 text-sm">{formatDate(tx.date)}</td>
                     <td className="px-3 py-2 text-sm truncate max-w-[150px]" title={tx.description}>{tx.description}</td>
                     <td className={`px-3 py-2 text-sm text-end font-medium ${tx.type === 'CREDIT' ? 'text-green-600' : 'text-red-600'}`}>
-                      {tx.type === 'CREDIT' ? '+' : '-'}{tx.amount.toFixed(2)}
+                      {tx.type === 'CREDIT' ? '+' : '-'}{formatCurrency(tx.amount)}
                     </td>
                     <td className="px-3 py-2 text-center">
                       {tx.reconciliationStatus === 'MATCHED' ? (
@@ -297,10 +322,10 @@ export default function RapprochementPage() {
             <table className="w-full">
               <thead className="bg-slate-50 sticky top-0">
                 <tr>
-                  <th className="px-3 py-2 text-start text-xs font-semibold text-slate-500">{t('admin.reconciliation.dateCol')}</th>
-                  <th className="px-3 py-2 text-start text-xs font-semibold text-slate-500">{t('admin.reconciliation.descriptionCol')}</th>
-                  <th className="px-3 py-2 text-end text-xs font-semibold text-slate-500">{t('admin.reconciliation.amountCol')}</th>
-                  <th className="px-3 py-2 text-center text-xs font-semibold text-slate-500">{t('admin.reconciliation.statusCol')}</th>
+                  <th scope="col" className="px-3 py-2 text-start text-xs font-semibold text-slate-500">{t('admin.reconciliation.dateCol')}</th>
+                  <th scope="col" className="px-3 py-2 text-start text-xs font-semibold text-slate-500">{t('admin.reconciliation.descriptionCol')}</th>
+                  <th scope="col" className="px-3 py-2 text-end text-xs font-semibold text-slate-500">{t('admin.reconciliation.amountCol')}</th>
+                  <th scope="col" className="px-3 py-2 text-center text-xs font-semibold text-slate-500">{t('admin.reconciliation.statusCol')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
@@ -309,13 +334,13 @@ export default function RapprochementPage() {
                   const amount = Math.max(entry.totalDebits, entry.totalCredits);
                   return (
                     <tr key={entry.id} className={isMatched ? 'bg-green-50/50' : 'bg-yellow-50/50'}>
-                      <td className="px-3 py-2 text-sm">{new Date(entry.date).toLocaleDateString('fr-CA')}</td>
+                      <td className="px-3 py-2 text-sm">{formatDate(entry.date)}</td>
                       <td className="px-3 py-2">
                         <p className="text-sm truncate max-w-[150px]" title={entry.description}>{entry.description}</p>
                         <p className="text-xs text-slate-500">{entry.entryNumber}</p>
                       </td>
                       <td className="px-3 py-2 text-sm text-end font-medium text-slate-700">
-                        {amount.toFixed(2)}
+                        {formatCurrency(amount)}
                       </td>
                       <td className="px-3 py-2 text-center">
                         {isMatched ? (
@@ -344,7 +369,7 @@ export default function RapprochementPage() {
           <CheckCircle className="w-12 h-12 mx-auto text-green-600 mb-3" />
           <h3 className="text-lg font-semibold text-green-900 mb-2">{t('admin.reconciliation.reconciliationComplete')}</h3>
           <p className="text-green-700 mb-4">{t('admin.reconciliation.allTransactionsReconciled')}</p>
-          <Button variant="primary" className="bg-green-600 hover:bg-green-700">
+          <Button variant="primary" className={`${theme.btnPrimary} border-transparent text-white`}>
             {t('admin.reconciliation.validateReconciliation')}
           </Button>
         </div>
@@ -374,7 +399,7 @@ export default function RapprochementPage() {
               <p className="text-sm text-blue-600">{t('admin.reconciliation.bankTransaction')}</p>
               <p className="font-medium text-blue-900">{selectedBankTx.description}</p>
               <p className="text-lg font-bold text-blue-900">
-                {selectedBankTx.type === 'CREDIT' ? '+' : '-'}{selectedBankTx.amount.toFixed(2)} $
+                {selectedBankTx.type === 'CREDIT' ? '+' : '-'}{formatCurrency(selectedBankTx.amount)}
               </p>
             </div>
 
@@ -399,10 +424,10 @@ export default function RapprochementPage() {
                         />
                         <div className="flex-1">
                           <p className="font-medium text-slate-900">{entry.description}</p>
-                          <p className="text-xs text-slate-500">{entry.entryNumber} &bull; {new Date(entry.date).toLocaleDateString('fr-CA')}</p>
+                          <p className="text-xs text-slate-500">{entry.entryNumber} &bull; {formatDate(entry.date)}</p>
                         </div>
                         <span className="font-medium text-slate-700">
-                          {entryAmount.toFixed(2)} $
+                          {formatCurrency(entryAmount)}
                         </span>
                       </label>
                     );
