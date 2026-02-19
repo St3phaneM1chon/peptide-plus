@@ -88,11 +88,13 @@ export async function POST(req: NextRequest) {
           imageUrl: cat.imageUrl,
           sortOrder: cat.sortOrder,
           isActive: cat.isActive,
+          updatedAt: new Date(),
         },
         update: {
           name: cat.name,
           slug: cat.slug,
           isActive: cat.isActive,
+          updatedAt: new Date(),
         },
       });
       log(`  Parent: ${cat.name} (${cat.slug}) - upserted`);
@@ -112,12 +114,14 @@ export async function POST(req: NextRequest) {
           sortOrder: cat.sortOrder,
           isActive: cat.isActive,
           parentId: cat.parentId,
+          updatedAt: new Date(),
         },
         update: {
           name: cat.name,
           slug: cat.slug,
           isActive: cat.isActive,
           parentId: cat.parentId,
+          updatedAt: new Date(),
         },
       });
       log(`  Child: ${cat.name} (${cat.slug}) → parent=${cat.parentId} - upserted`);
