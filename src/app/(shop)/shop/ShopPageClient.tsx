@@ -108,7 +108,7 @@ export default function ShopPage() {
   useEffect(() => {
     async function fetchProducts() {
       try {
-        const res = await fetch(`/api/products?locale=${locale}`);
+        const res = await fetch(`/api/products?locale=${locale}&limit=200`);
         if (!res.ok) throw new Error('Failed to fetch products');
         const data = await res.json();
         const list = Array.isArray(data) ? data : data.products || data.data?.products || data.data || [];

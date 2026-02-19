@@ -351,13 +351,13 @@ export async function POST(req: NextRequest) {
       try {
         await prisma.faq.create({
           data: {
-            id: faq.id,
+            id: faq.id as string,
             question: faq.question as string,
             answer: faq.answer as string,
-            category: (faq.category as string) || 'General',
-            productSlug: (faq.productSlug as string) || null,
+            category: (faq.category as string) || 'general',
+            locale: (faq.locale as string) || 'en',
             sortOrder: (faq.sortOrder as number) || 0,
-            isActive: faq.isActive !== false && faq.isActive !== undefined ? true : false,
+            isPublished: faq.isPublished !== false,
             updatedAt: new Date(),
           },
         });
@@ -411,108 +411,128 @@ export async function POST(req: NextRequest) {
     // ---------------------------------------------------------------
     log('\n--- STEP 8: Translations ---');
 
-    // Category translations
+    // Category translations (use catIdMap for remapped categories)
     const catTrans = getLocalCategoryTranslations();
     let catTransOk = 0;
+    let catTransSkip = 0;
     for (const t of catTrans) {
-      const catExists = await prisma.category.findUnique({ where: { id: t.categoryId } });
-      if (!catExists) continue;
+      const realCatId = catIdMap.get(t.categoryId as string) || (t.categoryId as string);
+      const catExists = await prisma.category.findUnique({ where: { id: realCatId } });
+      if (!catExists) { catTransSkip++; continue; }
       const existing = await prisma.categoryTranslation.findFirst({
-        where: { categoryId: t.categoryId, locale: t.locale },
+        where: { categoryId: realCatId, locale: t.locale as string },
       });
       if (existing) {
-        await prisma.categoryTranslation.update({
-          where: { id: existing.id },
-          data: { name: t.name, description: t.description },
-        });
+        try {
+          await prisma.categoryTranslation.update({
+            where: { id: existing.id },
+            data: { name: t.name as string, description: t.description as string, updatedAt: new Date() },
+          });
+          catTransOk++;
+        } catch { continue; }
       } else {
         try {
           await prisma.categoryTranslation.create({
-            data: { categoryId: t.categoryId, locale: t.locale, name: t.name, description: t.description },
+            data: {
+              id: t.id as string, categoryId: realCatId, locale: t.locale as string,
+              name: t.name as string, description: t.description as string, updatedAt: new Date(),
+            },
           });
+          catTransOk++;
         } catch { continue; }
       }
-      catTransOk++;
     }
-    log(`  Category translations: ${catTransOk}`);
+    log(`  Category translations: ${catTransOk} (skipped ${catTransSkip})`);
 
     // Product translations
     const prodTrans = getLocalProductTranslations();
     let prodTransOk = 0;
+    let prodTransSkip = 0;
     for (const t of prodTrans) {
-      const prodExists = await prisma.product.findUnique({ where: { id: t.productId } });
-      if (!prodExists) continue;
+      const prodExists = await prisma.product.findUnique({ where: { id: t.productId as string } });
+      if (!prodExists) { prodTransSkip++; continue; }
       const existing = await prisma.productTranslation.findFirst({
-        where: { productId: t.productId, locale: t.locale },
+        where: { productId: t.productId as string, locale: t.locale as string },
       });
       if (!existing) {
         try {
           await prisma.productTranslation.create({
             data: {
-              productId: t.productId, locale: t.locale, name: t.name,
-              subtitle: t.subtitle, shortDescription: t.shortDescription,
-              description: t.description, fullDetails: t.fullDetails,
-              specifications: t.specifications,
+              id: t.id as string, productId: t.productId as string, locale: t.locale as string,
+              name: t.name as string, subtitle: t.subtitle as string,
+              shortDescription: t.shortDescription as string, description: t.description as string,
+              fullDetails: t.fullDetails as string, specifications: t.specifications as string,
+              updatedAt: new Date(),
             },
           });
           prodTransOk++;
         } catch { continue; }
       } else { prodTransOk++; }
     }
-    log(`  Product translations: ${prodTransOk}`);
+    log(`  Product translations: ${prodTransOk} (skipped ${prodTransSkip})`);
 
     // FAQ translations
     const faqTrans = getLocalFaqTranslations();
     let faqTransOk = 0;
+    let faqTransSkip = 0;
     for (const t of faqTrans) {
-      const faqExists = await prisma.faq.findUnique({ where: { id: t.faqId } });
-      if (!faqExists) continue;
+      const faqExists = await prisma.faq.findUnique({ where: { id: t.faqId as string } });
+      if (!faqExists) { faqTransSkip++; continue; }
       try {
         await prisma.faqTranslation.create({
-          data: { faqId: t.faqId, locale: t.locale, question: t.question, answer: t.answer },
+          data: {
+            id: t.id as string, faqId: t.faqId as string, locale: t.locale as string,
+            question: t.question as string, answer: t.answer as string, updatedAt: new Date(),
+          },
         });
         faqTransOk++;
       } catch { continue; }
     }
-    log(`  FAQ translations: ${faqTransOk}`);
+    log(`  FAQ translations: ${faqTransOk} (skipped ${faqTransSkip})`);
 
     // Article translations
     const artTrans = getLocalArticleTranslations();
     let artTransOk = 0;
+    let artTransSkip = 0;
     for (const t of artTrans) {
-      const artExists = await prisma.article.findUnique({ where: { id: t.articleId } });
-      if (!artExists) continue;
+      const artExists = await prisma.article.findUnique({ where: { id: t.articleId as string } });
+      if (!artExists) { artTransSkip++; continue; }
       try {
         await prisma.articleTranslation.create({
           data: {
-            articleId: t.articleId, locale: t.locale, title: t.title,
-            excerpt: t.excerpt, content: t.content,
+            id: t.id as string, articleId: t.articleId as string, locale: t.locale as string,
+            title: t.title as string, excerpt: t.excerpt as string, content: t.content as string,
+            updatedAt: new Date(),
           },
         });
         artTransOk++;
       } catch { continue; }
     }
-    log(`  Article translations: ${artTransOk}`);
+    log(`  Article translations: ${artTransOk} (skipped ${artTransSkip})`);
 
     // Format translations (batch - largest dataset)
     const fmtTrans = getLocalFormatTranslations();
     let fmtTransOk = 0;
+    let fmtTransSkip = 0;
     for (const t of fmtTrans) {
       try {
-        const fmtExists = await prisma.productFormat.findUnique({ where: { id: t.formatId } });
-        if (!fmtExists) continue;
+        const fmtExists = await prisma.productFormat.findUnique({ where: { id: t.formatId as string } });
+        if (!fmtExists) { fmtTransSkip++; continue; }
         const existing = await prisma.productFormatTranslation.findFirst({
-          where: { formatId: t.formatId, locale: t.locale },
+          where: { formatId: t.formatId as string, locale: t.locale as string },
         });
         if (!existing) {
           await prisma.productFormatTranslation.create({
-            data: { formatId: t.formatId, locale: t.locale, name: t.name },
+            data: {
+              id: t.id as string, formatId: t.formatId as string,
+              locale: t.locale as string, name: t.name as string, updatedAt: new Date(),
+            },
           });
           fmtTransOk++;
         } else { fmtTransOk++; }
       } catch { continue; }
     }
-    log(`  Format translations: ${fmtTransOk}`);
+    log(`  Format translations: ${fmtTransOk} (skipped ${fmtTransSkip})`);
 
     // ---------------------------------------------------------------
     // STEP 9: Cleanup old categories (deactivate unused)

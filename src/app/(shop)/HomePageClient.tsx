@@ -121,7 +121,7 @@ export default function HomePage() {
   useEffect(() => {
     setFetchError(false);
     Promise.all([
-      fetch(`/api/products?locale=${locale}`)
+      fetch(`/api/products?locale=${locale}&limit=200`)
         .then((res) => res.ok ? res.json() : null)
         .then((data) => {
           if (data) {
