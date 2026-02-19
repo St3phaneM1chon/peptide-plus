@@ -53,8 +53,38 @@ export default function MediasPage() {
   }, []);
 
   const fetchFiles = async () => {
-    setFiles([]);
-    setLoading(false);
+    try {
+      setLoading(true);
+      const res = await fetch('/api/admin/medias');
+      if (res.ok) {
+        const data = await res.json();
+        const rawMedia = data.media || [];
+        setFiles(
+          rawMedia.map((m: Record<string, unknown>) => {
+            const mime = (m.mimeType as string) || '';
+            let type: MediaFile['type'] = 'document';
+            if (mime.startsWith('image/')) type = 'image';
+            else if (mime.startsWith('video/')) type = 'video';
+
+            return {
+              id: m.id as string,
+              name: (m.originalName as string) || (m.filename as string) || '',
+              type,
+              url: m.url as string,
+              size: (m.size as number) || 0,
+              mimeType: mime,
+              dimensions: undefined,
+              uploadedAt: (m.createdAt as string) || '',
+              usedIn: undefined,
+            };
+          })
+        );
+      }
+    } catch (error) {
+      console.error('Error fetching media files:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const formatFileSize = (bytes: number) => {

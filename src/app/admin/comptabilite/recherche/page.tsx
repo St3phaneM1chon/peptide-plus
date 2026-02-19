@@ -33,10 +33,10 @@ const typeLabelsKeys: Record<string, string> = {
 };
 
 const typeColors: Record<string, string> = {
-  ENTRY: 'bg-sky-900/30 text-sky-400',
-  INVOICE: 'bg-green-900/30 text-green-400',
-  SUPPLIER: 'bg-blue-900/30 text-blue-400',
-  TRANSACTION: 'bg-purple-900/30 text-purple-400',
+  ENTRY: 'bg-sky-100 text-sky-700',
+  INVOICE: 'bg-green-100 text-green-700',
+  SUPPLIER: 'bg-blue-100 text-blue-700',
+  TRANSACTION: 'bg-purple-100 text-purple-700',
 };
 
 export default function SearchPage() {
@@ -156,8 +156,8 @@ export default function SearchPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-white">{t('admin.search.title')}</h1>
-        <p className="text-neutral-400 mt-1">{t('admin.search.subtitle')}</p>
+        <h1 className="text-2xl font-bold text-slate-900">{t('admin.search.title')}</h1>
+        <p className="text-slate-500 mt-1">{t('admin.search.subtitle')}</p>
       </div>
 
       {/* Search Bar */}
@@ -169,7 +169,7 @@ export default function SearchPage() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={t('admin.search.searchPlaceholder')}
-              className="w-full px-4 py-3 ps-12 bg-neutral-800 border border-neutral-700 rounded-xl text-white text-lg focus:border-sky-500 focus:outline-none"
+              className="w-full px-4 py-3 ps-12 bg-white border border-slate-200 rounded-xl text-slate-900 text-lg focus:border-sky-500 focus:outline-none"
               autoFocus
             />
             <span className="absolute start-4 top-1/2 -translate-y-1/2 text-xl">🔍</span>
@@ -184,7 +184,7 @@ export default function SearchPage() {
           <button
             onClick={() => setShowFilters(!showFilters)}
             className={`px-4 py-3 rounded-xl border ${
-              showFilters ? 'bg-sky-600 border-sky-600 text-white' : 'bg-neutral-800 border-neutral-700 text-neutral-300'
+              showFilters ? 'bg-sky-600 border-sky-600 text-white' : 'bg-white border-slate-200 text-slate-600'
             }`}
           >
             ⚙️ {t('admin.search.filters')}
@@ -193,7 +193,7 @@ export default function SearchPage() {
           {query && (
             <button
               onClick={handleSaveSearch}
-              className="px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-xl text-neutral-300 hover:text-white"
+              className="px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-600 hover:text-slate-900"
             >
               ⭐ {t('admin.search.save')}
             </button>
@@ -202,12 +202,12 @@ export default function SearchPage() {
 
         {/* Suggestions */}
         {suggestions.length > 0 && (
-          <div className="absolute top-full left-0 right-0 mt-2 bg-neutral-800 border border-neutral-700 rounded-xl overflow-hidden z-10">
+          <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-xl overflow-hidden z-10">
             {suggestions.map((suggestion, i) => (
               <button
                 key={i}
                 onClick={() => setQuery(suggestion)}
-                className="w-full px-4 py-2 text-start text-neutral-300 hover:bg-neutral-700"
+                className="w-full px-4 py-2 text-start text-slate-600 hover:bg-slate-100"
               >
                 {suggestion}
               </button>
@@ -218,10 +218,10 @@ export default function SearchPage() {
 
       {/* Filters Panel */}
       {showFilters && (
-        <div className="bg-neutral-800 rounded-xl p-4 border border-neutral-700">
+        <div className="bg-white rounded-xl p-4 border border-slate-200">
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             <div className="col-span-2">
-              <label className="block text-xs text-neutral-400 mb-2">{t('admin.search.documentType')}</label>
+              <label className="block text-xs text-slate-500 mb-2">{t('admin.search.documentType')}</label>
               <div className="flex flex-wrap gap-2">
                 {Object.entries(typeLabels).map(([type, label]) => (
                   <button
@@ -230,7 +230,7 @@ export default function SearchPage() {
                     className={`px-3 py-1 rounded-full text-sm ${
                       filters.types.includes(type)
                         ? 'bg-sky-600 text-white'
-                        : 'bg-neutral-700 text-neutral-400'
+                        : 'bg-slate-100 text-slate-500'
                     }`}
                   >
                     {label}
@@ -239,29 +239,29 @@ export default function SearchPage() {
               </div>
             </div>
             <div>
-              <label className="block text-xs text-neutral-400 mb-1">{t('admin.search.dateFrom')}</label>
+              <label className="block text-xs text-slate-500 mb-1">{t('admin.search.dateFrom')}</label>
               <input
                 type="date"
                 value={filters.dateFrom}
                 onChange={e => setFilters(prev => ({ ...prev, dateFrom: e.target.value }))}
-                className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-white text-sm"
+                className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 text-sm"
               />
             </div>
             <div>
-              <label className="block text-xs text-neutral-400 mb-1">{t('admin.search.dateTo')}</label>
+              <label className="block text-xs text-slate-500 mb-1">{t('admin.search.dateTo')}</label>
               <input
                 type="date"
                 value={filters.dateTo}
                 onChange={e => setFilters(prev => ({ ...prev, dateTo: e.target.value }))}
-                className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-white text-sm"
+                className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 text-sm"
               />
             </div>
             <div>
-              <label className="block text-xs text-neutral-400 mb-1">{t('admin.search.statusLabel')}</label>
+              <label className="block text-xs text-slate-500 mb-1">{t('admin.search.statusLabel')}</label>
               <select
                 value={filters.status}
                 onChange={e => setFilters(prev => ({ ...prev, status: e.target.value }))}
-                className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-white text-sm"
+                className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 text-sm"
               >
                 <option value="">{t('admin.search.all')}</option>
                 <option value="POSTED">{t('admin.search.validated')}</option>
@@ -279,13 +279,13 @@ export default function SearchPage() {
         <div className="space-y-6">
           {/* Popular terms */}
           <div>
-            <h3 className="text-sm text-neutral-400 mb-2">{t('admin.search.popularSearches')}</h3>
+            <h3 className="text-sm text-slate-500 mb-2">{t('admin.search.popularSearches')}</h3>
             <div className="flex flex-wrap gap-2">
               {popularTerms.map(term => (
                 <button
                   key={term}
                   onClick={() => setQuery(term)}
-                  className="px-3 py-1 bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 rounded-full text-sm text-neutral-300"
+                  className="px-3 py-1 bg-white hover:bg-slate-100 border border-slate-200 rounded-full text-sm text-slate-600"
                 >
                   {term}
                 </button>
@@ -296,20 +296,20 @@ export default function SearchPage() {
           {/* Saved searches */}
           {savedSearches.length > 0 && (
             <div>
-              <h3 className="text-sm text-neutral-400 mb-2">{t('admin.search.savedSearches')}</h3>
+              <h3 className="text-sm text-slate-500 mb-2">{t('admin.search.savedSearches')}</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 {savedSearches.map(saved => (
                   <button
                     key={saved.id}
                     onClick={() => applySavedSearch(saved)}
-                    className="p-3 bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 rounded-xl text-start"
+                    className="p-3 bg-white hover:bg-slate-100 border border-slate-200 rounded-xl text-start"
                   >
                     <div className="flex justify-between items-start">
                       <div>
-                        <p className="font-medium text-white">⭐ {saved.name}</p>
-                        <p className="text-sm text-neutral-400 mt-1">"{saved.query}"</p>
+                        <p className="font-medium text-slate-900">⭐ {saved.name}</p>
+                        <p className="text-sm text-slate-500 mt-1">"{saved.query}"</p>
                       </div>
-                      <span className="text-xs text-neutral-500">{saved.useCount}x</span>
+                      <span className="text-xs text-slate-400">{saved.useCount}x</span>
                     </div>
                   </button>
                 ))}
@@ -326,12 +326,12 @@ export default function SearchPage() {
                   setFilters(prev => ({ ...prev, types: [type] }));
                   setQuery('*');
                 }}
-                className="p-4 bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 rounded-xl text-start"
+                className="p-4 bg-white hover:bg-slate-100 border border-slate-200 rounded-xl text-start"
               >
                 <span className={`px-2 py-1 rounded text-xs ${typeColors[type]}`}>
                   {typeLabels[type]}
                 </span>
-                <p className="text-2xl font-bold text-white mt-2">{count}</p>
+                <p className="text-2xl font-bold text-slate-900 mt-2">{count}</p>
               </button>
             ))}
           </div>
@@ -342,11 +342,11 @@ export default function SearchPage() {
       {results.length > 0 && (
         <div className="space-y-4">
           <div className="flex justify-between items-center">
-            <p className="text-sm text-neutral-400">
+            <p className="text-sm text-slate-500">
               {t('admin.search.resultCount', { count: results.length, query })}
             </p>
             <div className="flex gap-2">
-              <select className="px-3 py-1 bg-neutral-800 border border-neutral-700 rounded text-sm text-white">
+              <select className="px-3 py-1 bg-white border border-slate-200 rounded text-sm text-slate-900">
                 <option value="relevance">{t('admin.search.relevance')}</option>
                 <option value="date">{t('admin.search.sortDate')}</option>
                 <option value="amount">{t('admin.search.sortAmount')}</option>
@@ -358,7 +358,7 @@ export default function SearchPage() {
             {results.map(result => (
               <div
                 key={result.id}
-                className="bg-neutral-800 rounded-xl p-4 border border-neutral-700 hover:border-neutral-600 cursor-pointer"
+                className="bg-white rounded-xl p-4 border border-slate-200 hover:border-slate-300 cursor-pointer"
               >
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
@@ -366,30 +366,30 @@ export default function SearchPage() {
                       <span className={`px-2 py-0.5 rounded text-xs ${typeColors[result.type]}`}>
                         {typeLabels[result.type]}
                       </span>
-                      <span className="font-medium text-white">{result.title}</span>
+                      <span className="font-medium text-slate-900">{result.title}</span>
                       {result.reference && (
-                        <span className="text-sm text-neutral-500">#{result.reference}</span>
+                        <span className="text-sm text-slate-400">#{result.reference}</span>
                       )}
                     </div>
                     {result.description && (
-                      <p className="text-sm text-neutral-400 mt-1">{result.description}</p>
+                      <p className="text-sm text-slate-500 mt-1">{result.description}</p>
                     )}
                     {result.highlights && (
-                      <p 
-                        className="text-sm text-neutral-300 mt-2 [&_mark]:bg-sky-500/30 [&_mark]:text-sky-300"
+                      <p
+                        className="text-sm text-slate-600 mt-2 [&_mark]:bg-sky-100 [&_mark]:text-sky-700"
                         dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(result.highlights, { ALLOWED_TAGS: ['mark'] }) }}
                       />
                     )}
                   </div>
                   <div className="text-end ms-4">
-                    <p className="font-bold text-white">{formatCurrency(result.amount)}</p>
-                    <p className="text-sm text-neutral-500">
+                    <p className="font-bold text-slate-900">{formatCurrency(result.amount)}</p>
+                    <p className="text-sm text-slate-400">
                       {new Date(result.date).toLocaleDateString('fr-CA')}
                     </p>
                     <span className={`text-xs ${
                       result.status === 'POSTED' || result.status === 'PAID' || result.status === 'MATCHED'
-                        ? 'text-green-400'
-                        : 'text-yellow-400'
+                        ? 'text-green-600'
+                        : 'text-yellow-600'
                     }`}>
                       {result.status}
                     </span>
@@ -403,17 +403,17 @@ export default function SearchPage() {
 
       {/* Error */}
       {searchError && (
-        <div className="bg-neutral-800 rounded-xl p-8 border border-red-700 text-center">
-          <p className="text-red-400">{searchError}</p>
+        <div className="bg-white rounded-xl p-8 border border-red-300 text-center">
+          <p className="text-red-600">{searchError}</p>
         </div>
       )}
 
       {/* No results */}
       {query && !loading && !searchError && results.length === 0 && (
-        <div className="bg-neutral-800 rounded-xl p-8 border border-neutral-700 text-center">
+        <div className="bg-white rounded-xl p-8 border border-slate-200 text-center">
           <div className="text-4xl mb-4">🔍</div>
-          <h3 className="text-lg font-medium text-white mb-2">{t('admin.search.noResults')}</h3>
-          <p className="text-sm text-neutral-400">
+          <h3 className="text-lg font-medium text-slate-900 mb-2">{t('admin.search.noResults')}</h3>
+          <p className="text-sm text-slate-500">
             {t('admin.search.noResultsHint')}
           </p>
         </div>

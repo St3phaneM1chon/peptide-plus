@@ -28,6 +28,12 @@ import {
   Pause,
   Play,
   StarIcon,
+  FileText,
+  DollarSign,
+  CalendarDays,
+  Hash,
+  Download,
+  ExternalLink,
 } from 'lucide-react';
 import { PageHeader } from '@/components/admin/PageHeader';
 import { Button } from '@/components/admin/Button';
@@ -129,6 +135,8 @@ interface OrderItem {
 interface OrderStats {
   totalOrders: number;
   totalSpent: number;
+  ytdSpent: number;
+  totalItemsPurchased: number;
   pendingOrders: number;
   processingOrders: number;
   shippedOrders: number;
@@ -238,7 +246,7 @@ const tierColors: Record<string, string> = {
   DIAMOND: 'bg-violet-600',
 };
 
-type TabKey = 'orders' | 'communications' | 'loyalty' | 'subscriptions' | 'reviews' | 'addresses' | 'cards';
+type TabKey = 'orders' | 'invoices' | 'communications' | 'loyalty' | 'subscriptions' | 'reviews' | 'addresses' | 'cards';
 
 // ---------------------------------------------------------------------------
 // Main Component
@@ -394,8 +402,11 @@ export default function ClientDetailPage() {
   const deliveredOrders = orders.filter(o => o.status === 'DELIVERED');
   const cancelledOrders = orders.filter(o => o.status === 'CANCELLED');
 
+  const paidOrders = orders.filter(o => o.paymentStatus === 'PAID');
+
   const tabs: { key: TabKey; label: string; icon: typeof ShoppingCart }[] = [
     { key: 'orders', label: `${t('admin.customerDetail.tabs.orders')} (${orders.length})`, icon: ShoppingCart },
+    { key: 'invoices', label: `${t('admin.customerDetail.tabs.invoices')} (${paidOrders.length})`, icon: FileText },
     { key: 'communications', label: `${t('admin.customerDetail.tabs.communications')} (${conversations.length})`, icon: MessageSquare },
     { key: 'loyalty', label: `${t('admin.customerDetail.tabs.loyalty')} (${user.loyaltyPoints} pts)`, icon: Gift },
     { key: 'subscriptions', label: `${t('admin.customerDetail.tabs.subscriptions')} (${subscriptions.length})`, icon: Repeat },
@@ -590,7 +601,7 @@ export default function ClientDetailPage() {
 
       {/* Order Stats */}
       {orderStats && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           <StatCard
             label={t('admin.customerDetail.stats.totalSpent')}
             value={formatCurrency(orderStats.totalSpent)}
@@ -598,9 +609,21 @@ export default function ClientDetailPage() {
             className="bg-emerald-50 border-emerald-200"
           />
           <StatCard
+            label={t('admin.customerDetail.stats.ytdSpent')}
+            value={formatCurrency(orderStats.ytdSpent)}
+            icon={CalendarDays}
+            className="bg-teal-50 border-teal-200"
+          />
+          <StatCard
             label={t('admin.customerDetail.stats.orders')}
             value={orderStats.totalOrders}
             icon={Package}
+          />
+          <StatCard
+            label={t('admin.customerDetail.stats.totalProducts')}
+            value={orderStats.totalItemsPurchased}
+            icon={Hash}
+            className="bg-violet-50 border-violet-200"
           />
           <StatCard
             label={t('admin.customerDetail.stats.avgOrder')}
@@ -696,6 +719,95 @@ export default function ClientDetailPage() {
             <div className="text-center py-12 bg-white rounded-xl border border-slate-200">
               <ShoppingCart className="w-12 h-12 text-slate-300 mx-auto mb-3" />
               <p className="text-slate-500">{t('admin.customerDetail.orders.empty')}</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ================================================================= */}
+      {/* TAB: Invoices                                                     */}
+      {/* ================================================================= */}
+      {activeTab === 'invoices' && (
+        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+          <div className="px-4 py-3 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
+            <h3 className="font-semibold text-slate-900">{t('admin.customerDetail.invoices.title')}</h3>
+            <p className="text-sm text-slate-500">
+              {paidOrders.length} {t('admin.customerDetail.invoices.count')}
+            </p>
+          </div>
+          {paidOrders.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-slate-100 bg-slate-50/50">
+                    <th className="text-left px-4 py-2 text-xs font-semibold text-slate-500 uppercase">{t('admin.customerDetail.invoices.number')}</th>
+                    <th className="text-left px-4 py-2 text-xs font-semibold text-slate-500 uppercase">{t('admin.customerDetail.invoices.date')}</th>
+                    <th className="text-left px-4 py-2 text-xs font-semibold text-slate-500 uppercase">{t('admin.customerDetail.invoices.items')}</th>
+                    <th className="text-right px-4 py-2 text-xs font-semibold text-slate-500 uppercase">{t('admin.customerDetail.invoices.subtotal')}</th>
+                    <th className="text-right px-4 py-2 text-xs font-semibold text-slate-500 uppercase">{t('admin.customerDetail.invoices.tax')}</th>
+                    <th className="text-right px-4 py-2 text-xs font-semibold text-slate-500 uppercase">{t('admin.customerDetail.invoices.shipping')}</th>
+                    <th className="text-right px-4 py-2 text-xs font-semibold text-slate-500 uppercase">{t('admin.customerDetail.invoices.total')}</th>
+                    <th className="text-center px-4 py-2 text-xs font-semibold text-slate-500 uppercase">{t('admin.customerDetail.invoices.status')}</th>
+                    <th className="text-center px-4 py-2 text-xs font-semibold text-slate-500 uppercase">{t('admin.customerDetail.invoices.actions')}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {paidOrders.map((order) => {
+                    const itemCount = order.items.reduce((sum, i) => sum + i.quantity, 0);
+                    return (
+                      <tr key={order.id} className="hover:bg-slate-50 transition-colors">
+                        <td className="px-4 py-3">
+                          <span className="font-mono font-bold text-slate-900">{order.orderNumber}</span>
+                        </td>
+                        <td className="px-4 py-3 text-slate-600">{formatDate(order.createdAt)}</td>
+                        <td className="px-4 py-3">
+                          <span className="text-slate-600">{itemCount} {t('admin.customerDetail.invoices.products')}</span>
+                          <p className="text-xs text-slate-400 truncate max-w-[200px]">
+                            {order.items.map(i => i.product?.name || i.productName).join(', ')}
+                          </p>
+                        </td>
+                        <td className="px-4 py-3 text-right text-slate-600">{formatCurrency(order.subtotal)}</td>
+                        <td className="px-4 py-3 text-right text-slate-600">{formatCurrency(order.tax)}</td>
+                        <td className="px-4 py-3 text-right text-slate-600">{formatCurrency(order.shippingCost)}</td>
+                        <td className="px-4 py-3 text-right font-bold text-slate-900">{formatCurrency(order.total)}</td>
+                        <td className="px-4 py-3 text-center">
+                          <StatusBadge variant={statusConfig[order.status]?.variant || 'neutral'}>
+                            {order.status}
+                          </StatusBadge>
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          <Link
+                            href={`/admin/commandes?order=${order.id}`}
+                            className="inline-flex items-center gap-1 text-sky-600 hover:text-sky-700 text-sm"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                            {t('admin.customerDetail.invoices.view')}
+                          </Link>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+              <p className="text-slate-500">{t('admin.customerDetail.invoices.empty')}</p>
+            </div>
+          )}
+
+          {/* Invoice Totals Summary */}
+          {paidOrders.length > 0 && (
+            <div className="px-4 py-3 bg-slate-50 border-t border-slate-100">
+              <div className="flex justify-end gap-8 text-sm">
+                <span className="text-slate-500">
+                  {t('admin.customerDetail.invoices.totalAllTime')}: <strong className="text-slate-900">{formatCurrency(orderStats?.totalSpent || 0)}</strong>
+                </span>
+                <span className="text-slate-500">
+                  {t('admin.customerDetail.invoices.totalYTD')}: <strong className="text-teal-700">{formatCurrency(orderStats?.ytdSpent || 0)}</strong>
+                </span>
+              </div>
             </div>
           )}
         </div>

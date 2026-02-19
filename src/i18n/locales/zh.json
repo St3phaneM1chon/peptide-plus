@@ -1392,7 +1392,9 @@
         "avgOrder": "平均订单",
         "inProgress": "进行中",
         "orders": "订单",
-        "totalSpent": "总消费"
+        "totalSpent": "总消费",
+        "ytdSpent": "Spent this year",
+        "totalProducts": "Products purchased"
       },
       "subscriptions": {
         "cancelledAt": "取消于",
@@ -1412,7 +1414,26 @@
         "loyalty": "忠诚度",
         "orders": "订单",
         "reviews": "评论",
-        "subscriptions": "订阅"
+        "subscriptions": "订阅",
+        "invoices": "Invoices"
+      },
+      "invoices": {
+        "title": "Customer invoices",
+        "count": "invoice(s)",
+        "number": "Invoice #",
+        "date": "Date",
+        "items": "Items",
+        "subtotal": "Subtotal",
+        "tax": "Tax",
+        "shipping": "Shipping",
+        "total": "Total",
+        "status": "Status",
+        "actions": "Actions",
+        "products": "product(s)",
+        "view": "View",
+        "empty": "No invoices",
+        "totalAllTime": "All-time total",
+        "totalYTD": "Year-to-date total"
       }
     },
     "customerInvoices": {

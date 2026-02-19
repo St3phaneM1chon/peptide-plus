@@ -76,7 +76,7 @@ export default function UpsellAdminPage() {
 
   const fetchProducts = async () => {
     try {
-      const res = await fetch('/api/admin/products?limit=500&fields=id,name,slug');
+      const res = await fetch('/api/products?limit=500&fields=id,name,slug');
       const data = await res.json();
       setProducts(
         (data.products || []).map((p: { id: string; name: string; slug: string }) => ({

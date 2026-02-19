@@ -175,9 +175,9 @@ export default function CurrencyPage() {
   };
 
   const getTrendColor = (change: number) => {
-    if (change > 0) return 'text-green-400';
-    if (change < 0) return 'text-red-400';
-    return 'text-neutral-400';
+    if (change > 0) return 'text-green-600';
+    if (change < 0) return 'text-red-600';
+    return 'text-slate-500';
   };
 
   // Calculate totals
@@ -193,14 +193,14 @@ export default function CurrencyPage() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-white">{t('admin.multiCurrency.title')}</h1>
-          <p className="text-neutral-400 mt-1">{t('admin.multiCurrency.subtitle')}</p>
+          <h1 className="text-2xl font-bold text-slate-900">{t('admin.multiCurrency.title')}</h1>
+          <p className="text-slate-500 mt-1">{t('admin.multiCurrency.subtitle')}</p>
         </div>
         <div className="flex gap-2">
           <button
             onClick={handleRefreshRates}
             disabled={refreshing}
-            className="px-4 py-2 bg-neutral-700 hover:bg-neutral-600 text-white rounded-lg flex items-center gap-2 disabled:opacity-50"
+            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-900 rounded-lg flex items-center gap-2 disabled:opacity-50"
           >
             {refreshing ? '\u23f3' : '\ud83d\udd04'} {t('admin.multiCurrency.refreshRates')}
           </button>
@@ -215,29 +215,29 @@ export default function CurrencyPage() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-neutral-800 rounded-xl p-4 border border-neutral-700">
-          <p className="text-sm text-neutral-400">{t('admin.multiCurrency.baseCurrency')}</p>
-          <p className="text-2xl font-bold text-white mt-1">CAD \ud83c\udde8\ud83c\udde6</p>
-          <p className="text-xs text-neutral-500">{t('admin.multiCurrency.canadianDollar')}</p>
+        <div className="bg-white rounded-xl p-4 border border-slate-200">
+          <p className="text-sm text-slate-500">{t('admin.multiCurrency.baseCurrency')}</p>
+          <p className="text-2xl font-bold text-slate-900 mt-1">CAD \ud83c\udde8\ud83c\udde6</p>
+          <p className="text-xs text-slate-400">{t('admin.multiCurrency.canadianDollar')}</p>
         </div>
-        <div className="bg-neutral-800 rounded-xl p-4 border border-neutral-700">
-          <p className="text-sm text-neutral-400">{t('admin.multiCurrency.activeCurrencies')}</p>
-          <p className="text-2xl font-bold text-sky-400 mt-1">{currencies.length}</p>
+        <div className="bg-white rounded-xl p-4 border border-slate-200">
+          <p className="text-sm text-slate-500">{t('admin.multiCurrency.activeCurrencies')}</p>
+          <p className="text-2xl font-bold text-sky-600 mt-1">{currencies.length}</p>
         </div>
-        <div className="bg-neutral-800 rounded-xl p-4 border border-neutral-700">
-          <p className="text-sm text-neutral-400">{t('admin.multiCurrency.foreignHoldings')}</p>
-          <p className="text-2xl font-bold text-white mt-1">{formatCurrency(totalForeignCAD)}</p>
+        <div className="bg-white rounded-xl p-4 border border-slate-200">
+          <p className="text-sm text-slate-500">{t('admin.multiCurrency.foreignHoldings')}</p>
+          <p className="text-2xl font-bold text-slate-900 mt-1">{formatCurrency(totalForeignCAD)}</p>
         </div>
-        <div className="bg-neutral-800 rounded-xl p-4 border border-neutral-700">
-          <p className="text-sm text-neutral-400">{t('admin.multiCurrency.unrealizedGainLoss')}</p>
-          <p className={`text-2xl font-bold mt-1 ${totalUnrealizedGainLoss >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+        <div className="bg-white rounded-xl p-4 border border-slate-200">
+          <p className="text-sm text-slate-500">{t('admin.multiCurrency.unrealizedGainLoss')}</p>
+          <p className={`text-2xl font-bold mt-1 ${totalUnrealizedGainLoss >= 0 ? 'text-green-600' : 'text-red-600'}`}>
             {totalUnrealizedGainLoss >= 0 ? '+' : ''}{formatCurrency(totalUnrealizedGainLoss)}
           </p>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-neutral-800 p-1 rounded-lg w-fit">
+      <div className="flex gap-1 bg-slate-100 p-1 rounded-lg w-fit">
         {tabs.map(tab => (
           <button
             key={tab.id}
@@ -245,7 +245,7 @@ export default function CurrencyPage() {
             className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
               activeTab === tab.id
                 ? 'bg-sky-600 text-white'
-                : 'text-neutral-400 hover:text-white'
+                : 'text-slate-500 hover:text-slate-900'
             }`}
           >
             {tab.label}
@@ -259,7 +259,7 @@ export default function CurrencyPage() {
           {currencies.map(currency => (
             <div
               key={currency.code}
-              className="bg-neutral-800 rounded-xl p-4 border border-neutral-700 hover:border-sky-500/50 cursor-pointer transition-colors"
+              className="bg-white rounded-xl p-4 border border-slate-200 hover:border-sky-500/50 cursor-pointer transition-colors"
               onClick={() => setSelectedCurrency(currency.code)}
             >
               <div className="flex justify-between items-start">
@@ -267,8 +267,8 @@ export default function CurrencyPage() {
                   <div className="flex items-center gap-2">
                     <span className="text-2xl">{currency.code === 'USD' ? '\ud83c\uddfa\ud83c\uddf8' : currency.code === 'EUR' ? '\ud83c\uddea\ud83c\uddfa' : currency.code === 'GBP' ? '\ud83c\uddec\ud83c\udde7' : currency.code === 'JPY' ? '\ud83c\uddef\ud83c\uddf5' : currency.code === 'CHF' ? '\ud83c\udde8\ud83c\udded' : currency.code === 'AUD' ? '\ud83c\udde6\ud83c\uddfa' : '\ud83c\uddf2\ud83c\uddfd'}</span>
                     <div>
-                      <p className="font-bold text-white">{currency.code}</p>
-                      <p className="text-xs text-neutral-400">{currency.name}</p>
+                      <p className="font-bold text-slate-900">{currency.code}</p>
+                      <p className="text-xs text-slate-500">{currency.name}</p>
                     </div>
                   </div>
                 </div>
@@ -276,23 +276,23 @@ export default function CurrencyPage() {
               </div>
 
               <div className="mt-4">
-                <p className="text-2xl font-bold text-white">
-                  {currency.rate.toFixed(4)} <span className="text-sm text-neutral-400">CAD</span>
+                <p className="text-2xl font-bold text-slate-900">
+                  {currency.rate.toFixed(4)} <span className="text-sm text-slate-500">CAD</span>
                 </p>
                 <p className={`text-sm ${getTrendColor(currency.change24h)}`}>
                   {currency.change24h > 0 ? '+' : ''}{currency.change24h.toFixed(2)}% (24h)
                 </p>
               </div>
 
-              <p className="text-xs text-neutral-500 mt-2">
+              <p className="text-xs text-slate-400 mt-2">
                 {t('admin.multiCurrency.updatedAt', { time: currency.lastUpdated.toLocaleTimeString(locale) })}
               </p>
             </div>
           ))}
 
           {/* Add currency card */}
-          <div className="bg-neutral-800 rounded-xl p-4 border border-dashed border-neutral-600 flex items-center justify-center min-h-[160px]">
-            <button className="text-neutral-400 hover:text-white flex flex-col items-center gap-2">
+          <div className="bg-white rounded-xl p-4 border border-dashed border-slate-300 flex items-center justify-center min-h-[160px]">
+            <button className="text-slate-500 hover:text-slate-900 flex flex-col items-center gap-2">
               <span className="text-3xl">+</span>
               <span className="text-sm">{t('admin.multiCurrency.addCurrency')}</span>
             </button>
@@ -303,57 +303,57 @@ export default function CurrencyPage() {
       {/* Accounts Tab */}
       {activeTab === 'accounts' && (
         <div className="space-y-4">
-          <div className="bg-neutral-800 rounded-xl border border-neutral-700 overflow-hidden">
+          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
             <table className="w-full">
-              <thead className="bg-neutral-900/50">
+              <thead className="bg-slate-50">
                 <tr>
-                  <th className="px-4 py-3 text-start text-xs font-medium text-neutral-400 uppercase">{t('admin.multiCurrency.account')}</th>
-                  <th className="px-4 py-3 text-start text-xs font-medium text-neutral-400 uppercase">{t('admin.multiCurrency.currency')}</th>
-                  <th className="px-4 py-3 text-end text-xs font-medium text-neutral-400 uppercase">{t('admin.multiCurrency.originalBalance')}</th>
-                  <th className="px-4 py-3 text-end text-xs font-medium text-neutral-400 uppercase">{t('admin.multiCurrency.cadEquivalent')}</th>
-                  <th className="px-4 py-3 text-end text-xs font-medium text-neutral-400 uppercase">{t('admin.multiCurrency.originalRate')}</th>
-                  <th className="px-4 py-3 text-end text-xs font-medium text-neutral-400 uppercase">{t('admin.multiCurrency.currentRate')}</th>
-                  <th className="px-4 py-3 text-end text-xs font-medium text-neutral-400 uppercase">{t('admin.multiCurrency.gainLoss')}</th>
+                  <th className="px-4 py-3 text-start text-xs font-medium text-slate-500 uppercase">{t('admin.multiCurrency.account')}</th>
+                  <th className="px-4 py-3 text-start text-xs font-medium text-slate-500 uppercase">{t('admin.multiCurrency.currency')}</th>
+                  <th className="px-4 py-3 text-end text-xs font-medium text-slate-500 uppercase">{t('admin.multiCurrency.originalBalance')}</th>
+                  <th className="px-4 py-3 text-end text-xs font-medium text-slate-500 uppercase">{t('admin.multiCurrency.cadEquivalent')}</th>
+                  <th className="px-4 py-3 text-end text-xs font-medium text-slate-500 uppercase">{t('admin.multiCurrency.originalRate')}</th>
+                  <th className="px-4 py-3 text-end text-xs font-medium text-slate-500 uppercase">{t('admin.multiCurrency.currentRate')}</th>
+                  <th className="px-4 py-3 text-end text-xs font-medium text-slate-500 uppercase">{t('admin.multiCurrency.gainLoss')}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-neutral-700">
+              <tbody className="divide-y divide-slate-200">
                 {foreignAccounts.map(account => (
-                  <tr key={account.id} className="hover:bg-neutral-700/30">
+                  <tr key={account.id} className="hover:bg-slate-50">
                     <td className="px-4 py-3">
-                      <p className="font-medium text-white">{account.accountCode}</p>
-                      <p className="text-sm text-neutral-400">{account.accountName}</p>
+                      <p className="font-medium text-slate-900">{account.accountCode}</p>
+                      <p className="text-sm text-slate-500">{account.accountName}</p>
                     </td>
                     <td className="px-4 py-3">
-                      <span className="px-2 py-1 bg-neutral-700 rounded text-sm text-white">
+                      <span className="px-2 py-1 bg-slate-100 rounded text-sm text-slate-900">
                         {account.currency}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-end font-mono text-white">
+                    <td className="px-4 py-3 text-end font-mono text-slate-900">
                       {account.balance.toLocaleString(locale, { minimumFractionDigits: 2 })} {account.currency}
                     </td>
-                    <td className="px-4 py-3 text-end font-mono text-sky-400">
+                    <td className="px-4 py-3 text-end font-mono text-sky-600">
                       {formatCurrency(account.cadEquivalent)}
                     </td>
-                    <td className="px-4 py-3 text-end font-mono text-neutral-400">
+                    <td className="px-4 py-3 text-end font-mono text-slate-500">
                       {account.originalRate.toFixed(4)}
                     </td>
-                    <td className="px-4 py-3 text-end font-mono text-white">
+                    <td className="px-4 py-3 text-end font-mono text-slate-900">
                       {account.currentRate.toFixed(4)}
                     </td>
-                    <td className={`px-4 py-3 text-end font-mono font-medium ${account.unrealizedGainLoss >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                    <td className={`px-4 py-3 text-end font-mono font-medium ${account.unrealizedGainLoss >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                       {account.unrealizedGainLoss >= 0 ? '+' : ''}{formatCurrency(account.unrealizedGainLoss)}
                     </td>
                   </tr>
                 ))}
               </tbody>
-              <tfoot className="bg-neutral-900/50">
+              <tfoot className="bg-slate-50">
                 <tr>
-                  <td colSpan={3} className="px-4 py-3 text-end font-medium text-neutral-300">{t('admin.supplierInvoices.total')}</td>
-                  <td className="px-4 py-3 text-end font-bold text-sky-400">
+                  <td colSpan={3} className="px-4 py-3 text-end font-medium text-slate-600">{t('admin.supplierInvoices.total')}</td>
+                  <td className="px-4 py-3 text-end font-bold text-sky-600">
                     {formatCurrency(totalForeignCAD)}
                   </td>
                   <td colSpan={2}></td>
-                  <td className={`px-4 py-3 text-end font-bold ${totalUnrealizedGainLoss >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  <td className={`px-4 py-3 text-end font-bold ${totalUnrealizedGainLoss >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                     {totalUnrealizedGainLoss >= 0 ? '+' : ''}{formatCurrency(totalUnrealizedGainLoss)}
                   </td>
                 </tr>
@@ -362,7 +362,7 @@ export default function CurrencyPage() {
           </div>
 
           {/* Add account */}
-          <button className="w-full py-3 border border-dashed border-neutral-600 rounded-xl text-neutral-400 hover:text-white hover:border-neutral-500">
+          <button className="w-full py-3 border border-dashed border-slate-300 rounded-xl text-slate-500 hover:text-slate-900 hover:border-slate-400">
             {t('admin.multiCurrency.addForeignAccount')}
           </button>
         </div>
@@ -372,19 +372,19 @@ export default function CurrencyPage() {
       {activeTab === 'history' && (() => {
         const selectedRate = currencies.find(c => c.code === historyCurrency)?.rate;
         return (
-        <div className="bg-neutral-800 rounded-xl border border-neutral-700 overflow-hidden">
-          <div className="p-4 border-b border-neutral-700">
+        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+          <div className="p-4 border-b border-slate-200">
             <div className="flex gap-4">
               <select
                 value={historyCurrency}
                 onChange={(e) => setHistoryCurrency(e.target.value)}
-                className="px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-white text-sm"
+                className="px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 text-sm"
               >
                 {currencies.map(c => (
                   <option key={c.code} value={c.code}>{c.code} / CAD</option>
                 ))}
               </select>
-              <select className="px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-white text-sm">
+              <select className="px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 text-sm">
                 <option value="7">{t('admin.multiCurrency.last7Days')}</option>
                 <option value="30">{t('admin.multiCurrency.last30Days')}</option>
                 <option value="90">{t('admin.multiCurrency.last90Days')}</option>
@@ -395,14 +395,14 @@ export default function CurrencyPage() {
           {/* No historical data available — show current rate as reference */}
           <div className="p-6">
             <div className="h-48 flex flex-col items-center justify-center text-center">
-              <p className="text-neutral-400 text-sm mb-4">
+              <p className="text-slate-500 text-sm mb-4">
                 {t('admin.multiCurrency.noHistoricalData')}
               </p>
               {selectedRate != null && (
                 <div>
-                  <p className="text-xs text-neutral-500 mb-1">{t('admin.multiCurrency.currentRate')}</p>
-                  <p className="text-3xl font-bold text-sky-400">
-                    {selectedRate.toFixed(4)} <span className="text-sm text-neutral-400">CAD</span>
+                  <p className="text-xs text-slate-400 mb-1">{t('admin.multiCurrency.currentRate')}</p>
+                  <p className="text-3xl font-bold text-sky-600">
+                    {selectedRate.toFixed(4)} <span className="text-sm text-slate-500">CAD</span>
                   </p>
                 </div>
               )}
@@ -410,22 +410,22 @@ export default function CurrencyPage() {
           </div>
 
           {/* Stats — only current rate is available, no historical min/max/volatility */}
-          <div className="grid grid-cols-4 gap-4 p-4 border-t border-neutral-700">
+          <div className="grid grid-cols-4 gap-4 p-4 border-t border-slate-200">
             <div>
-              <p className="text-xs text-neutral-400">{t('admin.multiCurrency.average')}</p>
-              <p className="font-medium text-white">{selectedRate != null ? selectedRate.toFixed(4) : '\u2014'}</p>
+              <p className="text-xs text-slate-500">{t('admin.multiCurrency.average')}</p>
+              <p className="font-medium text-slate-900">{selectedRate != null ? selectedRate.toFixed(4) : '\u2014'}</p>
             </div>
             <div>
-              <p className="text-xs text-neutral-400">{t('admin.multiCurrency.highest')}</p>
-              <p className="font-medium text-neutral-500">{'\u2014'}</p>
+              <p className="text-xs text-slate-500">{t('admin.multiCurrency.highest')}</p>
+              <p className="font-medium text-slate-400">{'\u2014'}</p>
             </div>
             <div>
-              <p className="text-xs text-neutral-400">{t('admin.multiCurrency.lowest')}</p>
-              <p className="font-medium text-neutral-500">{'\u2014'}</p>
+              <p className="text-xs text-slate-500">{t('admin.multiCurrency.lowest')}</p>
+              <p className="font-medium text-slate-400">{'\u2014'}</p>
             </div>
             <div>
-              <p className="text-xs text-neutral-400">{t('admin.multiCurrency.volatility')}</p>
-              <p className="font-medium text-neutral-500">{'\u2014'}</p>
+              <p className="text-xs text-slate-500">{t('admin.multiCurrency.volatility')}</p>
+              <p className="font-medium text-slate-400">{'\u2014'}</p>
             </div>
           </div>
         </div>
@@ -438,32 +438,32 @@ export default function CurrencyPage() {
         const converterRate = currencies.find(c => c.code === selectedConverterCurrency)?.rate ?? 0;
         const convertedAmount = converterAmount * converterRate;
         return (
-      <div className="bg-neutral-800 rounded-xl p-6 border border-neutral-700">
-        <h3 className="font-medium text-white mb-4">\ud83d\udd04 {t('admin.multiCurrency.quickConverter')}</h3>
+      <div className="bg-white rounded-xl p-6 border border-slate-200">
+        <h3 className="font-medium text-slate-900 mb-4">\ud83d\udd04 {t('admin.multiCurrency.quickConverter')}</h3>
         <div className="flex items-center gap-4">
           <div className="flex-1">
             <input
               type="number"
               value={converterAmount}
               onChange={(e) => setConverterAmount(Number(e.target.value) || 0)}
-              className="w-full px-4 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-white text-lg"
+              className="w-full px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 text-lg"
             />
           </div>
           <select
             value={selectedConverterCurrency}
             onChange={(e) => setConverterCurrency(e.target.value)}
-            className="px-4 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-white"
+            className="px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-900"
           >
             {currencies.map(c => (
               <option key={c.code} value={c.code}>{c.code}</option>
             ))}
           </select>
           <span className="text-2xl">\u2192</span>
-          <div className="flex-1 px-4 py-2 bg-neutral-900 rounded-lg">
-            <p className="text-2xl font-bold text-sky-400">
+          <div className="flex-1 px-4 py-2 bg-slate-50 rounded-lg">
+            <p className="text-2xl font-bold text-sky-600">
               {convertedAmount.toFixed(2)} CAD
             </p>
-            <p className="text-xs text-neutral-500">{t('admin.multiCurrency.rate', { rate: converterRate.toFixed(4) })}</p>
+            <p className="text-xs text-slate-400">{t('admin.multiCurrency.rate', { rate: converterRate.toFixed(4) })}</p>
           </div>
         </div>
       </div>

@@ -58,8 +58,35 @@ export default function WebinairesPage() {
   }, []);
 
   const fetchWebinars = async () => {
-    setWebinars([]);
-    setLoading(false);
+    try {
+      setLoading(true);
+      const res = await fetch('/api/admin/webinars');
+      if (res.ok) {
+        const data = await res.json();
+        const rawWebinars = data.webinars || [];
+        setWebinars(
+          rawWebinars.map((w: Record<string, unknown>) => ({
+            id: w.id as string,
+            title: (w.title as string) || '',
+            description: (w.description as string) || '',
+            host: (w.speaker as string) || '',
+            scheduledAt: (w.scheduledAt as string) || '',
+            duration: (w.duration as number) || 60,
+            meetingUrl: (w.registrationUrl as string) || undefined,
+            recordingUrl: (w.recordingUrl as string) || undefined,
+            maxAttendees: (w.maxAttendees as number) || 100,
+            registeredCount: (w.registeredCount as number) || 0,
+            attendedCount: (w.attendedCount as number) || 0,
+            status: (w.status as Webinar['status']) || 'DRAFT',
+            createdAt: (w.createdAt as string) || '',
+          }))
+        );
+      }
+    } catch (error) {
+      console.error('Error fetching webinars:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const stats = {

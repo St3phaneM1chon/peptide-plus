@@ -43,7 +43,7 @@ export default function ExportsPage() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('/api/accounting/exports');
+      const response = await fetch('/api/accounting/export');
       if (!response.ok) throw new Error(`Error ${response.status}`);
       const data = await response.json();
       setHistory(data.exports || data.history || data.data || []);
@@ -125,7 +125,7 @@ export default function ExportsPage() {
   const handleExport = async () => {
     setExporting(true);
     try {
-      const response = await fetch('/api/accounting/exports', {
+      const response = await fetch('/api/accounting/export', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

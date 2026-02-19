@@ -2564,12 +2564,15 @@
       },
       "stats": {
         "totalSpent": "Total spent",
+        "ytdSpent": "Spent this year",
         "orders": "Orders",
+        "totalProducts": "Products purchased",
         "avgOrder": "Avg order",
         "inProgress": "In progress"
       },
       "tabs": {
         "orders": "Orders",
+        "invoices": "Invoices",
         "communications": "Communications",
         "loyalty": "Loyalty",
         "subscriptions": "Subscriptions",
@@ -2587,6 +2590,24 @@
         "shippedOn": "Shipped on",
         "deliveredOn": "Delivered on",
         "promoCode": "Promo code"
+      },
+      "invoices": {
+        "title": "Customer invoices",
+        "count": "invoice(s)",
+        "number": "Invoice #",
+        "date": "Date",
+        "items": "Items",
+        "subtotal": "Subtotal",
+        "tax": "Tax",
+        "shipping": "Shipping",
+        "total": "Total",
+        "status": "Status",
+        "actions": "Actions",
+        "products": "product(s)",
+        "view": "View",
+        "empty": "No invoices",
+        "totalAllTime": "All-time total",
+        "totalYTD": "Year-to-date total"
       },
       "communications": {
         "statusOpen": "Open",

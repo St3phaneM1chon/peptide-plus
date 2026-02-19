@@ -83,9 +83,7 @@ export default function RecurringEntriesPage() {
   const handleProcessDue = async () => {
     setProcessing(true);
     try {
-      const response = await fetch('/api/accounting/recurring/process', {
-        method: 'POST',
-      });
+      const response = await fetch('/api/accounting/recurring?action=process');
       if (!response.ok) throw new Error(t('admin.recurringEntries.apiError', { status: response.status }));
       toast.success(t('admin.recurringEntries.processSuccess'));
       await loadEntries();

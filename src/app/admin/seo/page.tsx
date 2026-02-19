@@ -42,8 +42,55 @@ export default function SEOPage() {
   }, []);
 
   const fetchData = async () => {
-    setPages([]);
-    setLoading(false);
+    try {
+      setLoading(true);
+      const res = await fetch('/api/admin/seo');
+      if (res.ok) {
+        const data = await res.json();
+        const seoMap: Record<string, string> = data.seoMap || {};
+        const rawSettings = data.settings || [];
+
+        // Populate global settings from seoMap
+        setGlobalSettings((prev) => ({
+          ...prev,
+          siteName: seoMap['seo_site_name'] || prev.siteName,
+          siteUrl: seoMap['seo_site_url'] || prev.siteUrl,
+          defaultOgImage: seoMap['seo_default_og_image'] || prev.defaultOgImage,
+          googleAnalyticsId: seoMap['seo_google_analytics_id'] || prev.googleAnalyticsId,
+          googleTagManagerId: seoMap['seo_google_tag_manager_id'] || prev.googleTagManagerId,
+          facebookPixelId: seoMap['seo_facebook_pixel_id'] || prev.facebookPixelId,
+        }));
+
+        // Map settings into PageSEO[] for any page-specific SEO entries
+        const pageEntries: PageSEO[] = rawSettings
+          .filter((s: Record<string, unknown>) => (s.key as string).startsWith('seo_page_'))
+          .map((s: Record<string, unknown>) => {
+            const key = s.key as string;
+            const value = s.value as string;
+            let parsed: Record<string, unknown> = {};
+            try {
+              parsed = JSON.parse(value);
+            } catch {
+              parsed = { title: value };
+            }
+            return {
+              id: s.id as string,
+              path: (parsed.path as string) || key.replace('seo_page_', '/'),
+              title: (parsed.title as string) || '',
+              description: (parsed.description as string) || '',
+              keywords: (parsed.keywords as string) || undefined,
+              ogImage: (parsed.ogImage as string) || undefined,
+              noIndex: (parsed.noIndex as boolean) || false,
+              lastUpdated: (s.updatedAt as string) || new Date().toISOString(),
+            };
+          });
+        setPages(pageEntries);
+      }
+    } catch (error) {
+      console.error('Error fetching SEO data:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const toggleNoIndex = (id: string) => {

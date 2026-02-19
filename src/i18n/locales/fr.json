@@ -2564,12 +2564,15 @@
       },
       "stats": {
         "totalSpent": "Total dépensé",
+        "ytdSpent": "Dépensé cette année",
         "orders": "Commandes",
+        "totalProducts": "Produits achetés",
         "avgOrder": "Panier moyen",
         "inProgress": "En cours"
       },
       "tabs": {
         "orders": "Commandes",
+        "invoices": "Factures",
         "communications": "Communications",
         "loyalty": "Fidélité",
         "subscriptions": "Abonnements",
@@ -2587,6 +2590,24 @@
         "shippedOn": "Expédié le",
         "deliveredOn": "Livré le",
         "promoCode": "Code promo"
+      },
+      "invoices": {
+        "title": "Factures du client",
+        "count": "facture(s)",
+        "number": "N° Facture",
+        "date": "Date",
+        "items": "Articles",
+        "subtotal": "Sous-total",
+        "tax": "Taxes",
+        "shipping": "Livraison",
+        "total": "Total",
+        "status": "Statut",
+        "actions": "Actions",
+        "products": "produit(s)",
+        "view": "Voir",
+        "empty": "Aucune facture",
+        "totalAllTime": "Total depuis le début",
+        "totalYTD": "Total cette année"
       },
       "communications": {
         "statusOpen": "Ouverte",

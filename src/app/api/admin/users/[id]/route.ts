@@ -74,22 +74,34 @@ export const GET = withAdminGuard(async (_request, { session, params }) => {
     });
 
     // Calculate totals
+    const paidOrders = orders.filter((o) => o.paymentStatus === 'PAID');
+    const totalSpent = paidOrders.reduce((sum, o) => sum + Number(o.total), 0);
+
+    // Year-to-date spending
+    const yearStart = new Date(new Date().getFullYear(), 0, 1);
+    const ytdSpent = paidOrders
+      .filter((o) => new Date(o.createdAt) >= yearStart)
+      .reduce((sum, o) => sum + Number(o.total), 0);
+
+    // Total products purchased (sum of all item quantities across paid orders)
+    const totalItemsPurchased = paidOrders.reduce(
+      (sum, o) => sum + o.items.reduce((iSum, item) => iSum + item.quantity, 0),
+      0
+    );
+
     const orderStats = {
       totalOrders: orders.length,
-      totalSpent: orders
-        .filter((o) => o.paymentStatus === 'PAID')
-        .reduce((sum, o) => sum + Number(o.total), 0),
+      totalSpent,
+      ytdSpent,
+      totalItemsPurchased,
       pendingOrders: orders.filter((o) => o.status === 'PENDING' || o.status === 'CONFIRMED').length,
       processingOrders: orders.filter((o) => o.status === 'PROCESSING').length,
       shippedOrders: orders.filter((o) => o.status === 'SHIPPED').length,
       deliveredOrders: orders.filter((o) => o.status === 'DELIVERED').length,
       cancelledOrders: orders.filter((o) => o.status === 'CANCELLED').length,
       averageOrderValue:
-        orders.length > 0
-          ? orders
-              .filter((o) => o.paymentStatus === 'PAID')
-              .reduce((sum, o) => sum + Number(o.total), 0) /
-            Math.max(orders.filter((o) => o.paymentStatus === 'PAID').length, 1)
+        paidOrders.length > 0
+          ? totalSpent / paidOrders.length
           : 0,
     };
 

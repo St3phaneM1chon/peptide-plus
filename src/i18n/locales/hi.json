@@ -1392,7 +1392,9 @@
         "avgOrder": "औसत आदेश",
         "inProgress": "प्रगति में",
         "orders": "आदेश",
-        "totalSpent": "कुल खर्च"
+        "totalSpent": "कुल खर्च",
+        "ytdSpent": "Spent this year",
+        "totalProducts": "Products purchased"
       },
       "subscriptions": {
         "cancelledAt": "रद्द किया गया",
@@ -1412,7 +1414,26 @@
         "loyalty": "निष्ठा",
         "orders": "आदेश",
         "reviews": "समीक्षाएँ",
-        "subscriptions": "सदस्यताएँ"
+        "subscriptions": "सदस्यताएँ",
+        "invoices": "Invoices"
+      },
+      "invoices": {
+        "title": "Customer invoices",
+        "count": "invoice(s)",
+        "number": "Invoice #",
+        "date": "Date",
+        "items": "Items",
+        "subtotal": "Subtotal",
+        "tax": "Tax",
+        "shipping": "Shipping",
+        "total": "Total",
+        "status": "Status",
+        "actions": "Actions",
+        "products": "product(s)",
+        "view": "View",
+        "empty": "No invoices",
+        "totalAllTime": "All-time total",
+        "totalYTD": "Year-to-date total"
       }
     },
     "customerInvoices": {

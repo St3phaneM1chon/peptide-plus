@@ -1392,7 +1392,9 @@
         "avgOrder": "Mwayen lòd",
         "inProgress": "An pwogrè",
         "orders": "Lòd",
-        "totalSpent": "Total depanse"
+        "totalSpent": "Total depanse",
+        "ytdSpent": "Spent this year",
+        "totalProducts": "Products purchased"
       },
       "subscriptions": {
         "cancelledAt": "Anile sou",
@@ -1412,7 +1414,26 @@
         "loyalty": "Loyalte",
         "orders": "Lòd",
         "reviews": "Revizyon",
-        "subscriptions": "Abònman"
+        "subscriptions": "Abònman",
+        "invoices": "Invoices"
+      },
+      "invoices": {
+        "title": "Customer invoices",
+        "count": "invoice(s)",
+        "number": "Invoice #",
+        "date": "Date",
+        "items": "Items",
+        "subtotal": "Subtotal",
+        "tax": "Tax",
+        "shipping": "Shipping",
+        "total": "Total",
+        "status": "Status",
+        "actions": "Actions",
+        "products": "product(s)",
+        "view": "View",
+        "empty": "No invoices",
+        "totalAllTime": "All-time total",
+        "totalYTD": "Year-to-date total"
       }
     },
     "customerInvoices": {

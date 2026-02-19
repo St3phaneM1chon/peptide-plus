@@ -1392,7 +1392,9 @@
         "avgOrder": "متوسط الطلب",
         "inProgress": "قيد المعالجة",
         "orders": "الطلبات",
-        "totalSpent": "الإجمالي المنفق"
+        "totalSpent": "الإجمالي المنفق",
+        "ytdSpent": "Spent this year",
+        "totalProducts": "Products purchased"
       },
       "subscriptions": {
         "cancelledAt": "ملغى في",
@@ -1412,7 +1414,26 @@
         "loyalty": "الولاء",
         "orders": "الطلبات",
         "reviews": "المراجعات",
-        "subscriptions": "الاشتراكات"
+        "subscriptions": "الاشتراكات",
+        "invoices": "Invoices"
+      },
+      "invoices": {
+        "title": "Customer invoices",
+        "count": "invoice(s)",
+        "number": "Invoice #",
+        "date": "Date",
+        "items": "Items",
+        "subtotal": "Subtotal",
+        "tax": "Tax",
+        "shipping": "Shipping",
+        "total": "Total",
+        "status": "Status",
+        "actions": "Actions",
+        "products": "product(s)",
+        "view": "View",
+        "empty": "No invoices",
+        "totalAllTime": "All-time total",
+        "totalYTD": "Year-to-date total"
       }
     },
     "customerInvoices": {

@@ -1392,7 +1392,9 @@
         "avgOrder": "Karaniwang order",
         "inProgress": "Nasa proseso",
         "orders": "Mga order",
-        "totalSpent": "Kabuuang ginastos"
+        "totalSpent": "Kabuuang ginastos",
+        "ytdSpent": "Spent this year",
+        "totalProducts": "Products purchased"
       },
       "subscriptions": {
         "cancelledAt": "Nakansela noong",
@@ -1412,7 +1414,26 @@
         "loyalty": "Katapatan",
         "orders": "Mga order",
         "reviews": "Mga pagsusuri",
-        "subscriptions": "Mga subscription"
+        "subscriptions": "Mga subscription",
+        "invoices": "Invoices"
+      },
+      "invoices": {
+        "title": "Customer invoices",
+        "count": "invoice(s)",
+        "number": "Invoice #",
+        "date": "Date",
+        "items": "Items",
+        "subtotal": "Subtotal",
+        "tax": "Tax",
+        "shipping": "Shipping",
+        "total": "Total",
+        "status": "Status",
+        "actions": "Actions",
+        "products": "product(s)",
+        "view": "View",
+        "empty": "No invoices",
+        "totalAllTime": "All-time total",
+        "totalYTD": "Year-to-date total"
       }
     },
     "customerInvoices": {

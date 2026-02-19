@@ -77,9 +77,48 @@ export default function EmailsPage() {
   }, []);
 
   const fetchData = async () => {
-    setTemplates([]);
-    setLogs([]);
-    setLoading(false);
+    try {
+      setLoading(true);
+      const [templatesRes, logsRes] = await Promise.all([
+        fetch('/api/admin/emails'),
+        fetch('/api/admin/emails/logs'),
+      ]);
+
+      if (templatesRes.ok) {
+        const templatesData = await templatesRes.json();
+        const rawTemplates = templatesData.templates || [];
+        setTemplates(
+          rawTemplates.map((t: Record<string, unknown>) => ({
+            id: t.id as string,
+            name: t.name as string,
+            type: (t.name as string || 'WELCOME').toUpperCase().replace(/\s+/g, '_') as EmailTemplate['type'],
+            subject: t.subject as string,
+            content: t.htmlContent as string || '',
+            isActive: t.isActive as boolean,
+            lastUpdated: t.updatedAt as string || t.createdAt as string,
+          }))
+        );
+      }
+
+      if (logsRes.ok) {
+        const logsData = await logsRes.json();
+        const rawLogs = logsData.logs || [];
+        setLogs(
+          rawLogs.map((l: Record<string, unknown>) => ({
+            id: l.id as string,
+            templateType: l.templateId as string || 'UNKNOWN',
+            to: l.to as string,
+            subject: l.subject as string,
+            status: ((l.status as string) || 'PENDING').toUpperCase() as EmailLog['status'],
+            sentAt: l.sentAt as string,
+          }))
+        );
+      }
+    } catch (error) {
+      console.error('Error fetching email data:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const toggleTemplate = (id: string) => {
