@@ -75,56 +75,70 @@ export async function POST(req: NextRequest) {
     // ---------------------------------------------------------------
     log('\n--- STEP 1: Categories (parents first, then children) ---');
 
+    // Helper: upsert category handling slug uniqueness
+    const catIdMap = new Map<string, string>(); // local ID → azure ID
+    async function upsertCategory(cat: typeof LOCAL_CATEGORIES[0]) {
+      // First check if slug already exists with different ID
+      const existingBySlug = await prisma.category.findFirst({ where: { slug: cat.slug } });
+      const existingById = await prisma.category.findUnique({ where: { id: cat.id } });
+
+      if (existingBySlug && existingBySlug.id !== cat.id) {
+        // Slug exists with different ID - update existing, remap
+        await prisma.category.update({
+          where: { id: existingBySlug.id },
+          data: {
+            name: cat.name,
+            isActive: cat.isActive,
+            parentId: cat.parentId ? (catIdMap.get(cat.parentId) || cat.parentId) : null,
+            updatedAt: new Date(),
+          },
+        });
+        catIdMap.set(cat.id, existingBySlug.id);
+        log(`  Updated existing: ${cat.name} (${cat.slug}) azure_id=${existingBySlug.id}`);
+      } else if (existingById) {
+        // Same ID exists - just update
+        await prisma.category.update({
+          where: { id: cat.id },
+          data: {
+            name: cat.name,
+            slug: cat.slug,
+            isActive: cat.isActive,
+            parentId: cat.parentId ? (catIdMap.get(cat.parentId) || cat.parentId) : null,
+            updatedAt: new Date(),
+          },
+        });
+        catIdMap.set(cat.id, cat.id);
+        log(`  Updated by ID: ${cat.name} (${cat.slug})`);
+      } else {
+        // New - create
+        await prisma.category.create({
+          data: {
+            id: cat.id,
+            name: cat.name,
+            slug: cat.slug,
+            description: cat.description,
+            imageUrl: cat.imageUrl,
+            sortOrder: cat.sortOrder,
+            isActive: cat.isActive,
+            parentId: cat.parentId ? (catIdMap.get(cat.parentId) || cat.parentId) : null,
+            updatedAt: new Date(),
+          },
+        });
+        catIdMap.set(cat.id, cat.id);
+        log(`  Created: ${cat.name} (${cat.slug})`);
+      }
+    }
+
     // Parents first (no parentId)
     const parents = LOCAL_CATEGORIES.filter(c => !c.parentId);
     for (const cat of parents) {
-      await prisma.category.upsert({
-        where: { id: cat.id },
-        create: {
-          id: cat.id,
-          name: cat.name,
-          slug: cat.slug,
-          description: cat.description,
-          imageUrl: cat.imageUrl,
-          sortOrder: cat.sortOrder,
-          isActive: cat.isActive,
-          updatedAt: new Date(),
-        },
-        update: {
-          name: cat.name,
-          slug: cat.slug,
-          isActive: cat.isActive,
-          updatedAt: new Date(),
-        },
-      });
-      log(`  Parent: ${cat.name} (${cat.slug}) - upserted`);
+      await upsertCategory(cat);
     }
 
     // Children (with parentId)
     const children = LOCAL_CATEGORIES.filter(c => c.parentId);
     for (const cat of children) {
-      await prisma.category.upsert({
-        where: { id: cat.id },
-        create: {
-          id: cat.id,
-          name: cat.name,
-          slug: cat.slug,
-          description: cat.description,
-          imageUrl: cat.imageUrl,
-          sortOrder: cat.sortOrder,
-          isActive: cat.isActive,
-          parentId: cat.parentId,
-          updatedAt: new Date(),
-        },
-        update: {
-          name: cat.name,
-          slug: cat.slug,
-          isActive: cat.isActive,
-          parentId: cat.parentId,
-          updatedAt: new Date(),
-        },
-      });
-      log(`  Child: ${cat.name} (${cat.slug}) → parent=${cat.parentId} - upserted`);
+      await upsertCategory(cat);
     }
 
     // ---------------------------------------------------------------
@@ -142,7 +156,8 @@ export async function POST(req: NextRequest) {
     for (const product of allProducts) {
       const currentSlug = product.category?.slug;
       if (currentSlug && CATEGORY_REMAP[currentSlug]) {
-        const newCatId = CATEGORY_REMAP[currentSlug];
+        const localCatId = CATEGORY_REMAP[currentSlug];
+        const newCatId = catIdMap.get(localCatId) || localCatId;
         await prisma.product.update({
           where: { id: product.id },
           data: { categoryId: newCatId },
@@ -165,14 +180,17 @@ export async function POST(req: NextRequest) {
     let imported = 0, skipped = 0;
 
     for (const prod of localProducts) {
+      // Remap categoryId using catIdMap
+      const mappedCatId = prod.categoryId ? (catIdMap.get(prod.categoryId as string) || prod.categoryId) : null;
+
       // Check if already exists by slug
       const existing = await prisma.product.findFirst({ where: { slug: prod.slug } });
       if (existing) {
         // Update category assignment if needed
-        if (prod.categoryId) {
+        if (mappedCatId) {
           await prisma.product.update({
             where: { id: existing.id },
-            data: { categoryId: prod.categoryId },
+            data: { categoryId: mappedCatId as string },
           });
         }
         skipped++;
@@ -200,7 +218,7 @@ export async function POST(req: NextRequest) {
             certificateName: prod.certificateName,
             dataSheetUrl: prod.dataSheetUrl,
             dataSheetName: prod.dataSheetName,
-            categoryId: prod.categoryId,
+            categoryId: mappedCatId as string,
             weight: prod.weight,
             dimensions: prod.dimensions,
             requiresShipping: prod.requiresShipping,
