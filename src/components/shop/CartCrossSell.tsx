@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useCart } from '@/contexts/CartContext';
 import { useCurrency } from '@/contexts/CurrencyContext';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 
 interface RecommendedProduct {
@@ -33,7 +33,7 @@ export default function CartCrossSell({ cartProductIds }: CartCrossSellProps) {
   const [addingProductId, setAddingProductId] = useState<string | null>(null);
   const { addItem } = useCart();
   const { formatPrice } = useCurrency();
-  const { t, locale } = useTranslations();
+  const { t, locale } = useI18n();
 
   useEffect(() => {
     if (cartProductIds.length === 0) {

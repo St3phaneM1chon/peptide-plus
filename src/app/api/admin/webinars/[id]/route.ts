@@ -9,21 +9,13 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { auth } from '@/lib/auth-config';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import { enqueue } from '@/lib/translation';
 
 // GET /api/admin/webinars/[id] - Get single webinar
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const GET = withAdminGuard(async (_request: NextRequest, { session, params }) => {
   try {
-    const session = await auth();
-    if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { id } = await params;
+    const id = params!.id;
 
     const webinar = await prisma.webinar.findUnique({
       where: { id },
@@ -79,20 +71,12 @@ export async function GET(
       { status: 500 }
     );
   }
-}
+});
 
 // PATCH /api/admin/webinars/[id] - Update webinar
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const PATCH = withAdminGuard(async (request: NextRequest, { session, params }) => {
   try {
-    const session = await auth();
-    if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { id } = await params;
+    const id = params!.id;
 
     const existing = await prisma.webinar.findUnique({ where: { id } });
     if (!existing) {
@@ -231,20 +215,12 @@ export async function PATCH(
       { status: 500 }
     );
   }
-}
+});
 
 // DELETE /api/admin/webinars/[id] - Delete webinar
-export async function DELETE(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const DELETE = withAdminGuard(async (_request: NextRequest, { session, params }) => {
   try {
-    const session = await auth();
-    if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { id } = await params;
+    const id = params!.id;
 
     const existing = await prisma.webinar.findUnique({ where: { id } });
     if (!existing) {
@@ -270,4 +246,4 @@ export async function DELETE(
       { status: 500 }
     );
   }
-}
+});

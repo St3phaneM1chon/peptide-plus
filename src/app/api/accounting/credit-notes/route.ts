@@ -5,6 +5,14 @@ import { auth } from '@/lib/auth-config';
 import { UserRole } from '@/types';
 import { prisma } from '@/lib/db';
 
+// #65 Audit: Valid status transitions for credit notes
+const VALID_CREDIT_NOTE_TRANSITIONS: Record<string, string[]> = {
+  DRAFT: ['ISSUED', 'VOID'],
+  ISSUED: ['APPLIED', 'VOID'],
+  APPLIED: ['VOID'], // Only void after applied, not back to DRAFT
+  VOID: [], // Terminal state
+};
+
 /**
  * GET /api/accounting/credit-notes
  * List credit notes with filters
@@ -24,8 +32,8 @@ export async function GET(request: NextRequest) {
     const from = searchParams.get('from');
     const to = searchParams.get('to');
     const search = searchParams.get('search');
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '20');
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
+    const limit = Math.min(Math.max(1, parseInt(searchParams.get('limit') || '20') || 20), 200);
 
     const where: Record<string, unknown> = {};
     if (status) where.status = status;
@@ -57,19 +65,28 @@ export async function GET(request: NextRequest) {
       prisma.creditNote.count({ where }),
     ]);
 
-    // Aggregate stats
-    const allNotes = await prisma.creditNote.findMany({
-      select: { status: true, total: true },
-    });
+    // Aggregate stats using DB-level aggregation instead of fetching all records
+    const [totalAgg, statusGroups] = await Promise.all([
+      prisma.creditNote.aggregate({
+        _count: true,
+        _sum: { total: true },
+      }),
+      prisma.creditNote.groupBy({
+        by: ['status'],
+        _count: true,
+        _sum: { total: true },
+      }),
+    ]);
+
+    const issuedGroup = statusGroups.find((g) => g.status === 'ISSUED');
+    const voidGroup = statusGroups.find((g) => g.status === 'VOID');
 
     const stats = {
-      totalCount: allNotes.length,
-      totalAmount: allNotes.reduce((sum, cn) => sum + Number(cn.total), 0),
-      issuedCount: allNotes.filter((cn) => cn.status === 'ISSUED').length,
-      issuedAmount: allNotes
-        .filter((cn) => cn.status === 'ISSUED')
-        .reduce((sum, cn) => sum + Number(cn.total), 0),
-      voidCount: allNotes.filter((cn) => cn.status === 'VOID').length,
+      totalCount: totalAgg._count,
+      totalAmount: Number(totalAgg._sum.total ?? 0),
+      issuedCount: issuedGroup?._count ?? 0,
+      issuedAmount: Number(issuedGroup?._sum.total ?? 0),
+      voidCount: voidGroup?._count ?? 0,
     };
 
     const mapped = creditNotes.map((cn) => ({

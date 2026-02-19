@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { db } from '@/lib/db';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { v4 as uuidv4 } from 'uuid';
 
 // GET - Liste des conversations (admin only)
@@ -53,6 +54,20 @@ export async function GET(request: NextRequest) {
 // POST - Créer ou récupérer une conversation
 export async function POST(request: NextRequest) {
   try {
+    // SEC-25: Rate limit chat creation - 10 per user per hour
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip')
+      || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/chat/route');
+    if (!rl.success) {
+      const res = NextResponse.json(
+        { error: rl.error!.message },
+        { status: 429 }
+      );
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+
     const body = await request.json();
     const { visitorId, visitorName, visitorEmail, visitorLanguage, currentPage, userAgent } = body;
 

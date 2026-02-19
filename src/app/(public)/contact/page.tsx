@@ -4,15 +4,14 @@
  */
 
 'use client';
-export const dynamic = 'force-dynamic';
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 import { contactFormSchema, validateForm } from '@/lib/form-validation';
 
 export default function ContactPage() {
-  const { t } = useTranslations();
+  const { t } = useI18n();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -251,7 +250,7 @@ export default function ContactPage() {
                         required
                         value={formData.name}
                         onChange={(e) => { setFormData({ ...formData, name: e.target.value }); clearFieldError('name'); }}
-                        placeholder="Jean Dupont"
+                        placeholder={t('contact.placeholderName')}
                         style={{
                           width: '100%',
                           padding: '12px',
@@ -271,7 +270,7 @@ export default function ContactPage() {
                         required
                         value={formData.email}
                         onChange={(e) => { setFormData({ ...formData, email: e.target.value }); clearFieldError('email'); }}
-                        placeholder="jean@example.com"
+                        placeholder={t('contact.placeholderEmail')}
                         style={{
                           width: '100%',
                           padding: '12px',
@@ -293,7 +292,7 @@ export default function ContactPage() {
                         type="text"
                         value={formData.company}
                         onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-                        placeholder="Université McGill"
+                        placeholder={t('contact.placeholderOrganization')}
                         style={{
                           width: '100%',
                           padding: '12px',

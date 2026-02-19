@@ -302,7 +302,7 @@ export default function AuditTrailPage() {
                   )}
                 </div>
                 
-                <div className="text-right">
+                <div className="text-end">
                   <p className="text-sm text-neutral-300">{entry.userName}</p>
                   {entry.ipAddress && (
                     <p className="text-xs text-neutral-500">{entry.ipAddress}</p>
@@ -359,9 +359,9 @@ export default function AuditTrailPage() {
                     <table className="w-full text-sm">
                       <thead className="bg-neutral-700/50">
                         <tr>
-                          <th className="px-3 py-2 text-left text-xs text-neutral-400">{t('admin.audit.fieldCol')}</th>
-                          <th className="px-3 py-2 text-left text-xs text-neutral-400">{t('admin.audit.oldValueCol')}</th>
-                          <th className="px-3 py-2 text-left text-xs text-neutral-400">{t('admin.audit.newValueCol')}</th>
+                          <th className="px-3 py-2 text-start text-xs text-neutral-400">{t('admin.audit.fieldCol')}</th>
+                          <th className="px-3 py-2 text-start text-xs text-neutral-400">{t('admin.audit.oldValueCol')}</th>
+                          <th className="px-3 py-2 text-start text-xs text-neutral-400">{t('admin.audit.newValueCol')}</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-neutral-700">

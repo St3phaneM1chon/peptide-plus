@@ -309,19 +309,19 @@ function ObligationsTab({ country, t }: { country: CountryCompliance; t: TFunc }
                 {obligation.rate && (
                   <div>
                     <span className="text-slate-500">{t('admin.fiscalCountry.rateLabel')}</span>
-                    <span className="ml-2 font-medium">{obligation.rate}</span>
+                    <span className="ms-2 font-medium">{obligation.rate}</span>
                   </div>
                 )}
                 {obligation.threshold && (
                   <div>
                     <span className="text-slate-500">{t('admin.fiscalCountry.thresholdLabel')}</span>
-                    <span className="ml-2 font-medium">{obligation.threshold}</span>
+                    <span className="ms-2 font-medium">{obligation.threshold}</span>
                   </div>
                 )}
                 {obligation.frequency && (
                   <div>
                     <span className="text-slate-500">{t('admin.fiscalCountry.frequencyLabel')}</span>
-                    <span className="ml-2 font-medium capitalize">{obligation.frequency}</span>
+                    <span className="ms-2 font-medium capitalize">{obligation.frequency}</span>
                   </div>
                 )}
               </div>
@@ -570,10 +570,10 @@ function ReportsTab({ country, monthlyData, t, locale }: { country: CountryCompl
       {monthlyData.length > 0 && (
         <div className="bg-slate-100 rounded-lg p-4 grid grid-cols-5 gap-4 text-sm font-bold">
           <div>TOTAL</div>
-          <div className="text-right">{totals.orders}</div>
-          <div className="text-right text-green-600">${totals.revenue.toLocaleString(locale)}</div>
-          <div className="text-right text-sky-600">${totals.tax.toLocaleString(locale)}</div>
-          <div className="text-right">${totals.orders > 0 ? (totals.revenue / totals.orders).toFixed(2) : '0.00'}</div>
+          <div className="text-end">{totals.orders}</div>
+          <div className="text-end text-green-600">${totals.revenue.toLocaleString(locale)}</div>
+          <div className="text-end text-sky-600">${totals.tax.toLocaleString(locale)}</div>
+          <div className="text-end">${totals.orders > 0 ? (totals.revenue / totals.orders).toFixed(2) : '0.00'}</div>
         </div>
       )}
 

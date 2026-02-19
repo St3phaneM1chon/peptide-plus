@@ -7,6 +7,20 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 import { defaultLocale, isValidLocale, type Locale, getLocaleFromHeaders } from '@/i18n/config';
 
+// Lightweight UUID v4 generator for Edge runtime (no crypto.randomUUID in all runtimes)
+function generateRequestId(): string {
+  try {
+    return crypto.randomUUID();
+  } catch {
+    // Fallback for environments without crypto.randomUUID
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+      const r = (Math.random() * 16) | 0;
+      const v = c === 'x' ? r : (r & 0x3) | 0x8;
+      return v.toString(16);
+    });
+  }
+}
+
 // Routes qui nécessitent une authentification
 const protectedRoutes = [
   '/dashboard',
@@ -86,14 +100,64 @@ function roleHasPermission(role: string, permissionCode: string): boolean {
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Skip pour les fichiers statiques et API
+  // Generate a correlation ID for every request (useful for tracing)
+  const requestId = request.headers.get('x-request-id') || generateRequestId();
+
+  // Skip pour les fichiers statiques
   if (
     pathname.startsWith('/_next') ||
-    pathname.startsWith('/api') ||
     pathname.includes('.') ||
     pathname.startsWith('/auth')
   ) {
-    return NextResponse.next();
+    const res = NextResponse.next();
+    res.headers.set('x-request-id', requestId);
+    return res;
+  }
+
+  // --- Request logging (Improvement #88) ---
+  // Skip health checks from logging to avoid noise
+  const isHealthCheck = pathname === '/api/health';
+  if (!isHealthCheck) {
+    // In production sample at 10%, in dev log all
+    const isProduction = process.env.NODE_ENV === 'production';
+    const shouldLog = !isProduction || Math.random() < 0.1;
+
+    if (shouldLog) {
+      const startTime = Date.now();
+      // Log is appended via x-request-start header for downstream duration calculation
+      // Edge runtime cannot use Winston, so we use structured console.log with JSON
+      const logEntry = {
+        event: 'request',
+        method: request.method,
+        path: pathname,
+        requestId,
+        userAgent: request.headers.get('user-agent')?.substring(0, 100),
+        ip: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip'),
+        timestamp: new Date().toISOString(),
+      };
+      console.log(JSON.stringify(logEntry));
+    }
+  }
+
+  // Fix 3 (BE-CORS): Add CORS headers for API routes
+  if (pathname.startsWith('/api')) {
+    // Handle preflight OPTIONS requests
+    if (request.method === 'OPTIONS') {
+      const preflightResponse = new NextResponse(null, { status: 204 });
+      preflightResponse.headers.set('Access-Control-Allow-Origin', process.env.NEXT_PUBLIC_APP_URL || 'https://biocyclepeptides.com');
+      preflightResponse.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+      preflightResponse.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-idempotency-key, x-request-id');
+      preflightResponse.headers.set('Access-Control-Max-Age', '86400');
+      preflightResponse.headers.set('x-request-id', requestId);
+      return preflightResponse;
+    }
+
+    const res = NextResponse.next();
+    res.headers.set('x-request-id', requestId);
+    res.headers.set('Access-Control-Allow-Origin', process.env.NEXT_PUBLIC_APP_URL || 'https://biocyclepeptides.com');
+    res.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+    res.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-idempotency-key, x-request-id');
+    return res;
   }
 
   // Récupérer le token d'authentification
@@ -118,20 +182,6 @@ export async function middleware(request: NextRequest) {
     }));
   }
 
-  // TEMPORARY DEBUG: Log middleware token status for protected routes
-  const isProtectedPath = ['/dashboard', '/admin', '/owner', '/account', '/checkout/payment', '/order', '/profile'].some(r => pathname.startsWith(r));
-  if (isProtectedPath) {
-    console.log(JSON.stringify({
-      event: 'middleware_debug',
-      pathname,
-      hasToken: !!token,
-      tokenRole: token?.role || null,
-      hasCookie: !!request.cookies.get('authjs.session-token'),
-      cookieLength: request.cookies.get('authjs.session-token')?.value?.length || 0,
-      proto: request.headers.get('x-forwarded-proto'),
-    }));
-  }
-
   // Récupérer la locale
   let locale: Locale = defaultLocale;
 
@@ -153,6 +203,9 @@ export async function middleware(request: NextRequest) {
 
   // Créer la réponse
   const response = NextResponse.next();
+
+  // Correlation ID for request tracing
+  response.headers.set('x-request-id', requestId);
 
   // Ajouter la locale en header pour les composants server
   response.headers.set('x-locale', locale);

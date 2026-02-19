@@ -1,17 +1,12 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth-config';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { enqueue } from '@/lib/translation';
 
 // GET /api/admin/content/faqs - List all FAQs
-export async function GET() {
-  const session = await auth();
-  if (!session?.user || (session.user.role !== 'EMPLOYEE' && session.user.role !== 'OWNER')) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-  }
-
+export const GET = withAdminGuard(async (_request, { session }) => {
   const faqs = await prisma.faq.findMany({
     orderBy: [{ category: 'asc' }, { sortOrder: 'asc' }],
     include: {
@@ -22,15 +17,10 @@ export async function GET() {
   });
 
   return NextResponse.json({ faqs });
-}
+});
 
 // POST /api/admin/content/faqs - Create a new FAQ
-export async function POST(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user || (session.user.role !== 'EMPLOYEE' && session.user.role !== 'OWNER')) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-  }
-
+export const POST = withAdminGuard(async (request, { session }) => {
   const body = await request.json();
   const { question, answer, category, sortOrder, isPublished } = body;
 
@@ -52,15 +42,10 @@ export async function POST(request: NextRequest) {
   enqueue.faq(faq.id);
 
   return NextResponse.json({ faq }, { status: 201 });
-}
+});
 
 // PUT /api/admin/content/faqs - Update a FAQ
-export async function PUT(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user || (session.user.role !== 'EMPLOYEE' && session.user.role !== 'OWNER')) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-  }
-
+export const PUT = withAdminGuard(async (request, { session }) => {
   const body = await request.json();
   const { id, question, answer, category, sortOrder, isPublished } = body;
 
@@ -83,15 +68,10 @@ export async function PUT(request: NextRequest) {
   enqueue.faq(faq.id, true);
 
   return NextResponse.json({ faq });
-}
+});
 
 // DELETE /api/admin/content/faqs - Delete a FAQ
-export async function DELETE(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user || session.user.role !== 'OWNER') {
-    return NextResponse.json({ error: 'Forbidden - Owner only' }, { status: 403 });
-  }
-
+export const DELETE = withAdminGuard(async (request, { session }) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
 
@@ -101,4 +81,4 @@ export async function DELETE(request: NextRequest) {
 
   await prisma.faq.delete({ where: { id } });
   return NextResponse.json({ success: true });
-}
+});

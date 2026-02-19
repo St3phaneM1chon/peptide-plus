@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
+import { useI18n } from '@/i18n/client';
 
 interface ProductImage {
   id: string;
@@ -16,6 +17,7 @@ interface ProductGalleryProps {
 }
 
 export default function ProductGallery({ images, productName }: ProductGalleryProps) {
+  const { t } = useI18n();
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isZoomed, setIsZoomed] = useState(false);
 
@@ -54,7 +56,8 @@ export default function ProductGallery({ images, productName }: ProductGalleryPr
           <>
             <button
               onClick={handlePrevious}
-              className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 hover:bg-white rounded-full shadow-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+              aria-label={t('shop.aria.previousImage')}
+              className="absolute start-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 hover:bg-white rounded-full shadow-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
             >
               <svg className="w-5 h-5 text-neutral-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -62,7 +65,8 @@ export default function ProductGallery({ images, productName }: ProductGalleryPr
             </button>
             <button
               onClick={handleNext}
-              className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 hover:bg-white rounded-full shadow-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+              aria-label={t('shop.aria.nextImage')}
+              className="absolute end-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 hover:bg-white rounded-full shadow-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
             >
               <svg className="w-5 h-5 text-neutral-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -79,8 +83,8 @@ export default function ProductGallery({ images, productName }: ProductGalleryPr
         )}
 
         {/* Zoom Hint */}
-        <div className="absolute top-3 right-3 bg-black/60 text-white text-xs px-2 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-          Click to zoom
+        <div className="absolute top-3 end-3 bg-black/60 text-white text-xs px-2 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+          {t('shop.gallery.clickToZoom')}
         </div>
       </div>
 
@@ -91,6 +95,8 @@ export default function ProductGallery({ images, productName }: ProductGalleryPr
             <button
               key={image.id}
               onClick={() => setSelectedIndex(index)}
+              aria-label={t('shop.aria.thumbnailImage', { index: String(index + 1), total: String(displayImages.length), type: image.type })}
+              aria-current={index === selectedIndex ? 'true' : undefined}
               className={`relative w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden border-2 transition-all ${
                 index === selectedIndex
                   ? 'border-orange-500 ring-2 ring-orange-200'

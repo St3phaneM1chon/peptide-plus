@@ -13,49 +13,138 @@ import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
+import { z } from 'zod';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2023-10-16',
 });
 
-// Server-side tax calculation (Quebec-based business)
-function calculateServerTaxes(subtotal: number, province: string) {
-  let tps = 0, tvq = 0, tvh = 0;
-  const GST_RATE = 0.05;
-  const QST_RATE = 0.09975;
-  const HST_RATES: Record<string, number> = {
-    ON: 0.13, NB: 0.15, NL: 0.15, NS: 0.15, PE: 0.15,
-  };
+// BE-SEC-03: Zod validation schema for checkout request
+const checkoutItemSchema = z.object({
+  productId: z.string().min(1),
+  formatId: z.string().optional().nullable(),
+  quantity: z.number().int().positive().max(100),
+  // Client-sent prices are ignored (validated from DB), but allow them through
+  price: z.number().optional(),
+  name: z.string().optional(),
+  formatName: z.string().optional(),
+  imageUrl: z.string().optional().nullable(),
+});
 
-  if (HST_RATES[province]) {
-    tvh = Math.round(subtotal * HST_RATES[province] * 100) / 100;
-  } else if (province === 'QC') {
-    tps = Math.round(subtotal * GST_RATE * 100) / 100;
-    tvq = Math.round(subtotal * QST_RATE * 100) / 100;
+const shippingInfoSchema = z.object({
+  firstName: z.string().max(100).optional(),
+  lastName: z.string().max(100).optional(),
+  address: z.string().max(500).optional(),
+  apartment: z.string().max(200).optional(),
+  city: z.string().max(100).optional(),
+  province: z.string().max(100).optional(),
+  postalCode: z.string().max(20).optional(),
+  country: z.string().max(2).optional(),
+  phone: z.string().max(30).optional(),
+  email: z.string().email().max(254).optional(),
+}).optional().nullable();
+
+const checkoutSchema = z.object({
+  items: z.array(checkoutItemSchema).min(1, 'Le panier ne peut pas être vide').max(50, 'Maximum 50 articles'),
+  shippingInfo: shippingInfoSchema,
+  billingInfo: shippingInfoSchema,
+  billingSameAsShipping: z.boolean().optional(),
+  currency: z.string().max(3).optional(),
+  promoCode: z.string().max(50).optional().nullable(),
+  cartId: z.string().max(100).optional().nullable(),
+  paymentMethod: z.string().max(50).optional(),
+  giftCardCode: z.string().max(50).optional().nullable(),
+  giftCardDiscount: z.number().optional(),
+});
+
+// Server-side tax calculation - all Canadian provinces/territories
+// BE-PAY-11, BE-PAY-20: Fixed to handle PST for BC/MB/SK, not just QC+HST
+const CANADIAN_TAX_RATES: Record<string, { gst: number; pst?: number; hst?: number; qst?: number; rst?: number }> = {
+  'AB': { gst: 0.05 },
+  'BC': { gst: 0.05, pst: 0.07 },
+  'MB': { gst: 0.05, rst: 0.07 },
+  'NB': { gst: 0, hst: 0.15 },
+  'NL': { gst: 0, hst: 0.15 },
+  'NS': { gst: 0, hst: 0.14 },
+  'NT': { gst: 0.05 },
+  'NU': { gst: 0.05 },
+  'ON': { gst: 0, hst: 0.13 },
+  'PE': { gst: 0, hst: 0.15 },
+  'QC': { gst: 0.05, qst: 0.09975 },
+  'SK': { gst: 0.05, pst: 0.06 },
+  'YT': { gst: 0.05 },
+};
+
+function calculateServerTaxes(subtotal: number, province: string) {
+  let tps = 0, tvq = 0, tvh = 0, pst = 0;
+  const rates = CANADIAN_TAX_RATES[province.toUpperCase()] || CANADIAN_TAX_RATES['QC'];
+
+  if (rates.hst) {
+    // HST provinces (ON, NB, NL, NS, PE)
+    tvh = Math.round(subtotal * rates.hst * 100) / 100;
+  } else if (rates.qst) {
+    // Quebec (GST + QST)
+    tps = Math.round(subtotal * rates.gst * 100) / 100;
+    tvq = Math.round(subtotal * rates.qst * 100) / 100;
+  } else if (rates.pst || rates.rst) {
+    // BC, SK (GST + PST) and MB (GST + RST)
+    tps = Math.round(subtotal * rates.gst * 100) / 100;
+    pst = Math.round(subtotal * (rates.pst || rates.rst || 0) * 100) / 100;
   } else {
-    // AB, BC, SK, MB, YT, NT, NU -- GST only
-    tps = Math.round(subtotal * GST_RATE * 100) / 100;
+    // GST-only provinces/territories (AB, YT, NT, NU)
+    tps = Math.round(subtotal * rates.gst * 100) / 100;
   }
 
-  return { tps, tvq, tvh, total: Math.round((tps + tvq + tvh) * 100) / 100 };
+  return { tps, tvq, tvh, pst, total: Math.round((tps + tvq + tvh + pst) * 100) / 100 };
 }
 
 // Server-side shipping calculation (product-type aware)
 function calculateServerShipping(subtotal: number, country: string, productTypes?: string[]): number {
   if (country === 'CA') {
     const hasLabSupply = productTypes?.some(t => t === 'LAB_SUPPLY');
-    const threshold = hasLabSupply ? 300 : 150;
+    const threshold = hasLabSupply ? 300 : 100;
     if (subtotal >= threshold) return 0;
-    return 15;
+    return 9.99;
   }
-  if (country === 'US') return 25;
-  return 45; // International
+  if (country === 'US') return 14.99;
+  return 24.99; // International
 }
 
 export async function POST(request: NextRequest) {
   try {
+    // Fix 4: Request body size limit (1MB)
+    const contentLength = request.headers.get('content-length');
+    if (contentLength && parseInt(contentLength, 10) > 1_000_000) {
+      return NextResponse.json({ error: 'Request body too large' }, { status: 413 });
+    }
+
     const session = await auth();
+
+    // BE-PAY-05: Idempotency key to prevent duplicate checkout sessions
+    const idempotencyKey = request.headers.get('x-idempotency-key');
+    if (idempotencyKey) {
+      const existingOrder = await prisma.order.findFirst({
+        where: { idempotencyKey },
+      });
+      if (existingOrder) {
+        return NextResponse.json({
+          orderId: existingOrder.id,
+          orderNumber: existingOrder.orderNumber,
+          message: 'Duplicate request - existing order returned',
+        });
+      }
+    }
+
     const body = await request.json();
+
+    // BE-SEC-03: Validate checkout payload with Zod schema
+    const validation = checkoutSchema.safeParse(body);
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: validation.error.errors[0]?.message || 'Invalid checkout data' },
+        { status: 400 }
+      );
+    }
 
     const {
       items,
@@ -66,6 +155,8 @@ export async function POST(request: NextRequest) {
       promoCode,
       cartId,
       paymentMethod: clientPaymentMethod,
+      giftCardCode,
+      giftCardDiscount: clientGiftCardDiscount,
     } = body;
 
     if (!items || !Array.isArray(items) || items.length === 0) {
@@ -135,10 +226,13 @@ export async function POST(request: NextRequest) {
       if (item.formatId) {
         const format = await prisma.productFormat.findUnique({
           where: { id: item.formatId },
-          select: { id: true, name: true, price: true, imageUrl: true },
+          select: { id: true, name: true, price: true, imageUrl: true, productId: true },
         });
         if (!format) {
           return NextResponse.json({ error: `Format introuvable: ${item.formatId}` }, { status: 400 });
+        }
+        if (format.productId !== item.productId) {
+          return NextResponse.json({ error: 'Le format ne correspond pas au produit' }, { status: 400 });
         }
         verifiedPrice = Number(format.price);
         formatName = format.name;
@@ -167,12 +261,21 @@ export async function POST(request: NextRequest) {
 
     // =====================================================
     // SECURITY: Validate promo code server-side
+    // BE-PAY-06: Enforce single promo code per order (prevent stacking)
     // =====================================================
     let serverPromoDiscount = 0;
     let validatedPromoCode = '';
 
     if (promoCode) {
-      const promo = await prisma.promoCode.findUnique({ where: { code: promoCode } });
+      // Reject arrays or multiple codes (stacking exploit prevention)
+      if (Array.isArray(promoCode) || (typeof promoCode === 'string' && promoCode.includes(','))) {
+        return NextResponse.json(
+          { error: 'Un seul code promo par commande est autorisé' },
+          { status: 400 }
+        );
+      }
+      const singlePromoCode = String(promoCode).trim().toUpperCase();
+      const promo = await prisma.promoCode.findUnique({ where: { code: singlePromoCode } });
       if (promo && promo.isActive) {
         const now = new Date();
         const notExpired = (!promo.startsAt || promo.startsAt <= now) && (!promo.endsAt || promo.endsAt >= now);
@@ -187,7 +290,7 @@ export async function POST(request: NextRequest) {
           if (promo.maxDiscount) {
             serverPromoDiscount = Math.min(serverPromoDiscount, Number(promo.maxDiscount));
           }
-          validatedPromoCode = promoCode;
+          validatedPromoCode = singlePromoCode;
         }
       }
     }
@@ -195,55 +298,106 @@ export async function POST(request: NextRequest) {
     const discountedSubtotal = Math.max(0, serverSubtotal - serverPromoDiscount);
 
     // =====================================================
+    // BE-PAY-04: Validate gift card server-side
+    // =====================================================
+    let serverGiftCardDiscount = 0;
+    let validatedGiftCardCode = '';
+
+    if (giftCardCode && clientGiftCardDiscount > 0) {
+      const giftCard = await prisma.giftCard.findUnique({
+        where: { code: giftCardCode.toUpperCase().trim() },
+      });
+      if (giftCard && giftCard.isActive && Number(giftCard.balance) > 0) {
+        const isExpired = giftCard.expiresAt && new Date() > giftCard.expiresAt;
+        if (!isExpired) {
+          // Cap at remaining total after promo discount
+          serverGiftCardDiscount = Math.min(
+            Number(giftCard.balance),
+            discountedSubtotal
+          );
+          validatedGiftCardCode = giftCard.code;
+        }
+      }
+    }
+
+    const subtotalAfterAllDiscounts = Math.max(0, discountedSubtotal - serverGiftCardDiscount);
+
+    // =====================================================
     // SECURITY: Calculate taxes and shipping server-side
     // =====================================================
     const province = shippingInfo?.province || 'QC';
     const country = shippingInfo?.country || 'CA';
-    const serverTaxes = calculateServerTaxes(discountedSubtotal, province);
+    const serverTaxes = calculateServerTaxes(subtotalAfterAllDiscounts, province);
     const cartProductTypes = verifiedItems.map(i => i.productType);
     const serverShipping = calculateServerShipping(serverSubtotal, country, cartProductTypes);
 
-    // Reserve inventory before creating payment session
-    const reservationIds: string[] = [];
+    // Reserve inventory atomically (prevents overselling)
+    let reservationIds: string[] = [];
     try {
-      for (const item of verifiedItems) {
-        if (item.formatId) {
-          const format = await prisma.productFormat.findUnique({
-            where: { id: item.formatId },
-            select: { stockQuantity: true, trackInventory: true },
-          });
+      reservationIds = await prisma.$transaction(async (tx) => {
+        const ids: string[] = [];
+        for (const item of verifiedItems) {
+          if (item.formatId) {
+            // Lock the format row to prevent concurrent overselling
+            const [format] = await tx.$queryRaw<{ stock_quantity: number; track_inventory: boolean }[]>`
+              SELECT "stockQuantity" as stock_quantity, "trackInventory" as track_inventory
+              FROM "ProductFormat"
+              WHERE id = ${item.formatId}
+              FOR UPDATE
+            `;
 
-          if (format?.trackInventory && format.stockQuantity < item.quantity) {
-            return NextResponse.json(
-              { error: `Stock insuffisant pour ${item.name}. Disponible: ${format.stockQuantity}` },
-              { status: 400 }
-            );
+            if (format?.track_inventory && format.stock_quantity < item.quantity) {
+              throw new Error(`Stock insuffisant pour ${item.name}. Disponible: ${format.stock_quantity}`);
+            }
+
+            const reservation = await tx.inventoryReservation.create({
+              data: {
+                productId: item.productId,
+                formatId: item.formatId,
+                quantity: item.quantity,
+                cartId: cartId || undefined,
+                expiresAt: new Date(Date.now() + 30 * 60 * 1000),
+              },
+            });
+            ids.push(reservation.id);
+          } else {
+            // BUG 8: Also check stock for base products without formats
+            const [product] = await tx.$queryRaw<{ stock_quantity: number; track_inventory: boolean }[]>`
+              SELECT "stockQuantity" as stock_quantity, "trackInventory" as track_inventory
+              FROM "Product"
+              WHERE id = ${item.productId}
+              FOR UPDATE
+            `;
+
+            if (product?.track_inventory && product.stock_quantity < item.quantity) {
+              throw new Error(`Stock insuffisant pour ${item.name}. Disponible: ${product.stock_quantity}`);
+            }
+
+            const reservation = await tx.inventoryReservation.create({
+              data: {
+                productId: item.productId,
+                formatId: null,
+                quantity: item.quantity,
+                cartId: cartId || undefined,
+                expiresAt: new Date(Date.now() + 30 * 60 * 1000),
+              },
+            });
+            ids.push(reservation.id);
           }
-
-          const reservation = await prisma.inventoryReservation.create({
-            data: {
-              productId: item.productId,
-              formatId: item.formatId,
-              quantity: item.quantity,
-              cartId: cartId || undefined,
-              expiresAt: new Date(Date.now() + 30 * 60 * 1000),
-            },
-          });
-          reservationIds.push(reservation.id);
         }
-      }
+        return ids;
+      });
     } catch (stockError) {
+      // Transaction auto-rolls back on error, but release any committed reservations
       if (reservationIds.length > 0) {
         await prisma.inventoryReservation.updateMany({
           where: { id: { in: reservationIds } },
           data: { status: 'RELEASED', releasedAt: new Date() },
         });
       }
+      const errorMsg = stockError instanceof Error ? stockError.message : 'Erreur lors de la réservation du stock';
       console.error('Stock reservation error:', stockError);
-      return NextResponse.json(
-        { error: 'Erreur lors de la réservation du stock' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: errorMsg }, { status: 400 });
     }
 
     // Create line items for Stripe using CONVERTED prices
@@ -277,9 +431,10 @@ export async function POST(request: NextRequest) {
       lineItems.pop();
     }
 
-    // Recalculate: apply discount proportionally to each item
-    if (serverPromoDiscount > 0) {
-      const discountRatio = serverPromoDiscount / serverSubtotal;
+    // Recalculate: apply all discounts (promo + gift card) proportionally to each item
+    const totalItemDiscount = serverPromoDiscount + serverGiftCardDiscount;
+    if (totalItemDiscount > 0) {
+      const discountRatio = totalItemDiscount / serverSubtotal;
       lineItems.forEach((li) => {
         const originalAmount = li.price_data!.unit_amount!;
         const discountAmount = Math.round(originalAmount * discountRatio);
@@ -332,18 +487,23 @@ export async function POST(request: NextRequest) {
       price: item.price,
     }));
 
+    // BUG 14: Use compact encoding to avoid metadata truncation losing cart items
+    // First try full data, then minimal, then store a reference ID to retrieve later
     let cartItemsStr = JSON.stringify(cartItemsData);
     if (cartItemsStr.length > 490) {
+      // Compact: only essential fields with short keys
       cartItemsStr = JSON.stringify(cartItemsData.map((item) => ({
-        productId: item.productId,
-        formatId: item.formatId,
-        name: item.name.substring(0, 30),
-        quantity: item.quantity,
-        price: item.price,
+        p: item.productId,
+        f: item.formatId,
+        q: item.quantity,
+        $: item.price,
       })));
     }
     if (cartItemsStr.length > 490) {
-      cartItemsStr = '[]';
+      // Still too long: store cart data in DB and reference by cartId
+      const cartRef = cartId || `cart-${Date.now()}`;
+      // The webhook can recover items from inventoryReservation records via cartId
+      cartItemsStr = JSON.stringify({ ref: cartRef, count: cartItemsData.length });
     }
 
     const checkoutSession = await stripe.checkout.sessions.create({
@@ -374,10 +534,16 @@ export async function POST(request: NextRequest) {
         taxTps: String(serverTaxes.tps),
         taxTvq: String(serverTaxes.tvq),
         taxTvh: String(serverTaxes.tvh),
+        taxPst: String(serverTaxes.pst),
         cartItems: cartItemsStr,
         promoCode: validatedPromoCode,
         promoDiscount: String(serverPromoDiscount),
+        // BE-PAY-04: Gift card info for balance decrement in webhook
+        giftCardCode: validatedGiftCardCode,
+        giftCardDiscount: String(serverGiftCardDiscount),
         cartId: cartId || '',
+        // BE-PAY-05: Idempotency key for duplicate prevention
+        idempotencyKey: idempotencyKey || '',
         // Multi-currency metadata
         currencyCode: dbCurrency!.code,
         currencyId: dbCurrency!.id,

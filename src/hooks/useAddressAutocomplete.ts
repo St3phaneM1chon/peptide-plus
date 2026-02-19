@@ -38,7 +38,7 @@ declare global {
           PlacesService: new (el: HTMLDivElement) => {
             getDetails: (
               request: { placeId: string; fields: string[] },
-              callback: (place: google.maps.places.PlaceResult | null, status: string) => void
+              callback: (place: GoogleMapsPlaceResult | null, status: string) => void
             ) => void;
           };
           PlacesServiceStatus: {
@@ -50,15 +50,13 @@ declare global {
     };
   }
 
-  namespace google.maps.places {
-    interface PlaceResult {
-      address_components?: {
-        long_name: string;
-        short_name: string;
-        types: string[];
-      }[];
-      formatted_address?: string;
-    }
+  interface GoogleMapsPlaceResult {
+    address_components?: {
+      long_name: string;
+      short_name: string;
+      types: string[];
+    }[];
+    formatted_address?: string;
   }
 }
 
@@ -178,7 +176,7 @@ export function useAddressAutocomplete() {
   }, [fetchPredictions]);
 
   // Parse address components from Google Place Details
-  const parseAddressComponents = (addressComponents: google.maps.places.PlaceResult['address_components']): AddressComponents => {
+  const parseAddressComponents = (addressComponents: GoogleMapsPlaceResult['address_components']): AddressComponents => {
     const components: AddressComponents = {
       street: '',
       city: '',

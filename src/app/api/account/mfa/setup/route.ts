@@ -5,14 +5,21 @@ export const dynamic = 'force-dynamic';
  * Returns QR code and manual entry key
  */
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { initializeMFASetup } from '@/lib/mfa';
 import { encrypt } from '@/lib/security';
 import { prisma } from '@/lib/db';
+import { validateCsrf } from '@/lib/csrf-middleware';
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   try {
+    // SECURITY (BE-SEC-15): CSRF protection for mutation endpoint
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
@@ -48,10 +55,14 @@ export async function POST() {
       },
     });
 
-    return NextResponse.json({
+    // SEC-32: Prevent caching of MFA secret data
+    const response = NextResponse.json({
       qrCodeUrl: setupData.qrCode,
       manualEntryKey: setupData.secret,
     });
+    response.headers.set('Cache-Control', 'no-store');
+    response.headers.set('Pragma', 'no-cache');
+    return response;
   } catch (error) {
     console.error('MFA setup error:', error);
     return NextResponse.json(

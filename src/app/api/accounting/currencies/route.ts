@@ -9,7 +9,7 @@ import { prisma } from '@/lib/db';
  * GET /api/accounting/currencies
  * List all currencies
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user) {
@@ -19,7 +19,16 @@ export async function GET() {
       return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
     }
 
+    const { searchParams } = new URL(request.url);
+    const includeInactive = searchParams.get('includeInactive') === 'true';
+
+    const where: Record<string, unknown> = {};
+    if (!includeInactive) {
+      where.isActive = true;
+    }
+
     const currencies = await prisma.currency.findMany({
+      where,
       orderBy: { code: 'asc' },
     });
 

@@ -1,4 +1,4 @@
-export const dynamic = 'force-dynamic';
+export const revalidate = 3600; // ISR: revalidate every hour
 
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
@@ -11,6 +11,14 @@ import { productSchema, breadcrumbSchema } from '@/lib/structured-data';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
+}
+
+export async function generateStaticParams() {
+  const products = await prisma.product.findMany({
+    where: { isActive: true },
+    select: { slug: true },
+  });
+  return products.map((p) => ({ slug: p.slug }));
 }
 
 async function getProductFromDB(slug: string) {
@@ -93,8 +101,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     }
   }
 
+  const siteUrl = 'https://biocyclepeptides.com';
   const primaryImage = product.images.find(img => img.isPrimary) || product.images[0];
-  const imageUrl = primaryImage?.url || product.imageUrl || '/images/og-default.jpg';
+  const ogFallback = `${siteUrl}/api/og?title=${encodeURIComponent(name)}&subtitle=${encodeURIComponent(subtitle)}&type=product`;
+  const rawImageUrl = primaryImage?.url || product.imageUrl || ogFallback;
+  const imageUrl = rawImageUrl.startsWith('http') ? rawImageUrl : `${siteUrl}${rawImageUrl}`;
 
   return {
     title: `${name} - ${subtitle}`,
@@ -198,7 +209,6 @@ function transformProductForClient(
     purchaseCount: product.purchaseCount,
     averageRating: product.averageRating ? Number(product.averageRating) : undefined,
     reviewCount: product.reviewCount,
-    restockedAt: product.restockedAt,
     promotion: promotion ? {
       id: promotion.id,
       name: promotion.name,

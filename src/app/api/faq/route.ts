@@ -32,6 +32,9 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('FAQ API error:', error);
-    return NextResponse.json({ faqs: [], byCategory: {} });
+    return NextResponse.json(
+      { error: 'Failed to fetch FAQs' },
+      { status: 500 }
+    );
   }
 }

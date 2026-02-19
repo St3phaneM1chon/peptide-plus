@@ -9,6 +9,8 @@ import { prisma } from '@/lib/db';
 import { UserRole } from '@/types';
 import { enqueue, withTranslation, getTranslatedFields, DB_SOURCE_LOCALE } from '@/lib/translation';
 import { defaultLocale } from '@/i18n/config';
+import { apiSuccess, apiError, apiNoContent, withETag, validateContentType } from '@/lib/api-response';
+import { ErrorCode } from '@/lib/error-codes';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -37,7 +39,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     });
 
     if (!product) {
-      return NextResponse.json({ error: 'Produit non trouvé' }, { status: 404 });
+      return apiError('Produit non trouvé', ErrorCode.NOT_FOUND, { request });
     }
 
     // Apply translations
@@ -53,28 +55,31 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       }
     }
 
-    return NextResponse.json({ product: translated });
+    // Item 3: ETag support for caching
+    return withETag({ product: translated }, request);
   } catch (error) {
     console.error('Error fetching product:', error);
-    return NextResponse.json(
-      { error: 'Erreur lors de la récupération du produit' },
-      { status: 500 }
-    );
+    return apiError('Erreur lors de la récupération du produit', ErrorCode.INTERNAL_ERROR, { request });
   }
 }
 
 // PUT - Mettre à jour un produit
+// Status codes: 200 OK, 400 Bad Request, 401 Unauthorized, 403 Forbidden, 404 Not Found, 409 Conflict, 415 Unsupported Media Type, 500 Internal Error
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
+    // Item 12: Content-Type validation
+    const ctError = validateContentType(request);
+    if (ctError) return ctError;
+
     const { id } = await params;
     const session = await auth();
 
     if (!session?.user) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
+      return apiError('Non autorisé', ErrorCode.UNAUTHORIZED, { request });
     }
 
     if (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER) {
-      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
+      return apiError('Accès refusé', ErrorCode.FORBIDDEN, { request });
     }
 
     const body = await request.json();
@@ -110,7 +115,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     });
 
     if (!existingProduct) {
-      return NextResponse.json({ error: 'Produit non trouvé' }, { status: 404 });
+      return apiError('Produit non trouvé', ErrorCode.NOT_FOUND, { request });
     }
 
     // Si le slug change, vérifier l'unicité
@@ -119,10 +124,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         where: { slug: productData.slug as string },
       });
       if (slugExists) {
-        return NextResponse.json(
-          { error: 'Ce slug existe déjà' },
-          { status: 400 }
-        );
+        return apiError('Ce slug existe déjà', ErrorCode.DUPLICATE_ENTRY, { status: 409, request });
       }
     }
 
@@ -149,16 +151,30 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         }
       }
 
-      // Supprimer les anciens formats si nouveaux fournis
+      // BUG 12: Use upsert pattern for formats to avoid breaking FK constraints
+      // Instead of deleteMany + createMany, update existing, create new, deactivate removed
       if (formats !== undefined) {
-        await tx.productFormat.deleteMany({
-          where: { productId: id },
-        });
-        
-        // Créer les nouveaux formats
+        const incomingFormatIds = (formats || [])
+          .filter((f: Record<string, unknown>) => f.id)
+          .map((f: Record<string, unknown>) => f.id as string);
+
+        // Deactivate formats that are no longer in the incoming list (instead of deleting)
+        if (existingProduct.formats.length > 0) {
+          const existingIds = existingProduct.formats.map(f => f.id);
+          const removedIds = existingIds.filter(eid => !incomingFormatIds.includes(eid));
+          if (removedIds.length > 0) {
+            await tx.productFormat.updateMany({
+              where: { id: { in: removedIds } },
+              data: { isActive: false },
+            });
+          }
+        }
+
+        // Upsert each format: update if it has an id, create if new
         if (formats && formats.length > 0) {
-          await tx.productFormat.createMany({
-            data: formats.map((f: Record<string, unknown>, index: number) => ({
+          for (let index = 0; index < formats.length; index++) {
+            const f = formats[index] as Record<string, unknown>;
+            const formatData = {
               productId: id,
               formatType: (f.formatType as string) || 'VIAL_2ML',
               name: f.name as string,
@@ -179,8 +195,21 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
               sortOrder: f.sortOrder != null ? Number(f.sortOrder) : index,
               isDefault: !!f.isDefault,
               isActive: f.isActive !== false,
-            })),
-          });
+            };
+
+            if (f.id && typeof f.id === 'string') {
+              // Update existing format
+              await tx.productFormat.update({
+                where: { id: f.id },
+                data: formatData,
+              });
+            } else {
+              // Create new format
+              await tx.productFormat.create({
+                data: formatData,
+              });
+            }
+          }
         }
       }
 
@@ -214,28 +243,26 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     // Re-translate product in all locales (force overwrite existing translations)
     enqueue.productUrgent(product.id);
 
-    return NextResponse.json({ product });
+    return apiSuccess({ product }, { request });
   } catch (error) {
     console.error('Error updating product:', error);
-    return NextResponse.json(
-      { error: 'Erreur lors de la mise à jour du produit' },
-      { status: 500 }
-    );
+    return apiError('Erreur lors de la mise à jour du produit', ErrorCode.INTERNAL_ERROR, { request });
   }
 }
 
 // DELETE - Supprimer un produit (soft delete)
+// Status codes: 204 No Content, 401 Unauthorized, 403 Forbidden, 500 Internal Error
 export async function DELETE(_request: Request, { params }: RouteParams) {
   try {
     const { id } = await params;
     const session = await auth();
 
     if (!session?.user) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
+      return apiError('Non autorisé', ErrorCode.UNAUTHORIZED);
     }
 
     if (session.user.role !== UserRole.OWNER) {
-      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
+      return apiError('Accès refusé', ErrorCode.FORBIDDEN);
     }
 
     await prisma.product.update({
@@ -253,12 +280,10 @@ export async function DELETE(_request: Request, { params }: RouteParams) {
       },
     });
 
-    return NextResponse.json({ success: true });
+    // Item 2: HTTP 204 No Content for DELETE operations
+    return apiNoContent();
   } catch (error) {
     console.error('Error deleting product:', error);
-    return NextResponse.json(
-      { error: 'Erreur lors de la suppression du produit' },
-      { status: 500 }
-    );
+    return apiError('Erreur lors de la suppression du produit', ErrorCode.INTERNAL_ERROR);
   }
 }

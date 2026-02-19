@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useWishlist } from '@/contexts/WishlistContext';
+import { useI18n } from '@/i18n/client';
 
 interface WishlistButtonProps {
   productId: string;
@@ -17,6 +18,7 @@ export default function WishlistButton({
   variant = 'icon',
   className = '',
 }: WishlistButtonProps) {
+  const { t } = useI18n();
   const { data: session } = useSession();
   const router = useRouter();
   const { isInWishlist, toggleWishlist } = useWishlist();
@@ -47,8 +49,8 @@ export default function WishlistButton({
             ? 'bg-red-50 border-red-200 text-red-600 hover:bg-red-100'
             : 'bg-white border-neutral-300 text-neutral-600 hover:border-red-300 hover:text-red-500'
         } ${className}`}
-        title={inWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
-        aria-label={inWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
+        title={inWishlist ? t('shop.aria.removeFromWishlist') : t('shop.aria.addToWishlist')}
+        aria-label={inWishlist ? t('shop.aria.removeFromWishlist') : t('shop.aria.addToWishlist')}
         aria-pressed={inWishlist}
       >
         <svg
@@ -65,7 +67,7 @@ export default function WishlistButton({
           />
         </svg>
         <span className="text-sm font-medium">
-          {inWishlist ? 'Saved' : 'Save'}
+          {inWishlist ? (t('shop.saved') || 'Saved') : (t('shop.save') || 'Save')}
         </span>
       </button>
     );

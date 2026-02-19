@@ -147,7 +147,7 @@ export default function WebinairesPage() {
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-2 ml-4">
+                <div className="flex flex-col gap-2 ms-4">
                   {webinar.status === 'SCHEDULED' && (
                     <>
                       <Button variant="outline" size="sm">{t('admin.webinars.editWebinar')}</Button>

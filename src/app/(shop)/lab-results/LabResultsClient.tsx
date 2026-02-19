@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 
 interface CoaEntry {
   id: string;
@@ -19,7 +19,7 @@ interface LabResultsClientProps {
 }
 
 export default function LabResultsClient({ coaData }: LabResultsClientProps) {
-  const { t } = useTranslations();
+  const { t, locale } = useI18n();
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -79,22 +79,22 @@ export default function LabResultsClient({ coaData }: LabResultsClientProps) {
               <table className="w-full">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
+                    <th className="px-6 py-4 text-start text-sm font-semibold text-gray-900">
                       {t('labResults.product') || 'Produit'}
                     </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
+                    <th className="px-6 py-4 text-start text-sm font-semibold text-gray-900">
                       {t('labResults.batch') || 'Lot'}
                     </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
+                    <th className="px-6 py-4 text-start text-sm font-semibold text-gray-900">
                       {t('labResults.testDate') || 'Date du test'}
                     </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
+                    <th className="px-6 py-4 text-start text-sm font-semibold text-gray-900">
                       {t('labResults.purityLabel') || 'Pureté'}
                     </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
+                    <th className="px-6 py-4 text-start text-sm font-semibold text-gray-900">
                       {t('labResults.status') || 'Statut'}
                     </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
+                    <th className="px-6 py-4 text-start text-sm font-semibold text-gray-900">
                       {t('labResults.report') || 'Rapport'}
                     </th>
                   </tr>
@@ -109,7 +109,7 @@ export default function LabResultsClient({ coaData }: LabResultsClientProps) {
                         {coa.batchNumber}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600">
-                        {new Date(coa.testDate).toLocaleDateString('fr-CA')}
+                        {new Date(coa.testDate).toLocaleDateString(locale)}
                       </td>
                       <td className="px-6 py-4">
                         {coa.purity ? (

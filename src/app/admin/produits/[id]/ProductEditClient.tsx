@@ -477,7 +477,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
                       onChange={(e) => setFormData({ ...formData, purity: e.target.value })}
                       className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
                     />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400">%</span>
+                    <span className="absolute end-3 top-1/2 -translate-y-1/2 text-neutral-400">%</span>
                   </div>
                 </div>
                 <div>
@@ -785,7 +785,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
                           </div>
                         </div>
                         <div className="flex items-center gap-4">
-                          <div className="text-right">
+                          <div className="text-end">
                             <p className="font-semibold text-neutral-900">${Number(format.price).toFixed(2)}</p>
                             {format.costPrice && <p className="text-xs text-neutral-400">{t('admin.productForm.cost')}: ${Number(format.costPrice).toFixed(2)}</p>}
                             {format.comparePrice && <p className="text-xs text-neutral-400 line-through">${Number(format.comparePrice).toFixed(2)}</p>}

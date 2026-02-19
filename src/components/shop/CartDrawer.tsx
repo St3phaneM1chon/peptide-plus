@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { useCart } from '@/contexts/CartContext';
 import { useCurrency } from '@/contexts/CurrencyContext';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 import CartCrossSell from './CartCrossSell';
 
 interface CartDrawerProps {
@@ -18,7 +18,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
   const { data: session } = useSession();
   const { items, removeItem, updateQuantity, subtotal, itemCount } = useCart();
   const { formatPrice } = useCurrency();
-  const { t } = useTranslations();
+  const { t } = useI18n();
 
   // Extract unique product IDs for cross-sell recommendations
   const cartProductIds = useMemo(() => {
@@ -42,13 +42,13 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
     };
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
-
   return (
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/50 z-50 transition-opacity"
+        className={`fixed inset-0 bg-black/50 z-50 transition-opacity duration-300 ${
+          isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        }`}
         onClick={onClose}
         aria-hidden="true"
       />
@@ -57,15 +57,18 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="Shopping cart"
-        className="fixed right-0 top-0 h-full w-full max-w-md bg-white z-50 shadow-2xl flex flex-col"
+        aria-label={t('cart.aria.shoppingCart')}
+        aria-hidden={!isOpen}
+        className={`fixed end-0 top-0 h-full w-full max-w-md bg-white z-50 shadow-2xl flex flex-col transition-transform duration-300 ease-in-out ${
+          isOpen ? 'translate-x-0' : 'ltr:translate-x-full rtl:-translate-x-full'
+        }`}
       >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-neutral-200">
           <h2 className="text-lg font-bold">{t('cart.titleWithCount', { count: itemCount })}</h2>
           <button
             onClick={onClose}
-            aria-label="Close cart"
+            aria-label={t('cart.aria.closeCart')}
             className="p-2 hover:bg-neutral-100 rounded-lg transition-colors"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -93,10 +96,11 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
             </div>
           ) : (
             <div className="space-y-4">
-              {items.map((item) => (
+              {items.map((item, index) => (
                 <div
                   key={`${item.productId}-${item.formatId}`}
-                  className="flex gap-4 bg-neutral-50 rounded-xl p-3"
+                  className="flex gap-4 bg-neutral-50 rounded-xl p-3 transition-all duration-300"
+                  style={index === items.length - 1 ? { animation: 'pulse-highlight 1s ease-out' } : undefined}
                 >
                   {/* Image */}
                   <div className="w-20 h-20 bg-white rounded-lg overflow-hidden flex-shrink-0 relative">
@@ -104,6 +108,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                       src={item.image || '/images/products/peptide-default.png'}
                       alt={item.name}
                       fill
+                      sizes="80px"
                       className="object-cover"
                     />
                   </div>
@@ -126,7 +131,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                         <button
                           onClick={() => updateQuantity(item.productId, item.formatId, item.quantity - 1)}
                           aria-label={`Decrease quantity of ${item.name}`}
-                          className="w-7 h-7 flex items-center justify-center text-neutral-600 hover:bg-neutral-100"
+                          className="w-10 h-10 flex items-center justify-center text-neutral-600 hover:bg-neutral-100"
                         >
                           −
                         </button>
@@ -134,7 +139,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                         <button
                           onClick={() => updateQuantity(item.productId, item.formatId, item.quantity + 1)}
                           aria-label={`Increase quantity of ${item.name}`}
-                          className="w-7 h-7 flex items-center justify-center text-neutral-600 hover:bg-neutral-100"
+                          className="w-10 h-10 flex items-center justify-center text-neutral-600 hover:bg-neutral-100"
                         >
                           +
                         </button>

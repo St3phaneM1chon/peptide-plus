@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 
 interface PeptideCalculatorProps {
   className?: string;
@@ -10,7 +10,7 @@ interface PeptideCalculatorProps {
 }
 
 export default function PeptideCalculator({ className = '', onClose, isModal = false }: PeptideCalculatorProps) {
-  const { t } = useTranslations();
+  const { t } = useI18n();
   // États des inputs avec sliders
   const [peptideAmount, setPeptideAmount] = useState(10); // mg (1-500)
   const [solventVolume, setSolventVolume] = useState(3); // ml (1-10)
@@ -98,7 +98,7 @@ export default function PeptideCalculator({ className = '', onClose, isModal = f
           </button>
           <div className="text-center min-w-[70px]">
             <span className={`text-xl font-bold ${colors[color].text}`}>{value}</span>
-            <span className={`text-xs font-medium ml-1 ${colors[color].text}`}>{label}</span>
+            <span className={`text-xs font-medium ms-1 ${colors[color].text}`}>{label}</span>
           </div>
           <button
             onClick={increase}
@@ -240,7 +240,7 @@ export default function PeptideCalculator({ className = '', onClose, isModal = f
                       {/* ===== GROUPE 2 - VALUES (Valeur affichée) ===== */}
                       <div className="flex items-center justify-center" style={{ marginLeft: '10px', marginBottom: '8px' }}>
                         <span className="text-2xl md:text-4xl font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">{peptideAmount}</span>
-                        <span className="text-sm md:text-lg text-orange-400 ml-1 font-bold drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">mg</span>
+                        <span className="text-sm md:text-lg text-orange-400 ms-1 font-bold drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">mg</span>
                       </div>
                       
                       {/* ===== GROUPE 3 - CONTROLS (Boutons +/-, Slider, Toggle) ===== */}
@@ -270,7 +270,7 @@ export default function PeptideCalculator({ className = '', onClose, isModal = f
                       {/* ===== GROUPE 2 - VALUES (Valeur affichée) ===== */}
                       <div className="flex items-center justify-center" style={{ marginLeft: '10px', marginBottom: '8px' }}>
                         <span className="text-2xl md:text-4xl font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">{solventVolume}</span>
-                        <span className="text-sm md:text-lg text-gray-300 ml-1 font-bold drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">mL</span>
+                        <span className="text-sm md:text-lg text-gray-300 ms-1 font-bold drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">mL</span>
                       </div>
                       
                       {/* ===== GROUPE 3 - CONTROLS (Boutons +/-, Slider) ===== */}
@@ -300,7 +300,7 @@ export default function PeptideCalculator({ className = '', onClose, isModal = f
                       {/* ===== GROUPE 2 - VALUES (Valeur affichée) ===== */}
                       <div className="flex items-center justify-center" style={{ marginLeft: '10px', marginBottom: '8px' }}>
                         <span className="text-2xl md:text-4xl font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">{desiredDose}</span>
-                        <span className="text-sm md:text-lg text-yellow-400 ml-1 font-bold drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">{doseUnit}</span>
+                        <span className="text-sm md:text-lg text-yellow-400 ms-1 font-bold drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">{doseUnit}</span>
                       </div>
                       
                       {/* ===== GROUPE 3 - CONTROLS (Boutons +/-, Slider, Toggle mcg/mg) ===== */}
@@ -361,7 +361,7 @@ export default function PeptideCalculator({ className = '', onClose, isModal = f
                   <p className="text-xs text-neutral-400 mb-0.5">{t('calculator.concentration')}</p>
                   <p className="text-amber-400 whitespace-nowrap">
                     <span className="text-xl font-bold">{calculations.concentrationMgPerMl.toFixed(2)}</span>
-                    <span className="text-xs ml-1">mg/mL</span>
+                    <span className="text-xs ms-1">mg/mL</span>
                   </p>
                 </div>
                 
@@ -370,7 +370,7 @@ export default function PeptideCalculator({ className = '', onClose, isModal = f
                   <p className="text-xs text-neutral-400 mb-0.5">{t('calculator.volumeToInject')}</p>
                   <p className="text-amber-400 whitespace-nowrap">
                     <span className="text-xl font-bold">{calculations.volumeToInjectMl.toFixed(2)}</span>
-                    <span className="text-xs ml-1">mL</span>
+                    <span className="text-xs ms-1">mL</span>
                   </p>
                 </div>
                 

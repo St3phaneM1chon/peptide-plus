@@ -7,22 +7,14 @@ export const dynamic = 'force-dynamic';
  * DELETE - Delete an email template
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { auth } from '@/lib/auth-config';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 
 // GET /api/admin/emails/[id] - Get a single template
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const GET = withAdminGuard(async (_request, { session: _session, params }) => {
   try {
-    const session = await auth();
-    if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { id } = await params;
+    const id = params!.id;
 
     const template = await prisma.emailTemplate.findUnique({
       where: { id },
@@ -40,20 +32,12 @@ export async function GET(
       { status: 500 }
     );
   }
-}
+});
 
 // PATCH /api/admin/emails/[id] - Update an email template
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const PATCH = withAdminGuard(async (request, { session: _session, params }) => {
   try {
-    const session = await auth();
-    if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { id } = await params;
+    const id = params!.id;
     const body = await request.json();
     const { name, subject, htmlContent, textContent, variables, isActive, locale } = body;
 
@@ -101,20 +85,12 @@ export async function PATCH(
       { status: 500 }
     );
   }
-}
+});
 
 // DELETE /api/admin/emails/[id] - Delete an email template
-export async function DELETE(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const DELETE = withAdminGuard(async (_request, { session: _session, params }) => {
   try {
-    const session = await auth();
-    if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { id } = await params;
+    const id = params!.id;
 
     const existing = await prisma.emailTemplate.findUnique({
       where: { id },
@@ -136,4 +112,4 @@ export async function DELETE(
       { status: 500 }
     );
   }
-}
+});

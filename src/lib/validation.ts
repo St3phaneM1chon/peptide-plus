@@ -3,6 +3,69 @@
  * Protection contre XSS, injection SQL, et validation des données
  */
 
+import DOMPurify from 'isomorphic-dompurify';
+import { PASSWORD_MIN_LENGTH } from '@/lib/constants';
+
+// =====================================================
+// HTML SANITIZATION (Server-side DOMPurify)
+// =====================================================
+
+/** Safe HTML tags allowed in rich-text content (blog, articles, product descriptions) */
+const RICH_TEXT_CONFIG: DOMPurify.Config = {
+  ALLOWED_TAGS: [
+    'p', 'br', 'strong', 'b', 'em', 'i', 'u', 's',
+    'h2', 'h3', 'h4', 'h5', 'h6',
+    'ul', 'ol', 'li',
+    'a', 'span', 'blockquote', 'pre', 'code',
+    'table', 'thead', 'tbody', 'tr', 'th', 'td',
+    'img', 'figure', 'figcaption',
+    'hr', 'sup', 'sub',
+  ],
+  ALLOWED_ATTR: [
+    'href', 'target', 'rel', 'class', 'id',
+    'src', 'alt', 'width', 'height', 'loading',
+    'colspan', 'rowspan',
+  ],
+  ALLOW_DATA_ATTR: false,
+  ADD_ATTR: ['target'],
+  FORBID_TAGS: ['script', 'style', 'iframe', 'object', 'embed', 'form', 'input', 'textarea', 'select', 'button'],
+  FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover', 'onfocus', 'onblur'],
+};
+
+/** Minimal tags for simple formatted text (comments, reviews, FAQ answers) */
+const SIMPLE_TEXT_CONFIG: DOMPurify.Config = {
+  ALLOWED_TAGS: ['p', 'br', 'strong', 'b', 'em', 'i', 'ul', 'ol', 'li', 'a'],
+  ALLOWED_ATTR: ['href', 'target', 'rel'],
+  ALLOW_DATA_ATTR: false,
+};
+
+/**
+ * Sanitize rich HTML content (blog posts, articles, product descriptions).
+ * Allows a safe subset of tags while stripping scripts, event handlers, etc.
+ */
+export function sanitizeHtml(html: string): string {
+  if (!html) return '';
+  return DOMPurify.sanitize(html, RICH_TEXT_CONFIG);
+}
+
+/**
+ * Sanitize simple formatted text (reviews, comments, FAQ answers).
+ * Only allows basic formatting tags.
+ */
+export function sanitizeSimpleHtml(html: string): string {
+  if (!html) return '';
+  return DOMPurify.sanitize(html, SIMPLE_TEXT_CONFIG);
+}
+
+/**
+ * Strip ALL HTML tags, returning plain text only.
+ * Use for fields that should never contain HTML (names, codes, etc.)
+ */
+export function stripHtml(html: string): string {
+  if (!html) return '';
+  return DOMPurify.sanitize(html, { ALLOWED_TAGS: [] });
+}
+
 // =====================================================
 // SANITIZATION
 // =====================================================
@@ -91,8 +154,8 @@ export function validatePassword(password: string): PasswordValidationResult {
   }
 
   // Longueur minimum
-  if (password.length < 8) {
-    errors.push('Minimum 8 caractères');
+  if (password.length < PASSWORD_MIN_LENGTH) {
+    errors.push(`Minimum ${PASSWORD_MIN_LENGTH} caractères`);
   } else {
     score += 20;
     if (password.length >= 12) score += 10;

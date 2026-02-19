@@ -1,5 +1,4 @@
 'use client';
-export const dynamic = 'force-dynamic';
 
 /**
  * PAGE POLITIQUE DE CONFIDENTIALITÉ - BioCycle Peptides
@@ -175,16 +174,11 @@ export default function PrivacyPage() {
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section style={{ marginBottom: '40px' }}>
+    <section style={{ marginBottom: '40px' }} className="legal-content">
       <h2 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '16px', color: '#1f2937' }}>
         {title}
       </h2>
       {children}
-      <style jsx>{`
-        ul { padding-left: 20px; margin: 8px 0; }
-        li { margin-bottom: 8px; }
-        a { color: #CC5500; }
-      `}</style>
     </section>
   );
 }

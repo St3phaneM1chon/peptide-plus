@@ -7,21 +7,13 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth-config';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import { getRunDetail, getRunStatus, cleanupUatRun } from '@/lib/uat/runner';
 
 // GET — Run detail
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const GET = withAdminGuard(async (request: NextRequest, { session, params }) => {
   try {
-    const session = await auth();
-    if (!session?.user || (session.user.role !== 'EMPLOYEE' && session.user.role !== 'OWNER')) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-
-    const { id } = await params;
+    const id = params!.id;
     const { searchParams } = new URL(request.url);
     const statusOnly = searchParams.get('status') === 'true';
 
@@ -43,20 +35,12 @@ export async function GET(
     console.error('[UAT API] GET detail error:', error);
     return NextResponse.json({ error: 'Une erreur est survenue' }, { status: 500 });
   }
-}
+});
 
 // DELETE — Cleanup test data
-export async function DELETE(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const DELETE = withAdminGuard(async (_request: NextRequest, { session, params }) => {
   try {
-    const session = await auth();
-    if (!session?.user || session.user.role !== 'OWNER') {
-      return NextResponse.json({ error: 'Forbidden — OWNER only' }, { status: 403 });
-    }
-
-    const { id } = await params;
+    const id = params!.id;
     const result = await cleanupUatRun(id);
 
     return NextResponse.json(result);
@@ -64,4 +48,4 @@ export async function DELETE(
     console.error('[UAT API] DELETE error:', error);
     return NextResponse.json({ error: 'Une erreur est survenue' }, { status: 500 });
   }
-}
+});

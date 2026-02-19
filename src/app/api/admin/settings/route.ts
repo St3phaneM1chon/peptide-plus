@@ -4,20 +4,51 @@ export const dynamic = 'force-dynamic';
  * Admin Settings API
  * GET  - Retrieve all settings (SiteSettings singleton + SiteSetting key-value pairs)
  * PUT  - Update settings (SiteSettings fields and/or SiteSetting entries)
+ *
+ * Item 74: Feature Flags via SiteSetting key-value store
+ * -------------------------------------------------------
+ * Feature flags are managed as SiteSetting entries with module='feature_flags'.
+ * This allows toggling features without code deployment.
+ *
+ * Convention:
+ *   key:    "ff.<feature_name>"     (e.g., "ff.live_chat", "ff.ab_testing")
+ *   value:  "true" | "false" | JSON (for richer config like rollout %)
+ *   type:   "boolean" | "json"
+ *   module: "feature_flags"
+ *
+ * Example: Enable live chat feature:
+ *   PUT /api/admin/settings
+ *   { "settings": [{ "key": "ff.live_chat", "value": "true", "type": "boolean", "module": "feature_flags" }] }
+ *
+ * Read flags in app code via:
+ *   const setting = await prisma.siteSetting.findUnique({ where: { key: 'ff.live_chat' } });
+ *   const isEnabled = setting?.value === 'true';
+ *
+ * TODO (item 74): Build a dedicated /api/feature-flags endpoint that:
+ *   - GET returns all flags with their current state (public, cached 60s)
+ *   - Supports percentage-based rollouts (value: { enabled: true, rollout: 25 })
+ *   - Supports user segment targeting (e.g., only for loyaltyTier='GOLD')
+ *   - Caches flags in-memory with revalidation to avoid DB hits per request
+ *   - Provides a client-side React hook: useFeatureFlag('live_chat')
+ *
+ * TODO (item 85): A/B Testing Framework
+ * Build an A/B testing system on top of feature flags:
+ *   - Define experiments as SiteSetting entries with module='ab_tests'
+ *   - Each experiment has: name, variants (with weights), targetMetric, startDate, endDate
+ *   - Assign users to variants deterministically using hash(userId + experimentId) % 100
+ *   - Track conversion events via a new AbTestEvent model
+ *   - Provide an admin dashboard to view results with statistical significance
+ *   - Auto-graduate winning variants after reaching significance threshold
+ *   - Key routes to create: /api/admin/ab-tests (CRUD), /api/ab-tests/assign (variant assignment)
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { auth } from '@/lib/auth-config';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 
 // GET /api/admin/settings - Get all settings
-export async function GET() {
+export const GET = withAdminGuard(async (_request, { session: _session }) => {
   try {
-    const session = await auth();
-    if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     // Fetch the singleton SiteSettings (create default if not exists)
     let siteSettings = await prisma.siteSettings.findUnique({
       where: { id: 'default' },
@@ -45,11 +76,11 @@ export async function GET() {
     }>> = {};
 
     for (const entry of siteSettingEntries) {
-      const module = entry.module || 'general';
-      if (!settingsByModule[module]) {
-        settingsByModule[module] = [];
+      const mod = entry.module || 'general';
+      if (!settingsByModule[mod]) {
+        settingsByModule[mod] = [];
       }
-      settingsByModule[module].push({
+      settingsByModule[mod].push({
         id: entry.id,
         key: entry.key,
         value: entry.value,
@@ -96,16 +127,11 @@ export async function GET() {
       { status: 500 }
     );
   }
-}
+});
 
 // PUT /api/admin/settings - Update settings
-export async function PUT(request: NextRequest) {
+export const PUT = withAdminGuard(async (request, { session }) => {
   try {
-    const session = await auth();
-    if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const body = await request.json();
     const { siteSettings: siteSettingsData, settings: keyValueSettings } = body;
 
@@ -160,56 +186,59 @@ export async function PUT(request: NextRequest) {
     }
 
     // Update key-value SiteSetting entries
+    // DI-67: Wrap all upserts in a transaction for atomicity
     if (keyValueSettings && typeof keyValueSettings === 'object') {
       const updatedKeys: string[] = [];
 
-      // keyValueSettings can be:
-      // - An object { key: value } for simple updates
-      // - An array of { key, value, type?, module?, description? } for detailed updates
-      if (Array.isArray(keyValueSettings)) {
-        for (const entry of keyValueSettings) {
-          if (!entry.key || entry.value === undefined) continue;
+      await prisma.$transaction(async (tx) => {
+        // keyValueSettings can be:
+        // - An object { key: value } for simple updates
+        // - An array of { key, value, type?, module?, description? } for detailed updates
+        if (Array.isArray(keyValueSettings)) {
+          for (const entry of keyValueSettings) {
+            if (!entry.key || entry.value === undefined) continue;
 
-          await prisma.siteSetting.upsert({
-            where: { key: entry.key },
-            update: {
-              value: String(entry.value),
-              ...(entry.type && { type: entry.type }),
-              ...(entry.module && { module: entry.module }),
-              ...(entry.description !== undefined && { description: entry.description }),
-              updatedBy: session.user.id,
-            },
-            create: {
-              key: entry.key,
-              value: String(entry.value),
-              type: entry.type || 'text',
-              module: entry.module || 'general',
-              description: entry.description || null,
-              updatedBy: session.user.id,
-            },
-          });
+            await tx.siteSetting.upsert({
+              where: { key: entry.key },
+              update: {
+                value: String(entry.value),
+                ...(entry.type && { type: entry.type }),
+                ...(entry.module && { module: entry.module }),
+                ...(entry.description !== undefined && { description: entry.description }),
+                updatedBy: session.user.id,
+              },
+              create: {
+                key: entry.key,
+                value: String(entry.value),
+                type: entry.type || 'text',
+                module: entry.module || 'general',
+                description: entry.description || null,
+                updatedBy: session.user.id,
+              },
+            });
 
-          updatedKeys.push(entry.key);
+            updatedKeys.push(entry.key);
+          }
+        } else {
+          // Simple object format: { "key1": "value1", "key2": "value2" }
+          for (const [key, value] of Object.entries(keyValueSettings)) {
+            await tx.siteSetting.upsert({
+              where: { key },
+              update: {
+                value: String(value),
+                updatedBy: session.user.id,
+              },
+              create: {
+                key,
+                value: String(value),
+                updatedBy: session.user.id,
+              },
+            });
+
+            updatedKeys.push(key);
+          }
         }
-      } else {
-        // Simple object format: { "key1": "value1", "key2": "value2" }
-        for (const [key, value] of Object.entries(keyValueSettings)) {
-          await prisma.siteSetting.upsert({
-            where: { key },
-            update: {
-              value: String(value),
-              updatedBy: session.user.id,
-            },
-            create: {
-              key,
-              value: String(value),
-              updatedBy: session.user.id,
-            },
-          });
-
-          updatedKeys.push(key);
-        }
-      }
+      });
 
       results.updatedKeys = updatedKeys;
     }
@@ -225,4 +254,4 @@ export async function PUT(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

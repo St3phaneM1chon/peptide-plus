@@ -4,7 +4,7 @@
 // Using <a> intentionally in error boundary - Link may not work when app is in error state
 
 import { useEffect } from 'react';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 
 export default function Error({
   error,
@@ -13,7 +13,7 @@ export default function Error({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  const { t } = useTranslations();
+  const { t } = useI18n();
 
   useEffect(() => {
     console.error('Application error:', error);

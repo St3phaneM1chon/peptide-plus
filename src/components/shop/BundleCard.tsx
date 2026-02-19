@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 import { useCurrency } from '@/contexts/CurrencyContext';
 
 interface BundleCardProps {
@@ -26,7 +26,7 @@ interface BundleCardProps {
 }
 
 export default function BundleCard({ bundle }: BundleCardProps) {
-  const { t } = useTranslations();
+  const { t } = useI18n();
   const { formatPrice } = useCurrency();
 
   return (
@@ -64,7 +64,7 @@ export default function BundleCard({ bundle }: BundleCardProps) {
 
         {/* Savings Badge */}
         {bundle.discount > 0 && (
-          <div className="absolute top-3 right-3 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold shadow-md">
+          <div className="absolute top-3 end-3 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold shadow-md">
             {t('shop.savePercent').replace('{percent}', String(bundle.discount))}
           </div>
         )}
@@ -140,7 +140,7 @@ export default function BundleCard({ bundle }: BundleCardProps) {
               {formatPrice(bundle.bundlePrice)}
             </span>
           </div>
-          <div className="text-sm text-green-600 font-medium text-right">
+          <div className="text-sm text-green-600 font-medium text-end">
             {t('shop.youSave').replace('{amount}', formatPrice(bundle.savings))}
           </div>
         </div>

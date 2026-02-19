@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Plus, Pencil, Users, UserCheck, Crown } from 'lucide-react';
 import { PageHeader, Button, Modal, FormField, Input, StatusBadge } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
+import { toast } from 'sonner';
 
 interface Employee {
   id: string;
@@ -62,6 +63,7 @@ export default function EmployesPage() {
     role: 'EMPLOYEE' as 'EMPLOYEE' | 'OWNER',
     permissions: [] as string[],
   });
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     fetchEmployees();
@@ -79,8 +81,85 @@ export default function EmployesPage() {
     setLoading(false);
   };
 
-  const toggleActive = (id: string) => {
-    setEmployees(employees.map((e) => (e.id === id ? { ...e, isActive: !e.isActive } : e)));
+  const toggleActive = async (id: string) => {
+    const emp = employees.find((e) => e.id === id);
+    if (!emp || emp.role === 'OWNER') return;
+
+    const newActive = !emp.isActive;
+    // Optimistic update
+    setEmployees(employees.map((e) => (e.id === id ? { ...e, isActive: newActive } : e)));
+
+    try {
+      const res = await fetch(`/api/admin/employees/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isActive: newActive }),
+      });
+      if (!res.ok) {
+        // Revert on error
+        setEmployees(employees.map((e) => (e.id === id ? { ...e, isActive: !newActive } : e)));
+        toast.error('Failed to update employee status');
+      }
+    } catch {
+      setEmployees(employees.map((e) => (e.id === id ? { ...e, isActive: !newActive } : e)));
+      toast.error('Failed to update employee status');
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!formData.email || !formData.name) {
+      toast.error(t('admin.employees.emailAndNameRequired') || 'Email and name are required');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      if (editingEmployee) {
+        // Update existing employee
+        const res = await fetch(`/api/admin/employees/${editingEmployee.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: formData.name,
+            role: formData.role,
+            permissions: formData.role === 'EMPLOYEE' ? formData.permissions : undefined,
+          }),
+        });
+        if (!res.ok) {
+          const data = await res.json();
+          toast.error(data.error || 'Failed to update employee');
+          setSaving(false);
+          return;
+        }
+        toast.success(t('admin.employees.employeeUpdated') || 'Employee updated');
+      } else {
+        // Create new employee
+        const res = await fetch('/api/admin/employees', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: formData.email,
+            name: formData.name,
+            role: formData.role,
+            permissions: formData.role === 'EMPLOYEE' ? formData.permissions : undefined,
+          }),
+        });
+        if (!res.ok) {
+          const data = await res.json();
+          toast.error(data.error || 'Failed to invite employee');
+          setSaving(false);
+          return;
+        }
+        toast.success(t('admin.employees.employeeInvited') || 'Employee invited');
+      }
+
+      resetForm();
+      await fetchEmployees();
+    } catch (err) {
+      console.error('Error saving employee:', err);
+      toast.error('An error occurred');
+    }
+    setSaving(false);
   };
 
   const resetForm = () => {
@@ -136,10 +215,10 @@ export default function EmployesPage() {
         <table className="w-full">
           <thead className="bg-slate-50">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.employees.employeeCol')}</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.employees.roleCol')}</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.employees.permissionsCol')}</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.employees.lastLogin')}</th>
+              <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.employees.employeeCol')}</th>
+              <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.employees.roleCol')}</th>
+              <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.employees.permissionsCol')}</th>
+              <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.employees.lastLogin')}</th>
               <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.employees.statusCol')}</th>
               <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.employees.actionsCol')}</th>
             </tr>
@@ -250,7 +329,7 @@ export default function EmployesPage() {
             <Button variant="secondary" onClick={resetForm} className="flex-1">
               {t('admin.employees.cancelBtn')}
             </Button>
-            <Button variant="primary" className="flex-1">
+            <Button variant="primary" className="flex-1" onClick={handleSubmit} loading={saving} disabled={saving}>
               {editingEmployee ? t('admin.employees.saveBtn') : t('admin.employees.sendInvitation')}
             </Button>
           </div>

@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import { useCurrency } from '@/contexts/CurrencyContext';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 
 export type FormatType = 
   | 'VIAL_2ML' 
@@ -79,7 +79,7 @@ export default function FormatDropdown({
   className = '',
 }: FormatDropdownProps) {
   const { formatPrice } = useCurrency();
-  const { t } = useTranslations();
+  const { t } = useI18n();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -177,7 +177,7 @@ export default function FormatDropdown({
 
                 {/* Selected indicator */}
                 {isSelected && (
-                  <div className="absolute top-2 right-2 w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center">
+                  <div className="absolute top-2 end-2 w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center">
                     <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                     </svg>
@@ -220,7 +220,7 @@ export default function FormatDropdown({
           )}
           
           {/* Selected Format Info */}
-          <div className="text-left min-w-0">
+          <div className="text-start min-w-0">
             <p className="text-sm font-medium text-neutral-900 truncate">{selectedFormat.name}</p>
             {showPrices && (
               <p className="text-sm text-orange-600 font-bold">{formatPrice(selectedFormat.price)}</p>
@@ -257,7 +257,7 @@ export default function FormatDropdown({
                   }
                 }}
                 disabled={!available}
-                className={`w-full flex items-center gap-3 px-3 py-3 text-left transition-colors border-b border-neutral-100 last:border-0 ${
+                className={`w-full flex items-center gap-3 px-3 py-3 text-start transition-colors border-b border-neutral-100 last:border-0 ${
                   isSelected
                     ? 'bg-orange-50'
                     : available

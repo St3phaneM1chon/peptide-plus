@@ -1,6 +1,8 @@
 import type { Config } from 'tailwindcss';
 
 const config: Config = {
+  // #67: Enable class-based dark mode for future theming support
+  darkMode: 'class',
   content: [
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
@@ -39,6 +41,16 @@ const config: Config = {
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
+      },
+      // #66: Shimmer animation defined as Tailwind utility
+      keyframes: {
+        shimmer: {
+          '0%': { transform: 'translateX(-100%)' },
+          '100%': { transform: 'translateX(100%)' },
+        },
+      },
+      animation: {
+        shimmer: 'shimmer 3s infinite',
       },
     },
   },

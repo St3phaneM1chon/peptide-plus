@@ -120,6 +120,14 @@
     "reconstitution": "Reconstitution",
     "reconstitutionGuide": "Guide de reconstitution",
     "reconstitutionSteps": "Étapes de reconstitution",
+    "reconstitutionStep1": "Laissez le flacon atteindre la température ambiante avant la reconstitution.",
+    "reconstitutionStep2": "Nettoyez le bouchon en caoutchouc avec un tampon d'alcool et laissez sécher.",
+    "reconstitutionStep3": "Prélevez {volume} de {solvent} dans une seringue stérile.",
+    "reconstitutionStep4": "Insérez l'aiguille à travers le bouchon et libérez lentement l'eau le long de la paroi intérieure du flacon.",
+    "reconstitutionStep5": "Ne PAS agiter. Faites tourner doucement ou laissez reposer jusqu'à dissolution complète.",
+    "reconstitutionStep6": "Conservez le peptide reconstitué au réfrigérateur (2-8°C).",
+    "needHelpCalculating": "Besoin d'aide pour calculer votre reconstitution ? Utilisez notre calculateur de peptides.",
+    "openPeptideCalculator": "Ouvrir le calculateur de peptides",
     "references": "Références",
     "research": "Recherche",
     "researchContext": "Contexte de recherche",
@@ -140,7 +148,67 @@
     "stockLeft": "{count} restant(s)",
     "savePercent": "Économisez {percent}%",
     "productIncluded": "{count} produit inclus",
-    "failedToLoadProduct": "Échec du chargement du produit"
+    "failedToLoadProduct": "Échec du chargement du produit",
+    "aria": {
+      "searchProducts": "Rechercher des produits",
+      "closeSearch": "Fermer la recherche",
+      "megaMenu": "Méga menu boutique",
+      "stickyAddToCartBar": "Barre fixe d'ajout au panier",
+      "availableFormats": "Formats disponibles",
+      "decreaseQuantity": "Diminuer la quantité",
+      "increaseQuantity": "Augmenter la quantité",
+      "shareProduct": "Partager ce produit",
+      "copyProductLink": "Copier le lien du produit",
+      "quickView": "Aperçu rapide",
+      "quickViewDetails": "Détails de l'aperçu rapide du produit",
+      "closeQuickView": "Fermer l'aperçu rapide",
+      "loadVideoPlayer": "Charger le lecteur vidéo",
+      "productBadges": "Badges du produit",
+      "productImageGallery": "Galerie d'images du produit",
+      "productInfoTabs": "Onglets d'information du produit",
+      "minimumPrice": "Prix minimum",
+      "maximumPrice": "Prix maximum",
+      "priceRangeSlider": "Curseur de fourchette de prix",
+      "removeInStockFilter": "Retirer le filtre en stock",
+      "removePurityFilter": "Retirer le filtre de pureté",
+      "removePriceFilter": "Retirer le filtre de prix",
+      "addToWishlist": "Ajouter à la liste de souhaits",
+      "removeFromWishlist": "Retirer de la liste de souhaits",
+      "previousImage": "Image précédente",
+      "nextImage": "Image suivante",
+      "thumbnailImage": "Miniature {index} de {total} : {type}",
+      "freeShippingBanner": "Promotion de livraison gratuite",
+      "freeShippingInfo": "Livraison gratuite et informations qualité",
+      "popularSearchFor": "Rechercher {term}"
+    },
+    "reviews": {
+      "removeImage": "Supprimer l'image",
+      "placeholderTitle": "Résumez votre expérience",
+      "placeholderBody": "Parlez-nous de votre expérience avec ce produit..."
+    },
+    "share": {
+      "copyLink": "Copier le lien"
+    },
+    "gallery": {
+      "clickToZoom": "Cliquez pour agrandir"
+    },
+    "productVideo": "Vidéo du produit",
+    "giftCard": {
+      "placeholderCode": "XXXX-XXXX-XXXX-XXXX",
+      "placeholderAmount": "Entrez le montant",
+      "placeholderRecipientName": "Jean Dupont",
+      "placeholderRecipientEmail": "jean@exemple.com",
+      "placeholderMessage": "Ajoutez un message personnel..."
+    },
+    "trackOrder": {
+      "placeholderOrderNumber": "ex: PP-2026-12345",
+      "placeholderEmail": "courriel@exemple.com"
+    },
+    "wishlist": {
+      "removeFromWishlist": "Retirer de la liste de souhaits",
+      "addToWishlist": "Ajouter à la liste de souhaits",
+      "moveToList": "Déplacer vers une autre liste"
+    }
   },
   "home": {
     "heroTitle": "Les meilleurs peptides de recherche au Canada",
@@ -149,10 +217,13 @@
     "featuredDesc": "Nos meilleurs vendeurs dans toutes les catégories",
     "peptidesSection": "Peptides de recherche",
     "peptidesDesc": "Peptides de qualité premium pour vos recherches",
-    "supplementsSection": "Suppléments",
-    "supplementsDesc": "Le complément parfait pour un protocole gagnant",
-    "accessoriesSection": "Accessoires et Kits",
+    "researchResultsSection": "Résultats de Recherche",
+    "researchResultsDesc": "Nos derniers articles et résultats de recherche",
+    "readMore": "Lire la suite",
+    "accessoriesSection": "Accessoires",
     "accessoriesDesc": "Tout ce dont vous avez besoin pour vos recherches",
+    "labEquipmentSection": "Matériel de Laboratoire",
+    "labEquipmentDesc": "Équipement professionnel pour votre laboratoire",
     "aboutTitle": "Découvrez-nous",
     "aboutText": "Chez Peptide Plus+, nous nous efforçons d'établir la norme en matière de qualité, de sécurité et de valeur dans le développement et la fabrication de produits peptidiques de qualité pharmaceutique qui améliorent significativement les résultats de recherche de nos clients.",
     "testimonialsTitle": "Ce que disent nos clients",
@@ -228,7 +299,21 @@
     "adminPanel": "Panneau d'administration",
     "closeMenu": "Fermer le menu",
     "openMenu": "Ouvrir le menu",
-    "security": "Sécurité"
+    "security": "Sécurité",
+    "aria": {
+      "mainNavigation": "Navigation principale",
+      "mobileNavigation": "Navigation mobile",
+      "accountMenu": "Menu du compte",
+      "signIn": "Se connecter",
+      "menu": "Menu",
+      "closeMenu": "Fermer le menu",
+      "openMenu": "Ouvrir le menu",
+      "cartItems": "Panier ({count} {count, plural, one {article} other {articles}})",
+      "cartEmpty": "Panier (vide)",
+      "resourcesMenu": "Menu des ressources",
+      "languageSelector": "Sélecteur de langue",
+      "selectLanguage": "Sélectionner la langue : {language}"
+    }
   },
   "categories": {
     "all": "Tous les produits",
@@ -370,11 +455,29 @@
     "newsletterDesc": "Abonnez-vous pour des offres exclusives, nouveaux produits et insights de recherche.",
     "subscribe": "S'abonner",
     "securePayments": "Paiements sécurisés",
+    "trustPurity": "Pureté 99%+",
+    "trustLabTested": "Testé en laboratoire",
+    "trustMadeInCanada": "Fabriqué au Canada",
     "allRightsReserved": "Tous droits réservés",
     "help": "Aide",
     "subscribeNewsletter": "Abonnez-vous à notre infolettre",
     "newsletterDescription": "Recevez nos dernières actualités et offres exclusives.",
-    "location": "Montréal, Québec, Canada"
+    "location": "Montréal, Québec, Canada",
+    "placeholder": {
+      "email": "votre@courriel.com"
+    },
+    "paymentVisa": "Visa",
+    "paymentMastercard": "Mastercard",
+    "paymentPaypal": "PayPal",
+    "paymentApplePay": "Apple Pay",
+    "paymentGooglePay": "Google Pay",
+    "newsletterSuccess": "Vous avez ete abonne avec succes!",
+    "aria": {
+      "shopLinks": "Liens de la boutique",
+      "resourcesLinks": "Liens des ressources",
+      "communityLinks": "Liens de la communauté",
+      "supportLinks": "Liens du service client"
+    }
   },
   "compare": {
     "compare": "Comparer",
@@ -412,7 +515,8 @@
     "dataSheet": "Fiche technique",
     "bestValue": "Meilleur rapport",
     "highestPurity": "Pureté maximale",
-    "fetchError": "Impossible de charger les produits pour la comparaison"
+    "fetchError": "Impossible de charger les produits pour la comparaison",
+    "productsInComparison": "{count} produits en comparaison"
   },
   "common": {
     "loading": "Chargement...",
@@ -470,7 +574,26 @@
     "scrollLeft": "Défiler vers la gauche",
     "scrollRight": "Défiler vers la droite",
     "genericError": "Une erreur est survenue",
-    "connectionError": "Erreur de connexion"
+    "connectionError": "Erreur de connexion",
+    "delete": "Supprimer",
+    "retry": "Réessayer",
+    "required": "Ce champ est requis",
+    "noResults": "Aucun résultat trouvé",
+    "previous": "Précédent",
+    "submitting": "Envoi...",
+    "aria": {
+      "close": "Fermer",
+      "dismiss": "Ignorer",
+      "breadcrumb": "Fil d'Ariane",
+      "scrollToTop": "Retour en haut",
+      "dismissBanner": "Fermer la bannière",
+      "dismissInstallPrompt": "Fermer l'invite d'installation",
+      "previousSlide": "Diapositive précédente",
+      "nextSlide": "Diapositive suivante",
+      "googleLogo": "Google",
+      "skipToContent": "Aller au contenu principal"
+    },
+    "edit": "Modifier"
   },
   "cart": {
     "title": "Votre panier",
@@ -503,7 +626,20 @@
     "increaseQuantity": "Augmenter la quantité",
     "customersAlsoBought": "Les clients ont aussi acheté",
     "addThis": "Ajoutez ceci",
-    "discount": "Remise"
+    "discount": "Remise",
+    "cartDataCorrupted": "Les données du panier étaient corrompues et ont été réinitialisées.",
+    "aria": {
+      "shoppingCart": "Panier d'achat",
+      "closeCart": "Fermer le panier"
+    }
+  },
+  "chat": {
+    "aria": {
+      "openChat": "Ouvrir le clavardage"
+    },
+    "placeholder": {
+      "typeMessage": "Tapez votre message..."
+    }
   },
   "checkout": {
     "emptyCart": "Votre panier est vide",
@@ -625,7 +761,10 @@
     "saveCardForFuture": "Sauvegarder cette carte pour mes prochains achats",
     "saveAddressForFuture": "Sauvegarder cette adresse pour mes prochaines commandes",
     "errors": {
-      "paymentFailed": "Le paiement a echoue. Veuillez reessayer."
+      "paymentFailed": "Le paiement a echoue. Veuillez reessayer.",
+      "paypalCheckoutError": "Le paiement PayPal a échoué. Veuillez réessayer ou choisir un autre mode de paiement.",
+      "expressCheckoutError": "Le paiement express a échoué. Veuillez réessayer ou choisir un autre mode de paiement.",
+      "retryPayment": "Réessayer le paiement"
     },
     "savedAddresses": "Adresses enregistrées",
     "defaultAddress": "Par défaut",
@@ -651,7 +790,13 @@
     "paymentGenericError": "Le paiement n'a pas pu être traité. Veuillez réessayer ou utiliser un autre mode de paiement.",
     "needHelp": "Besoin d'aide? Contactez-nous",
     "billingFirstName": "Prénom",
-    "billingLastName": "Nom de famille"
+    "billingLastName": "Nom de famille",
+    "aria": {
+      "checkoutProgress": "Progression du paiement"
+    },
+    "placeholderGiftCard": "Carte cadeau (XXXX-XXXX-XXXX-XXXX)",
+    "placeholderApartment": "App 4B",
+    "placeholderPostalCode": "H2X 1Y6"
   },
   "rewards": {
     "title": "Programme de récompenses",
@@ -802,7 +947,10 @@
     "support": "Support",
     "questionPlaceholder": "Quelle est votre question ou sujet?",
     "contentPlaceholder": "Partagez vos pensées, questions ou expériences...",
-    "tagsPlaceholder": "ex: bpc-157, reconstitution, débutant"
+    "tagsPlaceholder": "ex: bpc-157, reconstitution, débutant",
+    "placeholderPostTitle": "Quelle est votre question ou sujet?",
+    "placeholderPostBody": "Partagez vos pensées, questions ou expériences...",
+    "placeholderTags": "ex: bpc-157, reconstitution, débutant"
   },
   "webinars": {
     "title": "Webinaires et événements",
@@ -829,7 +977,8 @@
     "signInRequired": "Veuillez vous connecter pour vous inscrire à ce webinaire.",
     "education": "Éducation",
     "tutorial": "Tutoriel",
-    "bestPractices": "Bonnes pratiques"
+    "bestPractices": "Bonnes pratiques",
+    "placeholderEmail": "Entrez votre courriel"
   },
   "ambassador": {
     "title": "Devenez ambassadeur",
@@ -885,7 +1034,33 @@
     "faq5Q": "Dois-je être client d'abord?",
     "faq5A": "Bien que non requis, cela aide! Les recommandations authentiques d'utilisateurs performent le mieux.",
     "faq6Q": "Quel matériel marketing fournissez-vous?",
-    "faq6A": "Nous fournissons des bannières, images de produits, modèles de courriels et contenu pour réseaux sociaux."
+    "faq6A": "Nous fournissons des bannières, images de produits, modèles de courriels et contenu pour réseaux sociaux.",
+    "placeholderAbout": "Parlez-nous de vous et pourquoi vous seriez un excellent ambassadeur...",
+    "placeholderContentTypes": "Articles de blogue, vidéos, réseaux sociaux, infolettre, etc.",
+    "tierStarter": "Débutant",
+    "tierBronze": "Bronze",
+    "tierSilver": "Argent",
+    "tierGold": "Or",
+    "tierPlatinum": "Platine",
+    "benefitCommission10": "10% de commission sur toutes les recommandations",
+    "benefitReferralLink": "Lien de parrainage unique",
+    "benefitMonthlyPayouts": "Paiements mensuels",
+    "benefitCommission12": "12% de commission",
+    "benefitFreeSamples": "Échantillons de produits gratuits",
+    "benefitPrioritySupport": "Support prioritaire",
+    "benefitMarketingMaterials": "Matériel marketing",
+    "benefitCommission15": "15% de commission",
+    "benefitExclusiveDiscounts": "Codes de réduction exclusifs",
+    "benefitFeaturedOnSite": "Mis en vedette sur notre site",
+    "benefitEarlyAccess": "Accès anticipé aux nouveaux produits",
+    "benefitCommission18": "18% de commission",
+    "benefitCustomLandingPage": "Page d'atterrissage personnalisée",
+    "benefitCoBrandedMaterials": "Matériel co-marqué",
+    "benefitQuarterlyBonus": "Bonus trimestriel",
+    "benefitCommission20": "20% de commission",
+    "benefitVipEvents": "Accès aux événements VIP",
+    "benefitDedicatedManager": "Gestionnaire de compte dédié",
+    "benefitRevenueShare": "Opportunités de partage de revenus"
   },
   "account": {
     "dashboard": "Mon Portail",
@@ -1121,8 +1296,8 @@
     "saveChanges": "Enregistrer les modifications",
     "oauthPasswordDesc": "Vous vous êtes connecté avec un compte social. La gestion du mot de passe est gérée par votre fournisseur.",
     "passwordMismatch": "Les mots de passe ne correspondent pas",
-    "passwordTooShort": "Le mot de passe doit contenir au moins 12 caractères",
-    "passwordRequirements": "Minimum 12 caractères avec majuscule, minuscule, chiffre et caractère spécial",
+    "passwordTooShort": "Le mot de passe doit contenir au moins 8 caractères",
+    "passwordRequirements": "Minimum 8 caractères avec majuscule, minuscule, chiffre et caractère spécial",
     "updating": "Mise à jour...",
     "addressUpdated": "Adresse enregistrée avec succès",
     "dangerZoneDesc": "Actions irréversibles et destructrices",
@@ -1250,7 +1425,98 @@
     "removeFromWishlist": "Retirer de la liste de souhaits",
     "savedProducts": "Produits sauvegardés",
     "wishlist": "Liste de souhaits",
-    "connectedAs": "Connecté en tant que {email}"
+    "connectedAs": "Connecté en tant que {email}",
+    "aria": {
+      "copyReferralCode": "Copier le code de parrainage"
+    },
+    "wishlistSettings": {
+      "placeholderListName": "Entrez le nom de la liste",
+      "placeholderNewName": "Entrez le nouveau nom"
+    },
+    "ordersSettings": {
+      "placeholderPostalCode": "A1A 1A1"
+    },
+    "returnsSettings": {
+      "placeholderAdditionalInfo": "Veuillez fournir toute information supplémentaire concernant votre demande de retour..."
+    },
+    "settingsForm": {
+      "placeholderName": "Jean Dupont",
+      "placeholderCity": "Montréal",
+      "placeholderProvince": "Québec",
+      "placeholderPostalCode": "H2X 1Y6"
+    },
+    "profileForm": {
+      "placeholderName": "Jean Dupont"
+    },
+    "notificationLabels": {
+      "orderUpdates": "Mises à jour des commandes",
+      "promotions": "Promotions et offres spéciales",
+      "newsletter": "Infolettre",
+      "weeklyDigest": "Résumé hebdomadaire",
+      "priceDropAlerts": "Alertes baisse de prix",
+      "backInStockAlerts": "Alertes retour en stock",
+      "reviewReminders": "Rappels d'avis",
+      "birthdayOffers": "Offres d'anniversaire",
+      "loyaltyUpdates": "Mises à jour du programme de fidélité"
+    },
+    "returnsAndExchanges": "Retours et échanges",
+    "notifications": "Notifications",
+    "notificationsPage": {
+      "title": "Préférences de notification",
+      "subtitle": "Gérez vos préférences de courriel et de communication",
+      "orderNotifications": "Notifications de commande",
+      "orderUpdatesDesc": "Recevez des notifications sur les confirmations de commande, les mises à jour d'expédition et les confirmations de livraison",
+      "marketingCommunications": "Communications marketing",
+      "unsubscribeAll": "Se désabonner de tout",
+      "promotionsDesc": "Soyez informé des offres exclusives, des rabais et des promotions à durée limitée",
+      "newsletterDesc": "Recevez notre infolettre avec les nouveautés produits, conseils santé et nouvelles de l'industrie",
+      "weeklyDigestDesc": "Recevez un résumé hebdomadaire des nouveaux produits, articles et recommandations",
+      "productAlerts": "Alertes produits",
+      "priceDropDesc": "Soyez informé lorsque des produits de votre liste de souhaits sont en solde",
+      "stockAlertDesc": "Recevez des notifications lorsque des produits en rupture de stock redeviennent disponibles",
+      "reviewRemindersDesc": "Recevez des rappels pour évaluer les produits que vous avez achetés",
+      "rewardsAndLoyalty": "Récompenses et fidélité",
+      "birthdayDesc": "Recevez des rabais et récompenses spéciaux pour votre anniversaire",
+      "loyaltyDesc": "Soyez informé des points gagnés, changements de niveau et récompenses de fidélité exclusives",
+      "savePreferences": "Enregistrer les préférences",
+      "aboutPreferences": "À propos de vos préférences",
+      "aboutPreferencesDesc": "Vous pouvez modifier ces paramètres à tout moment. Les notifications de commande sont fortement recommandées pour rester informé de vos achats. Notez que certains courriels transactionnels (réinitialisation de mot de passe, sécurité du compte) seront toujours envoyés indépendamment de ces paramètres."
+    },
+    "returnsPage": {
+      "title": "Retours et échanges",
+      "subtitle": "Gérez vos demandes de retour et RMA",
+      "requestReturn": "Demander un retour",
+      "newReturnRequest": "Nouvelle demande de retour",
+      "selectOrder": "Sélectionner une commande",
+      "selectItemToReturn": "Sélectionner l'article à retourner",
+      "reasonForReturn": "Raison du retour",
+      "additionalDetails": "Détails supplémentaires",
+      "returnPolicy": "Politique de retour",
+      "policyWithin30Days": "Les retours doivent être demandés dans les 30 jours suivant la livraison",
+      "policyUnused": "Les articles doivent être inutilisés et dans leur emballage d'origine",
+      "policyShippingLabel": "Les étiquettes de retour seront fournies après approbation",
+      "policyRefundTime": "Les remboursements sont traités dans les 5 à 7 jours ouvrables après réception",
+      "chooseOrder": "Choisir une commande...",
+      "chooseItem": "Choisir un article...",
+      "selectReason": "Sélectionner une raison...",
+      "submitReturnRequest": "Soumettre la demande de retour",
+      "noReturnRequests": "Aucune demande de retour",
+      "noReturnRequestsDesc": "Vous n'avez soumis aucune demande de retour pour le moment.",
+      "requestAReturn": "Demander un retour",
+      "noEligibleOrders": "Vous n'avez aucune commande admissible pour un retour en ce moment.",
+      "returnsAvailable": "Les retours sont disponibles pour les commandes livrées dans les 30 jours."
+    },
+    "wishlistModals": {
+      "createNewWishlist": "Créer une nouvelle liste de souhaits",
+      "renameWishlist": "Renommer la liste de souhaits",
+      "moveToAnotherList": "Déplacer vers une autre liste",
+      "create": "Créer",
+      "rename": "Renommer",
+      "manageWishlists": "Gérer les listes de souhaits",
+      "chooseWishlist": "Choisir une liste de souhaits",
+      "saved": "Enregistré",
+      "default": "(Par défaut)"
+    }
   },
   "reviews": {
     "customerReviews": "Avis clients",
@@ -1297,7 +1563,13 @@
     "noReviewsYet": "Aucun avis. Soyez le premier à donner votre avis !",
     "storeResponse": "Réponse de BioCycle Peptides+",
     "titlePlaceholder": "Résumez votre expérience",
-    "contentPlaceholder": "Parlez-nous de votre expérience..."
+    "contentPlaceholder": "Parlez-nous de votre expérience...",
+    "helpfulCount": "Utile ({count})",
+    "reportReview": "Signaler",
+    "starRatingLabel": "{star} sur 5 étoiles",
+    "ratingGroup": "Note en étoiles",
+    "fetchError": "Impossible de charger les avis. Veuillez réessayer.",
+    "retryLoad": "Réessayer"
   },
   "qa": {
     "questionsAnswers": "Questions et réponses",
@@ -1424,7 +1696,10 @@
     "sendAnother": "Envoyer un autre message",
     "privacyNote": "En soumettant ce formulaire, vous acceptez notre",
     "privacyPolicy": "politique de confidentialité",
-    "connectionError": "Erreur de connexion. Veuillez réessayer."
+    "connectionError": "Erreur de connexion. Veuillez réessayer.",
+    "placeholderName": "Jean Dupont",
+    "placeholderEmail": "jean@exemple.com",
+    "placeholderOrganization": "Universit\u00e9 McGill"
   },
   "trackOrder": {
     "title": "Suivre votre commande",
@@ -1542,7 +1817,13 @@
     "successTitle": "Bienvenue dans la famille!",
     "successMessage": "Votre code de rabais a été appliqué à votre compte.",
     "yourCode": "Votre code de rabais:",
-    "startShopping": "Commencer mes achats"
+    "startShopping": "Commencer mes achats",
+    "apiWarning": "Impossible de sauvegarder l'inscription sur le serveur. Votre code de rabais est toujours valide.",
+    "dobLabel": "Date de naissance",
+    "dobOptional": "optionnel - pour une surprise d'anniversaire!"
+  },
+  "currency": {
+    "usingOfflineRates": "Utilisation de taux de change hors-ligne. Les prix peuvent différer légèrement."
   },
   "cookies": {
     "title": "Nous utilisons des cookies",
@@ -1550,7 +1831,8 @@
     "accept": "Accepter tout",
     "decline": "Refuser",
     "learnMore": "En savoir plus",
-    "message": "Nous utilisons des cookies pour améliorer votre expérience de navigation et analyser le trafic du site."
+    "message": "Nous utilisons des cookies pour améliorer votre expérience de navigation et analyser le trafic du site.",
+    "cookieDialogDescription": "Ce site utilise des cookies. Vous pouvez accepter ou refuser leur utilisation."
   },
   "trust": {
     "labTested": "Testé en labo",
@@ -2873,7 +3155,8 @@
       "trCtaText": "CTA Texte",
       "trCta2Text": "CTA2 Texte",
       "trStatsJson": "Stats JSON",
-      "ctaPlaceholder": "Voir les produits"
+      "ctaPlaceholder": "Voir les produits",
+      "placeholderTitle": "Peptides de qualité recherche"
     },
     "categories": {
       "title": "Catégories",
@@ -2910,6 +3193,7 @@
       "saving": "Sauvegarde...",
       "save": "Sauvegarder",
       "configSaved": "Configuration sauvegardée!",
+      "configSaveError": "Erreur lors de la sauvegarde de la configuration",
       "basicSettings": "Paramètres de base",
       "pointsPerDollar": "Points par dollar",
       "bronzeLevel": "Niveau Bronze",
@@ -3693,7 +3977,8 @@
       "actionPromoUsed": "Code promo utilisé",
       "actionProductUpdated": "Produit modifié",
       "actionLowStock": "Alerte stock bas",
-      "actionCronJob": "Tâche planifiée"
+      "actionCronJob": "Tâche planifiée",
+      "lastUpdated": "Dernière mise à jour"
     },
     "accounting": {
       "dashboardTitle": "Dashboard Comptable",
@@ -4203,7 +4488,9 @@
       "approvedTooltip": "Approuvée - {date}",
       "autoTranslatedPending": "Auto-traduite, en attente",
       "notTranslated": "Non traduite",
-      "newFormat": "Nouveau format"
+      "newFormat": "Nouveau format",
+      "placeholderReferences": "DOI, PMID, URLs...",
+      "placeholderSku": "BPC157-5MG-VIAL"
     },
     "productConstants": {
       "formatVial2ml": "Vial 2ml",
@@ -5313,7 +5600,11 @@
       "globalStatus": "Statut global",
       "confirmDelete": "Supprimer cette configuration upsell?",
       "saveSuccess": "Configuration upsell enregistree",
-      "deleteSuccess": "Configuration upsell supprimee"
+      "deleteSuccess": "Configuration upsell supprimee",
+      "placeholderBundleTitle": "Achetez plus, économisez plus",
+      "placeholderBundleSubtitle": "Rabais sur volume disponibles",
+      "placeholderSubscriptionTitle": "Abonnez-vous et économisez",
+      "placeholderSubscriptionSubtitle": "Livraison automatique à prix réduit"
     }
   },
   "badges": {
@@ -5342,8 +5633,10 @@
     "goToHomepage": "Aller à l'accueil",
     "browseProducts": "Parcourir les produits",
     "somethingWentWrong": "Une erreur est survenue !",
-    "errorDescription": "Nous nous excusons pour le désagrément. Veuillez réessayer.",
-    "errorId": "ID de l'erreur : {id}"
+    "errorDescription": "Nous nous excusons pour le désagrément. Une erreur inattendue s'est produite. Veuillez réessayer ou contacter notre équipe de support si le problème persiste.",
+    "errorId": "ID de l'erreur : {id}",
+    "contactSupport": "Contacter le support",
+    "retryLoading": "Réessayer"
   },
   "flashSale": {
     "endsIn": "Se termine dans",
@@ -5497,6 +5790,10 @@
       "improved": "IA amelioree",
       "verified": "IA verifiee",
       "human": "Revue humaine"
+    },
+    "aria": {
+      "goodTranslation": "Bonne traduction",
+      "badTranslation": "Mauvaise traduction"
     }
   },
   "validation": {
@@ -5545,7 +5842,8 @@
     },
     "decline": "Non merci, ajouter au panier",
     "reassurance": "Vous pouvez toujours changer d'avis plus tard",
-    "loading": "Chargement des offres..."
+    "loading": "Chargement des offres...",
+    "subscriptionFailed": "Impossible de créer l'abonnement. Article ajouté au prix normal."
   },
   "search": {
     "placeholder": "Rechercher un peptide...",
@@ -5585,7 +5883,20 @@
     "productVideo": "Vidéo du produit"
   },
   "share": {
-    "copyLink": "Copier le lien"
+    "copyLink": "Copier le lien",
+    "share": "Partager",
+    "shareOn": "Partager sur {platform}"
+  },
+  "priceAlert": {
+    "title": "Créer une alerte de prix",
+    "description": "Soyez averti lorsque le prix descend sous votre cible (optionnel)",
+    "descriptionShort": "Soyez averti lors d'une baisse de prix",
+    "targetPrice": "Prix cible (optionnel)",
+    "currentPrice": "Actuel : {price} $",
+    "setAlert": "Créer l'alerte",
+    "setting": "Création...",
+    "stopWatching": "Arrêter de surveiller le prix",
+    "watchPrice": "Surveiller les baisses de prix"
   },
   "ownerDashboard": {
     "title": "Tableau de bord Propriétaire",
@@ -5604,5 +5915,109 @@
   "tts.resume": "Reprendre",
   "tts.stop": "Arrêter",
   "tts.loading": "Chargement de la voix...",
-  "tts.unsupported": "La lecture vocale n'est pas supportée par votre navigateur"
+  "tts.unsupported": "La lecture vocale n'est pas supportée par votre navigateur",
+  "toast": {
+    "wishlist": {
+      "loadFailed": "Impossible de charger les listes de souhaits",
+      "itemsLoadFailed": "Impossible de charger les articles",
+      "enterName": "Veuillez entrer un nom",
+      "created": "Liste de souhaits créée",
+      "createFailed": "Impossible de créer la liste de souhaits",
+      "renamed": "Liste de souhaits renommée",
+      "renameFailed": "Impossible de renommer la liste de souhaits",
+      "cannotDeleteDefault": "Impossible de supprimer la liste par défaut",
+      "deleteFailed": "Impossible de supprimer la liste de souhaits",
+      "removed": "Retiré de la liste de souhaits",
+      "removeFailed": "Impossible de retirer l'article",
+      "itemMoved": "Article déplacé",
+      "moveFailed": "Impossible de déplacer l'article",
+      "added": "Ajouté à la liste de souhaits",
+      "updateFailed": "Impossible de mettre à jour la liste de souhaits"
+    },
+    "priceAlert": {
+      "removed": "Alerte de prix supprimée",
+      "removeFailed": "Impossible de supprimer l'alerte de prix",
+      "targetInvalid": "Le prix cible doit être inférieur au prix actuel",
+      "setFailed": "Impossible de configurer l'alerte de prix",
+      "notifyBelow": "Vous serez notifié lorsque le prix passera sous {amount}$",
+      "notifyAnyDrop": "Vous serez notifié de toute baisse de prix"
+    },
+    "profile": {
+      "updated": "Profil mis à jour avec succès",
+      "updateFailed": "Impossible de mettre à jour le profil",
+      "genericError": "Une erreur est survenue. Veuillez réessayer."
+    },
+    "password": {
+      "mismatch": "Les mots de passe ne correspondent pas",
+      "tooShort": "Le mot de passe doit comporter au moins 12 caractères",
+      "changed": "Mot de passe modifié avec succès",
+      "changeFailed": "Impossible de modifier le mot de passe"
+    },
+    "address": {
+      "saved": "Adresse enregistrée avec succès",
+      "updated": "Adresse mise à jour",
+      "added": "Adresse ajoutée",
+      "deleted": "Adresse supprimée",
+      "defaultUpdated": "Adresse par défaut mise à jour",
+      "updateFailed": "Impossible de mettre à jour l'adresse"
+    },
+    "notifications": {
+      "loadFailed": "Impossible de charger les préférences de notification",
+      "saved": "Préférences de notification enregistrées avec succès",
+      "saveFailed": "Impossible d'enregistrer les préférences de notification",
+      "unsubscribed": "Désabonné de toutes les communications marketing",
+      "unsubscribeFailed": "Impossible de se désabonner"
+    },
+    "orders": {
+      "reorderFailed": "Impossible de recommander",
+      "reorderAllUnavailable": "Tous les articles de cette commande ne sont plus disponibles",
+      "reorderItemsAdded": "article(s) ajouté(s) au panier",
+      "reorderItemsUnavailable": "article(s) plus disponible(s)",
+      "cancelFailed": "Impossible d'annuler la commande",
+      "cancelledWithRefund": "Commande {orderNumber} annulée. Remboursement de {amount}$ sera traité dans les 5 à 10 jours ouvrables.",
+      "cancelledSuccess": "Commande {orderNumber} annulée avec succès.",
+      "addressUpdated": "Adresse de livraison mise à jour avec succès !",
+      "addressUpdateFailed": "Impossible de mettre à jour l'adresse",
+      "exportSuccess": "Commandes exportées avec succès !",
+      "exportFailed": "Impossible d'exporter les commandes"
+    },
+    "giftCard": {
+      "amountInvalid": "Le montant doit être entre 25$ et 1000$",
+      "emailInvalid": "Veuillez entrer une adresse courriel valide",
+      "created": "Carte-cadeau créée avec succès !",
+      "purchaseFailed": "Impossible d'acheter la carte-cadeau",
+      "codeCopied": "Code copié dans le presse-papiers !"
+    },
+    "checkout": {
+      "promoApplied": "Code promo appliqué avec succès",
+      "promoInvalid": "Code promo invalide",
+      "promoFailed": "Impossible de valider le code promo",
+      "giftCardApplied": "Carte-cadeau appliquée : {amount}",
+      "giftCardInvalid": "Carte-cadeau invalide",
+      "giftCardFailed": "Impossible de valider la carte-cadeau",
+      "orderFailed": "Une erreur est survenue lors du passage de votre commande. Veuillez réessayer."
+    },
+    "returns": {
+      "loadFailed": "Impossible de charger les données de retour",
+      "fillRequired": "Veuillez remplir tous les champs obligatoires",
+      "submitFailed": "Impossible de soumettre la demande de retour",
+      "submitted": "Demande de retour soumise avec succès !"
+    },
+    "referrals": {
+      "codeGenerated": "Code de parrainage généré !",
+      "codeGenerateFailed": "Impossible de générer le code",
+      "codeCopied": "Code copié !",
+      "copyFailed": "Impossible de copier le code",
+      "linkCopied": "Lien copié dans le presse-papiers !",
+      "linkCopyFailed": "Impossible de copier le lien"
+    },
+    "admin": {
+      "upsellLoadFailed": "Impossible de charger les configurations d'upsell",
+      "upsellSaveError": "Erreur lors de la sauvegarde de la configuration",
+      "upsellDeleteError": "Erreur lors de la suppression de la configuration"
+    },
+    "error": {
+      "generic": "Une erreur est survenue. Veuillez réessayer."
+    }
+  }
 }

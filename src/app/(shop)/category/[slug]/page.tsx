@@ -1,4 +1,4 @@
-export const dynamic = 'force-dynamic';
+export const revalidate = 3600; // ISR: revalidate every hour
 
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
@@ -11,11 +11,19 @@ interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
+export async function generateStaticParams() {
+  const categories = await prisma.category.findMany({
+    where: { isActive: true },
+    select: { slug: true },
+  });
+  return categories.map((c) => ({ slug: c.slug }));
+}
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const category = await prisma.category.findUnique({
     where: { slug },
-    select: { id: true, name: true, description: true },
+    select: { id: true, name: true, description: true, parent: { select: { name: true } } },
   });
 
   if (!category) {
@@ -25,8 +33,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const locale = await getServerLocale();
   const translated = await withTranslation(category, 'Category', locale);
 
+  const title = category.parent
+    ? `${translated.name} - ${category.parent.name} | BioCycle Peptides`
+    : `${translated.name} | BioCycle Peptides`;
+
   return {
-    title: `${translated.name} | BioCycle Peptides`,
+    title,
     description: translated.description || '',
   };
 }
@@ -35,17 +47,38 @@ export default async function CategoryPage({ params }: PageProps) {
   const { slug } = await params;
   const category = await prisma.category.findUnique({
     where: { slug },
-    select: { id: true, name: true, slug: true, description: true },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      description: true,
+      parentId: true,
+      parent: { select: { id: true, name: true, slug: true } },
+      children: {
+        where: { isActive: true },
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          description: true,
+          imageUrl: true,
+          _count: { select: { products: true } },
+        },
+        orderBy: { sortOrder: 'asc' },
+      },
+    },
   });
 
   if (!category) {
     notFound();
   }
 
-  // Requête Prisma réelle avec produits, formats et images
+  // If parent category, fetch products from ALL children too
+  const categoryIds = [category.id, ...category.children.map(c => c.id)];
+
   const dbProducts = await prisma.product.findMany({
     where: {
-      categoryId: category.id,
+      categoryId: { in: categoryIds },
       isActive: true,
     },
     include: {
@@ -78,7 +111,16 @@ export default async function CategoryPage({ params }: PageProps) {
   const translatedCategory = await withTranslation(category, 'Category', locale);
   const translatedProducts = await withTranslations(dbProducts, 'Product', locale);
 
-  // Mapper vers le format attendu par CategoryPageClient
+  // Translate children categories
+  const translatedChildren = await withTranslations(category.children, 'Category', locale);
+
+  // Translate parent if exists
+  let translatedParent = category.parent;
+  if (category.parent) {
+    translatedParent = await withTranslation(category.parent, 'Category', locale);
+  }
+
+  // Map products
   const products = translatedProducts.map((p) => ({
     id: p.id,
     name: p.name,
@@ -107,6 +149,16 @@ export default async function CategoryPage({ params }: PageProps) {
         name: translatedCategory.name,
         description: translatedCategory.description || '',
         longDescription: translatedCategory.description || '',
+        parentId: category.parentId,
+        parent: translatedParent ? { name: translatedParent.name, slug: translatedParent.slug } : undefined,
+        children: translatedChildren.map(c => ({
+          id: c.id,
+          name: c.name,
+          slug: c.slug,
+          description: c.description,
+          imageUrl: c.imageUrl,
+          productCount: c._count?.products || 0,
+        })),
       }}
       products={products}
     />

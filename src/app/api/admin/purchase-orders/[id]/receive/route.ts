@@ -14,32 +14,13 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { auth } from '@/lib/auth-config';
-import { UserRole } from '@/types';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import { ACCOUNT_CODES } from '@/lib/accounting/types';
 
-async function requireAdmin() {
-  const session = await auth();
-  if (!session?.user) {
-    return { error: NextResponse.json({ error: 'Non autorisé' }, { status: 401 }) };
-  }
-  if (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER) {
-    return { error: NextResponse.json({ error: 'Accès refusé' }, { status: 403 }) };
-  }
-  return { session };
-}
-
 // ─── POST /api/admin/purchase-orders/[id]/receive ───────────────────────────────
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const POST = withAdminGuard(async (request, { session, params }) => {
   try {
-    const authResult = await requireAdmin();
-    if ('error' in authResult && authResult.error) return authResult.error;
-    const { session } = authResult;
-
-    const { id } = await params;
+    const id = params!.id;
     const body = await request.json();
 
     // ─── Load PO with items ─────────────────────────────────────────────
@@ -465,4 +446,4 @@ export async function POST(
       { status: 500 }
     );
   }
-}
+});

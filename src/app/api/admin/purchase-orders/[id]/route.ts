@@ -9,8 +9,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { auth } from '@/lib/auth-config';
-import { UserRole } from '@/types';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 
 // Valid PO statuses and allowed transitions
 const VALID_STATUSES = [
@@ -33,17 +32,6 @@ const STATUS_TRANSITIONS: Record<string, string[]> = {
   CANCELLED: [],      // Terminal state
 };
 
-async function requireAdmin() {
-  const session = await auth();
-  if (!session?.user) {
-    return { error: NextResponse.json({ error: 'Non autorisé' }, { status: 401 }) };
-  }
-  if (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER) {
-    return { error: NextResponse.json({ error: 'Accès refusé' }, { status: 403 }) };
-  }
-  return { session };
-}
-
 // Helper to serialize Decimal fields
 function serializePO(po: Record<string, unknown>) {
   return {
@@ -63,15 +51,9 @@ function serializePO(po: Record<string, unknown>) {
 }
 
 // ─── GET /api/admin/purchase-orders/[id] ────────────────────────────────────────
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const GET = withAdminGuard(async (_request, { session, params }) => {
   try {
-    const authResult = await requireAdmin();
-    if ('error' in authResult && authResult.error) return authResult.error;
-
-    const { id } = await params;
+    const id = params!.id;
 
     const po = await prisma.purchaseOrder.findUnique({
       where: { id },
@@ -205,19 +187,12 @@ export async function GET(
       { status: 500 }
     );
   }
-}
+});
 
 // ─── PATCH /api/admin/purchase-orders/[id] ──────────────────────────────────────
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const PATCH = withAdminGuard(async (request, { session, params }) => {
   try {
-    const authResult = await requireAdmin();
-    if ('error' in authResult && authResult.error) return authResult.error;
-    const { session } = authResult;
-
-    const { id } = await params;
+    const id = params!.id;
     const body = await request.json();
 
     const po = await prisma.purchaseOrder.findUnique({
@@ -381,18 +356,12 @@ export async function PATCH(
       { status: 500 }
     );
   }
-}
+});
 
 // ─── DELETE /api/admin/purchase-orders/[id] ─────────────────────────────────────
-export async function DELETE(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const DELETE = withAdminGuard(async (_request, { session, params }) => {
   try {
-    const authResult = await requireAdmin();
-    if ('error' in authResult && authResult.error) return authResult.error;
-
-    const { id } = await params;
+    const id = params!.id;
 
     const po = await prisma.purchaseOrder.findUnique({
       where: { id },
@@ -432,4 +401,4 @@ export async function DELETE(
       { status: 500 }
     );
   }
-}
+});

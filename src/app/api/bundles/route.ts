@@ -1,25 +1,48 @@
 export const dynamic = 'force-dynamic';
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const bundles = await prisma.bundle.findMany({
+    const { searchParams } = new URL(request.url);
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
+    const limit = Math.min(Math.max(1, parseInt(searchParams.get('limit') || '20', 10)), 100);
+
+    const [bundles, total] = await Promise.all([
+      prisma.bundle.findMany({
       where: { isActive: true },
       include: {
         items: {
           include: {
             product: {
               include: {
-                formats: true,
+                // PERF 90: Only include active formats and select needed fields
+                formats: {
+                  where: { isActive: true },
+                  select: {
+                    id: true,
+                    name: true,
+                    price: true,
+                    comparePrice: true,
+                    imageUrl: true,
+                    formatType: true,
+                    sortOrder: true,
+                    inStock: true,
+                    stockQuantity: true,
+                  },
+                },
               },
             },
           },
         },
       },
       orderBy: { createdAt: 'desc' },
-    });
+      skip: (page - 1) * limit,
+      take: limit,
+    }),
+      prisma.bundle.count({ where: { isActive: true } }),
+    ]);
 
     // Calculate prices for each bundle
     const bundlesWithPrices = bundles.map((bundle) => {
@@ -78,7 +101,15 @@ export async function GET() {
       };
     });
 
-    return NextResponse.json(bundlesWithPrices);
+    return NextResponse.json({
+      bundles: bundlesWithPrices,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
   } catch (error) {
     console.error('Error fetching bundles:', error);
     return NextResponse.json(

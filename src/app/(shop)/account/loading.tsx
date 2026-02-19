@@ -72,9 +72,9 @@ export default function Loading() {
                 <SkeletonText className="h-3 w-24" />
               </div>
             </div>
-            <div className="space-y-2 text-right">
-              <SkeletonText className="h-5 w-16 ml-auto" />
-              <Skeleton className="h-6 w-20 rounded-full ml-auto" />
+            <div className="space-y-2 text-end">
+              <SkeletonText className="h-5 w-16 ms-auto" />
+              <Skeleton className="h-6 w-20 rounded-full ms-auto" />
             </div>
           </div>
         </div>

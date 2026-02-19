@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Share2, Link2, Check } from 'lucide-react';
 import { toast } from 'sonner';
+import { useI18n } from '@/i18n/client';
 
 interface ShareButtonsProps {
   url: string;
@@ -44,6 +45,7 @@ function WhatsAppIcon({ className }: { className?: string }) {
 }
 
 export default function ShareButtons({ url, title, description }: ShareButtonsProps) {
+  const { t } = useI18n();
   const [copied, setCopied] = useState(false);
   const [canNativeShare, setCanNativeShare] = useState(false);
   const [absoluteUrl, setAbsoluteUrl] = useState(url);
@@ -148,10 +150,10 @@ export default function ShareButtons({ url, title, description }: ShareButtonsPr
         <button
           onClick={handleNativeShare}
           className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-neutral-300 bg-white text-neutral-600 hover:border-orange-400 hover:text-orange-600 transition-colors text-sm"
-          aria-label="Share this product"
+          aria-label={t('shop.aria.shareProduct')}
         >
           <Share2 className="w-4 h-4" />
-          <span className="font-medium">Share</span>
+          <span className="font-medium">{t('share.share')}</span>
         </button>
       </div>
     );
@@ -160,9 +162,9 @@ export default function ShareButtons({ url, title, description }: ShareButtonsPr
   // Desktop: show individual share buttons
   return (
     <div className="flex items-center gap-2 flex-wrap">
-      <span className="flex items-center gap-1.5 text-sm text-neutral-500 mr-1">
+      <span className="flex items-center gap-1.5 text-sm text-neutral-500 me-1">
         <Share2 className="w-4 h-4" />
-        Share
+        {t('share.share')}
       </span>
 
       {shareLinks.map((link) => {
@@ -185,8 +187,8 @@ export default function ShareButtons({ url, title, description }: ShareButtonsPr
       {/* Copy Link button */}
       <button
         onClick={handleCopyLink}
-        title="Copy link"
-        aria-label="Copy product link"
+        title={t('shop.share.copyLink')}
+        aria-label={t('shop.aria.copyProductLink')}
         className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 ${
           copied
             ? 'bg-green-500 text-white'

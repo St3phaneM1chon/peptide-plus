@@ -21,26 +21,37 @@ export async function GET() {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Get all orders for stats
-    const allOrders = await db.order.findMany({
-      where: { userId: user.id },
-      orderBy: { createdAt: 'desc' },
-    });
+    // Use efficient aggregate queries instead of fetching all orders
+    const [totalOrders, totalSpentAgg, pendingOrders, lastOrderArr] = await Promise.all([
+      db.order.count({ where: { userId: user.id } }),
+      db.order.aggregate({
+        where: { userId: user.id },
+        _sum: { total: true },
+      }),
+      db.order.count({
+        where: {
+          userId: user.id,
+          status: { in: ['PENDING', 'PROCESSING', 'SHIPPED'] },
+        },
+      }),
+      db.order.findMany({
+        where: { userId: user.id },
+        orderBy: { createdAt: 'desc' },
+        take: 1,
+        select: { id: true, orderNumber: true, createdAt: true, total: true, status: true },
+      }),
+    ]);
 
-    // Calculate summary
-    const totalOrders = allOrders.length;
-    const totalSpent = allOrders.reduce((sum, order) => sum + Number(order.total), 0);
-    const pendingOrders = allOrders.filter(
-      order => order.status === 'PENDING' || order.status === 'PROCESSING' || order.status === 'SHIPPED'
-    ).length;
+    const totalSpent = Number(totalSpentAgg._sum.total || 0);
 
     // Format last order if exists
-    const lastOrder = allOrders[0]
+    const lastOrderData = lastOrderArr[0];
+    const lastOrder = lastOrderData
       ? {
-          id: allOrders[0].orderNumber || allOrders[0].id,
-          date: allOrders[0].createdAt.toISOString().split('T')[0],
-          total: Number(allOrders[0].total),
-          status: allOrders[0].status,
+          id: lastOrderData.orderNumber || lastOrderData.id,
+          date: lastOrderData.createdAt.toISOString().split('T')[0],
+          total: Number(lastOrderData.total),
+          status: lastOrderData.status,
         }
       : undefined;
 

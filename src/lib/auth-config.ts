@@ -23,10 +23,16 @@ type AuthProvider = any;
 // =====================================================
 
 // Providers OAuth (ajoutés seulement si configurés)
-// allowDangerousEmailAccountLinking: permet aux utilisateurs qui se sont inscrits
-// par email/password de lier ensuite un compte OAuth avec le même email
+//
+// SECURITY FIX (BE-SEC-13): allowDangerousEmailAccountLinking
+// Only enabled for TRUSTED providers that verify email ownership:
+//   - Google: We enforce email_verified in signIn callback
+//   - Apple: Apple always verifies email ownership
+// REMOVED from Facebook and Twitter to prevent account takeover:
+//   - Facebook: email_verified is unreliable
+//   - Twitter/X: does not reliably return email at all
 const oauthProviders: AuthProvider[] = [
-  // Google
+  // Google (TRUSTED - email_verified enforced in signIn callback)
   ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
     ? [
         GoogleProvider({
@@ -44,7 +50,7 @@ const oauthProviders: AuthProvider[] = [
       ]
     : []),
 
-  // Apple
+  // Apple (TRUSTED - Apple always verifies email ownership)
   ...(process.env.APPLE_CLIENT_ID && process.env.APPLE_CLIENT_SECRET
     ? [
         AppleProvider({
@@ -55,13 +61,13 @@ const oauthProviders: AuthProvider[] = [
       ]
     : []),
 
-  // Facebook
+  // Facebook (UNTRUSTED - no email account linking to prevent takeover)
   ...(process.env.FACEBOOK_CLIENT_ID && process.env.FACEBOOK_CLIENT_SECRET
     ? [
         FacebookProvider({
           clientId: process.env.FACEBOOK_CLIENT_ID,
           clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
-          allowDangerousEmailAccountLinking: true,
+          // SECURITY: allowDangerousEmailAccountLinking removed - Facebook email_verified is unreliable
         }),
       ]
     : []),
@@ -73,7 +79,7 @@ const oauthProviders: AuthProvider[] = [
         TwitterProvider({
           clientId: process.env.TWITTER_CLIENT_ID,
           clientSecret: process.env.TWITTER_CLIENT_SECRET,
-          allowDangerousEmailAccountLinking: true,
+          // SECURITY: allowDangerousEmailAccountLinking removed - Twitter email is unreliable
           profile({ data }) {
             return {
               id: data.id,

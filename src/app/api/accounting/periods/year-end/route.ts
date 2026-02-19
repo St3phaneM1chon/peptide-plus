@@ -33,6 +33,15 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error running year-end close:', error);
-    return NextResponse.json({ error: 'Une erreur est survenue' }, { status: 400 });
+    // #86 Error Recovery: Distinguish 400 (validation) from 500 (server) errors
+    const message = error instanceof Error ? error.message : 'Une erreur est survenue';
+    const isValidationError = message.includes('not locked') ||
+      message.includes('not found') ||
+      message.includes('Only') ||
+      message.includes('Cannot close');
+    return NextResponse.json(
+      { error: message },
+      { status: isValidationError ? 400 : 500 }
+    );
   }
 }

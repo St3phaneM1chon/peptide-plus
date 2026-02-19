@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { useI18n } from '@/i18n/client';
 
 interface PriceDropButtonProps {
   productId: string;
@@ -20,6 +21,7 @@ export default function PriceDropButton({
 }: PriceDropButtonProps) {
   const { data: session } = useSession();
   const router = useRouter();
+  const { t } = useI18n();
   const [isWatching, setIsWatching] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [showPopover, setShowPopover] = useState(false);
@@ -86,13 +88,13 @@ export default function PriceDropButton({
         if (res.ok) {
           setIsWatching(false);
           setShowPopover(false);
-          toast.success('Price alert removed');
+          toast.success(t('toast.priceAlert.removed'));
         } else {
-          toast.error('Failed to remove price alert');
+          toast.error(t('toast.priceAlert.removeFailed'));
         }
       } catch (error) {
         console.error('Error removing price watch:', error);
-        toast.error('Failed to remove price alert');
+        toast.error(t('toast.priceAlert.removeFailed'));
       } finally {
         setIsLoading(false);
       }
@@ -114,7 +116,7 @@ export default function PriceDropButton({
 
       // Validate target price
       if (target !== null && (target <= 0 || target >= currentPrice)) {
-        toast.error('Target price must be less than current price');
+        toast.error(t('toast.priceAlert.targetInvalid'));
         setIsLoading(false);
         return;
       }
@@ -134,17 +136,17 @@ export default function PriceDropButton({
         setTargetPrice('');
 
         if (target) {
-          toast.success(`You'll be notified when price drops below $${target.toFixed(2)}`);
+          toast.success(t('toast.priceAlert.notifyBelow', { amount: target.toFixed(2) }));
         } else {
-          toast.success('You\'ll be notified of any price drops');
+          toast.success(t('toast.priceAlert.notifyAnyDrop'));
         }
       } else {
         const data = await res.json();
-        toast.error(data.error || 'Failed to set price alert');
+        toast.error(data.error || t('toast.priceAlert.setFailed'));
       }
     } catch (error) {
       console.error('Error setting price watch:', error);
-      toast.error('Failed to set price alert');
+      toast.error(t('toast.priceAlert.setFailed'));
     } finally {
       setIsLoading(false);
     }
@@ -186,7 +188,7 @@ export default function PriceDropButton({
         {showPopover && !isWatching && (
           <div
             ref={popoverRef}
-            className="absolute top-full left-0 mt-2 z-50 bg-white rounded-lg shadow-xl border border-neutral-200 p-4 w-72"
+            className="absolute top-full start-0 mt-2 z-50 bg-white rounded-lg shadow-xl border border-neutral-200 p-4 w-72"
           >
             <h4 className="font-semibold text-sm mb-2">Set Price Alert</h4>
             <p className="text-xs text-neutral-500 mb-3">
@@ -198,7 +200,7 @@ export default function PriceDropButton({
                   Target Price (optional)
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 text-sm">$</span>
+                  <span className="absolute start-3 top-1/2 -translate-y-1/2 text-neutral-400 text-sm">$</span>
                   <input
                     type="number"
                     step="0.01"
@@ -207,7 +209,7 @@ export default function PriceDropButton({
                     value={targetPrice}
                     onChange={(e) => setTargetPrice(e.target.value)}
                     placeholder={(currentPrice * 0.9).toFixed(2)}
-                    className="w-full pl-7 pr-3 py-2 border border-neutral-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    className="w-full ps-7 pe-3 py-2 border border-neutral-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   />
                 </div>
                 <p className="text-xs text-neutral-400 mt-1">
@@ -265,7 +267,7 @@ export default function PriceDropButton({
       {showPopover && !isWatching && (
         <div
           ref={popoverRef}
-          className="absolute top-full right-0 mt-2 z-50 bg-white rounded-lg shadow-xl border border-neutral-200 p-4 w-64"
+          className="absolute top-full end-0 mt-2 z-50 bg-white rounded-lg shadow-xl border border-neutral-200 p-4 w-64"
         >
           <h4 className="font-semibold text-sm mb-2">Set Price Alert</h4>
           <p className="text-xs text-neutral-500 mb-3">
@@ -277,7 +279,7 @@ export default function PriceDropButton({
                 Target Price (optional)
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 text-sm">$</span>
+                <span className="absolute start-3 top-1/2 -translate-y-1/2 text-neutral-400 text-sm">$</span>
                 <input
                   type="number"
                   step="0.01"
@@ -286,7 +288,7 @@ export default function PriceDropButton({
                   value={targetPrice}
                   onChange={(e) => setTargetPrice(e.target.value)}
                   placeholder={(currentPrice * 0.9).toFixed(2)}
-                  className="w-full pl-7 pr-3 py-2 border border-neutral-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full ps-7 pe-3 py-2 border border-neutral-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 />
               </div>
               <p className="text-xs text-neutral-400 mt-1">

@@ -1,20 +1,15 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth-config';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 
 /**
  * GET /api/admin/payment-methods
  * List all payment method configurations
  */
-export async function GET() {
+export const GET = withAdminGuard(async (_request, { session }) => {
   try {
-    const session = await auth();
-    if (!session?.user || session.user.role !== 'OWNER') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const configs = await prisma.paymentMethodConfig.findMany({
       orderBy: [
         { countryCode: 'asc' },
@@ -43,19 +38,14 @@ export async function GET() {
       { status: 500 }
     );
   }
-}
+});
 
 /**
  * POST /api/admin/payment-methods
  * Create or update a payment method configuration
  */
-export async function POST(request: NextRequest) {
+export const POST = withAdminGuard(async (request, { session }) => {
   try {
-    const session = await auth();
-    if (!session?.user || session.user.role !== 'OWNER') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const body = await request.json();
     const {
       countryCode,
@@ -139,19 +129,14 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
 /**
  * DELETE /api/admin/payment-methods
  * Delete a payment method configuration
  */
-export async function DELETE(request: NextRequest) {
+export const DELETE = withAdminGuard(async (request, { session }) => {
   try {
-    const session = await auth();
-    if (!session?.user || session.user.role !== 'OWNER') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
@@ -174,4 +159,4 @@ export async function DELETE(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

@@ -260,6 +260,8 @@ export function createSecurityLog(
 
 // ============================================
 // RATE LIMITING
+// Prefer rate-limiter.ts for rate limiting in API routes.
+// This is a basic in-memory implementation kept for simple utility use.
 // ============================================
 
 interface RateLimitEntry {
@@ -310,6 +312,8 @@ export function checkRateLimit(
 
 // ============================================
 // TOKENS CSRF
+// Prefer csrf-middleware.ts for CSRF protection in API routes.
+// This is a basic in-memory implementation kept for simple utility use.
 // ============================================
 
 const csrfTokens = new Map<string, number>();

@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 
 export default function CookieConsent() {
-  const { t } = useTranslations();
+  const { t } = useI18n();
   const [isVisible, setIsVisible] = useState(false);
+  const acceptButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     const consent = localStorage.getItem('cookie_consent');
@@ -17,6 +18,13 @@ export default function CookieConsent() {
     }
     return undefined;
   }, []);
+
+  // Auto-focus Accept button when dialog becomes visible
+  useEffect(() => {
+    if (isVisible && acceptButtonRef.current) {
+      acceptButtonRef.current.focus();
+    }
+  }, [isVisible]);
 
   const handleAccept = () => {
     localStorage.setItem('cookie_consent', 'accepted');
@@ -31,7 +39,12 @@ export default function CookieConsent() {
   if (!isVisible) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 p-4 bg-white border-t border-gray-200 shadow-lg md:p-6">
+    <div
+      role="alertdialog"
+      aria-describedby="cookie-consent-description"
+      aria-label={t('cookies.title')}
+      className="fixed bottom-0 left-0 right-0 z-50 p-4 bg-white border-t border-gray-200 shadow-lg md:p-6"
+    >
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex-1">
@@ -41,7 +54,7 @@ export default function CookieConsent() {
                 <h3 className="font-semibold text-gray-900 mb-1">
                   {t('cookies.title') || 'We use cookies'}
                 </h3>
-                <p className="text-sm text-gray-600">
+                <p id="cookie-consent-description" className="text-sm text-gray-600">
                   {t('cookies.message') || 'We use cookies to enhance your browsing experience, serve personalized content, and analyze our traffic. By clicking "Accept", you consent to our use of cookies.'}
                   {' '}
                   <Link href="/mentions-legales/cookies" className="text-orange-600 hover:underline">
@@ -52,7 +65,7 @@ export default function CookieConsent() {
             </div>
           </div>
           
-          <div className="flex items-center gap-3 ml-9 md:ml-0">
+          <div className="flex items-center gap-3 ms-9 md:ms-0">
             <button
               onClick={handleDecline}
               className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 transition-colors"
@@ -60,6 +73,7 @@ export default function CookieConsent() {
               {t('cookies.decline') || 'Decline'}
             </button>
             <button
+              ref={acceptButtonRef}
               onClick={handleAccept}
               className="px-6 py-2 bg-orange-500 text-white text-sm font-semibold rounded-lg hover:bg-orange-600 transition-colors"
             >

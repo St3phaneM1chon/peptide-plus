@@ -253,13 +253,13 @@ export default function RecurringEntriesPage() {
         <table className="w-full">
           <thead className="bg-neutral-900/50">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-medium text-neutral-400 uppercase">{t('admin.recurringEntries.name')}</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-neutral-400 uppercase">{t('admin.recurringEntries.frequency')}</th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-neutral-400 uppercase">{t('admin.recurringEntries.amount')}</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-neutral-400 uppercase">{t('admin.recurringEntries.next')}</th>
+              <th className="px-4 py-3 text-start text-xs font-medium text-neutral-400 uppercase">{t('admin.recurringEntries.name')}</th>
+              <th className="px-4 py-3 text-start text-xs font-medium text-neutral-400 uppercase">{t('admin.recurringEntries.frequency')}</th>
+              <th className="px-4 py-3 text-end text-xs font-medium text-neutral-400 uppercase">{t('admin.recurringEntries.amount')}</th>
+              <th className="px-4 py-3 text-start text-xs font-medium text-neutral-400 uppercase">{t('admin.recurringEntries.next')}</th>
               <th className="px-4 py-3 text-center text-xs font-medium text-neutral-400 uppercase">{t('admin.recurringEntries.autoPost')}</th>
               <th className="px-4 py-3 text-center text-xs font-medium text-neutral-400 uppercase">{t('admin.recurringEntries.status')}</th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-neutral-400 uppercase">{t('admin.recurringEntries.actions')}</th>
+              <th className="px-4 py-3 text-end text-xs font-medium text-neutral-400 uppercase">{t('admin.recurringEntries.actions')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-neutral-700">
@@ -274,10 +274,10 @@ export default function RecurringEntriesPage() {
                     {frequencyLabels[entry.frequency]}
                   </span>
                   {entry.dayOfMonth && (
-                    <span className="ml-1 text-sm text-neutral-500">{t('admin.recurringEntries.theDay', { day: entry.dayOfMonth })}</span>
+                    <span className="ms-1 text-sm text-neutral-500">{t('admin.recurringEntries.theDay', { day: entry.dayOfMonth })}</span>
                   )}
                 </td>
-                <td className="px-4 py-3 text-right font-medium text-white">
+                <td className="px-4 py-3 text-end font-medium text-white">
                   {entry.amount.toLocaleString(locale, { style: 'currency', currency: 'CAD' })}
                 </td>
                 <td className="px-4 py-3">
@@ -305,7 +305,7 @@ export default function RecurringEntriesPage() {
                     {entry.isActive ? t('admin.recurringEntries.active') : t('admin.recurringEntries.inactive')}
                   </button>
                 </td>
-                <td className="px-4 py-3 text-right">
+                <td className="px-4 py-3 text-end">
                   <div className="flex justify-end gap-2">
                     <button
                       onClick={() => setShowPreview(entry)}

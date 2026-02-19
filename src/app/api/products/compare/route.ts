@@ -51,27 +51,34 @@ export async function GET(request: NextRequest) {
           where: { isActive: true },
           orderBy: { sortOrder: 'asc' },
         },
-        reviews: {
-          select: {
-            id: true,
-            rating: true,
-          },
-        },
       },
     });
+
+    // Use aggregate for efficient average rating calculation
+    const reviewStats = await prisma.review.groupBy({
+      by: ['productId'],
+      where: {
+        productId: { in: products.map(p => p.id) },
+        isApproved: true,
+        isPublished: true,
+      },
+      _avg: { rating: true },
+      _count: { rating: true },
+    });
+    const reviewStatsMap = new Map(
+      reviewStats.map(s => [s.productId, { avg: s._avg.rating || 0, count: s._count.rating }])
+    );
 
     // Apply translations if needed
     if (isValidLocale(locale) && locale !== DB_SOURCE_LOCALE) {
       products = await withTranslations(products, 'Product', locale);
     }
 
-    // Calculate review stats for each product
+    // Map review stats to each product
     const productsWithStats = products.map((product) => {
-      const reviews = product.reviews || [];
-      const totalRatings = reviews.length;
-      const avgRating = totalRatings > 0
-        ? reviews.reduce((sum, r) => sum + r.rating, 0) / totalRatings
-        : 0;
+      const stats = reviewStatsMap.get(product.id);
+      const avgRating = stats?.avg || 0;
+      const totalRatings = stats?.count || 0;
 
       return {
         id: product.id,

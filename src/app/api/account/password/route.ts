@@ -1,17 +1,39 @@
 export const dynamic = 'force-dynamic';
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { db } from '@/lib/db';
 import { checkPasswordHistory, addToPasswordHistory } from '@/lib/password-history';
+import { validateCsrf } from '@/lib/csrf-middleware';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import bcrypt from 'bcryptjs';
 
-export async function PUT(request: Request) {
+export async function PUT(request: NextRequest) {
   try {
+    // SECURITY (BE-SEC-15): CSRF protection for mutation endpoint
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const session = await auth();
 
     if (!session?.user?.email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // SEC-27: Rate limit password changes - 5 per user per hour
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip')
+      || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/account/password', session.user.id);
+    if (!rl.success) {
+      const res = NextResponse.json(
+        { error: rl.error!.message },
+        { status: 429 }
+      );
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
     }
 
     const { currentPassword, newPassword } = await request.json();

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 
 interface StickyAddToCartProps {
   productName: string;
@@ -25,7 +25,7 @@ export default function StickyAddToCart({
   addedToCart,
   targetRef,
 }: StickyAddToCartProps) {
-  const { t } = useTranslations();
+  const { t } = useI18n();
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -55,10 +55,12 @@ export default function StickyAddToCart({
         isVisible ? 'translate-y-0' : 'translate-y-full'
       }`}
       role="region"
-      aria-label="Sticky add to cart bar"
+      aria-label={t('shop.aria.stickyAddToCartBar')}
       aria-hidden={!isVisible}
     >
-      <div className="bg-white/95 backdrop-blur-md border-t border-neutral-200 shadow-2xl">
+      <div className={`bg-white/95 backdrop-blur-md border-t border-neutral-200 transition-shadow duration-500 ${
+        isVisible ? 'shadow-2xl' : 'shadow-none'
+      }`}>
         <div className="px-4 py-3 flex items-center gap-3">
           {/* Product Info */}
           <div className="flex-1 min-w-0">
@@ -71,7 +73,7 @@ export default function StickyAddToCart({
           </div>
 
           {/* Price */}
-          <div className="text-right">
+          <div className="text-end">
             <p className="text-lg font-bold text-orange-600">
               {formattedPrice}
             </p>

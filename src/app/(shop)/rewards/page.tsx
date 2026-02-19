@@ -3,13 +3,14 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
+import { toast } from 'sonner';
 import Breadcrumbs from '@/components/ui/Breadcrumbs';
 import { useLoyalty, LOYALTY_TIERS, LOYALTY_REWARDS, LOYALTY_CONFIG } from '@/contexts/LoyaltyContext';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 
 export default function RewardsPage() {
   const { data: session } = useSession();
-  const { t } = useTranslations();
+  const { t } = useI18n();
   const {
     points,
     lifetimePoints,
@@ -36,7 +37,7 @@ export default function RewardsPage() {
     await new Promise(resolve => setTimeout(resolve, 800));
     setRedeemingId(null);
     if (success) {
-      alert('Reward redeemed successfully! It will be applied to your next order.');
+      toast.success(t('rewards.redeemSuccess') || 'Reward redeemed successfully! It will be applied to your next order.');
     }
   };
 
@@ -85,7 +86,7 @@ export default function RewardsPage() {
               )}
             </div>
             
-            <div className="text-center md:text-right">
+            <div className="text-center md:text-end">
               <p className="text-white/80 text-sm">{t('rewards.availablePoints') || 'Available Points'}</p>
               <p className="text-5xl font-bold">{points.toLocaleString()}</p>
               <p className="text-white/80 text-sm mt-1">

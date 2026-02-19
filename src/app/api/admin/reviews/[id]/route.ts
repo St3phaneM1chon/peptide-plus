@@ -6,33 +6,21 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth-config';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
-import { UserRole } from '@/types';
+import { apiSuccess, apiError, apiNoContent } from '@/lib/api-response';
+import { ErrorCode } from '@/lib/error-codes';
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const PATCH = withAdminGuard(async (request: NextRequest, { session, params }) => {
   try {
-    const session = await auth();
-
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
-    }
-
-    if (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER) {
-      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
-    }
-
-    const { id } = await params;
+    const id = params!.id;
     const body = await request.json();
     const { status, reply } = body;
 
     // Check review exists
     const existing = await prisma.review.findUnique({ where: { id } });
     if (!existing) {
-      return NextResponse.json({ error: 'Avis introuvable' }, { status: 404 });
+      return apiError('Avis introuvable', ErrorCode.NOT_FOUND, { request });
     }
 
     // Build update data
@@ -56,47 +44,30 @@ export async function PATCH(
       data: updateData,
     });
 
-    return NextResponse.json({ review: updated });
+    return apiSuccess({ review: updated }, { request });
   } catch (error) {
     console.error('Error updating review:', error);
-    return NextResponse.json(
-      { error: 'Erreur lors de la mise à jour de l\'avis' },
-      { status: 500 }
-    );
+    return apiError('Erreur lors de la mise à jour de l\'avis', ErrorCode.INTERNAL_ERROR, { request });
   }
-}
+});
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+// Status codes: 204 No Content, 404 Not Found, 500 Internal Error
+export const DELETE = withAdminGuard(async (_request: NextRequest, { session, params }) => {
   try {
-    const session = await auth();
-
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
-    }
-
-    if (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER) {
-      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
-    }
-
-    const { id } = await params;
+    const id = params!.id;
 
     // Check review exists
     const existing = await prisma.review.findUnique({ where: { id } });
     if (!existing) {
-      return NextResponse.json({ error: 'Avis introuvable' }, { status: 404 });
+      return apiError('Avis introuvable', ErrorCode.NOT_FOUND);
     }
 
     await prisma.review.delete({ where: { id } });
 
-    return NextResponse.json({ success: true });
+    // Item 2: HTTP 204 No Content for DELETE operations
+    return apiNoContent();
   } catch (error) {
     console.error('Error deleting review:', error);
-    return NextResponse.json(
-      { error: 'Erreur lors de la suppression de l\'avis' },
-      { status: 500 }
-    );
+    return apiError('Erreur lors de la suppression de l\'avis', ErrorCode.INTERNAL_ERROR);
   }
-}
+});

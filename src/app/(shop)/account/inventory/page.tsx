@@ -9,7 +9,7 @@ import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 
 // Types
 interface OrderItem {
@@ -68,8 +68,8 @@ type SortBy = 'name' | 'quantity' | 'recent' | 'spent';
 export default function InventoryPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const { t } = useTranslations();
-  
+  const { t, locale } = useI18n();
+
   // State
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -309,7 +309,7 @@ export default function InventoryPage() {
         f.formatName,
         f.totalQuantity,
         f.totalSpent.toFixed(2),
-        new Date(f.lastOrderDate).toLocaleDateString('fr-CA'),
+        new Date(f.lastOrderDate).toLocaleDateString(locale),
         p.stockStatus,
         p.notes.replace(/,/g, ';'),
       ])
@@ -423,9 +423,9 @@ export default function InventoryPage() {
                   placeholder={t('account.inventory.searchPlaceholder')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  className="w-full ps-10 pe-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                 />
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
+                <span className="absolute start-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
               </div>
             </div>
 
@@ -531,9 +531,9 @@ export default function InventoryPage() {
               <table className="w-full">
                 <thead>
                   <tr className="bg-gray-50 border-b border-gray-200">
-                    <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase">{t('account.inventory.tableProduct')}</th>
-                    <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase">{t('account.inventory.tableCategory')}</th>
-                    <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase">{t('account.inventory.tableFormats')}</th>
+                    <th className="text-start py-3 px-4 text-xs font-semibold text-gray-500 uppercase">{t('account.inventory.tableProduct')}</th>
+                    <th className="text-start py-3 px-4 text-xs font-semibold text-gray-500 uppercase">{t('account.inventory.tableCategory')}</th>
+                    <th className="text-start py-3 px-4 text-xs font-semibold text-gray-500 uppercase">{t('account.inventory.tableFormats')}</th>
                     <th className="text-center py-3 px-4 text-xs font-semibold text-gray-500 uppercase">{t('account.inventory.tableTotalQty')}</th>
                     <th className="text-center py-3 px-4 text-xs font-semibold text-gray-500 uppercase">{t('account.inventory.tableTotal')}</th>
                     <th className="text-center py-3 px-4 text-xs font-semibold text-gray-500 uppercase">{t('account.inventory.tableLastOrder')}</th>
@@ -679,7 +679,7 @@ function ProductCard({
               <StockBadge status={product.stockStatus} t={t} />
             </button>
             {showStockMenu && (
-              <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 py-1 min-w-[120px]">
+              <div className="absolute end-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 py-1 min-w-[120px]">
                 {(['full', 'low', 'empty', 'unknown'] as const).map(status => (
                   <button
                     key={status}
@@ -687,7 +687,7 @@ function ProductCard({
                       onUpdateStock(product.productId, status);
                       setShowStockMenu(false);
                     }}
-                    className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50"
+                    className="w-full px-3 py-2 text-start text-sm hover:bg-gray-50"
                   >
                     <StockBadge status={status} t={t} />
                   </button>
@@ -705,7 +705,7 @@ function ProductCard({
           {product.formats.map(f => (
             <div key={f.formatName} className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-sm">
               <span className="font-medium">{f.formatName}</span>
-              <span className="text-gray-500 ml-1">×{f.totalQuantity}</span>
+              <span className="text-gray-500 ms-1">×{f.totalQuantity}</span>
             </div>
           ))}
         </div>
@@ -857,7 +857,7 @@ function ProductDetailModal({
                         <p className="font-medium text-gray-900">{f.formatName}</p>
                         <p className="text-sm text-gray-500">{f.orderCount} {t('account.inventory.orderCount', { count: f.orderCount })}</p>
                       </div>
-                      <div className="text-right">
+                      <div className="text-end">
                         <p className="font-semibold text-gray-900">{f.totalQuantity} {t('account.inventory.units')}</p>
                         <p className="text-sm text-orange-600">${f.totalSpent.toFixed(2)}</p>
                       </div>
@@ -919,7 +919,7 @@ function ProductDetailModal({
                           <p className="font-medium text-gray-900">{order.orderNumber}</p>
                           <p className="text-sm text-gray-500">{formatDate(order.date)}</p>
                         </div>
-                        <div className="text-right">
+                        <div className="text-end">
                           <p className="font-semibold text-gray-900">×{order.quantity}</p>
                           <p className="text-sm text-orange-600">${(order.quantity * order.price).toFixed(2)}</p>
                         </div>
@@ -968,7 +968,7 @@ function detectCategory(productName: string): string {
 }
 
 function formatDate(dateString: string): string {
-  return new Date(dateString).toLocaleDateString('fr-CA', {
+  return new Date(dateString).toLocaleDateString(locale, {
     day: 'numeric',
     month: 'short',
     year: 'numeric',

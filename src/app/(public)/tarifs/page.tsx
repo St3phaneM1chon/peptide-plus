@@ -1,15 +1,13 @@
 'use client';
-
-export const dynamic = 'force-dynamic';
 /**
  * PAGE TARIFS
  */
 
 import Link from 'next/link';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 
 export default function PricingPage() {
-  const { t } = useTranslations();
+  const { t } = useI18n();
 
   const individualPlans = [
     {

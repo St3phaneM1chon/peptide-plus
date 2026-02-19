@@ -19,25 +19,32 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { sendEmail, priceDropEmail } from '@/lib/email';
 import { logger } from '@/lib/logger';
+import { withJobLock } from '@/lib/cron-lock';
 
 const BATCH_SIZE = 10;
 
 export async function GET(request: NextRequest) {
-  const startTime = Date.now();
+  // Verify cron secret (fail-closed)
+  const authHeader = request.headers.get('authorization');
+  const cronSecret = process.env.CRON_SECRET;
 
-  try {
-    // Verify cron secret (fail-closed)
-    const authHeader = request.headers.get('authorization');
-    const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
-    if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+  return withJobLock('price-drop-alerts', async () => {
+    const startTime = Date.now();
 
-    // Find all active (not yet notified) price watches
+    try {
+      // PERF 92: Only fetch watches where the product is active, avoiding processing
+      // inactive products. The price comparison is done in JS below since Prisma
+      // doesn't support cross-field comparisons (currentPrice < originalPrice) in where.
     const priceWatches = await prisma.priceWatch.findMany({
       where: {
         notified: false,
+        product: {
+          isActive: true,
+        },
       },
       include: {
         user: {
@@ -248,20 +255,21 @@ export async function GET(request: NextRequest) {
       durationMs: duration,
       results,
     });
-  } catch (error) {
-    logger.error('Price drop alerts cron: job error', {
-      error: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined,
-      durationMs: Date.now() - startTime,
-    });
-    return NextResponse.json(
-      {
-        error: 'Internal server error',
+    } catch (error) {
+      logger.error('Price drop alerts cron: job error', {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
         durationMs: Date.now() - startTime,
-      },
-      { status: 500 }
-    );
-  }
+      });
+      return NextResponse.json(
+        {
+          error: 'Internal server error',
+          durationMs: Date.now() - startTime,
+        },
+        { status: 500 }
+      );
+    }
+  });
 }
 
 // Allow POST for manual testing

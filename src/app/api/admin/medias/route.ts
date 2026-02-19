@@ -8,21 +8,61 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { auth } from '@/lib/auth-config';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
 import { randomUUID } from 'crypto';
 
 const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads');
 
-// GET /api/admin/medias - List media files
-export async function GET(request: NextRequest) {
-  try {
-    const session = await auth();
-    if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+// SECURITY FIX (BE-SEC-12): Allowed MIME types with their magic byte signatures
+// Validates that file content actually matches the declared MIME type
+const ALLOWED_MIME_SIGNATURES: Record<string, { bytes: number[]; offset?: number }[]> = {
+  'image/jpeg': [{ bytes: [0xFF, 0xD8, 0xFF] }],
+  'image/png': [{ bytes: [0x89, 0x50, 0x4E, 0x47] }],
+  'image/gif': [{ bytes: [0x47, 0x49, 0x46] }],
+  'image/webp': [{ bytes: [0x52, 0x49, 0x46, 0x46] }], // RIFF header
+  'application/pdf': [{ bytes: [0x25, 0x50, 0x44, 0x46] }], // %PDF
+  'image/svg+xml': [], // SVGs are text-based, validated separately
+};
 
+// Blocked extensions that could be dangerous even with correct MIME
+const BLOCKED_EXTENSIONS = ['.exe', '.bat', '.cmd', '.sh', '.ps1', '.php', '.jsp', '.asp', '.aspx', '.cgi', '.pl', '.py', '.rb', '.js', '.html', '.htm', '.svg'];
+
+/**
+ * Validate that file content magic bytes match the declared MIME type.
+ * Returns true if valid, false if content doesn't match MIME.
+ */
+function validateMagicBytes(buffer: Buffer, declaredMime: string): boolean {
+  const signatures = ALLOWED_MIME_SIGNATURES[declaredMime];
+
+  // If MIME type is not in our allowed list, reject
+  if (!signatures) return false;
+
+  // SVG files are XML text - skip magic byte check but they are blocked by extension check
+  if (declaredMime === 'image/svg+xml') return false; // Block SVG uploads (XSS risk)
+
+  // Check if any signature matches
+  for (const sig of signatures) {
+    const offset = sig.offset || 0;
+    if (buffer.length < offset + sig.bytes.length) continue;
+
+    let matches = true;
+    for (let i = 0; i < sig.bytes.length; i++) {
+      if (buffer[offset + i] !== sig.bytes[i]) {
+        matches = false;
+        break;
+      }
+    }
+    if (matches) return true;
+  }
+
+  return false;
+}
+
+// GET /api/admin/medias - List media files
+export const GET = withAdminGuard(async (request, { session }) => {
+  try {
     const { searchParams } = new URL(request.url);
     const folder = searchParams.get('folder');
     const mimeType = searchParams.get('mimeType');
@@ -68,16 +108,11 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
 // POST /api/admin/medias - Upload media file(s) via FormData
-export async function POST(request: NextRequest) {
+export const POST = withAdminGuard(async (request, { session }) => {
   try {
-    const session = await auth();
-    if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const formData = await request.formData();
     const files = formData.getAll('files') as File[];
     const folder = (formData.get('folder') as string) || 'general';
@@ -108,14 +143,32 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      // SECURITY FIX (BE-SEC-12): Block dangerous file extensions
+      const ext = path.extname(file.name).toLowerCase();
+      if (BLOCKED_EXTENSIONS.includes(ext)) {
+        return NextResponse.json(
+          { error: `File extension ${ext} is not allowed` },
+          { status: 400 }
+        );
+      }
+
+      // Read file content into buffer
+      const bytes = await file.arrayBuffer();
+      const buffer = Buffer.from(bytes);
+
+      // SECURITY FIX (BE-SEC-12): Validate magic bytes match declared MIME type
+      if (!validateMagicBytes(buffer, file.type)) {
+        return NextResponse.json(
+          { error: `File "${file.name}" content does not match declared type (${file.type}). Only JPEG, PNG, GIF, WebP, and PDF are allowed.` },
+          { status: 400 }
+        );
+      }
+
       // Generate unique filename
-      const ext = path.extname(file.name);
       const uniqueName = `${randomUUID()}${ext}`;
       const filePath = path.join(folderPath, uniqueName);
 
       // Write file to disk
-      const bytes = await file.arrayBuffer();
-      const buffer = Buffer.from(bytes);
       await writeFile(filePath, buffer);
 
       // Build public URL
@@ -149,4 +202,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

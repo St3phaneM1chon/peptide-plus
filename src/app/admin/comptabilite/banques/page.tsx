@@ -231,7 +231,7 @@ export default function BanquesPage() {
             <p className="text-4xl font-bold mt-1">{totalBalance.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}</p>
             <p className="text-emerald-200 text-sm mt-2">{accounts.length} {t('admin.bankAccounts.activeAccounts')}</p>
           </div>
-          <div className="text-right">
+          <div className="text-end">
             <p className="text-emerald-100 text-sm">{t('admin.bankAccounts.pendingTransactions')}</p>
             <p className="text-2xl font-bold">{pendingReconciliation}</p>
             <p className="text-emerald-200 text-sm">{t('admin.bankAccounts.toReconcile')}</p>
@@ -291,10 +291,10 @@ export default function BanquesPage() {
         <table className="w-full">
           <thead className="bg-slate-50">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.bankAccounts.dateCol')}</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.bankAccounts.descriptionCol')}</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.bankAccounts.categoryCol')}</th>
-              <th className="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase">{t('admin.bankAccounts.amountCol')}</th>
+              <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.bankAccounts.dateCol')}</th>
+              <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.bankAccounts.descriptionCol')}</th>
+              <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.bankAccounts.categoryCol')}</th>
+              <th className="px-4 py-3 text-end text-xs font-semibold text-slate-500 uppercase">{t('admin.bankAccounts.amountCol')}</th>
               <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.bankAccounts.statusCol')}</th>
             </tr>
           </thead>
@@ -312,7 +312,7 @@ export default function BanquesPage() {
                     </span>
                   )}
                 </td>
-                <td className={`px-4 py-3 text-right font-medium ${
+                <td className={`px-4 py-3 text-end font-medium ${
                   transaction.type === 'CREDIT' ? 'text-green-600' : 'text-red-600'
                 }`}>
                   {transaction.type === 'CREDIT' ? '+' : '-'}{transaction.amount.toFixed(2)} $

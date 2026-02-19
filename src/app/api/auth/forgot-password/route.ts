@@ -65,6 +65,7 @@ export async function POST(request: NextRequest) {
     // Note: Vous devez ajouter ces champs au modèle User dans Prisma:
     // resetToken      String?
     // resetTokenExpiry DateTime?
+    // SEC-28: Token must be stored successfully - no dev bypass
     try {
       await prisma.user.update({
         where: { id: user.id },
@@ -75,7 +76,10 @@ export async function POST(request: NextRequest) {
       });
     } catch (dbError) {
       console.error('Database update error (resetToken fields may not exist):', dbError);
-      // Continuer quand même pour le développement
+      return NextResponse.json(
+        { error: 'Une erreur est survenue' },
+        { status: 500 }
+      );
     }
 
     // Construire l'URL de réinitialisation

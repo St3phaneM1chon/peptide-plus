@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 
 interface Webinar {
   id: string;
@@ -82,7 +83,8 @@ function mapDbWebinar(w: Record<string, unknown>): Webinar {
 
 export default function WebinarsPage() {
   const { data: session } = useSession();
-  const { t, locale } = useTranslations();
+  const router = useRouter();
+  const { t, locale } = useI18n();
   const [activeFilter, setActiveFilter] = useState<'all' | 'upcoming' | 'recorded'>('all');
   const [activeCategory, setActiveCategory] = useState('All');
   const [registeredWebinars, setRegisteredWebinars] = useState<string[]>([]);
@@ -120,7 +122,7 @@ export default function WebinarsPage() {
 
   const handleRegister = (webinarId: string) => {
     if (!session) {
-      window.location.href = '/auth/signin?callbackUrl=/webinars';
+      router.push('/auth/signin?callbackUrl=/webinars');
       return;
     }
     setRegisteredWebinars(prev => [...prev, webinarId]);
@@ -295,10 +297,10 @@ export default function WebinarsPage() {
               {/* Thumbnail */}
               <div className="relative aspect-video bg-neutral-200">
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                <div className="absolute top-3 left-3">
+                <div className="absolute top-3 start-3">
                   {getStatusBadge(webinar.status)}
                 </div>
-                <div className="absolute bottom-3 left-3 right-3">
+                <div className="absolute bottom-3 start-3 end-3">
                   <span className="px-2 py-1 bg-white/90 text-neutral-700 text-xs font-medium rounded">
                     {webinar.category}
                   </span>
@@ -408,7 +410,7 @@ export default function WebinarsPage() {
           <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
             <input
               type="email"
-              placeholder="Enter your email"
+              placeholder={t('webinars.placeholderEmail')}
               className="flex-1 px-4 py-3 rounded-lg text-neutral-900 focus:outline-none focus:ring-2 focus:ring-white"
             />
             <button className="px-6 py-3 bg-white text-blue-600 rounded-lg font-medium hover:bg-blue-50 transition-colors">

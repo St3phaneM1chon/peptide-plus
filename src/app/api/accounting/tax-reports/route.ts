@@ -4,6 +4,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { UserRole } from '@/types';
 import { prisma } from '@/lib/db';
+import { roundCurrency } from '@/lib/financial';
+import { createHash } from 'crypto';
 
 /**
  * GET /api/accounting/tax-reports
@@ -23,16 +25,23 @@ export async function GET(request: NextRequest) {
     const year = searchParams.get('year');
     const status = searchParams.get('status');
     const regionCode = searchParams.get('regionCode');
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
+    const limit = Math.min(Math.max(1, parseInt(searchParams.get('limit') || '50') || 50), 200);
 
     const where: Record<string, unknown> = {};
     if (year) where.year = parseInt(year);
     if (status) where.status = status;
     if (regionCode) where.regionCode = regionCode;
 
-    const reports = await prisma.taxReport.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
-    });
+    const [reports, total] = await Promise.all([
+      prisma.taxReport.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      prisma.taxReport.count({ where }),
+    ]);
 
     const mapped = reports.map((r) => ({
       ...r,
@@ -51,7 +60,10 @@ export async function GET(request: NextRequest) {
       totalSales: Number(r.totalSales),
     }));
 
-    return NextResponse.json({ reports: mapped });
+    return NextResponse.json({
+      reports: mapped,
+      pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+    });
   } catch (error) {
     console.error('Get tax reports error:', error);
     return NextResponse.json(
@@ -85,20 +97,46 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Determine date range for the period
+    // #40 Check for duplicate reports (same period+year+regionCode)
+    const duplicateWhere: Record<string, unknown> = {
+      year,
+      regionCode,
+    };
+    if (periodType === 'MONTHLY' && month) {
+      duplicateWhere.month = month;
+      duplicateWhere.periodType = 'MONTHLY';
+    } else if (periodType === 'QUARTERLY' && quarter) {
+      duplicateWhere.quarter = quarter;
+      duplicateWhere.periodType = 'QUARTERLY';
+    } else {
+      duplicateWhere.periodType = 'ANNUAL';
+    }
+    const existingReport = await prisma.taxReport.findFirst({ where: duplicateWhere });
+    if (existingReport) {
+      return NextResponse.json(
+        { error: `Un rapport de taxes existe déjà pour cette période (${period}, ${regionCode}, ${year})`, existingReportId: existingReport.id },
+        { status: 409 }
+      );
+    }
+
+    // Determine date range for the period using UTC to avoid timezone
+    // off-by-one errors. Business operates in Eastern Time (America/Toronto)
+    // but DB timestamps are in UTC, so we use UTC boundaries.
     let startDate: Date;
     let endDate: Date;
 
     if (periodType === 'MONTHLY' && month) {
-      startDate = new Date(year, month - 1, 1);
-      endDate = new Date(year, month, 0, 23, 59, 59);
+      // First day of month at 00:00 UTC
+      startDate = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0, 0));
+      // Last day of month at 23:59:59.999 UTC
+      endDate = new Date(Date.UTC(year, month, 0, 23, 59, 59, 999));
     } else if (periodType === 'QUARTERLY' && quarter) {
       const startMonth = (quarter - 1) * 3;
-      startDate = new Date(year, startMonth, 1);
-      endDate = new Date(year, startMonth + 3, 0, 23, 59, 59);
+      startDate = new Date(Date.UTC(year, startMonth, 1, 0, 0, 0, 0));
+      endDate = new Date(Date.UTC(year, startMonth + 3, 0, 23, 59, 59, 999));
     } else {
-      startDate = new Date(year, 0, 1);
-      endDate = new Date(year, 11, 31, 23, 59, 59);
+      startDate = new Date(Date.UTC(year, 0, 1, 0, 0, 0, 0));
+      endDate = new Date(Date.UTC(year, 11, 31, 23, 59, 59, 999));
     }
 
     // Calculate taxes collected from paid orders
@@ -110,10 +148,10 @@ export async function POST(request: NextRequest) {
       select: { taxTps: true, taxTvq: true, taxTvh: true, total: true },
     });
 
-    const tpsCollected = orders.reduce((s, o) => s + Number(o.taxTps), 0);
-    const tvqCollected = orders.reduce((s, o) => s + Number(o.taxTvq), 0);
-    const tvhCollected = orders.reduce((s, o) => s + Number(o.taxTvh), 0);
-    const totalSales = orders.reduce((s, o) => s + Number(o.total), 0);
+    const tpsCollected = roundCurrency(orders.reduce((s, o) => s + Number(o.taxTps), 0));
+    const tvqCollected = roundCurrency(orders.reduce((s, o) => s + Number(o.taxTvq), 0));
+    const tvhCollected = roundCurrency(orders.reduce((s, o) => s + Number(o.taxTvh), 0));
+    const totalSales = roundCurrency(orders.reduce((s, o) => s + Number(o.total), 0));
 
     // Calculate taxes paid from supplier invoices
     const supplierInvoices = await prisma.supplierInvoice.findMany({
@@ -124,17 +162,17 @@ export async function POST(request: NextRequest) {
       select: { taxTps: true, taxTvq: true },
     });
 
-    const tpsPaid = supplierInvoices.reduce((s, i) => s + Number(i.taxTps), 0);
-    const tvqPaid = supplierInvoices.reduce((s, i) => s + Number(i.taxTvq), 0);
+    const tpsPaid = roundCurrency(supplierInvoices.reduce((s, i) => s + Number(i.taxTps), 0));
+    const tvqPaid = roundCurrency(supplierInvoices.reduce((s, i) => s + Number(i.taxTvq), 0));
 
-    const netTps = tpsCollected - tpsPaid;
-    const netTvq = tvqCollected - tvqPaid;
+    const netTps = roundCurrency(tpsCollected - tpsPaid);
+    const netTvq = roundCurrency(tvqCollected - tvqPaid);
     const netTvh = tvhCollected;
-    const netTotal = netTps + netTvq + netTvh;
+    const netTotal = roundCurrency(netTps + netTvq + netTvh);
 
     // Calculate due date (typically last day of the month following the period)
     const dueDate = new Date(endDate);
-    dueDate.setMonth(dueDate.getMonth() + 2);
+    dueDate.setMonth(dueDate.getMonth() + 1);
     dueDate.setDate(0); // Last day of next month
 
     // Map regionCode to region name
@@ -206,10 +244,40 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Rapport non trouvé' }, { status: 404 });
     }
 
+    const validStatuses = ['DRAFT', 'GENERATED', 'FILED', 'PAID'];
     const updateData: Record<string, unknown> = {};
     if (status) {
+      if (!validStatuses.includes(status)) {
+        return NextResponse.json({ error: `Statut invalide. Valeurs acceptées: ${validStatuses.join(', ')}` }, { status: 400 });
+      }
       updateData.status = status;
-      if (status === 'FILED') updateData.filedAt = new Date();
+      if (status === 'FILED') {
+        updateData.filedAt = new Date();
+        // #77 Compliance: Generate SHA-256 integrity hash when filing tax report
+        // This hash covers all financial figures to detect post-filing tampering.
+        const hashPayload = JSON.stringify({
+          id: existing.id,
+          period: existing.period,
+          year: existing.year,
+          regionCode: existing.regionCode,
+          tpsCollected: existing.tpsCollected.toString(),
+          tvqCollected: existing.tvqCollected.toString(),
+          tvhCollected: existing.tvhCollected.toString(),
+          tpsPaid: existing.tpsPaid.toString(),
+          tvqPaid: existing.tvqPaid.toString(),
+          netTps: existing.netTps.toString(),
+          netTvq: existing.netTvq.toString(),
+          netTvh: existing.netTvh.toString(),
+          netTotal: existing.netTotal.toString(),
+          totalSales: existing.totalSales.toString(),
+          salesCount: existing.salesCount,
+        });
+        updateData.notes = JSON.stringify({
+          ...(existing.notes ? JSON.parse(existing.notes as string) : {}),
+          integrityHash: createHash('sha256').update(hashPayload).digest('hex'),
+          hashGeneratedAt: new Date().toISOString(),
+        });
+      }
     }
     if (filingNumber) updateData.filingNumber = filingNumber;
     if (paidAt) updateData.paidAt = new Date(paidAt);
@@ -219,7 +287,38 @@ export async function PUT(request: NextRequest) {
       data: updateData,
     });
 
-    return NextResponse.json({ success: true, report });
+    // #77 Compliance: Verify integrity hash on reads for FILED reports
+    let integrityValid: boolean | null = null;
+    if (report.status === 'FILED' && report.notes) {
+      try {
+        const notesData = JSON.parse(report.notes as string);
+        if (notesData.integrityHash) {
+          const verifyPayload = JSON.stringify({
+            id: report.id,
+            period: report.period,
+            year: report.year,
+            regionCode: report.regionCode,
+            tpsCollected: report.tpsCollected.toString(),
+            tvqCollected: report.tvqCollected.toString(),
+            tvhCollected: report.tvhCollected.toString(),
+            tpsPaid: report.tpsPaid.toString(),
+            tvqPaid: report.tvqPaid.toString(),
+            netTps: report.netTps.toString(),
+            netTvq: report.netTvq.toString(),
+            netTvh: report.netTvh.toString(),
+            netTotal: report.netTotal.toString(),
+            totalSales: report.totalSales.toString(),
+            salesCount: report.salesCount,
+          });
+          const currentHash = createHash('sha256').update(verifyPayload).digest('hex');
+          integrityValid = currentHash === notesData.integrityHash;
+        }
+      } catch {
+        integrityValid = null;
+      }
+    }
+
+    return NextResponse.json({ success: true, report, integrityValid });
   } catch (error) {
     console.error('Update tax report error:', error);
     return NextResponse.json(

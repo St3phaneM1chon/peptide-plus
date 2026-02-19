@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { X, Package, RefreshCw, ChevronRight, Sparkles, Check, Building2 } from 'lucide-react';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 import { useCurrency } from '@/contexts/CurrencyContext';
 
 interface CartItemParams {
@@ -61,13 +61,63 @@ export default function UpsellInterstitialModal({
   onAcceptSubscription,
   onDecline,
 }: UpsellInterstitialModalProps) {
-  const { t } = useTranslations();
+  const { t } = useI18n();
   const { formatPrice } = useCurrency();
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
   const [upsellData, setUpsellData] = useState<UpsellData | null>(null);
   const [loading, setLoading] = useState(false);
   const [selectedQuantity, setSelectedQuantity] = useState<number>(3);
   const [selectedFrequency, setSelectedFrequency] = useState<string>('MONTHLY');
   const [activeTab, setActiveTab] = useState<'quantity' | 'subscription'>('quantity');
+
+  // Focus trap and Escape key handling
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (item) onDecline(item);
+        return;
+      }
+
+      if (e.key === 'Tab' && dialogRef.current) {
+        const focusable = dialogRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusable.length === 0) return;
+
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    },
+    [item, onDecline]
+  );
+
+  useEffect(() => {
+    if (isOpen) {
+      previousFocusRef.current = document.activeElement as HTMLElement;
+      document.addEventListener('keydown', handleKeyDown);
+
+      requestAnimationFrame(() => {
+        const focusable = dialogRef.current?.querySelector<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        focusable?.focus();
+      });
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      previousFocusRef.current?.focus();
+    };
+  }, [isOpen, handleKeyDown]);
 
   useEffect(() => {
     if (!isOpen || !item) return;
@@ -158,12 +208,18 @@ export default function UpsellInterstitialModal({
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => item && onDecline(item)} />
 
       {/* Modal */}
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200">
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={t('upsell.title')}
+        className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200"
+      >
         {/* Close button */}
         <button
           onClick={() => item && onDecline(item)}
-          className="absolute top-4 right-4 p-1.5 rounded-full hover:bg-neutral-100 transition-colors z-10"
-          aria-label="Close"
+          className="absolute top-4 end-4 p-1.5 rounded-full hover:bg-neutral-100 transition-colors z-10"
+          aria-label={t('common.aria.close')}
         >
           <X className="w-5 h-5 text-neutral-400" />
         </button>
@@ -250,7 +306,7 @@ export default function UpsellInterstitialModal({
                           >
                             {isSelected && <Check className="w-3 h-3 text-white" />}
                           </div>
-                          <div className="flex-1 text-left">
+                          <div className="flex-1 text-start">
                             <div className="flex items-center gap-2">
                               <span className="font-semibold text-neutral-900">
                                 {qty}x
@@ -284,7 +340,7 @@ export default function UpsellInterstitialModal({
                     <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0 group-hover:bg-blue-200 transition-colors">
                       <Building2 className="w-4 h-4 text-blue-600" />
                     </div>
-                    <div className="flex-1 text-left">
+                    <div className="flex-1 text-start">
                       <span className="font-semibold text-blue-900 text-sm">
                         {t('upsell.quantity.researchCenter')}
                       </span>
@@ -353,7 +409,7 @@ export default function UpsellInterstitialModal({
                           >
                             {isSelected && <Check className="w-3 h-3 text-white" />}
                           </div>
-                          <div className="flex-1 text-left">
+                          <div className="flex-1 text-start">
                             <span className="font-medium text-neutral-900">
                               {t(FREQUENCY_LABELS[opt.frequency] || opt.frequency)}
                             </span>

@@ -1,6 +1,24 @@
 /**
  * Advanced Search Service
  * Full-text search, filters, and saved searches for accounting
+ *
+ * #75 Audit: Performance note - The current implementation uses Prisma's `contains`
+ * with `mode: 'insensitive'` which translates to ILIKE in PostgreSQL. For better
+ * performance on large datasets, create these indexes:
+ *
+ * CREATE INDEX CONCURRENTLY idx_journal_entry_description_trgm
+ *   ON "JournalEntry" USING gin (lower("description") gin_trgm_ops);
+ * CREATE INDEX CONCURRENTLY idx_journal_entry_entry_number
+ *   ON "JournalEntry" USING btree ("entryNumber");
+ * CREATE INDEX CONCURRENTLY idx_customer_invoice_customer_name_trgm
+ *   ON "CustomerInvoice" USING gin (lower("customerName") gin_trgm_ops);
+ * CREATE INDEX CONCURRENTLY idx_bank_transaction_description_trgm
+ *   ON "BankTransaction" USING gin (lower("description") gin_trgm_ops);
+ *
+ * Requires: CREATE EXTENSION IF NOT EXISTS pg_trgm;
+ *
+ * TODO: Consider migrating to PostgreSQL full-text search (tsvector/tsquery)
+ * for relevance-ranked results instead of simple ILIKE matching.
  */
 
 import { db as prisma } from '@/lib/db';
@@ -125,10 +143,12 @@ export async function advancedSearch(
       entryWhere.status = { in: statuses };
     }
 
+    // #75 Audit: Limit DB query to avoid fetching unbounded rows; post-filtering still needed for amount/account
     const entries = await prisma.journalEntry.findMany({
       where: entryWhere,
       include: { lines: true },
       orderBy: { date: sortOrder },
+      take: 500, // Cap at 500 to prevent memory issues; refine with amount filter in DB if needed
     });
 
     for (const entry of entries) {

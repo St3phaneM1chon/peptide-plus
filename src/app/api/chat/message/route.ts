@@ -9,18 +9,45 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { db } from '@/lib/db';
 import { translateMessage, getChatbotResponse, detectLanguage } from '@/lib/chat/openai-chat';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { conversationId, content, sender, visitorId } = body;
+    // BE-SEC-14: Rate limit chat messages - 20 per user/visitor per hour (prevents OpenAI cost explosion)
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip')
+      || '127.0.0.1';
+    const session = await auth();
+    const rl = await rateLimitMiddleware(ip, '/api/chat/message', session?.user?.id);
+    if (!rl.success) {
+      const res = NextResponse.json(
+        { error: rl.error!.message },
+        { status: 429 }
+      );
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
 
-    if (!conversationId || !content) {
+    const body = await request.json();
+    const { conversationId, content: rawContent, sender, visitorId } = body;
+
+    if (!conversationId || !rawContent) {
       return NextResponse.json({ error: 'conversationId and content required' }, { status: 400 });
     }
 
-    // Vérifier autorisation
-    const session = await auth();
+    // BE-SEC-03: Strip HTML from chat messages to prevent stored XSS
+    // BE-SEC-05: Enforce max length on chat messages (5000 chars)
+    const contentStr = String(rawContent);
+    if (contentStr.length > 5000) {
+      return NextResponse.json({ error: 'Message too long (max 5000 characters)' }, { status: 400 });
+    }
+    const content = contentStr.replace(/<[^>]*>/g, '').replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '').trim();
+
+    if (!content) {
+      return NextResponse.json({ error: 'Message content cannot be empty' }, { status: 400 });
+    }
+
+    // Vérifier autorisation (session already fetched above for rate limiting)
     const isAdmin = session?.user && ['OWNER', 'EMPLOYEE'].includes(session.user.role as string);
 
     // Vérifier la conversation avec contrôle d'accès

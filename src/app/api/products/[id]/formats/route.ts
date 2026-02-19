@@ -13,7 +13,7 @@ export async function GET(
   try {
     const { id } = await params;
     const formats = await prisma.productFormat.findMany({
-      where: { productId: id },
+      where: { productId: id, isActive: true },
       orderBy: { sortOrder: 'asc' },
     });
 

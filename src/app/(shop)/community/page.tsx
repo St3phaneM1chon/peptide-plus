@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useSession } from 'next-auth/react';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 
 interface Post {
   id: string;
@@ -51,7 +51,7 @@ const getCategories = (t: (key: string) => string) => [
 
 export default function CommunityPage() {
   const { data: session } = useSession();
-  const { t } = useTranslations();
+  const { t } = useI18n();
   const categories = getCategories(t);
   const [activeCategory, setActiveCategory] = useState('all');
   const [posts, setPosts] = useState<Post[]>([]);
@@ -230,7 +230,7 @@ export default function CommunityPage() {
             {/* Search & Sort */}
             <div className="flex flex-col sm:flex-row gap-4 mb-6">
               <div className="relative flex-1">
-                <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="absolute start-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
                 <input
@@ -238,7 +238,7 @@ export default function CommunityPage() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder={t('community.searchPlaceholder') || 'Search discussions...'}
-                  className="w-full pl-12 pr-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full ps-12 pe-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                 />
               </div>
               <select
@@ -254,7 +254,40 @@ export default function CommunityPage() {
 
             {/* Posts List */}
             <div className="space-y-4">
-              {filteredPosts.length === 0 ? (
+              {filteredPosts.length === 0 && posts.length === 0 && !searchQuery ? (
+                /* Empty state: no posts at all */
+                <div className="bg-white rounded-xl p-12 text-center border border-neutral-200">
+                  <div className="w-20 h-20 mx-auto mb-6 bg-purple-100 rounded-full flex items-center justify-center">
+                    <svg className="w-10 h-10 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-bold mb-2 text-neutral-900">
+                    {t('community.emptyTitle') || 'No discussions yet'}
+                  </h3>
+                  <p className="text-neutral-500 mb-6 max-w-md mx-auto">
+                    {t('community.emptyDescription') || 'Be the first to start a conversation! Share your research experiences, ask questions, or help fellow community members.'}
+                  </p>
+                  {session ? (
+                    <button
+                      onClick={() => setShowNewPost(true)}
+                      className="inline-flex items-center gap-2 px-6 py-3 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                      {t('community.startFirstDiscussion') || 'Start the First Discussion'}
+                    </button>
+                  ) : (
+                    <Link
+                      href="/auth/signin"
+                      className="inline-flex items-center gap-2 px-6 py-3 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors"
+                    >
+                      {t('community.signInToStart') || 'Sign In to Start a Discussion'}
+                    </Link>
+                  )}
+                </div>
+              ) : filteredPosts.length === 0 ? (
                 <div className="bg-white rounded-xl p-12 text-center">
                   <span className="text-6xl mb-4 block">🔍</span>
                   <h3 className="text-lg font-bold mb-2">{t('community.noResults') || 'No discussions found'}</h3>
@@ -273,7 +306,7 @@ export default function CommunityPage() {
                           {/* Avatar */}
                           <div className="hidden sm:block">
                             {post.userAvatar ? (
-                              <Image src={post.userAvatar} alt="" width={48} height={48} className="w-12 h-12 rounded-full" unoptimized />
+                              <Image src={post.userAvatar} alt={post.userName} width={48} height={48} className="w-12 h-12 rounded-full" unoptimized />
                             ) : (
                               <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
                                 <span className="text-purple-600 font-bold text-lg">{post.userName.charAt(0)}</span>
@@ -380,7 +413,7 @@ export default function CommunityPage() {
                   type="text"
                   value={newPost.title}
                   onChange={(e) => setNewPost(prev => ({ ...prev, title: e.target.value }))}
-                  placeholder="What's your question or topic?"
+                  placeholder={t('community.placeholderPostTitle')}
                   className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                   required
                 />
@@ -404,7 +437,7 @@ export default function CommunityPage() {
                 <textarea
                   value={newPost.content}
                   onChange={(e) => setNewPost(prev => ({ ...prev, content: e.target.value }))}
-                  placeholder="Share your thoughts, questions, or experiences..."
+                  placeholder={t('community.placeholderPostBody')}
                   rows={6}
                   className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
                   required
@@ -417,7 +450,7 @@ export default function CommunityPage() {
                   type="text"
                   value={newPost.tags}
                   onChange={(e) => setNewPost(prev => ({ ...prev, tags: e.target.value }))}
-                  placeholder="e.g., bpc-157, reconstitution, beginner"
+                  placeholder={t('community.placeholderTags')}
                   className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                 />
               </div>

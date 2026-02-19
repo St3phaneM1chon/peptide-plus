@@ -925,7 +925,7 @@ export default function ClientDetailPage() {
                       <p className="text-sm text-slate-900">{tx.description || tx.type}</p>
                       <p className="text-xs text-slate-500">{formatDateTime(tx.createdAt)}</p>
                     </div>
-                    <div className="text-right">
+                    <div className="text-end">
                       <p className={`font-semibold ${tx.points > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                         {tx.points > 0 ? '+' : ''}{tx.points} pts
                       </p>
@@ -985,7 +985,7 @@ export default function ClientDetailPage() {
                           {sub.product?.name || t('admin.customerDetail.subscriptions.unknownProduct')}
                         </p>
                         <StatusBadge variant={statusVariant}>
-                          <StatusIcon className="w-3 h-3 mr-1" />
+                          <StatusIcon className="w-3 h-3 me-1" />
                           {sub.status}
                         </StatusBadge>
                       </div>
@@ -1005,7 +1005,7 @@ export default function ClientDetailPage() {
                         <span>
                           {t('admin.customerDetail.subscriptions.price')}: <strong>{formatCurrency(sub.unitPrice)}</strong>
                           {sub.discountPercent > 0 && (
-                            <span className="text-emerald-600 ml-1">(-{sub.discountPercent}%)</span>
+                            <span className="text-emerald-600 ms-1">(-{sub.discountPercent}%)</span>
                           )}
                         </span>
                       </div>
@@ -1089,7 +1089,7 @@ export default function ClientDetailPage() {
                   <p className="text-sm text-slate-600">{review.comment}</p>
                 )}
                 {review.reply && (
-                  <div className="mt-3 pl-4 border-l-2 border-sky-200">
+                  <div className="mt-3 ps-4 border-s-2 border-sky-200">
                     <p className="text-xs font-semibold text-sky-600 mb-1">
                       {t('admin.customerDetail.reviews.adminReply')}
                     </p>
@@ -1128,7 +1128,7 @@ export default function ClientDetailPage() {
                 <p className="text-sm text-slate-600">{addr.country}</p>
                 {addr.phone && (
                   <p className="text-sm text-slate-500 mt-1">
-                    <Phone className="w-3 h-3 inline mr-1" />{addr.phone}
+                    <Phone className="w-3 h-3 inline me-1" />{addr.phone}
                   </p>
                 )}
               </div>
@@ -1214,7 +1214,7 @@ function OrderSection({
                   {order.paymentStatus}
                 </StatusBadge>
               </div>
-              <div className="text-right">
+              <div className="text-end">
                 <p className="font-bold text-slate-900">{formatCurrency(order.total)}</p>
                 <p className="text-xs text-slate-500">{formatDateTime(order.createdAt)}</p>
               </div>

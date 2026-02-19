@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useMemo, useCallback, ReactNode } from 'react';
 import { useSession } from 'next-auth/react';
 
 // Points configuration
@@ -148,7 +148,7 @@ export function LoyaltyProvider({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.lifetimePoints]);
 
-  const loadLoyaltyData = async () => {
+  const loadLoyaltyData = useCallback(async () => {
     try {
       const res = await fetch('/api/loyalty');
       if (res.ok) {
@@ -165,7 +165,7 @@ export function LoyaltyProvider({ children }: { children: ReactNode }) {
         });
       } else {
         // API returned error, use default state
-        console.log('Loyalty API returned non-OK status:', res.status);
+        // Loyalty API returned non-OK status, use default state
       }
     } catch (error) {
       console.error('Error loading loyalty data:', error);
@@ -173,7 +173,8 @@ export function LoyaltyProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.user?.name]);
 
   const generateReferralCode = () => {
     // SECURITY: Use crypto.getRandomValues for non-guessable referral codes
@@ -262,15 +263,15 @@ export function LoyaltyProvider({ children }: { children: ReactNode }) {
     return true;
   };
 
-  const getPointsForPurchase = (amount: number): number => {
+  const getPointsForPurchase = useCallback((amount: number): number => {
     return Math.floor(amount * LOYALTY_CONFIG.pointsPerDollar * state.tier.multiplier);
-  };
+  }, [state.tier.multiplier]);
 
-  const getDiscountFromPoints = (points: number): number => {
+  const getDiscountFromPoints = useCallback((points: number): number => {
     return points * LOYALTY_CONFIG.pointsValue;
-  };
+  }, []);
 
-  const getTierProgress = () => {
+  const getTierProgress = useCallback(() => {
     const currentTierIndex = LOYALTY_TIERS.findIndex(t => t.id === state.tier.id);
     const nextTier = LOYALTY_TIERS[currentTierIndex + 1];
     
@@ -283,25 +284,27 @@ export function LoyaltyProvider({ children }: { children: ReactNode }) {
     const percentage = Math.min(100, Math.round((current / next) * 100));
 
     return { current: state.lifetimePoints, next: nextTier.minPoints, percentage };
-  };
+  }, [state.lifetimePoints, state.tier.id, state.tier.minPoints]);
 
-  const canRedeemReward = (rewardId: string): boolean => {
+  const canRedeemReward = useCallback((rewardId: string): boolean => {
     const reward = LOYALTY_REWARDS.find(r => r.id === rewardId);
     return reward ? state.points >= reward.points : false;
-  };
+  }, [state.points]);
+
+  const contextValue = useMemo(() => ({
+    ...state,
+    isLoading,
+    earnPoints,
+    redeemReward,
+    getPointsForPurchase,
+    getDiscountFromPoints,
+    getTierProgress,
+    canRedeemReward,
+  }), [state, isLoading, earnPoints, redeemReward, getPointsForPurchase, getDiscountFromPoints, getTierProgress, canRedeemReward]);
 
   return (
     <LoyaltyContext.Provider
-      value={{
-        ...state,
-        isLoading,
-        earnPoints,
-        redeemReward,
-        getPointsForPurchase,
-        getDiscountFromPoints,
-        getTierProgress,
-        canRedeemReward,
-      }}
+      value={contextValue}
     >
       {children}
     </LoyaltyContext.Provider>

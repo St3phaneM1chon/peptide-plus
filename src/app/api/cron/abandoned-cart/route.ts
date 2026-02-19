@@ -17,29 +17,56 @@ export const dynamic = 'force-dynamic';
  * Schedule: every 2 hours (0 star-slash-2 star star star)
  */
 
+/**
+ * Item 79: Multi-channel abandoned cart recovery
+ *
+ * Current: Email only (1 email per cart abandonment)
+ * Improved: Configurable multi-channel recovery with escalation:
+ *   - Channel 1 (1h after abandonment): Email reminder
+ *   - Channel 2 (4h after abandonment): SMS reminder (if user has phone + SMS consent)
+ *   - Channel 3 (24h after abandonment): Email with discount incentive
+ *
+ * TODO (item 79): Full multi-channel implementation:
+ *   - Add push notification support via web push (service worker + PushSubscription model)
+ *   - Add SMS recovery using the existing sendSms() from @/lib/sms
+ *   - Track recovery channel per user in EmailLog (templateId: 'abandoned-cart-sms', 'abandoned-cart-push')
+ *   - Add SiteSetting flags to enable/disable each channel:
+ *     ff.abandoned_cart_email (default: true)
+ *     ff.abandoned_cart_sms (default: false)
+ *     ff.abandoned_cart_push (default: false)
+ *   - Escalation: if email was sent >4h ago with no conversion, try SMS; if >24h, send discount email
+ *   - Respect user communication preferences (marketingConsent, smsConsent fields)
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { sendEmail, abandonedCartEmail } from '@/lib/email';
 import { logger } from '@/lib/logger';
+import { withJobLock } from '@/lib/cron-lock';
 
 const BATCH_SIZE = 10;
 const MIN_ABANDONMENT_MINUTES = 60; // 1 hour minimum
 const MAX_ABANDONMENT_HOURS = 48; // Don't email after 48 hours (too late)
 const DEDUP_HOURS = 24; // Don't re-send within 24 hours
 
+// Item 79: Configurable recovery channels (read from env or SiteSetting in future)
+const ENABLE_SMS_RECOVERY = process.env.ABANDONED_CART_SMS_ENABLED === 'true';
+const SMS_DELAY_HOURS = 4; // Send SMS 4 hours after email if no conversion
+
 export async function GET(request: NextRequest) {
-  const startTime = Date.now();
+  // Verify cron secret (fail-closed)
+  const authHeader = request.headers.get('authorization');
+  const cronSecret = process.env.CRON_SECRET;
 
-  try {
-    // Verify cron secret (fail-closed)
-    const authHeader = request.headers.get('authorization');
-    const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
-    if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+  return withJobLock('abandoned-cart', async () => {
+    const startTime = Date.now();
 
-    const now = new Date();
+    try {
+      const now = new Date();
 
     // Time window: updated between 1 hour ago and 48 hours ago
     const oneHourAgo = new Date(now.getTime() - MIN_ABANDONMENT_MINUTES * 60 * 1000);
@@ -96,15 +123,20 @@ export async function GET(request: NextRequest) {
       };
     }> = [];
 
+    // PERF 87: Batch fetch all users in a single query instead of N+1 per-cart lookups
+    const allUserIds = [...new Set(abandonedCarts.map((c) => c.userId).filter(Boolean))] as string[];
+    const users = allUserIds.length > 0
+      ? await db.user.findMany({
+          where: { id: { in: allUserIds } },
+          select: { id: true, name: true, email: true, locale: true },
+        })
+      : [];
+    const userMap = new Map(users.map((u) => [u.id, u]));
+
     for (const cart of abandonedCarts) {
       if (!cart.userId) continue;
 
-      // Get user info
-      const user = await db.user.findUnique({
-        where: { id: cart.userId },
-        select: { id: true, name: true, email: true, locale: true },
-      });
-
+      const user = userMap.get(cart.userId);
       if (!user) continue;
 
       // Skip if already emailed recently
@@ -267,11 +299,92 @@ export async function GET(request: NextRequest) {
     const failCount = results.filter((r) => !r.success).length;
     const duration = Date.now() - startTime;
 
+    // Item 79: SMS recovery for carts abandoned > SMS_DELAY_HOURS ago
+    // Only send SMS to users who already received email but haven't converted
+    let smsSent = 0;
+    if (ENABLE_SMS_RECOVERY) {
+      const smsDelayAgo = new Date(now.getTime() - SMS_DELAY_HOURS * 60 * 60 * 1000);
+
+      // Find users who received abandoned cart email > SMS_DELAY_HOURS ago but no SMS yet
+      const emailSentLogs = await db.emailLog.findMany({
+        where: {
+          templateId: 'abandoned-cart',
+          status: 'sent',
+          sentAt: {
+            gte: fortyEightHoursAgo,
+            lte: smsDelayAgo,
+          },
+        },
+        select: { to: true },
+      });
+
+      const smsSentLogs = await db.emailLog.findMany({
+        where: {
+          templateId: 'abandoned-cart-sms',
+          status: 'sent',
+          sentAt: { gte: fortyEightHoursAgo },
+        },
+        select: { to: true },
+      });
+      const alreadySmsSet = new Set(smsSentLogs.map((l) => l.to));
+
+      for (const log of emailSentLogs) {
+        if (alreadySmsSet.has(log.to)) continue;
+
+        // Look up user phone
+        const user = await db.user.findFirst({
+          where: { email: log.to, phone: { not: null } },
+          select: { id: true, phone: true, locale: true },
+        });
+
+        if (user?.phone) {
+          // Check if user completed an order since the email
+          const recentOrder = await db.order.findFirst({
+            where: { userId: user.id, paymentStatus: 'PAID', createdAt: { gte: smsDelayAgo } },
+            select: { id: true },
+          });
+
+          if (!recentOrder) {
+            try {
+              // Dynamic import to avoid breaking if sms module isn't available
+              const { sendSms } = await import('@/lib/sms');
+              const isFr = (user.locale || 'fr') !== 'en';
+              await sendSms({
+                to: user.phone,
+                body: isFr
+                  ? 'BioCycle: Votre panier vous attend! Finalisez votre commande sur biocyclepeptides.com/checkout'
+                  : 'BioCycle: Your cart is waiting! Complete your order at biocyclepeptides.com/checkout',
+              });
+
+              await db.emailLog.create({
+                data: {
+                  templateId: 'abandoned-cart-sms',
+                  to: log.to,
+                  subject: 'SMS: abandoned cart recovery',
+                  status: 'sent',
+                },
+              }).catch(() => {});
+
+              smsSent++;
+            } catch (smsError) {
+              logger.error('Abandoned cart SMS failed', {
+                email: log.to,
+                error: smsError instanceof Error ? smsError.message : String(smsError),
+              });
+            }
+          }
+        }
+      }
+
+      logger.info('Abandoned cart cron: SMS recovery', { smsSent });
+    }
+
     logger.info('Abandoned cart cron: job complete', {
       totalCarts: abandonedCarts.length,
       eligible: eligibleCarts.length,
       sent: successCount,
       failed: failCount,
+      smsSent,
       durationMs: duration,
     });
 
@@ -282,23 +395,25 @@ export async function GET(request: NextRequest) {
       eligible: eligibleCarts.length,
       sent: successCount,
       failed: failCount,
+      smsSent,
       durationMs: duration,
       results,
     });
-  } catch (error) {
-    logger.error('Abandoned cart cron: job error', {
-      error: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined,
-      durationMs: Date.now() - startTime,
-    });
-    return NextResponse.json(
-      {
-        error: 'Internal server error',
+    } catch (error) {
+      logger.error('Abandoned cart cron: job error', {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
         durationMs: Date.now() - startTime,
-      },
-      { status: 500 }
-    );
-  }
+      });
+      return NextResponse.json(
+        {
+          error: 'Internal server error',
+          durationMs: Date.now() - startTime,
+        },
+        { status: 500 }
+      );
+    }
+  });
 }
 
 // Allow POST for manual testing

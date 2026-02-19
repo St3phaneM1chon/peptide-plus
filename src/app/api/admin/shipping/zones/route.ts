@@ -1,20 +1,15 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth-config';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 
 /**
  * GET /api/admin/shipping/zones
  * List all shipping zones
  */
-export async function GET() {
+export const GET = withAdminGuard(async (_request, { session }) => {
   try {
-    const session = await auth();
-    if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const zones = await prisma.shippingZone.findMany({
       orderBy: { sortOrder: 'asc' },
     });
@@ -75,19 +70,14 @@ export async function GET() {
       { status: 500 }
     );
   }
-}
+});
 
 /**
  * POST /api/admin/shipping/zones
  * Create a new shipping zone
  */
-export async function POST(request: NextRequest) {
+export const POST = withAdminGuard(async (request, { session }) => {
   try {
-    const session = await auth();
-    if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const body = await request.json();
     const {
       name,
@@ -148,4 +138,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

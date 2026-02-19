@@ -9,7 +9,7 @@
 import Link from 'next/link';
 import { TrackingTimeline } from './TrackingTimeline';
 import { OrderSummary } from './OrderSummary';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 
 interface DigitalDeliveryTrackingProps {
   order: {
@@ -36,7 +36,7 @@ interface DigitalDeliveryTrackingProps {
 }
 
 export function DigitalDeliveryTracking({ order }: DigitalDeliveryTrackingProps) {
-  const { t } = useTranslations();
+  const { t } = useI18n();
   const purchaseDate = new Date(order.createdAt);
 
   // Étapes pour produit numérique (accès immédiat)

@@ -1,4 +1,15 @@
 // Types for the accounting module
+//
+// TODO #80: Define and enforce a data retention policy for accounting records.
+// Canadian tax law (CRA) requires businesses to keep records for at least 6 years
+// from the end of the last tax year they relate to. Quebec (Revenu Quebec) also
+// requires 6-year retention. Considerations:
+//   - Soft-deleted records (deletedAt != null) should be purged only after 6+ years
+//   - FILED TaxReports must NEVER be purged (regulatory requirement)
+//   - JournalEntries tied to active fiscal years must be retained
+//   - BankTransactions: retain matched records for 6 years, unmatched for review
+//   - Implement a scheduled job (e.g., cron) to archive/purge expired records
+//   - Add a `retainUntil` field to key models for automated retention enforcement
 
 export type AccountType = 'ASSET' | 'LIABILITY' | 'EQUITY' | 'REVENUE' | 'EXPENSE';
 
@@ -99,7 +110,7 @@ export const TAX_RATES = {
   AB: { TPS: 0.05, combined: 0.05 },
   SK: { TPS: 0.05, PST: 0.06, combined: 0.11 },
   MB: { TPS: 0.05, PST: 0.07, combined: 0.12 },
-  NS: { TVH: 0.14, combined: 0.14 },
+  NS: { TVH: 0.15, combined: 0.15 },
   NB: { TVH: 0.15, combined: 0.15 },
   NL: { TVH: 0.15, combined: 0.15 },
   PE: { TVH: 0.15, combined: 0.15 },

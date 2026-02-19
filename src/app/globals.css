@@ -929,8 +929,8 @@ a:hover {
   font-size: 16px;
   font-weight: 500;
   color: var(--gray-500);
-  border-left: 1px solid var(--gray-300);
-  border-right: 1px solid var(--gray-300);
+  border-inline-start: 1px solid var(--gray-300);
+  border-inline-end: 1px solid var(--gray-300);
 }
 
 /* Add to Cart */
@@ -1025,8 +1025,8 @@ a:hover {
    ===================================================== */
 
 .text-center { text-align: center; }
-.text-left { text-align: left; }
-.text-right { text-align: right; }
+.text-start { text-align: start; }
+.text-end { text-align: end; }
 
 .font-light { font-weight: 300; }
 .font-normal { font-weight: 400; }
@@ -1066,17 +1066,27 @@ a:hover {
    ACCESSIBILITY
    ===================================================== */
 
-/* Focus-visible outline for keyboard navigation */
+/* Focus-visible outline for keyboard navigation (WCAG 2.4.7) */
 *:focus-visible {
   outline: 2px solid #CC5500;
   outline-offset: 2px;
 }
 
-/* Remove focus-visible outline on elements that have their own focus styles */
+/* Form inputs: use box-shadow instead of outline (works even with outline-none classes) */
 input:focus-visible,
 textarea:focus-visible,
 select:focus-visible {
   outline: none;
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px #CC5500;
+}
+
+/* Buttons and links: ensure focus-visible is never fully hidden */
+button:focus-visible,
+a:focus-visible,
+[role="button"]:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid #CC5500 !important;
+  outline-offset: 2px !important;
 }
 
 /* Screen reader only utility (supplements Tailwind's sr-only) */
@@ -1101,14 +1111,34 @@ select:focus-visible {
   to { opacity: 1; }
 }
 
-@keyframes slideUp {
-  from { 
+@keyframes fadeInUp {
+  from {
     opacity: 0;
     transform: translateY(20px);
   }
-  to { 
+  to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
   }
 }
 
@@ -1121,8 +1151,78 @@ select:focus-visible {
   animation: fadeIn 0.3s ease;
 }
 
+.animate-fadeIn {
+  animation: fadeIn 0.2s ease-out;
+}
+
+.animate-fadeInUp {
+  animation: fadeInUp 0.6s ease-out both;
+}
+
 .animate-slide-up {
   animation: slideUp 0.4s ease;
+}
+
+.animate-shimmer {
+  animation: shimmer 3s infinite;
+}
+
+/* Pulse highlight for newly added cart items (#59) */
+@keyframes pulse-highlight {
+  0% { background-color: rgb(255 237 213); /* orange-100 */ }
+  100% { background-color: rgb(245 245 245); /* neutral-100 */ }
+}
+
+/* Checkmark draw animation for newsletter success (#65) */
+@keyframes checkmark-draw {
+  0% { stroke-dashoffset: 24; }
+  100% { stroke-dashoffset: 0; }
+}
+
+.animate-checkmark-draw {
+  stroke-dasharray: 24;
+  stroke-dashoffset: 24;
+  animation: checkmark-draw 0.5s ease-out 0.2s forwards;
+}
+
+/* Scale-in animation for modals (#61) */
+@keyframes scale-fade-in {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.95); }
+  100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+/* Tab fade transition for ProductPage (#62) */
+@keyframes tab-fade-in {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+.animate-tab-fade {
+  animation: tab-fade-in 0.25s ease-out;
+}
+
+.animation-delay-100 {
+  animation-delay: 0.1s;
+  opacity: 0;
+}
+
+.animation-delay-200 {
+  animation-delay: 0.2s;
+  opacity: 0;
+}
+
+.animation-delay-300 {
+  animation-delay: 0.3s;
+  opacity: 0;
+}
+
+/* Hide scrollbar utility */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 /* =====================================================
@@ -1136,10 +1236,40 @@ select:focus-visible {
   -ms-user-select: none;
 }
 
+/* Legal pages list/link styling */
+.legal-content ul { padding-left: 20px; margin: 8px 0; }
+.legal-content li { margin-bottom: 8px; }
+.legal-content a { color: #CC5500; }
+
 @media print {
   .no-print,
   .sensitive-data {
     display: none !important;
+  }
+
+  /* Invoice print styles */
+  body > *:not(.print-invoice-container) {
+    display: none !important;
+  }
+  header, footer, nav,
+  [data-radix-popper-content-wrapper] {
+    display: none !important;
+  }
+  .print-invoice-container {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    background: white !important;
+    z-index: 99999 !important;
+  }
+  .print-invoice-content {
+    padding: 20mm !important;
+    max-width: 100% !important;
+  }
+  @page {
+    margin: 10mm;
+    size: A4;
   }
   
   /* Invoice printing styles */
@@ -1196,3 +1326,33 @@ select:focus-visible {
   border-color: var(--gray-500);
   box-shadow: 0 0 0 3px rgba(66, 66, 66, 0.1);
 }
+
+/* =====================================================
+   REDUCED MOTION (#70)
+   Disable animations for users who prefer reduced motion
+   ===================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* =====================================================
+   DARK MODE / THEMING TODOs
+   ===================================================== */
+
+/* TODO (#68): Define semantic CSS variables for theming (e.g. --color-bg-primary,
+   --color-text-primary, --color-accent) and map them to Tailwind classes.
+   This will allow a single toggle (adding 'dark' class to <html>) to
+   swap all colors site-wide without modifying individual components. */
+
+/* TODO (#69): Unify admin dashboard and shop front color schemes.
+   Currently admin uses Tailwind default grays while shop uses custom
+   orange palette. Both should reference the same semantic variables
+   so theming is consistent across the entire application. */

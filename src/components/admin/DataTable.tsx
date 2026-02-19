@@ -129,7 +129,7 @@ export function DataTable<T>({
                 <th
                   key={col.key}
                   className={`px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider
-                    ${col.align === 'center' ? 'text-center' : col.align === 'right' ? 'text-right' : 'text-left'}
+                    ${col.align === 'center' ? 'text-center' : col.align === 'right' ? 'text-end' : 'text-start'}
                     ${col.sortable ? 'cursor-pointer select-none hover:text-slate-700' : ''}
                   `}
                   style={col.width ? { width: col.width } : undefined}
@@ -180,7 +180,7 @@ export function DataTable<T>({
                     <td
                       key={col.key}
                       className={`px-4 py-3 text-sm text-slate-700
-                        ${col.align === 'center' ? 'text-center' : col.align === 'right' ? 'text-right' : ''}
+                        ${col.align === 'center' ? 'text-center' : col.align === 'right' ? 'text-end' : ''}
                       `}
                     >
                       {col.render(row, index)}

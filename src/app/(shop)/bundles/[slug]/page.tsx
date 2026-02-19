@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 import { useCart } from '@/contexts/CartContext';
 import { toast } from 'sonner';
 
@@ -46,7 +46,7 @@ interface Bundle {
 export default function BundleDetailPage() {
   const params = useParams();
   const slug = params.slug as string;
-  const { t } = useTranslations();
+  const { t } = useI18n();
   const { addItem } = useCart();
 
   const [bundle, setBundle] = useState<Bundle | null>(null);
@@ -184,7 +184,7 @@ export default function BundleDetailPage() {
 
             {/* Savings Badge */}
             {bundle.discount > 0 && (
-              <div className="absolute top-4 right-4 bg-red-500 text-white px-4 py-2 rounded-full text-lg font-bold shadow-lg">
+              <div className="absolute top-4 end-4 bg-red-500 text-white px-4 py-2 rounded-full text-lg font-bold shadow-lg">
                 Save {bundle.discount}%
               </div>
             )}
@@ -220,7 +220,7 @@ export default function BundleDetailPage() {
                   ${bundle.bundlePrice.toFixed(2)}
                 </span>
               </div>
-              <div className="text-right text-green-600 font-medium">
+              <div className="text-end text-green-600 font-medium">
                 You save ${bundle.savings.toFixed(2)}!
               </div>
             </div>

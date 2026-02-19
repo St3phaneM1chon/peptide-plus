@@ -254,7 +254,7 @@ export default function PermissionsPage() {
                     <ChevronRight className="w-4 h-4 text-slate-400" />
                   )}
                   {group.label}
-                  <span className="text-xs text-slate-400 font-normal ml-1">
+                  <span className="text-xs text-slate-400 font-normal ms-1">
                     ({group.permissions.length})
                   </span>
                 </button>
@@ -458,7 +458,7 @@ export default function PermissionsPage() {
           <div className="bg-white border border-slate-200 rounded-lg p-5 mb-4">
             <label className="block text-sm font-medium text-slate-700 mb-2">{t('admin.permissions.searchUser')}</label>
             <div className="relative w-full max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <Input
                 value={userSearch}
                 onChange={e => {
@@ -466,7 +466,7 @@ export default function PermissionsPage() {
                   searchUsers(e.target.value);
                 }}
                 placeholder={t('admin.permissions.searchPlaceholder')}
-                className="pl-9"
+                className="ps-9"
               />
             </div>
             {users.length > 0 && !selectedUser && (
@@ -480,7 +480,7 @@ export default function PermissionsPage() {
                       setUserSearch('');
                       fetchOverrides(user.id);
                     }}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 text-left"
+                    className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 text-start"
                   >
                     <div className="w-8 h-8 bg-slate-200 rounded-full flex items-center justify-center text-xs font-medium text-slate-600">
                       {user.name?.charAt(0)?.toUpperCase() || user.email.charAt(0).toUpperCase()}

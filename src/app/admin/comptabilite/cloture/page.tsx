@@ -199,7 +199,7 @@ export default function CloturePage() {
                 <h2 className="text-xl font-bold text-emerald-900">{currentPeriod.name}</h2>
                 <p className="text-emerald-700">{t('admin.closing.closingChecklist')}</p>
               </div>
-              <div className="text-right">
+              <div className="text-end">
                 <p className="text-sm text-emerald-600">{t('admin.closing.progressLabel')}</p>
                 <p className="text-2xl font-bold text-emerald-900">{okTasks}/{checklist.length}</p>
               </div>

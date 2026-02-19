@@ -4,6 +4,7 @@
  */
 
 import { type Locale, defaultLocale, isValidLocale } from '@/i18n/config';
+import { logger } from './logger';
 import { prisma } from './db';
 import {
   orderConfirmationEmail,
@@ -56,7 +57,7 @@ async function getUserLocale(userId: string): Promise<Locale> {
       return user.locale as Locale;
     }
   } catch (error) {
-    console.error('Error fetching user locale:', error);
+    logger.error('Error fetching user locale', { userId, error: error instanceof Error ? error.message : String(error) });
   }
   
   return defaultLocale;
@@ -91,7 +92,7 @@ export async function sendOrderConfirmation(
       entityType: 'Email',
       details: JSON.stringify({ type: 'ORDER_CONFIRMATION', orderNumber: data.orderNumber, locale, sent }),
     },
-  }).catch(console.error);
+  }).catch((err: unknown) => logger.error('Failed to create audit log', { error: err instanceof Error ? err.message : String(err) }));
   
   return sent;
 }
@@ -119,7 +120,7 @@ export async function sendWelcomeEmail(
       entityType: 'Email',
       details: JSON.stringify({ type: 'WELCOME', locale, sent }),
     },
-  }).catch(console.error);
+  }).catch((err: unknown) => logger.error('Failed to create audit log', { error: err instanceof Error ? err.message : String(err) }));
   
   return sent;
 }
@@ -148,7 +149,7 @@ export async function sendPasswordResetEmail(
       entityType: 'Email',
       details: JSON.stringify({ type: 'PASSWORD_RESET', locale, sent }),
     },
-  }).catch(console.error);
+  }).catch((err: unknown) => logger.error('Failed to create audit log', { error: err instanceof Error ? err.message : String(err) }));
   
   return sent;
 }
@@ -181,7 +182,7 @@ export async function sendShippingUpdate(
       entityType: 'Email',
       details: JSON.stringify({ type: 'SHIPPING_UPDATE', orderNumber: data.orderNumber, status: data.status, locale, sent }),
     },
-  }).catch(console.error);
+  }).catch((err: unknown) => logger.error('Failed to create audit log', { error: err instanceof Error ? err.message : String(err) }));
   
   return sent;
 }
@@ -215,7 +216,7 @@ export async function sendReceiptEmail(
       entityType: 'Email',
       details: JSON.stringify({ type: 'RECEIPT', orderNumber: data.orderNumber, locale, sent }),
     },
-  }).catch(console.error);
+  }).catch((err: unknown) => logger.error('Failed to create audit log', { error: err instanceof Error ? err.message : String(err) }));
   
   return sent;
 }
@@ -249,7 +250,7 @@ export async function sendOrderCancellation(
       entityType: 'Email',
       details: JSON.stringify({ type: 'ORDER_CANCELLATION', orderNumber: data.orderNumber, locale, sent }),
     },
-  }).catch(console.error);
+  }).catch((err: unknown) => logger.error('Failed to create audit log', { error: err instanceof Error ? err.message : String(err) }));
 
   return sent;
 }

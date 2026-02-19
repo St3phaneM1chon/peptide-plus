@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { toast } from 'sonner';
 import Breadcrumbs from '@/components/ui/Breadcrumbs';
@@ -9,7 +9,7 @@ import Breadcrumbs from '@/components/ui/Breadcrumbs';
 const PRESET_AMOUNTS = [25, 50, 100, 200];
 
 export default function GiftCardsPage() {
-  const { t } = useTranslations();
+  const { t } = useI18n();
   const { formatPrice } = useCurrency();
 
   const [selectedAmount, setSelectedAmount] = useState<number>(50);
@@ -40,12 +40,12 @@ export default function GiftCardsPage() {
 
   const handlePurchase = async () => {
     if (finalAmount < 25 || finalAmount > 1000) {
-      toast.error('Amount must be between $25 and $1000');
+      toast.error(t('toast.giftCard.amountInvalid'));
       return;
     }
 
     if (recipientEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipientEmail)) {
-      toast.error('Please enter a valid email address');
+      toast.error(t('toast.giftCard.emailInvalid'));
       return;
     }
 
@@ -74,10 +74,10 @@ export default function GiftCardsPage() {
         amount: data.giftCard.amount,
       });
 
-      toast.success('Gift card created successfully!');
+      toast.success(t('toast.giftCard.created'));
     } catch (error) {
       console.error('Gift card purchase error:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to purchase gift card');
+      toast.error(error instanceof Error ? error.message : t('toast.giftCard.purchaseFailed'));
     } finally {
       setIsProcessing(false);
     }
@@ -118,7 +118,7 @@ export default function GiftCardsPage() {
               <button
                 onClick={() => {
                   navigator.clipboard.writeText(purchasedCard.code);
-                  toast.success('Code copied to clipboard!');
+                  toast.success(t('toast.giftCard.codeCopied'));
                 }}
                 className="w-full px-6 py-3 bg-gray-100 text-gray-800 font-semibold rounded-lg hover:bg-gray-200 flex items-center justify-center gap-2"
               >
@@ -204,15 +204,15 @@ export default function GiftCardsPage() {
                   Or enter custom amount ($25 - $1000)
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                  <span className="absolute start-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
                   <input
                     type="number"
                     min="25"
                     max="1000"
                     value={customAmount}
                     onChange={(e) => handleCustomAmountChange(e.target.value)}
-                    placeholder="Enter amount"
-                    className="w-full pl-8 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    placeholder={t('shop.giftCard.placeholderAmount')}
+                    className="w-full ps-8 pe-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                   />
                 </div>
               </div>
@@ -231,7 +231,7 @@ export default function GiftCardsPage() {
                     type="text"
                     value={recipientName}
                     onChange={(e) => setRecipientName(e.target.value)}
-                    placeholder="John Doe"
+                    placeholder={t('shop.giftCard.placeholderRecipientName')}
                     className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                   />
                 </div>
@@ -242,7 +242,7 @@ export default function GiftCardsPage() {
                     type="email"
                     value={recipientEmail}
                     onChange={(e) => setRecipientEmail(e.target.value)}
-                    placeholder="john@example.com"
+                    placeholder={t('shop.giftCard.placeholderRecipientEmail')}
                     className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                   />
                 </div>
@@ -252,7 +252,7 @@ export default function GiftCardsPage() {
                   <textarea
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
-                    placeholder="Add a personal message..."
+                    placeholder={t('shop.giftCard.placeholderMessage')}
                     rows={4}
                     maxLength={500}
                     className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"

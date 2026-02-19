@@ -315,6 +315,60 @@ export async function processInvoiceFromText(
 }
 
 /**
+ * #74 Audit: Validate OCR results before they can be used to create entries.
+ * Returns a list of validation errors. Empty array means data is valid.
+ */
+export function validateOCRData(ocrData: InvoiceData): string[] {
+  const errors: string[] = [];
+
+  if (!ocrData.total || ocrData.total <= 0) {
+    errors.push('Total is missing or not positive');
+  }
+
+  if (ocrData.subtotal !== undefined && ocrData.subtotal < 0) {
+    errors.push('Subtotal cannot be negative');
+  }
+
+  if (ocrData.taxTps !== undefined && ocrData.taxTps < 0) {
+    errors.push('TPS tax amount cannot be negative');
+  }
+
+  if (ocrData.taxTvq !== undefined && ocrData.taxTvq < 0) {
+    errors.push('TVQ tax amount cannot be negative');
+  }
+
+  // Cross-validate: subtotal + taxes should roughly equal total
+  if (ocrData.subtotal && ocrData.total) {
+    const computedTotal = ocrData.subtotal + (ocrData.taxTps || 0) + (ocrData.taxTvq || 0);
+    const tolerance = ocrData.total * 0.05; // 5% tolerance for OCR inaccuracies
+    if (Math.abs(computedTotal - ocrData.total) > tolerance && Math.abs(computedTotal - ocrData.total) > 1) {
+      errors.push(
+        `Computed total (${computedTotal.toFixed(2)}) differs from OCR total (${ocrData.total.toFixed(2)}) by more than 5%`
+      );
+    }
+  }
+
+  // Validate dates are sensible
+  if (ocrData.invoiceDate) {
+    const now = new Date();
+    const twoYearsAgo = new Date(now.getFullYear() - 2, 0, 1);
+    if (ocrData.invoiceDate < twoYearsAgo || ocrData.invoiceDate > new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)) {
+      errors.push('Invoice date seems unreasonable (more than 2 years old or in the future)');
+    }
+  }
+
+  if (ocrData.dueDate && ocrData.invoiceDate && ocrData.dueDate < ocrData.invoiceDate) {
+    errors.push('Due date is before invoice date');
+  }
+
+  if (ocrData.confidence < 0.5) {
+    errors.push(`OCR confidence too low (${(ocrData.confidence * 100).toFixed(0)}%) - manual review required`);
+  }
+
+  return errors;
+}
+
+/**
  * Create supplier invoice from OCR data
  */
 export function createInvoiceFromOCR(
@@ -335,29 +389,22 @@ export function createInvoiceFromOCR(
   const reviewNotes: string[] = [];
   let needsReview = false;
 
-  // Validate and flag issues
+  // #74 Audit: Run structured validation before creating entries
+  const validationErrors = validateOCRData(ocrData);
+  if (validationErrors.length > 0) {
+    reviewNotes.push(...validationErrors);
+    needsReview = true;
+  }
+
+  // Additional cosmetic checks
   if (!ocrData.invoiceNumber) {
     reviewNotes.push('Numéro de facture non détecté');
     needsReview = true;
   }
 
-  if (!ocrData.total || ocrData.total <= 0) {
-    reviewNotes.push('Total non détecté ou invalide');
-    needsReview = true;
-  }
-
-  if (ocrData.confidence < 0.7) {
+  if (ocrData.confidence < 0.7 && !validationErrors.some(e => e.includes('confidence'))) {
     reviewNotes.push('Confiance OCR faible - vérification recommandée');
     needsReview = true;
-  }
-
-  // Validate tax calculation
-  if (ocrData.subtotal && ocrData.total) {
-    const expectedTotal = ocrData.subtotal * 1.14975;
-    if (Math.abs(expectedTotal - ocrData.total) > 1) {
-      reviewNotes.push('Calcul des taxes à vérifier');
-      needsReview = true;
-    }
   }
 
   return {

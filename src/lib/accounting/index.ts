@@ -1,6 +1,32 @@
 /**
  * Accounting Module - Main Export
- * 
+ *
+ * #86 TODO: Extract common query builder patterns.
+ * Multiple API routes (customer-invoices, supplier-invoices, bank-transactions,
+ * entries, general-ledger) share nearly identical logic for:
+ *   - Date range filter construction + validation (from/to → { gte, lte })
+ *   - Pagination param parsing (page/limit with clamping)
+ *   - Safe ORDER BY field allowlist (sortBy/sortOrder)
+ *   - Soft-delete filter (deletedAt: null)
+ * Consolidating these into a shared `buildQueryFilters()` utility would reduce
+ * ~15 lines of boilerplate per route and centralise validation rules.
+ * Candidate location: src/lib/accounting/query-utils.ts
+ *
+ * #87 Note: Error message language convention.
+ * - API route handlers (src/app/api/accounting/): ALL error messages in French
+ *   (these are user-facing and returned in JSON responses).
+ * - Service files (src/lib/accounting/): English is acceptable for throw new Error()
+ *   (these are internal/technical errors caught and wrapped by API routes).
+ * - Do NOT mix languages within the same layer.
+ *
+ * #88 TODO: Potential circular dependency risk.
+ * expense.service.ts and recurring-entries.service.ts both import from '@/lib/db'
+ * and operate on the same JournalEntry model. If either service starts importing
+ * from the other (e.g. recurring expenses calling createExpenseEntry), a circular
+ * dependency will arise. Mitigation: keep these services independent and use the
+ * lower-level Prisma calls directly, or extract shared logic into a common
+ * journal-entry-factory.ts that both services can import.
+ *
  * Comprehensive accounting functionality for BioCycle Peptides:
  * 
  * PHASE 1-2: Core Functionality
@@ -149,6 +175,7 @@ export {
   getActionLabel,
   getEntityLabel,
 } from './audit-trail.service';
+export type { AuditAction, EntityType } from './audit-trail.service';
 
 // PHASE 5: Tax Compliance Service
 export {

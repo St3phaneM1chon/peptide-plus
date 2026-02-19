@@ -378,9 +378,9 @@ export default function ParametresComptablesPage() {
             <table className="w-full">
               <thead className="bg-slate-50">
                 <tr>
-                  <th className="px-4 py-2 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.accountingSettings.taxCol')}</th>
-                  <th className="px-4 py-2 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.accountingSettings.jurisdictionCol')}</th>
-                  <th className="px-4 py-2 text-right text-xs font-semibold text-slate-500 uppercase">{t('admin.accountingSettings.rateCol')}</th>
+                  <th className="px-4 py-2 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.accountingSettings.taxCol')}</th>
+                  <th className="px-4 py-2 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.accountingSettings.jurisdictionCol')}</th>
+                  <th className="px-4 py-2 text-end text-xs font-semibold text-slate-500 uppercase">{t('admin.accountingSettings.rateCol')}</th>
                   <th className="px-4 py-2 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.accountingSettings.activeCol')}</th>
                 </tr>
               </thead>
@@ -392,11 +392,11 @@ export default function ParametresComptablesPage() {
                 If rates change, update them here directly.
               */}
               <tbody className="divide-y divide-slate-200">
-                <tr><td className="px-4 py-3">TPS</td><td className="px-4 py-3 text-slate-600">{t('admin.accountingSettings.canadaFederal')}</td><td className="px-4 py-3 text-right">5%</td><td className="px-4 py-3 text-center text-green-600">&#10003;</td></tr>
-                <tr><td className="px-4 py-3">TVQ</td><td className="px-4 py-3 text-slate-600">{t('admin.accountingSettings.quebec')}</td><td className="px-4 py-3 text-right">9.975%</td><td className="px-4 py-3 text-center text-green-600">&#10003;</td></tr>
-                <tr><td className="px-4 py-3">TVH</td><td className="px-4 py-3 text-slate-600">{t('admin.accountingSettings.ontario')}</td><td className="px-4 py-3 text-right">13%</td><td className="px-4 py-3 text-center text-green-600">&#10003;</td></tr>
-                <tr><td className="px-4 py-3">TVH</td><td className="px-4 py-3 text-slate-600">{t('admin.accountingSettings.novaScotia')}</td><td className="px-4 py-3 text-right">15%</td><td className="px-4 py-3 text-center text-green-600">&#10003;</td></tr>
-                <tr><td className="px-4 py-3">PST</td><td className="px-4 py-3 text-slate-600">{t('admin.accountingSettings.britishColumbia')}</td><td className="px-4 py-3 text-right">7%</td><td className="px-4 py-3 text-center text-green-600">&#10003;</td></tr>
+                <tr><td className="px-4 py-3">TPS</td><td className="px-4 py-3 text-slate-600">{t('admin.accountingSettings.canadaFederal')}</td><td className="px-4 py-3 text-end">5%</td><td className="px-4 py-3 text-center text-green-600">&#10003;</td></tr>
+                <tr><td className="px-4 py-3">TVQ</td><td className="px-4 py-3 text-slate-600">{t('admin.accountingSettings.quebec')}</td><td className="px-4 py-3 text-end">9.975%</td><td className="px-4 py-3 text-center text-green-600">&#10003;</td></tr>
+                <tr><td className="px-4 py-3">TVH</td><td className="px-4 py-3 text-slate-600">{t('admin.accountingSettings.ontario')}</td><td className="px-4 py-3 text-end">13%</td><td className="px-4 py-3 text-center text-green-600">&#10003;</td></tr>
+                <tr><td className="px-4 py-3">TVH</td><td className="px-4 py-3 text-slate-600">{t('admin.accountingSettings.novaScotia')}</td><td className="px-4 py-3 text-end">15%</td><td className="px-4 py-3 text-center text-green-600">&#10003;</td></tr>
+                <tr><td className="px-4 py-3">PST</td><td className="px-4 py-3 text-slate-600">{t('admin.accountingSettings.britishColumbia')}</td><td className="px-4 py-3 text-end">7%</td><td className="px-4 py-3 text-center text-green-600">&#10003;</td></tr>
               </tbody>
             </table>
           </div>
@@ -433,9 +433,9 @@ export default function ParametresComptablesPage() {
             <table className="w-full">
               <thead className="bg-slate-50">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.accountingSettings.currencyCol')}</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.accountingSettings.symbolCol')}</th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase">{t('admin.accountingSettings.rateVsCAD')}</th>
+                  <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.accountingSettings.currencyCol')}</th>
+                  <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.accountingSettings.symbolCol')}</th>
+                  <th className="px-4 py-3 text-end text-xs font-semibold text-slate-500 uppercase">{t('admin.accountingSettings.rateVsCAD')}</th>
                   <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.accountingSettings.defaultCol')}</th>
                   <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.accountingSettings.activeCol')}</th>
                 </tr>
@@ -448,7 +448,7 @@ export default function ParametresComptablesPage() {
                       <p className="text-sm text-slate-500">{currency.name}</p>
                     </td>
                     <td className="px-4 py-3 text-slate-600">{currency.symbol}</td>
-                    <td className="px-4 py-3 text-right font-mono">{currency.rate.toFixed(4)}</td>
+                    <td className="px-4 py-3 text-end font-mono">{currency.rate.toFixed(4)}</td>
                     <td className="px-4 py-3 text-center">
                       {currency.isDefault && <span className="text-emerald-600">&#10003;</span>}
                     </td>

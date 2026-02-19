@@ -8,7 +8,7 @@
 import Link from 'next/link';
 import { TrackingTimeline } from './TrackingTimeline';
 import { OrderSummary } from './OrderSummary';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 
 interface ShippingInfo {
   status: string;
@@ -51,7 +51,7 @@ interface PhysicalDeliveryTrackingProps {
 }
 
 export function PhysicalDeliveryTracking({ order }: PhysicalDeliveryTrackingProps) {
-  const { t } = useTranslations();
+  const { t, locale } = useI18n();
   const shipping = order.shipping;
   const purchaseDate = new Date(order.createdAt);
 
@@ -222,7 +222,7 @@ export function PhysicalDeliveryTracking({ order }: PhysicalDeliveryTrackingProp
                   }}
                 >
                   {new Date(shipping.estimatedDelivery).toLocaleDateString(
-                    'fr-CA',
+                    locale,
                     {
                       weekday: 'long',
                       day: 'numeric',

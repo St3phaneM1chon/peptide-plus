@@ -271,7 +271,7 @@ export default function OCRPage() {
                   <h3 className="font-medium text-white">{t('admin.ocrScan.extractedData')}</h3>
                   <p className="text-sm text-neutral-400">{t('admin.ocrScan.verifyAndCorrect')}</p>
                 </div>
-                <div className="text-right">
+                <div className="text-end">
                   <span className={`text-sm font-medium ${getConfidenceColor(extractedData.confidence)}`}>
                     {t('admin.ocrScan.confidence', { percent: Math.round(extractedData.confidence * 100) })}
                   </span>
@@ -322,19 +322,19 @@ export default function OCRPage() {
                       <table className="w-full text-sm">
                         <thead className="bg-neutral-700/50">
                           <tr>
-                            <th className="px-3 py-2 text-left text-xs text-neutral-400">{t('admin.ocrScan.description')}</th>
-                            <th className="px-3 py-2 text-right text-xs text-neutral-400">{t('admin.ocrScan.qty')}</th>
-                            <th className="px-3 py-2 text-right text-xs text-neutral-400">{t('admin.ocrScan.unitPrice')}</th>
-                            <th className="px-3 py-2 text-right text-xs text-neutral-400">{t('admin.ocrScan.total')}</th>
+                            <th className="px-3 py-2 text-start text-xs text-neutral-400">{t('admin.ocrScan.description')}</th>
+                            <th className="px-3 py-2 text-end text-xs text-neutral-400">{t('admin.ocrScan.qty')}</th>
+                            <th className="px-3 py-2 text-end text-xs text-neutral-400">{t('admin.ocrScan.unitPrice')}</th>
+                            <th className="px-3 py-2 text-end text-xs text-neutral-400">{t('admin.ocrScan.total')}</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-neutral-700">
                           {extractedData.items.map((item, i) => (
                             <tr key={i}>
                               <td className="px-3 py-2 text-white">{item.description}</td>
-                              <td className="px-3 py-2 text-right text-neutral-300">{item.quantity}</td>
-                              <td className="px-3 py-2 text-right text-neutral-300">{formatCurrency(item.unitPrice)}</td>
-                              <td className="px-3 py-2 text-right text-white">{formatCurrency(item.total)}</td>
+                              <td className="px-3 py-2 text-end text-neutral-300">{item.quantity}</td>
+                              <td className="px-3 py-2 text-end text-neutral-300">{formatCurrency(item.unitPrice)}</td>
+                              <td className="px-3 py-2 text-end text-white">{formatCurrency(item.total)}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -438,7 +438,7 @@ export default function OCRPage() {
                       <p className="text-sm text-white">{scan.supplierName}</p>
                       <p className="text-xs text-neutral-500">{scan.fileName}</p>
                     </div>
-                    <div className="text-right">
+                    <div className="text-end">
                       <p className="text-sm font-medium text-white">{formatCurrency(scan.total)}</p>
                       <span className={`text-xs ${
                         scan.status === 'SUCCESS' ? 'text-green-400' :

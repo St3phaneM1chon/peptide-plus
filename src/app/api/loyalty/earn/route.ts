@@ -100,11 +100,29 @@ export async function POST(request: NextRequest) {
         transactionDescription = 'Welcome bonus - Thank you for joining!';
         break;
 
-      case 'REVIEW':
+      case 'REVIEW': {
+        // DI-59: Prevent duplicate review points for the same product
+        const productId = body.productId;
+        if (productId) {
+          const existingReviewEarn = await db.loyaltyTransaction.findFirst({
+            where: {
+              userId: user.id,
+              type: 'EARN_REVIEW',
+              description: { contains: productId },
+            },
+          });
+          if (existingReviewEarn) {
+            return NextResponse.json({
+              error: 'Review points already earned for this product',
+              points: user.loyaltyPoints,
+            }, { status: 400 });
+          }
+        }
         pointsToEarn = POINTS_CONFIG.REVIEW;
         transactionType = 'EARN_REVIEW';
-        transactionDescription = description || 'Points for leaving a product review';
+        transactionDescription = description || `Points for leaving a product review${productId ? ` [${productId}]` : ''}`;
         break;
+      }
 
       case 'REFERRAL':
         pointsToEarn = POINTS_CONFIG.REFERRAL;
@@ -112,11 +130,29 @@ export async function POST(request: NextRequest) {
         transactionDescription = description || 'Referral bonus - Thank you for sharing!';
         break;
 
-      case 'BIRTHDAY':
+      case 'BIRTHDAY': {
+        // DI-59: Prevent duplicate birthday points in the same year
+        const currentYear = new Date().getFullYear();
+        const yearStart = new Date(currentYear, 0, 1);
+        const yearEnd = new Date(currentYear + 1, 0, 1);
+        const existingBirthdayEarn = await db.loyaltyTransaction.findFirst({
+          where: {
+            userId: user.id,
+            type: 'EARN_BIRTHDAY',
+            createdAt: { gte: yearStart, lt: yearEnd },
+          },
+        });
+        if (existingBirthdayEarn) {
+          return NextResponse.json({
+            error: 'Birthday points already earned this year',
+            points: user.loyaltyPoints,
+          }, { status: 400 });
+        }
         pointsToEarn = POINTS_CONFIG.BIRTHDAY;
         transactionType = 'EARN_BIRTHDAY';
         transactionDescription = 'Happy Birthday! Enjoy your bonus points!';
         break;
+      }
 
       case 'BONUS':
         if (!amount || amount <= 0) {

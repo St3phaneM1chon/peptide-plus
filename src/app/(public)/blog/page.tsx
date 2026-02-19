@@ -6,7 +6,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 
 // metadata moved to layout or head for client components
 
@@ -37,7 +37,7 @@ function formatDate(dateString: string | null): string {
 export default function BlogPage() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
-  const { locale } = useTranslations();
+  const { locale } = useI18n();
 
   useEffect(() => {
     async function fetchPosts() {

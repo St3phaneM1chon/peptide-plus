@@ -5,10 +5,11 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import PriceDropButton from '@/components/shop/PriceDropButton';
 import { toast } from 'sonner';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
 interface WishlistProduct {
   name: string;
@@ -44,7 +45,7 @@ interface WishlistCollection {
 export default function WishlistPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const { t } = useTranslations();
+  const { t } = useI18n();
   const { formatPrice } = useCurrency();
 
   const [collections, setCollections] = useState<WishlistCollection[]>([]);
@@ -54,6 +55,7 @@ export default function WishlistPage() {
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newListName, setNewListName] = useState('');
+  const [confirmDeleteList, setConfirmDeleteList] = useState<{ id: string; isDefault: boolean } | null>(null);
   const [showRenameModal, setShowRenameModal] = useState(false);
   const [renameCollectionId, setRenameCollectionId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
@@ -91,7 +93,7 @@ export default function WishlistPage() {
       }
     } catch (error) {
       console.error('Error fetching wishlists:', error);
-      toast.error('Failed to load wishlists');
+      toast.error(t('toast.wishlist.loadFailed'));
     } finally {
       setIsLoading(false);
     }
@@ -106,13 +108,13 @@ export default function WishlistPage() {
       }
     } catch (error) {
       console.error('Error fetching wishlist items:', error);
-      toast.error('Failed to load items');
+      toast.error(t('toast.wishlist.itemsLoadFailed'));
     }
   };
 
   const handleCreateList = async () => {
     if (!newListName.trim()) {
-      toast.error('Please enter a name');
+      toast.error(t('toast.wishlist.enterName'));
       return;
     }
 
@@ -125,18 +127,18 @@ export default function WishlistPage() {
 
       if (res.ok) {
         const data = await res.json();
-        toast.success('Wishlist created');
+        toast.success(t('toast.wishlist.created'));
         setCollections((prev) => [...prev, data.wishlist]);
         setActiveCollectionId(data.wishlist.id);
         setShowCreateModal(false);
         setNewListName('');
       } else {
         const data = await res.json();
-        toast.error(data.error || 'Failed to create wishlist');
+        toast.error(data.error || t('toast.wishlist.createFailed'));
       }
     } catch (error) {
       console.error('Error creating wishlist:', error);
-      toast.error('Failed to create wishlist');
+      toast.error(t('toast.wishlist.createFailed'));
     }
   };
 
@@ -151,7 +153,7 @@ export default function WishlistPage() {
       });
 
       if (res.ok) {
-        toast.success('Wishlist renamed');
+        toast.success(t('toast.wishlist.renamed'));
         setCollections((prev) =>
           prev.map((c) => (c.id === renameCollectionId ? { ...c, name: renameValue.trim() } : c))
         );
@@ -160,23 +162,26 @@ export default function WishlistPage() {
         setRenameValue('');
       } else {
         const data = await res.json();
-        toast.error(data.error || 'Failed to rename wishlist');
+        toast.error(data.error || t('toast.wishlist.renameFailed'));
       }
     } catch (error) {
       console.error('Error renaming wishlist:', error);
-      toast.error('Failed to rename wishlist');
+      toast.error(t('toast.wishlist.renameFailed'));
     }
   };
 
-  const handleDeleteList = async (id: string, isDefault: boolean) => {
+  const handleDeleteList = (id: string, isDefault: boolean) => {
     if (isDefault) {
-      toast.error('Cannot delete default wishlist');
+      toast.error(t('toast.wishlist.cannotDeleteDefault'));
       return;
     }
+    setConfirmDeleteList({ id, isDefault });
+  };
 
-    if (!confirm('Delete this wishlist? Items will be moved to your default wishlist.')) {
-      return;
-    }
+  const executeDeleteList = async () => {
+    if (!confirmDeleteList) return;
+    const { id } = confirmDeleteList;
+    setConfirmDeleteList(null);
 
     try {
       const res = await fetch(`/api/account/wishlists?id=${id}`, {
@@ -193,11 +198,11 @@ export default function WishlistPage() {
         }
       } else {
         const data = await res.json();
-        toast.error(data.error || 'Failed to delete wishlist');
+        toast.error(data.error || t('toast.wishlist.deleteFailed'));
       }
     } catch (error) {
       console.error('Error deleting wishlist:', error);
-      toast.error('Failed to delete wishlist');
+      toast.error(t('toast.wishlist.deleteFailed'));
     }
   };
 
@@ -215,13 +220,13 @@ export default function WishlistPage() {
             c.id === activeCollectionId ? { ...c, _count: { items: c._count.items - 1 } } : c
           )
         );
-        toast.info('Removed from wishlist');
+        toast.info(t('toast.wishlist.removed'));
       } else {
-        toast.error('Failed to remove item');
+        toast.error(t('toast.wishlist.removeFailed'));
       }
     } catch (error) {
       console.error('Error removing item:', error);
-      toast.error('Failed to remove item');
+      toast.error(t('toast.wishlist.removeFailed'));
     } finally {
       setRemovingId(null);
     }
@@ -238,7 +243,7 @@ export default function WishlistPage() {
       });
 
       if (res.ok) {
-        toast.success('Item moved');
+        toast.success(t('toast.wishlist.itemMoved'));
         setItems((prev) => prev.filter((i) => i.id !== moveItemId));
         fetchCollections(); // Refresh counts
         setShowMoveModal(false);
@@ -246,11 +251,11 @@ export default function WishlistPage() {
         setMoveTargetId(null);
       } else {
         const data = await res.json();
-        toast.error(data.error || 'Failed to move item');
+        toast.error(data.error || t('toast.wishlist.moveFailed'));
       }
     } catch (error) {
       console.error('Error moving item:', error);
-      toast.error('Failed to move item');
+      toast.error(t('toast.wishlist.moveFailed'));
     }
   };
 
@@ -283,6 +288,15 @@ export default function WishlistPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <ConfirmDialog
+        isOpen={!!confirmDeleteList}
+        title={t('toast.wishlist.deleteTitle') || 'Delete Wishlist'}
+        message={t('toast.wishlist.deleteConfirmMessage') || 'Delete this wishlist? Items will be moved to your default wishlist.'}
+        confirmLabel={t('common.confirm') || 'Delete'}
+        onConfirm={executeDeleteList}
+        onCancel={() => setConfirmDeleteList(null)}
+        variant="danger"
+      />
       {/* Header */}
       <section className="bg-gradient-to-br from-neutral-900 via-neutral-800 to-black text-white py-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -336,14 +350,14 @@ export default function WishlistPage() {
 
               {/* Dropdown menu on hover */}
               {activeCollectionId === collection.id && (
-                <div className="absolute top-full right-0 mt-1 hidden group-hover:block z-10">
+                <div className="absolute top-full end-0 mt-1 hidden group-hover:block z-10">
                   <div className="bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden min-w-[150px]">
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         openRenameModal(collection);
                       }}
-                      className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center gap-2"
+                      className="w-full text-start px-4 py-2 text-sm hover:bg-gray-50 flex items-center gap-2"
                     >
                       ✏️ Rename
                     </button>
@@ -353,7 +367,7 @@ export default function WishlistPage() {
                           e.stopPropagation();
                           handleDeleteList(collection.id, collection.isDefault);
                         }}
-                        className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                        className="w-full text-start px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
                       >
                         🗑️ Delete
                       </button>
@@ -395,7 +409,7 @@ export default function WishlistPage() {
                       className="object-cover hover:scale-105 transition-transform duration-300"
                     />
                     {item.product.category && (
-                      <span className="absolute top-3 left-3 px-3 py-1 bg-black/80 text-white text-xs font-medium rounded-full">
+                      <span className="absolute top-3 start-3 px-3 py-1 bg-black/80 text-white text-xs font-medium rounded-full">
                         {item.product.category}
                       </span>
                     )}
@@ -451,7 +465,7 @@ export default function WishlistPage() {
                       <button
                         onClick={() => openMoveModal(item.id)}
                         className="w-10 h-10 flex items-center justify-center rounded-lg border border-neutral-200 text-neutral-400 hover:text-orange-500 hover:border-orange-200 transition-colors"
-                        title="Move to another list"
+                        title={t('shop.wishlist.moveToList')}
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path
@@ -522,7 +536,7 @@ export default function WishlistPage() {
               type="text"
               value={newListName}
               onChange={(e) => setNewListName(e.target.value)}
-              placeholder="Enter list name"
+              placeholder={t('account.wishlistSettings.placeholderListName')}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 mb-4"
               maxLength={100}
               autoFocus
@@ -558,7 +572,7 @@ export default function WishlistPage() {
               type="text"
               value={renameValue}
               onChange={(e) => setRenameValue(e.target.value)}
-              placeholder="Enter new name"
+              placeholder={t('account.wishlistSettings.placeholderNewName')}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 mb-4"
               maxLength={100}
               autoFocus

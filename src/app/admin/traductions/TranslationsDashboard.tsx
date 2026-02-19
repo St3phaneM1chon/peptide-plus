@@ -150,7 +150,7 @@ export default function TranslationsDashboard() {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
-        <span className="ml-3 text-gray-500">{t('admin.translationsDashboard.loadingStats')}</span>
+        <span className="ms-3 text-gray-500">{t('admin.translationsDashboard.loadingStats')}</span>
       </div>
     );
   }
@@ -249,20 +249,20 @@ export default function TranslationsDashboard() {
           <table className="w-full">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('admin.translationsDashboard.colType')}</th>
+                <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase">{t('admin.translationsDashboard.colType')}</th>
                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">{t('admin.translationsDashboard.colTotal')}</th>
                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">{t('admin.translationsDashboard.colTranslated')}</th>
                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">{t('admin.translationsDashboard.colPartial')}</th>
                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">{t('admin.translationsDashboard.colUntranslated')}</th>
                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">{t('admin.translationsDashboard.colCoverage')}</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">{t('admin.translationsDashboard.colAction')}</th>
+                <th className="px-6 py-3 text-end text-xs font-medium text-gray-500 uppercase">{t('admin.translationsDashboard.colAction')}</th>
               </tr>
             </thead>
             <tbody className="divide-y">
               {Object.entries(overview).map(([model, coverage]) => (
                 <tr key={model} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="mr-2">{MODEL_ICONS[model] || '📋'}</span>
+                    <span className="me-2">{MODEL_ICONS[model] || '📋'}</span>
                     <span className="font-medium text-gray-900">{getModelLabel(model)}</span>
                   </td>
                   <td className="px-6 py-4 text-center text-gray-600">
@@ -296,7 +296,7 @@ export default function TranslationsDashboard() {
                       </span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-right">
+                  <td className="px-6 py-4 text-end">
                     <button
                       onClick={() => triggerTranslation(model)}
                       disabled={translating[model] || coverage.totalEntities === 0}
@@ -327,7 +327,7 @@ export default function TranslationsDashboard() {
             <Clock className="w-5 h-5 text-gray-400" />
             {t('admin.translationsDashboard.translationQueue')}
             {queue && (queue.pending + queue.processing > 0) && (
-              <span className="ml-2 px-2 py-0.5 text-xs bg-blue-100 text-blue-700 rounded-full">
+              <span className="ms-2 px-2 py-0.5 text-xs bg-blue-100 text-blue-700 rounded-full">
                 {t('admin.translationsDashboard.inProgress', { count: queue.pending + queue.processing })}
               </span>
             )}
@@ -363,11 +363,11 @@ export default function TranslationsDashboard() {
                 <table className="w-full text-sm">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">{t('admin.translationsDashboard.colJobId')}</th>
-                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">{t('admin.translationsDashboard.colModel')}</th>
+                      <th className="px-3 py-2 text-start text-xs font-medium text-gray-500">{t('admin.translationsDashboard.colJobId')}</th>
+                      <th className="px-3 py-2 text-start text-xs font-medium text-gray-500">{t('admin.translationsDashboard.colModel')}</th>
                       <th className="px-3 py-2 text-center text-xs font-medium text-gray-500">{t('admin.translationsDashboard.colPriority')}</th>
                       <th className="px-3 py-2 text-center text-xs font-medium text-gray-500">{t('admin.translationsDashboard.colStatus')}</th>
-                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">{t('admin.translationsDashboard.colError')}</th>
+                      <th className="px-3 py-2 text-start text-xs font-medium text-gray-500">{t('admin.translationsDashboard.colError')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">

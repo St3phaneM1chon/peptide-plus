@@ -12,12 +12,11 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { logger } from '@/lib/logger';
 import { createAccountingEntriesForOrder, createRefundAccountingEntries } from '@/lib/accounting/webhook-accounting.service';
 import { consumeReservation } from '@/lib/inventory';
-
-const PAYPAL_API_URL = process.env.PAYPAL_MODE === 'live'
-  ? 'https://api-m.paypal.com'
-  : 'https://api-m.sandbox.paypal.com';
+import { getPayPalAccessToken, PAYPAL_API_URL } from '@/lib/paypal';
+import { sanitizeWebhookPayload } from '@/lib/sanitize';
 
 /**
  * Verify PayPal webhook signature
@@ -28,7 +27,7 @@ async function verifyWebhookSignature(
 ): Promise<boolean> {
   const webhookId = process.env.PAYPAL_WEBHOOK_ID;
   if (!webhookId) {
-    console.error('PAYPAL_WEBHOOK_ID is not configured');
+    logger.error('PAYPAL_WEBHOOK_ID is not configured', { webhookId: undefined });
     return false;
   }
 
@@ -39,26 +38,12 @@ async function verifyWebhookSignature(
   const transmissionSig = request.headers.get('paypal-transmission-sig');
 
   if (!transmissionId || !transmissionTime || !certUrl || !authAlgo || !transmissionSig) {
-    console.error('Missing PayPal webhook headers');
+    logger.error('Missing PayPal webhook headers', { webhookId });
     return false;
   }
 
   try {
-    const auth = Buffer.from(
-      `${process.env.PAYPAL_CLIENT_ID}:${process.env.PAYPAL_CLIENT_SECRET}`
-    ).toString('base64');
-
-    const tokenResponse = await fetch(`${PAYPAL_API_URL}/v1/oauth2/token`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Basic ${auth}`,
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: 'grant_type=client_credentials',
-    });
-
-    const tokenData = await tokenResponse.json();
-    const accessToken = tokenData.access_token;
+    const accessToken = await getPayPalAccessToken();
 
     const verifyResponse = await fetch(
       `${PAYPAL_API_URL}/v1/notifications/verify-webhook-signature`,
@@ -83,7 +68,10 @@ async function verifyWebhookSignature(
     const verifyData = await verifyResponse.json();
     return verifyData.verification_status === 'SUCCESS';
   } catch (error) {
-    console.error('PayPal webhook verification error:', error);
+    logger.error('PayPal webhook verification error', {
+      webhookId,
+      error: error instanceof Error ? error.message : String(error),
+    });
     return false;
   }
 }
@@ -96,14 +84,14 @@ export async function POST(request: NextRequest) {
     // Verify webhook signature
     const isValid = await verifyWebhookSignature(request, body);
     if (!isValid) {
-      console.error('PayPal webhook signature verification failed');
+      logger.error('PayPal webhook signature verification failed', { webhookId: event?.id });
       return NextResponse.json({ error: 'Signature verification failed' }, { status: 400 });
     }
 
     const eventId = event.id;
     const eventType = event.event_type;
 
-    console.log(`PayPal webhook received: ${eventType} (${eventId})`);
+    logger.info('PayPal webhook received', { webhookId: eventId, eventType });
 
     // Idempotence check: skip if already processed
     const existingEvent = await prisma.webhookEvent.findUnique({
@@ -111,18 +99,20 @@ export async function POST(request: NextRequest) {
     });
 
     if (existingEvent) {
-      console.log(`PayPal webhook ${eventId} already processed (status: ${existingEvent.status})`);
+      logger.info('PayPal webhook already processed', { webhookId: eventId, status: existingEvent.status });
       return NextResponse.json({ received: true, status: 'already_processed' });
     }
 
     // Record the webhook event as PROCESSING
+    // BE-SEC-20: Sanitize PCI/PII-sensitive fields before storing payload
+    const sanitizedPayload = JSON.stringify(sanitizeWebhookPayload(event));
     const webhookRecord = await prisma.webhookEvent.create({
       data: {
         eventId,
         provider: 'paypal',
         eventType,
         status: 'PROCESSING',
-        payload: body,
+        payload: sanitizedPayload,
       },
     });
 
@@ -141,7 +131,7 @@ export async function POST(request: NextRequest) {
           break;
 
         default:
-          console.log(`Unhandled PayPal event type: ${eventType}`);
+          logger.warn('Unhandled PayPal event type', { webhookId: eventId, eventType });
       }
 
       // Mark as completed
@@ -150,7 +140,11 @@ export async function POST(request: NextRequest) {
         data: { status: 'COMPLETED', processedAt: new Date() },
       });
     } catch (handlerError) {
-      console.error(`PayPal webhook handler error for ${eventType}:`, handlerError);
+      logger.error('PayPal webhook handler error', {
+        webhookId: eventId,
+        eventType,
+        error: handlerError instanceof Error ? handlerError.message : String(handlerError),
+      });
 
       await prisma.webhookEvent.update({
         where: { id: webhookRecord.id },
@@ -163,11 +157,20 @@ export async function POST(request: NextRequest) {
 
       // Still return 200 to PayPal so they don't retry endlessly
       // The error is logged and the event status is FAILED for manual review
+
+      // TODO (item 72): Implement webhook retry mechanism for PayPal
+      // Same retry logic as Stripe webhook: track retryCount on WebhookEvent,
+      // use cron job /api/cron/retry-webhooks to reprocess FAILED events
+      // with retryCount < 3 using exponential backoff (5s, 10s, 20s).
+      // After max retries, send admin notification for manual intervention.
     }
 
     return NextResponse.json({ received: true });
   } catch (error) {
-    console.error('PayPal webhook error:', error);
+    logger.error('PayPal webhook error', {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
     return NextResponse.json({ error: 'Webhook handler failed' }, { status: 500 });
   }
 }
@@ -186,7 +189,7 @@ async function handleCaptureCompleted(event: any, webhookRecordId: string) {
   const amount = parseFloat(capture.amount?.value || '0');
   const currencyCode = capture.amount?.currency_code || 'CAD';
 
-  console.log(`PayPal capture completed: ${paypalOrderId}, amount: ${amount} ${currencyCode}`);
+  logger.info('PayPal capture completed', { paymentId: capture.id, orderId: paypalOrderId, amount, currencyCode });
 
   // Find the order by paypalOrderId
   let order = await prisma.order.findFirst({
@@ -194,7 +197,7 @@ async function handleCaptureCompleted(event: any, webhookRecordId: string) {
   });
 
   if (!order) {
-    console.warn(`Order not found for PayPal order ${paypalOrderId}, skipping`);
+    logger.warn('Order not found for PayPal order', { orderId: paypalOrderId });
     return;
   }
 
@@ -217,18 +220,18 @@ async function handleCaptureCompleted(event: any, webhookRecordId: string) {
   // Create accounting entries
   try {
     const accounting = await createAccountingEntriesForOrder(order.id);
-    console.log(`Accounting entries created for order ${order.orderNumber}: sale=${accounting.saleEntryId}, fee=${accounting.feeEntryId}`);
+    logger.info('Accounting entries created', { orderId: order.id, orderNumber: order.orderNumber, saleEntryId: accounting.saleEntryId, feeEntryId: accounting.feeEntryId });
   } catch (accError) {
-    console.error(`Failed to create accounting entries for order ${order.id}:`, accError);
+    logger.error('Failed to create accounting entries', { orderId: order.id, error: accError instanceof Error ? accError.message : String(accError) });
     // Don't throw - order is still valid even if accounting fails
   }
 
   // Consume inventory reservations
   try {
     await consumeReservation(order.id);
-    console.log(`Inventory consumed for order ${order.orderNumber}`);
+    logger.info('Inventory consumed', { orderId: order.id, orderNumber: order.orderNumber });
   } catch (invError) {
-    console.error(`Failed to consume inventory for order ${order.id}:`, invError);
+    logger.error('Failed to consume inventory', { orderId: order.id, error: invError instanceof Error ? invError.message : String(invError) });
     // Don't throw - order is still valid even if inventory consumption fails
   }
 
@@ -236,7 +239,7 @@ async function handleCaptureCompleted(event: any, webhookRecordId: string) {
   try {
     await createAmbassadorCommission(order.id, order.orderNumber, Number(order.total), order.promoCode);
   } catch (commError) {
-    console.error(`Failed to create ambassador commission for order ${order.id}:`, commError);
+    logger.error('Failed to create ambassador commission', { orderId: order.id, error: commError instanceof Error ? commError.message : String(commError) });
     // Don't throw - order is still valid even if commission creation fails
   }
 }
@@ -253,7 +256,7 @@ async function handleCaptureRefunded(event: any, webhookRecordId: string) {
   const paypalOrderId = capture.supplementary_data?.related_ids?.order_id || capture.id;
   const refundAmount = parseFloat(capture.amount?.value || '0');
 
-  console.log(`PayPal capture refunded: ${paypalOrderId}, refund amount: ${refundAmount}`);
+  logger.info('PayPal capture refunded', { paymentId: capture.id, orderId: paypalOrderId, refundAmount });
 
   // Find the order
   const order = await prisma.order.findFirst({
@@ -262,7 +265,7 @@ async function handleCaptureRefunded(event: any, webhookRecordId: string) {
   });
 
   if (!order) {
-    console.warn(`Order not found for PayPal refund ${paypalOrderId}, skipping`);
+    logger.warn('Order not found for PayPal refund', { orderId: paypalOrderId });
     return;
   }
 
@@ -301,50 +304,53 @@ async function handleCaptureRefunded(event: any, webhookRecordId: string) {
       refundTvh,
       'PayPal refund'
     );
-    console.log(`Refund accounting entries created for order ${order.orderNumber}`);
+    logger.info('Refund accounting entries created', { orderId: order.id, orderNumber: order.orderNumber });
   } catch (accError) {
-    console.error(`Failed to create refund accounting entries for order ${order.id}:`, accError);
+    logger.error('Failed to create refund accounting entries', { orderId: order.id, error: accError instanceof Error ? accError.message : String(accError) });
   }
 
   // Restore stock for full refunds
+  // BUG 9: Wrap stock restoration in a transaction for atomicity
   if (isFullRefund) {
     try {
-      for (const item of order.items) {
-        if (item.formatId) {
-          await prisma.productFormat.update({
-            where: { id: item.formatId },
-            data: { stockQuantity: { increment: item.quantity } },
+      await prisma.$transaction(async (tx) => {
+        for (const item of order.items) {
+          if (item.formatId) {
+            await tx.productFormat.update({
+              where: { id: item.formatId },
+              data: { stockQuantity: { increment: item.quantity } },
+            });
+          }
+
+          // Get current WAC
+          const lastTransaction = await tx.inventoryTransaction.findFirst({
+            where: {
+              productId: item.productId,
+              formatId: item.formatId,
+            },
+            orderBy: { createdAt: 'desc' },
+            select: { runningWAC: true },
+          });
+          const wac = lastTransaction ? Number(lastTransaction.runningWAC) : 0;
+
+          // Create RETURN inventory transaction
+          await tx.inventoryTransaction.create({
+            data: {
+              productId: item.productId,
+              formatId: item.formatId,
+              type: 'RETURN',
+              quantity: item.quantity,
+              unitCost: wac,
+              runningWAC: wac,
+              orderId: order.id,
+              reason: 'PayPal refund - stock restored',
+            },
           });
         }
-
-        // Get current WAC
-        const lastTransaction = await prisma.inventoryTransaction.findFirst({
-          where: {
-            productId: item.productId,
-            formatId: item.formatId,
-          },
-          orderBy: { createdAt: 'desc' },
-          select: { runningWAC: true },
-        });
-        const wac = lastTransaction ? Number(lastTransaction.runningWAC) : 0;
-
-        // Create RETURN inventory transaction
-        await prisma.inventoryTransaction.create({
-          data: {
-            productId: item.productId,
-            formatId: item.formatId,
-            type: 'RETURN',
-            quantity: item.quantity,
-            unitCost: wac,
-            runningWAC: wac,
-            orderId: order.id,
-            reason: 'PayPal refund - stock restored',
-          },
-        });
-      }
-      console.log(`Stock restored for refunded order ${order.orderNumber}`);
+      });
+      logger.info('Stock restored for refunded order', { orderId: order.id, orderNumber: order.orderNumber });
     } catch (invError) {
-      console.error(`Failed to restore stock for order ${order.id}:`, invError);
+      logger.error('Failed to restore stock', { orderId: order.id, error: invError instanceof Error ? invError.message : String(invError) });
     }
   }
 }
@@ -358,14 +364,14 @@ async function handleCaptureDenied(event: any, webhookRecordId: string) {
   const capture = event.resource;
   const paypalOrderId = capture.supplementary_data?.related_ids?.order_id || capture.id;
 
-  console.log(`PayPal capture denied: ${paypalOrderId}`);
+  logger.info('PayPal capture denied', { paymentId: capture.id, orderId: paypalOrderId });
 
   const order = await prisma.order.findFirst({
     where: { paypalOrderId },
   });
 
   if (!order) {
-    console.warn(`Order not found for PayPal denied capture ${paypalOrderId}, skipping`);
+    logger.warn('Order not found for PayPal denied capture', { orderId: paypalOrderId });
     return;
   }
 
@@ -382,7 +388,7 @@ async function handleCaptureDenied(event: any, webhookRecordId: string) {
     data: { orderId: order.id },
   });
 
-  console.log(`Order ${order.orderNumber} marked as failed (PayPal capture denied)`);
+  logger.info('Order marked as failed (PayPal capture denied)', { orderId: order.id, orderNumber: order.orderNumber });
 }
 
 /**
@@ -425,5 +431,5 @@ async function createAmbassadorCommission(
     update: {}, // No-op if already exists
   });
 
-  console.log(`Ambassador commission created: ${commissionAmount}$ for ${ambassador.name} (order ${orderNumber})`);
+  logger.info('Ambassador commission created', { orderId, orderNumber, commissionAmount, ambassadorName: ambassador.name });
 }

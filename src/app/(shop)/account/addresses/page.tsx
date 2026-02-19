@@ -9,10 +9,11 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 import { addressSchema, validateForm } from '@/lib/form-validation';
 import { FormError } from '@/components/ui/FormError';
 import { AddressAutocomplete } from '@/components/ui/AddressAutocomplete';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { toast } from 'sonner';
 
 interface Address {
@@ -52,7 +53,7 @@ const PROVINCE_KEYS: Record<string, string> = {
 export default function AddressesPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const { t } = useTranslations();
+  const { t } = useI18n();
 
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [loading, setLoading] = useState(true);
@@ -73,6 +74,7 @@ export default function AddressesPage() {
     phone: '',
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   // Clear a specific field error when user modifies that field
   const clearFieldError = (field: string) => {
@@ -148,7 +150,7 @@ export default function AddressesPage() {
       }
 
       saveAddresses(updated);
-      toast.success('Address updated');
+      toast.success(t('toast.address.updated'));
     } else {
       // Create new
       const newAddress: Address = {
@@ -172,7 +174,7 @@ export default function AddressesPage() {
       }
 
       saveAddresses([...updated, newAddress]);
-      toast.success('Address added');
+      toast.success(t('toast.address.added'));
     }
 
     resetForm();
@@ -209,9 +211,14 @@ export default function AddressesPage() {
 
   // Delete address
   const deleteAddress = (id: string) => {
-    if (confirm(t('customerAddresses.confirmDelete'))) {
-      saveAddresses(addresses.filter(a => a.id !== id));
-      toast.success('Address deleted');
+    setConfirmDeleteId(id);
+  };
+
+  const confirmDeleteAddress = () => {
+    if (confirmDeleteId) {
+      saveAddresses(addresses.filter(a => a.id !== confirmDeleteId));
+      toast.success(t('toast.address.deleted'));
+      setConfirmDeleteId(null);
     }
   };
 
@@ -225,7 +232,7 @@ export default function AddressesPage() {
       isDefault: a.id === id ? true : (a.type === address.type ? false : a.isDefault),
     }));
     saveAddresses(updated);
-    toast.success('Default address updated');
+    toast.success(t('toast.address.defaultUpdated'));
   };
 
   if (status === 'loading' || loading) {
@@ -243,6 +250,15 @@ export default function AddressesPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
+      <ConfirmDialog
+        isOpen={!!confirmDeleteId}
+        title={t('customerAddresses.deleteTitle') || 'Delete Address'}
+        message={t('customerAddresses.confirmDelete')}
+        confirmLabel={t('common.confirm') || 'Delete'}
+        onConfirm={confirmDeleteAddress}
+        onCancel={() => setConfirmDeleteId(null)}
+        variant="danger"
+      />
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
@@ -358,7 +374,7 @@ export default function AddressesPage() {
                         value="shipping"
                         checked={formData.type === 'shipping'}
                         onChange={() => setFormData({ ...formData, type: 'shipping' })}
-                        className="mr-2 text-orange-500 focus:ring-orange-500"
+                        className="me-2 text-orange-500 focus:ring-orange-500"
                       />
                       {t('customerAddresses.shipping')}
                     </label>
@@ -369,7 +385,7 @@ export default function AddressesPage() {
                         value="billing"
                         checked={formData.type === 'billing'}
                         onChange={() => setFormData({ ...formData, type: 'billing' })}
-                        className="mr-2 text-orange-500 focus:ring-orange-500"
+                        className="me-2 text-orange-500 focus:ring-orange-500"
                       />
                       {t('customerAddresses.billing')}
                     </label>
@@ -570,7 +586,7 @@ function AddressCard({
   onDelete: () => void;
   onSetDefault: () => void;
 }) {
-  const { t } = useTranslations();
+  const { t } = useI18n();
   const provinceName = PROVINCE_KEYS[address.province] ? t(PROVINCE_KEYS[address.province]) : address.province;
 
   return (

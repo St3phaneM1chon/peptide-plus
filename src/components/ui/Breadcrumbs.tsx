@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 
 export interface BreadcrumbItem {
   label: string;
@@ -13,7 +13,7 @@ interface BreadcrumbsProps {
 }
 
 export default function Breadcrumbs({ items }: BreadcrumbsProps) {
-  const { t } = useTranslations();
+  const { t } = useI18n();
 
   // Generate JSON-LD structured data for SEO
   const jsonLd = {
@@ -36,7 +36,7 @@ export default function Breadcrumbs({ items }: BreadcrumbsProps) {
       />
 
       {/* Breadcrumb navigation */}
-      <nav aria-label="Breadcrumb" className="bg-neutral-50 border-b border-neutral-200">
+      <nav aria-label={t('common.aria.breadcrumb')} className="bg-neutral-50 border-b border-neutral-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
           <ol className="flex items-center gap-2 text-sm overflow-x-auto">
             {items.map((item, index) => {

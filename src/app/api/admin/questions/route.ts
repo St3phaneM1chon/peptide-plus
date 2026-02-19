@@ -5,24 +5,16 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth-config';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
-import { UserRole } from '@/types';
 
-export async function GET(request: NextRequest) {
+export const GET = withAdminGuard(async (request: NextRequest, { session }) => {
   try {
-    const session = await auth();
-
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
-    }
-
-    if (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER) {
-      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
-    }
-
     const { searchParams } = new URL(request.url);
     const answered = searchParams.get('answered'); // 'true' or 'false'
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
+    const limit = Math.min(parseInt(searchParams.get('limit') || '20', 10), 100);
+    const skip = (page - 1) * limit;
 
     const where: Record<string, unknown> = {};
     if (answered === 'true') {
@@ -31,18 +23,23 @@ export async function GET(request: NextRequest) {
       where.answer = null;
     }
 
-    const dbQuestions = await prisma.productQuestion.findMany({
-      where,
-      include: {
-        user: {
-          select: { id: true, name: true, email: true },
+    const [dbQuestions, total] = await Promise.all([
+      prisma.productQuestion.findMany({
+        where,
+        include: {
+          user: {
+            select: { id: true, name: true, email: true },
+          },
+          product: {
+            select: { id: true, name: true },
+          },
         },
-        product: {
-          select: { id: true, name: true },
-        },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      prisma.productQuestion.count({ where }),
+    ]);
 
     // Map DB model to frontend Question interface
     const questions = dbQuestions.map((q) => ({
@@ -60,7 +57,15 @@ export async function GET(request: NextRequest) {
       createdAt: q.createdAt.toISOString(),
     }));
 
-    return NextResponse.json({ questions });
+    return NextResponse.json({
+      questions,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+      },
+    });
   } catch (error) {
     console.error('Error fetching questions:', error);
     return NextResponse.json(
@@ -68,4 +73,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

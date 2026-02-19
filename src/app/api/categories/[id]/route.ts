@@ -1,6 +1,23 @@
 export const dynamic = 'force-dynamic';
 /**
  * API - CRUD Catégorie individuelle
+ *
+ * TODO (item 78): Return Policies per Product Category
+ * Currently return/refund policy is global (SiteSettings.refundDays, refundProcessingDays).
+ * Some product categories may need different policies (e.g., peptides: non-returnable once
+ * opened, supplements: 30-day return, accessories: 60-day return).
+ *
+ * Implementation plan:
+ *   - Add fields to Category model:
+ *     returnPolicyDays     Int?       // Override global refundDays (null = use global)
+ *     returnPolicyText     String?    // Custom policy text for this category
+ *     isReturnable         Boolean    @default(true)  // Some categories are final sale
+ *     restockingFeePercent Decimal?   // Optional restocking fee (e.g., 15%)
+ *   - Update PUT handler above to accept these new fields in allowedFields
+ *   - Create /api/admin/return-policies endpoint to view/manage all category policies
+ *   - Update refund validation in /api/admin/orders/[id] to check category-level policy
+ *   - Display category-specific return policy on product pages (frontend)
+ *   - Update return request flow to validate against category policy
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -8,6 +25,8 @@ import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { enqueue } from '@/lib/translation';
 import { UserRole } from '@/types';
+import { apiSuccess, apiError, apiNoContent, validateContentType } from '@/lib/api-response';
+import { ErrorCode } from '@/lib/error-codes';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -24,6 +43,16 @@ export async function GET(_request: Request, { params }: RouteParams) {
           where: { isActive: true },
           orderBy: { createdAt: 'desc' },
         },
+        children: {
+          where: { isActive: true },
+          include: {
+            _count: { select: { products: true } },
+          },
+          orderBy: { sortOrder: 'asc' },
+        },
+        parent: {
+          select: { id: true, name: true, slug: true },
+        },
         _count: {
           select: { products: true },
         },
@@ -31,37 +60,39 @@ export async function GET(_request: Request, { params }: RouteParams) {
     });
 
     if (!category) {
-      return NextResponse.json({ error: 'Catégorie non trouvée' }, { status: 404 });
+      return apiError('Catégorie non trouvée', ErrorCode.NOT_FOUND);
     }
 
-    return NextResponse.json({ category });
+    return apiSuccess({ category });
   } catch (error) {
     console.error('Error fetching category:', error);
-    return NextResponse.json(
-      { error: 'Erreur lors de la récupération de la catégorie' },
-      { status: 500 }
-    );
+    return apiError('Erreur lors de la récupération de la catégorie', ErrorCode.INTERNAL_ERROR);
   }
 }
 
 // PUT - Mettre à jour une catégorie
+// Status codes: 200 OK, 400 Bad Request, 401 Unauthorized, 403 Forbidden, 404 Not Found, 415 Unsupported Media Type, 500 Internal Error
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
+    // Item 12: Content-Type validation
+    const ctError = validateContentType(request);
+    if (ctError) return ctError;
+
     const { id } = await params;
     const session = await auth();
 
     if (!session?.user) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
+      return apiError('Non autorisé', ErrorCode.UNAUTHORIZED, { request });
     }
 
     if (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER) {
-      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
+      return apiError('Accès refusé', ErrorCode.FORBIDDEN, { request });
     }
 
     const body = await request.json();
 
     // Whitelist: only allow safe fields to be updated (H11 - mass assignment fix)
-    const allowedFields = ['name', 'slug', 'description', 'imageUrl', 'sortOrder', 'isActive'] as const;
+    const allowedFields = ['name', 'slug', 'description', 'imageUrl', 'sortOrder', 'isActive', 'parentId'] as const;
     const updateData: Record<string, unknown> = {};
     for (const field of allowedFields) {
       if (body[field] !== undefined) {
@@ -75,7 +106,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     });
 
     if (!existingCategory) {
-      return NextResponse.json({ error: 'Catégorie non trouvée' }, { status: 404 });
+      return apiError('Catégorie non trouvée', ErrorCode.NOT_FOUND, { request });
     }
 
     // Si le slug change, vérifier l'unicité
@@ -84,10 +115,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         where: { slug: updateData.slug as string },
       });
       if (slugExists) {
-        return NextResponse.json(
-          { error: 'Ce slug existe déjà' },
-          { status: 400 }
-        );
+        return apiError('Ce slug existe déjà', ErrorCode.DUPLICATE_ENTRY, { status: 409, request });
       }
     }
 
@@ -110,50 +138,49 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       },
     });
 
-    return NextResponse.json({ category });
+    return apiSuccess({ category }, { request });
   } catch (error) {
     console.error('Error updating category:', error);
-    return NextResponse.json(
-      { error: 'Erreur lors de la mise à jour de la catégorie' },
-      { status: 500 }
-    );
+    return apiError('Erreur lors de la mise à jour de la catégorie', ErrorCode.INTERNAL_ERROR, { request });
   }
 }
 
 // DELETE - Supprimer une catégorie (soft delete, Owner only)
+// Status codes: 204 No Content, 400 Bad Request, 401 Unauthorized, 403 Forbidden, 404 Not Found, 500 Internal Error
 export async function DELETE(_request: Request, { params }: RouteParams) {
   try {
     const session = await auth();
 
     if (!session?.user) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
+      return apiError('Non autorisé', ErrorCode.UNAUTHORIZED);
     }
 
     if (session.user.role !== UserRole.OWNER) {
-      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
+      return apiError('Accès refusé', ErrorCode.FORBIDDEN);
     }
 
     const { id } = await params;
 
-    // Vérifier si la catégorie a des produits
+    // Vérifier si la catégorie a des produits ou des sous-catégories
     const category = await prisma.category.findUnique({
       where: { id },
       include: {
         _count: {
-          select: { products: true },
+          select: { products: true, children: true },
         },
       },
     });
 
     if (!category) {
-      return NextResponse.json({ error: 'Catégorie non trouvée' }, { status: 404 });
+      return apiError('Catégorie non trouvée', ErrorCode.NOT_FOUND);
     }
 
     if (category._count.products > 0) {
-      return NextResponse.json(
-        { error: `Impossible de supprimer: ${category._count.products} produit(s) associé(s)` },
-        { status: 400 }
-      );
+      return apiError(`Impossible de supprimer: ${category._count.products} produit(s) associé(s)`, ErrorCode.CONFLICT);
+    }
+
+    if (category._count.children > 0) {
+      return apiError(`Impossible de supprimer: ${category._count.children} sous-catégorie(s) associée(s)`, ErrorCode.CONFLICT);
     }
 
     await prisma.category.update({
@@ -171,12 +198,10 @@ export async function DELETE(_request: Request, { params }: RouteParams) {
       },
     });
 
-    return NextResponse.json({ success: true });
+    // Item 2: HTTP 204 No Content for DELETE operations
+    return apiNoContent();
   } catch (error) {
     console.error('Error deleting category:', error);
-    return NextResponse.json(
-      { error: 'Erreur lors de la suppression de la catégorie' },
-      { status: 500 }
-    );
+    return apiError('Erreur lors de la suppression de la catégorie', ErrorCode.INTERNAL_ERROR);
   }
 }

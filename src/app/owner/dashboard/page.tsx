@@ -220,7 +220,7 @@ export default async function OwnerDashboard() {
                   }`}>
                     {index + 1}
                   </span>
-                  <div className="ml-3 flex-1">
+                  <div className="ms-3 flex-1">
                     <p className="font-medium text-gray-900 truncate">{product.name}</p>
                     <p className="text-sm text-gray-500">{product.purchaseCount} ventes</p>
                   </div>
@@ -243,11 +243,11 @@ export default async function OwnerDashboard() {
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Client</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Formation</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Montant</th>
+                  <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase">Date</th>
+                  <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase">Client</th>
+                  <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase">Formation</th>
+                  <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase">Status</th>
+                  <th className="px-6 py-3 text-end text-xs font-medium text-gray-500 uppercase">Montant</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -263,7 +263,7 @@ export default async function OwnerDashboard() {
                             {purchase.user.name?.charAt(0) || purchase.user.email.charAt(0)}
                           </span>
                         </div>
-                        <div className="ml-3">
+                        <div className="ms-3">
                           <p className="text-sm font-medium text-gray-900">
                             {purchase.user.name || purchase.user.email}
                           </p>
@@ -285,7 +285,7 @@ export default async function OwnerDashboard() {
                          purchase.status === 'PENDING' ? 'En attente' : 'Échoué'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-sm font-semibold text-gray-900 text-right">
+                    <td className="px-6 py-4 text-sm font-semibold text-gray-900 text-end">
                       {Number(purchase.amount).toFixed(2)} $
                     </td>
                   </tr>

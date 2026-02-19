@@ -34,30 +34,39 @@ export async function GET(request: NextRequest) {
       await syncCommissionsForCodes(ambassadors);
     }
 
+    // PERF 86: Batch aggregate all order totals, pending commissions, and paid commissions
+    // in 3 queries instead of 3 * N per-ambassador queries.
+    const allReferralCodes = ambassadors.map((a) => a.referralCode);
+    const allAmbassadorIds = ambassadors.map((a) => a.id);
+
+    const [orderTotals, pendingCommissionTotals, paidCommissionTotals] = await Promise.all([
+      prisma.order.groupBy({
+        by: ['promoCode'],
+        where: { promoCode: { in: allReferralCodes }, paymentStatus: 'PAID' },
+        _sum: { total: true },
+      }),
+      prisma.ambassadorCommission.groupBy({
+        by: ['ambassadorId'],
+        where: { ambassadorId: { in: allAmbassadorIds }, paidOut: false },
+        _sum: { commissionAmount: true },
+      }),
+      prisma.ambassadorCommission.groupBy({
+        by: ['ambassadorId'],
+        where: { ambassadorId: { in: allAmbassadorIds }, paidOut: true },
+        _sum: { commissionAmount: true },
+      }),
+    ]);
+
+    const orderTotalMap = new Map(orderTotals.map((o) => [o.promoCode, Number(o._sum.total || 0)]));
+    const pendingMap = new Map(pendingCommissionTotals.map((c) => [c.ambassadorId, Number(c._sum.commissionAmount || 0)]));
+    const paidMap = new Map(paidCommissionTotals.map((c) => [c.ambassadorId, Number(c._sum.commissionAmount || 0)]));
+
     // Now build the formatted response with real payout data
     const formatted = await Promise.all(
       ambassadors.map(async (a) => {
-        // Get total sales from paid orders using this referral code
-        const orderTotal = await prisma.order.aggregate({
-          where: { promoCode: a.referralCode, paymentStatus: 'PAID' },
-          _sum: { total: true },
-        });
-
-        // Get pending (unpaid) commission total
-        const pendingCommissions = await prisma.ambassadorCommission.aggregate({
-          where: { ambassadorId: a.id, paidOut: false },
-          _sum: { commissionAmount: true },
-        });
-
-        // Get total paid-out commission
-        const paidCommissions = await prisma.ambassadorCommission.aggregate({
-          where: { ambassadorId: a.id, paidOut: true },
-          _sum: { commissionAmount: true },
-        });
-
-        const totalSales = Number(orderTotal._sum.total || 0);
-        const pendingPayout = Number(pendingCommissions._sum.commissionAmount || 0);
-        const totalEarnings = Number(paidCommissions._sum.commissionAmount || 0) + pendingPayout;
+        const totalSales = orderTotalMap.get(a.referralCode) || 0;
+        const pendingPayout = pendingMap.get(a.id) || 0;
+        const totalEarnings = (paidMap.get(a.id) || 0) + pendingPayout;
 
         // Keep the ambassador's totalEarnings field in sync
         if (Number(a.totalEarnings) !== totalEarnings) {

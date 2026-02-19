@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { useI18n } from '@/i18n/client';
 
 interface SubscriptionOfferModalProps {
   productId: string;
@@ -20,8 +20,55 @@ export default function SubscriptionOfferModal({
   onAccept,
   onDecline,
 }: SubscriptionOfferModalProps) {
-  const { t } = useTranslations();
+  const { t } = useI18n();
   const [selectedFrequency, setSelectedFrequency] = useState('MONTHLY');
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
+
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onDecline();
+        return;
+      }
+
+      if (e.key === 'Tab' && dialogRef.current) {
+        const focusable = dialogRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusable.length === 0) return;
+
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    },
+    [onDecline]
+  );
+
+  useEffect(() => {
+    previousFocusRef.current = document.activeElement as HTMLElement;
+    document.addEventListener('keydown', handleKeyDown);
+
+    requestAnimationFrame(() => {
+      const focusable = dialogRef.current?.querySelector<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      focusable?.focus();
+    });
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      previousFocusRef.current?.focus();
+    };
+  }, [handleKeyDown]);
 
   const FREQUENCIES = [
     { id: 'WEEKLY', label: t('subscriptions.weekly'), discount: 20 },
@@ -34,8 +81,14 @@ export default function SubscriptionOfferModal({
   const discountedPrice = currentPrice * (1 - selected.discount / 100);
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" role="presentation">
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={t('subscriptions.offerTitle')}
+        className="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden"
+      >
         {/* Header */}
         <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-5 text-white">
           <h2 className="text-xl font-bold">{t('subscriptions.offerTitle')}</h2>
@@ -76,7 +129,7 @@ export default function SubscriptionOfferModal({
                     />
                     <div>
                       <span className="font-medium text-gray-900">{freq.label}</span>
-                      <span className="ml-2 text-sm text-green-600 font-medium">
+                      <span className="ms-2 text-sm text-green-600 font-medium">
                         {t('subscriptions.save', { percent: freq.discount })}
                       </span>
                     </div>

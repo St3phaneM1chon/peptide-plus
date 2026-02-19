@@ -4,6 +4,20 @@
  */
 
 import { ACCOUNT_CODES, TAX_RATES, JournalEntry, JournalLine } from './types';
+import { roundCurrency } from '@/lib/financial';
+
+// #94 Error class for auto-entry generation failures
+export class AutoEntryError extends Error {
+  constructor(
+    message: string,
+    public readonly entryType: string,
+    public readonly sourceId: string,
+    public readonly cause?: unknown
+  ) {
+    super(message);
+    this.name = 'AutoEntryError';
+  }
+}
 
 interface OrderData {
   id: string;
@@ -56,6 +70,7 @@ interface StripePayoutData {
   currency: string;
 }
 
+// WARNING: In-memory counter - entry numbers are not persisted via this path
 let entryCounter = 0;
 
 function generateEntryNumber(): string {
@@ -110,8 +125,32 @@ function getFeeAccount(paymentMethod: string): string {
 
 /**
  * Generate journal entry for a completed sale
+ * #94 Added error handling for invalid order data
  */
 export function generateSaleEntry(order: OrderData): JournalEntry {
+  // #94 Validate required order data before generating entry
+  if (!order.id || !order.orderNumber) {
+    throw new AutoEntryError(
+      `Données de commande invalides: id ou orderNumber manquant`,
+      'AUTO_SALE',
+      order.id || 'unknown'
+    );
+  }
+  if (order.total <= 0) {
+    throw new AutoEntryError(
+      `Montant total invalide (${order.total}) pour la commande ${order.orderNumber}`,
+      'AUTO_SALE',
+      order.id
+    );
+  }
+  if (!order.customer?.country) {
+    throw new AutoEntryError(
+      `Pays du client manquant pour la commande ${order.orderNumber}`,
+      'AUTO_SALE',
+      order.id
+    );
+  }
+
   const lines: JournalLine[] = [];
   const salesAccount = getSalesAccount(order.customer.country, order.customer.province);
   const bankAccount = getBankAccount(order.paymentMethod);
@@ -214,6 +253,7 @@ export function generateSaleEntry(order: OrderData): JournalEntry {
 
 /**
  * Generate journal entry for payment processing fee (Stripe, PayPal)
+ * #94 Added validation for fee data
  */
 export function generateFeeEntry(
   orderId: string,
@@ -222,6 +262,22 @@ export function generateFeeEntry(
   fee: number,
   paymentMethod: 'STRIPE' | 'PAYPAL'
 ): JournalEntry {
+  // #94 Validate fee data
+  if (fee <= 0) {
+    throw new AutoEntryError(
+      `Montant de frais invalide (${fee}) pour ${orderNumber}`,
+      paymentMethod === 'STRIPE' ? 'AUTO_STRIPE_FEE' : 'AUTO_PAYPAL_FEE',
+      orderId
+    );
+  }
+  if (!date || isNaN(date.getTime())) {
+    throw new AutoEntryError(
+      `Date invalide pour les frais de ${orderNumber}`,
+      paymentMethod === 'STRIPE' ? 'AUTO_STRIPE_FEE' : 'AUTO_PAYPAL_FEE',
+      orderId
+    );
+  }
+
   const feeAccount = getFeeAccount(paymentMethod);
   const bankAccount = getBankAccount(paymentMethod);
 
@@ -262,8 +318,25 @@ export function generateFeeEntry(
 
 /**
  * Generate journal entry for a refund
+ * #94 Added validation for refund data
  */
 export function generateRefundEntry(refund: RefundData): JournalEntry {
+  // #94 Validate refund data
+  if (!refund.id || !refund.orderId) {
+    throw new AutoEntryError(
+      `Données de remboursement invalides: id ou orderId manquant`,
+      'AUTO_REFUND',
+      refund.id || 'unknown'
+    );
+  }
+  if (refund.amount <= 0) {
+    throw new AutoEntryError(
+      `Montant de remboursement invalide (${refund.amount}) pour ${refund.orderNumber}`,
+      'AUTO_REFUND',
+      refund.id
+    );
+  }
+
   const lines: JournalLine[] = [];
   const bankAccount = getBankAccount(refund.paymentMethod);
 
@@ -434,55 +507,78 @@ export function calculateTaxes(
   province: string,
   country: string
 ): { tps: number; tvq: number; tvh: number; total: number } {
-  const taxableAmount = subtotal + shipping - discount;
-  
+  const taxableAmount = roundCurrency(subtotal + shipping - discount);
+
   // No Canadian tax for non-Canadian customers
   if (country !== 'CA' && country !== 'Canada') {
     return { tps: 0, tvq: 0, tvh: 0, total: taxableAmount };
   }
 
   const rates = TAX_RATES[province as keyof typeof TAX_RATES] || TAX_RATES.QC;
-  
+
   let tps = 0;
   let tvq = 0;
   let tvh = 0;
 
   if ('TVH' in rates && rates.TVH) {
     // HST provinces
-    tvh = taxableAmount * rates.TVH;
+    tvh = roundCurrency(taxableAmount * rates.TVH);
   } else {
     // Separate GST/PST or GST/QST
     if ('TPS' in rates) {
-      tps = taxableAmount * rates.TPS;
+      tps = roundCurrency(taxableAmount * rates.TPS);
     }
     if ('TVQ' in rates) {
-      tvq = taxableAmount * rates.TVQ;
+      tvq = roundCurrency(taxableAmount * rates.TVQ);
     }
     if ('PST' in rates) {
       // PST is treated like TVQ for accounting purposes
-      tvq = taxableAmount * rates.PST;
+      tvq = roundCurrency(taxableAmount * rates.PST);
     }
   }
 
   return {
-    tps: Math.round(tps * 100) / 100,
-    tvq: Math.round(tvq * 100) / 100,
-    tvh: Math.round(tvh * 100) / 100,
-    total: Math.round((taxableAmount + tps + tvq + tvh) * 100) / 100,
+    tps,
+    tvq,
+    tvh,
+    total: roundCurrency(taxableAmount + tps + tvq + tvh),
   };
 }
 
 /**
  * Validate that a journal entry is balanced
+ * #94 Enhanced: also checks for empty lines and missing accounts
  */
-export function validateEntry(entry: JournalEntry): { valid: boolean; difference: number } {
-  const totalDebits = entry.lines.reduce((sum, line) => sum + line.debit, 0);
-  const totalCredits = entry.lines.reduce((sum, line) => sum + line.credit, 0);
+export function validateEntry(entry: JournalEntry): { valid: boolean; difference: number; errors: string[] } {
+  const errors: string[] = [];
+
+  // #94 Check for empty or missing lines
+  if (!entry.lines || entry.lines.length < 2) {
+    errors.push(`L'écriture doit avoir au moins 2 lignes (trouvé: ${entry.lines?.length || 0})`);
+  }
+
+  // #94 Check for lines with missing account codes
+  for (const line of entry.lines || []) {
+    if (!line.accountCode) {
+      errors.push(`Ligne sans code de compte: ${line.description || '(sans description)'}`);
+    }
+    if (line.debit < 0 || line.credit < 0) {
+      errors.push(`Montant négatif détecté sur le compte ${line.accountCode}`);
+    }
+  }
+
+  const totalDebits = (entry.lines || []).reduce((sum, line) => sum + line.debit, 0);
+  const totalCredits = (entry.lines || []).reduce((sum, line) => sum + line.credit, 0);
   const difference = Math.round((totalDebits - totalCredits) * 100) / 100;
-  
+
+  if (Math.abs(difference) >= 0.01) {
+    errors.push(`Écriture déséquilibrée: différence de ${difference.toFixed(2)}`);
+  }
+
   return {
-    valid: Math.abs(difference) < 0.01,
+    valid: errors.length === 0,
     difference,
+    errors,
   };
 }
 

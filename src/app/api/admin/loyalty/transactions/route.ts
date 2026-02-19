@@ -7,16 +7,11 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { auth } from '@/lib/auth-config';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 
 // GET /api/admin/loyalty/transactions - List loyalty transactions
-export async function GET(request: NextRequest) {
+export const GET = withAdminGuard(async (request: NextRequest, { session }) => {
   try {
-    const session = await auth();
-    if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role || '')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const { searchParams } = new URL(request.url);
     const type = searchParams.get('type');
     const userId = searchParams.get('userId');
@@ -150,4 +145,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

@@ -2,10 +2,10 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 
 export default function TrackOrderPage() {
-  const { t } = useTranslations();
+  const { t } = useI18n();
   const [orderNumber, setOrderNumber] = useState('');
   const [email, setEmail] = useState('');
   const [trackingResult, setTrackingResult] = useState<null | {
@@ -65,7 +65,7 @@ export default function TrackOrderPage() {
                 id="orderNumber"
                 value={orderNumber}
                 onChange={(e) => setOrderNumber(e.target.value)}
-                placeholder="e.g., PP-2026-12345"
+                placeholder={t('shop.trackOrder.placeholderOrderNumber')}
                 required
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
               />
@@ -80,7 +80,7 @@ export default function TrackOrderPage() {
                 id="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="email@example.com"
+                placeholder={t('shop.trackOrder.placeholderEmail')}
                 required
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
               />
@@ -123,22 +123,22 @@ export default function TrackOrderPage() {
                       </svg>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500">Status</p>
+                      <p className="text-sm text-gray-500">{t('track.status') || 'Status'}</p>
                       <p className="text-lg font-semibold text-green-700">{trackingResult.status}</p>
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-sm">
                     <div>
-                      <p className="text-gray-500">Tracking Number</p>
+                      <p className="text-gray-500">{t('track.trackingNumber') || 'Tracking Number'}</p>
                       <p className="font-medium">{trackingResult.trackingNumber}</p>
                     </div>
                     <div>
-                      <p className="text-gray-500">Carrier</p>
+                      <p className="text-gray-500">{t('track.carrier') || 'Carrier'}</p>
                       <p className="font-medium">{trackingResult.carrier}</p>
                     </div>
                     <div>
-                      <p className="text-gray-500">Est. Delivery</p>
+                      <p className="text-gray-500">{t('track.estimatedDelivery') || 'Est. Delivery'}</p>
                       <p className="font-medium text-orange-600">{trackingResult.estimatedDelivery}</p>
                     </div>
                   </div>
@@ -146,7 +146,7 @@ export default function TrackOrderPage() {
 
                 {/* Timeline */}
                 <div className="p-6">
-                  <h3 className="font-semibold text-gray-900 mb-4">Shipping Progress</h3>
+                  <h3 className="font-semibold text-gray-900 mb-4">{t('track.shippingProgress') || 'Shipping Progress'}</h3>
                   <div className="space-y-4">
                     {trackingResult.steps?.map((step, index) => (
                       <div key={index} className="flex gap-4">
@@ -180,7 +180,7 @@ export default function TrackOrderPage() {
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 text-orange-600 hover:underline"
                   >
-                    Track on {trackingResult.carrier} website
+                    {t('track.trackOnCarrier') || 'Track on'} {trackingResult.carrier}
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                     </svg>
@@ -194,12 +194,12 @@ export default function TrackOrderPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Order Not Found</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('track.orderNotFound') || 'Order Not Found'}</h3>
                 <p className="text-gray-600 mb-4">
-                  We couldn't find an order with those details. Please check your order number and email.
+                  {t('track.orderNotFoundDesc') || "We couldn't find an order with those details. Please check your order number and email."}
                 </p>
                 <Link href="/contact" className="text-orange-600 hover:underline">
-                  Contact support for help
+                  {t('track.contactSupport') || 'Contact support for help'}
                 </Link>
               </div>
             )}
@@ -208,7 +208,7 @@ export default function TrackOrderPage() {
 
         {/* Help Section */}
         <div className="mt-8 bg-white rounded-xl shadow-sm p-6">
-          <h3 className="font-semibold text-gray-900 mb-4">Need Help?</h3>
+          <h3 className="font-semibold text-gray-900 mb-4">{t('track.needHelp') || 'Need Help?'}</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Link
               href="/faq"
@@ -216,8 +216,8 @@ export default function TrackOrderPage() {
             >
               <span className="text-2xl">❓</span>
               <div>
-                <p className="font-medium text-gray-900">FAQ</p>
-                <p className="text-sm text-gray-500">Common shipping questions</p>
+                <p className="font-medium text-gray-900">{t('nav.faq') || 'FAQ'}</p>
+                <p className="text-sm text-gray-500">{t('track.commonShippingQuestions') || 'Common shipping questions'}</p>
               </div>
             </Link>
             <Link
@@ -226,8 +226,8 @@ export default function TrackOrderPage() {
             >
               <span className="text-2xl">💬</span>
               <div>
-                <p className="font-medium text-gray-900">Contact Us</p>
-                <p className="text-sm text-gray-500">Get support from our team</p>
+                <p className="font-medium text-gray-900">{t('nav.contact') || 'Contact Us'}</p>
+                <p className="text-sm text-gray-500">{t('track.getSupport') || 'Get support from our team'}</p>
               </div>
             </Link>
           </div>

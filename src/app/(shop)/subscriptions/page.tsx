@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 import { useCurrency } from '@/contexts/CurrencyContext';
 
 interface SubscriptionProduct {
@@ -40,16 +40,16 @@ const getFrequencies = (t: (key: string) => string) => [
   { id: 'BIMONTHLY', label: t('subscriptions.bimonthly') || 'Every 2 Months', days: 60, discount: 5 },
 ];
 
-const frequencyLabels: Record<string, string> = {
-  WEEKLY: 'Hebdomadaire',
-  BIWEEKLY: 'Aux 2 semaines',
-  MONTHLY: 'Mensuel',
-  BIMONTHLY: 'Aux 2 mois',
-};
+const getFrequencyLabels = (t: (key: string) => string): Record<string, string> => ({
+  WEEKLY: t('subscriptions.weekly') || 'Weekly',
+  BIWEEKLY: t('subscriptions.biweekly') || 'Every 2 Weeks',
+  MONTHLY: t('subscriptions.monthly') || 'Monthly',
+  BIMONTHLY: t('subscriptions.bimonthly') || 'Every 2 Months',
+});
 
 export default function SubscriptionsPage() {
   const { data: session } = useSession();
-  const { t, locale } = useTranslations();
+  const { t, locale } = useI18n();
   const { formatPrice } = useCurrency();
 
   const [activeTab, setActiveTab] = useState<'browse' | 'manage'>('browse');
@@ -57,6 +57,7 @@ export default function SubscriptionsPage() {
   const [subscriptionProducts, setSubscriptionProducts] = useState<SubscriptionProduct[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<SubscriptionProduct | null>(null);
   const frequencies = getFrequencies(t);
+  const frequencyLabels = getFrequencyLabels(t);
   const [selectedFrequency, setSelectedFrequency] = useState(frequencies[2]); // Monthly default
   const [quantity, setQuantity] = useState(1);
   const [isCreating, setIsCreating] = useState(false);
@@ -226,7 +227,7 @@ export default function SubscriptionsPage() {
           >
             {t('subscriptions.mySubscriptions') || 'My Subscriptions'}
             {activeSubscriptions.length > 0 && (
-              <span className="ml-2 px-2 py-0.5 bg-white/20 rounded-full text-sm">
+              <span className="ms-2 px-2 py-0.5 bg-white/20 rounded-full text-sm">
                 {activeSubscriptions.length}
               </span>
             )}
@@ -474,7 +475,7 @@ export default function SubscriptionsPage() {
                         </div>
 
                         <div className="flex items-center gap-4">
-                          <div className="text-right">
+                          <div className="text-end">
                             <p className="font-bold text-lg">
                               {formatPrice(sub.unitPrice * sub.quantity * (1 - sub.discountPercent / 100))}
                             </p>
@@ -490,7 +491,7 @@ export default function SubscriptionsPage() {
                           <div>
                             <p className="text-sm text-neutral-500">{t('subscriptions.nextDelivery') || 'Next Delivery'}</p>
                             <p className="font-medium">
-                              {new Date(sub.nextDelivery).toLocaleDateString('fr-CA', {
+                              {new Date(sub.nextDelivery).toLocaleDateString(locale, {
                                 weekday: 'long',
                                 year: 'numeric',
                                 month: 'long',

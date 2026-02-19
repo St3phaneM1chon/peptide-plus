@@ -1,8 +1,9 @@
 export const dynamic = 'force-dynamic';
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
+import { validateCsrf } from '@/lib/csrf-middleware';
 
 // GET - List user's return requests
 export async function GET() {
@@ -67,8 +68,14 @@ export async function GET() {
 }
 
 // POST - Create new return request
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
+    // SECURITY (BE-SEC-15): CSRF protection for mutation endpoint
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const session = await auth();
 
     if (!session?.user?.email) {
@@ -192,6 +199,130 @@ export async function POST(request: Request) {
     }, { status: 201 });
   } catch (error) {
     console.error('Error creating return request:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
+// PATCH - Update return request status (admin use)
+// BE-PAY-13: When a return is marked as RECEIVED, automatically trigger refund creation
+export async function PATCH(request: NextRequest) {
+  try {
+    const session = await auth();
+
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Check admin role
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      select: { id: true, role: true },
+    });
+
+    if (!user || (user.role !== 'EMPLOYEE' && user.role !== 'OWNER')) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    const body = await request.json();
+    const { returnRequestId, status, resolution, adminNotes } = body;
+
+    if (!returnRequestId || !status) {
+      return NextResponse.json(
+        { error: 'Missing required fields: returnRequestId, status' },
+        { status: 400 }
+      );
+    }
+
+    const validStatuses = ['PENDING', 'APPROVED', 'RECEIVED', 'REFUNDED', 'REJECTED'];
+    if (!validStatuses.includes(status)) {
+      return NextResponse.json(
+        { error: `Invalid status. Must be one of: ${validStatuses.join(', ')}` },
+        { status: 400 }
+      );
+    }
+
+    // Get the return request with order and item details
+    const returnRequest = await prisma.returnRequest.findUnique({
+      where: { id: returnRequestId },
+      include: {
+        order: {
+          include: { items: true },
+        },
+      },
+    });
+
+    if (!returnRequest) {
+      return NextResponse.json({ error: 'Return request not found' }, { status: 404 });
+    }
+
+    // Update the return request status
+    const updatedReturn = await prisma.returnRequest.update({
+      where: { id: returnRequestId },
+      data: {
+        status,
+        resolution: resolution || returnRequest.resolution,
+        adminNotes: adminNotes || returnRequest.adminNotes,
+      },
+    });
+
+    // BE-PAY-13: When return is marked as RECEIVED, trigger refund creation
+    if (status === 'RECEIVED' || status === 'APPROVED') {
+      const returnItem = returnRequest.order.items.find(
+        (item) => item.id === returnRequest.orderItemId
+      );
+
+      if (returnItem) {
+        const refundAmount = Number(returnItem.unitPrice) * returnItem.quantity;
+
+        // BUG 13: Check if a refund already exists for this return before creating a new one
+        const existingRefund = await prisma.refund.findFirst({
+          where: {
+            returnRequestId: returnRequest.id,
+            status: { notIn: ['REJECTED', 'CANCELLED'] },
+          },
+        });
+
+        if (existingRefund) {
+          return NextResponse.json({
+            returnRequest: updatedReturn,
+            refund: {
+              id: existingRefund.id,
+              amount: Number(existingRefund.amount),
+              status: existingRefund.status,
+              reason: existingRefund.reason,
+            },
+            message: `Return marked as ${status}. Existing refund found (no duplicate created).`,
+          });
+        }
+
+        // Create a refund record with PENDING status
+        const refund = await prisma.refund.create({
+          data: {
+            orderId: returnRequest.orderId,
+            returnRequestId: returnRequest.id,
+            amount: refundAmount,
+            status: 'PENDING',
+            reason: 'RETURN',
+            notes: `Auto-created from return request ${returnRequest.id}. Item: ${returnItem.productName || 'Unknown'} x${returnItem.quantity}`,
+          },
+        });
+
+        return NextResponse.json({
+          returnRequest: updatedReturn,
+          refund: {
+            id: refund.id,
+            amount: Number(refund.amount),
+            status: refund.status,
+            reason: refund.reason,
+          },
+          message: `Return marked as ${status}. Refund of $${refundAmount.toFixed(2)} created with PENDING status.`,
+        });
+      }
+    }
+
+    return NextResponse.json({ returnRequest: updatedReturn });
+  } catch (error) {
+    console.error('Error updating return request:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

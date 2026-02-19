@@ -16,6 +16,21 @@ export const metadata: Metadata = {
       'Browse our complete selection of premium research peptides. Lab-tested, 99%+ purity.',
     url: 'https://biocyclepeptides.com/shop',
     type: 'website',
+    images: [
+      {
+        url: 'https://biocyclepeptides.com/api/og?title=Shop%20Research%20Peptides&type=product',
+        width: 1200,
+        height: 630,
+        alt: 'Shop Research Peptides - BioCycle Peptides',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Shop Research Peptides - BioCycle Peptides',
+    description:
+      'Browse our complete selection of premium research peptides. Lab-tested, 99%+ purity.',
+    images: ['https://biocyclepeptides.com/api/og?title=Shop%20Research%20Peptides&type=product'],
   },
 };
 

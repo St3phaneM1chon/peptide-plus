@@ -83,7 +83,7 @@ export function HeaderCorporate() {
           alignItems: 'center',
         }}
       >
-        <span>📞 {process.env.NEXT_PUBLIC_PHONE || '1-800-XXX-XXXX'}</span>
+        {process.env.NEXT_PUBLIC_PHONE && <span>📞 {process.env.NEXT_PUBLIC_PHONE}</span>}
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <Link href="/aide" style={{ color: 'white', textDecoration: 'none', opacity: 0.9 }}>
             {t('footer.help')}
@@ -126,7 +126,7 @@ export function HeaderCorporate() {
             alignItems: 'center',
             gap: '4px',
           }}
-          className="desktop-nav"
+          className="hidden lg:flex"
         >
           {mainNavigation.slice(1, 7).map((item) => (
             <NavItemComponent
@@ -193,14 +193,13 @@ export function HeaderCorporate() {
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             style={{
-              display: 'none',
               padding: '8px',
               background: 'none',
               border: 'none',
               cursor: 'pointer',
             }}
-            className="mobile-menu-toggle"
-            aria-label="Menu"
+            className="hidden max-lg:block"
+            aria-label={t('nav.aria.menu')}
           >
             {mobileMenuOpen ? <CloseIcon /> : <MenuIcon />}
           </button>
@@ -220,16 +219,6 @@ export function HeaderCorporate() {
         />
       )}
 
-      <style jsx global>{`
-        @media (max-width: 1024px) {
-          .desktop-nav {
-            display: none !important;
-          }
-          .mobile-menu-toggle {
-            display: block !important;
-          }
-        }
-      `}</style>
     </header>
   );
 }
@@ -316,8 +305,7 @@ function NavItemComponent({
 }
 
 // User Menu
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Session and translation function types from external libs
-function UserMenu({ session, userRole, t }: { session: any; userRole: string; t: any }) {
+function UserMenu({ session, userRole, t }: { session: { user?: { name?: string | null; email?: string | null; image?: string | null } }; userRole: string; t: (key: string, params?: Record<string, string | number>) => string }) {
   const [open, setOpen] = useState(false);
   const dashboardItems = dashboardNavigation[userRole] || dashboardNavigation.CUSTOMER;
 

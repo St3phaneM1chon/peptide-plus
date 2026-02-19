@@ -12,6 +12,80 @@ import { prisma } from '@/lib/db';
 import { UserRole } from '@/types';
 import { withTranslations, getTranslatedFields, enqueue, DB_SOURCE_LOCALE } from '@/lib/translation';
 import { isValidLocale, defaultLocale } from '@/i18n/config';
+import { z } from 'zod';
+import { stripHtml, stripControlChars } from '@/lib/sanitize';
+import { apiSuccess, apiError, apiPaginated, withETag, validateContentType, parseFieldSelection } from '@/lib/api-response';
+import { ErrorCode } from '@/lib/error-codes';
+import { createProductSchema as validatedCreateProductSchema } from '@/lib/validations/product';
+
+// BE-SEC-03: Zod validation schema for product creation (admin)
+const productImageSchema = z.object({
+  url: z.string().url(),
+  alt: z.string().max(500).optional(),
+  caption: z.string().max(500).optional(),
+  sortOrder: z.number().int().optional(),
+  isPrimary: z.boolean().optional(),
+});
+
+const productFormatSchema = z.object({
+  formatType: z.string().max(50).optional(),
+  name: z.string().max(200),
+  description: z.string().max(2000).optional(),
+  imageUrl: z.string().url().optional().nullable(),
+  dosageMg: z.number().optional().nullable(),
+  volumeMl: z.number().optional().nullable(),
+  unitCount: z.number().int().optional().nullable(),
+  costPrice: z.number().optional().nullable(),
+  price: z.number().min(0).optional(),
+  comparePrice: z.number().optional().nullable(),
+  sku: z.string().max(100).optional().nullable(),
+  barcode: z.string().max(100).optional().nullable(),
+  inStock: z.boolean().optional(),
+  stockQuantity: z.number().int().min(0).optional(),
+  lowStockThreshold: z.number().int().min(0).optional(),
+  availability: z.string().max(50).optional(),
+  sortOrder: z.number().int().optional(),
+  isDefault: z.boolean().optional(),
+  isActive: z.boolean().optional(),
+});
+
+const createProductSchema = z.object({
+  name: z.string().min(1, 'Product name is required').max(200, 'Product name must not exceed 200 characters'),
+  subtitle: z.string().max(500).optional().nullable(),
+  slug: z.string().min(1, 'Slug is required').max(200).regex(/^[a-z0-9-]+$/, 'Slug must be lowercase alphanumeric with hyphens'),
+  shortDescription: z.string().max(1000).optional().nullable(),
+  description: z.string().max(50000).optional().nullable(),
+  fullDetails: z.string().max(100000).optional().nullable(),
+  specifications: z.string().max(10000).optional().nullable(),
+  productType: z.string().max(50).optional(),
+  price: z.number().min(0, 'Price must be non-negative'),
+  compareAtPrice: z.number().min(0).optional().nullable(),
+  imageUrl: z.string().max(2000).optional().nullable(),
+  videoUrl: z.string().max(2000).optional().nullable(),
+  certificateUrl: z.string().max(2000).optional().nullable(),
+  certificateName: z.string().max(200).optional().nullable(),
+  dataSheetUrl: z.string().max(2000).optional().nullable(),
+  dataSheetName: z.string().max(200).optional().nullable(),
+  categoryId: z.string().min(1, 'Category is required'),
+  weight: z.number().min(0).optional().nullable(),
+  dimensions: z.string().max(100).optional().nullable(),
+  requiresShipping: z.boolean().optional(),
+  sku: z.string().max(100).optional().nullable(),
+  barcode: z.string().max(100).optional().nullable(),
+  manufacturer: z.string().max(200).optional().nullable(),
+  origin: z.string().max(100).optional().nullable(),
+  supplierUrl: z.string().max(2000).optional().nullable(),
+  metaTitle: z.string().max(200).optional().nullable(),
+  metaDescription: z.string().max(500).optional().nullable(),
+  researchSays: z.string().max(50000).optional().nullable(),
+  relatedResearch: z.string().max(50000).optional().nullable(),
+  participateResearch: z.string().max(50000).optional().nullable(),
+  customSections: z.unknown().optional().nullable(),
+  isFeatured: z.boolean().optional(),
+  isActive: z.boolean().optional(),
+  images: z.array(productImageSchema).max(50).optional(),
+  formats: z.array(productFormatSchema).max(50).optional(),
+});
 
 // GET - Liste des produits
 export async function GET(request: NextRequest) {
@@ -20,9 +94,37 @@ export async function GET(request: NextRequest) {
     const category = searchParams.get('category');
     const featured = searchParams.get('featured');
     const productType = searchParams.get('type');
-    const limit = parseInt(searchParams.get('limit') || '200');
+    const slugs = searchParams.get('slugs');
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
+    const limit = Math.min(Math.max(1, parseInt(searchParams.get('limit') || '50', 10)), 200);
     const includeInactive = searchParams.get('includeInactive') === 'true';
     const locale = searchParams.get('locale') || defaultLocale;
+
+    // #58: Faceted search params
+    const minPrice = searchParams.get('minPrice');
+    const maxPrice = searchParams.get('maxPrice');
+    const minRating = searchParams.get('minRating');
+    const inStock = searchParams.get('inStock');
+    const categoryIds = searchParams.get('categoryIds');
+    const tags = searchParams.get('tags');
+    const withFacets = searchParams.get('facets') === 'true';
+
+    // SEC-22: Require admin auth when includeInactive=true
+    if (includeInactive) {
+      const session = await auth();
+      if (!session?.user || (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER)) {
+        return apiError('Admin authentication required to view inactive products', ErrorCode.FORBIDDEN, { request });
+      }
+    }
+
+    // Item 11: Optional field selection via ?fields=name,price,slug
+    const fieldSelect = parseFieldSelection(request, [
+      'id', 'name', 'subtitle', 'slug', 'shortDescription', 'description',
+      'productType', 'price', 'compareAtPrice', 'imageUrl', 'videoUrl',
+      'categoryId', 'isFeatured', 'isActive', 'createdAt', 'updatedAt',
+      'sku', 'barcode', 'weight', 'manufacturer', 'origin', 'purity',
+      'metaTitle', 'metaDescription',
+    ]);
 
     const where: Record<string, unknown> = {};
 
@@ -30,8 +132,29 @@ export async function GET(request: NextRequest) {
       where.isActive = true;
     }
 
+    // Filter by specific slugs (comma-separated)
+    if (slugs) {
+      const slugList = slugs.split(',').filter(Boolean).slice(0, 20);
+      where.slug = { in: slugList };
+    }
+
     if (category) {
-      where.category = { slug: category };
+      // Check if this is a parent category - if so, include all children
+      const cat = await prisma.category.findUnique({
+        where: { slug: category },
+        include: { children: { select: { id: true } } },
+      });
+      if (cat) {
+        if (cat.children.length > 0) {
+          // Parent category: include products from all children
+          const categoryIds = [cat.id, ...cat.children.map(c => c.id)];
+          where.categoryId = { in: categoryIds };
+        } else {
+          where.category = { slug: category };
+        }
+      } else {
+        where.category = { slug: category };
+      }
     }
 
     if (featured === 'true') {
@@ -42,14 +165,49 @@ export async function GET(request: NextRequest) {
       where.productType = productType;
     }
 
+    // #58: Faceted search filters
+    if (minPrice || maxPrice) {
+      where.price = {};
+      if (minPrice) (where.price as Record<string, unknown>).gte = parseFloat(minPrice);
+      if (maxPrice) (where.price as Record<string, unknown>).lte = parseFloat(maxPrice);
+    }
+
+    if (minRating) {
+      where.averageRating = { gte: parseFloat(minRating) };
+    }
+
+    if (inStock === 'true') {
+      where.formats = { some: { isActive: true, stockQuantity: { gt: 0 } } };
+    }
+
+    if (categoryIds) {
+      const ids = categoryIds.split(',').filter(Boolean).slice(0, 20);
+      if (ids.length > 0) {
+        where.categoryId = { in: ids };
+      }
+    }
+
+    if (tags) {
+      const tagList = tags.split(',').filter(Boolean).slice(0, 10);
+      if (tagList.length > 0) {
+        // Tags stored as comma-separated string in Product.tags
+        where.OR = [
+          ...(Array.isArray(where.OR) ? where.OR as Record<string, unknown>[] : []),
+          ...tagList.map(tag => ({ tags: { contains: tag, mode: 'insensitive' as const } })),
+        ];
+      }
+    }
+
     let products = await prisma.product.findMany({
       where,
       include: {
         category: {
-          select: { id: true, name: true, slug: true },
+          select: { id: true, name: true, slug: true, parentId: true, parent: { select: { id: true, name: true, slug: true } } },
         },
+        // PERF 89: For list view, only fetch the primary image to reduce payload for large catalogs
         images: {
           orderBy: { sortOrder: 'asc' },
+          take: 1,
         },
         formats: {
           where: { isActive: true },
@@ -57,6 +215,7 @@ export async function GET(request: NextRequest) {
         },
       },
       orderBy: { createdAt: 'desc' },
+      skip: (page - 1) * limit,
       take: limit,
     });
 
@@ -91,35 +250,101 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    return NextResponse.json({ products }, {
-      headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600' },
+    // #58: Compute facets if requested
+    let facets: Record<string, unknown> | undefined;
+    if (withFacets) {
+      const [facetCategories, priceAgg, ratingGroups] = await Promise.all([
+        // Category facets with counts
+        prisma.category.findMany({
+          where: { isActive: true },
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            _count: { select: { products: { where: { isActive: true } } } },
+          },
+          orderBy: { sortOrder: 'asc' },
+        }),
+        // Price range
+        prisma.product.aggregate({
+          where: { isActive: true },
+          _min: { price: true },
+          _max: { price: true },
+        }),
+        // Rating distribution
+        prisma.product.groupBy({
+          by: ['averageRating'],
+          where: { isActive: true, averageRating: { not: null } },
+          _count: true,
+        }),
+      ]);
+
+      // Build rating distribution (1-5 stars)
+      const ratings: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+      for (const g of ratingGroups) {
+        const r = Math.round(Number(g.averageRating ?? 0));
+        if (r >= 1 && r <= 5) ratings[r] += g._count;
+      }
+
+      facets = {
+        categories: facetCategories.map(c => ({
+          id: c.id,
+          name: c.name,
+          slug: c.slug,
+          count: c._count.products,
+        })),
+        priceRange: {
+          min: Number(priceAgg._min.price ?? 0),
+          max: Number(priceAgg._max.price ?? 0),
+        },
+        ratings,
+      };
+    }
+
+    // Item 3: ETag support for caching
+    const responseBody = facets ? { products, facets } : { products };
+    return withETag(responseBody, request, {
+      cacheControl: 'public, s-maxage=300, stale-while-revalidate=600',
     });
   } catch (error) {
     console.error('Error fetching products:', error);
-    return NextResponse.json(
-      { error: 'Erreur lors de la récupération des produits' },
-      { status: 500 }
-    );
+    return apiError('Erreur lors de la récupération des produits', ErrorCode.INTERNAL_ERROR, { request });
   }
 }
 
 // POST - Créer un produit (Admin/Owner seulement)
+// Status codes: 201 Created, 400 Bad Request, 401 Unauthorized, 403 Forbidden, 500 Internal Error
 export async function POST(request: NextRequest) {
   try {
+    // Item 12: Content-Type validation
+    const ctError = validateContentType(request);
+    if (ctError) return ctError;
+
     const session = await auth();
 
     if (!session?.user) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
+      return apiError('Non autorisé', ErrorCode.UNAUTHORIZED, { request });
     }
 
     if (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER) {
-      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
+      return apiError('Accès refusé', ErrorCode.FORBIDDEN, { request });
     }
 
     const body = await request.json();
+
+    // BE-SEC-03 + Item 17: Validate product data with Zod schema
+    const validation = createProductSchema.safeParse(body);
+    if (!validation.success) {
+      return apiError(
+        validation.error.errors[0]?.message || 'Invalid product data',
+        ErrorCode.VALIDATION_ERROR,
+        { details: validation.error.errors.map(e => ({ path: e.path.join('.'), message: e.message })), request }
+      );
+    }
+
     const {
       // Base
-      name,
+      name: rawName,
       subtitle,
       slug,
       shortDescription,
@@ -165,12 +390,12 @@ export async function POST(request: NextRequest) {
       formats,
     } = body;
 
-    // Validation
+    // BE-SEC-03: Sanitize product name (strip HTML to prevent stored XSS in admin views)
+    const name = stripControlChars(stripHtml(String(rawName))).trim();
+
+    // Validation (Zod already checked required fields, this is a safety net)
     if (!name || !slug || !price || !categoryId) {
-      return NextResponse.json(
-        { error: 'Champs requis: name, slug, price, categoryId' },
-        { status: 400 }
-      );
+      return apiError('Champs requis: name, slug, price, categoryId', ErrorCode.MISSING_FIELD, { request });
     }
 
     // Vérifier l'unicité du slug
@@ -179,10 +404,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (existingProduct) {
-      return NextResponse.json(
-        { error: 'Ce slug existe déjà' },
-        { status: 400 }
-      );
+      return apiError('Ce slug existe déjà', ErrorCode.DUPLICATE_ENTRY, { status: 409, request });
     }
 
     // Créer le produit avec ses relations
@@ -286,12 +508,9 @@ export async function POST(request: NextRequest) {
     // Enqueue automatic translation to all locales
     enqueue.product(product.id);
 
-    return NextResponse.json({ product }, { status: 201 });
+    return apiSuccess({ product }, { status: 201, request });
   } catch (error) {
     console.error('Error creating product:', error);
-    return NextResponse.json(
-      { error: 'Erreur lors de la création du produit' },
-      { status: 500 }
-    );
+    return apiError('Erreur lors de la création du produit', ErrorCode.INTERNAL_ERROR, { request });
   }
 }

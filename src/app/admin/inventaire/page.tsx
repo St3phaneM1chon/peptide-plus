@@ -56,6 +56,17 @@ export default function InventairePage() {
   const [editValue, setEditValue] = useState<number>(0);
   const [adjustmentReason, setAdjustmentReason] = useState('');
   const [showHistory, setShowHistory] = useState<string | null>(null);
+  const [historyData, setHistoryData] = useState<Array<{
+    id: string;
+    type: string;
+    quantity: number;
+    reason: string | null;
+    orderId: string | null;
+    createdAt: string;
+    productName: string;
+    formatName: string | null;
+  }>>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
 
   const handleExportInventory = async () => {
@@ -105,6 +116,38 @@ export default function InventairePage() {
   useEffect(() => {
     fetchInventory();
   }, []);
+
+  // Fetch real history data when the history modal opens
+  useEffect(() => {
+    if (!showHistory) {
+      setHistoryData([]);
+      return;
+    }
+
+    const fetchHistory = async () => {
+      setHistoryLoading(true);
+      try {
+        // showHistory is the format id; find the matching item to get productId
+        const item = inventory.find((i) => i.id === showHistory);
+        const params = new URLSearchParams();
+        if (item) {
+          params.set('productId', item.productId);
+          params.set('formatId', showHistory);
+        }
+        params.set('limit', '20');
+
+        const res = await fetch(`/api/admin/inventory/history?${params.toString()}`);
+        const data = await res.json();
+        setHistoryData(data.transactions || []);
+      } catch (err) {
+        console.error('Error fetching inventory history:', err);
+        setHistoryData([]);
+      }
+      setHistoryLoading(false);
+    };
+
+    fetchHistory();
+  }, [showHistory, inventory]);
 
   const fetchInventory = async () => {
     try {
@@ -398,7 +441,7 @@ export default function InventairePage() {
 
       {/* Adjustment Reason Panel */}
       {editingId && (
-        <div className="fixed bottom-4 right-4 bg-white rounded-xl shadow-lg border border-slate-200 p-4 w-80 z-40">
+        <div className="fixed bottom-4 end-4 bg-white rounded-xl shadow-lg border border-slate-200 p-4 w-80 z-40">
           <h4 className="font-semibold text-slate-900 mb-2">{t('admin.inventory.adjustmentReason')}</h4>
           <Input
             type="text"
@@ -416,28 +459,37 @@ export default function InventairePage() {
         onClose={() => setShowHistory(null)}
         title={t('admin.inventory.historyTitle')}
       >
-        <div className="space-y-3">
-          <div className="flex items-center gap-3 text-sm">
-            <span className="text-green-600 font-bold">+10</span>
-            <span className="text-slate-500">{t('admin.inventory.historyStockReception')}</span>
-            <span className="text-slate-400 ml-auto">{t('admin.inventory.historyDaysAgo2')}</span>
+        {historyLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-sky-500" />
           </div>
-          <div className="flex items-center gap-3 text-sm">
-            <span className="text-red-600 font-bold">-2</span>
-            <span className="text-slate-500">{t('admin.inventory.historyOrder')} #BC-2026-00001</span>
-            <span className="text-slate-400 ml-auto">{t('admin.inventory.historyDaysAgo3')}</span>
+        ) : historyData.length === 0 ? (
+          <p className="text-sm text-slate-500 py-4 text-center">
+            {t('admin.inventory.noHistory') || 'No transaction history yet.'}
+          </p>
+        ) : (
+          <div className="space-y-3">
+            {historyData.map((tx) => {
+              const isPositive = tx.quantity > 0;
+              const timeAgo = new Date(tx.createdAt).toLocaleDateString(undefined, {
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric',
+              });
+              return (
+                <div key={tx.id} className="flex items-center gap-3 text-sm">
+                  <span className={`font-bold min-w-[3rem] text-end ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
+                    {isPositive ? '+' : ''}{tx.quantity}
+                  </span>
+                  <span className="text-slate-600 flex-1">
+                    {tx.reason || tx.type}
+                  </span>
+                  <span className="text-slate-400 text-xs whitespace-nowrap">{timeAgo}</span>
+                </div>
+              );
+            })}
           </div>
-          <div className="flex items-center gap-3 text-sm">
-            <span className="text-red-600 font-bold">-1</span>
-            <span className="text-slate-500">{t('admin.inventory.historyOrder')} #BC-2026-00002</span>
-            <span className="text-slate-400 ml-auto">{t('admin.inventory.historyDaysAgo5')}</span>
-          </div>
-          <div className="flex items-center gap-3 text-sm">
-            <span className="text-green-600 font-bold">+50</span>
-            <span className="text-slate-500">{t('admin.inventory.historyInitialStock')}</span>
-            <span className="text-slate-400 ml-auto">{t('admin.inventory.historyDaysAgo30')}</span>
-          </div>
-        </div>
+        )}
       </Modal>
     </div>
   );

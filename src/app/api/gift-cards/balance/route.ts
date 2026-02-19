@@ -6,9 +6,24 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
 
 export async function GET(request: NextRequest) {
   try {
+    // SEC-19: Rate limit balance checks - 5 per IP per minute
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip')
+      || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/gift-cards/balance');
+    if (!rl.success) {
+      const res = NextResponse.json(
+        { error: rl.error!.message },
+        { status: 429 }
+      );
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+
     const { searchParams } = new URL(request.url);
     const code = searchParams.get('code');
 

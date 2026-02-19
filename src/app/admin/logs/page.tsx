@@ -47,6 +47,7 @@ export default function LogsPage() {
   const [filter, setFilter] = useState({ level: '', search: '', action: '' });
   const [selectedLog, setSelectedLog] = useState<LogEntry | null>(null);
   const [autoRefresh, setAutoRefresh] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   useEffect(() => {
     fetchLogs();
@@ -62,6 +63,7 @@ export default function LogsPage() {
       const res = await fetch('/api/admin/logs');
       const data = await res.json();
       setLogs(data.logs || []);
+      setLastUpdated(new Date());
     } catch (err) {
       console.error('Error fetching logs:', err);
       setLogs([]);
@@ -182,6 +184,11 @@ export default function LogsPage() {
             <Button variant="secondary" icon={Download}>
               {t('admin.logs.export')}
             </Button>
+            {lastUpdated && (
+              <span className="text-xs text-slate-400 whitespace-nowrap">
+                {t('admin.logs.lastUpdated') || 'Last updated'}: {lastUpdated.toLocaleTimeString(locale)}
+              </span>
+            )}
           </div>
         }
       />

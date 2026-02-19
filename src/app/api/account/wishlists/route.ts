@@ -1,8 +1,9 @@
 export const dynamic = 'force-dynamic';
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
+import { validateCsrf } from '@/lib/csrf-middleware';
 
 /**
  * GET /api/account/wishlists
@@ -61,8 +62,14 @@ export async function GET() {
  * Create a new wishlist
  * Body: { name: string }
  */
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
+    // SECURITY (BE-SEC-15): CSRF protection for mutation endpoint
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const session = await auth();
 
     if (!session?.user?.id) {
@@ -116,8 +123,14 @@ export async function POST(request: Request) {
  * Rename a wishlist
  * Body: { id: string, name: string }
  */
-export async function PATCH(request: Request) {
+export async function PATCH(request: NextRequest) {
   try {
+    // SECURITY (BE-SEC-15): CSRF protection for mutation endpoint
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const session = await auth();
 
     if (!session?.user?.id) {
@@ -182,8 +195,14 @@ export async function PATCH(request: Request) {
  * DELETE /api/account/wishlists?id=...
  * Delete a wishlist (cannot delete default, items moved to default)
  */
-export async function DELETE(request: Request) {
+export async function DELETE(request: NextRequest) {
   try {
+    // SECURITY (BE-SEC-15): CSRF protection for mutation endpoint
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const session = await auth();
 
     if (!session?.user?.id) {

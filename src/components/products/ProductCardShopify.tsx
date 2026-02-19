@@ -8,7 +8,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useCart } from '@/components/cart/CartDrawer';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 
 interface Product {
   id: string;
@@ -28,7 +28,7 @@ interface ProductCardShopifyProps {
 
 export function ProductCardShopify({ product }: ProductCardShopifyProps) {
   const { addItem } = useCart();
-  const { t } = useTranslations();
+  const { t } = useI18n();
 
   const hasDiscount = product.compareAtPrice && product.compareAtPrice > product.price;
   const discountPercent = hasDiscount

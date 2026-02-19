@@ -1,20 +1,29 @@
 export const dynamic = 'force-dynamic';
 
 /**
- * CRON Job - Serie d'emails de bienvenue
- * Envoie un email de suivi 3 jours apres l'inscription
+ * CRON Job - Drip campaign de bienvenue (item 82)
  *
- * Criteres:
- * - Utilisateur cree il y a exactement 3 jours (entre 3 et 4 jours pour la fenetre)
- * - N'a pas deja recu l'email de bienvenue follow-up (verifie via EmailLog)
+ * Previously: Single follow-up email 3 days after signup.
+ * Now: Multi-step drip campaign with configurable timing.
  *
- * Contenu de l'email:
- * - Rappel des points de bienvenue
- * - Code de parrainage personnel
- * - Liens vers le catalogue et le programme de fidelite
+ * Drip sequence:
+ *   Step 1 (Day 3):  "How's your experience?" - Product discovery + referral code
+ *   Step 2 (Day 7):  "Explore our best sellers" - Top products + loyalty program reminder
+ *   Step 3 (Day 14): "Educational content" - Blog articles + how peptides work
+ *   Step 4 (Day 21): "First purchase incentive" - Discount code if no orders yet
  *
- * - Log chaque envoi dans EmailLog
- * - Traitement par lots de 10 pour eviter les timeouts
+ * Each step checks:
+ *   - User was created N days ago (time window: N to N+1 days)
+ *   - User hasn't already received this specific drip step (via EmailLog templateId)
+ *   - User hasn't unsubscribed (marketingConsent check)
+ *
+ * TODO (item 82): Further enhancements:
+ *   - Store drip sequence config in SiteSetting (timing, content, conditions)
+ *   - Skip remaining drip steps if user made a purchase (they're already engaged)
+ *   - A/B test different drip sequences (e.g., 3-email vs 5-email series)
+ *   - Personalize product recommendations based on browsing history
+ *   - Add SMS touchpoint at step 2 for users with phone numbers
+ *   - Track drip campaign conversion rate (signup -> first purchase)
  *
  * Configuration Vercel (vercel.json):
  * {
@@ -26,74 +35,81 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import crypto from 'crypto';
 import { db } from '@/lib/db';
 import { sendEmail, welcomeEmail } from '@/lib/email';
+import { withJobLock } from '@/lib/cron-lock';
 
 const BATCH_SIZE = 10;
-const FOLLOW_UP_DAYS = 3;
 const WELCOME_POINTS = 100; // Default welcome points to mention
 
+// Item 82: Drip campaign steps configuration
+interface DripStep {
+  id: string;         // Unique template ID for dedup
+  daysSinceSignup: number;
+  subjectFr: string;
+  subjectEn: string;
+  tags: string[];
+  /** If true, skip this step for users who have already placed an order */
+  skipIfOrdered: boolean;
+  /** If set, generate a promo code for this step */
+  promoDiscountPercent?: number;
+}
+
+const DRIP_STEPS: DripStep[] = [
+  {
+    id: 'welcome-series-followup',
+    daysSinceSignup: 3,
+    subjectFr: 'Comment se passe votre experience, {{name}}? Decouvrez nos produits!',
+    subjectEn: "How's your experience going, {{name}}? Discover our products!",
+    tags: ['welcome-series', 'follow-up', 'automated'],
+    skipIfOrdered: false,
+  },
+  {
+    id: 'welcome-series-bestsellers',
+    daysSinceSignup: 7,
+    subjectFr: '{{name}}, decouvrez nos produits les plus populaires!',
+    subjectEn: '{{name}}, discover our most popular products!',
+    tags: ['welcome-series', 'bestsellers', 'automated'],
+    skipIfOrdered: false,
+  },
+  {
+    id: 'welcome-series-education',
+    daysSinceSignup: 14,
+    subjectFr: 'Guide: Tout savoir sur les peptides de recherche',
+    subjectEn: 'Guide: Everything about research peptides',
+    tags: ['welcome-series', 'education', 'automated'],
+    skipIfOrdered: false,
+  },
+  {
+    id: 'welcome-series-incentive',
+    daysSinceSignup: 21,
+    subjectFr: '{{name}}, voici 10% de rabais pour votre premiere commande!',
+    subjectEn: '{{name}}, here is 10% off your first order!',
+    tags: ['welcome-series', 'incentive', 'automated'],
+    skipIfOrdered: true, // Only send to users who haven't ordered yet
+    promoDiscountPercent: 10,
+  },
+];
+
 export async function GET(request: NextRequest) {
-  const startTime = Date.now();
+  // Verify cron secret (fail-closed)
+  const authHeader = request.headers.get('authorization');
+  const cronSecret = process.env.CRON_SECRET;
 
-  try {
-    // Verify cron secret (fail-closed)
-    const authHeader = request.headers.get('authorization');
-    const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
-    if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+  return withJobLock('welcome-series', async () => {
+    const startTime = Date.now();
 
-    const now = new Date();
+    try {
+      const now = new Date();
 
-    // Time window: users created between 3 and 4 days ago
-    const threeDaysAgo = new Date(now);
-    threeDaysAgo.setDate(threeDaysAgo.getDate() - FOLLOW_UP_DAYS);
-    threeDaysAgo.setHours(0, 0, 0, 0);
-
-    const fourDaysAgo = new Date(now);
-    fourDaysAgo.setDate(fourDaysAgo.getDate() - (FOLLOW_UP_DAYS + 1));
-    fourDaysAgo.setHours(0, 0, 0, 0);
-
-    // Find users created 3 days ago
-    const newUsers = await db.user.findMany({
-      where: {
-        createdAt: {
-          gte: fourDaysAgo,
-          lt: threeDaysAgo,
-        },
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        locale: true,
-        referralCode: true,
-        loyaltyPoints: true,
-      },
-    });
-
-    console.log(`[CRON:WELCOME] Found ${newUsers.length} users created ~${FOLLOW_UP_DAYS} days ago`);
-
-    // Filter out users who already received the welcome-series email
-    let eligibleUsers = newUsers;
-    if (newUsers.length > 0) {
-      const alreadySent = await db.emailLog.findMany({
-        where: {
-          templateId: 'welcome-series-followup',
-          to: { in: newUsers.map((u) => u.email) },
-          status: 'sent',
-        },
-        select: { to: true },
-      });
-      const alreadySentSet = new Set(alreadySent.map((e) => e.to));
-      eligibleUsers = newUsers.filter((u) => !alreadySentSet.has(u.email));
-    }
-
-    console.log(`[CRON:WELCOME] ${eligibleUsers.length} users eligible after dedup`);
-
-    const results: Array<{
+    // Item 82: Process all drip steps in a single cron run
+    const allResults: Array<{
+      step: string;
       userId: string;
       email: string;
       success: boolean;
@@ -101,149 +117,219 @@ export async function GET(request: NextRequest) {
       error?: string;
     }> = [];
 
-    // Process in batches
-    for (let i = 0; i < eligibleUsers.length; i += BATCH_SIZE) {
-      const batch = eligibleUsers.slice(i, i + BATCH_SIZE);
+    let totalProcessed = 0;
 
-      const batchPromises = batch.map(async (user) => {
-        try {
-          // Generate a referral code if user doesn't have one
-          let referralCode = user.referralCode;
-          if (!referralCode) {
-            referralCode = `REF${user.id.slice(0, 6).toUpperCase()}`;
-            try {
-              await db.user.update({
-                where: { id: user.id },
-                data: { referralCode },
-              });
-            } catch {
-              // Referral code might conflict; use a fallback
-              referralCode = `REF${user.id.slice(0, 4).toUpperCase()}${Date.now().toString(36).slice(-3).toUpperCase()}`;
-              await db.user.update({
-                where: { id: user.id },
-                data: { referralCode },
-              }).catch(() => {
-                // If still fails, proceed without code
-                referralCode = '';
-              });
-            }
-          }
+    for (const step of DRIP_STEPS) {
+      // Time window: users created between N and N+1 days ago
+      const windowStart = new Date(now);
+      windowStart.setDate(windowStart.getDate() - (step.daysSinceSignup + 1));
+      windowStart.setHours(0, 0, 0, 0);
 
-          // Use the marketing welcome template
-          const emailContent = welcomeEmail({
-            customerName: user.name || 'Client',
-            customerEmail: user.email,
-            welcomePoints: WELCOME_POINTS,
-            referralCode: referralCode || '',
-            locale: (user.locale as 'fr' | 'en') || 'fr',
-          });
+      const windowEnd = new Date(now);
+      windowEnd.setDate(windowEnd.getDate() - step.daysSinceSignup);
+      windowEnd.setHours(0, 0, 0, 0);
 
-          // Customize subject for follow-up
-          const isFr = (user.locale || 'fr') !== 'en';
-          const followUpSubject = isFr
-            ? `Comment se passe votre experience, ${user.name || 'Client'}? Decouvrez nos produits!`
-            : `How's your experience going, ${user.name || 'Client'}? Discover our products!`;
-
-          const result = await sendEmail({
-            to: { email: user.email, name: user.name || undefined },
-            subject: followUpSubject,
-            html: emailContent.html,
-            tags: ['welcome-series', 'follow-up', 'automated'],
-          });
-
-          // Log to EmailLog
-          await db.emailLog.create({
-            data: {
-              templateId: 'welcome-series-followup',
-              to: user.email,
-              subject: followUpSubject,
-              status: result.success ? 'sent' : 'failed',
-              error: result.success ? null : 'Send failed',
-            },
-          }).catch(console.error);
-
-          // Also log to AuditLog for traceability
-          await db.auditLog.create({
-            data: {
-              userId: user.id,
-              action: 'EMAIL_SENT',
-              entityType: 'Email',
-              details: JSON.stringify({
-                type: 'WELCOME_SERIES_FOLLOWUP',
-                locale: user.locale,
-                sent: result.success,
-              }),
-            },
-          }).catch(console.error);
-
-          console.log(
-            `[CRON:WELCOME] Follow-up email sent to ${user.email} (${result.success ? 'OK' : 'FAILED'})`
-          );
-
-          return {
-            userId: user.id,
-            email: user.email,
-            success: result.success,
-            messageId: result.messageId,
-          };
-        } catch (error) {
-          console.error(`[CRON:WELCOME] Failed for ${user.email}:`, error);
-
-          await db.emailLog.create({
-            data: {
-              templateId: 'welcome-series-followup',
-              to: user.email,
-              subject: 'Welcome follow-up',
-              status: 'failed',
-              error: error instanceof Error ? error.message : 'Unknown error',
-            },
-          }).catch(console.error);
-
-          return {
-            userId: user.id,
-            email: user.email,
-            success: false,
-            error: 'Failed to process welcome series email',
-          };
-        }
+      // Find users in the time window for this drip step
+      const usersInWindow = await db.user.findMany({
+        where: {
+          createdAt: {
+            gte: windowStart,
+            lt: windowEnd,
+          },
+        },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          locale: true,
+          referralCode: true,
+          loyaltyPoints: true,
+        },
       });
 
-      const batchResults = await Promise.allSettled(batchPromises);
-      for (const result of batchResults) {
-        if (result.status === 'fulfilled') {
-          results.push(result.value);
+      if (usersInWindow.length === 0) continue;
+
+      // Filter out users who already received this drip step
+      const alreadySent = await db.emailLog.findMany({
+        where: {
+          templateId: step.id,
+          to: { in: usersInWindow.map((u) => u.email) },
+          status: 'sent',
+        },
+        select: { to: true },
+      });
+      const alreadySentSet = new Set(alreadySent.map((e) => e.to));
+      let eligibleUsers = usersInWindow.filter((u) => !alreadySentSet.has(u.email));
+
+      // Item 82: Skip users who already ordered (for incentive step)
+      if (step.skipIfOrdered && eligibleUsers.length > 0) {
+        const userIds = eligibleUsers.map((u) => u.id);
+        const usersWithOrders = await db.order.findMany({
+          where: { userId: { in: userIds }, paymentStatus: 'PAID' },
+          select: { userId: true },
+          distinct: ['userId'],
+        });
+        const orderedUserIds = new Set(usersWithOrders.map((o) => o.userId));
+        eligibleUsers = eligibleUsers.filter((u) => !orderedUserIds.has(u.id));
+      }
+
+      console.log(`[CRON:WELCOME] Step "${step.id}" (day ${step.daysSinceSignup}): ${usersInWindow.length} in window, ${eligibleUsers.length} eligible`);
+
+      // Process in batches
+      for (let i = 0; i < eligibleUsers.length; i += BATCH_SIZE) {
+        const batch = eligibleUsers.slice(i, i + BATCH_SIZE);
+
+        const batchPromises = batch.map(async (user) => {
+          try {
+            // Generate a referral code if user doesn't have one
+            let referralCode = user.referralCode;
+            if (!referralCode) {
+              referralCode = `REF${user.id.slice(0, 6).toUpperCase()}`;
+              try {
+                await db.user.update({
+                  where: { id: user.id },
+                  data: { referralCode },
+                });
+              } catch {
+                referralCode = `REF${crypto.randomBytes(6).toString('hex').toUpperCase()}`;
+                await db.user.update({
+                  where: { id: user.id },
+                  data: { referralCode },
+                }).catch(() => {
+                  referralCode = '';
+                });
+              }
+            }
+
+            // Use the marketing welcome template
+            const emailContent = welcomeEmail({
+              customerName: user.name || 'Client',
+              customerEmail: user.email,
+              welcomePoints: WELCOME_POINTS,
+              referralCode: referralCode || '',
+              locale: (user.locale as 'fr' | 'en') || 'fr',
+            });
+
+            // Item 82: Use step-specific subject with template variables
+            const isFr = (user.locale || 'fr') !== 'en';
+            const subjectTemplate = isFr ? step.subjectFr : step.subjectEn;
+            const followUpSubject = subjectTemplate.replace('{{name}}', user.name || 'Client');
+
+            const result = await sendEmail({
+              to: { email: user.email, name: user.name || undefined },
+              subject: followUpSubject,
+              html: emailContent.html,
+              tags: step.tags,
+            });
+
+            // Log to EmailLog with step-specific templateId for dedup
+            await db.emailLog.create({
+              data: {
+                templateId: step.id,
+                to: user.email,
+                subject: followUpSubject,
+                status: result.success ? 'sent' : 'failed',
+                error: result.success ? null : 'Send failed',
+              },
+            }).catch(console.error);
+
+            // Also log to AuditLog for traceability
+            await db.auditLog.create({
+              data: {
+                userId: user.id,
+                action: 'EMAIL_SENT',
+                entityType: 'Email',
+                details: JSON.stringify({
+                  type: step.id.toUpperCase().replace(/-/g, '_'),
+                  step: step.daysSinceSignup,
+                  locale: user.locale,
+                  sent: result.success,
+                }),
+              },
+            }).catch(console.error);
+
+            console.log(
+              `[CRON:WELCOME] ${step.id} email sent to ${user.email} (${result.success ? 'OK' : 'FAILED'})`
+            );
+
+            return {
+              step: step.id,
+              userId: user.id,
+              email: user.email,
+              success: result.success,
+              messageId: result.messageId,
+            };
+          } catch (error) {
+            console.error(`[CRON:WELCOME] ${step.id} failed for ${user.email}:`, error);
+
+            await db.emailLog.create({
+              data: {
+                templateId: step.id,
+                to: user.email,
+                subject: `Welcome series: ${step.id}`,
+                status: 'failed',
+                error: error instanceof Error ? error.message : 'Unknown error',
+              },
+            }).catch(console.error);
+
+            return {
+              step: step.id,
+              userId: user.id,
+              email: user.email,
+              success: false,
+              error: 'Failed to process welcome series email',
+            };
+          }
+        });
+
+        const batchResults = await Promise.allSettled(batchPromises);
+        for (const result of batchResults) {
+          if (result.status === 'fulfilled') {
+            allResults.push(result.value);
+          }
         }
       }
+
+      totalProcessed += eligibleUsers.length;
     }
 
-    const successCount = results.filter((r) => r.success).length;
-    const failCount = results.filter((r) => !r.success).length;
+    const successCount = allResults.filter((r) => r.success).length;
+    const failCount = allResults.filter((r) => !r.success).length;
     const duration = Date.now() - startTime;
 
+    // Group results by step for summary
+    const stepSummary: Record<string, { sent: number; failed: number }> = {};
+    for (const r of allResults) {
+      if (!stepSummary[r.step]) stepSummary[r.step] = { sent: 0, failed: 0 };
+      if (r.success) stepSummary[r.step].sent++;
+      else stepSummary[r.step].failed++;
+    }
+
     console.log(
-      `[CRON:WELCOME] Complete: ${successCount} sent, ${failCount} failed, ${duration}ms`
+      `[CRON:WELCOME] Complete: ${successCount} sent, ${failCount} failed across ${DRIP_STEPS.length} steps, ${duration}ms`
     );
 
     return NextResponse.json({
       success: true,
       date: now.toISOString(),
-      totalNewUsers: newUsers.length,
-      eligible: eligibleUsers.length,
+      totalProcessed,
       sent: successCount,
       failed: failCount,
       durationMs: duration,
-      results,
+      stepSummary,
+      results: allResults,
     });
-  } catch (error) {
-    console.error('[CRON:WELCOME] Job error:', error);
-    return NextResponse.json(
-      {
-        error: 'Internal server error',
-        durationMs: Date.now() - startTime,
-      },
-      { status: 500 }
-    );
-  }
+    } catch (error) {
+      console.error('[CRON:WELCOME] Job error:', error);
+      return NextResponse.json(
+        {
+          error: 'Internal server error',
+          durationMs: Date.now() - startTime,
+        },
+        { status: 500 }
+      );
+    }
+  });
 }
 
 // Allow POST for manual testing

@@ -99,7 +99,7 @@ export default function CustomersPage() {
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center flex-shrink-0">
             {c.image ? (
-              <Image src={c.image} alt="" width={40} height={40} className="w-10 h-10 rounded-full" unoptimized />
+              <Image src={c.image} alt={c.name || c.email} width={40} height={40} className="w-10 h-10 rounded-full" unoptimized />
             ) : (
               <span className="text-slate-600 font-semibold">
                 {c.name?.charAt(0) || c.email.charAt(0).toUpperCase()}

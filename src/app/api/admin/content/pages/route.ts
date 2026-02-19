@@ -1,16 +1,11 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth-config';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 
 // GET /api/admin/content/pages - List all pages
-export async function GET() {
-  const session = await auth();
-  if (!session?.user || (session.user.role !== 'EMPLOYEE' && session.user.role !== 'OWNER')) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-  }
-
+export const GET = withAdminGuard(async (_request, { session }) => {
   const pages = await prisma.page.findMany({
     orderBy: { updatedAt: 'desc' },
     include: {
@@ -21,15 +16,10 @@ export async function GET() {
   });
 
   return NextResponse.json({ pages });
-}
+});
 
 // POST /api/admin/content/pages - Create a new page
-export async function POST(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user || (session.user.role !== 'EMPLOYEE' && session.user.role !== 'OWNER')) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-  }
-
+export const POST = withAdminGuard(async (request, { session }) => {
   const body = await request.json();
   const { title, slug, content, excerpt, metaTitle, metaDescription, template, isPublished } = body;
 
@@ -59,15 +49,10 @@ export async function POST(request: NextRequest) {
   });
 
   return NextResponse.json({ page }, { status: 201 });
-}
+});
 
 // PUT /api/admin/content/pages - Update a page
-export async function PUT(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user || (session.user.role !== 'EMPLOYEE' && session.user.role !== 'OWNER')) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-  }
-
+export const PUT = withAdminGuard(async (request, { session }) => {
   const body = await request.json();
   const { id, title, slug, content, excerpt, metaTitle, metaDescription, template, isPublished } = body;
 
@@ -107,15 +92,10 @@ export async function PUT(request: NextRequest) {
   });
 
   return NextResponse.json({ page });
-}
+});
 
 // DELETE /api/admin/content/pages - Delete a page
-export async function DELETE(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user || session.user.role !== 'OWNER') {
-    return NextResponse.json({ error: 'Forbidden - Owner only' }, { status: 403 });
-  }
-
+export const DELETE = withAdminGuard(async (request, { session }) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
 
@@ -125,4 +105,4 @@ export async function DELETE(request: NextRequest) {
 
   await prisma.page.delete({ where: { id } });
   return NextResponse.json({ success: true });
-}
+});

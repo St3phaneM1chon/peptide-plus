@@ -1,10 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 
 export default function RefundPolicyPage() {
-  const { t } = useTranslations();
+  const { t } = useI18n();
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -133,8 +133,8 @@ export default function RefundPolicyPage() {
               <table className="w-full">
                 <thead className="bg-gray-100">
                   <tr>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Payment Method</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Processing Time</th>
+                    <th className="px-4 py-3 text-start text-sm font-semibold text-gray-700">Payment Method</th>
+                    <th className="px-4 py-3 text-start text-sm font-semibold text-gray-700">Processing Time</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">

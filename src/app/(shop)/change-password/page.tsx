@@ -8,12 +8,12 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 
 export default function ChangePasswordPage() {
   const { status } = useSession();
   const router = useRouter();
-  const { t } = useTranslations();
+  const { t } = useI18n();
   const [formData, setFormData] = useState({
     currentPassword: '',
     newPassword: '',
@@ -151,12 +151,12 @@ export default function ChangePasswordPage() {
                   value={formData.currentPassword}
                   onChange={(e) => setFormData({ ...formData, currentPassword: e.target.value })}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 pr-12"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 pe-12"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPasswords({ ...showPasswords, current: !showPasswords.current })}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute end-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
                   {showPasswords.current ? '🙈' : '👁️'}
                 </button>
@@ -174,12 +174,12 @@ export default function ChangePasswordPage() {
                   value={formData.newPassword}
                   onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 pr-12"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 pe-12"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPasswords({ ...showPasswords, new: !showPasswords.new })}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute end-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
                   {showPasswords.new ? '🙈' : '👁️'}
                 </button>
@@ -237,7 +237,7 @@ export default function ChangePasswordPage() {
                   value={formData.confirmPassword}
                   onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                   required
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 pr-12 ${
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 pe-12 ${
                     formData.confirmPassword && formData.confirmPassword !== formData.newPassword
                       ? 'border-red-300 bg-red-50'
                       : formData.confirmPassword && formData.confirmPassword === formData.newPassword
@@ -248,7 +248,7 @@ export default function ChangePasswordPage() {
                 <button
                   type="button"
                   onClick={() => setShowPasswords({ ...showPasswords, confirm: !showPasswords.confirm })}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute end-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
                   {showPasswords.confirm ? '🙈' : '👁️'}
                 </button>

@@ -9,21 +9,13 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { auth } from '@/lib/auth-config';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import { enqueue } from '@/lib/translation';
 
 // GET /api/admin/blog/[id] - Get single blog post
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const GET = withAdminGuard(async (_request, { session, params }) => {
   try {
-    const session = await auth();
-    if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { id } = await params;
+    const id = params!.id;
 
     const post = await prisma.blogPost.findUnique({
       where: { id },
@@ -64,20 +56,12 @@ export async function GET(
       { status: 500 }
     );
   }
-}
+});
 
 // PATCH /api/admin/blog/[id] - Update blog post
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const PATCH = withAdminGuard(async (request, { session, params }) => {
   try {
-    const session = await auth();
-    if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { id } = await params;
+    const id = params!.id;
 
     const existing = await prisma.blogPost.findUnique({ where: { id } });
     if (!existing) {
@@ -216,20 +200,12 @@ export async function PATCH(
       { status: 500 }
     );
   }
-}
+});
 
 // DELETE /api/admin/blog/[id] - Delete blog post
-export async function DELETE(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const DELETE = withAdminGuard(async (_request, { session, params }) => {
   try {
-    const session = await auth();
-    if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { id } = await params;
+    const id = params!.id;
 
     const existing = await prisma.blogPost.findUnique({ where: { id } });
     if (!existing) {
@@ -255,4 +231,4 @@ export async function DELETE(
       { status: 500 }
     );
   }
-}
+});

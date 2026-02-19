@@ -7,6 +7,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
 
 const STATUS_LABELS: Record<string, string> = {
   PENDING: 'Order Placed',
@@ -26,6 +27,20 @@ const STATUS_ORDER = [
 
 export async function GET(request: NextRequest) {
   try {
+    // SEC-18: Rate limit order tracking requests
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip')
+      || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/orders/track');
+    if (!rl.success) {
+      const res = NextResponse.json(
+        { found: false, error: rl.error!.message },
+        { status: 429 }
+      );
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+
     const { searchParams } = new URL(request.url);
     const orderNumber = searchParams.get('orderNumber');
     const email = searchParams.get('email');

@@ -124,16 +124,9 @@ export async function GET() {
 
   } catch (error) {
     console.error('Error fetching loyalty data:', error);
-    // En cas d'erreur, retourner des données par défaut
-    return NextResponse.json({
-      points: 0,
-      lifetimePoints: 0,
-      tier: 'BRONZE',
-      transactions: [],
-      referralCode: '',
-      referralCount: 0,
-      nextTier: 'SILVER',
-      pointsToNextTier: 500,
-    });
+    return NextResponse.json(
+      { error: 'Failed to fetch loyalty data' },
+      { status: 500 }
+    );
   }
 }

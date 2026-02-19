@@ -5,16 +5,23 @@ export const dynamic = 'force-dynamic';
  * POST /api/account/orders/[id]/cancel
  */
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { sendOrderCancellation } from '@/lib/email-service';
+import { validateCsrf } from '@/lib/csrf-middleware';
 
 export async function POST(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // SECURITY (BE-SEC-15): CSRF protection for mutation endpoint
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const session = await auth();
 
     if (!session?.user?.email) {
@@ -104,8 +111,9 @@ export async function POST(
         }
       }
 
-      // If payment was made (PAID status), create a refund record
-      // Note: We don't actually process the refund with Stripe here - just log it
+      // If payment was made (PAID status), mark as REFUND_PENDING
+      // IMPORTANT: Do NOT set REFUNDED here — actual refund must go through
+      // Stripe/PayPal API via the admin refund endpoint
       let refundAmount = 0;
       let refundMethod = '';
 
@@ -113,19 +121,19 @@ export async function POST(
         refundAmount = Number(order.total);
         refundMethod = order.paymentMethod || 'Original payment method';
 
-        // Update payment status to REFUNDED
+        // Mark as pending refund — admin must process the actual refund
         await tx.order.update({
           where: { id: orderId },
           data: {
-            paymentStatus: 'REFUNDED',
+            paymentStatus: 'REFUND_PENDING',
           },
         });
 
-        // Log refund in audit (we don't have a Refund model, so we use audit log)
+        // Log refund request in audit
         await tx.auditLog.create({
           data: {
             userId: user.id,
-            action: 'ORDER_REFUND_CREATED',
+            action: 'ORDER_REFUND_REQUESTED',
             entityType: 'Order',
             entityId: orderId,
             details: JSON.stringify({
@@ -135,7 +143,7 @@ export async function POST(
               paymentMethod: refundMethod,
               stripePaymentId: order.stripePaymentId,
               paypalOrderId: order.paypalOrderId,
-              note: 'Refund will be processed manually or via payment provider webhook',
+              note: 'Customer-initiated cancellation. Admin must process refund via payment provider.',
             }),
           },
         });
@@ -199,13 +207,17 @@ export async function POST(
       refund: result.refundAmount > 0 ? {
         amount: result.refundAmount,
         method: result.refundMethod,
-        note: 'Refund will be processed within 5-10 business days',
+        note: 'Refund request submitted. An admin will process your refund within 5-10 business days.',
       } : null,
     });
   } catch (error) {
     console.error('Order cancellation error:', error);
+    // BE-SEC-04: Don't leak error details in production
+    const details = process.env.NODE_ENV === 'development'
+      ? (error instanceof Error ? error.message : 'Unknown error')
+      : undefined;
     return NextResponse.json(
-      { error: 'Failed to cancel order', details: error instanceof Error ? error.message : 'Unknown error' },
+      { error: 'Failed to cancel order', ...(details ? { details } : {}) },
       { status: 500 }
     );
   }

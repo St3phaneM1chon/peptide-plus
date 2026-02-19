@@ -383,7 +383,7 @@ export default function EcrituresPage() {
             </button>
           )}
           {entry.attachments && entry.attachments > 0 && (
-            <span className="text-xs text-slate-400 ml-1">
+            <span className="text-xs text-slate-400 ms-1">
               <Paperclip className="w-4 h-4 inline" />
             </span>
           )}
@@ -412,7 +412,7 @@ export default function EcrituresPage() {
         </Button>
       )}
       <Button variant="secondary" icon={Copy}>{t('admin.entries.duplicate')}</Button>
-      <Button variant="secondary" icon={Printer} className="ml-auto">{t('admin.entries.print')}</Button>
+      <Button variant="secondary" icon={Printer} className="ms-auto">{t('admin.entries.print')}</Button>
     </div>
   ) : null;
 
@@ -428,7 +428,7 @@ export default function EcrituresPage() {
       <Button
         variant="primary"
         icon={Check}
-        className="ml-auto bg-emerald-600 hover:bg-emerald-700 border-transparent"
+        className="ms-auto bg-emerald-600 hover:bg-emerald-700 border-transparent"
         onClick={() => handleCreateEntry(true)}
         disabled={submitting}
       >
@@ -551,10 +551,10 @@ export default function EcrituresPage() {
                 <table className="w-full">
                   <thead className="bg-slate-50">
                     <tr>
-                      <th className="px-4 py-2 text-left text-xs font-semibold text-slate-500">{t('admin.entries.accountHeader')}</th>
-                      <th className="px-4 py-2 text-left text-xs font-semibold text-slate-500">{t('admin.entries.descriptionHeader')}</th>
-                      <th className="px-4 py-2 text-right text-xs font-semibold text-slate-500">{t('admin.entries.debitHeader')}</th>
-                      <th className="px-4 py-2 text-right text-xs font-semibold text-slate-500">{t('admin.entries.creditHeader')}</th>
+                      <th className="px-4 py-2 text-start text-xs font-semibold text-slate-500">{t('admin.entries.accountHeader')}</th>
+                      <th className="px-4 py-2 text-start text-xs font-semibold text-slate-500">{t('admin.entries.descriptionHeader')}</th>
+                      <th className="px-4 py-2 text-end text-xs font-semibold text-slate-500">{t('admin.entries.debitHeader')}</th>
+                      <th className="px-4 py-2 text-end text-xs font-semibold text-slate-500">{t('admin.entries.creditHeader')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -562,15 +562,15 @@ export default function EcrituresPage() {
                       <tr key={line.id}>
                         <td className="px-4 py-2">
                           <span className="font-mono text-sm text-slate-600">{line.accountCode}</span>
-                          <span className="text-sm text-slate-900 ml-2">{line.accountName}</span>
+                          <span className="text-sm text-slate-900 ms-2">{line.accountName}</span>
                         </td>
                         <td className="px-4 py-2 text-sm text-slate-600">{line.description || '-'}</td>
-                        <td className="px-4 py-2 text-right">
+                        <td className="px-4 py-2 text-end">
                           {line.debit > 0 && (
                             <span className="font-medium text-slate-900">{fmtCurrency(line.debit)}</span>
                           )}
                         </td>
-                        <td className="px-4 py-2 text-right">
+                        <td className="px-4 py-2 text-end">
                           {line.credit > 0 && (
                             <span className="font-medium text-slate-900">{fmtCurrency(line.credit)}</span>
                           )}
@@ -581,10 +581,10 @@ export default function EcrituresPage() {
                   <tfoot className="bg-slate-100">
                     <tr>
                       <td colSpan={2} className="px-4 py-2 font-semibold text-slate-900">{t('admin.entries.total')}</td>
-                      <td className="px-4 py-2 text-right font-bold text-slate-900">
+                      <td className="px-4 py-2 text-end font-bold text-slate-900">
                         {fmtCurrency(totalDebit(selectedEntry))}
                       </td>
-                      <td className="px-4 py-2 text-right font-bold text-slate-900">
+                      <td className="px-4 py-2 text-end font-bold text-slate-900">
                         {fmtCurrency(totalCredit(selectedEntry))}
                       </td>
                     </tr>
@@ -640,10 +640,10 @@ export default function EcrituresPage() {
               <table className="w-full">
                 <thead className="bg-slate-50">
                   <tr>
-                    <th className="px-4 py-2 text-left text-xs font-semibold text-slate-500">{t('admin.entries.accountHeader')}</th>
-                    <th className="px-4 py-2 text-left text-xs font-semibold text-slate-500">{t('admin.entries.descriptionHeader')}</th>
-                    <th className="px-4 py-2 text-right text-xs font-semibold text-slate-500 w-32">{t('admin.entries.debitHeader')}</th>
-                    <th className="px-4 py-2 text-right text-xs font-semibold text-slate-500 w-32">{t('admin.entries.creditHeader')}</th>
+                    <th className="px-4 py-2 text-start text-xs font-semibold text-slate-500">{t('admin.entries.accountHeader')}</th>
+                    <th className="px-4 py-2 text-start text-xs font-semibold text-slate-500">{t('admin.entries.descriptionHeader')}</th>
+                    <th className="px-4 py-2 text-end text-xs font-semibold text-slate-500 w-32">{t('admin.entries.debitHeader')}</th>
+                    <th className="px-4 py-2 text-end text-xs font-semibold text-slate-500 w-32">{t('admin.entries.creditHeader')}</th>
                     <th className="w-10" />
                   </tr>
                 </thead>
@@ -675,7 +675,7 @@ export default function EcrituresPage() {
                         <input
                           type="number"
                           step="0.01"
-                          className="w-full px-2 py-1 border border-slate-300 rounded text-sm text-right focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                          className="w-full px-2 py-1 border border-slate-300 rounded text-sm text-end focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
                           placeholder="0.00"
                           value={line.debit}
                           onChange={(e) => updateNewLine(idx, 'debit', e.target.value)}
@@ -685,7 +685,7 @@ export default function EcrituresPage() {
                         <input
                           type="number"
                           step="0.01"
-                          className="w-full px-2 py-1 border border-slate-300 rounded text-sm text-right focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                          className="w-full px-2 py-1 border border-slate-300 rounded text-sm text-end focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
                           placeholder="0.00"
                           value={line.credit}
                           onChange={(e) => updateNewLine(idx, 'credit', e.target.value)}
@@ -702,8 +702,8 @@ export default function EcrituresPage() {
                 <tfoot className="bg-slate-100">
                   <tr>
                     <td colSpan={2} className="px-4 py-2 font-semibold text-slate-900">{t('admin.entries.total')}</td>
-                    <td className="px-4 py-2 text-right font-bold text-slate-900">{fmtCurrency(newLinesTotalDebit)}</td>
-                    <td className="px-4 py-2 text-right font-bold text-slate-900">{fmtCurrency(newLinesTotalCredit)}</td>
+                    <td className="px-4 py-2 text-end font-bold text-slate-900">{fmtCurrency(newLinesTotalDebit)}</td>
+                    <td className="px-4 py-2 text-end font-bold text-slate-900">{fmtCurrency(newLinesTotalCredit)}</td>
                     <td />
                   </tr>
                 </tfoot>

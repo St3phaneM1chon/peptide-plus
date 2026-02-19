@@ -142,9 +142,9 @@ export default function SEOPage() {
         <table className="w-full">
           <thead className="bg-slate-50">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.seo.page')}</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.seo.titleCol')}</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.seo.description')}</th>
+              <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.seo.page')}</th>
+              <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.seo.titleCol')}</th>
+              <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.seo.description')}</th>
               <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.seo.indexed')}</th>
               <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.seo.actionsCol')}</th>
             </tr>

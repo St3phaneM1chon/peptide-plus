@@ -8,17 +8,12 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { auth } from '@/lib/auth-config';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import { enqueue } from '@/lib/translation';
 
 // GET /api/admin/blog - List all blog posts
-export async function GET(request: NextRequest) {
+export const GET = withAdminGuard(async (request, { session }) => {
   try {
-    const session = await auth();
-    if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const { searchParams } = new URL(request.url);
     const category = searchParams.get('category');
     const search = searchParams.get('search');
@@ -106,16 +101,11 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
 // POST /api/admin/blog - Create a new blog post
-export async function POST(request: NextRequest) {
+export const POST = withAdminGuard(async (request, { session }) => {
   try {
-    const session = await auth();
-    if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const body = await request.json();
     const {
       title,
@@ -141,6 +131,23 @@ export async function POST(request: NextRequest) {
         { error: 'Title is required' },
         { status: 400 }
       );
+    }
+
+    // BE-SEC-05: Enforce max length limits on blog post text fields
+    if (typeof title === 'string' && title.length > 500) {
+      return NextResponse.json({ error: 'Title must not exceed 500 characters' }, { status: 400 });
+    }
+    if (typeof excerpt === 'string' && excerpt.length > 2000) {
+      return NextResponse.json({ error: 'Excerpt must not exceed 2000 characters' }, { status: 400 });
+    }
+    if (typeof content === 'string' && content.length > 200000) {
+      return NextResponse.json({ error: 'Content must not exceed 200000 characters' }, { status: 400 });
+    }
+    if (typeof metaTitle === 'string' && metaTitle.length > 200) {
+      return NextResponse.json({ error: 'Meta title must not exceed 200 characters' }, { status: 400 });
+    }
+    if (typeof metaDescription === 'string' && metaDescription.length > 500) {
+      return NextResponse.json({ error: 'Meta description must not exceed 500 characters' }, { status: 400 });
     }
 
     // Generate slug from title
@@ -219,4 +226,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

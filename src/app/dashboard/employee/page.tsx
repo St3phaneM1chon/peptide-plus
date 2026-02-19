@@ -141,7 +141,7 @@ export default async function EmployeeDashboard() {
             href="/dashboard/employee/clients"
             className="bg-white p-6 rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all flex items-center"
           >
-            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center text-2xl mr-4">
+            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center text-2xl me-4">
               🏢
             </div>
             <div>
@@ -154,7 +154,7 @@ export default async function EmployeeDashboard() {
             href="/dashboard/employee/customers"
             className="bg-white p-6 rounded-xl border border-gray-200 hover:border-purple-300 hover:shadow-md transition-all flex items-center"
           >
-            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center text-2xl mr-4">
+            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center text-2xl me-4">
               👥
             </div>
             <div>
@@ -167,7 +167,7 @@ export default async function EmployeeDashboard() {
             href="/admin/chat"
             className="bg-white p-6 rounded-xl border border-gray-200 hover:border-green-300 hover:shadow-md transition-all flex items-center"
           >
-            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center text-2xl mr-4">
+            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center text-2xl me-4">
               💬
             </div>
             <div>
@@ -200,7 +200,7 @@ export default async function EmployeeDashboard() {
                           {company.name.charAt(0)}
                         </span>
                       </div>
-                      <div className="ml-3">
+                      <div className="ms-3">
                         <p className="font-medium text-gray-900">{company.name}</p>
                         <p className="text-sm text-gray-500">
                           {company._count.customers} étudiant(s) • {company._count.purchases} achat(s)
@@ -243,7 +243,7 @@ export default async function EmployeeDashboard() {
                           {purchase.company && ` • ${purchase.company.name}`}
                         </p>
                       </div>
-                      <div className="text-right">
+                      <div className="text-end">
                         <p className="font-semibold text-gray-900">
                           {Number(purchase.amount).toFixed(2)} $
                         </p>
@@ -288,7 +288,7 @@ function StatCard({
         <div className={`w-12 h-12 ${bgColors[color]} rounded-lg flex items-center justify-center text-xl`}>
           {icon}
         </div>
-        <div className="ml-4">
+        <div className="ms-4">
           <p className="text-sm text-gray-500">{title}</p>
           <p className="text-2xl font-bold text-gray-900">{value}</p>
         </div>

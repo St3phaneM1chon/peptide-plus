@@ -3,12 +3,14 @@ const nextConfig = {
   // Production: Standalone build for Azure/Docker deployment
   output: 'standalone',
   
-  // Build: Ignorer les erreurs pour déploiement initial
+  // TypeScript: 484 pre-existing errors need fixing before enabling strict mode
+  // TODO: Fix all TS errors then set to false (Sprint 2+)
   typescript: {
     ignoreBuildErrors: true,
   },
+  // ESLint: enabled - catches actual bugs (no-assign-module, no-namespace, etc.)
   eslint: {
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: false,
   },
 
   // Sécurité: Désactiver x-powered-by
@@ -51,20 +53,32 @@ const nextConfig = {
             value: 'camera=(), microphone=(), geolocation=(), interest-cohort=()'
           },
           // Content Security Policy
+          // SECURITY FIX (BE-SEC-20b): Tightened CSP directives
+          // - unsafe-eval: only in development (needed for Next.js HMR), removed in production
+          // - unsafe-inline for script-src: required by Next.js for inline scripts; a nonce-based
+          //   approach would require custom Next.js middleware (documented for future improvement)
+          // - unsafe-inline for style-src: required by Next.js styled-jsx and Radix UI
+          // - Added object-src 'none' to block plugin-based attacks (Flash, Java)
+          // - Added worker-src 'self' to restrict Web Workers
           {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              // unsafe-eval needed for Next.js dev mode HMR; safe to keep in prod (Next.js strips it)
-              `script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://www.paypal.com https://login.microsoftonline.com https://accounts.google.com https://appleid.cdn-apple.com`,
+              // In production: no unsafe-eval. In dev: needed for HMR/React Fast Refresh
+              process.env.NODE_ENV === 'production'
+                ? `script-src 'self' 'unsafe-inline' https://js.stripe.com https://www.paypal.com https://login.microsoftonline.com https://accounts.google.com https://appleid.cdn-apple.com https://www.googletagmanager.com`
+                : `script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://www.paypal.com https://login.microsoftonline.com https://accounts.google.com https://appleid.cdn-apple.com https://www.googletagmanager.com`,
+              // unsafe-inline required by Next.js styled-jsx and Radix UI inline styles
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https: blob:",
               "font-src 'self' data:",
-              "connect-src 'self' https://*.azure.com https://login.microsoftonline.com https://api.stripe.com https://www.paypal.com https://api.openai.com https://accounts.google.com https://oauth.googleapis.com https://appleid.apple.com https://graph.facebook.com https://api.x.com https://api.twitter.com https://twitter.com",
+              "connect-src 'self' https://*.azure.com https://login.microsoftonline.com https://api.stripe.com https://www.paypal.com https://api.openai.com https://accounts.google.com https://oauth.googleapis.com https://appleid.apple.com https://graph.facebook.com https://api.x.com https://api.twitter.com https://twitter.com https://www.google-analytics.com https://www.googletagmanager.com",
               "frame-src https://js.stripe.com https://www.paypal.com https://hooks.stripe.com https://accounts.google.com",
               "frame-ancestors 'none'",
               "base-uri 'self'",
               "form-action 'self' https://accounts.google.com https://appleid.apple.com https://www.facebook.com https://x.com https://twitter.com",
+              "object-src 'none'",
+              "worker-src 'self'",
               ...(process.env.NODE_ENV === 'production' ? ["upgrade-insecure-requests"] : [])
             ].join('; ')
           }

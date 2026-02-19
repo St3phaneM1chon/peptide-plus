@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import CountdownTimer from '@/components/ui/CountdownTimer';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 
 interface FlashSaleBannerProps {
   title: string;
@@ -20,9 +20,8 @@ export default function FlashSaleBanner({
   link,
   dismissible = true,
 }: FlashSaleBannerProps) {
-  const { t } = useTranslations();
-  const [isDismissed, setIsDismissed] = useState(false);
-  const [isExpired, setIsExpired] = useState(false);
+  const { t } = useI18n();
+  const [status, setStatus] = useState<'visible' | 'expired' | 'dismissed'>('visible');
 
   // Check localStorage on mount to see if user dismissed this banner
   useEffect(() => {
@@ -32,25 +31,25 @@ export default function FlashSaleBanner({
 
     // Auto-show banner after 24 hours
     if (now - dismissedTime < 24 * 60 * 60 * 1000) {
-      setIsDismissed(true);
+      setStatus('dismissed');
     }
   }, []);
 
   const handleDismiss = () => {
-    setIsDismissed(true);
+    setStatus('dismissed');
     localStorage.setItem('flash-sale-dismissed', Date.now().toString());
   };
 
   const handleExpire = () => {
-    setIsExpired(true);
+    setStatus('expired');
     // Auto-dismiss when expired
     if (dismissible) {
-      setTimeout(() => setIsDismissed(true), 3000);
+      setTimeout(() => setStatus('dismissed'), 3000);
     }
   };
 
-  // Don't render if dismissed or expired (after delay)
-  if (isDismissed) return null;
+  // Don't render if dismissed
+  if (status === 'dismissed') return null;
 
   return (
     <div className="relative bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 text-white overflow-hidden">
@@ -63,7 +62,7 @@ export default function FlashSaleBanner({
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6">
           {/* Left: Title & Description */}
-          <div className="flex-1 text-center md:text-left">
+          <div className="flex-1 text-center md:text-start">
             <div className="flex items-center justify-center md:justify-start gap-2 mb-2">
               <span className="text-2xl md:text-3xl animate-pulse">⚡</span>
               <h2 className="text-2xl md:text-3xl font-bold drop-shadow-lg">
@@ -111,11 +110,11 @@ export default function FlashSaleBanner({
         </div>
 
         {/* Dismiss Button */}
-        {dismissible && !isExpired && (
+        {dismissible && status !== 'expired' && (
           <button
             onClick={handleDismiss}
-            aria-label="Dismiss banner"
-            className="absolute top-2 right-2 md:top-4 md:right-4 p-1.5 md:p-2 rounded-lg hover:bg-white/20 transition-colors"
+            aria-label={t('common.aria.dismissBanner')}
+            className="absolute top-2 end-2 md:top-4 md:end-4 p-1.5 md:p-2 rounded-lg hover:bg-white/20 transition-colors"
           >
             <svg
               className="w-5 h-5 md:w-6 md:h-6"
@@ -134,7 +133,7 @@ export default function FlashSaleBanner({
         )}
 
         {/* Expired overlay */}
-        {isExpired && (
+        {status === 'expired' && (
           <div className="absolute inset-0 bg-neutral-900/80 flex items-center justify-center backdrop-blur-sm">
             <div className="text-center">
               <p className="text-2xl md:text-3xl font-bold mb-2">
@@ -148,19 +147,6 @@ export default function FlashSaleBanner({
         )}
       </div>
 
-      <style jsx>{`
-        @keyframes shimmer {
-          0% {
-            transform: translateX(-100%);
-          }
-          100% {
-            transform: translateX(100%);
-          }
-        }
-        .animate-shimmer {
-          animation: shimmer 3s infinite;
-        }
-      `}</style>
     </div>
   );
 }

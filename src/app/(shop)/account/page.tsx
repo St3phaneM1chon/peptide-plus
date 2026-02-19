@@ -6,7 +6,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import Breadcrumbs from '@/components/ui/Breadcrumbs';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
+import { useCurrency } from '@/contexts/CurrencyContext';
 
 interface OrderSummary {
   totalOrders: number;
@@ -23,7 +24,8 @@ interface OrderSummary {
 export default function AccountPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const { t } = useTranslations();
+  const { t } = useI18n();
+  const { formatPrice } = useCurrency();
   const [orderSummary, setOrderSummary] = useState<OrderSummary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -130,7 +132,7 @@ export default function AccountPage() {
                 </svg>
               </div>
               <div>
-                <p className="text-2xl font-bold">${(orderSummary?.totalSpent || 0).toFixed(2)}</p>
+                <p className="text-2xl font-bold">{formatPrice(orderSummary?.totalSpent || 0)}</p>
                 <p className="text-sm text-neutral-500">{t('account.totalSpent') }</p>
               </div>
             </div>
@@ -166,7 +168,7 @@ export default function AccountPage() {
         </div>
 
         {/* Quick Actions - Row 1 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-4">
           <QuickActionCard
             href="/account/orders"
             icon="📦"
@@ -195,7 +197,7 @@ export default function AccountPage() {
         </div>
 
         {/* Quick Actions - Row 2 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
           <QuickActionCard
             href="/account/referrals"
             icon="🎁"
@@ -212,8 +214,8 @@ export default function AccountPage() {
           <QuickActionCard
             href="/account/returns"
             icon="🔄"
-            title="Returns & Exchanges"
-            description="Request returns or RMA"
+            title={t('account.returnsAndExchanges')}
+            description={t('account.requestReturns') || 'Request returns or RMA'}
           />
           <QuickActionCard
             href="/account/settings"
@@ -224,8 +226,8 @@ export default function AccountPage() {
           <QuickActionCard
             href="/account/notifications"
             icon="🔔"
-            title="Notifications"
-            description="Manage email preferences"
+            title={t('account.notifications')}
+            description={t('account.manageEmailPreferences') || 'Manage email preferences'}
           />
           <QuickActionCard
             href="/subscriptions"
@@ -274,8 +276,8 @@ export default function AccountPage() {
                   <p className="text-sm text-neutral-500">{orderSummary.lastOrder.date}</p>
                 </div>
               </div>
-              <div className="text-right">
-                <p className="font-bold">${orderSummary.lastOrder.total.toFixed(2)}</p>
+              <div className="text-end">
+                <p className="font-bold">{formatPrice(orderSummary.lastOrder.total)}</p>
                 <span className={`inline-block px-2 py-1 text-xs font-medium rounded-full ${
                   orderSummary.lastOrder.status === 'delivered' ? 'bg-green-100 text-green-700' :
                   orderSummary.lastOrder.status === 'shipped' ? 'bg-blue-100 text-blue-700' :

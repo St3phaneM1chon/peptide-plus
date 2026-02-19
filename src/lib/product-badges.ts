@@ -16,8 +16,6 @@ interface ProductBadgeData {
     stockQuantity: number;
     inStock: boolean;
   }>;
-  // For back-in-stock detection (would need to add this to Product model)
-  restockedAt?: Date | string;
 }
 
 interface Badge {
@@ -47,17 +45,7 @@ export function getProductBadges(product: ProductBadgeData): Badge[] {
     }
   }
 
-  // 3. BACK IN STOCK - restocked within last 7 days
-  if (product.restockedAt) {
-    const restockedDate = new Date(product.restockedAt);
-    const now = new Date();
-    const daysDiff = Math.floor((now.getTime() - restockedDate.getTime()) / (1000 * 60 * 60 * 24));
-    if (daysDiff <= 7) {
-      badges.push({ type: 'back-in-stock' });
-    }
-  }
-
-  // 4. LOW STOCK - any format has stock > 0 AND <= 5
+  // 3. LOW STOCK - any format has stock > 0 AND <= 5
   if (product.formats && product.formats.length > 0) {
     const hasLowStock = product.formats.some(
       f => f.inStock && f.stockQuantity > 0 && f.stockQuantity <= 5

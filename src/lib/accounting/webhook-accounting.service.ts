@@ -64,29 +64,55 @@ function getBankAccount(paymentMethod: string | null): string {
 }
 
 /**
- * Get next entry number for a given type
+ * Get next entry number for a given type.
+ * CRITICAL FIX: Uses MAX() FOR UPDATE instead of count() to prevent
+ * duplicate entry numbers when entries are deleted or concurrent inserts occur.
+ * Must be called within a Prisma $transaction for the lock to be effective.
  */
-export async function getNextEntryNumber(): Promise<string> {
+export async function getNextEntryNumber(tx?: Parameters<Parameters<typeof prisma.$transaction>[0]>[0]): Promise<string> {
   const year = new Date().getFullYear();
-  const count = await prisma.journalEntry.count({
-    where: {
-      entryNumber: { startsWith: `JV-${year}-` },
-    },
-  });
-  return `JV-${year}-${String(count + 1).padStart(4, '0')}`;
+  const prefix = `JV-${year}-`;
+  const client = tx || prisma;
+
+  const [maxRow] = await client.$queryRaw<{ max_num: string | null }[]>`
+    SELECT MAX("entryNumber") as max_num
+    FROM "JournalEntry"
+    WHERE "entryNumber" LIKE ${prefix + '%'}
+    FOR UPDATE
+  `;
+
+  let nextNum = 1;
+  if (maxRow?.max_num) {
+    const parsed = parseInt(maxRow.max_num.split('-').pop() || '0');
+    if (!isNaN(parsed)) nextNum = parsed + 1;
+  }
+  return `${prefix}${String(nextNum).padStart(4, '0')}`;
 }
 
 /**
- * Get next invoice number
+ * Get next invoice number.
+ * CRITICAL FIX: Uses MAX() FOR UPDATE instead of count() to prevent
+ * duplicate invoice numbers when invoices are deleted or concurrent inserts occur.
+ * Must be called within a Prisma $transaction for the lock to be effective.
  */
-async function getNextInvoiceNumber(): Promise<string> {
+async function getNextInvoiceNumber(tx?: Parameters<Parameters<typeof prisma.$transaction>[0]>[0]): Promise<string> {
   const year = new Date().getFullYear();
-  const count = await prisma.customerInvoice.count({
-    where: {
-      invoiceNumber: { startsWith: `FACT-${year}-` },
-    },
-  });
-  return `FACT-${year}-${String(count + 1).padStart(4, '0')}`;
+  const prefix = `FACT-${year}-`;
+  const client = tx || prisma;
+
+  const [maxRow] = await client.$queryRaw<{ max_num: string | null }[]>`
+    SELECT MAX("invoiceNumber") as max_num
+    FROM "CustomerInvoice"
+    WHERE "invoiceNumber" LIKE ${prefix + '%'}
+    FOR UPDATE
+  `;
+
+  let nextNum = 1;
+  if (maxRow?.max_num) {
+    const parsed = parseInt(maxRow.max_num.split('-').pop() || '0');
+    if (!isNaN(parsed)) nextNum = parsed + 1;
+  }
+  return `${prefix}${String(nextNum).padStart(4, '0')}`;
 }
 
 /**
@@ -104,7 +130,29 @@ export async function getAccountId(code: string): Promise<string> {
 }
 
 /**
- * Main entry point: create all accounting entries for a completed order
+ * #89/#90 Batch fetch multiple account IDs in a single DB query.
+ * Avoids N+1 problem when building journal entries with many lines,
+ * each requiring an account lookup.
+ */
+async function batchGetAccountIds(codes: string[]): Promise<Map<string, string>> {
+  const uniqueCodes = [...new Set(codes)];
+  const accounts = await prisma.chartOfAccount.findMany({
+    where: { code: { in: uniqueCodes } },
+    select: { id: true, code: true },
+  });
+  const map = new Map(accounts.map((a) => [a.code, a.id]));
+  // Validate all codes were found
+  for (const code of uniqueCodes) {
+    if (!map.has(code)) {
+      throw new Error(`Chart of Account not found for code: ${code}`);
+    }
+  }
+  return map;
+}
+
+/**
+ * Main entry point: create all accounting entries for a completed order.
+ * Wrapped in a transaction so entry/invoice number generation is serialized.
  */
 export async function createAccountingEntriesForOrder(orderId: string): Promise<{
   saleEntryId: string;
@@ -121,16 +169,18 @@ export async function createAccountingEntriesForOrder(orderId: string): Promise<
     throw new Error(`Order not found: ${orderId}`);
   }
 
-  // 1. Generate sale journal entry
-  const saleEntryId = await generateSaleEntry(order);
+  return prisma.$transaction(async (tx) => {
+    // 1. Generate sale journal entry
+    const saleEntryId = await generateSaleEntry(order, tx);
 
-  // 2. Generate fee entry (Stripe/PayPal processing fees)
-  const feeEntryId = await generateFeeEntry(order);
+    // 2. Generate fee entry (Stripe/PayPal processing fees)
+    const feeEntryId = await generateFeeEntry(order, tx);
 
-  // 3. Create customer invoice
-  const invoiceId = await createCustomerInvoice(order);
+    // 3. Create customer invoice
+    const invoiceId = await createCustomerInvoice(order, tx);
 
-  return { saleEntryId, feeEntryId, invoiceId };
+    return { saleEntryId, feeEntryId, invoiceId };
+  });
 }
 
 /**
@@ -142,8 +192,9 @@ export async function createAccountingEntriesForOrder(orderId: string): Promise<
  * Credit: TVQ payable
  * Credit: TVH payable
  */
-async function generateSaleEntry(order: OrderWithItems): Promise<string> {
-  const entryNumber = await getNextEntryNumber();
+async function generateSaleEntry(order: OrderWithItems, tx?: Parameters<Parameters<typeof prisma.$transaction>[0]>[0]): Promise<string> {
+  const client = tx || prisma;
+  const entryNumber = await getNextEntryNumber(tx);
   const salesAccountCode = getSalesAccount(order.shippingCountry);
   const bankAccountCode = getBankAccount(order.paymentMethod);
 
@@ -164,6 +215,15 @@ async function generateSaleEntry(order: OrderWithItems): Promise<string> {
   const pst = toCAD(Number(order.taxPst));
   const total = toCAD(Number(order.total));
 
+  // #89 Batch: Collect all account codes needed, then fetch in one DB query
+  const accountCodes = [bankAccountCode, salesAccountCode];
+  if (shipping > 0) accountCodes.push(ACCOUNT_CODES.SHIPPING_CHARGED);
+  if (tps > 0) accountCodes.push(ACCOUNT_CODES.TPS_PAYABLE);
+  if (tvq > 0) accountCodes.push(ACCOUNT_CODES.TVQ_PAYABLE);
+  if (tvh > 0) accountCodes.push(ACCOUNT_CODES.TVH_PAYABLE);
+  if (pst > 0) accountCodes.push(ACCOUNT_CODES.PST_PAYABLE);
+  const accountMap = await batchGetAccountIds(accountCodes);
+
   // Build lines
   const lines: {
     accountId: string;
@@ -174,7 +234,7 @@ async function generateSaleEntry(order: OrderWithItems): Promise<string> {
 
   // DEBIT: Bank account for total received
   lines.push({
-    accountId: await getAccountId(bankAccountCode),
+    accountId: accountMap.get(bankAccountCode)!,
     description: `Paiement reçu commande ${order.orderNumber}`,
     debit: total,
     credit: 0,
@@ -182,7 +242,7 @@ async function generateSaleEntry(order: OrderWithItems): Promise<string> {
 
   // CREDIT: Sales revenue (subtotal - discount)
   lines.push({
-    accountId: await getAccountId(salesAccountCode),
+    accountId: accountMap.get(salesAccountCode)!,
     description: `Vente ${order.orderNumber}`,
     debit: 0,
     credit: subtotal - discount,
@@ -191,7 +251,7 @@ async function generateSaleEntry(order: OrderWithItems): Promise<string> {
   // CREDIT: Shipping charged
   if (shipping > 0) {
     lines.push({
-      accountId: await getAccountId(ACCOUNT_CODES.SHIPPING_CHARGED),
+      accountId: accountMap.get(ACCOUNT_CODES.SHIPPING_CHARGED)!,
       description: `Frais livraison ${order.orderNumber}`,
       debit: 0,
       credit: shipping,
@@ -201,7 +261,7 @@ async function generateSaleEntry(order: OrderWithItems): Promise<string> {
   // CREDIT: TPS payable
   if (tps > 0) {
     lines.push({
-      accountId: await getAccountId(ACCOUNT_CODES.TPS_PAYABLE),
+      accountId: accountMap.get(ACCOUNT_CODES.TPS_PAYABLE)!,
       description: `TPS sur ${order.orderNumber}`,
       debit: 0,
       credit: tps,
@@ -211,7 +271,7 @@ async function generateSaleEntry(order: OrderWithItems): Promise<string> {
   // CREDIT: TVQ payable
   if (tvq > 0) {
     lines.push({
-      accountId: await getAccountId(ACCOUNT_CODES.TVQ_PAYABLE),
+      accountId: accountMap.get(ACCOUNT_CODES.TVQ_PAYABLE)!,
       description: `TVQ sur ${order.orderNumber}`,
       debit: 0,
       credit: tvq,
@@ -221,7 +281,7 @@ async function generateSaleEntry(order: OrderWithItems): Promise<string> {
   // CREDIT: TVH payable
   if (tvh > 0) {
     lines.push({
-      accountId: await getAccountId(ACCOUNT_CODES.TVH_PAYABLE),
+      accountId: accountMap.get(ACCOUNT_CODES.TVH_PAYABLE)!,
       description: `TVH sur ${order.orderNumber}`,
       debit: 0,
       credit: tvh,
@@ -231,16 +291,16 @@ async function generateSaleEntry(order: OrderWithItems): Promise<string> {
   // CREDIT: PST payable (BC, SK, MB)
   if (pst > 0) {
     lines.push({
-      accountId: await getAccountId(ACCOUNT_CODES.PST_PAYABLE),
+      accountId: accountMap.get(ACCOUNT_CODES.PST_PAYABLE)!,
       description: `PST sur ${order.orderNumber}`,
       debit: 0,
       credit: pst,
     });
   }
 
-  // Create the journal entry with lines in a transaction
+  // Create the journal entry with lines
   const fxSuffix = isCAD ? '' : ` (${currencyCode} @${xRate})`;
-  const entry = await prisma.journalEntry.create({
+  const entry = await client.journalEntry.create({
     data: {
       entryNumber,
       date: order.createdAt,
@@ -274,7 +334,8 @@ async function generateSaleEntry(order: OrderWithItems): Promise<string> {
  * Debit: Fee expense account
  * Credit: Bank account
  */
-async function generateFeeEntry(order: OrderWithItems): Promise<string | null> {
+async function generateFeeEntry(order: OrderWithItems, tx?: Parameters<Parameters<typeof prisma.$transaction>[0]>[0]): Promise<string | null> {
+  const client = tx || prisma;
   // No fees for AureliaPay (UAT test payment)
   if (order.paymentMethod === 'AURELIA_PAY') return null;
 
@@ -288,11 +349,14 @@ async function generateFeeEntry(order: OrderWithItems): Promise<string | null> {
 
   if (estimatedFee <= 0) return null;
 
-  const entryNumber = await getNextEntryNumber();
+  const entryNumber = await getNextEntryNumber(tx);
   const feeAccountCode = isPaypal ? ACCOUNT_CODES.PAYPAL_FEES : ACCOUNT_CODES.STRIPE_FEES;
   const bankAccountCode = isPaypal ? ACCOUNT_CODES.CASH_PAYPAL : ACCOUNT_CODES.CASH_STRIPE;
 
-  const entry = await prisma.journalEntry.create({
+  // #89 Batch: fetch both account IDs in one query
+  const feeAccountMap = await batchGetAccountIds([feeAccountCode, bankAccountCode]);
+
+  const entry = await client.journalEntry.create({
     data: {
       entryNumber,
       date: order.createdAt,
@@ -307,13 +371,13 @@ async function generateFeeEntry(order: OrderWithItems): Promise<string | null> {
       lines: {
         create: [
           {
-            accountId: await getAccountId(feeAccountCode),
+            accountId: feeAccountMap.get(feeAccountCode)!,
             description: `Frais ${isPaypal ? 'PayPal' : 'Stripe'} sur ${order.orderNumber}`,
             debit: estimatedFee,
             credit: 0,
           },
           {
-            accountId: await getAccountId(bankAccountCode),
+            accountId: feeAccountMap.get(bankAccountCode)!,
             description: `Frais ${isPaypal ? 'PayPal' : 'Stripe'} sur ${order.orderNumber}`,
             debit: 0,
             credit: estimatedFee,
@@ -329,8 +393,9 @@ async function generateFeeEntry(order: OrderWithItems): Promise<string | null> {
 /**
  * Create a customer invoice for the order
  */
-async function createCustomerInvoice(order: OrderWithItems): Promise<string> {
-  const invoiceNumber = await getNextInvoiceNumber();
+async function createCustomerInvoice(order: OrderWithItems, tx?: Parameters<Parameters<typeof prisma.$transaction>[0]>[0]): Promise<string> {
+  const client = tx || prisma;
+  const invoiceNumber = await getNextInvoiceNumber(tx);
 
   // Get customer info
   let customerName = 'Client';
@@ -341,7 +406,7 @@ async function createCustomerInvoice(order: OrderWithItems): Promise<string> {
     customerName = (order as unknown as Record<string, unknown>).shippingName as string || 'Client';
   }
 
-  const invoice = await prisma.customerInvoice.create({
+  const invoice = await client.customerInvoice.create({
     data: {
       invoiceNumber,
       customerId: (order as unknown as Record<string, unknown>).userId as string || null,
@@ -401,15 +466,22 @@ export async function createRefundAccountingEntries(
 
   const isPaypal = order.paymentMethod === 'PAYPAL' || order.paypalOrderId;
   const bankAccountCode = isPaypal ? ACCOUNT_CODES.CASH_PAYPAL : ACCOUNT_CODES.CASH_STRIPE;
-  const entryNumber = await getNextEntryNumber();
 
   const netRefund = refundAmount - refundTps - refundTvq - refundTvh - refundPst;
+
+  // #90 Batch: Collect all account codes needed, then fetch in one DB query
+  const refundAccountCodes = [ACCOUNT_CODES.DISCOUNTS_RETURNS, bankAccountCode];
+  if (refundTps > 0) refundAccountCodes.push(ACCOUNT_CODES.TPS_PAYABLE);
+  if (refundTvq > 0) refundAccountCodes.push(ACCOUNT_CODES.TVQ_PAYABLE);
+  if (refundTvh > 0) refundAccountCodes.push(ACCOUNT_CODES.TVH_PAYABLE);
+  if (refundPst > 0) refundAccountCodes.push(ACCOUNT_CODES.PST_PAYABLE);
+  const refundAccountMap = await batchGetAccountIds(refundAccountCodes);
 
   const lines: { accountId: string; description: string; debit: number; credit: number }[] = [];
 
   // DEBIT: Discounts/Returns
   lines.push({
-    accountId: await getAccountId(ACCOUNT_CODES.DISCOUNTS_RETURNS),
+    accountId: refundAccountMap.get(ACCOUNT_CODES.DISCOUNTS_RETURNS)!,
     description: `Remboursement ${order.orderNumber}`,
     debit: netRefund,
     credit: 0,
@@ -418,7 +490,7 @@ export async function createRefundAccountingEntries(
   // DEBIT: Reverse taxes
   if (refundTps > 0) {
     lines.push({
-      accountId: await getAccountId(ACCOUNT_CODES.TPS_PAYABLE),
+      accountId: refundAccountMap.get(ACCOUNT_CODES.TPS_PAYABLE)!,
       description: `TPS remboursée ${order.orderNumber}`,
       debit: refundTps,
       credit: 0,
@@ -426,7 +498,7 @@ export async function createRefundAccountingEntries(
   }
   if (refundTvq > 0) {
     lines.push({
-      accountId: await getAccountId(ACCOUNT_CODES.TVQ_PAYABLE),
+      accountId: refundAccountMap.get(ACCOUNT_CODES.TVQ_PAYABLE)!,
       description: `TVQ remboursée ${order.orderNumber}`,
       debit: refundTvq,
       credit: 0,
@@ -434,7 +506,7 @@ export async function createRefundAccountingEntries(
   }
   if (refundTvh > 0) {
     lines.push({
-      accountId: await getAccountId(ACCOUNT_CODES.TVH_PAYABLE),
+      accountId: refundAccountMap.get(ACCOUNT_CODES.TVH_PAYABLE)!,
       description: `TVH remboursée ${order.orderNumber}`,
       debit: refundTvh,
       credit: 0,
@@ -442,7 +514,7 @@ export async function createRefundAccountingEntries(
   }
   if (refundPst > 0) {
     lines.push({
-      accountId: await getAccountId(ACCOUNT_CODES.PST_PAYABLE),
+      accountId: refundAccountMap.get(ACCOUNT_CODES.PST_PAYABLE)!,
       description: `PST remboursée ${order.orderNumber}`,
       debit: refundPst,
       credit: 0,
@@ -451,33 +523,36 @@ export async function createRefundAccountingEntries(
 
   // CREDIT: Bank account
   lines.push({
-    accountId: await getAccountId(bankAccountCode),
+    accountId: refundAccountMap.get(bankAccountCode)!,
     description: `Remboursement ${order.orderNumber}`,
     debit: 0,
     credit: refundAmount,
   });
 
-  const entry = await prisma.journalEntry.create({
-    data: {
-      entryNumber,
-      date: new Date(),
-      description: `Remboursement ${order.orderNumber} - ${reason}`,
-      type: 'AUTO_REFUND',
-      status: 'POSTED',
-      reference: `RMB-${order.orderNumber}`,
-      orderId,
-      createdBy: 'system',
-      postedBy: 'system',
-      postedAt: new Date(),
-      lines: {
-        create: lines.map((line) => ({
-          accountId: line.accountId,
-          description: line.description,
-          debit: line.debit,
-          credit: line.credit,
-        })),
+  const entry = await prisma.$transaction(async (tx) => {
+    const entryNumber = await getNextEntryNumber(tx);
+    return tx.journalEntry.create({
+      data: {
+        entryNumber,
+        date: new Date(),
+        description: `Remboursement ${order.orderNumber} - ${reason}`,
+        type: 'AUTO_REFUND',
+        status: 'POSTED',
+        reference: `RMB-${order.orderNumber}`,
+        orderId,
+        createdBy: 'system',
+        postedBy: 'system',
+        postedAt: new Date(),
+        lines: {
+          create: lines.map((line) => ({
+            accountId: line.accountId,
+            description: line.description,
+            debit: line.debit,
+            credit: line.credit,
+          })),
+        },
       },
-    },
+    });
   });
 
   return entry.id;
@@ -502,11 +577,44 @@ export async function createCreditNote(params: {
   journalEntryId: string;
   issuedBy: string;
 }): Promise<string> {
+  // #64 Audit: Verify credit note total does not exceed original invoice
+  if (params.invoiceId) {
+    const originalInvoice = await prisma.customerInvoice.findUnique({
+      where: { id: params.invoiceId },
+      select: { total: true },
+    });
+    if (originalInvoice) {
+      const invoiceTotal = Number(originalInvoice.total);
+      // Sum existing credit notes against this invoice
+      const existingCreditNotesAgg = await prisma.creditNote.aggregate({
+        where: { invoiceId: params.invoiceId, status: { not: 'VOID' } },
+        _sum: { total: true },
+      });
+      const existingTotal = Number(existingCreditNotesAgg._sum.total ?? 0);
+      if (existingTotal + params.total > invoiceTotal) {
+        throw new Error(
+          `Credit note total (${params.total}) plus existing credit notes (${existingTotal}) exceeds original invoice total (${invoiceTotal})`
+        );
+      }
+    }
+  }
+
   const year = new Date().getFullYear();
-  const count = await prisma.creditNote.count({
-    where: { creditNoteNumber: { startsWith: `NC-${year}-` } },
-  });
-  const creditNoteNumber = `NC-${year}-${String(count + 1).padStart(4, '0')}`;
+  const prefix = `NC-${year}-`;
+
+  // Use MAX() FOR UPDATE for safe sequential numbering
+  const [maxRow] = await prisma.$queryRaw<{ max_num: string | null }[]>`
+    SELECT MAX("creditNoteNumber") as max_num
+    FROM "CreditNote"
+    WHERE "creditNoteNumber" LIKE ${prefix + '%'}
+    FOR UPDATE
+  `;
+  let nextNum = 1;
+  if (maxRow?.max_num) {
+    const parsed = parseInt(maxRow.max_num.split('-').pop() || '0');
+    if (!isNaN(parsed)) nextNum = parsed + 1;
+  }
+  const creditNoteNumber = `${prefix}${String(nextNum).padStart(4, '0')}`;
 
   const creditNote = await prisma.creditNote.create({
     data: {
@@ -543,38 +651,46 @@ export async function createInventoryLossEntry(
   lossAmount: number,
   reason: string
 ): Promise<string> {
-  const entryNumber = await getNextEntryNumber();
   const lossRounded = Math.round(lossAmount * 100) / 100;
 
-  const entry = await prisma.journalEntry.create({
-    data: {
-      entryNumber,
-      date: new Date(),
-      description: `Perte inventaire ${orderNumber} - ${reason}`,
-      type: 'ADJUSTMENT',
-      status: 'POSTED',
-      reference: `LOSS-${orderNumber}`,
-      orderId,
-      createdBy: 'system',
-      postedBy: 'system',
-      postedAt: new Date(),
-      lines: {
-        create: [
-          {
-            accountId: await getAccountId(ACCOUNT_CODES.INVENTORY_LOSS),
-            description: `Perte stock ${orderNumber}`,
-            debit: lossRounded,
-            credit: 0,
-          },
-          {
-            accountId: await getAccountId(ACCOUNT_CODES.INVENTORY),
-            description: `Reduction stock ${orderNumber}`,
-            debit: 0,
-            credit: lossRounded,
-          },
-        ],
+  // #89 Batch: fetch both account IDs in one query
+  const lossAccountMap = await batchGetAccountIds([
+    ACCOUNT_CODES.INVENTORY_LOSS,
+    ACCOUNT_CODES.INVENTORY,
+  ]);
+
+  const entry = await prisma.$transaction(async (tx) => {
+    const entryNumber = await getNextEntryNumber(tx);
+    return tx.journalEntry.create({
+      data: {
+        entryNumber,
+        date: new Date(),
+        description: `Perte inventaire ${orderNumber} - ${reason}`,
+        type: 'ADJUSTMENT',
+        status: 'POSTED',
+        reference: `LOSS-${orderNumber}`,
+        orderId,
+        createdBy: 'system',
+        postedBy: 'system',
+        postedAt: new Date(),
+        lines: {
+          create: [
+            {
+              accountId: lossAccountMap.get(ACCOUNT_CODES.INVENTORY_LOSS)!,
+              description: `Perte stock ${orderNumber}`,
+              debit: lossRounded,
+              credit: 0,
+            },
+            {
+              accountId: lossAccountMap.get(ACCOUNT_CODES.INVENTORY)!,
+              description: `Reduction stock ${orderNumber}`,
+              debit: 0,
+              credit: lossRounded,
+            },
+          ],
+        },
       },
-    },
+    });
   });
 
   return entry.id;

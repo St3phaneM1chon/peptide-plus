@@ -47,8 +47,18 @@ model AccountingAlert {
   @@index([type])
 }
 
+// TODO #51: Create AuditTrail model to store structured audit entries instead of console.info logs.
+//   Fields: id, action (CREATE/UPDATE/DELETE/VOID/POST), entityType, entityId,
+//   userId, previousValues (Json?), newValues (Json?), ipAddress, createdAt
+//   This replaces scattered console.info audit logs with queryable DB records.
+
+// TODO #52: Create RecurringEntryTemplate model to persist recurring templates in DB.
+//   Fields: id, name, description, frequency (DAILY/WEEKLY/MONTHLY/QUARTERLY/YEARLY),
+//   dayOfMonth, dayOfWeek, monthOfYear, lines (Json), startDate, endDate,
+//   nextRunDate, isActive, autoPost, notifyOnCreate, createdBy, createdAt, updatedAt
+
 model AccountingPeriod {
-  id               String    @id
+  id               String    @id // TODO #54: Add @default(cuid()) for auto-generated IDs
   name             String
   code             String    @unique
   startDate        DateTime
@@ -62,6 +72,21 @@ model AccountingPeriod {
 
   @@index([startDate])
   @@index([status])
+}
+
+model FiscalYear {
+  id        String   @id @default(cuid())
+  name      String
+  startDate DateTime
+  endDate   DateTime
+  isClosed  Boolean  @default(false)
+  closedAt  DateTime?
+  closedBy  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([startDate])
+  @@index([isClosed])
 }
 
 model AccountingSettings {
@@ -241,18 +266,20 @@ model BankTransaction {
   category             String?
   reference            String?
   reconciliationStatus ReconciliationStatus @default(PENDING)
-  matchedEntryId       String?
+  matchedEntryId       String?              // TODO #53: Add foreign key constraint: @relation(fields: [matchedEntryId], references: [id]) to JournalEntry
   matchedAt            DateTime?
   matchedBy            String?
   importBatch          String?
   importedAt           DateTime             @default(now())
-  rawData              String?
+  rawData              String?              // TODO #59: Change from String? to Json? for proper structured data storage and querying
   createdAt            DateTime             @default(now())
+  deletedAt            DateTime?
   bankAccount          BankAccount          @relation(fields: [bankAccountId], references: [id], onDelete: Cascade)
 
   @@index([bankAccountId])
   @@index([date])
   @@index([reconciliationStatus])
+  @@index([deletedAt])
 }
 
 model BlogPost {
@@ -409,11 +436,15 @@ model Category {
   imageUrl     String?
   sortOrder    Int                   @default(0)
   isActive     Boolean               @default(true)
+  parentId     String?
   createdAt    DateTime              @default(now())
   updatedAt    DateTime
+  parent       Category?             @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children     Category[]            @relation("CategoryHierarchy")
   translations CategoryTranslation[]
   products     Product[]
 
+  @@index([parentId])
   @@index([slug])
 }
 
@@ -633,6 +664,7 @@ model CreditNote {
   journalEntryId   String?
   createdAt        DateTime         @default(now())
   updatedAt        DateTime
+  deletedAt        DateTime?
   taxPst           Decimal          @default(0) @db.Decimal(12, 2)
   invoice          CustomerInvoice? @relation(fields: [invoiceId], references: [id])
 
@@ -640,6 +672,7 @@ model CreditNote {
   @@index([invoiceId])
   @@index([orderId])
   @@index([status])
+  @@index([deletedAt])
 }
 
 model Currency {
@@ -687,6 +720,7 @@ model CustomerInvoice {
   journalEntryId  String?
   createdAt       DateTime              @default(now())
   updatedAt       DateTime
+  deletedAt       DateTime?
   taxPst          Decimal               @default(0) @db.Decimal(12, 2)
   creditNotes     CreditNote[]
   items           CustomerInvoiceItem[]
@@ -695,6 +729,7 @@ model CustomerInvoice {
   @@index([dueDate])
   @@index([orderId])
   @@index([status])
+  @@index([deletedAt])
 }
 
 model CustomerInvoiceItem {
@@ -967,6 +1002,10 @@ model InventoryTransaction {
   @@index([type])
 }
 
+// TODO #55: Add @default(cuid()) to id fields in accounting models:
+//   JournalEntry, JournalLine, TaxReport, BankTransaction, AccountingPeriod, AccountingAlert
+//   Currently these models require manual ID generation which is error-prone.
+
 model JournalEntry {
   id           String             @id
   entryNumber  String             @unique
@@ -985,6 +1024,7 @@ model JournalEntry {
   attachments  String?
   createdAt    DateTime           @default(now())
   updatedAt    DateTime
+  deletedAt    DateTime?
   currency     String             @default("CAD")
   exchangeRate Decimal            @default(1.000000) @db.Decimal(10, 6)
   lines        JournalLine[]
@@ -993,6 +1033,9 @@ model JournalEntry {
   @@index([orderId])
   @@index([status])
   @@index([type])
+  @@index([status, date])
+  @@index([deletedAt])
+  @@index([reference]) // #56 - Index for reference lookups (reconciliation, Stripe sync)
 }
 
 model JournalLine {
@@ -1010,6 +1053,7 @@ model JournalLine {
 
   @@index([accountId])
   @@index([entryId])
+  @@index([accountId, entryId])
 }
 
 model LoyaltyTransaction {
@@ -1201,9 +1245,11 @@ model Order {
   parentOrderId     String?
   replacementReason String?
   taxPst            Decimal         @default(0) @db.Decimal(10, 2)
+  idempotencyKey    String?         @unique
+  user              User            @relation(fields: [userId], references: [id])
   currency          Currency        @relation(fields: [currencyId], references: [id])
   parentOrder       Order?          @relation("OrderToOrder", fields: [parentOrderId], references: [id])
-  childOrders       Order[]         @relation("OrderToOrder")
+  replacementOrders Order[]         @relation("OrderToOrder")
   billingName       String?
   billingAddress1   String?
   billingAddress2   String?
@@ -1221,7 +1267,11 @@ model Order {
   @@index([parentOrderId])
   @@index([paymentStatus])
   @@index([status])
+  @@index([stripePaymentId])
+  @@index([paypalOrderId])
   @@index([userId])
+  @@index([userId, status])
+  @@index([status, createdAt])
 }
 
 model PaymentError {
@@ -1230,16 +1280,18 @@ model PaymentError {
   stripePaymentId String?
   errorType       String
   errorMessage    String
-  amount          Float    @default(0)
+  amount          Decimal  @default(0) @db.Decimal(10, 2)
   currency        String   @default("CAD")
   customerEmail   String?
   metadata        String?
   createdAt       DateTime @default(now())
+  deletedAt       DateTime?
   order           Order?   @relation(fields: [orderId], references: [id], onDelete: SetNull)
 
   @@index([createdAt])
   @@index([orderId])
   @@index([errorType])
+  @@index([deletedAt])
 }
 
 model OrderItem {
@@ -1260,6 +1312,7 @@ model OrderItem {
   @@index([formatId])
   @@index([orderId])
   @@index([productId])
+  @@index([orderId, productId])
 }
 
 model Page {
@@ -1465,6 +1518,9 @@ model Product {
   @@index([productType])
   @@index([sku])
   @@index([slug])
+  @@index([name])
+  @@index([categoryId, isActive])
+  @@index([isActive, createdAt])
 }
 
 model ProductFormat {
@@ -1639,6 +1695,7 @@ model Purchase {
   status          PurchaseStatus @default(PENDING)
   receiptUrl      String?
   receiptNumber   String?        @unique
+  idempotencyKey  String?        @unique
   createdAt       DateTime       @default(now())
   updatedAt       DateTime
   courseAccess    CourseAccess?
@@ -1785,6 +1842,26 @@ model ReturnRequest {
   @@index([orderId])
   @@index([status])
   @@index([userId])
+}
+
+model Refund {
+  id              String   @id @default(cuid())
+  orderId         String
+  returnRequestId String?
+  amount          Decimal  @db.Decimal(10, 2)
+  status          String   @default("PENDING")
+  reason          String
+  processedAt     DateTime?
+  processedBy     String?
+  stripeRefundId  String?
+  paypalRefundId  String?
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([orderId])
+  @@index([returnRequestId])
+  @@index([status])
 }
 
 model Review {
@@ -2008,7 +2085,7 @@ model Subscription {
 
 model SupplierInvoice {
   id              String        @id
-  invoiceNumber   String
+  invoiceNumber   String        @unique
   supplierId      String?
   supplierName    String
   supplierEmail   String?
@@ -2030,10 +2107,12 @@ model SupplierInvoice {
   journalEntryId  String?
   createdAt       DateTime      @default(now())
   updatedAt       DateTime
+  deletedAt       DateTime?
 
   @@index([dueDate])
   @@index([status])
   @@index([supplierId])
+  @@index([deletedAt])
 }
 
 model TaxReport {
@@ -2070,9 +2149,13 @@ model TaxReport {
   createdAt         DateTime        @default(now())
   updatedAt         DateTime
 
+  // TODO #60: Add updatedAt DateTime @updatedAt field to TaxReport model
+  //   Currently TaxReport has no updatedAt, making it impossible to track when reports are modified.
+
   @@unique([regionCode, year, month])
   @@index([status])
   @@index([year])
+  @@index([year, regionCode]) // #58 - Composite index for tax report queries filtered by year+region
 }
 
 model Testimonial {
@@ -2227,6 +2310,7 @@ model User {
   addresses              UserAddress[]
   wishlistCollections    WishlistCollection[]
   authenticators         Authenticator[]
+  orders                 Order[]
 
   @@index([email])
   @@index([role])
@@ -2720,4 +2804,67 @@ enum WebhookEventStatus {
   PROCESSING
   COMPLETED
   FAILED
+}
+
+// =====================================================
+// SEARCH (Improvements 56-65)
+// =====================================================
+
+model SearchLog {
+  id          String   @id @default(cuid())
+  query       String
+  resultCount Int      @default(0)
+  userId      String?
+  filters     Json?
+  locale      String?
+  duration    Int?     // ms
+  createdAt   DateTime @default(now())
+
+  @@index([query])
+  @@index([createdAt])
+  @@index([userId])
+}
+
+// =====================================================
+// WEBHOOKS (Improvements 76-82)
+// =====================================================
+
+model WebhookEndpoint {
+  id         String            @id @default(cuid())
+  url        String
+  events     String[]
+  secret     String
+  active     Boolean           @default(true)
+  name       String?
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+  deliveries WebhookDelivery[]
+
+  @@index([active])
+}
+
+model WebhookDelivery {
+  id          String          @id @default(cuid())
+  endpointId  String
+  event       String
+  payload     Json
+  status      Int             @default(0) // HTTP status code, 0 = pending
+  attempts    Int             @default(0)
+  lastAttempt DateTime?
+  response    String?
+  duration    Int?            // ms
+  createdAt   DateTime        @default(now())
+  endpoint    WebhookEndpoint @relation(fields: [endpointId], references: [id], onDelete: Cascade)
+
+  @@index([endpointId])
+  @@index([event])
+  @@index([status])
+  @@index([createdAt])
+}
+
+enum WebhookDeliveryStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  RETRYING
 }

@@ -214,7 +214,7 @@ export default function GrandLivrePage() {
             <p className="text-sm text-emerald-600 font-medium">{t('admin.generalLedger.selectedAccount')}</p>
             <h2 className="text-xl font-bold text-emerald-900">{currentAccount?.code} - {currentAccount?.name}</h2>
           </div>
-          <div className="text-right">
+          <div className="text-end">
             <p className="text-sm text-emerald-600">{t('admin.generalLedger.currentBalance')}</p>
             <p className="text-3xl font-bold text-emerald-900">
               {(ledgerSummary.balance || currentAccount?.balance || 0).toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}
@@ -234,13 +234,13 @@ export default function GrandLivrePage() {
           <table className="w-full">
             <thead className="bg-slate-50">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.generalLedger.dateCol')}</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.generalLedger.entryNumberCol')}</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.generalLedger.descriptionCol')}</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.generalLedger.referenceCol')}</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase">{t('admin.generalLedger.debitCol')}</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase">{t('admin.generalLedger.creditCol')}</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase">{t('admin.generalLedger.balanceCol')}</th>
+                <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.generalLedger.dateCol')}</th>
+                <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.generalLedger.entryNumberCol')}</th>
+                <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.generalLedger.descriptionCol')}</th>
+                <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.generalLedger.referenceCol')}</th>
+                <th className="px-4 py-3 text-end text-xs font-semibold text-slate-500 uppercase">{t('admin.generalLedger.debitCol')}</th>
+                <th className="px-4 py-3 text-end text-xs font-semibold text-slate-500 uppercase">{t('admin.generalLedger.creditCol')}</th>
+                <th className="px-4 py-3 text-end text-xs font-semibold text-slate-500 uppercase">{t('admin.generalLedger.balanceCol')}</th>
                 <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.generalLedger.reconciledCol')}</th>
               </tr>
             </thead>
@@ -265,21 +265,21 @@ export default function GrandLivrePage() {
                       </span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-right">
+                  <td className="px-4 py-3 text-end">
                     {transaction.debit > 0 && (
                       <span className="font-medium text-slate-900">
                         {transaction.debit.toLocaleString('fr-CA', { minimumFractionDigits: 2 })} $
                       </span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-right">
+                  <td className="px-4 py-3 text-end">
                     {transaction.credit > 0 && (
                       <span className="font-medium text-red-600">
                         {transaction.credit.toLocaleString('fr-CA', { minimumFractionDigits: 2 })} $
                       </span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-right font-medium text-slate-900">
+                  <td className="px-4 py-3 text-end font-medium text-slate-900">
                     {transaction.balance.toLocaleString('fr-CA', { minimumFractionDigits: 2 })} $
                   </td>
                   <td className="px-4 py-3 text-center">
@@ -301,13 +301,13 @@ export default function GrandLivrePage() {
                 <td colSpan={4} className="px-4 py-3 text-sm font-semibold text-slate-900">
                   {t('admin.generalLedger.totalPeriod')}
                 </td>
-                <td className="px-4 py-3 text-right font-bold text-slate-900">
+                <td className="px-4 py-3 text-end font-bold text-slate-900">
                   {totalDebit.toLocaleString('fr-CA', { minimumFractionDigits: 2 })} $
                 </td>
-                <td className="px-4 py-3 text-right font-bold text-red-600">
+                <td className="px-4 py-3 text-end font-bold text-red-600">
                   {totalCredit.toLocaleString('fr-CA', { minimumFractionDigits: 2 })} $
                 </td>
-                <td className="px-4 py-3 text-right font-bold text-emerald-600">
+                <td className="px-4 py-3 text-end font-bold text-emerald-600">
                   {(totalDebit - totalCredit).toLocaleString('fr-CA', { minimumFractionDigits: 2 })} $
                 </td>
                 <td></td>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useI18n } from '@/i18n/client';
 
 interface QuickViewButtonProps {
   onClick: () => void;
@@ -8,6 +9,7 @@ interface QuickViewButtonProps {
 }
 
 export default function QuickViewButton({ onClick, className = '' }: QuickViewButtonProps) {
+  const { t } = useI18n();
   const [showTooltip, setShowTooltip] = useState(false);
 
   return (
@@ -20,7 +22,7 @@ export default function QuickViewButton({ onClick, className = '' }: QuickViewBu
         }}
         onMouseEnter={() => setShowTooltip(true)}
         onMouseLeave={() => setShowTooltip(false)}
-        aria-label="Quick view"
+        aria-label={t('shop.aria.quickView')}
         className={`p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:bg-white hover:scale-110 transition-all ${className}`}
       >
         <svg

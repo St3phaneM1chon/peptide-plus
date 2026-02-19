@@ -9,7 +9,7 @@ import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 
 // Types
 interface ProtocolEntry {
@@ -104,7 +104,7 @@ function getProtocolTemplates(t: (key: string) => string): ProtocolTemplate[] {
 export default function ProtocolsPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const { t } = useTranslations();
+  const { t } = useI18n();
 
   // Memoized templates with translations
   const PROTOCOL_TEMPLATES = useMemo(() => getProtocolTemplates(t), [t]);
@@ -442,7 +442,7 @@ function ProtocolCard({
   onClick: () => void;
   onStatusChange: (status: Protocol['status']) => void;
 }) {
-  const { t } = useTranslations();
+  const { t } = useI18n();
   const statusColors: Record<string, string> = {
     active: 'bg-green-100 text-green-800',
     completed: 'bg-blue-100 text-blue-800',
@@ -533,7 +533,7 @@ function ProtocolCard({
 }
 
 function TemplateCard({ template, onStart }: { template: ProtocolTemplate; onStart: () => void }) {
-  const { t } = useTranslations();
+  const { t } = useI18n();
   const [showDetails, setShowDetails] = useState(false);
 
   return (
@@ -596,7 +596,7 @@ function ProtocolDetailModal({
   onDelete: () => void;
   onStatusChange: (status: Protocol['status']) => void;
 }) {
-  const { t } = useTranslations();
+  const { t, locale } = useI18n();
   const [activeTab, setActiveTab] = useState<'journal' | 'stats' | 'add'>('journal');
   const [newEntry, setNewEntry] = useState({
     date: new Date().toISOString().split('T')[0],
@@ -713,7 +713,7 @@ function ProtocolDetailModal({
                         <div>
                           <p className="font-medium text-gray-900">{entry.peptide}</p>
                           <p className="text-sm text-gray-500">
-                            {new Date(entry.date).toLocaleDateString('fr-CA', { 
+                            {new Date(entry.date).toLocaleDateString(locale, { 
                               weekday: 'long', 
                               day: 'numeric', 
                               month: 'long' 
@@ -962,7 +962,7 @@ function NewProtocolModal({
   onClose: () => void;
   onCreate: (protocol: Protocol) => void;
 }) {
-  const { t } = useTranslations();
+  const { t } = useI18n();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [goal, setGoal] = useState('');

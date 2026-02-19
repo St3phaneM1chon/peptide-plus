@@ -40,6 +40,22 @@ export async function POST(
       );
     }
 
+    // #72 Compliance: Check for closed fiscal year before posting
+    const entryDate = existing.date;
+    const closedFiscalYear = await prisma.fiscalYear.findFirst({
+      where: {
+        isClosed: true,
+        startDate: { lte: entryDate },
+        endDate: { gte: entryDate },
+      },
+    });
+    if (closedFiscalYear) {
+      return NextResponse.json(
+        { error: `Impossible de valider une écriture dans l'exercice fiscal clos "${closedFiscalYear.name}" (${closedFiscalYear.startDate.toISOString().split('T')[0]} — ${closedFiscalYear.endDate.toISOString().split('T')[0]})` },
+        { status: 400 }
+      );
+    }
+
     // Verify balanced
     const totalDebits = existing.lines.reduce((s, l) => s + Number(l.debit), 0);
     const totalCredits = existing.lines.reduce((s, l) => s + Number(l.credit), 0);

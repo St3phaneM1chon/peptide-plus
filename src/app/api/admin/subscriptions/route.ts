@@ -8,16 +8,11 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { auth } from '@/lib/auth-config';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 
 // GET /api/admin/subscriptions - List all subscriptions with filtering
-export async function GET(request: NextRequest) {
+export const GET = withAdminGuard(async (request, { session }) => {
   try {
-    const session = await auth();
-    if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role || '')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
     const search = searchParams.get('search');
@@ -111,7 +106,7 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
 const VALID_FREQUENCIES = ['EVERY_2_MONTHS', 'EVERY_4_MONTHS', 'EVERY_6_MONTHS', 'EVERY_12_MONTHS'];
 
@@ -130,13 +125,8 @@ const FREQUENCY_DISCOUNTS: Record<string, number> = {
 };
 
 // POST /api/admin/subscriptions - Create a subscription for a user
-export async function POST(request: NextRequest) {
+export const POST = withAdminGuard(async (request, { session }) => {
   try {
-    const session = await auth();
-    if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role || '')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const body = await request.json();
     const { userId, productId, formatId, quantity, frequency, discountPercent } = body;
 
@@ -203,6 +193,11 @@ export async function POST(request: NextRequest) {
       ? Math.max(0, Math.min(100, discountPercent))
       : FREQUENCY_DISCOUNTS[freq];
 
+    // BE-PAY-07: Admin-created subscriptions also start as PENDING_PAYMENT
+    // unless recurring billing (Stripe) is explicitly configured.
+    // TODO: When Stripe subscription billing is integrated, admin should be
+    // able to choose between PENDING_PAYMENT (requires user payment) and
+    // ACTIVE (admin-granted, no billing required).
     const subscription = await prisma.subscription.create({
       data: {
         userId,
@@ -214,7 +209,7 @@ export async function POST(request: NextRequest) {
         frequency: freq,
         discountPercent: discount,
         unitPrice,
-        status: 'ACTIVE',
+        status: 'PENDING_PAYMENT', // BE-PAY-07: Not ACTIVE until billing confirmed
         nextDelivery,
       },
     });
@@ -246,4 +241,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

@@ -2,12 +2,18 @@ export const dynamic = 'force-dynamic';
 
 /**
  * Admin Products Export API
- * GET - Export all products as CSV with their formats
+ * GET - Export all products as CSV or JSON with their formats (item 73)
+ *
+ * Query params:
+ *   format=csv (default) | json
+ *
+ * JSON export includes full product data with formats, suitable for
+ * re-import via POST /api/admin/products/import.
  */
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { auth } from '@/lib/auth-config';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 
 // Escape a value for CSV: wrap in quotes if it contains commas, quotes, or newlines
 function csvEscape(value: string | number | boolean | null | undefined): string {
@@ -23,16 +29,11 @@ function csvRow(values: (string | number | boolean | null | undefined)[]): strin
   return values.map(csvEscape).join(',');
 }
 
-// GET /api/admin/products/export - Export all products as CSV
-export async function GET() {
+// GET /api/admin/products/export?format=csv|json - Export all products (item 73)
+export const GET = withAdminGuard(async (request: NextRequest, { session: _session }) => {
   try {
-    const session = await auth();
-    if (
-      !session?.user ||
-      (session.user.role !== 'EMPLOYEE' && session.user.role !== 'OWNER')
-    ) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
+    const { searchParams } = new URL(request.url);
+    const exportFormat = searchParams.get('format') || 'csv';
 
     const products = await prisma.product.findMany({
       include: {
@@ -61,6 +62,62 @@ export async function GET() {
       },
       orderBy: { createdAt: 'desc' },
     });
+
+    // Item 73: JSON export support
+    if (exportFormat === 'json') {
+      const jsonProducts = products.map((product) => ({
+        id: product.id,
+        name: product.name,
+        slug: product.slug,
+        productType: product.productType,
+        categoryId: product.categoryId,
+        categoryName: product.category.name,
+        description: product.description,
+        shortDescription: product.shortDescription,
+        isActive: product.isActive,
+        isFeatured: product.isFeatured,
+        isNew: product.isNew,
+        isBestseller: product.isBestseller,
+        price: Number(product.price),
+        compareAtPrice: product.compareAtPrice ? Number(product.compareAtPrice) : null,
+        purity: product.purity ? Number(product.purity) : null,
+        molecularWeight: product.molecularWeight ? Number(product.molecularWeight) : null,
+        casNumber: product.casNumber,
+        molecularFormula: product.molecularFormula,
+        sku: product.sku,
+        manufacturer: product.manufacturer,
+        origin: product.origin,
+        imageUrl: product.imageUrl,
+        createdAt: product.createdAt.toISOString(),
+        formats: product.formats.map((f) => ({
+          id: f.id,
+          name: f.name,
+          formatType: f.formatType,
+          price: Number(f.price),
+          comparePrice: f.comparePrice ? Number(f.comparePrice) : null,
+          sku: f.sku,
+          stockQuantity: f.stockQuantity,
+          lowStockThreshold: f.lowStockThreshold,
+          availability: f.availability,
+          dosageMg: f.dosageMg,
+          volumeMl: f.volumeMl,
+          unitCount: f.unitCount,
+          isActive: f.isActive,
+          sortOrder: f.sortOrder,
+        })),
+      }));
+
+      const timestamp = new Date().toISOString().slice(0, 10);
+      const jsonString = JSON.stringify({ products: jsonProducts, exportedAt: new Date().toISOString(), count: jsonProducts.length }, null, 2);
+
+      return new NextResponse(jsonString, {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8',
+          'Content-Disposition': `attachment; filename="products-export-${timestamp}.json"`,
+        },
+      });
+    }
 
     // CSV Header
     const headers = [
@@ -157,4 +214,4 @@ export async function GET() {
       { status: 500 }
     );
   }
-}
+});

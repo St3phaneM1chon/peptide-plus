@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 import BundleCard from '@/components/shop/BundleCard';
 
 interface Bundle {
@@ -23,7 +23,7 @@ interface Bundle {
 }
 
 export default function BundlesPage() {
-  const { t } = useTranslations();
+  const { t } = useI18n();
   const [bundles, setBundles] = useState<Bundle[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

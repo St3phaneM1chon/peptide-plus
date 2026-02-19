@@ -293,12 +293,12 @@ export default function EtatsFinanciersPage() {
                   {Object.entries(incomeStatement.revenue).map(([name, amount]) => (
                     <tr key={name}>
                       <td className="px-8 py-2 text-slate-600">{name}</td>
-                      <td className="px-4 py-2 text-right">{amount.toLocaleString()} $</td>
+                      <td className="px-4 py-2 text-end">{amount.toLocaleString()} $</td>
                     </tr>
                   ))}
                   <tr className="border-t border-slate-200">
                     <td className="px-4 py-3 font-semibold text-slate-900">{t('admin.financialStatements.totalRevenue')}</td>
-                    <td className="px-4 py-3 text-right font-bold text-emerald-600">{totalRevenue.toLocaleString()} $</td>
+                    <td className="px-4 py-3 text-end font-bold text-emerald-600">{totalRevenue.toLocaleString()} $</td>
                   </tr>
 
                   {/* CMV */}
@@ -310,12 +310,12 @@ export default function EtatsFinanciersPage() {
                       {Object.entries(incomeStatement.cogs).map(([name, amount]) => (
                         <tr key={name}>
                           <td className="px-8 py-2 text-slate-600">{name}</td>
-                          <td className="px-4 py-2 text-right">{amount.toLocaleString()} $</td>
+                          <td className="px-4 py-2 text-end">{amount.toLocaleString()} $</td>
                         </tr>
                       ))}
                       <tr className="border-t border-slate-200">
                         <td className="px-4 py-3 font-semibold text-slate-900">{t('admin.financialStatements.totalCogs')}</td>
-                        <td className="px-4 py-3 text-right font-bold text-red-600">({totalCogs.toLocaleString()}) $</td>
+                        <td className="px-4 py-3 text-end font-bold text-red-600">({totalCogs.toLocaleString()}) $</td>
                       </tr>
                     </>
                   )}
@@ -323,7 +323,7 @@ export default function EtatsFinanciersPage() {
                   {/* Marge brute */}
                   <tr className="bg-emerald-100">
                     <td className="px-4 py-3 font-bold text-emerald-900">{t('admin.financialStatements.grossMargin')}</td>
-                    <td className="px-4 py-3 text-right font-bold text-emerald-700">
+                    <td className="px-4 py-3 text-end font-bold text-emerald-700">
                       {grossProfit.toLocaleString()} $ {totalRevenue > 0 ? `(${((grossProfit / totalRevenue) * 100).toFixed(1)}%)` : ''}
                     </td>
                   </tr>
@@ -337,12 +337,12 @@ export default function EtatsFinanciersPage() {
                       {Object.entries(incomeStatement.expenses).map(([name, amount]) => (
                         <tr key={name}>
                           <td className="px-8 py-2 text-slate-600">{name}</td>
-                          <td className="px-4 py-2 text-right">{amount.toLocaleString()} $</td>
+                          <td className="px-4 py-2 text-end">{amount.toLocaleString()} $</td>
                         </tr>
                       ))}
                       <tr className="border-t border-slate-200">
                         <td className="px-4 py-3 font-semibold text-slate-900">{t('admin.financialStatements.totalExpenses')}</td>
-                        <td className="px-4 py-3 text-right font-bold text-red-600">({totalExpenses.toLocaleString()}) $</td>
+                        <td className="px-4 py-3 text-end font-bold text-red-600">({totalExpenses.toLocaleString()}) $</td>
                       </tr>
                     </>
                   )}
@@ -350,7 +350,7 @@ export default function EtatsFinanciersPage() {
                   {/* Bénéfice d'exploitation */}
                   <tr className="bg-blue-100">
                     <td className="px-4 py-3 font-bold text-blue-900">{t('admin.financialStatements.operatingProfit')}</td>
-                    <td className="px-4 py-3 text-right font-bold text-blue-700">{operatingProfit.toLocaleString()} $</td>
+                    <td className="px-4 py-3 text-end font-bold text-blue-700">{operatingProfit.toLocaleString()} $</td>
                   </tr>
 
                   {/* Autres */}
@@ -362,7 +362,7 @@ export default function EtatsFinanciersPage() {
                       {Object.entries(incomeStatement.other).map(([name, amount]) => (
                         <tr key={name}>
                           <td className="px-8 py-2 text-slate-600">{name}</td>
-                          <td className={`px-4 py-2 text-right ${amount < 0 ? 'text-red-600' : ''}`}>
+                          <td className={`px-4 py-2 text-end ${amount < 0 ? 'text-red-600' : ''}`}>
                             {amount < 0 ? `(${Math.abs(amount).toLocaleString()})` : amount.toLocaleString()} $
                           </td>
                         </tr>
@@ -373,7 +373,7 @@ export default function EtatsFinanciersPage() {
                   {/* Bénéfice net */}
                   <tr className="bg-emerald-600 text-white">
                     <td className="px-4 py-4 font-bold text-lg">{t('admin.financialStatements.netProfit')}</td>
-                    <td className="px-4 py-4 text-right font-bold text-lg">{netProfit.toLocaleString()} $</td>
+                    <td className="px-4 py-4 text-end font-bold text-lg">{netProfit.toLocaleString()} $</td>
                   </tr>
                 </tbody>
               </table>
@@ -402,12 +402,12 @@ export default function EtatsFinanciersPage() {
                         {Object.entries(balanceSheet.assets.current).map(([name, amount]) => (
                           <tr key={name}>
                             <td className="px-6 py-2 text-slate-600">{name}</td>
-                            <td className={`px-4 py-2 text-right ${amount < 0 ? 'text-red-600' : ''}`}>
+                            <td className={`px-4 py-2 text-end ${amount < 0 ? 'text-red-600' : ''}`}>
                               {amount < 0 ? `(${Math.abs(amount).toLocaleString()})` : amount.toLocaleString()} $
                             </td>
                           </tr>
                         ))}
-                        <tr className="border-t"><td className="px-4 py-2 font-medium">{t('admin.financialStatements.totalCurrentAssets')}</td><td className="px-4 py-2 text-right font-medium">{totalCurrentAssets.toLocaleString()} $</td></tr>
+                        <tr className="border-t"><td className="px-4 py-2 font-medium">{t('admin.financialStatements.totalCurrentAssets')}</td><td className="px-4 py-2 text-end font-medium">{totalCurrentAssets.toLocaleString()} $</td></tr>
                       </>
                     )}
 
@@ -417,16 +417,16 @@ export default function EtatsFinanciersPage() {
                         {Object.entries(balanceSheet.assets.nonCurrent).map(([name, amount]) => (
                           <tr key={name}>
                             <td className="px-6 py-2 text-slate-600">{name}</td>
-                            <td className={`px-4 py-2 text-right ${amount < 0 ? 'text-red-600' : ''}`}>
+                            <td className={`px-4 py-2 text-end ${amount < 0 ? 'text-red-600' : ''}`}>
                               {amount < 0 ? `(${Math.abs(amount).toLocaleString()})` : amount.toLocaleString()} $
                             </td>
                           </tr>
                         ))}
-                        <tr className="border-t"><td className="px-4 py-2 font-medium">{t('admin.financialStatements.totalNonCurrentAssets')}</td><td className="px-4 py-2 text-right font-medium">{totalNonCurrentAssets.toLocaleString()} $</td></tr>
+                        <tr className="border-t"><td className="px-4 py-2 font-medium">{t('admin.financialStatements.totalNonCurrentAssets')}</td><td className="px-4 py-2 text-end font-medium">{totalNonCurrentAssets.toLocaleString()} $</td></tr>
                       </>
                     )}
 
-                    <tr className="bg-blue-100"><td className="px-4 py-3 font-bold text-blue-900">{t('admin.financialStatements.totalAssets')}</td><td className="px-4 py-3 text-right font-bold text-blue-700">{totalAssets.toLocaleString()} $</td></tr>
+                    <tr className="bg-blue-100"><td className="px-4 py-3 font-bold text-blue-900">{t('admin.financialStatements.totalAssets')}</td><td className="px-4 py-3 text-end font-bold text-blue-700">{totalAssets.toLocaleString()} $</td></tr>
                   </tbody>
                 </table>
               )}
@@ -450,10 +450,10 @@ export default function EtatsFinanciersPage() {
                         {Object.entries(balanceSheet.liabilities.current).map(([name, amount]) => (
                           <tr key={name}>
                             <td className="px-6 py-2 text-slate-600">{name}</td>
-                            <td className="px-4 py-2 text-right">{amount.toLocaleString()} $</td>
+                            <td className="px-4 py-2 text-end">{amount.toLocaleString()} $</td>
                           </tr>
                         ))}
-                        <tr className="border-t"><td className="px-4 py-2 font-medium">{t('admin.financialStatements.totalLiabilities')}</td><td className="px-4 py-2 text-right font-medium">{totalLiabilities.toLocaleString()} $</td></tr>
+                        <tr className="border-t"><td className="px-4 py-2 font-medium">{t('admin.financialStatements.totalLiabilities')}</td><td className="px-4 py-2 text-end font-medium">{totalLiabilities.toLocaleString()} $</td></tr>
                       </>
                     )}
 
@@ -463,14 +463,14 @@ export default function EtatsFinanciersPage() {
                         {Object.entries(balanceSheet.equity).map(([name, amount]) => (
                           <tr key={name}>
                             <td className="px-6 py-2 text-slate-600">{name}</td>
-                            <td className="px-4 py-2 text-right">{amount.toLocaleString()} $</td>
+                            <td className="px-4 py-2 text-end">{amount.toLocaleString()} $</td>
                           </tr>
                         ))}
-                        <tr className="border-t"><td className="px-4 py-2 font-medium">{t('admin.financialStatements.totalEquity')}</td><td className="px-4 py-2 text-right font-medium">{totalEquity.toLocaleString()} $</td></tr>
+                        <tr className="border-t"><td className="px-4 py-2 font-medium">{t('admin.financialStatements.totalEquity')}</td><td className="px-4 py-2 text-end font-medium">{totalEquity.toLocaleString()} $</td></tr>
                       </>
                     )}
 
-                    <tr className="bg-red-100"><td className="px-4 py-3 font-bold text-red-900">{t('admin.financialStatements.totalLiabilitiesEquity')}</td><td className="px-4 py-3 text-right font-bold text-red-700">{(totalLiabilities + totalEquity).toLocaleString()} $</td></tr>
+                    <tr className="bg-red-100"><td className="px-4 py-3 font-bold text-red-900">{t('admin.financialStatements.totalLiabilitiesEquity')}</td><td className="px-4 py-3 text-end font-bold text-red-700">{(totalLiabilities + totalEquity).toLocaleString()} $</td></tr>
                   </tbody>
                 </table>
               )}
@@ -490,25 +490,25 @@ export default function EtatsFinanciersPage() {
             <table className="w-full">
               <tbody>
                 <tr className="bg-slate-50"><td colSpan={2} className="px-4 py-3 font-bold text-slate-900">{t('admin.financialStatements.operatingActivities')}</td></tr>
-                <tr><td className="px-8 py-2 text-slate-600">{t('admin.financialStatements.netIncome')}</td><td className="px-4 py-2 text-right">{netProfit.toLocaleString()} $</td></tr>
+                <tr><td className="px-8 py-2 text-slate-600">{t('admin.financialStatements.netIncome')}</td><td className="px-4 py-2 text-end">{netProfit.toLocaleString()} $</td></tr>
                 {Object.entries(cashFlow.operating).filter(([key]) => key !== 'netIncome').map(([name, amount]) => (
                   <tr key={name}>
                     <td className="px-8 py-2 text-slate-600">{name}</td>
-                    <td className={`px-4 py-2 text-right ${amount < 0 ? 'text-red-600' : ''}`}>
+                    <td className={`px-4 py-2 text-end ${amount < 0 ? 'text-red-600' : ''}`}>
                       {amount < 0 ? `(${Math.abs(amount).toLocaleString()})` : amount.toLocaleString()} $
                     </td>
                   </tr>
                 ))}
                 <tr className="border-t border-slate-200 bg-green-50">
                   <td className="px-4 py-3 font-semibold text-green-900">{t('admin.financialStatements.netOperatingCashFlow')}</td>
-                  <td className="px-4 py-3 text-right font-bold text-green-700">{operatingCashFlow.toLocaleString()} $</td>
+                  <td className="px-4 py-3 text-end font-bold text-green-700">{operatingCashFlow.toLocaleString()} $</td>
                 </tr>
 
                 <tr className="bg-slate-50"><td colSpan={2} className="px-4 py-3 font-bold text-slate-900">{t('admin.financialStatements.investingActivities')}</td></tr>
                 {Object.entries(cashFlow.investing).map(([name, amount]) => (
                   <tr key={name}>
                     <td className="px-8 py-2 text-slate-600">{name}</td>
-                    <td className={`px-4 py-2 text-right ${amount < 0 ? 'text-red-600' : ''}`}>
+                    <td className={`px-4 py-2 text-end ${amount < 0 ? 'text-red-600' : ''}`}>
                       {amount < 0 ? `(${Math.abs(amount).toLocaleString()})` : amount.toLocaleString()} $
                     </td>
                   </tr>
@@ -518,14 +518,14 @@ export default function EtatsFinanciersPage() {
                 )}
                 <tr className="border-t border-slate-200 bg-red-50">
                   <td className="px-4 py-3 font-semibold text-red-900">{t('admin.financialStatements.netInvestingCashFlow')}</td>
-                  <td className="px-4 py-3 text-right font-bold text-red-700">{investingCashFlow.toLocaleString()} $</td>
+                  <td className="px-4 py-3 text-end font-bold text-red-700">{investingCashFlow.toLocaleString()} $</td>
                 </tr>
 
                 <tr className="bg-slate-50"><td colSpan={2} className="px-4 py-3 font-bold text-slate-900">{t('admin.financialStatements.financingActivities')}</td></tr>
                 {Object.entries(cashFlow.financing).map(([name, amount]) => (
                   <tr key={name}>
                     <td className="px-8 py-2 text-slate-600">{name}</td>
-                    <td className="px-4 py-2 text-right">{amount.toLocaleString()} $</td>
+                    <td className="px-4 py-2 text-end">{amount.toLocaleString()} $</td>
                   </tr>
                 ))}
                 {Object.keys(cashFlow.financing).length === 0 && (
@@ -533,12 +533,12 @@ export default function EtatsFinanciersPage() {
                 )}
                 <tr className="border-t border-slate-200 bg-blue-50">
                   <td className="px-4 py-3 font-semibold text-blue-900">{t('admin.financialStatements.netFinancingCashFlow')}</td>
-                  <td className="px-4 py-3 text-right font-bold text-blue-700">{financingCashFlow.toLocaleString()} $</td>
+                  <td className="px-4 py-3 text-end font-bold text-blue-700">{financingCashFlow.toLocaleString()} $</td>
                 </tr>
 
                 <tr className="bg-purple-600 text-white">
                   <td className="px-4 py-4 font-bold text-lg">{t('admin.financialStatements.netCashChange')}</td>
-                  <td className="px-4 py-4 text-right font-bold text-lg">{netCashFlow.toLocaleString()} $</td>
+                  <td className="px-4 py-4 text-end font-bold text-lg">{netCashFlow.toLocaleString()} $</td>
                 </tr>
               </tbody>
             </table>

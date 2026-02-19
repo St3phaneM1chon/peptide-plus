@@ -223,11 +223,11 @@ export default function BudgetPage() {
           <table className="w-full">
             <thead className="bg-slate-50">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.budget.categoryHeader')}</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.budget.accountHeader')}</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase">{t('admin.budget.budgetHeader')}</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase">{t('admin.budget.actualHeader')}</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase">{t('admin.budget.varianceHeader')}</th>
+                <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.budget.categoryHeader')}</th>
+                <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.budget.accountHeader')}</th>
+                <th className="px-4 py-3 text-end text-xs font-semibold text-slate-500 uppercase">{t('admin.budget.budgetHeader')}</th>
+                <th className="px-4 py-3 text-end text-xs font-semibold text-slate-500 uppercase">{t('admin.budget.actualHeader')}</th>
+                <th className="px-4 py-3 text-end text-xs font-semibold text-slate-500 uppercase">{t('admin.budget.varianceHeader')}</th>
                 <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.budget.percentAchieved')}</th>
               </tr>
             </thead>
@@ -236,9 +236,9 @@ export default function BudgetPage() {
                 <tr key={line.id} className="hover:bg-slate-50">
                   <td className="px-4 py-3 font-medium text-slate-900">{line.category}</td>
                   <td className="px-4 py-3 font-mono text-sm text-slate-500">{line.accountCode}</td>
-                  <td className="px-4 py-3 text-right text-slate-900">{line.budget.toLocaleString(locale)} $</td>
-                  <td className="px-4 py-3 text-right text-slate-900">{line.actual.toLocaleString(locale)} $</td>
-                  <td className={`px-4 py-3 text-right font-medium ${line.variance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  <td className="px-4 py-3 text-end text-slate-900">{line.budget.toLocaleString(locale)} $</td>
+                  <td className="px-4 py-3 text-end text-slate-900">{line.actual.toLocaleString(locale)} $</td>
+                  <td className={`px-4 py-3 text-end font-medium ${line.variance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                     {line.variance >= 0 ? '+' : ''}{line.variance.toLocaleString(locale)} $
                   </td>
                   <td className="px-4 py-3">
@@ -259,9 +259,9 @@ export default function BudgetPage() {
               <tr>
                 <td className="px-4 py-3 font-bold text-emerald-900">{t('admin.budget.totalRevenue')}</td>
                 <td></td>
-                <td className="px-4 py-3 text-right font-bold text-emerald-900">{totalRevenueBudget.toLocaleString(locale)} $</td>
-                <td className="px-4 py-3 text-right font-bold text-emerald-900">{totalRevenueActual.toLocaleString(locale)} $</td>
-                <td className={`px-4 py-3 text-right font-bold ${(totalRevenueActual - totalRevenueBudget) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                <td className="px-4 py-3 text-end font-bold text-emerald-900">{totalRevenueBudget.toLocaleString(locale)} $</td>
+                <td className="px-4 py-3 text-end font-bold text-emerald-900">{totalRevenueActual.toLocaleString(locale)} $</td>
+                <td className={`px-4 py-3 text-end font-bold ${(totalRevenueActual - totalRevenueBudget) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                   {(totalRevenueActual - totalRevenueBudget) >= 0 ? '+' : ''}{(totalRevenueActual - totalRevenueBudget).toLocaleString(locale)} $
                 </td>
                 <td className="px-4 py-3 text-center font-bold text-emerald-900">{totalRevenueBudget > 0 ? ((totalRevenueActual/totalRevenueBudget)*100).toFixed(1) : '0.0'}%</td>
@@ -282,11 +282,11 @@ export default function BudgetPage() {
           <table className="w-full">
             <thead className="bg-slate-50">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.budget.categoryHeader')}</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.budget.accountHeader')}</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase">{t('admin.budget.budgetHeader')}</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase">{t('admin.budget.actualHeader')}</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase">{t('admin.budget.varianceHeader')}</th>
+                <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.budget.categoryHeader')}</th>
+                <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.budget.accountHeader')}</th>
+                <th className="px-4 py-3 text-end text-xs font-semibold text-slate-500 uppercase">{t('admin.budget.budgetHeader')}</th>
+                <th className="px-4 py-3 text-end text-xs font-semibold text-slate-500 uppercase">{t('admin.budget.actualHeader')}</th>
+                <th className="px-4 py-3 text-end text-xs font-semibold text-slate-500 uppercase">{t('admin.budget.varianceHeader')}</th>
                 <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.budget.percentUsed')}</th>
               </tr>
             </thead>
@@ -295,9 +295,9 @@ export default function BudgetPage() {
                 <tr key={line.id} className="hover:bg-slate-50">
                   <td className="px-4 py-3 font-medium text-slate-900">{line.category}</td>
                   <td className="px-4 py-3 font-mono text-sm text-slate-500">{line.accountCode}</td>
-                  <td className="px-4 py-3 text-right text-slate-900">{line.budget.toLocaleString(locale)} $</td>
-                  <td className="px-4 py-3 text-right text-slate-900">{line.actual.toLocaleString(locale)} $</td>
-                  <td className={`px-4 py-3 text-right font-medium ${line.variance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  <td className="px-4 py-3 text-end text-slate-900">{line.budget.toLocaleString(locale)} $</td>
+                  <td className="px-4 py-3 text-end text-slate-900">{line.actual.toLocaleString(locale)} $</td>
+                  <td className={`px-4 py-3 text-end font-medium ${line.variance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                     {line.variance >= 0 ? '+' : ''}{line.variance.toLocaleString(locale)} $
                   </td>
                   <td className="px-4 py-3">
@@ -318,9 +318,9 @@ export default function BudgetPage() {
               <tr>
                 <td className="px-4 py-3 font-bold text-red-900">{t('admin.budget.totalExpenses')}</td>
                 <td></td>
-                <td className="px-4 py-3 text-right font-bold text-red-900">{totalExpenseBudgetVal.toLocaleString(locale)} $</td>
-                <td className="px-4 py-3 text-right font-bold text-red-900">{totalExpenseActual.toLocaleString(locale)} $</td>
-                <td className="px-4 py-3 text-right font-bold text-green-600">+{(totalExpenseBudgetVal - totalExpenseActual).toLocaleString(locale)} $</td>
+                <td className="px-4 py-3 text-end font-bold text-red-900">{totalExpenseBudgetVal.toLocaleString(locale)} $</td>
+                <td className="px-4 py-3 text-end font-bold text-red-900">{totalExpenseActual.toLocaleString(locale)} $</td>
+                <td className="px-4 py-3 text-end font-bold text-green-600">+{(totalExpenseBudgetVal - totalExpenseActual).toLocaleString(locale)} $</td>
                 <td className="px-4 py-3 text-center font-bold text-red-900">{totalExpenseBudgetVal > 0 ? ((totalExpenseActual/totalExpenseBudgetVal)*100).toFixed(1) : '0.0'}%</td>
               </tr>
             </tfoot>

@@ -249,7 +249,7 @@ export default function NotesCreditPage() {
                 <p className="font-medium text-slate-900">{cn.customerName}</p>
                 {cn.customerEmail && <p className="text-sm text-slate-600">{cn.customerEmail}</p>}
               </div>
-              <div className="text-right">
+              <div className="text-end">
                 <div className="mb-2">
                   <StatusBadge variant={statusConfig[cn.status].variant} dot>
                     {statusConfig[cn.status].label}

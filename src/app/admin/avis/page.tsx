@@ -56,6 +56,7 @@ export default function AvisPage() {
   const [filter, setFilter] = useState({ status: '', rating: '', search: '' });
   const [selectedReview, setSelectedReview] = useState<Review | null>(null);
   const [adminResponse, setAdminResponse] = useState('');
+  const [updatingIds, setUpdatingIds] = useState<Set<string>>(new Set());
 
   const statusLabel: Record<string, string> = {
     PENDING: t('admin.reviews.statusPending'),
@@ -80,6 +81,7 @@ export default function AvisPage() {
   };
 
   const updateReviewStatus = async (id: string, status: 'APPROVED' | 'REJECTED') => {
+    setUpdatingIds(prev => new Set(prev).add(id));
     try {
       await fetch(`/api/admin/reviews/${id}`, {
         method: 'PATCH',
@@ -92,6 +94,12 @@ export default function AvisPage() {
       }
     } catch (err) {
       console.error('Error updating review:', err);
+    } finally {
+      setUpdatingIds(prev => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
     }
   };
 
@@ -265,8 +273,9 @@ export default function AvisPage() {
                     icon={ThumbsUp}
                     onClick={() => updateReviewStatus(review.id, 'APPROVED')}
                     className="text-green-700 hover:bg-green-100"
+                    disabled={updatingIds.has(review.id)}
                   >
-                    {t('admin.reviews.approve')}
+                    {updatingIds.has(review.id) ? '...' : t('admin.reviews.approve')}
                   </Button>
                   <Button
                     size="sm"
@@ -274,8 +283,9 @@ export default function AvisPage() {
                     icon={ThumbsDown}
                     onClick={() => updateReviewStatus(review.id, 'REJECTED')}
                     className="text-red-700 hover:bg-red-100"
+                    disabled={updatingIds.has(review.id)}
                   >
-                    {t('admin.reviews.reject')}
+                    {updatingIds.has(review.id) ? '...' : t('admin.reviews.reject')}
                   </Button>
                 </>
               )}

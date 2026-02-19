@@ -57,14 +57,14 @@ export function ProductCard({ product }: ProductCardProps) {
 
         {/* Badge Discount */}
         {hasDiscount && (
-          <div className="absolute top-3 left-3 bg-red-500 text-white px-2 py-1 rounded-md text-sm font-semibold">
+          <div className="absolute top-3 start-3 bg-red-500 text-white px-2 py-1 rounded-md text-sm font-semibold">
             -{discountPercent}%
           </div>
         )}
 
         {/* Badge Niveau */}
         {product.level && (
-          <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-md text-sm font-medium text-gray-700">
+          <div className="absolute top-3 end-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-md text-sm font-medium text-gray-700">
             {product.level}
           </div>
         )}
@@ -91,7 +91,7 @@ export function ProductCard({ product }: ProductCardProps) {
           {product.duration && (
             <div className="flex items-center">
               <svg
-                className="w-4 h-4 mr-1"
+                className="w-4 h-4 me-1"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -110,7 +110,7 @@ export function ProductCard({ product }: ProductCardProps) {
           {product.averageRating && (
             <div className="flex items-center">
               <svg
-                className="w-4 h-4 mr-1 text-yellow-400"
+                className="w-4 h-4 me-1 text-yellow-400"
                 fill="currentColor"
                 viewBox="0 0 20 20"
               >
@@ -123,7 +123,7 @@ export function ProductCard({ product }: ProductCardProps) {
           {product.purchaseCount > 0 && (
             <div className="flex items-center">
               <svg
-                className="w-4 h-4 mr-1"
+                className="w-4 h-4 me-1"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"

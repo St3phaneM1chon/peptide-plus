@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 import { useCurrency } from '@/contexts/CurrencyContext';
 
 interface RecentProduct {
@@ -25,7 +25,7 @@ const MAX_SHOWN = 8;
 
 export default function RecentlyViewed({ excludeSlug }: RecentlyViewedProps) {
   const { recentSlugs } = useRecentlyViewed();
-  const { t, locale } = useTranslations();
+  const { t, locale } = useI18n();
   const { formatPrice } = useCurrency();
 
   const [products, setProducts] = useState<RecentProduct[]>([]);
@@ -47,17 +47,16 @@ export default function RecentlyViewed({ excludeSlug }: RecentlyViewedProps) {
     async function fetchProducts() {
       setLoading(true);
       try {
-        // Fetch all products and filter by slugs client-side
-        const res = await fetch(`/api/products?locale=${locale}`);
+        // Fetch only the specific products by slugs (not the full catalog)
+        const slugsParam = slugsToFetch.join(',');
+        const res = await fetch(`/api/products?slugs=${encodeURIComponent(slugsParam)}&locale=${locale}`);
         if (!res.ok) throw new Error('Failed to fetch products');
         const data = await res.json();
-        const allProducts = Array.isArray(data) ? data : data.products || data.data || [];
+        const fetchedProducts = Array.isArray(data) ? data : data.products || data.data || [];
 
         // Build a map for quick lookup
         const productMap = new Map<string, RecentProduct>();
-        for (const p of allProducts) {
-          if (!p.isActive) continue;
-
+        for (const p of fetchedProducts) {
           // Compute lowest price from formats
           const activeFormats = (p.formats || []).filter((f: { isActive: boolean }) => f.isActive);
           const lowestPrice = activeFormats.length > 0

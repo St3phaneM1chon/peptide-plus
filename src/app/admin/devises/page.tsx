@@ -142,10 +142,10 @@ export default function DevisesPage() {
         <table className="w-full">
           <thead className="bg-slate-50">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.currencies.currency')}</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.currencies.symbol')}</th>
-              <th className="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase">{t('admin.currencies.rateVsCAD')}</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.currencies.lastUpdate')}</th>
+              <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.currencies.currency')}</th>
+              <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.currencies.symbol')}</th>
+              <th className="px-4 py-3 text-end text-xs font-semibold text-slate-500 uppercase">{t('admin.currencies.rateVsCAD')}</th>
+              <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.currencies.lastUpdate')}</th>
               <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.currencies.defaultCol')}</th>
               <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.currencies.activeCol')}</th>
               <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.currencies.actions')}</th>
@@ -166,7 +166,7 @@ export default function DevisesPage() {
                   </div>
                 </td>
                 <td className="px-4 py-4 text-lg font-mono text-slate-700">{currency.symbol}</td>
-                <td className="px-4 py-4 text-right">
+                <td className="px-4 py-4 text-end">
                   {currency.isDefault ? (
                     <span className="text-slate-500">{t('admin.currencies.base')}</span>
                   ) : (

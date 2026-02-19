@@ -25,6 +25,25 @@ export async function GET(request: NextRequest) {
     const fromStr = searchParams.get('from');
     const toStr = searchParams.get('to');
 
+    // Validate date range if provided
+    if (fromStr || toStr) {
+      const parsedFrom = fromStr ? new Date(fromStr) : null;
+      const parsedTo = toStr ? new Date(toStr) : null;
+
+      if ((fromStr && isNaN(parsedFrom!.getTime())) || (toStr && isNaN(parsedTo!.getTime()))) {
+        return NextResponse.json({ error: 'Format de date invalide. Utilisez le format ISO (YYYY-MM-DD)' }, { status: 400 });
+      }
+      if (parsedFrom && parsedTo && parsedFrom > parsedTo) {
+        return NextResponse.json({ error: 'La date de début doit être antérieure à la date de fin' }, { status: 400 });
+      }
+      if (parsedFrom && parsedTo) {
+        const oneYearMs = 365 * 24 * 60 * 60 * 1000;
+        if (parsedTo.getTime() - parsedFrom.getTime() > oneYearMs) {
+          return NextResponse.json({ error: 'La plage de dates ne peut pas dépasser 1 an' }, { status: 400 });
+        }
+      }
+    }
+
     const now = new Date();
     const from = fromStr ? new Date(fromStr) : new Date(now.getFullYear(), now.getMonth(), 1);
     const to = toStr ? new Date(toStr) : new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);

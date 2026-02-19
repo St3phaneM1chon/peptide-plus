@@ -6,6 +6,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
+import { validateCsrf } from '@/lib/csrf-middleware';
 import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
 import { existsSync } from 'fs';
@@ -16,6 +17,12 @@ const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
 export async function POST(request: NextRequest) {
   try {
+    // SECURITY (BE-SEC-15): CSRF protection for mutation endpoint
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const session = await auth();
 
     if (!session?.user) {
@@ -35,6 +42,7 @@ export async function POST(request: NextRequest) {
 
     const uploadedUrls: string[] = [];
 
+    // TODO: migrate to Azure Blob Storage - local filesystem writes do not persist on Azure App Service
     // Ensure upload directory exists
     const uploadDir = join(process.cwd(), 'public', 'uploads', 'reviews');
     if (!existsSync(uploadDir)) {
@@ -58,17 +66,35 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Generate unique filename
+      // Generate unique filename with sanitized extension
       const timestamp = Date.now();
       const randomString = Math.random().toString(36).substring(2, 8);
-      const extension = file.name.split('.').pop();
+      const rawExtension = file.name.split('.').pop() || '';
+      const extension = rawExtension.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() || 'jpg';
+      // Only allow known image extensions
+      if (!['jpg', 'jpeg', 'png', 'webp'].includes(extension)) {
+        return NextResponse.json(
+          { error: `Invalid file extension: .${extension}` },
+          { status: 400 }
+        );
+      }
       const filename = `review_${timestamp}_${randomString}.${extension}`;
 
-      // Convert file to buffer and write
+      // Convert file to buffer and validate magic bytes
       const bytes = await file.arrayBuffer();
       const buffer = Buffer.from(bytes);
-      const filepath = join(uploadDir, filename);
+      const header = buffer.subarray(0, 4);
+      const isJpeg = header[0] === 0xFF && header[1] === 0xD8;
+      const isPng = header[0] === 0x89 && header[1] === 0x50 && header[2] === 0x4E && header[3] === 0x47;
+      const isWebp = header[0] === 0x52 && header[1] === 0x49 && header[2] === 0x46 && header[3] === 0x46;
+      if (!isJpeg && !isPng && !isWebp) {
+        return NextResponse.json(
+          { error: 'File content does not match an allowed image format' },
+          { status: 400 }
+        );
+      }
 
+      const filepath = join(uploadDir, filename);
       await writeFile(filepath, buffer);
 
       // Store the public URL

@@ -8,18 +8,16 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { auth } from '@/lib/auth-config';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 
 // GET /api/admin/employees - List employees and owners
-export async function GET(request: NextRequest) {
+export const GET = withAdminGuard(async (request: NextRequest, { session }) => {
   try {
-    const session = await auth();
-    if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role || '')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const { searchParams } = new URL(request.url);
     const search = searchParams.get('search');
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
+    const limit = Math.min(parseInt(searchParams.get('limit') || '20', 10), 100);
+    const skip = (page - 1) * limit;
 
     const where: Record<string, unknown> = {
       role: { in: ['EMPLOYEE', 'OWNER'] },
@@ -32,25 +30,30 @@ export async function GET(request: NextRequest) {
       ];
     }
 
-    const users = await prisma.user.findMany({
-      where,
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        image: true,
-        role: true,
-        phone: true,
-        createdAt: true,
-        updatedAt: true,
-        sessions: {
-          select: { expires: true },
-          orderBy: { expires: 'desc' },
-          take: 1,
+    const [users, total] = await Promise.all([
+      prisma.user.findMany({
+        where,
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          image: true,
+          role: true,
+          phone: true,
+          createdAt: true,
+          updatedAt: true,
+          sessions: {
+            select: { expires: true },
+            orderBy: { expires: 'desc' },
+            take: 1,
+          },
         },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      prisma.user.count({ where }),
+    ]);
 
     // Get permission groups for each user
     const userIds = users.map((u) => u.id);
@@ -132,7 +135,15 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    return NextResponse.json({ employees });
+    return NextResponse.json({
+      employees,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+      },
+    });
   } catch (error) {
     console.error('Admin employees GET error:', error);
     return NextResponse.json(
@@ -140,16 +151,11 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
 // POST /api/admin/employees - Create/invite a new employee
-export async function POST(request: NextRequest) {
+export const POST = withAdminGuard(async (request: NextRequest, { session }) => {
   try {
-    const session = await auth();
-    if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role || '')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     // Only OWNER can create employees
     if (session.user.role !== 'OWNER') {
       return NextResponse.json(
@@ -254,4 +260,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

@@ -250,9 +250,9 @@ export default function RapprochementPage() {
             <table className="w-full">
               <thead className="bg-slate-50 sticky top-0">
                 <tr>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-slate-500">{t('admin.reconciliation.dateCol')}</th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-slate-500">{t('admin.reconciliation.descriptionCol')}</th>
-                  <th className="px-3 py-2 text-right text-xs font-semibold text-slate-500">{t('admin.reconciliation.amountCol')}</th>
+                  <th className="px-3 py-2 text-start text-xs font-semibold text-slate-500">{t('admin.reconciliation.dateCol')}</th>
+                  <th className="px-3 py-2 text-start text-xs font-semibold text-slate-500">{t('admin.reconciliation.descriptionCol')}</th>
+                  <th className="px-3 py-2 text-end text-xs font-semibold text-slate-500">{t('admin.reconciliation.amountCol')}</th>
                   <th className="px-3 py-2 text-center text-xs font-semibold text-slate-500">{t('admin.reconciliation.actionCol')}</th>
                 </tr>
               </thead>
@@ -261,7 +261,7 @@ export default function RapprochementPage() {
                   <tr key={tx.id} className={tx.reconciliationStatus === 'MATCHED' ? 'bg-green-50/50' : 'bg-yellow-50/50'}>
                     <td className="px-3 py-2 text-sm">{new Date(tx.date).toLocaleDateString('fr-CA')}</td>
                     <td className="px-3 py-2 text-sm truncate max-w-[150px]" title={tx.description}>{tx.description}</td>
-                    <td className={`px-3 py-2 text-sm text-right font-medium ${tx.type === 'CREDIT' ? 'text-green-600' : 'text-red-600'}`}>
+                    <td className={`px-3 py-2 text-sm text-end font-medium ${tx.type === 'CREDIT' ? 'text-green-600' : 'text-red-600'}`}>
                       {tx.type === 'CREDIT' ? '+' : '-'}{tx.amount.toFixed(2)}
                     </td>
                     <td className="px-3 py-2 text-center">
@@ -297,9 +297,9 @@ export default function RapprochementPage() {
             <table className="w-full">
               <thead className="bg-slate-50 sticky top-0">
                 <tr>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-slate-500">{t('admin.reconciliation.dateCol')}</th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-slate-500">{t('admin.reconciliation.descriptionCol')}</th>
-                  <th className="px-3 py-2 text-right text-xs font-semibold text-slate-500">{t('admin.reconciliation.amountCol')}</th>
+                  <th className="px-3 py-2 text-start text-xs font-semibold text-slate-500">{t('admin.reconciliation.dateCol')}</th>
+                  <th className="px-3 py-2 text-start text-xs font-semibold text-slate-500">{t('admin.reconciliation.descriptionCol')}</th>
+                  <th className="px-3 py-2 text-end text-xs font-semibold text-slate-500">{t('admin.reconciliation.amountCol')}</th>
                   <th className="px-3 py-2 text-center text-xs font-semibold text-slate-500">{t('admin.reconciliation.statusCol')}</th>
                 </tr>
               </thead>
@@ -314,7 +314,7 @@ export default function RapprochementPage() {
                         <p className="text-sm truncate max-w-[150px]" title={entry.description}>{entry.description}</p>
                         <p className="text-xs text-slate-500">{entry.entryNumber}</p>
                       </td>
-                      <td className="px-3 py-2 text-sm text-right font-medium text-slate-700">
+                      <td className="px-3 py-2 text-sm text-end font-medium text-slate-700">
                         {amount.toFixed(2)}
                       </td>
                       <td className="px-3 py-2 text-center">

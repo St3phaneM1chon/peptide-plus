@@ -8,27 +8,11 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { auth } from '@/lib/auth-config';
-import { UserRole } from '@/types';
-
-// SECURITY: Shared auth check for all handlers
-async function requireAdmin() {
-  const session = await auth();
-  if (!session?.user) {
-    return { error: NextResponse.json({ error: 'Non autorisé' }, { status: 401 }) };
-  }
-  if (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER) {
-    return { error: NextResponse.json({ error: 'Accès refusé' }, { status: 403 }) };
-  }
-  return { session };
-}
+import { withAdminGuard } from '@/lib/admin-api-guard';
 
 // ─── GET /api/admin/purchase-orders ─────────────────────────────────────────────
-export async function GET(request: NextRequest) {
+export const GET = withAdminGuard(async (request, { session }) => {
   try {
-    const authResult = await requireAdmin();
-    if ('error' in authResult && authResult.error) return authResult.error;
-
     const { searchParams } = new URL(request.url);
 
     // Filters
@@ -140,15 +124,11 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
 // ─── POST /api/admin/purchase-orders ────────────────────────────────────────────
-export async function POST(request: NextRequest) {
+export const POST = withAdminGuard(async (request, { session }) => {
   try {
-    const authResult = await requireAdmin();
-    if ('error' in authResult && authResult.error) return authResult.error;
-    const { session } = authResult;
-
     const body = await request.json();
     const {
       supplierId,
@@ -272,4 +252,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

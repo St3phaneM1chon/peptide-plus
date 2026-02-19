@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 import Link from 'next/link';
 
 interface Answer {
@@ -33,7 +33,7 @@ interface ProductQAProps {
 
 export default function ProductQA({ productId: _productId, productName }: ProductQAProps) {
   const { data: session } = useSession();
-  const { t } = useTranslations();
+  const { t } = useI18n();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [showAskQuestion, setShowAskQuestion] = useState(false);
   const [expandedQuestion, setExpandedQuestion] = useState<string | null>(null);
@@ -123,7 +123,7 @@ export default function ProductQA({ productId: _productId, productName }: Produc
 
       {/* Search */}
       <div className="relative mb-6">
-        <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="absolute start-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
         </svg>
         <input
@@ -131,7 +131,7 @@ export default function ProductQA({ productId: _productId, productName }: Produc
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder={t('qa.searchQuestions') || 'Search questions...'}
-          className="w-full pl-12 pr-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+          className="w-full ps-12 pe-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
         />
       </div>
 

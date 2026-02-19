@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 
 interface Video {
   id: string;
@@ -135,7 +135,7 @@ const videos: Video[] = [
 ];
 
 export default function VideosPage() {
-  const { t } = useTranslations();
+  const { t } = useI18n();
   const videoCategories = getVideoCategories(t);
   const [activeCategory, setActiveCategory] = useState('all');
   const [playingVideo, setPlayingVideo] = useState<Video | null>(null);
@@ -173,7 +173,7 @@ export default function VideosPage() {
 
           {/* Search */}
           <div className="relative mt-8 max-w-xl">
-            <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="absolute start-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
             <input
@@ -181,7 +181,7 @@ export default function VideosPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={t('videos.searchPlaceholder') || 'Search videos...'}
-              className="w-full pl-12 pr-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="w-full ps-12 pe-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
             />
           </div>
         </div>
@@ -202,15 +202,15 @@ export default function VideosPage() {
                   <div className="relative aspect-video bg-neutral-200">
                     <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity">
                       <div className="w-16 h-16 bg-orange-500 rounded-full flex items-center justify-center">
-                        <svg className="w-8 h-8 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-8 h-8 text-white ms-1" fill="currentColor" viewBox="0 0 24 24">
                           <path d="M8 5v14l11-7z" />
                         </svg>
                       </div>
                     </div>
-                    <span className="absolute bottom-2 right-2 px-2 py-1 bg-black/80 text-white text-xs rounded">
+                    <span className="absolute bottom-2 end-2 px-2 py-1 bg-black/80 text-white text-xs rounded">
                       {video.duration}
                     </span>
-                    <span className="absolute top-2 left-2 px-2 py-1 bg-orange-500 text-white text-xs font-medium rounded">
+                    <span className="absolute top-2 start-2 px-2 py-1 bg-orange-500 text-white text-xs font-medium rounded">
                       Featured
                     </span>
                   </div>
@@ -259,12 +259,12 @@ export default function VideosPage() {
               <div className="relative aspect-video bg-neutral-200">
                 <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity">
                   <div className="w-16 h-16 bg-orange-500 rounded-full flex items-center justify-center">
-                    <svg className="w-8 h-8 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-8 h-8 text-white ms-1" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M8 5v14l11-7z" />
                     </svg>
                   </div>
                 </div>
-                <span className="absolute bottom-2 right-2 px-2 py-1 bg-black/80 text-white text-xs rounded">
+                <span className="absolute bottom-2 end-2 px-2 py-1 bg-black/80 text-white text-xs rounded">
                   {video.duration}
                 </span>
               </div>

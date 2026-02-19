@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useCompare } from '@/hooks/useCompare';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -14,12 +14,12 @@ interface CompareProduct {
 
 export default function CompareBar() {
   const { productSlugs, count, removeFromCompare, clearCompare, getCompareUrl } = useCompare();
-  const { t, locale } = useTranslations();
+  const { t, locale } = useI18n();
   const [products, setProducts] = useState<CompareProduct[]>([]);
   const [isVisible, setIsVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Fetch product details when slugs change
+  // Fetch product details when slugs change (debounced to avoid rapid re-fetches)
   useEffect(() => {
     if (productSlugs.length === 0) {
       setProducts([]);
@@ -27,7 +27,7 @@ export default function CompareBar() {
       return;
     }
 
-    const fetchProducts = async () => {
+    const timer = setTimeout(async () => {
       setIsLoading(true);
       try {
         const response = await fetch(`/api/products/compare?slugs=${productSlugs.join(',')}&locale=${locale}`);
@@ -41,10 +41,10 @@ export default function CompareBar() {
       } finally {
         setIsLoading(false);
       }
-    };
+    }, 300);
 
-    fetchProducts();
-  }, [productSlugs]);
+    return () => clearTimeout(timer);
+  }, [productSlugs, locale]);
 
   // Listen for compare updates from other components
   useEffect(() => {
@@ -68,8 +68,8 @@ export default function CompareBar() {
       <div className="max-w-7xl mx-auto px-4 py-3">
         <div className="flex items-center justify-between gap-4">
           {/* Left: Title & Product Count */}
-          <div className="flex items-center gap-3">
-            <div className="bg-orange-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">
+          <div className="flex items-center gap-3" aria-live="polite" role="status">
+            <div className="bg-orange-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm" aria-label={t('compare.productsInComparison', { count: count.toString() })}>
               {count}
             </div>
             <div>
@@ -112,7 +112,7 @@ export default function CompareBar() {
                       e.preventDefault();
                       removeFromCompare(product.slug);
                     }}
-                    className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-md hover:bg-red-600"
+                    className="absolute -top-1 -end-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-md hover:bg-red-600"
                     aria-label={`Remove ${product.name}`}
                   >
                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">

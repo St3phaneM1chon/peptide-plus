@@ -5,6 +5,7 @@ import { prisma } from '@/lib/db';
 import { sendEmail } from '@/lib/email/email-service';
 import { backInStockEmail } from '@/lib/email-templates';
 import { type Locale } from '@/i18n/config';
+import { withJobLock } from '@/lib/cron-lock';
 
 /**
  * POST /api/cron/stock-alerts
@@ -16,35 +17,51 @@ import { type Locale } from '@/i18n/config';
  * Authentication: Requires CRON_SECRET in Authorization header
  */
 export async function POST(request: NextRequest) {
-  try {
-    // Verify cron secret
-    const authHeader = request.headers.get('authorization');
-    const cronSecret = process.env.CRON_SECRET;
+  // Verify cron secret
+  const authHeader = request.headers.get('authorization');
+  const cronSecret = process.env.CRON_SECRET;
 
-    if (!cronSecret) {
-      console.error('CRON_SECRET not configured');
-      return NextResponse.json(
-        { error: 'Cron secret not configured' },
-        { status: 500 }
-      );
-    }
+  if (!cronSecret) {
+    console.error('CRON_SECRET not configured');
+    return NextResponse.json(
+      { error: 'Cron secret not configured' },
+      { status: 500 }
+    );
+  }
 
-    if (authHeader !== `Bearer ${cronSecret}`) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+  if (authHeader !== `Bearer ${cronSecret}`) {
+    return NextResponse.json(
+      { error: 'Unauthorized' },
+      { status: 401 }
+    );
+  }
 
-    // Find all non-notified alerts
+  return withJobLock('stock-alerts', async () => {
+    try {
+      // Find all non-notified alerts
+    // PERF 91: Select only needed product fields (name, slug, imageUrl) and
+    // only the formats relevant to the alerts instead of ALL formats.
     const pendingAlerts = await prisma.stockAlert.findMany({
       where: {
         notified: false,
       },
       include: {
         product: {
-          include: {
-            formats: true,
+          select: {
+            name: true,
+            slug: true,
+            price: true,
+            imageUrl: true,
+            formats: {
+              select: {
+                id: true,
+                name: true,
+                price: true,
+                imageUrl: true,
+                stockQuantity: true,
+                inStock: true,
+              },
+            },
           },
         },
       },
@@ -152,23 +169,25 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({
-      success: true,
-      processed: processedCount,
-      sent: sentCount,
-      errors: errorCount,
-      message: `Processed ${processedCount} alerts, sent ${sentCount} emails, ${errorCount} errors`,
-    });
-  } catch (error) {
-    console.error('Stock alerts cron error:', error);
-    return NextResponse.json(
-      {
-        error: 'Failed to process stock alerts',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    );
-  }
+      return NextResponse.json({
+        success: true,
+        processed: processedCount,
+        sent: sentCount,
+        errors: errorCount,
+        message: `Processed ${processedCount} alerts, sent ${sentCount} emails, ${errorCount} errors`,
+      });
+    } catch (error) {
+      console.error('Stock alerts cron error:', error);
+      // BE-SEC-04: Don't leak error details in production
+      return NextResponse.json(
+        {
+          error: 'Failed to process stock alerts',
+          ...(process.env.NODE_ENV === 'development' ? { details: error instanceof Error ? error.message : 'Unknown error' } : {}),
+        },
+        { status: 500 }
+      );
+    }
+  });
 }
 
 /**
@@ -190,10 +209,13 @@ export async function GET() {
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
+    // BE-SEC-04: Don't leak error details in production
     return NextResponse.json(
       {
         status: 'error',
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: process.env.NODE_ENV === 'development'
+          ? (error instanceof Error ? error.message : 'Unknown error')
+          : 'An unexpected error occurred',
       },
       { status: 500 }
     );

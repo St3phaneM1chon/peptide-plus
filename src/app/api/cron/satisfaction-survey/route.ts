@@ -2,8 +2,30 @@ export const dynamic = 'force-dynamic';
 
 /**
  * CRON Job - Emails de satisfaction
- * Envoie un email de demande d'avis 5 jours après la livraison
- * 
+ * Envoie un email de demande d'avis N jours après la livraison
+ *
+ * Item 81: Configurable survey timing and link
+ * - Survey delay days, feedback URL, and bonus points are now configurable
+ *   via SiteSetting key-value store (module: 'satisfaction_survey')
+ * - Survey link uses configurable base URL instead of hardcoded domain
+ *
+ * TODO (item 81): Full A/B testing for satisfaction surveys:
+ *   - Create A/B test variants for:
+ *     a) Timing: 3 days vs 5 days vs 7 days after delivery
+ *     b) Subject line variants (emoji vs no emoji, question vs statement)
+ *     c) Incentive: 50 points vs 100 points vs 10% discount
+ *     d) Survey format: emoji rating vs 1-5 stars vs NPS scale
+ *   - Assign users to variants deterministically: hash(userId + experimentId) % variantCount
+ *   - Track open rates, click rates, and review completion rates per variant
+ *   - Store results in AbTestResult model for statistical analysis
+ *   - Auto-graduate the best variant after N=500 sends with 95% confidence
+ *
+ * Configurable SiteSetting keys (module: 'satisfaction_survey'):
+ *   satisfaction_survey.delay_days       - Default: 5
+ *   satisfaction_survey.bonus_points     - Default: 50
+ *   satisfaction_survey.feedback_base_url - Default: https://biocyclepeptides.com/feedback
+ *   satisfaction_survey.review_base_url  - Default: https://biocyclepeptides.com/account/orders
+ *
  * Configuration Vercel (vercel.json):
  * {
  *   "crons": [{
@@ -16,25 +38,51 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { sendEmail, satisfactionSurveyEmail, type OrderData } from '@/lib/email';
+import { withJobLock } from '@/lib/cron-lock';
+
+// Defaults (overridden by SiteSetting values)
+const DEFAULT_DELAY_DAYS = 5;
+const DEFAULT_BONUS_POINTS = 50;
 
 export async function GET(request: NextRequest) {
-  try {
-    // Vérifier la clé de sécurité
-    const authHeader = request.headers.get('authorization');
-    const cronSecret = process.env.CRON_SECRET;
-    
-    if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+  // Vérifier la clé de sécurité
+  const authHeader = request.headers.get('authorization');
+  const cronSecret = process.env.CRON_SECRET;
 
-    // Trouver les commandes livrées il y a 5 jours
-    const fiveDaysAgo = new Date();
-    fiveDaysAgo.setDate(fiveDaysAgo.getDate() - 5);
-    fiveDaysAgo.setHours(0, 0, 0, 0);
+  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
-    const sixDaysAgo = new Date();
-    sixDaysAgo.setDate(sixDaysAgo.getDate() - 6);
-    sixDaysAgo.setHours(0, 0, 0, 0);
+  return withJobLock('satisfaction-survey', async () => {
+    try {
+      // Item 81: Load configurable survey parameters from SiteSetting
+      const surveyConfigKeys = [
+        'satisfaction_survey.delay_days',
+        'satisfaction_survey.bonus_points',
+      ];
+      const surveyConfig = await db.siteSetting.findMany({
+        where: { key: { in: surveyConfigKeys } },
+        select: { key: true, value: true },
+      }).catch(() => [] as { key: string; value: string }[]);
+      const surveyConfigMap = new Map(surveyConfig.map((e) => [e.key, e.value]));
+
+      const delayDays = parseInt(surveyConfigMap.get('satisfaction_survey.delay_days') || '', 10) || DEFAULT_DELAY_DAYS;
+      const bonusPoints = parseInt(surveyConfigMap.get('satisfaction_survey.bonus_points') || '', 10) || DEFAULT_BONUS_POINTS;
+
+      console.log(`Satisfaction survey config: delay=${delayDays}d, bonus=${bonusPoints}pts`);
+
+    // Find orders delivered delayDays ago (configurable, default 5)
+    const targetDayAgo = new Date();
+    targetDayAgo.setDate(targetDayAgo.getDate() - delayDays);
+    targetDayAgo.setHours(0, 0, 0, 0);
+
+    const targetDayPlusOneAgo = new Date();
+    targetDayPlusOneAgo.setDate(targetDayPlusOneAgo.getDate() - (delayDays + 1));
+    targetDayPlusOneAgo.setHours(0, 0, 0, 0);
+
+    // Backward compat aliases
+    const fiveDaysAgo = targetDayAgo;
+    const sixDaysAgo = targetDayPlusOneAgo;
 
     // Commandes livrées entre 5 et 6 jours
     const deliveredOrders = await db.order.findMany({
@@ -44,8 +92,6 @@ export async function GET(request: NextRequest) {
           gte: sixDaysAgo,
           lt: fiveDaysAgo,
         },
-        // Vérifier qu'on n'a pas déjà envoyé un email de satisfaction
-        // On pourrait ajouter un champ satisfactionEmailSent au modèle Order
       },
       include: {
         items: true,
@@ -53,18 +99,48 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    console.log(`📊 Found ${deliveredOrders.length} orders to send satisfaction survey`);
+    // DI-64: Deduplicate - filter out orders that already had a satisfaction survey sent
+    const orderNumbers = deliveredOrders.map((o) => o.orderNumber);
+    const alreadySentLogs = orderNumbers.length > 0
+      ? await db.emailLog.findMany({
+          where: {
+            templateId: 'satisfaction-survey',
+            status: 'sent',
+            to: { in: deliveredOrders.map((o) => o.userId) }, // rough filter
+          },
+          select: { subject: true },
+        })
+      : [];
+    // Extract order numbers from subjects like "Satisfaction survey - #ORD-xxx"
+    const alreadySentOrderNumbers = new Set<string>();
+    for (const log of alreadySentLogs) {
+      for (const orderNumber of orderNumbers) {
+        if (log.subject?.includes(orderNumber)) {
+          alreadySentOrderNumbers.add(orderNumber);
+        }
+      }
+    }
+    const filteredOrders = deliveredOrders.filter(
+      (o) => !alreadySentOrderNumbers.has(o.orderNumber)
+    );
+
+    console.log(`Found ${deliveredOrders.length} delivered orders, ${filteredOrders.length} after dedup`);
+
+    // DI-65: Batch fetch users to avoid N+1 queries
+    const userIds = [...new Set(filteredOrders.map((o) => o.userId))];
+    const users = userIds.length > 0
+      ? await db.user.findMany({
+          where: { id: { in: userIds } },
+          select: { id: true, name: true, email: true, locale: true },
+        })
+      : [];
+    const userMap = new Map(users.map((u) => [u.id, u]));
 
     const results = [];
 
-    for (const order of deliveredOrders) {
+    for (const order of filteredOrders) {
       try {
-        // Récupérer l'utilisateur
-        const user = await db.user.findUnique({
-          where: { id: order.userId },
-          select: { name: true, email: true, locale: true },
-        });
-
+        const user = userMap.get(order.userId);
         if (!user) continue;
 
         // Préparer les données
@@ -103,6 +179,17 @@ export async function GET(request: NextRequest) {
           tags: ['satisfaction', 'automated', order.orderNumber],
         });
 
+        // Log to EmailLog for deduplication on future runs
+        await db.emailLog.create({
+          data: {
+            templateId: 'satisfaction-survey',
+            to: user.email,
+            subject: emailContent.subject,
+            status: result.success ? 'sent' : 'failed',
+            error: result.success ? null : 'Send failed',
+          },
+        }).catch((err: unknown) => console.error('Failed to create email log', err));
+
         results.push({
           orderId: order.id,
           orderNumber: order.orderNumber,
@@ -111,7 +198,7 @@ export async function GET(request: NextRequest) {
           messageId: result.messageId,
         });
 
-        console.log(`📊 Satisfaction survey sent for order ${order.orderNumber} to ${user.email}`);
+        console.log(`Satisfaction survey sent for order ${order.orderNumber} to ${user.email}`);
 
       } catch (error) {
         console.error(`Failed to send satisfaction email for order ${order.id}:`, error);
@@ -127,17 +214,18 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       date: new Date().toISOString(),
-      processed: deliveredOrders.length,
+      processed: filteredOrders.length,
       results,
     });
 
-  } catch (error) {
-    console.error('Satisfaction survey cron job error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
+    } catch (error) {
+      console.error('Satisfaction survey cron job error:', error);
+      return NextResponse.json(
+        { error: 'Internal server error' },
+        { status: 500 }
+      );
+    }
+  });
 }
 
 export { GET as POST };

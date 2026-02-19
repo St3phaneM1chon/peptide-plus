@@ -8,7 +8,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 
 interface RecentPurchase {
   firstName: string;
@@ -19,7 +19,7 @@ interface RecentPurchase {
 }
 
 export function SocialProofNotification() {
-  const { t } = useTranslations();
+  const { t } = useI18n();
   const [purchase, setPurchase] = useState<RecentPurchase | null>(null);
   const [visible, setVisible] = useState(false);
   const [dismissed, setDismissed] = useState(false);
@@ -176,7 +176,7 @@ export function SocialProofNotification() {
             color: '#9CA3AF',
             flexShrink: 0,
           }}
-          aria-label="Dismiss"
+          aria-label={t('common.aria.dismiss')}
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />

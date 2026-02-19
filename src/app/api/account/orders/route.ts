@@ -1,10 +1,10 @@
 export const dynamic = 'force-dynamic';
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { db } from '@/lib/db';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const session = await auth();
 
@@ -12,23 +12,59 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Pagination parameters
+    const { searchParams } = new URL(request.url);
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
+    const limit = Math.min(parseInt(searchParams.get('limit') || '20', 10), 100);
+    const offset = (page - 1) * limit;
+
     // Get user
     const user = await db.user.findUnique({
       where: { email: session.user.email },
+      select: { id: true },
     });
 
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Get all orders for user
-    const orders = await db.order.findMany({
-      where: { userId: user.id },
-      orderBy: { createdAt: 'desc' },
-      include: {
-        items: true,
-      },
-    });
+    // Get paginated orders for user
+    const [orders, total] = await Promise.all([
+      db.order.findMany({
+        where: { userId: user.id },
+        orderBy: { createdAt: 'desc' },
+        skip: offset,
+        take: limit,
+        select: {
+          id: true,
+          orderNumber: true,
+          status: true,
+          total: true,
+          subtotal: true,
+          tax: true,
+          shippingCost: true,
+          trackingNumber: true,
+          shippingName: true,
+          shippingAddress1: true,
+          shippingCity: true,
+          shippingState: true,
+          shippingPostal: true,
+          shippingCountry: true,
+          createdAt: true,
+          items: {
+            select: {
+              id: true,
+              productId: true,
+              productName: true,
+              formatName: true,
+              quantity: true,
+              unitPrice: true,
+            },
+          },
+        },
+      }),
+      db.order.count({ where: { userId: user.id } }),
+    ]);
 
     // Format orders for frontend
     const formattedOrders = orders.map((order) => ({
@@ -60,9 +96,21 @@ export async function GET() {
       },
     }));
 
-    return NextResponse.json(formattedOrders);
+    return NextResponse.json({
+      orders: formattedOrders,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+        hasMore: offset + limit < total,
+      },
+    });
   } catch (error) {
     console.error('Error fetching orders:', error);
-    return NextResponse.json([]);
+    return NextResponse.json(
+      { error: 'Failed to fetch orders' },
+      { status: 500 }
+    );
   }
 }

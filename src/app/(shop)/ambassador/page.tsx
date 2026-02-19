@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 
 interface AmbassadorStats {
   referrals: number;
@@ -13,46 +13,70 @@ interface AmbassadorStats {
   tier: 'starter' | 'bronze' | 'silver' | 'gold' | 'platinum';
 }
 
-const ambassadorTiers = [
+const getAmbassadorTiers = (t: (key: string) => string) => [
   {
     id: 'starter',
-    name: 'Starter',
+    name: t('ambassador.tierStarter') || 'Starter',
     icon: '🌱',
     commission: 10,
     minReferrals: 0,
-    benefits: ['10% commission on all referrals', 'Unique referral link', 'Monthly payouts'],
+    benefits: [
+      t('ambassador.benefitCommission10') || '10% commission on all referrals',
+      t('ambassador.benefitReferralLink') || 'Unique referral link',
+      t('ambassador.benefitMonthlyPayouts') || 'Monthly payouts',
+    ],
   },
   {
     id: 'bronze',
-    name: 'Bronze',
+    name: t('ambassador.tierBronze') || 'Bronze',
     icon: '🥉',
     commission: 12,
     minReferrals: 10,
-    benefits: ['12% commission', 'Free product samples', 'Priority support', 'Marketing materials'],
+    benefits: [
+      t('ambassador.benefitCommission12') || '12% commission',
+      t('ambassador.benefitFreeSamples') || 'Free product samples',
+      t('ambassador.benefitPrioritySupport') || 'Priority support',
+      t('ambassador.benefitMarketingMaterials') || 'Marketing materials',
+    ],
   },
   {
     id: 'silver',
-    name: 'Silver',
+    name: t('ambassador.tierSilver') || 'Silver',
     icon: '🥈',
     commission: 15,
     minReferrals: 25,
-    benefits: ['15% commission', 'Exclusive discount codes', 'Featured on our site', 'Early access to new products'],
+    benefits: [
+      t('ambassador.benefitCommission15') || '15% commission',
+      t('ambassador.benefitExclusiveDiscounts') || 'Exclusive discount codes',
+      t('ambassador.benefitFeaturedOnSite') || 'Featured on our site',
+      t('ambassador.benefitEarlyAccess') || 'Early access to new products',
+    ],
   },
   {
     id: 'gold',
-    name: 'Gold',
+    name: t('ambassador.tierGold') || 'Gold',
     icon: '🥇',
     commission: 18,
     minReferrals: 50,
-    benefits: ['18% commission', 'Custom landing page', 'Co-branded materials', 'Quarterly bonus'],
+    benefits: [
+      t('ambassador.benefitCommission18') || '18% commission',
+      t('ambassador.benefitCustomLandingPage') || 'Custom landing page',
+      t('ambassador.benefitCoBrandedMaterials') || 'Co-branded materials',
+      t('ambassador.benefitQuarterlyBonus') || 'Quarterly bonus',
+    ],
   },
   {
     id: 'platinum',
-    name: 'Platinum',
+    name: t('ambassador.tierPlatinum') || 'Platinum',
     icon: '💎',
     commission: 20,
     minReferrals: 100,
-    benefits: ['20% commission', 'VIP events access', 'Dedicated account manager', 'Revenue share opportunities'],
+    benefits: [
+      t('ambassador.benefitCommission20') || '20% commission',
+      t('ambassador.benefitVipEvents') || 'VIP events access',
+      t('ambassador.benefitDedicatedManager') || 'Dedicated account manager',
+      t('ambassador.benefitRevenueShare') || 'Revenue share opportunities',
+    ],
   },
 ];
 
@@ -61,7 +85,8 @@ const testimonials: { name: string; role: string; image: string; quote: string; 
 
 export default function AmbassadorPage() {
   const { data: session } = useSession();
-  const { t } = useTranslations();
+  const { t } = useI18n();
+  const ambassadorTiers = getAmbassadorTiers(t);
   const [activeTab, setActiveTab] = useState<'overview' | 'dashboard' | 'apply'>('overview');
   const [isApplying, setIsApplying] = useState(false);
   const [applicationSubmitted, setApplicationSubmitted] = useState(false);
@@ -344,7 +369,7 @@ export default function AmbassadorPage() {
                   </div>
                 </div>
                 {getNextTier() && (
-                  <div className="text-right">
+                  <div className="text-end">
                     <p className="text-sm text-neutral-500">Next tier: {getNextTier().name}</p>
                     <p className="text-sm">{getNextTier().minReferrals - ambassadorStats.referrals} more referrals needed</p>
                   </div>
@@ -444,7 +469,7 @@ export default function AmbassadorPage() {
                     <textarea
                       value={applicationData.whyJoin}
                       onChange={(e) => setApplicationData(prev => ({ ...prev, whyJoin: e.target.value }))}
-                      placeholder="Tell us about yourself and why you'd be a great ambassador..."
+                      placeholder={t('ambassador.placeholderAbout')}
                       rows={4}
                       className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
                       required
@@ -456,7 +481,7 @@ export default function AmbassadorPage() {
                     <textarea
                       value={applicationData.promotionPlan}
                       onChange={(e) => setApplicationData(prev => ({ ...prev, promotionPlan: e.target.value }))}
-                      placeholder="Blog posts, videos, social media, email newsletter, etc."
+                      placeholder={t('ambassador.placeholderContentTypes')}
                       rows={3}
                       className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
                       required

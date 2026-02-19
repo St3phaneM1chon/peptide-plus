@@ -285,7 +285,7 @@ export default function BankImportPage() {
                       </p>
                     </div>
                   </div>
-                  <div className="text-right">
+                  <div className="text-end">
                     <p className="text-xl font-bold text-white">
                       {conn.balance.toLocaleString('fr-CA', { style: 'currency', currency: conn.currency })}
                     </p>
@@ -403,7 +403,7 @@ export default function BankImportPage() {
               {/* Bank account selector for import */}
               {bankAccounts.length > 0 && (
                 <div className="bg-neutral-800 rounded-xl p-4 border border-neutral-700">
-                  <label className="text-sm text-neutral-300 mr-3">{t('admin.bankImport.destinationAccount')}</label>
+                  <label className="text-sm text-neutral-300 me-3">{t('admin.bankImport.destinationAccount')}</label>
                   <select
                     value={selectedBankAccountId}
                     onChange={e => setSelectedBankAccountId(e.target.value)}
@@ -474,11 +474,11 @@ export default function BankImportPage() {
                 <table className="w-full">
                   <thead className="bg-neutral-900/50">
                     <tr>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-neutral-400 uppercase w-10"></th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-neutral-400 uppercase">{t('admin.bankImport.dateCol')}</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-neutral-400 uppercase">{t('admin.bankImport.descriptionCol')}</th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-neutral-400 uppercase">{t('admin.bankImport.amountCol')}</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-neutral-400 uppercase">{t('admin.bankImport.suggestedCategory')}</th>
+                      <th className="px-4 py-3 text-start text-xs font-medium text-neutral-400 uppercase w-10"></th>
+                      <th className="px-4 py-3 text-start text-xs font-medium text-neutral-400 uppercase">{t('admin.bankImport.dateCol')}</th>
+                      <th className="px-4 py-3 text-start text-xs font-medium text-neutral-400 uppercase">{t('admin.bankImport.descriptionCol')}</th>
+                      <th className="px-4 py-3 text-end text-xs font-medium text-neutral-400 uppercase">{t('admin.bankImport.amountCol')}</th>
+                      <th className="px-4 py-3 text-start text-xs font-medium text-neutral-400 uppercase">{t('admin.bankImport.suggestedCategory')}</th>
                       <th className="px-4 py-3 text-center text-xs font-medium text-neutral-400 uppercase">{t('admin.bankImport.confidence')}</th>
                     </tr>
                   </thead>
@@ -502,7 +502,7 @@ export default function BankImportPage() {
                         <td className="px-4 py-3">
                           <p className="text-white">{tx.description}</p>
                         </td>
-                        <td className={`px-4 py-3 text-right font-medium ${tx.type === 'CREDIT' ? 'text-green-400' : 'text-red-400'}`}>
+                        <td className={`px-4 py-3 text-end font-medium ${tx.type === 'CREDIT' ? 'text-green-400' : 'text-red-400'}`}>
                           {tx.type === 'CREDIT' ? '+' : '-'}{tx.amount.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}
                         </td>
                         <td className="px-4 py-3">
@@ -539,10 +539,10 @@ export default function BankImportPage() {
           <table className="w-full">
             <thead className="bg-neutral-900/50">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-neutral-400 uppercase">{t('admin.bankImport.dateCol')}</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-neutral-400 uppercase">{t('admin.bankImport.sourceCol')}</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-neutral-400 uppercase">{t('admin.bankImport.transactionsCol')}</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-neutral-400 uppercase">{t('admin.bankImport.statusCol')}</th>
+                <th className="px-4 py-3 text-start text-xs font-medium text-neutral-400 uppercase">{t('admin.bankImport.dateCol')}</th>
+                <th className="px-4 py-3 text-start text-xs font-medium text-neutral-400 uppercase">{t('admin.bankImport.sourceCol')}</th>
+                <th className="px-4 py-3 text-end text-xs font-medium text-neutral-400 uppercase">{t('admin.bankImport.transactionsCol')}</th>
+                <th className="px-4 py-3 text-start text-xs font-medium text-neutral-400 uppercase">{t('admin.bankImport.statusCol')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-700">
@@ -550,7 +550,7 @@ export default function BankImportPage() {
                 <tr key={i} className="hover:bg-neutral-700/30">
                   <td className="px-4 py-3 text-white">{new Date(item.date).toLocaleDateString('fr-CA')}</td>
                   <td className="px-4 py-3 text-neutral-300">{item.source}</td>
-                  <td className="px-4 py-3 text-right text-white">{item.count}</td>
+                  <td className="px-4 py-3 text-end text-white">{item.count}</td>
                   <td className="px-4 py-3">
                     <span className="px-2 py-1 bg-green-900/30 text-green-400 rounded text-sm">{t('admin.bankImport.completed')}</span>
                   </td>

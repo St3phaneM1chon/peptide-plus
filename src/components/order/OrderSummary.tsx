@@ -6,7 +6,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 
 interface OrderSummaryProps {
   order: {
@@ -32,7 +32,7 @@ interface OrderSummaryProps {
 }
 
 export function OrderSummary({ order }: OrderSummaryProps) {
-  const { t } = useTranslations();
+  const { t, locale } = useI18n();
   const subtotal = Number(order.amount);
   const tps = subtotal * 0.05;
   const tvq = subtotal * 0.09975;
@@ -267,7 +267,7 @@ export function OrderSummary({ order }: OrderSummaryProps) {
               {t('order.orderDate')}
             </p>
             <p style={{ fontSize: '14px', color: 'var(--gray-500)' }}>
-              {new Date(order.createdAt).toLocaleDateString('fr-CA', {
+              {new Date(order.createdAt).toLocaleDateString(locale, {
                 day: 'numeric',
                 month: 'long',
                 year: 'numeric',

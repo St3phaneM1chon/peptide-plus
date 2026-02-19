@@ -1,7 +1,12 @@
 /**
  * SMS Service - Twilio
  * Sends SMS notifications for order events
+ *
+ * Improvement #85: Replaced console.log/error with structured logger
+ * Improvement #91: Removed hardcoded phone number fallback
  */
+
+import { logger } from '@/lib/logger';
 
 interface SendSmsParams {
   to: string;
@@ -21,7 +26,11 @@ export async function sendSms({ to, body }: SendSmsParams): Promise<boolean> {
   const fromNumber = process.env.TWILIO_PHONE_NUMBER;
 
   if (!accountSid || !authToken || !fromNumber) {
-    console.warn('SMS: Twilio credentials not configured, skipping SMS');
+    logger.warn('SMS: Twilio credentials not configured, skipping SMS', {
+      hasAccountSid: !!accountSid,
+      hasAuthToken: !!authToken,
+      hasFromNumber: !!fromNumber,
+    });
     return false;
   }
 
@@ -47,21 +56,31 @@ export async function sendSms({ to, body }: SendSmsParams): Promise<boolean> {
 
     if (!response.ok) {
       const error = await response.json();
-      console.error('SMS send failed:', error);
+      logger.error('SMS send failed', {
+        to: formattedTo,
+        status: response.status,
+        twilioError: error?.message || error?.code,
+      });
       return false;
     }
 
-    console.log(`SMS sent to ${formattedTo}: ${body.substring(0, 50)}...`);
+    logger.info('SMS sent successfully', {
+      to: formattedTo,
+      bodyPreview: body.substring(0, 50),
+    });
     return true;
   } catch (error) {
-    console.error('SMS service error:', error);
+    logger.error('SMS service error', {
+      error: error instanceof Error ? error.message : String(error),
+      to,
+    });
     return false;
   }
 }
 
 /**
  * Format phone number to E.164 format
- * Handles Canadian numbers (450-847-4741 -> +14508474741)
+ * Handles Canadian numbers (e.g., 514-555-1234 -> +15145551234)
  */
 function formatPhoneNumber(phone: string): string {
   // Remove all non-digits
@@ -82,6 +101,25 @@ function formatPhoneNumber(phone: string): string {
 }
 
 /**
+ * Get the admin phone number from environment.
+ * Throws in production if not configured.
+ */
+function getAdminPhone(adminPhoneOverride?: string): string | null {
+  const phone = adminPhoneOverride || process.env.ADMIN_SMS_PHONE;
+
+  if (!phone) {
+    if (process.env.NODE_ENV === 'production') {
+      logger.error('ADMIN_SMS_PHONE is not configured in production');
+      throw new Error('ADMIN_SMS_PHONE environment variable is required in production');
+    }
+    logger.warn('ADMIN_SMS_PHONE not configured, skipping admin SMS notification');
+    return null;
+  }
+
+  return phone;
+}
+
+/**
  * Send order notification SMS to admin
  */
 export async function sendOrderNotificationSms(
@@ -89,10 +127,8 @@ export async function sendOrderNotificationSms(
   orderNumber: string,
   adminPhone?: string
 ): Promise<boolean> {
-  // Use admin phone from param, or fall back to env var, or hardcoded default
-  const phone = adminPhone
-    || process.env.ADMIN_SMS_PHONE
-    || '450-847-4741';
+  const phone = getAdminPhone(adminPhone);
+  if (!phone) return false;
 
   const formattedTotal = new Intl.NumberFormat('fr-CA', {
     style: 'currency',
@@ -114,9 +150,8 @@ export async function sendPaymentFailureAlertSms(
   customerEmail?: string,
   adminPhone?: string
 ): Promise<boolean> {
-  const phone = adminPhone
-    || process.env.ADMIN_SMS_PHONE
-    || '450-847-4741';
+  const phone = getAdminPhone(adminPhone);
+  if (!phone) return false;
 
   const formattedAmount = new Intl.NumberFormat('fr-CA', {
     style: 'currency',
@@ -127,6 +162,6 @@ export async function sendPaymentFailureAlertSms(
 
   return sendSms({
     to: phone,
-    body: `ALERTE: Échec de paiement ${formattedAmount}. Raison: ${errorType}${customerInfo}`,
+    body: `ALERTE: Echec de paiement ${formattedAmount}. Raison: ${errorType}${customerInfo}`,
   });
 }

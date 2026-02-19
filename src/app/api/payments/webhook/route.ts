@@ -11,14 +11,96 @@ import { prisma } from '@/lib/db';
 import { sendEmail, orderConfirmationEmail, type OrderData } from '@/lib/email';
 import { createAccountingEntriesForOrder } from '@/lib/accounting/webhook-accounting.service';
 import { generateCOGSEntry } from '@/lib/inventory';
-import { qualifyReferral } from '@/app/api/referrals/qualify/route';
+import { qualifyReferral } from '@/lib/referral-qualify';
 import { logger } from '@/lib/logger';
+import { sendOrderNotificationSms, sendPaymentFailureAlertSms } from '@/lib/sms';
+import { sanitizeWebhookPayload } from '@/lib/sanitize';
+import { getRedisClient, isRedisAvailable } from '@/lib/redis';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2023-10-16',
 });
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
+
+// ---------------------------------------------------------------------------
+// Event Deduplication (in-memory + Redis)
+// ---------------------------------------------------------------------------
+
+/**
+ * In-memory LRU cache for rapid deduplication of recently-seen event IDs.
+ * Prevents duplicate processing even before hitting the database.
+ * Entries auto-expire after 10 minutes (Map insertion order).
+ */
+const DEDUP_CACHE_MAX = 5000;
+const DEDUP_TTL_MS = 10 * 60 * 1000; // 10 minutes
+const recentEventIds = new Map<string, number>(); // eventId -> timestamp
+
+function isDuplicateInMemory(eventId: string): boolean {
+  const ts = recentEventIds.get(eventId);
+  if (ts && Date.now() - ts < DEDUP_TTL_MS) {
+    return true;
+  }
+  return false;
+}
+
+function markEventProcessed(eventId: string): void {
+  // Evict oldest entries if cache is full
+  if (recentEventIds.size >= DEDUP_CACHE_MAX) {
+    const firstKey = recentEventIds.keys().next().value;
+    if (firstKey) recentEventIds.delete(firstKey);
+  }
+  recentEventIds.set(eventId, Date.now());
+}
+
+/**
+ * Check dedup in Redis (SET-based) for distributed environments.
+ * Returns true if the event was already seen.
+ */
+async function isDuplicateInRedis(eventId: string): Promise<boolean> {
+  if (!isRedisAvailable()) return false;
+  try {
+    const redis = await getRedisClient();
+    if (!redis) return false;
+    const key = `webhook:dedup:${eventId}`;
+    const exists = await redis.get(key);
+    return exists !== null;
+  } catch {
+    return false;
+  }
+}
+
+async function markEventInRedis(eventId: string): Promise<void> {
+  if (!isRedisAvailable()) return;
+  try {
+    const redis = await getRedisClient();
+    if (!redis) return;
+    const key = `webhook:dedup:${eventId}`;
+    // Store with 1-hour TTL
+    await redis.set(key, '1', 'EX', 3600);
+  } catch {
+    // Silently fail -- in-memory dedup is the primary layer
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Raw Payload Storage for Replay
+// ---------------------------------------------------------------------------
+
+/**
+ * Store the raw webhook payload for potential replay.
+ * Stored alongside the WebhookEvent record.
+ */
+async function storeRawPayload(eventId: string, rawBody: string): Promise<void> {
+  try {
+    await prisma.webhookEvent.update({
+      where: { eventId },
+      data: { payload: rawBody.slice(0, 50000) }, // Truncate for safety
+    });
+  } catch {
+    // Non-critical -- don't fail the webhook
+  }
+}
 
 /**
  * Check idempotence: if this event was already processed, return true
@@ -63,7 +145,28 @@ async function completeWebhookEvent(eventId: string, orderId?: string, journalEn
 }
 
 /**
- * Mark webhook event as failed
+ * Mark webhook event as failed, with retry tracking (item 72)
+ *
+ * Item 72: Webhook retry mechanism
+ * Failed webhook events are recorded with status='FAILED' and can be retried.
+ * The errorMessage contains the failure reason for diagnosis.
+ *
+ * Retry strategy (to be executed by cron or admin action):
+ *   - Track retry attempts via the errorMessage prefix: "[Retry N]"
+ *   - Max 3 retries with exponential backoff: 5min, 15min, 45min
+ *   - After max retries, mark as permanently failed and alert admin
+ *
+ * TODO (item 72): Implement automatic retry execution via:
+ *   a) A cron job at /api/cron/retry-webhooks (recommended) that runs every 5 minutes:
+ *      - Query: SELECT * FROM "WebhookEvent" WHERE status='FAILED'
+ *        AND "processedAt" < NOW() - INTERVAL '5 minutes'
+ *        AND ("errorMessage" NOT LIKE '[Retry 3]%')
+ *      - For each event: parse payload, reprocess the event, increment retry count
+ *      - Exponential backoff: only retry if processedAt + backoff_interval < NOW()
+ *   b) Add a retryCount Int @default(0) field to WebhookEvent model
+ *   c) Admin UI button to manually retry a specific failed webhook event
+ *   d) After max retries exhausted, send admin notification (email/Slack)
+ *   e) Dashboard showing failed webhook events with retry status
  */
 async function failWebhookEvent(eventId: string, errorMessage: string) {
   await prisma.webhookEvent.update({
@@ -73,6 +176,11 @@ async function failWebhookEvent(eventId: string, errorMessage: string) {
       errorMessage,
       processedAt: new Date(),
     },
+  });
+
+  logger.warn('Webhook event failed - eligible for retry', {
+    eventId,
+    error: errorMessage,
   });
 }
 
@@ -95,14 +203,33 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Idempotence check: if already processed, return 200 immediately
-    if (await checkIdempotence(event.id)) {
-      logger.info('Webhook already processed, skipping', { eventId: event.id });
+    // Fast dedup layer: in-memory check (no DB hit for recent duplicates)
+    if (isDuplicateInMemory(event.id)) {
+      logger.info('Webhook duplicate (in-memory)', { eventId: event.id, eventType: event.type });
       return NextResponse.json({ received: true, duplicate: true });
     }
 
-    // Record the event
-    await recordWebhookEvent(event.id, event.type, JSON.stringify(event.data.object).slice(0, 5000));
+    // Redis dedup layer (distributed environments)
+    if (await isDuplicateInRedis(event.id)) {
+      logger.info('Webhook duplicate (Redis)', { eventId: event.id, eventType: event.type });
+      markEventProcessed(event.id); // also populate memory cache
+      return NextResponse.json({ received: true, duplicate: true });
+    }
+
+    // DB-level idempotence check: if already processed, return 200 immediately
+    if (await checkIdempotence(event.id)) {
+      logger.info('Webhook already processed, skipping', { eventId: event.id });
+      markEventProcessed(event.id);
+      await markEventInRedis(event.id);
+      return NextResponse.json({ received: true, duplicate: true });
+    }
+
+    // Record the event (BE-SEC-20: sanitize PCI/PII data before storing)
+    const sanitizedPayload = sanitizeWebhookPayload(event.data.object);
+    await recordWebhookEvent(event.id, event.type, JSON.stringify(sanitizedPayload).slice(0, 5000));
+
+    // Store raw payload for potential replay (non-blocking)
+    storeRawPayload(event.id, body).catch(() => {});
 
     try {
       // Process the event
@@ -137,6 +264,10 @@ export async function POST(request: NextRequest) {
           logger.info('Unhandled event type', { eventType: event.type });
           await completeWebhookEvent(event.id);
       }
+
+      // Mark event in dedup caches after successful processing
+      markEventProcessed(event.id);
+      await markEventInRedis(event.id);
 
       return NextResponse.json({ received: true });
     } catch (processError) {
@@ -175,18 +306,19 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
   const taxTps = parseFloat(metadata.taxTps || '0');
   const taxTvq = parseFloat(metadata.taxTvq || '0');
   const taxTvh = parseFloat(metadata.taxTvh || '0');
+  const taxPst = parseFloat(metadata.taxPst || '0');
   const cartItems = metadata.cartItems ? JSON.parse(metadata.cartItems) : [];
   const promoCode = metadata.promoCode || null;
   const promoDiscount = parseFloat(metadata.promoDiscount || '0');
   const shippingCost = parseFloat(metadata.shippingCost || '0');
   const subtotal = parseFloat(metadata.subtotal || '0');
+  // BE-PAY-04: Gift card info from checkout metadata
+  const giftCardCode = metadata.giftCardCode || null;
+  const giftCardDiscount = parseFloat(metadata.giftCardDiscount || '0');
 
   // Multi-currency: retrieve currency info from checkout metadata
   const checkoutCurrencyId = metadata.currencyId;
   const checkoutExchangeRate = parseFloat(metadata.exchangeRate || '1');
-
-  // Generate order number
-  const orderNumber = `PP-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`;
 
   // Find currency: prefer the ID stored at checkout time, then fall back to code lookup
   let currency = checkoutCurrencyId
@@ -216,7 +348,7 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
   // record accounting values in CAD for consistency.
   const stripeSubtotal = subtotal || (session.amount_subtotal || 0) / 100;
   const stripeTotal = (session.amount_total || 0) / 100;
-  const totalTax = taxTps + taxTvq + taxTvh;
+  const totalTax = taxTps + taxTvq + taxTvh + taxPst;
 
   // If the order was placed in a foreign currency, the Stripe total
   // is in that currency. We still record the CAD amounts from metadata
@@ -225,12 +357,30 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
     ? subtotal - promoDiscount + totalTax + shippingCost
     : stripeTotal; // fallback
 
+  // BUG 15: Declare orderNumber before transaction so it's accessible outside
+  let orderNumber = '';
+
   // Create the order with items in a transaction
   const order = await prisma.$transaction(async (tx) => {
+    // Atomic order number generation with row locking (prevents duplicates)
+    const year = new Date().getFullYear();
+    const prefix = `PP-${year}-`;
+    const lastRows = await tx.$queryRaw<{ order_number: string }[]>`
+      SELECT "orderNumber" as order_number FROM "Order"
+      WHERE "orderNumber" LIKE ${prefix + '%'}
+      ORDER BY "orderNumber" DESC
+      LIMIT 1
+      FOR UPDATE
+    `;
+    const lastNum = lastRows.length > 0
+      ? parseInt(lastRows[0].order_number.replace(prefix, ''), 10)
+      : 0;
+    orderNumber = `${prefix}${String(lastNum + 1).padStart(6, '0')}`;
+
     const newOrder = await tx.order.create({
       data: {
         orderNumber,
-        userId: userId && userId !== 'guest' ? userId : 'guest',
+        userId: userId && userId !== 'guest' ? userId : `guest-${session.id}`,
         subtotal: stripeSubtotal,
         shippingCost,
         discount: promoDiscount,
@@ -238,6 +388,7 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
         taxTps,
         taxTvq,
         taxTvh,
+        taxPst,
         total: cadTotal,
         currencyId: currency!.id,
         exchangeRate: checkoutExchangeRate,
@@ -294,6 +445,17 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
         });
       }
 
+      // Look up current WAC for accurate COGS
+      const lastTx = await tx.inventoryTransaction.findFirst({
+        where: {
+          productId: reservation.productId,
+          formatId: reservation.formatId,
+        },
+        orderBy: { createdAt: 'desc' },
+        select: { runningWAC: true },
+      });
+      const wac = lastTx ? Number(lastTx.runningWAC) : 0;
+
       // Create inventory transaction
       await tx.inventoryTransaction.create({
         data: {
@@ -301,8 +463,8 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
           formatId: reservation.formatId,
           type: 'SALE',
           quantity: -reservation.quantity,
-          unitCost: 0, // Will be updated when WAC is calculated
-          runningWAC: 0,
+          unitCost: wac,
+          runningWAC: wac,
           orderId: newOrder.id,
         },
       });
@@ -343,26 +505,87 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
     });
   }
 
-  // Track promo code usage
+  // Track promo code usage (with per-user limit check)
   if (promoCode && promoDiscount > 0) {
     try {
-      await prisma.promoCode.updateMany({
-        where: { code: promoCode },
-        data: { usageCount: { increment: 1 } },
-      });
-      await prisma.promoCodeUsage.create({
-        data: {
-          promoCodeId: (await prisma.promoCode.findUnique({ where: { code: promoCode } }))?.id || '',
-          userId: userId && userId !== 'guest' ? userId : 'anonymous',
-          orderId: order.id,
-          discount: promoDiscount,
-        },
-      });
+      const promo = await prisma.promoCode.findUnique({ where: { code: promoCode } });
+      if (promo) {
+        // Check per-user usage limit (default: 1 use per user)
+        const maxUsesPerUser = (promo as Record<string, unknown>).maxUsesPerUser as number || 1;
+        const existingUsage = userId && userId !== 'guest'
+          ? await prisma.promoCodeUsage.count({
+              where: { promoCodeId: promo.id, userId },
+            })
+          : 0;
+
+        if (existingUsage < maxUsesPerUser) {
+          await prisma.promoCode.update({
+            where: { id: promo.id },
+            data: { usageCount: { increment: 1 } },
+          });
+          await prisma.promoCodeUsage.create({
+            data: {
+              promoCodeId: promo.id,
+              userId: userId && userId !== 'guest' ? userId : 'anonymous',
+              orderId: order.id,
+              discount: promoDiscount,
+            },
+          });
+        } else {
+          logger.warn('Promo code per-user limit reached', { promoCode, userId });
+        }
+      }
     } catch (promoError) {
       logger.error('Failed to track promo code usage', {
         promoCode,
         error: promoError instanceof Error ? promoError.message : String(promoError),
       });
+    }
+  }
+
+  // BE-PAY-04: Decrement gift card balance after successful payment
+  if (giftCardCode && giftCardDiscount > 0) {
+    try {
+      await prisma.$transaction(async (tx) => {
+        // Lock the gift card row to prevent concurrent balance modifications
+        const [giftCard] = await tx.$queryRaw<{
+          id: string; balance: number; is_active: boolean;
+        }[]>`
+          SELECT id, balance::float as balance, "isActive" as is_active
+          FROM "GiftCard"
+          WHERE code = ${giftCardCode}
+          FOR UPDATE
+        `;
+
+        if (giftCard && giftCard.is_active && giftCard.balance > 0) {
+          const amountToDeduct = Math.min(giftCardDiscount, giftCard.balance);
+          const newBalance = Math.round((giftCard.balance - amountToDeduct) * 100) / 100;
+
+          await tx.giftCard.update({
+            where: { id: giftCard.id },
+            data: {
+              balance: newBalance,
+              // If balance reaches 0, deactivate the card
+              isActive: newBalance > 0,
+            },
+          });
+
+          logger.info('Gift card balance decremented', {
+            giftCardCode,
+            amountDeducted: amountToDeduct,
+            newBalance,
+            orderNumber: order.orderNumber,
+          });
+        }
+      });
+    } catch (gcError) {
+      logger.error('Failed to decrement gift card balance', {
+        giftCardCode,
+        giftCardDiscount,
+        orderNumber: order.orderNumber,
+        error: gcError instanceof Error ? gcError.message : String(gcError),
+      });
+      // Don't fail the webhook for gift card errors
     }
   }
 
@@ -451,6 +674,11 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
   if (userId && userId !== 'guest') {
     await sendOrderConfirmationEmailAsync(order.id, userId);
   }
+
+  // Send SMS notification to admin (non-blocking)
+  sendOrderNotificationSms(Number(cadTotal), orderNumber).catch((err) => {
+    logger.error('Failed to send order SMS', { orderNumber, error: String(err) });
+  });
 }
 
 async function handleRefund(charge: Stripe.Charge, eventId: string) {
@@ -484,7 +712,7 @@ async function handleRefund(charge: Stripe.Charge, eventId: string) {
     const tvq = Number(order.taxTvq);
     const tvh = Number(order.taxTvh);
     const orderTotal = Number(order.total);
-    const refundRatio = refundAmount / orderTotal;
+    const refundRatio = orderTotal > 0 ? refundAmount / orderTotal : 0;
 
     await createRefundAccountingEntries(
       order.id,
@@ -501,32 +729,34 @@ async function handleRefund(charge: Stripe.Charge, eventId: string) {
     });
   }
 
-  // Restore inventory for full refunds
+  // Restore inventory for full refunds (atomic transaction)
   if (charge.amount_refunded === charge.amount) {
     try {
-      const transactions = await prisma.inventoryTransaction.findMany({
-        where: { orderId: order.id, type: 'SALE' },
-      });
-      for (const tx of transactions) {
-        if (tx.formatId) {
-          await prisma.productFormat.update({
-            where: { id: tx.formatId },
-            data: { stockQuantity: { increment: Math.abs(tx.quantity) } },
+      await prisma.$transaction(async (tx) => {
+        const saleTxs = await tx.inventoryTransaction.findMany({
+          where: { orderId: order.id, type: 'SALE' },
+        });
+        for (const saleTx of saleTxs) {
+          if (saleTx.formatId) {
+            await tx.productFormat.update({
+              where: { id: saleTx.formatId },
+              data: { stockQuantity: { increment: Math.abs(saleTx.quantity) } },
+            });
+          }
+          await tx.inventoryTransaction.create({
+            data: {
+              productId: saleTx.productId,
+              formatId: saleTx.formatId,
+              type: 'RETURN',
+              quantity: Math.abs(saleTx.quantity),
+              unitCost: saleTx.unitCost,
+              runningWAC: saleTx.runningWAC,
+              orderId: order.id,
+              reason: 'Remboursement complet',
+            },
           });
         }
-        await prisma.inventoryTransaction.create({
-          data: {
-            productId: tx.productId,
-            formatId: tx.formatId,
-            type: 'RETURN',
-            quantity: Math.abs(tx.quantity),
-            unitCost: tx.unitCost,
-            runningWAC: tx.runningWAC,
-            orderId: order.id,
-            reason: 'Remboursement complet',
-          },
-        });
-      }
+      });
     } catch (invError) {
       logger.error('Failed to restore inventory for refund', {
         orderId: order.id,
@@ -623,6 +853,37 @@ async function handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
 
 async function handlePaymentFailure(paymentIntent: Stripe.PaymentIntent) {
   logger.warn('Payment failed', { paymentIntentId: paymentIntent.id });
+
+  const errorMessage = paymentIntent.last_payment_error?.message || 'Unknown error';
+  const errorCode = paymentIntent.last_payment_error?.code || 'unknown';
+  const customerEmail = paymentIntent.receipt_email || paymentIntent.metadata?.customerEmail;
+  const amount = paymentIntent.amount / 100;
+
+  // Log payment error to database
+  try {
+    await prisma.paymentError.create({
+      data: {
+        orderId: paymentIntent.metadata?.orderId || null,
+        stripePaymentId: paymentIntent.id,
+        errorType: errorCode,
+        errorMessage,
+        amount,
+        currency: paymentIntent.currency?.toUpperCase() || 'CAD',
+        customerEmail: customerEmail || null,
+        metadata: JSON.stringify({
+          paymentMethodType: paymentIntent.payment_method_types,
+          declineCode: paymentIntent.last_payment_error?.decline_code,
+        }),
+      },
+    });
+  } catch (logError) {
+    logger.error('Failed to log payment error', { error: String(logError) });
+  }
+
+  // Send SMS alert (non-blocking)
+  sendPaymentFailureAlertSms(errorCode, amount, customerEmail || undefined).catch((err) => {
+    logger.error('Failed to send payment failure SMS', { error: String(err) });
+  });
 
   await prisma.order.updateMany({
     where: { stripePaymentId: paymentIntent.id },

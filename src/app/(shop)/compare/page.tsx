@@ -3,7 +3,7 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useCompare } from '@/hooks/useCompare';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useCart } from '@/contexts/CartContext';
 import { useUpsell } from '@/contexts/UpsellContext';
@@ -50,7 +50,7 @@ function ComparePageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { productSlugs, removeFromCompare, clearCompare } = useCompare();
-  const { t } = useTranslations();
+  const { t } = useI18n();
   const { formatPrice } = useCurrency();
   const { addItem } = useCart();
   const { addItemWithUpsell } = useUpsell();
@@ -91,16 +91,18 @@ function ComparePageContent() {
     };
 
     fetchProducts();
-  }, [slugsToFetch.join(','), t]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slugsToFetch.join(',')]);
 
   const handleRemoveProduct = (slug: string) => {
     removeFromCompare(slug);
     setProducts(prev => prev.filter(p => p.slug !== slug));
 
-    // Update URL
+    // Sync URL params with remaining products
     const remainingSlugs = slugsToFetch.filter(s => s !== slug);
+    const currentLang = typeof window !== 'undefined' ? localStorage.getItem('locale') || 'en' : 'en';
     if (remainingSlugs.length > 0) {
-      router.push(`/compare?products=${remainingSlugs.join(',')}`);
+      router.replace(`/compare?products=${remainingSlugs.join(',')}&lang=${currentLang}`);
     } else {
       router.push('/shop');
     }
@@ -264,7 +266,7 @@ function ComparePageContent() {
         <table className="w-full border-collapse">
           <thead>
             <tr className="border-b-2 border-neutral-200">
-              <th className="text-left py-4 px-4 font-semibold text-neutral-700 w-1/5">
+              <th className="text-start py-4 px-4 font-semibold text-neutral-700 w-1/5">
                 {t('compare.feature')}
               </th>
               {products.map((product) => (
@@ -272,7 +274,7 @@ function ComparePageContent() {
                   <div className="relative">
                     <button
                       onClick={() => handleRemoveProduct(product.slug)}
-                      className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors shadow-md z-10"
+                      className="absolute -top-2 -end-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors shadow-md z-10"
                       aria-label={`Remove ${product.name}`}
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -525,7 +527,7 @@ function ComparePageContent() {
             <div key={product.slug} className="bg-white border border-neutral-200 rounded-lg p-4 relative">
               <button
                 onClick={() => handleRemoveProduct(product.slug)}
-                className="absolute top-2 right-2 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors shadow-md"
+                className="absolute top-2 end-2 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors shadow-md"
                 aria-label={`Remove ${product.name}`}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

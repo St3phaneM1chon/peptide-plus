@@ -23,23 +23,25 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { sendEmail, pointsExpiringEmail } from '@/lib/email';
+import { withJobLock } from '@/lib/cron-lock';
 
 const BATCH_SIZE = 10;
 const INACTIVITY_MONTHS = 11;
 
 export async function GET(request: NextRequest) {
-  const startTime = Date.now();
+  // Verify cron secret (fail-closed)
+  const authHeader = request.headers.get('authorization');
+  const cronSecret = process.env.CRON_SECRET;
 
-  try {
-    // Verify cron secret (fail-closed)
-    const authHeader = request.headers.get('authorization');
-    const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
-    if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+  return withJobLock('points-expiring', async () => {
+    const startTime = Date.now();
 
-    // === STRATEGY 1: Points with explicit expiresAt in ~30 days ===
+    try {
+      // === STRATEGY 1: Points with explicit expiresAt in ~30 days ===
     const thirtyDaysFromNow = new Date();
     thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
 
@@ -285,16 +287,17 @@ export async function GET(request: NextRequest) {
       },
       results,
     });
-  } catch (error) {
-    console.error('[CRON:POINTS] Job error:', error);
-    return NextResponse.json(
-      {
-        error: 'Internal server error',
-        durationMs: Date.now() - startTime,
-      },
-      { status: 500 }
-    );
-  }
+    } catch (error) {
+      console.error('[CRON:POINTS] Job error:', error);
+      return NextResponse.json(
+        {
+          error: 'Internal server error',
+          durationMs: Date.now() - startTime,
+        },
+        { status: 500 }
+      );
+    }
+  });
 }
 
 // Allow POST for manual testing

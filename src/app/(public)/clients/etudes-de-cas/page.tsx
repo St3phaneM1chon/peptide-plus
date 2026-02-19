@@ -1,4 +1,3 @@
-export const dynamic = 'force-dynamic';
 /**
  * PAGE ÉTUDES DE CAS
  */

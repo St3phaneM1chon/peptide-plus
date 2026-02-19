@@ -274,7 +274,7 @@ export default function FacturesClientsPage() {
                 {t('admin.customerInvoices.sendByEmail')}
               </Button>
               {inv.status !== 'PAID' && inv.status !== 'CANCELLED' && (
-                <Button variant="secondary" className="ml-auto" onClick={() => { handleMarkAsPaid(inv.id); setSelectedInvoice(null); }}>
+                <Button variant="secondary" className="ms-auto" onClick={() => { handleMarkAsPaid(inv.id); setSelectedInvoice(null); }}>
                   {t('admin.customerInvoices.markAsPaid')}
                 </Button>
               )}
@@ -292,7 +292,7 @@ export default function FacturesClientsPage() {
                 <p className="text-sm text-slate-600">{inv.customer.email}</p>
                 <p className="text-sm text-slate-600">{inv.customer.address}</p>
               </div>
-              <div className="text-right">
+              <div className="text-end">
                 <div className="mb-2">
                   <StatusBadge variant={statusConfig[inv.status].variant} dot>
                     {statusConfig[inv.status].label}
@@ -310,10 +310,10 @@ export default function FacturesClientsPage() {
             <table className="w-full border border-slate-200 rounded-lg overflow-hidden">
               <thead className="bg-slate-50">
                 <tr>
-                  <th className="px-4 py-2 text-left text-xs font-semibold text-slate-500">{t('admin.customerInvoices.description')}</th>
+                  <th className="px-4 py-2 text-start text-xs font-semibold text-slate-500">{t('admin.customerInvoices.description')}</th>
                   <th className="px-4 py-2 text-center text-xs font-semibold text-slate-500">{t('admin.customerInvoices.qty')}</th>
-                  <th className="px-4 py-2 text-right text-xs font-semibold text-slate-500">{t('admin.customerInvoices.unitPrice')}</th>
-                  <th className="px-4 py-2 text-right text-xs font-semibold text-slate-500">{t('admin.customerInvoices.total')}</th>
+                  <th className="px-4 py-2 text-end text-xs font-semibold text-slate-500">{t('admin.customerInvoices.unitPrice')}</th>
+                  <th className="px-4 py-2 text-end text-xs font-semibold text-slate-500">{t('admin.customerInvoices.total')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
@@ -321,8 +321,8 @@ export default function FacturesClientsPage() {
                   <tr key={index}>
                     <td className="px-4 py-3 text-slate-900">{item.description}</td>
                     <td className="px-4 py-3 text-center text-slate-600">{item.quantity}</td>
-                    <td className="px-4 py-3 text-right text-slate-600">{item.unitPrice.toFixed(2)} $</td>
-                    <td className="px-4 py-3 text-right font-medium text-slate-900">{item.total.toFixed(2)} $</td>
+                    <td className="px-4 py-3 text-end text-slate-600">{item.unitPrice.toFixed(2)} $</td>
+                    <td className="px-4 py-3 text-end font-medium text-slate-900">{item.total.toFixed(2)} $</td>
                   </tr>
                 ))}
               </tbody>

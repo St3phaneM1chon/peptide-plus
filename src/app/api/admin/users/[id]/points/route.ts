@@ -2,19 +2,11 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { auth } from '@/lib/auth-config';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const POST = withAdminGuard(async (request: NextRequest, { session, params }) => {
   try {
-    const session = await auth();
-    if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role || '')) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
-    }
-
-    const { id } = await params;
+    const id = params!.id;
     const body = await request.json();
     const { amount, reason } = body;
 
@@ -61,4 +53,4 @@ export async function POST(
     console.error('Admin points adjustment error:', error);
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
   }
-}
+});

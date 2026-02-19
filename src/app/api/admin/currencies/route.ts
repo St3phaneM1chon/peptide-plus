@@ -1,20 +1,15 @@
 export const dynamic = 'force-dynamic';
 
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth-config';
+import { NextResponse } from 'next/server';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 
 /**
  * GET /api/admin/currencies
  * List all currencies
  */
-export async function GET() {
+export const GET = withAdminGuard(async (_request, { session: _session }) => {
   try {
-    const session = await auth();
-    if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const currencies = await prisma.currency.findMany({
       orderBy: [{ isDefault: 'desc' }, { code: 'asc' }],
     });
@@ -43,19 +38,14 @@ export async function GET() {
       { status: 500 }
     );
   }
-}
+});
 
 /**
  * POST /api/admin/currencies
  * Create a new currency
  */
-export async function POST(request: NextRequest) {
+export const POST = withAdminGuard(async (request, { session: _session }) => {
   try {
-    const session = await auth();
-    if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const body = await request.json();
     const { code, name, symbol, exchangeRate, isDefault } = body;
 
@@ -122,4 +112,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

@@ -57,6 +57,7 @@ export default function FidelitePage() {
       toast.success(t('admin.loyalty.configSaved'));
     } catch (err) {
       console.error('Error saving config:', err);
+      toast.error(t('admin.loyalty.configSaveError') || 'Error saving configuration');
     }
     setSaving(false);
   };

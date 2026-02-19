@@ -302,11 +302,11 @@ export default function GlobalReportsPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-slate-100 bg-slate-50">
-                  <th className="text-left py-3 px-4 text-xs font-medium text-slate-500 uppercase">{t('admin.fiscalReports.countryCol')}</th>
-                  <th className="text-right py-3 px-4 text-xs font-medium text-slate-500 uppercase">{t('admin.fiscalReports.ordersCol')}</th>
-                  <th className="text-right py-3 px-4 text-xs font-medium text-slate-500 uppercase">{t('admin.fiscalReports.revenueCol')}</th>
-                  <th className="text-right py-3 px-4 text-xs font-medium text-slate-500 uppercase">{t('admin.fiscalReports.taxesCol')}</th>
-                  <th className="text-right py-3 px-4 text-xs font-medium text-slate-500 uppercase">{t('admin.fiscalReports.growthCol')}</th>
+                  <th className="text-start py-3 px-4 text-xs font-medium text-slate-500 uppercase">{t('admin.fiscalReports.countryCol')}</th>
+                  <th className="text-end py-3 px-4 text-xs font-medium text-slate-500 uppercase">{t('admin.fiscalReports.ordersCol')}</th>
+                  <th className="text-end py-3 px-4 text-xs font-medium text-slate-500 uppercase">{t('admin.fiscalReports.revenueCol')}</th>
+                  <th className="text-end py-3 px-4 text-xs font-medium text-slate-500 uppercase">{t('admin.fiscalReports.taxesCol')}</th>
+                  <th className="text-end py-3 px-4 text-xs font-medium text-slate-500 uppercase">{t('admin.fiscalReports.growthCol')}</th>
                   <th className="text-center py-3 px-4 text-xs font-medium text-slate-500 uppercase">{t('admin.fiscalReports.actionsCol')}</th>
                 </tr>
               </thead>
@@ -319,14 +319,14 @@ export default function GlobalReportsPage() {
                         <span className="font-medium">{country.country}</span>
                       </div>
                     </td>
-                    <td className="py-3 px-4 text-right font-medium">{country.orders.toLocaleString(locale)}</td>
-                    <td className="py-3 px-4 text-right font-medium text-green-600">
+                    <td className="py-3 px-4 text-end font-medium">{country.orders.toLocaleString(locale)}</td>
+                    <td className="py-3 px-4 text-end font-medium text-green-600">
                       ${country.revenue.toLocaleString(locale)}
                     </td>
-                    <td className="py-3 px-4 text-right text-slate-600">
+                    <td className="py-3 px-4 text-end text-slate-600">
                       ${country.taxCollected.toLocaleString(locale)}
                     </td>
-                    <td className="py-3 px-4 text-right">
+                    <td className="py-3 px-4 text-end">
                       <span className={`font-medium ${country.growth >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                         {country.growth >= 0 ? '+' : ''}{country.growth}%
                       </span>
@@ -345,10 +345,10 @@ export default function GlobalReportsPage() {
               <tfoot>
                 <tr className="bg-slate-100 font-bold">
                   <td className="py-3 px-4">TOTAL</td>
-                  <td className="py-3 px-4 text-right">{totals.totalOrders.toLocaleString(locale)}</td>
-                  <td className="py-3 px-4 text-right text-green-600">${totals.totalRevenue.toLocaleString(locale)}</td>
-                  <td className="py-3 px-4 text-right text-slate-600">${totals.totalTax.toLocaleString(locale)}</td>
-                  <td className="py-3 px-4 text-right text-green-600">+{totals.avgGrowth.toFixed(1)}%</td>
+                  <td className="py-3 px-4 text-end">{totals.totalOrders.toLocaleString(locale)}</td>
+                  <td className="py-3 px-4 text-end text-green-600">${totals.totalRevenue.toLocaleString(locale)}</td>
+                  <td className="py-3 px-4 text-end text-slate-600">${totals.totalTax.toLocaleString(locale)}</td>
+                  <td className="py-3 px-4 text-end text-green-600">+{totals.avgGrowth.toFixed(1)}%</td>
                   <td className="py-3 px-4"></td>
                 </tr>
               </tfoot>
@@ -402,10 +402,10 @@ export default function GlobalReportsPage() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-slate-100">
-                <th className="text-left py-3 px-4 text-sm font-medium text-slate-500">{t('admin.fiscalReports.monthCol')}</th>
-                <th className="text-right py-3 px-4 text-sm font-medium text-slate-500">{t('admin.fiscalReports.ordersCol')}</th>
-                <th className="text-right py-3 px-4 text-sm font-medium text-slate-500">{t('admin.fiscalReports.revenueCol')}</th>
-                <th className="text-right py-3 px-4 text-sm font-medium text-slate-500">{t('admin.fiscalReports.avgPerOrder')}</th>
+                <th className="text-start py-3 px-4 text-sm font-medium text-slate-500">{t('admin.fiscalReports.monthCol')}</th>
+                <th className="text-end py-3 px-4 text-sm font-medium text-slate-500">{t('admin.fiscalReports.ordersCol')}</th>
+                <th className="text-end py-3 px-4 text-sm font-medium text-slate-500">{t('admin.fiscalReports.revenueCol')}</th>
+                <th className="text-end py-3 px-4 text-sm font-medium text-slate-500">{t('admin.fiscalReports.avgPerOrder')}</th>
                 <th className="py-3 px-4 text-sm font-medium text-slate-500">{t('admin.fiscalReports.trendCol')}</th>
               </tr>
             </thead>
@@ -416,11 +416,11 @@ export default function GlobalReportsPage() {
                 return (
                   <tr key={month.month} className="border-b border-slate-50">
                     <td className="py-3 px-4 font-medium">{month.month}</td>
-                    <td className="py-3 px-4 text-right">{month.orders}</td>
-                    <td className="py-3 px-4 text-right font-medium text-green-600">
+                    <td className="py-3 px-4 text-end">{month.orders}</td>
+                    <td className="py-3 px-4 text-end font-medium text-green-600">
                       ${month.revenue.toLocaleString(locale)}
                     </td>
-                    <td className="py-3 px-4 text-right">
+                    <td className="py-3 px-4 text-end">
                       ${(month.revenue / month.orders).toFixed(2)}
                     </td>
                     <td className="py-3 px-4">

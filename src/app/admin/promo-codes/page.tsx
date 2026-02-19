@@ -233,11 +233,11 @@ export default function PromoCodesPage() {
         <table className="w-full">
           <thead className="bg-slate-50">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.promoCodes.colCode')}</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.promoCodes.colDiscount')}</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.promoCodes.colConditions')}</th>
+              <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.promoCodes.colCode')}</th>
+              <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.promoCodes.colDiscount')}</th>
+              <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.promoCodes.colConditions')}</th>
               <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.promoCodes.colUsage')}</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.promoCodes.colValidity')}</th>
+              <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.promoCodes.colValidity')}</th>
               <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.promoCodes.colStatus')}</th>
               <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.promoCodes.colActions')}</th>
             </tr>

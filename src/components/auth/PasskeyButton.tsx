@@ -84,7 +84,7 @@ export default function PasskeyButton({ callbackUrl = '/' }: PasskeyButtonProps)
         className="w-full flex items-center justify-center px-4 py-3 border-2 border-gray-200 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
         type="button"
       >
-        <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-5 h-5 me-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             strokeLinecap="round"
             strokeLinejoin="round"

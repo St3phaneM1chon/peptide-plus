@@ -307,7 +307,7 @@ export default function UatPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-xs text-slate-500 uppercase tracking-wider border-b border-slate-100">
+                <tr className="text-start text-xs text-slate-500 uppercase tracking-wider border-b border-slate-100">
                   <th className="px-5 py-3">#</th>
                   <th className="px-5 py-3">{t('admin.uat.dateCol')}</th>
                   <th className="px-5 py-3">{t('admin.uat.statusCol')}</th>
@@ -361,7 +361,7 @@ export default function UatPage() {
                           </button>
                         )}
                         {run.cleanedUp && (
-                          <span className="text-xs text-slate-400 ml-1">{t('admin.uat.cleanedUp')}</span>
+                          <span className="text-xs text-slate-400 ms-1">{t('admin.uat.cleanedUp')}</span>
                         )}
                       </div>
                     </td>
@@ -505,7 +505,7 @@ function RunDetailPanel({
             }`}
           >
             {tab.label}
-            <span className="ml-1.5 text-xs bg-slate-100 px-1.5 py-0.5 rounded-full">{tab.count}</span>
+            <span className="ms-1.5 text-xs bg-slate-100 px-1.5 py-0.5 rounded-full">{tab.count}</span>
           </button>
         ))}
       </div>
@@ -551,7 +551,7 @@ function TestCasesTable({
         <div key={tc.id} className="border border-slate-100 rounded-lg overflow-hidden">
           <button
             onClick={() => onToggle(expandedCase === tc.id ? null : tc.id)}
-            className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-slate-50 text-sm"
+            className="w-full flex items-center gap-3 px-4 py-2.5 text-start hover:bg-slate-50 text-sm"
           >
             {expandedCase === tc.id ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
             <StatusBadge status={tc.status} />
@@ -559,7 +559,7 @@ function TestCasesTable({
             <span className="text-slate-600 truncate flex-1">{tc.scenarioName}</span>
             <span className="text-xs text-slate-400 w-10 flex-shrink-0">{tc.region}</span>
             {tc.orderNumber && <span className="font-mono text-xs text-slate-400">{tc.orderNumber}</span>}
-            {tc.durationMs && <span className="text-xs text-slate-400 w-14 text-right">{tc.durationMs}ms</span>}
+            {tc.durationMs && <span className="text-xs text-slate-400 w-14 text-end">{tc.durationMs}ms</span>}
             {tc.errors.length > 0 && (
               <span className="text-xs bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full">{tc.errors.length} err</span>
             )}
@@ -643,32 +643,32 @@ function TaxReportTable({ taxReport }: { taxReport: TaxReport }) {
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
-          <tr className="text-left text-xs text-slate-500 uppercase tracking-wider border-b border-slate-200">
+          <tr className="text-start text-xs text-slate-500 uppercase tracking-wider border-b border-slate-200">
             <th className="px-3 py-2">{t('admin.uat.region')}</th>
-            <th className="px-3 py-2 text-right">{t('admin.uat.sales')}</th>
-            <th className="px-3 py-2 text-right">{t('admin.uat.totalSales')}</th>
-            <th className="px-3 py-2 text-right">TPS</th>
-            <th className="px-3 py-2 text-right">TVQ</th>
-            <th className="px-3 py-2 text-right">TVH</th>
-            <th className="px-3 py-2 text-right">PST</th>
-            <th className="px-3 py-2 text-right">{t('admin.uat.totalTaxes')}</th>
-            <th className="px-3 py-2 text-right">{t('admin.uat.expectedCol')}</th>
-            <th className="px-3 py-2 text-right">{t('admin.uat.difference')}</th>
+            <th className="px-3 py-2 text-end">{t('admin.uat.sales')}</th>
+            <th className="px-3 py-2 text-end">{t('admin.uat.totalSales')}</th>
+            <th className="px-3 py-2 text-end">TPS</th>
+            <th className="px-3 py-2 text-end">TVQ</th>
+            <th className="px-3 py-2 text-end">TVH</th>
+            <th className="px-3 py-2 text-end">PST</th>
+            <th className="px-3 py-2 text-end">{t('admin.uat.totalTaxes')}</th>
+            <th className="px-3 py-2 text-end">{t('admin.uat.expectedCol')}</th>
+            <th className="px-3 py-2 text-end">{t('admin.uat.difference')}</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-50">
           {taxReport.rows.map(row => (
             <tr key={row.region} className="hover:bg-slate-50">
               <td className="px-3 py-2 font-medium">{row.region}</td>
-              <td className="px-3 py-2 text-right font-mono">{row.salesCount}</td>
-              <td className="px-3 py-2 text-right font-mono">{row.totalSales.toFixed(2)}$</td>
-              <td className="px-3 py-2 text-right font-mono">{row.tpsCollected > 0 ? `${row.tpsCollected.toFixed(2)}$` : '-'}</td>
-              <td className="px-3 py-2 text-right font-mono">{row.tvqCollected > 0 ? `${row.tvqCollected.toFixed(2)}$` : '-'}</td>
-              <td className="px-3 py-2 text-right font-mono">{row.tvhCollected > 0 ? `${row.tvhCollected.toFixed(2)}$` : '-'}</td>
-              <td className="px-3 py-2 text-right font-mono">{row.pstCollected > 0 ? `${row.pstCollected.toFixed(2)}$` : '-'}</td>
-              <td className="px-3 py-2 text-right font-mono font-medium">{row.totalTaxCollected.toFixed(2)}$</td>
-              <td className="px-3 py-2 text-right font-mono">{row.expectedTotalTax.toFixed(2)}$</td>
-              <td className={`px-3 py-2 text-right font-mono font-medium ${Math.abs(row.difference) > 0.01 ? 'text-red-600' : 'text-green-600'}`}>
+              <td className="px-3 py-2 text-end font-mono">{row.salesCount}</td>
+              <td className="px-3 py-2 text-end font-mono">{row.totalSales.toFixed(2)}$</td>
+              <td className="px-3 py-2 text-end font-mono">{row.tpsCollected > 0 ? `${row.tpsCollected.toFixed(2)}$` : '-'}</td>
+              <td className="px-3 py-2 text-end font-mono">{row.tvqCollected > 0 ? `${row.tvqCollected.toFixed(2)}$` : '-'}</td>
+              <td className="px-3 py-2 text-end font-mono">{row.tvhCollected > 0 ? `${row.tvhCollected.toFixed(2)}$` : '-'}</td>
+              <td className="px-3 py-2 text-end font-mono">{row.pstCollected > 0 ? `${row.pstCollected.toFixed(2)}$` : '-'}</td>
+              <td className="px-3 py-2 text-end font-mono font-medium">{row.totalTaxCollected.toFixed(2)}$</td>
+              <td className="px-3 py-2 text-end font-mono">{row.expectedTotalTax.toFixed(2)}$</td>
+              <td className={`px-3 py-2 text-end font-mono font-medium ${Math.abs(row.difference) > 0.01 ? 'text-red-600' : 'text-green-600'}`}>
                 {row.difference > 0 ? '+' : ''}{row.difference.toFixed(2)}$
               </td>
             </tr>
@@ -677,12 +677,12 @@ function TaxReportTable({ taxReport }: { taxReport: TaxReport }) {
         <tfoot>
           <tr className="border-t-2 border-slate-200 font-bold">
             <td className="px-3 py-2">{t('admin.uat.totalRow')}</td>
-            <td className="px-3 py-2 text-right">{taxReport.rows.reduce((s, r) => s + r.salesCount, 0)}</td>
-            <td className="px-3 py-2 text-right font-mono">{taxReport.totalSales.toFixed(2)}$</td>
+            <td className="px-3 py-2 text-end">{taxReport.rows.reduce((s, r) => s + r.salesCount, 0)}</td>
+            <td className="px-3 py-2 text-end font-mono">{taxReport.totalSales.toFixed(2)}$</td>
             <td className="px-3 py-2" colSpan={4}></td>
-            <td className="px-3 py-2 text-right font-mono">{taxReport.totalTaxCollected.toFixed(2)}$</td>
-            <td className="px-3 py-2 text-right font-mono">{taxReport.totalExpectedTax.toFixed(2)}$</td>
-            <td className={`px-3 py-2 text-right font-mono ${Math.abs(taxReport.totalDifference) > 0.01 ? 'text-red-600' : 'text-green-600'}`}>
+            <td className="px-3 py-2 text-end font-mono">{taxReport.totalTaxCollected.toFixed(2)}$</td>
+            <td className="px-3 py-2 text-end font-mono">{taxReport.totalExpectedTax.toFixed(2)}$</td>
+            <td className={`px-3 py-2 text-end font-mono ${Math.abs(taxReport.totalDifference) > 0.01 ? 'text-red-600' : 'text-green-600'}`}>
               {taxReport.totalDifference > 0 ? '+' : ''}{taxReport.totalDifference.toFixed(2)}$
             </td>
           </tr>

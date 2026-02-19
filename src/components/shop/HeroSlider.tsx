@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
-import { useTranslations } from '@/hooks/useTranslations';
+import Image from 'next/image';
+import { useI18n } from '@/i18n/client';
 
 interface HeroSlideTranslation {
   locale: string;
@@ -50,9 +51,13 @@ function getLocalizedField(
   return slide[field];
 }
 
+// Simple in-memory cache for hero slides to avoid refetching on re-mounts
+let heroSlidesCache: { data: HeroSlide[] | null; timestamp: number } = { data: null, timestamp: 0 };
+const HERO_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
 export default function HeroSlider() {
-  const { locale } = useTranslations();
-  const [slides, setSlides] = useState<HeroSlide[]>([]);
+  const { t, locale } = useI18n();
+  const [slides, setSlides] = useState<HeroSlide[]>(heroSlidesCache.data || []);
   const [current, setCurrent] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -60,10 +65,19 @@ export default function HeroSlider() {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
+    const now = Date.now();
+    if (heroSlidesCache.data && (now - heroSlidesCache.timestamp) < HERO_CACHE_TTL) {
+      setSlides(heroSlidesCache.data);
+      return;
+    }
+
     fetch('/api/hero-slides/active')
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
-        if (data?.slides?.length) setSlides(data.slides);
+        if (data?.slides?.length) {
+          heroSlidesCache = { data: data.slides, timestamp: Date.now() };
+          setSlides(data.slides);
+        }
       })
       .catch(() => {});
   }, []);
@@ -176,15 +190,23 @@ export default function HeroSlider() {
             />
           ) : (
             <>
-              <div
-                className="absolute inset-0 bg-cover bg-center bg-no-repeat hidden md:block"
-                style={{ backgroundImage: `url('${s.backgroundUrl}')` }}
+              {/* Desktop image */}
+              <Image
+                src={s.backgroundUrl}
+                alt=""
+                fill
+                priority={i === 0}
+                sizes="100vw"
+                className="absolute inset-0 object-cover hidden md:block"
               />
-              <div
-                className="absolute inset-0 bg-cover bg-center bg-no-repeat md:hidden"
-                style={{
-                  backgroundImage: `url('${s.backgroundMobile || s.backgroundUrl}')`,
-                }}
+              {/* Mobile image */}
+              <Image
+                src={s.backgroundMobile || s.backgroundUrl}
+                alt=""
+                fill
+                priority={i === 0}
+                sizes="100vw"
+                className="absolute inset-0 object-cover md:hidden"
               />
             </>
           )}
@@ -318,8 +340,8 @@ export default function HeroSlider() {
             {/* Arrows */}
             <button
               onClick={prev}
-              className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 flex items-center justify-center bg-black/30 hover:bg-black/50 backdrop-blur rounded-full text-white transition-colors"
-              aria-label="Previous slide"
+              className="absolute start-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 flex items-center justify-center bg-black/30 hover:bg-black/50 backdrop-blur rounded-full text-white transition-colors"
+              aria-label={t('common.aria.previousSlide')}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -327,8 +349,8 @@ export default function HeroSlider() {
             </button>
             <button
               onClick={next}
-              className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 flex items-center justify-center bg-black/30 hover:bg-black/50 backdrop-blur rounded-full text-white transition-colors"
-              aria-label="Next slide"
+              className="absolute end-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 flex items-center justify-center bg-black/30 hover:bg-black/50 backdrop-blur rounded-full text-white transition-colors"
+              aria-label={t('common.aria.nextSlide')}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -338,22 +360,6 @@ export default function HeroSlider() {
         )}
       </div>
 
-      {/* Animation styles */}
-      <style jsx>{`
-        @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        .animate-fadeInUp {
-          animation: fadeInUp 0.6s ease-out both;
-        }
-      `}</style>
     </section>
   );
 }

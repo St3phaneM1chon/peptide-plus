@@ -1,26 +1,12 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth-config';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import { db } from '@/lib/db';
 
-async function checkAdmin() {
-  const session = await auth();
-  if (!session?.user?.email) return false;
-  const user = await db.user.findUnique({
-    where: { email: session.user.email },
-    select: { role: true },
-  });
-  return user?.role === 'OWNER' || user?.role === 'EMPLOYEE';
-}
-
 // GET — List all upsell configs
-export async function GET() {
+export const GET = withAdminGuard(async (_request, { session }) => {
   try {
-    if (!(await checkAdmin())) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const configs = await db.upsellConfig.findMany({
       include: {
         product: { select: { id: true, name: true, slug: true, imageUrl: true } },
@@ -53,15 +39,11 @@ export async function GET() {
     console.error('Error fetching upsell configs:', error);
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
-}
+});
 
 // POST — Create or update upsell config (upsert on productId)
-export async function POST(request: NextRequest) {
+export const POST = withAdminGuard(async (request, { session }) => {
   try {
-    if (!(await checkAdmin())) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const body = await request.json();
     const {
       productId,
@@ -123,15 +105,11 @@ export async function POST(request: NextRequest) {
     console.error('Error saving upsell config:', error);
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
-}
+});
 
 // DELETE — Delete an upsell config by ID
-export async function DELETE(request: NextRequest) {
+export const DELETE = withAdminGuard(async (request, { session }) => {
   try {
-    if (!(await checkAdmin())) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
@@ -146,4 +124,4 @@ export async function DELETE(request: NextRequest) {
     console.error('Error deleting upsell config:', error);
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
-}
+});

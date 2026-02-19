@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useAddressAutocomplete } from '@/hooks/useAddressAutocomplete';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 
 interface AddressComponents {
   street: string;
@@ -37,7 +37,7 @@ export function AddressAutocomplete({
   'aria-invalid': ariaInvalid,
   'aria-describedby': ariaDescribedBy,
 }: AddressAutocompleteProps) {
-  const { t } = useTranslations();
+  const { t } = useI18n();
   const {
     inputRef,
     predictions,
@@ -170,7 +170,7 @@ export function AddressAutocomplete({
 
         {/* Loading indicator */}
         {loading && (
-          <div className="absolute right-3 top-1/2 -translate-y-1/2">
+          <div className="absolute end-3 top-1/2 -translate-y-1/2">
             <svg
               className="animate-spin h-4 w-4 text-gray-400"
               xmlns="http://www.w3.org/2000/svg"
@@ -213,7 +213,7 @@ export function AddressAutocomplete({
               viewBox="0 0 100 32"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
-              aria-label="Google"
+              aria-label={t('common.aria.googleLogo')}
             >
               <path
                 d="M17.5 16.5c0 4.14-3.36 7.5-7.5 7.5s-7.5-3.36-7.5-7.5 3.36-7.5 7.5-7.5c2.04 0 3.87.78 5.25 2.04l-2.13 2.04c-.63-.6-1.47-.96-2.37-.96-1.95 0-3.54 1.59-3.54 3.54s1.59 3.54 3.54 3.54c1.77 0 3.24-1.17 3.51-2.79H10v-2.88h7.41c.09.48.15.99.15 1.53 0 0-.06.09-.06.09z"
@@ -235,7 +235,7 @@ export function AddressAutocomplete({
               aria-selected={index === selectedIndex}
               onClick={() => handleSelect(prediction.place_id)}
               onMouseEnter={() => setSelectedIndex(index)}
-              className={`w-full text-left px-4 py-3 hover:bg-orange-50 transition-colors border-b border-gray-100 last:border-b-0 ${
+              className={`w-full text-start px-4 py-3 hover:bg-orange-50 transition-colors border-b border-gray-100 last:border-b-0 ${
                 index === selectedIndex ? 'bg-orange-50' : ''
               }`}
             >

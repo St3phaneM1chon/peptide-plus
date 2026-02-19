@@ -1,11 +1,14 @@
+// TODO: Consider extracting non-interactive sections (links, disclaimers, trust badges)
+// into a separate server component to reduce client-side JavaScript bundle size.
+// Only the newsletter form requires client-side interactivity ('use client').
 'use client';
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 
 export default function Footer() {
-  const { t } = useTranslations();
+  const { t } = useI18n();
   const [email, setEmail] = useState('');
   const [newsletterStatus, setNewsletterStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [newsletterMessage, setNewsletterMessage] = useState('');
@@ -25,15 +28,15 @@ export default function Footer() {
       
       if (data.success) {
         setNewsletterStatus('success');
-        setNewsletterMessage(data.message);
+        setNewsletterMessage(data.message || t('footer.newsletterSuccess'));
         setEmail('');
       } else {
         setNewsletterStatus('error');
-        setNewsletterMessage(data.error || 'Une erreur est survenue');
+        setNewsletterMessage(data.error || t('common.genericError'));
       }
     } catch {
       setNewsletterStatus('error');
-      setNewsletterMessage('Erreur de connexion');
+      setNewsletterMessage(t('common.connectionError'));
     }
 
     // Reset après 5 secondes
@@ -74,7 +77,7 @@ export default function Footer() {
           </div>
 
           {/* Shop */}
-          <div>
+          <nav aria-label={t('footer.aria.shopLinks')}>
             <h3 className="font-bold mb-4">{t('footer.shop') || 'Shop'}</h3>
             <ul className="space-y-2 text-neutral-400 text-sm">
               <li>
@@ -96,10 +99,10 @@ export default function Footer() {
                 <Link href="/category/accessories" className="hover:text-white transition-colors">{t('nav.accessories') || 'Accessories'}</Link>
               </li>
             </ul>
-          </div>
+          </nav>
 
           {/* Resources */}
-          <div>
+          <nav aria-label={t('footer.aria.resourcesLinks')}>
             <h3 className="font-bold mb-4">{t('footer.resources') || 'Resources'}</h3>
             <ul className="space-y-2 text-neutral-400 text-sm">
               <li>
@@ -118,10 +121,10 @@ export default function Footer() {
                 <Link href="/faq" className="hover:text-white transition-colors">{t('nav.faq') || 'FAQ'}</Link>
               </li>
             </ul>
-          </div>
+          </nav>
 
           {/* Community */}
-          <div>
+          <nav aria-label={t('footer.aria.communityLinks')}>
             <h3 className="font-bold mb-4">{t('footer.community') || 'Community'}</h3>
             <ul className="space-y-2 text-neutral-400 text-sm">
               <li>
@@ -139,10 +142,10 @@ export default function Footer() {
                 <Link href="/ambassador" className="hover:text-white transition-colors">{t('nav.ambassador') || 'Become Ambassador'}</Link>
               </li>
             </ul>
-          </div>
+          </nav>
 
           {/* Support */}
-          <div>
+          <nav aria-label={t('footer.aria.supportLinks')}>
             <h3 className="font-bold mb-4">{t('footer.customerService') || 'Support'}</h3>
             <ul className="space-y-2 text-neutral-400 text-sm">
               <li>
@@ -164,7 +167,7 @@ export default function Footer() {
                 <Link href="/mentions-legales/confidentialite" className="hover:text-white transition-colors">{t('footer.privacy') || 'Privacy Policy'}</Link>
               </li>
             </ul>
-          </div>
+          </nav>
         </div>
 
         {/* Newsletter Section */}
@@ -179,31 +182,33 @@ export default function Footer() {
             {newsletterStatus === 'success' ? (
               <div className="flex items-center gap-2 text-green-400">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  <path className="animate-checkmark-draw" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
                 <span>{newsletterMessage}</span>
               </div>
             ) : (
-              <form onSubmit={handleNewsletterSubmit} className="flex gap-2 max-w-md">
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="your@email.com"
-                  required
-                  className="flex-1 px-4 py-2 bg-neutral-900 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:border-orange-500"
-                />
-                <button
-                  type="submit"
-                  disabled={newsletterStatus === 'loading'}
-                  className="px-6 py-2 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 transition-colors disabled:opacity-50"
-                >
-                  {newsletterStatus === 'loading' ? '...' : (t('footer.subscribe') || 'Subscribe')}
-                </button>
-              </form>
-            )}
-            {newsletterStatus === 'error' && (
-              <p className="text-red-400 text-sm mt-2">{newsletterMessage}</p>
+              <div className="max-w-md">
+                <form onSubmit={handleNewsletterSubmit} className="flex gap-2">
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder={t('footer.placeholder.email')}
+                    required
+                    className="flex-1 px-4 py-2 bg-neutral-900 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:border-orange-500"
+                  />
+                  <button
+                    type="submit"
+                    disabled={newsletterStatus === 'loading'}
+                    className="px-6 py-2 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 transition-colors disabled:opacity-50"
+                  >
+                    {newsletterStatus === 'loading' ? '...' : (t('footer.subscribe') || 'Subscribe')}
+                  </button>
+                </form>
+                {newsletterStatus === 'error' && (
+                  <p className="text-red-400 text-sm mt-2">{newsletterMessage}</p>
+                )}
+              </div>
             )}
           </div>
         </div>
@@ -220,12 +225,12 @@ export default function Footer() {
               © {new Date().getFullYear()} BioCycle Peptides. {t('footer.copyright') || 'All rights reserved.'}
             </p>
             <div className="flex items-center gap-3 text-neutral-400">
-              <span className="text-xs">Secure Payments:</span>
-              <span title="Visa">💳</span>
-              <span title="Mastercard">💳</span>
-              <span title="PayPal">🅿️</span>
-              <span title="Apple Pay">🍎</span>
-              <span title="Google Pay">G</span>
+              <span className="text-xs">{t('footer.securePayments')}:</span>
+              <span title={t('footer.paymentVisa')}>💳</span>
+              <span title={t('footer.paymentMastercard')}>💳</span>
+              <span title={t('footer.paymentPaypal')}>🅿️</span>
+              <span title={t('footer.paymentApplePay')}>🍎</span>
+              <span title={t('footer.paymentGooglePay')}>G</span>
             </div>
           </div>
         </div>

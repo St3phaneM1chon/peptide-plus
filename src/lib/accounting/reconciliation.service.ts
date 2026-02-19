@@ -11,10 +11,39 @@ interface MatchCriteria {
   minConfidenceScore: number;
 }
 
+// #92 Named constants for reconciliation thresholds (extracted from magic numbers)
+const RECONCILIATION_THRESHOLDS = {
+  /** Default date tolerance for auto-matching (days) */
+  DATE_TOLERANCE_DAYS: 3,
+  /** Default amount tolerance for auto-matching (1% for rounding differences) */
+  AMOUNT_TOLERANCE_PERCENT: 0.01,
+  /** Minimum confidence to auto-match without manual review */
+  MIN_AUTO_MATCH_CONFIDENCE: 0.7,
+  /** Amount tolerance for manual matching (5% - more lenient) */
+  MANUAL_MATCH_TOLERANCE_PERCENT: 0.05,
+  /** Minimum absolute amount difference to ignore (rounding threshold in $) */
+  AMOUNT_ROUNDING_THRESHOLD: 0.02,
+  /** Penny-level exact match threshold ($) */
+  EXACT_AMOUNT_THRESHOLD: 0.01,
+  /** Minimum word length for string similarity comparison */
+  MIN_WORD_LENGTH: 2,
+  /** Minimum description similarity score to count as "similar" */
+  MIN_DESCRIPTION_SIMILARITY: 0.5,
+  // Confidence score weights
+  CONFIDENCE_EXACT_AMOUNT: 0.4,
+  CONFIDENCE_CLOSE_AMOUNT: 0.3,
+  CONFIDENCE_SAME_DATE: 0.3,
+  CONFIDENCE_CLOSE_DATE_1DAY: 0.2,
+  CONFIDENCE_CLOSE_DATE_MULTI: 0.1,
+  CONFIDENCE_EXACT_REFERENCE: 0.3,
+  CONFIDENCE_SIMILAR_REFERENCE: 0.2,
+  CONFIDENCE_SIMILAR_DESCRIPTION: 0.1,
+} as const;
+
 const DEFAULT_CRITERIA: MatchCriteria = {
-  dateToleranceDays: 3,
-  amountTolerancePercent: 0.01, // 1% tolerance for rounding
-  minConfidenceScore: 0.7,
+  dateToleranceDays: RECONCILIATION_THRESHOLDS.DATE_TOLERANCE_DAYS,
+  amountTolerancePercent: RECONCILIATION_THRESHOLDS.AMOUNT_TOLERANCE_PERCENT,
+  minConfidenceScore: RECONCILIATION_THRESHOLDS.MIN_AUTO_MATCH_CONFIDENCE,
 };
 
 /**
@@ -86,54 +115,54 @@ function findMatches(
     const amountTolerance = bankAmount * criteria.amountTolerancePercent;
 
     // Skip if amount is too different
-    if (amountDiff > amountTolerance && amountDiff > 0.02) continue;
+    if (amountDiff > amountTolerance && amountDiff > RECONCILIATION_THRESHOLDS.AMOUNT_ROUNDING_THRESHOLD) continue;
 
-    // Calculate confidence score
+    // Calculate confidence score using named weights (#92)
     let confidence = 0;
     const reasons: string[] = [];
 
-    // Exact amount match: +40%
-    if (amountDiff < 0.01) {
-      confidence += 0.4;
+    // Exact amount match
+    if (amountDiff < RECONCILIATION_THRESHOLDS.EXACT_AMOUNT_THRESHOLD) {
+      confidence += RECONCILIATION_THRESHOLDS.CONFIDENCE_EXACT_AMOUNT;
       reasons.push('Montant exact');
     } else if (amountDiff <= amountTolerance) {
-      confidence += 0.3;
+      confidence += RECONCILIATION_THRESHOLDS.CONFIDENCE_CLOSE_AMOUNT;
       reasons.push('Montant proche');
     }
 
-    // Same date: +30%
+    // Date proximity
     if (daysDiff === 0) {
-      confidence += 0.3;
+      confidence += RECONCILIATION_THRESHOLDS.CONFIDENCE_SAME_DATE;
       reasons.push('Même date');
     } else if (daysDiff <= 1) {
-      confidence += 0.2;
+      confidence += RECONCILIATION_THRESHOLDS.CONFIDENCE_CLOSE_DATE_1DAY;
       reasons.push('Date proche (±1 jour)');
     } else {
-      confidence += 0.1;
+      confidence += RECONCILIATION_THRESHOLDS.CONFIDENCE_CLOSE_DATE_MULTI;
       reasons.push(`Date proche (±${Math.round(daysDiff)} jours)`);
     }
 
-    // Reference match: +30%
+    // Reference match
     if (bankTx.reference && entry.reference) {
       if (bankTx.reference === entry.reference) {
-        confidence += 0.3;
+        confidence += RECONCILIATION_THRESHOLDS.CONFIDENCE_EXACT_REFERENCE;
         reasons.push('Référence identique');
       } else if (
         bankTx.reference.toLowerCase().includes(entry.reference.toLowerCase()) ||
         entry.reference.toLowerCase().includes(bankTx.reference.toLowerCase())
       ) {
-        confidence += 0.2;
+        confidence += RECONCILIATION_THRESHOLDS.CONFIDENCE_SIMILAR_REFERENCE;
         reasons.push('Référence similaire');
       }
     }
 
-    // Description similarity: +10%
+    // Description similarity
     const descSimilarity = calculateStringSimilarity(
       bankTx.description.toLowerCase(),
       entry.description.toLowerCase()
     );
-    if (descSimilarity > 0.5) {
-      confidence += 0.1;
+    if (descSimilarity > RECONCILIATION_THRESHOLDS.MIN_DESCRIPTION_SIMILARITY) {
+      confidence += RECONCILIATION_THRESHOLDS.CONFIDENCE_SIMILAR_DESCRIPTION;
       reasons.push('Description similaire');
     }
 
@@ -157,8 +186,8 @@ function findMatches(
  * Calculate similarity between two strings (Jaccard similarity)
  */
 function calculateStringSimilarity(str1: string, str2: string): number {
-  const words1 = new Set(str1.split(/\s+/).filter(w => w.length > 2));
-  const words2 = new Set(str2.split(/\s+/).filter(w => w.length > 2));
+  const words1 = new Set(str1.split(/\s+/).filter(w => w.length > RECONCILIATION_THRESHOLDS.MIN_WORD_LENGTH));
+  const words2 = new Set(str2.split(/\s+/).filter(w => w.length > RECONCILIATION_THRESHOLDS.MIN_WORD_LENGTH));
 
   if (words1.size === 0 || words2.size === 0) return 0;
 
@@ -182,7 +211,8 @@ export function manualMatch(
     : entry.lines.reduce((sum, l) => sum + l.credit, 0);
 
   const amountDiff = Math.abs(bankAmount - entryAmount);
-  if (amountDiff > bankAmount * 0.05) { // 5% tolerance for manual
+  // #92 Use named constant instead of magic number
+  if (amountDiff > bankAmount * RECONCILIATION_THRESHOLDS.MANUAL_MATCH_TOLERANCE_PERCENT) {
     return {
       success: false,
       error: `Les montants ne correspondent pas: Banque ${bankAmount.toFixed(2)}$ vs Écriture ${entryAmount.toFixed(2)}$`,
@@ -377,19 +407,29 @@ function parseCSVLine(line: string): string[] {
 }
 
 function parseDate(dateStr: string): Date {
-  // Try various formats
-  const formats = [
-    /(\d{4})-(\d{2})-(\d{2})/, // YYYY-MM-DD
-    /(\d{2})\/(\d{2})\/(\d{4})/, // DD/MM/YYYY or MM/DD/YYYY
-    /(\d{2})-(\d{2})-(\d{4})/, // DD-MM-YYYY
-  ];
+  // YYYY-MM-DD
+  const isoMatch = dateStr.match(/(\d{4})-(\d{2})-(\d{2})/);
+  if (isoMatch) {
+    return new Date(`${isoMatch[1]}-${isoMatch[2]}-${isoMatch[3]}`);
+  }
 
-  for (const format of formats) {
-    const match = dateStr.match(format);
-    if (match) {
-      // Assume YYYY-MM-DD or adjust as needed
-      return new Date(dateStr);
-    }
+  // DD/MM/YYYY - explicitly construct from captured groups to avoid
+  // JS Date parsing it as MM/DD/YYYY
+  const slashMatch = dateStr.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+  if (slashMatch) {
+    const day = parseInt(slashMatch[1], 10);
+    const month = parseInt(slashMatch[2], 10);
+    const year = parseInt(slashMatch[3], 10);
+    return new Date(year, month - 1, day);
+  }
+
+  // DD-MM-YYYY
+  const dashMatch = dateStr.match(/(\d{2})-(\d{2})-(\d{4})/);
+  if (dashMatch) {
+    const day = parseInt(dashMatch[1], 10);
+    const month = parseInt(dashMatch[2], 10);
+    const year = parseInt(dashMatch[3], 10);
+    return new Date(year, month - 1, day);
   }
 
   return new Date(dateStr);

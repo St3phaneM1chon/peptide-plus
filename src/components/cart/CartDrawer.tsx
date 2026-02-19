@@ -1,140 +1,19 @@
 /**
  * CART DRAWER COMPONENT
  * Panier style Shopify - Slide-in drawer
+ * Uses the single CartContext from contexts/CartContext.tsx
  */
 
 'use client';
 
-import { useState, useEffect, createContext, useContext } from 'react';
+import { useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useI18n } from '@/i18n/client';
+import { useCart } from '@/contexts/CartContext';
 
-// =====================================================
-// CART CONTEXT
-// =====================================================
-
-interface CartItem {
-  id: string;
-  productId: string;
-  name: string;
-  price: number;
-  compareAtPrice?: number;
-  quantity: number;
-  imageUrl?: string;
-  variant?: string;
-  productType?: string;
-}
-
-interface CartContextType {
-  items: CartItem[];
-  isOpen: boolean;
-  itemCount: number;
-  subtotal: number;
-  addItem: (item: Omit<CartItem, 'quantity'>, quantity?: number) => void;
-  removeItem: (id: string) => void;
-  updateQuantity: (id: string, quantity: number) => void;
-  clearCart: () => void;
-  openCart: () => void;
-  closeCart: () => void;
-  toggleCart: () => void;
-}
-
-const CartContext = createContext<CartContextType | undefined>(undefined);
-
-export function useCart() {
-  const context = useContext(CartContext);
-  if (!context) {
-    throw new Error('useCart must be used within a CartProvider');
-  }
-  return context;
-}
-
-// =====================================================
-// CART PROVIDER
-// =====================================================
-
-export function CartProvider({ children }: { children: React.ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>([]);
-  const [isOpen, setIsOpen] = useState(false);
-
-  // Charger le panier depuis localStorage
-  useEffect(() => {
-    const savedCart = localStorage.getItem('cart');
-    if (savedCart) {
-      try {
-        setItems(JSON.parse(savedCart));
-      } catch (e) {
-        console.error('Error loading cart:', e);
-      }
-    }
-  }, []);
-
-  // Sauvegarder le panier dans localStorage
-  useEffect(() => {
-    localStorage.setItem('cart', JSON.stringify(items));
-  }, [items]);
-
-  const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
-  const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-
-  const addItem = (newItem: Omit<CartItem, 'quantity'>, quantity = 1) => {
-    setItems((prev) => {
-      const existingIndex = prev.findIndex(
-        (item) => item.productId === newItem.productId && item.variant === newItem.variant
-      );
-
-      if (existingIndex > -1) {
-        const updated = [...prev];
-        updated[existingIndex].quantity += quantity;
-        return updated;
-      }
-
-      return [...prev, { ...newItem, id: `${newItem.productId}-${Date.now()}`, quantity }];
-    });
-    setIsOpen(true);
-  };
-
-  const removeItem = (id: string) => {
-    setItems((prev) => prev.filter((item) => item.id !== id));
-  };
-
-  const updateQuantity = (id: string, quantity: number) => {
-    if (quantity < 1) {
-      removeItem(id);
-      return;
-    }
-    setItems((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, quantity } : item))
-    );
-  };
-
-  const clearCart = () => setItems([]);
-  const openCart = () => setIsOpen(true);
-  const closeCart = () => setIsOpen(false);
-  const toggleCart = () => setIsOpen((prev) => !prev);
-
-  return (
-    <CartContext.Provider
-      value={{
-        items,
-        isOpen,
-        itemCount,
-        subtotal,
-        addItem,
-        removeItem,
-        updateQuantity,
-        clearCart,
-        openCart,
-        closeCart,
-        toggleCart,
-      }}
-    >
-      {children}
-      <CartDrawer />
-    </CartContext.Provider>
-  );
-}
+// Re-export CartProvider and useCart from the canonical source
+export { CartProvider, useCart } from '@/contexts/CartContext';
 
 // =====================================================
 // CART ICON (pour le header)
@@ -172,7 +51,7 @@ export function CartIcon() {
 // CART DRAWER
 // =====================================================
 
-function CartDrawer() {
+export default function CartDrawer() {
   const { items, isOpen, subtotal, closeCart, updateQuantity, removeItem } = useCart();
   const { t, formatCurrency } = useI18n();
 
@@ -261,10 +140,10 @@ function CartDrawer() {
             <div className="cart-items">
               {items.map((item) => (
                 <CartItemRow
-                  key={item.id}
+                  key={`${item.productId}-${item.formatId || 'default'}`}
                   item={item}
-                  onUpdateQuantity={(qty) => updateQuantity(item.id, qty)}
-                  onRemove={() => removeItem(item.id)}
+                  onUpdateQuantity={(qty) => updateQuantity(item.productId, item.formatId, qty)}
+                  onRemove={() => removeItem(item.productId, item.formatId)}
                   t={t}
                   formatCurrency={formatCurrency}
                 />
@@ -307,7 +186,15 @@ function CartDrawer() {
 // =====================================================
 
 interface CartItemRowProps {
-  item: CartItem;
+  item: {
+    productId: string;
+    formatId?: string;
+    name: string;
+    formatName?: string;
+    price: number;
+    quantity: number;
+    image?: string;
+  };
   onUpdateQuantity: (quantity: number) => void;
   onRemove: () => void;
   t: (key: string, params?: Record<string, string | number>) => string;
@@ -319,8 +206,8 @@ function CartItemRow({ item, onUpdateQuantity, onRemove, t, formatCurrency }: Ca
     <div className="cart-item">
       {/* Image */}
       <div className="cart-item__image">
-        {item.imageUrl ? (
-          <Image src={item.imageUrl} alt={item.name} width={80} height={80} className="object-cover" />
+        {item.image ? (
+          <Image src={item.image} alt={item.name} width={80} height={80} className="object-cover" />
         ) : (
           <div
             style={{
@@ -335,8 +222,11 @@ function CartItemRow({ item, onUpdateQuantity, onRemove, t, formatCurrency }: Ca
       {/* Details */}
       <div className="cart-item__details">
         <h4 className="cart-item__title">{item.name}</h4>
-        {item.variant && <p className="cart-item__variant">{item.variant}</p>}
-        <p className="cart-item__price">{formatCurrency(item.price)}</p>
+        {item.formatName && <p className="cart-item__variant">{item.formatName}</p>}
+        <div className="cart-item__price-line">
+          <span className="cart-item__price">{formatCurrency(item.price)}</span>
+          <span className="cart-item__line-total">{formatCurrency(item.price * item.quantity)}</span>
+        </div>
 
         <div className="cart-item__actions">
           {/* Quantity */}
@@ -389,5 +279,3 @@ function CartItemRow({ item, onUpdateQuantity, onRemove, t, formatCurrency }: Ca
     </div>
   );
 }
-
-export default CartDrawer;

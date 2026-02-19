@@ -1,6 +1,6 @@
 'use client';
 
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 
 export type BadgeType = 'new' | 'trending' | 'low-stock' | 'best-seller' | 'sale' | 'back-in-stock';
 
@@ -11,7 +11,7 @@ interface ProductBadgeProps {
 }
 
 export default function ProductBadge({ type, discountPercent, className = '' }: ProductBadgeProps) {
-  const { t } = useTranslations();
+  const { t } = useI18n();
 
   const badgeConfig: Record<BadgeType, {
     label: string;

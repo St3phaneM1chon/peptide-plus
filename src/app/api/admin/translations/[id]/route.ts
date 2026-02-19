@@ -14,9 +14,8 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth-config';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
-import { UserRole } from '@/types';
 import { TRANSLATABLE_FIELDS, type TranslatableModel } from '@/lib/translation';
 import { cacheDelete } from '@/lib/cache';
 
@@ -42,19 +41,10 @@ const FK_FIELD_MAP: Record<TranslatableModel, string> = {
   QuickReply: 'quickReplyId',
 };
 
-interface RouteParams {
-  params: Promise<{ id: string }>;
-}
-
 // GET - Lire une traduction
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export const GET = withAdminGuard(async (request: NextRequest, { session, params }) => {
   try {
-    const session = await auth();
-    if (!session?.user || (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER)) {
-      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
-    }
-
-    const { id: entityId } = await params;
+    const entityId = params!.id;
     const { searchParams } = new URL(request.url);
     const model = searchParams.get('model') as TranslatableModel;
     const locale = searchParams.get('locale');
@@ -86,17 +76,12 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     console.error('Error fetching translation:', error);
     return NextResponse.json({ error: 'Erreur' }, { status: 500 });
   }
-}
+});
 
 // PUT - Modifier une traduction manuellement
-export async function PUT(request: NextRequest, { params }: RouteParams) {
+export const PUT = withAdminGuard(async (request: NextRequest, { session, params }) => {
   try {
-    const session = await auth();
-    if (!session?.user || (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER)) {
-      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
-    }
-
-    const { id: entityId } = await params;
+    const entityId = params!.id;
     const { searchParams } = new URL(request.url);
     const model = searchParams.get('model') as TranslatableModel;
     const locale = searchParams.get('locale');
@@ -146,17 +131,12 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     console.error('Error updating translation:', error);
     return NextResponse.json({ error: 'Erreur' }, { status: 500 });
   }
-}
+});
 
 // DELETE - Supprimer une traduction
-export async function DELETE(request: NextRequest, { params }: RouteParams) {
+export const DELETE = withAdminGuard(async (request: NextRequest, { session, params }) => {
   try {
-    const session = await auth();
-    if (!session?.user || (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER)) {
-      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
-    }
-
-    const { id: entityId } = await params;
+    const entityId = params!.id;
     const { searchParams } = new URL(request.url);
     const model = searchParams.get('model') as TranslatableModel;
     const locale = searchParams.get('locale');
@@ -191,4 +171,4 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     console.error('Error deleting translation:', error);
     return NextResponse.json({ error: 'Erreur' }, { status: 500 });
   }
-}
+});

@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation';
 import { useCart } from '@/contexts/CartContext';
 import { useUpsell } from '@/contexts/UpsellContext';
 import SubscriptionOfferModal from '@/components/SubscriptionOfferModal';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 
 interface ProductHistoryItem {
   productId: string;
@@ -37,7 +37,7 @@ export default function ProductHistoryPage() {
   const router = useRouter();
   const { addItem } = useCart();
   const { addItemWithUpsell } = useUpsell();
-  const { t } = useTranslations();
+  const { t, locale } = useI18n();
   const [categories, setCategories] = useState<CategoryGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [subscriptionOffer, setSubscriptionOffer] = useState<ProductHistoryItem | null>(null);
@@ -248,9 +248,9 @@ export default function ProductHistoryPage() {
                               <p className="font-bold text-gray-900">${product.currentPrice.toFixed(2)}</p>
                               <p className="text-xs text-gray-400">{t('account.currentPrice')}</p>
                             </div>
-                            <div className="text-right">
+                            <div className="text-end">
                               <p className="text-gray-600">
-                                {new Date(product.lastOrderDate).toLocaleDateString('fr-CA', {
+                                {new Date(product.lastOrderDate).toLocaleDateString(locale, {
                                   day: 'numeric',
                                   month: 'short',
                                   year: 'numeric',

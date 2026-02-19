@@ -164,16 +164,16 @@ export default function ReferralsPage() {
       const data = await res.json();
 
       if (res.ok && data.referralCode) {
-        toast.success('Referral code generated!', {
+        toast.success(t('toast.referrals.codeGenerated'), {
           description: `Your code is: ${data.referralCode}`,
         });
         // Refresh stats
         await fetchStats();
       } else {
-        toast.error(data.error || 'Failed to generate code');
+        toast.error(data.error || t('toast.referrals.codeGenerateFailed'));
       }
     } catch {
-      toast.error('Something went wrong. Please try again.');
+      toast.error(t('toast.error.generic'));
     } finally {
       setGenerating(false);
     }
@@ -185,12 +185,10 @@ export default function ReferralsPage() {
     try {
       await navigator.clipboard.writeText(stats.referralCode);
       setCopied(true);
-      toast.success(t('customerRewards.codeCopied') !== 'customerRewards.codeCopied'
-        ? t('customerRewards.codeCopied')
-        : 'Code copied!');
+      toast.success(t('toast.referrals.codeCopied'));
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      toast.error('Failed to copy code');
+      toast.error(t('toast.referrals.copyFailed'));
     }
   };
 
@@ -200,10 +198,10 @@ export default function ReferralsPage() {
     try {
       await navigator.clipboard.writeText(referralLink);
       setCopiedLink(true);
-      toast.success('Link copied to clipboard!');
+      toast.success(t('toast.referrals.linkCopied'));
       setTimeout(() => setCopiedLink(false), 2000);
     } catch {
-      toast.error('Failed to copy link');
+      toast.error(t('toast.referrals.linkCopyFailed'));
     }
   };
 
@@ -340,7 +338,7 @@ export default function ReferralsPage() {
                     <button
                       onClick={handleCopyCode}
                       className="p-2 rounded-lg bg-white/20 hover:bg-white/30 transition-colors"
-                      aria-label="Copy referral code"
+                      aria-label={t('account.aria.copyReferralCode')}
                     >
                       {copied ? (
                         <Check className="w-5 h-5 text-green-300" />
@@ -485,7 +483,7 @@ export default function ReferralsPage() {
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
-                      <tr className="bg-gray-50 text-left">
+                      <tr className="bg-gray-50 text-start">
                         <th className="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                           Friend
                         </th>

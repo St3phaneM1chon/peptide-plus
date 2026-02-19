@@ -7,9 +7,10 @@ export const dynamic = 'force-dynamic';
  * Allows customers to update shipping address for orders that haven't been shipped yet
  */
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
+import { validateCsrf } from '@/lib/csrf-middleware';
 
 interface UpdateAddressRequest {
   firstName: string;
@@ -24,10 +25,16 @@ interface UpdateAddressRequest {
 }
 
 export async function PUT(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // SECURITY (BE-SEC-15): CSRF protection for mutation endpoint
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const session = await auth();
 
     if (!session?.user?.email) {

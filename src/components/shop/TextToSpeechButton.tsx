@@ -1,7 +1,7 @@
 'use client';
 
 import { useTextToSpeech } from '@/hooks/useTextToSpeech';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 
 /**
  * Floating Text-to-Speech button.
@@ -9,7 +9,7 @@ import { useTranslations } from '@/hooks/useTranslations';
  * Automatically adapts to the customer's selected language.
  */
 export default function TextToSpeechButton() {
-  const { t, locale } = useTranslations();
+  const { t, locale } = useI18n();
   const { status, isSupported, progress, toggle, stop } = useTextToSpeech({
     locale,
     rate: 0.92,
@@ -29,7 +29,7 @@ export default function TextToSpeechButton() {
           : t('tts.loading') || 'Loading...';
 
   return (
-    <div className="fixed bottom-6 left-6 z-40 flex items-center gap-2">
+    <div className="fixed bottom-6 start-6 z-40 flex items-center gap-2">
       {/* Main button */}
       <button
         onClick={toggle}
@@ -88,7 +88,7 @@ export default function TextToSpeechButton() {
 
       {/* Tooltip on hover (idle state) */}
       {status === 'idle' && (
-        <span className="hidden group-hover:block absolute left-14 bg-gray-900 text-white text-xs px-3 py-1.5 rounded-lg whitespace-nowrap shadow-lg pointer-events-none">
+        <span className="hidden group-hover:block absolute start-14 bg-gray-900 text-white text-xs px-3 py-1.5 rounded-lg whitespace-nowrap shadow-lg pointer-events-none">
           {label}
         </span>
       )}

@@ -43,42 +43,55 @@ export async function createExpenseEntry(data: {
   });
   if (!bankAccount) throw new Error('Main bank account (1010) not found');
 
-  // Generate entry number
+  // Generate entry number inside a transaction to prevent race conditions
   const year = new Date().getFullYear();
-  const count = await prisma.journalEntry.count({
-    where: { entryNumber: { startsWith: `JV-${year}-` } },
-  });
-  const entryNumber = `JV-${year}-${String(count + 1).padStart(4, '0')}`;
+  const prefix = `JV-${year}-`;
 
-  const entry = await prisma.journalEntry.create({
-    data: {
-      entryNumber,
-      date: data.date,
-      description: data.description,
-      type: 'MANUAL',
-      status: 'POSTED',
-      reference: data.reference,
-      createdBy: data.createdBy,
-      postedBy: data.createdBy,
-      postedAt: new Date(),
-      lines: {
-        create: [
-          {
-            accountId: expenseAccount.id,
-            description: data.description,
-            debit: data.amount,
-            credit: 0,
-            costCenter: data.department,
-          },
-          {
-            accountId: bankAccount.id,
-            description: data.description,
-            debit: 0,
-            credit: data.amount,
-          },
-        ],
+  const entry = await prisma.$transaction(async (tx) => {
+    const [maxRow] = await tx.$queryRaw<{ max_num: string | null }[]>`
+      SELECT MAX("entryNumber") as max_num
+      FROM "JournalEntry"
+      WHERE "entryNumber" LIKE ${prefix + '%'}
+      FOR UPDATE
+    `;
+
+    let nextNum = 1;
+    if (maxRow?.max_num) {
+      const parsed = parseInt(maxRow.max_num.split('-').pop() || '0');
+      if (!isNaN(parsed)) nextNum = parsed + 1;
+    }
+    const entryNumber = `${prefix}${String(nextNum).padStart(4, '0')}`;
+
+    return tx.journalEntry.create({
+      data: {
+        entryNumber,
+        date: data.date,
+        description: data.description,
+        type: 'MANUAL',
+        status: 'POSTED',
+        reference: data.reference,
+        createdBy: data.createdBy,
+        postedBy: data.createdBy,
+        postedAt: new Date(),
+        lines: {
+          create: [
+            {
+              accountId: expenseAccount.id,
+              description: data.description,
+              debit: data.amount,
+              credit: 0,
+              costCenter: data.department,
+            },
+            {
+              accountId: bankAccount.id,
+              description: data.description,
+              debit: 0,
+              credit: data.amount,
+            },
+          ],
+        },
       },
-    },
+    });
   });
 
   return entry.id;

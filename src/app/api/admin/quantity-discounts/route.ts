@@ -1,22 +1,58 @@
 export const dynamic = 'force-dynamic';
 
+/**
+ * Admin Quantity Discounts API
+ * GET    - List quantity discounts for a product
+ * POST   - Create or update quantity discounts for a product
+ * DELETE - Remove a specific quantity discount tier
+ *
+ * TODO (item 83): Bulk Discount Rules Engine
+ * Current implementation only supports simple percentage-based quantity tiers per product.
+ * A full rules engine should support:
+ *
+ * 1. Discount Types (beyond percentage):
+ *    - PERCENTAGE: X% off (current)
+ *    - FIXED_AMOUNT: $X off per unit
+ *    - FIXED_PRICE: Set unit price to $X (override)
+ *    - FREE_SHIPPING: Free shipping when qty >= threshold
+ *    - BUY_X_GET_Y: Buy X get Y free (e.g., buy 3 get 1 free)
+ *    - BUNDLE_PRICE: Fixed price for a bundle of N items
+ *
+ * 2. Scope Targets (beyond per-product):
+ *    - Per-product (current)
+ *    - Per-category (apply to all products in a category)
+ *    - Per-cart (total cart quantity across all products)
+ *    - Cross-product bundles (buy product A + product B = 15% off)
+ *    - Per-customer-tier (different discounts for GOLD vs SILVER)
+ *
+ * 3. Stacking Rules:
+ *    - Define priority order for discount rules
+ *    - Choose stacking behavior: BEST_ONLY, ADDITIVE, MULTIPLICATIVE
+ *    - Mutual exclusion groups (can't combine certain discounts)
+ *
+ * 4. Time-based Rules:
+ *    - Start/end dates for quantity discount tiers
+ *    - Day-of-week restrictions (e.g., Tuesday special: buy 2 get 1 free)
+ *    - Flash quantity deals (first 50 buyers at bulk price)
+ *
+ * Implementation:
+ *    - New DiscountRule model with:
+ *      id, name, type (enum), scope (PRODUCT/CATEGORY/CART/BUNDLE),
+ *      targetId (productId or categoryId), conditions (JSON),
+ *      discount (JSON: { type, value, freeQty? }),
+ *      priority, stackGroup?, startsAt?, endsAt?, isActive
+ *    - Rules evaluation engine in @/lib/discount-engine.ts
+ *    - Endpoint: /api/admin/discount-rules (CRUD)
+ *    - Evaluation: /api/cart/calculate-discounts (called by checkout)
+ */
+
 import { NextResponse } from 'next/server';
-import { auth } from '@/lib/auth-config';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 
 // GET - List quantity discounts for a product
-export async function GET(request: Request) {
+export const GET = withAdminGuard(async (request, { session: _session }) => {
   try {
-    const session = await auth();
-
-    // Check authentication and authorization
-    if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role)) {
-      return NextResponse.json(
-        { error: 'Unauthorized - Admin access required' },
-        { status: 401 }
-      );
-    }
-
     const { searchParams } = new URL(request.url);
     const productId = searchParams.get('productId');
 
@@ -46,21 +82,11 @@ export async function GET(request: Request) {
       { status: 500 }
     );
   }
-}
+});
 
 // POST - Create or update quantity discounts for a product
-export async function POST(request: Request) {
+export const POST = withAdminGuard(async (request, { session: _session }) => {
   try {
-    const session = await auth();
-
-    // Check authentication and authorization
-    if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role)) {
-      return NextResponse.json(
-        { error: 'Unauthorized - Admin access required' },
-        { status: 401 }
-      );
-    }
-
     const body = await request.json();
     const { productId, tiers } = body;
 
@@ -155,21 +181,11 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
-}
+});
 
 // DELETE - Remove a specific quantity discount tier
-export async function DELETE(request: Request) {
+export const DELETE = withAdminGuard(async (request, { session: _session }) => {
   try {
-    const session = await auth();
-
-    // Check authentication and authorization
-    if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role)) {
-      return NextResponse.json(
-        { error: 'Unauthorized - Admin access required' },
-        { status: 401 }
-      );
-    }
-
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
@@ -195,4 +211,4 @@ export async function DELETE(request: Request) {
       { status: 500 }
     );
   }
-}
+});

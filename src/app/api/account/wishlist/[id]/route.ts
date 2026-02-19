@@ -1,8 +1,9 @@
 export const dynamic = 'force-dynamic';
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { db } from '@/lib/db';
+import { validateCsrf } from '@/lib/csrf-middleware';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -12,8 +13,14 @@ interface RouteParams {
  * DELETE /api/account/wishlist/[id]
  * Removes a wishlist item by its ID, verifying ownership
  */
-export async function DELETE(_request: Request, { params }: RouteParams) {
+export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
+    // SECURITY (BE-SEC-15): CSRF protection for mutation endpoint
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const session = await auth();
 
     if (!session?.user?.id) {

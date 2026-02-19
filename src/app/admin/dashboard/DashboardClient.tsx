@@ -7,7 +7,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 import {
   ShoppingCart,
   DollarSign,
@@ -83,7 +83,7 @@ function formatCurrency(amount: number, locale: string): string {
 // --------------------------------------------------
 
 export default function DashboardClient({ stats, recentOrders, recentUsers }: DashboardClientProps) {
-  const { t, locale } = useTranslations();
+  const { t, locale } = useI18n();
 
   function getOrderStatusLabel(status: string): { label: string; classes: string } {
     switch (status) {
@@ -382,7 +382,7 @@ function StatCard({
       className="group relative bg-white rounded-xl p-5 border border-slate-200 hover:border-sky-200 hover:shadow-sm transition-all"
     >
       {alert && (
-        <span className="absolute top-3 right-3 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse" />
+        <span className="absolute top-3 end-3 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse" />
       )}
       <div className="flex items-center gap-4">
         <div className={`w-11 h-11 rounded-lg flex items-center justify-center flex-shrink-0 ${iconBg}`}>
@@ -393,7 +393,7 @@ function StatCard({
           <p className="text-xl font-bold text-slate-900 mt-0.5">{value}</p>
         </div>
       </div>
-      <TrendingUp className="absolute bottom-3 right-3 w-4 h-4 text-slate-200 group-hover:text-sky-300 transition-colors" />
+      <TrendingUp className="absolute bottom-3 end-3 w-4 h-4 text-slate-200 group-hover:text-sky-300 transition-colors" />
     </Link>
   );
 }

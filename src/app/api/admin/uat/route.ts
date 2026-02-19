@@ -8,18 +8,13 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { auth } from '@/lib/auth-config';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import { launchUatRun } from '@/lib/uat/runner';
 import { getScenarios } from '@/lib/uat/scenarios';
 
 // POST — Launch a new UAT run
-export async function POST(request: NextRequest) {
+export const POST = withAdminGuard(async (request: NextRequest, { session }) => {
   try {
-    const session = await auth();
-    if (!session?.user || session.user.role !== 'OWNER') {
-      return NextResponse.json({ error: 'Forbidden — OWNER only' }, { status: 403 });
-    }
-
     const body = await request.json();
     const canadaOnly = body.canadaOnly !== false; // default true
 
@@ -46,16 +41,11 @@ export async function POST(request: NextRequest) {
     console.error('[UAT API] POST error:', error);
     return NextResponse.json({ error: 'Une erreur est survenue' }, { status: 500 });
   }
-}
+});
 
 // GET — List all runs
-export async function GET(_request: NextRequest) {
+export const GET = withAdminGuard(async (_request: NextRequest, { session }) => {
   try {
-    const session = await auth();
-    if (!session?.user || (session.user.role !== 'EMPLOYEE' && session.user.role !== 'OWNER')) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-
     const runs = await prisma.uatTestRun.findMany({
       orderBy: { createdAt: 'desc' },
       take: 50,
@@ -66,4 +56,4 @@ export async function GET(_request: NextRequest) {
     console.error('[UAT API] GET error:', error);
     return NextResponse.json({ error: 'Une erreur est survenue' }, { status: 500 });
   }
-}
+});

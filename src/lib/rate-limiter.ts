@@ -147,8 +147,38 @@ const RATE_LIMIT_CONFIGS: Record<string, { windowMs: number; maxRequests: number
   // Admin - modere
   'admin': { windowMs: 60000, maxRequests: 100 },
 
-  // Chat - permissif
+  // Chat - permissif (general)
   'chat': { windowMs: 60000, maxRequests: 120 },
+
+  // BE-SEC-01: Contact form - 3 per IP per hour (anti-spam)
+  'contact': { windowMs: 3600000, maxRequests: 3 },
+
+  // BE-SEC-01: Newsletter subscribe - 5 per IP per hour
+  'newsletter': { windowMs: 3600000, maxRequests: 5 },
+
+  // BE-SEC-01: Review submission - 10 per user per day
+  'reviews': { windowMs: 86400000, maxRequests: 10 },
+
+  // BE-SEC-02: Promo code validation - 10 per IP per hour (anti brute-force enumeration)
+  'promo/validate': { windowMs: 3600000, maxRequests: 10 },
+
+  // BE-SEC-14: Chat message - 20 per user per hour (prevents OpenAI cost explosion)
+  'chat/message': { windowMs: 3600000, maxRequests: 20 },
+
+  // SEC-19: Gift card balance check - 5 per IP per minute
+  'gift-cards/balance': { windowMs: 60000, maxRequests: 5 },
+
+  // SEC-18: Order tracking - 10 per IP per minute
+  'orders/track': { windowMs: 60000, maxRequests: 10 },
+
+  // SEC-24: Stock alerts - 10 per IP per hour
+  'stock-alerts': { windowMs: 3600000, maxRequests: 10 },
+
+  // SEC-25: Chat route - 10 per user per hour
+  'chat/route': { windowMs: 3600000, maxRequests: 10 },
+
+  // SEC-27: Password change - 5 per user per hour
+  'account/password': { windowMs: 3600000, maxRequests: 5 },
 };
 
 // ---------------------------------------------------------------------------
@@ -178,7 +208,20 @@ function getEndpointType(path: string): string {
     if (segments[1] === 'auth') return `auth/${segments[2] || 'default'}`;
     if (segments[1] === 'admin') return 'admin';
     if (segments[1] === 'checkout' || segments[1] === 'payments') return segments[1];
+    // Chat: distinguish /api/chat/message from /api/chat
+    if (segments[1] === 'chat' && segments[2] === 'message') return 'chat/message';
+    if (segments[1] === 'chat' && segments[2] === 'route') return 'chat/route';
     if (segments[1] === 'chat') return 'chat';
+    // Promo: distinguish /api/promo/validate
+    if (segments[1] === 'promo' && segments[2] === 'validate') return 'promo/validate';
+    // Gift cards: distinguish /api/gift-cards/balance
+    if (segments[1] === 'gift-cards' && segments[2] === 'balance') return 'gift-cards/balance';
+    // Orders: distinguish /api/orders/track
+    if (segments[1] === 'orders' && segments[2] === 'track') return 'orders/track';
+    // Stock alerts
+    if (segments[1] === 'stock-alerts') return 'stock-alerts';
+    // Account: distinguish /api/account/password
+    if (segments[1] === 'account' && segments[2] === 'password') return 'account/password';
     return segments[1] || 'default';
   }
 

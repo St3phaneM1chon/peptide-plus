@@ -4,9 +4,11 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import crypto from 'crypto';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { createPaymentIntent, getOrCreateStripeCustomer } from '@/lib/stripe';
+import { calculateTaxAmount } from '@/lib/tax-rates';
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,7 +18,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
     }
 
-    const { productId, saveCard, companyId } = await request.json();
+    // BE-PAY-05: Idempotency key to prevent duplicate payments
+    const idempotencyKey = request.headers.get('x-idempotency-key');
+    if (idempotencyKey) {
+      const existingPurchase = await prisma.purchase.findFirst({
+        where: { idempotencyKey },
+      });
+      if (existingPurchase) {
+        return NextResponse.json({
+          paymentIntentId: existingPurchase.stripePaymentId,
+          amount: Number(existingPurchase.amount),
+          message: 'Duplicate request - existing payment returned',
+        });
+      }
+    }
+
+    const { productId, saveCard, companyId, province: reqProvince } = await request.json();
 
     if (!productId) {
       return NextResponse.json({ error: 'Product ID requis' }, { status: 400 });
@@ -31,11 +48,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Produit non trouvé' }, { status: 404 });
     }
 
-    // Calculer le montant total avec taxes
+    // BUG 2: Validate stock before creating payment intent
+    if (product.trackInventory && Number(product.stockQuantity ?? 0) <= 0) {
+      return NextResponse.json({ error: 'Out of stock' }, { status: 400 });
+    }
+
+    // BE-PAY-11: Calculate taxes based on province (not hardcoded to QC)
     const subtotal = Number(product.price);
-    const tps = subtotal * 0.05;
-    const tvq = subtotal * 0.09975;
-    const total = Math.round((subtotal + tps + tvq) * 100); // En centimes
+    const province = (reqProvince || 'QC').toUpperCase();
+    const taxAmount = calculateTaxAmount(subtotal, province);
+    const total = Math.round((subtotal + taxAmount) * 100); // En centimes
 
     // Récupérer ou créer le customer Stripe
     const stripeCustomerId = await getOrCreateStripeCustomer(
@@ -67,12 +89,13 @@ export async function POST(request: NextRequest) {
         userId: session.user.id,
         productId,
         companyId: companyId || null,
-        amount: subtotal,
+        amount: total / 100, // Store total (in dollars) to match what Stripe charges
         currency: 'CAD',
         paymentMethod: 'STRIPE_CARD',
         stripePaymentId: paymentIntent.id,
         status: 'PENDING',
-        receiptNumber: `REC-${Date.now()}`,
+        receiptNumber: `REC-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`,
+        idempotencyKey: idempotencyKey || undefined,
       },
     });
 

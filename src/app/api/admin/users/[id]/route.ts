@@ -2,20 +2,11 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { auth } from '@/lib/auth-config';
-import { validateCsrf } from '@/lib/csrf-middleware';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const GET = withAdminGuard(async (_request, { session, params }) => {
   try {
-    const session = await auth();
-    if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role || '')) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
-    }
-
-    const { id } = await params;
+    const id = params!.id;
 
     const user = await prisma.user.findUnique({
       where: { id },
@@ -211,24 +202,11 @@ export async function GET(
     console.error('Admin user detail error:', error);
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
   }
-}
+});
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const PATCH = withAdminGuard(async (request, { session, params }) => {
   try {
-    const csrfValid = await validateCsrf(request);
-    if (!csrfValid) {
-      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
-    }
-
-    const session = await auth();
-    if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role || '')) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
-    }
-
-    const { id } = await params;
+    const id = params!.id;
     const body = await request.json();
 
     // Whitelist allowed fields
@@ -253,4 +231,4 @@ export async function PATCH(
     console.error('Admin user update error:', error);
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
   }
-}
+});

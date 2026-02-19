@@ -1,5 +1,11 @@
+import type { Metadata } from 'next';
 import { prisma } from '@/lib/db';
 import LabResultsClient from './LabResultsClient';
+
+export const metadata: Metadata = {
+  title: 'Lab Results & Certificates of Analysis',
+  description: 'View third-party lab test results and Certificates of Analysis (COA) for all BioCycle Peptides research compounds. 99%+ purity verified.',
+};
 
 export const dynamic = 'force-dynamic';
 

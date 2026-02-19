@@ -336,7 +336,7 @@ export default function NewProductClient({ categories }: Props) {
                 <div>
                   <label className="block text-sm font-medium text-neutral-700 mb-1">
                     {t('admin.productForm.purity')}
-                    <span className="text-neutral-400 font-normal ml-1">{t('admin.productForm.purityDefault')}</span>
+                    <span className="text-neutral-400 font-normal ms-1">{t('admin.productForm.purityDefault')}</span>
                   </label>
                   <div className="relative">
                     <input
@@ -348,7 +348,7 @@ export default function NewProductClient({ categories }: Props) {
                       onChange={(e) => setFormData({ ...formData, purity: e.target.value })}
                       className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
                     />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400">%</span>
+                    <span className="absolute end-3 top-1/2 -translate-y-1/2 text-neutral-400">%</span>
                   </div>
                 </div>
 
@@ -674,7 +674,7 @@ export default function NewProductClient({ categories }: Props) {
                               type="text"
                               value={pt.references}
                               onChange={(e) => updateProductText(pt.id, 'references', e.target.value)}
-                              placeholder="DOI, PMID, URLs..."
+                              placeholder={t('admin.productForm.placeholderReferences')}
                               className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
                             />
                           </div>
@@ -785,7 +785,7 @@ function FormatCard({
           </div>
         </div>
         <div className="flex items-center gap-4">
-          <div className="text-right">
+          <div className="text-end">
             <p className="font-semibold text-neutral-900">${format.price.toFixed(2)}</p>
             {format.costPrice && (
               <p className="text-xs text-neutral-400">{t('admin.productForm.cost')}: ${format.costPrice.toFixed(2)}</p>
@@ -934,7 +934,7 @@ function FormatCard({
                 type="text"
                 value={format.sku}
                 onChange={(e) => onUpdate({ sku: e.target.value })}
-                placeholder="BPC157-5MG-VIAL"
+                placeholder={t('admin.productForm.placeholderSku')}
                 className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
               />
             </div>

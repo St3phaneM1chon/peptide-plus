@@ -8,16 +8,11 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { auth } from '@/lib/auth-config';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 
 // GET /api/admin/seo - Get all SEO settings
-export async function GET() {
+export const GET = withAdminGuard(async (_request: NextRequest, { session }) => {
   try {
-    const session = await auth();
-    if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const settings = await prisma.siteSetting.findMany({
       where: { module: 'seo' },
       orderBy: { key: 'asc' },
@@ -37,16 +32,11 @@ export async function GET() {
       { status: 500 }
     );
   }
-}
+});
 
 // PUT /api/admin/seo - Save SEO settings (bulk upsert)
-export async function PUT(request: NextRequest) {
+export const PUT = withAdminGuard(async (request: NextRequest, { session }) => {
   try {
-    const session = await auth();
-    if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const body = await request.json();
     const { settings } = body;
 
@@ -92,4 +82,4 @@ export async function PUT(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

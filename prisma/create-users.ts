@@ -122,6 +122,7 @@ async function main() {
       postalCode: 'H2X 1Y4',
       country: 'CA',
       phone: '514-555-1234',
+      updatedAt: new Date(),
     },
   });
 
@@ -140,6 +141,7 @@ async function main() {
       postalCode: 'H2X 1Y4',
       country: 'CA',
       phone: '514-555-1234',
+      updatedAt: new Date(),
     },
   });
 

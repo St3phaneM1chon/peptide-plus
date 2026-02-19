@@ -9,29 +9,32 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { auth } from '@/lib/auth-config';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import { purchaseStock, adjustStock } from '@/lib/inventory';
 
 // GET /api/admin/inventory - List products with inventory info
-export async function GET(request: NextRequest) {
+export const GET = withAdminGuard(async (request, { session }) => {
   try {
-    const session = await auth();
-    if (!session?.user || (session.user.role !== 'EMPLOYEE' && session.user.role !== 'OWNER')) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-
     const { searchParams } = new URL(request.url);
     const lowStockOnly = searchParams.get('lowStock') === 'true';
+
+    // DI-69: Use raw WHERE for low stock filter instead of JS post-filtering
+    let lowStockIds: string[] | null = null;
+    if (lowStockOnly) {
+      const lowStockFormats = await prisma.$queryRaw<{ id: string }[]>`
+        SELECT "id" FROM "ProductFormat"
+        WHERE "isActive" = true
+          AND "trackInventory" = true
+          AND "stockQuantity" <= "lowStockThreshold"
+      `;
+      lowStockIds = lowStockFormats.map((f) => f.id);
+    }
 
     const formats = await prisma.productFormat.findMany({
       where: {
         isActive: true,
         trackInventory: true,
-        ...(lowStockOnly ? {
-          // Raw filter: stockQuantity <= lowStockThreshold
-          // Prisma doesn't support field-to-field comparison directly,
-          // so we fetch all and filter in memory
-        } : {}),
+        ...(lowStockIds !== null ? { id: { in: lowStockIds } } : {}),
       },
       include: {
         product: {
@@ -90,10 +93,8 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    // Filter low stock in memory if requested
-    const result = lowStockOnly
-      ? inventoryItems.filter((item) => item.isLowStock)
-      : inventoryItems;
+    // DI-69: Low stock is already filtered at DB level when lowStockOnly is true
+    const result = inventoryItems;
 
     return NextResponse.json({
       inventory: result,
@@ -107,16 +108,11 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
 // POST /api/admin/inventory - Receive stock (purchase)
-export async function POST(request: NextRequest) {
+export const POST = withAdminGuard(async (request, { session }) => {
   try {
-    const session = await auth();
-    if (!session?.user || (session.user.role !== 'EMPLOYEE' && session.user.role !== 'OWNER')) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-
     const body = await request.json();
     const { items, supplierInvoiceId } = body;
 
@@ -174,16 +170,11 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
 // PUT /api/admin/inventory - Adjust stock manually
-export async function PUT(request: NextRequest) {
+export const PUT = withAdminGuard(async (request, { session }) => {
   try {
-    const session = await auth();
-    if (!session?.user || (session.user.role !== 'EMPLOYEE' && session.user.role !== 'OWNER')) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-
     const body = await request.json();
     const { productId, formatId, quantity, reason } = body;
 
@@ -227,4 +218,4 @@ export async function PUT(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

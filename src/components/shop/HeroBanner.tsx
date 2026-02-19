@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 
 interface Slide {
   id: number;
@@ -16,7 +16,7 @@ interface Slide {
 }
 
 export default function HeroBanner() {
-  const { t } = useTranslations();
+  const { t } = useI18n();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
 
@@ -143,7 +143,7 @@ export default function HeroBanner() {
       {/* Navigation Arrows */}
       <button
         onClick={prevSlide}
-        className="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 backdrop-blur-sm rounded-full text-white hover:bg-white/20 transition-colors hidden md:block"
+        className="absolute start-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 backdrop-blur-sm rounded-full text-white hover:bg-white/20 transition-colors hidden md:block"
         aria-label={t('common.previousSlide')}
       >
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -152,7 +152,7 @@ export default function HeroBanner() {
       </button>
       <button
         onClick={nextSlide}
-        className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 backdrop-blur-sm rounded-full text-white hover:bg-white/20 transition-colors hidden md:block"
+        className="absolute end-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 backdrop-blur-sm rounded-full text-white hover:bg-white/20 transition-colors hidden md:block"
         aria-label={t('common.nextSlide')}
       >
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -176,41 +176,6 @@ export default function HeroBanner() {
         ))}
       </div>
 
-      {/* Styles */}
-      <style jsx>{`
-        @keyframes fade-in {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        @keyframes slide-up {
-          from { 
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to { 
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        .animate-fade-in {
-          animation: fade-in 0.5s ease-out forwards;
-        }
-        .animate-slide-up {
-          animation: slide-up 0.6s ease-out forwards;
-        }
-        .animation-delay-100 {
-          animation-delay: 0.1s;
-          opacity: 0;
-        }
-        .animation-delay-200 {
-          animation-delay: 0.2s;
-          opacity: 0;
-        }
-        .animation-delay-300 {
-          animation-delay: 0.3s;
-          opacity: 0;
-        }
-      `}</style>
     </section>
   );
 }

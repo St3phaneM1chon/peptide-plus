@@ -169,13 +169,13 @@ export default function SearchPage() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={t('admin.search.searchPlaceholder')}
-              className="w-full px-4 py-3 pl-12 bg-neutral-800 border border-neutral-700 rounded-xl text-white text-lg focus:border-sky-500 focus:outline-none"
+              className="w-full px-4 py-3 ps-12 bg-neutral-800 border border-neutral-700 rounded-xl text-white text-lg focus:border-sky-500 focus:outline-none"
               autoFocus
             />
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl">🔍</span>
+            <span className="absolute start-4 top-1/2 -translate-y-1/2 text-xl">🔍</span>
             
             {loading && (
-              <div className="absolute right-4 top-1/2 -translate-y-1/2">
+              <div className="absolute end-4 top-1/2 -translate-y-1/2">
                 <div className="animate-spin h-5 w-5 border-2 border-sky-500 border-t-transparent rounded-full"></div>
               </div>
             )}
@@ -207,7 +207,7 @@ export default function SearchPage() {
               <button
                 key={i}
                 onClick={() => setQuery(suggestion)}
-                className="w-full px-4 py-2 text-left text-neutral-300 hover:bg-neutral-700"
+                className="w-full px-4 py-2 text-start text-neutral-300 hover:bg-neutral-700"
               >
                 {suggestion}
               </button>
@@ -302,7 +302,7 @@ export default function SearchPage() {
                   <button
                     key={saved.id}
                     onClick={() => applySavedSearch(saved)}
-                    className="p-3 bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 rounded-xl text-left"
+                    className="p-3 bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 rounded-xl text-start"
                   >
                     <div className="flex justify-between items-start">
                       <div>
@@ -326,7 +326,7 @@ export default function SearchPage() {
                   setFilters(prev => ({ ...prev, types: [type] }));
                   setQuery('*');
                 }}
-                className="p-4 bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 rounded-xl text-left"
+                className="p-4 bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 rounded-xl text-start"
               >
                 <span className={`px-2 py-1 rounded text-xs ${typeColors[type]}`}>
                   {typeLabels[type]}
@@ -381,7 +381,7 @@ export default function SearchPage() {
                       />
                     )}
                   </div>
-                  <div className="text-right ml-4">
+                  <div className="text-end ms-4">
                     <p className="font-bold text-white">{formatCurrency(result.amount)}</p>
                     <p className="text-sm text-neutral-500">
                       {new Date(result.date).toLocaleDateString('fr-CA')}

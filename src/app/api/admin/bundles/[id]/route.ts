@@ -1,15 +1,13 @@
 export const dynamic = 'force-dynamic';
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 
 // GET single bundle by ID
-export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const GET = withAdminGuard(async (_request, { session, params }) => {
   try {
-    const { id } = await params;
+    const id = params!.id;
 
     const bundle = await prisma.bundle.findUnique({
       where: { id },
@@ -41,15 +39,12 @@ export async function GET(
       { status: 500 }
     );
   }
-}
+});
 
 // PATCH update bundle
-export async function PATCH(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const PATCH = withAdminGuard(async (request, { session, params }) => {
   try {
-    const { id } = await params;
+    const id = params!.id;
     const body = await request.json();
     const { name, slug, description, image, discount, isActive, items } = body;
 
@@ -138,15 +133,12 @@ export async function PATCH(
       { status: 500 }
     );
   }
-}
+});
 
 // DELETE bundle
-export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const DELETE = withAdminGuard(async (_request, { session, params }) => {
   try {
-    const { id } = await params;
+    const id = params!.id;
 
     const bundle = await prisma.bundle.findUnique({
       where: { id },
@@ -171,4 +163,4 @@ export async function DELETE(
       { status: 500 }
     );
   }
-}
+});

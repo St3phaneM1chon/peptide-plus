@@ -1,49 +1,111 @@
+/**
+ * SITEMAP - Dynamic sitemap generation for SEO
+ * Includes: static pages, products, categories, blog posts, learning articles
+ */
+
 import { MetadataRoute } from 'next';
-import { products } from '@/data/products';
+import { prisma } from '@/lib/db';
 
-const BASE_URL = 'https://biocyclepeptides.com';
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://biocyclepeptides.com';
 
-export default function sitemap(): MetadataRoute.Sitemap {
   // Static pages
   const staticPages = [
     '',
     '/shop',
-    '/contact',
     '/faq',
+    '/learn',
+    '/contact',
+    '/community',
     '/rewards',
     '/subscriptions',
     '/a-propos',
-    '/mentions-legales/confidentialite',
+    '/a-propos/mission',
+    '/a-propos/equipe',
+    '/a-propos/histoire',
+    '/a-propos/valeurs',
+    '/a-propos/engagements',
+    '/aide',
+    '/accessibilite',
     '/mentions-legales/conditions',
+    '/mentions-legales/confidentialite',
+    '/mentions-legales/cookies',
     '/refund-policy',
     '/shipping-policy',
-    '/auth/signin',
-    '/auth/signup',
-  ];
-
-  const staticEntries: MetadataRoute.Sitemap = staticPages.map((path) => ({
-    url: `${BASE_URL}${path}`,
+  ].map((path) => ({
+    url: `${baseUrl}${path}`,
     lastModified: new Date(),
-    changeFrequency: path === '' ? 'daily' : 'weekly',
+    changeFrequency: path === '' ? ('daily' as const) : ('weekly' as const),
     priority: path === '' ? 1 : path === '/shop' ? 0.9 : 0.7,
   }));
 
-  // Product pages
-  const productEntries: MetadataRoute.Sitemap = products.map((product) => ({
-    url: `${BASE_URL}/product/${product.slug}`,
-    lastModified: new Date(),
-    changeFrequency: 'weekly',
-    priority: 0.8,
-  }));
+  // Product pages (dynamic from DB)
+  let productPages: MetadataRoute.Sitemap = [];
+  try {
+    const products = await prisma.product.findMany({
+      where: { isActive: true },
+      select: { slug: true, updatedAt: true },
+    });
+    productPages = products.map((p) => ({
+      url: `${baseUrl}/product/${p.slug}`,
+      lastModified: p.updatedAt,
+      changeFrequency: 'weekly' as const,
+      priority: 0.8,
+    }));
+  } catch {
+    // Database may not be available during build
+  }
 
-  // Category pages
-  const categories = ['peptides', 'supplements', 'accessories'];
-  const categoryEntries: MetadataRoute.Sitemap = categories.map((cat) => ({
-    url: `${BASE_URL}/category/${cat}`,
-    lastModified: new Date(),
-    changeFrequency: 'weekly',
-    priority: 0.8,
-  }));
+  // Category pages (dynamic from DB)
+  let categoryPages: MetadataRoute.Sitemap = [];
+  try {
+    const categories = await prisma.category.findMany({
+      where: { isActive: true },
+      select: { slug: true, updatedAt: true, parentId: true },
+    });
+    categoryPages = categories.map((c) => ({
+      url: `${baseUrl}/shop?category=${c.slug}`,
+      lastModified: c.updatedAt,
+      changeFrequency: 'weekly' as const,
+      priority: c.parentId ? 0.6 : 0.7,
+    }));
+  } catch {
+    // Database may not be available during build
+  }
 
-  return [...staticEntries, ...productEntries, ...categoryEntries];
+  // Blog posts
+  let blogPages: MetadataRoute.Sitemap = [];
+  try {
+    const blogPosts = await prisma.blogPost.findMany({
+      where: { isPublished: true },
+      select: { slug: true, updatedAt: true },
+    });
+    blogPages = blogPosts.map((post) => ({
+      url: `${baseUrl}/blog/${post.slug}`,
+      lastModified: post.updatedAt,
+      changeFrequency: 'monthly' as const,
+      priority: 0.6,
+    }));
+  } catch {
+    // Database may not be available during build
+  }
+
+  // Learning articles
+  let articlePages: MetadataRoute.Sitemap = [];
+  try {
+    const articles = await prisma.article.findMany({
+      where: { isPublished: true },
+      select: { slug: true, updatedAt: true },
+    });
+    articlePages = articles.map((a) => ({
+      url: `${baseUrl}/learn/${a.slug}`,
+      lastModified: a.updatedAt,
+      changeFrequency: 'monthly' as const,
+      priority: 0.6,
+    }));
+  } catch {
+    // Database may not be available during build
+  }
+
+  return [...staticPages, ...productPages, ...categoryPages, ...blogPages, ...articlePages];
 }

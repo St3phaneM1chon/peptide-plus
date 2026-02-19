@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import Breadcrumbs from '@/components/ui/Breadcrumbs';
 
@@ -45,7 +45,7 @@ interface OrderItem {
 export default function ReturnsPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const { t } = useTranslations();
+  const { t } = useI18n();
   const [returnRequests, setReturnRequests] = useState<ReturnRequest[]>([]);
   const [eligibleOrders, setEligibleOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -92,7 +92,7 @@ export default function ReturnsPage() {
       }
     } catch (error) {
       console.error('Failed to fetch data:', error);
-      toast.error('Failed to load returns data');
+      toast.error(t('toast.returns.loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -102,7 +102,7 @@ export default function ReturnsPage() {
     e.preventDefault();
 
     if (!selectedOrder || !selectedItemId || !reason) {
-      toast.error('Please fill in all required fields');
+      toast.error(t('toast.returns.fillRequired'));
       return;
     }
 
@@ -122,11 +122,11 @@ export default function ReturnsPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        toast.error(data.error || 'Failed to submit return request');
+        toast.error(data.error || t('toast.returns.submitFailed'));
         return;
       }
 
-      toast.success('Return request submitted successfully!');
+      toast.success(t('toast.returns.submitted'));
       setReturnRequests([data, ...returnRequests]);
 
       // Reset form
@@ -137,7 +137,7 @@ export default function ReturnsPage() {
       setDetails('');
     } catch (error) {
       console.error('Failed to submit return:', error);
-      toast.error('Failed to submit return request');
+      toast.error(t('toast.returns.submitFailed'));
     } finally {
       setSubmitting(false);
     }
@@ -194,8 +194,8 @@ export default function ReturnsPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Returns & Exchanges</h1>
-            <p className="text-gray-600 mt-2">Manage your return requests and RMA</p>
+            <h1 className="text-3xl font-bold text-gray-900">{t('account.returnsPage.title')}</h1>
+            <p className="text-gray-600 mt-2">{t('account.returnsPage.subtitle')}</p>
           </div>
           {eligibleOrders.length > 0 && !showForm && (
             <button
@@ -203,7 +203,7 @@ export default function ReturnsPage() {
               className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2"
             >
               <span>📦</span>
-              Request Return
+              {t('account.returnsPage.requestReturn')}
             </button>
           )}
         </div>
@@ -212,7 +212,7 @@ export default function ReturnsPage() {
         {showForm && (
           <div className="bg-white rounded-xl border border-gray-200 p-6 mb-8">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-gray-900">New Return Request</h2>
+              <h2 className="text-xl font-bold text-gray-900">{t('account.returnsPage.newReturnRequest')}</h2>
               <button
                 onClick={() => setShowForm(false)}
                 className="text-gray-400 hover:text-gray-600"
@@ -225,7 +225,7 @@ export default function ReturnsPage() {
               {/* Select Order */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Select Order *
+                  {t('account.returnsPage.selectOrder')} *
                 </label>
                 <select
                   value={selectedOrder?.id || ''}
@@ -237,7 +237,7 @@ export default function ReturnsPage() {
                   required
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                 >
-                  <option value="">Choose an order...</option>
+                  <option value="">{t('account.returnsPage.chooseOrder')}</option>
                   {eligibleOrders.map((order) => (
                     <option key={order.id} value={order.id}>
                       {order.orderNumber} - {new Date(order.createdAt).toLocaleDateString()}
@@ -250,7 +250,7 @@ export default function ReturnsPage() {
               {selectedOrder && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Select Item to Return *
+                    {t('account.returnsPage.selectItemToReturn')} *
                   </label>
                   <select
                     value={selectedItemId}
@@ -258,7 +258,7 @@ export default function ReturnsPage() {
                     required
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                   >
-                    <option value="">Choose an item...</option>
+                    <option value="">{t('account.returnsPage.chooseItem')}</option>
                     {selectedOrder.items.map((item) => (
                       <option key={item.id} value={item.id}>
                         {item.productName} {item.formatName ? `- ${item.formatName}` : ''} (Qty: {item.quantity})
@@ -271,7 +271,7 @@ export default function ReturnsPage() {
               {/* Reason */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Reason for Return *
+                  {t('account.returnsPage.reasonForReturn')} *
                 </label>
                 <select
                   value={reason}
@@ -279,7 +279,7 @@ export default function ReturnsPage() {
                   required
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                 >
-                  <option value="">Select a reason...</option>
+                  <option value="">{t('account.returnsPage.selectReason')}</option>
                   {returnReasons.map((r) => (
                     <option key={r.value} value={r.value}>
                       {r.label}
@@ -291,25 +291,25 @@ export default function ReturnsPage() {
               {/* Details */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Additional Details
+                  {t('account.returnsPage.additionalDetails')}
                 </label>
                 <textarea
                   value={details}
                   onChange={(e) => setDetails(e.target.value)}
                   rows={4}
-                  placeholder="Please provide any additional information about your return request..."
+                  placeholder={t('account.returnsSettings.placeholderAdditionalInfo')}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                 />
               </div>
 
               {/* Return Policy Notice */}
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h4 className="font-medium text-blue-900 mb-2">Return Policy</h4>
+                <h4 className="font-medium text-blue-900 mb-2">{t('account.returnsPage.returnPolicy')}</h4>
                 <ul className="text-sm text-blue-800 space-y-1">
-                  <li>• Returns must be requested within 30 days of delivery</li>
-                  <li>• Items must be unused and in original packaging</li>
-                  <li>• Return shipping labels will be provided upon approval</li>
-                  <li>• Refunds processed within 5-7 business days after receipt</li>
+                  <li>• {t('account.returnsPage.policyWithin30Days')}</li>
+                  <li>• {t('account.returnsPage.policyUnused')}</li>
+                  <li>• {t('account.returnsPage.policyShippingLabel')}</li>
+                  <li>• {t('account.returnsPage.policyRefundTime')}</li>
                 </ul>
               </div>
 
@@ -320,7 +320,7 @@ export default function ReturnsPage() {
                   onClick={() => setShowForm(false)}
                   className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
                 >
-                  Cancel
+                  {t('common.cancel')}
                 </button>
                 <button
                   type="submit"
@@ -330,10 +330,10 @@ export default function ReturnsPage() {
                   {submitting ? (
                     <>
                       <span className="animate-spin inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full"></span>
-                      Submitting...
+                      {t('common.submitting')}
                     </>
                   ) : (
-                    'Submit Return Request'
+                    t('account.returnsPage.submitReturnRequest')
                   )}
                 </button>
               </div>
@@ -347,22 +347,22 @@ export default function ReturnsPage() {
             <div className="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
               <span className="text-4xl">🔄</span>
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">No Return Requests</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">{t('account.returnsPage.noReturnRequests')}</h2>
             <p className="text-gray-600 mb-6">
-              You haven't submitted any return requests yet.
+              {t('account.returnsPage.noReturnRequestsDesc')}
             </p>
             {eligibleOrders.length > 0 ? (
               <button
                 onClick={() => setShowForm(true)}
                 className="inline-block bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-medium transition-colors"
               >
-                Request a Return
+                {t('account.returnsPage.requestAReturn')}
               </button>
             ) : (
               <p className="text-sm text-gray-500">
-                You don't have any eligible orders for returns at this time.
+                {t('account.returnsPage.noEligibleOrders')}
                 <br />
-                Returns are available for delivered orders within 30 days.
+                {t('account.returnsPage.returnsAvailable')}
               </p>
             )}
           </div>
@@ -430,8 +430,8 @@ export default function ReturnsPage() {
                   {/* Timeline */}
                   <div className="border-t border-gray-200 pt-4 mt-4">
                     <h4 className="text-sm font-medium text-gray-700 mb-3">Return Status Timeline</h4>
-                    <div className="relative pl-6">
-                      <div className="absolute left-1.5 top-2 bottom-2 w-0.5 bg-gray-200"></div>
+                    <div className="relative ps-6">
+                      <div className="absolute start-1.5 top-2 bottom-2 w-0.5 bg-gray-200"></div>
 
                       <TimelineStep
                         label="Submitted"

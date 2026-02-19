@@ -247,10 +247,10 @@ export default function AgingPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-slate-200">
-                  <th className="text-left py-3 px-4 text-sm font-medium text-slate-500">{t('admin.aging.periodCol')}</th>
-                  <th className="text-right py-3 px-4 text-sm font-medium text-slate-500">{t('admin.aging.invoicesCol')}</th>
-                  <th className="text-right py-3 px-4 text-sm font-medium text-slate-500">{t('admin.aging.amountCol')}</th>
-                  <th className="text-right py-3 px-4 text-sm font-medium text-slate-500">%</th>
+                  <th className="text-start py-3 px-4 text-sm font-medium text-slate-500">{t('admin.aging.periodCol')}</th>
+                  <th className="text-end py-3 px-4 text-sm font-medium text-slate-500">{t('admin.aging.invoicesCol')}</th>
+                  <th className="text-end py-3 px-4 text-sm font-medium text-slate-500">{t('admin.aging.amountCol')}</th>
+                  <th className="text-end py-3 px-4 text-sm font-medium text-slate-500">%</th>
                 </tr>
               </thead>
               <tbody>
@@ -261,22 +261,22 @@ export default function AgingPage() {
                         {bucket.label}
                       </span>
                     </td>
-                    <td className="text-right py-3 px-4 font-medium">{bucket.count}</td>
-                    <td className="text-right py-3 px-4 font-medium">
+                    <td className="text-end py-3 px-4 font-medium">{bucket.count}</td>
+                    <td className="text-end py-3 px-4 font-medium">
                       {bucket.total.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}
                     </td>
-                    <td className="text-right py-3 px-4 text-slate-500">{bucket.percentage.toFixed(1)}%</td>
+                    <td className="text-end py-3 px-4 text-slate-500">{bucket.percentage.toFixed(1)}%</td>
                   </tr>
                 ))}
               </tbody>
               <tfoot>
                 <tr className="bg-slate-50 font-semibold">
                   <td className="py-3 px-4">Total</td>
-                  <td className="text-right py-3 px-4">{report.buckets.reduce((s, b) => s + b.count, 0)}</td>
-                  <td className="text-right py-3 px-4">
+                  <td className="text-end py-3 px-4">{report.buckets.reduce((s, b) => s + b.count, 0)}</td>
+                  <td className="text-end py-3 px-4">
                     {report.totalOutstanding.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}
                   </td>
-                  <td className="text-right py-3 px-4">100%</td>
+                  <td className="text-end py-3 px-4">100%</td>
                 </tr>
               </tfoot>
             </table>
@@ -292,13 +292,13 @@ export default function AgingPage() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-slate-200">
-                    <th className="text-left py-3 px-4 text-sm font-medium text-slate-500">{t('admin.aging.nameCol')}</th>
-                    <th className="text-right py-3 px-4 text-sm font-medium text-slate-500">{t('admin.aging.currentCol')}</th>
-                    <th className="text-right py-3 px-4 text-sm font-medium text-slate-500">1-30j</th>
-                    <th className="text-right py-3 px-4 text-sm font-medium text-slate-500">31-60j</th>
-                    <th className="text-right py-3 px-4 text-sm font-medium text-slate-500">61-90j</th>
-                    <th className="text-right py-3 px-4 text-sm font-medium text-slate-500">90j+</th>
-                    <th className="text-right py-3 px-4 text-sm font-medium text-slate-500">Total</th>
+                    <th className="text-start py-3 px-4 text-sm font-medium text-slate-500">{t('admin.aging.nameCol')}</th>
+                    <th className="text-end py-3 px-4 text-sm font-medium text-slate-500">{t('admin.aging.currentCol')}</th>
+                    <th className="text-end py-3 px-4 text-sm font-medium text-slate-500">1-30j</th>
+                    <th className="text-end py-3 px-4 text-sm font-medium text-slate-500">31-60j</th>
+                    <th className="text-end py-3 px-4 text-sm font-medium text-slate-500">61-90j</th>
+                    <th className="text-end py-3 px-4 text-sm font-medium text-slate-500">90j+</th>
+                    <th className="text-end py-3 px-4 text-sm font-medium text-slate-500">Total</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -312,22 +312,22 @@ export default function AgingPage() {
                           )}
                         </div>
                       </td>
-                      <td className="text-right py-3 px-4 text-green-600">
+                      <td className="text-end py-3 px-4 text-green-600">
                         {customer.current > 0 ? customer.current.toFixed(2) + ' $' : '-'}
                       </td>
-                      <td className="text-right py-3 px-4 text-blue-600">
+                      <td className="text-end py-3 px-4 text-blue-600">
                         {customer.days1to30 > 0 ? customer.days1to30.toFixed(2) + ' $' : '-'}
                       </td>
-                      <td className="text-right py-3 px-4 text-yellow-600">
+                      <td className="text-end py-3 px-4 text-yellow-600">
                         {customer.days31to60 > 0 ? customer.days31to60.toFixed(2) + ' $' : '-'}
                       </td>
-                      <td className="text-right py-3 px-4 text-amber-600">
+                      <td className="text-end py-3 px-4 text-amber-600">
                         {customer.days61to90 > 0 ? customer.days61to90.toFixed(2) + ' $' : '-'}
                       </td>
-                      <td className="text-right py-3 px-4 text-red-600 font-medium">
+                      <td className="text-end py-3 px-4 text-red-600 font-medium">
                         {customer.over90 > 0 ? customer.over90.toFixed(2) + ' $' : '-'}
                       </td>
-                      <td className="text-right py-3 px-4 font-semibold">
+                      <td className="text-end py-3 px-4 font-semibold">
                         {customer.total.toFixed(2)} $
                       </td>
                     </tr>

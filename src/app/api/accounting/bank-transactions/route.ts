@@ -8,6 +8,11 @@ import { prisma } from '@/lib/db';
 /**
  * GET /api/accounting/bank-transactions
  * List bank transactions with filters
+ *
+ * #85 Audit: Recommended indexes for performance on large datasets:
+ *   CREATE INDEX idx_bank_tx_date ON "BankTransaction" ("date" DESC) WHERE "deletedAt" IS NULL;
+ *   CREATE INDEX idx_bank_tx_account_date ON "BankTransaction" ("bankAccountId", "date" DESC) WHERE "deletedAt" IS NULL;
+ *   CREATE INDEX idx_bank_tx_reconciliation ON "BankTransaction" ("reconciliationStatus", "date" DESC) WHERE "deletedAt" IS NULL;
  */
 export async function GET(request: NextRequest) {
   try {
@@ -24,10 +29,29 @@ export async function GET(request: NextRequest) {
     const reconciliationStatus = searchParams.get('reconciliationStatus');
     const from = searchParams.get('from');
     const to = searchParams.get('to');
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '50');
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
+    const limit = Math.min(Math.max(1, parseInt(searchParams.get('limit') || '50') || 50), 200);
 
-    const where: Record<string, unknown> = {};
+    // Validate date range if provided
+    if (from || to) {
+      const startDate = from ? new Date(from) : null;
+      const endDate = to ? new Date(to) : null;
+
+      if ((from && isNaN(startDate!.getTime())) || (to && isNaN(endDate!.getTime()))) {
+        return NextResponse.json({ error: 'Format de date invalide. Utilisez le format ISO (YYYY-MM-DD)' }, { status: 400 });
+      }
+      if (startDate && endDate && startDate > endDate) {
+        return NextResponse.json({ error: 'La date de début doit être antérieure à la date de fin' }, { status: 400 });
+      }
+      if (startDate && endDate) {
+        const oneYearMs = 365 * 24 * 60 * 60 * 1000;
+        if (endDate.getTime() - startDate.getTime() > oneYearMs) {
+          return NextResponse.json({ error: 'La plage de dates ne peut pas dépasser 1 an' }, { status: 400 });
+        }
+      }
+    }
+
+    const where: Record<string, unknown> = { deletedAt: null };
     if (bankAccountId) where.bankAccountId = bankAccountId;
     if (reconciliationStatus) where.reconciliationStatus = reconciliationStatus;
     if (from || to) {
@@ -143,7 +167,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'ID requis' }, { status: 400 });
     }
 
-    const existing = await prisma.bankTransaction.findUnique({ where: { id } });
+    const existing = await prisma.bankTransaction.findFirst({ where: { id, deletedAt: null } });
     if (!existing) {
       return NextResponse.json({ error: 'Transaction bancaire non trouvée' }, { status: 404 });
     }

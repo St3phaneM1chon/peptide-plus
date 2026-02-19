@@ -23,6 +23,7 @@ import {
   Textarea,
 } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
+import { toast } from 'sonner';
 
 interface Subscriber {
   id: string;
@@ -63,10 +64,51 @@ export default function NewsletterPage() {
   const [loading, setLoading] = useState(true);
   const [showComposer, setShowComposer] = useState(false);
   const [newCampaign, setNewCampaign] = useState({ subject: '', content: '' });
+  const [savingCampaign, setSavingCampaign] = useState(false);
 
   useEffect(() => {
     fetchData();
   }, []);
+
+  const createCampaign = async (status: 'DRAFT' | 'SCHEDULED' | 'SENT') => {
+    if (!newCampaign.subject.trim() || !newCampaign.content.trim()) {
+      toast.error(t('admin.newsletter.subjectAndContentRequired') || 'Subject and content are required');
+      return;
+    }
+
+    setSavingCampaign(true);
+    try {
+      const res = await fetch('/api/admin/newsletter/campaigns', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          subject: newCampaign.subject,
+          content: newCampaign.content,
+          status,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        toast.error(data.error || 'Failed to create campaign');
+        setSavingCampaign(false);
+        return;
+      }
+
+      const statusMessages: Record<string, string> = {
+        DRAFT: t('admin.newsletter.draftSaved') || 'Draft saved',
+        SCHEDULED: t('admin.newsletter.campaignScheduled') || 'Campaign scheduled',
+        SENT: t('admin.newsletter.campaignSent') || 'Campaign sent',
+      };
+      toast.success(statusMessages[status]);
+      setShowComposer(false);
+      setNewCampaign({ subject: '', content: '' });
+      await fetchData();
+    } catch (err) {
+      console.error('Error creating campaign:', err);
+      toast.error('An error occurred');
+    }
+    setSavingCampaign(false);
+  };
 
   const fetchData = async () => {
     try {
@@ -182,11 +224,11 @@ export default function NewsletterPage() {
           <table className="w-full">
             <thead className="bg-slate-50">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.newsletter.colEmail')}</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.newsletter.colLanguage')}</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.newsletter.colSource')}</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.newsletter.colStatus')}</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.newsletter.colSubscribedAt')}</th>
+                <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.newsletter.colEmail')}</th>
+                <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.newsletter.colLanguage')}</th>
+                <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.newsletter.colSource')}</th>
+                <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.newsletter.colStatus')}</th>
+                <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.newsletter.colSubscribedAt')}</th>
                 <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.newsletter.colActions')}</th>
               </tr>
             </thead>
@@ -287,13 +329,13 @@ export default function NewsletterPage() {
             />
           </FormField>
           <div className="flex gap-3 pt-4 border-t border-slate-200">
-            <Button variant="secondary" className="flex-1">
+            <Button variant="secondary" className="flex-1" onClick={() => createCampaign('DRAFT')} disabled={savingCampaign}>
               {t('admin.newsletter.saveDraft')}
             </Button>
-            <Button variant="outline" icon={Clock} className="flex-1">
+            <Button variant="outline" icon={Clock} className="flex-1" onClick={() => createCampaign('SCHEDULED')} disabled={savingCampaign}>
               {t('admin.newsletter.schedule')}
             </Button>
-            <Button variant="primary" icon={Send} className="flex-1">
+            <Button variant="primary" icon={Send} className="flex-1" onClick={() => createCampaign('SENT')} disabled={savingCampaign} loading={savingCampaign}>
               {t('admin.newsletter.sendNow')}
             </Button>
           </div>

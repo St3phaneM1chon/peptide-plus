@@ -87,7 +87,7 @@ export default function ReviewImageGallery({ images }: ReviewImageGalleryProps) 
           {/* Close button */}
           <button
             onClick={closeLightbox}
-            className="absolute top-4 right-4 text-white hover:text-neutral-300 transition-colors z-10"
+            className="absolute top-4 end-4 text-white hover:text-neutral-300 transition-colors z-10"
           >
             <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -95,7 +95,7 @@ export default function ReviewImageGallery({ images }: ReviewImageGalleryProps) 
           </button>
 
           {/* Image counter */}
-          <div className="absolute top-4 left-4 text-white text-sm bg-black/50 px-3 py-1 rounded-full z-10">
+          <div className="absolute top-4 start-4 text-white text-sm bg-black/50 px-3 py-1 rounded-full z-10">
             {currentIndex + 1} / {images.length}
           </div>
 
@@ -106,7 +106,7 @@ export default function ReviewImageGallery({ images }: ReviewImageGalleryProps) 
                 e.stopPropagation();
                 goToPrevious();
               }}
-              className="absolute left-4 text-white hover:text-neutral-300 transition-colors z-10"
+              className="absolute start-4 text-white hover:text-neutral-300 transition-colors z-10"
             >
               <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -135,7 +135,7 @@ export default function ReviewImageGallery({ images }: ReviewImageGalleryProps) 
                 e.stopPropagation();
                 goToNext();
               }}
-              className="absolute right-4 text-white hover:text-neutral-300 transition-colors z-10"
+              className="absolute end-4 text-white hover:text-neutral-300 transition-colors z-10"
             >
               <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />

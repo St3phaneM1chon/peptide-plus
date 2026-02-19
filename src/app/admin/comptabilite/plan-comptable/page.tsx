@@ -261,11 +261,11 @@ export default function PlanComptablePage() {
         <table className="w-full">
           <thead className="bg-slate-50">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.chartOfAccounts.code')}</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.chartOfAccounts.accountName')}</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.chartOfAccounts.type')}</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.chartOfAccounts.category')}</th>
-              <th className="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase">{t('admin.chartOfAccounts.balance')}</th>
+              <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.chartOfAccounts.code')}</th>
+              <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.chartOfAccounts.accountName')}</th>
+              <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.chartOfAccounts.type')}</th>
+              <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.chartOfAccounts.category')}</th>
+              <th className="px-4 py-3 text-end text-xs font-semibold text-slate-500 uppercase">{t('admin.chartOfAccounts.balance')}</th>
               <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.chartOfAccounts.statusCol')}</th>
               <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.chartOfAccounts.actionsCol')}</th>
             </tr>
@@ -303,7 +303,7 @@ export default function PlanComptablePage() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-slate-600 text-sm">{account.category}</td>
-                    <td className="px-4 py-3 text-right">
+                    <td className="px-4 py-3 text-end">
                       <span className={`font-medium ${account.balance >= 0 ? 'text-slate-900' : 'text-red-600'}`}>
                         {account.balance.toLocaleString(locale, { style: 'currency', currency: 'CAD' })}
                       </span>
@@ -334,7 +334,7 @@ export default function PlanComptablePage() {
                   {/* Child accounts */}
                   {isExpanded && children.map((child) => (
                     <tr key={child.id} className="bg-slate-50/50 hover:bg-slate-100">
-                      <td className="px-4 py-2 pl-12">
+                      <td className="px-4 py-2 ps-12">
                         <span className="font-mono text-sm text-slate-600">{child.code}</span>
                       </td>
                       <td className="px-4 py-2">
@@ -346,7 +346,7 @@ export default function PlanComptablePage() {
                         </span>
                       </td>
                       <td className="px-4 py-2 text-slate-500 text-sm">{child.category}</td>
-                      <td className="px-4 py-2 text-right">
+                      <td className="px-4 py-2 text-end">
                         <span className={`text-sm ${child.balance >= 0 ? 'text-slate-700' : 'text-red-600'}`}>
                           {child.balance.toLocaleString(locale, { style: 'currency', currency: 'CAD' })}
                         </span>

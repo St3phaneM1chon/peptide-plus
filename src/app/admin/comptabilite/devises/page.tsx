@@ -307,13 +307,13 @@ export default function CurrencyPage() {
             <table className="w-full">
               <thead className="bg-neutral-900/50">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-neutral-400 uppercase">{t('admin.multiCurrency.account')}</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-neutral-400 uppercase">{t('admin.multiCurrency.currency')}</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-neutral-400 uppercase">{t('admin.multiCurrency.originalBalance')}</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-neutral-400 uppercase">{t('admin.multiCurrency.cadEquivalent')}</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-neutral-400 uppercase">{t('admin.multiCurrency.originalRate')}</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-neutral-400 uppercase">{t('admin.multiCurrency.currentRate')}</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-neutral-400 uppercase">{t('admin.multiCurrency.gainLoss')}</th>
+                  <th className="px-4 py-3 text-start text-xs font-medium text-neutral-400 uppercase">{t('admin.multiCurrency.account')}</th>
+                  <th className="px-4 py-3 text-start text-xs font-medium text-neutral-400 uppercase">{t('admin.multiCurrency.currency')}</th>
+                  <th className="px-4 py-3 text-end text-xs font-medium text-neutral-400 uppercase">{t('admin.multiCurrency.originalBalance')}</th>
+                  <th className="px-4 py-3 text-end text-xs font-medium text-neutral-400 uppercase">{t('admin.multiCurrency.cadEquivalent')}</th>
+                  <th className="px-4 py-3 text-end text-xs font-medium text-neutral-400 uppercase">{t('admin.multiCurrency.originalRate')}</th>
+                  <th className="px-4 py-3 text-end text-xs font-medium text-neutral-400 uppercase">{t('admin.multiCurrency.currentRate')}</th>
+                  <th className="px-4 py-3 text-end text-xs font-medium text-neutral-400 uppercase">{t('admin.multiCurrency.gainLoss')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-700">
@@ -328,19 +328,19 @@ export default function CurrencyPage() {
                         {account.currency}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-right font-mono text-white">
+                    <td className="px-4 py-3 text-end font-mono text-white">
                       {account.balance.toLocaleString(locale, { minimumFractionDigits: 2 })} {account.currency}
                     </td>
-                    <td className="px-4 py-3 text-right font-mono text-sky-400">
+                    <td className="px-4 py-3 text-end font-mono text-sky-400">
                       {formatCurrency(account.cadEquivalent)}
                     </td>
-                    <td className="px-4 py-3 text-right font-mono text-neutral-400">
+                    <td className="px-4 py-3 text-end font-mono text-neutral-400">
                       {account.originalRate.toFixed(4)}
                     </td>
-                    <td className="px-4 py-3 text-right font-mono text-white">
+                    <td className="px-4 py-3 text-end font-mono text-white">
                       {account.currentRate.toFixed(4)}
                     </td>
-                    <td className={`px-4 py-3 text-right font-mono font-medium ${account.unrealizedGainLoss >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                    <td className={`px-4 py-3 text-end font-mono font-medium ${account.unrealizedGainLoss >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                       {account.unrealizedGainLoss >= 0 ? '+' : ''}{formatCurrency(account.unrealizedGainLoss)}
                     </td>
                   </tr>
@@ -348,12 +348,12 @@ export default function CurrencyPage() {
               </tbody>
               <tfoot className="bg-neutral-900/50">
                 <tr>
-                  <td colSpan={3} className="px-4 py-3 text-right font-medium text-neutral-300">{t('admin.supplierInvoices.total')}</td>
-                  <td className="px-4 py-3 text-right font-bold text-sky-400">
+                  <td colSpan={3} className="px-4 py-3 text-end font-medium text-neutral-300">{t('admin.supplierInvoices.total')}</td>
+                  <td className="px-4 py-3 text-end font-bold text-sky-400">
                     {formatCurrency(totalForeignCAD)}
                   </td>
                   <td colSpan={2}></td>
-                  <td className={`px-4 py-3 text-right font-bold ${totalUnrealizedGainLoss >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  <td className={`px-4 py-3 text-end font-bold ${totalUnrealizedGainLoss >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                     {totalUnrealizedGainLoss >= 0 ? '+' : ''}{formatCurrency(totalUnrealizedGainLoss)}
                   </td>
                 </tr>

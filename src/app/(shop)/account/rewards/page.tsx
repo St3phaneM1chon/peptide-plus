@@ -9,7 +9,7 @@ import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 
 // Types
 interface LoyaltyLevel {
@@ -94,7 +94,7 @@ const AVAILABLE_REWARDS_CONFIG = [
 export default function RewardsPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const { t } = useTranslations();
+  const { t } = useI18n();
 
   // State - Mock data (would come from API in production)
   const [loading, setLoading] = useState(true);
@@ -231,7 +231,7 @@ export default function RewardsPage() {
                 )}
               </p>
             </div>
-            <div className="text-center md:text-right">
+            <div className="text-center md:text-end">
               <p className="text-5xl font-bold">{points.toLocaleString()}</p>
               <p className="text-white/80">{t('customerRewards.availablePoints')}</p>
             </div>

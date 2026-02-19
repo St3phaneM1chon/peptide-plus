@@ -209,11 +209,13 @@ export function FooterCorporate() {
             <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.7)', lineHeight: 1.8 }}>
               <p>{process.env.NEXT_PUBLIC_ADDRESS || '123 Rue Principale'}</p>
               <p>{process.env.NEXT_PUBLIC_CITY || 'Montréal, QC H2X 1Y6'}</p>
-              <p style={{ marginTop: '16px' }}>
-                <a href={`tel:${process.env.NEXT_PUBLIC_PHONE || '1-800-XXX-XXXX'}`} style={{ color: 'inherit' }}>
-                  📞 {process.env.NEXT_PUBLIC_PHONE || '1-800-XXX-XXXX'}
-                </a>
-              </p>
+              {process.env.NEXT_PUBLIC_PHONE && (
+                <p style={{ marginTop: '16px' }}>
+                  <a href={`tel:${process.env.NEXT_PUBLIC_PHONE}`} style={{ color: 'inherit' }}>
+                    📞 {process.env.NEXT_PUBLIC_PHONE}
+                  </a>
+                </p>
+              )}
               <p>
                 <a href={`mailto:${process.env.NEXT_PUBLIC_EMAIL || 'info@biocyclepeptides.com'}`} style={{ color: 'inherit' }}>
                   ✉️ {process.env.NEXT_PUBLIC_EMAIL || 'info@biocyclepeptides.com'}

@@ -271,7 +271,7 @@ export default function FacturesFournisseursPage() {
                   {t('admin.supplierInvoices.markPaid')}
                 </Button>
               )}
-              <Button variant="secondary" icon={Download} className="ml-auto">
+              <Button variant="secondary" icon={Download} className="ms-auto">
                 {t('admin.supplierInvoices.download')}
               </Button>
             </>
@@ -304,15 +304,15 @@ export default function FacturesFournisseursPage() {
             <table className="w-full border border-slate-200 rounded-lg overflow-hidden">
               <thead className="bg-slate-50">
                 <tr>
-                  <th className="px-4 py-2 text-left text-xs font-semibold text-slate-500">{t('admin.supplierInvoices.description')}</th>
-                  <th className="px-4 py-2 text-right text-xs font-semibold text-slate-500">{t('admin.supplierInvoices.amount')}</th>
+                  <th className="px-4 py-2 text-start text-xs font-semibold text-slate-500">{t('admin.supplierInvoices.description')}</th>
+                  <th className="px-4 py-2 text-end text-xs font-semibold text-slate-500">{t('admin.supplierInvoices.amount')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
                 {inv.items.map((item, index) => (
                   <tr key={index}>
                     <td className="px-4 py-3 text-slate-900">{item.description}</td>
-                    <td className="px-4 py-3 text-right font-medium text-slate-900">{item.amount.toFixed(2)} $</td>
+                    <td className="px-4 py-3 text-end font-medium text-slate-900">{item.amount.toFixed(2)} $</td>
                   </tr>
                 ))}
               </tbody>

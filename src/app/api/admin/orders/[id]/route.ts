@@ -2,14 +2,16 @@ export const dynamic = 'force-dynamic';
 
 /**
  * Admin Single Order API
- * GET  - Full order detail
- * PUT  - Update order fields
- * POST - Actions (refund, reship)
+ * GET   - Full order detail
+ * PATCH - Update order fields (used by frontend)
+ * PUT   - Update order fields (legacy)
+ * POST  - Actions (refund, reship)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { auth } from '@/lib/auth-config';
+import { withAdminGuard } from '@/lib/admin-api-guard';
+import Stripe from 'stripe';
 import {
   createRefundAccountingEntries,
   createCreditNote,
@@ -17,19 +19,16 @@ import {
 } from '@/lib/accounting/webhook-accounting.service';
 import { generateCOGSEntry } from '@/lib/inventory';
 import { sendOrderLifecycleEmail } from '@/lib/email';
+import { getPayPalAccessToken, PAYPAL_API_URL } from '@/lib/paypal';
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: '2023-10-16',
+});
 
 // GET /api/admin/orders/[id] - Full order detail
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const GET = withAdminGuard(async (_request, { session, params }) => {
   try {
-    const session = await auth();
-    if (!session?.user || (session.user.role !== 'EMPLOYEE' && session.user.role !== 'OWNER')) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-
-    const { id } = await params;
+    const id = params!.id;
 
     const order = await prisma.order.findUnique({
       where: { id },
@@ -150,96 +149,134 @@ export async function GET(
       { status: 500 }
     );
   }
-}
+});
 
-// PUT /api/admin/orders/[id] - Update order fields
-export async function PUT(
+// ─── Shared update handler used by both PATCH and PUT ──────────────────────
+async function handleOrderUpdate(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  id: string,
+  session: { user: { id: string; role: string; name?: string | null; email?: string | null } }
 ) {
-  try {
-    const session = await auth();
-    if (!session?.user || (session.user.role !== 'EMPLOYEE' && session.user.role !== 'OWNER')) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
+  const body = await request.json();
+  const { status, trackingNumber, carrier, adminNotes } = body;
 
-    const { id } = await params;
-    const body = await request.json();
-    const { status, trackingNumber, carrier, adminNotes } = body;
+  const existingOrder = await prisma.order.findUnique({
+    where: { id },
+  });
 
-    const existingOrder = await prisma.order.findUnique({
-      where: { id },
-    });
+  if (!existingOrder) {
+    return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+  }
 
-    if (!existingOrder) {
-      return NextResponse.json({ error: 'Order not found' }, { status: 404 });
-    }
+  // BE-PAY-09: Order state machine - validate transitions
+  const VALID_TRANSITIONS: Record<string, string[]> = {
+    'PENDING': ['CONFIRMED', 'CANCELLED'],
+    'CONFIRMED': ['PROCESSING', 'CANCELLED'],
+    'PROCESSING': ['SHIPPED', 'CANCELLED'],
+    'SHIPPED': ['DELIVERED', 'RETURNED'],
+    'DELIVERED': ['RETURNED', 'REFUNDED'],
+    'RETURNED': ['REFUNDED'],
+    'CANCELLED': [],   // Terminal state
+    'REFUNDED': [],    // Terminal state
+  };
 
-    // Validate status if provided
-    const validStatuses = ['PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'];
-    if (status && !validStatuses.includes(status)) {
+  const validStatuses = Object.keys(VALID_TRANSITIONS);
+  if (status && !validStatuses.includes(status)) {
+    return NextResponse.json(
+      { error: `Invalid status. Must be one of: ${validStatuses.join(', ')}` },
+      { status: 400 }
+    );
+  }
+
+  // Validate state transition if status is changing
+  if (status && status !== existingOrder.status) {
+    const allowedNextStatuses = VALID_TRANSITIONS[existingOrder.status] || [];
+    if (!allowedNextStatuses.includes(status)) {
       return NextResponse.json(
-        { error: `Invalid status. Must be one of: ${validStatuses.join(', ')}` },
+        {
+          error: `Invalid status transition: ${existingOrder.status} -> ${status}. ` +
+            `Allowed transitions from ${existingOrder.status}: ${allowedNextStatuses.length > 0 ? allowedNextStatuses.join(', ') : 'none (terminal state)'}`,
+        },
         { status: 400 }
       );
     }
+  }
 
-    const updateData: Record<string, unknown> = {};
+  const updateData: Record<string, unknown> = {};
 
-    if (status !== undefined) {
-      updateData.status = status;
+  if (status !== undefined) {
+    updateData.status = status;
+  }
+
+  if (trackingNumber !== undefined) {
+    updateData.trackingNumber = trackingNumber;
+  }
+
+  if (carrier !== undefined) {
+    updateData.carrier = carrier;
+  }
+
+  if (adminNotes !== undefined) {
+    updateData.adminNotes = adminNotes;
+  }
+
+  // Set timestamps based on status
+  if (status === 'SHIPPED' && !existingOrder.shippedAt) {
+    updateData.shippedAt = new Date();
+  }
+
+  if (status === 'DELIVERED' && !existingOrder.deliveredAt) {
+    updateData.deliveredAt = new Date();
+  }
+
+  const order = await prisma.order.update({
+    where: { id },
+    data: updateData,
+    include: {
+      items: true,
+      currency: { select: { code: true, symbol: true } },
+    },
+  });
+
+  // Send lifecycle email on status change (fire-and-forget)
+  if (status && status !== existingOrder.status) {
+    const emailEvent = status as string;
+    const validEmailEvents = ['CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'];
+
+    if (validEmailEvents.includes(emailEvent)) {
+      sendOrderLifecycleEmail(
+        id,
+        emailEvent as 'CONFIRMED' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED',
+        {
+          trackingNumber: trackingNumber || undefined,
+          carrier: carrier || undefined,
+        },
+      ).catch((err) => {
+        console.error(`Failed to send ${emailEvent} email for order ${id}:`, err);
+      });
     }
+  }
 
-    if (trackingNumber !== undefined) {
-      updateData.trackingNumber = trackingNumber;
-    }
+  return NextResponse.json({ order });
+}
 
-    if (carrier !== undefined) {
-      updateData.carrier = carrier;
-    }
+// PATCH /api/admin/orders/[id] - Update order fields (used by frontend)
+export const PATCH = withAdminGuard(async (request, { session, params }) => {
+  try {
+    return await handleOrderUpdate(request, params!.id, session);
+  } catch (error) {
+    console.error('Admin order PATCH error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+});
 
-    if (adminNotes !== undefined) {
-      updateData.adminNotes = adminNotes;
-    }
-
-    // Set timestamps based on status
-    if (status === 'SHIPPED' && !existingOrder.shippedAt) {
-      updateData.shippedAt = new Date();
-    }
-
-    if (status === 'DELIVERED' && !existingOrder.deliveredAt) {
-      updateData.deliveredAt = new Date();
-    }
-
-    const order = await prisma.order.update({
-      where: { id },
-      data: updateData,
-      include: {
-        items: true,
-        currency: { select: { code: true, symbol: true } },
-      },
-    });
-
-    // ── Send lifecycle email on status change (fire-and-forget) ──────────
-    if (status && status !== existingOrder.status) {
-      const emailEvent = status as string;
-      const validEmailEvents = ['CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'];
-
-      if (validEmailEvents.includes(emailEvent)) {
-        sendOrderLifecycleEmail(
-          id,
-          emailEvent as 'CONFIRMED' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED',
-          {
-            trackingNumber: trackingNumber || undefined,
-            carrier: carrier || undefined,
-          },
-        ).catch((err) => {
-          console.error(`Failed to send ${emailEvent} email for order ${id}:`, err);
-        });
-      }
-    }
-
-    return NextResponse.json({ order });
+// PUT /api/admin/orders/[id] - Update order fields (legacy)
+export const PUT = withAdminGuard(async (request, { session, params }) => {
+  try {
+    return await handleOrderUpdate(request, params!.id, session);
   } catch (error) {
     console.error('Admin order PUT error:', error);
     return NextResponse.json(
@@ -247,20 +284,12 @@ export async function PUT(
       { status: 500 }
     );
   }
-}
+});
 
 // POST /api/admin/orders/[id]?action=refund|reship
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const POST = withAdminGuard(async (request, { session, params }) => {
   try {
-    const session = await auth();
-    if (!session?.user || (session.user.role !== 'EMPLOYEE' && session.user.role !== 'OWNER')) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-
-    const { id } = await params;
+    const id = params!.id;
     const { searchParams } = new URL(request.url);
     const action = searchParams.get('action');
 
@@ -283,7 +312,7 @@ export async function POST(
       { status: 500 }
     );
   }
-}
+});
 
 // ─── REFUND HANDLER ─────────────────────────────────────────────────────────────
 
@@ -321,9 +350,28 @@ async function handleRefund(
 
   // Validate refund amount
   const orderTotal = Number(order.total);
-  if (amount > orderTotal) {
+
+  // BE-PAY-08: Calculate total already refunded to prevent over-refund
+  const previousRefunds = await prisma.creditNote.aggregate({
+    where: { orderId: orderId, status: { not: 'VOID' } },
+    _sum: { total: true },
+  });
+  const alreadyRefunded = Number(previousRefunds._sum?.total || 0);
+  const maxRefundable = Math.round((orderTotal - alreadyRefunded) * 100) / 100;
+
+  if (amount > maxRefundable) {
     return NextResponse.json(
-      { error: `Refund amount (${amount}) exceeds order total (${orderTotal})` },
+      {
+        error: `Refund amount ($${amount}) exceeds maximum refundable amount ($${maxRefundable}). ` +
+          `Order total: $${orderTotal}, already refunded: $${alreadyRefunded}.`,
+      },
+      { status: 400 }
+    );
+  }
+
+  if (maxRefundable <= 0) {
+    return NextResponse.json(
+      { error: `Order has already been fully refunded ($${alreadyRefunded} of $${orderTotal})` },
       { status: 400 }
     );
   }
@@ -336,7 +384,76 @@ async function handleRefund(
     );
   }
 
-  const isFullRefund = amount >= orderTotal;
+  // BE-PAY-08: Full refund = this refund covers the remaining refundable amount
+  const isFullRefund = amount >= maxRefundable;
+
+  // ── Actually refund via Stripe or PayPal ──────────────────────────────
+  if (order.stripePaymentId) {
+    // Stripe refund
+    try {
+      await stripe.refunds.create({
+        payment_intent: order.stripePaymentId,
+        amount: Math.round(amount * 100), // Stripe uses cents
+        reason: 'requested_by_customer',
+      });
+    } catch (stripeError) {
+      console.error('Stripe refund failed:', stripeError);
+      return NextResponse.json(
+        { error: `Stripe refund failed: ${stripeError instanceof Error ? stripeError.message : 'Unknown error'}` },
+        { status: 502 }
+      );
+    }
+  } else if (order.paypalOrderId) {
+    // PayPal refund
+    try {
+      const paypalAccessToken = await getPayPalAccessToken();
+
+      // Get the capture ID from the PayPal order
+      const orderRes = await fetch(`${PAYPAL_API_URL}/v2/checkout/orders/${order.paypalOrderId}`, {
+        headers: { 'Authorization': `Bearer ${paypalAccessToken}` },
+      });
+      const orderData = await orderRes.json();
+      const captureId = orderData.purchase_units?.[0]?.payments?.captures?.[0]?.id;
+
+      if (!captureId) {
+        return NextResponse.json(
+          { error: 'PayPal capture ID not found - cannot refund' },
+          { status: 400 }
+        );
+      }
+
+      const refundRes = await fetch(`${PAYPAL_API_URL}/v2/payments/captures/${captureId}/refund`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${paypalAccessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(
+          isFullRefund ? {} : { amount: { value: amount.toFixed(2), currency_code: 'CAD' } }
+        ),
+      });
+
+      if (!refundRes.ok) {
+        const refundError = await refundRes.json();
+        console.error('PayPal refund failed:', refundError);
+        return NextResponse.json(
+          { error: `PayPal refund failed: ${refundError.message || JSON.stringify(refundError)}` },
+          { status: 502 }
+        );
+      }
+    } catch (paypalError) {
+      console.error('PayPal refund failed:', paypalError);
+      return NextResponse.json(
+        { error: `PayPal refund failed: ${paypalError instanceof Error ? paypalError.message : 'Unknown error'}` },
+        { status: 502 }
+      );
+    }
+  } else {
+    return NextResponse.json(
+      { error: 'No payment provider ID found on order - cannot refund' },
+      { status: 400 }
+    );
+  }
 
   // Calculate proportional tax refund
   const refundRatio = amount / orderTotal;
@@ -504,59 +621,70 @@ async function handleReship(
     );
   }
 
-  // Generate replacement order number
-  const lastOrder = await prisma.order.findFirst({
-    orderBy: { orderNumber: 'desc' },
-    select: { orderNumber: true },
-  });
-  const lastNum = lastOrder ? parseInt(lastOrder.orderNumber.split('-').pop() || '0') : 0;
+  // BUG 11: Generate replacement order number with FOR UPDATE lock to prevent duplicates
   const year = new Date().getFullYear();
-  const replacementOrderNumber = `PP-${year}-${String(lastNum + 1).padStart(6, '0')}`;
+  const prefix = `PP-${year}-`;
 
-  // Create replacement order at $0
-  const replacementOrder = await prisma.order.create({
-    data: {
-      orderNumber: replacementOrderNumber,
-      userId: order.userId,
-      subtotal: 0,
-      shippingCost: 0,
-      discount: 0,
-      tax: 0,
-      taxTps: 0,
-      taxTvq: 0,
-      taxTvh: 0,
-      total: 0,
-      currencyId: order.currencyId,
-      paymentStatus: 'PAID', // $0 = considered paid
-      status: 'PROCESSING',
-      shippingName: order.shippingName,
-      shippingAddress1: order.shippingAddress1,
-      shippingAddress2: order.shippingAddress2,
-      shippingCity: order.shippingCity,
-      shippingState: order.shippingState,
-      shippingPostal: order.shippingPostal,
-      shippingCountry: order.shippingCountry,
-      shippingPhone: order.shippingPhone,
-      parentOrderId: order.id,
-      replacementReason: reason,
-      orderType: 'REPLACEMENT',
-      adminNotes: `[RESHIP] Re-expedition de ${order.orderNumber} - ${reason}`,
-      items: {
-        create: order.items.map((item) => ({
-          productId: item.productId,
-          formatId: item.formatId,
-          productName: item.productName,
-          formatName: item.formatName,
-          sku: item.sku,
-          quantity: item.quantity,
-          unitPrice: 0,
-          discount: 0,
-          total: 0,
-        })),
+  // Create replacement order at $0 (inside transaction for atomic order number)
+  const replacementOrder = await prisma.$transaction(async (tx) => {
+    const lastRows = await tx.$queryRaw<{ order_number: string }[]>`
+      SELECT "orderNumber" as order_number FROM "Order"
+      WHERE "orderNumber" LIKE ${prefix + '%'}
+      ORDER BY "orderNumber" DESC
+      LIMIT 1
+      FOR UPDATE
+    `;
+    const lastNum = lastRows.length > 0
+      ? parseInt(lastRows[0].order_number.replace(prefix, ''), 10)
+      : 0;
+    const replacementOrderNumber = `${prefix}${String(lastNum + 1).padStart(6, '0')}`;
+
+    return tx.order.create({
+      data: {
+        orderNumber: replacementOrderNumber,
+        userId: order.userId,
+        subtotal: 0,
+        shippingCost: 0,
+        discount: 0,
+        tax: 0,
+        taxTps: 0,
+        taxTvq: 0,
+        taxTvh: 0,
+        total: 0,
+        currencyId: order.currencyId,
+        paymentStatus: 'PAID', // $0 = considered paid
+        status: 'PROCESSING',
+        shippingName: order.shippingName,
+        shippingAddress1: order.shippingAddress1,
+        shippingAddress2: order.shippingAddress2,
+        shippingCity: order.shippingCity,
+        shippingState: order.shippingState,
+        shippingPostal: order.shippingPostal,
+        shippingCountry: order.shippingCountry,
+        shippingPhone: order.shippingPhone,
+        parentOrderId: order.id,
+        replacementReason: reason,
+        orderType: 'REPLACEMENT',
+        adminNotes: `[RESHIP] Re-expedition de ${order.orderNumber} - ${reason}`,
+        items: {
+          create: order.items.map((item) => ({
+            productId: item.productId,
+            formatId: item.formatId,
+            productName: item.productName,
+            formatName: item.formatName,
+            sku: item.sku,
+            quantity: item.quantity,
+            unitPrice: 0,
+            discount: 0,
+            total: 0,
+          })),
+        },
       },
-    },
-    include: { items: true },
+      include: { items: true },
+    });
   });
+
+  const replacementOrderNumber = replacementOrder.orderNumber;
 
   // Process inventory: LOSS on original + SALE on replacement + decrement stock
   let totalLossAmount = 0;

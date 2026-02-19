@@ -424,7 +424,7 @@ export default function QuickEntryPage() {
               <button
                 key={template.id}
                 onClick={() => setSelectedTemplate(template)}
-                className={`p-4 rounded-xl border text-left transition-all ${
+                className={`p-4 rounded-xl border text-start transition-all ${
                   selectedTemplate?.id === template.id
                     ? 'bg-sky-600/20 border-sky-500'
                     : 'bg-neutral-800 border-neutral-700 hover:border-neutral-600'
@@ -471,7 +471,7 @@ export default function QuickEntryPage() {
                       {entry.date.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </div>
-                  <div className="text-right">
+                  <div className="text-end">
                     <p className="text-sm font-medium text-white">
                       {entry.amount.toLocaleString(locale, { style: 'currency', currency: 'CAD' })}
                     </p>
@@ -566,22 +566,22 @@ export default function QuickEntryPage() {
                   <table className="w-full text-sm">
                     <thead className="bg-neutral-700/50">
                       <tr>
-                        <th className="px-3 py-2 text-left text-xs text-neutral-400">{t('admin.quickEntry.account')}</th>
-                        <th className="px-3 py-2 text-right text-xs text-neutral-400">{t('admin.quickEntry.debit')}</th>
-                        <th className="px-3 py-2 text-right text-xs text-neutral-400">{t('admin.quickEntry.credit')}</th>
+                        <th className="px-3 py-2 text-start text-xs text-neutral-400">{t('admin.quickEntry.account')}</th>
+                        <th className="px-3 py-2 text-end text-xs text-neutral-400">{t('admin.quickEntry.debit')}</th>
+                        <th className="px-3 py-2 text-end text-xs text-neutral-400">{t('admin.quickEntry.credit')}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-neutral-700">
                       {calculatePreview().map((line, i) => (
                         <tr key={i}>
                           <td className="px-3 py-2">
-                            <span className="text-neutral-400 mr-2">{line.accountCode}</span>
+                            <span className="text-neutral-400 me-2">{line.accountCode}</span>
                             <span className="text-white">{line.accountName}</span>
                           </td>
-                          <td className="px-3 py-2 text-right font-mono text-green-400">
+                          <td className="px-3 py-2 text-end font-mono text-green-400">
                             {line.debit > 0 ? line.debit.toFixed(2) : ''}
                           </td>
-                          <td className="px-3 py-2 text-right font-mono text-red-400">
+                          <td className="px-3 py-2 text-end font-mono text-red-400">
                             {line.credit > 0 ? line.credit.toFixed(2) : ''}
                           </td>
                         </tr>
@@ -590,10 +590,10 @@ export default function QuickEntryPage() {
                     <tfoot className="bg-neutral-700/30">
                       <tr>
                         <td className="px-3 py-2 font-medium text-white">{t('admin.quickEntry.totalRow')}</td>
-                        <td className="px-3 py-2 text-right font-mono font-medium text-green-400">
+                        <td className="px-3 py-2 text-end font-mono font-medium text-green-400">
                           {calculatePreview().reduce((sum, l) => sum + l.debit, 0).toFixed(2)}
                         </td>
-                        <td className="px-3 py-2 text-right font-mono font-medium text-red-400">
+                        <td className="px-3 py-2 text-end font-mono font-medium text-red-400">
                           {calculatePreview().reduce((sum, l) => sum + l.credit, 0).toFixed(2)}
                         </td>
                       </tr>

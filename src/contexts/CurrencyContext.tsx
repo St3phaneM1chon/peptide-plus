@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react';
 
 interface Currency {
   id?: string;
@@ -76,50 +76,48 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
       });
   }, []);
 
-  const setCurrency = (newCurrency: Currency) => {
+  const setCurrency = useCallback((newCurrency: Currency) => {
     setCurrencyState(newCurrency);
     localStorage.setItem(CURRENCY_STORAGE_KEY, newCurrency.code);
-  };
+  }, []);
 
-  const convertPrice = (priceInCAD: number): number => {
+  const convertPrice = useCallback((priceInCAD: number): number => {
     return priceInCAD * currency.exchangeRate;
-  };
+  }, [currency.exchangeRate]);
 
-  const formatPrice = (priceInCAD: number): string => {
-    const converted = convertPrice(priceInCAD);
+  // Memoize Intl.NumberFormat instance to avoid re-creating on every formatPrice call
+  const formatter = useMemo(() => {
+    const userLocale =
+      typeof navigator !== 'undefined' && navigator.language
+        ? navigator.language
+        : 'en-CA';
 
-    // Select locale based on currency for proper formatting
-    const localeMap: Record<string, string> = {
-      CAD: 'en-CA',
-      USD: 'en-US',
-      EUR: 'fr-FR',
-      GBP: 'en-GB',
-    };
-    const locale = localeMap[currency.code] || 'en-CA';
-
-    const formatter = new Intl.NumberFormat(locale, {
+    return new Intl.NumberFormat(userLocale, {
       style: 'currency',
       currency: currency.code,
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     });
+  }, [currency.code]);
 
+  const formatPrice = useCallback((priceInCAD: number): string => {
+    const converted = priceInCAD * currency.exchangeRate;
     return formatter.format(converted);
-  };
+  }, [currency.exchangeRate, formatter]);
 
   const stripeCurrencyCode = currency.code.toLowerCase();
 
+  const value = useMemo(() => ({
+    currency,
+    currencies,
+    setCurrency,
+    convertPrice,
+    formatPrice,
+    stripeCurrencyCode,
+  }), [currency, currencies, setCurrency, convertPrice, formatPrice, stripeCurrencyCode]);
+
   return (
-    <CurrencyContext.Provider
-      value={{
-        currency,
-        currencies,
-        setCurrency,
-        convertPrice,
-        formatPrice,
-        stripeCurrencyCode,
-      }}
-    >
+    <CurrencyContext.Provider value={value}>
       {children}
     </CurrencyContext.Provider>
   );

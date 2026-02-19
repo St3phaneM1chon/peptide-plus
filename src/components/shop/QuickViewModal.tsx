@@ -1,14 +1,15 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useCart } from '@/contexts/CartContext';
 import { useUpsell } from '@/contexts/UpsellContext';
 import { useCurrency } from '@/contexts/CurrencyContext';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
+import { getFormatIcon } from '@/lib/format-icons';
 
 type FormatType = 'vial_2ml' | 'vial_10ml' | 'cartridge_3ml' | 'cartridge_kit_12' | 'capsule' | 'pack_10' | 'syringe' | 'accessory' | 'powder' | 'gummies' | 'capsules_30' | 'capsules_60' | 'capsules_120' | 'pack_2' | 'pack_5' | 'box_50' | 'box_100' | 'kit';
 
@@ -43,27 +44,7 @@ interface QuickViewModalProps {
   onClose: () => void;
 }
 
-// Format type icons - same as ProductCard
-const formatIcons: Record<string, string> = {
-  vial_2ml: '💉',
-  vial_10ml: '🧪',
-  cartridge_3ml: '💊',
-  cartridge_kit_12: '📦',
-  capsule: '💊',
-  capsules_30: '💊',
-  capsules_60: '💊',
-  capsules_120: '💊',
-  pack_2: '📦',
-  pack_5: '📦',
-  pack_10: '📦',
-  box_50: '📦',
-  box_100: '📦',
-  syringe: '💉',
-  accessory: '🔧',
-  powder: '🥤',
-  gummies: '🍬',
-  kit: '🎁',
-};
+// Format icons imported from shared utility: @/lib/format-icons
 
 export default function QuickViewModal({ slug, isOpen, onClose }: QuickViewModalProps) {
   const [product, setProduct] = useState<Product | null>(null);
@@ -72,10 +53,11 @@ export default function QuickViewModal({ slug, isOpen, onClose }: QuickViewModal
   const [quantity, setQuantity] = useState(1);
   const [isAdding, setIsAdding] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
   const { addItem } = useCart();
   const { addItemWithUpsell } = useUpsell();
   const { formatPrice } = useCurrency();
-  const { t, locale } = useTranslations();
+  const { t, locale } = useI18n();
 
   // Fetch product data when modal opens
   useEffect(() => {
@@ -107,16 +89,53 @@ export default function QuickViewModal({ slug, isOpen, onClose }: QuickViewModal
     fetchProduct();
   }, [isOpen, slug, onClose]);
 
-  // Close on Escape key
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
+  // Close on Escape key + focus trap
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isOpen) {
         onClose();
+        return;
       }
+
+      if (e.key === 'Tab' && modalRef.current) {
+        const focusable = modalRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusable.length === 0) return;
+
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    },
+    [isOpen, onClose]
+  );
+
+  useEffect(() => {
+    if (isOpen) {
+      previousFocusRef.current = document.activeElement as HTMLElement;
+      document.addEventListener('keydown', handleKeyDown);
+
+      requestAnimationFrame(() => {
+        const focusable = modalRef.current?.querySelector<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        focusable?.focus();
+      });
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      previousFocusRef.current?.focus();
     };
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
-  }, [isOpen, onClose]);
+  }, [isOpen, handleKeyDown]);
 
   // Reset state when modal closes
   useEffect(() => {
@@ -198,14 +217,14 @@ export default function QuickViewModal({ slug, isOpen, onClose }: QuickViewModal
         ref={modalRef}
         role="dialog"
         aria-modal="true"
-        aria-label="Quick view product details"
-        className="fixed inset-x-4 top-1/2 -translate-y-1/2 md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:w-full md:max-w-4xl bg-white rounded-2xl shadow-2xl z-50 overflow-hidden animate-slide-up"
+        aria-label={t('shop.aria.quickViewDetails')}
+        className="fixed inset-x-4 top-1/2 -translate-y-1/2 md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:w-full md:max-w-4xl bg-white rounded-2xl shadow-2xl z-50 overflow-hidden animate-slide-up motion-safe:animate-[slideUp_0.3s_ease-out]"
       >
         {/* Close Button */}
         <button
           onClick={onClose}
-          aria-label="Close quick view"
-          className="absolute top-4 right-4 z-10 p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:bg-white transition-all"
+          aria-label={t('shop.aria.closeQuickView')}
+          className="absolute top-4 end-4 z-10 p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:bg-white transition-all"
         >
           <svg className="w-5 h-5 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -231,7 +250,7 @@ export default function QuickViewModal({ slug, isOpen, onClose }: QuickViewModal
                 />
                 {/* Category Badge */}
                 {getCategoryName() && (
-                  <span className="absolute top-4 left-4 px-3 py-1 bg-black/80 text-white text-xs font-medium rounded-full">
+                  <span className="absolute top-4 start-4 px-3 py-1 bg-black/80 text-white text-xs font-medium rounded-full">
                     {getCategoryName()}
                   </span>
                 )}
@@ -307,9 +326,9 @@ export default function QuickViewModal({ slug, isOpen, onClose }: QuickViewModal
                           }`}
                         >
                           <span className="text-2xl">
-                            {format.type ? formatIcons[format.type] || '📦' : '📦'}
+                            {getFormatIcon(format.type)}
                           </span>
-                          <div className="flex-1 text-left">
+                          <div className="flex-1 text-start">
                             <p className="font-medium text-neutral-900">{getFormatName(format)}</p>
                             <p className="text-sm text-orange-600 font-bold">{formatPrice(format.price)}</p>
                           </div>
@@ -332,7 +351,7 @@ export default function QuickViewModal({ slug, isOpen, onClose }: QuickViewModal
                 <div className="flex items-center border border-neutral-300 rounded-lg w-fit">
                   <button
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    aria-label="Decrease quantity"
+                    aria-label={t('shop.aria.decreaseQuantity')}
                     className="w-10 h-10 flex items-center justify-center text-neutral-600 hover:bg-neutral-100"
                   >
                     −
@@ -340,7 +359,7 @@ export default function QuickViewModal({ slug, isOpen, onClose }: QuickViewModal
                   <span className="w-12 text-center text-lg font-medium">{quantity}</span>
                   <button
                     onClick={() => setQuantity(quantity + 1)}
-                    aria-label="Increase quantity"
+                    aria-label={t('shop.aria.increaseQuantity')}
                     className="w-10 h-10 flex items-center justify-center text-neutral-600 hover:bg-neutral-100"
                   >
                     +
@@ -377,48 +396,6 @@ export default function QuickViewModal({ slug, isOpen, onClose }: QuickViewModal
         ) : null}
       </div>
 
-      <style jsx global>{`
-        @keyframes fade-in {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
-        }
-
-        @keyframes slide-up {
-          from {
-            opacity: 0;
-            transform: translateY(20px) translateX(-50%);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(-50%) translateX(-50%);
-          }
-        }
-
-        @media (max-width: 768px) {
-          @keyframes slide-up {
-            from {
-              opacity: 0;
-              transform: translateY(20px);
-            }
-            to {
-              opacity: 1;
-              transform: translateY(-50%);
-            }
-          }
-        }
-
-        .animate-fade-in {
-          animation: fade-in 0.2s ease-out;
-        }
-
-        .animate-slide-up {
-          animation: slide-up 0.3s ease-out;
-        }
-      `}</style>
     </>
   );
 

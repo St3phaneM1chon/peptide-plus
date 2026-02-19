@@ -8,25 +8,29 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { auth } from '@/lib/auth-config';
-import { validateCsrf } from '@/lib/csrf-middleware';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 
 // GET /api/admin/promo-codes - List all promo codes with usage counts
-export async function GET() {
+export const GET = withAdminGuard(async (request, { session }) => {
   try {
-    const session = await auth();
-    if (!session?.user || (session.user.role !== 'EMPLOYEE' && session.user.role !== 'OWNER')) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
+    const { searchParams } = new URL(request.url);
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
+    const limit = Math.min(parseInt(searchParams.get('limit') || '20', 10), 100);
+    const skip = (page - 1) * limit;
 
-    const promoCodes = await prisma.promoCode.findMany({
-      orderBy: { createdAt: 'desc' },
-      include: {
-        _count: {
-          select: { usages: true },
+    const [promoCodes, total] = await Promise.all([
+      prisma.promoCode.findMany({
+        orderBy: { createdAt: 'desc' },
+        include: {
+          _count: {
+            select: { usages: true },
+          },
         },
-      },
-    });
+        skip,
+        take: limit,
+      }),
+      prisma.promoCode.count(),
+    ]);
 
     // Convert Decimal fields to numbers for JSON serialization
     const serialized = promoCodes.map((pc) => ({
@@ -51,7 +55,15 @@ export async function GET() {
       _count: pc._count,
     }));
 
-    return NextResponse.json({ promoCodes: serialized });
+    return NextResponse.json({
+      promoCodes: serialized,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+      },
+    });
   } catch (error) {
     console.error('Admin promo-codes GET error:', error);
     return NextResponse.json(
@@ -59,21 +71,11 @@ export async function GET() {
       { status: 500 }
     );
   }
-}
+});
 
 // POST /api/admin/promo-codes - Create a new promo code
-export async function POST(request: NextRequest) {
+export const POST = withAdminGuard(async (request, { session }) => {
   try {
-    const csrfValid = await validateCsrf(request);
-    if (!csrfValid) {
-      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
-    }
-
-    const session = await auth();
-    if (!session?.user || (session.user.role !== 'EMPLOYEE' && session.user.role !== 'OWNER')) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-
     const body = await request.json();
     const {
       code,
@@ -172,4 +174,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

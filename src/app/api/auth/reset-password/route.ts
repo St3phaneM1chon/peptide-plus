@@ -11,6 +11,7 @@ import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { checkPasswordHistory, addToPasswordHistory } from '@/lib/password-history';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
+import { PASSWORD_MIN_LENGTH } from '@/lib/constants';
 
 export async function POST(request: NextRequest) {
   try {
@@ -35,9 +36,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Validation du mot de passe
-    if (password.length < 12) {
+    if (password.length < PASSWORD_MIN_LENGTH) {
       return NextResponse.json(
-        { error: 'Le mot de passe doit contenir au moins 12 caractères' },
+        { error: `Le mot de passe doit contenir au moins ${PASSWORD_MIN_LENGTH} caractères` },
         { status: 400 }
       );
     }

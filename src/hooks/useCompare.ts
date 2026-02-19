@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 const STORAGE_KEY = 'biocycle-compare-products';
 const MAX_PRODUCTS = 4;
@@ -8,6 +8,8 @@ const MAX_PRODUCTS = 4;
 export function useCompare() {
   const [productSlugs, setProductSlugs] = useState<string[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
+  const slugsRef = useRef(productSlugs);
+  slugsRef.current = productSlugs;
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -38,26 +40,27 @@ export function useCompare() {
 
   // Add product to comparison
   const addToCompare = useCallback((slug: string): { success: boolean; message?: string } => {
-    if (productSlugs.includes(slug)) {
+    const current = slugsRef.current;
+    if (current.includes(slug)) {
       return { success: false, message: 'Product already in comparison' };
     }
 
-    if (productSlugs.length >= MAX_PRODUCTS) {
+    if (current.length >= MAX_PRODUCTS) {
       return { success: false, message: `Maximum ${MAX_PRODUCTS} products can be compared` };
     }
 
-    const newSlugs = [...productSlugs, slug];
+    const newSlugs = [...current, slug];
     setProductSlugs(newSlugs);
     saveToStorage(newSlugs);
     return { success: true };
-  }, [productSlugs, saveToStorage]);
+  }, [saveToStorage]);
 
   // Remove product from comparison
   const removeFromCompare = useCallback((slug: string) => {
-    const newSlugs = productSlugs.filter(s => s !== slug);
+    const newSlugs = slugsRef.current.filter(s => s !== slug);
     setProductSlugs(newSlugs);
     saveToStorage(newSlugs);
-  }, [productSlugs, saveToStorage]);
+  }, [saveToStorage]);
 
   // Clear all products
   const clearCompare = useCallback(() => {
@@ -67,14 +70,15 @@ export function useCompare() {
 
   // Check if product is in comparison
   const isInCompare = useCallback((slug: string) => {
-    return productSlugs.includes(slug);
-  }, [productSlugs]);
+    return slugsRef.current.includes(slug);
+  }, []);
 
   // Get comparison URL
   const getCompareUrl = useCallback(() => {
-    if (productSlugs.length === 0) return null;
-    return `/compare?products=${productSlugs.join(',')}&lang=${typeof window !== 'undefined' ? localStorage.getItem('locale') || 'en' : 'en'}`;
-  }, [productSlugs]);
+    const current = slugsRef.current;
+    if (current.length === 0) return null;
+    return `/compare?products=${current.join(',')}&lang=${typeof window !== 'undefined' ? localStorage.getItem('locale') || 'en' : 'en'}`;
+  }, []);
 
   return {
     productSlugs,

@@ -7,8 +7,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from '@/hooks/useTranslations';
-import { loadStripe } from '@stripe/stripe-js';
+import { useI18n } from '@/i18n/client';
+import { loadStripe, type Stripe } from '@stripe/stripe-js';
 import {
   Elements,
   PaymentElement,
@@ -16,7 +16,14 @@ import {
   useElements,
 } from '@stripe/react-stripe-js';
 
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+// Lazy initialization: only load Stripe SDK when first needed, not at module parse time
+let stripePromise: Promise<Stripe | null> | null = null;
+function getStripe() {
+  if (!stripePromise) {
+    stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+  }
+  return stripePromise;
+}
 
 interface CheckoutFormProps {
   product: {
@@ -43,7 +50,7 @@ interface CheckoutFormProps {
 type PaymentMethodType = 'card' | 'saved-card' | 'apple-pay' | 'google-pay' | 'paypal';
 
 export function CheckoutForm({ product, user: _user, savedCards }: CheckoutFormProps) {
-  const { t } = useTranslations();
+  const { t } = useI18n();
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>(
     savedCards.length > 0 ? 'saved-card' : 'card'
   );
@@ -158,7 +165,7 @@ export function CheckoutForm({ product, user: _user, savedCards }: CheckoutFormP
             <button
               type="button"
               onClick={() => setPaymentMethod('saved-card')}
-              className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
+              className={`w-full p-4 rounded-lg border-2 transition-all text-start ${
                 paymentMethod === 'saved-card'
                   ? 'border-blue-500 bg-blue-50'
                   : 'border-gray-200 hover:border-gray-300'
@@ -182,7 +189,7 @@ export function CheckoutForm({ product, user: _user, savedCards }: CheckoutFormP
                         value={card.id}
                         checked={selectedCardId === card.id}
                         onChange={() => setSelectedCardId(card.id)}
-                        className="mr-3"
+                        className="me-3"
                       />
                       <div className="flex-1">
                         <span className="capitalize">{card.brand}</span>
@@ -203,14 +210,14 @@ export function CheckoutForm({ product, user: _user, savedCards }: CheckoutFormP
         <button
           type="button"
           onClick={() => setPaymentMethod('card')}
-          className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
+          className={`w-full p-4 rounded-lg border-2 transition-all text-start ${
             paymentMethod === 'card'
               ? 'border-blue-500 bg-blue-50'
               : 'border-gray-200 hover:border-gray-300'
           }`}
         >
           <div className="flex items-center">
-            <svg className="w-8 h-8 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-8 h-8 text-gray-400 me-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
             </svg>
             <span className="font-medium text-gray-900">{t('checkout.newCard')}</span>
@@ -221,7 +228,7 @@ export function CheckoutForm({ product, user: _user, savedCards }: CheckoutFormP
       {/* Formulaire Stripe pour nouvelle carte */}
       {paymentMethod === 'card' && clientSecret && (
         <Elements
-          stripe={stripePromise}
+          stripe={getStripe()}
           options={{
             clientSecret,
             appearance: {
@@ -279,7 +286,7 @@ function StripeCheckoutForm({
   const stripe = useStripe();
   const elements = useElements();
   const router = useRouter();
-  const { t } = useTranslations();
+  const { t } = useI18n();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -320,7 +327,7 @@ function StripeCheckoutForm({
           type="checkbox"
           checked={saveCard}
           onChange={(e) => setSaveCard(e.target.checked)}
-          className="mr-2"
+          className="me-2"
         />
         <span className="text-sm text-gray-600">
           {t('checkout.saveCardForFuture')}
@@ -346,7 +353,7 @@ function StripeCheckoutForm({
 
 // Composant PayPal
 function PayPalCheckout({ productId, price: _price }: { productId: string; price: number }) {
-  const { t } = useTranslations();
+  const { t } = useI18n();
   const [isLoading, setIsLoading] = useState(false);
 
   const handlePayPal = async () => {
@@ -386,7 +393,7 @@ function ExpressCheckout({
   productId: string;
   price: number;
 }) {
-  const { t } = useTranslations();
+  const { t } = useI18n();
   const [isLoading, setIsLoading] = useState(false);
 
   const handleExpressCheckout = async () => {
@@ -436,7 +443,7 @@ function SavedCardCheckout({
   price: number;
 }) {
   const router = useRouter();
-  const { t } = useTranslations();
+  const { t } = useI18n();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

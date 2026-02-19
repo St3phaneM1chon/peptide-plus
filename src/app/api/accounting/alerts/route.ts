@@ -44,10 +44,25 @@ export async function GET() {
       select: { currentBalance: true },
     });
     const currentBalance = bankAccounts.reduce((s, a) => s + Number(a.currentBalance), 0);
+
+    // Calculate projected inflows from unpaid customer invoices
+    const unpaidCustomerInvoices = await prisma.customerInvoice.aggregate({
+      where: { status: { in: ['SENT', 'OVERDUE'] }, deletedAt: null },
+      _sum: { balance: true },
+    });
+    const projectedInflows = Number(unpaidCustomerInvoices._sum.balance ?? 0);
+
+    // Calculate projected outflows from unpaid supplier invoices
+    const unpaidSupplierInvoices = await prisma.supplierInvoice.aggregate({
+      where: { status: { in: ['DRAFT', 'SENT', 'OVERDUE'] }, deletedAt: null },
+      _sum: { balance: true },
+    });
+    const projectedOutflows = Number(unpaidSupplierInvoices._sum.balance ?? 0);
+
     const cashFlow = {
       currentBalance,
-      projectedInflows: 0,
-      projectedOutflows: 0,
+      projectedInflows,
+      projectedOutflows,
       minimumBalance: 10000,
     };
 
@@ -96,8 +111,56 @@ export async function GET() {
 
     // Expense anomalies: aggregate current month vs previous months
     const now = new Date();
+    const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const currentMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+
+    // Aggregate current month expenses by account code
+    const currentMonthLines = await prisma.journalLine.findMany({
+      where: {
+        debit: { gt: 0 },
+        account: { type: 'EXPENSE' },
+        entry: {
+          status: 'POSTED',
+          deletedAt: null,
+          date: { gte: currentMonthStart, lte: currentMonthEnd },
+        },
+      },
+      select: { debit: true, account: { select: { code: true } } },
+    });
+
     const currentExpenses: Record<string, number> = {};
+    for (const line of currentMonthLines) {
+      const code = line.account.code;
+      currentExpenses[code] = (currentExpenses[code] || 0) + Number(line.debit);
+    }
+
+    // Compute 3-month historical averages
+    const threeMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 3, 1);
+    const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+
+    const historicalLines = await prisma.journalLine.findMany({
+      where: {
+        debit: { gt: 0 },
+        account: { type: 'EXPENSE' },
+        entry: {
+          status: 'POSTED',
+          deletedAt: null,
+          date: { gte: threeMonthsAgo, lte: lastMonthEnd },
+        },
+      },
+      select: { debit: true, account: { select: { code: true } } },
+    });
+
+    const historicalTotals: Record<string, number> = {};
+    for (const line of historicalLines) {
+      const code = line.account.code;
+      historicalTotals[code] = (historicalTotals[code] || 0) + Number(line.debit);
+    }
+
     const historicalAverages: Record<string, number> = {};
+    for (const [code, total] of Object.entries(historicalTotals)) {
+      historicalAverages[code] = Math.round((total / 3) * 100) / 100;
+    }
 
     // Detect anomalies
     const expenseAnomalies = detectExpenseAnomalies(currentExpenses, historicalAverages);
@@ -187,11 +250,16 @@ export async function POST(request: NextRequest) {
       updateData.resolvedBy = session.user.id || session.user.email;
     }
 
+    const existingAlert = await prisma.accountingAlert.findUnique({
+      where: { id: alertId },
+    });
+    if (!existingAlert) {
+      return NextResponse.json({ error: 'Alerte non trouvée' }, { status: 404 });
+    }
+
     await prisma.accountingAlert.update({
       where: { id: alertId },
       data: updateData,
-    }).catch(() => {
-      // Alert may be generated dynamically and not in DB yet
     });
 
     return NextResponse.json({

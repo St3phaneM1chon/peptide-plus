@@ -15,56 +15,53 @@ export async function reserveStock(
   cartId: string,
   ttlMinutes = 30
 ): Promise<string[]> {
-  const reservationIds: string[] = [];
   const expiresAt = new Date(Date.now() + ttlMinutes * 60 * 1000);
 
-  for (const item of items) {
-    // Check available stock (total - reserved)
-    if (item.formatId) {
-      const format = await prisma.productFormat.findUnique({
-        where: { id: item.formatId },
-        select: { stockQuantity: true, trackInventory: true },
-      });
+  // Wrap entire reservation in a single transaction to prevent race conditions
+  return prisma.$transaction(async (tx) => {
+    const reservationIds: string[] = [];
 
-      if (format?.trackInventory) {
-        const reservedQty = await prisma.inventoryReservation.aggregate({
-          where: {
-            formatId: item.formatId,
-            status: 'RESERVED',
-            expiresAt: { gt: new Date() },
-          },
-          _sum: { quantity: true },
+    for (const item of items) {
+      // Check available stock (total - reserved) atomically within transaction
+      if (item.formatId) {
+        const format = await tx.productFormat.findUnique({
+          where: { id: item.formatId },
+          select: { stockQuantity: true, trackInventory: true },
         });
 
-        const available = format.stockQuantity - (reservedQty._sum.quantity || 0);
-        if (available < item.quantity) {
-          // Rollback previous reservations
-          if (reservationIds.length > 0) {
-            await prisma.inventoryReservation.updateMany({
-              where: { id: { in: reservationIds } },
-              data: { status: 'RELEASED', releasedAt: new Date() },
-            });
+        if (format?.trackInventory) {
+          const reservedQty = await tx.inventoryReservation.aggregate({
+            where: {
+              formatId: item.formatId,
+              status: 'RESERVED',
+              expiresAt: { gt: new Date() },
+            },
+            _sum: { quantity: true },
+          });
+
+          const available = format.stockQuantity - (reservedQty._sum.quantity || 0);
+          if (available < item.quantity) {
+            throw new Error(
+              `Stock insuffisant pour format ${item.formatId}: demandé ${item.quantity}, disponible ${available}`
+            );
           }
-          throw new Error(
-            `Stock insuffisant pour format ${item.formatId}: demandé ${item.quantity}, disponible ${available}`
-          );
         }
       }
+
+      const reservation = await tx.inventoryReservation.create({
+        data: {
+          productId: item.productId,
+          formatId: item.formatId || null,
+          quantity: item.quantity,
+          cartId,
+          expiresAt,
+        },
+      });
+      reservationIds.push(reservation.id);
     }
 
-    const reservation = await prisma.inventoryReservation.create({
-      data: {
-        productId: item.productId,
-        formatId: item.formatId || null,
-        quantity: item.quantity,
-        cartId,
-        expiresAt,
-      },
-    });
-    reservationIds.push(reservation.id);
-  }
-
-  return reservationIds;
+    return reservationIds;
+  });
 }
 
 /**

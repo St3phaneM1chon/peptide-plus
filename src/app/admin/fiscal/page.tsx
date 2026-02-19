@@ -648,14 +648,14 @@ export default function FiscalPage() {
               <div className="bg-sky-50 border border-slate-200 border-t-0 rounded-b-lg px-4 py-3">
                 <div className="flex items-center text-sm">
                   <span className="font-bold text-sky-900 w-[200px]">{t('admin.fiscal.annualReports.totalAnnual')}</span>
-                  <span className="font-bold text-sky-900 flex-1 text-right">
+                  <span className="font-bold text-sky-900 flex-1 text-end">
                     {annualReports.reduce((s, r) => s + r.totalSales, 0).toLocaleString(locale)} $
                   </span>
-                  <span className="font-bold text-sky-900 flex-1 text-right">
+                  <span className="font-bold text-sky-900 flex-1 text-end">
                     {annualReports.reduce((s, r) => s + r.taxableAmount, 0).toLocaleString(locale)} $
                   </span>
                   <span className="flex-1" />
-                  <span className="font-bold text-green-700 flex-1 text-right">
+                  <span className="font-bold text-green-700 flex-1 text-end">
                     {annualReports.reduce((s, r) => s + r.taxCollected, 0).toLocaleString(locale)} $
                   </span>
                   <span className="font-bold text-sky-900 flex-1 text-center">
@@ -872,7 +872,7 @@ export default function FiscalPage() {
               {selectedReport.status === 'GENERATED' && (
                 <Button
                   variant="primary"
-                  className="ml-auto"
+                  className="ms-auto"
                   onClick={() => {
                     markAsFiled(selectedReport.id);
                     setSelectedReport({ ...selectedReport, status: 'FILED', filedAt: new Date().toISOString() });
@@ -884,7 +884,7 @@ export default function FiscalPage() {
               {selectedReport.status === 'FILED' && (
                 <Button
                   variant="primary"
-                  className="ml-auto"
+                  className="ms-auto"
                   onClick={() => {
                     markAsPaid(selectedReport.id);
                     setSelectedReport({ ...selectedReport, status: 'PAID', paidAt: new Date().toISOString() });

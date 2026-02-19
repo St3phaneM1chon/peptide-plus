@@ -7,31 +7,37 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { cacheGetOrSet, CacheKeys, CacheTags, CacheTTL } from '@/lib/cache';
 
 export async function GET() {
   try {
-    const currencies = await prisma.currency.findMany({
-      where: { isActive: true },
-      select: {
-        id: true,
-        code: true,
-        name: true,
-        symbol: true,
-        exchangeRate: true,
-        isDefault: true,
+    const currencies = await cacheGetOrSet(
+      CacheKeys.config.currencies(),
+      async () => {
+        const rows = await prisma.currency.findMany({
+          where: { isActive: true },
+          select: {
+            id: true,
+            code: true,
+            name: true,
+            symbol: true,
+            exchangeRate: true,
+            isDefault: true,
+          },
+          orderBy: [
+            { isDefault: 'desc' },
+            { code: 'asc' },
+          ],
+        });
+        return rows.map((c) => ({
+          ...c,
+          exchangeRate: Number(c.exchangeRate),
+        }));
       },
-      orderBy: [
-        { isDefault: 'desc' },
-        { code: 'asc' },
-      ],
-    });
+      { ttl: CacheTTL.CONFIG, tags: [CacheTags.CONFIG] },
+    );
 
-    return NextResponse.json({
-      currencies: currencies.map((c) => ({
-        ...c,
-        exchangeRate: Number(c.exchangeRate),
-      })),
-    });
+    return NextResponse.json({ currencies });
   } catch (error) {
     console.error('Currencies API error:', error);
     return NextResponse.json({ currencies: [] }, { status: 500 });

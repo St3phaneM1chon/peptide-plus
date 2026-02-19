@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { useState, useEffect } from 'react';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 
 interface Guide {
   id: string;
@@ -23,7 +23,7 @@ interface Guide {
 }
 
 export default function GuidesPage() {
-  const { t } = useTranslations();
+  const { t } = useI18n();
   const [guides, setGuides] = useState<Guide[]>([]);
   const [loading, setLoading] = useState(true);
 

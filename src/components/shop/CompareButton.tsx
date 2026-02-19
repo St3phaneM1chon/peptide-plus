@@ -1,7 +1,7 @@
 'use client';
 
 import { useCompare } from '@/hooks/useCompare';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 
 interface CompareButtonProps {
@@ -18,7 +18,7 @@ export default function CompareButton({
   className = ''
 }: CompareButtonProps) {
   const { isInCompare, addToCompare, removeFromCompare, maxProducts } = useCompare();
-  const { t } = useTranslations();
+  const { t } = useI18n();
   const isAdded = isInCompare(productSlug);
 
   const handleToggle = (e: React.MouseEvent) => {

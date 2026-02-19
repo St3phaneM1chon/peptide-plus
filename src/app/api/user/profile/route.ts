@@ -9,6 +9,8 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { db } from '@/lib/db';
+import { stripHtml, isValidPhone, isValidName } from '@/lib/validation';
+import { locales } from '@/i18n/config';
 
 export async function GET() {
   try {
@@ -59,26 +61,38 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, phone, birthDate, locale } = body;
+    const { name: rawName, phone: rawPhone, birthDate, locale } = body;
 
-    // Validation
-    if (name && (typeof name !== 'string' || name.length > 100)) {
-      return NextResponse.json({ error: 'Invalid name' }, { status: 400 });
+    // SECURITY FIX (BE-SEC-05): Validate and sanitize all profile fields
+    // Strip HTML to prevent stored XSS
+    const name = rawName !== undefined ? stripHtml(String(rawName)).trim() : undefined;
+    const phone = rawPhone !== undefined ? (rawPhone ? String(rawPhone).trim() : null) : undefined;
+
+    if (name !== undefined && name !== '') {
+      if (!isValidName(name, 2, 100)) {
+        return NextResponse.json(
+          { error: 'Name must be 2-100 characters, letters/spaces/hyphens/apostrophes only' },
+          { status: 400 }
+        );
+      }
     }
 
-    if (phone && (typeof phone !== 'string' || phone.length > 20)) {
-      return NextResponse.json({ error: 'Invalid phone' }, { status: 400 });
+    if (phone !== undefined && phone !== null) {
+      if (!isValidPhone(phone)) {
+        return NextResponse.json({ error: 'Invalid phone number format' }, { status: 400 });
+      }
     }
 
-    if (locale && !['fr', 'en'].includes(locale)) {
+    // Validate locale against ALL 22 supported locales (not just fr/en)
+    if (locale && !(locales as readonly string[]).includes(locale)) {
       return NextResponse.json({ error: 'Invalid locale' }, { status: 400 });
     }
 
     // Préparer les données de mise à jour
     const updateData: Record<string, unknown> = {};
-    
+
     if (name !== undefined) updateData.name = name;
-    if (phone !== undefined) updateData.phone = phone || null;
+    if (phone !== undefined) updateData.phone = phone;
     if (locale !== undefined) updateData.locale = locale;
     
     if (birthDate) {

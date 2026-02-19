@@ -275,7 +275,7 @@ export default function MediasPage() {
               >
                 <div className="aspect-square bg-slate-100 flex items-center justify-center relative">
                   {file.type === 'image' ? (
-                    <NextImage src={file.url} alt={file.name} fill className="object-cover" unoptimized />
+                    <NextImage src={file.url} alt={file.name} fill className="object-cover" sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw" unoptimized />
                   ) : file.type === 'video' ? (
                     <PlayCircle className="w-12 h-12 text-purple-500" />
                   ) : (

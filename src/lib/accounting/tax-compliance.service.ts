@@ -5,6 +5,7 @@
 
 import { db as prisma } from '@/lib/db';
 import { TaxReport } from './types';
+import { roundCurrency, calculateTax } from '@/lib/financial';
 
 // Tax rates by province/territory
 export const PROVINCIAL_TAX_RATES = {
@@ -90,26 +91,26 @@ export function calculateSalesTax(
 ): { gst: number; qst: number; hst: number; pst: number; total: number } {
   // No Canadian tax for non-Canadian customers
   if (customerCountry !== 'CA' && customerCountry !== 'Canada') {
-    return { gst: 0, qst: 0, hst: 0, pst: 0, total: amount };
+    return { gst: 0, qst: 0, hst: 0, pst: 0, total: roundCurrency(amount) };
   }
 
   const rates = PROVINCIAL_TAX_RATES[customerProvince as keyof typeof PROVINCIAL_TAX_RATES];
   if (!rates) {
     // Default to GST only
-    const gst = amount * 0.05;
-    return { gst, qst: 0, hst: 0, pst: 0, total: amount + gst };
+    const gst = calculateTax(amount, 0.05);
+    return { gst, qst: 0, hst: 0, pst: 0, total: roundCurrency(amount + gst) };
   }
 
   if ('HST' in rates) {
-    const hst = amount * rates.HST;
-    return { gst: 0, qst: 0, hst, pst: 0, total: amount + hst };
+    const hst = calculateTax(amount, rates.HST);
+    return { gst: 0, qst: 0, hst, pst: 0, total: roundCurrency(amount + hst) };
   }
 
-  const gst = amount * (rates.GST || 0);
-  const qst = 'QST' in rates ? amount * rates.QST : 0;
-  const pst = 'PST' in rates ? amount * rates.PST : 0;
+  const gst = calculateTax(amount, rates.GST || 0);
+  const qst = 'QST' in rates ? calculateTax(amount, rates.QST) : 0;
+  const pst = 'PST' in rates ? calculateTax(amount, rates.PST) : 0;
 
-  return { gst, qst, hst: 0, pst, total: amount + gst + qst + pst };
+  return { gst, qst, hst: 0, pst, total: roundCurrency(amount + gst + qst + pst) };
 }
 
 /**
@@ -124,18 +125,19 @@ export async function generateTaxSummary(
   let endDate: Date;
   let period: string;
 
+  // Use UTC dates to avoid timezone off-by-one errors
   if (month) {
-    startDate = new Date(year, month - 1, 1);
-    endDate = new Date(year, month, 0);
+    startDate = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0, 0));
+    endDate = new Date(Date.UTC(year, month, 0, 23, 59, 59, 999));
     period = `${year}-${String(month).padStart(2, '0')}`;
   } else if (quarter) {
     const startMonth = (quarter - 1) * 3;
-    startDate = new Date(year, startMonth, 1);
-    endDate = new Date(year, startMonth + 3, 0);
+    startDate = new Date(Date.UTC(year, startMonth, 1, 0, 0, 0, 0));
+    endDate = new Date(Date.UTC(year, startMonth + 3, 0, 23, 59, 59, 999));
     period = `Q${quarter}-${year}`;
   } else {
-    startDate = new Date(year, 0, 1);
-    endDate = new Date(year, 11, 31);
+    startDate = new Date(Date.UTC(year, 0, 1, 0, 0, 0, 0));
+    endDate = new Date(Date.UTC(year, 11, 31, 23, 59, 59, 999));
     period = `${year}`;
   }
 
@@ -205,22 +207,22 @@ export async function generateTaxSummary(
 
   return {
     period,
-    totalSales,
-    taxableSales,
+    totalSales: roundCurrency(totalSales),
+    taxableSales: roundCurrency(taxableSales),
     exemptSales: 0,
-    zeroRatedSales: totalSales - taxableSales,
-    gstCollected: Math.round(gstCollected * 100) / 100,
-    gstPaid: Math.round(gstPaid * 100) / 100,
-    netGst: Math.round((gstCollected - gstPaid) * 100) / 100,
-    qstCollected: Math.round(qstCollected * 100) / 100,
-    qstPaid: Math.round(qstPaid * 100) / 100,
-    netQst: Math.round((qstCollected - qstPaid) * 100) / 100,
-    hstCollected: Math.round(hstCollected * 100) / 100,
-    hstPaid: Math.round(hstPaid * 100) / 100,
-    netHst: Math.round((hstCollected - hstPaid) * 100) / 100,
-    totalTaxCollected: Math.round((gstCollected + qstCollected + hstCollected) * 100) / 100,
-    totalTaxPaid: Math.round((gstPaid + qstPaid + hstPaid) * 100) / 100,
-    netTaxOwing: Math.round((gstCollected + qstCollected + hstCollected - gstPaid - qstPaid - hstPaid) * 100) / 100,
+    zeroRatedSales: roundCurrency(totalSales - taxableSales),
+    gstCollected: roundCurrency(gstCollected),
+    gstPaid: roundCurrency(gstPaid),
+    netGst: roundCurrency(gstCollected - gstPaid),
+    qstCollected: roundCurrency(qstCollected),
+    qstPaid: roundCurrency(qstPaid),
+    netQst: roundCurrency(qstCollected - qstPaid),
+    hstCollected: roundCurrency(hstCollected),
+    hstPaid: roundCurrency(hstPaid),
+    netHst: roundCurrency(hstCollected - hstPaid),
+    totalTaxCollected: roundCurrency(gstCollected + qstCollected + hstCollected),
+    totalTaxPaid: roundCurrency(gstPaid + qstPaid + hstPaid),
+    netTaxOwing: roundCurrency(gstCollected + qstCollected + hstCollected - gstPaid - qstPaid - hstPaid),
     salesCount: orders.length,
     purchaseCount: purchases.length,
   };
@@ -281,27 +283,64 @@ export function generateFPZ500Data(summary: TaxSummary): {
   };
 }
 
+// #70 Audit: Configurable tax filing deadlines per jurisdiction (not hardcoded)
+export interface FilingDeadlineConfig {
+  monthly: { offsetMonths: number; dayOfMonth: number | 'end' };
+  quarterly: { offsetMonths: number; dayOfMonth: number | 'end' };
+  annual: { month: number; day: number };
+}
+
+export const FILING_DEADLINES: Record<string, FilingDeadlineConfig> = {
+  QC: {
+    monthly: { offsetMonths: 1, dayOfMonth: 'end' },     // End of following month
+    quarterly: { offsetMonths: 1, dayOfMonth: 'end' },    // End of month after quarter end
+    annual: { month: 6, day: 15 },                         // June 15 of following year
+  },
+  ON: {
+    monthly: { offsetMonths: 1, dayOfMonth: 'end' },
+    quarterly: { offsetMonths: 1, dayOfMonth: 'end' },
+    annual: { month: 6, day: 15 },
+  },
+  // Default for other provinces (same federal rules)
+  DEFAULT: {
+    monthly: { offsetMonths: 1, dayOfMonth: 'end' },
+    quarterly: { offsetMonths: 1, dayOfMonth: 'end' },
+    annual: { month: 6, day: 15 },
+  },
+};
+
 /**
  * Calculate filing due date
+ * @param jurisdiction - Province code (e.g. 'QC', 'ON') to look up jurisdiction-specific deadlines
  */
 export function calculateFilingDueDate(
   year: number,
   month: number,
-  filingFrequency: 'MONTHLY' | 'QUARTERLY' | 'ANNUAL'
+  filingFrequency: 'MONTHLY' | 'QUARTERLY' | 'ANNUAL',
+  jurisdiction: string = 'QC'
 ): Date {
+  const config = FILING_DEADLINES[jurisdiction] || FILING_DEADLINES['DEFAULT'];
+
   switch (filingFrequency) {
-    case 'MONTHLY':
-      // Due by end of following month
-      return new Date(year, month + 1, 0);
-      
-    case 'QUARTERLY':
-      // Due one month after quarter end
+    case 'MONTHLY': {
+      const targetMonth = month + config.monthly.offsetMonths;
+      if (config.monthly.dayOfMonth === 'end') {
+        return new Date(year, targetMonth, 0); // Last day of month
+      }
+      return new Date(year, targetMonth - 1, config.monthly.dayOfMonth);
+    }
+
+    case 'QUARTERLY': {
       const quarterEnd = Math.ceil(month / 3) * 3;
-      return new Date(year, quarterEnd + 1, 0);
-      
+      const targetMonth = quarterEnd + config.quarterly.offsetMonths;
+      if (config.quarterly.dayOfMonth === 'end') {
+        return new Date(year, targetMonth, 0);
+      }
+      return new Date(year, targetMonth - 1, config.quarterly.dayOfMonth);
+    }
+
     case 'ANNUAL':
-      // Due by June 15 of following year (for most businesses)
-      return new Date(year + 1, 5, 15);
+      return new Date(year + 1, config.annual.month - 1, config.annual.day);
   }
 }
 

@@ -68,7 +68,7 @@ export default function UpsellAdminPage() {
       const data = await res.json();
       setConfigs(data.configs || []);
     } catch {
-      toast.error('Failed to load upsell configs');
+      toast.error(t('toast.admin.upsellLoadFailed'));
     } finally {
       setLoading(false);
     }
@@ -153,7 +153,7 @@ export default function UpsellAdminPage() {
       resetForm();
       fetchConfigs();
     } catch {
-      toast.error('Error saving configuration');
+      toast.error(t('toast.admin.upsellSaveError'));
     } finally {
       setSaving(false);
     }
@@ -169,7 +169,7 @@ export default function UpsellAdminPage() {
       toast.success(t('admin.upsell.deleteSuccess'));
       fetchConfigs();
     } catch {
-      toast.error('Error deleting configuration');
+      toast.error(t('toast.admin.upsellDeleteError'));
     }
   };
 
@@ -234,7 +234,7 @@ export default function UpsellAdminPage() {
               <button
                 onClick={() => openForm(globalConfig)}
                 className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
-                title="Edit"
+                title={t('common.edit')}
               >
                 <Pencil className="w-4 h-4 text-slate-500" />
               </button>
@@ -424,14 +424,14 @@ export default function UpsellAdminPage() {
               <Input
                 value={formQtyTitle}
                 onChange={(e) => setFormQtyTitle(e.target.value)}
-                placeholder="Buy More, Save More"
+                placeholder={t('admin.upsell.placeholderBundleTitle')}
               />
             </FormField>
             <FormField label={t('admin.upsell.quantitySubtitle')}>
               <Input
                 value={formQtySubtitle}
                 onChange={(e) => setFormQtySubtitle(e.target.value)}
-                placeholder="Volume discounts available"
+                placeholder={t('admin.upsell.placeholderBundleSubtitle')}
               />
             </FormField>
           </div>
@@ -441,14 +441,14 @@ export default function UpsellAdminPage() {
               <Input
                 value={formSubTitle}
                 onChange={(e) => setFormSubTitle(e.target.value)}
-                placeholder="Subscribe & Save"
+                placeholder={t('admin.upsell.placeholderSubscriptionTitle')}
               />
             </FormField>
             <FormField label={t('admin.upsell.subscriptionSubtitle')}>
               <Input
                 value={formSubSubtitle}
                 onChange={(e) => setFormSubSubtitle(e.target.value)}
-                placeholder="Auto delivery at a discount"
+                placeholder={t('admin.upsell.placeholderSubscriptionSubtitle')}
               />
             </FormField>
           </div>
@@ -490,10 +490,10 @@ export default function UpsellAdminPage() {
               resetForm();
             }}
           >
-            Cancel
+            {t('common.cancel') || 'Cancel'}
           </Button>
           <Button variant="primary" onClick={handleSave} disabled={saving}>
-            {saving ? 'Saving...' : 'Save'}
+            {saving ? (t('common.saving') || 'Saving...') : (t('common.save') || 'Save')}
           </Button>
         </div>
       </Modal>

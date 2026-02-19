@@ -68,8 +68,27 @@ export async function GET(request: NextRequest) {
 
       case 'income': {
         // Build income statement from journal entries
+        const fromParam = searchParams.get('from');
+        const toParam = searchParams.get('to');
+        const incomeWhere: Record<string, unknown> = { status: 'POSTED', deletedAt: null };
+
+        // #81 Audit: Default to current fiscal year if no date range provided
+        // to avoid fetching ALL historical entries
+        if (fromParam || toParam) {
+          const dateFilter: Record<string, Date> = {};
+          if (fromParam) dateFilter.gte = new Date(fromParam);
+          if (toParam) dateFilter.lte = new Date(toParam);
+          incomeWhere.date = dateFilter;
+        } else {
+          // Default to current calendar year
+          const currentYear = new Date().getFullYear();
+          incomeWhere.date = {
+            gte: new Date(currentYear, 0, 1),
+            lte: new Date(currentYear, 11, 31, 23, 59, 59),
+          };
+        }
         const entries = await prisma.journalEntry.findMany({
-          where: { status: 'POSTED' },
+          where: incomeWhere,
           include: {
             lines: { include: { account: { select: { code: true, name: true, type: true } } } },
           },
@@ -102,11 +121,16 @@ export async function GET(request: NextRequest) {
 
       case 'balance': {
         // Build balance sheet from chart of accounts balances
+        const asOfDate = searchParams.get('asOfDate');
+        const balanceEntryWhere: Record<string, unknown> = { status: 'POSTED', deletedAt: null };
+        if (asOfDate) {
+          balanceEntryWhere.date = { lte: new Date(asOfDate) };
+        }
         const accounts = await prisma.chartOfAccount.findMany({
           where: { isActive: true },
           include: {
             journalLines: {
-              where: { entry: { status: 'POSTED' } },
+              where: { entry: balanceEntryWhere },
               select: { debit: true, credit: true },
             },
           },

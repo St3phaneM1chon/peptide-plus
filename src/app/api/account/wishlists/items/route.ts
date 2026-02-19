@@ -1,8 +1,9 @@
 export const dynamic = 'force-dynamic';
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
+import { validateCsrf } from '@/lib/csrf-middleware';
 
 /**
  * GET /api/account/wishlists/items?collectionId=...
@@ -119,8 +120,14 @@ export async function GET(request: Request) {
  * Add a product to a wishlist collection
  * Body: { collectionId: string, productId: string }
  */
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
+    // SECURITY (BE-SEC-15): CSRF protection for mutation endpoint
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const session = await auth();
 
     if (!session?.user?.id) {
@@ -207,8 +214,14 @@ export async function POST(request: Request) {
  * Move item to a different wishlist collection
  * Body: { itemId: string, newCollectionId: string }
  */
-export async function PATCH(request: Request) {
+export async function PATCH(request: NextRequest) {
   try {
+    // SECURITY (BE-SEC-15): CSRF protection for mutation endpoint
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const session = await auth();
 
     if (!session?.user?.id) {
@@ -299,8 +312,14 @@ export async function PATCH(request: Request) {
  * DELETE /api/account/wishlists/items?id=...
  * Remove item from wishlist
  */
-export async function DELETE(request: Request) {
+export async function DELETE(request: NextRequest) {
   try {
+    // SECURITY (BE-SEC-15): CSRF protection for mutation endpoint
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const session = await auth();
 
     if (!session?.user?.id) {

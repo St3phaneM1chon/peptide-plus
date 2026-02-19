@@ -1,18 +1,16 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import dynamic from 'next/dynamic';
 import { useCart } from '@/contexts/CartContext';
 import { useUpsell } from '@/contexts/UpsellContext';
 import { useCurrency } from '@/contexts/CurrencyContext';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 import { getPeptideChemistry } from '@/data/peptideChemistry';
 import Breadcrumbs from '@/components/ui/Breadcrumbs';
-import ProductReviews from '@/components/shop/ProductReviews';
-import ProductQA from '@/components/shop/ProductQA';
 import WishlistButton from '@/components/shop/WishlistButton';
-import RecentlyViewed from '@/components/shop/RecentlyViewed';
 import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
 import ShareButtons from '@/components/shop/ShareButtons';
 import StickyAddToCart from '@/components/shop/StickyAddToCart';
@@ -20,8 +18,13 @@ import StockAlertButton from '@/components/shop/StockAlertButton';
 import QuantityTiers from '@/components/shop/QuantityTiers';
 import ProductBadges from '@/components/shop/ProductBadges';
 import PriceDropButton from '@/components/shop/PriceDropButton';
-import ProductVideo from '@/components/shop/ProductVideo';
 import CountdownTimer from '@/components/ui/CountdownTimer';
+import { getFormatIcon } from '@/lib/format-icons';
+
+const ProductReviews = dynamic(() => import('@/components/shop/ProductReviews'), { ssr: false });
+const ProductQA = dynamic(() => import('@/components/shop/ProductQA'), { ssr: false });
+const RecentlyViewed = dynamic(() => import('@/components/shop/RecentlyViewed'), { ssr: false });
+const ProductVideo = dynamic(() => import('@/components/shop/ProductVideo'), { ssr: false });
 
 interface ProductFormat {
   id: string;
@@ -100,7 +103,6 @@ interface Product {
   purchaseCount?: number;
   averageRating?: number;
   reviewCount?: number;
-  restockedAt?: Date | string;
   promotion?: Promotion | null;
 }
 
@@ -108,33 +110,13 @@ interface ProductPageClientProps {
   product: Product;
 }
 
-// Format icons - same as ProductCard
-const formatIcons: Record<string, string> = {
-  vial_2ml: '💉',
-  vial_10ml: '🧪',
-  cartridge_3ml: '💊',
-  cartridge_kit_12: '📦',
-  capsule: '💊',
-  capsules_30: '💊',
-  capsules_60: '💊',
-  capsules_120: '💊',
-  pack_2: '📦',
-  pack_5: '📦',
-  pack_10: '📦',
-  box_50: '📦',
-  box_100: '📦',
-  syringe: '💉',
-  accessory: '🔧',
-  powder: '🥤',
-  gummies: '🍬',
-  kit: '🎁',
-};
+// Format icons imported from shared utility: @/lib/format-icons
 
 export default function ProductPageClient({ product }: ProductPageClientProps) {
   const { addItem } = useCart();
   const { addItemWithUpsell } = useUpsell();
   const { formatPrice } = useCurrency();
-  const { t } = useTranslations();
+  const { t } = useI18n();
   const { addViewed } = useRecentlyViewed();
 
   // Track this product as recently viewed
@@ -161,7 +143,22 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
     availableFormats.find(f => f.inStock) || availableFormats[0] || product.formats[0] || fallbackFormat
   );
   const [quantity, setQuantity] = useState(1);
-  const [activeTab, setActiveTab] = useState<'description' | 'specs' | 'research' | 'reconstitution' | 'video'>('description');
+  const validTabs = ['description', 'specs', 'research', 'reconstitution', 'video'] as const;
+  type TabType = typeof validTabs[number];
+  const getInitialTab = (): TabType => {
+    if (typeof window !== 'undefined') {
+      const hash = window.location.hash.replace('#', '') as TabType;
+      if (validTabs.includes(hash)) return hash;
+    }
+    return 'description';
+  };
+  const [activeTab, setActiveTab] = useState<TabType>(getInitialTab);
+  const handleTabChange = (tab: TabType) => {
+    setActiveTab(tab);
+    if (typeof window !== 'undefined') {
+      window.history.replaceState(null, '', `#${tab}`);
+    }
+  };
   const [addedToCart, setAddedToCart] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string>(
@@ -225,7 +222,10 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
   };
 
   // Get the effective price per unit
-  const effectivePrice = getEffectivePrice(selectedFormat.price, quantity);
+  const effectivePrice = useMemo(
+    () => getEffectivePrice(selectedFormat.price, quantity),
+    [selectedFormat.price, quantity, product.quantityDiscounts]
+  );
 
   const handleFormatSelect = (format: ProductFormat) => {
     setSelectedFormat(format);
@@ -313,12 +313,12 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
                   formats: availableFormats,
                 }}
                 maxBadges={3}
-                className="top-3 left-3"
+                className="top-3 start-3"
               />
             </div>
             {/* Thumbnail gallery */}
             {product.images && product.images.length > 1 && (
-              <div className="flex gap-2 mt-3 max-w-md mx-auto overflow-x-auto" role="group" aria-label="Product image gallery">
+              <div className="flex gap-2 mt-3 max-w-md mx-auto overflow-x-auto" role="group" aria-label={t('shop.aria.productImageGallery')}>
                 {product.images.map((img, index) => (
                   <button
                     key={img.id}
@@ -430,9 +430,9 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
               >
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">
-                    {selectedFormat?.type ? formatIcons[selectedFormat.type] || '📦' : '📦'}
+                    {getFormatIcon(selectedFormat?.type)}
                   </span>
-                  <div className="text-left">
+                  <div className="text-start">
                     <p className="font-semibold text-black">
                       {getFormatName(selectedFormat)}
                     </p>
@@ -453,7 +453,7 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
 
               {/* Dropdown Menu */}
               {isDropdownOpen && (
-                <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-neutral-200 rounded-lg shadow-2xl max-h-80 overflow-y-auto" role="listbox" aria-label="Available formats">
+                <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-neutral-200 rounded-lg shadow-2xl max-h-80 overflow-y-auto" role="listbox" aria-label={t('shop.aria.availableFormats')}>
                   {availableFormats.map((format) => (
                     <button
                       key={format.id}
@@ -461,7 +461,7 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
                       aria-selected={selectedFormat.id === format.id}
                       onClick={() => handleFormatSelect(format)}
                       disabled={!format.inStock}
-                      className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors border-b border-neutral-100 last:border-b-0 ${
+                      className={`w-full flex items-center gap-3 px-4 py-3 text-start transition-colors border-b border-neutral-100 last:border-b-0 ${
                         selectedFormat.id === format.id
                           ? 'bg-orange-50'
                           : format.inStock
@@ -474,7 +474,7 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
                         {format.image ? (
                           <Image src={format.image} alt={getFormatName(format)} width={48} height={48} className="object-cover rounded-lg" />
                         ) : (
-                          <span className="text-2xl">{format.type ? formatIcons[format.type] || '📦' : '📦'}</span>
+                          <span className="text-2xl">{getFormatIcon(format.type)}</span>
                         )}
                       </div>
                       
@@ -524,7 +524,7 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
               <div className="flex items-center border border-neutral-300 rounded-lg" role="group" aria-label={`Quantity for ${productName}`}>
                 <button
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  aria-label="Decrease quantity"
+                  aria-label={t('shop.aria.decreaseQuantity')}
                   className="w-12 h-12 flex items-center justify-center text-xl hover:bg-neutral-100 transition-colors"
                 >
                   −
@@ -532,7 +532,7 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
                 <span className="w-14 text-center font-bold text-lg" aria-live="polite" aria-atomic="true">{quantity}</span>
                 <button
                   onClick={() => setQuantity(Math.min(selectedFormat.stockQuantity, quantity + 1))}
-                  aria-label="Increase quantity"
+                  aria-label={t('shop.aria.increaseQuantity')}
                   className="w-12 h-12 flex items-center justify-center text-xl hover:bg-neutral-100 transition-colors"
                 >
                   +
@@ -614,13 +614,13 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
 
         {/* Tabs: Description / Specifications / Research / Reconstitution */}
         <div className="mt-12 border-t pt-8">
-          <div className="flex flex-wrap gap-4 md:gap-6 border-b mb-6" role="tablist" aria-label="Product information tabs">
+          <div className="flex flex-nowrap overflow-x-auto gap-4 md:gap-6 border-b mb-6" role="tablist" aria-label={t('shop.aria.productInfoTabs')}>
             <button
               role="tab"
               id="tab-description"
               aria-selected={activeTab === 'description'}
               aria-controls="tabpanel-description"
-              onClick={() => setActiveTab('description')}
+              onClick={() => handleTabChange('description')}
               className={`pb-3 font-medium text-base md:text-lg whitespace-nowrap ${
                 activeTab === 'description'
                   ? 'text-orange-600 border-b-2 border-orange-600'
@@ -634,7 +634,7 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
               id="tab-specs"
               aria-selected={activeTab === 'specs'}
               aria-controls="tabpanel-specs"
-              onClick={() => setActiveTab('specs')}
+              onClick={() => handleTabChange('specs')}
               className={`pb-3 font-medium text-base md:text-lg whitespace-nowrap ${
                 activeTab === 'specs'
                   ? 'text-orange-600 border-b-2 border-orange-600'
@@ -649,7 +649,7 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
                 id="tab-research"
                 aria-selected={activeTab === 'research'}
                 aria-controls="tabpanel-research"
-                onClick={() => setActiveTab('research')}
+                onClick={() => handleTabChange('research')}
                 className={`pb-3 font-medium text-base md:text-lg whitespace-nowrap ${
                   activeTab === 'research'
                     ? 'text-orange-600 border-b-2 border-orange-600'
@@ -665,7 +665,7 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
                 id="tab-reconstitution"
                 aria-selected={activeTab === 'reconstitution'}
                 aria-controls="tabpanel-reconstitution"
-                onClick={() => setActiveTab('reconstitution')}
+                onClick={() => handleTabChange('reconstitution')}
                 className={`pb-3 font-medium text-base md:text-lg whitespace-nowrap ${
                   activeTab === 'reconstitution'
                     ? 'text-orange-600 border-b-2 border-orange-600'
@@ -681,7 +681,7 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
                 id="tab-video"
                 aria-selected={activeTab === 'video'}
                 aria-controls="tabpanel-video"
-                onClick={() => setActiveTab('video')}
+                onClick={() => handleTabChange('video')}
                 className={`pb-3 font-medium text-base md:text-lg whitespace-nowrap ${
                   activeTab === 'video'
                     ? 'text-orange-600 border-b-2 border-orange-600'
@@ -695,7 +695,7 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
 
           {/* Description Tab */}
           {activeTab === 'description' && (
-            <div role="tabpanel" id="tabpanel-description" aria-labelledby="tab-description" className="prose max-w-none">
+            <div role="tabpanel" id="tabpanel-description" aria-labelledby="tab-description" className="prose max-w-none animate-tab-fade">
               {(product.description || product.shortDescription) ? (
                 (product.description || product.shortDescription).split('\n').map((p, i) => (
                   <p key={i} className="mb-4 text-neutral-700 leading-relaxed">{p}</p>
@@ -717,17 +717,27 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
 
           {/* Specifications Tab */}
           {activeTab === 'specs' && (
-            <div role="tabpanel" id="tabpanel-specs" aria-labelledby="tab-specs" className="bg-neutral-50 rounded-lg p-6">
+            <div role="tabpanel" id="tabpanel-specs" aria-labelledby="tab-specs" className="bg-neutral-50 rounded-lg p-6 animate-tab-fade">
               {/* COA Download Button */}
               {chemistryData?.coaAvailable && (
                 <div className="mb-6 flex flex-wrap gap-3">
-                  <button className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                  <button
+                    onClick={() => {
+                      window.open(`/lab-results?product=${product.slug}`, '_blank');
+                    }}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                     {t('shop.downloadCOA') || 'Download COA (PDF)'}
                   </button>
-                  <button className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                  <button
+                    onClick={() => {
+                      window.open(`/lab-results?product=${product.slug}#hplc`, '_blank');
+                    }}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                     </svg>
@@ -833,7 +843,7 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
 
           {/* Research Tab */}
           {activeTab === 'research' && chemistryData?.researchSummary && (
-            <div role="tabpanel" id="tabpanel-research" aria-labelledby="tab-research" className="bg-neutral-50 rounded-lg p-6">
+            <div role="tabpanel" id="tabpanel-research" aria-labelledby="tab-research" className="bg-neutral-50 rounded-lg p-6 animate-tab-fade">
               <div className="flex items-center gap-3 mb-4">
                 <span className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center text-xl">🔬</span>
                 <h3 className="font-bold text-xl">{t('shop.researchOverview') || 'Research Overview'}</h3>
@@ -866,7 +876,7 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
                               href={`https://pubmed.ncbi.nlm.nih.gov/${ref.pubmedId}/`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="ml-2 text-blue-600 hover:underline"
+                              className="ms-2 text-blue-600 hover:underline"
                             >
                               [PubMed: {ref.pubmedId}]
                             </a>
@@ -880,7 +890,7 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
 
               <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
                 <p className="text-xs text-amber-700">
-                  <strong>Note:</strong> This information is for educational purposes only. All products are sold for research use only and are not intended for human consumption.
+                  <strong>{t('disclaimer.title')}:</strong> {t('disclaimer.educationalPurposes') || 'This information is for educational purposes only. All products are sold for research use only and are not intended for human consumption.'}
                 </p>
               </div>
             </div>
@@ -888,7 +898,7 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
 
           {/* Reconstitution Tab */}
           {activeTab === 'reconstitution' && chemistryData?.reconstitution && (
-            <div role="tabpanel" id="tabpanel-reconstitution" aria-labelledby="tab-reconstitution" className="bg-neutral-50 rounded-lg p-6">
+            <div role="tabpanel" id="tabpanel-reconstitution" aria-labelledby="tab-reconstitution" className="bg-neutral-50 rounded-lg p-6 animate-tab-fade">
               <div className="flex items-center gap-3 mb-4">
                 <span className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-xl">💉</span>
                 <h3 className="font-bold text-xl">{t('shop.reconstitutionGuide') || 'Reconstitution Guide'}</h3>
@@ -914,27 +924,27 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
                 <ol className="space-y-3 text-sm text-neutral-600">
                   <li className="flex items-start gap-3">
                     <span className="w-6 h-6 bg-orange-500 text-white rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">1</span>
-                    <span>Allow the vial to reach room temperature before reconstitution.</span>
+                    <span>{t('shop.reconstitutionStep1') || 'Allow the vial to reach room temperature before reconstitution.'}</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <span className="w-6 h-6 bg-orange-500 text-white rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">2</span>
-                    <span>Wipe the rubber stopper with an alcohol swab and let it dry.</span>
+                    <span>{t('shop.reconstitutionStep2') || 'Wipe the rubber stopper with an alcohol swab and let it dry.'}</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <span className="w-6 h-6 bg-orange-500 text-white rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">3</span>
-                    <span>Draw {chemistryData.reconstitution.volume} of {chemistryData.reconstitution.solvent} into a sterile syringe.</span>
+                    <span>{(t('shop.reconstitutionStep3') || 'Draw {volume} of {solvent} into a sterile syringe.').replace('{volume}', chemistryData.reconstitution.volume).replace('{solvent}', chemistryData.reconstitution.solvent)}</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <span className="w-6 h-6 bg-orange-500 text-white rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">4</span>
-                    <span>Insert needle through stopper and <strong>slowly</strong> release water along the inside wall of the vial.</span>
+                    <span>{t('shop.reconstitutionStep4') || 'Insert needle through stopper and slowly release water along the inside wall of the vial.'}</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <span className="w-6 h-6 bg-orange-500 text-white rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">5</span>
-                    <span>Do NOT shake. Gently swirl or let sit until fully dissolved.</span>
+                    <span>{t('shop.reconstitutionStep5') || 'Do NOT shake. Gently swirl or let sit until fully dissolved.'}</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <span className="w-6 h-6 bg-orange-500 text-white rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">6</span>
-                    <span>Store reconstituted peptide in refrigerator (2-8°C).</span>
+                    <span>{t('shop.reconstitutionStep6') || 'Store reconstituted peptide in refrigerator (2-8°C).'}</span>
                   </li>
                 </ol>
               </div>
@@ -951,13 +961,13 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
               {/* Calculator Link */}
               <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 text-center">
                 <p className="text-sm text-orange-700 mb-3">
-                  Need help calculating your reconstitution? Use our peptide calculator.
+                  {t('shop.needHelpCalculating') || 'Need help calculating your reconstitution? Use our peptide calculator.'}
                 </p>
                 <Link
                   href="/#calculator"
                   className="inline-flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm font-medium"
                 >
-                  🧮 Open Peptide Calculator
+                  🧮 {t('shop.openPeptideCalculator') || 'Open Peptide Calculator'}
                 </Link>
               </div>
             </div>
@@ -965,7 +975,7 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
 
           {/* Video Tab */}
           {activeTab === 'video' && product.videoUrl && (
-            <div role="tabpanel" id="tabpanel-video" aria-labelledby="tab-video" className="bg-neutral-50 rounded-lg p-6">
+            <div role="tabpanel" id="tabpanel-video" aria-labelledby="tab-video" className="bg-neutral-50 rounded-lg p-6 animate-tab-fade">
               <div className="flex items-center gap-3 mb-4">
                 <span className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center text-xl">🎥</span>
                 <h3 className="font-bold text-xl">{t('shop.productVideo') || 'Product Video'}</h3>

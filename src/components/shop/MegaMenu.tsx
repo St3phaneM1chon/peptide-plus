@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 import { useCurrency } from '@/contexts/CurrencyContext';
 
 interface Category {
@@ -11,6 +11,8 @@ interface Category {
   name: string;
   slug: string;
   imageUrl?: string | null;
+  parentId?: string | null;
+  children?: Category[];
   _count?: {
     products: number;
   };
@@ -39,8 +41,28 @@ interface MegaMenuProps {
   onClose: () => void;
 }
 
+// Icons for parent categories
+const categoryIcons: Record<string, string> = {
+  'laboratory-equipment': '🔬',
+  'peptides': '🧬',
+};
+
+// Icons for peptide subcategories
+const subCategoryIcons: Record<string, string> = {
+  'anti-aging-longevity': '⏳',
+  'weight-loss': '⚖️',
+  'skin-health': '✨',
+  'sexual-health': '💗',
+  'cognitive-health': '🧠',
+  'growth-metabolism': '📈',
+  'muscle-growth': '💪',
+  'recovery-repair': '🔧',
+  'lab-equipment': '🧪',
+  'lab-accessories': '💉',
+};
+
 export default function MegaMenu({ isOpen, onClose }: MegaMenuProps) {
-  const { t, locale } = useTranslations();
+  const { t, locale } = useI18n();
   const { formatPrice } = useCurrency();
   const [categories, setCategories] = useState<Category[]>([]);
   const [featuredProducts, setFeaturedProducts] = useState<FeaturedProduct[]>([]);
@@ -48,11 +70,11 @@ export default function MegaMenu({ isOpen, onClose }: MegaMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
   const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Fetch categories and featured products
+  // Fetch categories (tree) and featured products
   useEffect(() => {
     if (isOpen) {
       Promise.all([
-        fetch(`/api/categories?locale=${locale}`).then(res => res.ok ? res.json() : { categories: [] }),
+        fetch(`/api/categories?tree=true&locale=${locale}`).then(res => res.ok ? res.json() : { categories: [] }),
         fetch(`/api/products?featured=true&limit=3&locale=${locale}`).then(res => res.ok ? res.json() : { products: [] }),
       ])
         .then(([catData, prodData]) => {
@@ -62,7 +84,7 @@ export default function MegaMenu({ isOpen, onClose }: MegaMenuProps) {
         .catch(err => console.error('Error loading mega menu:', err))
         .finally(() => setIsLoading(false));
     }
-  }, [isOpen]);
+  }, [isOpen, locale]);
 
   // Handle ESC key
   useEffect(() => {
@@ -79,7 +101,7 @@ export default function MegaMenu({ isOpen, onClose }: MegaMenuProps) {
   const handleMouseLeave = () => {
     closeTimeoutRef.current = setTimeout(() => {
       onClose();
-    }, 300); // 300ms delay before closing
+    }, 300);
   };
 
   const handleMouseEnter = () => {
@@ -100,6 +122,9 @@ export default function MegaMenu({ isOpen, onClose }: MegaMenuProps) {
 
   if (!isOpen) return null;
 
+  // Filter parent categories (those without parentId)
+  const parentCategories = categories.filter(c => !c.parentId);
+
   return (
     <div
       ref={menuRef}
@@ -107,7 +132,7 @@ export default function MegaMenu({ isOpen, onClose }: MegaMenuProps) {
       onMouseLeave={handleMouseLeave}
       onMouseEnter={handleMouseEnter}
       role="menu"
-      aria-label="Shop mega menu"
+      aria-label={t('shop.aria.megaMenu')}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {isLoading ? (
@@ -116,64 +141,79 @@ export default function MegaMenu({ isOpen, onClose }: MegaMenuProps) {
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            {/* Left Column: Categories */}
-            <div className="lg:col-span-4">
-              <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wide mb-4">
-                {t('nav.categories') || 'Categories'}
-              </h3>
-              <nav className="space-y-1">
+            {/* Left Column: Hierarchical Categories */}
+            <div className="lg:col-span-5">
+              <nav>
+                {/* All Products link */}
                 <Link
                   href="/shop"
                   onClick={onClose}
-                  className="group flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-orange-50 transition-colors"
+                  className="group flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-orange-50 transition-colors mb-2"
                 >
                   <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-gradient-to-br from-orange-400 to-orange-600 text-white group-hover:scale-110 transition-transform">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                     </svg>
                   </div>
-                  <div className="flex-1">
-                    <div className="font-semibold text-gray-900 group-hover:text-orange-600">
-                      {t('nav.allProducts') || 'All Products'}
-                    </div>
+                  <div className="font-semibold text-gray-900 group-hover:text-orange-600">
+                    {t('nav.allProducts') || 'All Products'}
                   </div>
                 </Link>
 
-                {categories.map((cat) => (
-                  <Link
-                    key={cat.id}
-                    href={`/category/${cat.slug}`}
-                    onClick={onClose}
-                    className="group flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-orange-50 transition-colors"
-                  >
-                    <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-gray-100 group-hover:bg-orange-100 transition-colors">
-                      {cat.imageUrl ? (
-                        <Image src={cat.imageUrl} alt="" width={32} height={32} className="rounded-lg object-cover" />
-                      ) : (
-                        <span className="text-lg">🧬</span>
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <div className="font-medium text-gray-900 group-hover:text-orange-600 transition-colors">
-                        {cat.name}
-                      </div>
-                      {cat._count && cat._count.products > 0 && (
-                        <div className="text-xs text-gray-500">
-                          {cat._count.products} {cat._count.products === 1 ? 'product' : 'products'}
+                {/* Parent categories with subcategories */}
+                {parentCategories.map((parent) => (
+                  <div key={parent.id} className="mb-4">
+                    {/* Parent category header */}
+                    <Link
+                      href={`/category/${parent.slug}`}
+                      onClick={onClose}
+                      className="group flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-orange-50 transition-colors"
+                    >
+                      <span className="text-lg">{categoryIcons[parent.slug] || '📂'}</span>
+                      <div className="flex-1">
+                        <div className="font-bold text-gray-900 group-hover:text-orange-600 text-sm uppercase tracking-wide">
+                          {parent.name}
                         </div>
-                      )}
-                    </div>
-                    <svg className="w-5 h-5 text-gray-400 group-hover:text-orange-500 transform group-hover:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </Link>
+                        {parent._count && parent._count.products > 0 && (
+                          <div className="text-xs text-gray-400">
+                            {parent._count.products} {parent._count.products === 1 ? 'product' : 'products'}
+                          </div>
+                        )}
+                      </div>
+                      <svg className="w-4 h-4 text-gray-400 group-hover:text-orange-500 transform group-hover:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </Link>
+
+                    {/* Subcategories */}
+                    {parent.children && parent.children.length > 0 && (
+                      <div className="ms-6 mt-1 space-y-0.5">
+                        {parent.children.map((child) => (
+                          <Link
+                            key={child.id}
+                            href={`/category/${child.slug}`}
+                            onClick={onClose}
+                            className="group flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-orange-50 transition-colors"
+                          >
+                            <span className="text-sm">{subCategoryIcons[child.slug] || '•'}</span>
+                            <span className="text-sm text-gray-700 group-hover:text-orange-600 transition-colors flex-1">
+                              {child.name}
+                            </span>
+                            {child._count && child._count.products > 0 && (
+                              <span className="text-xs text-gray-400">{child._count.products}</span>
+                            )}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 ))}
               </nav>
             </div>
 
             {/* Center Column: Featured Products */}
             {featuredProducts.length > 0 && (
-              <div className="lg:col-span-5">
+              <div className="lg:col-span-4">
                 <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wide mb-4">
                   {t('shop.featured') || 'Featured Products'}
                 </h3>
@@ -198,7 +238,7 @@ export default function MegaMenu({ isOpen, onClose }: MegaMenuProps) {
                             className="object-cover group-hover:scale-110 transition-transform duration-300"
                           />
                           {product.purity && (
-                            <div className="absolute top-1 right-1 bg-green-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
+                            <div className="absolute top-1 end-1 bg-green-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
                               {product.purity}%
                             </div>
                           )}
@@ -294,21 +334,6 @@ export default function MegaMenu({ isOpen, onClose }: MegaMenuProps) {
         )}
       </div>
 
-      <style jsx>{`
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: translateY(-10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        .animate-fadeIn {
-          animation: fadeIn 0.2s ease-out;
-        }
-      `}</style>
     </div>
   );
 }

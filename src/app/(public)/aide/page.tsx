@@ -1,4 +1,3 @@
-export const dynamic = 'force-dynamic';
 /**
  * PAGE AIDE / CENTRE D'AIDE
  */

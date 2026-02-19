@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useRef, useMemo, ReactNode } from 'react';
 import { useCart } from '@/contexts/CartContext';
 import UpsellInterstitialModal from '@/components/shop/UpsellInterstitialModal';
 
@@ -65,6 +65,8 @@ export function UpsellProvider({ children }: { children: ReactNode }) {
   const { addItem } = useCart();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [pendingItem, setPendingItem] = useState<CartItemParams | null>(null);
+  const pendingItemRef = useRef<CartItemParams | null>(null);
+  pendingItemRef.current = pendingItem;
 
   const addItemWithUpsell = useCallback((item: CartItemParams) => {
     setPendingItem(item);
@@ -127,13 +129,18 @@ export function UpsellProvider({ children }: { children: ReactNode }) {
   // Check display rules before showing modal - this is called by the modal itself
   // The modal fetches config and auto-declines if disabled
 
+  const contextValue = useMemo(
+    () => ({ addItemWithUpsell }),
+    [addItemWithUpsell]
+  );
+
   return (
-    <UpsellContext.Provider value={{ addItemWithUpsell }}>
+    <UpsellContext.Provider value={contextValue}>
       {children}
       <UpsellInterstitialModal
         isOpen={isModalOpen}
         onClose={() => {
-          if (pendingItem) handleDecline(pendingItem);
+          if (pendingItemRef.current) handleDecline(pendingItemRef.current);
         }}
         item={pendingItem}
         onAcceptQuantity={handleAcceptQuantity}

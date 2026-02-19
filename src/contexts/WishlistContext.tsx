@@ -1,8 +1,9 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef, useMemo, ReactNode } from 'react';
 import { useSession } from 'next-auth/react';
 import { toast } from 'sonner';
+import { useI18n } from '@/i18n/client';
 
 interface WishlistContextType {
   /** Set of product IDs currently in the user's wishlist */
@@ -33,9 +34,16 @@ const WishlistContext = createContext<WishlistContextType>({
 
 export function WishlistProvider({ children }: { children: ReactNode }) {
   const { data: session, status } = useSession();
+  const { t } = useI18n();
   const [wishlistProductIds, setWishlistProductIds] = useState<Set<string>>(new Set());
   const [wishlistItemMap, setWishlistItemMap] = useState<Map<string, string>>(new Map());
   const [isLoading, setIsLoading] = useState(false);
+
+  // Refs for stable toggleWishlist callback
+  const wishlistProductIdsRef = useRef(wishlistProductIds);
+  wishlistProductIdsRef.current = wishlistProductIds;
+  const wishlistItemMapRef = useRef(wishlistItemMap);
+  wishlistItemMapRef.current = wishlistItemMap;
 
   // Fetch wishlist when user session is available
   const fetchWishlist = useCallback(async () => {
@@ -82,11 +90,11 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
     async (productId: string): Promise<boolean> => {
       if (!session?.user?.id) return false;
 
-      const isCurrentlyInWishlist = wishlistProductIds.has(productId);
+      const isCurrentlyInWishlist = wishlistProductIdsRef.current.has(productId);
 
       if (isCurrentlyInWishlist) {
         // Remove from wishlist
-        const wishlistItemId = wishlistItemMap.get(productId);
+        const wishlistItemId = wishlistItemMapRef.current.get(productId);
         if (!wishlistItemId) return false;
 
         // Optimistic update
@@ -110,17 +118,17 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
             // Revert optimistic update
             setWishlistProductIds((prev) => new Set(prev).add(productId));
             setWishlistItemMap((prev) => new Map(prev).set(productId, wishlistItemId));
-            toast.error('Failed to update wishlist');
+            toast.error(t('toast.wishlist.updateFailed'));
             return true; // Still in wishlist
           }
 
-          toast.info('Removed from wishlist');
+          toast.info(t('toast.wishlist.removed'));
           return false; // Removed
         } catch {
           // Revert optimistic update
           setWishlistProductIds((prev) => new Set(prev).add(productId));
           setWishlistItemMap((prev) => new Map(prev).set(productId, wishlistItemId));
-          toast.error('Failed to update wishlist');
+          toast.error(t('toast.wishlist.updateFailed'));
           return true;
         }
       } else {
@@ -139,7 +147,7 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
           if (res.ok || res.status === 201) {
             const data = await res.json();
             setWishlistItemMap((prev) => new Map(prev).set(productId, data.id));
-            toast.success('Added to wishlist');
+            toast.success(t('toast.wishlist.added'));
             return true; // Added
           }
 
@@ -149,7 +157,7 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
             next.delete(productId);
             return next;
           });
-          toast.error('Failed to update wishlist');
+          toast.error(t('toast.wishlist.updateFailed'));
           return false;
         } catch {
           // Revert optimistic update
@@ -158,26 +166,29 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
             next.delete(productId);
             return next;
           });
-          toast.error('Failed to update wishlist');
+          toast.error(t('toast.wishlist.updateFailed'));
           return false;
         }
       }
     },
-    [session?.user?.id, wishlistProductIds, wishlistItemMap]
+    [session?.user?.id, t]
+  );
+
+  const contextValue = useMemo(
+    () => ({
+      wishlistProductIds,
+      wishlistItemMap,
+      isLoading,
+      toggleWishlist,
+      isInWishlist,
+      count: wishlistProductIds.size,
+      refresh: fetchWishlist,
+    }),
+    [wishlistProductIds, wishlistItemMap, isLoading, toggleWishlist, isInWishlist, fetchWishlist]
   );
 
   return (
-    <WishlistContext.Provider
-      value={{
-        wishlistProductIds,
-        wishlistItemMap,
-        isLoading,
-        toggleWishlist,
-        isInWishlist,
-        count: wishlistProductIds.size,
-        refresh: fetchWishlist,
-      }}
-    >
+    <WishlistContext.Provider value={contextValue}>
       {children}
     </WishlistContext.Provider>
   );

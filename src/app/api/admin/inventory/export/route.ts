@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { auth } from '@/lib/auth-config';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 
 // Escape a value for CSV: wrap in quotes if it contains commas, quotes, or newlines
 function csvEscape(value: string | number | boolean | null | undefined): string {
@@ -24,16 +24,8 @@ function csvRow(values: (string | number | boolean | null | undefined)[]): strin
 }
 
 // GET /api/admin/inventory/export - Export inventory as CSV
-export async function GET() {
+export const GET = withAdminGuard(async (_request, { session }) => {
   try {
-    const session = await auth();
-    if (
-      !session?.user ||
-      (session.user.role !== 'EMPLOYEE' && session.user.role !== 'OWNER')
-    ) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-
     const formats = await prisma.productFormat.findMany({
       where: {
         isActive: true,
@@ -118,4 +110,4 @@ export async function GET() {
       { status: 500 }
     );
   }
-}
+});

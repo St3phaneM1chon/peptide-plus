@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Breadcrumbs from '@/components/ui/Breadcrumbs';
 import { ProductCard } from '@/components/shop';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 import { useCurrency } from '@/contexts/CurrencyContext';
 
 // ---------------------------------------------------------------------------
@@ -63,7 +63,7 @@ type SortOption = 'relevance' | 'price-asc' | 'price-desc' | 'newest';
 function SearchPageInner() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { t, locale } = useTranslations();
+  const { t, locale } = useI18n();
   const { formatPrice } = useCurrency();
 
   // Read query from URL
@@ -74,6 +74,8 @@ function SearchPageInner() {
   const [categories, setCategories] = useState<CategoryFacet[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const pageSize = 20;
 
   // Filter state
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -91,7 +93,8 @@ function SearchPageInner() {
       try {
         const params = new URLSearchParams();
         if (query) params.set('q', query);
-        params.set('limit', '100');
+        params.set('limit', String(pageSize));
+        params.set('offset', String((page - 1) * pageSize));
 
         params.set('locale', locale);
         const res = await fetch(`/api/products/search?${params.toString()}`);
@@ -109,7 +112,7 @@ function SearchPageInner() {
       }
     }
     fetchResults();
-  }, [query]);
+  }, [query, page, locale]);
 
   // Compute max price from results
   const maxPrice = useMemo(() => {
@@ -282,10 +285,10 @@ function SearchPageInner() {
           <h1 className="text-2xl md:text-3xl font-bold">
             {query ? (
               <>
-                Search results for &ldquo;{query}&rdquo;
+                {t('search.resultsFor') || 'Search results for'} &ldquo;{query}&rdquo;
               </>
             ) : (
-              'Search Products'
+              t('search.searchProducts') || 'Search Products'
             )}
           </h1>
           {/* Inline search bar */}
@@ -302,7 +305,7 @@ function SearchPageInner() {
           >
             <div className="relative flex-1">
               <svg
-                className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400"
+                className="absolute start-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -319,15 +322,15 @@ function SearchPageInner() {
                 name="q"
                 defaultValue={query}
                 placeholder={t('shop.search')}
-                aria-label="Search products"
-                className="w-full pl-10 pr-4 py-3 rounded-l-lg text-neutral-900 placeholder:text-neutral-400 outline-none focus:ring-2 focus:ring-orange-500"
+                aria-label={t('shop.aria.searchProducts')}
+                className="w-full ps-10 pe-4 py-3 rounded-s-lg text-neutral-900 placeholder:text-neutral-400 outline-none focus:ring-2 focus:ring-orange-500"
               />
             </div>
             <button
               type="submit"
-              className="px-6 py-3 bg-orange-500 text-white font-semibold rounded-r-lg hover:bg-orange-600 transition-colors"
+              className="px-6 py-3 bg-orange-500 text-white font-semibold rounded-e-lg hover:bg-orange-600 transition-colors"
             >
-              Search
+              {t('search.search') || 'Search'}
             </button>
           </form>
         </div>
@@ -353,7 +356,7 @@ function SearchPageInner() {
             </svg>
             {t('shop.filters')}
             {hasActiveFilters && (
-              <span className="ml-1 w-5 h-5 flex items-center justify-center bg-orange-500 text-white text-xs rounded-full">
+              <span className="ms-1 w-5 h-5 flex items-center justify-center bg-orange-500 text-white text-xs rounded-full">
                 {selectedCategories.length +
                   (showInStockOnly ? 1 : 0) +
                   (purityFilter !== null ? 1 : 0) +
@@ -367,16 +370,36 @@ function SearchPageInner() {
           {/* ---------------------------------------------------------------- */}
           {/* Sidebar Filters */}
           {/* ---------------------------------------------------------------- */}
+          {showFilters && (
+            <div
+              className="fixed inset-0 z-40 bg-black/30 lg:hidden"
+              onClick={() => setShowFilters(false)}
+            />
+          )}
           <aside
             id="search-filters"
-            className={`w-full lg:w-64 flex-shrink-0 ${showFilters ? 'block' : 'hidden lg:block'}`}
+            className={`
+              ${showFilters ? 'fixed inset-0 z-50 bg-white overflow-y-auto p-4 lg:relative lg:inset-auto lg:z-auto lg:bg-transparent lg:overflow-visible lg:p-0' : 'hidden lg:block'}
+              w-full lg:w-64 flex-shrink-0
+            `}
           >
             <div className="sticky top-20 space-y-6">
-              <h2 className="font-bold text-lg">{t('shop.filters')}</h2>
+              <div className="flex items-center justify-between lg:block">
+                <h2 className="font-bold text-lg">{t('shop.filters')}</h2>
+                <button
+                  className="lg:hidden p-2 text-neutral-500 hover:text-neutral-800"
+                  onClick={() => setShowFilters(false)}
+                  aria-label="Close filters"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
 
               {/* Category checkboxes */}
               <div>
-                <h3 className="font-semibold mb-3">Category</h3>
+                <h3 className="font-semibold mb-3">{t('shop.category') || 'Category'}</h3>
                 <ul className="space-y-2">
                   {categories
                     .filter((c) => c.count > 0)
@@ -414,7 +437,7 @@ function SearchPageInner() {
                       }
                       className="w-20 px-2 py-1 border rounded text-sm"
                       min={0}
-                      aria-label="Minimum price"
+                      aria-label={t('shop.aria.minimumPrice')}
                     />
                     <span className="text-neutral-400">-</span>
                     <input
@@ -425,7 +448,7 @@ function SearchPageInner() {
                       }
                       className="w-20 px-2 py-1 border rounded text-sm"
                       min={0}
-                      aria-label="Maximum price"
+                      aria-label={t('shop.aria.maximumPrice')}
                     />
                   </div>
                   <input
@@ -437,7 +460,7 @@ function SearchPageInner() {
                       setPriceRange([priceRange[0], Number(e.target.value)])
                     }
                     className="w-full accent-orange-500"
-                    aria-label="Price range slider"
+                    aria-label={t('shop.aria.priceRangeSlider')}
                   />
                   <p className="text-sm text-neutral-500">
                     {formatPrice(priceRange[0])} - {formatPrice(priceRange[1])}
@@ -494,7 +517,7 @@ function SearchPageInner() {
                   onClick={resetFilters}
                   className="text-sm text-orange-600 hover:underline"
                 >
-                  Reset filters
+                  {t('search.resetFilters') || 'Reset filters'}
                 </button>
               )}
             </div>
@@ -510,8 +533,8 @@ function SearchPageInner() {
                 {loading
                   ? '...'
                   : `${filteredProducts.length} ${
-                      filteredProducts.length === 1 ? 'product' : 'products'
-                    }${query ? ` for "${query}"` : ''}`}
+                      filteredProducts.length === 1 ? (t('search.product') || 'product') : (t('search.products') || 'products')
+                    }${query ? ` ${t('search.for') || 'for'} "${query}"` : ''}`}
               </p>
 
               <div className="flex items-center gap-2">
@@ -524,7 +547,7 @@ function SearchPageInner() {
                   onChange={(e) => setSortBy(e.target.value as SortOption)}
                   className="px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                 >
-                  <option value="relevance">Relevance</option>
+                  <option value="relevance">{t('search.relevance') || 'Relevance'}</option>
                   <option value="newest">{t('shop.newest')}</option>
                   <option value="price-asc">{t('shop.priceAsc')}</option>
                   <option value="price-desc">{t('shop.priceDesc')}</option>
@@ -559,7 +582,7 @@ function SearchPageInner() {
                     <button
                       onClick={() => setShowInStockOnly(false)}
                       className="hover:text-green-900"
-                      aria-label="Remove in-stock filter"
+                      aria-label={t('shop.aria.removeInStockFilter')}
                     >
                       x
                     </button>
@@ -571,7 +594,7 @@ function SearchPageInner() {
                     <button
                       onClick={() => setPurityFilter(null)}
                       className="hover:text-emerald-900"
-                      aria-label="Remove purity filter"
+                      aria-label={t('shop.aria.removePurityFilter')}
                     >
                       x
                     </button>
@@ -584,7 +607,7 @@ function SearchPageInner() {
                     <button
                       onClick={() => setPriceRange([0, maxPrice])}
                       className="hover:text-blue-900"
-                      aria-label="Remove price filter"
+                      aria-label={t('shop.aria.removePriceFilter')}
                     >
                       x
                     </button>
@@ -614,7 +637,7 @@ function SearchPageInner() {
                   onClick={() => window.location.reload()}
                   className="text-orange-600 hover:underline"
                 >
-                  Retry
+                  {t('common.retry') || 'Retry'}
                 </button>
               </div>
             )}
@@ -647,20 +670,19 @@ function SearchPageInner() {
                 {query ? (
                   <>
                     <p className="text-neutral-700 text-lg font-medium mb-2">
-                      No results for &ldquo;{query}&rdquo;
+                      {t('search.noResults') || 'No results for'} &ldquo;{query}&rdquo;
                     </p>
                     <p className="text-neutral-500 mb-6">
-                      Try adjusting your search or filters to find what you are
-                      looking for.
+                      {t('search.tryAdjusting') || 'Try adjusting your search or filters to find what you are looking for.'}
                     </p>
                   </>
                 ) : (
                   <>
                     <p className="text-neutral-700 text-lg font-medium mb-2">
-                      Start searching
+                      {t('search.startSearching') || 'Start searching'}
                     </p>
                     <p className="text-neutral-500 mb-6">
-                      Enter a keyword above to find research peptides.
+                      {t('search.enterKeyword') || 'Enter a keyword above to find research peptides.'}
                     </p>
                   </>
                 )}
@@ -668,7 +690,7 @@ function SearchPageInner() {
                 {/* Suggestions */}
                 <div className="mb-6">
                   <p className="text-sm text-neutral-500 mb-3">
-                    Popular searches
+                    {t('search.popularSearches') || 'Popular searches'}
                   </p>
                   <div className="flex flex-wrap justify-center gap-2">
                     {popularSearches.map((term) => (
@@ -688,7 +710,7 @@ function SearchPageInner() {
                     onClick={resetFilters}
                     className="text-orange-600 hover:underline font-medium"
                   >
-                    Clear all filters
+                    {t('search.clearAllFilters') || 'Clear all filters'}
                   </button>
                 )}
 

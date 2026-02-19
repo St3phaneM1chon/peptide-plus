@@ -8,7 +8,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 import { profileSchema, validateForm } from '@/lib/form-validation';
 import { FormError } from '@/components/ui/FormError';
 import { toast } from 'sonner';
@@ -28,7 +28,7 @@ interface UserProfile {
 export default function ProfilePage() {
   const { data: session, status, update } = useSession();
   const router = useRouter();
-  const { t } = useTranslations();
+  const { t, locale } = useI18n();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -115,17 +115,17 @@ export default function ProfilePage() {
         setProfile(data);
         setEditMode(false);
         setMessage({ type: 'success', text: t('account.profileUpdated') });
-        toast.success('Profile updated successfully');
+        toast.success(t('toast.profile.updated'));
         // Mettre à jour la session
         update({ name: formData.name });
       } else {
         const error = await res.json();
         setMessage({ type: 'error', text: error.message || t('account.updateError') });
-        toast.error('Failed to update profile');
+        toast.error(t('toast.profile.updateFailed'));
       }
     } catch (error) {
       setMessage({ type: 'error', text: t('account.genericError') });
-      toast.error('Something went wrong. Please try again.');
+      toast.error(t('toast.error.generic'));
     } finally {
       setSaving(false);
     }
@@ -286,7 +286,7 @@ export default function ProfilePage() {
               ) : (
                 <p className="text-gray-900">
                   {profile?.birthDate 
-                    ? new Date(profile.birthDate).toLocaleDateString('fr-CA', { day: 'numeric', month: 'long', year: 'numeric' })
+                    ? new Date(profile.birthDate).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' })
                     : '-'}
                 </p>
               )}
@@ -369,7 +369,7 @@ export default function ProfilePage() {
         {/* Member Since */}
         {profile?.createdAt && (
           <p className="text-center text-sm text-gray-500 mt-8">
-            {t('account.memberSince')} {new Date(profile.createdAt).toLocaleDateString('fr-CA', { month: 'long', year: 'numeric' })}
+            {t('account.memberSince')} {new Date(profile.createdAt).toLocaleDateString(locale, { month: 'long', year: 'numeric' })}
           </p>
         )}
       </div>

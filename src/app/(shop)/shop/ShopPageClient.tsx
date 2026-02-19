@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { ProductCard } from '@/components/shop';
 import RecentlyViewed from '@/components/shop/RecentlyViewed';
 import Breadcrumbs from '@/components/ui/Breadcrumbs';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 import { useCurrency } from '@/contexts/CurrencyContext';
 
 interface ApiProduct {
@@ -21,6 +22,8 @@ interface ApiProduct {
     id: string;
     name: string;
     slug: string;
+    parentId?: string | null;
+    parent?: { id: string; name: string; slug: string } | null;
   };
   images?: Array<{
     id: string;
@@ -46,26 +49,60 @@ interface CategoryCount {
   name: string;
   slug: string;
   count: number;
+  parentId?: string | null;
+  parentSlug?: string;
+  children?: CategoryCount[];
 }
 
 type SortOption = 'popular' | 'newest' | 'price-asc' | 'price-desc' | 'name-asc';
 
 export default function ShopPage() {
-  const { t } = useTranslations();
+  const { t, locale } = useI18n();
   const { formatPrice } = useCurrency();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
 
   const [products, setProducts] = useState<ApiProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Filter states
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [sortBy, setSortBy] = useState<SortOption>('popular');
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 5000]);
-  const [showInStockOnly, setShowInStockOnly] = useState(false);
+  // Filter states - initialize from URL params
+  const [selectedCategory, setSelectedCategory] = useState(
+    searchParams.get('category') || 'all'
+  );
+  const [sortBy, setSortBy] = useState<SortOption>(
+    (searchParams.get('sort') as SortOption) || 'popular'
+  );
+  const [priceRange, setPriceRange] = useState<[number, number]>(() => {
+    const minP = Number(searchParams.get('minPrice')) || 0;
+    const maxP = Number(searchParams.get('maxPrice')) || 5000;
+    return [minP, maxP];
+  });
+  const [showInStockOnly, setShowInStockOnly] = useState(
+    searchParams.get('inStock') === 'true'
+  );
   const [showFilters, setShowFilters] = useState(false);
 
-  const { locale } = useTranslations();
+  // Sync filter state changes to URL query params
+  const updateUrlParams = useCallback((params: Record<string, string | null>) => {
+    const current = new URLSearchParams(searchParams.toString());
+    for (const [key, value] of Object.entries(params)) {
+      if (value === null || value === '' || value === undefined) {
+        current.delete(key);
+      } else {
+        current.set(key, value);
+      }
+    }
+    // Remove default values to keep URL clean
+    if (current.get('category') === 'all') current.delete('category');
+    if (current.get('sort') === 'popular') current.delete('sort');
+    if (current.get('minPrice') === '0') current.delete('minPrice');
+    if (current.get('inStock') === 'false') current.delete('inStock');
+
+    const search = current.toString();
+    router.replace(`${pathname}${search ? `?${search}` : ''}`, { scroll: false });
+  }, [searchParams, router, pathname]);
 
   // Fetch products from API with locale for translations
   useEffect(() => {
@@ -86,25 +123,73 @@ export default function ShopPage() {
     fetchProducts();
   }, [locale]);
 
-  // Build dynamic categories from loaded products
+  // Build hierarchical categories from loaded products
   const categories = useMemo<CategoryCount[]>(() => {
-    const catMap = new Map<string, { name: string; count: number }>();
+    // Count products per category slug
+    const catMap = new Map<string, { name: string; count: number; parentId?: string | null; parentSlug?: string; parentName?: string }>();
     for (const p of products) {
       if (p.category) {
         const existing = catMap.get(p.category.slug);
         if (existing) {
           existing.count++;
         } else {
-          catMap.set(p.category.slug, { name: p.category.name, count: 1 });
+          catMap.set(p.category.slug, {
+            name: p.category.name,
+            count: 1,
+            parentId: p.category.parentId,
+            parentSlug: p.category.parent?.slug,
+            parentName: p.category.parent?.name,
+          });
         }
       }
     }
+
+    // Build parent→children structure
+    const parentMap = new Map<string, CategoryCount>();
+    const childrenByParent = new Map<string, CategoryCount[]>();
+
+    for (const [slug, info] of catMap) {
+      if (info.parentSlug) {
+        // This is a child category
+        const children = childrenByParent.get(info.parentSlug) || [];
+        children.push({ name: info.name, slug, count: info.count, parentId: info.parentId, parentSlug: info.parentSlug });
+        childrenByParent.set(info.parentSlug, children);
+
+        // Ensure parent exists in parentMap
+        if (!parentMap.has(info.parentSlug)) {
+          parentMap.set(info.parentSlug, {
+            name: info.parentName || info.parentSlug,
+            slug: info.parentSlug,
+            count: 0,
+          });
+        }
+      } else {
+        // This is a parent or standalone category
+        const existing = parentMap.get(slug);
+        if (existing) {
+          existing.count += info.count;
+          existing.name = info.name;
+        } else {
+          parentMap.set(slug, { name: info.name, slug, count: info.count });
+        }
+      }
+    }
+
+    // Build final list
     const cats: CategoryCount[] = [
       { name: t('shop.allProducts'), slug: 'all', count: products.length },
     ];
-    for (const [slug, { name, count }] of catMap) {
-      cats.push({ name, slug, count });
+
+    for (const [slug, parent] of parentMap) {
+      const children = childrenByParent.get(slug) || [];
+      const childCount = children.reduce((s, c) => s + c.count, 0);
+      cats.push({
+        ...parent,
+        count: parent.count + childCount,
+        children,
+      });
     }
+
     return cats;
   }, [products, t]);
 
@@ -158,9 +243,17 @@ export default function ShopPage() {
       };
     });
 
-    // Category filter
+    // Category filter (parent selection includes all children)
     if (selectedCategory !== 'all') {
-      result = result.filter((p) => p.categorySlug === selectedCategory);
+      const selectedCat = categories.find(c => c.slug === selectedCategory);
+      if (selectedCat?.children && selectedCat.children.length > 0) {
+        // Parent category: show products from this parent and all children
+        const childSlugs = new Set(selectedCat.children.map(c => c.slug));
+        childSlugs.add(selectedCategory);
+        result = result.filter((p) => childSlugs.has(p.categorySlug));
+      } else {
+        result = result.filter((p) => p.categorySlug === selectedCategory);
+      }
     }
 
     // Price filter
@@ -235,23 +328,43 @@ export default function ShopPage() {
           {/* Sidebar Filters */}
           <aside className={`w-full lg:w-64 flex-shrink-0 ${showFilters ? 'block' : 'hidden lg:block'}`}>
             <div className="sticky top-20 space-y-6">
-              {/* Categories */}
+              {/* Categories (hierarchical) */}
               <div>
                 <h2 className="font-bold text-lg mb-4">{t('shop.filters')}</h2>
-                <ul className="space-y-2">
+                <ul className="space-y-1">
                   {categories.map((cat) => (
                     <li key={cat.slug}>
                       <button
-                        onClick={() => setSelectedCategory(cat.slug)}
-                        className={`w-full flex items-center justify-between px-3 py-2 rounded-lg transition-colors text-left ${
+                        onClick={() => { setSelectedCategory(cat.slug); updateUrlParams({ category: cat.slug }); }}
+                        className={`w-full flex items-center justify-between px-3 py-2 rounded-lg transition-colors text-start ${
                           selectedCategory === cat.slug
                             ? 'bg-orange-50 text-orange-600 font-medium'
                             : 'text-neutral-600 hover:bg-neutral-50'
                         }`}
                       >
-                        <span>{cat.name}</span>
+                        <span className={cat.children && cat.children.length > 0 ? 'font-semibold' : ''}>{cat.name}</span>
                         <span className="text-sm text-neutral-400">{cat.count}</span>
                       </button>
+                      {/* Show subcategories when parent is selected or always visible */}
+                      {cat.children && cat.children.length > 0 && (
+                        <ul className="ms-4 mt-1 space-y-0.5">
+                          {cat.children.map((child) => (
+                            <li key={child.slug}>
+                              <button
+                                onClick={() => { setSelectedCategory(child.slug); updateUrlParams({ category: child.slug }); }}
+                                className={`w-full flex items-center justify-between px-3 py-1.5 rounded-lg transition-colors text-start text-sm ${
+                                  selectedCategory === child.slug
+                                    ? 'bg-orange-50 text-orange-600 font-medium'
+                                    : 'text-neutral-500 hover:bg-neutral-50'
+                                }`}
+                              >
+                                <span>{child.name}</span>
+                                <span className="text-xs text-neutral-400">{child.count}</span>
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
                     </li>
                   ))}
                 </ul>
@@ -265,7 +378,7 @@ export default function ShopPage() {
                     <input
                       type="number"
                       value={priceRange[0]}
-                      onChange={(e) => setPriceRange([Number(e.target.value), priceRange[1]])}
+                      onChange={(e) => { const v = Number(e.target.value); setPriceRange([v, priceRange[1]]); updateUrlParams({ minPrice: String(v) }); }}
                       className="w-20 px-2 py-1 border rounded text-sm"
                       min={0}
                     />
@@ -273,7 +386,7 @@ export default function ShopPage() {
                     <input
                       type="number"
                       value={priceRange[1]}
-                      onChange={(e) => setPriceRange([priceRange[0], Number(e.target.value)])}
+                      onChange={(e) => { const v = Number(e.target.value); setPriceRange([priceRange[0], v]); updateUrlParams({ maxPrice: String(v) }); }}
                       className="w-20 px-2 py-1 border rounded text-sm"
                       min={0}
                     />
@@ -283,7 +396,7 @@ export default function ShopPage() {
                     min={0}
                     max={maxPrice}
                     value={priceRange[1]}
-                    onChange={(e) => setPriceRange([priceRange[0], Number(e.target.value)])}
+                    onChange={(e) => { const v = Number(e.target.value); setPriceRange([priceRange[0], v]); updateUrlParams({ maxPrice: String(v) }); }}
                     className="w-full accent-orange-500"
                   />
                   <p className="text-sm text-neutral-500">
@@ -298,7 +411,7 @@ export default function ShopPage() {
                   <input
                     type="checkbox"
                     checked={showInStockOnly}
-                    onChange={(e) => setShowInStockOnly(e.target.checked)}
+                    onChange={(e) => { setShowInStockOnly(e.target.checked); updateUrlParams({ inStock: e.target.checked ? 'true' : null }); }}
                     className="w-4 h-4 rounded text-orange-500 focus:ring-orange-500"
                   />
                   <span className="text-sm">{t('shop.inStock')}</span>
@@ -312,6 +425,7 @@ export default function ShopPage() {
                   setPriceRange([0, maxPrice]);
                   setShowInStockOnly(false);
                   setSortBy('popular');
+                  router.replace(pathname, { scroll: false });
                 }}
                 className="text-sm text-orange-600 hover:underline"
               >
@@ -332,7 +446,7 @@ export default function ShopPage() {
                 <label className="text-sm text-neutral-600">{t('shop.sortBy')}:</label>
                 <select
                   value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as SortOption)}
+                  onChange={(e) => { const v = e.target.value as SortOption; setSortBy(v); updateUrlParams({ sort: v }); }}
                   className="px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                 >
                   <option value="popular">{t('shop.popular')}</option>
@@ -350,19 +464,19 @@ export default function ShopPage() {
                 {selectedCategory !== 'all' && (
                   <span className="inline-flex items-center gap-1 px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm">
                     {categories.find(c => c.slug === selectedCategory)?.name}
-                    <button onClick={() => setSelectedCategory('all')} className="hover:text-orange-900">×</button>
+                    <button onClick={() => { setSelectedCategory('all'); updateUrlParams({ category: null }); }} className="hover:text-orange-900">×</button>
                   </span>
                 )}
                 {showInStockOnly && (
                   <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">
                     {t('shop.inStock')}
-                    <button onClick={() => setShowInStockOnly(false)} className="hover:text-green-900">×</button>
+                    <button onClick={() => { setShowInStockOnly(false); updateUrlParams({ inStock: null }); }} className="hover:text-green-900">×</button>
                   </span>
                 )}
                 {(priceRange[0] > 0 || priceRange[1] < maxPrice) && (
                   <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">
                     {formatPrice(priceRange[0])} - {formatPrice(priceRange[1])}
-                    <button onClick={() => setPriceRange([0, maxPrice])} className="hover:text-blue-900">×</button>
+                    <button onClick={() => { setPriceRange([0, maxPrice]); updateUrlParams({ minPrice: null, maxPrice: null }); }} className="hover:text-blue-900">×</button>
                   </span>
                 )}
               </div>
@@ -372,11 +486,7 @@ export default function ShopPage() {
             {loading && (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="animate-pulse">
-                    <div className="bg-neutral-200 rounded-lg aspect-square mb-3" />
-                    <div className="bg-neutral-200 h-4 rounded w-3/4 mb-2" />
-                    <div className="bg-neutral-200 h-4 rounded w-1/2" />
-                  </div>
+                  <ProductCardSkeleton key={i} />
                 ))}
               </div>
             )}
@@ -424,6 +534,38 @@ export default function ShopPage() {
 
         {/* Recently Viewed Products */}
         <RecentlyViewed />
+      </div>
+    </div>
+  );
+}
+
+/**
+ * ProductCardSkeleton - Matches ProductCard dimensions for smooth loading
+ */
+function ProductCardSkeleton() {
+  return (
+    <div className="bg-white rounded-xl border border-neutral-200 overflow-hidden flex flex-col h-full animate-pulse">
+      {/* Image placeholder */}
+      <div className="relative aspect-square bg-neutral-200 rounded-t-xl" />
+      {/* Content placeholder */}
+      <div className="p-4 flex flex-col flex-grow">
+        {/* Title */}
+        <div className="h-5 bg-neutral-200 rounded w-3/4 mb-2" />
+        {/* Price */}
+        <div className="h-5 bg-neutral-200 rounded w-1/3 mb-2" />
+        {/* Purity/Mass */}
+        <div className="h-4 bg-neutral-200 rounded w-1/2 mb-4" />
+        {/* Bottom section */}
+        <div className="mt-auto pt-4">
+          {/* Format selector placeholder */}
+          <div className="h-4 bg-neutral-200 rounded w-1/4 mb-2" />
+          <div className="h-10 bg-neutral-200 rounded mb-4" />
+          {/* Quantity + Button */}
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-24 bg-neutral-200 rounded" />
+            <div className="flex-1 h-10 bg-neutral-200 rounded" />
+          </div>
+        </div>
       </div>
     </div>
   );

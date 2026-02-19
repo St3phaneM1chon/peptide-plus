@@ -6,7 +6,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 import { AddressAutocomplete } from '@/components/ui/AddressAutocomplete';
 
 interface ShippingAddress {
@@ -48,7 +48,7 @@ export function ShippingAddressForm({
   onAddressChange,
   userName,
 }: ShippingAddressFormProps) {
-  const { t } = useTranslations();
+  const { t } = useI18n();
   const [selectedAddressId, setSelectedAddressId] = useState<string | 'new'>(
     savedAddresses.find((a) => a.isDefault)?.id || savedAddresses[0]?.id || 'new'
   );
@@ -99,25 +99,8 @@ export function ShippingAddressForm({
   }, [selectedAddressId, newAddress, savedAddresses, onAddressChange]);
 
   return (
-    <div
-      style={{
-        backgroundColor: 'white',
-        borderRadius: '12px',
-        padding: '24px',
-        border: '1px solid var(--gray-200)',
-      }}
-    >
-      <h2
-        style={{
-          fontSize: '18px',
-          fontWeight: 600,
-          color: 'var(--gray-500)',
-          marginBottom: '20px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-        }}
-      >
+    <div className="bg-white rounded-xl p-6 border border-gray-200">
+      <h2 className="text-lg font-semibold text-gray-500 mb-5 flex items-center gap-2">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
@@ -138,35 +121,17 @@ export function ShippingAddressForm({
 
       {/* Adresses sauvegardées */}
       {savedAddresses.length > 0 && (
-        <div style={{ marginBottom: '20px' }}>
-          <p
-            style={{
-              fontSize: '13px',
-              fontWeight: 500,
-              color: 'var(--gray-500)',
-              marginBottom: '12px',
-            }}
-          >
+        <div className="mb-5">
+          <p className="text-[13px] font-medium text-gray-500 mb-3">
             {t('checkout.savedAddresses')}
           </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div className="flex flex-col gap-2">
             {savedAddresses.map((address) => (
               <label
                 key={address.id}
-                style={{
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: '12px',
-                  padding: '14px',
-                  border: `2px solid ${
-                    selectedAddressId === address.id
-                      ? 'var(--gray-500)'
-                      : 'var(--gray-200)'
-                  }`,
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  transition: 'border-color 0.2s ease',
-                }}
+                className={`flex items-start gap-3 p-3.5 border-2 rounded-lg cursor-pointer transition-colors ${
+                  selectedAddressId === address.id ? 'border-gray-500' : 'border-gray-200'
+                }`}
               >
                 <input
                   type="radio"
@@ -174,58 +139,29 @@ export function ShippingAddressForm({
                   value={address.id}
                   checked={selectedAddressId === address.id}
                   onChange={() => setSelectedAddressId(address.id)}
-                  style={{ marginTop: '2px' }}
+                  className="mt-0.5"
                 />
-                <div style={{ flex: 1 }}>
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                      marginBottom: '4px',
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontSize: '14px',
-                        fontWeight: 500,
-                        color: 'var(--gray-500)',
-                      }}
-                    >
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-sm font-medium text-gray-500">
                       {address.recipientName}
                     </span>
                     {address.label && (
-                      <span
-                        style={{
-                          fontSize: '11px',
-                          padding: '2px 8px',
-                          backgroundColor: 'var(--gray-100)',
-                          borderRadius: '10px',
-                          color: 'var(--gray-400)',
-                        }}
-                      >
+                      <span className="text-[11px] px-2 py-0.5 bg-gray-100 rounded-full text-gray-400">
                         {address.label}
                       </span>
                     )}
                     {address.isDefault && (
-                      <span
-                        style={{
-                          fontSize: '11px',
-                          padding: '2px 8px',
-                          backgroundColor: '#E8F5E9',
-                          borderRadius: '10px',
-                          color: '#4CAF50',
-                        }}
-                      >
+                      <span className="text-[11px] px-2 py-0.5 bg-green-50 rounded-full text-green-600">
                         {t('checkout.defaultAddress')}
                       </span>
                     )}
                   </div>
-                  <p style={{ fontSize: '13px', color: 'var(--gray-400)' }}>
+                  <p className="text-[13px] text-gray-400">
                     {address.addressLine1}
                     {address.addressLine2 && `, ${address.addressLine2}`}
                   </p>
-                  <p style={{ fontSize: '13px', color: 'var(--gray-400)' }}>
+                  <p className="text-[13px] text-gray-400">
                     {address.city}, {address.state} {address.postalCode}
                   </p>
                 </div>
@@ -237,18 +173,9 @@ export function ShippingAddressForm({
 
       {/* Option nouvelle adresse */}
       <label
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px',
-          padding: '14px',
-          border: `2px solid ${
-            selectedAddressId === 'new' ? 'var(--gray-500)' : 'var(--gray-200)'
-          }`,
-          borderRadius: '8px',
-          cursor: 'pointer',
-          marginBottom: selectedAddressId === 'new' ? '20px' : '0',
-        }}
+        className={`flex items-center gap-3 p-3.5 border-2 rounded-lg cursor-pointer ${
+          selectedAddressId === 'new' ? 'border-gray-500 mb-5' : 'border-gray-200 mb-0'
+        }`}
       >
         <input
           type="radio"
@@ -257,7 +184,7 @@ export function ShippingAddressForm({
           checked={selectedAddressId === 'new'}
           onChange={() => setSelectedAddressId('new')}
         />
-        <span style={{ fontSize: '14px', color: 'var(--gray-500)' }}>
+        <span className="text-sm text-gray-500">
           {savedAddresses.length > 0
             ? t('checkout.useNewAddress')
             : t('checkout.enterAddress')}
@@ -266,18 +193,14 @@ export function ShippingAddressForm({
 
       {/* Formulaire nouvelle adresse */}
       {selectedAddressId === 'new' && (
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(2, 1fr)',
-            gap: '16px',
-          }}
-        >
+        <div className="grid grid-cols-2 gap-4">
           {/* Nom complet */}
-          <div style={{ gridColumn: 'span 2' }}>
-            <label className="form-label">{t('checkout.recipientName')}</label>
+          <div className="col-span-2">
+            <label htmlFor="shipping-recipient" className="form-label">{t('checkout.recipientName')}</label>
             <input
+              id="shipping-recipient"
               type="text"
+              autoComplete="name"
               value={newAddress.recipientName}
               onChange={(e) =>
                 setNewAddress({ ...newAddress, recipientName: e.target.value })
@@ -289,8 +212,8 @@ export function ShippingAddressForm({
           </div>
 
           {/* Adresse ligne 1 */}
-          <div style={{ gridColumn: 'span 2' }}>
-            <label className="form-label">{t('checkout.address')}</label>
+          <div className="col-span-2">
+            <label htmlFor="shipping-address1" className="form-label">{t('checkout.address')}</label>
             <AddressAutocomplete
               value={newAddress.addressLine1}
               onChange={(addressComponents) => {
@@ -308,31 +231,36 @@ export function ShippingAddressForm({
               }
               placeholder="123 Rue Principale"
               className="form-input"
+              id="shipping-address1"
               required
             />
           </div>
 
           {/* Adresse ligne 2 */}
-          <div style={{ gridColumn: 'span 2' }}>
-            <label className="form-label">
+          <div className="col-span-2">
+            <label htmlFor="shipping-address2" className="form-label">
               {t('checkout.apartment')}
             </label>
             <input
+              id="shipping-address2"
               type="text"
+              autoComplete="address-line2"
               value={newAddress.addressLine2}
               onChange={(e) =>
                 setNewAddress({ ...newAddress, addressLine2: e.target.value })
               }
               className="form-input"
-              placeholder="Apt 4B"
+              placeholder={t('checkout.placeholderApartment')}
             />
           </div>
 
           {/* Ville */}
           <div>
-            <label className="form-label">{t('checkout.city')}</label>
+            <label htmlFor="shipping-city" className="form-label">{t('checkout.city')}</label>
             <input
+              id="shipping-city"
               type="text"
+              autoComplete="address-level2"
               value={newAddress.city}
               onChange={(e) =>
                 setNewAddress({ ...newAddress, city: e.target.value })
@@ -345,8 +273,9 @@ export function ShippingAddressForm({
 
           {/* Province */}
           <div>
-            <label className="form-label">{t('checkout.province')}</label>
+            <label htmlFor="shipping-province" className="form-label">{t('checkout.province')}</label>
             <select
+              id="shipping-province"
               value={newAddress.state}
               onChange={(e) =>
                 setNewAddress({ ...newAddress, state: e.target.value })
@@ -364,9 +293,11 @@ export function ShippingAddressForm({
 
           {/* Code postal */}
           <div>
-            <label className="form-label">{t('checkout.postalCode')}</label>
+            <label htmlFor="shipping-postal" className="form-label">{t('checkout.postalCode')}</label>
             <input
+              id="shipping-postal"
               type="text"
+              autoComplete="postal-code"
               value={newAddress.postalCode}
               onChange={(e) =>
                 setNewAddress({
@@ -375,7 +306,7 @@ export function ShippingAddressForm({
                 })
               }
               className="form-input"
-              placeholder="H2X 1Y6"
+              placeholder={t('checkout.placeholderPostalCode')}
               maxLength={7}
               required
             />
@@ -383,28 +314,33 @@ export function ShippingAddressForm({
 
           {/* Téléphone */}
           <div>
-            <label className="form-label">{t('checkout.phone')}</label>
+            <label htmlFor="shipping-phone" className="form-label">{t('checkout.phone')}</label>
             <input
+              id="shipping-phone"
               type="tel"
+              autoComplete="tel"
               value={newAddress.phone}
-              onChange={(e) =>
-                setNewAddress({ ...newAddress, phone: e.target.value })
-              }
+              onChange={(e) => {
+                // Auto-format phone: (XXX) XXX-XXXX
+                const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
+                let formatted = digits;
+                if (digits.length > 6) {
+                  formatted = `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+                } else if (digits.length > 3) {
+                  formatted = `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+                } else if (digits.length > 0) {
+                  formatted = `(${digits}`;
+                }
+                setNewAddress({ ...newAddress, phone: formatted });
+              }}
               className="form-input"
               placeholder="(514) 555-0123"
             />
           </div>
 
           {/* Sauvegarder */}
-          <div style={{ gridColumn: 'span 2' }}>
-            <label
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                cursor: 'pointer',
-              }}
-            >
+          <div className="col-span-2">
+            <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
                 checked={newAddress.saveAddress}
@@ -412,7 +348,7 @@ export function ShippingAddressForm({
                   setNewAddress({ ...newAddress, saveAddress: e.target.checked })
                 }
               />
-              <span style={{ fontSize: '14px', color: 'var(--gray-500)' }}>
+              <span className="text-sm text-gray-500">
                 {t('checkout.saveAddressForFuture')}
               </span>
             </label>

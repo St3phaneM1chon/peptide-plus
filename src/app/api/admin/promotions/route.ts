@@ -8,20 +8,18 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { auth } from '@/lib/auth-config';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 
 // GET /api/admin/promotions - List all promotions/discounts
-export async function GET(request: NextRequest) {
+export const GET = withAdminGuard(async (request, { session }) => {
   try {
-    const session = await auth();
-    if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const { searchParams } = new URL(request.url);
     const isActive = searchParams.get('isActive');
     const type = searchParams.get('type');
     const search = searchParams.get('search');
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
+    const limit = Math.min(parseInt(searchParams.get('limit') || '20', 10), 100);
+    const skip = (page - 1) * limit;
 
     // Build where clause
     const where: Record<string, unknown> = {};
@@ -38,10 +36,15 @@ export async function GET(request: NextRequest) {
       where.name = { contains: search, mode: 'insensitive' };
     }
 
-    const discounts = await prisma.discount.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
-    });
+    const [discounts, total] = await Promise.all([
+      prisma.discount.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      prisma.discount.count({ where }),
+    ]);
 
     // Collect unique categoryIds and productIds for lookups
     const categoryIds = [
@@ -98,7 +101,15 @@ export async function GET(request: NextRequest) {
       updatedAt: d.updatedAt.toISOString(),
     }));
 
-    return NextResponse.json({ promotions });
+    return NextResponse.json({
+      promotions,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+      },
+    });
   } catch (error) {
     console.error('Admin promotions GET error:', error);
     return NextResponse.json(
@@ -106,16 +117,11 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
 // POST /api/admin/promotions - Create a new promotion/discount
-export async function POST(request: NextRequest) {
+export const POST = withAdminGuard(async (request, { session }) => {
   try {
-    const session = await auth();
-    if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const body = await request.json();
     const {
       name,
@@ -265,4 +271,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

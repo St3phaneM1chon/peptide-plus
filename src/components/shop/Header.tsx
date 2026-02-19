@@ -7,7 +7,7 @@ import { usePathname } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import { useCart } from '@/contexts/CartContext';
 import { useCurrency } from '@/contexts/CurrencyContext';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 import { locales, localeNames, localeFlags } from '@/i18n/config';
 import CartDrawer from './CartDrawer';
 import SearchModal from './SearchModal';
@@ -23,7 +23,7 @@ const LANGUAGES = locales.map(code => ({
 
 export default function Header() {
   const { itemCount } = useCart();
-  const { t, locale } = useTranslations();
+  const { t, locale } = useI18n();
   const { currency, currencies, setCurrency } = useCurrency();
   const { data: session, status } = useSession();
   
@@ -42,17 +42,22 @@ export default function Header() {
 
   }, [pathname]);
 
-  // Close dropdowns on ESC key or scroll
+  // Close dropdowns on ESC key or scroll (throttled with rAF)
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setOpenDropdown(null);
-    
       }
     };
+    let scrollTicking = false;
     const handleScroll = () => {
-      setOpenDropdown(null);
-  
+      if (!scrollTicking) {
+        scrollTicking = true;
+        requestAnimationFrame(() => {
+          setOpenDropdown(null);
+          scrollTicking = false;
+        });
+      }
     };
     document.addEventListener('keydown', handleEsc);
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -119,7 +124,7 @@ export default function Header() {
             </Link>
 
             {/* Desktop Navigation - Simplified */}
-            <nav aria-label="Main navigation" className="hidden lg:flex items-center gap-1">
+            <nav aria-label={t('nav.aria.mainNavigation')} className="hidden lg:flex items-center gap-1">
               <NavLink href="/">{t('nav.home') || 'Home'}</NavLink>
 
               <NavLink href="/shop">{t('nav.shop') || 'Shop'}</NavLink>
@@ -130,6 +135,9 @@ export default function Header() {
               <div className="relative" data-dropdown="resources">
                 <button
                   onClick={() => toggleDropdown('resources')}
+                  aria-expanded={openDropdown === 'resources'}
+                  aria-haspopup="menu"
+                  aria-label={t('nav.aria.resourcesMenu')}
                   className={`flex items-center gap-1 px-3 py-2 text-sm font-semibold rounded-lg transition-all whitespace-nowrap ${
                     openDropdown === 'resources'
                       ? 'text-orange-400 bg-white/10'
@@ -186,7 +194,7 @@ export default function Header() {
                   <ChevronIcon isOpen={openDropdown === 'currency'} small />
                 </button>
                 {openDropdown === 'currency' && (
-                  <div className="currency-dropdown absolute top-full right-0 mt-2 w-32 bg-white text-black rounded-lg shadow-xl overflow-hidden z-50">
+                  <div className="currency-dropdown absolute top-full end-0 mt-2 w-32 bg-white text-black rounded-lg shadow-xl overflow-hidden z-50">
                     {currencies.map((curr) => (
                       <button
                         key={curr.code}
@@ -207,6 +215,9 @@ export default function Header() {
               <div className="relative" data-dropdown="lang">
                 <button
                   onClick={() => toggleDropdown('lang')}
+                  aria-expanded={openDropdown === 'lang'}
+                  aria-haspopup="listbox"
+                  aria-label={t('nav.aria.languageSelector')}
                   className={`flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-semibold rounded-lg transition-all ${
                     openDropdown === 'lang'
                       ? 'text-orange-400 bg-white/10'
@@ -218,12 +229,15 @@ export default function Header() {
                   <ChevronIcon isOpen={openDropdown === 'lang'} small />
                 </button>
                 {openDropdown === 'lang' && (
-                  <div className="language-dropdown absolute top-full right-0 mt-2 w-48 bg-white text-black rounded-lg shadow-xl overflow-hidden z-50">
-                    <div className="max-h-80 overflow-y-auto">
+                  <div className="language-dropdown absolute top-full end-0 mt-2 w-48 bg-white text-black rounded-lg shadow-xl overflow-hidden z-50">
+                    <div role="listbox" aria-label={t('nav.aria.languageSelector')} className="max-h-80 overflow-y-auto">
                       {LANGUAGES.map((lang) => (
                         <button
                           key={lang.code}
                           onClick={() => handleLanguageChange(lang.code)}
+                          role="option"
+                          aria-selected={locale === lang.code}
+                          aria-label={t('nav.aria.selectLanguage', { language: lang.name })}
                           className={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-100 transition-colors ${
                             locale === lang.code ? 'bg-orange-50 text-orange-600 font-medium' : ''
                           }`}
@@ -231,7 +245,7 @@ export default function Header() {
                           <span className="text-base">{lang.flag}</span>
                           <span className="truncate">{lang.name}</span>
                           {locale === lang.code && (
-                            <svg className="w-4 h-4 ml-auto text-orange-500" fill="currentColor" viewBox="0 0 20 20">
+                            <svg className="w-4 h-4 ms-auto text-orange-500" fill="currentColor" viewBox="0 0 20 20">
                               <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                             </svg>
                           )}
@@ -248,15 +262,15 @@ export default function Header() {
                   <>
                     <button
                       onClick={() => toggleDropdown('profile')}
-                      aria-label="Account menu"
+                      aria-label={t('nav.aria.accountMenu')}
                       aria-expanded={openDropdown === 'profile'}
                       aria-haspopup="true"
-                      className={`flex items-center p-1.5 rounded-lg transition-all ${
+                      className={`flex items-center p-1.5 min-w-[44px] min-h-[44px] justify-center rounded-lg transition-all ${
                         openDropdown === 'profile' ? 'bg-white/10' : 'hover:bg-white/10'
                       }`}
                     >
                       {session.user.image ? (
-                        <Image src={session.user.image} alt="" width={28} height={28} className="w-7 h-7 rounded-full border-2 border-orange-500" unoptimized />
+                        <Image src={session.user.image} alt={session.user.name || 'User profile'} width={28} height={28} className="w-7 h-7 rounded-full border-2 border-orange-500" unoptimized />
                       ) : (
                         <div className="w-7 h-7 bg-orange-500 rounded-full flex items-center justify-center">
                           <span className="text-white text-xs font-bold">
@@ -266,7 +280,7 @@ export default function Header() {
                       )}
                     </button>
                     {openDropdown === 'profile' && (
-                      <div className="absolute top-full right-0 mt-2 w-52 bg-white text-black rounded-lg shadow-xl overflow-hidden z-50">
+                      <div role="menu" className="absolute top-full end-0 mt-2 w-52 bg-white text-black rounded-lg shadow-xl overflow-hidden z-50">
                         <div className="px-4 py-3 bg-gray-50 border-b">
                           <p className="font-medium text-sm truncate">{session.user.name || 'User'}</p>
                           <p className="text-xs text-gray-500 truncate">{session.user.email}</p>
@@ -301,6 +315,7 @@ export default function Header() {
                         <div className="border-t py-1">
                           <button
                             onClick={handleSignOut}
+                            role="menuitem"
                             className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
                           >
                             <span>🚪</span>
@@ -311,7 +326,7 @@ export default function Header() {
                     )}
                   </>
                 ) : (
-                  <Link href="/auth/signin" aria-label="Sign in" className="p-1.5 hover:bg-white/10 rounded transition-colors">
+                  <Link href="/auth/signin" aria-label={t('nav.aria.signIn')} className="p-1.5 min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-white/10 rounded transition-colors">
                     <UserIcon />
                   </Link>
                 )}
@@ -320,12 +335,12 @@ export default function Header() {
               {/* Cart */}
               <button
                 onClick={() => setIsCartOpen(true)}
-                aria-label={itemCount > 0 ? `Cart (${itemCount} ${itemCount === 1 ? 'item' : 'items'})` : 'Cart (empty)'}
-                className="relative p-1.5 hover:bg-white/10 rounded transition-colors"
+                aria-label={itemCount > 0 ? t('nav.aria.cartItems', { count: itemCount }) : t('nav.aria.cartEmpty')}
+                className="relative p-1.5 min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-white/10 rounded transition-colors"
               >
                 <CartIcon />
                 {itemCount > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-orange-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center" aria-hidden="true">
+                  <span className="absolute -top-0.5 -end-0.5 w-4 h-4 bg-orange-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center" aria-hidden="true">
                     {itemCount > 9 ? '9+' : itemCount}
                   </span>
                 )}
@@ -334,7 +349,7 @@ export default function Header() {
               {/* Mobile Menu Toggle */}
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
+                aria-label={isMobileMenuOpen ? t('nav.aria.closeMenu') : t('nav.aria.openMenu')}
                 aria-expanded={isMobileMenuOpen}
                 className="lg:hidden p-2 text-gray-200 hover:text-orange-400 hover:bg-white/10 rounded-lg transition-all"
               >
@@ -345,8 +360,8 @@ export default function Header() {
 
           {/* Mobile Menu */}
           {isMobileMenuOpen && (
-            <div className="lg:hidden py-4 border-t border-white/10">
-              <nav aria-label="Mobile navigation" className="flex flex-col gap-1">
+            <div className="lg:hidden py-4 border-t border-white/10 animate-slide-down" style={{ animation: 'slideDown 0.2s ease-out' }}>
+              <nav aria-label={t('nav.aria.mobileNavigation')} className="flex flex-col gap-1">
                 <MobileNavLink href="/" onClick={() => setIsMobileMenuOpen(false)}>
                   {t('nav.home') || 'Home'}
                 </MobileNavLink>
@@ -410,7 +425,7 @@ export default function Header() {
                         <span className="text-base">{lang.flag}</span>
                         <span className="truncate">{lang.name}</span>
                         {locale === lang.code && (
-                          <svg className="w-4 h-4 ml-auto text-orange-400" fill="currentColor" viewBox="0 0 20 20">
+                          <svg className="w-4 h-4 ms-auto text-orange-400" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                           </svg>
                         )}
@@ -453,7 +468,7 @@ export default function Header() {
                       </MobileNavLink>
                       <button
                         onClick={handleSignOut}
-                        className="w-full text-left px-3 py-2 text-red-400 hover:bg-white/5 rounded text-sm"
+                        className="w-full text-start px-3 py-2 text-red-400 hover:bg-white/5 rounded text-sm"
                       >
                         🚪 {t('account.signOut') || 'Sign Out'}
                       </button>
@@ -481,10 +496,18 @@ export default function Header() {
 // ============================================
 
 function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
+  const pathname = usePathname();
+  const isActive = href === '/' ? pathname === '/' : pathname.startsWith(href);
+
   return (
-    <Link 
-      href={href} 
-      className="px-3 py-2 text-sm font-semibold text-gray-100 hover:text-orange-400 hover:bg-white/10 rounded-lg transition-all whitespace-nowrap"
+    <Link
+      href={href}
+      aria-current={isActive ? 'page' : undefined}
+      className={`px-3 py-2 text-sm font-semibold rounded-lg transition-all whitespace-nowrap ${
+        isActive
+          ? 'text-orange-400 bg-white/10 underline underline-offset-4'
+          : 'text-gray-100 hover:text-orange-400 hover:bg-white/10'
+      }`}
     >
       {children}
     </Link>
@@ -502,19 +525,28 @@ function MobileNavLink({
   onClick?: () => void;
   indent?: boolean;
 }) {
+  const pathname = usePathname();
+  const isActive = href === '/' ? pathname === '/' : pathname.startsWith(href);
+
   return (
-    <button
-      onClick={() => { if (onClick) onClick(); window.location.href = href; }}
-      className={`w-full text-left px-3 py-2 hover:bg-white/5 rounded text-sm ${indent ? 'pl-6 text-gray-400' : ''}`}
+    <Link
+      href={href}
+      onClick={onClick}
+      aria-current={isActive ? 'page' : undefined}
+      className={`block w-full text-start px-3 py-2 hover:bg-white/5 rounded text-sm ${
+        indent ? 'ps-6 text-gray-400' : ''
+      } ${
+        isActive ? 'text-orange-400 font-semibold bg-white/10' : ''
+      }`}
     >
       {children}
-    </button>
+    </Link>
   );
 }
 
 function DropdownMenu({ children }: { children: React.ReactNode }) {
   return (
-    <div className="absolute top-full left-0 mt-1 w-48 bg-white text-black rounded-lg shadow-xl overflow-hidden z-50">
+    <div role="menu" className="absolute top-full start-0 mt-1 w-48 bg-white text-black rounded-lg shadow-xl overflow-hidden z-50">
       {children}
     </div>
   );
@@ -532,15 +564,16 @@ function DropdownItem({
   highlight?: boolean;
 }) {
   return (
-    <button
-      onClick={() => { window.location.href = href; }}
-      className={`w-full flex items-center gap-2 px-4 py-2.5 text-sm text-left hover:bg-gray-100 transition-colors cursor-pointer ${
+    <Link
+      href={href}
+      role="menuitem"
+      className={`w-full flex items-center gap-2 px-4 py-2.5 text-sm text-start hover:bg-gray-100 transition-colors cursor-pointer ${
         highlight ? 'text-orange-600 font-medium' : ''
       }`}
     >
       {icon && <span>{icon}</span>}
       {children}
-    </button>
+    </Link>
   );
 }
 
@@ -548,19 +581,19 @@ function DropdownDivider() {
   return <div className="border-t border-gray-100 my-1" />;
 }
 
-function IconButton({ 
-  onClick, 
-  children, 
-  label 
-}: { 
-  onClick: () => void; 
+function IconButton({
+  onClick,
+  children,
+  label
+}: {
+  onClick: () => void;
   children: React.ReactNode;
   label: string;
 }) {
   return (
     <button
       onClick={onClick}
-      className="p-2 text-gray-200 hover:text-orange-400 hover:bg-white/10 rounded-lg transition-all"
+      className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-200 hover:text-orange-400 hover:bg-white/10 rounded-lg transition-all"
       aria-label={label}
     >
       {children}

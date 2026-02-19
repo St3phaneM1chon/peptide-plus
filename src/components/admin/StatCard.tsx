@@ -47,7 +47,7 @@ export function StatCard({ label, value, icon: Icon, trend, className = '' }: St
         <div className={`mt-3 flex items-center gap-1 text-sm ${trendColor}`}>
           <TrendIcon className="w-4 h-4" />
           <span className="font-medium">{Math.abs(trend.value)}%</span>
-          {trend.label && <span className="text-slate-400 ml-1">{trend.label}</span>}
+          {trend.label && <span className="text-slate-400 ms-1">{trend.label}</span>}
         </div>
       )}
     </div>

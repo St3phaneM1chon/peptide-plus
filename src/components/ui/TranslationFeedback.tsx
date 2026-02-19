@@ -9,14 +9,14 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 
 const STORAGE_KEY = 'translation-feedback-last';
 const COOLDOWN_DAYS = 30;
 const SHOW_PROBABILITY = 0.05; // 5% chance per page load
 
 export function TranslationFeedback() {
-  const { locale, t } = useTranslations();
+  const { locale, t } = useI18n();
   const [visible, setVisible] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [rating, setRating] = useState<'good' | 'bad' | null>(null);
@@ -103,7 +103,7 @@ export function TranslationFeedback() {
             </h4>
             <button
               onClick={handleDismiss}
-              aria-label="Close"
+              aria-label={t('common.aria.close')}
               style={{
                 background: 'none',
                 border: 'none',
@@ -137,7 +137,7 @@ export function TranslationFeedback() {
                 fontSize: '20px',
                 transition: 'all 0.15s ease',
               }}
-              aria-label="Good translation"
+              aria-label={t('translation.aria.goodTranslation')}
             >
               &#x1F44D;
             </button>
@@ -153,7 +153,7 @@ export function TranslationFeedback() {
                 fontSize: '20px',
                 transition: 'all 0.15s ease',
               }}
-              aria-label="Bad translation"
+              aria-label={t('translation.aria.badTranslation')}
             >
               &#x1F44E;
             </button>

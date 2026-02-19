@@ -156,7 +156,7 @@ export default function ClientsPage() {
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center flex-shrink-0">
             {user.image ? (
-              <Image src={user.image} alt="" width={40} height={40} className="w-10 h-10 rounded-full" unoptimized />
+              <Image src={user.image} alt={user.name || user.email} width={40} height={40} className="w-10 h-10 rounded-full" unoptimized />
             ) : (
               <span className="text-slate-600 font-semibold">
                 {user.name?.charAt(0) || user.email.charAt(0).toUpperCase()}
@@ -321,7 +321,7 @@ export default function ClientsPage() {
             <Button variant="secondary" icon={KeyRound} size="sm">
               {t('admin.clients.resetPassword')}
             </Button>
-            <div className="ml-auto">
+            <div className="ms-auto">
               <Button variant="danger" icon={Ban} size="sm">
                 {t('admin.clients.suspend')}
               </Button>

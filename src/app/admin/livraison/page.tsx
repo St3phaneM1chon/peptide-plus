@@ -21,6 +21,7 @@ import {
   StatCard,
 } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
+import { toast } from 'sonner';
 
 interface ShippingZone {
   id: string;
@@ -61,22 +62,93 @@ export default function LivraisonPage() {
     setLoading(false);
   };
 
-  const toggleZoneActive = (id: string) => {
-    setZones(zones.map(z => z.id === id ? { ...z, isActive: !z.isActive } : z));
+  const toggleZoneActive = async (id: string) => {
+    const zone = zones.find(z => z.id === id);
+    if (!zone) return;
+
+    const newActive = !zone.isActive;
+    // Optimistic update
+    setZones(zones.map(z => z.id === id ? { ...z, isActive: newActive } : z));
+
+    try {
+      const res = await fetch(`/api/admin/shipping/zones/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isActive: newActive }),
+      });
+      if (!res.ok) {
+        // Revert on failure
+        setZones(zones.map(z => z.id === id ? { ...z, isActive: !newActive } : z));
+        toast.error(t('admin.shipping.updateError') || 'Failed to update zone');
+      }
+    } catch {
+      setZones(zones.map(z => z.id === id ? { ...z, isActive: !newActive } : z));
+      toast.error(t('admin.shipping.updateError') || 'Failed to update zone');
+    }
   };
 
-  const toggleMethodActive = (zoneId: string, methodId: string) => {
+  const toggleMethodActive = async (zoneId: string, methodId: string) => {
+    // The methods are synthesized from the zone data on the API side.
+    // Each zone currently has a single synthesized method where the method's
+    // isActive mirrors the zone's isActive. For now, toggling a method also
+    // toggles the zone's isActive since there is no separate ShippingMethod model.
+    // This is a pragmatic approach until a dedicated ShippingMethod table is added.
+    const zone = zones.find(z => z.id === zoneId);
+    if (!zone) return;
+
+    const method = zone.methods.find(m => m.id === methodId);
+    if (!method) return;
+
+    const newActive = !method.isActive;
+
+    // Optimistic update
     setZones(zones.map(z => {
       if (z.id === zoneId) {
         return {
           ...z,
           methods: z.methods.map(m =>
-            m.id === methodId ? { ...m, isActive: !m.isActive } : m
+            m.id === methodId ? { ...m, isActive: newActive } : m
           ),
         };
       }
       return z;
     }));
+
+    try {
+      const res = await fetch(`/api/admin/shipping/zones/${zoneId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isActive: newActive }),
+      });
+      if (!res.ok) {
+        // Revert on failure
+        setZones(zones.map(z => {
+          if (z.id === zoneId) {
+            return {
+              ...z,
+              methods: z.methods.map(m =>
+                m.id === methodId ? { ...m, isActive: !newActive } : m
+              ),
+            };
+          }
+          return z;
+        }));
+        toast.error(t('admin.shipping.updateError') || 'Failed to update shipping method');
+      }
+    } catch {
+      setZones(zones.map(z => {
+        if (z.id === zoneId) {
+          return {
+            ...z,
+            methods: z.methods.map(m =>
+              m.id === methodId ? { ...m, isActive: !newActive } : m
+            ),
+          };
+        }
+        return z;
+      }));
+      toast.error(t('admin.shipping.updateError') || 'Failed to update shipping method');
+    }
   };
 
   const getCountryName = (code: string): string => {
@@ -182,11 +254,11 @@ export default function LivraisonPage() {
               <table className="w-full">
                 <thead>
                   <tr className="text-xs text-slate-500 uppercase">
-                    <th className="text-left py-2">{t('admin.shipping.method')}</th>
-                    <th className="text-left py-2">{t('admin.shipping.carrier')}</th>
+                    <th className="text-start py-2">{t('admin.shipping.method')}</th>
+                    <th className="text-start py-2">{t('admin.shipping.carrier')}</th>
                     <th className="text-center py-2">{t('admin.shipping.delay')}</th>
-                    <th className="text-right py-2">{t('admin.shipping.price')}</th>
-                    <th className="text-right py-2">{t('admin.shipping.freeAbove')}</th>
+                    <th className="text-end py-2">{t('admin.shipping.price')}</th>
+                    <th className="text-end py-2">{t('admin.shipping.freeAbove')}</th>
                     <th className="text-center py-2">{t('admin.shipping.activeCol')}</th>
                   </tr>
                 </thead>
@@ -198,10 +270,10 @@ export default function LivraisonPage() {
                       <td className="py-3 text-center text-slate-600">
                         {method.minDays}-{method.maxDays} {t('admin.shipping.days')}
                       </td>
-                      <td className="py-3 text-right font-medium text-slate-900">
+                      <td className="py-3 text-end font-medium text-slate-900">
                         {method.price.toFixed(2)} $
                       </td>
-                      <td className="py-3 text-right text-slate-600">
+                      <td className="py-3 text-end text-slate-600">
                         {method.freeAbove ? `${method.freeAbove} $` : '-'}
                       </td>
                       <td className="py-3 text-center">

@@ -1,20 +1,15 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth-config';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 
 /**
  * GET /api/admin/newsletter/subscribers
  * List newsletter subscribers with optional filters
  */
-export async function GET(request: NextRequest) {
+export const GET = withAdminGuard(async (request, { session: _session }) => {
   try {
-    const session = await auth();
-    if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const { searchParams } = new URL(request.url);
     const search = searchParams.get('search') || '';
     const isActive = searchParams.get('isActive');
@@ -83,19 +78,14 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
 /**
  * POST /api/admin/newsletter/subscribers
  * Add a new subscriber
  */
-export async function POST(request: NextRequest) {
+export const POST = withAdminGuard(async (request, { session: _session }) => {
   try {
-    const session = await auth();
-    if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const body = await request.json();
     const { email, name, source, locale } = body;
 
@@ -156,4 +146,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

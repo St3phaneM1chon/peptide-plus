@@ -1,11 +1,18 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
-import { ProductCard, PeptideCalculator, TrustBadges } from '@/components/shop';
+import Image from 'next/image';
+import { ProductCard, TrustBadges } from '@/components/shop';
 import { TrustBadgesHero } from '@/components/shop/TrustBadges';
 import HeroSlider from '@/components/shop/HeroSlider';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
+
+const PeptideCalculator = dynamic(() => import('@/components/shop/PeptideCalculator'), {
+  loading: () => <div className="animate-pulse h-48 bg-gray-100 rounded-xl" />,
+  ssr: false,
+});
 
 interface ApiProduct {
   id: string;
@@ -39,7 +46,21 @@ interface ApiProduct {
   createdAt: string;
 }
 
+interface Article {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string | null;
+  imageUrl: string | null;
+  author: string | null;
+  category: string | null;
+  readTime: number | null;
+  publishedAt: string | null;
+}
+
 // Map API product to ProductCard props
+const newThreshold = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
 function toCardProps(p: ApiProduct) {
   const activeFormats = p.formats.filter((f) => f.isActive);
   const lowestPrice = activeFormats.length > 0
@@ -55,7 +76,7 @@ function toCardProps(p: ApiProduct) {
     purity: p.purity ? Number(p.purity) : undefined,
     imageUrl: p.imageUrl || p.images?.[0]?.url || undefined,
     category: p.category?.name || '',
-    isNew: new Date(p.createdAt) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+    isNew: new Date(p.createdAt) > newThreshold,
     isBestseller: p.isFeatured,
     inStock: hasStock,
     formats: activeFormats.map((f) => ({
@@ -90,40 +111,63 @@ const testimonials = [
 ];
 
 export default function HomePage() {
-  const { t, locale } = useTranslations();
+  const { t, locale } = useI18n();
   const [products, setProducts] = useState<ApiProduct[]>([]);
+  const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
+  const [articlesLoading, setArticlesLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
 
   useEffect(() => {
-    fetch(`/api/products?locale=${locale}`)
-      .then((res) => res.ok ? res.json() : null)
-      .then((data) => {
-        if (data) {
-          const list = Array.isArray(data) ? data : data.products || data.data || [];
-          setProducts(list.filter((p: ApiProduct) => p.isActive));
-        }
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
+    setFetchError(false);
+    Promise.all([
+      fetch(`/api/products?locale=${locale}`)
+        .then((res) => res.ok ? res.json() : null)
+        .then((data) => {
+          if (data) {
+            const list = Array.isArray(data) ? data : data.products || data.data || [];
+            setProducts(list.filter((p: ApiProduct) => p.isActive));
+          }
+        })
+        .catch(() => { setFetchError(true); })
+        .finally(() => setLoading(false)),
+
+      fetch(`/api/articles?category=Résultats de Recherche&locale=${locale}&limit=4`)
+        .then((res) => res.ok ? res.json() : null)
+        .then((data) => {
+          if (data?.articles) {
+            setArticles(data.articles);
+          }
+        })
+        .catch(() => { setFetchError(true); })
+        .finally(() => setArticlesLoading(false)),
+    ]);
   }, [locale]);
 
-  const featuredProducts = useMemo(
-    () => products.filter((p) => p.isFeatured).slice(0, 4).map(toCardProps),
-    [products]
-  );
+  // Generic helper to filter products by category slugs and convert to card props
+  const filterByCategory = (allProducts: ApiProduct[], slugs: string[], limit = 4) => {
+    if (!allProducts || allProducts.length === 0) return [];
+    return allProducts
+      .filter((p) => p.category && slugs.includes(p.category.slug))
+      .slice(0, limit)
+      .map(toCardProps);
+  };
 
+  // Peptide products
   const peptideProducts = useMemo(
-    () => products.filter((p) => p.category?.slug?.startsWith('peptides')).slice(0, 4).map(toCardProps),
+    () => filterByCategory(products, ['anti-aging-longevity', 'weight-loss', 'skin-health', 'sexual-health', 'cognitive-health', 'growth-metabolism', 'muscle-growth', 'recovery-repair', 'peptides']),
     [products]
   );
 
-  const supplementProducts = useMemo(
-    () => products.filter((p) => p.category?.slug === 'supplements').slice(0, 4).map(toCardProps),
-    [products]
-  );
-
+  // Accessory products
   const accessoryProducts = useMemo(
-    () => products.filter((p) => p.category?.slug === 'accessoires').slice(0, 4).map(toCardProps),
+    () => filterByCategory(products, ['lab-accessories', 'accessories']),
+    [products]
+  );
+
+  // Lab equipment products
+  const labEquipmentProducts = useMemo(
+    () => filterByCategory(products, ['lab-equipment', 'laboratory-equipment']),
     [products]
   );
 
@@ -135,6 +179,17 @@ export default function HomePage() {
     </div>
   );
 
+  const ArticleSkeleton = () => (
+    <div className="animate-pulse bg-white rounded-xl overflow-hidden">
+      <div className="bg-neutral-200 h-44" />
+      <div className="p-5">
+        <div className="bg-neutral-200 h-4 rounded w-3/4 mb-3" />
+        <div className="bg-neutral-200 h-3 rounded w-full mb-2" />
+        <div className="bg-neutral-200 h-3 rounded w-2/3" />
+      </div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Slider */}
@@ -143,40 +198,84 @@ export default function HomePage() {
       {/* Trust Badges Hero */}
       <TrustBadgesHero />
 
-      {/* Section 1: Featured Products (Best Sellers - All Categories) */}
-      <section className="py-16 bg-neutral-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center mb-8">
-            <div>
-              <h2 className="text-3xl font-bold">{t('home.featuredProducts')}</h2>
-              <p className="text-neutral-600 mt-1">{t('home.featuredDesc')}</p>
-            </div>
-            <Link
-              href="/shop"
-              className="text-orange-600 hover:text-orange-700 font-semibold flex items-center gap-1"
-            >
-              {t('shop.viewAll')}
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 overflow-visible">
-            {loading ? (
-              Array.from({ length: 4 }).map((_, i) => <ProductSkeleton key={i} />)
-            ) : (
-              featuredProducts.map((product) => (
-                <div key={product.id} className="overflow-visible h-full">
-                  <ProductCard {...product} />
-                </div>
-              ))
-            )}
-          </div>
+      {/* Fetch Error */}
+      {fetchError && !loading && (
+        <div className="max-w-7xl mx-auto px-4 py-6 text-center">
+          <p className="text-red-600 mb-2">{t('common.fetchError') || 'Failed to load content.'}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm font-medium"
+          >
+            {t('common.retry') || 'Retry'}
+          </button>
         </div>
-      </section>
+      )}
 
-      {/* Section 2: Peptides */}
+      {/* Section 1: Résultats de Recherche (Articles) */}
+      {(articlesLoading || articles.length > 0) && (
+        <section className="py-16 bg-neutral-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center mb-8">
+              <div>
+                <h2 className="text-3xl font-bold">{t('home.researchResultsSection')}</h2>
+                <p className="text-neutral-600 mt-1">{t('home.researchResultsDesc')}</p>
+              </div>
+              <Link
+                href="/blog"
+                className="text-orange-600 hover:text-orange-700 font-semibold flex items-center gap-1"
+              >
+                {t('shop.viewAll')}
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {articlesLoading ? (
+                Array.from({ length: 4 }).map((_, i) => <ArticleSkeleton key={i} />)
+              ) : (
+                articles.map((article) => (
+                  <Link
+                    key={article.id}
+                    href={`/blog/${article.slug}`}
+                    className="group bg-white rounded-xl overflow-hidden shadow-sm border border-neutral-200 hover:shadow-md transition-shadow"
+                  >
+                    <div className="h-44 bg-neutral-100 flex items-center justify-center overflow-hidden">
+                      {article.imageUrl ? (
+                        <Image
+                          src={article.imageUrl}
+                          alt={article.title}
+                          width={400}
+                          height={176}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      ) : (
+                        <span className="text-5xl">🔬</span>
+                      )}
+                    </div>
+                    <div className="p-5">
+                      <h3 className="font-semibold text-neutral-900 mb-2 line-clamp-2 group-hover:text-orange-600 transition-colors">
+                        {article.title}
+                      </h3>
+                      {article.excerpt && (
+                        <p className="text-sm text-neutral-500 line-clamp-2 mb-3">
+                          {article.excerpt}
+                        </p>
+                      )}
+                      <span className="text-sm text-orange-600 font-medium">
+                        {t('home.readMore')} →
+                      </span>
+                    </div>
+                  </Link>
+                ))
+              )}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Section 2: Peptides de recherche */}
       {(loading || peptideProducts.length > 0) && (
         <section className="py-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -186,7 +285,7 @@ export default function HomePage() {
                 <p className="text-neutral-600 mt-1">{t('home.peptidesDesc')}</p>
               </div>
               <Link
-                href="/shop"
+                href="/category/peptides"
                 className="text-orange-600 hover:text-orange-700 font-semibold flex items-center gap-1"
               >
                 {t('shop.viewAll')}
@@ -211,44 +310,9 @@ export default function HomePage() {
         </section>
       )}
 
-      {/* Section 3: Supplements */}
-      {(loading || supplementProducts.length > 0) && (
-        <section className="py-16 bg-neutral-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center mb-8">
-              <div>
-                <h2 className="text-3xl font-bold">{t('home.supplementsSection')}</h2>
-                <p className="text-neutral-600 mt-1">{t('home.supplementsDesc')}</p>
-              </div>
-              <Link
-                href="/category/supplements"
-                className="text-orange-600 hover:text-orange-700 font-semibold flex items-center gap-1"
-              >
-                {t('shop.viewAll')}
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </Link>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 overflow-visible">
-              {loading ? (
-                Array.from({ length: 4 }).map((_, i) => <ProductSkeleton key={i} />)
-              ) : (
-                supplementProducts.map((product) => (
-                  <div key={product.id} className="overflow-visible h-full">
-                    <ProductCard {...product} />
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Section 4: Accessories */}
+      {/* Section 3: Accessoires */}
       {(loading || accessoryProducts.length > 0) && (
-        <section className="py-16">
+        <section className="py-16 bg-neutral-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center mb-8">
               <div>
@@ -256,7 +320,7 @@ export default function HomePage() {
                 <p className="text-neutral-600 mt-1">{t('home.accessoriesDesc')}</p>
               </div>
               <Link
-                href="/category/accessories"
+                href="/category/lab-accessories"
                 className="text-orange-600 hover:text-orange-700 font-semibold flex items-center gap-1"
               >
                 {t('shop.viewAll')}
@@ -271,6 +335,41 @@ export default function HomePage() {
                 Array.from({ length: 4 }).map((_, i) => <ProductSkeleton key={i} />)
               ) : (
                 accessoryProducts.map((product) => (
+                  <div key={product.id} className="overflow-visible h-full">
+                    <ProductCard {...product} />
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Section 4: Matériel de Laboratoire */}
+      {(loading || labEquipmentProducts.length > 0) && (
+        <section className="py-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center mb-8">
+              <div>
+                <h2 className="text-3xl font-bold">{t('home.labEquipmentSection')}</h2>
+                <p className="text-neutral-600 mt-1">{t('home.labEquipmentDesc')}</p>
+              </div>
+              <Link
+                href="/category/lab-equipment"
+                className="text-orange-600 hover:text-orange-700 font-semibold flex items-center gap-1"
+              >
+                {t('shop.viewAll')}
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 overflow-visible">
+              {loading ? (
+                Array.from({ length: 4 }).map((_, i) => <ProductSkeleton key={i} />)
+              ) : (
+                labEquipmentProducts.map((product) => (
                   <div key={product.id} className="overflow-visible h-full">
                     <ProductCard {...product} />
                   </div>

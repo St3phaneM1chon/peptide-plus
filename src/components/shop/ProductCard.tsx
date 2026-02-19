@@ -6,12 +6,13 @@ import Image from 'next/image';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useCart } from '@/contexts/CartContext';
 import { useUpsell } from '@/contexts/UpsellContext';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 import WishlistButton from './WishlistButton';
 import QuickViewButton from './QuickViewButton';
 import QuickViewModal from './QuickViewModal';
 import CompareButton from './CompareButton';
 import ProductBadges from './ProductBadges';
+import { getFormatIcon } from '@/lib/format-icons';
 
 type FormatType = 'vial_2ml' | 'vial_10ml' | 'cartridge_3ml' | 'cartridge_kit_12' | 'capsule' | 'pack_10' | 'syringe' | 'accessory' | 'powder' | 'gummies' | 'capsules_30' | 'capsules_60' | 'capsules_120' | 'pack_2' | 'pack_5' | 'box_50' | 'box_100' | 'kit';
 
@@ -48,30 +49,9 @@ interface ProductCardProps {
   purchaseCount?: number;
   averageRating?: number;
   reviewCount?: number;
-  restockedAt?: Date | string;
 }
 
-// Format type icons
-const formatIcons: Record<string, string> = {
-  vial_2ml: '💉',
-  vial_10ml: '🧪',
-  cartridge_3ml: '💊',
-  cartridge_kit_12: '📦',
-  capsule: '💊',
-  capsules_30: '💊',
-  capsules_60: '💊',
-  capsules_120: '💊',
-  pack_2: '📦',
-  pack_5: '📦',
-  pack_10: '📦',
-  box_50: '📦',
-  box_100: '📦',
-  syringe: '💉',
-  accessory: '🔧',
-  powder: '🥤',
-  gummies: '🍬',
-  kit: '🎁',
-};
+// Format icons imported from shared utility: @/lib/format-icons
 
 export default function ProductCard({
   id,
@@ -94,12 +74,11 @@ export default function ProductCard({
   purchaseCount,
   averageRating,
   reviewCount,
-  restockedAt,
 }: ProductCardProps) {
   const { formatPrice } = useCurrency();
   const { addItem } = useCart();
   const { addItemWithUpsell } = useUpsell();
-  const { t } = useTranslations();
+  const { t } = useI18n();
   
   // Filter out formats with stockQuantity <= 0
   const availableFormats = formats?.filter(f => f.stockQuantity > 0);
@@ -116,8 +95,9 @@ export default function ProductCard({
   const displayPrice = selectedFormat?.price || price;
   const displayComparePrice = selectedFormat?.comparePrice || comparePrice;
 
-  // Track if format has been manually selected
-  const [hasSelectedFormat, setHasSelectedFormat] = useState(false);
+  // Derive if format has been manually selected by comparing with initial default
+  const initialFormat = availableFormats?.find((f) => f.inStock) || availableFormats?.[0];
+  const hasSelectedFormat = selectedFormat !== undefined && initialFormat !== undefined && selectedFormat.id !== initialFormat.id;
 
   // Get translated product name
   const productName = nameKey ? t(`products.${nameKey}`) : name;
@@ -146,7 +126,6 @@ export default function ProductCard({
 
   const handleFormatSelect = (format: ProductFormat) => {
     setSelectedFormat(format);
-    setHasSelectedFormat(true);
     setIsDropdownOpen(false);
   };
 
@@ -188,6 +167,7 @@ export default function ProductCard({
                 src={imageUrl || '/images/products/peptide-default.png'}
                 alt={`${productName} - ${categoryName || 'product'} image`}
                 fill
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                 className="object-cover hover:scale-105 transition-transform duration-300"
               />
 
@@ -201,21 +181,20 @@ export default function ProductCard({
                   price: displayPrice,
                   compareAtPrice: displayComparePrice,
                   formats: availableFormats,
-                  restockedAt,
                 }}
                 maxBadges={2}
               />
 
               {/* Category Badge - Bottom Left */}
               {categoryName && (
-                <span className="absolute bottom-3 left-3 px-3 py-1 bg-black/80 text-white text-xs font-medium rounded-full">
+                <span className="absolute bottom-3 start-3 px-3 py-1 bg-black/80 text-white text-xs font-medium rounded-full">
                   {categoryName}
                 </span>
               )}
             </div>
           </Link>
           {/* Action Buttons Container */}
-          <div className="absolute top-3 right-3 flex flex-col gap-2 z-10">
+          <div className="absolute top-3 end-3 flex flex-col gap-2 z-10">
             {/* Wishlist Heart Button */}
             <WishlistButton productId={id} variant="icon" />
             {/* Quick View Button - appears on hover */}
@@ -275,7 +254,7 @@ export default function ProductCard({
               >
                 <div className="flex items-center gap-2">
                   <span className="text-lg">
-                    {selectedFormat?.type ? formatIcons[selectedFormat.type] || '📦' : '📦'}
+                    {getFormatIcon(selectedFormat?.type)}
                   </span>
                   <span className="text-sm font-medium truncate">
                     {selectedFormat ? getFormatName(selectedFormat) : t('shop.selectFormat')}
@@ -293,7 +272,7 @@ export default function ProductCard({
 
               {/* Dropdown Menu - Overlays card with scroll */}
               {isDropdownOpen && (
-                <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-neutral-200 rounded-lg shadow-2xl max-h-64 overflow-y-auto" role="listbox" aria-label="Available formats">
+                <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-neutral-200 rounded-lg shadow-2xl max-h-64 overflow-y-auto" role="listbox" aria-label={t('shop.aria.availableFormats')}>
                   {availableFormats.map((format) => (
                     <button
                       key={format.id}
@@ -304,7 +283,7 @@ export default function ProductCard({
                         handleFormatSelect(format);
                       }}
                       disabled={!format.inStock}
-                      className={`w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors ${
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 text-start transition-colors ${
                         selectedFormat?.id === format.id
                           ? 'bg-orange-50'
                           : format.inStock
@@ -317,7 +296,7 @@ export default function ProductCard({
                         {format.image ? (
                           <Image src={format.image} alt={getFormatName(format)} width={40} height={40} className="object-cover" />
                         ) : (
-                          <span className="text-xl">{format.type ? formatIcons[format.type] || '📦' : '📦'}</span>
+                          <span className="text-xl">{getFormatIcon(format.type)}</span>
                         )}
                       </div>
                       
@@ -354,7 +333,7 @@ export default function ProductCard({
                 e.preventDefault();
                 setQuantity(Math.max(1, quantity - 1));
               }}
-              aria-label="Decrease quantity"
+              aria-label={t('shop.aria.decreaseQuantity')}
               className="w-8 h-8 flex items-center justify-center text-neutral-600 hover:bg-neutral-100"
             >
               −
@@ -365,7 +344,7 @@ export default function ProductCard({
                 e.preventDefault();
                 setQuantity(quantity + 1);
               }}
-              aria-label="Increase quantity"
+              aria-label={t('shop.aria.increaseQuantity')}
               className="w-8 h-8 flex items-center justify-center text-neutral-600 hover:bg-neutral-100"
             >
               +
@@ -377,11 +356,11 @@ export default function ProductCard({
             onClick={handleAddToCart}
             disabled={!inStock || isAdding}
             aria-label={`Add ${productName} to cart`}
-            className={`flex-1 py-2 px-4 rounded-lg font-semibold text-sm transition-all ${
+            className={`flex-1 py-2 px-4 rounded-lg font-semibold text-sm transition-all duration-200 ${
               isAdding
-                ? 'bg-green-600 text-white'
+                ? 'bg-green-600 text-white scale-105'
                 : inStock
-                ? 'bg-orange-500 text-white hover:bg-orange-600'
+                ? 'bg-orange-500 text-white hover:bg-orange-600 active:scale-95'
                 : 'bg-neutral-300 text-neutral-500 cursor-not-allowed'
             }`}
           >
@@ -392,12 +371,14 @@ export default function ProductCard({
       </div>
       </article>
 
-      {/* Quick View Modal */}
-      <QuickViewModal
-        slug={slug}
-        isOpen={isQuickViewOpen}
-        onClose={() => setIsQuickViewOpen(false)}
-      />
+      {/* Quick View Modal - only mount when open to avoid unnecessary rendering */}
+      {isQuickViewOpen && (
+        <QuickViewModal
+          slug={slug}
+          isOpen={isQuickViewOpen}
+          onClose={() => setIsQuickViewOpen(false)}
+        />
+      )}
     </>
   );
 }

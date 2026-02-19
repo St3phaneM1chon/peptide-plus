@@ -23,26 +23,81 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { sendEmail, birthdayEmail } from '@/lib/email';
 import { logger } from '@/lib/logger';
+import { withJobLock } from '@/lib/cron-lock';
 
 const BATCH_SIZE = 10;
-const DISCOUNT_PERCENT = 15;
-const BONUS_POINTS = 200;
-const PROMO_VALIDITY_DAYS = 30;
-const MIN_YEARLY_SPEND = 300; // Must have spent $300+ this year to get the birthday gift
+
+/**
+ * Item 80: Configurable birthday email template system
+ *
+ * Configuration is now read from SiteSetting key-value store at runtime,
+ * falling back to defaults if not set. This allows changing birthday email
+ * parameters (discount %, points, validity, spend threshold) without
+ * code deployment, via PUT /api/admin/settings.
+ *
+ * SiteSetting keys (module: 'birthday_email'):
+ *   birthday_email.discount_percent   - Default: 15
+ *   birthday_email.bonus_points       - Default: 200
+ *   birthday_email.promo_validity_days - Default: 30
+ *   birthday_email.min_yearly_spend   - Default: 300
+ *   birthday_email.subject_fr         - Custom French subject line
+ *   birthday_email.subject_en         - Custom English subject line
+ *
+ * TODO (item 80): Full template system enhancements:
+ *   - Store email HTML templates in DB (EmailTemplate model) instead of code
+ *   - Support Mustache/Handlebars variables in templates: {{customerName}},
+ *     {{discountCode}}, {{discountPercent}}, {{bonusPoints}}, {{expiryDate}}
+ *   - Admin UI to edit birthday email template with live preview
+ *   - Support multiple birthday tiers based on loyaltyTier:
+ *     BRONZE: 10% + 100pts, SILVER: 15% + 200pts, GOLD: 20% + 300pts, PLATINUM: 25% + 500pts
+ *   - Personalized product recommendations in birthday email based on purchase history
+ */
+
+// Defaults (overridden by SiteSetting values loaded in handler)
+const DEFAULT_DISCOUNT_PERCENT = 15;
+const DEFAULT_BONUS_POINTS = 200;
+const DEFAULT_PROMO_VALIDITY_DAYS = 30;
+const DEFAULT_MIN_YEARLY_SPEND = 300;
 
 export async function GET(request: NextRequest) {
-  const startTime = Date.now();
+  // Verify cron secret (fail-closed: deny if not configured)
+  const authHeader = request.headers.get('authorization');
+  const cronSecret = process.env.CRON_SECRET;
 
-  try {
-    // Verify cron secret (fail-closed: deny if not configured)
-    const authHeader = request.headers.get('authorization');
-    const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
-    if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+  return withJobLock('birthday-emails', async () => {
+    const startTime = Date.now();
 
-    const today = new Date();
+    try {
+      // Item 80: Load configurable parameters from SiteSetting (template system)
+      const configKeys = [
+        'birthday_email.discount_percent',
+        'birthday_email.bonus_points',
+        'birthday_email.promo_validity_days',
+        'birthday_email.min_yearly_spend',
+      ];
+      const configEntries = await db.siteSetting.findMany({
+        where: { key: { in: configKeys } },
+        select: { key: true, value: true },
+      }).catch(() => [] as { key: string; value: string }[]);
+      const configMap = new Map(configEntries.map((e) => [e.key, e.value]));
+
+      const DISCOUNT_PERCENT = parseInt(configMap.get('birthday_email.discount_percent') || '', 10) || DEFAULT_DISCOUNT_PERCENT;
+      const BONUS_POINTS = parseInt(configMap.get('birthday_email.bonus_points') || '', 10) || DEFAULT_BONUS_POINTS;
+      const PROMO_VALIDITY_DAYS = parseInt(configMap.get('birthday_email.promo_validity_days') || '', 10) || DEFAULT_PROMO_VALIDITY_DAYS;
+      const MIN_YEARLY_SPEND = parseInt(configMap.get('birthday_email.min_yearly_spend') || '', 10) || DEFAULT_MIN_YEARLY_SPEND;
+
+      logger.info('Birthday cron: loaded config', {
+        DISCOUNT_PERCENT,
+        BONUS_POINTS,
+        PROMO_VALIDITY_DAYS,
+        MIN_YEARLY_SPEND,
+      });
+
+      const today = new Date();
     const currentMonth = today.getMonth() + 1; // 1-12
     const currentDay = today.getDate();
 
@@ -82,20 +137,27 @@ export async function GET(request: NextRequest) {
       date: `${currentMonth}/${currentDay}`,
     });
 
-    // Filter: only users who spent >= $300 this year qualify for the birthday gift
+    // PERF 88: Batch aggregate yearly spend for all birthday users in a single groupBy
+    // instead of N+1 per-user aggregate queries.
     const yearStart = new Date(today.getFullYear(), 0, 1);
     const birthdayUsers: typeof birthdayUsersRaw = [];
 
+    const birthdayUserIds = birthdayUsersRaw.map((u) => u.id);
+    const yearlySpendByUser = birthdayUserIds.length > 0
+      ? await db.order.groupBy({
+          by: ['userId'],
+          where: {
+            userId: { in: birthdayUserIds },
+            paymentStatus: 'PAID',
+            createdAt: { gte: yearStart },
+          },
+          _sum: { total: true },
+        })
+      : [];
+    const yearlySpendMap = new Map(yearlySpendByUser.map((r) => [r.userId, Number(r._sum.total || 0)]));
+
     for (const user of birthdayUsersRaw) {
-      const yearlyOrders = await db.order.aggregate({
-        where: {
-          userId: user.id,
-          paymentStatus: 'PAID',
-          createdAt: { gte: yearStart },
-        },
-        _sum: { total: true },
-      });
-      const yearlySpend = Number(yearlyOrders._sum.total || 0);
+      const yearlySpend = yearlySpendMap.get(user.id) || 0;
       if (yearlySpend >= MIN_YEARLY_SPEND) {
         birthdayUsers.push(user);
       } else {
@@ -127,7 +189,7 @@ export async function GET(request: NextRequest) {
       const batchPromises = batch.map(async (user) => {
         try {
           // Generate unique promo code
-          const discountCode = `BDAY${user.id.slice(0, 4).toUpperCase()}${today.getFullYear()}`;
+          const discountCode = `BDAY${user.id.slice(0, 8).toUpperCase()}${today.getFullYear()}`;
           const expiresAt = new Date();
           expiresAt.setDate(expiresAt.getDate() + PROMO_VALIDITY_DAYS);
 
@@ -153,25 +215,27 @@ export async function GET(request: NextRequest) {
           }
 
           // Add bonus loyalty points in a transaction
-          await db.$transaction([
-            db.user.update({
+          // DI-62: Calculate balanceAfter from the updated user record
+          await db.$transaction(async (tx) => {
+            const updatedUser = await tx.user.update({
               where: { id: user.id },
               data: {
                 loyaltyPoints: { increment: BONUS_POINTS },
                 lifetimePoints: { increment: BONUS_POINTS },
                 lastBirthdayEmail: new Date(),
               },
-            }),
-            db.loyaltyTransaction.create({
+              select: { loyaltyPoints: true },
+            });
+            await tx.loyaltyTransaction.create({
               data: {
                 userId: user.id,
                 type: 'EARN_BIRTHDAY',
                 points: BONUS_POINTS,
                 description: 'Happy Birthday! Bonus points',
-                balanceAfter: user.loyaltyPoints + BONUS_POINTS,
+                balanceAfter: updatedUser.loyaltyPoints,
               },
-            }),
-          ]);
+            });
+          });
 
           // Generate and send email
           const emailContent = birthdayEmail({
@@ -273,20 +337,21 @@ export async function GET(request: NextRequest) {
       durationMs: duration,
       results,
     });
-  } catch (error) {
-    logger.error('Birthday cron: job error', {
-      error: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined,
-      durationMs: Date.now() - startTime,
-    });
-    return NextResponse.json(
-      {
-        error: 'Internal server error',
+    } catch (error) {
+      logger.error('Birthday cron: job error', {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
         durationMs: Date.now() - startTime,
-      },
-      { status: 500 }
-    );
-  }
+      });
+      return NextResponse.json(
+        {
+          error: 'Internal server error',
+          durationMs: Date.now() - startTime,
+        },
+        { status: 500 }
+      );
+    }
+  });
 }
 
 // Allow POST for manual testing

@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 
 // Map DB category slugs to display names and icons
 const categoryMeta: Record<string, { name: string; nameKey: string; icon: string }> = {
@@ -20,14 +20,6 @@ function getCategoryMeta(category: string) {
   return categoryMeta[category] || { name: category, nameKey: '', icon: '\u2753' };
 }
 
-interface FaqItem {
-  id: string;
-  question: string;
-  answer: string;
-  category: string;
-  sortOrder: number;
-}
-
 interface FaqCategory {
   name: string;
   nameKey: string;
@@ -35,42 +27,29 @@ interface FaqCategory {
   questions: { question: string; answer: string }[];
 }
 
-export default function FAQPage() {
-  const { t, locale } = useTranslations();
+interface FaqPageClientProps {
+  initialByCategory: Record<string, { question: string; answer: string }[]>;
+}
+
+export default function FAQPage({ initialByCategory }: FaqPageClientProps) {
+  const { t } = useI18n();
   const [activeCategory, setActiveCategory] = useState(0);
   const [openQuestions, setOpenQuestions] = useState<Set<string>>(new Set());
-  const [faqCategories, setFaqCategories] = useState<FaqCategory[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function fetchFaqs() {
-      try {
-        const res = await fetch(`/api/faq?locale=${locale}`);
-        const data = await res.json();
-        const byCategory: Record<string, { question: string; answer: string }[]> = data.byCategory || {};
+  // Build categories from server-provided data (no client fetch needed)
+  const faqCategories = useMemo<FaqCategory[]>(() => {
+    return Object.entries(initialByCategory).map(([cat, questions]) => {
+      const meta = getCategoryMeta(cat);
+      return {
+        name: meta.name,
+        nameKey: meta.nameKey,
+        icon: meta.icon,
+        questions,
+      };
+    });
+  }, [initialByCategory]);
 
-        // Build categories array from grouped data
-        const categories: FaqCategory[] = Object.entries(byCategory).map(([cat, questions]) => {
-          const meta = getCategoryMeta(cat);
-          return {
-            name: meta.name,
-            nameKey: meta.nameKey,
-            icon: meta.icon,
-            questions,
-          };
-        });
-
-        setFaqCategories(categories);
-      } catch (error) {
-        console.error('Failed to fetch FAQs:', error);
-        setFaqCategories([]);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchFaqs();
-  }, []);
+  const loading = false;
 
   const toggleQuestion = (key: string) => {
     const newSet = new Set(openQuestions);
@@ -132,7 +111,7 @@ export default function FAQPage() {
                     <button
                       key={index}
                       onClick={() => setActiveCategory(index)}
-                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${
+                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-start transition-colors ${
                         activeCategory === index
                           ? 'bg-orange-50 text-orange-600 font-medium'
                           : 'text-gray-600 hover:bg-gray-50'
@@ -165,7 +144,7 @@ export default function FAQPage() {
                       <div key={qIndex} className="border-b border-gray-100 last:border-0">
                         <button
                           onClick={() => toggleQuestion(key)}
-                          className="w-full flex items-start justify-between gap-4 p-6 text-left hover:bg-gray-50 transition-colors"
+                          className="w-full flex items-start justify-between gap-4 p-6 text-start hover:bg-gray-50 transition-colors"
                         >
                           <span className="font-medium text-gray-900">
                             {item.question}
@@ -182,7 +161,7 @@ export default function FAQPage() {
 
                         {isOpen && (
                           <div className="px-6 pb-6">
-                            <div className="pl-0 text-gray-600 whitespace-pre-line leading-relaxed">
+                            <div className="ps-0 text-gray-600 whitespace-pre-line leading-relaxed">
                               {item.answer}
                             </div>
                           </div>

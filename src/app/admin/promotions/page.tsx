@@ -56,11 +56,28 @@ export default function PromotionsPage() {
 
   const toggleActive = async (id: string, isActive: boolean) => {
     setPromotions(promotions.map((p) => (p.id === id ? { ...p, isActive: !isActive } : p)));
+    try {
+      await fetch(`/api/admin/promotions/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isActive: !isActive }),
+      });
+    } catch {
+      // Revert on failure
+      setPromotions(promotions.map((p) => (p.id === id ? { ...p, isActive } : p)));
+    }
   };
 
   const deletePromotion = async (id: string) => {
     if (!confirm(t('admin.promotions.confirmDelete'))) return;
+    const prev = promotions;
     setPromotions(promotions.filter((p) => p.id !== id));
+    try {
+      await fetch(`/api/admin/promotions/${id}`, { method: 'DELETE' });
+    } catch {
+      // Revert on failure
+      setPromotions(prev);
+    }
   };
 
   if (loading) {
@@ -84,7 +101,7 @@ export default function PromotionsPage() {
       />
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <MiniStat icon={Percent} label={t('admin.promotions.statTotal')} value={promotions.length} bg="bg-slate-100 text-slate-600" />
         <MiniStat icon={Percent} label={t('admin.promotions.statActive')} value={promotions.filter((p) => p.isActive).length} bg="bg-emerald-100 text-emerald-600" />
         <MiniStat icon={Zap} label={t('admin.promotions.statFlashSales')} value={promotions.filter((p) => p.type === 'FLASH_SALE').length} bg="bg-red-100 text-red-600" />

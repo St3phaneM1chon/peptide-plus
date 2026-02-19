@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 
 interface CountdownTimerProps {
   endDate: Date | string;
@@ -26,7 +26,7 @@ export default function CountdownTimer({
   variant = 'full',
   showDays = true,
 }: CountdownTimerProps) {
-  const { t } = useTranslations();
+  const { t } = useI18n();
   const [timeLeft, setTimeLeft] = useState<TimeLeft>({
     days: 0,
     hours: 0,
@@ -160,7 +160,7 @@ export default function CountdownTimer({
         <div
           className={`${
             variant === 'compact'
-              ? 'text-sm font-medium text-neutral-700 mr-2'
+              ? 'text-sm font-medium text-neutral-700 me-2'
               : 'text-lg md:text-xl font-bold text-neutral-800 mb-4'
           }`}
         >

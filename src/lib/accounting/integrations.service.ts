@@ -1,6 +1,10 @@
 /**
  * External Integrations Service
  * QuickBooks, Sage, inventory sync, and external accounting exports
+ *
+ * #73 Audit: SECURITY - All API keys and secrets MUST come from environment
+ * variables, never from plain text in code or database fields. Sensitive
+ * credentials should be stored in Azure Key Vault or equivalent secret manager.
  */
 
 import { JournalEntry } from './types';
@@ -9,13 +13,29 @@ import { JournalEntry } from './types';
 // QUICKBOOKS ONLINE INTEGRATION
 // ============================================
 
+// #73 Audit: Config should be populated exclusively from environment variables
 interface QBOConfig {
-  clientId: string;
-  clientSecret: string;
-  accessToken?: string;
-  refreshToken?: string;
+  clientId: string;      // From process.env.QBO_CLIENT_ID
+  clientSecret: string;  // From process.env.QBO_CLIENT_SECRET
+  accessToken?: string;  // From OAuth flow, stored encrypted
+  refreshToken?: string; // From OAuth flow, stored encrypted
   realmId?: string;
   environment: 'sandbox' | 'production';
+}
+
+/**
+ * #73 Audit: Build QBO config from environment variables only
+ * Never accept credentials from request body or database plain text fields
+ */
+export function getQBOConfigFromEnv(): QBOConfig {
+  return {
+    clientId: process.env.QBO_CLIENT_ID || '',
+    clientSecret: process.env.QBO_CLIENT_SECRET || '',
+    accessToken: process.env.QBO_ACCESS_TOKEN,
+    refreshToken: process.env.QBO_REFRESH_TOKEN,
+    realmId: process.env.QBO_REALM_ID,
+    environment: (process.env.QBO_ENVIRONMENT as 'sandbox' | 'production') || 'sandbox',
+  };
 }
 
 interface QBOJournalEntry {

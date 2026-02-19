@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { auth } from '@/lib/auth-config';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 
 interface LoyaltyTier {
   name: string;
@@ -75,13 +75,8 @@ const DEFAULT_CONFIG: LoyaltyConfig = {
 const LOYALTY_CONFIG_KEY = 'loyalty_config';
 
 // GET /api/admin/loyalty/config
-export async function GET() {
+export const GET = withAdminGuard(async (_request, { session }) => {
   try {
-    const session = await auth();
-    if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role || '')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     // Try to load from SiteSetting key-value store
     const setting = await prisma.siteSetting.findUnique({
       where: { key: LOYALTY_CONFIG_KEY },
@@ -129,16 +124,11 @@ export async function GET() {
       { status: 500 }
     );
   }
-}
+});
 
 // PUT /api/admin/loyalty/config
-export async function PUT(request: NextRequest) {
+export const PUT = withAdminGuard(async (request: NextRequest, { session }) => {
   try {
-    const session = await auth();
-    if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role || '')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const body = await request.json();
 
     // Validate required fields
@@ -209,4 +199,4 @@ export async function PUT(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

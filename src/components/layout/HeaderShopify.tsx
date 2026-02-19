@@ -99,7 +99,7 @@ export function HeaderShopify() {
           <button
             className="header__icon md:hidden"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            aria-label="Menu"
+            aria-label={t('nav.aria.menu')}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -178,7 +178,7 @@ export function HeaderShopify() {
                 </Link>
                 <button
                   onClick={() => signOut()}
-                  className="text-left text-gray-500 hover:text-gray-900 font-medium"
+                  className="text-start text-gray-500 hover:text-gray-900 font-medium"
                 >
                   {t('nav.logout')}
                 </button>

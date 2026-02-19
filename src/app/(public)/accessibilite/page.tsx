@@ -1,4 +1,3 @@
-export const dynamic = 'force-dynamic';
 /**
  * PAGE ACCESSIBILITÉ
  */
@@ -43,7 +42,7 @@ export default function AccessibilityPage() {
 
             <div>
               <h2 className="text-xl font-bold text-gray-900 mb-4">Conformité</h2>
-              <ul className="list-disc pl-6 space-y-2">
+              <ul className="list-disc ps-6 space-y-2">
                 <li><strong>WCAG 2.1 niveau AA</strong> - Web Content Accessibility Guidelines</li>
                 <li><strong>Section 508</strong> - US Rehabilitation Act</li>
                 <li><strong>EN 301 549</strong> - Norme européenne d'accessibilité</li>
@@ -52,7 +51,7 @@ export default function AccessibilityPage() {
 
             <div>
               <h2 className="text-xl font-bold text-gray-900 mb-4">Mesures prises</h2>
-              <ul className="list-disc pl-6 space-y-2">
+              <ul className="list-disc ps-6 space-y-2">
                 <li>Navigation au clavier complète</li>
                 <li>Textes alternatifs pour toutes les images</li>
                 <li>Contraste de couleurs conforme WCAG 2.1 AA</li>

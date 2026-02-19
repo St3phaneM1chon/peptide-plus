@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { X, Download, Smartphone } from 'lucide-react';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -10,7 +10,7 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 export default function InstallPWA() {
-  const { t } = useTranslations();
+  const { t } = useI18n();
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showBanner, setShowBanner] = useState(false);
 
@@ -91,13 +91,13 @@ export default function InstallPWA() {
   }
 
   return (
-    <div className="fixed bottom-20 left-4 right-4 md:left-auto md:right-4 md:max-w-md z-50 animate-slide-up">
+    <div className="fixed bottom-20 start-4 end-4 md:start-auto md:end-4 md:max-w-md z-50 animate-slide-up">
       <div className="bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden">
         <div className="relative bg-gradient-to-r from-orange-500 to-orange-600 p-4">
           <button
             onClick={handleDismiss}
-            className="absolute top-2 right-2 text-white/80 hover:text-white transition-colors"
-            aria-label="Dismiss install prompt"
+            className="absolute top-2 end-2 text-white/80 hover:text-white transition-colors"
+            aria-label={t('common.aria.dismissInstallPrompt')}
           >
             <X className="w-5 h-5" />
           </button>

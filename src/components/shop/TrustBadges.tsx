@@ -1,6 +1,6 @@
 'use client';
 
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 
 interface TrustBadgesProps {
   variant?: 'horizontal' | 'vertical' | 'compact';
@@ -8,7 +8,7 @@ interface TrustBadgesProps {
 }
 
 export default function TrustBadges({ variant = 'horizontal', showAll = true }: TrustBadgesProps) {
-  const { t } = useTranslations();
+  const { t } = useI18n();
 
   const badges = [
     {
@@ -90,7 +90,7 @@ export default function TrustBadges({ variant = 'horizontal', showAll = true }: 
 
 // Hero variant for homepage
 export function TrustBadgesHero() {
-  const { t } = useTranslations();
+  const { t } = useI18n();
   return (
     <div className="bg-neutral-900 text-white py-4 border-t border-neutral-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

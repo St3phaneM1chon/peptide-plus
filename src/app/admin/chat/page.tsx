@@ -268,8 +268,8 @@ export default function AdminChatPage() {
                 <button
                   key={conv.id}
                   onClick={() => selectConversation(conv)}
-                  className={`w-full p-4 text-left border-b border-slate-100 hover:bg-slate-50 transition-colors ${
-                    selectedConversation?.id === conv.id ? 'bg-sky-50 border-l-4 border-l-sky-500' : ''
+                  className={`w-full p-4 text-start border-b border-slate-100 hover:bg-slate-50 transition-colors ${
+                    selectedConversation?.id === conv.id ? 'bg-sky-50 border-s-4 border-s-sky-500' : ''
                   }`}
                 >
                   <div className="flex items-start justify-between">
@@ -293,7 +293,7 @@ export default function AdminChatPage() {
                         </span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-1.5 ml-2 flex-shrink-0">
+                    <div className="flex items-center gap-1.5 ms-2 flex-shrink-0">
                       {conv.status === 'WAITING_ADMIN' && (
                         <span className="p-1 bg-yellow-50 text-yellow-600 rounded-full">
                           <AlertTriangle className="w-3.5 h-3.5" />

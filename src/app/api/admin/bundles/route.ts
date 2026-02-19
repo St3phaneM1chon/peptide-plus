@@ -1,25 +1,36 @@
 export const dynamic = 'force-dynamic';
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 
 // GET all bundles (including inactive for admin)
-export async function GET() {
+export const GET = withAdminGuard(async (request, { session }) => {
   try {
-    const bundles = await prisma.bundle.findMany({
-      include: {
-        items: {
-          include: {
-            product: {
-              include: {
-                formats: true,
+    const { searchParams } = new URL(request.url);
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
+    const limit = Math.min(parseInt(searchParams.get('limit') || '20', 10), 100);
+    const skip = (page - 1) * limit;
+
+    const [bundles, total] = await Promise.all([
+      prisma.bundle.findMany({
+        include: {
+          items: {
+            include: {
+              product: {
+                include: {
+                  formats: true,
+                },
               },
             },
           },
         },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      prisma.bundle.count(),
+    ]);
 
     // Calculate prices for each bundle
     const bundlesWithPrices = bundles.map((bundle) => {
@@ -60,7 +71,15 @@ export async function GET() {
       };
     });
 
-    return NextResponse.json(bundlesWithPrices);
+    return NextResponse.json({
+      bundles: bundlesWithPrices,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+      },
+    });
   } catch (error) {
     console.error('Error fetching bundles:', error);
     return NextResponse.json(
@@ -68,10 +87,10 @@ export async function GET() {
       { status: 500 }
     );
   }
-}
+});
 
 // POST create new bundle
-export async function POST(request: Request) {
+export const POST = withAdminGuard(async (request, { session }) => {
   try {
     const body = await request.json();
     const { name, slug, description, image, discount, isActive, items } = body;
@@ -134,4 +153,4 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
-}
+});

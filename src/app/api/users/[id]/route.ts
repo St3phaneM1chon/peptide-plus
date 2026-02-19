@@ -191,16 +191,29 @@ export async function DELETE(_request: Request, { params }: RouteParams) {
       );
     }
 
-    // Soft delete - on pourrait ajouter un champ isActive
-    await prisma.user.delete({
-      where: { id },
-    });
+    // Soft delete - deactivate user by clearing sessions and anonymizing
+    // instead of hard deleting to preserve referential integrity
+    await prisma.$transaction([
+      prisma.session.deleteMany({ where: { userId: id } }),
+      prisma.user.update({
+        where: { id },
+        data: {
+          email: `deleted-${id}@deactivated.local`,
+          name: 'Deleted User',
+          password: null,
+          mfaEnabled: false,
+          mfaSecret: null,
+          mfaBackupCodes: null,
+          role: 'PUBLIC',
+        },
+      }),
+    ]);
 
     // Log d'audit
     await prisma.auditLog.create({
       data: {
         userId: session.user.id,
-        action: 'DELETE',
+        action: 'SOFT_DELETE',
         entityType: 'User',
         entityId: id,
       },

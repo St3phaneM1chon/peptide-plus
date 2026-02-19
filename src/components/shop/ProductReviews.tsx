@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useSession } from 'next-auth/react';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import ReviewImageUpload from './ReviewImageUpload';
@@ -34,7 +34,7 @@ interface ProductReviewsProps {
 
 export default function ProductReviews({ productId, productName }: ProductReviewsProps) {
   const { data: session } = useSession();
-  const { t } = useTranslations();
+  const { t, locale } = useI18n();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [showWriteReview, setShowWriteReview] = useState(false);
   const [sortBy, setSortBy] = useState<'recent' | 'helpful' | 'highest' | 'lowest'>('helpful');
@@ -51,6 +51,7 @@ export default function ProductReviews({ productId, productName }: ProductReview
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(10);
 
   // Load reviews on mount
   useEffect(() => {
@@ -176,14 +177,24 @@ export default function ProductReviews({ productId, productName }: ProductReview
   }) => {
     const sizes = { sm: 'w-4 h-4', md: 'w-5 h-5', lg: 'w-7 h-7' };
     return (
-      <div className="flex gap-0.5">
+      <div className="flex gap-0.5" role={interactive ? 'radiogroup' : undefined} aria-label={interactive ? t('reviews.ratingGroup') : undefined}>
         {[1, 2, 3, 4, 5].map((star) => (
           <button
             key={star}
             type={interactive ? 'button' : undefined}
             onClick={() => interactive && onChange?.(star)}
+            onKeyDown={interactive ? (e) => {
+              if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); onChange?.(Math.min(5, rating + 1)); }
+              if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); onChange?.(Math.max(1, rating - 1)); }
+              if (e.key === 'Home') { e.preventDefault(); onChange?.(1); }
+              if (e.key === 'End') { e.preventDefault(); onChange?.(5); }
+            } : undefined}
             disabled={!interactive}
-            className={interactive ? 'cursor-pointer hover:scale-110 transition-transform' : 'cursor-default'}
+            tabIndex={interactive ? (star === rating ? 0 : -1) : undefined}
+            aria-label={t('reviews.starRatingLabel', { star: String(star) })}
+            role={interactive ? 'radio' : undefined}
+            aria-checked={interactive ? star === rating : undefined}
+            className={interactive ? 'cursor-pointer hover:scale-110 transition-transform focus:outline-none focus:ring-2 focus:ring-orange-500 rounded' : 'cursor-default'}
           >
             <svg
               className={`${sizes[size]} ${star <= rating ? 'text-yellow-400' : 'text-gray-300'}`}
@@ -290,7 +301,7 @@ export default function ProductReviews({ productId, productName }: ProductReview
                       setFilterRating(null);
                       setFilterWithPhotos(false);
                     }}
-                    className="ml-2 text-orange-500 hover:underline"
+                    className="ms-2 text-orange-500 hover:underline"
                   >
                     Clear filters
                   </button>
@@ -339,12 +350,12 @@ export default function ProductReviews({ productId, productName }: ProductReview
                 {filterRating || filterWithPhotos ? 'No reviews match your filters' : 'No reviews yet. Be the first to review!'}
               </div>
             ) : (
-              sortedReviews.map((review) => (
+              sortedReviews.slice(0, visibleCount).map((review) => (
                 <div key={review.id} className="border-b border-neutral-200 pb-6">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
                       {review.userAvatar ? (
-                        <Image src={review.userAvatar} alt="" width={40} height={40} className="w-10 h-10 rounded-full" unoptimized />
+                        <Image src={review.userAvatar} alt={review.userName || 'Reviewer'} width={40} height={40} className="w-10 h-10 rounded-full" unoptimized />
                       ) : (
                         <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
                           <span className="text-orange-600 font-bold">{review.userName.charAt(0)}</span>
@@ -359,14 +370,14 @@ export default function ProductReviews({ productId, productName }: ProductReview
                               <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                                 <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                               </svg>
-                              Verified Purchase
+                              {t('reviews.verifiedPurchase')}
                             </span>
                           )}
                         </div>
                       </div>
                     </div>
                     <span className="text-sm text-neutral-500">
-                      {new Date(review.createdAt).toLocaleDateString('en-CA', {
+                      {new Date(review.createdAt).toLocaleDateString(locale, {
                         year: 'numeric', month: 'short', day: 'numeric'
                       })}
                     </span>
@@ -382,7 +393,7 @@ export default function ProductReviews({ productId, productName }: ProductReview
 
                 {/* Response from store */}
                 {review.response && (
-                  <div className="mt-4 ml-6 p-4 bg-orange-50 rounded-lg border-l-4 border-orange-500">
+                  <div className="mt-4 ms-6 p-4 bg-orange-50 rounded-lg border-s-4 border-orange-500">
                     <p className="text-sm font-medium text-orange-800">Response from BioCycle Peptides+</p>
                     <p className="text-sm text-neutral-600 mt-1">{review.response.content}</p>
                   </div>
@@ -396,14 +407,26 @@ export default function ProductReviews({ productId, productName }: ProductReview
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
                     </svg>
-                    Helpful ({review.helpful})
+                    {t('reviews.helpfulCount', { count: String(review.helpful) })}
                   </button>
                   <button className="text-sm text-neutral-500 hover:text-neutral-700">
-                    Report
+                    {t('reviews.reportReview')}
                   </button>
                 </div>
                 </div>
               ))
+            )}
+
+            {/* Load More button */}
+            {!isLoadingReviews && sortedReviews.length > visibleCount && (
+              <div className="text-center pt-4">
+                <button
+                  onClick={() => setVisibleCount((prev) => prev + 10)}
+                  className="px-6 py-2 border border-neutral-300 rounded-lg text-sm font-medium text-neutral-700 hover:bg-neutral-50 transition-colors"
+                >
+                  {t('reviews.loadMore') || 'Load More Reviews'} ({sortedReviews.length - visibleCount} {t('reviews.remaining') || 'remaining'})
+                </button>
+              </div>
             )}
           </div>
         </div>
@@ -452,7 +475,7 @@ export default function ProductReviews({ productId, productName }: ProductReview
                     type="text"
                     value={newReview.title}
                     onChange={(e) => setNewReview(prev => ({ ...prev, title: e.target.value }))}
-                    placeholder="Summarize your experience"
+                    placeholder={t('shop.reviews.placeholderTitle')}
                     className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                     required
                   />
@@ -463,13 +486,15 @@ export default function ProductReviews({ productId, productName }: ProductReview
                   <textarea
                     value={newReview.content}
                     onChange={(e) => setNewReview(prev => ({ ...prev, content: e.target.value }))}
-                    placeholder="Tell us about your experience with this product..."
+                    placeholder={t('shop.reviews.placeholderBody')}
                     rows={5}
                     className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
                     required
                     minLength={20}
                   />
-                  <p className="text-xs text-neutral-500 mt-1">Minimum 20 characters</p>
+                  <p className={`text-xs mt-1 ${newReview.content.length < 20 ? 'text-neutral-500' : 'text-green-600'}`}>
+                    {newReview.content.length}/20 {t('reviews.minCharacters')}
+                  </p>
                 </div>
 
                 <div>

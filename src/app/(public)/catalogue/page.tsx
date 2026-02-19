@@ -4,10 +4,16 @@ export const dynamic = 'force-dynamic';
  * Liste de tous les produits peptides avec filtres
  */
 
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { db as prisma } from '@/lib/db';
 import { ProductCard } from '@/components/products/ProductCard';
 import { Product } from '@/types';
+
+export const metadata: Metadata = {
+  title: 'Catalog',
+  description: 'Browse our complete catalog of premium research peptides. Filter by category, type, and price. Lab-tested, 99%+ purity.',
+};
 
 interface CataloguePageProps {
   searchParams: Promise<{
@@ -139,7 +145,7 @@ export default async function CataloguePage({ searchParams }: CataloguePageProps
                         }`}
                       >
                         {category.name}
-                        <span className="text-gray-400 ml-1">
+                        <span className="text-gray-400 ms-1">
                           ({category._count.products})
                         </span>
                       </Link>

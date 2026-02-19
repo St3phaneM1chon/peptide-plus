@@ -4,30 +4,10 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import crypto from 'crypto';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
-
-const PAYPAL_API_URL = process.env.PAYPAL_SANDBOX === 'true'
-  ? 'https://api-m.sandbox.paypal.com'
-  : 'https://api-m.paypal.com';
-
-async function getPayPalAccessToken(): Promise<string> {
-  const auth = Buffer.from(
-    `${process.env.PAYPAL_CLIENT_ID}:${process.env.PAYPAL_CLIENT_SECRET}`
-  ).toString('base64');
-
-  const response = await fetch(`${PAYPAL_API_URL}/v1/oauth2/token`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      Authorization: `Basic ${auth}`,
-    },
-    body: 'grant_type=client_credentials',
-  });
-
-  const data = await response.json();
-  return data.access_token;
-}
+import { getPayPalAccessToken, PAYPAL_API_URL } from '@/lib/paypal';
 
 export async function POST(request: NextRequest) {
   try {
@@ -37,7 +17,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
     }
 
-    const { productId, companyId } = await request.json();
+    // BE-PAY-05: Idempotency key to prevent duplicate payments
+    const idempotencyKey = request.headers.get('x-idempotency-key');
+    if (idempotencyKey) {
+      const existingPurchase = await prisma.purchase.findFirst({
+        where: { idempotencyKey },
+      });
+      if (existingPurchase) {
+        return NextResponse.json({
+          orderId: existingPurchase.paypalOrderId,
+          message: 'Duplicate request - existing payment returned',
+        });
+      }
+    }
+
+    const { productId, companyId, province: reqProvince } = await request.json();
 
     if (!productId) {
       return NextResponse.json({ error: 'Product ID requis' }, { status: 400 });
@@ -52,11 +46,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Produit non trouvé' }, { status: 404 });
     }
 
-    // Calculer le total avec taxes
+    // BUG 3: Province-aware tax calculation (not hardcoded to QC)
     const subtotal = Number(product.price);
-    const tps = subtotal * 0.05;
-    const tvq = subtotal * 0.09975;
-    const total = (subtotal + tps + tvq).toFixed(2);
+    const province = (reqProvince || 'QC').toUpperCase();
+    const TAX_RATES: Record<string, { gst: number; pst?: number; hst?: number; qst?: number; rst?: number }> = {
+      'AB': { gst: 0.05 }, 'BC': { gst: 0.05, pst: 0.07 }, 'MB': { gst: 0.05, rst: 0.07 },
+      'NB': { gst: 0, hst: 0.15 }, 'NL': { gst: 0, hst: 0.15 }, 'NS': { gst: 0, hst: 0.14 },
+      'NT': { gst: 0.05 }, 'NU': { gst: 0.05 }, 'ON': { gst: 0, hst: 0.13 },
+      'PE': { gst: 0, hst: 0.15 }, 'QC': { gst: 0.05, qst: 0.09975 },
+      'SK': { gst: 0.05, pst: 0.06 }, 'YT': { gst: 0.05 },
+    };
+    const rates = TAX_RATES[province] || TAX_RATES['QC'];
+    let taxAmount = 0;
+    if (rates.hst) {
+      taxAmount = subtotal * rates.hst;
+    } else {
+      taxAmount = subtotal * rates.gst + subtotal * (rates.qst || rates.pst || rates.rst || 0);
+    }
+    const total = (subtotal + taxAmount).toFixed(2);
+    const taxTotal = taxAmount.toFixed(2);
 
     // Obtenir le token PayPal
     const accessToken = await getPayPalAccessToken();
@@ -84,7 +92,7 @@ export async function POST(request: NextRequest) {
                 },
                 tax_total: {
                   currency_code: 'CAD',
-                  value: (tps + tvq).toFixed(2),
+                  value: taxTotal,
                 },
               },
             },
@@ -103,11 +111,11 @@ export async function POST(request: NextRequest) {
           },
         ],
         application_context: {
-          brand_name: 'Formations Pro',
+          brand_name: 'BioCycle Peptides',
           landing_page: 'NO_PREFERENCE',
           user_action: 'PAY_NOW',
-          return_url: `${process.env.NEXTAUTH_URL}/checkout/paypal/success?product=${productId}`,
-          cancel_url: `${process.env.NEXTAUTH_URL}/checkout/${product.slug}`,
+          return_url: `${process.env.NEXT_PUBLIC_APP_URL}/checkout/paypal/success?product=${productId}`,
+          cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/checkout/${product.slug}`,
         },
       }),
     });
@@ -130,7 +138,8 @@ export async function POST(request: NextRequest) {
         paymentMethod: 'PAYPAL',
         paypalOrderId: orderData.id,
         status: 'PENDING',
-        receiptNumber: `REC-${Date.now()}`,
+        receiptNumber: `REC-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`,
+        idempotencyKey: idempotencyKey || undefined,
       },
     });
 

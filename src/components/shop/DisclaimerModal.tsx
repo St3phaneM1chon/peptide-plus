@@ -1,11 +1,51 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { useI18n } from '@/i18n/client';
 
 export default function DisclaimerModal() {
-  const { t } = useTranslations();
+  const { t } = useI18n();
   const [isOpen, setIsOpen] = useState(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  // Focus trap
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.key === 'Tab' && dialogRef.current) {
+        const focusable = dialogRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusable.length === 0) return;
+
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    },
+    []
+  );
+
+  useEffect(() => {
+    if (isOpen) {
+      document.addEventListener('keydown', handleKeyDown);
+      requestAnimationFrame(() => {
+        const focusable = dialogRef.current?.querySelector<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        focusable?.focus();
+      });
+    }
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, handleKeyDown]);
 
   useEffect(() => {
     // Check if user has already accepted
@@ -41,8 +81,14 @@ export default function DisclaimerModal() {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 z-[200] flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl">
+    <div className="fixed inset-0 bg-black/80 z-[200] flex items-center justify-center p-4" role="presentation">
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={content.title}
+        className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl"
+      >
         {/* Logo */}
         <div className="flex items-center justify-center gap-2 mb-6">
           <div className="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center">
@@ -64,7 +110,7 @@ export default function DisclaimerModal() {
           <p>
             {content.warning}
           </p>
-          <ul className="list-disc list-inside space-y-2 ml-2">
+          <ul className="list-disc list-inside space-y-2 ms-2">
             <li><strong>{content.age}</strong></li>
             <li><strong>{content.research}</strong></li>
             <li><strong>{content.noConsumption}</strong></li>

@@ -9,13 +9,13 @@
  */
 
 import { useState, useEffect } from 'react';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 
 const DISMISS_KEY = 'translation-notice-dismissed';
 const DISMISS_DAYS = 7;
 
 export function TranslationNotice() {
-  const { locale, t } = useTranslations();
+  const { locale, t } = useI18n();
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -76,7 +76,7 @@ export function TranslationNotice() {
       </div>
       <button
         onClick={handleDismiss}
-        aria-label="Dismiss"
+        aria-label={t('common.aria.dismiss')}
         style={{
           background: 'none',
           border: 'none',

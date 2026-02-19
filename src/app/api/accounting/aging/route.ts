@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
 
     if (type === 'RECEIVABLE') {
       const customerInvoices = await prisma.customerInvoice.findMany({
-        where: { status: { not: 'CANCELLED' } },
+        where: { status: { not: 'CANCELLED' }, deletedAt: null, balance: { gt: 0 } },
         orderBy: { dueDate: 'asc' },
       });
       invoices = customerInvoices.map((i) => ({
@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
       }));
     } else {
       const supplierInvoices = await prisma.supplierInvoice.findMany({
-        where: { status: { not: 'CANCELLED' } },
+        where: { status: { not: 'CANCELLED' }, deletedAt: null, balance: { gt: 0 } },
         orderBy: { dueDate: 'asc' },
       });
       invoices = supplierInvoices.map((i) => ({

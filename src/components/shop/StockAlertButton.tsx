@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 
 interface StockAlertButtonProps {
@@ -19,7 +19,7 @@ export default function StockAlertButton({
   formatName,
 }: StockAlertButtonProps) {
   const { data: session } = useSession();
-  const { t } = useTranslations();
+  const { t } = useI18n();
   const [email, setEmail] = useState(session?.user?.email || '');
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isLoading, setIsLoading] = useState(false);

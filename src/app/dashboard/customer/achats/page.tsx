@@ -67,7 +67,7 @@ export default async function PurchasesPage() {
               </nav>
               <h1 className="text-2xl font-bold text-gray-900">Historique des achats</h1>
             </div>
-            <div className="text-right">
+            <div className="text-end">
               <p className="text-sm text-gray-500">Total dépensé</p>
               <p className="text-2xl font-bold text-gray-900">{totalSpent.toFixed(2)} $</p>
             </div>
@@ -106,22 +106,22 @@ export default async function PurchasesPage() {
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Date
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Formation
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Paiement
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-end text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Montant
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-end text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Reçu
                   </th>
                 </tr>
@@ -138,7 +138,7 @@ export default async function PurchasesPage() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center">
-                        <div className="w-10 h-10 bg-gray-100 rounded-lg flex-shrink-0 mr-3 overflow-hidden">
+                        <div className="w-10 h-10 bg-gray-100 rounded-lg flex-shrink-0 me-3 overflow-hidden">
                           {purchase.product.imageUrl ? (
                             <Image
                               src={purchase.product.imageUrl}
@@ -174,10 +174,10 @@ export default async function PurchasesPage() {
                         {statusLabels[purchase.status]?.label || purchase.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-right">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-end">
                       {Number(purchase.amount).toFixed(2)} $
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                    <td className="px-6 py-4 whitespace-nowrap text-end">
                       {purchase.status === 'COMPLETED' && (
                         <div className="flex items-center justify-end space-x-2">
                           <a
@@ -187,7 +187,7 @@ export default async function PurchasesPage() {
                             className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
                           >
                             <svg
-                              className="w-4 h-4 mr-1"
+                              className="w-4 h-4 me-1"
                               fill="none"
                               stroke="currentColor"
                               viewBox="0 0 24 24"
@@ -206,7 +206,7 @@ export default async function PurchasesPage() {
                             className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
                           >
                             <svg
-                              className="w-4 h-4 mr-1"
+                              className="w-4 h-4 me-1"
                               fill="none"
                               stroke="currentColor"
                               viewBox="0 0 24 24"

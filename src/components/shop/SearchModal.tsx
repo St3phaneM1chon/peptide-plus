@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
+import { useCurrency } from '@/contexts/CurrencyContext';
 
 interface SearchResult {
   id: string;
@@ -24,8 +25,11 @@ export default function SearchModal({ open, onClose }: SearchModalProps) {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
   const router = useRouter();
-  const { t, locale } = useTranslations();
+  const { t, locale } = useI18n();
+  const { formatPrice } = useCurrency();
 
   // Focus input when modal opens
   useEffect(() => {
@@ -61,16 +65,60 @@ export default function SearchModal({ open, onClose }: SearchModalProps) {
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [query]);
+  }, [query, locale]);
 
-  // Close on Escape
+  // Close on Escape + Focus trap
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+        return;
+      }
+
+      if (e.key === 'Tab' && dialogRef.current) {
+        const focusable = dialogRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusable.length === 0) return;
+
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    },
+    [onClose]
+  );
+
   useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+    if (open) {
+      previousFocusRef.current = document.activeElement as HTMLElement;
+      document.addEventListener('keydown', handleKeyDown);
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      if (!open) previousFocusRef.current?.focus();
     };
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
-  }, [onClose]);
+  }, [open, handleKeyDown]);
+
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [open]);
 
   if (!open) return null;
 
@@ -94,9 +142,10 @@ export default function SearchModal({ open, onClose }: SearchModalProps) {
 
       {/* Modal */}
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
-        aria-label="Search products"
+        aria-label={t('shop.aria.searchProducts')}
         className="fixed inset-x-4 top-20 md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:w-full md:max-w-2xl bg-white rounded-xl shadow-2xl z-50 overflow-hidden"
       >
         {/* Search Input */}
@@ -110,12 +159,12 @@ export default function SearchModal({ open, onClose }: SearchModalProps) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t('search.placeholder')}
-            aria-label="Search products"
+            aria-label={t('shop.aria.searchProducts')}
             className="flex-1 text-lg outline-none placeholder:text-neutral-400"
           />
           <button
             onClick={onClose}
-            aria-label="Close search"
+            aria-label={t('shop.aria.closeSearch')}
             className="p-2 text-neutral-400 hover:text-neutral-600"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -147,8 +196,8 @@ export default function SearchModal({ open, onClose }: SearchModalProps) {
                       <p className="font-medium text-neutral-900">{result.name}</p>
                       <p className="text-sm text-neutral-500">{result.category}</p>
                     </div>
-                    <div className="text-right">
-                      <p className="font-semibold text-neutral-900">${result.price.toFixed(2)}</p>
+                    <div className="text-end">
+                      <p className="font-semibold text-neutral-900">{formatPrice(result.price)}</p>
                       {result.purity && (
                         <p className="text-xs text-emerald-600">{t('search.purityPercent').replace('{purity}', String(result.purity))}</p>
                       )}
@@ -193,6 +242,7 @@ export default function SearchModal({ open, onClose }: SearchModalProps) {
                   <button
                     key={term}
                     onClick={() => setQuery(term)}
+                    aria-label={t('shop.aria.popularSearchFor', { term })}
                     className="px-4 py-2 bg-neutral-100 text-neutral-700 rounded-full text-sm hover:bg-neutral-200 transition-colors"
                   >
                     {term}

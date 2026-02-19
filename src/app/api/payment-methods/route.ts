@@ -24,6 +24,8 @@ export async function GET(request: NextRequest) {
       },
     });
 
+    const cacheHeaders = { 'Cache-Control': 'public, s-maxage=300' };
+
     // If we have configured methods in the database, use those
     if (configuredMethods.length > 0) {
       return NextResponse.json({
@@ -35,7 +37,7 @@ export async function GET(request: NextRequest) {
           minAmount: m.minAmount ? Number(m.minAmount) : null,
           maxAmount: m.maxAmount ? Number(m.maxAmount) : null,
         })),
-      });
+      }, { headers: cacheHeaders });
     }
 
     // Otherwise, fall back to defaults from lib/payment-methods.ts
@@ -45,7 +47,7 @@ export async function GET(request: NextRequest) {
       country,
       methods: defaultMethods,
       usingDefaults: true,
-    });
+    }, { headers: cacheHeaders });
   } catch (error) {
     console.error('Get payment methods error:', error);
     return NextResponse.json(

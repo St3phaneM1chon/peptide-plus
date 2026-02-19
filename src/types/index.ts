@@ -78,10 +78,14 @@ export interface Category {
   imageUrl: string | null;
   sortOrder: number;
   isActive: boolean;
+  parentId: string | null;
+  parent?: Category | null;
+  children?: Category[];
 }
 
 export interface CategoryWithProducts extends Category {
   products: Product[];
+  children?: CategoryWithProducts[];
   _count: {
     products: number;
   };

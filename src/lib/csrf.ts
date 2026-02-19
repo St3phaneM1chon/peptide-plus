@@ -6,12 +6,34 @@
 import { randomBytes, createHmac } from 'crypto';
 import { cookies } from 'next/headers';
 
-const CSRF_SECRET: string = process.env.CSRF_SECRET || process.env.NEXTAUTH_SECRET || 'build-placeholder';
-if (!CSRF_SECRET || CSRF_SECRET === 'build-placeholder') {
-  if (typeof window === 'undefined' && process.env.NODE_ENV === 'production' && !process.env.NEXT_PHASE) {
-    console.warn('CSRF_SECRET or NEXTAUTH_SECRET not set - CSRF protection disabled');
+// SECURITY: In production, CSRF_SECRET or NEXTAUTH_SECRET must be set.
+// In development, use a stable dev-only secret instead of the insecure 'build-placeholder'.
+const DEV_FALLBACK_SECRET = 'dev-csrf-secret-not-for-production-use-only';
+
+function resolveCSRFSecret(): string {
+  const secret = process.env.CSRF_SECRET || process.env.NEXTAUTH_SECRET;
+  if (secret) return secret;
+
+  // During Next.js build phase, return a placeholder (no requests are served)
+  if (process.env.NEXT_PHASE === 'phase-production-build') {
+    return DEV_FALLBACK_SECRET;
   }
+
+  // In production runtime: throw to fail-closed
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error(
+      'CSRF_SECRET or NEXTAUTH_SECRET must be set in production. CSRF protection cannot operate without a secret.'
+    );
+  }
+
+  // Development: use a stable, clearly-marked dev secret
+  if (typeof window === 'undefined') {
+    console.warn('[csrf] CSRF_SECRET not set - using development fallback (NOT safe for production)');
+  }
+  return DEV_FALLBACK_SECRET;
 }
+
+const CSRF_SECRET: string = resolveCSRFSecret();
 const CSRF_COOKIE_NAME = 'csrf-token';
 const CSRF_HEADER_NAME = 'x-csrf-token';
 const TOKEN_EXPIRY_MS = 3600000; // 1 heure

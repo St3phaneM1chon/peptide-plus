@@ -310,7 +310,7 @@ export default function RapportsPage() {
                       />
                     </div>
                   </div>
-                  <div className="text-right">
+                  <div className="text-end">
                     <p className="font-semibold text-slate-900">{product.revenue.toLocaleString(locale)} $</p>
                     <p className="text-xs text-slate-500">{t('admin.reports.salesCount', { count: product.sales })}</p>
                   </div>
@@ -338,7 +338,7 @@ export default function RapportsPage() {
                       />
                     </div>
                   </div>
-                  <div className="text-right">
+                  <div className="text-end">
                     <p className="font-semibold text-slate-900">{region.revenue.toLocaleString(locale)} $</p>
                     <p className="text-xs text-slate-500">{t('admin.reports.ordersCount', { count: region.orders })}</p>
                   </div>
@@ -364,7 +364,7 @@ export default function RapportsPage() {
                   <div className="flex-1 bg-slate-100 rounded-full h-2">
                     <div className="bg-sky-500 h-2 rounded-full" style={{ width: `${pct}%` }} />
                   </div>
-                  <span className="font-medium w-16 text-right">{pct.toFixed(1)}%</span>
+                  <span className="font-medium w-16 text-end">{pct.toFixed(1)}%</span>
                 </div>
               );
             })}

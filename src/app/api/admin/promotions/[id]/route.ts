@@ -5,11 +5,31 @@ export const dynamic = 'force-dynamic';
  * GET    - Get promotion detail with related category/product names
  * PATCH  - Update promotion fields
  * DELETE - Delete a promotion
+ *
+ * TODO (item 77): Scheduled Price Changes
+ * Add scheduled pricing capabilities beyond the current startsAt/endsAt promo dates:
+ *   - New model ScheduledPriceChange with fields:
+ *     id, productId, formatId?, newPrice, newCompareAtPrice?,
+ *     scheduledAt (when to apply), appliedAt (when actually applied),
+ *     revertAt (optional: auto-revert date), revertedAt, status (PENDING/APPLIED/REVERTED),
+ *     createdBy, reason
+ *   - CRUD endpoint: /api/admin/products/[id]/scheduled-prices
+ *   - Cron job /api/cron/apply-price-changes that runs every 15 minutes:
+ *     1. Find all PENDING changes where scheduledAt <= NOW()
+ *     2. Update product/format price
+ *     3. Mark as APPLIED
+ *     4. Find all APPLIED changes where revertAt <= NOW()
+ *     5. Restore original price
+ *     6. Mark as REVERTED
+ *     7. Create AuditLog entries for each change
+ *   - Use cases: seasonal sales, flash sales that auto-start/end,
+ *     MAP compliance (minimum advertised price at specific times),
+ *     price matching with competitors on a schedule
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { auth } from '@/lib/auth-config';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 
 // Helper: map a Discount record to the frontend promotion shape
 async function mapDiscountToPromotion(discount: {
@@ -76,17 +96,9 @@ async function mapDiscountToPromotion(discount: {
 }
 
 // GET /api/admin/promotions/[id] - Get single promotion detail
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const GET = withAdminGuard(async (_request, { session, params }) => {
   try {
-    const session = await auth();
-    if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { id } = await params;
+    const id = params!.id;
 
     const discount = await prisma.discount.findUnique({
       where: { id },
@@ -109,20 +121,12 @@ export async function GET(
       { status: 500 }
     );
   }
-}
+});
 
 // PATCH /api/admin/promotions/[id] - Update promotion
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const PATCH = withAdminGuard(async (request, { session, params }) => {
   try {
-    const session = await auth();
-    if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { id } = await params;
+    const id = params!.id;
     const body = await request.json();
 
     // Verify discount exists
@@ -251,20 +255,12 @@ export async function PATCH(
       { status: 500 }
     );
   }
-}
+});
 
 // DELETE /api/admin/promotions/[id] - Delete a promotion
-export async function DELETE(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const DELETE = withAdminGuard(async (_request, { session, params }) => {
   try {
-    const session = await auth();
-    if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { id } = await params;
+    const id = params!.id;
 
     // Verify discount exists
     const existing = await prisma.discount.findUnique({
@@ -294,4 +290,4 @@ export async function DELETE(
       { status: 500 }
     );
   }
-}
+});

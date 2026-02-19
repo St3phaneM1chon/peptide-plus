@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react';
 import { toast } from 'sonner';
 
 interface CartItem {
@@ -21,11 +21,15 @@ interface CartContextType {
   items: CartItem[];
   itemCount: number;
   subtotal: number;
+  isOpen: boolean;
   addItem: (item: Omit<CartItem, 'quantity'> & { quantity?: number }) => void;
   removeItem: (productId: string, formatId?: string) => void;
   updateQuantity: (productId: string, formatId: string | undefined, quantity: number) => void;
   clearCart: () => void;
   isInCart: (productId: string, formatId?: string) => boolean;
+  openCart: () => void;
+  closeCart: () => void;
+  toggleCart: () => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -35,6 +39,7 @@ const CART_STORAGE_KEY = 'biocycle-cart';
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   // Load cart from localStorage
   useEffect(() => {
@@ -56,18 +61,32 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [items, isLoaded]);
 
-  const itemCount = items.reduce((total, item) => total + item.quantity, 0);
-  
-  const subtotal = items.reduce((total, item) => total + item.price * item.quantity, 0);
+  // Cross-tab sync
+  useEffect(() => {
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === CART_STORAGE_KEY && e.newValue) {
+        try {
+          setItems(JSON.parse(e.newValue));
+        } catch {
+          // ignore
+        }
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
 
-  const addItem = (newItem: Omit<CartItem, 'quantity'> & { quantity?: number }) => {
+  const itemCount = useMemo(() => items.reduce((total, item) => total + item.quantity, 0), [items]);
+
+  const subtotal = useMemo(() => items.reduce((total, item) => total + item.price * item.quantity, 0), [items]);
+
+  const addItem = useCallback((newItem: Omit<CartItem, 'quantity'> & { quantity?: number }) => {
     setItems((prevItems) => {
       const existingIndex = prevItems.findIndex(
         (item) => item.productId === newItem.productId && item.formatId === newItem.formatId
       );
 
       if (existingIndex >= 0) {
-        // Update quantity if item exists
         const updated = [...prevItems];
         const maxQty = newItem.maxQuantity || 99;
         updated[existingIndex].quantity = Math.min(
@@ -77,22 +96,22 @@ export function CartProvider({ children }: { children: ReactNode }) {
         return updated;
       }
 
-      // Add new item
       return [...prevItems, { ...newItem, quantity: newItem.quantity || 1 }];
     });
     toast.success(`${newItem.name} added to cart`);
-  };
+    setIsOpen(true);
+  }, []);
 
-  const removeItem = (productId: string, formatId?: string) => {
+  const removeItem = useCallback((productId: string, formatId?: string) => {
     setItems((prevItems) =>
       prevItems.filter(
         (item) => !(item.productId === productId && item.formatId === formatId)
       )
     );
     toast.info('Removed from cart');
-  };
+  }, []);
 
-  const updateQuantity = (productId: string, formatId: string | undefined, quantity: number) => {
+  const updateQuantity = useCallback((productId: string, formatId: string | undefined, quantity: number) => {
     if (quantity <= 0) {
       removeItem(productId, formatId);
       return;
@@ -105,33 +124,39 @@ export function CartProvider({ children }: { children: ReactNode }) {
           : item
       )
     );
-    toast.info('Quantity updated');
-  };
+  }, [removeItem]);
 
-  const clearCart = () => {
+  const clearCart = useCallback(() => {
     setItems([]);
-    toast.info('Cart cleared');
-  };
+  }, []);
 
-  const isInCart = (productId: string, formatId?: string) => {
+  const isInCart = useCallback((productId: string, formatId?: string) => {
     return items.some(
       (item) => item.productId === productId && item.formatId === formatId
     );
-  };
+  }, [items]);
+
+  const openCart = useCallback(() => setIsOpen(true), []);
+  const closeCart = useCallback(() => setIsOpen(false), []);
+  const toggleCart = useCallback(() => setIsOpen((prev) => !prev), []);
+
+  const value = useMemo(() => ({
+    items,
+    itemCount,
+    subtotal,
+    isOpen,
+    addItem,
+    removeItem,
+    updateQuantity,
+    clearCart,
+    isInCart,
+    openCart,
+    closeCart,
+    toggleCart,
+  }), [items, itemCount, subtotal, isOpen, addItem, removeItem, updateQuantity, clearCart, isInCart, openCart, closeCart, toggleCart]);
 
   return (
-    <CartContext.Provider
-      value={{
-        items,
-        itemCount,
-        subtotal,
-        addItem,
-        removeItem,
-        updateQuantity,
-        clearCart,
-        isInCart,
-      }}
-    >
+    <CartContext.Provider value={value}>
       {children}
     </CartContext.Provider>
   );

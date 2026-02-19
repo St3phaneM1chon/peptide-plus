@@ -1,17 +1,22 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useSession, signIn, getProviders } from 'next-auth/react';
 import Breadcrumbs from '@/components/ui/Breadcrumbs';
 import { useCart } from '@/contexts/CartContext';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { toast } from 'sonner';
 import { checkoutShippingSchema, validateForm } from '@/lib/form-validation';
+import { isValidEmail } from '@/lib/validation';
 import { FormError } from '@/components/ui/FormError';
 import { AddressAutocomplete } from '@/components/ui/AddressAutocomplete';
+import { useDiscountCode } from '@/hooks/useDiscountCode';
+// TODO: Consider lazy-loading the tax calculation module (e.g. dynamic import)
+// to reduce the initial bundle size of the checkout page, since tax calculations
+// are only needed after the user enters their shipping address.
 import {
   calculateTaxes,
   calculateShipping,
@@ -27,7 +32,7 @@ type PaymentMethod = 'credit_card' | 'interac' | 'paypal' | 'apple_pay' | 'googl
 export default function CheckoutPage() {
   const { data: session } = useSession();
   const { items, subtotal } = useCart();
-  const { t, locale } = useTranslations();
+  const { t, locale } = useI18n();
   const { formatPrice, currency } = useCurrency();
   
   // Determine initial step based on auth status
@@ -71,6 +76,54 @@ export default function CheckoutPage() {
   // Shipping validation errors
   const [shippingErrors, setShippingErrors] = useState<Record<string, string>>({});
 
+  // Billing validation errors (inline on blur)
+  const [billingErrors, setBillingErrors] = useState<Record<string, string>>({});
+
+  // Validate a single billing field on blur
+  const validateBillingField = (field: string, value: string) => {
+    let error = '';
+    const requiredFields: Record<string, string> = {
+      firstName: t('checkout.firstName'),
+      lastName: t('checkout.lastName'),
+      address: t('checkout.address'),
+      city: t('checkout.city'),
+      postalCode: t('checkout.postalCode'),
+    };
+
+    if (field in requiredFields && !value.trim()) {
+      error = `${requiredFields[field]} ${t('common.error') || 'is required'}`;
+    }
+
+    if (field === 'postalCode' && value.trim()) {
+      const postalRegex = billingInfo.country === 'CA'
+        ? /^[A-Za-z]\d[A-Za-z][ -]?\d[A-Za-z]\d$/
+        : billingInfo.country === 'US'
+          ? /^\d{5}(-\d{4})?$/
+          : null;
+      if (postalRegex && !postalRegex.test(value.trim())) {
+        error = t('checkout.invalidPostalCode') || 'Invalid postal code format';
+      }
+    }
+
+    setBillingErrors(prev => {
+      if (error) return { ...prev, [field]: error };
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+  };
+
+  // Clear a billing field error on change
+  const clearBillingError = (field: string) => {
+    if (billingErrors[field]) {
+      setBillingErrors(prev => {
+        const next = { ...prev };
+        delete next[field];
+        return next;
+      });
+    }
+  };
+
   // Clear a specific shipping field error when user modifies that field
   const clearShippingError = (field: string) => {
     if (shippingErrors[field]) {
@@ -82,104 +135,119 @@ export default function CheckoutPage() {
     }
   };
 
-  // Promo code state
-  const [promoCode, setPromoCode] = useState('');
-  const [promoDiscount, setPromoDiscount] = useState(0);
-  const [promoApplied, setPromoApplied] = useState<string | null>(null);
-  const [promoError, setPromoError] = useState('');
-  const [promoLoading, setPromoLoading] = useState(false);
+  // Validate a single shipping field on blur
+  const validateShippingField = (field: string, value: string) => {
+    let error = '';
+    const requiredFields: Record<string, string> = {
+      firstName: t('checkout.firstName'),
+      lastName: t('checkout.lastName'),
+      address: t('checkout.address'),
+      city: t('checkout.city'),
+      postalCode: t('checkout.postalCode'),
+    };
 
-  // Gift card state
-  const [giftCardCode, setGiftCardCode] = useState('');
-  const [giftCardDiscount, setGiftCardDiscount] = useState(0);
-  const [giftCardApplied, setGiftCardApplied] = useState<string | null>(null);
-  const [giftCardError, setGiftCardError] = useState('');
-  const [giftCardLoading, setGiftCardLoading] = useState(false);
+    if (field in requiredFields && !value.trim()) {
+      error = `${requiredFields[field]} ${t('common.error') || 'is required'}`;
+    }
 
-  // Apply promo code
-  const applyPromoCode = async () => {
-    if (!promoCode.trim()) return;
-    
-    setPromoLoading(true);
-    setPromoError('');
-    
-    try {
-      const res = await fetch('/api/promo/validate', {
+    if (field === 'postalCode' && value.trim()) {
+      const postalRegex = shippingInfo.country === 'CA'
+        ? /^[A-Za-z]\d[A-Za-z][ -]?\d[A-Za-z]\d$/
+        : shippingInfo.country === 'US'
+          ? /^\d{5}(-\d{4})?$/
+          : null;
+      if (postalRegex && !postalRegex.test(value.trim())) {
+        error = t('checkout.invalidPostalCode') || 'Invalid postal code format';
+      }
+    }
+
+    setShippingErrors(prev => {
+      if (error) return { ...prev, [field]: error };
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+  };
+
+  // Promo code (uses shared useDiscountCode hook)
+  const validatePromo = useCallback(async (code: string) => {
+    const res = await fetch('/api/promo/validate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code, subtotal }),
+    });
+    const data = await res.json();
+    return { valid: !!data.valid, discount: data.discount || 0, code: data.code, error: data.error };
+  }, [subtotal]);
+
+  const [promo, promoActions] = useDiscountCode({
+    validateFn: validatePromo,
+    onSuccess: () => toast.success(t('toast.checkout.promoApplied')),
+    onError: () => toast.error(t('toast.checkout.promoInvalid')),
+    onFail: () => toast.error(t('toast.checkout.promoFailed')),
+    defaultErrorMessage: t('checkout.invalidPromoCode'),
+    failureErrorMessage: t('checkout.validationError'),
+  });
+
+  // Gift card (uses shared useDiscountCode hook)
+  const validateGiftCard = useCallback(async (code: string) => {
+    const res = await fetch(`/api/gift-cards/balance?code=${encodeURIComponent(code)}`);
+    const data = await res.json();
+    if (res.ok && data.balance > 0) {
+      const remainingTotal = subtotal - promo.discount;
+      const discountAmount = Math.min(data.balance, remainingTotal);
+      return { valid: true, discount: discountAmount, code };
+    }
+    return { valid: false, discount: 0, error: data.error || 'Invalid or expired gift card' };
+  }, [subtotal, promo.discount]);
+
+  const [giftCard, giftCardActions] = useDiscountCode({
+    validateFn: validateGiftCard,
+    onSuccess: (_code, amount) => toast.success(t('toast.checkout.giftCardApplied', { amount: formatPrice(amount) })),
+    onError: () => toast.error(t('toast.checkout.giftCardInvalid')),
+    onFail: () => toast.error(t('toast.checkout.giftCardFailed')),
+    defaultErrorMessage: 'Invalid or expired gift card',
+    failureErrorMessage: 'Failed to validate gift card',
+  });
+
+  // Backward-compatible aliases for existing template references
+  const promoCode = promo.code;
+  const promoDiscount = promo.discount;
+  const promoApplied = promo.appliedCode;
+  const promoError = promo.error;
+  const promoLoading = promo.loading;
+  const giftCardCode = giftCard.code;
+  const giftCardDiscount = giftCard.discount;
+  const giftCardApplied = giftCard.appliedCode;
+  const giftCardError = giftCard.error;
+  const giftCardLoading = giftCard.loading;
+
+  // Apply/remove shortcuts using the hook actions
+  const applyPromoCode = promoActions.apply;
+  const removePromoCode = promoActions.remove;
+  const applyGiftCard = giftCardActions.apply;
+  const removeGiftCard = giftCardActions.remove;
+
+  // Re-validate promo when cart subtotal changes
+  useEffect(() => {
+    if (promoApplied && subtotal > 0) {
+      fetch('/api/promo/validate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: promoCode, subtotal }),
-      });
-      
-      const data = await res.json();
-      
-      if (data.valid) {
-        setPromoDiscount(data.discount);
-        setPromoApplied(data.code);
-        setPromoError('');
-        toast.success('Promo code applied successfully');
-      } else {
-        setPromoError(data.error || t('checkout.invalidPromoCode'));
-        setPromoDiscount(0);
-        setPromoApplied(null);
-        toast.error('Invalid promo code');
-      }
-    } catch {
-      setPromoError(t('checkout.validationError'));
-      toast.error('Failed to validate promo code');
-    } finally {
-      setPromoLoading(false);
+        body: JSON.stringify({ code: promoApplied, subtotal }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (!data.valid) {
+            removePromoCode();
+          }
+        })
+        .catch(() => {
+          // Keep existing discount on network error
+        });
     }
-  };
-
-  // Remove promo code
-  const removePromoCode = () => {
-    setPromoCode('');
-    setPromoDiscount(0);
-    setPromoApplied(null);
-    setPromoError('');
-  };
-
-  // Apply gift card
-  const applyGiftCard = async () => {
-    if (!giftCardCode.trim()) return;
-
-    setGiftCardLoading(true);
-    setGiftCardError('');
-
-    try {
-      const res = await fetch(`/api/gift-cards/balance?code=${encodeURIComponent(giftCardCode)}`);
-      const data = await res.json();
-
-      if (res.ok && data.balance > 0) {
-        // Calculate how much to apply (up to the remaining total)
-        const remainingTotal = subtotal - promoDiscount;
-        const discountAmount = Math.min(data.balance, remainingTotal);
-
-        setGiftCardDiscount(discountAmount);
-        setGiftCardApplied(giftCardCode);
-        setGiftCardError('');
-        toast.success(`Gift card applied: ${formatPrice(discountAmount)}`);
-      } else {
-        setGiftCardError(data.error || 'Invalid or expired gift card');
-        setGiftCardDiscount(0);
-        setGiftCardApplied(null);
-        toast.error('Invalid gift card');
-      }
-    } catch {
-      setGiftCardError('Failed to validate gift card');
-      toast.error('Failed to validate gift card');
-    } finally {
-      setGiftCardLoading(false);
-    }
-  };
-
-  // Remove gift card
-  const removeGiftCard = () => {
-    setGiftCardCode('');
-    setGiftCardDiscount(0);
-    setGiftCardApplied(null);
-    setGiftCardError('');
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [subtotal]);
 
   // Auto-fill from session when user is logged in
   useEffect(() => {
@@ -382,7 +450,7 @@ export default function CheckoutPage() {
       }
     } catch (error) {
       console.error('Payment error:', error);
-      toast.error('Something went wrong placing your order. Please try again.');
+      toast.error(t('toast.checkout.orderFailed'));
     } finally {
       setIsProcessing(false);
     }
@@ -417,7 +485,7 @@ export default function CheckoutPage() {
         </div>
 
         {/* Progress Steps */}
-        <div className="flex items-center justify-center mb-8" role="navigation" aria-label="Checkout progress">
+        <div className="flex items-center justify-center mb-8" role="navigation" aria-label={t('checkout.aria.checkoutProgress')}>
           <div className="flex items-center">
             {!session && !guestCheckout && (
               <>
@@ -663,16 +731,37 @@ export default function CheckoutPage() {
                       <label htmlFor="checkout-email" className="block text-sm font-medium text-gray-700 mb-1">
                         {t('checkout.email')} *
                       </label>
-                      <input
-                        id="checkout-email"
-                        type="email"
-                        value={contactInfo.email}
-                        onChange={(e) => setContactInfo({ ...contactInfo, email: e.target.value })}
-                        className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                        placeholder={t('auth.emailPlaceholder')}
-                        required
-                        aria-required="true"
-                      />
+                      <div className="relative">
+                        <input
+                          id="checkout-email"
+                          type="email"
+                          autoComplete="email"
+                          value={contactInfo.email}
+                          onChange={(e) => setContactInfo({ ...contactInfo, email: e.target.value })}
+                          className={`w-full px-4 py-3 pe-10 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 ${
+                            contactInfo.email && !isValidEmail(contactInfo.email) ? 'border-red-300' : contactInfo.email && isValidEmail(contactInfo.email) ? 'border-green-400' : 'border-gray-200'
+                          }`}
+                          placeholder={t('auth.emailPlaceholder')}
+                          required
+                          aria-required="true"
+                        />
+                        {contactInfo.email && (
+                          <span className="absolute end-3 top-1/2 -translate-y-1/2">
+                            {isValidEmail(contactInfo.email) ? (
+                              <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              </svg>
+                            ) : (
+                              <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                            )}
+                          </span>
+                        )}
+                      </div>
+                      {contactInfo.email && !isValidEmail(contactInfo.email) && (
+                        <p className="text-red-500 text-xs mt-1">{t('auth.invalidEmail') || 'Please enter a valid email address'}</p>
+                      )}
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -680,6 +769,7 @@ export default function CheckoutPage() {
                       </label>
                       <input
                         type="tel"
+                        autoComplete="tel"
                         value={contactInfo.phone}
                         onChange={(e) => setContactInfo({ ...contactInfo, phone: e.target.value })}
                         className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
@@ -706,7 +796,7 @@ export default function CheckoutPage() {
                     </button>
                     <button
                       onClick={() => setCurrentStep('shipping')}
-                      disabled={!contactInfo.email}
+                      disabled={!contactInfo.email || !isValidEmail(contactInfo.email)}
                       className="px-6 py-3 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {t('checkout.continueToShipping')}
@@ -723,7 +813,7 @@ export default function CheckoutPage() {
                     <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
                       <div className="flex items-center gap-3">
                         {session.user.image ? (
-                          <Image src={session.user.image} alt="" width={40} height={40} className="w-10 h-10 rounded-full" unoptimized />
+                          <Image src={session.user.image} alt={session.user.name || 'Profile'} width={40} height={40} className="w-10 h-10 rounded-full" unoptimized />
                         ) : (
                           <div className="w-10 h-10 bg-green-200 rounded-full flex items-center justify-center">
                             <span className="text-green-700 font-semibold">
@@ -735,7 +825,7 @@ export default function CheckoutPage() {
                           <p className="font-medium text-green-900">{session.user.name || session.user.email}</p>
                           <p className="text-sm text-green-700">{session.user.email}</p>
                         </div>
-                        <span className="ml-auto px-2 py-1 bg-green-200 text-green-800 text-xs font-medium rounded">
+                        <span className="ms-auto px-2 py-1 bg-green-200 text-green-800 text-xs font-medium rounded">
                           {t('checkout.loggedIn')}
                         </span>
                       </div>
@@ -752,8 +842,10 @@ export default function CheckoutPage() {
                         <input
                           id="shipping-firstName"
                           type="text"
+                          autoComplete="shipping given-name"
                           value={shippingInfo.firstName}
                           onChange={(e) => { setShippingInfo({ ...shippingInfo, firstName: e.target.value }); clearShippingError('firstName'); }}
+                          onBlur={(e) => validateShippingField('firstName', e.target.value)}
                           className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 ${shippingErrors.firstName ? 'border-red-500' : 'border-gray-200'}`}
                           required
                           aria-required="true"
@@ -769,8 +861,10 @@ export default function CheckoutPage() {
                         <input
                           id="shipping-lastName"
                           type="text"
+                          autoComplete="shipping family-name"
                           value={shippingInfo.lastName}
                           onChange={(e) => { setShippingInfo({ ...shippingInfo, lastName: e.target.value }); clearShippingError('lastName'); }}
+                          onBlur={(e) => validateShippingField('lastName', e.target.value)}
                           className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 ${shippingErrors.lastName ? 'border-red-500' : 'border-gray-200'}`}
                           required
                           aria-required="true"
@@ -819,6 +913,7 @@ export default function CheckoutPage() {
                       </label>
                       <input
                         type="text"
+                        autoComplete="shipping address-line2"
                         value={shippingInfo.apartment}
                         onChange={(e) => setShippingInfo({ ...shippingInfo, apartment: e.target.value })}
                         className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
@@ -833,8 +928,10 @@ export default function CheckoutPage() {
                         <input
                           id="shipping-city"
                           type="text"
+                          autoComplete="shipping address-level2"
                           value={shippingInfo.city}
                           onChange={(e) => { setShippingInfo({ ...shippingInfo, city: e.target.value }); clearShippingError('city'); }}
+                          onBlur={(e) => validateShippingField('city', e.target.value)}
                           className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 ${shippingErrors.city ? 'border-red-500' : 'border-gray-200'}`}
                           required
                           aria-required="true"
@@ -887,8 +984,10 @@ export default function CheckoutPage() {
                           </label>
                           <input
                             type="text"
+                            autoComplete="shipping postal-code"
                             value={shippingInfo.postalCode}
                             onChange={(e) => { setShippingInfo({ ...shippingInfo, postalCode: e.target.value.toUpperCase() }); clearShippingError('postalCode'); }}
+                            onBlur={(e) => validateShippingField('postalCode', e.target.value)}
                             className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 ${shippingErrors.postalCode ? 'border-red-500' : 'border-gray-200'}`}
                             placeholder={addressFormat.postalCodePlaceholder || ''}
                             required={addressFormat.postalCodeRequired}
@@ -1046,11 +1145,14 @@ export default function CheckoutPage() {
                             </label>
                             <input
                               type="text"
+                              autoComplete="billing given-name"
                               value={billingInfo.firstName}
-                              onChange={(e) => setBillingInfo({ ...billingInfo, firstName: e.target.value })}
-                              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                              onChange={(e) => { setBillingInfo({ ...billingInfo, firstName: e.target.value }); clearBillingError('firstName'); }}
+                              onBlur={(e) => validateBillingField('firstName', e.target.value)}
+                              className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 ${billingErrors.firstName ? 'border-red-500' : 'border-gray-200'}`}
                               required
                             />
+                            <FormError error={billingErrors.firstName} />
                           </div>
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -1058,11 +1160,14 @@ export default function CheckoutPage() {
                             </label>
                             <input
                               type="text"
+                              autoComplete="billing family-name"
                               value={billingInfo.lastName}
-                              onChange={(e) => setBillingInfo({ ...billingInfo, lastName: e.target.value })}
-                              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                              onChange={(e) => { setBillingInfo({ ...billingInfo, lastName: e.target.value }); clearBillingError('lastName'); }}
+                              onBlur={(e) => validateBillingField('lastName', e.target.value)}
+                              className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 ${billingErrors.lastName ? 'border-red-500' : 'border-gray-200'}`}
                               required
                             />
+                            <FormError error={billingErrors.lastName} />
                           </div>
                         </div>
                         <div>
@@ -1071,11 +1176,14 @@ export default function CheckoutPage() {
                           </label>
                           <input
                             type="text"
+                            autoComplete="billing street-address"
                             value={billingInfo.address}
-                            onChange={(e) => setBillingInfo({ ...billingInfo, address: e.target.value })}
-                            className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                            onChange={(e) => { setBillingInfo({ ...billingInfo, address: e.target.value }); clearBillingError('address'); }}
+                            onBlur={(e) => validateBillingField('address', e.target.value)}
+                            className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 ${billingErrors.address ? 'border-red-500' : 'border-gray-200'}`}
                             required
                           />
+                          <FormError error={billingErrors.address} />
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -1083,6 +1191,7 @@ export default function CheckoutPage() {
                           </label>
                           <input
                             type="text"
+                            autoComplete="billing address-line2"
                             value={billingInfo.apartment}
                             onChange={(e) => setBillingInfo({ ...billingInfo, apartment: e.target.value })}
                             className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
@@ -1095,11 +1204,14 @@ export default function CheckoutPage() {
                             </label>
                             <input
                               type="text"
+                              autoComplete="billing address-level2"
                               value={billingInfo.city}
-                              onChange={(e) => setBillingInfo({ ...billingInfo, city: e.target.value })}
-                              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                              onChange={(e) => { setBillingInfo({ ...billingInfo, city: e.target.value }); clearBillingError('city'); }}
+                              onBlur={(e) => validateBillingField('city', e.target.value)}
+                              className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 ${billingErrors.city ? 'border-red-500' : 'border-gray-200'}`}
                               required
                             />
+                            <FormError error={billingErrors.city} />
                           </div>
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -1123,12 +1235,15 @@ export default function CheckoutPage() {
                             </label>
                             <input
                               type="text"
+                              autoComplete="billing postal-code"
                               value={billingInfo.postalCode}
-                              onChange={(e) => setBillingInfo({ ...billingInfo, postalCode: e.target.value.toUpperCase() })}
-                              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                              onChange={(e) => { setBillingInfo({ ...billingInfo, postalCode: e.target.value.toUpperCase() }); clearBillingError('postalCode'); }}
+                              onBlur={(e) => validateBillingField('postalCode', e.target.value)}
+                              className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 ${billingErrors.postalCode ? 'border-red-500' : 'border-gray-200'}`}
                               placeholder="H2X 1Y4"
                               required
                             />
+                            <FormError error={billingErrors.postalCode} />
                           </div>
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -1221,7 +1336,7 @@ export default function CheckoutPage() {
                       {/* Credit Card */}
                       <button
                         onClick={() => setSelectedPaymentMethod('credit_card')}
-                        className={`w-full flex items-center gap-4 px-4 py-4 rounded-lg border-2 transition-colors text-left ${
+                        className={`w-full flex items-center gap-4 px-4 py-4 rounded-lg border-2 transition-colors text-start ${
                           selectedPaymentMethod === 'credit_card'
                             ? 'border-orange-500 bg-orange-50'
                             : 'border-gray-200 hover:border-gray-300'
@@ -1257,7 +1372,7 @@ export default function CheckoutPage() {
                       {/* Interac */}
                       <button
                         onClick={() => setSelectedPaymentMethod('interac')}
-                        className={`w-full flex items-center gap-4 px-4 py-4 rounded-lg border-2 transition-colors text-left ${
+                        className={`w-full flex items-center gap-4 px-4 py-4 rounded-lg border-2 transition-colors text-start ${
                           selectedPaymentMethod === 'interac'
                             ? 'border-orange-500 bg-orange-50'
                             : 'border-gray-200 hover:border-gray-300'
@@ -1280,7 +1395,7 @@ export default function CheckoutPage() {
                       {/* PayPal */}
                       <button
                         onClick={() => setSelectedPaymentMethod('paypal')}
-                        className={`w-full flex items-center gap-4 px-4 py-4 rounded-lg border-2 transition-colors text-left ${
+                        className={`w-full flex items-center gap-4 px-4 py-4 rounded-lg border-2 transition-colors text-start ${
                           selectedPaymentMethod === 'paypal'
                             ? 'border-orange-500 bg-orange-50'
                             : 'border-gray-200 hover:border-gray-300'
@@ -1303,7 +1418,7 @@ export default function CheckoutPage() {
                       {/* Apple Pay */}
                       <button
                         onClick={() => setSelectedPaymentMethod('apple_pay')}
-                        className={`w-full flex items-center gap-4 px-4 py-4 rounded-lg border-2 transition-colors text-left ${
+                        className={`w-full flex items-center gap-4 px-4 py-4 rounded-lg border-2 transition-colors text-start ${
                           selectedPaymentMethod === 'apple_pay'
                             ? 'border-orange-500 bg-orange-50'
                             : 'border-gray-200 hover:border-gray-300'
@@ -1326,7 +1441,7 @@ export default function CheckoutPage() {
                       {/* Google Pay */}
                       <button
                         onClick={() => setSelectedPaymentMethod('google_pay')}
-                        className={`w-full flex items-center gap-4 px-4 py-4 rounded-lg border-2 transition-colors text-left ${
+                        className={`w-full flex items-center gap-4 px-4 py-4 rounded-lg border-2 transition-colors text-start ${
                           selectedPaymentMethod === 'google_pay'
                             ? 'border-orange-500 bg-orange-50'
                             : 'border-gray-200 hover:border-gray-300'
@@ -1404,7 +1519,7 @@ export default function CheckoutPage() {
                       {item.image && (
                         <Image src={item.image} alt={item.name} width={64} height={64} className="w-full h-full object-cover rounded-lg" unoptimized />
                       )}
-                      <span className="absolute -top-2 -right-2 w-5 h-5 bg-gray-500 text-white text-xs rounded-full flex items-center justify-center">
+                      <span className="absolute -top-2 -end-2 w-5 h-5 bg-gray-500 text-white text-xs rounded-full flex items-center justify-center">
                         {item.quantity}
                       </span>
                     </div>
@@ -1443,7 +1558,7 @@ export default function CheckoutPage() {
                       <input
                         type="text"
                         value={promoCode}
-                        onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                        onChange={(e) => promoActions.setCode(e.target.value.toUpperCase())}
                         placeholder={t('cart.promoCode')}
                         className="flex-grow px-4 py-2 border border-gray-200 rounded-lg text-sm uppercase"
                         onKeyDown={(e) => e.key === 'Enter' && applyPromoCode()}
@@ -1489,8 +1604,8 @@ export default function CheckoutPage() {
                       <input
                         type="text"
                         value={giftCardCode}
-                        onChange={(e) => setGiftCardCode(e.target.value.toUpperCase())}
-                        placeholder="Gift Card (XXXX-XXXX-XXXX-XXXX)"
+                        onChange={(e) => giftCardActions.setCode(e.target.value.toUpperCase())}
+                        placeholder={t('checkout.placeholderGiftCard')}
                         className="flex-grow px-4 py-2 border border-gray-200 rounded-lg text-sm uppercase font-mono"
                         maxLength={19}
                         onKeyDown={(e) => e.key === 'Enter' && applyGiftCard()}
@@ -1514,7 +1629,7 @@ export default function CheckoutPage() {
               <div className="space-y-3 border-t border-gray-200 pt-4">
                 <div className="flex justify-between">
                   <span className="text-gray-600">{t('cart.subtotal')}</span>
-                  <div className="text-right">
+                  <div className="text-end">
                     <span className="font-medium">{formatPrice(subtotal)}</span>
                     {currency.code !== 'CAD' && (
                       <span className="text-xs text-gray-500 block">
@@ -1552,7 +1667,7 @@ export default function CheckoutPage() {
 
                 <div className="flex justify-between">
                   <span className="text-gray-600">{t('cart.shipping')}</span>
-                  <div className="text-right">
+                  <div className="text-end">
                     {shippingCalc.isFree ? (
                       <span className="text-green-600 font-medium">{t('cart.free')}</span>
                     ) : (
@@ -1586,7 +1701,7 @@ export default function CheckoutPage() {
                 
                 <div className="flex justify-between text-lg font-bold pt-3 border-t border-gray-200">
                   <span>{t('cart.total')}</span>
-                  <div className="text-right">
+                  <div className="text-end">
                     <span>{formatPrice(totalCAD)}</span>
                     {currency.code !== 'CAD' && (
                       <span className="text-sm text-gray-500 font-normal block">

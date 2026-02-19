@@ -4,7 +4,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 
 interface NotificationPreferences {
@@ -22,6 +22,7 @@ interface NotificationPreferences {
 export default function NotificationPreferencesPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const { t } = useI18n();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [preferences, setPreferences] = useState<NotificationPreferences>({
@@ -67,7 +68,7 @@ export default function NotificationPreferencesPage() {
       }
     } catch (error) {
       console.error('Error fetching preferences:', error);
-      toast.error('Failed to load notification preferences');
+      toast.error(t('toast.notifications.loadFailed'));
     } finally {
       setIsLoading(false);
     }
@@ -90,13 +91,13 @@ export default function NotificationPreferencesPage() {
       });
 
       if (res.ok) {
-        toast.success('Notification preferences saved successfully');
+        toast.success(t('toast.notifications.saved'));
       } else {
-        toast.error('Failed to save notification preferences');
+        toast.error(t('toast.notifications.saveFailed'));
       }
     } catch (error) {
       console.error('Error saving preferences:', error);
-      toast.error('Something went wrong. Please try again.');
+      toast.error(t('toast.error.generic'));
     } finally {
       setIsSaving(false);
     }
@@ -122,13 +123,13 @@ export default function NotificationPreferencesPage() {
       });
 
       if (res.ok) {
-        toast.success('Unsubscribed from all marketing communications');
+        toast.success(t('toast.notifications.unsubscribed'));
       } else {
-        toast.error('Failed to unsubscribe');
+        toast.error(t('toast.notifications.unsubscribeFailed'));
       }
     } catch (error) {
       console.error('Error unsubscribing:', error);
-      toast.error('Something went wrong. Please try again.');
+      toast.error(t('toast.error.generic'));
     } finally {
       setIsSaving(false);
     }
@@ -164,8 +165,8 @@ export default function NotificationPreferencesPage() {
               </svg>
             </div>
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold">Notification Preferences</h1>
-              <p className="text-neutral-400 mt-1">Manage your email and communication preferences</p>
+              <h1 className="text-2xl md:text-3xl font-bold">{t('account.notificationsPage.title')}</h1>
+              <p className="text-neutral-400 mt-1">{t('account.notificationsPage.subtitle')}</p>
             </div>
           </div>
         </div>
@@ -175,89 +176,89 @@ export default function NotificationPreferencesPage() {
         <div className="bg-white rounded-xl shadow-sm border border-neutral-200 overflow-hidden">
           {/* Orders Section */}
           <div className="p-6 border-b border-neutral-200">
-            <h2 className="text-lg font-bold mb-4">Order Notifications</h2>
+            <h2 className="text-lg font-bold mb-4">{t('account.notificationsPage.orderNotifications')}</h2>
             <NotificationToggle
               enabled={preferences.orderUpdates}
               onToggle={() => handleToggle('orderUpdates')}
-              title="Order Updates"
-              description="Receive notifications about order confirmations, shipping updates, and delivery confirmations"
+              title={t('account.notificationLabels.orderUpdates')}
+              description={t('account.notificationsPage.orderUpdatesDesc')}
             />
           </div>
 
           {/* Marketing Section */}
           <div className="p-6 border-b border-neutral-200">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold">Marketing Communications</h2>
+              <h2 className="text-lg font-bold">{t('account.notificationsPage.marketingCommunications')}</h2>
               <button
                 onClick={handleUnsubscribeAll}
                 disabled={isSaving}
                 className="text-sm text-red-600 hover:text-red-700 font-medium"
               >
-                Unsubscribe from all
+                {t('account.notificationsPage.unsubscribeAll')}
               </button>
             </div>
             <div className="space-y-4">
               <NotificationToggle
                 enabled={preferences.promotions}
                 onToggle={() => handleToggle('promotions')}
-                title="Promotions & Special Offers"
-                description="Get notified about exclusive deals, discounts, and limited-time offers"
+                title={t('account.notificationLabels.promotions')}
+                description={t('account.notificationsPage.promotionsDesc')}
               />
               <NotificationToggle
                 enabled={preferences.newsletter}
                 onToggle={() => handleToggle('newsletter')}
-                title="Newsletter"
-                description="Receive our newsletter with product updates, health tips, and industry news"
+                title={t('account.notificationLabels.newsletter')}
+                description={t('account.notificationsPage.newsletterDesc')}
               />
               <NotificationToggle
                 enabled={preferences.weeklyDigest}
                 onToggle={() => handleToggle('weeklyDigest')}
-                title="Weekly Digest"
-                description="Get a weekly summary of new products, articles, and recommendations"
+                title={t('account.notificationLabels.weeklyDigest')}
+                description={t('account.notificationsPage.weeklyDigestDesc')}
               />
             </div>
           </div>
 
           {/* Product Alerts Section */}
           <div className="p-6 border-b border-neutral-200">
-            <h2 className="text-lg font-bold mb-4">Product Alerts</h2>
+            <h2 className="text-lg font-bold mb-4">{t('account.notificationsPage.productAlerts')}</h2>
             <div className="space-y-4">
               <NotificationToggle
                 enabled={preferences.priceDrops}
                 onToggle={() => handleToggle('priceDrops')}
-                title="Price Drop Alerts"
-                description="Get notified when products on your wishlist go on sale"
+                title={t('account.notificationLabels.priceDropAlerts')}
+                description={t('account.notificationsPage.priceDropDesc')}
               />
               <NotificationToggle
                 enabled={preferences.stockAlerts}
                 onToggle={() => handleToggle('stockAlerts')}
-                title="Back-in-Stock Alerts"
-                description="Receive notifications when out-of-stock products become available again"
+                title={t('account.notificationLabels.backInStockAlerts')}
+                description={t('account.notificationsPage.stockAlertDesc')}
               />
               <NotificationToggle
                 enabled={preferences.productReviews}
                 onToggle={() => handleToggle('productReviews')}
-                title="Review Reminders"
-                description="Get reminders to review products you have purchased"
+                title={t('account.notificationLabels.reviewReminders')}
+                description={t('account.notificationsPage.reviewRemindersDesc')}
               />
             </div>
           </div>
 
           {/* Rewards Section */}
           <div className="p-6">
-            <h2 className="text-lg font-bold mb-4">Rewards & Loyalty</h2>
+            <h2 className="text-lg font-bold mb-4">{t('account.notificationsPage.rewardsAndLoyalty')}</h2>
             <div className="space-y-4">
               <NotificationToggle
                 enabled={preferences.birthdayOffers}
                 onToggle={() => handleToggle('birthdayOffers')}
-                title="Birthday Offers"
-                description="Receive special birthday discounts and rewards"
+                title={t('account.notificationLabels.birthdayOffers')}
+                description={t('account.notificationsPage.birthdayDesc')}
               />
               <NotificationToggle
                 enabled={preferences.loyaltyUpdates}
                 onToggle={() => handleToggle('loyaltyUpdates')}
-                title="Loyalty Program Updates"
-                description="Get notified about points earned, tier changes, and exclusive loyalty rewards"
+                title={t('account.notificationLabels.loyaltyUpdates')}
+                description={t('account.notificationsPage.loyaltyDesc')}
               />
             </div>
           </div>
@@ -273,10 +274,10 @@ export default function NotificationPreferencesPage() {
             {isSaving ? (
               <>
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                Saving...
+                {t('common.saving')}
               </>
             ) : (
-              'Save Preferences'
+              t('account.notificationsPage.savePreferences')
             )}
           </button>
         </div>
@@ -288,10 +289,9 @@ export default function NotificationPreferencesPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <div>
-              <p className="text-sm text-blue-900 font-medium">About Your Preferences</p>
+              <p className="text-sm text-blue-900 font-medium">{t('account.notificationsPage.aboutPreferences')}</p>
               <p className="text-sm text-blue-700 mt-1">
-                You can change these settings at any time. Order notifications are highly recommended to stay updated on your purchases.
-                Note that some transactional emails (password resets, account security) will always be sent regardless of these settings.
+                {t('account.notificationsPage.aboutPreferencesDesc')}
               </p>
             </div>
           </div>

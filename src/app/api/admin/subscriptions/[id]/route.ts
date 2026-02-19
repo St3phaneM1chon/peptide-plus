@@ -9,20 +9,12 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { auth } from '@/lib/auth-config';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 
 // GET /api/admin/subscriptions/[id] - Get subscription detail
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const GET = withAdminGuard(async (_request, { session, params }) => {
   try {
-    const session = await auth();
-    if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role || '')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { id } = await params;
+    const id = params!.id;
 
     const subscription = await prisma.subscription.findUnique({
       where: { id },
@@ -98,20 +90,12 @@ export async function GET(
       { status: 500 }
     );
   }
-}
+});
 
 // PATCH /api/admin/subscriptions/[id] - Update subscription
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const PATCH = withAdminGuard(async (request, { session, params }) => {
   try {
-    const session = await auth();
-    if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role || '')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { id } = await params;
+    const id = params!.id;
     const body = await request.json();
 
     const existing = await prisma.subscription.findUnique({
@@ -126,7 +110,8 @@ export async function PATCH(
 
     // Status changes: pause, resume, cancel
     if (body.status !== undefined) {
-      const validStatuses = ['ACTIVE', 'PAUSED', 'CANCELLED'];
+      // BE-PAY-07: Added PENDING_PAYMENT as valid status
+      const validStatuses = ['ACTIVE', 'PAUSED', 'CANCELLED', 'PENDING_PAYMENT'];
       if (!validStatuses.includes(body.status)) {
         return NextResponse.json(
           { error: `Invalid status. Must be one of: ${validStatuses.join(', ')}` },
@@ -217,20 +202,12 @@ export async function PATCH(
       { status: 500 }
     );
   }
-}
+});
 
 // DELETE /api/admin/subscriptions/[id] - Cancel subscription
-export async function DELETE(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const DELETE = withAdminGuard(async (_request, { session, params }) => {
   try {
-    const session = await auth();
-    if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role || '')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { id } = await params;
+    const id = params!.id;
 
     const existing = await prisma.subscription.findUnique({
       where: { id },
@@ -265,4 +242,4 @@ export async function DELETE(
       { status: 500 }
     );
   }
-}
+});

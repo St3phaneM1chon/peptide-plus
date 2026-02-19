@@ -1,35 +1,72 @@
 export const dynamic = 'force-dynamic';
 
-import { NextResponse } from 'next/server';
-import { auth } from '@/lib/auth-config';
+import { NextRequest, NextResponse } from 'next/server';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
+
+const CAMPAIGNS_KEY = 'newsletter_campaigns';
+
+interface Campaign {
+  id: string;
+  subject: string;
+  content: string;
+  status: 'DRAFT' | 'SCHEDULED' | 'SENT';
+  scheduledFor?: string;
+  sentAt?: string;
+  recipientCount: number;
+  openRate?: number;
+  clickRate?: number;
+  createdAt: string;
+}
+
+/**
+ * Helper to load campaigns from the SiteSetting key-value store.
+ * This is a temporary solution until a dedicated NewsletterCampaign model is added.
+ */
+async function loadCampaigns(): Promise<Campaign[]> {
+  const entry = await prisma.siteSetting.findUnique({
+    where: { key: CAMPAIGNS_KEY },
+  });
+  if (!entry) return [];
+  try {
+    return JSON.parse(entry.value) as Campaign[];
+  } catch {
+    return [];
+  }
+}
+
+async function saveCampaigns(campaigns: Campaign[], userId: string): Promise<void> {
+  await prisma.siteSetting.upsert({
+    where: { key: CAMPAIGNS_KEY },
+    update: {
+      value: JSON.stringify(campaigns),
+      updatedBy: userId,
+    },
+    create: {
+      key: CAMPAIGNS_KEY,
+      value: JSON.stringify(campaigns),
+      type: 'json',
+      module: 'newsletter',
+      updatedBy: userId,
+    },
+  });
+}
 
 /**
  * GET /api/admin/newsletter/campaigns
  * List newsletter campaigns
- *
- * Note: There is no NewsletterCampaign Prisma model yet.
- * This returns an empty array until the model is added.
- * The admin page expects: { campaigns: Campaign[] }
- * where Campaign has: id, subject, content, status, scheduledFor, sentAt,
- *   recipientCount, openRate, clickRate
  */
-export async function GET() {
+export const GET = withAdminGuard(async (_request, { session: _session }) => {
   try {
-    const session = await auth();
-    if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const [campaigns, totalActive] = await Promise.all([
+      loadCampaigns(),
+      prisma.newsletterSubscriber.count({
+        where: { isActive: true },
+      }),
+    ]);
 
-    // Provide subscriber stats alongside campaigns for context
-    const totalActive = await prisma.newsletterSubscriber.count({
-      where: { isActive: true },
-    });
-
-    // TODO: Replace with real campaign data once NewsletterCampaign model is added to schema
-    // For now, return empty campaigns array - the page handles this gracefully
     return NextResponse.json({
-      campaigns: [],
+      campaigns,
       meta: {
         totalActiveSubscribers: totalActive,
       },
@@ -41,4 +78,57 @@ export async function GET() {
       { status: 500 }
     );
   }
-}
+});
+
+/**
+ * POST /api/admin/newsletter/campaigns
+ * Create a new campaign (draft, scheduled, or send now)
+ */
+export const POST = withAdminGuard(async (request: NextRequest, { session }) => {
+  try {
+    const body = await request.json();
+    const { subject, content, status } = body;
+
+    if (!subject || !content) {
+      return NextResponse.json(
+        { error: 'Subject and content are required' },
+        { status: 400 }
+      );
+    }
+
+    const validStatuses = ['DRAFT', 'SCHEDULED', 'SENT'];
+    const campaignStatus = validStatuses.includes(status) ? status : 'DRAFT';
+
+    // Count active subscribers for recipientCount
+    const recipientCount = await prisma.newsletterSubscriber.count({
+      where: { isActive: true },
+    });
+
+    const now = new Date().toISOString();
+    const newCampaign: Campaign = {
+      id: `campaign-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      subject,
+      content,
+      status: campaignStatus,
+      scheduledFor: body.scheduledFor || undefined,
+      sentAt: campaignStatus === 'SENT' ? now : undefined,
+      recipientCount: campaignStatus === 'SENT' ? recipientCount : 0,
+      createdAt: now,
+    };
+
+    const campaigns = await loadCampaigns();
+    campaigns.unshift(newCampaign);
+    await saveCampaigns(campaigns, session.user.id);
+
+    return NextResponse.json(
+      { success: true, campaign: newCampaign },
+      { status: 201 }
+    );
+  } catch (error) {
+    console.error('Create newsletter campaign error:', error);
+    return NextResponse.json(
+      { error: 'Error creating campaign' },
+      { status: 500 }
+    );
+  }
+});

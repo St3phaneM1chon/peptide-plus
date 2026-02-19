@@ -8,6 +8,7 @@
 import { CartProvider } from '@/contexts/CartContext';
 import { CurrencyProvider } from '@/contexts/CurrencyContext';
 import { Header, Footer, DisclaimerModal } from '@/components/shop';
+import SkipToContent from '@/components/ui/SkipToContent';
 
 export default function PublicLayout({
   children,
@@ -18,8 +19,9 @@ export default function PublicLayout({
     <CurrencyProvider>
       <CartProvider>
         <div className="min-h-screen flex flex-col bg-white">
+          <SkipToContent />
           <Header />
-          <main className="flex-1">{children}</main>
+          <main id="main-content" className="flex-1" tabIndex={-1}>{children}</main>
           <Footer />
           <DisclaimerModal />
         </div>

@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 
 interface WishlistCollection {
   id: string;
@@ -28,7 +28,7 @@ export default function AddToWishlistButton({
 }: AddToWishlistButtonProps) {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const { t } = useTranslations();
+  const { t } = useI18n();
   const [collections, setCollections] = useState<WishlistCollection[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
@@ -205,22 +205,22 @@ export default function AddToWishlistButton({
         </button>
 
         {showDropdown && collections.length > 1 && (
-          <div className="absolute top-full right-0 mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden z-50">
+          <div className="absolute top-full end-0 mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden z-50">
             <div className="p-2 bg-gray-50 border-b">
-              <p className="text-xs font-semibold text-gray-600 uppercase">Add to wishlist</p>
+              <p className="text-xs font-semibold text-gray-600 uppercase">{t('shop.addToWishlist')}</p>
             </div>
             <div className="max-h-64 overflow-y-auto">
               {collections.map((collection) => (
                 <button
                   key={collection.id}
                   onClick={() => addToWishlist(collection.id)}
-                  className="w-full px-4 py-3 text-left hover:bg-orange-50 transition-colors flex items-center justify-between"
+                  className="w-full px-4 py-3 text-start hover:bg-orange-50 transition-colors flex items-center justify-between"
                 >
                   <div>
                     <div className="font-medium text-sm text-gray-900">
                       {collection.name}
                       {collection.isDefault && (
-                        <span className="ml-2 text-xs text-gray-500">(Default)</span>
+                        <span className="ms-2 text-xs text-gray-500">{t('account.wishlistModals.default')}</span>
                       )}
                     </div>
                     <div className="text-xs text-gray-500">
@@ -241,7 +241,7 @@ export default function AddToWishlistButton({
                 }}
                 className="w-full px-3 py-2 text-sm text-orange-600 hover:bg-orange-50 rounded transition-colors"
               >
-                Manage wishlists
+                {t('account.wishlistModals.manageWishlists')}
               </button>
             </div>
           </div>
@@ -278,7 +278,7 @@ export default function AddToWishlistButton({
             />
           </svg>
         )}
-        {isInAnyWishlist ? 'Saved' : t('shop.addToWishlist') || 'Add to Wishlist'}
+        {isInAnyWishlist ? t('account.wishlistModals.saved') : t('shop.addToWishlist')}
         {collections.length > 1 && (
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -287,20 +287,20 @@ export default function AddToWishlistButton({
       </button>
 
       {showDropdown && collections.length > 1 && (
-        <div className="absolute top-full left-0 mt-2 w-full min-w-[250px] bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden z-50">
+        <div className="absolute top-full start-0 mt-2 w-full min-w-[250px] bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden z-50">
           <div className="p-2 bg-gray-50 border-b">
-            <p className="text-xs font-semibold text-gray-600 uppercase">Choose a wishlist</p>
+            <p className="text-xs font-semibold text-gray-600 uppercase">{t('account.wishlistModals.chooseWishlist')}</p>
           </div>
           <div className="max-h-64 overflow-y-auto">
             {collections.map((collection) => (
               <button
                 key={collection.id}
                 onClick={() => addToWishlist(collection.id)}
-                className="w-full px-4 py-3 text-left hover:bg-orange-50 transition-colors"
+                className="w-full px-4 py-3 text-start hover:bg-orange-50 transition-colors"
               >
                 <div className="font-medium text-sm text-gray-900">
                   {collection.name}
-                  {collection.isDefault && <span className="ml-2 text-xs text-gray-500">(Default)</span>}
+                  {collection.isDefault && <span className="ms-2 text-xs text-gray-500">(Default)</span>}
                 </div>
                 <div className="text-xs text-gray-500">
                   {collection._count.items} {collection._count.items === 1 ? 'item' : 'items'}

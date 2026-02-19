@@ -1,33 +1,49 @@
 'use client';
 
-import { useEffect, useState, Suspense } from 'react';
+import { useEffect, useState, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Breadcrumbs from '@/components/ui/Breadcrumbs';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 import { useCart } from '@/contexts/CartContext';
 
 function CheckoutSuccessContent() {
-  const { t } = useTranslations();
+  const { t } = useI18n();
   const searchParams = useSearchParams();
   const { clearCart } = useCart();
   const [orderNumber, setOrderNumber] = useState<string>('');
+  const [orderId, setOrderId] = useState<string>('');
+  const hasCleared = useRef(false);
 
   useEffect(() => {
-    // Vider le panier après paiement réussi
-    clearCart();
+    // Clear cart only once, silently (no toast)
+    if (!hasCleared.current) {
+      hasCleared.current = true;
+      clearCart();
+    }
 
-    // Récupérer le session_id de Stripe si disponible
+    // Fetch real order info from session_id
     const sessionId = searchParams.get('session_id');
-
     if (sessionId) {
-      // Format: PP-YYYY-XXXXXX
-      setOrderNumber(`PP-${new Date().getFullYear()}-${sessionId.slice(-6).toUpperCase()}`);
+      fetch(`/api/orders/by-session?session_id=${sessionId}`)
+        .then((res) => res.ok ? res.json() : null)
+        .then((data) => {
+          if (data?.orderNumber) {
+            setOrderNumber(data.orderNumber);
+            setOrderId(data.orderId || '');
+          } else {
+            // Fallback: use session_id suffix
+            setOrderNumber(`PP-${new Date().getFullYear()}-${sessionId.slice(-6).toUpperCase()}`);
+          }
+        })
+        .catch(() => {
+          setOrderNumber(`PP-${new Date().getFullYear()}-${sessionId.slice(-6).toUpperCase()}`);
+        });
     } else {
-      // Générer un numéro de commande par défaut
       setOrderNumber(`PP-${new Date().getFullYear()}-${Date.now().toString(36).toUpperCase().slice(-6)}`);
     }
-  }, [searchParams, clearCart]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -58,7 +74,7 @@ function CheckoutSuccessContent() {
           {/* Order Number */}
           <div className="bg-gray-50 rounded-lg p-4 mb-6">
             <p className="text-sm text-gray-500 mb-1">{t('checkout.orderNumber')}</p>
-            <p className="text-xl font-mono font-bold text-gray-900">{orderNumber}</p>
+            <p className="text-xl font-mono font-bold text-gray-900">{orderNumber || '...'}</p>
           </div>
 
           {/* Email Confirmation */}
@@ -67,7 +83,7 @@ function CheckoutSuccessContent() {
           </p>
 
           {/* What's Next */}
-          <div className="bg-orange-50 rounded-lg p-6 mb-8 text-left">
+          <div className="bg-orange-50 rounded-lg p-6 mb-8 text-start">
             <h3 className="font-semibold text-orange-900 mb-3">{t('checkout.whatNext')}</h3>
             <ul className="space-y-2 text-sm text-orange-800">
               <li className="flex items-start gap-2">
@@ -98,6 +114,14 @@ function CheckoutSuccessContent() {
 
           {/* Actions */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            {orderId && (
+              <Link
+                href={`/account/orders`}
+                className="px-6 py-3 bg-gray-100 text-gray-700 font-semibold rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                {t('checkout.viewOrders') || 'View My Orders'}
+              </Link>
+            )}
             <Link
               href="/"
               className="px-6 py-3 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 transition-colors"

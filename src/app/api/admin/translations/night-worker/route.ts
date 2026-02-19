@@ -12,23 +12,11 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth-config';
-import { UserRole } from '@/types';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import { processNightJobs, getQueueStats, cleanupJobs } from '@/lib/translation';
 
-export async function POST(request: NextRequest) {
+export const POST = withAdminGuard(async (request: NextRequest, { session }) => {
   try {
-    // Auth: either CRON_SECRET header or admin session
-    const cronSecret = request.headers.get('authorization')?.replace('Bearer ', '');
-    const isAuthorizedCron = cronSecret && process.env.CRON_SECRET && cronSecret === process.env.CRON_SECRET;
-
-    if (!isAuthorizedCron) {
-      const session = await auth();
-      if (!session?.user || (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER)) {
-        return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
-      }
-    }
-
     console.log('[NightWorker] Starting night translation processing...');
 
     // Process all pending Pass 2 and Pass 3 jobs
@@ -51,25 +39,27 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('[NightWorker] Error:', error);
+    // BE-SEC-04: Don't leak error details in production
     return NextResponse.json(
-      { error: 'Night worker failed', details: error instanceof Error ? error.message : String(error) },
+      { error: 'Night worker failed', ...(process.env.NODE_ENV === 'development' ? { details: error instanceof Error ? error.message : String(error) } : {}) },
       { status: 500 }
     );
   }
-}
+});
 
 /**
  * GET /api/admin/translations/night-worker
  * Returns queue stats for monitoring
  */
-export async function GET() {
+export const GET = withAdminGuard(async (_request: NextRequest, { session }) => {
   try {
     const stats = await getQueueStats();
     return NextResponse.json({ stats, timestamp: new Date().toISOString() });
   } catch (error) {
+    // BE-SEC-04: Don't leak error details in production
     return NextResponse.json(
-      { error: 'Failed to get stats', details: error instanceof Error ? error.message : String(error) },
+      { error: 'Failed to get stats', ...(process.env.NODE_ENV === 'development' ? { details: error instanceof Error ? error.message : String(error) } : {}) },
       { status: 500 }
     );
   }
-}
+});

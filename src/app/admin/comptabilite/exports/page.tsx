@@ -192,7 +192,7 @@ export default function ExportsPage() {
               setExportConfig(prev => ({ ...prev, format: format.id }));
               setActiveExport(format.id);
             }}
-            className={`p-4 rounded-xl border transition-all text-left ${
+            className={`p-4 rounded-xl border transition-all text-start ${
               exportConfig.format === format.id
                 ? 'bg-sky-600/20 border-sky-500'
                 : 'bg-neutral-800 border-neutral-700 hover:border-neutral-600'
@@ -346,13 +346,13 @@ export default function ExportsPage() {
         <table className="w-full">
           <thead className="bg-neutral-900/50">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-medium text-neutral-400 uppercase">{t('admin.exports.dateCol')}</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-neutral-400 uppercase">{t('admin.exports.typeCol')}</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-neutral-400 uppercase">{t('admin.exports.formatCol')}</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-neutral-400 uppercase">{t('admin.exports.periodCol')}</th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-neutral-400 uppercase">{t('admin.exports.recordsCol')}</th>
+              <th className="px-4 py-3 text-start text-xs font-medium text-neutral-400 uppercase">{t('admin.exports.dateCol')}</th>
+              <th className="px-4 py-3 text-start text-xs font-medium text-neutral-400 uppercase">{t('admin.exports.typeCol')}</th>
+              <th className="px-4 py-3 text-start text-xs font-medium text-neutral-400 uppercase">{t('admin.exports.formatCol')}</th>
+              <th className="px-4 py-3 text-start text-xs font-medium text-neutral-400 uppercase">{t('admin.exports.periodCol')}</th>
+              <th className="px-4 py-3 text-end text-xs font-medium text-neutral-400 uppercase">{t('admin.exports.recordsCol')}</th>
               <th className="px-4 py-3 text-center text-xs font-medium text-neutral-400 uppercase">{t('admin.exports.statusCol')}</th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-neutral-400 uppercase">{t('admin.exports.actionCol')}</th>
+              <th className="px-4 py-3 text-end text-xs font-medium text-neutral-400 uppercase">{t('admin.exports.actionCol')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-neutral-700">
@@ -364,7 +364,7 @@ export default function ExportsPage() {
                 <td className="px-4 py-3 text-white">{job.type}</td>
                 <td className="px-4 py-3 text-neutral-300">{job.format}</td>
                 <td className="px-4 py-3 text-neutral-300">{job.dateRange}</td>
-                <td className="px-4 py-3 text-right text-white">{job.records}</td>
+                <td className="px-4 py-3 text-end text-white">{job.records}</td>
                 <td className="px-4 py-3 text-center">
                   <span className={`px-2 py-1 rounded text-xs ${
                     job.status === 'COMPLETED' ? 'bg-green-900/30 text-green-400' :
@@ -374,7 +374,7 @@ export default function ExportsPage() {
                     {job.status === 'COMPLETED' ? t('admin.exports.statusCompleted') : job.status === 'PROCESSING' ? t('admin.exports.statusProcessing') : t('admin.exports.statusFailed')}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-right">
+                <td className="px-4 py-3 text-end">
                   {job.status === 'COMPLETED' && job.fileUrl && (
                     <a
                       href={job.fileUrl}

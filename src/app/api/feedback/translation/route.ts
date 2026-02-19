@@ -16,14 +16,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid rating' }, { status: 400 });
     }
 
+    // BE-SEC-03: Strip HTML from user-submitted text fields
+    // BE-SEC-05: Enforce length limits
+    const safeLocale = String(locale).replace(/<[^>]*>/g, '').slice(0, 10);
+    const safePage = String(page).replace(/<[^>]*>/g, '').slice(0, 500);
+    const safeComment = comment ? String(comment).replace(/<[^>]*>/g, '').slice(0, 1000) : undefined;
     const userAgent = request.headers.get('user-agent') || undefined;
 
     await prisma.translationFeedback.create({
       data: {
-        locale,
+        locale: safeLocale,
         rating,
-        comment: comment ? String(comment).slice(0, 1000) : undefined,
-        page: String(page).slice(0, 500),
+        comment: safeComment,
+        page: safePage,
         userAgent: userAgent?.slice(0, 500),
       },
     });

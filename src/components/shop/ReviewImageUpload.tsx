@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react';
 import Image from 'next/image';
 import { toast } from 'sonner';
+import { useI18n } from '@/i18n/client';
 
 interface ReviewImageUploadProps {
   onImagesChange: (files: File[]) => void;
@@ -10,6 +11,7 @@ interface ReviewImageUploadProps {
 }
 
 export default function ReviewImageUpload({ onImagesChange, maxImages = 3 }: ReviewImageUploadProps) {
+  const { t } = useI18n();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
   const [isDragging, setIsDragging] = useState(false);
@@ -167,8 +169,8 @@ export default function ReviewImageUpload({ onImagesChange, maxImages = 3 }: Rev
                   e.stopPropagation();
                   removeImage(index);
                 }}
-                className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
-                title="Remove image"
+                className="absolute top-1 end-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                title={t('shop.reviews.removeImage')}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

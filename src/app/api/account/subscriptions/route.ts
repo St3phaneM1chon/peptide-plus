@@ -10,6 +10,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { db } from '@/lib/db';
+import { validateCsrf } from '@/lib/csrf-middleware';
 
 const FREQUENCY_DISCOUNTS: Record<string, number> = {
   EVERY_2_MONTHS: 15,
@@ -74,6 +75,12 @@ export async function GET() {
 // POST — Create subscription
 export async function POST(request: NextRequest) {
   try {
+    // SECURITY (BE-SEC-15): CSRF protection for mutation endpoint
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const session = await auth();
     const user = await getUser(session as { user?: { email?: string | null } });
     if (!user) {
@@ -120,9 +127,24 @@ export async function POST(request: NextRequest) {
       unitPrice = Number(format.price);
     }
 
-    const daysUntilNext = FREQUENCY_DAYS[freq];
-    const nextDelivery = new Date();
-    nextDelivery.setDate(nextDelivery.getDate() + daysUntilNext);
+    // DI-63: Don't set nextDelivery until payment is confirmed and status becomes ACTIVE.
+    // BE-PAY-07: Subscription starts as PENDING_PAYMENT until recurring billing
+    // is confirmed via Stripe. The subscription should NOT grant product access
+    // or trigger deliveries until status is changed to ACTIVE by the payment
+    // confirmation webhook.
+    //
+    // TODO: Integrate with Stripe Subscriptions API:
+    // 1. Create or retrieve a Stripe Customer for this user
+    // 2. Create a Stripe Price for the product/format with the recurring interval
+    // 3. Create a Stripe Subscription with the price
+    // 4. Return Stripe's checkout URL for the customer to complete payment
+    // 5. On webhook `invoice.paid` / `customer.subscription.created`, set status to ACTIVE
+    //    and calculate nextDelivery based on FREQUENCY_DAYS[freq]
+    // 6. On webhook `customer.subscription.deleted`, set status to CANCELLED
+    // 7. On webhook `invoice.payment_failed`, set status to PAST_DUE
+    //
+    // Until Stripe recurring billing is integrated, subscriptions are created
+    // as PENDING_PAYMENT to prevent unbilled product access.
 
     const subscription = await db.subscription.create({
       data: {
@@ -135,8 +157,8 @@ export async function POST(request: NextRequest) {
         frequency: freq,
         discountPercent: FREQUENCY_DISCOUNTS[freq],
         unitPrice,
-        status: 'ACTIVE',
-        nextDelivery,
+        status: 'PENDING_PAYMENT', // BE-PAY-07: Not ACTIVE until billing confirmed
+        nextDelivery: new Date('9999-12-31'), // DI-63: Placeholder; recalculate when status becomes ACTIVE
       },
     });
 
@@ -152,6 +174,9 @@ export async function POST(request: NextRequest) {
         discountPercent: subscription.discountPercent,
         unitPrice: Number(subscription.unitPrice),
         status: subscription.status,
+        // BE-PAY-07: Inform client that payment setup is required
+        paymentRequired: true,
+        message: 'Subscription created. Payment setup required before activation.',
         nextDelivery: subscription.nextDelivery.toISOString(),
         createdAt: subscription.createdAt.toISOString(),
       },
@@ -165,6 +190,12 @@ export async function POST(request: NextRequest) {
 // PATCH — Pause/Resume/Cancel
 export async function PATCH(request: NextRequest) {
   try {
+    // SECURITY (BE-SEC-15): CSRF protection for mutation endpoint
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const session = await auth();
     const user = await getUser(session as { user?: { email?: string | null } });
     if (!user) {

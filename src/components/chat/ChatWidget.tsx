@@ -7,6 +7,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { usePathname } from 'next/navigation';
+import { useI18n } from '@/i18n/client';
 
 interface Message {
   id: string;
@@ -26,6 +27,7 @@ interface ChatSettings {
 }
 
 export default function ChatWidget() {
+  const { t } = useI18n();
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -110,7 +112,21 @@ export default function ChatWidget() {
   }, [isOpen]);
 
   // Polling for new messages (simple solution without WebSocket)
+  const pollingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const messagesLengthRef = useRef(messages.length);
+
+  // Keep the ref in sync with messages length
   useEffect(() => {
+    messagesLengthRef.current = messages.length;
+  }, [messages.length]);
+
+  useEffect(() => {
+    // Clear any existing interval before setting a new one
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+      pollingIntervalRef.current = null;
+    }
+
     if (!isOpen || !conversationId) return;
 
     const pollMessages = async () => {
@@ -123,11 +139,8 @@ export default function ChatWidget() {
         const data = await res.json();
         if (data.conversation?.messages) {
           const newMessages = data.conversation.messages;
-          if (newMessages.length > messages.length) {
+          if (newMessages.length > messagesLengthRef.current) {
             setMessages(newMessages);
-            if (!isOpen) {
-              setUnreadCount(prev => prev + (newMessages.length - messages.length));
-            }
           }
         }
       } catch (error) {
@@ -135,9 +148,15 @@ export default function ChatWidget() {
       }
     };
 
-    const interval = setInterval(pollMessages, 5000); // Poll every 5 seconds
-    return () => clearInterval(interval);
-  }, [isOpen, conversationId, visitorId, messages.length]);
+    pollingIntervalRef.current = setInterval(pollMessages, 5000); // Poll every 5 seconds
+
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
+      }
+    };
+  }, [isOpen, conversationId, visitorId]);
 
   const sendMessage = async () => {
     if (!inputValue.trim() || !conversationId || isLoading) return;
@@ -207,9 +226,9 @@ export default function ChatWidget() {
       {/* Chat Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-110 z-50"
+        className="fixed bottom-6 end-6 w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-110 z-50"
         style={{ backgroundColor: widgetColor }}
-        aria-label="Open chat"
+        aria-label={t('chat.aria.openChat')}
       >
         {isOpen ? (
           <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -221,7 +240,7 @@ export default function ChatWidget() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
             </svg>
             {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+              <span className="absolute -top-1 -end-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
                 {unreadCount}
               </span>
             )}
@@ -231,7 +250,7 @@ export default function ChatWidget() {
 
       {/* Chat Window */}
       {isOpen && (
-        <div className="fixed bottom-24 right-6 w-[380px] max-w-[calc(100vw-48px)] bg-white rounded-2xl shadow-2xl overflow-hidden z-50 flex flex-col" style={{ height: '500px', maxHeight: 'calc(100vh - 140px)' }}>
+        <div className="fixed bottom-24 end-6 w-[380px] max-w-[calc(100vw-48px)] bg-white rounded-2xl shadow-2xl overflow-hidden z-50 flex flex-col" style={{ height: '500px', maxHeight: 'calc(100vh - 140px)' }}>
           {/* Header */}
           <div className="px-4 py-3 text-white flex items-center gap-3" style={{ backgroundColor: widgetColor }}>
             <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
@@ -306,7 +325,7 @@ export default function ChatWidget() {
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Type your message..."
+                placeholder={t('chat.placeholder.typeMessage')}
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:border-orange-500 text-sm"
                 disabled={isLoading}
               />

@@ -3,7 +3,7 @@
 import { useRef } from 'react';
 import Link from 'next/link';
 import ProductCard from './ProductCard';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 
 interface Product {
   id: string;
@@ -34,7 +34,7 @@ interface CategoryScrollerProps {
 }
 
 export default function CategoryScroller({ title, slug, products }: CategoryScrollerProps) {
-  const { t } = useTranslations();
+  const { t } = useI18n();
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const scroll = (direction: 'left' | 'right') => {
@@ -106,12 +106,6 @@ export default function CategoryScroller({ title, slug, products }: CategoryScro
         </div>
       </div>
 
-      {/* Hide scrollbar style */}
-      <style jsx>{`
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
-      `}</style>
     </section>
   );
 }

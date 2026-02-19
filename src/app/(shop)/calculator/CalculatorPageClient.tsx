@@ -1,11 +1,16 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
-import { useTranslations } from '@/hooks/useTranslations';
-import PeptideCalculator from '@/components/shop/PeptideCalculator';
+import { useI18n } from '@/i18n/client';
+
+const PeptideCalculator = dynamic(() => import('@/components/shop/PeptideCalculator'), {
+  loading: () => <div className="animate-pulse h-48 bg-neutral-800 rounded-xl" />,
+  ssr: false,
+});
 
 export default function CalculatorPageClient() {
-  const { t } = useTranslations();
+  const { t } = useI18n();
 
   return (
     <div className="min-h-screen bg-neutral-950">

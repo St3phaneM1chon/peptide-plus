@@ -10,13 +10,13 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useSession, signOut } from 'next-auth/react';
 import { UserRole } from '@/types';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 
 export function Header() {
   const { data: session, status } = useSession();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const { t } = useTranslations();
+  const { t } = useI18n();
 
   const isLoading = status === 'loading';
   const isAuthenticated = status === 'authenticated';
@@ -60,7 +60,7 @@ export function Header() {
                   />
                 </svg>
               </div>
-              <span className="ml-3 text-xl font-bold text-gray-900">
+              <span className="ms-3 text-xl font-bold text-gray-900">
                 {t('shop.title')}
               </span>
             </Link>
@@ -132,7 +132,7 @@ export function Header() {
 
                 {/* Dropdown Menu */}
                 {userMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-50">
+                  <div className="absolute end-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-50">
                     <Link
                       href={getDashboardUrl()}
                       className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
@@ -157,7 +157,7 @@ export function Header() {
                     <hr className="my-1" />
                     <button
                       onClick={() => signOut({ callbackUrl: '/' })}
-                      className="block w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100"
+                      className="block w-full text-start px-4 py-2 text-red-600 hover:bg-gray-100"
                     >
                       {t('account.signOut')}
                     </button>

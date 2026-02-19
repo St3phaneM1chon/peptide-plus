@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Settings, ShoppingCart, Package, Bell, Lock, Link2,
   Save,
@@ -43,14 +43,110 @@ export default function ParametresPage() {
   });
 
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [activeSection, setActiveSection] = useState<string>('general');
+
+  // Helper to extract a setting value from key-value entries
+  const getSettingValue = (
+    settingsByModule: Record<string, Array<{ key: string; value: string }>>,
+    key: string,
+    fallback: string
+  ): string => {
+    for (const entries of Object.values(settingsByModule)) {
+      const entry = entries.find((e) => e.key === key);
+      if (entry) return entry.value;
+    }
+    return fallback;
+  };
+
+  // Load settings from API on mount
+  const fetchSettings = useCallback(async () => {
+    try {
+      const res = await fetch('/api/admin/settings');
+      if (!res.ok) throw new Error('Failed to fetch settings');
+      const data = await res.json();
+      const ss = data.siteSettings || {};
+      const kv = data.settings || {};
+
+      setSettings({
+        siteName: ss.companyName || 'BioCycle Peptides',
+        siteEmail: ss.email || 'info@biocycle.ca',
+        supportEmail: ss.supportEmail || 'support@biocycle.ca',
+        phone: ss.phone || '+1 (888) 555-0123',
+        timezone: getSettingValue(kv, 'timezone', 'America/Toronto'),
+        currency: ss.defaultCurrency || 'CAD',
+        weightUnit: getSettingValue(kv, 'weightUnit', 'g'),
+        dimensionUnit: getSettingValue(kv, 'dimensionUnit', 'cm'),
+        freeShippingThreshold: ss.freeShippingThreshold ?? 150,
+        orderPrefix: getSettingValue(kv, 'orderPrefix', 'BC'),
+        minOrderAmount: parseInt(getSettingValue(kv, 'minOrderAmount', '0')) || 0,
+        maxOrderAmount: parseInt(getSettingValue(kv, 'maxOrderAmount', '10000')) || 10000,
+        guestCheckout: getSettingValue(kv, 'guestCheckout', 'true') === 'true',
+        orderNotifications: getSettingValue(kv, 'orderNotifications', 'true') === 'true',
+        lowStockNotifications: getSettingValue(kv, 'lowStockNotifications', 'true') === 'true',
+        reviewNotifications: getSettingValue(kv, 'reviewNotifications', 'true') === 'true',
+        requireEmailVerification: getSettingValue(kv, 'requireEmailVerification', 'false') === 'true',
+        sessionTimeout: parseInt(getSettingValue(kv, 'sessionTimeout', '30')) || 30,
+        maxLoginAttempts: parseInt(getSettingValue(kv, 'maxLoginAttempts', '5')) || 5,
+      });
+    } catch (err) {
+      console.error('Error loading settings:', err);
+    }
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    fetchSettings();
+  }, [fetchSettings]);
 
   const handleSave = async () => {
     setSaving(true);
-    await new Promise(r => setTimeout(r, 1000));
-    toast.success(t('admin.settingsPage.settingsSaved'));
+    try {
+      const res = await fetch('/api/admin/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          siteSettings: {
+            companyName: settings.siteName,
+            email: settings.siteEmail,
+            supportEmail: settings.supportEmail,
+            phone: settings.phone,
+            defaultCurrency: settings.currency,
+            freeShippingThreshold: settings.freeShippingThreshold,
+          },
+          settings: [
+            { key: 'timezone', value: settings.timezone, module: 'general', type: 'text' },
+            { key: 'weightUnit', value: settings.weightUnit, module: 'store', type: 'text' },
+            { key: 'dimensionUnit', value: settings.dimensionUnit, module: 'store', type: 'text' },
+            { key: 'orderPrefix', value: settings.orderPrefix, module: 'orders', type: 'text' },
+            { key: 'minOrderAmount', value: String(settings.minOrderAmount), module: 'orders', type: 'number' },
+            { key: 'maxOrderAmount', value: String(settings.maxOrderAmount), module: 'orders', type: 'number' },
+            { key: 'guestCheckout', value: String(settings.guestCheckout), module: 'orders', type: 'boolean' },
+            { key: 'orderNotifications', value: String(settings.orderNotifications), module: 'notifications', type: 'boolean' },
+            { key: 'lowStockNotifications', value: String(settings.lowStockNotifications), module: 'notifications', type: 'boolean' },
+            { key: 'reviewNotifications', value: String(settings.reviewNotifications), module: 'notifications', type: 'boolean' },
+            { key: 'requireEmailVerification', value: String(settings.requireEmailVerification), module: 'security', type: 'boolean' },
+            { key: 'sessionTimeout', value: String(settings.sessionTimeout), module: 'security', type: 'number' },
+            { key: 'maxLoginAttempts', value: String(settings.maxLoginAttempts), module: 'security', type: 'number' },
+          ],
+        }),
+      });
+      if (!res.ok) throw new Error('Failed to save');
+      toast.success(t('admin.settingsPage.settingsSaved'));
+    } catch (err) {
+      console.error('Error saving settings:', err);
+      toast.error(t('admin.settingsPage.settingsError') || 'Error saving settings');
+    }
     setSaving(false);
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500" />
+      </div>
+    );
+  }
 
   const sections = [
     { id: 'general', label: t('admin.settingsPage.general'), icon: Settings },
@@ -80,7 +176,7 @@ export default function ParametresPage() {
                 <button
                   key={section.id}
                   onClick={() => setActiveSection(section.id)}
-                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-start transition-colors ${
                     activeSection === section.id
                       ? 'bg-sky-100 text-sky-900'
                       : 'text-slate-600 hover:bg-slate-100'

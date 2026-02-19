@@ -2,16 +2,17 @@
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 
 export default function NewsletterPopup() {
-  const { t, locale } = useTranslations();
+  const { t, locale } = useI18n();
   const { data: session } = useSession();
   const [isOpen, setIsOpen] = useState(false);
   const [email, setEmail] = useState('');
   const [birthDate, setBirthDate] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [emailError, setEmailError] = useState('');
 
   useEffect(() => {
     // Don't show to logged-in users (they already have an account)
@@ -104,8 +105,8 @@ export default function NewsletterPopup() {
         {/* Close Button */}
         <button
           onClick={handleClose}
-          className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 transition-colors z-10"
-          aria-label="Close"
+          className="absolute top-4 end-4 p-2 text-gray-400 hover:text-gray-600 transition-colors z-10"
+          aria-label={t('common.aria.close')}
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -138,11 +139,19 @@ export default function NewsletterPopup() {
                     type="email"
                     id="newsletter-email"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => { setEmail(e.target.value); if (emailError) setEmailError(''); }}
+                    onBlur={() => {
+                      if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                        setEmailError(t('newsletter.invalidEmail') || 'Please enter a valid email address');
+                      }
+                    }}
                     placeholder={t('newsletter.placeholder')}
                     required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors ${emailError ? 'border-red-500' : 'border-gray-300'}`}
                   />
+                  {emailError && (
+                    <p className="text-xs text-red-500 mt-1">{emailError}</p>
+                  )}
                 </div>
 
                 <div>

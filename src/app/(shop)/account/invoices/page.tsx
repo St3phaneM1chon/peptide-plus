@@ -9,7 +9,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 
 // =====================================================
 // TYPES
@@ -115,7 +115,7 @@ const PAYMENT_METHOD_LABELS: Record<string, string> = {
 export default function InvoicesPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const { t } = useTranslations();
+  const { t } = useI18n();
   const printRef = useRef<HTMLDivElement>(null);
 
   // State
@@ -286,37 +286,6 @@ export default function InvoicesPage() {
 
   return (
     <>
-      {/* Print-only styles */}
-      <style jsx global>{`
-        @media print {
-          /* Hide everything except the invoice detail */
-          body > *:not(.print-invoice-container) {
-            display: none !important;
-          }
-          header, footer, nav,
-          .no-print,
-          [data-radix-popper-content-wrapper] {
-            display: none !important;
-          }
-          .print-invoice-container {
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 100% !important;
-            background: white !important;
-            z-index: 99999 !important;
-          }
-          .print-invoice-content {
-            padding: 20mm !important;
-            max-width: 100% !important;
-          }
-          @page {
-            margin: 10mm;
-            size: A4;
-          }
-        }
-      `}</style>
-
       <div className="min-h-screen bg-gray-50 no-print">
         {/* Header */}
         <section className="bg-gradient-to-br from-neutral-900 via-neutral-800 to-black text-white py-8">
@@ -432,22 +401,22 @@ export default function InvoicesPage() {
                   <table className="w-full">
                     <thead className="bg-gray-50 border-b border-gray-200">
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-start text-xs font-semibold text-gray-500 uppercase tracking-wider">
                           {t('account.invoices.colInvoice') || 'Invoice'}
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-start text-xs font-semibold text-gray-500 uppercase tracking-wider">
                           {t('account.invoices.colDate') || 'Date'}
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden sm:table-cell">
+                        <th className="px-6 py-3 text-start text-xs font-semibold text-gray-500 uppercase tracking-wider hidden sm:table-cell">
                           {t('account.invoices.colItems') || 'Items'}
                         </th>
-                        <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-end text-xs font-semibold text-gray-500 uppercase tracking-wider">
                           {t('account.invoices.colTotal') || 'Total'}
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                        <th className="px-6 py-3 text-start text-xs font-semibold text-gray-500 uppercase tracking-wider hidden md:table-cell">
                           {t('account.invoices.colStatus') || 'Status'}
                         </th>
-                        <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-end text-xs font-semibold text-gray-500 uppercase tracking-wider">
                           {t('account.invoices.colActions') || 'Actions'}
                         </th>
                       </tr>
@@ -469,7 +438,7 @@ export default function InvoicesPage() {
                               ? (t('account.invoices.item') || 'item')
                               : (t('account.invoices.items') || 'items')}
                           </td>
-                          <td className="px-6 py-4 text-right">
+                          <td className="px-6 py-4 text-end">
                             <p className="font-semibold text-gray-900">
                               {formatMoney(invoice.total, invoice.currency.symbol)}
                             </p>
@@ -480,7 +449,7 @@ export default function InvoicesPage() {
                               {t('account.invoices.paid') || 'Paid'}
                             </span>
                           </td>
-                          <td className="px-6 py-4 text-right">
+                          <td className="px-6 py-4 text-end">
                             <div className="flex items-center justify-end gap-1">
                               {/* View Button */}
                               <button
@@ -605,7 +574,7 @@ export default function InvoicesPage() {
                     <p className="text-gray-500 text-sm">Montreal, QC H3C 1K3, Canada</p>
                     <p className="text-gray-500 text-sm">(514) 555-0199 | support@biocyclepeptides.com</p>
                   </div>
-                  <div className="text-right sm:text-right">
+                  <div className="text-end sm:text-end">
                     <h2 className="text-xl font-bold text-gray-900">INVOICE</h2>
                     <p className="text-gray-600 font-medium">{viewingInvoice.invoiceNumber}</p>
                     <p className="text-gray-500 text-sm mt-2">
@@ -673,16 +642,16 @@ export default function InvoicesPage() {
                   <table className="w-full">
                     <thead className="bg-gray-50">
                       <tr>
-                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                        <th className="px-4 py-3 text-start text-sm font-semibold text-gray-700">
                           {t('account.invoices.product') || 'Product'}
                         </th>
                         <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">
                           {t('account.invoices.qty') || 'Qty'}
                         </th>
-                        <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">
+                        <th className="px-4 py-3 text-end text-sm font-semibold text-gray-700">
                           {t('account.invoices.unitPrice') || 'Unit Price'}
                         </th>
-                        <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">
+                        <th className="px-4 py-3 text-end text-sm font-semibold text-gray-700">
                           {t('account.invoices.lineTotal') || 'Total'}
                         </th>
                       </tr>
@@ -700,10 +669,10 @@ export default function InvoicesPage() {
                             )}
                           </td>
                           <td className="px-4 py-3 text-center text-sm text-gray-600">{item.quantity}</td>
-                          <td className="px-4 py-3 text-right text-sm text-gray-600">
+                          <td className="px-4 py-3 text-end text-sm text-gray-600">
                             {formatMoney(item.unitPrice, viewingInvoice.currency.symbol)}
                           </td>
-                          <td className="px-4 py-3 text-right text-sm font-medium text-gray-900">
+                          <td className="px-4 py-3 text-end text-sm font-medium text-gray-900">
                             {formatMoney(item.total, viewingInvoice.currency.symbol)}
                           </td>
                         </tr>

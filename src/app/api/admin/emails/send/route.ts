@@ -7,22 +7,11 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { auth } from '@/lib/auth-config';
-import { validateCsrf } from '@/lib/csrf-middleware';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 
 // POST /api/admin/emails/send - Send a test email
-export async function POST(request: NextRequest) {
+export const POST = withAdminGuard(async (request, { session: _session }) => {
   try {
-    const csrfValid = await validateCsrf(request);
-    if (!csrfValid) {
-      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
-    }
-
-    const session = await auth();
-    if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const body = await request.json();
     const { templateId, to, subject: customSubject, variables } = body;
 
@@ -111,4 +100,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

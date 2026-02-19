@@ -274,25 +274,25 @@ export default function ForecastingPage() {
             <table className="w-full">
               <thead className="bg-neutral-900/50">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-neutral-400 uppercase">{t('admin.forecasts.periodCol')}</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-neutral-400 uppercase">{t('admin.forecasts.openingBalance')}</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-neutral-400 uppercase">{t('admin.forecasts.inflows')}</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-neutral-400 uppercase">{t('admin.forecasts.outflows')}</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-neutral-400 uppercase">{t('admin.forecasts.netFlow')}</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-neutral-400 uppercase">{t('admin.forecasts.closingBalance')}</th>
+                  <th className="px-4 py-3 text-start text-xs font-medium text-neutral-400 uppercase">{t('admin.forecasts.periodCol')}</th>
+                  <th className="px-4 py-3 text-end text-xs font-medium text-neutral-400 uppercase">{t('admin.forecasts.openingBalance')}</th>
+                  <th className="px-4 py-3 text-end text-xs font-medium text-neutral-400 uppercase">{t('admin.forecasts.inflows')}</th>
+                  <th className="px-4 py-3 text-end text-xs font-medium text-neutral-400 uppercase">{t('admin.forecasts.outflows')}</th>
+                  <th className="px-4 py-3 text-end text-xs font-medium text-neutral-400 uppercase">{t('admin.forecasts.netFlow')}</th>
+                  <th className="px-4 py-3 text-end text-xs font-medium text-neutral-400 uppercase">{t('admin.forecasts.closingBalance')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-700">
                 {baseProjections.map((p, i) => (
                   <tr key={i} className={`hover:bg-neutral-700/30 ${p.closingBalance < minimumCash ? 'bg-red-900/10' : ''}`}>
                     <td className="px-4 py-3 font-medium text-white">{p.period}</td>
-                    <td className="px-4 py-3 text-right text-neutral-300">{formatCurrency(p.openingBalance)}</td>
-                    <td className="px-4 py-3 text-right text-green-400">+{formatCurrency(p.inflows)}</td>
-                    <td className="px-4 py-3 text-right text-red-400">-{formatCurrency(p.outflows)}</td>
-                    <td className={`px-4 py-3 text-right font-medium ${p.netCashFlow >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                    <td className="px-4 py-3 text-end text-neutral-300">{formatCurrency(p.openingBalance)}</td>
+                    <td className="px-4 py-3 text-end text-green-400">+{formatCurrency(p.inflows)}</td>
+                    <td className="px-4 py-3 text-end text-red-400">-{formatCurrency(p.outflows)}</td>
+                    <td className={`px-4 py-3 text-end font-medium ${p.netCashFlow >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                       {p.netCashFlow >= 0 ? '+' : ''}{formatCurrency(p.netCashFlow)}
                     </td>
-                    <td className={`px-4 py-3 text-right font-bold ${p.closingBalance < minimumCash ? 'text-red-400' : 'text-white'}`}>
+                    <td className={`px-4 py-3 text-end font-bold ${p.closingBalance < minimumCash ? 'text-red-400' : 'text-white'}`}>
                       {formatCurrency(p.closingBalance)}
                     </td>
                   </tr>
@@ -345,9 +345,9 @@ export default function ForecastingPage() {
             <table className="w-full">
               <thead className="bg-neutral-900/50">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-neutral-400 uppercase">{t('admin.forecasts.periodCol')}</th>
+                  <th className="px-4 py-3 text-start text-xs font-medium text-neutral-400 uppercase">{t('admin.forecasts.periodCol')}</th>
                   {scenarios.map(s => (
-                    <th key={s.id} className="px-4 py-3 text-right text-xs font-medium text-neutral-400 uppercase">
+                    <th key={s.id} className="px-4 py-3 text-end text-xs font-medium text-neutral-400 uppercase">
                       {s.name}
                     </th>
                   ))}
@@ -358,7 +358,7 @@ export default function ForecastingPage() {
                   <tr key={i} className="hover:bg-neutral-700/30">
                     <td className="px-4 py-3 font-medium text-white">{baseProjections[i].period}</td>
                     {scenarios.map(s => (
-                      <td key={s.id} className="px-4 py-3 text-right">
+                      <td key={s.id} className="px-4 py-3 text-end">
                         <span className={
                           s.projections[i]?.closingBalance < minimumCash ? 'text-red-400' :
                           s.projections[i]?.closingBalance > baseProjections[i].closingBalance ? 'text-green-400' : 'text-white'
@@ -419,7 +419,7 @@ export default function ForecastingPage() {
                       <p className="text-sm text-neutral-300 mt-1">
                         {t('admin.forecasts.projectedBalance')} <strong>{formatCurrency(alert.balance)}</strong>
                         {alert.type === 'WARNING' && (
-                          <span className="text-neutral-400 ml-2">
+                          <span className="text-neutral-400 ms-2">
                             {t('admin.forecasts.belowMinimum', { amount: formatCurrency(minimumCash - alert.balance) })}
                           </span>
                         )}

@@ -358,7 +358,7 @@ export default function OrdersPage() {
           <p className="font-semibold text-slate-900">
             {order.orderNumber}
             {order.orderType === 'REPLACEMENT' && (
-              <span className="ml-1 text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded">{t('admin.commandes.reship')}</span>
+              <span className="ms-1 text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded">{t('admin.commandes.reship')}</span>
             )}
           </p>
           <p className="text-xs text-slate-500">{t('admin.commandes.itemCount', { count: order.items.length })}</p>
@@ -509,7 +509,7 @@ export default function OrdersPage() {
               </Button>
             )}
             {canRefund && (
-              <Button variant="danger" icon={RotateCcw} className="ml-auto" onClick={openRefundModal}>
+              <Button variant="danger" icon={RotateCcw} className="ms-auto" onClick={openRefundModal}>
                 {t('admin.commandes.refund')}
               </Button>
             )}
@@ -604,10 +604,10 @@ export default function OrdersPage() {
                 <table className="w-full">
                   <thead className="bg-slate-50">
                     <tr>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">{t('admin.commandes.colProduct')}</th>
+                      <th className="px-4 py-2 text-start text-xs font-medium text-slate-500 uppercase">{t('admin.commandes.colProduct')}</th>
                       <th className="px-4 py-2 text-center text-xs font-medium text-slate-500 uppercase">{t('admin.commandes.colQty')}</th>
-                      <th className="px-4 py-2 text-right text-xs font-medium text-slate-500 uppercase">{t('admin.commandes.colUnitPrice')}</th>
-                      <th className="px-4 py-2 text-right text-xs font-medium text-slate-500 uppercase">{t('admin.commandes.colTotal')}</th>
+                      <th className="px-4 py-2 text-end text-xs font-medium text-slate-500 uppercase">{t('admin.commandes.colUnitPrice')}</th>
+                      <th className="px-4 py-2 text-end text-xs font-medium text-slate-500 uppercase">{t('admin.commandes.colTotal')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -620,8 +620,8 @@ export default function OrdersPage() {
                           )}
                         </td>
                         <td className="px-4 py-3 text-center text-sm text-slate-700">{item.quantity}</td>
-                        <td className="px-4 py-3 text-right text-sm text-slate-700">{item.unitPrice.toFixed(2)} $</td>
-                        <td className="px-4 py-3 text-right text-sm font-medium text-slate-900">{item.total.toFixed(2)} $</td>
+                        <td className="px-4 py-3 text-end text-sm text-slate-700">{item.unitPrice.toFixed(2)} $</td>
+                        <td className="px-4 py-3 text-end text-sm font-medium text-slate-900">{item.total.toFixed(2)} $</td>
                       </tr>
                     ))}
                   </tbody>
@@ -674,7 +674,7 @@ export default function OrdersPage() {
                         >
                           {cn.creditNoteNumber}
                         </Link>
-                        <span className="text-red-600 ml-2">{cn.reason}</span>
+                        <span className="text-red-600 ms-2">{cn.reason}</span>
                       </div>
                       <span className="font-medium text-red-700">-{cn.total.toFixed(2)} $</span>
                     </div>
@@ -741,7 +741,7 @@ export default function OrdersPage() {
                     <div key={ro.id} className="flex items-center justify-between text-sm">
                       <div>
                         <span className="font-mono text-amber-700">{ro.orderNumber}</span>
-                        <span className="text-amber-600 ml-2">{ro.replacementReason}</span>
+                        <span className="text-amber-600 ms-2">{ro.replacementReason}</span>
                       </div>
                       <span className="text-xs text-amber-600">
                         {new Date(ro.createdAt).toLocaleDateString(locale)} - {ro.status}
@@ -861,7 +861,7 @@ export default function OrdersPage() {
                   <div key={item.id} className="px-3 py-2 flex justify-between text-sm">
                     <span className="text-slate-700">
                       {item.productName}
-                      {item.formatName && <span className="text-slate-400 ml-1">({item.formatName})</span>}
+                      {item.formatName && <span className="text-slate-400 ms-1">({item.formatName})</span>}
                     </span>
                     <span className="text-slate-500">x{item.quantity}</span>
                   </div>

@@ -120,7 +120,7 @@ export default async function ClientDetailPage({ params, searchParams }: PagePro
               <div className="w-16 h-16 bg-blue-100 rounded-xl flex items-center justify-center text-2xl font-bold text-blue-600">
                 {company.name.charAt(0)}
               </div>
-              <div className="ml-4">
+              <div className="ms-4">
                 <h1 className="text-2xl font-bold text-gray-900">{company.name}</h1>
                 <p className="text-gray-600">{company.contactEmail}</p>
               </div>
@@ -184,12 +184,12 @@ export default async function ClientDetailPage({ params, searchParams }: PagePro
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Étudiant</th>
+                  <th className="px-6 py-4 text-start text-sm font-semibold text-gray-900">Étudiant</th>
                   <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">Formations</th>
                   <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">Complétées</th>
                   <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">Statut</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Ajouté le</th>
-                  <th className="px-6 py-4 text-right text-sm font-semibold text-gray-900">Actions</th>
+                  <th className="px-6 py-4 text-start text-sm font-semibold text-gray-900">Ajouté le</th>
+                  <th className="px-6 py-4 text-end text-sm font-semibold text-gray-900">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -218,7 +218,7 @@ export default async function ClientDetailPage({ params, searchParams }: PagePro
                                 {cc.customer.name?.charAt(0) || cc.customer.email.charAt(0)}
                               </span>
                             </div>
-                            <div className="ml-3">
+                            <div className="ms-3">
                               <p className="font-medium text-gray-900">
                                 {cc.customer.name || 'Sans nom'}
                               </p>
@@ -252,7 +252,7 @@ export default async function ClientDetailPage({ params, searchParams }: PagePro
                         <td className="px-6 py-4 text-sm text-gray-500">
                           {new Date(cc.addedAt).toLocaleDateString('fr-CA')}
                         </td>
-                        <td className="px-6 py-4 text-right">
+                        <td className="px-6 py-4 text-end">
                           <Link
                             href={`/dashboard/employee/customers/${cc.customerId}`}
                             className="text-blue-600 hover:underline text-sm"
@@ -275,10 +275,10 @@ export default async function ClientDetailPage({ params, searchParams }: PagePro
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Produit</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Acheteur</th>
-                  <th className="px-6 py-4 text-right text-sm font-semibold text-gray-900">Montant</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Date</th>
+                  <th className="px-6 py-4 text-start text-sm font-semibold text-gray-900">Produit</th>
+                  <th className="px-6 py-4 text-start text-sm font-semibold text-gray-900">Acheteur</th>
+                  <th className="px-6 py-4 text-end text-sm font-semibold text-gray-900">Montant</th>
+                  <th className="px-6 py-4 text-start text-sm font-semibold text-gray-900">Date</th>
                   <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">Statut</th>
                 </tr>
               </thead>
@@ -298,7 +298,7 @@ export default async function ClientDetailPage({ params, searchParams }: PagePro
                       <td className="px-6 py-4">
                         <p className="text-gray-900">{purchase.user.name || purchase.user.email}</p>
                       </td>
-                      <td className="px-6 py-4 text-right font-semibold text-gray-900">
+                      <td className="px-6 py-4 text-end font-semibold text-gray-900">
                         {Number(purchase.amount).toFixed(2)} $
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-500">
@@ -371,7 +371,7 @@ export default async function ClientDetailPage({ params, searchParams }: PagePro
                       {company.owner.name?.charAt(0) || company.owner.email.charAt(0)}
                     </span>
                   </div>
-                  <div className="ml-3">
+                  <div className="ms-3">
                     <p className="font-medium text-gray-900">{company.owner.name || 'Sans nom'}</p>
                     <p className="text-sm text-gray-500">{company.owner.email}</p>
                   </div>

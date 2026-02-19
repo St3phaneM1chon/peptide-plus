@@ -132,12 +132,12 @@ export default async function ClientsListPage({ searchParams }: PageProps) {
           <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Entreprise</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Contact</th>
+                <th className="px-6 py-4 text-start text-sm font-semibold text-gray-900">Entreprise</th>
+                <th className="px-6 py-4 text-start text-sm font-semibold text-gray-900">Contact</th>
                 <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">Étudiants</th>
                 <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">Achats</th>
                 <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">Statut</th>
-                <th className="px-6 py-4 text-right text-sm font-semibold text-gray-900">Actions</th>
+                <th className="px-6 py-4 text-end text-sm font-semibold text-gray-900">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
@@ -155,7 +155,7 @@ export default async function ClientsListPage({ searchParams }: PageProps) {
                         <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
                           <span className="text-blue-600 font-semibold">{company.name.charAt(0)}</span>
                         </div>
-                        <div className="ml-3">
+                        <div className="ms-3">
                           <p className="font-medium text-gray-900">{company.name}</p>
                           <p className="text-sm text-gray-500">{company.slug}</p>
                         </div>
@@ -184,7 +184,7 @@ export default async function ClientsListPage({ searchParams }: PageProps) {
                         {company.isActive ? 'Actif' : 'Inactif'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-6 py-4 text-end">
                       <div className="flex justify-end space-x-2">
                         <Link
                           href={`/dashboard/employee/clients/${company.id}`}

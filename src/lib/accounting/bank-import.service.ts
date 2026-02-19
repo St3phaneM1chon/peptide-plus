@@ -4,6 +4,17 @@
  */
 
 import { BankTransaction, ReconciliationStatus } from './types';
+import { decrypt } from '@/lib/security';
+
+/** Try to decrypt a value; if it fails (legacy plaintext), return as-is */
+async function safeDecryptField(value: string | null): Promise<string | null> {
+  if (!value) return null;
+  try {
+    return await decrypt(value);
+  } catch {
+    return value;
+  }
+}
 
 // Plaid-like transaction structure
 interface PlaidTransaction {
@@ -190,7 +201,7 @@ export async function fetchPlaidTransactions(
       official_name: `${bankAccount.institution} - ${bankAccount.name}`,
       type: 'depository',
       subtype: bankAccount.type.toLowerCase() === 'savings' ? 'savings' : 'checking',
-      mask: bankAccount.accountNumber?.slice(-4) || undefined,
+      mask: bankAccount.accountNumber ? (await safeDecryptField(bankAccount.accountNumber))?.slice(-4) : undefined,
       balances: {
         available: Number(bankAccount.currentBalance),
         current: Number(bankAccount.currentBalance),
@@ -442,19 +453,19 @@ export async function getBankConnections(): Promise<BankConnection[]> {
       provider: accounts[0].type === 'STRIPE' || accounts[0].type === 'PAYPAL' ? 'MANUAL' : 'PLAID',
       institutionId: `ins_${institution.toLowerCase().replace(/\s+/g, '_')}`,
       institutionName: institution,
-      accounts: accounts.map((acc) => ({
+      accounts: await Promise.all(accounts.map(async (acc) => ({
         account_id: acc.id,
         name: acc.name,
         official_name: `${institution} - ${acc.name}`,
         type: 'depository' as const,
         subtype: acc.type.toLowerCase() === 'savings' ? 'savings' : 'checking',
-        mask: acc.accountNumber?.slice(-4) || undefined,
+        mask: acc.accountNumber ? (await safeDecryptField(acc.accountNumber))?.slice(-4) : undefined,
         balances: {
           available: Number(acc.currentBalance),
           current: Number(acc.currentBalance),
           iso_currency_code: acc.currency,
         },
-      })),
+      }))),
       lastSync: accounts[0].lastSyncAt || accounts[0].updatedAt || new Date(),
       status: 'ACTIVE',
     });

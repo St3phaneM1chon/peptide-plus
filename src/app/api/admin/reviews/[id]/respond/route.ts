@@ -5,32 +5,30 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth-config';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
-import { UserRole } from '@/types';
+import { stripHtml, stripControlChars } from '@/lib/sanitize';
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const POST = withAdminGuard(async (request: NextRequest, { session, params }) => {
   try {
-    const session = await auth();
-
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
-    }
-
-    if (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER) {
-      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
-    }
-
-    const { id } = await params;
+    const id = params!.id;
     const body = await request.json();
-    const { response } = body;
+    const { response: rawResponse } = body;
 
-    if (!response || !response.trim()) {
+    if (!rawResponse || !String(rawResponse).trim()) {
       return NextResponse.json(
         { error: 'La réponse ne peut pas être vide' },
+        { status: 400 }
+      );
+    }
+
+    // BE-SEC-03: Sanitize response text - strip HTML and control characters
+    const response = stripControlChars(stripHtml(String(rawResponse))).trim();
+
+    // BE-SEC-05: Enforce max length on response text
+    if (response.length > 5000) {
+      return NextResponse.json(
+        { error: 'La réponse ne doit pas dépasser 5000 caractères' },
         { status: 400 }
       );
     }
@@ -57,4 +55,4 @@ export async function POST(
       { status: 500 }
     );
   }
-}
+});

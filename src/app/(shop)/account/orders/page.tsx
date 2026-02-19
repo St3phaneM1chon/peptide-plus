@@ -9,7 +9,7 @@ import { useState, useEffect, useMemo, useCallback, FormEvent } from 'react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 import { useCart } from '@/contexts/CartContext';
 import { toast } from 'sonner';
 
@@ -68,7 +68,7 @@ interface Order {
 export default function OrdersPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const { t } = useTranslations();
+  const { t, locale } = useI18n();
   const { addItem } = useCart();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -196,7 +196,7 @@ export default function OrdersPage() {
 
       if (!res.ok) {
         const errorData = await res.json();
-        toast.error(errorData.message || errorData.error || 'Failed to cancel order');
+        toast.error(errorData.message || errorData.error || t('toast.orders.cancelFailed'));
         return;
       }
 
@@ -205,11 +205,11 @@ export default function OrdersPage() {
       // Show success message
       if (data.refund && data.refund.amount > 0) {
         toast.success(
-          `Order ${order.orderNumber} cancelled. Refund of $${data.refund.amount.toFixed(2)} will be processed within 5-10 business days.`,
+          t('toast.orders.cancelledWithRefund', { orderNumber: order.orderNumber, amount: data.refund.amount.toFixed(2) }),
           { duration: 6000 }
         );
       } else {
-        toast.success(`Order ${order.orderNumber} cancelled successfully.`);
+        toast.success(t('toast.orders.cancelledSuccess', { orderNumber: order.orderNumber }));
       }
 
       // Refresh orders list
@@ -219,11 +219,11 @@ export default function OrdersPage() {
       setCancelConfirmOrder(null);
     } catch (error) {
       console.error('Cancel order failed:', error);
-      toast.error('Failed to cancel order');
+      toast.error(t('toast.orders.cancelFailed'));
     } finally {
       setCancellingId(null);
     }
-  }, [fetchOrders]);
+  }, [fetchOrders, t]);
 
   const statusColors: Record<string, string> = {
     PENDING: 'bg-yellow-100 text-yellow-800',
@@ -300,7 +300,7 @@ export default function OrdersPage() {
       doc.setFontSize(10);
       doc.setTextColor(100, 100, 100);
       doc.text(`N° ${order.orderNumber}`, 150, 32);
-      doc.text(`${t('account.orders.pdfDate')}: ${new Date(order.createdAt).toLocaleDateString('fr-CA')}`, 150, 38);
+      doc.text(`${t('account.orders.pdfDate')}: ${new Date(order.createdAt).toLocaleDateString(locale)}`, 150, 38);
 
       // Line
       doc.setDrawColor(200, 200, 200);
@@ -438,7 +438,7 @@ export default function OrdersPage() {
       doc.setTextColor(100, 100, 100);
       doc.text(`${t('account.orders.pdfPaymentStatus')}: ${order.paymentStatus === 'PAID' ? t('account.orders.pdfPaid') : order.paymentStatus}`, 20, y);
       if (order.paidAt) {
-        doc.text(`${t('account.orders.pdfPaymentDate')}: ${new Date(order.paidAt).toLocaleDateString('fr-CA')}`, 20, y + 5);
+        doc.text(`${t('account.orders.pdfPaymentDate')}: ${new Date(order.paidAt).toLocaleDateString(locale)}`, 20, y + 5);
       }
       if (order.paymentMethod) {
         doc.text(`${t('account.orders.pdfMethod')}: ${order.paymentMethod}`, 20, y + 10);
@@ -519,7 +519,7 @@ export default function OrdersPage() {
 
       if (!res.ok) {
         const error = await res.json();
-        toast.error(error.error || 'Failed to update address');
+        toast.error(error.error || t('toast.orders.addressUpdateFailed'));
         return;
       }
 
@@ -537,11 +537,11 @@ export default function OrdersPage() {
         )
       );
 
-      toast.success(t('account.orders.addressUpdated') || 'Shipping address updated successfully!');
+      toast.success(t('toast.orders.addressUpdated'));
       handleCancelEditAddress();
     } catch (error) {
       console.error('Update address failed:', error);
-      toast.error('Failed to update address');
+      toast.error(t('toast.orders.addressUpdateFailed'));
     } finally {
       setSavingAddress(false);
     }
@@ -566,7 +566,7 @@ export default function OrdersPage() {
 
       if (!res.ok) {
         const error = await res.json();
-        toast.error(error.error || 'Failed to export orders');
+        toast.error(error.error || t('toast.orders.exportFailed'));
         return;
       }
 
@@ -590,15 +590,15 @@ export default function OrdersPage() {
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
 
-      toast.success('Orders exported successfully!');
+      toast.success(t('toast.orders.exportSuccess'));
       setShowDatePicker(false);
     } catch (error) {
       console.error('Export failed:', error);
-      toast.error('Failed to export orders');
+      toast.error(t('toast.orders.exportFailed'));
     } finally {
       setExporting(false);
     }
-  }, [exportDateFrom, exportDateTo]);
+  }, [exportDateFrom, exportDateTo, t]);
 
   if (status === 'loading' || loading) {
     return (
@@ -640,9 +640,9 @@ export default function OrdersPage() {
                       placeholder={t('account.orders.searchPlaceholder')}
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                      className="w-full ps-10 pe-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                     />
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
+                    <span className="absolute start-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
                   </div>
                 </div>
 
@@ -800,7 +800,7 @@ export default function OrdersPage() {
                       <div>
                         <p className="text-sm text-gray-500">{t('account.orders.dateLabel')}</p>
                         <p className="text-gray-900">
-                          {new Date(order.createdAt).toLocaleDateString('fr-CA', {
+                          {new Date(order.createdAt).toLocaleDateString(locale, {
                             day: 'numeric',
                             month: 'long',
                             year: 'numeric',
@@ -874,10 +874,10 @@ export default function OrdersPage() {
                 <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
                   <div className="text-sm text-gray-500">
                     {order.deliveredAt && (
-                      <span>{t('account.orders.deliveredOn')} {new Date(order.deliveredAt).toLocaleDateString('fr-CA')}</span>
+                      <span>{t('account.orders.deliveredOn')} {new Date(order.deliveredAt).toLocaleDateString(locale)}</span>
                     )}
                     {order.shippedAt && !order.deliveredAt && (
-                      <span>{t('account.orders.shippedOn')} {new Date(order.shippedAt).toLocaleDateString('fr-CA')}</span>
+                      <span>{t('account.orders.shippedOn')} {new Date(order.shippedAt).toLocaleDateString(locale)}</span>
                     )}
                     {(order.status === 'PENDING' || order.status === 'CONFIRMED') && (
                       <button
@@ -1207,7 +1207,7 @@ function EditAddressModal({
                   onChange={(e) => handleChange('postalCode', e.target.value.toUpperCase())}
                   required
                   pattern="[A-Z][0-9][A-Z] ?[0-9][A-Z][0-9]"
-                  placeholder="A1A 1A1"
+                  placeholder={t('account.ordersSettings.placeholderPostalCode')}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                 />
               </div>
@@ -1335,11 +1335,11 @@ function InvoiceModal({
                 <p className="text-gray-500 text-sm mt-2">support@biocyclepeptides.com</p>
                 <p className="text-gray-500 text-sm">biocyclepeptides.com</p>
               </div>
-              <div className="text-right">
+              <div className="text-end">
                 <h2 className="text-xl font-bold text-gray-900">{t('account.orders.pdfInvoiceTitle')}</h2>
                 <p className="text-gray-600">N° {order.orderNumber}</p>
                 <p className="text-gray-500 text-sm mt-2">
-                  {t('account.orders.pdfDate')}: {new Date(order.createdAt).toLocaleDateString('fr-CA', {
+                  {t('account.orders.pdfDate')}: {new Date(order.createdAt).toLocaleDateString(locale, {
                     day: 'numeric',
                     month: 'long',
                     year: 'numeric',
@@ -1347,7 +1347,7 @@ function InvoiceModal({
                 </p>
                 {order.paidAt && (
                   <p className="text-green-600 text-sm font-medium mt-1">
-                    {t('account.orders.paidOn')} {new Date(order.paidAt).toLocaleDateString('fr-CA')}
+                    {t('account.orders.paidOn')} {new Date(order.paidAt).toLocaleDateString(locale)}
                   </p>
                 )}
               </div>
@@ -1402,10 +1402,10 @@ function InvoiceModal({
               <table className="w-full">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">{t('account.orders.pdfDescription')}</th>
+                    <th className="px-4 py-3 text-start text-sm font-semibold text-gray-900">{t('account.orders.pdfDescription')}</th>
                     <th className="px-4 py-3 text-center text-sm font-semibold text-gray-900">{t('account.orders.pdfQty')}</th>
-                    <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">{t('account.orders.pdfUnitPrice')}</th>
-                    <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">{t('account.orders.pdfTotal')}</th>
+                    <th className="px-4 py-3 text-end text-sm font-semibold text-gray-900">{t('account.orders.pdfUnitPrice')}</th>
+                    <th className="px-4 py-3 text-end text-sm font-semibold text-gray-900">{t('account.orders.pdfTotal')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
@@ -1419,8 +1419,8 @@ function InvoiceModal({
                         {item.sku && <p className="text-xs text-gray-500">SKU: {item.sku}</p>}
                       </td>
                       <td className="px-4 py-3 text-center text-gray-600">{item.quantity}</td>
-                      <td className="px-4 py-3 text-right text-gray-600">{formatMoney(item.unitPrice)}</td>
-                      <td className="px-4 py-3 text-right font-medium text-gray-900">
+                      <td className="px-4 py-3 text-end text-gray-600">{formatMoney(item.unitPrice)}</td>
+                      <td className="px-4 py-3 text-end font-medium text-gray-900">
                         {formatMoney(item.unitPrice * item.quantity)}
                       </td>
                     </tr>

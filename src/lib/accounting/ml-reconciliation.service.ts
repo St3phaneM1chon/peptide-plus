@@ -244,8 +244,16 @@ function calculateConfidenceScore(features: MatchFeatures): number {
   return Math.round(score * 100) / 100;
 }
 
+// #72 Audit: Configurable confidence thresholds (not hardcoded)
+export const DEFAULT_MATCH_THRESHOLDS = {
+  autoMatch: 0.85,
+  suggestion: 0.5,
+  maxSuggestionsPerTx: 3,
+} as const;
+
 /**
  * ML-enhanced reconciliation
+ * #72 Audit: All thresholds are configurable via options (defaults exported above)
  */
 export function intelligentReconcile(
   bankTransactions: BankTransaction[],
@@ -268,9 +276,9 @@ export function intelligentReconcile(
   };
 } {
   const {
-    autoMatchThreshold = 0.85,
-    suggestionThreshold = 0.5,
-    maxSuggestionsPerTransaction = 3,
+    autoMatchThreshold = DEFAULT_MATCH_THRESHOLDS.autoMatch,
+    suggestionThreshold = DEFAULT_MATCH_THRESHOLDS.suggestion,
+    maxSuggestionsPerTransaction = DEFAULT_MATCH_THRESHOLDS.maxSuggestionsPerTx,
   } = options;
 
   const result = {

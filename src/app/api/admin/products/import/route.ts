@@ -2,13 +2,18 @@ export const dynamic = 'force-dynamic';
 
 /**
  * Admin Products Import API
- * POST - Import products from a CSV file (multipart/form-data)
+ * POST - Import products from a CSV or JSON file (multipart/form-data) (item 73)
  * Upserts: updates existing products if slug matches, creates new ones otherwise
+ *
+ * Accepts:
+ *   - CSV files (.csv): Standard CSV with headers matching product fields
+ *   - JSON files (.json): Array of product objects or { products: [...] } wrapper
+ *     JSON format matches the output of GET /api/admin/products/export?format=json
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { auth } from '@/lib/auth-config';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 
 // ---------------------------------------------------------------------------
 // CSV parsing with proper quote handling
@@ -109,11 +114,15 @@ interface ImportError {
 }
 
 // POST /api/admin/products/import - Import products from CSV
-export async function POST(request: NextRequest) {
+export const POST = withAdminGuard(async (request, { session: _session }) => {
   try {
-    const session = await auth();
-    if (!session?.user || session.user.role !== 'OWNER') {
-      return NextResponse.json({ error: 'Forbidden - OWNER role required' }, { status: 403 });
+    // Fix 4: Request body size limit (5MB for CSV imports)
+    const contentLength = request.headers.get('content-length');
+    if (contentLength && parseInt(contentLength, 10) > 5_000_000) {
+      return NextResponse.json(
+        { error: 'Request body too large. Maximum file size: 5MB' },
+        { status: 413 }
+      );
     }
 
     // Parse multipart form data
@@ -127,17 +136,53 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate file type
-    if (!file.name.endsWith('.csv') && file.type !== 'text/csv') {
+    // Item 73: Support both CSV and JSON file formats
+    const isCSV = file.name.endsWith('.csv') || file.type === 'text/csv';
+    const isJSON = file.name.endsWith('.json') || file.type === 'application/json';
+
+    if (!isCSV && !isJSON) {
       return NextResponse.json(
-        { error: 'Only CSV files are accepted.' },
+        { error: 'Only CSV and JSON files are accepted.' },
         { status: 400 }
       );
     }
 
-    // Read and parse the CSV
+    // Read file content
     const text = await file.text();
-    const rows = parseCSV(text);
+
+    // Parse rows from either CSV or JSON
+    let rows: Record<string, string>[];
+
+    if (isJSON) {
+      // Item 73: JSON import support
+      try {
+        const parsed = JSON.parse(text);
+        // Support both { products: [...] } and direct array format
+        const productsArray = Array.isArray(parsed) ? parsed : parsed.products;
+        if (!Array.isArray(productsArray)) {
+          return NextResponse.json(
+            { error: 'JSON file must contain an array of products or a { products: [...] } object.' },
+            { status: 400 }
+          );
+        }
+        // Convert JSON objects to string records (same shape as CSV rows)
+        rows = productsArray.map((p: Record<string, unknown>) => {
+          const row: Record<string, string> = {};
+          for (const [key, value] of Object.entries(p)) {
+            if (key === 'formats' || key === 'createdAt' || key === 'id') continue; // Skip non-importable fields
+            row[key] = value !== null && value !== undefined ? String(value) : '';
+          }
+          return row;
+        });
+      } catch {
+        return NextResponse.json(
+          { error: 'Invalid JSON file. Could not parse.' },
+          { status: 400 }
+        );
+      }
+    } else {
+      rows = parseCSV(text);
+    }
 
     if (rows.length === 0) {
       return NextResponse.json(
@@ -314,4 +359,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

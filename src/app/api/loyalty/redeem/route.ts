@@ -65,22 +65,34 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Calculer le nouveau solde
-    const newPoints = user.loyaltyPoints - reward.points;
-
     // Générer un code de récompense unique
     // SECURITY: Use crypto.randomUUID for non-guessable reward codes
     const rewardCode = `BC${Date.now().toString(36).toUpperCase()}${crypto.randomUUID().replace(/-/g, '').substring(0, 4).toUpperCase()}`;
 
-    // Transaction Prisma pour mettre à jour l'utilisateur et créer la transaction
-    const [, transaction] = await db.$transaction([
-      db.user.update({
+    // BUG 10: Use row-level locking (FOR UPDATE) to prevent race conditions on point deduction
+    const transaction = await db.$transaction(async (tx) => {
+      // Lock the user row to prevent concurrent redemptions
+      const [lockedUser] = await tx.$queryRaw<{ id: string; loyalty_points: number }[]>`
+        SELECT id, "loyaltyPoints" as loyalty_points
+        FROM "User"
+        WHERE id = ${user.id}
+        FOR UPDATE
+      `;
+
+      if (!lockedUser || lockedUser.loyalty_points < reward.points) {
+        throw new Error('Insufficient points (concurrent modification detected)');
+      }
+
+      const newPoints = lockedUser.loyalty_points - reward.points;
+
+      await tx.user.update({
         where: { id: user.id },
         data: {
           loyaltyPoints: newPoints,
         },
-      }),
-      db.loyaltyTransaction.create({
+      });
+
+      const loyaltyTx = await tx.loyaltyTransaction.create({
         data: {
           userId: user.id,
           type: reward.type === 'discount' ? 'REDEEM_DISCOUNT' : 'REDEEM_PRODUCT',
@@ -94,8 +106,12 @@ export async function POST(request: NextRequest) {
             type: reward.type,
           }),
         },
-      }),
-    ]);
+      });
+
+      return { loyaltyTx, newPoints };
+    });
+
+    const newPoints = transaction.newPoints;
 
     // Créer un code promo si c'est une réduction
     if (reward.type === 'discount' && reward.value > 0) {
@@ -130,11 +146,11 @@ export async function POST(request: NextRequest) {
         expiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(),
       },
       transaction: {
-        id: transaction.id,
-        type: transaction.type,
-        points: transaction.points,
-        description: transaction.description,
-        date: transaction.createdAt.toISOString(),
+        id: transaction.loyaltyTx.id,
+        type: transaction.loyaltyTx.type,
+        points: transaction.loyaltyTx.points,
+        description: transaction.loyaltyTx.description,
+        date: transaction.loyaltyTx.createdAt.toISOString(),
       },
     });
 

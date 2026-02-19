@@ -7,9 +7,24 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
 
 export async function POST(request: NextRequest) {
   try {
+    // BE-SEC-02: Rate limit promo validation - 10 per IP per hour (prevents brute-force enumeration)
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip')
+      || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/promo/validate');
+    if (!rl.success) {
+      const res = NextResponse.json(
+        { valid: false, error: rl.error!.message },
+        { status: 429 }
+      );
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+
     const { code, subtotal } = await request.json();
 
     if (!code) {

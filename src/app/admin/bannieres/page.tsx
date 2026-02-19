@@ -324,7 +324,7 @@ export default function BannieresPage() {
                     className="object-cover"
                     unoptimized
                   />
-                  <span className="absolute bottom-1 right-1 bg-black/70 text-white text-xs px-1.5 py-0.5 rounded">
+                  <span className="absolute bottom-1 end-1 bg-black/70 text-white text-xs px-1.5 py-0.5 rounded">
                     {slide.mediaType}
                   </span>
                 </div>
@@ -447,7 +447,7 @@ export default function BannieresPage() {
               <Input
                 value={form.badgeText}
                 onChange={(e) => setForm({ ...form, badgeText: e.target.value })}
-                placeholder="Research Grade Peptides"
+                placeholder={t('admin.banners.placeholderTitle')}
               />
             </FormField>
             <div className="flex items-center gap-2">
@@ -484,7 +484,7 @@ export default function BannieresPage() {
               />
               {form.backgroundUrl && (
                 <div className="mt-2 h-32 rounded-lg overflow-hidden bg-slate-100 relative">
-                  <Image src={form.backgroundUrl} alt="" fill className="object-cover" unoptimized />
+                  <Image src={form.backgroundUrl} alt="" fill className="object-cover" sizes="(max-width: 768px) 100vw, 50vw" unoptimized />
                 </div>
               )}
             </FormField>

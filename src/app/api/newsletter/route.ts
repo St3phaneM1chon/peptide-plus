@@ -7,12 +7,33 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, source, locale, birthDate } = await request.json();
+    // BE-SEC-01: Rate limit newsletter subscribe - 5 per IP per hour
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip')
+      || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/newsletter');
+    if (!rl.success) {
+      const res = NextResponse.json(
+        { error: rl.error!.message },
+        { status: 429 }
+      );
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
 
-    if (!email || !email.includes('@')) {
+    const rawBody = await request.json();
+
+    // BE-SEC-05: Validate and enforce length limits
+    const email = typeof rawBody.email === 'string' ? rawBody.email.trim().toLowerCase() : '';
+    const source = typeof rawBody.source === 'string' ? rawBody.source.slice(0, 50) : 'footer';
+    const locale = typeof rawBody.locale === 'string' ? rawBody.locale.slice(0, 10) : 'fr';
+    const birthDate = rawBody.birthDate;
+
+    if (!email || email.length > 254 || !email.includes('@')) {
       return NextResponse.json(
         { error: 'Email invalide' },
         { status: 400 }
@@ -59,11 +80,13 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Log pour suivi
+    // Log pour suivi (email masked for privacy)
+    const [localPart, domain] = email.split('@');
+    const maskedEmail = localPart.slice(0, 2) + '***@' + domain;
     console.log(JSON.stringify({
       event: 'newsletter_subscription',
       timestamp: new Date().toISOString(),
-      email: email,
+      email: maskedEmail,
     }));
 
     return NextResponse.json({
@@ -80,24 +103,9 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Optionnel: GET pour vérifier le statut
-export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const email = searchParams.get('email');
-
-  if (!email) {
-    return NextResponse.json({ subscribed: false });
-  }
-
-  try {
-    const subscriber = await prisma.newsletterSubscriber.findUnique({
-      where: { email: email.toLowerCase() },
-    }).catch(() => null);
-
-    return NextResponse.json({
-      subscribed: !!subscriber,
-    });
-  } catch {
-    return NextResponse.json({ subscribed: false });
-  }
+// SEC-23: Always return generic response to prevent subscription status enumeration
+export async function GET() {
+  return NextResponse.json({
+    message: 'If this email is subscribed, you will continue to receive emails',
+  });
 }

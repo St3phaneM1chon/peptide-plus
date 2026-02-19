@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useI18n } from '@/i18n/client';
 
 interface ProductVideoProps {
   videoUrl: string;
@@ -44,6 +45,7 @@ function parseVideoUrl(url: string): { platform: 'youtube' | 'vimeo' | null; vid
  * Supports YouTube and Vimeo URLs
  */
 export default function ProductVideo({ videoUrl }: ProductVideoProps) {
+  const { t } = useI18n();
   const [isLoaded, setIsLoaded] = useState(false);
   const parsed = parseVideoUrl(videoUrl);
 
@@ -75,7 +77,7 @@ export default function ProductVideo({ videoUrl }: ProductVideoProps) {
         <button
           onClick={handleLoadVideo}
           className="absolute inset-0 w-full h-full bg-black rounded-lg overflow-hidden group cursor-pointer"
-          aria-label="Load video player"
+          aria-label={t('shop.aria.loadVideoPlayer')}
         >
           {thumbnailUrl ? (
             <img
@@ -104,7 +106,7 @@ export default function ProductVideo({ videoUrl }: ProductVideoProps) {
           <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/50 transition-colors">
             <div className="w-20 h-20 bg-orange-500 rounded-full flex items-center justify-center group-hover:bg-orange-600 transition-all transform group-hover:scale-110 shadow-2xl">
               <svg
-                className="w-10 h-10 text-white ml-1"
+                className="w-10 h-10 text-white ms-1"
                 fill="currentColor"
                 viewBox="0 0 20 20"
               >
@@ -114,7 +116,7 @@ export default function ProductVideo({ videoUrl }: ProductVideoProps) {
           </div>
 
           {/* Platform badge */}
-          <div className="absolute top-3 right-3 px-3 py-1 bg-black/70 text-white text-xs font-semibold rounded-full uppercase">
+          <div className="absolute top-3 end-3 px-3 py-1 bg-black/70 text-white text-xs font-semibold rounded-full uppercase">
             {platform}
           </div>
         </button>
@@ -123,7 +125,7 @@ export default function ProductVideo({ videoUrl }: ProductVideoProps) {
         <iframe
           className="absolute inset-0 w-full h-full rounded-lg"
           src={embedUrl}
-          title="Product video"
+          title={t('shop.productVideo')}
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
         />

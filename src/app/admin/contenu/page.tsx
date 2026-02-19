@@ -276,11 +276,11 @@ export default function ContenuPage() {
             <table className="w-full">
               <thead className="bg-slate-50">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">{t('admin.content.colPage')}</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">{t('admin.content.colUrl')}</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">{t('admin.content.colUpdated')}</th>
+                  <th className="px-4 py-3 text-start text-xs font-medium text-slate-500 uppercase tracking-wider">{t('admin.content.colPage')}</th>
+                  <th className="px-4 py-3 text-start text-xs font-medium text-slate-500 uppercase tracking-wider">{t('admin.content.colUrl')}</th>
+                  <th className="px-4 py-3 text-start text-xs font-medium text-slate-500 uppercase tracking-wider">{t('admin.content.colUpdated')}</th>
                   <th className="px-4 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">{t('admin.content.colStatus')}</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">{t('admin.content.colActions')}</th>
+                  <th className="px-4 py-3 text-end text-xs font-medium text-slate-500 uppercase tracking-wider">{t('admin.content.colActions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">

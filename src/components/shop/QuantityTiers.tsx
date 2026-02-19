@@ -1,7 +1,7 @@
 'use client';
 
 import { useCurrency } from '@/contexts/CurrencyContext';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 
 export interface QuantityTier {
   id: string;
@@ -22,7 +22,7 @@ export default function QuantityTiers({
   currentQuantity = 1
 }: QuantityTiersProps) {
   const { formatPrice } = useCurrency();
-  const { t } = useTranslations();
+  const { t } = useI18n();
 
   // Sort tiers by minQty
   const sortedTiers = [...tiers].sort((a, b) => a.minQty - b.minQty);
@@ -73,7 +73,7 @@ export default function QuantityTiers({
                   {t('shop.basePrice') || 'Base price'}
                 </p>
               </div>
-              <div className="text-right">
+              <div className="text-end">
                 <p className="font-bold text-neutral-800">
                   {formatPrice(basePrice)}
                 </p>
@@ -113,7 +113,7 @@ export default function QuantityTiers({
                     {t('shop.save') || 'Save'} {tier.discount}%
                   </p>
                 </div>
-                <div className="text-right">
+                <div className="text-end">
                   <p className="font-bold text-orange-600">
                     {formatPrice(discountedPrice)}
                   </p>

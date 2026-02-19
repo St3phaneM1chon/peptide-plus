@@ -9,20 +9,12 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { auth } from '@/lib/auth-config';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 
 // GET /api/admin/employees/[id] - Get employee detail
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const GET = withAdminGuard(async (_request, { session, params }) => {
   try {
-    const session = await auth();
-    if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role || '')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { id } = await params;
+    const id = params!.id;
 
     const user = await prisma.user.findUnique({
       where: { id },
@@ -131,19 +123,11 @@ export async function GET(
       { status: 500 }
     );
   }
-}
+});
 
 // PATCH /api/admin/employees/[id] - Update employee
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const PATCH = withAdminGuard(async (request, { session, params }) => {
   try {
-    const session = await auth();
-    if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role || '')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     // Only OWNER can modify employees
     if (session.user.role !== 'OWNER') {
       return NextResponse.json(
@@ -152,7 +136,7 @@ export async function PATCH(
       );
     }
 
-    const { id } = await params;
+    const id = params!.id;
     const body = await request.json();
 
     const existing = await prisma.user.findUnique({
@@ -263,19 +247,11 @@ export async function PATCH(
       { status: 500 }
     );
   }
-}
+});
 
 // DELETE /api/admin/employees/[id] - Deactivate employee (set role to PUBLIC)
-export async function DELETE(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const DELETE = withAdminGuard(async (_request, { session, params }) => {
   try {
-    const session = await auth();
-    if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role || '')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     // Only OWNER can deactivate employees
     if (session.user.role !== 'OWNER') {
       return NextResponse.json(
@@ -284,7 +260,7 @@ export async function DELETE(
       );
     }
 
-    const { id } = await params;
+    const id = params!.id;
 
     // Prevent self-deactivation
     if (id === session.user.id) {
@@ -346,4 +322,4 @@ export async function DELETE(
       { status: 500 }
     );
   }
-}
+});

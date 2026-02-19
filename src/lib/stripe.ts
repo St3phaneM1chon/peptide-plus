@@ -91,15 +91,15 @@ export async function createPaymentIntent({
     amount,
     currency,
     customer: customerId,
-    payment_method_types: paymentMethodTypes,
-    metadata: {
-      productId,
-      ...metadata,
-    },
-    // Options pour Apple Pay / Google Pay
+    // Use automatic_payment_methods for broad payment method support (card, Apple Pay, Google Pay)
+    // NOTE: payment_method_types and automatic_payment_methods are mutually exclusive in Stripe API
     automatic_payment_methods: {
       enabled: true,
       allow_redirects: 'never',
+    },
+    metadata: {
+      productId,
+      ...metadata,
     },
   });
 }

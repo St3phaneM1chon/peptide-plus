@@ -10,20 +10,12 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { auth } from '@/lib/auth-config';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 
 // GET /api/admin/promo-codes/[id] - Get single promo code with usages
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const GET = withAdminGuard(async (_request, { session, params }) => {
   try {
-    const session = await auth();
-    if (!session?.user || (session.user.role !== 'EMPLOYEE' && session.user.role !== 'OWNER')) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-
-    const { id } = await params;
+    const id = params!.id;
 
     const promoCode = await prisma.promoCode.findUnique({
       where: { id },
@@ -93,20 +85,12 @@ export async function GET(
       { status: 500 }
     );
   }
-}
+});
 
 // PUT /api/admin/promo-codes/[id] - Full update (edit form)
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const PUT = withAdminGuard(async (request, { session, params }) => {
   try {
-    const session = await auth();
-    if (!session?.user || (session.user.role !== 'EMPLOYEE' && session.user.role !== 'OWNER')) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-
-    const { id } = await params;
+    const id = params!.id;
     const body = await request.json();
 
     const existing = await prisma.promoCode.findUnique({
@@ -216,20 +200,12 @@ export async function PUT(
       { status: 500 }
     );
   }
-}
+});
 
 // PATCH /api/admin/promo-codes/[id] - Partial update (toggle isActive, etc.)
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const PATCH = withAdminGuard(async (request, { session, params }) => {
   try {
-    const session = await auth();
-    if (!session?.user || (session.user.role !== 'EMPLOYEE' && session.user.role !== 'OWNER')) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-
-    const { id } = await params;
+    const id = params!.id;
     const body = await request.json();
 
     const existing = await prisma.promoCode.findUnique({
@@ -321,20 +297,12 @@ export async function PATCH(
       { status: 500 }
     );
   }
-}
+});
 
 // DELETE /api/admin/promo-codes/[id] - Delete promo code
-export async function DELETE(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const DELETE = withAdminGuard(async (_request, { session, params }) => {
   try {
-    const session = await auth();
-    if (!session?.user || (session.user.role !== 'EMPLOYEE' && session.user.role !== 'OWNER')) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-
-    const { id } = await params;
+    const id = params!.id;
 
     const existing = await prisma.promoCode.findUnique({
       where: { id },
@@ -374,4 +342,4 @@ export async function DELETE(
       { status: 500 }
     );
   }
-}
+});

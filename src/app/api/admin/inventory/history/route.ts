@@ -7,16 +7,11 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { auth } from '@/lib/auth-config';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 
 // GET /api/admin/inventory/history - Inventory transaction history
-export async function GET(request: NextRequest) {
+export const GET = withAdminGuard(async (request, { session }) => {
   try {
-    const session = await auth();
-    if (!session?.user || (session.user.role !== 'EMPLOYEE' && session.user.role !== 'OWNER')) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-
     const { searchParams } = new URL(request.url);
     const productId = searchParams.get('productId');
     const formatId = searchParams.get('formatId');
@@ -114,4 +109,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

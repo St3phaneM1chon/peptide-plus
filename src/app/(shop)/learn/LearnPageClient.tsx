@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 
 // Article data
 const articles = [
@@ -90,7 +90,7 @@ const categories = [
 ];
 
 export default function LearnPage() {
-  const { t } = useTranslations();
+  const { t } = useI18n();
   const featuredArticles = articles.filter(a => a.featured);
 
   return (
@@ -125,7 +125,7 @@ export default function LearnPage() {
                   <div className="absolute inset-0 flex items-center justify-center text-white text-6xl opacity-50">
                     📚
                   </div>
-                  <div className="absolute top-3 left-3">
+                  <div className="absolute top-3 start-3">
                     <span className="px-3 py-1 bg-white/90 text-orange-600 text-xs font-semibold rounded-full">
                       {article.category}
                     </span>
@@ -157,7 +157,7 @@ export default function LearnPage() {
                   {categories.map((cat) => (
                     <button
                       key={cat.name}
-                      className="w-full flex items-center justify-between px-4 py-2 text-left text-gray-600 hover:bg-orange-50 hover:text-orange-600 rounded-lg transition-colors"
+                      className="w-full flex items-center justify-between px-4 py-2 text-start text-gray-600 hover:bg-orange-50 hover:text-orange-600 rounded-lg transition-colors"
                     >
                       <span>{cat.name}</span>
                       <span className="text-xs bg-gray-100 px-2 py-0.5 rounded-full">{cat.count}</span>
@@ -208,7 +208,7 @@ export default function LearnPage() {
                   <div className="w-48 h-32 bg-gradient-to-br from-gray-200 to-gray-300 flex-shrink-0 flex items-center justify-center text-4xl">
                     📄
                   </div>
-                  <div className="flex-1 py-4 pr-4">
+                  <div className="flex-1 py-4 pe-4">
                     <div className="flex items-center gap-2 mb-2">
                       <span className="px-2 py-0.5 bg-orange-100 text-orange-600 text-xs font-medium rounded">
                         {article.category}

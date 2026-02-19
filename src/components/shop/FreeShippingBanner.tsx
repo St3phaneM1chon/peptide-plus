@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 import { useCurrency } from '@/contexts/CurrencyContext';
 
 export default function FreeShippingBanner() {
-  const { t } = useTranslations();
+  const { t } = useI18n();
   const { formatPrice } = useCurrency();
   const [isVisible, setIsVisible] = useState(true);
 
@@ -31,6 +31,8 @@ export default function FreeShippingBanner() {
 
   return (
     <div
+      role="banner"
+      aria-label={t('shop.aria.freeShippingInfo')}
       className={`bg-gradient-to-r from-orange-500 to-orange-600 text-white text-center py-2 px-4 text-sm font-medium transition-all duration-300 ${
         isVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0 h-0 py-0'
       }`}

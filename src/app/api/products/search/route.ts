@@ -9,9 +9,13 @@ import { prisma } from '@/lib/db';
 import { Prisma } from '@prisma/client';
 import { withTranslations, getTranslatedFields, DB_SOURCE_LOCALE } from '@/lib/translation';
 import { defaultLocale } from '@/i18n/config';
+import { cacheGetOrSet, cacheInvalidateTag, CacheKeys } from '@/lib/cache';
+import { logSearch } from '@/lib/search-analytics';
+import { createHash } from 'crypto';
 
 export async function GET(request: NextRequest) {
   try {
+    const searchStart = Date.now();
     const { searchParams } = new URL(request.url);
     const q = searchParams.get('q')?.trim() || '';
     const category = searchParams.get('category');
@@ -20,8 +24,14 @@ export async function GET(request: NextRequest) {
     const inStock = searchParams.get('inStock');
     const purity = searchParams.get('purity');
     const sort = searchParams.get('sort') || 'relevance';
-    const limit = parseInt(searchParams.get('limit') || '50');
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
+    const limit = Math.min(Math.max(1, parseInt(searchParams.get('limit') || '50', 10)), 200);
     const locale = searchParams.get('locale') || defaultLocale;
+
+    // #61: Generate cache key from all search params
+    const cacheKeyData = JSON.stringify({ q, category, minPrice, maxPrice, inStock, purity, sort, page, limit, locale });
+    const cacheHash = createHash('md5').update(cacheKeyData).digest('hex');
+    const cacheKey = `search:${cacheHash}`;
 
     // Build where clause
     const where: Prisma.ProductWhereInput = {
@@ -38,9 +48,18 @@ export async function GET(request: NextRequest) {
       ];
     }
 
-    // Category filter
+    // Category filter (parent categories include children)
     if (category) {
-      where.category = { slug: category };
+      const cat = await prisma.category.findUnique({
+        where: { slug: category },
+        include: { children: { select: { id: true } } },
+      });
+      if (cat && cat.children.length > 0) {
+        const categoryIds = [cat.id, ...cat.children.map(c => c.id)];
+        where.categoryId = { in: categoryIds };
+      } else {
+        where.category = { slug: category };
+      }
     }
 
     // Price range filter
@@ -52,6 +71,16 @@ export async function GET(request: NextRequest) {
       if (maxPrice) {
         (where.price as Prisma.DecimalFilter).lte = parseFloat(maxPrice);
       }
+    }
+
+    // In-stock filter (moved into Prisma where clause for efficiency)
+    if (inStock === 'true') {
+      where.formats = {
+        some: {
+          isActive: true,
+          stockQuantity: { gt: 0 },
+        },
+      };
     }
 
     // Purity filter
@@ -77,30 +106,29 @@ export async function GET(request: NextRequest) {
         break;
     }
 
-    let products = await prisma.product.findMany({
-      where,
-      include: {
-        category: {
-          select: { id: true, name: true, slug: true },
+    const [products_raw, totalCount] = await Promise.all([
+      prisma.product.findMany({
+        where,
+        include: {
+          category: {
+            select: { id: true, name: true, slug: true },
+          },
+          images: {
+            orderBy: { sortOrder: 'asc' },
+          },
+          formats: {
+            where: { isActive: true },
+            orderBy: { sortOrder: 'asc' },
+          },
         },
-        images: {
-          orderBy: { sortOrder: 'asc' },
-        },
-        formats: {
-          where: { isActive: true },
-          orderBy: { sortOrder: 'asc' },
-        },
-      },
-      orderBy,
-      take: limit,
-    });
+        orderBy,
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      prisma.product.count({ where }),
+    ]);
 
-    // In-stock filter (post-query since it depends on formats)
-    if (inStock === 'true') {
-      products = products.filter((p) =>
-        p.formats.some((f) => f.stockQuantity > 0)
-      );
-    }
+    let products = products_raw;
 
     // Apply translations
     if (locale !== DB_SOURCE_LOCALE) {
@@ -155,13 +183,33 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    return NextResponse.json(
-      {
-        products,
-        categories: translatedCategories,
-        total: products.length,
-        query: q,
+    const responseData = {
+      products,
+      categories: translatedCategories,
+      total: totalCount,
+      query: q,
+      pagination: {
+        page,
+        limit,
+        total: totalCount,
+        totalPages: Math.ceil(totalCount / limit),
       },
+    };
+
+    // #59: Log search analytics (fire-and-forget)
+    const duration = Date.now() - searchStart;
+    if (q) {
+      logSearch({
+        query: q,
+        resultCount: totalCount,
+        filters: { category, minPrice, maxPrice, inStock, purity, sort },
+        locale,
+        duration,
+      }).catch(() => {}); // silent
+    }
+
+    return NextResponse.json(
+      responseData,
       {
         headers: {
           'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120',

@@ -17,6 +17,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
     }
 
+    // SEC-26: Restrict user listing to EMPLOYEE/OWNER roles only
     if (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER) {
       return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
     }
@@ -35,8 +36,8 @@ export async function GET(request: NextRequest) {
 
     if (search) {
       where.OR = [
-        { email: { contains: search } },
-        { name: { contains: search } },
+        { email: { contains: search, mode: 'insensitive' } },
+        { name: { contains: search, mode: 'insensitive' } },
       ];
     }
 

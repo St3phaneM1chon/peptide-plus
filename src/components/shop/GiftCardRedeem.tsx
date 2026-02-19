@@ -3,11 +3,11 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { useCurrency } from '@/contexts/CurrencyContext';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 
 export default function GiftCardRedeem() {
   const { formatPrice } = useCurrency();
-  const { t } = useTranslations();
+  const { t } = useI18n();
   const [code, setCode] = useState('');
   const [isChecking, setIsChecking] = useState(false);
   const [isRedeeming, setIsRedeeming] = useState(false);
@@ -90,8 +90,13 @@ export default function GiftCardRedeem() {
           <input
             type="text"
             value={code}
-            onChange={(e) => setCode(e.target.value.toUpperCase())}
-            placeholder="XXXX-XXXX-XXXX-XXXX"
+            onChange={(e) => {
+              // Strip dashes and non-alphanumeric, then auto-format with dashes every 4 chars
+              const raw = e.target.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+              const formatted = raw.match(/.{1,4}/g)?.join('-') || '';
+              setCode(formatted);
+            }}
+            placeholder={t('shop.giftCard.placeholderCode')}
             className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm uppercase font-mono"
             maxLength={19}
           />

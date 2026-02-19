@@ -147,7 +147,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               className="form-input"
-              placeholder="Jean Dupont"
+              placeholder={t('account.profileForm.placeholderName')}
             />
           </div>
 

@@ -5,6 +5,14 @@
 
 import { db as prisma } from '@/lib/db';
 
+// #95 Retry configuration for failed recurring entries
+const RETRY_CONFIG = {
+  /** Maximum number of retry attempts for a failed recurring entry */
+  MAX_RETRIES: 3,
+  /** Base delay between retries in milliseconds (doubles each attempt) */
+  BASE_DELAY_MS: 1000,
+} as const;
+
 export interface RecurringEntryTemplate {
   id: string;
   name: string;
@@ -92,9 +100,19 @@ export const PREDEFINED_TEMPLATES: Partial<RecurringEntryTemplate>[] = [
 /**
  * Get all recurring entry templates
  */
+// TODO: Replace with database query when RecurringEntryTemplate model exists
 export async function getRecurringTemplates(): Promise<RecurringEntryTemplate[]> {
-  // In production, fetch from database
-  // For now, return mock data
+  // Try fetching from database first
+  try {
+    const dbTemplates = await (prisma as any).recurringEntryTemplate?.findMany();
+    if (dbTemplates && dbTemplates.length > 0) {
+      return dbTemplates;
+    }
+  } catch {
+    // Model doesn't exist yet, fall back to mock data
+  }
+
+  // Fallback: return mock data
   const templates: RecurringEntryTemplate[] = [
     {
       id: 'rec-1',
@@ -240,17 +258,48 @@ export function calculateNextRunDate(
 }
 
 /**
+ * #95 Helper: retry an async operation with exponential backoff
+ */
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  label: string,
+  maxRetries: number = RETRY_CONFIG.MAX_RETRIES,
+  baseDelayMs: number = RETRY_CONFIG.BASE_DELAY_MS,
+): Promise<T> {
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error;
+      if (attempt < maxRetries) {
+        const delay = baseDelayMs * Math.pow(2, attempt - 1);
+        console.warn(
+          `[Recurring] Tentative ${attempt}/${maxRetries} échouée pour "${label}". ` +
+          `Nouvelle tentative dans ${delay}ms. Erreur: ${error}`
+        );
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      }
+    }
+  }
+  throw lastError;
+}
+
+/**
  * Process due recurring entries
+ * #95 Enhanced with retry logic for transient failures
  */
 export async function processDueRecurringEntries(): Promise<{
   processed: number;
   created: string[];
   errors: string[];
+  retried: number;
 }> {
   const result = {
     processed: 0,
     created: [] as string[],
     errors: [] as string[],
+    retried: 0, // #95 Track how many entries needed retries
   };
 
   const templates = await getRecurringTemplates();
@@ -262,40 +311,62 @@ export async function processDueRecurringEntries(): Promise<{
     if (template.nextRunDate > now) continue;
 
     try {
-      // Generate entry number
-      const year = now.getFullYear();
-      const count = await prisma.journalEntry.count({
-        where: { entryNumber: { startsWith: `JV-${year}` } },
-      });
-      const entryNumber = `JV-${year}-${String(count + 1).padStart(4, '0')}`;
+      // #95 Wrap the entire entry creation in retry logic
+      const entry = await withRetry(async () => {
+        const year = now.getFullYear();
+        const prefix = `JV-${year}-`;
 
-      // Create journal entry
-      const entry = await prisma.journalEntry.create({
-        data: {
-          entryNumber,
-          date: now,
-          description: `${template.name} - Récurrent`,
-          type: 'RECURRING',
-          status: template.autoPost ? 'POSTED' : 'DRAFT',
-          reference: `REC-${template.id}`,
-          createdBy: 'Système (récurrent)',
-          postedBy: template.autoPost ? 'Système' : null,
-          postedAt: template.autoPost ? now : null,
-          lines: {
-            create: await Promise.all(template.lines.map(async (line) => {
-              const account = await prisma.chartOfAccount.findUnique({
-                where: { code: line.accountCode },
-              });
-              return {
-                accountId: account?.id || '',
-                description: line.description || template.name,
-                debit: line.debitAmount,
-                credit: line.creditAmount,
-              };
-            })),
-          },
-        },
-      });
+        // Resolve account IDs before the transaction
+        const resolvedLines = await Promise.all(template.lines.map(async (line) => {
+          const account = await prisma.chartOfAccount.findUnique({
+            where: { code: line.accountCode },
+          });
+          if (!account) {
+            throw new Error(`Compte ${line.accountCode} introuvable pour "${template.name}"`);
+          }
+          return {
+            accountId: account.id,
+            description: line.description || template.name,
+            debit: line.debitAmount,
+            credit: line.creditAmount,
+          };
+        }));
+
+        // Generate entry number inside a transaction with row-level lock
+        // to prevent duplicate numbers under concurrent processing
+        return prisma.$transaction(async (tx) => {
+          const [maxRow] = await tx.$queryRaw<{ max_num: string | null }[]>`
+            SELECT MAX("entryNumber") as max_num
+            FROM "JournalEntry"
+            WHERE "entryNumber" LIKE ${prefix + '%'}
+            FOR UPDATE
+          `;
+
+          let nextNum = 1;
+          if (maxRow?.max_num) {
+            const parsed = parseInt(maxRow.max_num.split('-').pop() || '0');
+            if (!isNaN(parsed)) nextNum = parsed + 1;
+          }
+          const entryNumber = `${prefix}${String(nextNum).padStart(4, '0')}`;
+
+          return tx.journalEntry.create({
+            data: {
+              entryNumber,
+              date: now,
+              description: `${template.name} - Récurrent`,
+              type: 'RECURRING',
+              status: template.autoPost ? 'POSTED' : 'DRAFT',
+              reference: `REC-${template.id}`,
+              createdBy: 'Système (récurrent)',
+              postedBy: template.autoPost ? 'Système' : null,
+              postedAt: template.autoPost ? now : null,
+              lines: {
+                create: resolvedLines,
+              },
+            },
+          });
+        });
+      }, template.name);
 
       result.created.push(entry.entryNumber);
       result.processed++;
@@ -312,7 +383,11 @@ export async function processDueRecurringEntries(): Promise<{
       template.totalRuns++;
 
     } catch (error) {
-      result.errors.push(`Erreur pour ${template.name}: ${error}`);
+      // #95 All retries exhausted - log final failure
+      result.errors.push(
+        `Erreur pour ${template.name} (après ${RETRY_CONFIG.MAX_RETRIES} tentatives): ${error}`
+      );
+      result.retried++;
     }
   }
 

@@ -60,8 +60,14 @@ export async function fetchBOCRate(currency: string): Promise<number> {
 
     throw new Error('No rate data');
   } catch (error) {
-    console.error(`Error fetching BOC rate for ${currency}:`, error);
-    return getFallbackRate(currency);
+    const fallbackRate = getFallbackRate(currency);
+    console.warn('BOC API failed, using fallback rate:', {
+      currency,
+      fallbackRate,
+      error: error instanceof Error ? error.message : String(error),
+      timestamp: new Date().toISOString(),
+    });
+    return fallbackRate;
   }
 }
 

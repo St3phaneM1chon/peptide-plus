@@ -5,24 +5,16 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth-config';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
-import { UserRole } from '@/types';
 
-export async function GET(request: NextRequest) {
+export const GET = withAdminGuard(async (request: NextRequest, { session }) => {
   try {
-    const session = await auth();
-
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
-    }
-
-    if (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER) {
-      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
-    }
-
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status'); // pending, approved, rejected
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
+    const limit = Math.min(parseInt(searchParams.get('limit') || '20', 10), 100);
+    const skip = (page - 1) * limit;
 
     // Build where clause based on status filter
     const where: Record<string, unknown> = {};
@@ -38,21 +30,26 @@ export async function GET(request: NextRequest) {
       // For now, we return all non-approved non-published as pending
     }
 
-    const dbReviews = await prisma.review.findMany({
-      where,
-      include: {
-        user: {
-          select: { id: true, name: true, email: true },
+    const [dbReviews, total] = await Promise.all([
+      prisma.review.findMany({
+        where,
+        include: {
+          user: {
+            select: { id: true, name: true, email: true },
+          },
+          product: {
+            select: { id: true, name: true },
+          },
+          images: {
+            orderBy: { order: 'asc' },
+          },
         },
-        product: {
-          select: { id: true, name: true },
-        },
-        images: {
-          orderBy: { order: 'asc' },
-        },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      prisma.review.count({ where }),
+    ]);
 
     // Map DB model to frontend Review interface
     const reviews = dbReviews.map((r) => {
@@ -84,7 +81,15 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    return NextResponse.json({ reviews });
+    return NextResponse.json({
+      reviews,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+      },
+    });
   } catch (error) {
     console.error('Error fetching reviews:', error);
     return NextResponse.json(
@@ -92,4 +97,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

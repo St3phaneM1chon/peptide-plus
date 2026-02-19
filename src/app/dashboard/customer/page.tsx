@@ -247,7 +247,7 @@ function StatCard({ title, value, icon, color }: {
         <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${colors[color]}`}>
           <span className="text-2xl">{icon}</span>
         </div>
-        <div className="ml-4">
+        <div className="ms-4">
           <p className="text-sm text-gray-500">{title}</p>
           <p className="text-2xl font-bold text-gray-900">{value}</p>
         </div>
@@ -262,7 +262,7 @@ function QuickLink({ href, icon, title }: { href: string; icon: string; title: s
       href={href}
       className="bg-white rounded-xl p-4 border border-gray-200 hover:border-orange-300 hover:shadow-sm transition-all flex items-center"
     >
-      <div className="w-10 h-10 bg-orange-50 rounded-lg flex items-center justify-center text-orange-600 mr-3">
+      <div className="w-10 h-10 bg-orange-50 rounded-lg flex items-center justify-center text-orange-600 me-3">
         <span className="text-xl">{icon}</span>
       </div>
       <span className="font-medium text-gray-900">{title}</span>
@@ -270,8 +270,17 @@ function QuickLink({ href, icon, title }: { href: string; icon: string; title: s
   );
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Prisma order object with nested relations
-function OrderCard({ order }: { order: any }) {
+interface OrderWithRelations {
+  id: string;
+  orderNumber: string;
+  createdAt: Date | string;
+  status: string;
+  total: number | { toNumber?: () => number } | string;
+  items: Array<Record<string, unknown>>;
+  currency?: { code: string; [key: string]: unknown } | null;
+}
+
+function OrderCard({ order }: { order: OrderWithRelations }) {
   const statusColors: Record<string, string> = {
     PENDING: 'bg-yellow-100 text-yellow-800',
     CONFIRMED: 'bg-blue-100 text-blue-800',

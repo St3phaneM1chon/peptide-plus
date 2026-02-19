@@ -4,10 +4,11 @@ import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { useTranslations } from '@/hooks/useTranslations';
+import { useI18n } from '@/i18n/client';
 import { settingsProfileSchema, validateForm } from '@/lib/form-validation';
 import { FormError } from '@/components/ui/FormError';
 import { toast } from 'sonner';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
 interface ProfileData {
   name: string;
@@ -27,7 +28,7 @@ export default function SettingsPage() {
   const { data: session, status, update: updateSession } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { t } = useTranslations();
+  const { t } = useI18n();
 
   const mfaRequired = searchParams.get('mfa_required') === '1';
   const [activeTab, setActiveTab] = useState<'profile' | 'password' | 'address' | 'security'>(mfaRequired ? 'security' : 'profile');
@@ -37,6 +38,7 @@ export default function SettingsPage() {
   const [mfaVerifyCode, setMfaVerifyCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   
   // Profile form
   const [profileData, setProfileData] = useState<ProfileData>({
@@ -140,15 +142,15 @@ export default function SettingsPage() {
       if (res.ok) {
         await updateSession({ name: profileData.name });
         setMessage({ type: 'success', text: t('account.profileUpdated') });
-        toast.success('Profile updated successfully');
+        toast.success(t('toast.profile.updated'));
       } else {
         const data = await res.json();
         setMessage({ type: 'error', text: data.error || data.message || t('account.errorUpdateProfile') });
-        toast.error(data.error || 'Failed to update profile');
+        toast.error(data.error || t('toast.profile.updateFailed'));
       }
     } catch (error) {
       setMessage({ type: 'error', text: t('account.errorGeneric') });
-      toast.error('Something went wrong. Please try again.');
+      toast.error(t('toast.error.generic'));
     } finally {
       setIsLoading(false);
     }
@@ -162,14 +164,14 @@ export default function SettingsPage() {
     // Validation
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       setMessage({ type: 'error', text: t('account.passwordMismatch') });
-      toast.error('Passwords do not match');
+      toast.error(t('toast.password.mismatch'));
       setIsLoading(false);
       return;
     }
 
-    if (passwordData.newPassword.length < 12) {
+    if (passwordData.newPassword.length < 8) {
       setMessage({ type: 'error', text: t('account.passwordTooShort') });
-      toast.error('Password must be at least 12 characters');
+      toast.error(t('toast.password.tooShort'));
       setIsLoading(false);
       return;
     }
@@ -187,15 +189,15 @@ export default function SettingsPage() {
       if (res.ok) {
         setMessage({ type: 'success', text: t('account.passwordUpdated') });
         setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
-        toast.success('Password changed successfully');
+        toast.success(t('toast.password.changed'));
       } else {
         const error = await res.json();
         setMessage({ type: 'error', text: error.message || t('account.errorUpdatePassword') });
-        toast.error('Failed to change password');
+        toast.error(t('toast.password.changeFailed'));
       }
     } catch (error) {
       setMessage({ type: 'error', text: t('account.errorGeneric') });
-      toast.error('Something went wrong. Please try again.');
+      toast.error(t('toast.error.generic'));
     } finally {
       setIsLoading(false);
     }
@@ -218,11 +220,11 @@ export default function SettingsPage() {
       });
 
       setMessage({ type: 'success', text: t('account.addressUpdated') });
-      toast.success('Address saved successfully');
+      toast.success(t('toast.address.saved'));
     } catch (error) {
       // Still show success if localStorage worked
       setMessage({ type: 'success', text: t('account.addressUpdated') });
-      toast.success('Address saved successfully');
+      toast.success(t('toast.address.saved'));
     } finally {
       setIsLoading(false);
     }
@@ -363,7 +365,7 @@ export default function SettingsPage() {
                     value={profileData.name}
                     onChange={(e) => { setProfileData({ ...profileData, name: e.target.value }); clearProfileError('name'); }}
                     className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent ${profileErrors.name ? 'border-red-500' : 'border-neutral-300'}`}
-                    placeholder="John Doe"
+                    placeholder={t('account.settingsForm.placeholderName')}
                   />
                   <FormError error={profileErrors.name} />
                 </div>
@@ -520,7 +522,7 @@ export default function SettingsPage() {
                       value={addressData.city}
                       onChange={(e) => setAddressData({ ...addressData, city: e.target.value })}
                       className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                      placeholder="Toronto"
+                      placeholder={t('account.settingsForm.placeholderCity')}
                     />
                   </div>
                   <div>
@@ -532,7 +534,7 @@ export default function SettingsPage() {
                       value={addressData.province}
                       onChange={(e) => setAddressData({ ...addressData, province: e.target.value })}
                       className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                      placeholder="Ontario"
+                      placeholder={t('account.settingsForm.placeholderProvince')}
                     />
                   </div>
                 </div>
@@ -547,7 +549,7 @@ export default function SettingsPage() {
                       value={addressData.postalCode}
                       onChange={(e) => setAddressData({ ...addressData, postalCode: e.target.value })}
                       className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                      placeholder="M5V 3A8"
+                      placeholder={t('account.settingsForm.placeholderPostalCode')}
                     />
                   </div>
                   <div>
@@ -749,12 +751,7 @@ export default function SettingsPage() {
               {t('account.dangerZoneDesc') }
             </p>
             <button
-              onClick={() => {
-                if (confirm(t('account.deleteConfirm'))) {
-                  // Handle account deletion
-                  alert(t('account.deletionRequested'));
-                }
-              }}
+              onClick={() => setShowDeleteConfirm(true)}
               className="px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors text-sm font-medium"
             >
               {t('account.deleteAccount') }
@@ -762,6 +759,19 @@ export default function SettingsPage() {
           </div>
         </div>
       </div>
+      <ConfirmDialog
+        isOpen={showDeleteConfirm}
+        title={t('account.deleteAccount') || 'Delete Account'}
+        message={t('account.deleteConfirm')}
+        confirmLabel={t('account.deleteAccount') || 'Delete Account'}
+        onConfirm={() => {
+          setShowDeleteConfirm(false);
+          // Handle account deletion
+          toast.info(t('account.deletionRequested'));
+        }}
+        onCancel={() => setShowDeleteConfirm(false)}
+        variant="danger"
+      />
     </div>
   );
 }

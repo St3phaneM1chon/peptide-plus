@@ -139,29 +139,37 @@ function calculateSeasonalIndices(monthlyData: number[]): number[] {
 
 /**
  * Generate revenue forecast
+ * #71 Audit: Uses seasonal decomposition + linear trend + exponential smoothing.
+ * For improved accuracy, provide at least 24 months of historical data (2 full seasonal cycles).
+ * TODO: Consider Holt-Winters triple exponential smoothing for better multi-year seasonality.
  */
 export function forecastRevenue(
-  historicalRevenue: number[], // Last 12 months
+  historicalRevenue: number[], // Last 12+ months for seasonal accuracy
   monthsAhead: number = 6
 ): Forecast[] {
   const forecasts: Forecast[] = [];
-  
-  // Calculate trend
+
+  // Calculate trend using linear regression
   const trend = linearRegression(historicalRevenue);
-  
-  // Calculate seasonality
+
+  // Calculate seasonality indices (requires 12+ months for meaningful decomposition)
   const seasonalIndices = calculateSeasonalIndices(historicalRevenue);
-  
-  // Smooth historical data (for future use)
-  exponentialSmoothing(historicalRevenue);
+
+  // Apply exponential smoothing for noise reduction
+  const smoothedData = exponentialSmoothing(historicalRevenue);
+  // Use smoothed last value as a secondary signal
+  const smoothedLastValue = smoothedData.length > 0 ? smoothedData[smoothedData.length - 1] : 0;
 
   const now = new Date();
   const currentMonth = now.getMonth();
 
   for (let i = 1; i <= monthsAhead; i++) {
     const forecastMonth = (currentMonth + i) % 12;
-    const baseProjection = trend.slope * (historicalRevenue.length + i - 1) + trend.intercept;
+    const trendProjection = trend.slope * (historicalRevenue.length + i - 1) + trend.intercept;
     const seasonalAdjustment = seasonalIndices[forecastMonth];
+    // #71 Audit: Blend linear trend with smoothed recent level for better short-term accuracy
+    const blendWeight = Math.min(0.4, i * 0.1); // More trend weight for distant forecasts
+    const baseProjection = (1 - blendWeight) * smoothedLastValue + blendWeight * trendProjection;
     const projectedRevenue = Math.max(0, baseProjection * seasonalAdjustment);
 
     // Confidence decreases with distance
@@ -405,6 +413,24 @@ export function generateCashFlowAlerts(
   }
 
   return alerts;
+}
+
+/**
+ * Expose r2 and trend.slope for forecast response transparency
+ */
+export function getForecastMetrics(historicalRevenue: number[]): {
+  r2: number;
+  trendSlope: number;
+  trendIntercept: number;
+  dataPoints: number;
+} {
+  const trend = linearRegression(historicalRevenue);
+  return {
+    r2: Math.round(trend.r2 * 10000) / 10000,
+    trendSlope: Math.round(trend.slope * 100) / 100,
+    trendIntercept: Math.round(trend.intercept * 100) / 100,
+    dataPoints: historicalRevenue.length,
+  };
 }
 
 // Helper functions
