@@ -729,6 +729,7 @@ async function handleRefund(charge: Stripe.Charge, eventId: string) {
     const tps = Number(order.taxTps);
     const tvq = Number(order.taxTvq);
     const tvh = Number(order.taxTvh);
+    const pst = Number(order.taxPst);
     const orderTotal = Number(order.total);
     const refundRatio = orderTotal > 0 ? refundAmount / orderTotal : 0;
 
@@ -738,7 +739,8 @@ async function handleRefund(charge: Stripe.Charge, eventId: string) {
       Math.round(tps * refundRatio * 100) / 100,
       Math.round(tvq * refundRatio * 100) / 100,
       Math.round(tvh * refundRatio * 100) / 100,
-      'Remboursement Stripe'
+      'Remboursement Stripe',
+      Math.round(pst * refundRatio * 100) / 100
     );
   } catch (acctError) {
     logger.error('Failed to create refund accounting entries', {

@@ -19,6 +19,7 @@ export const GET = withAdminGuard(async (request) => {
     const { searchParams } = new URL(request.url);
     const reportType = searchParams.get('type');
     const period = searchParams.get('period') || 'Janvier 2026';
+    const locale = searchParams.get('locale') || 'fr';
 
     let html = '';
 
@@ -53,7 +54,7 @@ export const GET = withAdminGuard(async (request) => {
           totalSales: Number(taxReport.totalSales),
           generatedAt: taxReport.createdAt,
           dueDate: taxReport.dueDate || new Date(),
-        });
+        }, undefined, locale);
         break;
       }
 
@@ -106,7 +107,7 @@ export const GET = withAdminGuard(async (request) => {
           }
         }
 
-        html = generateIncomeStatementHTML({ revenue, cogs, expenses, other }, period);
+        html = generateIncomeStatementHTML({ revenue, cogs, expenses, other }, period, undefined, locale);
         break;
       }
 
@@ -152,7 +153,7 @@ export const GET = withAdminGuard(async (request) => {
           }
         }
 
-        html = generateBalanceSheetHTML({ assets, liabilities, equity }, period);
+        html = generateBalanceSheetHTML({ assets, liabilities, equity }, period, undefined, locale);
         break;
       }
 
@@ -194,7 +195,7 @@ export const GET = withAdminGuard(async (request) => {
           createdBy: entry.createdBy,
           createdAt: entry.createdAt,
           postedAt: entry.postedAt || undefined,
-        });
+        }, undefined, locale);
         break;
       }
 
@@ -208,6 +209,7 @@ export const GET = withAdminGuard(async (request) => {
     return new NextResponse(html, {
       headers: {
         'Content-Type': 'text/html; charset=utf-8',
+        'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'",
       },
     });
   } catch (error) {
@@ -226,7 +228,8 @@ export const GET = withAdminGuard(async (request) => {
 export const POST = withAdminGuard(async (request) => {
   try {
     const body = await request.json();
-    const { reportType, data, period } = body;
+    const { reportType, data, period, locale: bodyLocale } = body;
+    const pdfLocale = bodyLocale || 'fr';
 
     if (!reportType || !data) {
       return NextResponse.json(
@@ -239,16 +242,16 @@ export const POST = withAdminGuard(async (request) => {
 
     switch (reportType) {
       case 'tax':
-        html = generateTaxReportHTML(data);
+        html = generateTaxReportHTML(data, undefined, pdfLocale);
         break;
       case 'income':
-        html = generateIncomeStatementHTML(data, period || 'Période personnalisée');
+        html = generateIncomeStatementHTML(data, period || 'Période personnalisée', undefined, pdfLocale);
         break;
       case 'balance':
-        html = generateBalanceSheetHTML(data, period || new Date().toLocaleDateString('fr-CA'));
+        html = generateBalanceSheetHTML(data, period || new Date().toLocaleDateString('fr-CA'), undefined, pdfLocale);
         break;
       case 'entry':
-        html = generateJournalEntryHTML(data);
+        html = generateJournalEntryHTML(data, undefined, pdfLocale);
         break;
       default:
         return NextResponse.json(
@@ -260,6 +263,7 @@ export const POST = withAdminGuard(async (request) => {
     return new NextResponse(html, {
       headers: {
         'Content-Type': 'text/html; charset=utf-8',
+        'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'",
       },
     });
   } catch (error) {

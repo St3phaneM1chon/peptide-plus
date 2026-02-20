@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { roundCurrency } from '@/lib/financial';
 
 // ---- Journal Entries ----
 export const journalLineSchema = z.object({
@@ -18,7 +19,7 @@ export const createJournalEntrySchema = z.object({
   (data) => {
     const totalDebit = data.lines.reduce((s, l) => s + l.debit, 0);
     const totalCredit = data.lines.reduce((s, l) => s + l.credit, 0);
-    return Math.abs(totalDebit - totalCredit) < 0.01;
+    return roundCurrency(totalDebit - totalCredit) === 0;
   },
   { message: 'Les débits et crédits doivent être équilibrés' }
 );
@@ -35,7 +36,7 @@ export const updateJournalEntrySchema = z.object({
     if (!data.lines) return true;
     const totalDebit = data.lines.reduce((s, l) => s + l.debit, 0);
     const totalCredit = data.lines.reduce((s, l) => s + l.credit, 0);
-    return Math.abs(totalDebit - totalCredit) < 0.01;
+    return roundCurrency(totalDebit - totalCredit) === 0;
   },
   { message: 'Les débits et crédits doivent être équilibrés' }
 );

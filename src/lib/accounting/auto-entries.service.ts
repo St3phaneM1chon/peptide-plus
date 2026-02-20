@@ -41,6 +41,8 @@ interface OrderData {
   tps: number;
   tvq: number;
   tvh: number;
+  /** PST for BC, SK, MB — distinct from TVQ; maps to PST_PAYABLE (2150) */
+  pst?: number;
   otherTax: number;
   total: number;
   paymentMethod: 'STRIPE' | 'PAYPAL' | 'BANK_TRANSFER' | 'OTHER';
@@ -70,17 +72,13 @@ interface StripePayoutData {
   currency: string;
 }
 
-// WARNING: This counter is for in-memory object generation ONLY. It resets to 0 on
-// every server restart, so it WILL produce duplicate numbers across restarts.
-// Never persist entries using this number directly. Always use the
-// SELECT MAX ... FOR UPDATE pattern in a transaction before persisting
-// (see webhook-accounting.service.ts getNextEntryNumber()).
-let entryCounter = 0;
-
+// generateEntryNumber returns a temporary placeholder entry number.
+// The real entry number is generated atomically in the API route using
+// SELECT MAX(entryNumber) FOR UPDATE inside a transaction before persisting,
+// to avoid duplicates across concurrent requests and server restarts.
+// (see webhook-accounting.service.ts getNextEntryNumber())
 function generateEntryNumber(): string {
-  entryCounter++;
-  const year = new Date().getFullYear();
-  return `JV-${year}-${String(entryCounter).padStart(4, '0')}`;
+  return `TEMP-${Date.now()}`;
 }
 
 /**
@@ -227,10 +225,22 @@ export function generateSaleEntry(order: OrderData): JournalEntry {
     });
   }
 
+  // CREDIT: PST payable (BC, SK, MB) — separate from TVQ, uses account PST_PAYABLE (2150)
+  if (order.pst && order.pst > 0) {
+    lines.push({
+      id: `line-${Date.now()}-7`,
+      accountCode: ACCOUNT_CODES.PST_PAYABLE,
+      accountName: 'PST à payer',
+      description: `PST sur ${order.orderNumber}`,
+      debit: 0,
+      credit: order.pst,
+    });
+  }
+
   // DEBIT: Discount given (contra-revenue)
   if (order.discount > 0) {
     lines.push({
-      id: `line-${Date.now()}-7`,
+      id: `line-${Date.now()}-8`,
       accountCode: ACCOUNT_CODES.DISCOUNTS_RETURNS,
       accountName: 'Remises et retours',
       description: `Rabais ${order.orderNumber}`,
@@ -502,7 +512,9 @@ export function generateRecurringEntry(
 }
 
 /**
- * Calculate tax breakdown from total and province
+ * Calculate tax breakdown from total and province.
+ * Returns PST separately from TVQ: BC, SK, MB have provincial sales tax (PST)
+ * which uses account 2150 (PST_PAYABLE), not 2120 (TVQ_PAYABLE).
  */
 export function calculateTaxes(
   subtotal: number,
@@ -510,12 +522,12 @@ export function calculateTaxes(
   discount: number,
   province: string,
   country: string
-): { tps: number; tvq: number; tvh: number; total: number } {
+): { tps: number; tvq: number; tvh: number; pst: number; total: number } {
   const taxableAmount = roundCurrency(subtotal + shipping - discount);
 
   // No Canadian tax for non-Canadian customers
   if (country !== 'CA' && country !== 'Canada') {
-    return { tps: 0, tvq: 0, tvh: 0, total: taxableAmount };
+    return { tps: 0, tvq: 0, tvh: 0, pst: 0, total: taxableAmount };
   }
 
   const rates = TAX_RATES[province as keyof typeof TAX_RATES] || TAX_RATES.QC;
@@ -523,21 +535,23 @@ export function calculateTaxes(
   let tps = 0;
   let tvq = 0;
   let tvh = 0;
+  let pst = 0;
 
   if ('TVH' in rates && rates.TVH) {
-    // HST provinces
+    // HST provinces (ON, NS, NB, NL, PE)
     tvh = roundCurrency(taxableAmount * rates.TVH);
   } else {
-    // Separate GST/PST or GST/QST
+    // Separate GST + QST or GST + PST
     if ('TPS' in rates) {
       tps = roundCurrency(taxableAmount * rates.TPS);
     }
     if ('TVQ' in rates) {
+      // Quebec QST → TVQ_PAYABLE (2120)
       tvq = roundCurrency(taxableAmount * rates.TVQ);
     }
     if ('PST' in rates) {
-      // PST is treated like TVQ for accounting purposes
-      tvq = roundCurrency(taxableAmount * rates.PST);
+      // BC/SK/MB provincial sales tax → PST_PAYABLE (2150), NOT TVQ
+      pst = roundCurrency(taxableAmount * rates.PST);
     }
   }
 
@@ -545,7 +559,8 @@ export function calculateTaxes(
     tps,
     tvq,
     tvh,
-    total: roundCurrency(taxableAmount + tps + tvq + tvh),
+    pst,
+    total: roundCurrency(taxableAmount + tps + tvq + tvh + pst),
   };
 }
 

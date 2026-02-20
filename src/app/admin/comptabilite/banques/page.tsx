@@ -39,10 +39,13 @@ export default function BanquesPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchBankAccounts();
-    fetchCurrencyRates();
-    fetchExpectedInflows();
-    fetchExpectedOutflows();
+    Promise.all([
+      fetchBankAccounts(),
+      fetchCurrencyRates(),
+      fetchExpectedInflows(),
+      fetchExpectedOutflows(),
+      fetchRecentTransactions(),
+    ]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -150,10 +153,6 @@ export default function BanquesPage() {
   };
 
   // Fetch recent transactions from bank-transactions API
-  useEffect(() => {
-    fetchRecentTransactions();
-  }, []);
-
   const fetchRecentTransactions = async () => {
     try {
       const res = await fetch('/api/accounting/bank-transactions?limit=6');

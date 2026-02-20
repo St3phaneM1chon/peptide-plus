@@ -1,8 +1,25 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
+
+const createSupplierInvoiceSchema = z.object({
+  invoiceNumber: z.string().min(1).max(100),
+  supplierName: z.string().min(1).max(200),
+  supplierEmail: z.string().email().optional().or(z.literal('')),
+  invoiceDate: z.string().min(1),
+  dueDate: z.string().min(1),
+  subtotal: z.number().min(0),
+  taxTps: z.number().min(0).default(0),
+  taxTvq: z.number().min(0).default(0),
+  taxOther: z.number().min(0).default(0),
+  total: z.number().min(0),
+  notes: z.string().max(2000).optional(),
+  supplierId: z.string().optional(),
+  expenseCategory: z.string().optional(),
+});
 
 /**
  * GET /api/accounting/supplier-invoices
@@ -82,18 +99,20 @@ export const GET = withAdminGuard(async (request) => {
 export const POST = withAdminGuard(async (request) => {
   try {
     const body = await request.json();
-    const {
-      invoiceNumber, supplierName, supplierEmail,
-      subtotal, taxTps, taxTvq, total,
-      invoiceDate, dueDate, expenseCategory,
-    } = body;
 
-    if (!invoiceNumber || !supplierName || !subtotal || !total || !invoiceDate || !dueDate) {
+    const parsed = createSupplierInvoiceSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'invoiceNumber, supplierName, subtotal, total, invoiceDate et dueDate sont requis' },
+        { error: 'Données invalides', details: parsed.error.flatten().fieldErrors },
         { status: 400 }
       );
     }
+
+    const {
+      invoiceNumber, supplierName, supplierEmail,
+      subtotal, taxTps, taxTvq, taxOther, total,
+      invoiceDate, dueDate, expenseCategory,
+    } = parsed.data;
 
     // #49 Validate invoiceDate <= dueDate
     const parsedInvoiceDate = new Date(invoiceDate);
@@ -112,7 +131,7 @@ export const POST = withAdminGuard(async (request) => {
     }
 
     // #38 Validate total equals subtotal + taxes (server-side recompute)
-    const computedTotal = Number(subtotal) + Number(taxTps || 0) + Number(taxTvq || 0);
+    const computedTotal = Number(subtotal) + Number(taxTps || 0) + Number(taxTvq || 0) + Number(taxOther || 0);
     if (Math.abs(computedTotal - Number(total)) > 0.01) {
       return NextResponse.json(
         { error: `Le total (${total}) ne correspond pas au sous-total + taxes (${computedTotal.toFixed(2)})` },
@@ -128,6 +147,7 @@ export const POST = withAdminGuard(async (request) => {
         subtotal,
         taxTps: taxTps || 0,
         taxTvq: taxTvq || 0,
+        taxOther: taxOther || 0,
         total,
         balance: total,
         invoiceDate: new Date(invoiceDate),

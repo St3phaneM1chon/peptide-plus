@@ -1,13 +1,13 @@
 // Types for the accounting module
 //
 // TODO #80: Define and enforce a data retention policy for accounting records.
-// Canadian tax law (CRA) requires businesses to keep records for at least 6 years
-// from the end of the last tax year they relate to. Quebec (Revenu Quebec) also
-// requires 6-year retention. Considerations:
-//   - Soft-deleted records (deletedAt != null) should be purged only after 6+ years
+// Canadian tax law (CRA) requires businesses to keep records for at least 7 years
+// from the end of the last tax year they relate to (LIR article 230). Quebec
+// (Revenu Quebec) also requires 7-year retention. Considerations:
+//   - Soft-deleted records (deletedAt != null) should be purged only after 7+ years
 //   - FILED TaxReports must NEVER be purged (regulatory requirement)
 //   - JournalEntries tied to active fiscal years must be retained
-//   - BankTransactions: retain matched records for 6 years, unmatched for review
+//   - BankTransactions: retain matched records for 7 years, unmatched for review
 //   - Implement a scheduled job (e.g., cron) to archive/purge expired records
 //   - Add a `retainUntil` field to key models for automated retention enforcement
 

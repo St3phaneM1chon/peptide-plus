@@ -34,7 +34,7 @@ export const GET = withAdminGuard(async (_request, { session, params }) => {
   }
 });
 
-export const POST = withAdminGuard(async (request, { params }) => {
+export const POST = withAdminGuard(async (request, { session, params }) => {
   try {
     const code = params?.code;
 
@@ -42,8 +42,7 @@ export const POST = withAdminGuard(async (request, { params }) => {
       return NextResponse.json({ error: 'Code de période requis' }, { status: 400 });
     }
 
-    const body = await request.json();
-    const { closedBy = 'system' } = body;
+    const closedBy = session.user?.id || session.user?.email || 'system';
 
     await lockPeriod(code, closedBy);
 
@@ -51,11 +50,14 @@ export const POST = withAdminGuard(async (request, { params }) => {
   } catch (error) {
     console.error('Error locking period:', error);
     // #87 Error Recovery: Return 500 for unexpected errors, 400 for validation
-    const message = error instanceof Error ? error.message : 'Une erreur est survenue';
-    const isValidationError = message.includes('not found') ||
-      message.includes('already locked') ||
-      message.includes('Impossible de verrouiller') ||
-      message.includes('Cannot lock');
+    const rawMessage = error instanceof Error ? error.message : 'Une erreur est survenue';
+    const isValidationError = rawMessage.includes('not found') ||
+      rawMessage.includes('already locked') ||
+      rawMessage.includes('Impossible de verrouiller') ||
+      rawMessage.includes('Cannot lock');
+    const message = isValidationError
+      ? rawMessage
+      : (process.env.NODE_ENV === 'development' ? rawMessage : 'Une erreur est survenue');
     return NextResponse.json(
       { error: message },
       { status: isValidationError ? 400 : 500 }

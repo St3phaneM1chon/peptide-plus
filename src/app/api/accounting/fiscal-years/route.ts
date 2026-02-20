@@ -105,6 +105,13 @@ export const PUT = withAdminGuard(async (request, { session }) => {
     }
 
     if (action === 'close') {
+      if (session.user.role !== 'OWNER') {
+        return NextResponse.json(
+          { error: 'Seul le propriétaire peut clore un exercice fiscal' },
+          { status: 403 }
+        );
+      }
+
       if (existing.isClosed) {
         return NextResponse.json(
           { error: 'Cet exercice fiscal est déjà clos' },
@@ -141,6 +148,13 @@ export const PUT = withAdminGuard(async (request, { session }) => {
     }
 
     if (action === 'reopen') {
+      if (session.user.role !== 'OWNER') {
+        return NextResponse.json(
+          { error: 'Seul le propriétaire peut réouvrir un exercice fiscal' },
+          { status: 403 }
+        );
+      }
+
       if (!existing.isClosed) {
         return NextResponse.json(
           { error: 'Cet exercice fiscal n\'est pas clos' },

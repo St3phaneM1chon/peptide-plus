@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { logAuditTrail } from '@/lib/accounting';
+import { roundCurrency } from '@/lib/financial';
 
 /**
  * POST /api/accounting/entries/[id]/post
@@ -53,7 +54,7 @@ export const POST = withAdminGuard(async (_request, { session, params }) => {
     const totalDebits = existing.lines.reduce((s, l) => s + Number(l.debit), 0);
     const totalCredits = existing.lines.reduce((s, l) => s + Number(l.credit), 0);
 
-    if (Math.abs(totalDebits - totalCredits) > 0.01) {
+    if (roundCurrency(totalDebits - totalCredits) !== 0) {
       return NextResponse.json(
         { error: `L'écriture n'est pas équilibrée. Débits: ${totalDebits.toFixed(2)}, Crédits: ${totalCredits.toFixed(2)}` },
         { status: 400 }

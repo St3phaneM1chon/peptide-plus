@@ -183,9 +183,7 @@ export default function ParametresComptablesPage() {
   };
 
   useEffect(() => {
-    fetchSettings();
-    fetchCurrencies();
-    fetchIntegrations();
+    Promise.all([fetchSettings(), fetchCurrencies(), fetchIntegrations()]);
   }, []);
 
   // Map fiscal year start month to month-day format for display

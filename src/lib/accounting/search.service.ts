@@ -207,6 +207,7 @@ export async function advancedSearch(
     const invoices = await prisma.customerInvoice.findMany({
       where: invoiceWhere,
       orderBy: { invoiceDate: sortOrder },
+      take: 1000,
     });
 
     for (const invoice of invoices) {
@@ -250,6 +251,7 @@ export async function advancedSearch(
     const suppliers = await prisma.supplierInvoice.findMany({
       where: supplierWhere,
       orderBy: { invoiceDate: sortOrder },
+      take: 1000,
     });
 
     for (const invoice of suppliers) {
@@ -290,6 +292,7 @@ export async function advancedSearch(
     const transactions = await prisma.bankTransaction.findMany({
       where: txWhere,
       orderBy: { date: sortOrder },
+      take: 1000,
     });
 
     for (const tx of transactions) {

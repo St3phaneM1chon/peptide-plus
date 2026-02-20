@@ -260,19 +260,24 @@ export async function getHistoricalRates(
   startDate: Date,
   endDate: Date
 ): Promise<{ date: Date; rate: number }[]> {
-  // In production, fetch from BOC historical API
-  // For now, generate simulated historical data
-  const rates: { date: Date; rate: number }[] = [];
+  // TODO: In production, fetch from BOC historical Valet API:
+  // https://www.bankofcanada.ca/valet/observations/FX{CURRENCY}CAD/json?start_date=...&end_date=...
+  // For now, use static fallback rates. These are the same conservative estimates
+  // used by getFallbackRate() and should be updated periodically.
+  console.warn('getHistoricalRates: BOC historical API not implemented, using static fallback rates.', {
+    currency,
+    startDate: startDate.toISOString(),
+    endDate: endDate.toISOString(),
+  });
+
   const baseRate = getFallbackRate(currency);
-  
+  const rates: { date: Date; rate: number }[] = [];
+
   const current = new Date(startDate);
   while (current <= endDate) {
-    // SECURITY NOTE: Math.random() is intentional here - used only for mock/simulated
-    // historical rate data, not for security purposes. No crypto needed.
-    const variation = (Math.random() - 0.5) * 0.02;
     rates.push({
       date: new Date(current),
-      rate: baseRate * (1 + variation),
+      rate: baseRate,
     });
     current.setDate(current.getDate() + 1);
   }

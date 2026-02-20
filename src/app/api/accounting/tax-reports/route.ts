@@ -123,12 +123,14 @@ export const POST = withAdminGuard(async (request) => {
     }
 
     // Calculate taxes collected from paid orders
+    // Safety limit to prevent unbounded queries on large datasets
     const orders = await prisma.order.findMany({
       where: {
         paymentStatus: 'PAID',
         createdAt: { gte: startDate, lte: endDate },
       },
       select: { taxTps: true, taxTvq: true, taxTvh: true, total: true },
+      take: 10000,
     });
 
     const tpsCollected = roundCurrency(orders.reduce((s, o) => s + Number(o.taxTps), 0));
@@ -137,12 +139,14 @@ export const POST = withAdminGuard(async (request) => {
     const totalSales = roundCurrency(orders.reduce((s, o) => s + Number(o.total), 0));
 
     // Calculate taxes paid from supplier invoices
+    // Safety limit to prevent unbounded queries on large datasets
     const supplierInvoices = await prisma.supplierInvoice.findMany({
       where: {
         status: { in: ['PAID', 'PARTIAL'] },
         invoiceDate: { gte: startDate, lte: endDate },
       },
       select: { taxTps: true, taxTvq: true },
+      take: 10000,
     });
 
     const tpsPaid = roundCurrency(supplierInvoices.reduce((s, i) => s + Number(i.taxTps), 0));

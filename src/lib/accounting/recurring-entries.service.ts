@@ -99,104 +99,82 @@ export const PREDEFINED_TEMPLATES: Partial<RecurringEntryTemplate>[] = [
 ];
 
 /**
- * Get all recurring entry templates
+ * Get all recurring entry templates from the database
  */
-// TODO: Replace with database query when RecurringEntryTemplate model exists
 export async function getRecurringTemplates(): Promise<RecurringEntryTemplate[]> {
-  // Try fetching from database first
-  try {
-    const dbTemplates = await (prisma as any).recurringEntryTemplate?.findMany();
-    if (dbTemplates && dbTemplates.length > 0) {
-      return dbTemplates;
-    }
-  } catch {
-    // Model doesn't exist yet, fall back to mock data
-  }
+  const dbTemplates = await prisma.recurringEntryTemplate.findMany({
+    where: { isActive: true },
+    orderBy: { nextRunDate: 'asc' },
+  });
 
-  // Fallback: return mock data
-  const templates: RecurringEntryTemplate[] = [
-    {
-      id: 'rec-1',
-      name: 'Amortissement équipement',
-      description: 'Amortissement mensuel des immobilisations',
-      frequency: 'MONTHLY',
-      dayOfMonth: 1,
-      lines: [
-        { accountCode: '6800', accountName: 'Amortissement', debitAmount: 125, creditAmount: 0 },
-        { accountCode: '1590', accountName: 'Amortissement cumulé', debitAmount: 0, creditAmount: 125 },
-      ],
-      startDate: new Date('2026-01-01'),
-      nextRunDate: new Date('2026-02-01'),
-      lastRunDate: new Date('2026-01-01'),
-      isActive: true,
-      autoPost: true,
-      notifyOnCreate: false,
-      totalRuns: 1,
-      createdAt: new Date('2025-12-15'),
-      updatedAt: new Date('2026-01-01'),
-    },
-    {
-      id: 'rec-2',
-      name: 'Hébergement Azure',
-      description: 'Frais mensuels Azure App Service + PostgreSQL',
-      frequency: 'MONTHLY',
-      dayOfMonth: 5,
-      lines: [
-        { accountCode: '6310', accountName: 'Hébergement Azure', debitAmount: 185.50, creditAmount: 0 },
-        { accountCode: '2000', accountName: 'Comptes fournisseurs', debitAmount: 0, creditAmount: 185.50 },
-      ],
-      startDate: new Date('2026-01-01'),
-      nextRunDate: new Date('2026-02-05'),
-      lastRunDate: new Date('2026-01-05'),
-      isActive: true,
-      autoPost: false,
-      notifyOnCreate: true,
-      totalRuns: 1,
-      createdAt: new Date('2025-12-20'),
-      updatedAt: new Date('2026-01-05'),
-    },
-    {
-      id: 'rec-3',
-      name: 'Abonnement OpenAI API',
-      description: 'Frais mensuels API ChatGPT pour chatbot',
-      frequency: 'MONTHLY',
-      dayOfMonth: 1,
-      lines: [
-        { accountCode: '6330', accountName: 'Services SaaS', debitAmount: 50, creditAmount: 0 },
-        { accountCode: '1010', accountName: 'Compte bancaire', debitAmount: 0, creditAmount: 50 },
-      ],
-      startDate: new Date('2026-01-01'),
-      nextRunDate: new Date('2026-02-01'),
-      lastRunDate: new Date('2026-01-01'),
-      isActive: true,
-      autoPost: true,
-      notifyOnCreate: false,
-      totalRuns: 1,
-      createdAt: new Date('2025-12-25'),
-      updatedAt: new Date('2026-01-01'),
-    },
-  ];
-
-  return templates;
+  return dbTemplates.map((t) => {
+    const data = t.templateData as {
+      lines?: { accountCode: string; accountName: string; description?: string; debitAmount: number; creditAmount: number }[];
+      autoPost?: boolean;
+      notifyOnCreate?: boolean;
+      startDate?: string;
+      endDate?: string;
+      monthOfYear?: number;
+      totalRuns?: number;
+    };
+    return {
+      id: t.id,
+      name: t.name,
+      description: t.description || '',
+      frequency: t.frequency as RecurringEntryTemplate['frequency'],
+      dayOfMonth: t.dayOfMonth ?? undefined,
+      dayOfWeek: t.dayOfWeek ?? undefined,
+      monthOfYear: data.monthOfYear,
+      lines: data.lines || [],
+      startDate: data.startDate ? new Date(data.startDate) : t.createdAt,
+      endDate: data.endDate ? new Date(data.endDate) : undefined,
+      nextRunDate: t.nextRunDate,
+      lastRunDate: t.lastRunDate ?? undefined,
+      isActive: t.isActive,
+      autoPost: data.autoPost ?? false,
+      notifyOnCreate: data.notifyOnCreate ?? true,
+      totalRuns: data.totalRuns ?? 0,
+      createdAt: t.createdAt,
+      updatedAt: t.updatedAt,
+    };
+  });
 }
 
 /**
- * Create a new recurring entry template
+ * Create a new recurring entry template (persisted to database)
  */
 export async function createRecurringTemplate(
   template: Omit<RecurringEntryTemplate, 'id' | 'createdAt' | 'updatedAt' | 'totalRuns' | 'lastRunDate'>
 ): Promise<RecurringEntryTemplate> {
-  const now = new Date();
-  const newTemplate: RecurringEntryTemplate = {
-    ...template,
-    id: `rec-${Date.now()}`,
-    totalRuns: 0,
-    createdAt: now,
-    updatedAt: now,
-  };
+  const dbTemplate = await prisma.recurringEntryTemplate.create({
+    data: {
+      name: template.name,
+      description: template.description,
+      frequency: template.frequency,
+      dayOfMonth: template.dayOfMonth,
+      dayOfWeek: template.dayOfWeek,
+      nextRunDate: template.nextRunDate,
+      isActive: template.isActive,
+      createdBy: 'admin',
+      templateData: {
+        lines: template.lines,
+        autoPost: template.autoPost,
+        notifyOnCreate: template.notifyOnCreate,
+        startDate: template.startDate.toISOString(),
+        endDate: template.endDate?.toISOString(),
+        monthOfYear: template.monthOfYear,
+        totalRuns: 0,
+      },
+    },
+  });
 
-  // In production, save to database
-  return newTemplate;
+  return {
+    ...template,
+    id: dbTemplate.id,
+    totalRuns: 0,
+    createdAt: dbTemplate.createdAt,
+    updatedAt: dbTemplate.updatedAt,
+  };
 }
 
 /**
@@ -392,15 +370,28 @@ export async function processDueRecurringEntries(): Promise<{
         // Audit logging must never break recurring processing
       });
 
-      // Update template (in production, save to database)
-      template.lastRunDate = now;
-      template.nextRunDate = calculateNextRunDate(
+      // Persist nextRunDate and lastRunDate to database
+      const nextRun = calculateNextRunDate(
         template.frequency,
         now,
         template.dayOfMonth,
         template.dayOfWeek,
         template.monthOfYear
       );
+
+      await prisma.recurringEntryTemplate.update({
+        where: { id: template.id },
+        data: {
+          lastRunDate: now,
+          nextRunDate: nextRun,
+          templateData: {
+            ...(typeof template === 'object' ? { lines: template.lines, autoPost: template.autoPost, notifyOnCreate: template.notifyOnCreate, totalRuns: template.totalRuns + 1 } : {}),
+          },
+        },
+      });
+
+      template.lastRunDate = now;
+      template.nextRunDate = nextRun;
       template.totalRuns++;
 
     } catch (error) {

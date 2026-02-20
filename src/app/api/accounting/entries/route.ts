@@ -5,6 +5,7 @@ import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { roundCurrency } from '@/lib/financial';
 import { formatZodErrors, logAuditTrail } from '@/lib/accounting';
+import { updateJournalEntrySchema } from '@/lib/accounting/validation';
 import { z } from 'zod';
 /**
  * GET /api/accounting/entries
@@ -292,6 +293,15 @@ export const POST = withAdminGuard(async (request, { session }) => {
 export const PUT = withAdminGuard(async (request, { session }) => {
   try {
     const body = await request.json();
+
+    const putValidation = updateJournalEntrySchema.safeParse(body);
+    if (!putValidation.success) {
+      return NextResponse.json(
+        { error: 'Données invalides', details: formatZodErrors(putValidation.error) },
+        { status: 400 }
+      );
+    }
+
     const { id, date, description, reference, lines, updatedAt: clientUpdatedAt } = body;
 
     if (!id) {
@@ -510,6 +520,14 @@ export const DELETE = withAdminGuard(async (request, { session }) => {
       await prisma.journalEntry.update({
         where: { id },
         data: { deletedAt: new Date() },
+      });
+      logAuditTrail({
+        entityType: 'JournalEntry',
+        entityId: id,
+        action: 'DELETE',
+        userId: session.user.id || session.user.email || 'unknown',
+        userName: session.user.name || undefined,
+        metadata: { entryNumber: existing.entryNumber },
       });
       console.info('Journal entry deleted:', {
         entryId: id,

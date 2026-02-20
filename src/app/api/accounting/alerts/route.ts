@@ -38,38 +38,45 @@ export const GET = withAdminGuard(async (request) => {
     }
 
     // Legacy computed alerts (Phase 1-7)
-    // Fetch overdue invoices
-    const overdueInvoices = await prisma.customerInvoice.findMany({
-      where: { status: 'OVERDUE' },
-      select: {
-        id: true,
-        invoiceNumber: true,
-        customerName: true,
-        total: true,
-        dueDate: true,
-        status: true,
-      },
-    });
+    // Fetch independent queries in parallel
+    const [
+      overdueInvoices,
+      bankAccounts,
+      unpaidCustomerInvoices,
+      unpaidSupplierInvoices,
+      taxReports,
+    ] = await Promise.all([
+      prisma.customerInvoice.findMany({
+        where: { status: 'OVERDUE' },
+        select: {
+          id: true,
+          invoiceNumber: true,
+          customerName: true,
+          total: true,
+          dueDate: true,
+          status: true,
+        },
+      }),
+      prisma.bankAccount.findMany({
+        where: { isActive: true },
+        select: { currentBalance: true },
+      }),
+      prisma.customerInvoice.aggregate({
+        where: { status: { in: ['SENT', 'OVERDUE'] }, deletedAt: null },
+        _sum: { balance: true },
+      }),
+      prisma.supplierInvoice.aggregate({
+        where: { status: { in: ['DRAFT', 'SENT', 'OVERDUE'] }, deletedAt: null },
+        _sum: { balance: true },
+      }),
+      prisma.taxReport.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: 1,
+      }),
+    ]);
 
-    // Fetch cash flow data from bank accounts
-    const bankAccounts = await prisma.bankAccount.findMany({
-      where: { isActive: true },
-      select: { currentBalance: true },
-    });
     const currentBalance = bankAccounts.reduce((s, a) => s + Number(a.currentBalance), 0);
-
-    // Calculate projected inflows from unpaid customer invoices
-    const unpaidCustomerInvoices = await prisma.customerInvoice.aggregate({
-      where: { status: { in: ['SENT', 'OVERDUE'] }, deletedAt: null },
-      _sum: { balance: true },
-    });
     const projectedInflows = Number(unpaidCustomerInvoices._sum.balance ?? 0);
-
-    // Calculate projected outflows from unpaid supplier invoices
-    const unpaidSupplierInvoices = await prisma.supplierInvoice.aggregate({
-      where: { status: { in: ['DRAFT', 'SENT', 'OVERDUE'] }, deletedAt: null },
-      _sum: { balance: true },
-    });
     const projectedOutflows = Number(unpaidSupplierInvoices._sum.balance ?? 0);
 
     const cashFlow = {
@@ -79,11 +86,6 @@ export const GET = withAdminGuard(async (request) => {
       minimumBalance: 10000,
     };
 
-    // Fetch latest tax report
-    const taxReports = await prisma.taxReport.findMany({
-      orderBy: { createdAt: 'desc' },
-      take: 1,
-    });
     const mappedTaxReports = taxReports.map((t) => ({
       ...t,
       periodType: t.periodType as 'MONTHLY' | 'QUARTERLY' | 'ANNUAL',
@@ -108,61 +110,59 @@ export const GET = withAdminGuard(async (request) => {
       dueDate: t.dueDate || new Date(),
     }));
 
-    // Fetch pending reconciliation count
-    const pendingReconCount = await prisma.bankTransaction.count({
-      where: { reconciliationStatus: 'PENDING' },
-    });
-    const oldestPending = await prisma.bankTransaction.findFirst({
-      where: { reconciliationStatus: 'PENDING' },
-      orderBy: { date: 'asc' },
-      select: { date: true },
-    });
+    // Expense anomalies date ranges
+    const now = new Date();
+    const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const currentMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+    const threeMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 3, 1);
+    const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+
+    // Fetch reconciliation and expense data in parallel
+    const [pendingReconCount, oldestPending, currentMonthLines, historicalLines] = await Promise.all([
+      prisma.bankTransaction.count({
+        where: { reconciliationStatus: 'PENDING' },
+      }),
+      prisma.bankTransaction.findFirst({
+        where: { reconciliationStatus: 'PENDING' },
+        orderBy: { date: 'asc' },
+        select: { date: true },
+      }),
+      prisma.journalLine.findMany({
+        where: {
+          debit: { gt: 0 },
+          account: { type: 'EXPENSE' },
+          entry: {
+            status: 'POSTED',
+            deletedAt: null,
+            date: { gte: currentMonthStart, lte: currentMonthEnd },
+          },
+        },
+        select: { debit: true, account: { select: { code: true } } },
+      }),
+      prisma.journalLine.findMany({
+        where: {
+          debit: { gt: 0 },
+          account: { type: 'EXPENSE' },
+          entry: {
+            status: 'POSTED',
+            deletedAt: null,
+            date: { gte: threeMonthsAgo, lte: lastMonthEnd },
+          },
+        },
+        select: { debit: true, account: { select: { code: true } } },
+      }),
+    ]);
+
     const oldestPendingDays = oldestPending
       ? Math.floor((Date.now() - oldestPending.date.getTime()) / (1000 * 60 * 60 * 24))
       : 0;
     const reconciliation = { pendingCount: pendingReconCount, oldestPendingDays };
-
-    // Expense anomalies: aggregate current month vs previous months
-    const now = new Date();
-    const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const currentMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
-
-    // Aggregate current month expenses by account code
-    const currentMonthLines = await prisma.journalLine.findMany({
-      where: {
-        debit: { gt: 0 },
-        account: { type: 'EXPENSE' },
-        entry: {
-          status: 'POSTED',
-          deletedAt: null,
-          date: { gte: currentMonthStart, lte: currentMonthEnd },
-        },
-      },
-      select: { debit: true, account: { select: { code: true } } },
-    });
 
     const currentExpenses: Record<string, number> = {};
     for (const line of currentMonthLines) {
       const code = line.account.code;
       currentExpenses[code] = (currentExpenses[code] || 0) + Number(line.debit);
     }
-
-    // Compute 3-month historical averages
-    const threeMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 3, 1);
-    const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
-
-    const historicalLines = await prisma.journalLine.findMany({
-      where: {
-        debit: { gt: 0 },
-        account: { type: 'EXPENSE' },
-        entry: {
-          status: 'POSTED',
-          deletedAt: null,
-          date: { gte: threeMonthsAgo, lte: lastMonthEnd },
-        },
-      },
-      select: { debit: true, account: { select: { code: true } } },
-    });
 
     const historicalTotals: Record<string, number> = {};
     for (const line of historicalLines) {
@@ -190,12 +190,17 @@ export const GET = withAdminGuard(async (request) => {
       expenseAnomalies
     );
 
+    // Fetch lastPeriod and settings in parallel
+    const [lastPeriod, settings] = await Promise.all([
+      prisma.accountingPeriod.findFirst({
+        where: { status: 'LOCKED' },
+        orderBy: { endDate: 'desc' },
+        select: { code: true },
+      }),
+      prisma.accountingSettings.findFirst(),
+    ]);
+
     // Add closing alerts
-    const lastPeriod = await prisma.accountingPeriod.findFirst({
-      where: { status: 'LOCKED' },
-      orderBy: { endDate: 'desc' },
-      select: { code: true },
-    });
     const closingAlerts = generateClosingAlerts(
       now.getMonth() + 1,
       now.getFullYear(),
@@ -210,7 +215,6 @@ export const GET = withAdminGuard(async (request) => {
     }
 
     // Get next tax deadline info
-    const settings = await prisma.accountingSettings.findFirst();
     const taxDeadline = getNextTaxDeadline(
       (settings?.taxFilingFrequency || 'MONTHLY') as 'MONTHLY' | 'QUARTERLY' | 'ANNUAL'
     );
@@ -272,7 +276,7 @@ export const POST = withAdminGuard(async (request) => {
       );
     }
 
-    const alertId = `custom-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+    const alertId = `custom-${Date.now()}-${crypto.randomUUID().replace(/-/g, '').substring(0, 8)}`;
 
     const alert = await prisma.accountingAlert.create({
       data: {

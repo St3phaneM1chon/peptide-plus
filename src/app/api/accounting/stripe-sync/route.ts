@@ -87,18 +87,30 @@ export const POST = withAdminGuard(async (request, { session }) => {
           : [];
         const existingRefs = new Set(existingEntries.map((e) => e.reference));
 
+        // Pre-load ALL chart accounts needed by any entry in a single query (batch, no N+1)
+        const allAccountCodes = Array.from(
+          new Set(
+            (result.entries || []).flatMap((e: { lines: { accountCode: string }[] }) =>
+              e.lines.map((l) => l.accountCode)
+            )
+          )
+        );
+        const allAccounts = allAccountCodes.length > 0
+          ? await tx.chartOfAccount.findMany({
+              where: { code: { in: allAccountCodes } },
+              select: { id: true, code: true },
+            })
+          : [];
+        const globalAccountMap = new Map(allAccounts.map((a) => [a.code, a.id]));
+
         for (const entry of (result.entries || [])) {
           // #96 Skip entries that already exist (idempotency per Stripe reference)
           if (entry.reference && existingRefs.has(entry.reference)) {
             continue;
           }
 
-          const accountCodes = entry.lines.map((l: { accountCode: string }) => l.accountCode);
-          const accounts = await tx.chartOfAccount.findMany({
-            where: { code: { in: accountCodes } },
-            select: { id: true, code: true },
-          });
-          const accountMap = new Map(accounts.map((a) => [a.code, a.id]));
+          // Use the pre-loaded global account map (O(1) lookup, no per-iteration DB query)
+          const accountMap = globalAccountMap;
 
           const year = new Date(entry.date).getFullYear();
           const prefix = `JV-${year}-`;
@@ -158,7 +170,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
                 amount: tx_data.amount,
                 type: tx_data.type || 'CREDIT',
                 reconciliationStatus: 'PENDING',
-                rawData: JSON.stringify(tx_data),
+                rawData: tx_data,
               },
             });
           }

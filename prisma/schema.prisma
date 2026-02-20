@@ -28,7 +28,7 @@ model Account {
 }
 
 model AccountingAlert {
-  id         String    @id
+  id         String    @id @default(cuid())
   type       String
   severity   String    @default("MEDIUM")
   title      String
@@ -58,7 +58,7 @@ model AccountingAlert {
 //   nextRunDate, isActive, autoPost, notifyOnCreate, createdBy, createdAt, updatedAt
 
 model AccountingPeriod {
-  id               String    @id // TODO #54: Add @default(cuid()) for auto-generated IDs
+  id               String    @id @default(cuid())
   name             String
   code             String    @unique
   startDate        DateTime
@@ -237,7 +237,7 @@ model AuditLog {
 }
 
 model BankAccount {
-  id             String            @id
+  id             String            @id @default(cuid())
   name           String
   accountNumber  String?
   institution    String
@@ -257,7 +257,7 @@ model BankAccount {
 }
 
 model BankTransaction {
-  id                   String               @id
+  id                   String               @id @default(cuid())
   bankAccountId        String
   date                 DateTime
   description          String
@@ -271,7 +271,7 @@ model BankTransaction {
   matchedBy            String?
   importBatch          String?
   importedAt           DateTime             @default(now())
-  rawData              String? // TODO #59: Change from String? to Json? for proper structured data storage and querying
+  rawData              Json?
   createdAt            DateTime             @default(now())
   deletedAt            DateTime?
   bankAccount          BankAccount          @relation(fields: [bankAccountId], references: [id], onDelete: Cascade)
@@ -333,7 +333,7 @@ model BlogPostTranslation {
 }
 
 model Budget {
-  id        String       @id
+  id        String       @id @default(cuid())
   name      String
   year      Int
   isActive  Boolean      @default(true)
@@ -345,7 +345,7 @@ model Budget {
 }
 
 model BudgetLine {
-  id          String   @id
+  id          String   @id @default(cuid())
   budgetId    String
   accountCode String
   accountName String
@@ -645,7 +645,7 @@ model CourseAccess {
 }
 
 model CreditNote {
-  id               String           @id
+  id               String           @id @default(cuid())
   creditNoteNumber String           @unique
   invoiceId        String?
   orderId          String?
@@ -694,7 +694,7 @@ model Currency {
 }
 
 model CustomerInvoice {
-  id              String                @id
+  id              String                @id @default(cuid())
   invoiceNumber   String                @unique
   customerId      String?
   customerName    String
@@ -1011,7 +1011,7 @@ model InventoryTransaction {
 //   Currently these models require manual ID generation which is error-prone.
 
 model JournalEntry {
-  id           String             @id
+  id           String             @id @default(cuid())
   entryNumber  String             @unique
   date         DateTime
   description  String
@@ -1043,7 +1043,7 @@ model JournalEntry {
 }
 
 model JournalLine {
-  id          String         @id
+  id          String         @id @default(cuid())
   entryId     String
   accountId   String
   description String?
@@ -2088,7 +2088,7 @@ model Subscription {
 }
 
 model SupplierInvoice {
-  id              String        @id
+  id              String        @id @default(cuid())
   invoiceNumber   String        @unique
   supplierId      String?
   supplierName    String
@@ -2114,13 +2114,14 @@ model SupplierInvoice {
   deletedAt       DateTime?
 
   @@index([dueDate])
+  @@index([invoiceDate])
   @@index([status])
   @@index([supplierId])
   @@index([deletedAt])
 }
 
 model TaxReport {
-  id                String          @id
+  id                String          @id @default(cuid())
   period            String
   periodType        String          @default("MONTHLY")
   year              Int
@@ -2645,6 +2646,7 @@ enum ConversationStatus {
 enum CreditNoteStatus {
   DRAFT
   ISSUED
+  APPLIED
   VOID
 }
 

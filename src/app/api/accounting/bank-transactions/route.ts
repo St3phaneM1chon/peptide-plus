@@ -102,6 +102,13 @@ export const POST = withAdminGuard(async (request) => {
       );
     }
 
+    if (transactions.length > 1000) {
+      return NextResponse.json(
+        { error: 'Maximum 1000 transactions par lot' },
+        { status: 400 }
+      );
+    }
+
     const bankAccount = await prisma.bankAccount.findUnique({ where: { id: bankAccountId } });
     if (!bankAccount) {
       return NextResponse.json({ error: 'Compte bancaire non trouvé' }, { status: 404 });

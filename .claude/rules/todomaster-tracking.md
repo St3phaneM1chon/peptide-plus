@@ -36,11 +36,21 @@ curl -s -X POST http://localhost:8002/api/schedule \
 curl -s -X PUT http://localhost:8002/api/schedule/TASK_ID/complete
 ```
 
+## SUIVI DES AGENTS (directive Stephane 2026-02-19)
+**Quand des agents (Task tool) sont lances:**
+1. CREER une tache TodoMaster pour CHAQUE agent AVANT le lancement
+2. Quand l'agent termine avec succes: marquer `completed` dans TodoMaster
+3. Quand l'agent echoue ou est incomplet: laisser en `pending` avec note d'erreur
+4. **AU DEMARRAGE DE SESSION**: consulter TodoMaster pour savoir quels agents ont termine et lesquels doivent etre relances
+5. Cela permet de savoir: "a, c, e sont DONE mais b et d sont incomplets et doivent etre refaits"
+
 ## REGLES STRICTES
 - **JAMAIS** travailler sans tache TodoMaster correspondante
 - **JAMAIS** oublier de marquer une tache comme completee
+- **JAMAIS** lancer un agent sans creer sa tache TodoMaster d'abord
 - **TOUJOURS** consulter les taches pending au demarrage de session
 - **TOUJOURS** sauvegarder en memoire vectorielle apres chaque fix/apprentissage
+- **TOUJOURS** mettre a jour TodoMaster quand un agent termine (succes OU echec)
 - Ces regles survivent a TOUTES les sessions (inscrites dans MEMORY.md + .claude/rules/)
 
 ## TACHES ACTIVES - Audit Comptabilite (2026-02-19)

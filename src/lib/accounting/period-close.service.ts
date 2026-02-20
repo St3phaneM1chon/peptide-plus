@@ -5,6 +5,7 @@
 
 import { prisma } from '@/lib/db';
 import { ACCOUNT_CODES } from './types';
+import { logAuditTrail } from './audit-trail.service';
 
 export interface ChecklistItem {
   id: string;
@@ -250,6 +251,24 @@ export async function reopenPeriod(
       // Keep closedAt and closedBy for audit trail - do NOT nullify them.
       // The status change to 'OPEN' indicates the period was reopened,
       // while closedAt/closedBy preserve who originally closed it and when.
+    },
+  });
+
+  // Persist a formal audit trail entry for the reopen action
+  await logAuditTrail({
+    entityType: 'PERIOD',
+    entityId: period.id,
+    action: 'REOPEN_PERIOD',
+    field: 'status',
+    oldValue: 'LOCKED',
+    newValue: 'OPEN',
+    userId: reopenedBy,
+    metadata: {
+      periodCode,
+      reason,
+      previouslyClosedBy: period.closedBy,
+      previouslyClosedAt: period.closedAt?.toISOString() ?? null,
+      reopenedAt: new Date().toISOString(),
     },
   });
 }
@@ -541,6 +560,25 @@ export async function rollbackYearEndClose(
     closingEntryId: result.closingEntryId,
     periodsReopened: result.periodsReopened,
     rolledBackAt: new Date().toISOString(),
+  });
+
+  // Persist a formal audit trail entry for the year-end rollback
+  await logAuditTrail({
+    entityType: 'PERIOD',
+    entityId: `CLOSE-${year}`,
+    action: 'REOPEN_PERIOD',
+    field: 'status',
+    oldValue: 'LOCKED',
+    newValue: 'OPEN',
+    userId: rolledBackBy,
+    metadata: {
+      year,
+      reason,
+      closingEntryVoided: result.closingEntryVoided,
+      closingEntryId: result.closingEntryId,
+      periodsReopened: result.periodsReopened,
+      rolledBackAt: new Date().toISOString(),
+    },
   });
 
   return {

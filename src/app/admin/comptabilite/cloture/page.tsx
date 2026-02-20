@@ -37,8 +37,8 @@ export default function CloturePage() {
   const [lockingPeriod, setLockingPeriod] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch all periods
-  const fetchPeriods = async () => {
+  // Fetch all periods, returns the first period code so callers can kick off checklist in parallel
+  const fetchPeriods = async (): Promise<string | null> => {
     try {
       const res = await fetch('/api/accounting/periods');
       if (!res.ok) throw new Error(t('admin.closing.errorLoadPeriods'));
@@ -48,10 +48,14 @@ export default function CloturePage() {
       );
       setPeriods(fetchedPeriods);
       if (fetchedPeriods.length > 0 && !selectedPeriod) {
-        setSelectedPeriod(fetchedPeriods[0].code);
+        const firstCode = fetchedPeriods[0].code;
+        setSelectedPeriod(firstCode);
+        return firstCode;
       }
+      return null;
     } catch (err) {
       setError(err instanceof Error ? err.message : t('admin.closing.errorUnknown'));
+      return null;
     } finally {
       setLoading(false);
     }
@@ -109,7 +113,10 @@ export default function CloturePage() {
   };
 
   useEffect(() => {
-    fetchPeriods();
+    // Fetch periods and, once we have the first period code, fetch its checklist in parallel
+    fetchPeriods().then((firstCode) => {
+      if (firstCode) fetchChecklist(firstCode);
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

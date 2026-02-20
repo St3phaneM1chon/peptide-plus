@@ -221,6 +221,19 @@ export const PUT = withAdminGuard(async (request, { session }) => {
       return NextResponse.json({ error: 'Facture non trouvée' }, { status: 404 });
     }
 
+    // Guard: PAID invoices may not have financial fields modified.
+    // Only status (→ VOID), notes, and adminNotes are permitted.
+    if (existing.status === 'PAID') {
+      const financialFields = ['amountPaid', 'subtotal', 'taxTps', 'taxTvq', 'taxTvh', 'total', 'discount', 'shippingCost', 'dueDate', 'items'];
+      const attemptedFinancialChange = financialFields.some((f) => body[f] !== undefined);
+      if (attemptedFinancialChange) {
+        return NextResponse.json(
+          { error: "Impossible de modifier les montants d'une facture payée. Utilisez une note de crédit." },
+          { status: 400 }
+        );
+      }
+    }
+
     // #47 Invoice status transition validation (state machine)
     const VALID_INVOICE_TRANSITIONS: Record<string, string[]> = {
       DRAFT: ['SENT', 'VOID'],
@@ -313,7 +326,7 @@ export const PUT = withAdminGuard(async (request, { session }) => {
  * DELETE /api/accounting/customer-invoices
  * Soft-delete a customer invoice (audit trail preservation)
  */
-export const DELETE = withAdminGuard(async (request) => {
+export const DELETE = withAdminGuard(async (request, { session }) => {
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
@@ -338,6 +351,15 @@ export const DELETE = withAdminGuard(async (request) => {
     await prisma.customerInvoice.update({
       where: { id },
       data: { deletedAt: new Date() },
+    });
+
+    logAuditTrail({
+      entityType: 'CustomerInvoice',
+      entityId: id,
+      action: 'DELETE',
+      userId: session.user.id || session.user.email || 'unknown',
+      userName: session.user.name || undefined,
+      metadata: { invoiceNumber: existing.invoiceNumber },
     });
 
     return NextResponse.json({ success: true, message: 'Facture supprimée' });
