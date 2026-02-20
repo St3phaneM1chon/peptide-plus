@@ -58,20 +58,40 @@ export const GET = withAdminGuard(async (_request, { session, params }) => {
     }
 
     // Get all orders for this user with full details
-    const orders = await prisma.order.findMany({
+    const rawOrders = await prisma.order.findMany({
       where: { userId: id },
       include: {
-        items: {
-          include: {
-            product: {
-              select: { name: true, slug: true, imageUrl: true },
-            },
-          },
-        },
+        items: true,
         currency: { select: { code: true, symbol: true } },
       },
       orderBy: { createdAt: 'desc' },
     });
+
+    // Enrich order items with product info (OrderItem has no direct relation to Product)
+    const allProductIds = [...new Set(rawOrders.flatMap((o) => o.items.map((i) => i.productId)))];
+    const products = allProductIds.length > 0
+      ? await prisma.product.findMany({
+          where: { id: { in: allProductIds } },
+          select: { id: true, name: true, slug: true, imageUrl: true },
+        })
+      : [];
+    const productMap = new Map(products.map((p) => [p.id, p]));
+
+    const orders = rawOrders.map((o) => ({
+      ...o,
+      total: Number(o.total),
+      subtotal: Number(o.subtotal),
+      shippingCost: Number(o.shippingCost),
+      discount: Number(o.discount),
+      tax: Number(o.tax),
+      items: o.items.map((item) => ({
+        ...item,
+        unitPrice: Number(item.unitPrice),
+        discount: Number(item.discount),
+        total: Number(item.total),
+        product: productMap.get(item.productId) || null,
+      })),
+    }));
 
     // Calculate totals
     const paidOrders = orders.filter((o) => o.paymentStatus === 'PAID');
