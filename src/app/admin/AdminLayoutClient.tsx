@@ -7,6 +7,7 @@ import { useSession } from 'next-auth/react';
 import { useI18n } from '@/i18n/client';
 import { Toaster } from 'sonner';
 import { useAdminNotifications } from '@/hooks/useAdminNotifications';
+import CsrfInit from '@/components/admin/CsrfInit';
 import type { LucideIcon } from 'lucide-react';
 import {
   LayoutDashboard, ShoppingCart, Users, Package, FolderOpen, Archive,
@@ -176,6 +177,7 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
 
   return (
     <div className="min-h-screen bg-slate-50">
+      <CsrfInit />
       {/* Mobile menu overlay */}
       {mobileMenuOpen && (
         <div
