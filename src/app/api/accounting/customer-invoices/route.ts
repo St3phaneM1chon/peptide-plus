@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
+import { v4 as uuidv4 } from 'uuid';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { createCustomerInvoiceSchema, formatZodErrors, logAuditTrail } from '@/lib/accounting';
@@ -112,7 +113,7 @@ export const POST = withAdminGuard(async (request) => {
         { status: 400 }
       );
     }
-    const { customerName, customerEmail, items, taxTps, taxTvq, taxTvh, dueDate } = parsed.data;
+    const { customerName, customerEmail, customerAddress, items, taxTps, taxTvq, taxTvh, dueDate, notes, status: requestedStatus } = parsed.data;
 
     // Validation handled by Zod schema above
 
@@ -170,6 +171,7 @@ export const POST = withAdminGuard(async (request) => {
           invoiceNumber,
           customerName,
           customerEmail: customerEmail || null,
+          customerAddress: customerAddress || null,
           subtotal,
           taxTps: tps,
           taxTvq: tvq,
@@ -178,9 +180,11 @@ export const POST = withAdminGuard(async (request) => {
           balance: total,
           invoiceDate: new Date(),
           dueDate: new Date(dueDate),
-          status: 'SENT',
+          status: requestedStatus || 'DRAFT',
+          notes: notes || null,
           items: {
             create: items.map((item) => ({
+              id: uuidv4(),
               description: item.description,
               quantity: item.quantity,
               unitPrice: item.unitPrice,

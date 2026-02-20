@@ -31,7 +31,7 @@ interface Subscription {
   productName: string;
   formatName: string;
   quantity: number;
-  frequency: 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY' | 'BIMONTHLY';
+  frequency: 'EVERY_2_MONTHS' | 'EVERY_4_MONTHS' | 'EVERY_6_MONTHS' | 'EVERY_12_MONTHS';
   price: number;
   discount: number;
   nextDelivery: string;
@@ -53,10 +53,10 @@ export default function AbonnementsPage() {
   const [selectedSub, setSelectedSub] = useState<Subscription | null>(null);
 
   const frequencyLabels: Record<string, string> = {
-    WEEKLY: t('admin.subscriptions.frequencyWeekly'),
-    BIWEEKLY: t('admin.subscriptions.frequencyBiweekly'),
-    MONTHLY: t('admin.subscriptions.frequencyMonthly'),
-    BIMONTHLY: t('admin.subscriptions.frequencyBimonthly'),
+    EVERY_2_MONTHS: t('admin.subscriptions.frequencyEvery2Months'),
+    EVERY_4_MONTHS: t('admin.subscriptions.frequencyEvery4Months'),
+    EVERY_6_MONTHS: t('admin.subscriptions.frequencyEvery6Months'),
+    EVERY_12_MONTHS: t('admin.subscriptions.frequencyEvery12Months'),
   };
 
   const statusLabels: Record<string, string> = {
@@ -102,7 +102,8 @@ export default function AbonnementsPage() {
     active: subscriptions.filter(s => s.status === 'ACTIVE').length,
     paused: subscriptions.filter(s => s.status === 'PAUSED').length,
     monthlyRevenue: subscriptions.filter(s => s.status === 'ACTIVE').reduce((sum, s) => {
-      const multiplier = s.frequency === 'WEEKLY' ? 4 : s.frequency === 'BIWEEKLY' ? 2 : s.frequency === 'MONTHLY' ? 1 : 0.5;
+      // Convert frequency to monthly multiplier for MRR estimation
+      const multiplier = s.frequency === 'EVERY_2_MONTHS' ? 0.5 : s.frequency === 'EVERY_4_MONTHS' ? 0.25 : s.frequency === 'EVERY_6_MONTHS' ? (1/6) : (1/12);
       return sum + (s.price * (1 - s.discount / 100) * multiplier);
     }, 0),
   };

@@ -52,11 +52,14 @@ export const invoiceItemSchema = z.object({
 export const createCustomerInvoiceSchema = z.object({
   customerName: z.string().min(1, 'Nom du client requis'),
   customerEmail: z.string().email('Email invalide').optional(),
+  customerAddress: z.string().max(500).optional(),
   items: z.array(invoiceItemSchema).min(1, 'Au moins un article requis'),
   taxTps: z.number().min(0).default(0),
   taxTvq: z.number().min(0).default(0),
   taxTvh: z.number().min(0).default(0),
   dueDate: z.string().refine((d) => !isNaN(Date.parse(d)), 'Date invalide'),
+  notes: z.string().max(2000).optional(),
+  status: z.enum(['DRAFT', 'SENT']).default('DRAFT'),
 });
 
 // ---- Expenses ----

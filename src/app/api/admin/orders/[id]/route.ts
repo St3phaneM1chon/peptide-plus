@@ -21,9 +21,15 @@ import { generateCOGSEntry } from '@/lib/inventory';
 import { sendOrderLifecycleEmail } from '@/lib/email';
 import { getPayPalAccessToken, PAYPAL_API_URL } from '@/lib/paypal';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2023-10-16',
-});
+// KB-PP-BUILD-002: Lazy init to avoid crash when STRIPE_SECRET_KEY is absent at build time
+let _stripe: Stripe | null = null;
+function getStripe(): Stripe {
+  if (!_stripe) {
+    if (!process.env.STRIPE_SECRET_KEY) throw new Error('STRIPE_SECRET_KEY not configured');
+    _stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2023-10-16' });
+  }
+  return _stripe;
+}
 
 // GET /api/admin/orders/[id] - Full order detail
 export const GET = withAdminGuard(async (_request, { session, params }) => {
@@ -391,7 +397,7 @@ async function handleRefund(
   if (order.stripePaymentId) {
     // Stripe refund
     try {
-      await stripe.refunds.create({
+      await getStripe().refunds.create({
         payment_intent: order.stripePaymentId,
         amount: Math.round(amount * 100), // Stripe uses cents
         reason: 'requested_by_customer',

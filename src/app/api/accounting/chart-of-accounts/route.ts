@@ -165,7 +165,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
 export const PUT = withAdminGuard(async (request, { session }) => {
   try {
     const body = await request.json();
-    const { id, name, description, isActive } = body;
+    const { id, name, description, isActive, gifiCode, gifiName, ccaClass, ccaRate, deductiblePercent, isContra } = body;
 
     if (!id) {
       return NextResponse.json({ error: 'ID requis' }, { status: 400 });
@@ -200,6 +200,13 @@ export const PUT = withAdminGuard(async (request, { session }) => {
     if (name !== undefined) updateData.name = name;
     if (description !== undefined) updateData.description = description;
     if (isActive !== undefined) updateData.isActive = isActive;
+    // GIFI / Fiscal fields
+    if (gifiCode !== undefined) updateData.gifiCode = gifiCode || null;
+    if (gifiName !== undefined) updateData.gifiName = gifiName || null;
+    if (ccaClass !== undefined) updateData.ccaClass = ccaClass !== null && ccaClass !== '' ? Number(ccaClass) : null;
+    if (ccaRate !== undefined) updateData.ccaRate = ccaRate !== null && ccaRate !== '' ? Number(ccaRate) : null;
+    if (deductiblePercent !== undefined) updateData.deductiblePercent = deductiblePercent !== null && deductiblePercent !== '' ? Number(deductiblePercent) : null;
+    if (isContra !== undefined) updateData.isContra = Boolean(isContra);
 
     const account = await prisma.chartOfAccount.update({
       where: { id },
@@ -219,6 +226,12 @@ export const PUT = withAdminGuard(async (request, { session }) => {
         ...(name !== undefined && name !== existing.name && { name: { from: existing.name, to: name } }),
         ...(description !== undefined && description !== existing.description && { description: { from: existing.description, to: description } }),
         ...(isActive !== undefined && isActive !== existing.isActive && { isActive: { from: existing.isActive, to: isActive } }),
+        ...(gifiCode !== undefined && gifiCode !== existing.gifiCode && { gifiCode: { from: existing.gifiCode, to: gifiCode } }),
+        ...(gifiName !== undefined && gifiName !== existing.gifiName && { gifiName: { from: existing.gifiName, to: gifiName } }),
+        ...(ccaClass !== undefined && { ccaClass: { from: existing.ccaClass, to: ccaClass } }),
+        ...(ccaRate !== undefined && { ccaRate: { from: existing.ccaRate, to: ccaRate } }),
+        ...(deductiblePercent !== undefined && { deductiblePercent: { from: existing.deductiblePercent, to: deductiblePercent } }),
+        ...(isContra !== undefined && isContra !== existing.isContra && { isContra: { from: existing.isContra, to: isContra } }),
       },
     });
 

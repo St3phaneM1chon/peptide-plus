@@ -107,6 +107,14 @@ model AccountingSettings {
   taxFilingFrequency    String   @default("MONTHLY")
   autoCreateSaleEntries Boolean  @default(true)
   autoReconcileStripe   Boolean  @default(true)
+
+  // Quick Method GST/HST (méthode rapide)
+  quickMethodEnabled    Boolean  @default(false)
+  quickMethodProvince   String   @default("QC")
+
+  // Document Retention Policy
+  blockDeletionDuringRetention Boolean @default(true)
+
   updatedAt             DateTime
 }
 
@@ -480,14 +488,29 @@ model ChartOfAccount {
   isActive         Boolean          @default(true)
   isSystem         Boolean          @default(false)
   allowDirectEntry Boolean          @default(true)
+  // GIFI mapping for CRA T2 corporate tax return
+  gifiCode         String?          // GIFI code (e.g. "1001", "8000")
+  gifiName         String?          // GIFI name for reference
+  // CCA (Capital Cost Allowance) for depreciable assets
+  ccaClass         Int?             // CCA class number (e.g. 8, 10, 50)
+  ccaRate          Float?           // CCA rate percentage (e.g. 20, 30, 55)
+  // Deductibility
+  deductiblePercent Int?            // 100 = fully, 50 = meals, 0 = non-deductible
+  isContra         Boolean          @default(false)
   createdAt        DateTime         @default(now())
   updatedAt        DateTime
   parent           ChartOfAccount?  @relation("ChartOfAccountToChartOfAccount", fields: [parentId], references: [id])
   children         ChartOfAccount[] @relation("ChartOfAccountToChartOfAccount")
   journalLines     JournalLine[]
+  fixedAssets      FixedAsset[]     @relation("AssetAccount")
+  depreciationAssets FixedAsset[]   @relation("DepreciationAccount")
+  expenseAssets    FixedAsset[]     @relation("ExpenseAccount")
+  bankRules        BankRule[]       @relation("bankRuleAccount")
+  expenses         Expense[]        @relation("expenseAccount")
 
   @@index([parentId])
   @@index([type])
+  @@index([gifiCode])
 }
 
 model ChatConversation {
@@ -721,7 +744,7 @@ model CustomerInvoice {
   lastReminderAt  DateTime?
   journalEntryId  String?
   createdAt       DateTime              @default(now())
-  updatedAt       DateTime
+  updatedAt       DateTime              @updatedAt
   deletedAt       DateTime?
   taxPst          Decimal               @default(0) @db.Decimal(12, 2)
   creditNotes     CreditNote[]
@@ -798,6 +821,63 @@ model EmailTemplate {
   locale      String   @default("fr")
   createdAt   DateTime @default(now())
   updatedAt   DateTime
+}
+
+model Expense {
+  id                String          @id @default(cuid())
+  expenseNumber     String          @unique
+  date              DateTime
+  description       String
+
+  // Amounts
+  subtotal          Decimal         @db.Decimal(12, 2)
+  taxGst            Decimal         @default(0) @db.Decimal(12, 2)
+  taxQst            Decimal         @default(0) @db.Decimal(12, 2)
+  taxOther          Decimal         @default(0) @db.Decimal(12, 2)
+  total             Decimal         @db.Decimal(12, 2)
+
+  // Categorization
+  category          String          // meals, travel, office, professional, advertising, etc.
+  accountId         String?
+  account           ChartOfAccount? @relation("expenseAccount", fields: [accountId], references: [id])
+  deductiblePercent Int             @default(100) // 100, 50, or 0
+
+  // Vendor
+  vendorName        String?
+  vendorTaxNumber   String?         // GST/QST registration number
+
+  // Receipt
+  receiptUrl        String?
+  ocrData           Json?
+
+  // Approval
+  status            ExpenseStatus   @default(DRAFT)
+  submittedBy       String?
+  approvedBy        String?
+  approvedAt        DateTime?
+  rejectionReason   String?
+
+  // Mileage (if applicable)
+  mileageKm         Float?
+  mileageRate       Float?          // CRA rate per km
+
+  // Payment
+  paymentMethod     String?         // cash, credit_card, debit, company_card, reimbursement
+  reimbursed        Boolean         @default(false)
+  reimbursedAt      DateTime?
+
+  // Relations
+  journalEntryId    String?
+
+  notes             String?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  deletedAt         DateTime?
+
+  @@index([status])
+  @@index([category])
+  @@index([date])
+  @@index([deletedAt])
 }
 
 model Faq {
@@ -2655,6 +2735,14 @@ enum DiscountType {
   FIXED_AMOUNT
 }
 
+enum ExpenseStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+  REIMBURSED
+}
+
 enum FormatType {
   VIAL_2ML
   VIAL_10ML
@@ -2918,4 +3006,178 @@ model RecurringEntryTemplate {
 
   @@index([isActive, nextRunDate])
   @@index([frequency])
+}
+
+// =============================================
+// FIXED ASSETS / IMMOBILISATIONS (CCA)
+// =============================================
+
+model FixedAsset {
+  id                    String    @id @default(cuid())
+  name                  String
+  description           String?
+  // Asset details
+  assetNumber           String    @unique // Internal tracking number (e.g. FA-001)
+  serialNumber          String?
+  location              String?
+  // Financial
+  acquisitionDate       DateTime
+  acquisitionCost       Decimal   @db.Decimal(12, 2)
+  residualValue         Decimal   @default(0) @db.Decimal(12, 2)
+  currentBookValue      Decimal   @db.Decimal(12, 2) // Updated after each depreciation
+  accumulatedDepreciation Decimal @default(0) @db.Decimal(12, 2)
+  // CCA (Capital Cost Allowance)
+  ccaClass              Int       // CCA class number (8, 10, 12, 13, 14.1, 50, etc.)
+  ccaRate               Float     // Declining balance rate (e.g. 20, 30, 55)
+  depreciationMethod    String    @default("DECLINING_BALANCE") // DECLINING_BALANCE, STRAIGHT_LINE, LEASE_TERM
+  halfYearRuleApplied   Boolean   @default(true) // Half-year rule for first year
+  aiiApplied            Boolean   @default(false) // Accelerated Investment Incentive (1.5x first year)
+  superDeduction        Boolean   @default(false) // 100% immediate expensing (Budget 2025)
+  // GIFI
+  gifiCode              String?   // GIFI code for this asset category
+  // Status
+  status                String    @default("ACTIVE") // ACTIVE, DISPOSED, FULLY_DEPRECIATED, WRITTEN_OFF
+  disposalDate          DateTime?
+  disposalProceeds      Decimal?  @db.Decimal(12, 2)
+  disposalGainLoss      Decimal?  @db.Decimal(12, 2)
+  // Linked accounts
+  assetAccountId        String    // Balance sheet asset account
+  depreciationAccountId String    // Accumulated depreciation contra account
+  expenseAccountId      String    // Depreciation expense account
+  assetAccount          ChartOfAccount @relation("AssetAccount", fields: [assetAccountId], references: [id])
+  depreciationAccount   ChartOfAccount @relation("DepreciationAccount", fields: [depreciationAccountId], references: [id])
+  expenseAccount        ChartOfAccount @relation("ExpenseAccount", fields: [expenseAccountId], references: [id])
+  // Metadata
+  notes                 String?
+  attachments           Json?     // Array of file references
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  depreciationEntries   FixedAssetDepreciation[]
+
+  @@index([ccaClass])
+  @@index([status])
+  @@index([assetAccountId])
+  @@index([acquisitionDate])
+}
+
+model FixedAssetDepreciation {
+  id              String     @id @default(cuid())
+  fixedAssetId    String
+  fixedAsset      FixedAsset @relation(fields: [fixedAssetId], references: [id], onDelete: Cascade)
+  // Period
+  fiscalYear      Int        // e.g. 2026
+  periodStart     DateTime
+  periodEnd       DateTime
+  // Amounts
+  openingUCC      Decimal    @db.Decimal(12, 2) // Undepreciated Capital Cost at start
+  ccaClaimed      Decimal    @db.Decimal(12, 2) // CCA claimed this period
+  closingUCC      Decimal    @db.Decimal(12, 2) // UCC at end of period
+  // Journal entry reference
+  journalEntryId  String?
+  // Metadata
+  notes           String?
+  createdAt       DateTime   @default(now())
+
+  @@unique([fixedAssetId, fiscalYear])
+  @@index([fiscalYear])
+}
+
+// =============================================
+// FISCAL CALENDAR / CALENDRIER FISCAL
+// =============================================
+
+model FiscalCalendarEvent {
+  id                String    @id @default(cuid())
+  // Event details
+  title             String
+  titleFr           String?
+  description       String?
+  descriptionFr     String?
+  // Scheduling
+  dueDate           DateTime
+  reminderDate      DateTime? // When to send reminder
+  // Classification
+  category          String    // payroll, corporate_tax, sales_tax, information_return, installment
+  authority         String    // CRA, RQ, BOTH, SERVICE_CANADA
+  frequency         String    // once, monthly, quarterly, annual
+  // Status
+  status            String    @default("PENDING") // PENDING, COMPLETED, OVERDUE, SKIPPED
+  completedAt       DateTime?
+  completedBy       String?
+  // Amount (for installments/remittances)
+  amount            Decimal?  @db.Decimal(12, 2)
+  // Recurrence (for auto-generated events)
+  isRecurring       Boolean   @default(false)
+  templateId        String?   // Reference to the deadline template
+  // Metadata
+  notes             String?
+  attachments       Json?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([dueDate])
+  @@index([status])
+  @@index([category])
+  @@index([authority])
+}
+
+// =============================================
+// DOCUMENT ATTACHMENTS (for all transactions)
+// =============================================
+
+model DocumentAttachment {
+  id            String   @id @default(cuid())
+  // Entity reference (polymorphic)
+  entityType    String   // journal_entry, customer_invoice, supplier_invoice, expense, fixed_asset, etc.
+  entityId      String
+  // File details
+  fileName      String
+  fileType      String   // pdf, jpg, png, etc.
+  fileSize      Int      // bytes
+  fileUrl       String   // Storage URL (e.g. Cloudinary, S3)
+  thumbnailUrl  String?  // Preview thumbnail
+  // Metadata
+  description   String?
+  uploadedBy    String?
+  createdAt     DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}
+
+// =============================================
+// BANK RULES (auto-categorization)
+// =============================================
+
+model BankRule {
+  id            String   @id @default(cuid())
+  name          String
+  priority      Int      @default(0)
+  isActive      Boolean  @default(true)
+
+  // Conditions (all optional - multiple conditions = AND logic)
+  descriptionContains   String?
+  descriptionStartsWith String?
+  descriptionExact      String?
+  amountMin             Decimal?  @db.Decimal(12, 2)
+  amountMax             Decimal?  @db.Decimal(12, 2)
+  amountExact           Decimal?  @db.Decimal(12, 2)
+  transactionType       String?   // DEBIT, CREDIT
+
+  // Actions
+  accountId     String?
+  account       ChartOfAccount? @relation("bankRuleAccount", fields: [accountId], references: [id])
+  categoryTag   String?
+  taxCode       String?   // GST, QST, HST, EXEMPT, ZERO_RATED
+  description   String?   // Override description
+
+  // Stats
+  timesApplied  Int      @default(0)
+  lastAppliedAt DateTime?
+
+  createdBy     String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([isActive, priority])
 }

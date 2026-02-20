@@ -502,7 +502,7 @@ export const DELETE = withAdminGuard(async (request, { session }) => {
 
     const existing = await prisma.journalEntry.findFirst({
       where: { id, deletedAt: null },
-      select: { status: true, entryNumber: true },
+      select: { status: true, entryNumber: true, date: true },
     });
 
     if (!existing) {
@@ -516,6 +516,27 @@ export const DELETE = withAdminGuard(async (request, { session }) => {
           { status: 400 }
         );
       }
+
+      // Document retention policy check: block deletion if entry is within the
+      // mandatory 7-year retention period and the setting is enabled.
+      const accountingSettings = await prisma.accountingSettings.findUnique({
+        where: { id: 'default' },
+        select: { blockDeletionDuringRetention: true },
+      });
+
+      if (accountingSettings?.blockDeletionDuringRetention) {
+        const RETENTION_YEARS = 7;
+        const retentionCutoff = new Date();
+        retentionCutoff.setFullYear(retentionCutoff.getFullYear() - RETENTION_YEARS);
+
+        if (existing.date > retentionCutoff) {
+          return NextResponse.json(
+            { error: 'Document dans la période de conservation obligatoire (7 ans)' },
+            { status: 403 }
+          );
+        }
+      }
+
       // Soft delete: set deletedAt instead of hard delete to preserve audit trail
       await prisma.journalEntry.update({
         where: { id },

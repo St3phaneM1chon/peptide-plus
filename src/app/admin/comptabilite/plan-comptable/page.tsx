@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Plus, Download, ChevronRight, Pencil, ClipboardList } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Plus, Download, ChevronRight, Pencil, ClipboardList, Sparkles, FileSpreadsheet } from 'lucide-react';
 import {
   PageHeader,
   Button,
@@ -16,6 +16,11 @@ import {
 import { useI18n } from '@/i18n/client';
 import { sectionThemes } from '@/lib/admin/section-themes';
 import { toast } from 'sonner';
+import { CCA_CLASSES } from '@/lib/accounting/canadian-tax-config';
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
 
 interface Account {
   id: string;
@@ -27,7 +32,26 @@ interface Account {
   isActive: boolean;
   parentId?: string;
   children?: Account[];
+  // GIFI fields
+  gifiCode?: string | null;
+  gifiName?: string | null;
+  ccaClass?: number | null;
+  ccaRate?: number | null;
+  deductiblePercent?: number | null;
+  isContra?: boolean;
 }
+
+interface GifiSuggestion {
+  code: string;
+  nameEn: string;
+  nameFr: string;
+  category: string;
+  score: number;
+}
+
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
 
 export default function PlanComptablePage() {
   const { t, locale, formatCurrency } = useI18n();
@@ -42,18 +66,25 @@ export default function PlanComptablePage() {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState<string>('');
+  const [gifiFilter, setGifiFilter] = useState<string>('');
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(['1000', '2000', '4000', '5000']));
   const [showModal, setShowModal] = useState(false);
   const [editingAccount, setEditingAccount] = useState<Account | null>(null);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(true);
+  const [batchAssigning, setBatchAssigning] = useState(false);
 
-  useEffect(() => {
-    fetchAccounts();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // GIFI modal state
+  const [modalGifiCode, setModalGifiCode] = useState('');
+  const [modalGifiName, setModalGifiName] = useState('');
+  const [modalCcaClass, setModalCcaClass] = useState('');
+  const [modalCcaRate, setModalCcaRate] = useState('');
+  const [modalDeductiblePercent, setModalDeductiblePercent] = useState('');
+  const [modalIsContra, setModalIsContra] = useState(false);
+  const [gifiSuggestions, setGifiSuggestions] = useState<GifiSuggestion[]>([]);
+  const [suggestingGifi, setSuggestingGifi] = useState(false);
 
-  const fetchAccounts = async () => {
+  const fetchAccounts = useCallback(async () => {
     try {
       const res = await fetch('/api/accounting/chart-of-accounts');
       const json = await res.json();
@@ -67,6 +98,12 @@ export default function PlanComptablePage() {
           balance: 0,
           isActive: a.isActive as boolean,
           parentId: (a.parentId as string) || undefined,
+          gifiCode: (a.gifiCode as string) || null,
+          gifiName: (a.gifiName as string) || null,
+          ccaClass: (a.ccaClass as number) ?? null,
+          ccaRate: (a.ccaRate as number) ?? null,
+          deductiblePercent: (a.deductiblePercent as number) ?? null,
+          isContra: (a.isContra as boolean) || false,
         }));
         setAccounts(mapped);
       }
@@ -75,7 +112,12 @@ export default function PlanComptablePage() {
     } finally {
       setLoading(false);
     }
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    fetchAccounts();
+  }, [fetchAccounts]);
 
   const getCategoryFromType = (type: string, code: string): string => {
     const codeNum = parseInt(code);
@@ -89,6 +131,61 @@ export default function PlanComptablePage() {
       return t('admin.chartOfAccounts.other');
     }
     return '';
+  };
+
+  // Reset modal GIFI fields when editing account changes
+  const openModal = (account: Account | null) => {
+    setEditingAccount(account);
+    setModalGifiCode(account?.gifiCode || '');
+    setModalGifiName(account?.gifiName || '');
+    setModalCcaClass(account?.ccaClass != null ? String(account.ccaClass) : '');
+    setModalCcaRate(account?.ccaRate != null ? String(account.ccaRate) : '');
+    setModalDeductiblePercent(account?.deductiblePercent != null ? String(account.deductiblePercent) : '');
+    setModalIsContra(account?.isContra || false);
+    setGifiSuggestions([]);
+    setShowModal(true);
+  };
+
+  const handleSuggestGifi = async () => {
+    const nameInput = document.querySelector<HTMLInputElement>('#accountName');
+    const typeSelect = document.querySelector<HTMLSelectElement>('#accountType');
+    const name = nameInput?.value || editingAccount?.name || '';
+    const type = typeSelect?.value || editingAccount?.type || '';
+
+    if (!name) return;
+
+    setSuggestingGifi(true);
+    try {
+      const params = new URLSearchParams({ accountName: name });
+      if (type) params.set('accountType', type);
+      const res = await fetch(`/api/accounting/chart-of-accounts/gifi-suggest?${params}`);
+      const json = await res.json();
+      if (json.suggestions) {
+        setGifiSuggestions(json.suggestions);
+      }
+    } catch (err) {
+      console.error('Error suggesting GIFI:', err);
+    } finally {
+      setSuggestingGifi(false);
+    }
+  };
+
+  const selectGifiSuggestion = (suggestion: GifiSuggestion) => {
+    setModalGifiCode(suggestion.code);
+    setModalGifiName(locale === 'fr' ? suggestion.nameFr : suggestion.nameEn);
+    setGifiSuggestions([]);
+  };
+
+  const handleCcaClassChange = (classNum: string) => {
+    setModalCcaClass(classNum);
+    if (classNum) {
+      const ccaClass = CCA_CLASSES.find((c) => c.classNumber === Number(classNum));
+      if (ccaClass) {
+        setModalCcaRate(String(ccaClass.rate));
+      }
+    } else {
+      setModalCcaRate('');
+    }
   };
 
   const handleSaveAccount = async () => {
@@ -119,6 +216,13 @@ export default function PlanComptablePage() {
             name: payload.name,
             description: payload.description,
             isActive: payload.isActive,
+            // GIFI / Fiscal fields
+            gifiCode: modalGifiCode || null,
+            gifiName: modalGifiName || null,
+            ccaClass: modalCcaClass ? Number(modalCcaClass) : null,
+            ccaRate: modalCcaRate ? Number(modalCcaRate) : null,
+            deductiblePercent: modalDeductiblePercent ? Number(modalDeductiblePercent) : null,
+            isContra: modalIsContra,
           }),
         });
         if (!res.ok) {
@@ -146,6 +250,37 @@ export default function PlanComptablePage() {
     }
   };
 
+  const handleBatchAssignGifi = async () => {
+    if (!confirm(t('admin.chartOfAccounts.autoAssignGifiConfirm'))) return;
+
+    setBatchAssigning(true);
+    try {
+      const res = await fetch('/api/accounting/chart-of-accounts/gifi-suggest', {
+        method: 'POST',
+      });
+      const json = await res.json();
+      if (res.ok) {
+        toast.success(
+          t('admin.chartOfAccounts.autoAssignSuccess')
+            .replace('{count}', String(json.assigned))
+            .replace('{skipped}', String(json.skipped))
+        );
+        await fetchAccounts();
+      } else {
+        toast.error(json.error || t('admin.chartOfAccounts.autoAssignError'));
+      }
+    } catch (err) {
+      console.error('Error batch assigning GIFI:', err);
+      toast.error(t('admin.chartOfAccounts.autoAssignError'));
+    } finally {
+      setBatchAssigning(false);
+    }
+  };
+
+  const handleExportGifi = () => {
+    window.open('/api/accounting/chart-of-accounts/gifi-export', '_blank');
+  };
+
   const toggleCategory = (code: string) => {
     const newExpanded = new Set(expandedCategories);
     if (newExpanded.has(code)) {
@@ -161,6 +296,12 @@ export default function PlanComptablePage() {
       return false;
     }
     if (selectedType && account.type !== selectedType) {
+      return false;
+    }
+    if (gifiFilter === 'assigned' && !account.gifiCode) {
+      return false;
+    }
+    if (gifiFilter === 'not-assigned' && account.gifiCode) {
       return false;
     }
     return true;
@@ -186,12 +327,21 @@ export default function PlanComptablePage() {
     EXPENSE: accounts.filter(a => a.type === 'EXPENSE' && !a.parentId).reduce((sum, a) => sum + a.balance, 0),
   };
 
+  // GIFI coverage stats
+  const gifiAssignedCount = accounts.filter(a => a.gifiCode).length;
+  const totalAccountCount = accounts.length;
+
   const typeFilterOptions = [
     { value: 'ASSET', label: t('admin.chartOfAccounts.typeAssets') },
     { value: 'LIABILITY', label: t('admin.chartOfAccounts.typeLiabilities') },
     { value: 'EQUITY', label: t('admin.chartOfAccounts.typeEquity') },
     { value: 'REVENUE', label: t('admin.chartOfAccounts.typeRevenue') },
     { value: 'EXPENSE', label: t('admin.chartOfAccounts.typeExpense') },
+  ];
+
+  const gifiFilterOptions = [
+    { value: 'assigned', label: t('admin.chartOfAccounts.gifiAssigned') },
+    { value: 'not-assigned', label: t('admin.chartOfAccounts.gifiNotAssigned') },
   ];
 
   const summaryCardColors: Record<string, { bg: string; border: string; text: string; value: string }> = {
@@ -203,6 +353,36 @@ export default function PlanComptablePage() {
   };
 
   const theme = sectionThemes.accounts;
+
+  // ---------------------------------------------------------------------------
+  // Render helpers
+  // ---------------------------------------------------------------------------
+
+  const renderGifiCell = (account: Account) => {
+    if (account.gifiCode) {
+      return (
+        <div className="flex items-center gap-1.5">
+          <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" title={t('admin.chartOfAccounts.gifiAssigned')} />
+          <span className="font-mono text-xs text-slate-700">{account.gifiCode}</span>
+          {account.gifiName && (
+            <span className="text-xs text-slate-500 truncate max-w-[120px]" title={account.gifiName}>
+              {account.gifiName}
+            </span>
+          )}
+        </div>
+      );
+    }
+    return (
+      <div className="flex items-center gap-1.5">
+        <span className="w-2 h-2 rounded-full bg-amber-400 shrink-0" title={t('admin.chartOfAccounts.gifiNotAssigned')} />
+        <span className="text-xs text-slate-400">&mdash;</span>
+      </div>
+    );
+  };
+
+  // ---------------------------------------------------------------------------
+  // Loading state
+  // ---------------------------------------------------------------------------
 
   if (loading) return (
     <div aria-live="polite" aria-busy="true" className="p-8 space-y-4 animate-pulse">
@@ -221,14 +401,24 @@ export default function PlanComptablePage() {
         subtitle={t('admin.chartOfAccounts.subtitle')}
         theme={theme}
         actions={
-          <Button
-            variant="primary"
-            icon={Plus}
-            onClick={() => { setEditingAccount(null); setShowModal(true); }}
-            className={`${theme.btnPrimary} border-transparent text-white`}
-          >
-            {t('admin.chartOfAccounts.newAccount')}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="secondary"
+              icon={Sparkles}
+              onClick={handleBatchAssignGifi}
+              disabled={batchAssigning}
+            >
+              {batchAssigning ? '...' : t('admin.chartOfAccounts.autoAssignGifi')}
+            </Button>
+            <Button
+              variant="primary"
+              icon={Plus}
+              onClick={() => openModal(null)}
+              className={`${theme.btnPrimary} border-transparent text-white`}
+            >
+              {t('admin.chartOfAccounts.newAccount')}
+            </Button>
+          </div>
         }
       />
 
@@ -250,15 +440,37 @@ export default function PlanComptablePage() {
         })}
       </div>
 
+      {/* GIFI Coverage Badge */}
+      <div className="flex items-center gap-3">
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-indigo-50 border border-indigo-200 rounded-lg text-sm">
+          <span className="w-2 h-2 rounded-full bg-indigo-500" />
+          <span className="text-indigo-700 font-medium">
+            {t('admin.chartOfAccounts.gifiCoverage')
+              .replace('{count}', String(gifiAssignedCount))
+              .replace('{total}', String(totalAccountCount))}
+          </span>
+          {totalAccountCount > 0 && (
+            <span className="text-indigo-500 text-xs">
+              ({Math.round((gifiAssignedCount / totalAccountCount) * 100)}%)
+            </span>
+          )}
+        </div>
+      </div>
+
       {/* Filters */}
       <FilterBar
         searchValue={searchTerm}
         onSearchChange={setSearchTerm}
         searchPlaceholder={t('admin.chartOfAccounts.searchPlaceholder')}
         actions={
-          <Button variant="secondary" icon={Download}>
-            {t('admin.chartOfAccounts.export')}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="secondary" icon={FileSpreadsheet} onClick={handleExportGifi}>
+              {t('admin.chartOfAccounts.exportGifi')}
+            </Button>
+            <Button variant="secondary" icon={Download}>
+              {t('admin.chartOfAccounts.export')}
+            </Button>
+          </div>
         }
       >
         <SelectFilter
@@ -266,6 +478,12 @@ export default function PlanComptablePage() {
           value={selectedType}
           onChange={setSelectedType}
           options={typeFilterOptions}
+        />
+        <SelectFilter
+          label={t('admin.chartOfAccounts.gifiAll')}
+          value={gifiFilter}
+          onChange={setGifiFilter}
+          options={gifiFilterOptions}
         />
       </FilterBar>
 
@@ -277,6 +495,7 @@ export default function PlanComptablePage() {
               <th scope="col" className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.chartOfAccounts.code')}</th>
               <th scope="col" className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.chartOfAccounts.accountName')}</th>
               <th scope="col" className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.chartOfAccounts.type')}</th>
+              <th scope="col" className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.chartOfAccounts.gifi')}</th>
               <th scope="col" className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.chartOfAccounts.category')}</th>
               <th scope="col" className="px-4 py-3 text-end text-xs font-semibold text-slate-500 uppercase">{t('admin.chartOfAccounts.balance')}</th>
               <th scope="col" className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.chartOfAccounts.statusCol')}</th>
@@ -290,7 +509,7 @@ export default function PlanComptablePage() {
               const isExpanded = expandedCategories.has(account.code);
 
               return (
-                <>
+                <>{/* Fragment key on first tr */}
                   <tr key={account.id} className="hover:bg-slate-50">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
@@ -316,6 +535,7 @@ export default function PlanComptablePage() {
                         {accountTypes[account.type].label}
                       </span>
                     </td>
+                    <td className="px-4 py-3">{renderGifiCell(account)}</td>
                     <td className="px-4 py-3 text-slate-600 text-sm">{account.category}</td>
                     <td className="px-4 py-3 text-end">
                       <span className={`font-medium ${account.balance >= 0 ? 'text-slate-900' : 'text-red-600'}`}>
@@ -330,7 +550,7 @@ export default function PlanComptablePage() {
                     <td className="px-4 py-3 text-center">
                       <div className="flex items-center justify-center gap-1">
                         <button
-                          onClick={() => { setEditingAccount(account); setShowModal(true); }}
+                          onClick={() => openModal(account)}
                           className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded"
                           title={t('admin.chartOfAccounts.edit')}
                           aria-label={t('admin.chartOfAccounts.edit')}
@@ -361,6 +581,7 @@ export default function PlanComptablePage() {
                           {accountTypes[child.type].label}
                         </span>
                       </td>
+                      <td className="px-4 py-2">{renderGifiCell(child)}</td>
                       <td className="px-4 py-2 text-slate-500 text-sm">{child.category}</td>
                       <td className="px-4 py-2 text-end">
                         <span className={`text-sm ${child.balance >= 0 ? 'text-slate-700' : 'text-red-600'}`}>
@@ -375,7 +596,7 @@ export default function PlanComptablePage() {
                       <td className="px-4 py-2 text-center">
                         <div className="flex items-center justify-center gap-1">
                           <button
-                            onClick={() => { setEditingAccount(child); setShowModal(true); }}
+                            onClick={() => openModal(child)}
                             className="p-1 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded"
                           >
                             <Pencil className="w-3.5 h-3.5" />
@@ -391,7 +612,7 @@ export default function PlanComptablePage() {
         </table>
       </SectionCard>
 
-      {/* Account Modal */}
+      {/* Account Modal (enhanced with GIFI/Fiscal section) */}
       <Modal
         isOpen={showModal}
         onClose={() => setShowModal(false)}
@@ -411,6 +632,7 @@ export default function PlanComptablePage() {
         }
       >
         <div className="space-y-4">
+          {/* --- General Section --- */}
           <div className="grid grid-cols-2 gap-4">
             <FormField label={t('admin.chartOfAccounts.code')}>
               <Input
@@ -473,6 +695,137 @@ export default function PlanComptablePage() {
             />
             <label htmlFor="isActive" className="text-sm text-slate-700">{t('admin.chartOfAccounts.activeAccount')}</label>
           </div>
+
+          {/* --- GIFI / Fiscal Section (only in edit mode) --- */}
+          {editingAccount && (
+            <>
+              <div className="border-t border-slate-200 pt-4 mt-4">
+                <h3 className="text-sm font-semibold text-indigo-700 mb-3">
+                  {t('admin.chartOfAccounts.gifiFiscalSection')}
+                </h3>
+
+                {/* GIFI Code + Suggest button */}
+                <div className="space-y-3">
+                  <div className="flex items-end gap-2">
+                    <div className="flex-1">
+                      <FormField label={t('admin.chartOfAccounts.gifiCode')}>
+                        <Input
+                          type="text"
+                          value={modalGifiCode}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setModalGifiCode(e.target.value)}
+                          placeholder="8000"
+                        />
+                      </FormField>
+                    </div>
+                    <Button
+                      variant="secondary"
+                      icon={Sparkles}
+                      onClick={handleSuggestGifi}
+                      disabled={suggestingGifi}
+                      className="shrink-0 mb-0.5"
+                    >
+                      {suggestingGifi ? '...' : t('admin.chartOfAccounts.suggestGifi')}
+                    </Button>
+                  </div>
+
+                  {/* GIFI Suggestions dropdown */}
+                  {gifiSuggestions.length > 0 && (
+                    <div className="border border-indigo-200 rounded-lg overflow-hidden bg-white shadow-sm">
+                      {gifiSuggestions.map((s) => (
+                        <button
+                          key={s.code}
+                          onClick={() => selectGifiSuggestion(s)}
+                          className="w-full px-3 py-2 text-start hover:bg-indigo-50 flex items-center justify-between border-b border-slate-100 last:border-b-0"
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-sm font-medium text-indigo-700">{s.code}</span>
+                            <span className="text-sm text-slate-700">
+                              {locale === 'fr' ? s.nameFr : s.nameEn}
+                            </span>
+                          </div>
+                          <span className={`text-xs px-1.5 py-0.5 rounded ${
+                            s.score >= 0.8 ? 'bg-emerald-100 text-emerald-700' :
+                            s.score >= 0.5 ? 'bg-amber-100 text-amber-700' :
+                            'bg-slate-100 text-slate-500'
+                          }`}>
+                            {Math.round(s.score * 100)}%
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* GIFI Name */}
+                  <FormField label={t('admin.chartOfAccounts.gifiName')}>
+                    <Input
+                      type="text"
+                      value={modalGifiName}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setModalGifiName(e.target.value)}
+                      placeholder={t('admin.chartOfAccounts.selectGifi')}
+                    />
+                  </FormField>
+
+                  {/* CCA Class + Rate */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField label={t('admin.chartOfAccounts.ccaClass')}>
+                      <select
+                        value={modalCcaClass}
+                        onChange={(e) => handleCcaClassChange(e.target.value)}
+                        className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white
+                          focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-shadow"
+                      >
+                        <option value="">--</option>
+                        {CCA_CLASSES.map((c) => (
+                          <option key={c.classNumber} value={c.classNumber}>
+                            {c.classNumber} - {locale === 'fr' ? c.descriptionFr : c.description} ({c.rate}%)
+                          </option>
+                        ))}
+                      </select>
+                    </FormField>
+                    <FormField label={t('admin.chartOfAccounts.ccaRate')}>
+                      <Input
+                        type="number"
+                        value={modalCcaRate}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setModalCcaRate(e.target.value)}
+                        placeholder="0"
+                      />
+                    </FormField>
+                  </div>
+
+                  {/* Deductible % + Is Contra */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField label={t('admin.chartOfAccounts.deductiblePercent')}>
+                      <select
+                        value={modalDeductiblePercent}
+                        onChange={(e) => setModalDeductiblePercent(e.target.value)}
+                        className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white
+                          focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-shadow"
+                      >
+                        <option value="">--</option>
+                        <option value="100">100%</option>
+                        <option value="50">50%</option>
+                        <option value="0">0%</option>
+                      </select>
+                    </FormField>
+                    <div className="flex items-end pb-1">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          id="isContra"
+                          checked={modalIsContra}
+                          onChange={(e) => setModalIsContra(e.target.checked)}
+                          className="w-4 h-4 rounded border-slate-300 text-indigo-600"
+                        />
+                        <label htmlFor="isContra" className="text-sm text-slate-700">
+                          {t('admin.chartOfAccounts.isContraAccount')}
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </Modal>
     </div>

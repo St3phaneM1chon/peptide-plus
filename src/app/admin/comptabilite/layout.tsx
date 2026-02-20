@@ -29,6 +29,9 @@ import {
   Settings,
   ChevronDown,
   ChevronRight,
+  Building2,
+  CalendarDays,
+  Receipt,
   type LucideIcon,
 } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
@@ -58,6 +61,9 @@ const icons: Record<string, LucideIcon> = {
   target: Target,
   lock: Lock,
   settings: Settings,
+  building: Building2,
+  calendar: CalendarDays,
+  taxReceipt: Receipt,
 };
 
 interface NavItem {
@@ -98,6 +104,7 @@ export default function ComptabiliteLayout({ children }: { children: React.React
         { name: t('admin.accountingLayout.entries'), href: '/admin/comptabilite/ecritures', icon: 'edit' },
         { name: t('admin.accountingLayout.recurring'), href: '/admin/comptabilite/recurrentes', icon: 'repeat' },
         { name: t('admin.accountingLayout.ocrInvoices'), href: '/admin/comptabilite/ocr', icon: 'camera' },
+        { name: t('admin.accountingLayout.expenses') || 'Depenses', href: '/admin/comptabilite/depenses', icon: 'receipt' },
       ],
     },
     {
@@ -111,6 +118,7 @@ export default function ComptabiliteLayout({ children }: { children: React.React
         { name: t('admin.accountingLayout.supplierInvoices'), href: '/admin/comptabilite/factures-fournisseurs', icon: 'receipt' },
         { name: t('admin.accountingLayout.creditNotes'), href: '/admin/comptabilite/notes-credit', icon: 'invoice' },
         { name: t('admin.accountingLayout.aging'), href: '/admin/comptabilite/aging', icon: 'clock' },
+        { name: t('admin.accountingLayout.fixedAssets') || 'Immobilisations', href: '/admin/comptabilite/immobilisations', icon: 'building' },
       ],
     },
     {
@@ -120,6 +128,7 @@ export default function ComptabiliteLayout({ children }: { children: React.React
       items: [
         { name: t('admin.accountingLayout.bankAccounts'), href: '/admin/comptabilite/banques', icon: 'bank' },
         { name: t('admin.accountingLayout.bankImport'), href: '/admin/comptabilite/import-bancaire', icon: 'download' },
+        { name: t('admin.accountingLayout.bankRules') || 'Bank Rules', href: '/admin/comptabilite/regles-bancaires', icon: 'zap' },
         { name: t('admin.accountingLayout.reconciliation'), href: '/admin/comptabilite/rapprochement', icon: 'check' },
         { name: t('admin.accountingLayout.currencies'), href: '/admin/comptabilite/devises', icon: 'currency' },
       ],
@@ -144,6 +153,8 @@ export default function ComptabiliteLayout({ children }: { children: React.React
         { name: t('admin.accountingLayout.auditTrail'), href: '/admin/comptabilite/audit', icon: 'shield' },
         { name: t('admin.accountingLayout.closing'), href: '/admin/comptabilite/cloture', icon: 'lock' },
         { name: t('admin.accountingLayout.settings'), href: '/admin/comptabilite/parametres', icon: 'settings' },
+        { name: t('admin.accountingLayout.fiscalCalendar') || 'Calendrier fiscal', href: '/admin/comptabilite/calendrier-fiscal', icon: 'calendar' },
+        { name: t('admin.accountingLayout.gstQstReturn') || 'TPS/TVQ', href: '/admin/comptabilite/declaration-tps-tvq', icon: 'taxReceipt' },
       ],
     },
   ];

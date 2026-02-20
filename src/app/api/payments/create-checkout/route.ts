@@ -15,9 +15,15 @@ import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { z } from 'zod';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2023-10-16',
-});
+// KB-PP-BUILD-002: Lazy init to avoid crash when STRIPE_SECRET_KEY is absent at build time
+let _stripe: Stripe | null = null;
+function getStripe(): Stripe {
+  if (!_stripe) {
+    if (!process.env.STRIPE_SECRET_KEY) throw new Error('STRIPE_SECRET_KEY not configured');
+    _stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2023-10-16' });
+  }
+  return _stripe;
+}
 
 // BE-SEC-03: Zod validation schema for checkout request
 const checkoutItemSchema = z.object({
@@ -506,7 +512,7 @@ export async function POST(request: NextRequest) {
       cartItemsStr = JSON.stringify({ ref: cartRef, count: cartItemsData.length });
     }
 
-    const checkoutSession = await stripe.checkout.sessions.create({
+    const checkoutSession = await getStripe().checkout.sessions.create({
       payment_method_types: paymentMethodTypes,
       line_items: lineItems,
       mode: 'payment',

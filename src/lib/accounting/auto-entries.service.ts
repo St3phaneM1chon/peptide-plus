@@ -5,6 +5,7 @@
 
 import { ACCOUNT_CODES, TAX_RATES, JournalEntry, JournalLine } from './types';
 import { roundCurrency } from '@/lib/financial';
+import { calculateSalesTax as calculateSalesTaxByProvince } from './canadian-tax-config';
 
 // #94 Error class for auto-entry generation failures
 export class AutoEntryError extends Error {
@@ -515,13 +516,22 @@ export function generateRecurringEntry(
  * Calculate tax breakdown from total and province.
  * Returns PST separately from TVQ: BC, SK, MB have provincial sales tax (PST)
  * which uses account 2150 (PST_PAYABLE), not 2120 (TVQ_PAYABLE).
+ *
+ * When `shippingProvince` is provided, destination-based (place of supply)
+ * taxation is applied using `calculateSalesTax()` from canadian-tax-config.ts.
+ * The `province` parameter then acts as the seller's province (origin) and
+ * `shippingProvince` is the buyer's destination province whose rates apply.
+ *
+ * When `shippingProvince` is omitted, the legacy behaviour is preserved:
+ * tax is calculated based on `province` using the hardcoded TAX_RATES map.
  */
 export function calculateTaxes(
   subtotal: number,
   shipping: number,
   discount: number,
   province: string,
-  country: string
+  country: string,
+  shippingProvince?: string
 ): { tps: number; tvq: number; tvh: number; pst: number; total: number } {
   const taxableAmount = roundCurrency(subtotal + shipping - discount);
 
@@ -530,6 +540,51 @@ export function calculateTaxes(
     return { tps: 0, tvq: 0, tvh: 0, pst: 0, total: taxableAmount };
   }
 
+  // -------------------------------------------------------------------
+  // Place-of-supply path: use destination-based taxation from
+  // canadian-tax-config.ts when a shipping province is provided.
+  // -------------------------------------------------------------------
+  if (shippingProvince) {
+    const fromProvince = province || 'QC';
+    const toProvince = shippingProvince.toUpperCase();
+
+    const result = calculateSalesTaxByProvince(taxableAmount, fromProvince, toProvince);
+
+    // Map the generic GST/PST/HST breakdown to the accounting fields.
+    // HST provinces return hst > 0 and gst = 0.
+    // Quebec returns gst (→ tps) and pst (→ tvq since it's QST).
+    // BC/SK/MB return gst (→ tps) and pst (→ pst, account 2150).
+    // GST-only provinces return gst (→ tps) only.
+    let tps = 0;
+    let tvq = 0;
+    let tvh = 0;
+    let pst = 0;
+
+    if (result.hst > 0) {
+      tvh = result.hst;
+    } else {
+      tps = result.gst;
+      if (toProvince === 'QC') {
+        // Quebec's provincial tax is QST → TVQ_PAYABLE (2120)
+        tvq = result.pst;
+      } else {
+        // BC, SK, MB → PST_PAYABLE (2150); AB/territories have pst = 0
+        pst = result.pst;
+      }
+    }
+
+    return {
+      tps,
+      tvq,
+      tvh,
+      pst,
+      total: roundCurrency(taxableAmount + tps + tvq + tvh + pst),
+    };
+  }
+
+  // -------------------------------------------------------------------
+  // Legacy path: use hardcoded TAX_RATES keyed by the province parameter.
+  // -------------------------------------------------------------------
   const rates = TAX_RATES[province as keyof typeof TAX_RATES] || TAX_RATES.QC;
 
   let tps = 0;

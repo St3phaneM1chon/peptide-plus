@@ -168,14 +168,17 @@ const pathToSection: Record<string, AccountingSectionId> = {
   '/admin/comptabilite/ecritures': 'entry',
   '/admin/comptabilite/recurrentes': 'entry',
   '/admin/comptabilite/ocr': 'entry',
+  '/admin/comptabilite/depenses': 'entry',
   '/admin/comptabilite/grand-livre': 'accounts',
   '/admin/comptabilite/plan-comptable': 'accounts',
   '/admin/comptabilite/factures-clients': 'accounts',
   '/admin/comptabilite/factures-fournisseurs': 'accounts',
   '/admin/comptabilite/notes-credit': 'accounts',
   '/admin/comptabilite/aging': 'accounts',
+  '/admin/comptabilite/immobilisations': 'accounts',
   '/admin/comptabilite/banques': 'bank',
   '/admin/comptabilite/import-bancaire': 'bank',
+  '/admin/comptabilite/regles-bancaires': 'bank',
   '/admin/comptabilite/rapprochement': 'bank',
   '/admin/comptabilite/devises': 'bank',
   '/admin/comptabilite/etats-financiers': 'reports',
@@ -186,6 +189,8 @@ const pathToSection: Record<string, AccountingSectionId> = {
   '/admin/comptabilite/audit': 'compliance',
   '/admin/comptabilite/cloture': 'compliance',
   '/admin/comptabilite/parametres': 'compliance',
+  '/admin/comptabilite/calendrier-fiscal': 'compliance',
+  '/admin/comptabilite/declaration-tps-tvq': 'compliance',
 };
 
 /** Get section ID from pathname */

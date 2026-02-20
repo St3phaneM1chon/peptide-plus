@@ -216,6 +216,158 @@ export const GET = withAdminGuard(async (request) => {
       },
     };
 
+    // KPIs: DSO, DPO, Current Ratio, AR/AP Outstanding
+    const [arAgg, apAgg, currentAssetsAgg, currentLiabilitiesAgg] = await Promise.all([
+      // AR outstanding
+      prisma.customerInvoice.aggregate({
+        where: { status: { in: ['SENT', 'OVERDUE'] }, deletedAt: null },
+        _sum: { balance: true },
+      }),
+      // AP outstanding
+      prisma.supplierInvoice.aggregate({
+        where: { status: { in: ['PENDING', 'OVERDUE'] }, deletedAt: null },
+        _sum: { balance: true },
+      }),
+      // Current assets total (from journal lines)
+      prisma.journalLine.aggregate({
+        where: {
+          account: { type: 'ASSET', code: { startsWith: '1' } },
+          entry: { status: 'POSTED', deletedAt: null },
+        },
+        _sum: { debit: true, credit: true },
+      }),
+      // Current liabilities total
+      prisma.journalLine.aggregate({
+        where: {
+          account: { type: 'LIABILITY', code: { startsWith: '2' } },
+          entry: { status: 'POSTED', deletedAt: null },
+        },
+        _sum: { debit: true, credit: true },
+      }),
+    ]);
+
+    const arOutstanding = Number(arAgg._sum.balance ?? 0);
+    const apOutstanding = Number(apAgg._sum.balance ?? 0);
+    const currentAssets = Number(currentAssetsAgg._sum.debit ?? 0) - Number(currentAssetsAgg._sum.credit ?? 0);
+    const currentLiabilities = Number(currentLiabilitiesAgg._sum.credit ?? 0) - Number(currentLiabilitiesAgg._sum.debit ?? 0);
+
+    // DSO = (AR / Revenue) * 30 days
+    const dso = totalRevenue > 0 ? Math.round((arOutstanding / totalRevenue) * 30) : 0;
+    // DPO = (AP / Expenses) * 30 days
+    const dpo = totalExpenses > 0 ? Math.round((apOutstanding / totalExpenses) * 30) : 0;
+    // Current Ratio = Current Assets / Current Liabilities
+    const currentRatio = currentLiabilities > 0 ? Math.round((currentAssets / currentLiabilities) * 100) / 100 : 0;
+    // Gross margin %
+    const grossMarginPct = totalRevenue > 0 ? Math.round(((totalRevenue - totalExpenses) / totalRevenue) * 1000) / 10 : 0;
+
+    const kpis = { dso, dpo, currentRatio, grossMarginPct, arOutstanding, apOutstanding };
+
+    // Monthly trends: last 6 months of revenue vs expenses for charts
+    const monthlyTrendsData: Array<{
+      month: string;
+      revenue: number;
+      expenses: number;
+      cashFlow: number;
+    }> = [];
+
+    const trendMonths: Array<{ start: Date; end: Date; label: string }> = [];
+    for (let i = 5; i >= 0; i--) {
+      const trendDate = new Date(viewYear, viewMonth - i, 1);
+      const trendYear = trendDate.getFullYear();
+      const trendMonth = trendDate.getMonth();
+      trendMonths.push({
+        start: new Date(trendYear, trendMonth, 1),
+        end: new Date(trendYear, trendMonth + 1, 0, 23, 59, 59),
+        label: `${trendYear}-${String(trendMonth + 1).padStart(2, '0')}`,
+      });
+    }
+
+    const [trendRevenueResults, trendExpenseResults] = await Promise.all([
+      // Revenue per month (from paid orders)
+      Promise.all(
+        trendMonths.map((m) =>
+          prisma.order.aggregate({
+            where: {
+              paymentStatus: 'PAID',
+              createdAt: { gte: m.start, lte: m.end },
+            },
+            _sum: { total: true },
+          })
+        )
+      ),
+      // Expenses per month (from posted journal lines on expense accounts)
+      Promise.all(
+        trendMonths.map((m) =>
+          prisma.journalLine.aggregate({
+            where: {
+              account: { type: 'EXPENSE' },
+              entry: {
+                status: 'POSTED',
+                deletedAt: null,
+                date: { gte: m.start, lte: m.end },
+              },
+            },
+            _sum: { debit: true },
+          })
+        )
+      ),
+    ]);
+
+    for (let i = 0; i < trendMonths.length; i++) {
+      const rev = Number(trendRevenueResults[i]._sum.total ?? 0);
+      const exp = Number(trendExpenseResults[i]._sum.debit ?? 0);
+      monthlyTrendsData.push({
+        month: trendMonths[i].label,
+        revenue: rev,
+        expenses: exp,
+        cashFlow: rev - exp,
+      });
+    }
+
+    // Expenses by category: top expense accounts by total debit
+    const expenseByCategoryRaw = await prisma.journalLine.groupBy({
+      by: ['accountId'],
+      where: {
+        account: { type: 'EXPENSE' },
+        entry: {
+          status: 'POSTED',
+          deletedAt: null,
+          date: { gte: startOfMonth, lte: endOfMonth },
+        },
+      },
+      _sum: { debit: true },
+      orderBy: { _sum: { debit: 'desc' } },
+      take: 8,
+    });
+
+    // Fetch account names for the expense categories
+    const expenseAccountIds = expenseByCategoryRaw.map((r) => r.accountId);
+    const expenseAccounts = expenseAccountIds.length > 0
+      ? await prisma.chartOfAccount.findMany({
+          where: { id: { in: expenseAccountIds } },
+          select: { id: true, code: true, name: true },
+        })
+      : [];
+    const accountMap = new Map(expenseAccounts.map((a) => [a.id, a]));
+
+    const expenseCategoryTotal = expenseByCategoryRaw.reduce(
+      (sum, r) => sum + Number(r._sum.debit ?? 0),
+      0
+    );
+
+    const expensesByCategory = expenseByCategoryRaw.map((r) => {
+      const acct = accountMap.get(r.accountId);
+      const total = Number(r._sum.debit ?? 0);
+      return {
+        accountName: acct?.name ?? 'Unknown',
+        accountCode: acct?.code ?? '???',
+        total,
+        percentage: expenseCategoryTotal > 0
+          ? Math.round((total / expenseCategoryTotal) * 1000) / 10
+          : 0,
+      };
+    });
+
     // #99 Build the response payload and cache it
     const responseData = {
       totalRevenue,
@@ -223,6 +375,7 @@ export const GET = withAdminGuard(async (request) => {
       pendingInvoices,
       bankBalance,
       comparisons,
+      kpis,
       recentEntries: recentEntries.map((e) => ({
         id: e.id,
         entryNumber: e.entryNumber,
@@ -240,6 +393,8 @@ export const GET = withAdminGuard(async (request) => {
         createdAt: o.createdAt,
       })),
       alerts,
+      monthlyTrends: monthlyTrendsData,
+      expensesByCategory,
     };
 
     // #99 Store in cache for subsequent requests

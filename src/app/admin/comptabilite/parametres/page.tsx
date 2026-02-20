@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus, RefreshCw, Settings, Download } from 'lucide-react';
+import { Plus, RefreshCw, Settings, Download, AlertTriangle, Shield } from 'lucide-react';
 import { PageHeader, Button, StatusBadge, SectionCard, FormField, Input } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
 import { sectionThemes } from '@/lib/admin/section-themes';
@@ -18,6 +18,9 @@ interface AccountingSettingsData {
   taxFilingFrequency: string;
   autoCreateSaleEntries: boolean;
   autoReconcileStripe: boolean;
+  quickMethodEnabled: boolean;
+  quickMethodProvince: string;
+  blockDeletionDuringRetention: boolean;
   [key: string]: unknown;
 }
 
@@ -57,6 +60,9 @@ export default function ParametresComptablesPage() {
     taxFilingFrequency: 'MONTHLY',
     autoCreateSaleEntries: true,
     autoReconcileStripe: true,
+    quickMethodEnabled: false,
+    quickMethodProvince: 'QC',
+    blockDeletionDuringRetention: true,
   });
 
   const [currencies, setCurrencies] = useState<Currency[]>([]);
@@ -80,6 +86,9 @@ export default function ParametresComptablesPage() {
           taxFilingFrequency: data.settings.taxFilingFrequency || 'MONTHLY',
           autoCreateSaleEntries: data.settings.autoCreateSaleEntries ?? true,
           autoReconcileStripe: data.settings.autoReconcileStripe ?? true,
+          quickMethodEnabled: data.settings.quickMethodEnabled ?? false,
+          quickMethodProvince: data.settings.quickMethodProvince || 'QC',
+          blockDeletionDuringRetention: data.settings.blockDeletionDuringRetention ?? true,
         });
       }
     } catch (err) {
@@ -419,6 +428,116 @@ export default function ParametresComptablesPage() {
                   <option value="ANNUAL">{t('admin.accountingSettings.annual')}</option>
                 </select>
               </FormField>
+            </div>
+          </SectionCard>
+
+          {/* Quick Method GST/HST */}
+          <SectionCard title={t('admin.accountingSettings.quickMethodTitle')} theme={theme}>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-slate-900">{t('admin.accountingSettings.quickMethodEnable')}</p>
+                  <p className="text-sm text-slate-500">{t('admin.accountingSettings.quickMethodEnableDesc')}</p>
+                </div>
+                <button
+                  onClick={() => setSettings({ ...settings, quickMethodEnabled: !settings.quickMethodEnabled })}
+                  className={`w-12 h-6 rounded-full transition-colors relative ${
+                    settings.quickMethodEnabled ? 'bg-emerald-500' : 'bg-slate-300'
+                  }`}
+                >
+                  <span className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
+                    settings.quickMethodEnabled ? 'right-1' : 'left-1'
+                  }`} />
+                </button>
+              </div>
+
+              {settings.quickMethodEnabled && (
+                <div className="space-y-4">
+                  <FormField label={t('admin.accountingSettings.quickMethodProvince')}>
+                    <select
+                      value={settings.quickMethodProvince}
+                      onChange={(e) => setSettings({ ...settings, quickMethodProvince: e.target.value })}
+                      className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                    >
+                      <option value="QC">{t('admin.accountingSettings.quebec')} (QC)</option>
+                      <option value="ON">{t('admin.accountingSettings.ontario')} (ON)</option>
+                      <option value="AB">Alberta (AB)</option>
+                      <option value="BC">{t('admin.accountingSettings.britishColumbia')} (BC)</option>
+                      <option value="SK">Saskatchewan (SK)</option>
+                      <option value="MB">Manitoba (MB)</option>
+                      <option value="NB">New Brunswick (NB)</option>
+                      <option value="NL">Newfoundland (NL)</option>
+                      <option value="NS">{t('admin.accountingSettings.novaScotia')} (NS)</option>
+                      <option value="PE">Prince Edward Island (PE)</option>
+                      <option value="YT">Yukon (YT)</option>
+                      <option value="NT">Northwest Territories (NT)</option>
+                      <option value="NU">Nunavut (NU)</option>
+                    </select>
+                  </FormField>
+
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                    <div className="flex items-start gap-3">
+                      <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" />
+                      <div>
+                        <p className="font-medium text-amber-900">{t('admin.accountingSettings.quickMethodEligibilityTitle')}</p>
+                        <p className="text-sm text-amber-700 mt-1">{t('admin.accountingSettings.quickMethodEligibilityDesc')}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </SectionCard>
+
+          {/* Document Retention Policy */}
+          <SectionCard title={t('admin.accountingSettings.retentionTitle')} theme={sectionThemes.compliance}>
+            <div className="space-y-4">
+              {/* Read-only retention rules table */}
+              <p className="text-sm text-slate-600">{t('admin.accountingSettings.retentionDescription')}</p>
+              <div className="overflow-hidden rounded-lg border border-slate-200">
+                <table className="w-full">
+                  <thead className="bg-slate-50">
+                    <tr>
+                      <th scope="col" className="px-4 py-2 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.accountingSettings.retentionDocType')}</th>
+                      <th scope="col" className="px-4 py-2 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.accountingSettings.retentionYears')}</th>
+                      <th scope="col" className="px-4 py-2 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.accountingSettings.retentionAuthority')}</th>
+                      <th scope="col" className="px-4 py-2 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.accountingSettings.retentionReference')}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200">
+                    <tr><td className="px-4 py-2 text-sm">{locale === 'fr' ? 'Registres comptables generaux' : 'General accounting records'}</td><td className="px-4 py-2 text-center text-sm font-mono">6</td><td className="px-4 py-2 text-sm text-slate-600">CRA</td><td className="px-4 py-2 text-sm text-slate-500">s.230(4) ITA</td></tr>
+                    <tr><td className="px-4 py-2 text-sm">{locale === 'fr' ? 'Declarations T2' : 'T2 corporate returns'}</td><td className="px-4 py-2 text-center text-sm font-mono">6</td><td className="px-4 py-2 text-sm text-slate-600">CRA</td><td className="px-4 py-2 text-sm text-slate-500">IT-Folio S4-F14-C1</td></tr>
+                    <tr><td className="px-4 py-2 text-sm">{locale === 'fr' ? 'Registres TPS/TVQ' : 'GST/QST records'}</td><td className="px-4 py-2 text-center text-sm font-mono">6</td><td className="px-4 py-2 text-sm text-slate-600">CRA/RQ</td><td className="px-4 py-2 text-sm text-slate-500">s.286 ETA</td></tr>
+                    <tr><td className="px-4 py-2 text-sm">{locale === 'fr' ? 'Registres de paie' : 'Payroll records'}</td><td className="px-4 py-2 text-center text-sm font-mono">6</td><td className="px-4 py-2 text-sm text-slate-600">CRA/RQ</td><td className="px-4 py-2 text-sm text-slate-500">s.230(4) ITA</td></tr>
+                    <tr><td className="px-4 py-2 text-sm">{locale === 'fr' ? 'Copies T4/RL-1' : 'T4/RL-1 copies'}</td><td className="px-4 py-2 text-center text-sm font-mono">6</td><td className="px-4 py-2 text-sm text-slate-600">CRA/RQ</td><td className="px-4 py-2 text-sm text-slate-500">s.230(4) ITA</td></tr>
+                    <tr><td className="px-4 py-2 text-sm">{locale === 'fr' ? 'RE' : 'ROE'}</td><td className="px-4 py-2 text-center text-sm font-mono">6</td><td className="px-4 py-2 text-sm text-slate-600">Service Canada</td><td className="px-4 py-2 text-sm text-slate-500">EI Act s.87</td></tr>
+                    <tr><td className="px-4 py-2 text-sm">{locale === 'fr' ? 'Acte constitutif' : 'Articles of incorporation'}</td><td className="px-4 py-2 text-center text-sm font-mono">{t('admin.accountingSettings.retentionPermanent')}</td><td className="px-4 py-2 text-sm text-slate-600">{locale === 'fr' ? 'Droit corporatif' : 'Corporate law'}</td><td className="px-4 py-2 text-sm text-slate-500">CBCA/QBCA</td></tr>
+                    <tr><td className="px-4 py-2 text-sm">{locale === 'fr' ? 'PV assemblees' : 'Board minutes'}</td><td className="px-4 py-2 text-center text-sm font-mono">{t('admin.accountingSettings.retentionPermanent')}</td><td className="px-4 py-2 text-sm text-slate-600">{locale === 'fr' ? 'Droit corporatif' : 'Corporate law'}</td><td className="px-4 py-2 text-sm text-slate-500">CBCA s.20</td></tr>
+                    <tr><td className="px-4 py-2 text-sm">{locale === 'fr' ? 'Registre actions' : 'Share register'}</td><td className="px-4 py-2 text-center text-sm font-mono">{t('admin.accountingSettings.retentionPermanent')}</td><td className="px-4 py-2 text-sm text-slate-600">{locale === 'fr' ? 'Droit corporatif' : 'Corporate law'}</td><td className="px-4 py-2 text-sm text-slate-500">CBCA s.50</td></tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Block deletion toggle */}
+              <div className="flex items-center justify-between pt-4 border-t border-slate-200">
+                <div className="flex items-start gap-3">
+                  <Shield className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" />
+                  <div>
+                    <p className="font-medium text-slate-900">{t('admin.accountingSettings.retentionBlockDelete')}</p>
+                    <p className="text-sm text-slate-500">{t('admin.accountingSettings.retentionBlockDeleteDesc')}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setSettings({ ...settings, blockDeletionDuringRetention: !settings.blockDeletionDuringRetention })}
+                  className={`w-12 h-6 rounded-full transition-colors relative shrink-0 ${
+                    settings.blockDeletionDuringRetention ? 'bg-emerald-500' : 'bg-slate-300'
+                  }`}
+                >
+                  <span className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
+                    settings.blockDeletionDuringRetention ? 'right-1' : 'left-1'
+                  }`} />
+                </button>
+              </div>
             </div>
           </SectionCard>
         </div>

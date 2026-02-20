@@ -21,6 +21,11 @@ const accountingSettingsSchema = z.object({
   fiscalYearStart: z.string().max(10).optional(),
   defaultCurrency: z.string().length(3).optional(),
   taxNumber: z.string().max(50).optional(),
+  // Quick Method GST/HST fields
+  quickMethodEnabled: z.boolean().optional(),
+  quickMethodProvince: z.string().length(2).optional(),
+  // Document Retention Policy
+  blockDeletionDuringRetention: z.boolean().optional(),
 }).strict(); // strict() rejects unknown fields
 
 /**
