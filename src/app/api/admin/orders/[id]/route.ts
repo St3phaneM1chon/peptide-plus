@@ -134,11 +134,36 @@ export const GET = withAdminGuard(async (_request, { session, params }) => {
       orderBy: { createdAt: 'desc' },
     });
 
+    // Serialize Decimal fields to numbers
+    const serializedOrder = {
+      ...order,
+      subtotal: Number(order.subtotal),
+      shippingCost: Number(order.shippingCost),
+      discount: Number(order.discount),
+      tax: Number(order.tax),
+      taxTps: Number(order.taxTps),
+      taxTvq: Number(order.taxTvq),
+      taxTvh: Number(order.taxTvh),
+      total: Number(order.total),
+      promoDiscount: order.promoDiscount ? Number(order.promoDiscount) : null,
+      exchangeRate: Number(order.exchangeRate),
+      taxPst: Number((order as Record<string, unknown>).taxPst || 0),
+      items: order.items.map((item) => ({
+        ...item,
+        unitPrice: Number(item.unitPrice),
+        discount: Number(item.discount),
+        total: Number(item.total),
+      })),
+    };
+
     return NextResponse.json({
-      order,
+      order: serializedOrder,
       customer: user,
       journalEntries,
-      inventoryTransactions,
+      inventoryTransactions: inventoryTransactions.map((it) => ({
+        ...it,
+        unitCost: Number(it.unitCost),
+      })),
       creditNotes: creditNotes.map((cn) => ({
         ...cn,
         total: Number(cn.total),

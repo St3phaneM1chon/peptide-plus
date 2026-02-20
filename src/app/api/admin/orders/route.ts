@@ -65,7 +65,7 @@ export const GET = withAdminGuard(async (request, { session }) => {
       }
     }
 
-    const [orders, total] = await Promise.all([
+    const [rawOrders, total] = await Promise.all([
       prisma.order.findMany({
         where,
         orderBy: { createdAt: 'desc' },
@@ -81,14 +81,26 @@ export const GET = withAdminGuard(async (request, { session }) => {
           shippingCost: true,
           discount: true,
           tax: true,
+          taxTps: true,
+          taxTvq: true,
+          taxTvh: true,
           total: true,
+          promoCode: true,
           shippingName: true,
+          shippingAddress1: true,
           shippingCity: true,
+          shippingState: true,
+          shippingPostal: true,
           shippingCountry: true,
           carrier: true,
           trackingNumber: true,
           adminNotes: true,
+          orderType: true,
+          parentOrderId: true,
           createdAt: true,
+          user: {
+            select: { name: true, email: true },
+          },
           items: {
             select: {
               id: true,
@@ -108,6 +120,28 @@ export const GET = withAdminGuard(async (request, { session }) => {
       }),
       prisma.order.count({ where }),
     ]);
+
+    // Serialize Decimal fields to numbers and flatten nested relations
+    const orders = rawOrders.map((o) => ({
+      ...o,
+      subtotal: Number(o.subtotal),
+      shippingCost: Number(o.shippingCost),
+      discount: Number(o.discount),
+      tax: Number(o.tax),
+      taxTps: Number(o.taxTps),
+      taxTvq: Number(o.taxTvq),
+      taxTvh: Number(o.taxTvh),
+      total: Number(o.total),
+      userName: o.user?.name || o.shippingName,
+      userEmail: o.user?.email || '',
+      currencyCode: o.currency?.code || 'CAD',
+      items: o.items.map((item) => ({
+        ...item,
+        unitPrice: Number(item.unitPrice),
+        discount: Number(item.discount),
+        total: Number(item.total),
+      })),
+    }));
 
     return NextResponse.json({
       orders,
