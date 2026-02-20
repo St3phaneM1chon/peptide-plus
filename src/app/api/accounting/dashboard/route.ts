@@ -223,9 +223,9 @@ export const GET = withAdminGuard(async (request) => {
         where: { status: { in: ['SENT', 'OVERDUE'] }, deletedAt: null },
         _sum: { balance: true },
       }),
-      // AP outstanding
+      // AP outstanding (SENT + OVERDUE = unpaid supplier invoices)
       prisma.supplierInvoice.aggregate({
-        where: { status: { in: ['PENDING', 'OVERDUE'] }, deletedAt: null },
+        where: { status: { in: ['SENT', 'OVERDUE'] }, deletedAt: null },
         _sum: { balance: true },
       }),
       // Current assets total (from journal lines)
