@@ -1,13 +1,12 @@
 /**
  * CONFIGURATION AUTHENTIFICATION MULTI-PROVIDERS
- * Google, Apple, Facebook, X (Twitter), Shopify, Email/Password + MFA
+ * Google, Apple, X (Twitter), Shopify, Email/Password + MFA
  */
 
 import NextAuth from 'next-auth';
 import type { NextAuthConfig } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
 import AppleProvider from 'next-auth/providers/apple';
-import FacebookProvider from 'next-auth/providers/facebook';
 import TwitterProvider from 'next-auth/providers/twitter';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { PrismaAdapter } from '@auth/prisma-adapter';
@@ -57,17 +56,6 @@ const oauthProviders: AuthProvider[] = [
           clientId: process.env.APPLE_CLIENT_ID,
           clientSecret: process.env.APPLE_CLIENT_SECRET,
           allowDangerousEmailAccountLinking: true,
-        }),
-      ]
-    : []),
-
-  // Facebook (UNTRUSTED - no email account linking to prevent takeover)
-  ...(process.env.FACEBOOK_CLIENT_ID && process.env.FACEBOOK_CLIENT_SECRET
-    ? [
-        FacebookProvider({
-          clientId: process.env.FACEBOOK_CLIENT_ID,
-          clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
-          // SECURITY: allowDangerousEmailAccountLinking removed - Facebook email_verified is unreliable
         }),
       ]
     : []),
