@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 
 // GET /api/admin/seo - Get all SEO settings
 export const GET = withAdminGuard(async (_request: NextRequest, { session }) => {
@@ -69,6 +70,16 @@ export const PUT = withAdminGuard(async (request: NextRequest, { session }) => {
       });
       upsertedSettings.push(upserted);
     }
+
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'UPDATE_SEO_SETTINGS',
+      targetType: 'SiteSetting',
+      targetId: 'seo',
+      newValue: { count: upsertedSettings.length, keys: Object.keys(settings) },
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json({
       success: true,

@@ -105,6 +105,7 @@ export const GET = withAdminGuard(async (request) => {
       include: {
         account: { select: { code: true, name: true, type: true, normalBalance: true } },
       },
+      take: 1000,
     });
 
     // Aggregate actual amounts by account code

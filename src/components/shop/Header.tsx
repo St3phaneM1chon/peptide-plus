@@ -181,7 +181,7 @@ export default function Header() {
             <div className="flex items-center gap-1">
               
               {/* Search */}
-              <IconButton onClick={() => setIsSearchOpen(true)} label="Search">
+              <IconButton onClick={() => setIsSearchOpen(true)} label={t('common.search')}>
                 <SearchIcon />
               </IconButton>
 

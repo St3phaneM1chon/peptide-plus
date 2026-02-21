@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 
 // GET all bundles (including inactive for admin)
 export const GET = withAdminGuard(async (request, { session }) => {
@@ -144,6 +145,17 @@ export const POST = withAdminGuard(async (request, { session }) => {
         },
       },
     });
+
+    // Audit log (fire-and-forget)
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'CREATE_BUNDLE',
+      targetType: 'Bundle',
+      targetId: bundle.id,
+      newValue: { name: bundle.name, slug: bundle.slug, discount: Number(bundle.discount), isActive: bundle.isActive },
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json({ data: bundle }, { status: 201 });
   } catch (error) {

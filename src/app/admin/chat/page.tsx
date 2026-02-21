@@ -18,6 +18,8 @@ import {
   UserCog,
   Lightbulb,
   ArrowLeftRight,
+  Image as ImageIcon,
+  Smile,
 } from 'lucide-react';
 import {
   PageHeader,
@@ -40,6 +42,10 @@ interface Message {
   createdAt: string;
   isFromBot: boolean;
   isRead: boolean;
+  type?: 'TEXT' | 'IMAGE' | 'FILE';
+  attachmentUrl?: string;
+  attachmentName?: string;
+  attachmentSize?: number;
 }
 
 interface Conversation {
@@ -72,7 +78,10 @@ export default function AdminChatPage() {
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [settings, setSettings] = useState<Settings | null>(null);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Charger les settings
   useEffect(() => {
@@ -183,6 +192,64 @@ export default function AdminChatPage() {
     } catch (error) {
       console.error(error);
       toast.error(t('common.errorOccurred'));
+    }
+  };
+
+  // Emoji picker
+  const commonEmojis = [
+    '\u{1F600}', '\u{1F60A}', '\u{1F602}', '\u{1F923}', '\u{1F60D}', '\u{1F970}', '\u{1F618}', '\u{1F60E}',
+    '\u{1F914}', '\u{1F605}', '\u{1F622}', '\u{1F62D}', '\u{1F621}', '\u{1F92F}', '\u{1F973}', '\u{1F929}',
+    '\u{1F44D}', '\u{1F44E}', '\u2764\uFE0F', '\u{1F525}', '\u2705', '\u2B50', '\u{1F389}', '\u{1F4AF}',
+    '\u{1F44B}', '\u{1F64F}', '\u{1F4AA}', '\u{1F91D}', '\u{1F44F}', '\u{1F38A}', '\u{1F4A1}', '\u{1F4E6}',
+  ];
+
+  const insertEmoji = (emoji: string) => {
+    setInputValue(prev => prev + emoji);
+    setShowEmojiPicker(false);
+  };
+
+  // Image upload handler (admin)
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !selectedConversation) return;
+
+    e.target.value = '';
+    setIsUploading(true);
+
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+      formData.append('conversationId', selectedConversation.id);
+
+      const uploadRes = await fetch('/api/chat/upload', { method: 'POST', body: formData });
+      const uploadData = await uploadRes.json();
+
+      if (!uploadRes.ok || !uploadData.success) {
+        throw new Error(uploadData.error || 'Upload failed');
+      }
+
+      const msgRes = await fetch('/api/chat/message', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          conversationId: selectedConversation.id,
+          content: uploadData.url,
+          sender: 'ADMIN',
+          type: 'IMAGE',
+          attachmentUrl: uploadData.url,
+          attachmentName: uploadData.name,
+          attachmentSize: uploadData.size,
+        }),
+      });
+
+      const msgData = await msgRes.json();
+      setMessages(prev => [...prev, msgData.message]);
+      loadConversations();
+    } catch (err) {
+      console.error('Image upload failed:', err);
+      toast.error('Image upload failed');
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -395,8 +462,18 @@ export default function AdminChatPage() {
                         )}
                       </div>
 
-                      {/* Message traduit (pour les messages visiteur) */}
-                      <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                      {/* Message content: image or text */}
+                      {message.type === 'IMAGE' && message.attachmentUrl ? (
+                        <a href={message.attachmentUrl} target="_blank" rel="noopener noreferrer">
+                          <img
+                            src={message.attachmentUrl}
+                            alt={message.attachmentName || 'Image'}
+                            className="max-w-[240px] max-h-[240px] rounded-lg object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                          />
+                        </a>
+                      ) : (
+                        <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                      )}
 
                       {/* Message original si different */}
                       {message.contentOriginal && message.contentOriginal !== message.content && (
@@ -419,7 +496,48 @@ export default function AdminChatPage() {
 
               {/* Input */}
               <div className="p-4 border-t border-slate-200 bg-white">
-                <div className="flex gap-3">
+                <div className="flex items-center gap-2">
+                  {/* Image upload button */}
+                  <label className="p-2 hover:bg-slate-100 rounded-full cursor-pointer transition-colors flex-shrink-0" title="Upload image">
+                    <ImageIcon className="w-5 h-5 text-slate-500" />
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/gif"
+                      className="hidden"
+                      onChange={handleImageUpload}
+                      disabled={isLoading || isUploading}
+                    />
+                  </label>
+
+                  {/* Emoji picker */}
+                  <div className="relative flex-shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                      className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+                      title="Emoji"
+                    >
+                      <Smile className="w-5 h-5 text-slate-500" />
+                    </button>
+                    {showEmojiPicker && (
+                      <div className="absolute bottom-10 left-0 bg-white border border-slate-200 rounded-lg shadow-xl p-2 w-64 z-50">
+                        <div className="grid grid-cols-8 gap-1">
+                          {commonEmojis.map((emoji) => (
+                            <button
+                              key={emoji}
+                              type="button"
+                              onClick={() => insertEmoji(emoji)}
+                              className="w-7 h-7 flex items-center justify-center text-lg hover:bg-slate-100 rounded transition-colors"
+                            >
+                              {emoji}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
                   <Input
                     type="text"
                     value={inputValue}
@@ -427,15 +545,15 @@ export default function AdminChatPage() {
                     onKeyPress={handleKeyPress}
                     placeholder={t('admin.chat.replyPlaceholder', { language: getLanguageName(selectedConversation.visitorLanguage) })}
                     className="flex-1 !h-11 !rounded-xl"
-                    disabled={isLoading}
+                    disabled={isLoading || isUploading}
                   />
                   <Button
                     variant="primary"
                     size="lg"
-                    icon={Send}
+                    icon={isUploading ? undefined : Send}
                     onClick={sendMessage}
-                    disabled={!inputValue.trim()}
-                    loading={isLoading}
+                    disabled={!inputValue.trim() && !isUploading}
+                    loading={isLoading || isUploading}
                     className="!rounded-xl !px-6"
                   >
                     {t('admin.chat.send')}

@@ -166,16 +166,62 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
 
         {/* Footer */}
         {items.length > 0 && (
-          <div className="border-t border-neutral-200 p-4 space-y-4" aria-live="polite" aria-atomic="true">
-            {/* Subtotal */}
-            <div className="flex items-center justify-between">
-              <span className="text-neutral-600">{t('cart.subtotal')}</span>
-              <span className="text-xl font-bold">{formatPrice(subtotal)}</span>
-            </div>
+          <div className="border-t border-neutral-200 p-4 space-y-3" aria-live="polite" aria-atomic="true">
+            {/* Free Shipping Progress Bar */}
+            {(() => {
+              const FREE_SHIPPING_THRESHOLD = 150;
+              const remaining = FREE_SHIPPING_THRESHOLD - subtotal;
+              const progress = Math.min((subtotal / FREE_SHIPPING_THRESHOLD) * 100, 100);
+              return (
+                <div className="bg-neutral-50 rounded-lg p-3">
+                  {remaining > 0 ? (
+                    <>
+                      <p className="text-xs text-neutral-600 mb-2">
+                        {t('cart.freeShippingProgress', { amount: formatPrice(remaining) })}
+                      </p>
+                      <div className="w-full bg-neutral-200 rounded-full h-1.5">
+                        <div
+                          className="bg-orange-500 h-1.5 rounded-full transition-all duration-500"
+                          style={{ width: `${progress}%` }}
+                          role="progressbar"
+                          aria-valuenow={Math.round(progress)}
+                          aria-valuemin={0}
+                          aria-valuemax={100}
+                          aria-label={t('cart.freeShippingProgress', { amount: formatPrice(remaining) })}
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex items-center gap-2 text-green-600">
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                      <p className="text-xs font-medium">{t('cart.freeShippingUnlocked')}</p>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
 
-            <p className="text-xs text-neutral-500">
-              {t('cart.taxesNote')}
-            </p>
+            {/* Order Summary */}
+            <div className="space-y-2 text-sm">
+              <div className="flex items-center justify-between">
+                <span className="text-neutral-600">{t('cart.subtotal')}</span>
+                <span className="font-medium">{formatPrice(subtotal)}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-neutral-600">{t('cart.shippingEstimate')}</span>
+                <span className="text-neutral-500 text-xs">{t('cart.shippingCalculatedAtCheckout')}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-neutral-600">{t('cart.taxEstimate')}</span>
+                <span className="text-neutral-500 text-xs">{t('cart.shippingCalculatedAtCheckout')}</span>
+              </div>
+              <div className="flex items-center justify-between pt-2 border-t border-neutral-200">
+                <span className="font-bold text-neutral-900">{t('cart.estimatedTotal')}</span>
+                <span className="text-lg font-bold text-neutral-900">{formatPrice(subtotal)}</span>
+              </div>
+            </div>
 
             {/* Checkout Button */}
             <Link
@@ -189,7 +235,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
             {/* Continue Shopping */}
             <button
               onClick={onClose}
-              className="block w-full py-3 border border-neutral-300 text-neutral-700 font-medium text-center rounded-lg hover:bg-neutral-50 transition-colors"
+              className="block w-full py-2 text-orange-600 font-medium text-center text-sm hover:underline transition-colors"
             >
               {t('cart.continueShopping')}
             </button>

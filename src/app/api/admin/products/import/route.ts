@@ -14,6 +14,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 
 // ---------------------------------------------------------------------------
 // CSV parsing with proper quote handling
@@ -106,7 +107,7 @@ function slugify(text: string): string {
     .replace(/^-+|-+$/g, '');
 }
 
-const VALID_PRODUCT_TYPES = ['PEPTIDE', 'SUPPLEMENT', 'ACCESSORY', 'BUNDLE', 'CAPSULE'];
+const VALID_PRODUCT_TYPES = ['PEPTIDE', 'SUPPLEMENT', 'ACCESSORY', 'BUNDLE', 'CAPSULE', 'LAB_SUPPLY'];
 
 interface ImportError {
   row: number;
@@ -114,7 +115,7 @@ interface ImportError {
 }
 
 // POST /api/admin/products/import - Import products from CSV
-export const POST = withAdminGuard(async (request, { session: _session }) => {
+export const POST = withAdminGuard(async (request, { session }) => {
   try {
     // Fix 4: Request body size limit (5MB for CSV imports)
     const contentLength = request.headers.get('content-length');
@@ -294,7 +295,7 @@ export const POST = withAdminGuard(async (request, { session: _session }) => {
         // Build data object
         const data = {
           name,
-          productType: productType as 'PEPTIDE' | 'SUPPLEMENT' | 'ACCESSORY' | 'BUNDLE' | 'CAPSULE',
+          productType: productType as 'PEPTIDE' | 'SUPPLEMENT' | 'ACCESSORY' | 'BUNDLE' | 'CAPSULE' | 'LAB_SUPPLY',
           categoryId,
           description: row.description?.trim() || null,
           shortDescription: row.shortDescription?.trim() || null,
@@ -342,6 +343,17 @@ export const POST = withAdminGuard(async (request, { session: _session }) => {
         errors.push({ row: rowNum, message });
       }
     }
+
+    // Audit log for product import (fire-and-forget)
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'IMPORT_PRODUCTS',
+      targetType: 'Product',
+      targetId: `import_${rows.length}`,
+      newValue: { totalRows: rows.length, created, updated, errorCount: errors.length },
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json({
       success: true,

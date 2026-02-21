@@ -18,6 +18,7 @@ import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { TRANSLATABLE_FIELDS, type TranslatableModel } from '@/lib/translation';
 import { cacheDelete } from '@/lib/cache';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 
 const TRANSLATION_TABLE_MAP: Record<TranslatableModel, string> = {
   Product: 'productTranslation',
@@ -123,6 +124,16 @@ export const PUT = withAdminGuard(async (request: NextRequest, { session, params
     // Invalidate cache
     cacheDelete(`translation:${model}:${entityId}:${locale}`);
 
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'UPDATE_TRANSLATION',
+      targetType: model,
+      targetId: entityId,
+      newValue: { locale, fields: Object.keys(updateData), approve },
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
+
     return NextResponse.json({
       message: 'Traduction mise à jour',
       translation,
@@ -155,6 +166,17 @@ export const DELETE = withAdminGuard(async (request: NextRequest, { session, par
         where: { [`${fkField}_locale`]: { [fkField]: entityId, locale } },
       });
       cacheDelete(`translation:${model}:${entityId}:${locale}`);
+
+      logAdminAction({
+        adminUserId: session.user.id,
+        action: 'DELETE_TRANSLATION',
+        targetType: model,
+        targetId: entityId,
+        previousValue: { locale },
+        ipAddress: getClientIpFromRequest(request),
+        userAgent: request.headers.get('user-agent') || undefined,
+      }).catch(() => {});
+
       return NextResponse.json({ message: `Traduction ${locale} supprimée` });
     } else {
       // Delete all translations for this entity
@@ -162,6 +184,17 @@ export const DELETE = withAdminGuard(async (request: NextRequest, { session, par
       const result = await ((prisma as Record<string, any>)[tableName]).deleteMany({
         where: { [fkField]: entityId },
       });
+
+      logAdminAction({
+        adminUserId: session.user.id,
+        action: 'DELETE_ALL_TRANSLATIONS',
+        targetType: model,
+        targetId: entityId,
+        newValue: { deleted: result.count },
+        ipAddress: getClientIpFromRequest(request),
+        userAgent: request.headers.get('user-agent') || undefined,
+      }).catch(() => {});
+
       return NextResponse.json({
         message: `${result.count} traduction(s) supprimée(s)`,
         deleted: result.count,

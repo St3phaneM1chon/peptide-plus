@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 
 // PATCH /api/admin/inventory/[id] - Update stock for a product format
 export const PATCH = withAdminGuard(async (request, { session, params }) => {
@@ -92,6 +93,17 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
         createdBy: session.user.id,
       },
     });
+
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'ADJUST_STOCK',
+      targetType: 'ProductFormat',
+      targetId: formatId,
+      previousValue: { stockQuantity: oldQuantity },
+      newValue: { stockQuantity, adjustment, reason },
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json({
       success: true,

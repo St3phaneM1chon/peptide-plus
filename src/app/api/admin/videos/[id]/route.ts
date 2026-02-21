@@ -11,6 +11,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { enqueue } from '@/lib/translation';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 
 // GET /api/admin/videos/[id] - Get single video
 export const GET = withAdminGuard(async (_request, { session, params }) => {
@@ -178,6 +179,17 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
       return NextResponse.json({ video: updated });
     }
 
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'UPDATE_VIDEO',
+      targetType: 'Video',
+      targetId: id,
+      previousValue: { title: existing.title, isPublished: existing.isPublished },
+      newValue: updateData,
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
+
     return NextResponse.json({ video });
   } catch (error) {
     console.error('Admin video PATCH error:', error);
@@ -205,6 +217,16 @@ export const DELETE = withAdminGuard(async (_request, { session, params }) => {
     await prisma.video.delete({
       where: { id },
     });
+
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'DELETE_VIDEO',
+      targetType: 'Video',
+      targetId: id,
+      previousValue: { title: existing.title },
+      ipAddress: getClientIpFromRequest(_request),
+      userAgent: _request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json({
       success: true,

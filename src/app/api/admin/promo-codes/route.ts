@@ -10,6 +10,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { createPromoCodeSchema } from '@/lib/validations/promo-code';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 
 // GET /api/admin/promo-codes - List all promo codes with usage counts
 export const GET = withAdminGuard(async (request, { session }) => {
@@ -132,6 +133,16 @@ export const POST = withAdminGuard(async (request, { session }) => {
         categoryIds: categoryIds ?? null,
       },
     });
+
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'CREATE_PROMO_CODE',
+      targetType: 'PromoCode',
+      targetId: promoCode.id,
+      newValue: { code: promoCode.code, type, value, isActive: true },
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json({
       promoCode: {

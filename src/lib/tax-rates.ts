@@ -1,7 +1,11 @@
 /**
  * Shared Canadian province tax rates
  * Single source of truth for GST/HST/PST/QST/RST rates used across payment routes.
+ *
+ * All calculations use Decimal.js for financial precision.
  */
+
+import { applyRate, add } from '@/lib/decimal-calculator';
 
 export interface ProvinceTaxRates {
   gst: number;
@@ -32,11 +36,14 @@ export function getProvinceTaxRates(province: string): ProvinceTaxRates {
 
 /**
  * Calculate tax amount for a given subtotal and province.
+ * Uses Decimal.js for safe financial arithmetic.
  */
 export function calculateTaxAmount(subtotal: number, province: string): number {
   const rates = getProvinceTaxRates(province);
   if (rates.hst) {
-    return subtotal * rates.hst;
+    return applyRate(subtotal, rates.hst);
   }
-  return subtotal * rates.gst + subtotal * (rates.qst || rates.pst || rates.rst || 0);
+  const gst = applyRate(subtotal, rates.gst);
+  const provincial = applyRate(subtotal, rates.qst || rates.pst || rates.rst || 0);
+  return add(gst, provincial);
 }

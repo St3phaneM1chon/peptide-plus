@@ -12,6 +12,7 @@ import {
   BarChart2, Activity, UserCheck, Settings, Shield, FlaskConical, Languages,
   Megaphone, Inbox, FileBarChart, Layout, Receipt, CreditCard, Clock,
   BookOpen, Import, Ruler, Scale, Calendar, FileCheck, Zap, Target,
+  Trash2, AlertTriangle, StickyNote, FolderSearch, FileEdit, Globe,
 } from 'lucide-react';
 
 // ── Icon Rail (left vertical strip) ──────────────────────────
@@ -30,6 +31,7 @@ export const railItems: NavRailItem[] = [
   { id: 'marketing', labelKey: 'admin.nav.marketing', icon: Megaphone },
   { id: 'community', labelKey: 'admin.nav.community', icon: MessageCircle, badge: 'unreadChats' },
   { id: 'loyalty', labelKey: 'admin.nav.loyalty', icon: Award },
+  { id: 'media', labelKey: 'admin.nav.mediaSection', icon: Video },
   { id: 'emails', labelKey: 'admin.nav.emails', icon: Mail, badge: 'inboxCount' },
   { id: 'accounting', labelKey: 'admin.nav.accounting', icon: Calculator },
   { id: 'system', labelKey: 'admin.nav.system', icon: Settings },
@@ -82,6 +84,7 @@ export const folderSections: Record<string, NavFolderSection> = {
           { href: '/admin/customers', labelKey: 'admin.nav.customers', icon: Users },
           { href: '/admin/clients', labelKey: 'admin.nav.distributors', icon: Briefcase },
           { href: '/admin/inventaire', labelKey: 'admin.nav.inventory', icon: Archive },
+          { href: '/admin/fournisseurs', labelKey: 'admin.nav.suppliers', icon: Truck },
         ],
         defaultOpen: true,
       },
@@ -150,28 +153,83 @@ export const folderSections: Record<string, NavFolderSection> = {
     ],
   },
 
+  media: {
+    railId: 'media',
+    title: 'admin.nav.mediaSection',
+    groups: [
+      {
+        labelKey: 'admin.nav.mediaAPIs',
+        items: [
+          { href: '/admin/media/api-zoom', labelKey: 'admin.nav.mediaZoom', icon: Video },
+          { href: '/admin/media/api-whatsapp', labelKey: 'admin.nav.mediaWhatsApp', icon: MessageCircle },
+          { href: '/admin/media/api-teams', labelKey: 'admin.nav.mediaTeams', icon: Users },
+        ],
+        defaultOpen: true,
+      },
+      {
+        labelKey: 'admin.nav.mediaAds',
+        items: [
+          { href: '/admin/media/pub-youtube', labelKey: 'admin.nav.mediaYouTube', icon: Video },
+          { href: '/admin/media/pub-x', labelKey: 'admin.nav.mediaX', icon: MessageCircle },
+          { href: '/admin/media/pub-tiktok', labelKey: 'admin.nav.mediaTikTok', icon: Activity },
+          { href: '/admin/media/pub-google', labelKey: 'admin.nav.mediaGoogle', icon: Search },
+        ],
+        collapsible: true,
+        defaultOpen: true,
+      },
+      {
+        labelKey: 'admin.nav.mediaManagement',
+        items: [
+          { href: '/admin/media/videos', labelKey: 'admin.nav.mediaVideos', icon: Video },
+          { href: '/admin/media/images', labelKey: 'admin.nav.mediaImages', icon: ImageIcon },
+          { href: '/admin/media/library', labelKey: 'admin.nav.mediaLibrary', icon: FolderOpen },
+        ],
+        collapsible: true,
+        defaultOpen: true,
+      },
+    ],
+  },
+
   emails: {
     railId: 'emails',
     title: 'admin.nav.emails',
     groups: [
       {
-        labelKey: 'admin.nav.emails',
+        labelKey: 'admin.nav.emailFavorites',
         items: [
-          { href: '/admin/emails', labelKey: 'admin.nav.emailInbox', icon: Inbox, badge: 'inboxCount' },
-          { href: '/admin/emails?tab=templates', labelKey: 'admin.nav.emailTemplates', icon: FileText },
-          { href: '/admin/emails?tab=campaigns', labelKey: 'admin.nav.emailCampaigns', icon: Send },
-          { href: '/admin/emails?tab=flows', labelKey: 'admin.nav.emailFlows', icon: Zap },
-          { href: '/admin/emails?tab=analytics', labelKey: 'admin.nav.emailAnalytics', icon: BarChart2 },
-          { href: '/admin/emails?tab=segments', labelKey: 'admin.nav.emailSegments', icon: Target },
+          { href: '/admin/emails?folder=inbox', labelKey: 'admin.nav.emailInbox', icon: Inbox, badge: 'inboxCount' },
+          { href: '/admin/emails?folder=sent', labelKey: 'admin.nav.emailSent', icon: Send },
+          { href: '/admin/emails?folder=drafts', labelKey: 'admin.nav.emailDrafts', icon: FileEdit },
         ],
         defaultOpen: true,
       },
       {
-        labelKey: 'admin.nav.configuration',
+        labelKey: 'admin.nav.emailAccount',
+        collapsible: true,
         items: [
+          { href: '/admin/emails?folder=inbox', labelKey: 'admin.nav.emailInbox', icon: Inbox, badge: 'inboxCount' },
+          { href: '/admin/emails?folder=drafts', labelKey: 'admin.nav.emailDrafts', icon: FileEdit },
+          { href: '/admin/emails?folder=sent', labelKey: 'admin.nav.emailSent', icon: Send },
+          { href: '/admin/emails?folder=deleted', labelKey: 'admin.nav.emailDeleted', icon: Trash2 },
+          { href: '/admin/emails?folder=junk', labelKey: 'admin.nav.emailJunk', icon: AlertTriangle },
+          { href: '/admin/emails?folder=notes', labelKey: 'admin.nav.emailNotes', icon: StickyNote },
+          { href: '/admin/emails?folder=archive', labelKey: 'admin.nav.emailArchive', icon: Archive },
+          { href: '/admin/emails?folder=search', labelKey: 'admin.nav.emailSearchFolders', icon: FolderSearch },
+        ],
+        defaultOpen: true,
+      },
+      {
+        labelKey: 'admin.nav.emailManagement',
+        collapsible: true,
+        items: [
+          { href: '/admin/emails?tab=templates', labelKey: 'admin.nav.emailTemplates', icon: FileText },
+          { href: '/admin/emails?tab=campaigns', labelKey: 'admin.nav.emailCampaigns', icon: Megaphone },
+          { href: '/admin/emails?tab=flows', labelKey: 'admin.nav.emailFlows', icon: Zap },
+          { href: '/admin/emails?tab=analytics', labelKey: 'admin.nav.emailAnalytics', icon: BarChart2 },
+          { href: '/admin/emails?tab=segments', labelKey: 'admin.nav.emailSegments', icon: Target },
+          { href: '/admin/emails?tab=mailing-list', labelKey: 'admin.nav.emailMailingList', icon: Users },
           { href: '/admin/emails?tab=settings', labelKey: 'admin.nav.emailSettings', icon: Settings },
         ],
-        collapsible: true,
         defaultOpen: false,
       },
     ],
@@ -278,7 +336,7 @@ export const folderSections: Record<string, NavFolderSection> = {
           { href: '/admin/seo', labelKey: 'admin.nav.seo', icon: Search },
           { href: '/admin/traductions', labelKey: 'admin.nav.translations', icon: Languages },
           { href: '/admin/contenu', labelKey: 'admin.nav.contentPages', icon: FileText },
-          { href: '/admin/medias', labelKey: 'admin.nav.media', icon: ImageIcon },
+          { href: '/admin/navigateur', labelKey: 'admin.nav.webNavigator', icon: Globe },
         ],
         collapsible: true,
         defaultOpen: true,
@@ -293,11 +351,12 @@ export const folderSections: Record<string, NavFolderSection> = {
 export function getActiveRailId(pathname: string): string {
   if (pathname.startsWith('/admin/comptabilite')) return 'accounting';
   if (pathname.startsWith('/admin/emails')) return 'emails';
-  if (pathname.startsWith('/admin/commandes') || pathname.startsWith('/admin/customers') || pathname.startsWith('/admin/clients') || pathname.startsWith('/admin/inventaire')) return 'commerce';
+  if (pathname.startsWith('/admin/commandes') || pathname.startsWith('/admin/customers') || pathname.startsWith('/admin/clients') || pathname.startsWith('/admin/inventaire') || pathname.startsWith('/admin/fournisseurs')) return 'commerce';
   if (pathname.startsWith('/admin/produits') || pathname.startsWith('/admin/categories')) return 'catalog';
   if (pathname.startsWith('/admin/promo-codes') || pathname.startsWith('/admin/promotions') || pathname.startsWith('/admin/newsletter') || pathname.startsWith('/admin/bannieres') || pathname.startsWith('/admin/upsell')) return 'marketing';
   if (pathname.startsWith('/admin/avis') || pathname.startsWith('/admin/questions') || pathname.startsWith('/admin/chat') || pathname.startsWith('/admin/ambassadeurs')) return 'community';
   if (pathname.startsWith('/admin/fidelite') || pathname.startsWith('/admin/abonnements') || pathname.startsWith('/admin/webinaires')) return 'loyalty';
-  if (pathname.startsWith('/admin/permissions') || pathname.startsWith('/admin/fiscal') || pathname.startsWith('/admin/rapports') || pathname.startsWith('/admin/logs') || pathname.startsWith('/admin/employes') || pathname.startsWith('/admin/parametres') || pathname.startsWith('/admin/uat') || pathname.startsWith('/admin/livraison') || pathname.startsWith('/admin/devises') || pathname.startsWith('/admin/seo') || pathname.startsWith('/admin/traductions') || pathname.startsWith('/admin/contenu') || pathname.startsWith('/admin/medias')) return 'system';
+  if (pathname.startsWith('/admin/media')) return 'media';
+  if (pathname.startsWith('/admin/permissions') || pathname.startsWith('/admin/fiscal') || pathname.startsWith('/admin/rapports') || pathname.startsWith('/admin/logs') || pathname.startsWith('/admin/employes') || pathname.startsWith('/admin/parametres') || pathname.startsWith('/admin/uat') || pathname.startsWith('/admin/livraison') || pathname.startsWith('/admin/devises') || pathname.startsWith('/admin/seo') || pathname.startsWith('/admin/traductions') || pathname.startsWith('/admin/contenu') || pathname.startsWith('/admin/navigateur')) return 'system';
   return 'dashboard';
 }

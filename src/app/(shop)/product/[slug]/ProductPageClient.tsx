@@ -563,6 +563,14 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
               </button>
             </div>
 
+            {/* Research Disclaimer - LEGAL REQUIREMENT */}
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
+              <p className="text-amber-800 text-xs leading-relaxed">
+                <strong className="text-amber-900">{t('disclaimer.title').toUpperCase()}:</strong>{' '}
+                {t('shop.researchDisclaimer')}
+              </p>
+            </div>
+
             {/* Wishlist & Price Alert Buttons */}
             <div className="mb-6 flex gap-3">
               <WishlistButton productId={product.id} variant="button" />

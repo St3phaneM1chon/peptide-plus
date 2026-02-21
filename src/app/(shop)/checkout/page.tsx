@@ -40,6 +40,8 @@ export default function CheckoutPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod>('credit_card');
   const [guestCheckout, setGuestCheckout] = useState(false);
+  const [researchConsent, setResearchConsent] = useState(false);
+  const [researchConsentError, setResearchConsentError] = useState(false);
   const [availableProviders, setAvailableProviders] = useState<Record<string, unknown>>({});
 
   // Billing address
@@ -379,10 +381,18 @@ export default function CheckoutPage() {
   }
 
   const handleSubmitOrder = async () => {
+    // Validate research consent before proceeding
+    if (!researchConsent) {
+      setResearchConsentError(true);
+      toast.error(t('checkout.researchConsentRequired'));
+      return;
+    }
+
     setIsProcessing(true);
-    
+
     try {
       const effectiveBilling = billingSameAsShipping ? shippingInfo : billingInfo;
+      const researchConsentTimestamp = new Date().toISOString();
       const orderData = {
         items: items.map(item => ({
           productId: item.productId,
@@ -410,6 +420,8 @@ export default function CheckoutPage() {
         taxes: taxBreakdown.totalTax,
         total: totalCAD,
         currency: currency.code,
+        researchConsentAccepted: true,
+        researchConsentTimestamp: researchConsentTimestamp,
       };
 
       // Route selon la méthode de paiement
@@ -1460,6 +1472,35 @@ export default function CheckoutPage() {
                     {t('checkout.securePayment')}
                   </div>
                   
+                  {/* Research Consent Checkbox - LEGAL REQUIREMENT */}
+                  <div className={`mt-6 p-4 rounded-lg border ${researchConsentError && !researchConsent ? 'border-red-400 bg-red-50' : 'border-gray-200 bg-gray-50'}`}>
+                    <label className="flex items-start gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={researchConsent}
+                        onChange={(e) => {
+                          setResearchConsent(e.target.checked);
+                          if (e.target.checked) setResearchConsentError(false);
+                        }}
+                        className="mt-1 h-5 w-5 rounded border-gray-300 text-orange-500 focus:ring-orange-500 flex-shrink-0"
+                      />
+                      <span className="text-sm text-gray-700 leading-relaxed">
+                        {(() => {
+                          const raw = t('checkout.researchConsentLabel');
+                          const termsLink = `<a href="/mentions-legales/conditions" target="_blank" class="text-orange-600 underline hover:text-orange-700 font-medium">${t('checkout.researchConsentTerms')}</a>`;
+                          const privacyLink = `<a href="/mentions-legales/confidentialite" target="_blank" class="text-orange-600 underline hover:text-orange-700 font-medium">${t('checkout.researchConsentPrivacy')}</a>`;
+                          const html = raw.replace('{termsLink}', termsLink).replace('{privacyLink}', privacyLink);
+                          return <span dangerouslySetInnerHTML={{ __html: html }} />;
+                        })()}
+                      </span>
+                    </label>
+                    {researchConsentError && !researchConsent && (
+                      <p className="text-red-600 text-sm mt-2 ml-8">
+                        {t('checkout.researchConsentRequired')}
+                      </p>
+                    )}
+                  </div>
+
                   <div className="mt-8 flex justify-between">
                     <button
                       onClick={() => setCurrentStep('shipping')}
@@ -1469,7 +1510,7 @@ export default function CheckoutPage() {
                     </button>
                     <button
                       onClick={handleSubmitOrder}
-                      disabled={isProcessing}
+                      disabled={isProcessing || !researchConsent}
                       className="px-8 py-3 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                     >
                       {isProcessing ? (

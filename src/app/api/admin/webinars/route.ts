@@ -10,6 +10,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { enqueue } from '@/lib/translation';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 
 // GET /api/admin/webinars - List all webinars
 export const GET = withAdminGuard(async (request: NextRequest, { session }) => {
@@ -239,6 +240,16 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
 
     // Auto-enqueue translation for all 21 locales
     enqueue.webinar(webinar.id);
+
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'CREATE_WEBINAR',
+      targetType: 'Webinar',
+      targetId: webinar.id,
+      newValue: { title, slug: webinar.slug, speaker, category, isPublished: webinar.isPublished },
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json({ webinar }, { status: 201 });
   } catch (error) {

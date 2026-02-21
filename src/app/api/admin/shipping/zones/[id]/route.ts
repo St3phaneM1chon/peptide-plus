@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 
 /**
  * PATCH /api/admin/shipping/zones/[id]
@@ -53,6 +54,17 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
       data: updateData,
     });
 
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'UPDATE_SHIPPING_ZONE',
+      targetType: 'ShippingZone',
+      targetId: id,
+      previousValue: { name: existing.name, isActive: existing.isActive },
+      newValue: updateData,
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
+
     return NextResponse.json({ success: true, data: zone });
   } catch (error) {
     console.error('Update shipping zone error:', error);
@@ -83,6 +95,16 @@ export const DELETE = withAdminGuard(async (_request, { session, params }) => {
     }
 
     await prisma.shippingZone.delete({ where: { id } });
+
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'DELETE_SHIPPING_ZONE',
+      targetType: 'ShippingZone',
+      targetId: id,
+      previousValue: { name: existing.name },
+      ipAddress: getClientIpFromRequest(_request),
+      userAgent: _request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json({ success: true });
   } catch (error) {

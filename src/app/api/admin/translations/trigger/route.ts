@@ -18,6 +18,7 @@ import {
   enqueue,
   type TranslatableModel,
 } from '@/lib/translation';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 
 const VALID_MODELS: TranslatableModel[] = [
   'Product', 'ProductFormat', 'Category', 'Article',
@@ -58,6 +59,16 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
         ](entity.id, force);
       }
 
+      logAdminAction({
+        adminUserId: session.user.id,
+        action: 'TRIGGER_BATCH_TRANSLATION',
+        targetType: model,
+        targetId: 'all',
+        newValue: { model, queued: entities.length, force },
+        ipAddress: getClientIpFromRequest(request),
+        userAgent: request.headers.get('user-agent') || undefined,
+      }).catch(() => {});
+
       return NextResponse.json({
         message: `${entities.length} ${model}(s) en file d'attente pour traduction`,
         queued: entities.length,
@@ -96,6 +107,16 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
       entityId,
       { force, concurrency: 3 }
     );
+
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'TRIGGER_TRANSLATION',
+      targetType: model,
+      targetId: entityId,
+      newValue: { model, entityId, force, translatedLocales: results.length },
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json({
       message: `Traduction terminée pour ${model}#${entityId}`,

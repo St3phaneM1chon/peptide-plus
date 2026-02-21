@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { Prisma } from '@prisma/client';
-import { withTranslations, getTranslatedFields, DB_SOURCE_LOCALE } from '@/lib/translation';
+import { withTranslations, getTranslatedFieldsBatch, DB_SOURCE_LOCALE } from '@/lib/translation';
 import { defaultLocale } from '@/i18n/config';
 import { cacheGetOrSet, cacheInvalidateTag, CacheKeys } from '@/lib/cache';
 import { logSearch } from '@/lib/search-analytics';
@@ -134,15 +134,15 @@ export async function GET(request: NextRequest) {
     if (locale !== DB_SOURCE_LOCALE) {
       products = await withTranslations(products, 'Product', locale);
 
-      // Translate nested category names on products
+      // Translate nested category names on products (batch query instead of N+1)
       const categoryIds = [...new Set(products.map(p => (p as Record<string, unknown> & { category?: { id: string } }).category?.id).filter(Boolean))] as string[];
       const categoryTranslations = new Map<string, Record<string, string>>();
-      await Promise.all(
-        categoryIds.map(async (catId) => {
-          const translated = await getTranslatedFields('Category', catId, locale);
-          if (translated) categoryTranslations.set(catId, translated);
-        })
-      );
+      if (categoryIds.length > 0) {
+        const batchResult = await getTranslatedFieldsBatch('Category', categoryIds, locale);
+        for (const [catId, trans] of batchResult) {
+          if (trans) categoryTranslations.set(catId, trans);
+        }
+      }
       products = products.map(p => {
         const product = p as Record<string, unknown> & { category?: { id: string; name: string; slug: string } };
         if (product.category && categoryTranslations.has(product.category.id)) {
@@ -167,7 +167,7 @@ export async function GET(request: NextRequest) {
       orderBy: { sortOrder: 'asc' },
     });
 
-    // Translate category facet names
+    // Translate category facet names (batch query instead of N+1)
     let translatedCategories = categories.map((c) => ({
       id: c.id,
       name: c.name,
@@ -175,12 +175,14 @@ export async function GET(request: NextRequest) {
       count: c._count.products,
     }));
     if (locale !== DB_SOURCE_LOCALE) {
-      translatedCategories = await Promise.all(
-        translatedCategories.map(async (c) => {
-          const trans = await getTranslatedFields('Category', c.id, locale);
+      const facetCatIds = translatedCategories.map(c => c.id);
+      if (facetCatIds.length > 0) {
+        const facetTransMap = await getTranslatedFieldsBatch('Category', facetCatIds, locale);
+        translatedCategories = translatedCategories.map(c => {
+          const trans = facetTransMap.get(c.id);
           return { ...c, name: trans?.name || c.name };
-        })
-      );
+        });
+      }
     }
 
     const responseData = {

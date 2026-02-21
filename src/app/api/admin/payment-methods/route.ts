@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 
 /**
  * GET /api/admin/payment-methods
@@ -104,6 +105,17 @@ export const POST = withAdminGuard(async (request, { session }) => {
       });
     }
 
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: existing ? 'UPDATE_PAYMENT_METHOD' : 'CREATE_PAYMENT_METHOD',
+      targetType: 'PaymentMethodConfig',
+      targetId: config.id,
+      ...(existing ? { previousValue: { provider: existing.provider, isActive: existing.isActive } } : {}),
+      newValue: { countryCode, methodType, provider, isActive },
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
+
     return NextResponse.json(
       {
         success: true,
@@ -150,6 +162,15 @@ export const DELETE = withAdminGuard(async (request, { session }) => {
     await prisma.paymentMethodConfig.delete({
       where: { id },
     });
+
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'DELETE_PAYMENT_METHOD',
+      targetType: 'PaymentMethodConfig',
+      targetId: id,
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json({ success: true });
   } catch (error) {

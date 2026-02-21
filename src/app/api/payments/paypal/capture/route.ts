@@ -9,9 +9,16 @@ import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { createAccountingEntriesForOrder } from '@/lib/accounting/webhook-accounting.service';
 import { getPayPalAccessToken, PAYPAL_API_URL } from '@/lib/paypal';
+import { validateCsrf } from '@/lib/csrf-middleware';
 
 export async function POST(request: NextRequest) {
   try {
+    // SECURITY: CSRF protection for payment mutation endpoint
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const session = await auth();
     const body = await request.json();
     const {

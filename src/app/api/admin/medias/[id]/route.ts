@@ -11,6 +11,7 @@ import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { unlink } from 'fs/promises';
 import path from 'path';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 
 // PATCH /api/admin/medias/[id] - Update media metadata
 export const PATCH = withAdminGuard(async (request, { session, params }) => {
@@ -35,6 +36,17 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
       where: { id },
       data,
     });
+
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'UPDATE_MEDIA',
+      targetType: 'Media',
+      targetId: id,
+      previousValue: { alt: existing.alt, folder: existing.folder },
+      newValue: data,
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json({ media });
   } catch (error) {
@@ -72,6 +84,16 @@ export const DELETE = withAdminGuard(async (_request, { session, params }) => {
     await prisma.media.delete({
       where: { id },
     });
+
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'DELETE_MEDIA',
+      targetType: 'Media',
+      targetId: id,
+      previousValue: { filename: existing.filename, originalName: existing.originalName, url: existing.url },
+      ipAddress: getClientIpFromRequest(_request),
+      userAgent: _request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json({ success: true });
   } catch (error) {

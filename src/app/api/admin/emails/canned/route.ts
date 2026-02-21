@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 
 export const GET = withAdminGuard(async (request, { session: _session }) => {
   try {
@@ -71,6 +72,16 @@ export const POST = withAdminGuard(async (request, { session }) => {
         createdBy: session.user.id,
       },
     });
+
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'CREATE_CANNED_RESPONSE',
+      targetType: 'CannedResponse',
+      targetId: response.id,
+      newValue: { title, category: category || null, locale: locale || 'fr' },
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json({ response });
   } catch (error) {

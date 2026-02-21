@@ -24,6 +24,7 @@ export {
 
   // Read path
   getTranslatedFields,
+  getTranslatedFieldsBatch,
   withTranslation,
   withTranslations,
 

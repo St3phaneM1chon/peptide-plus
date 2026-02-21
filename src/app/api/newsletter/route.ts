@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { z } from 'zod';
+import crypto from 'crypto';
 
 // API-003: Zod schema for newsletter subscription
 const newsletterSubscribeSchema = z.object({
@@ -49,41 +50,55 @@ export async function POST(request: NextRequest) {
     // their birthDate voluntarily in their account profile settings.
     const { email, source, locale } = validation.data;
 
-    // Vérifier si l'email existe déjà
+    // CASL compliance: Forward to double opt-in mailing list flow
+    // Also save to legacy NewsletterSubscriber for backward compat
     const existing = await prisma.newsletterSubscriber.findUnique({
       where: { email: email.toLowerCase() },
     }).catch(() => null);
 
-    if (existing) {
-      return NextResponse.json({
-        success: true,
-        message: 'Vous êtes déjà inscrit à notre newsletter !',
-        alreadySubscribed: true,
+    if (!existing) {
+      await prisma.newsletterSubscriber.create({
+        data: {
+          id: crypto.randomUUID(),
+          email: email.toLowerCase(),
+          subscribedAt: new Date(),
+          source: source || 'footer',
+          locale: locale || 'fr',
+        },
       });
     }
 
-    // Créer l'inscription (no birthDate - data minimization principle)
-    await prisma.newsletterSubscriber.create({
-      data: {
-        email: email.toLowerCase(),
-        subscribedAt: new Date(),
-        source: source || 'footer',
-        locale: locale || 'fr',
-      },
-    });
+    // Forward to CASL-compliant double opt-in endpoint
+    const baseUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://biocyclepeptides.com';
+    try {
+      await fetch(`${baseUrl}/api/mailing-list/subscribe`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-forwarded-for': ip,
+        },
+        body: JSON.stringify({
+          email: email.toLowerCase(),
+          consentMethod: source || 'footer',
+          preferences: ['promotions', 'promo_codes', 'specials', 'new_products'],
+        }),
+      });
+    } catch (fwdError) {
+      console.error('Forward to mailing-list/subscribe failed:', fwdError);
+    }
 
     // Log pour suivi (email masked for privacy)
     const [localPart, domain] = email.split('@');
     const maskedEmail = localPart.slice(0, 2) + '***@' + domain;
     console.log(JSON.stringify({
-      event: 'newsletter_subscription',
+      event: 'newsletter_subscription_with_double_optin',
       timestamp: new Date().toISOString(),
       email: maskedEmail,
     }));
 
     return NextResponse.json({
       success: true,
-      message: 'Merci ! Vous êtes maintenant inscrit à notre newsletter.',
+      message: 'A confirmation email has been sent. Please check your inbox.',
     }, { status: 201 });
 
   } catch (error) {

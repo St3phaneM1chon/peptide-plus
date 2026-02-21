@@ -139,31 +139,22 @@ export const localeDateFormats: Record<Locale, Intl.DateTimeFormatOptions> = {
   gcr: { dateStyle: 'long', timeStyle: 'short' },
 };
 
-// Formats de devise par locale (tout en CAD pour le Canada)
-export const localeCurrencyFormats: Record<Locale, { currency: string; style: 'currency' }> = {
-  en: { currency: 'CAD', style: 'currency' },
-  fr: { currency: 'CAD', style: 'currency' },
-  zh: { currency: 'CAD', style: 'currency' },
-  pa: { currency: 'CAD', style: 'currency' },
-  es: { currency: 'CAD', style: 'currency' },
-  tl: { currency: 'CAD', style: 'currency' },
-  ar: { currency: 'CAD', style: 'currency' },
-  'ar-ma': { currency: 'CAD', style: 'currency' },
-  'ar-dz': { currency: 'CAD', style: 'currency' },
-  'ar-lb': { currency: 'CAD', style: 'currency' },
-  de: { currency: 'CAD', style: 'currency' },
-  it: { currency: 'CAD', style: 'currency' },
-  pt: { currency: 'CAD', style: 'currency' },
-  hi: { currency: 'CAD', style: 'currency' },
-  pl: { currency: 'CAD', style: 'currency' },
-  vi: { currency: 'CAD', style: 'currency' },
-  ko: { currency: 'CAD', style: 'currency' },
-  ta: { currency: 'CAD', style: 'currency' },
-  sv: { currency: 'CAD', style: 'currency' },
-  ru: { currency: 'CAD', style: 'currency' },
-  ht: { currency: 'CAD', style: 'currency' },
-  gcr: { currency: 'CAD', style: 'currency' },
-};
+// Default base currency (overridden at runtime by SiteSettings.defaultCurrency)
+export const DEFAULT_CURRENCY = 'CAD';
+
+/**
+ * Get currency format for a locale.
+ * Currency is dynamic — defaults to DEFAULT_CURRENCY but can be overridden
+ * at runtime via CurrencyContext (user selection from DB).
+ */
+export function getCurrencyFormat(currencyCode?: string): { currency: string; style: 'currency' } {
+  return { currency: currencyCode || DEFAULT_CURRENCY, style: 'currency' };
+}
+
+// Legacy export for backward compat — uses default currency
+export const localeCurrencyFormats: Record<Locale, { currency: string; style: 'currency' }> = Object.fromEntries(
+  locales.map((l) => [l, { currency: DEFAULT_CURRENCY, style: 'currency' as const }])
+) as Record<Locale, { currency: string; style: 'currency' }>;
 
 export function isValidLocale(locale: string): locale is Locale {
   return locales.includes(locale as Locale);

@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { createPromotionSchema } from '@/lib/validations/promotion';
 
 // GET /api/admin/promotions - List all promotions/discounts
@@ -192,25 +193,15 @@ export const POST = withAdminGuard(async (request, { session }) => {
     });
 
     // Audit log for promotion creation (fire-and-forget)
-    prisma.auditLog.create({
-      data: {
-        id: `audit_create_promotion_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 8)}`,
-        userId: session.user.id,
-        action: 'ADMIN_CREATE_PROMOTION',
-        entityType: 'Discount',
-        entityId: discount.id,
-        details: JSON.stringify({
-          name: discount.name,
-          type: discount.type,
-          value: Number(discount.value),
-          appliesToAll: discount.appliesToAll,
-          categoryId: discount.categoryId,
-          productId: discount.productId,
-          isActive: discount.isActive,
-        }),
-        ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || null,
-      },
-    }).catch(console.error);
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'CREATE_PROMOTION',
+      targetType: 'Discount',
+      targetId: discount.id,
+      newValue: { name: discount.name, type: discount.type, value: Number(discount.value), appliesToAll: discount.appliesToAll, categoryId: discount.categoryId, productId: discount.productId, isActive: discount.isActive },
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     // Fetch related names for response
     let categoryName: string | null = null;

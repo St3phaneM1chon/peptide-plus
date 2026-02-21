@@ -54,15 +54,38 @@ export async function GET(request: NextRequest) {
 
     // Apply translations if locale is not default
     if (isValidLocale(locale) && locale !== DB_SOURCE_LOCALE) {
-      categories = await withTranslations(categories, 'Category', locale);
-      // Also translate children
+      // Collect all category IDs (parents + children) for a single batch query
+      const allCategoryIds: string[] = [];
       for (const cat of categories) {
-        if ((cat as Record<string, unknown>).children) {
-          const children = (cat as Record<string, unknown>).children as Array<Record<string, unknown>>;
-          const translatedChildren = await withTranslations(children, 'Category', locale);
-          (cat as Record<string, unknown>).children = translatedChildren;
+        allCategoryIds.push(cat.id);
+        const children = (cat as Record<string, unknown>).children as Array<Record<string, unknown> & { id: string }> | undefined;
+        if (children) {
+          for (const child of children) {
+            allCategoryIds.push(child.id);
+          }
         }
       }
+
+      // Single batch query for all translations (parents + children)
+      const { getTranslatedFieldsBatch } = await import('@/lib/translation');
+      const translationMap = await getTranslatedFieldsBatch('Category', allCategoryIds, locale);
+
+      // Apply translations to parent categories
+      categories = categories.map(cat => {
+        const trans = translationMap.get(cat.id);
+        const updated = trans ? { ...cat, ...trans } : cat;
+
+        // Apply translations to children
+        const children = (updated as Record<string, unknown>).children as Array<Record<string, unknown> & { id: string }> | undefined;
+        if (children) {
+          (updated as Record<string, unknown>).children = children.map(child => {
+            const childTrans = translationMap.get(child.id);
+            return childTrans ? { ...child, ...childTrans } : child;
+          });
+        }
+
+        return updated;
+      });
     }
 
     // If tree=true, return only parent categories with their children nested

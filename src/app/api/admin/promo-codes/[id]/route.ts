@@ -12,6 +12,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { updatePromoCodeSchema, patchPromoCodeSchema } from '@/lib/validations/promo-code';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 
 // GET /api/admin/promo-codes/[id] - Get single promo code with usages
 export const GET = withAdminGuard(async (_request, { session, params }) => {
@@ -159,6 +160,17 @@ export const PUT = withAdminGuard(async (request, { session, params }) => {
       },
     });
 
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'UPDATE_PROMO_CODE',
+      targetType: 'PromoCode',
+      targetId: id,
+      previousValue: { code: existing.code, type: existing.type, isActive: existing.isActive },
+      newValue: { code: upperCode, type, value },
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
+
     return NextResponse.json({
       promoCode: {
         ...promoCode,
@@ -260,6 +272,17 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
       data: updateData,
     });
 
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'UPDATE_PROMO_CODE',
+      targetType: 'PromoCode',
+      targetId: id,
+      previousValue: { code: existing.code, isActive: existing.isActive },
+      newValue: updateData,
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
+
     return NextResponse.json({
       promoCode: {
         ...promoCode,
@@ -282,7 +305,7 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
 });
 
 // DELETE /api/admin/promo-codes/[id] - Delete promo code
-export const DELETE = withAdminGuard(async (_request, { session, params }) => {
+export const DELETE = withAdminGuard(async (request, { session, params }) => {
   try {
     const id = params!.id;
 
@@ -304,6 +327,17 @@ export const DELETE = withAdminGuard(async (_request, { session, params }) => {
         data: { isActive: false },
       });
 
+      logAdminAction({
+        adminUserId: session.user.id,
+        action: 'DEACTIVATE_PROMO_CODE',
+        targetType: 'PromoCode',
+        targetId: id,
+        previousValue: { code: existing.code, isActive: existing.isActive },
+        newValue: { isActive: false, softDeleted: true },
+        ipAddress: getClientIpFromRequest(request),
+        userAgent: request.headers.get('user-agent') || undefined,
+      }).catch(() => {});
+
       return NextResponse.json({
         success: true,
         softDeleted: true,
@@ -315,6 +349,16 @@ export const DELETE = withAdminGuard(async (_request, { session, params }) => {
     await prisma.promoCode.delete({
       where: { id },
     });
+
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'DELETE_PROMO_CODE',
+      targetType: 'PromoCode',
+      targetId: id,
+      previousValue: { code: existing.code },
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json({ success: true, deleted: true });
   } catch (error) {

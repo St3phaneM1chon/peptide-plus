@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 
 // GET /api/admin/content/pages - List all pages
 export const GET = withAdminGuard(async (_request, { session }) => {
@@ -48,6 +49,16 @@ export const POST = withAdminGuard(async (request, { session }) => {
     },
   });
 
+  logAdminAction({
+    adminUserId: session.user.id,
+    action: 'CREATE_PAGE',
+    targetType: 'Page',
+    targetId: page.id,
+    newValue: { title, slug, template: template || 'default', isPublished: isPublished || false },
+    ipAddress: getClientIpFromRequest(request),
+    userAgent: request.headers.get('user-agent') || undefined,
+  }).catch(() => {});
+
   return NextResponse.json({ page }, { status: 201 });
 });
 
@@ -91,6 +102,17 @@ export const PUT = withAdminGuard(async (request, { session }) => {
     },
   });
 
+  logAdminAction({
+    adminUserId: session.user.id,
+    action: 'UPDATE_PAGE',
+    targetType: 'Page',
+    targetId: id,
+    previousValue: { title: existing.title, slug: existing.slug, isPublished: existing.isPublished },
+    newValue: { title, slug, isPublished: nowPublished },
+    ipAddress: getClientIpFromRequest(request),
+    userAgent: request.headers.get('user-agent') || undefined,
+  }).catch(() => {});
+
   return NextResponse.json({ page });
 });
 
@@ -104,5 +126,15 @@ export const DELETE = withAdminGuard(async (request, { session }) => {
   }
 
   await prisma.page.delete({ where: { id } });
+
+  logAdminAction({
+    adminUserId: session.user.id,
+    action: 'DELETE_PAGE',
+    targetType: 'Page',
+    targetId: id,
+    ipAddress: getClientIpFromRequest(request),
+    userAgent: request.headers.get('user-agent') || undefined,
+  }).catch(() => {});
+
   return NextResponse.json({ success: true });
 });

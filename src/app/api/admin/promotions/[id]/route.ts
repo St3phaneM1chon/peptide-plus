@@ -30,6 +30,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { patchPromotionSchema } from '@/lib/validations/promotion';
 
 // Helper: map a Discount record to the frontend promotion shape
@@ -241,21 +242,16 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
     });
 
     // Audit log for promotion update (fire-and-forget)
-    prisma.auditLog.create({
-      data: {
-        id: `audit_update_promotion_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 8)}`,
-        userId: session.user.id,
-        action: 'ADMIN_UPDATE_PROMOTION',
-        entityType: 'Discount',
-        entityId: id,
-        details: JSON.stringify({
-          updatedFields: Object.keys(updateData),
-          changes: updateData,
-          previousName: existing.name,
-        }),
-        ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || null,
-      },
-    }).catch(console.error);
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'UPDATE_PROMOTION',
+      targetType: 'Discount',
+      targetId: id,
+      previousValue: { name: existing.name, type: existing.type, value: Number(existing.value), isActive: existing.isActive },
+      newValue: updateData,
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     const promotion = await mapDiscountToPromotion(discount);
 
@@ -292,19 +288,15 @@ export const DELETE = withAdminGuard(async (_request, { session, params }) => {
     });
 
     // Audit log for promotion deletion (fire-and-forget)
-    prisma.auditLog.create({
-      data: {
-        id: `audit_delete_promotion_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 8)}`,
-        userId: session.user.id,
-        action: 'ADMIN_DELETE_PROMOTION',
-        entityType: 'Discount',
-        entityId: id,
-        details: JSON.stringify({
-          deletedName: existing.name,
-        }),
-        ipAddress: null,
-      },
-    }).catch(console.error);
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'DELETE_PROMOTION',
+      targetType: 'Discount',
+      targetId: id,
+      previousValue: { name: existing.name },
+      ipAddress: getClientIpFromRequest(_request),
+      userAgent: _request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json({
       success: true,

@@ -89,60 +89,46 @@ export async function fullTextSearch(
 
   const tsQuery = sanitizeQuery(query);
 
-  // Build WHERE conditions
-  const conditions: string[] = [
-    `"isActive" = true`,
-    `"searchVector" @@ to_tsquery('english', $1)`,
+  // Build WHERE conditions using Prisma.sql for parameterized queries
+  const conditions: Prisma.Sql[] = [
+    Prisma.sql`"isActive" = true`,
+    Prisma.sql`"searchVector" @@ to_tsquery('english', ${tsQuery})`,
   ];
-  const params: (string | number)[] = [tsQuery];
-  let paramIndex = 2;
 
   if (categoryIds && categoryIds.length > 0) {
-    conditions.push(`"categoryId" = ANY($${paramIndex}::text[])`);
-    params.push(categoryIds as unknown as string);
-    paramIndex++;
+    conditions.push(Prisma.sql`"categoryId" = ANY(${categoryIds}::text[])`);
   }
 
   if (minPrice !== undefined) {
-    conditions.push(`"price" >= $${paramIndex}`);
-    params.push(minPrice);
-    paramIndex++;
+    conditions.push(Prisma.sql`"price" >= ${minPrice}`);
   }
 
   if (maxPrice !== undefined) {
-    conditions.push(`"price" <= $${paramIndex}`);
-    params.push(maxPrice);
-    paramIndex++;
+    conditions.push(Prisma.sql`"price" <= ${maxPrice}`);
   }
 
-  const whereClause = conditions.join(' AND ');
+  const whereClause = Prisma.join(conditions, ' AND ');
 
   try {
     // Count total results
-    const countResult = await prisma.$queryRawUnsafe<[{ count: bigint }]>(
-      `SELECT COUNT(*) as count FROM "Product" WHERE ${whereClause}`,
-      ...params
-    );
+    const countResult = await prisma.$queryRaw<[{ count: bigint }]>`
+      SELECT COUNT(*) as count FROM "Product" WHERE ${whereClause}`;
     const total = Number(countResult[0]?.count ?? 0);
 
     // Fetch ranked results with ts_headline for highlighting (#64)
-    const results = await prisma.$queryRawUnsafe<SearchResult[]>(
-      `SELECT
+    const results = await prisma.$queryRaw<SearchResult[]>`
+      SELECT
         "id", "name", "slug", "subtitle", "shortDescription",
         "price"::float as "price", "imageUrl", "categoryId",
-        ts_rank("searchVector", to_tsquery('english', $1)) as "rank",
+        ts_rank("searchVector", to_tsquery('english', ${tsQuery})) as "rank",
         ts_headline('english', COALESCE("name", '') || ' ' || COALESCE("shortDescription", ''),
-          to_tsquery('english', $1),
+          to_tsquery('english', ${tsQuery}),
           'StartSel=<mark>, StopSel=</mark>, MaxWords=40, MinWords=20'
         ) as "headline"
       FROM "Product"
       WHERE ${whereClause}
       ORDER BY "rank" DESC, "isFeatured" DESC
-      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`,
-      ...params,
-      limit,
-      offset
-    );
+      LIMIT ${limit} OFFSET ${offset}`;
 
     // If too few results, try fuzzy matching (#62)
     let didYouMean: string | undefined;
@@ -245,14 +231,12 @@ async function fallbackSearch(
  */
 export async function suggestCorrection(query: string): Promise<string | null> {
   try {
-    const result = await prisma.$queryRawUnsafe<{ name: string; sim: number }[]>(
-      `SELECT "name", similarity("name", $1) as sim
-       FROM "Product"
-       WHERE "isActive" = true AND similarity("name", $1) > 0.3
-       ORDER BY sim DESC
-       LIMIT 1`,
-      query
-    );
+    const result = await prisma.$queryRaw<{ name: string; sim: number }[]>`
+      SELECT "name", similarity("name", ${query}) as sim
+      FROM "Product"
+      WHERE "isActive" = true AND similarity("name", ${query}) > 0.3
+      ORDER BY sim DESC
+      LIMIT 1`;
     if (result.length > 0 && result[0].name.toLowerCase() !== query.toLowerCase()) {
       return result[0].name;
     }
@@ -273,19 +257,15 @@ export async function fuzzySearch(
   const { limit = 10, threshold = 0.3 } = options;
 
   try {
-    const results = await prisma.$queryRawUnsafe<SearchResult[]>(
-      `SELECT
+    const results = await prisma.$queryRaw<SearchResult[]>`
+      SELECT
         "id", "name", "slug", "subtitle", "shortDescription",
         "price"::float as "price", "imageUrl", "categoryId",
-        similarity("name", $1) as "rank"
+        similarity("name", ${query}) as "rank"
       FROM "Product"
-      WHERE "isActive" = true AND similarity("name", $1) > $2
+      WHERE "isActive" = true AND similarity("name", ${query}) > ${threshold}
       ORDER BY "rank" DESC
-      LIMIT $3`,
-      query,
-      threshold,
-      limit
-    );
+      LIMIT ${limit}`;
     return results;
   } catch {
     return [];

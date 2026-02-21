@@ -10,6 +10,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 
 export const GET = withAdminGuard(
   async (_request: NextRequest, { session: _session, params }: { session: unknown; params: { id: string } }) => {
@@ -34,7 +35,7 @@ export const GET = withAdminGuard(
 );
 
 export const PUT = withAdminGuard(
-  async (request: NextRequest, { session: _session, params }: { session: unknown; params: { id: string } }) => {
+  async (request: NextRequest, { session, params }: { session: { user: { id: string } }; params: { id: string } }) => {
     try {
       const body = await request.json();
       const { name, subject, htmlContent, textContent, segmentQuery, scheduledAt, status, abTestConfig } = body;
@@ -64,6 +65,17 @@ export const PUT = withAdminGuard(
         data: updates,
       });
 
+      logAdminAction({
+        adminUserId: session.user.id,
+        action: 'UPDATE_EMAIL_CAMPAIGN',
+        targetType: 'EmailCampaign',
+        targetId: params.id,
+        previousValue: { name: existing.name, status: existing.status },
+        newValue: updates,
+        ipAddress: getClientIpFromRequest(request),
+        userAgent: request.headers.get('user-agent') || undefined,
+      }).catch(() => {});
+
       return NextResponse.json({ campaign });
     } catch (error) {
       console.error('[Campaign Update] Error:', error);
@@ -73,7 +85,7 @@ export const PUT = withAdminGuard(
 );
 
 export const DELETE = withAdminGuard(
-  async (_request: NextRequest, { session: _session, params }: { session: unknown; params: { id: string } }) => {
+  async (_request: NextRequest, { session, params }: { session: { user: { id: string } }; params: { id: string } }) => {
     try {
       const existing = await prisma.emailCampaign.findUnique({ where: { id: params.id } });
       if (!existing) {
@@ -83,6 +95,17 @@ export const DELETE = withAdminGuard(
         return NextResponse.json({ error: 'Can only delete draft campaigns' }, { status: 400 });
       }
       await prisma.emailCampaign.delete({ where: { id: params.id } });
+
+      logAdminAction({
+        adminUserId: session.user.id,
+        action: 'DELETE_EMAIL_CAMPAIGN',
+        targetType: 'EmailCampaign',
+        targetId: params.id,
+        previousValue: { name: existing.name, status: existing.status },
+        ipAddress: getClientIpFromRequest(_request),
+        userAgent: _request.headers.get('user-agent') || undefined,
+      }).catch(() => {});
+
       return NextResponse.json({ success: true });
     } catch (error) {
       console.error('[Campaign Delete] Error:', error);

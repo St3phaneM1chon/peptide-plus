@@ -4,10 +4,11 @@
  * PAGE MON PROFIL - BioCycle Peptides
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { Camera } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
 import { profileSchema, validateForm } from '@/lib/form-validation';
 import { FormError } from '@/components/ui/FormError';
@@ -16,6 +17,7 @@ import { toast } from 'sonner';
 interface UserProfile {
   name: string;
   email: string;
+  image?: string | null;
   phone?: string;
   birthDate?: string;
   locale?: string;
@@ -41,6 +43,8 @@ export default function ProfilePage() {
     locale: 'fr',
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const clearFieldError = (field: string) => {
     if (formErrors[field]) {
@@ -49,6 +53,35 @@ export default function ProfilePage() {
         delete next[field];
         return next;
       });
+    }
+  };
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setAvatarUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('avatar', file);
+
+      const res = await fetch('/api/user/avatar', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setProfile((prev) => prev ? { ...prev, image: data.url } : prev);
+        toast.success(t('toast.profile.avatarUpdated'));
+      } else {
+        toast.error(data.error || t('toast.error.generic'));
+      }
+    } catch {
+      toast.error(t('toast.error.generic'));
+    } finally {
+      setAvatarUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
@@ -177,10 +210,36 @@ export default function ProfilePage() {
           <div className="p-6 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center">
-                  <span className="text-2xl font-bold text-orange-600">
-                    {(profile?.name || session.user?.name || 'U')[0].toUpperCase()}
-                  </span>
+                <div className="relative group">
+                  <div
+                    className="w-16 h-16 rounded-full overflow-hidden cursor-pointer border-2 border-slate-200 hover:border-sky-400 transition-colors"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    {profile?.image ? (
+                      <img src={profile.image} alt={profile.name || ''} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full bg-orange-100 flex items-center justify-center">
+                        <span className="text-2xl font-bold text-orange-600">
+                          {(profile?.name || session.user?.name || 'U')[0].toUpperCase()}
+                        </span>
+                      </div>
+                    )}
+                    {avatarUploading && (
+                      <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 rounded-full flex items-center justify-center transition-colors">
+                      <Camera className="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
+                  </div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    className="hidden"
+                    onChange={handleAvatarUpload}
+                  />
                 </div>
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900">

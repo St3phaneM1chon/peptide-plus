@@ -134,11 +134,12 @@ export function I18nProvider({ children, locale: initialLocale, messages }: I18n
     return new Intl.DateTimeFormat(locale, { dateStyle: 'long' }).format(d);
   }, [locale]);
 
-  // Formatage de devise
-  const formatCurrency = useCallback((amount: number): string => {
+  // Formatage de devise (reads user's selected currency from localStorage)
+  const formatCurrency = useCallback((amount: number, currency?: string): string => {
+    const cur = currency || (typeof window !== 'undefined' && localStorage.getItem('biocycle-currency')) || 'CAD';
     return new Intl.NumberFormat(locale, {
       style: 'currency',
-      currency: 'CAD',
+      currency: cur,
     }).format(amount);
   }, [locale]);
 

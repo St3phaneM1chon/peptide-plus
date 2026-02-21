@@ -16,6 +16,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { ACCOUNT_CODES } from '@/lib/accounting/types';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 
 // ─── POST /api/admin/purchase-orders/[id]/receive ───────────────────────────────
 export const POST = withAdminGuard(async (request, { session, params }) => {
@@ -397,6 +398,22 @@ export const POST = withAdminGuard(async (request, { session, params }) => {
         journalEntryId,
       };
     });
+
+    logAdminAction({
+      adminUserId: session!.user.id,
+      action: 'RECEIVE_PURCHASE_ORDER',
+      targetType: 'PurchaseOrder',
+      targetId: id,
+      previousValue: { status: po.status, poNumber: po.poNumber },
+      newValue: {
+        newStatus: result.newStatus,
+        allFullyReceived: result.allFullyReceived,
+        itemsReceived: result.inventoryUpdates.length,
+        journalEntryId: result.journalEntryId,
+      },
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     // ─── Fetch final state ──────────────────────────────────────────────
     const updatedPO = await prisma.purchaseOrder.findUnique({

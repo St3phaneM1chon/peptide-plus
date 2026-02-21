@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { updateExchangeRates } from '@/lib/exchange-rates';
 
 export const POST = withAdminGuard(async (_request, { session }) => {
@@ -23,6 +24,17 @@ export const POST = withAdminGuard(async (_request, { session }) => {
       `[CRON:RATES] Manual refresh complete: ${result.updated.length} updated, ` +
       `${result.skipped.length} skipped, ${result.errors.length} errors, ${duration}ms`
     );
+
+    // Audit log (fire-and-forget)
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'REFRESH_EXCHANGE_RATES',
+      targetType: 'Currency',
+      targetId: 'all',
+      newValue: { updated: result.updated.length, skipped: result.skipped.length, errors: result.errors.length },
+      ipAddress: getClientIpFromRequest(_request),
+      userAgent: _request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json({
       success: true,

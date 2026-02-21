@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { prisma } from '@/lib/db';
 
 /**
@@ -44,7 +45,7 @@ export const GET = withAdminGuard(async (_request, { session: _session }) => {
  * POST /api/admin/currencies
  * Create a new currency
  */
-export const POST = withAdminGuard(async (request, { session: _session }) => {
+export const POST = withAdminGuard(async (request, { session }) => {
   try {
     const body = await request.json();
     const { code, name, symbol, exchangeRate, isDefault } = body;
@@ -93,6 +94,17 @@ export const POST = withAdminGuard(async (request, { session: _session }) => {
         isActive: true,
       },
     });
+
+    // Audit log (fire-and-forget)
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'CREATE_CURRENCY',
+      targetType: 'Currency',
+      targetId: currency.id,
+      newValue: { code: currency.code, name: currency.name, symbol: currency.symbol, exchangeRate: Number(currency.exchangeRate), isDefault: currency.isDefault },
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json(
       {

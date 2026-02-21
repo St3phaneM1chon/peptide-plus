@@ -1,0 +1,222 @@
+export const dynamic = 'force-dynamic';
+
+/**
+ * Admin Supplier Item API
+ * GET    - Get a single supplier with all relations
+ * PATCH  - Update a supplier (including contacts and links)
+ * DELETE - Delete a supplier
+ */
+
+import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/db';
+import { withAdminGuard } from '@/lib/admin-api-guard';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+
+// GET /api/admin/suppliers/[id] - Get single supplier with all relations
+export const GET = withAdminGuard(async (_request, { params }) => {
+  try {
+    const id = params!.id;
+
+    const supplier = await prisma.supplier.findUnique({
+      where: { id },
+      include: {
+        contacts: { orderBy: { isPrimary: 'desc' } },
+        links: { orderBy: { sortOrder: 'asc' } },
+      },
+    });
+
+    if (!supplier) {
+      return NextResponse.json(
+        { error: 'Supplier not found' },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(supplier);
+  } catch (error) {
+    console.error('Supplier GET error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+});
+
+// PATCH /api/admin/suppliers/[id] - Update supplier
+export const PATCH = withAdminGuard(async (request, { session, params }) => {
+  try {
+    const id = params!.id;
+    const body = await request.json();
+    const {
+      name,
+      code,
+      email,
+      phone,
+      website,
+      address,
+      city,
+      province,
+      postalCode,
+      country,
+      notes,
+      isActive,
+      contacts,
+      links,
+    } = body;
+
+    // Check supplier exists
+    const existing = await prisma.supplier.findUnique({ where: { id } });
+    if (!existing) {
+      return NextResponse.json(
+        { error: 'Supplier not found' },
+        { status: 404 }
+      );
+    }
+
+    if (name !== undefined && !name?.trim()) {
+      return NextResponse.json(
+        { error: 'Supplier name cannot be empty' },
+        { status: 400 }
+      );
+    }
+
+    // Build update data for supplier fields
+    const updateData: Record<string, unknown> = {};
+    if (name !== undefined) updateData.name = name.trim();
+    if (code !== undefined) updateData.code = code?.trim() || null;
+    if (email !== undefined) updateData.email = email?.trim() || null;
+    if (phone !== undefined) updateData.phone = phone?.trim() || null;
+    if (website !== undefined) updateData.website = website?.trim() || null;
+    if (address !== undefined) updateData.address = address?.trim() || null;
+    if (city !== undefined) updateData.city = city?.trim() || null;
+    if (province !== undefined) updateData.province = province?.trim() || null;
+    if (postalCode !== undefined)
+      updateData.postalCode = postalCode?.trim() || null;
+    if (country !== undefined) updateData.country = country || 'CA';
+    if (notes !== undefined) updateData.notes = notes?.trim() || null;
+    if (isActive !== undefined) updateData.isActive = isActive;
+
+    // Use a transaction to update supplier + replace contacts and links
+    const supplier = await prisma.$transaction(async (tx) => {
+      // Update supplier fields
+      await tx.supplier.update({
+        where: { id },
+        data: updateData,
+      });
+
+      // Replace contacts if provided
+      if (contacts !== undefined) {
+        await tx.supplierContact.deleteMany({ where: { supplierId: id } });
+        if (contacts?.length) {
+          await tx.supplierContact.createMany({
+            data: contacts.map(
+              (c: {
+                department: string;
+                name: string;
+                email?: string;
+                phone?: string;
+                extension?: string;
+                title?: string;
+                isPrimary?: boolean;
+              }) => ({
+                supplierId: id,
+                department: c.department,
+                name: c.name,
+                email: c.email || null,
+                phone: c.phone || null,
+                extension: c.extension || null,
+                title: c.title || null,
+                isPrimary: c.isPrimary || false,
+              })
+            ),
+          });
+        }
+      }
+
+      // Replace links if provided
+      if (links !== undefined) {
+        await tx.supplierLink.deleteMany({ where: { supplierId: id } });
+        if (links?.length) {
+          await tx.supplierLink.createMany({
+            data: links.map(
+              (
+                l: { label: string; url: string; type?: string },
+                idx: number
+              ) => ({
+                supplierId: id,
+                label: l.label,
+                url: l.url,
+                type: l.type || 'other',
+                sortOrder: idx,
+              })
+            ),
+          });
+        }
+      }
+
+      // Return updated supplier with relations
+      return tx.supplier.findUnique({
+        where: { id },
+        include: {
+          contacts: { orderBy: { isPrimary: 'desc' } },
+          links: { orderBy: { sortOrder: 'asc' } },
+        },
+      });
+    });
+
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'UPDATE_SUPPLIER',
+      targetType: 'Supplier',
+      targetId: id,
+      previousValue: { name: existing.name, isActive: existing.isActive },
+      newValue: updateData,
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
+
+    return NextResponse.json(supplier);
+  } catch (error) {
+    console.error('Supplier PATCH error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+});
+
+// DELETE /api/admin/suppliers/[id] - Delete supplier
+export const DELETE = withAdminGuard(async (_request, { session, params }) => {
+  try {
+    const id = params!.id;
+
+    const existing = await prisma.supplier.findUnique({ where: { id } });
+    if (!existing) {
+      return NextResponse.json(
+        { error: 'Supplier not found' },
+        { status: 404 }
+      );
+    }
+
+    // Cascade delete handles contacts and links
+    await prisma.supplier.delete({ where: { id } });
+
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'DELETE_SUPPLIER',
+      targetType: 'Supplier',
+      targetId: id,
+      previousValue: { name: existing.name },
+      ipAddress: getClientIpFromRequest(_request),
+      userAgent: _request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Supplier DELETE error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+});

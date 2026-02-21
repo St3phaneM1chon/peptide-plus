@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 
 interface LoyaltyTier {
   name: string;
@@ -190,6 +191,16 @@ export const PUT = withAdminGuard(async (request: NextRequest, { session }) => {
     } catch {
       // Non-critical: SiteSettings sync is optional
     }
+
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'UPDATE_LOYALTY_CONFIG',
+      targetType: 'SiteSetting',
+      targetId: LOYALTY_CONFIG_KEY,
+      newValue: { pointsPerDollar: config.pointsPerDollar, pointsValue: config.pointsValue, tierCount: config.tiers.length },
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json({ success: true, data: config });
   } catch (error) {

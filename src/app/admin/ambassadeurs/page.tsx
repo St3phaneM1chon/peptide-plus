@@ -8,9 +8,12 @@ import {
   Clock,
   Settings,
   Inbox,
+  Percent,
 } from 'lucide-react';
 import { Button } from '@/components/admin/Button';
 import { StatCard } from '@/components/admin/StatCard';
+import { Modal } from '@/components/admin/Modal';
+import { FormField, Input } from '@/components/admin/FormField';
 import {
   ContentList,
   DetailPane,
@@ -78,6 +81,22 @@ export default function AmbassadeursPage() {
   // Filter state
   const [searchValue, setSearchValue] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+
+  // Modal states
+  const [showApplicationsModal, setShowApplicationsModal] = useState(false);
+  const [showConfigModal, setShowConfigModal] = useState(false);
+  const [showEditCommissionModal, setShowEditCommissionModal] = useState(false);
+  const [editCommissionAmbassadorId, setEditCommissionAmbassadorId] = useState<string | null>(null);
+  const [editCommissionRate, setEditCommissionRate] = useState('');
+  const [savingCommission, setSavingCommission] = useState(false);
+
+  // Config form state
+  const [configDefaultCommission, setConfigDefaultCommission] = useState('5');
+  const [configMinPayout, setConfigMinPayout] = useState('50');
+  const [configCookieDays, setConfigCookieDays] = useState('30');
+  const [configAutoApprove, setConfigAutoApprove] = useState(false);
+  const [configProgramActive, setConfigProgramActive] = useState(true);
+  const [savingConfig, setSavingConfig] = useState(false);
 
   // ─── Data fetching ──────────────────────────────────────────
 
@@ -163,6 +182,81 @@ export default function AmbassadeursPage() {
     }
   };
 
+  // ─── Edit Commission ───────────────────────────────────
+
+  const openEditCommission = (amb: Ambassador) => {
+    setEditCommissionAmbassadorId(amb.id);
+    setEditCommissionRate(String(amb.commissionRate));
+    setShowEditCommissionModal(true);
+  };
+
+  const handleSaveCommission = async () => {
+    if (!editCommissionAmbassadorId) return;
+    const rate = parseFloat(editCommissionRate);
+    if (isNaN(rate) || rate < 0 || rate > 100) {
+      toast.error(t('admin.ambassadors.commissionError'));
+      return;
+    }
+
+    setSavingCommission(true);
+    try {
+      const res = await fetch(`/api/ambassadors/${editCommissionAmbassadorId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ commissionRate: rate }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        toast.error(data.error || t('admin.ambassadors.commissionError'));
+        return;
+      }
+      // Update local state
+      setAmbassadors(prev =>
+        prev.map(a =>
+          a.id === editCommissionAmbassadorId ? { ...a, commissionRate: rate } : a
+        )
+      );
+      toast.success(t('admin.ambassadors.commissionUpdated'));
+      setShowEditCommissionModal(false);
+    } catch {
+      toast.error(t('admin.ambassadors.commissionError'));
+    } finally {
+      setSavingCommission(false);
+    }
+  };
+
+  // ─── Save Config ──────────────────────────────────────
+
+  const handleSaveConfig = async () => {
+    setSavingConfig(true);
+    try {
+      const res = await fetch('/api/admin/settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          key: 'ambassador_program_config',
+          value: JSON.stringify({
+            defaultCommission: parseFloat(configDefaultCommission) || 5,
+            minPayoutAmount: parseFloat(configMinPayout) || 50,
+            cookieDays: parseInt(configCookieDays) || 30,
+            autoApprove: configAutoApprove,
+            programActive: configProgramActive,
+          }),
+        }),
+      });
+      if (res.ok) {
+        toast.success(t('admin.ambassadors.configSaved'));
+        setShowConfigModal(false);
+      } else {
+        toast.error(t('admin.ambassadors.configError'));
+      }
+    } catch {
+      toast.error(t('admin.ambassadors.configError'));
+    } finally {
+      setSavingConfig(false);
+    }
+  };
+
   // ─── Filtering ──────────────────────────────────────────────
 
   const filteredAmbassadors = useMemo(() => {
@@ -204,7 +298,7 @@ export default function AmbassadeursPage() {
       avatar: { text: amb.userName || 'A' },
       title: amb.userName,
       subtitle: amb.userEmail,
-      preview: `${amb.referralCode} - ${formatCurrency(amb.totalSales)} ventes`,
+      preview: `${amb.referralCode} - ${formatCurrency(amb.totalSales)} ${t('admin.ambassadors.salesLabel')}`,
       timestamp: amb.joinedAt,
       badges: [
         { text: amb.tier, variant: tierBadgeVariant(amb.tier) },
@@ -250,16 +344,13 @@ export default function AmbassadeursPage() {
             <p className="text-sm text-slate-500 mt-0.5">{t('admin.ambassadors.subtitle')}</p>
           </div>
           <div className="flex gap-3">
-            <Button variant="secondary" icon={Inbox} onClick={() => {
-              // TODO: Create API endpoint /api/ambassadors/applications and dedicated page/modal
-              toast.info(t('admin.ambassadors.applications') + ' - Coming soon');
-            }}>
+            <Button variant="secondary" icon={Inbox} onClick={() => setShowApplicationsModal(true)}>
               {t('admin.ambassadors.applications')}
+              {stats.pending > 0 && (
+                <span className="ml-1.5 px-1.5 py-0.5 bg-amber-500 text-white rounded-full text-[10px] font-bold leading-none">{stats.pending}</span>
+              )}
             </Button>
-            <Button variant="primary" icon={Settings} onClick={() => {
-              // TODO: Create API endpoint /api/ambassadors/config and modal for program configuration
-              toast.info(t('admin.ambassadors.configureProgram') + ' - Coming soon');
-            }}>
+            <Button variant="primary" icon={Settings} onClick={() => setShowConfigModal(true)}>
               {t('admin.ambassadors.configureProgram')}
             </Button>
           </div>
@@ -365,10 +456,7 @@ export default function AmbassadeursPage() {
                           {t('admin.ambassadors.activate')}
                         </Button>
                       )}
-                      <Button size="sm" variant="secondary" onClick={() => {
-                        // TODO: Create API endpoint PATCH /api/ambassadors/:id/commission and modal for editing commission rate
-                        toast.info(t('admin.ambassadors.editCommission') + ' - Coming soon');
-                      }}>
+                      <Button size="sm" variant="secondary" icon={Percent} onClick={() => openEditCommission(selectedAmbassador)}>
                         {t('admin.ambassadors.editCommission')}
                       </Button>
                     </div>
@@ -467,6 +555,178 @@ export default function AmbassadeursPage() {
           }
         />
       </div>
+
+      {/* ─── APPLICATIONS MODAL ─────────────────────────────────── */}
+      <Modal
+        isOpen={showApplicationsModal}
+        onClose={() => setShowApplicationsModal(false)}
+        title={t('admin.ambassadors.applicationsTitle')}
+        subtitle={t('admin.ambassadors.applicationsSubtitle')}
+        size="lg"
+      >
+        <div className="space-y-4">
+          {ambassadors.filter(a => a.status === 'PENDING').length === 0 ? (
+            <div className="text-center py-8">
+              <Inbox className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+              <p className="text-sm font-medium text-slate-900">{t('admin.ambassadors.noApplications')}</p>
+              <p className="text-sm text-slate-500 mt-1">{t('admin.ambassadors.noApplicationsDesc')}</p>
+            </div>
+          ) : (
+            ambassadors.filter(a => a.status === 'PENDING').map((amb) => (
+              <div key={amb.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200">
+                <div>
+                  <p className="font-medium text-slate-900">{amb.userName}</p>
+                  <p className="text-sm text-slate-500">{amb.userEmail}</p>
+                  <p className="text-xs text-slate-400 mt-1">
+                    {t('admin.ambassadors.referralCode')}: <code className="font-mono text-sky-600">{amb.referralCode}</code>
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="primary"
+                    onClick={async () => {
+                      await updateStatus(amb.id, 'ACTIVE');
+                      if (ambassadors.filter(a => a.status === 'PENDING' && a.id !== amb.id).length === 0) {
+                        setShowApplicationsModal(false);
+                      }
+                    }}
+                  >
+                    {t('admin.ambassadors.approve')}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="danger"
+                    onClick={async () => {
+                      await updateStatus(amb.id, 'SUSPENDED');
+                      if (ambassadors.filter(a => a.status === 'PENDING' && a.id !== amb.id).length === 0) {
+                        setShowApplicationsModal(false);
+                      }
+                    }}
+                  >
+                    {t('admin.ambassadors.suspend')}
+                  </Button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </Modal>
+
+      {/* ─── CONFIGURE PROGRAM MODAL ────────────────────────────── */}
+      <Modal
+        isOpen={showConfigModal}
+        onClose={() => setShowConfigModal(false)}
+        title={t('admin.ambassadors.configureTitle')}
+        subtitle={t('admin.ambassadors.configureSubtitle')}
+        size="md"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setShowConfigModal(false)}>
+              {t('common.cancel') || 'Cancel'}
+            </Button>
+            <Button variant="primary" onClick={handleSaveConfig} loading={savingConfig}>
+              {t('common.save') || 'Save'}
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <FormField label={t('admin.ambassadors.defaultCommission')}>
+            <Input
+              type="number"
+              min="0"
+              max="100"
+              step="0.5"
+              value={configDefaultCommission}
+              onChange={(e) => setConfigDefaultCommission(e.target.value)}
+            />
+          </FormField>
+          <FormField label={t('admin.ambassadors.minPayoutAmount')}>
+            <Input
+              type="number"
+              min="0"
+              step="1"
+              value={configMinPayout}
+              onChange={(e) => setConfigMinPayout(e.target.value)}
+            />
+          </FormField>
+          <FormField label={t('admin.ambassadors.cookieDuration')}>
+            <Input
+              type="number"
+              min="1"
+              max="365"
+              value={configCookieDays}
+              onChange={(e) => setConfigCookieDays(e.target.value)}
+            />
+          </FormField>
+          <div className="flex items-center justify-between py-2">
+            <span className="text-sm text-slate-700">{t('admin.ambassadors.autoApprove')}</span>
+            <button
+              onClick={() => setConfigAutoApprove(!configAutoApprove)}
+              className={`w-11 h-6 rounded-full transition-colors relative ${configAutoApprove ? 'bg-sky-500' : 'bg-slate-300'}`}
+            >
+              <span className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${configAutoApprove ? 'right-1' : 'left-1'}`} />
+            </button>
+          </div>
+          <div className="flex items-center justify-between py-2">
+            <span className="text-sm text-slate-700">{t('admin.ambassadors.programActive')}</span>
+            <button
+              onClick={() => setConfigProgramActive(!configProgramActive)}
+              className={`w-11 h-6 rounded-full transition-colors relative ${configProgramActive ? 'bg-green-500' : 'bg-slate-300'}`}
+            >
+              <span className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${configProgramActive ? 'right-1' : 'left-1'}`} />
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* ─── EDIT COMMISSION MODAL ──────────────────────────────── */}
+      <Modal
+        isOpen={showEditCommissionModal}
+        onClose={() => setShowEditCommissionModal(false)}
+        title={t('admin.ambassadors.editCommissionTitle')}
+        subtitle={t('admin.ambassadors.editCommissionSubtitle', { name: selectedAmbassador?.userName || '' })}
+        size="sm"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setShowEditCommissionModal(false)}>
+              {t('common.cancel') || 'Cancel'}
+            </Button>
+            <Button variant="primary" onClick={handleSaveCommission} loading={savingCommission}>
+              {t('common.save') || 'Save'}
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          {selectedAmbassador && (
+            <div className="bg-slate-50 rounded-lg p-3">
+              <p className="text-sm text-slate-500">{t('admin.ambassadors.currentRate')}</p>
+              <p className="text-2xl font-bold text-slate-900">{selectedAmbassador.commissionRate}%</p>
+            </div>
+          )}
+          <FormField label={t('admin.ambassadors.newRate')}>
+            <Input
+              type="number"
+              min="0"
+              max="100"
+              step="0.5"
+              value={editCommissionRate}
+              onChange={(e) => setEditCommissionRate(e.target.value)}
+            />
+          </FormField>
+          {/* Tier reference */}
+          <div className="bg-sky-50 rounded-lg p-3">
+            <p className="text-xs text-sky-700 font-medium mb-1">{t('admin.ambassadors.commissionLevels')}</p>
+            <div className="flex gap-3 text-xs text-sky-600">
+              {Object.entries(tierConfig).map(([tier, config]) => (
+                <span key={tier}>{tier}: {config.commission}%</span>
+              ))}
+            </div>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

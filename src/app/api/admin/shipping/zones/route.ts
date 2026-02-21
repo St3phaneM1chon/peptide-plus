@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 
 /**
  * GET /api/admin/shipping/zones
@@ -12,6 +13,7 @@ export const GET = withAdminGuard(async (_request, { session }) => {
   try {
     const zones = await prisma.shippingZone.findMany({
       orderBy: { sortOrder: 'asc' },
+      take: 100,
     });
 
     // Map to the format the frontend expects
@@ -129,6 +131,16 @@ export const POST = withAdminGuard(async (request, { session }) => {
         sortOrder: sortOrder ?? 0,
       },
     });
+
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'CREATE_SHIPPING_ZONE',
+      targetType: 'ShippingZone',
+      targetId: zone.id,
+      newValue: { name, countries, baseFee, isActive: isActive ?? true },
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json({ success: true, data: zone }, { status: 201 });
   } catch (error) {

@@ -62,37 +62,44 @@ export async function GET(request: NextRequest) {
     const paidMap = new Map(paidCommissionTotals.map((c) => [c.ambassadorId, Number(c._sum.commissionAmount || 0)]));
 
     // Now build the formatted response with real payout data
-    const formatted = await Promise.all(
-      ambassadors.map(async (a) => {
-        const totalSales = orderTotalMap.get(a.referralCode) || 0;
-        const pendingPayout = pendingMap.get(a.id) || 0;
-        const totalEarnings = (paidMap.get(a.id) || 0) + pendingPayout;
+    // First, collect ambassadors needing earnings sync to batch-update
+    const earningsUpdates: Array<{ id: string; totalEarnings: number }> = [];
 
-        // Keep the ambassador's totalEarnings field in sync
-        if (Number(a.totalEarnings) !== totalEarnings) {
-          await prisma.ambassador.update({
-            where: { id: a.id },
-            data: { totalEarnings },
-          });
-        }
+    const formatted = ambassadors.map((a) => {
+      const totalSales = orderTotalMap.get(a.referralCode) || 0;
+      const pendingPayout = pendingMap.get(a.id) || 0;
+      const totalEarnings = (paidMap.get(a.id) || 0) + pendingPayout;
 
-        return {
-          id: a.id,
-          userId: a.userId || '',
-          userName: a.user?.name || a.name,
-          userEmail: a.user?.email || a.email || '',
-          referralCode: a.referralCode,
-          tier: a.tier,
-          commissionRate: Number(a.commissionRate),
-          totalReferrals: a.totalReferrals,
-          totalSales,
-          totalEarnings,
-          pendingPayout,
-          status: a.status,
-          joinedAt: a.joinedAt.toISOString(),
-        };
-      })
-    );
+      // Collect out-of-sync ambassadors for batch update
+      if (Number(a.totalEarnings) !== totalEarnings) {
+        earningsUpdates.push({ id: a.id, totalEarnings });
+      }
+
+      return {
+        id: a.id,
+        userId: a.userId || '',
+        userName: a.user?.name || a.name,
+        userEmail: a.user?.email || a.email || '',
+        referralCode: a.referralCode,
+        tier: a.tier,
+        commissionRate: Number(a.commissionRate),
+        totalReferrals: a.totalReferrals,
+        totalSales,
+        totalEarnings,
+        pendingPayout,
+        status: a.status,
+        joinedAt: a.joinedAt.toISOString(),
+      };
+    });
+
+    // Batch sync earnings in the background (fire-and-forget, non-blocking)
+    if (earningsUpdates.length > 0) {
+      Promise.all(
+        earningsUpdates.map(({ id, totalEarnings }) =>
+          prisma.ambassador.update({ where: { id }, data: { totalEarnings } })
+        )
+      ).catch((err) => console.error('Ambassador earnings sync error:', err));
+    }
 
     return NextResponse.json({ ambassadors: formatted });
   } catch (error) {
@@ -104,6 +111,7 @@ export async function GET(request: NextRequest) {
 /**
  * Sync commission records for all paid orders that used ambassador referral codes.
  * Creates AmbassadorCommission entries for any orders that don't already have one.
+ * Uses batch queries to avoid N+1 performance issues.
  */
 async function syncCommissionsForCodes(
   ambassadors: Array<{
@@ -112,7 +120,56 @@ async function syncCommissionsForCodes(
     commissionRate: { toNumber?: () => number } | number;
   }>
 ) {
-  for (const amb of ambassadors) {
+  // Build lookup maps
+  const codeToAmbassador = new Map(ambassadors.map(a => [a.referralCode, a]));
+  const allCodes = ambassadors.map(a => a.referralCode);
+
+  // Batch: fetch ALL paid orders that used any ambassador referral code
+  const allOrders = await prisma.order.findMany({
+    where: {
+      promoCode: { in: allCodes },
+      paymentStatus: 'PAID',
+    },
+    select: {
+      id: true,
+      orderNumber: true,
+      total: true,
+      promoCode: true,
+    },
+  });
+
+  if (allOrders.length === 0) return;
+
+  // Batch: fetch ALL existing commissions for these ambassadors
+  const allAmbassadorIds = ambassadors.map(a => a.id);
+  const existingCommissions = await prisma.ambassadorCommission.findMany({
+    where: { ambassadorId: { in: allAmbassadorIds } },
+    select: { ambassadorId: true, orderId: true },
+  });
+
+  // Build a Set of "ambassadorId:orderId" for O(1) lookup
+  const existingSet = new Set(
+    existingCommissions.map(c => `${c.ambassadorId}:${c.orderId}`)
+  );
+
+  // Collect new commissions to create
+  const newCommissions: Array<{
+    ambassadorId: string;
+    orderId: string;
+    orderNumber: string;
+    orderTotal: number;
+    commissionRate: number;
+    commissionAmount: number;
+  }> = [];
+
+  for (const order of allOrders) {
+    if (!order.promoCode) continue;
+    const amb = codeToAmbassador.get(order.promoCode);
+    if (!amb) continue;
+
+    const key = `${amb.id}:${order.id}`;
+    if (existingSet.has(key)) continue;
+
     const rate =
       typeof amb.commissionRate === 'number'
         ? amb.commissionRate
@@ -120,45 +177,25 @@ async function syncCommissionsForCodes(
           ? amb.commissionRate.toNumber()
           : Number(amb.commissionRate);
 
-    // Find paid orders using this referral code that don't yet have a commission record
-    const orders = await prisma.order.findMany({
-      where: {
-        promoCode: amb.referralCode,
-        paymentStatus: 'PAID',
-      },
-      select: {
-        id: true,
-        orderNumber: true,
-        total: true,
-      },
+    const orderTotal = Number(order.total);
+    const commissionAmount = Math.round(orderTotal * rate) / 100;
+
+    newCommissions.push({
+      ambassadorId: amb.id,
+      orderId: order.id,
+      orderNumber: order.orderNumber,
+      orderTotal,
+      commissionRate: rate,
+      commissionAmount,
     });
+  }
 
-    for (const order of orders) {
-      const existing = await prisma.ambassadorCommission.findUnique({
-        where: {
-          ambassadorId_orderId: {
-            ambassadorId: amb.id,
-            orderId: order.id,
-          },
-        },
-      });
-
-      if (!existing) {
-        const orderTotal = Number(order.total);
-        const commissionAmount = Math.round(orderTotal * rate) / 100;
-
-        await prisma.ambassadorCommission.create({
-          data: {
-            ambassadorId: amb.id,
-            orderId: order.id,
-            orderNumber: order.orderNumber,
-            orderTotal: orderTotal,
-            commissionRate: rate,
-            commissionAmount,
-          },
-        });
-      }
-    }
+  // Batch create all new commissions
+  if (newCommissions.length > 0) {
+    await prisma.ambassadorCommission.createMany({
+      data: newCommissions,
+      skipDuplicates: true,
+    });
   }
 }
 

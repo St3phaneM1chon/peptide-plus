@@ -390,13 +390,13 @@ export default function UpsellAdminPage() {
                     <div className="bg-slate-50 rounded-lg p-4">
                       <h4 className="text-sm font-medium text-slate-700 mb-1">{t('admin.upsell.showQuantityDiscount')}</h4>
                       <p className={`text-lg font-bold ${selectedConfig.showQuantityDiscount ? 'text-emerald-600' : 'text-slate-400'}`}>
-                        {selectedConfig.showQuantityDiscount ? 'ON' : 'OFF'}
+                        {selectedConfig.showQuantityDiscount ? t('admin.upsell.on') : t('admin.upsell.off')}
                       </p>
                     </div>
                     <div className="bg-slate-50 rounded-lg p-4">
                       <h4 className="text-sm font-medium text-slate-700 mb-1">{t('admin.upsell.showSubscription')}</h4>
                       <p className={`text-lg font-bold ${selectedConfig.showSubscription ? 'text-emerald-600' : 'text-slate-400'}`}>
-                        {selectedConfig.showSubscription ? 'ON' : 'OFF'}
+                        {selectedConfig.showSubscription ? t('admin.upsell.on') : t('admin.upsell.off')}
                       </p>
                     </div>
                   </div>

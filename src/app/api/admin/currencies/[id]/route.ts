@@ -2,13 +2,14 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { prisma } from '@/lib/db';
 
 /**
  * PATCH /api/admin/currencies/[id]
  * Update a currency (exchange rate, isActive, isDefault, etc.)
  */
-export const PATCH = withAdminGuard(async (request, { session: _session, params }) => {
+export const PATCH = withAdminGuard(async (request, { session, params }) => {
   try {
     const id = params!.id;
     const body = await request.json();
@@ -60,6 +61,18 @@ export const PATCH = withAdminGuard(async (request, { session: _session, params 
       data: updateData,
     });
 
+    // Audit log (fire-and-forget)
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'UPDATE_CURRENCY',
+      targetType: 'Currency',
+      targetId: id,
+      previousValue: { code: existing.code, exchangeRate: Number(existing.exchangeRate), isActive: existing.isActive, isDefault: existing.isDefault },
+      newValue: updateData,
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
+
     return NextResponse.json({
       success: true,
       data: {
@@ -81,7 +94,7 @@ export const PATCH = withAdminGuard(async (request, { session: _session, params 
  * DELETE /api/admin/currencies/[id]
  * Delete a currency (only if not used in orders and not default)
  */
-export const DELETE = withAdminGuard(async (_request, { session: _session, params }) => {
+export const DELETE = withAdminGuard(async (_request, { session, params }) => {
   try {
     const id = params!.id;
 
@@ -116,6 +129,17 @@ export const DELETE = withAdminGuard(async (_request, { session: _session, param
     }
 
     await prisma.currency.delete({ where: { id } });
+
+    // Audit log (fire-and-forget)
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'DELETE_CURRENCY',
+      targetType: 'Currency',
+      targetId: id,
+      previousValue: { code: existing.code, name: existing.name },
+      ipAddress: getClientIpFromRequest(_request),
+      userAgent: _request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json({ success: true });
   } catch (error) {

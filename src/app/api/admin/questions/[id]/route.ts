@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 
 // DELETE /api/admin/questions/[id] - Delete a question
 export const DELETE = withAdminGuard(async (_request, { session, params }) => {
@@ -35,6 +36,16 @@ export const DELETE = withAdminGuard(async (_request, { session, params }) => {
         deletedBy: session.user.id,
       })
     );
+
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'DELETE_QUESTION',
+      targetType: 'ProductQuestion',
+      targetId: id,
+      previousValue: { productId: existing.productId, question: existing.question?.substring(0, 200) },
+      ipAddress: getClientIpFromRequest(_request),
+      userAgent: _request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json({ success: true });
   } catch (error) {
@@ -79,6 +90,17 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
       where: { id },
       data: updateData,
     });
+
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'UPDATE_QUESTION',
+      targetType: 'ProductQuestion',
+      targetId: id,
+      previousValue: { isPublished: existing.isPublished, answer: existing.answer?.substring(0, 200) },
+      newValue: updateData,
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json({
       question: {

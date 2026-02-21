@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 
 export const GET = withAdminGuard(async (request, { session: _session }) => {
   try {
@@ -69,6 +70,16 @@ export const POST = withAdminGuard(async (request, { session }) => {
         createdBy: session.user.id,
       },
     });
+
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'CREATE_EMAIL_CAMPAIGN',
+      targetType: 'EmailCampaign',
+      targetId: campaign.id,
+      newValue: { name, subject, status: 'DRAFT' },
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json({ campaign });
   } catch (error) {

@@ -16,8 +16,9 @@ import { withAdminGuard } from '@/lib/admin-api-guard';
 import { replayDelivery } from '@/lib/webhooks/outgoing';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 
-export const POST = withAdminGuard(async (_request, { session, params }) => {
+export const POST = withAdminGuard(async (request, { session, params }) => {
   const deliveryId = params?.id;
 
   if (!deliveryId) {
@@ -58,6 +59,16 @@ export const POST = withAdminGuard(async (_request, { session, params }) => {
     });
 
     const result = await replayDelivery(deliveryId);
+
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'REPLAY_WEBHOOK',
+      targetType: 'WebhookDelivery',
+      targetId: deliveryId,
+      newValue: { success: result.success, status: result.status, endpointUrl: delivery.endpoint.url },
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json({
       success: result.success,

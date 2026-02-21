@@ -49,6 +49,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 
 // GET - List quantity discounts for a product
 export const GET = withAdminGuard(async (request, { session: _session }) => {
@@ -85,7 +86,7 @@ export const GET = withAdminGuard(async (request, { session: _session }) => {
 });
 
 // POST - Create or update quantity discounts for a product
-export const POST = withAdminGuard(async (request, { session: _session }) => {
+export const POST = withAdminGuard(async (request, { session }) => {
   try {
     const body = await request.json();
     const { productId, tiers } = body;
@@ -170,6 +171,16 @@ export const POST = withAdminGuard(async (request, { session: _session }) => {
       discount: Number(d.discount),
     }));
 
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'UPDATE_QUANTITY_DISCOUNTS',
+      targetType: 'QuantityDiscount',
+      targetId: productId,
+      newValue: { productId, tierCount: tiers.length },
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
+
     return NextResponse.json({
       success: true,
       discounts: formattedDiscounts,
@@ -184,7 +195,7 @@ export const POST = withAdminGuard(async (request, { session: _session }) => {
 });
 
 // DELETE - Remove a specific quantity discount tier
-export const DELETE = withAdminGuard(async (request, { session: _session }) => {
+export const DELETE = withAdminGuard(async (request, { session }) => {
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
@@ -199,6 +210,15 @@ export const DELETE = withAdminGuard(async (request, { session: _session }) => {
     await prisma.quantityDiscount.delete({
       where: { id },
     });
+
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'DELETE_QUANTITY_DISCOUNT',
+      targetType: 'QuantityDiscount',
+      targetId: id,
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json({
       success: true,

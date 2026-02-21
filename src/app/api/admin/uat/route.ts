@@ -11,6 +11,7 @@ import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { launchUatRun } from '@/lib/uat/runner';
 import { getScenarios } from '@/lib/uat/scenarios';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 
 // POST — Launch a new UAT run
 export const POST = withAdminGuard(async (request: NextRequest, { session }) => {
@@ -31,6 +32,16 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
 
     const scenarios = getScenarios(canadaOnly);
     const runId = await launchUatRun(canadaOnly);
+
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'LAUNCH_UAT_RUN',
+      targetType: 'UatTestRun',
+      targetId: runId,
+      newValue: { canadaOnly, totalScenarios: scenarios.length },
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json({
       runId,

@@ -3,12 +3,13 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 
 /**
  * PATCH /api/admin/newsletter/subscribers/[id]
  * Update a subscriber (toggle isActive, change locale, etc.)
  */
-export const PATCH = withAdminGuard(async (request, { session: _session, params }) => {
+export const PATCH = withAdminGuard(async (request, { session, params }) => {
   try {
     const id = params!.id;
     const body = await request.json();
@@ -44,6 +45,17 @@ export const PATCH = withAdminGuard(async (request, { session: _session, params 
       data: updateData,
     });
 
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'UPDATE_NEWSLETTER_SUBSCRIBER',
+      targetType: 'NewsletterSubscriber',
+      targetId: id,
+      previousValue: { email: existing.email, isActive: existing.isActive },
+      newValue: updateData,
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
+
     return NextResponse.json({ success: true, subscriber });
   } catch (error) {
     console.error('Update newsletter subscriber error:', error);
@@ -58,7 +70,7 @@ export const PATCH = withAdminGuard(async (request, { session: _session, params 
  * DELETE /api/admin/newsletter/subscribers/[id]
  * Remove a subscriber permanently
  */
-export const DELETE = withAdminGuard(async (_request, { session: _session, params }) => {
+export const DELETE = withAdminGuard(async (request, { session, params }) => {
   try {
     const id = params!.id;
 
@@ -74,6 +86,16 @@ export const DELETE = withAdminGuard(async (_request, { session: _session, param
     }
 
     await prisma.newsletterSubscriber.delete({ where: { id } });
+
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'DELETE_NEWSLETTER_SUBSCRIBER',
+      targetType: 'NewsletterSubscriber',
+      targetId: id,
+      previousValue: { email: existing.email },
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { inviteEmployeeSchema } from '@/lib/validations/employee';
 
 // GET /api/admin/employees - List employees and owners
@@ -237,6 +238,17 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
         });
       }
     }
+
+    // Audit log (fire-and-forget)
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'CREATE_EMPLOYEE',
+      targetType: 'User',
+      targetId: employee.id,
+      newValue: { email: employee.email, name: employee.name, role: employee.role },
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json({
       employee: {

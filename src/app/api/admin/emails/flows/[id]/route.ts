@@ -10,6 +10,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 
 export const GET = withAdminGuard(
   async (_request: NextRequest, { session: _session, params }: { session: unknown; params: { id: string } }) => {
@@ -34,7 +35,7 @@ export const GET = withAdminGuard(
 );
 
 export const PUT = withAdminGuard(
-  async (request: NextRequest, { session: _session, params }: { session: unknown; params: { id: string } }) => {
+  async (request: NextRequest, { session, params }: { session: { user: { id: string } }; params: { id: string } }) => {
     try {
       const body = await request.json();
       const { name, description, trigger, nodes, edges, isActive } = body;
@@ -52,6 +53,16 @@ export const PUT = withAdminGuard(
         data: updates,
       });
 
+      logAdminAction({
+        adminUserId: session.user.id,
+        action: 'UPDATE_EMAIL_FLOW',
+        targetType: 'EmailAutomationFlow',
+        targetId: params.id,
+        newValue: updates,
+        ipAddress: getClientIpFromRequest(request),
+        userAgent: request.headers.get('user-agent') || undefined,
+      }).catch(() => {});
+
       return NextResponse.json({
         flow: {
           ...flow,
@@ -67,9 +78,19 @@ export const PUT = withAdminGuard(
 );
 
 export const DELETE = withAdminGuard(
-  async (_request: NextRequest, { session: _session, params }: { session: unknown; params: { id: string } }) => {
+  async (_request: NextRequest, { session, params }: { session: { user: { id: string } }; params: { id: string } }) => {
     try {
       await prisma.emailAutomationFlow.delete({ where: { id: params.id } });
+
+      logAdminAction({
+        adminUserId: session.user.id,
+        action: 'DELETE_EMAIL_FLOW',
+        targetType: 'EmailAutomationFlow',
+        targetId: params.id,
+        ipAddress: getClientIpFromRequest(_request),
+        userAgent: _request.headers.get('user-agent') || undefined,
+      }).catch(() => {});
+
       return NextResponse.json({ success: true });
     } catch (error) {
       console.error('[Flow Delete] Error:', error);

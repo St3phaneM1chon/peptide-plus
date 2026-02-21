@@ -31,6 +31,12 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { conversationId, content: rawContent, sender, visitorId } = body;
 
+    // Image/file attachment fields
+    const messageType = body.type || 'TEXT';
+    const attachmentUrl = body.attachmentUrl || null;
+    const attachmentName = body.attachmentName || null;
+    const attachmentSize = body.attachmentSize ? parseInt(String(body.attachmentSize)) : null;
+
     if (!conversationId || !rawContent) {
       return NextResponse.json({ error: 'conversationId and content required' }, { status: 400 });
     }
@@ -191,6 +197,11 @@ export async function POST(request: NextRequest) {
         language: messageToSave.language,
         translatedTo: messageToSave.translatedTo,
         isFromBot: false,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Prisma enum type mismatch
+        type: messageType as any,
+        attachmentUrl,
+        attachmentName,
+        attachmentSize,
       },
     });
 

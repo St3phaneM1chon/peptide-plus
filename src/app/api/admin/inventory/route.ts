@@ -11,6 +11,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { purchaseStock, adjustStock } from '@/lib/inventory';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 
 // GET /api/admin/inventory - List products with inventory info
 export const GET = withAdminGuard(async (request, { session }) => {
@@ -156,6 +157,16 @@ export const POST = withAdminGuard(async (request, { session }) => {
       session.user.id
     );
 
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'RECEIVE_STOCK',
+      targetType: 'Inventory',
+      targetId: supplierInvoiceId || 'bulk',
+      newValue: { itemCount: items.length, supplierInvoiceId },
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
+
     return NextResponse.json(
       {
         success: true,
@@ -206,6 +217,16 @@ export const PUT = withAdminGuard(async (request, { session }) => {
       reason,
       session.user.id
     );
+
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'ADJUST_STOCK',
+      targetType: 'Inventory',
+      targetId: productId,
+      newValue: { productId, formatId, quantity, reason },
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json({
       success: true,

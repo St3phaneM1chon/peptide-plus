@@ -7,6 +7,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { prisma } from '@/lib/db';
 import { apiSuccess, apiError, apiNoContent } from '@/lib/api-response';
 import { ErrorCode } from '@/lib/error-codes';
@@ -44,6 +45,17 @@ export const PATCH = withAdminGuard(async (request: NextRequest, { session, para
       data: updateData,
     });
 
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'UPDATE_REVIEW',
+      targetType: 'Review',
+      targetId: id,
+      previousValue: { isApproved: existing.isApproved, isPublished: existing.isPublished },
+      newValue: updateData,
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
+
     return apiSuccess({ review: updated }, { request });
   } catch (error) {
     console.error('Error updating review:', error);
@@ -63,6 +75,16 @@ export const DELETE = withAdminGuard(async (_request: NextRequest, { session, pa
     }
 
     await prisma.review.delete({ where: { id } });
+
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'DELETE_REVIEW',
+      targetType: 'Review',
+      targetId: id,
+      previousValue: { rating: existing.rating, productId: existing.productId },
+      ipAddress: getClientIpFromRequest(_request),
+      userAgent: _request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     // Item 2: HTTP 204 No Content for DELETE operations
     return apiNoContent();

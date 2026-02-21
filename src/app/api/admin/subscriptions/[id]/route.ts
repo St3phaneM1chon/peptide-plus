@@ -10,6 +10,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 
 // GET /api/admin/subscriptions/[id] - Get subscription detail
 export const GET = withAdminGuard(async (_request, { session, params }) => {
@@ -189,6 +190,17 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
       data: updateData,
     });
 
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'UPDATE_SUBSCRIPTION',
+      targetType: 'Subscription',
+      targetId: id,
+      previousValue: { status: existing.status, frequency: existing.frequency, quantity: existing.quantity },
+      newValue: updateData,
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
+
     return NextResponse.json({
       subscription: {
         ...updated,
@@ -228,6 +240,17 @@ export const DELETE = withAdminGuard(async (_request, { session, params }) => {
         cancelledAt: new Date(),
       },
     });
+
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'CANCEL_SUBSCRIPTION',
+      targetType: 'Subscription',
+      targetId: id,
+      previousValue: { status: existing.status, productName: existing.productName },
+      newValue: { status: 'CANCELLED' },
+      ipAddress: getClientIpFromRequest(_request),
+      userAgent: _request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json({
       subscription: {

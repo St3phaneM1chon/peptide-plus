@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { createCampaignSchema } from '@/lib/validations/newsletter';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 
 const CAMPAIGNS_KEY = 'newsletter_campaigns';
 
@@ -120,6 +121,16 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
     const campaigns = await loadCampaigns();
     campaigns.unshift(newCampaign);
     await saveCampaigns(campaigns, session.user.id);
+
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'CREATE_NEWSLETTER_CAMPAIGN',
+      targetType: 'NewsletterCampaign',
+      targetId: newCampaign.id,
+      newValue: { subject, status: campaignStatus, recipientCount: newCampaign.recipientCount },
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json(
       { success: true, campaign: newCampaign },

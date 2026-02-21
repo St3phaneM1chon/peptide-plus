@@ -90,9 +90,10 @@ interface WizardProps {
   onComplete: () => void;
   getModelLabel: (m: string) => string;
   t: (key: string, params?: Record<string, string | number>) => string;
+  locale: string;
 }
 
-function TranslationWizard({ overview, onClose, onComplete, getModelLabel, t }: WizardProps) {
+function TranslationWizard({ overview, onClose, onComplete, getModelLabel, t, locale }: WizardProps) {
   const [step, setStep] = useState(1);
   const [selectedModels, setSelectedModels] = useState<Set<string>>(new Set());
   const [forceRetranslate, setForceRetranslate] = useState(false);
@@ -101,6 +102,7 @@ function TranslationWizard({ overview, onClose, onComplete, getModelLabel, t }: 
   const [translationDone, setTranslationDone] = useState(false);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [liveQueue, setLiveQueue] = useState<QueueStats | null>(null);
+  const [liveJobs, setLiveJobs] = useState<QueueJob[]>([]);
 
   // Step 1: Auto-select models that have untranslated content
   useEffect(() => {
@@ -113,7 +115,7 @@ function TranslationWizard({ overview, onClose, onComplete, getModelLabel, t }: 
     setSelectedModels(modelsWithWork);
   }, [overview]);
 
-  // Step 3: Poll queue for progress
+  // Step 3: Poll queue for progress + live jobs
   useEffect(() => {
     if (step === 3 && isTranslating) {
       pollRef.current = setInterval(async () => {
@@ -121,6 +123,7 @@ function TranslationWizard({ overview, onClose, onComplete, getModelLabel, t }: 
           const res = await fetch('/api/admin/translations/status?queue=true');
           const data = await res.json();
           if (data.queue) setLiveQueue(data.queue);
+          if (data.recentJobs) setLiveJobs(data.recentJobs);
           // Auto-complete when queue is empty
           if (data.queue && data.queue.pending === 0 && data.queue.processing === 0) {
             setIsTranslating(false);
@@ -128,7 +131,7 @@ function TranslationWizard({ overview, onClose, onComplete, getModelLabel, t }: 
             if (pollRef.current) clearInterval(pollRef.current);
           }
         } catch { /* ignore */ }
-      }, 3000);
+      }, 2000);
     }
     return () => {
       if (pollRef.current) clearInterval(pollRef.current);
@@ -325,7 +328,7 @@ function TranslationWizard({ overview, onClose, onComplete, getModelLabel, t }: 
                       </div>
                       {missing > 0 && (
                         <span className="text-xs px-2 py-0.5 bg-orange-100 text-orange-700 rounded-full flex-shrink-0">
-                          {missing} manquantes
+                          {t('admin.translationsDashboard.wizardMissingCount', { count: missing })}
                         </span>
                       )}
                     </button>
@@ -411,6 +414,53 @@ function TranslationWizard({ overview, onClose, onComplete, getModelLabel, t }: 
                   );
                 })}
               </div>
+
+              {/* Live translation log - shows individual entities being translated */}
+              {(isTranslating || translationDone) && liveJobs.length > 0 && (
+                <div className="border rounded-lg overflow-hidden">
+                  <div className="px-3 py-2 bg-gray-50 border-b flex items-center justify-between">
+                    <h4 className="text-xs font-semibold text-gray-700 flex items-center gap-1.5">
+                      <RefreshCw className={`w-3.5 h-3.5 ${isTranslating ? 'animate-spin text-blue-500' : 'text-green-500'}`} />
+                      {t('admin.translationsDashboard.wizardLiveLog')}
+                    </h4>
+                    <span className="text-xs text-gray-400">{liveJobs.length} {t('admin.translationsDashboard.wizardJobs')}</span>
+                  </div>
+                  <div className="max-h-48 overflow-y-auto divide-y">
+                    {liveJobs.slice(0, 30).map(job => (
+                      <div key={job.id} className="flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-gray-50">
+                        <span>{MODEL_ICONS[job.model] || '📋'}</span>
+                        <span className="font-medium text-gray-700">{getModelLabel(job.model)}</span>
+                        <span className="text-gray-400 font-mono truncate max-w-[100px]">#{job.entityId.slice(0, 8)}</span>
+                        <span className="flex-1" />
+                        {job.status === 'processing' && (
+                          <span className="flex items-center gap-1 text-blue-600">
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                            {t('admin.translationsDashboard.processing')}
+                          </span>
+                        )}
+                        {job.status === 'completed' && (
+                          <span className="flex items-center gap-1 text-green-600">
+                            <CheckCircle2 className="w-3 h-3" />
+                            {t('admin.translationsDashboard.completed')}
+                          </span>
+                        )}
+                        {job.status === 'pending' && (
+                          <span className="flex items-center gap-1 text-yellow-600">
+                            <Clock className="w-3 h-3" />
+                            {t('admin.translationsDashboard.pending')}
+                          </span>
+                        )}
+                        {job.status === 'failed' && (
+                          <span className="flex items-center gap-1 text-red-600" title={job.error}>
+                            <AlertCircle className="w-3 h-3" />
+                            {t('admin.translationsDashboard.failed')}
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Live queue stats */}
               {isTranslating && liveQueue && (
@@ -634,6 +684,7 @@ export default function TranslationsDashboard() {
           onComplete={() => { fetchStatus(); }}
           getModelLabel={getModelLabel}
           t={t}
+          locale={locale}
         />
       )}
 

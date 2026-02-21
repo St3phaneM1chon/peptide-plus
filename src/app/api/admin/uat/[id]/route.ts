@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { getRunDetail, getRunStatus, cleanupUatRun } from '@/lib/uat/runner';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 
 // GET — Run detail
 export const GET = withAdminGuard(async (request: NextRequest, { session, params }) => {
@@ -42,6 +43,15 @@ export const DELETE = withAdminGuard(async (_request: NextRequest, { session, pa
   try {
     const id = params!.id;
     const result = await cleanupUatRun(id);
+
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'CLEANUP_UAT_RUN',
+      targetType: 'UatTestRun',
+      targetId: id,
+      ipAddress: getClientIpFromRequest(_request),
+      userAgent: _request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json({ success: true, data: result });
   } catch (error) {

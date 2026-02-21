@@ -51,12 +51,16 @@ export default function CookieConsent() {
     localStorage.setItem('cookie_consent', 'accepted');
     setIsVisible(false);
     saveConsentToBackend(true);
+    // Notify other components (e.g. GoogleAnalytics) that consent changed
+    window.dispatchEvent(new CustomEvent('cookie_consent_change', { detail: { consent: 'accepted' } }));
   };
 
   const handleDecline = () => {
     localStorage.setItem('cookie_consent', 'declined');
     setIsVisible(false);
     saveConsentToBackend(false);
+    // Notify other components (e.g. GoogleAnalytics) that consent changed
+    window.dispatchEvent(new CustomEvent('cookie_consent_change', { detail: { consent: 'declined' } }));
   };
 
   if (!isVisible) return null;

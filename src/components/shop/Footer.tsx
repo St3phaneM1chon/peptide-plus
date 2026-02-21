@@ -218,7 +218,16 @@ export default function Footer() {
           <p className="text-xs text-neutral-500 leading-relaxed mb-4">
             <strong className="text-orange-400">DISCLAIMER:</strong> {t('disclaimer.text') || 'All products are intended for laboratory and research use only. Not for human consumption. Products have not been evaluated by Health Canada or the FDA. Purchasers must be 18+ years of age. By using this website, you agree that these products are being purchased for research purposes only.'}
           </p>
-          
+
+          {/* Company Legal Identification */}
+          <div className="mb-4 text-xs text-neutral-500 leading-relaxed">
+            <p className="font-semibold text-neutral-400 mb-1">{t('footer.companyInfo')}</p>
+            <p>{t('footer.companyName')}</p>
+            <p>{t('footer.companyNeq')}</p>
+            <p>{t('footer.companyAddress')}</p>
+            <p>{t('footer.companyPhone')}</p>
+          </div>
+
           {/* Payment Methods */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <p className="text-sm text-neutral-500">

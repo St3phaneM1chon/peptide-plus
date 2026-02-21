@@ -6,6 +6,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { prisma } from '@/lib/db';
 import { stripHtml, stripControlChars } from '@/lib/sanitize';
 
@@ -47,6 +48,16 @@ export const POST = withAdminGuard(async (request: NextRequest, { session, param
         isPublished: true, // Auto-publish when answered
       },
     });
+
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'ANSWER_QUESTION',
+      targetType: 'ProductQuestion',
+      targetId: id,
+      newValue: { answer: answer.substring(0, 200) },
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json({ question: updated });
   } catch (error) {

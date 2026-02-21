@@ -8,7 +8,6 @@
 import { SessionProvider } from 'next-auth/react';
 import { I18nProvider } from '@/i18n/client';
 import { CartProvider } from '@/contexts/CartContext';
-import CartDrawer from '@/components/cart/CartDrawer';
 import { CurrencyProvider } from '@/contexts/CurrencyContext';
 import { LoyaltyProvider } from '@/contexts/LoyaltyContext';
 import { WishlistProvider } from '@/contexts/WishlistContext';
@@ -30,7 +29,6 @@ export function Providers({ children, locale = defaultLocale, messages = {} }: P
             <WishlistProvider>
               <CartProvider>
                 {children}
-                <CartDrawer />
               </CartProvider>
             </WishlistProvider>
           </LoyaltyProvider>

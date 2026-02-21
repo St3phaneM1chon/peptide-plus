@@ -6,6 +6,7 @@
 import { prisma } from '@/lib/db';
 import { ACCOUNT_CODES } from './types';
 import { Decimal } from '@prisma/client/runtime/library';
+import { convertCurrency, subtract } from '@/lib/decimal-calculator';
 
 interface OrderWithItems {
   id: string;
@@ -203,8 +204,8 @@ async function generateSaleEntry(order: OrderWithItems, tx?: Parameters<Paramete
   const currencyCode = order.currency?.code || 'CAD';
   const isCAD = currencyCode === 'CAD';
 
-  // Convert order amounts to CAD for journal entries
-  const toCAD = (amount: number) => isCAD ? amount : Math.round(amount * xRate * 100) / 100;
+  // Convert order amounts to CAD for journal entries (Decimal.js safe)
+  const toCAD = (amount: number) => isCAD ? amount : convertCurrency(amount, xRate);
 
   const subtotal = toCAD(Number(order.subtotal));
   const discount = toCAD(Number(order.discount));
@@ -245,7 +246,7 @@ async function generateSaleEntry(order: OrderWithItems, tx?: Parameters<Paramete
     accountId: accountMap.get(salesAccountCode)!,
     description: `Vente ${order.orderNumber}`,
     debit: 0,
-    credit: subtotal - discount,
+    credit: subtract(subtotal, discount),
   });
 
   // CREDIT: Shipping charged
@@ -345,7 +346,8 @@ async function generateFeeEntry(order: OrderWithItems, tx?: Parameters<Parameter
   const isPaypal = order.paymentMethod === 'PAYPAL' || order.paypalOrderId;
   const feeRate = 0.029;
   const fixedFee = 0.30;
-  const estimatedFee = Math.round((total * feeRate + fixedFee) * 100) / 100;
+  const { add: addDec, applyRate: applyRateDec } = await import('@/lib/decimal-calculator');
+  const estimatedFee = addDec(applyRateDec(total, feeRate), fixedFee);
 
   if (estimatedFee <= 0) return null;
 

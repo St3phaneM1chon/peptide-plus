@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Plus, Loader2 } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { Plus, Loader2, Trash2 } from 'lucide-react';
 import { PageHeader, Button, Modal, FormField, Input } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
@@ -20,6 +20,9 @@ interface LoyaltyConfig {
   minRedemption: number;
   referralBonus: number;
   birthdayBonus: number;
+  firstOrderBonus?: number;
+  reviewBonus?: number;
+  signupBonus?: number;
   tiers: LoyaltyTier[];
 }
 
@@ -29,6 +32,17 @@ export default function FidelitePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editingTier, setEditingTier] = useState<string | null>(null);
+
+  // Tier edit form state
+  const [tierFormName, setTierFormName] = useState('');
+  const [tierFormMinPoints, setTierFormMinPoints] = useState(0);
+  const [tierFormMultiplier, setTierFormMultiplier] = useState(1);
+  const [tierFormPerks, setTierFormPerks] = useState('');
+  const [tierFormColor, setTierFormColor] = useState('orange');
+
+  // Simulation state
+  const [simAmount, setSimAmount] = useState(100);
+  const [simTier, setSimTier] = useState('');
 
   useEffect(() => {
     fetchConfig();
@@ -62,6 +76,86 @@ export default function FidelitePage() {
     }
     setSaving(false);
   };
+
+  // ─── Tier editing helpers ────────────────────────────────────
+
+  const openEditTier = (tierName: string) => {
+    if (!config) return;
+    const tier = config.tiers.find((t) => t.name === tierName);
+    if (!tier) return;
+    setTierFormName(tier.name);
+    setTierFormMinPoints(tier.minPoints);
+    setTierFormMultiplier(tier.multiplier);
+    setTierFormPerks(tier.perks.join('\n'));
+    setTierFormColor(tier.color);
+    setEditingTier(tierName);
+  };
+
+  const closeEditTier = () => {
+    setEditingTier(null);
+  };
+
+  const saveTier = () => {
+    if (!config || !editingTier) return;
+    const updatedTiers = config.tiers.map((tier) => {
+      if (tier.name === editingTier) {
+        return {
+          name: tierFormName.trim() || tier.name,
+          minPoints: tierFormMinPoints,
+          multiplier: tierFormMultiplier,
+          perks: tierFormPerks.split('\n').map((p) => p.trim()).filter(Boolean),
+          color: tierFormColor,
+        };
+      }
+      return tier;
+    });
+    setConfig({ ...config, tiers: updatedTiers });
+    toast.success(t('admin.loyalty.tierSaved'));
+    setEditingTier(null);
+  };
+
+  const addNewTier = () => {
+    if (!config) return;
+    const maxPoints = Math.max(...config.tiers.map((t) => t.minPoints), 0);
+    const newTier: LoyaltyTier = {
+      name: t('admin.loyalty.newTierName'),
+      minPoints: maxPoints + 10000,
+      multiplier: 1,
+      perks: [],
+      color: 'orange',
+    };
+    setConfig({ ...config, tiers: [...config.tiers, newTier] });
+    toast.success(t('admin.loyalty.addTierSuccess'));
+    // Immediately open editor for the new tier
+    setTierFormName(newTier.name);
+    setTierFormMinPoints(newTier.minPoints);
+    setTierFormMultiplier(newTier.multiplier);
+    setTierFormPerks('');
+    setTierFormColor(newTier.color);
+    setEditingTier(newTier.name);
+  };
+
+  const deleteTier = (tierName: string) => {
+    if (!config) return;
+    if (!confirm(t('admin.loyalty.confirmDeleteTier'))) return;
+    setConfig({
+      ...config,
+      tiers: config.tiers.filter((t) => t.name !== tierName),
+    });
+    if (editingTier === tierName) setEditingTier(null);
+    toast.success(t('admin.loyalty.tierDeleted'));
+  };
+
+  // ─── Simulation computed values ────────────────────────────
+
+  const simResult = useMemo(() => {
+    if (!config) return { points: 0, discount: '0.00' };
+    const selectedTier = config.tiers.find((t) => t.name === simTier) || config.tiers[0];
+    if (!selectedTier) return { points: 0, discount: '0.00' };
+    const points = Math.round(simAmount * config.pointsPerDollar * selectedTier.multiplier);
+    const discount = (points * config.pointsValue).toFixed(2);
+    return { points, discount };
+  }, [config, simAmount, simTier]);
 
   const tierColors: Record<string, string> = {
     orange: 'bg-sky-100 text-sky-800 border-sky-300',
@@ -140,13 +234,25 @@ export default function FidelitePage() {
             />
           </FormField>
           <FormField label={t('admin.loyalty.firstOrderBonus')} hint={t('admin.loyalty.pointsOffered')}>
-            <Input type="number" defaultValue={100} />
+            <Input
+              type="number"
+              value={config.firstOrderBonus ?? 100}
+              onChange={(e) => setConfig({ ...config, firstOrderBonus: parseInt(e.target.value) || 0 })}
+            />
           </FormField>
           <FormField label={t('admin.loyalty.reviewBonus')} hint={t('admin.loyalty.perReview')}>
-            <Input type="number" defaultValue={50} />
+            <Input
+              type="number"
+              value={config.reviewBonus ?? 50}
+              onChange={(e) => setConfig({ ...config, reviewBonus: parseInt(e.target.value) || 0 })}
+            />
           </FormField>
           <FormField label={t('admin.loyalty.signupBonus')} hint={t('admin.loyalty.welcomePoints')}>
-            <Input type="number" defaultValue={200} />
+            <Input
+              type="number"
+              value={config.signupBonus ?? 200}
+              onChange={(e) => setConfig({ ...config, signupBonus: parseInt(e.target.value) || 0 })}
+            />
           </FormField>
         </div>
       </div>
@@ -155,10 +261,7 @@ export default function FidelitePage() {
       <div className="bg-white rounded-xl border border-slate-200 p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-semibold text-slate-900">{t('admin.loyalty.loyaltyTiers')}</h3>
-          <Button variant="ghost" size="sm" icon={Plus} className="text-sky-600 hover:text-sky-700" onClick={() => {
-            // TODO: Create API endpoint POST /api/admin/loyalty/tiers and modal for adding a new tier
-            toast.info(t('admin.loyalty.addTier') + ' - Coming soon');
-          }}>
+          <Button variant="ghost" size="sm" icon={Plus} className="text-sky-600 hover:text-sky-700" onClick={addNewTier}>
             {t('admin.loyalty.addTier')}
           </Button>
         </div>
@@ -197,7 +300,7 @@ export default function FidelitePage() {
               </div>
 
               <button
-                onClick={() => setEditingTier(tier.name)}
+                onClick={() => openEditTier(tier.name)}
                 className="w-full mt-3 text-xs py-1 bg-white/50 rounded hover:bg-white/70"
               >
                 {t('admin.loyalty.edit')}
@@ -214,12 +317,17 @@ export default function FidelitePage() {
           <FormField label={t('admin.loyalty.purchaseAmount')}>
             <Input
               type="number"
-              defaultValue={100}
+              value={simAmount}
+              onChange={(e) => setSimAmount(parseFloat(e.target.value) || 0)}
               className="border-sky-300 bg-white"
             />
           </FormField>
           <FormField label={t('admin.loyalty.customerLevel')}>
-            <select className="w-full h-9 px-3 rounded-lg border border-sky-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
+            <select
+              value={simTier || config.tiers[0]?.name || ''}
+              onChange={(e) => setSimTier(e.target.value)}
+              className="w-full h-9 px-3 rounded-lg border border-sky-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+            >
               {config.tiers.map(tier => (
                 <option key={tier.name} value={tier.name}>{tier.name}</option>
               ))}
@@ -227,8 +335,8 @@ export default function FidelitePage() {
           </FormField>
           <div className="bg-white rounded-lg p-4 text-center">
             <p className="text-sm text-sky-600">{t('admin.loyalty.pointsEarned')}</p>
-            <p className="text-3xl font-bold text-sky-900">1,000</p>
-            <p className="text-xs text-sky-600">{t('admin.loyalty.discountValue', { value: '10.00' })}</p>
+            <p className="text-3xl font-bold text-sky-900">{simResult.points.toLocaleString(locale)}</p>
+            <p className="text-xs text-sky-600">{t('admin.loyalty.discountValue', { value: simResult.discount })}</p>
           </div>
         </div>
       </div>
@@ -236,15 +344,78 @@ export default function FidelitePage() {
       {/* Edit Tier Modal */}
       <Modal
         isOpen={!!editingTier}
-        onClose={() => setEditingTier(null)}
+        onClose={closeEditTier}
         title={t('admin.loyalty.editTier', { name: editingTier || '' })}
         footer={
-          <Button variant="secondary" onClick={() => setEditingTier(null)}>
-            {t('admin.loyalty.close')}
-          </Button>
+          <>
+            <Button
+              variant="danger"
+              size="sm"
+              icon={Trash2}
+              onClick={() => { if (editingTier) deleteTier(editingTier); }}
+              disabled={config.tiers.length <= 1}
+            >
+              {t('admin.loyalty.deleteTier')}
+            </Button>
+            <div className="flex-1" />
+            <Button variant="secondary" onClick={closeEditTier}>
+              {t('admin.loyalty.cancel')}
+            </Button>
+            <Button variant="primary" onClick={saveTier}>
+              {t('admin.loyalty.saveTier')}
+            </Button>
+          </>
         }
       >
-        <p className="text-slate-500">{t('admin.loyalty.featureInDevelopment')}</p>
+        <div className="space-y-4">
+          <FormField label={t('admin.loyalty.tierName')} required>
+            <Input
+              type="text"
+              value={tierFormName}
+              onChange={(e) => setTierFormName(e.target.value)}
+            />
+          </FormField>
+          <div className="grid grid-cols-2 gap-4">
+            <FormField label={t('admin.loyalty.tierMinPoints')} required>
+              <Input
+                type="number"
+                min={0}
+                value={tierFormMinPoints}
+                onChange={(e) => setTierFormMinPoints(parseInt(e.target.value) || 0)}
+              />
+            </FormField>
+            <FormField label={t('admin.loyalty.tierMultiplier')} required>
+              <Input
+                type="number"
+                min={0.1}
+                step={0.25}
+                value={tierFormMultiplier}
+                onChange={(e) => setTierFormMultiplier(parseFloat(e.target.value) || 1)}
+              />
+            </FormField>
+          </div>
+          <FormField label={t('admin.loyalty.tierPerks')} hint={t('admin.loyalty.tierPerksHint')}>
+            <textarea
+              rows={4}
+              value={tierFormPerks}
+              onChange={(e) => setTierFormPerks(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm text-slate-900 placeholder-slate-400 transition-shadow resize-y focus:outline-none focus:ring-2 focus:ring-sky-700 focus:border-sky-700"
+            />
+          </FormField>
+          <FormField label={t('admin.loyalty.tierColor')}>
+            <select
+              value={tierFormColor}
+              onChange={(e) => setTierFormColor(e.target.value)}
+              className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-sky-700 focus:border-sky-700"
+            >
+              <option value="orange">Bronze</option>
+              <option value="gray">Silver</option>
+              <option value="yellow">Gold</option>
+              <option value="blue">Platinum</option>
+              <option value="purple">Diamond</option>
+            </select>
+          </FormField>
+        </div>
       </Modal>
     </div>
   );

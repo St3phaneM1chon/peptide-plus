@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 
 // GET /api/admin/emails - List all email templates
 export const GET = withAdminGuard(async (request, { session: _session }) => {
@@ -54,7 +55,7 @@ export const GET = withAdminGuard(async (request, { session: _session }) => {
 });
 
 // POST /api/admin/emails - Create a new email template
-export const POST = withAdminGuard(async (request, { session: _session }) => {
+export const POST = withAdminGuard(async (request, { session }) => {
   try {
     const body = await request.json();
     const { name, subject, htmlContent, textContent, variables, isActive, locale } = body;
@@ -90,6 +91,16 @@ export const POST = withAdminGuard(async (request, { session: _session }) => {
         locale: locale || 'fr',
       },
     });
+
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'CREATE_EMAIL_TEMPLATE',
+      targetType: 'EmailTemplate',
+      targetId: template.id,
+      newValue: { name, subject, locale: locale || 'fr', isActive: isActive ?? true },
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json({ template }, { status: 201 });
   } catch (error) {

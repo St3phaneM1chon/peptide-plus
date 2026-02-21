@@ -11,6 +11,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import Stripe from 'stripe';
 import { STRIPE_API_VERSION } from '@/lib/stripe';
 import {
@@ -289,23 +290,16 @@ async function handleOrderUpdate(
   });
 
   // Audit log for order update (fire-and-forget)
-  prisma.auditLog.create({
-    data: {
-      id: `audit_update_order_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 8)}`,
-      userId: session.user.id,
-      action: 'ADMIN_UPDATE_ORDER',
-      entityType: 'Order',
-      entityId: id,
-      details: JSON.stringify({
-        previousStatus: existingOrder.status,
-        newStatus: status || existingOrder.status,
-        trackingNumber: trackingNumber || null,
-        carrier: carrier || null,
-        adminNotes: adminNotes || null,
-      }),
-      ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || null,
-    },
-  }).catch(console.error);
+  logAdminAction({
+    adminUserId: session.user.id,
+    action: 'UPDATE_ORDER',
+    targetType: 'Order',
+    targetId: id,
+    previousValue: { status: existingOrder.status, trackingNumber: existingOrder.trackingNumber, carrier: existingOrder.carrier },
+    newValue: { status: status || existingOrder.status, trackingNumber: trackingNumber || null, carrier: carrier || null, adminNotes: adminNotes || null },
+    ipAddress: getClientIpFromRequest(request),
+    userAgent: request.headers.get('user-agent') || undefined,
+  }).catch(() => {});
 
   // Send lifecycle email on status change (fire-and-forget)
   if (status && status !== existingOrder.status) {
@@ -639,26 +633,17 @@ async function handleRefund(
   }
 
   // Audit log for refund (fire-and-forget)
-  prisma.auditLog.create({
-    data: {
-      id: `audit_refund_order_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 8)}`,
-      userId: session.user.id,
-      action: 'ADMIN_REFUND_ORDER',
-      entityType: 'Order',
-      entityId: orderId,
-      details: JSON.stringify({
-        amount,
-        reason,
-        isFullRefund,
-        previousPaymentStatus: order.paymentStatus,
-        newPaymentStatus: isFullRefund ? 'REFUNDED' : 'PARTIAL_REFUND',
-        journalEntryId: entryId,
-        creditNoteId,
-        commissionClawback: commissionClawback.clawbackAmount ? commissionClawback : null,
-      }),
-      ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || null,
-    },
-  }).catch(console.error);
+  logAdminAction({
+    adminUserId: session.user.id,
+    action: 'REFUND_ORDER',
+    targetType: 'Order',
+    targetId: orderId,
+    previousValue: { paymentStatus: order.paymentStatus, status: order.status },
+    newValue: { paymentStatus: isFullRefund ? 'REFUNDED' : 'PARTIAL_REFUND', amount, reason, isFullRefund },
+    ipAddress: getClientIpFromRequest(request),
+    userAgent: request.headers.get('user-agent') || undefined,
+    metadata: { journalEntryId: entryId, creditNoteId, commissionClawback: commissionClawback.clawbackAmount ? commissionClawback : null },
+  }).catch(() => {});
 
   // ── Send refund email (fire-and-forget) ──────────────────────────────
   sendOrderLifecycleEmail(orderId, 'REFUNDED', {
@@ -897,25 +882,16 @@ async function handleReship(
   }
 
   // Audit log for reship (fire-and-forget)
-  prisma.auditLog.create({
-    data: {
-      id: `audit_reship_order_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 8)}`,
-      userId: session.user.id,
-      action: 'ADMIN_RESHIP_ORDER',
-      entityType: 'Order',
-      entityId: orderId,
-      details: JSON.stringify({
-        reason,
-        originalOrderNumber: order.orderNumber,
-        replacementOrderId: replacementOrder.id,
-        replacementOrderNumber,
-        itemsReshipped: order.items.length,
-        totalLossAmount: Math.round(totalLossAmount * 100) / 100,
-        lossEntryId,
-      }),
-      ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || null,
-    },
-  }).catch(console.error);
+  logAdminAction({
+    adminUserId: session.user.id,
+    action: 'RESHIP_ORDER',
+    targetType: 'Order',
+    targetId: orderId,
+    newValue: { reason, replacementOrderId: replacementOrder.id, replacementOrderNumber, itemsReshipped: order.items.length },
+    ipAddress: getClientIpFromRequest(request),
+    userAgent: request.headers.get('user-agent') || undefined,
+    metadata: { originalOrderNumber: order.orderNumber, totalLossAmount: Math.round(totalLossAmount * 100) / 100, lossEntryId },
+  }).catch(() => {});
 
   return NextResponse.json({
     success: true,

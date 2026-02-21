@@ -438,6 +438,82 @@ export async function getTranslatedFields(
 }
 
 /**
+ * Batch-fetch translated fields for multiple entities in a single query.
+ * Eliminates N+1 queries when translating lists of entities.
+ * Returns a Map of entityId -> translated fields (or null if no translation).
+ */
+export async function getTranslatedFieldsBatch(
+  model: TranslatableModel,
+  entityIds: string[],
+  locale: string
+): Promise<Map<string, Record<string, string> | null>> {
+  const result = new Map<string, Record<string, string> | null>();
+
+  if (locale === DB_SOURCE_LOCALE || entityIds.length === 0) {
+    for (const id of entityIds) result.set(id, null);
+    return result;
+  }
+
+  const tableName = TRANSLATION_TABLE_MAP[model];
+  const fkField = FK_FIELD_MAP[model];
+  const translatableFields = TRANSLATABLE_FIELDS[model];
+
+  // 1. Check memory cache for each entity; collect uncached IDs
+  const uncachedIds: string[] = [];
+  for (const entityId of entityIds) {
+    const cacheKey = translationCacheKey(model, entityId, locale);
+    const cached = cacheGet<Record<string, string>>(cacheKey);
+    if (cached) {
+      result.set(entityId, cached);
+    } else {
+      uncachedIds.push(entityId);
+    }
+  }
+
+  // 2. Batch DB query for all uncached entities (single findMany instead of N findUnique calls)
+  if (uncachedIds.length > 0) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic Prisma model access requires runtime key indexing
+    const translations = await ((prisma as Record<string, any>)[tableName]).findMany({
+      where: { [fkField]: { in: uncachedIds }, locale },
+    });
+
+    // Index translations by their foreign key for O(1) lookup
+    const translationMap = new Map<string, Record<string, unknown>>();
+    for (const t of translations) {
+      translationMap.set(t[fkField], t);
+    }
+
+    // Process each uncached entity
+    for (const entityId of uncachedIds) {
+      const translation = translationMap.get(entityId);
+      if (!translation) {
+        result.set(entityId, null);
+        continue;
+      }
+
+      const fields: Record<string, string> = {};
+      for (const f of translatableFields) {
+        if (translation[f]) fields[f] = translation[f] as string;
+      }
+
+      const fieldResult = Object.keys(fields).length > 0 ? fields : null;
+
+      // Cache each individual result
+      if (fieldResult) {
+        cacheSet(translationCacheKey(model, entityId, locale), fieldResult, {
+          ttl: CacheTTL.STATIC,
+          tags: [`translation:${model}`, `translation:${entityId}`],
+        });
+      }
+
+      result.set(entityId, fieldResult);
+    }
+  }
+
+  return result;
+}
+
+/**
  * Apply translations to an entity object
  * Returns a new object with translated fields overlaid
  */
@@ -455,18 +531,26 @@ export async function withTranslation<T extends Record<string, unknown> & { id: 
 }
 
 /**
- * Apply translations to an array of entities
+ * Apply translations to an array of entities using a single batch query.
+ * This replaces the previous N+1 pattern (one query per entity) with a single findMany.
  */
 export async function withTranslations<T extends Record<string, unknown> & { id: string }>(
   entities: T[],
   model: TranslatableModel,
   locale: string
 ): Promise<T[]> {
-  if (locale === DB_SOURCE_LOCALE) return entities;
+  if (locale === DB_SOURCE_LOCALE || entities.length === 0) return entities;
 
-  return Promise.all(
-    entities.map(entity => withTranslation(entity, model, locale))
-  );
+  // Batch-fetch all translations in one query
+  const entityIds = entities.map(e => e.id);
+  const translationMap = await getTranslatedFieldsBatch(model, entityIds, locale);
+
+  // Apply translations to each entity
+  return entities.map(entity => {
+    const translated = translationMap.get(entity.id);
+    if (!translated) return entity;
+    return { ...entity, ...translated };
+  });
 }
 
 // ============================================

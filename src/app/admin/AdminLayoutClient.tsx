@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { usePathname } from 'next/navigation';
 import { Toaster } from 'sonner';
 import CsrfInit from '@/components/admin/CsrfInit';
-import { IconRail, FolderPane, OutlookTopBar } from '@/components/admin/outlook';
+import { IconRail, FolderPane, OutlookTopBar, OutlookRibbon } from '@/components/admin/outlook';
 import { AdminLayoutProvider, useAdminLayout } from '@/lib/admin/admin-layout-context';
 import { getActiveRailId } from '@/lib/admin/outlook-nav';
 import { useI18n } from '@/i18n/client';
@@ -93,6 +93,9 @@ function AdminLayoutShell({ children }: { children: React.ReactNode }) {
       {/* Top bar - 48px height */}
       <OutlookTopBar onMobileMenuToggle={handleToggleMobileMenu} />
 
+      {/* Contextual Ribbon */}
+      <OutlookRibbon />
+
       {/* Mobile overlay backdrop */}
       {mobileMenuOpen && (
         <div
@@ -103,7 +106,7 @@ function AdminLayoutShell({ children }: { children: React.ReactNode }) {
       )}
 
       {/* Main layout: IconRail + FolderPane + Content */}
-      <div className="flex" style={{ height: 'calc(100vh - 48px)' }}>
+      <div className="flex" style={{ height: 'calc(100vh - 84px)' }}>
         {/* Icon Rail - always visible on desktop, hidden on mobile */}
         <div className="hidden lg:block">
           <IconRail />

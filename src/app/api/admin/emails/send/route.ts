@@ -1,103 +1,87 @@
 export const dynamic = 'force-dynamic';
 
-/**
- * Admin Email Send API
- * POST - Send a test email
- */
-
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { sendEmail } from '@/lib/email/email-service';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 
-// POST /api/admin/emails/send - Send a test email
-export const POST = withAdminGuard(async (request, { session: _session }) => {
+// POST /api/admin/emails/send - Send email (direct compose or template-based test)
+export const POST = withAdminGuard(async (request, { session }) => {
   try {
     const body = await request.json();
-    const { templateId, to, subject: customSubject, variables } = body;
+    const { to, subject, htmlBody, textBody, templateId, variables } = body;
 
     if (!to) {
-      return NextResponse.json(
-        { error: 'Recipient email (to) is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Recipient email (to) is required' }, { status: 400 });
     }
 
-    // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(to)) {
-      return NextResponse.json(
-        { error: 'Invalid email address' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid email address' }, { status: 400 });
     }
 
-    let subject = customSubject || 'Test Email';
-    let htmlContent = '<p>This is a test email.</p>';
+    let emailSubject = subject || 'Test Email';
+    let html = htmlBody || textBody?.replace(/\n/g, '<br/>') || '<p>This is a test email.</p>';
+    let text = textBody || '';
 
-    // If a template is specified, load it
+    // If a template is specified, load and fill it
     if (templateId) {
-      const template = await prisma.emailTemplate.findUnique({
-        where: { id: templateId },
-      });
-
+      const template = await prisma.emailTemplate.findUnique({ where: { id: templateId } });
       if (!template) {
-        return NextResponse.json(
-          { error: 'Template not found' },
-          { status: 404 }
-        );
+        return NextResponse.json({ error: 'Template not found' }, { status: 404 });
       }
-
-      subject = template.subject;
-      htmlContent = template.htmlContent;
-
-      // Replace template variables if provided
+      emailSubject = template.subject;
+      html = template.htmlContent;
       if (variables && typeof variables === 'object') {
         for (const [key, value] of Object.entries(variables)) {
           const placeholder = `{{${key}}}`;
-          subject = subject.replace(new RegExp(placeholder.replace(/[{}]/g, '\\$&'), 'g'), String(value));
-          htmlContent = htmlContent.replace(new RegExp(placeholder.replace(/[{}]/g, '\\$&'), 'g'), String(value));
+          const regex = new RegExp(placeholder.replace(/[{}]/g, '\\$&'), 'g');
+          emailSubject = emailSubject.replace(regex, String(value));
+          html = html.replace(regex, String(value));
         }
       }
     }
 
-    // Log the send attempt
-    // In production, this would integrate with Resend/SendGrid/SMTP
-    // For now, we just log it
-    let logStatus = 'sent';
-    let logError: string | null = null;
+    // Send via configured provider
+    const result = await sendEmail({
+      to: { email: to },
+      subject: emailSubject,
+      html,
+      text,
+      tags: [templateId ? 'admin-template-test' : 'admin-direct'],
+    });
 
-    try {
-      // TODO: Integrate with actual email provider (Resend, SendGrid, etc.)
-      // For now, simulate the send
-      console.log(`[EMAIL] Sending test email to ${to}: "${subject}"`);
-    } catch (sendError) {
-      logStatus = 'failed';
-      logError = sendError instanceof Error ? sendError.message : 'Unknown error';
-    }
-
-    // Create email log entry
+    // Log the email
     const emailLog = await prisma.emailLog.create({
       data: {
+        id: crypto.randomUUID(),
         templateId: templateId || null,
         to,
-        subject,
-        status: logStatus,
-        error: logError,
+        subject: emailSubject,
+        status: result.success ? 'SENT' : 'FAILED',
+        error: result.error || null,
       },
     });
 
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'SEND_EMAIL',
+      targetType: 'EmailLog',
+      targetId: emailLog.id,
+      newValue: { to, subject: emailSubject, success: result.success, templateId: templateId || null },
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
+
     return NextResponse.json({
-      success: logStatus === 'sent',
+      success: result.success,
       emailLog,
-      message: logStatus === 'sent'
-        ? `Test email sent to ${to}`
-        : `Failed to send email: ${logError}`,
+      messageId: result.messageId,
+      message: result.success ? `Email sent to ${to}` : `Failed: ${result.error}`,
     });
   } catch (error) {
     console.error('Admin email send POST error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 });

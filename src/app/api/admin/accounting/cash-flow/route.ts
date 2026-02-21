@@ -70,6 +70,7 @@ export const GET = withAdminGuard(async (request) => {
         createdAt: true,
         shippingState: true,
       },
+      take: 1000,
     });
 
     const orderInflows = roundCurrency(
@@ -93,6 +94,7 @@ export const GET = withAdminGuard(async (request) => {
         expenseCategory: true,
         paidAt: true,
       },
+      take: 1000,
     });
 
     const supplierOutflows = roundCurrency(
@@ -113,6 +115,7 @@ export const GET = withAdminGuard(async (request) => {
         total: true,
         issuedAt: true,
       },
+      take: 1000,
     });
 
     const refundOutflows = roundCurrency(
@@ -133,6 +136,7 @@ export const GET = withAdminGuard(async (request) => {
         total: true,
         receivedAt: true,
       },
+      take: 1000,
     });
 
     const poOutflows = roundCurrency(
@@ -154,6 +158,7 @@ export const GET = withAdminGuard(async (request) => {
         account: { select: { code: true, name: true, type: true } },
         entry: { select: { date: true, description: true, type: true } },
       },
+      take: 1000,
     });
 
     // Aggregate investing and financing flows from journal entries

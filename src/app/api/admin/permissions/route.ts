@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { PERMISSION_MODULES, seedPermissions } from '@/lib/permissions';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { permissionPostSchema } from '@/lib/validations/permission';
 
 // GET /api/admin/permissions - List all permissions, groups, and overrides
@@ -19,6 +20,7 @@ export const GET = withAdminGuard(async (request, { session }) => {
 
     const permissions = await prisma.permission.findMany({
       orderBy: { module: 'asc' },
+      take: 200,
     });
 
     return NextResponse.json({ permissions, modules: PERMISSION_MODULES });
@@ -32,6 +34,7 @@ export const GET = withAdminGuard(async (request, { session }) => {
         _count: { select: { users: true } },
       },
       orderBy: { name: 'asc' },
+      take: 200,
     });
 
     return NextResponse.json({ groups });
@@ -44,6 +47,7 @@ export const GET = withAdminGuard(async (request, { session }) => {
     const overrides = await prisma.userPermissionOverride.findMany({
       where,
       orderBy: { createdAt: 'desc' },
+      take: 200,
     });
 
     return NextResponse.json({ overrides });
@@ -93,6 +97,14 @@ export const POST = withAdminGuard(async (request, { session }) => {
 
   if (action === 'seed') {
     await seedPermissions();
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'SEED_PERMISSIONS',
+      targetType: 'Permission',
+      targetId: 'all',
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
     return NextResponse.json({ success: true });
   }
 
@@ -118,6 +130,16 @@ export const POST = withAdminGuard(async (request, { session }) => {
         })),
       });
     }
+
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'CREATE_PERMISSION_GROUP',
+      targetType: 'PermissionGroup',
+      targetId: group.id,
+      newValue: { name, description, color, permissionCodes },
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json({ group });
   }
@@ -145,12 +167,30 @@ export const POST = withAdminGuard(async (request, { session }) => {
       });
     }
 
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'UPDATE_PERMISSION_GROUP',
+      targetType: 'PermissionGroup',
+      targetId: groupId,
+      newValue: { name, description, color, permissionCodes },
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
+
     return NextResponse.json({ success: true });
   }
 
   if (action === 'deleteGroup') {
     const { groupId } = validatedData as Extract<typeof validatedData, { action: 'deleteGroup' }>;
     await prisma.permissionGroup.delete({ where: { id: groupId } });
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'DELETE_PERMISSION_GROUP',
+      targetType: 'PermissionGroup',
+      targetId: groupId,
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
     return NextResponse.json({ success: true });
   }
 
@@ -163,6 +203,16 @@ export const POST = withAdminGuard(async (request, { session }) => {
       create: { userId, groupId, assignedBy: session.user.id },
     });
 
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'ASSIGN_PERMISSION_GROUP',
+      targetType: 'UserPermissionGroup',
+      targetId: `${userId}_${groupId}`,
+      newValue: { userId, groupId },
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
+
     return NextResponse.json({ success: true });
   }
 
@@ -172,6 +222,16 @@ export const POST = withAdminGuard(async (request, { session }) => {
     await prisma.userPermissionGroup.deleteMany({
       where: { userId, groupId },
     });
+
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'REMOVE_FROM_PERMISSION_GROUP',
+      targetType: 'UserPermissionGroup',
+      targetId: `${userId}_${groupId}`,
+      previousValue: { userId, groupId },
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json({ success: true });
   }
@@ -197,6 +257,16 @@ export const POST = withAdminGuard(async (request, { session }) => {
       },
     });
 
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'SET_PERMISSION_OVERRIDE',
+      targetType: 'UserPermissionOverride',
+      targetId: `${userId}_${permissionCode}`,
+      newValue: { userId, permissionCode, granted, reason, expiresAt },
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
+
     return NextResponse.json({ success: true });
   }
 
@@ -206,6 +276,16 @@ export const POST = withAdminGuard(async (request, { session }) => {
     await prisma.userPermissionOverride.deleteMany({
       where: { userId, permissionCode },
     });
+
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'REMOVE_PERMISSION_OVERRIDE',
+      targetType: 'UserPermissionOverride',
+      targetId: `${userId}_${permissionCode}`,
+      previousValue: { userId, permissionCode },
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json({ success: true });
   }
@@ -217,6 +297,16 @@ export const POST = withAdminGuard(async (request, { session }) => {
       where: { code },
       data: { defaultOwner, defaultEmployee, defaultClient, defaultCustomer },
     });
+
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'UPDATE_PERMISSION_DEFAULTS',
+      targetType: 'Permission',
+      targetId: code,
+      newValue: { defaultOwner, defaultEmployee, defaultClient, defaultCustomer },
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json({ success: true });
   }

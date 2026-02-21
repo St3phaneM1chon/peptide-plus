@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import { prisma } from '@/lib/db';
 import HomePageClient from './HomePageClient';
+import type { TestimonialData } from './HomePageClient';
 
 // Revalidate hero slides every 60 seconds (ISR) for fresh content without blocking render
 export const revalidate = 60;
@@ -60,13 +61,31 @@ async function getHeroSlides() {
   }
 }
 
+/** Fetch published testimonials server-side, preferring locale-specific translations. */
+async function getTestimonials(): Promise<TestimonialData[]> {
+  try {
+    const testimonials = await prisma.testimonial.findMany({
+      where: { isPublished: true },
+      include: { translations: true },
+      orderBy: [{ isFeatured: 'desc' }, { sortOrder: 'asc' }, { createdAt: 'desc' }],
+      take: 6,
+    });
+    return JSON.parse(JSON.stringify(testimonials));
+  } catch {
+    return [];
+  }
+}
+
 export default async function HomePage() {
-  const heroSlides = await getHeroSlides();
+  const [heroSlides, testimonials] = await Promise.all([
+    getHeroSlides(),
+    getTestimonials(),
+  ]);
 
   return (
     <>
       <h1 className="sr-only">BioCycle Peptides - Research Peptides</h1>
-      <HomePageClient initialHeroSlides={heroSlides} />
+      <HomePageClient initialHeroSlides={heroSlides} initialTestimonials={testimonials} />
     </>
   );
 }

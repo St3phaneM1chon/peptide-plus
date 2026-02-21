@@ -17,6 +17,7 @@ import { organizationSchema, websiteSchema } from '@/lib/structured-data';
 import { TranslationNotice } from '@/components/ui/TranslationNotice';
 import { TranslationFeedback } from '@/components/ui/TranslationFeedback';
 import { GoogleAnalytics } from '@/components/analytics/GoogleAnalytics';
+import { MetaPixel } from '@/components/analytics/MetaPixel';
 
 // Only import en/fr statically (most common); others loaded dynamically
 import en from '@/i18n/locales/en.json';
@@ -193,6 +194,7 @@ export default async function RootLayout({
       </head>
       <body className={inter.className}>
         <GoogleAnalytics />
+        <MetaPixel />
         <JsonLd data={organizationSchema()} />
         <JsonLd data={websiteSchema()} />
         <Providers locale={locale} messages={messages}>

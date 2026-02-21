@@ -9,9 +9,17 @@ import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { createPaymentIntent, getOrCreateStripeCustomer } from '@/lib/stripe';
 import { calculateTaxAmount } from '@/lib/tax-rates';
+import { validateCsrf } from '@/lib/csrf-middleware';
+import { add, toCents } from '@/lib/decimal-calculator';
 
 export async function POST(request: NextRequest) {
   try {
+    // SECURITY: CSRF protection for payment mutation endpoint
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const session = await auth();
 
     if (!session?.user) {
@@ -57,7 +65,7 @@ export async function POST(request: NextRequest) {
     const subtotal = Number(product.price);
     const province = (reqProvince || 'QC').toUpperCase();
     const taxAmount = calculateTaxAmount(subtotal, province);
-    const total = Math.round((subtotal + taxAmount) * 100); // En centimes
+    const total = toCents(add(subtotal, taxAmount));
 
     // Récupérer ou créer le customer Stripe
     const stripeCustomerId = await getOrCreateStripeCustomer(

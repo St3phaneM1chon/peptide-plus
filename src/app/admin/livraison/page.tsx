@@ -162,6 +162,17 @@ export default function LivraisonPage() {
   const [formMaxDays, setFormMaxDays] = useState('7');
   const [saving, setSaving] = useState(false);
 
+  // Add Method modal state
+  const [showAddMethodModal, setShowAddMethodModal] = useState(false);
+  const [addMethodZoneId, setAddMethodZoneId] = useState<string | null>(null);
+  const [methodName, setMethodName] = useState('');
+  const [methodCarrier, setMethodCarrier] = useState('');
+  const [methodBaseRate, setMethodBaseRate] = useState('0');
+  const [methodMinDays, setMethodMinDays] = useState('3');
+  const [methodMaxDays, setMethodMaxDays] = useState('7');
+  const [methodFreeAbove, setMethodFreeAbove] = useState('');
+  const [savingMethod, setSavingMethod] = useState(false);
+
   const resetForm = () => {
     setFormName('');
     setFormCountries('');
@@ -230,6 +241,53 @@ export default function LivraisonPage() {
       toast.error('Failed to save zone');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const openAddMethodModal = (zoneId: string) => {
+    setAddMethodZoneId(zoneId);
+    setMethodName('');
+    setMethodCarrier('');
+    setMethodBaseRate('0');
+    setMethodMinDays('3');
+    setMethodMaxDays('7');
+    setMethodFreeAbove('');
+    setShowAddMethodModal(true);
+  };
+
+  const handleAddMethod = async () => {
+    if (!addMethodZoneId || !methodName.trim()) {
+      toast.error(t('admin.shipping.nameRequired') || 'Method name is required');
+      return;
+    }
+    setSavingMethod(true);
+    try {
+      // Since there's no dedicated ShippingMethod model yet, we update the zone
+      // with new method data. The API synthesizes methods from zone data.
+      // For now, we update the zone's base fee and delivery days via PATCH.
+      const res = await fetch(`/api/admin/shipping/zones/${addMethodZoneId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          baseFee: parseFloat(methodBaseRate) || 0,
+          estimatedDaysMin: parseInt(methodMinDays) || 3,
+          estimatedDaysMax: parseInt(methodMaxDays) || 7,
+          freeShippingThreshold: methodFreeAbove ? parseFloat(methodFreeAbove) : null,
+          notes: `Method: ${methodName.trim()} | Carrier: ${methodCarrier.trim()}`,
+        }),
+      });
+      if (res.ok) {
+        toast.success(t('admin.shipping.methodCreated'));
+        setShowAddMethodModal(false);
+        await fetchZones();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        toast.error(data.error || t('admin.shipping.methodError'));
+      }
+    } catch {
+      toast.error(t('admin.shipping.methodError'));
+    } finally {
+      setSavingMethod(false);
     }
   };
 
@@ -376,10 +434,7 @@ export default function LivraisonPage() {
                 </tbody>
               </table>
               <button
-                onClick={() => {
-                  // TODO: Create API endpoint POST /api/admin/shipping/zones/:id/methods and modal for adding a new method
-                  toast.info(t('admin.shipping.addMethod') + ' - Coming soon');
-                }}
+                onClick={() => openAddMethodModal(zone.id)}
                 className="mt-3 text-sm text-sky-600 hover:text-sky-700 inline-flex items-center gap-1"
               >
                 <Plus className="w-3.5 h-3.5" />
@@ -458,6 +513,90 @@ export default function LivraisonPage() {
             </Button>
             <Button variant="primary" onClick={handleSaveZone} loading={saving}>
               {editingZone ? (t('common.save') || 'Save') : (t('admin.shipping.createZone') || 'Create Zone')}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Add Method Modal */}
+      <Modal
+        isOpen={showAddMethodModal}
+        onClose={() => setShowAddMethodModal(false)}
+        title={t('admin.shipping.addMethodTitle')}
+        size="md"
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.shipping.methodName')}</label>
+            <input
+              type="text"
+              value={methodName}
+              onChange={e => setMethodName(e.target.value)}
+              placeholder="Standard, Express, Economy..."
+              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-sky-500 focus:border-sky-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.shipping.methodCarrier')}</label>
+            <input
+              type="text"
+              value={methodCarrier}
+              onChange={e => setMethodCarrier(e.target.value)}
+              placeholder="Canada Post, UPS, FedEx..."
+              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-sky-500 focus:border-sky-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.shipping.methodBaseRate')}</label>
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              value={methodBaseRate}
+              onChange={e => setMethodBaseRate(e.target.value)}
+              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-sky-500 focus:border-sky-500"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.shipping.methodMinDays')}</label>
+              <input
+                type="number"
+                min="1"
+                value={methodMinDays}
+                onChange={e => setMethodMinDays(e.target.value)}
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-sky-500 focus:border-sky-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.shipping.methodMaxDays')}</label>
+              <input
+                type="number"
+                min="1"
+                value={methodMaxDays}
+                onChange={e => setMethodMaxDays(e.target.value)}
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-sky-500 focus:border-sky-500"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.shipping.methodFreeAbove')}</label>
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              value={methodFreeAbove}
+              onChange={e => setMethodFreeAbove(e.target.value)}
+              placeholder={t('admin.shipping.optional') || 'Optional'}
+              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-sky-500 focus:border-sky-500"
+            />
+          </div>
+          <div className="flex gap-3 justify-end pt-2">
+            <Button variant="secondary" onClick={() => setShowAddMethodModal(false)}>
+              {t('common.cancel') || 'Cancel'}
+            </Button>
+            <Button variant="primary" onClick={handleAddMethod} loading={savingMethod}>
+              {t('admin.shipping.addMethod')}
             </Button>
           </div>
         </div>

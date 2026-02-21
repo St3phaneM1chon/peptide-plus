@@ -125,14 +125,15 @@ function getAdminPhone(adminPhoneOverride?: string): string | null {
 export async function sendOrderNotificationSms(
   orderTotal: number,
   orderNumber: string,
-  adminPhone?: string
+  adminPhone?: string,
+  currency: string = 'CAD'
 ): Promise<boolean> {
   const phone = getAdminPhone(adminPhone);
   if (!phone) return false;
 
   const formattedTotal = new Intl.NumberFormat('fr-CA', {
     style: 'currency',
-    currency: 'CAD',
+    currency,
   }).format(orderTotal);
 
   return sendSms({
@@ -148,14 +149,15 @@ export async function sendPaymentFailureAlertSms(
   errorType: string,
   amount: number,
   customerEmail?: string,
-  adminPhone?: string
+  adminPhone?: string,
+  currency: string = 'CAD'
 ): Promise<boolean> {
   const phone = getAdminPhone(adminPhone);
   if (!phone) return false;
 
   const formattedAmount = new Intl.NumberFormat('fr-CA', {
     style: 'currency',
-    currency: 'CAD',
+    currency,
   }).format(amount);
 
   const customerInfo = customerEmail ? ` - Client: ${customerEmail}` : '';

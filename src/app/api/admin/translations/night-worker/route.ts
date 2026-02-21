@@ -14,6 +14,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { processNightJobs, getQueueStats, cleanupJobs } from '@/lib/translation';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 
 export const POST = withAdminGuard(async (request: NextRequest, { session }) => {
   try {
@@ -29,6 +30,16 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
     const stats = await getQueueStats();
 
     console.log(`[NightWorker] Done. Pass 2: ${results.pass2.processed} ok / ${results.pass2.errors} err. Pass 3: ${results.pass3.processed} ok / ${results.pass3.errors} err. Cleaned: ${cleaned}`);
+
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'RUN_NIGHT_WORKER',
+      targetType: 'Translation',
+      targetId: 'night-worker',
+      newValue: { pass2: results.pass2, pass3: results.pass3, cleaned },
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json({
       message: 'Night worker processing complete',

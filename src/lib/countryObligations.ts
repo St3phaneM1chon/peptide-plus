@@ -121,7 +121,7 @@ export const CANADA_COMPLIANCE: CountryCompliance = {
       nameFr: 'Perception TPS/TVH',
       description: 'Collect and remit GST/HST based on customer province. Registration required if taxable supplies exceed $30,000 in any 4 consecutive calendar quarters.',
       descriptionFr: 'Percevoir et remettre la TPS/TVH selon la province du client. Inscription requise si fournitures taxables > 30 000 $ sur 4 trimestres consécutifs.',
-      rate: '5% GST only (AB, BC, MB, SK, territories) | 13% HST (ON) | 15% HST (NB, NL, NS, PE)',
+      rate: '5% GST only (AB, BC, MB, SK, territories) | 13% HST (ON) | 14% HST (NS) | 15% HST (NB, NL, PE)',
       frequency: 'monthly',
       required: true,
       url: 'https://www.canada.ca/en/revenue-agency/services/tax/businesses/topics/gst-hst-businesses.html',

@@ -72,7 +72,7 @@ export const GET = withAdminGuard(async (request: NextRequest, { session }) => {
       }
     }
 
-    const queueStats = getQueueStats();
+    const queueStats = await getQueueStats();
 
     return NextResponse.json({
       overview,

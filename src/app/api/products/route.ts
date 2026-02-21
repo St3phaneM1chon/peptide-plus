@@ -10,7 +10,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { UserRole } from '@/types';
-import { withTranslations, getTranslatedFields, enqueue, DB_SOURCE_LOCALE } from '@/lib/translation';
+import { withTranslations, getTranslatedFieldsBatch, enqueue, DB_SOURCE_LOCALE } from '@/lib/translation';
 import { isValidLocale, defaultLocale } from '@/i18n/config';
 import { z } from 'zod';
 import { stripHtml, stripControlChars } from '@/lib/sanitize';
@@ -223,15 +223,15 @@ export async function GET(request: NextRequest) {
     if (isValidLocale(locale) && locale !== DB_SOURCE_LOCALE) {
       products = await withTranslations(products, 'Product', locale);
 
-      // Also translate nested category names
+      // Also translate nested category names (batch query instead of N+1)
       const categoryIds = [...new Set(products.map(p => (p as Record<string, unknown> & { category?: { id: string } }).category?.id).filter(Boolean))] as string[];
       const categoryTranslations = new Map<string, Record<string, string>>();
-      await Promise.all(
-        categoryIds.map(async (catId) => {
-          const translated = await getTranslatedFields('Category', catId, locale);
-          if (translated) categoryTranslations.set(catId, translated);
-        })
-      );
+      if (categoryIds.length > 0) {
+        const batchResult = await getTranslatedFieldsBatch('Category', categoryIds, locale);
+        for (const [catId, trans] of batchResult) {
+          if (trans) categoryTranslations.set(catId, trans);
+        }
+      }
 
       // Apply category translations to each product
       products = products.map(p => {

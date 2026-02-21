@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 
 export const GET = withAdminGuard(
   async (request: NextRequest, { session: _session, params }: { session: unknown; params: { id: string } }) => {
@@ -193,6 +194,17 @@ export const PUT = withAdminGuard(
           })
         ),
       ]);
+
+      logAdminAction({
+        adminUserId: session.user.id,
+        action: 'UPDATE_CONVERSATION',
+        targetType: 'EmailConversation',
+        targetId: id,
+        previousValue: { status: existing.status, assignedToId: existing.assignedToId, priority: existing.priority },
+        newValue: updates,
+        ipAddress: getClientIpFromRequest(request),
+        userAgent: request.headers.get('user-agent') || undefined,
+      }).catch(() => {});
 
       return NextResponse.json({ conversation });
     } catch (error) {

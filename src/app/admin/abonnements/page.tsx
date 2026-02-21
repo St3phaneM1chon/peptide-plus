@@ -7,9 +7,12 @@ import {
   Pause,
   DollarSign,
   Settings,
+  Pencil,
 } from 'lucide-react';
 import { Button } from '@/components/admin/Button';
 import { StatCard } from '@/components/admin/StatCard';
+import { Modal } from '@/components/admin/Modal';
+import { FormField, Input } from '@/components/admin/FormField';
 import {
   ContentList,
   DetailPane,
@@ -61,6 +64,24 @@ export default function AbonnementsPage() {
   const [searchValue, setSearchValue] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
+  // Modal states
+  const [showConfigModal, setShowConfigModal] = useState(false);
+  const [showModifyModal, setShowModifyModal] = useState(false);
+  const [savingConfig, setSavingConfig] = useState(false);
+  const [savingModify, setSavingModify] = useState(false);
+
+  // Config form state
+  const [cfgDiscount, setCfgDiscount] = useState('15');
+  const [cfgFreeShipping, setCfgFreeShipping] = useState(true);
+  const [cfgReminderDays, setCfgReminderDays] = useState('3');
+  const [cfgMaxPauses, setCfgMaxPauses] = useState('1');
+
+  // Modify form state
+  const [modFrequency, setModFrequency] = useState('');
+  const [modQuantity, setModQuantity] = useState('');
+  const [modDiscount, setModDiscount] = useState('');
+  const [modNextDelivery, setModNextDelivery] = useState('');
+
   const frequencyLabels: Record<string, string> = useMemo(() => ({
     EVERY_2_MONTHS: t('admin.subscriptions.frequencyEvery2Months'),
     EVERY_4_MONTHS: t('admin.subscriptions.frequencyEvery4Months'),
@@ -111,6 +132,82 @@ export default function AbonnementsPage() {
     } catch (err) {
       console.error('Error updating subscription status:', err);
       toast.error(t('common.networkError'));
+    }
+  };
+
+  // ─── Save Config ───────────────────────────────────────────
+
+  const handleSaveConfig = async () => {
+    setSavingConfig(true);
+    try {
+      const res = await fetch('/api/admin/settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          key: 'subscription_config',
+          value: JSON.stringify({
+            defaultDiscount: parseFloat(cfgDiscount) || 15,
+            freeShipping: cfgFreeShipping,
+            reminderDays: parseInt(cfgReminderDays) || 3,
+            maxPausesPerYear: parseInt(cfgMaxPauses) || 1,
+          }),
+        }),
+      });
+      if (res.ok) {
+        toast.success(t('admin.subscriptions.configSaved'));
+        setShowConfigModal(false);
+      } else {
+        toast.error(t('admin.subscriptions.configError'));
+      }
+    } catch {
+      toast.error(t('admin.subscriptions.configError'));
+    } finally {
+      setSavingConfig(false);
+    }
+  };
+
+  // ─── Open Modify Modal ────────────────────────────────────
+
+  const openModifyModal = (sub: Subscription) => {
+    setModFrequency(sub.frequency);
+    setModQuantity(String(sub.quantity));
+    setModDiscount(String(sub.discount));
+    setModNextDelivery(sub.nextDelivery ? sub.nextDelivery.split('T')[0] : '');
+    setShowModifyModal(true);
+  };
+
+  const handleSaveModify = async () => {
+    if (!selectedSub) return;
+    setSavingModify(true);
+    try {
+      const body: Record<string, unknown> = {};
+      if (modFrequency !== selectedSub.frequency) body.frequency = modFrequency;
+      if (parseInt(modQuantity) !== selectedSub.quantity) body.quantity = parseInt(modQuantity);
+      if (parseFloat(modDiscount) !== selectedSub.discount) body.discountPercent = parseFloat(modDiscount);
+      if (modNextDelivery) body.nextDelivery = modNextDelivery;
+
+      if (Object.keys(body).length === 0) {
+        setShowModifyModal(false);
+        return;
+      }
+
+      const res = await fetch(`/api/admin/subscriptions/${selectedSub.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        toast.error(data.error || t('admin.subscriptions.modifyError'));
+        return;
+      }
+      toast.success(t('admin.subscriptions.modifySaved'));
+      setShowModifyModal(false);
+      await fetchSubscriptions();
+    } catch {
+      toast.error(t('admin.subscriptions.modifyError'));
+    } finally {
+      setSavingModify(false);
     }
   };
 
@@ -201,10 +298,7 @@ export default function AbonnementsPage() {
             <h1 className="text-xl font-bold text-slate-900">{t('admin.subscriptions.title')}</h1>
             <p className="text-sm text-slate-500 mt-0.5">{t('admin.subscriptions.subtitle')}</p>
           </div>
-          <Button variant="primary" icon={Settings} onClick={() => {
-            // TODO: Create API endpoint /api/admin/subscriptions/config and modal for configuration
-            toast.info(t('admin.subscriptions.configureOptions') + ' - Coming soon');
-          }}>
+          <Button variant="primary" icon={Settings} onClick={() => setShowConfigModal(true)}>
             {t('admin.subscriptions.configureOptions')}
           </Button>
         </div>
@@ -318,10 +412,7 @@ export default function AbonnementsPage() {
                           {t('admin.subscriptions.cancel')}
                         </Button>
                       )}
-                      <Button size="sm" variant="secondary" onClick={() => {
-                        // TODO: Create API endpoint PATCH /api/admin/subscriptions/:id for modifications (frequency, quantity, etc.)
-                        toast.info(t('admin.subscriptions.modify') + ' - Coming soon');
-                      }}>
+                      <Button size="sm" variant="secondary" icon={Pencil} onClick={() => openModifyModal(selectedSub)}>
                         {t('admin.subscriptions.modify')}
                       </Button>
                     </div>
@@ -401,6 +492,131 @@ export default function AbonnementsPage() {
           }
         />
       </div>
+
+      {/* ─── CONFIGURE OPTIONS MODAL ────────────────────────────── */}
+      <Modal
+        isOpen={showConfigModal}
+        onClose={() => setShowConfigModal(false)}
+        title={t('admin.subscriptions.configureTitle')}
+        subtitle={t('admin.subscriptions.configureSubtitle')}
+        size="md"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setShowConfigModal(false)}>
+              {t('common.cancel') || 'Cancel'}
+            </Button>
+            <Button variant="primary" onClick={handleSaveConfig} loading={savingConfig}>
+              {t('common.save') || 'Save'}
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <FormField label={t('admin.subscriptions.defaultDiscount')}>
+            <Input
+              type="number"
+              min="0"
+              max="100"
+              step="1"
+              value={cfgDiscount}
+              onChange={(e) => setCfgDiscount(e.target.value)}
+            />
+          </FormField>
+          <div className="flex items-center justify-between py-2">
+            <span className="text-sm text-slate-700">{t('admin.subscriptions.freeShipping')}</span>
+            <button
+              onClick={() => setCfgFreeShipping(!cfgFreeShipping)}
+              className={`w-11 h-6 rounded-full transition-colors relative ${cfgFreeShipping ? 'bg-green-500' : 'bg-slate-300'}`}
+            >
+              <span className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${cfgFreeShipping ? 'right-1' : 'left-1'}`} />
+            </button>
+          </div>
+          <FormField label={t('admin.subscriptions.reminderDays')}>
+            <Input
+              type="number"
+              min="1"
+              max="30"
+              value={cfgReminderDays}
+              onChange={(e) => setCfgReminderDays(e.target.value)}
+            />
+          </FormField>
+          <FormField label={t('admin.subscriptions.maxPausesPerYear')}>
+            <Input
+              type="number"
+              min="0"
+              max="12"
+              value={cfgMaxPauses}
+              onChange={(e) => setCfgMaxPauses(e.target.value)}
+            />
+          </FormField>
+        </div>
+      </Modal>
+
+      {/* ─── MODIFY SUBSCRIPTION MODAL ──────────────────────────── */}
+      <Modal
+        isOpen={showModifyModal}
+        onClose={() => setShowModifyModal(false)}
+        title={t('admin.subscriptions.modifyTitle')}
+        subtitle={t('admin.subscriptions.modifySubtitle', { name: selectedSub?.userName || '' })}
+        size="md"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setShowModifyModal(false)}>
+              {t('common.cancel') || 'Cancel'}
+            </Button>
+            <Button variant="primary" onClick={handleSaveModify} loading={savingModify}>
+              {t('common.save') || 'Save'}
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          {selectedSub && (
+            <div className="bg-slate-50 rounded-lg p-3 mb-2">
+              <p className="font-medium text-slate-900">{selectedSub.productName}</p>
+              <p className="text-sm text-slate-500">{selectedSub.formatName}</p>
+            </div>
+          )}
+          <FormField label={t('admin.subscriptions.modifyFrequency')}>
+            <select
+              value={modFrequency}
+              onChange={(e) => setModFrequency(e.target.value)}
+              className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+            >
+              <option value="EVERY_2_MONTHS">{frequencyLabels.EVERY_2_MONTHS}</option>
+              <option value="EVERY_4_MONTHS">{frequencyLabels.EVERY_4_MONTHS}</option>
+              <option value="EVERY_6_MONTHS">{frequencyLabels.EVERY_6_MONTHS}</option>
+              <option value="EVERY_12_MONTHS">{frequencyLabels.EVERY_12_MONTHS}</option>
+            </select>
+          </FormField>
+          <FormField label={t('admin.subscriptions.modifyQuantity')}>
+            <Input
+              type="number"
+              min="1"
+              max="99"
+              value={modQuantity}
+              onChange={(e) => setModQuantity(e.target.value)}
+            />
+          </FormField>
+          <FormField label={t('admin.subscriptions.modifyDiscount')}>
+            <Input
+              type="number"
+              min="0"
+              max="100"
+              step="1"
+              value={modDiscount}
+              onChange={(e) => setModDiscount(e.target.value)}
+            />
+          </FormField>
+          <FormField label={t('admin.subscriptions.modifyNextDelivery')}>
+            <Input
+              type="date"
+              value={modNextDelivery}
+              onChange={(e) => setModNextDelivery(e.target.value)}
+            />
+          </FormField>
+        </div>
+      </Modal>
     </div>
   );
 }

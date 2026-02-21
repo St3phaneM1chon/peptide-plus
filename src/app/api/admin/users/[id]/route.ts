@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { adminUpdateUserSchema } from '@/lib/validations/user';
 
 export const GET = withAdminGuard(async (_request, { session, params }) => {
@@ -273,20 +274,16 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
     });
 
     // Audit log for user update (fire-and-forget)
-    prisma.auditLog.create({
-      data: {
-        id: `audit_update_user_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 8)}`,
-        userId: session.user.id,
-        action: 'ADMIN_UPDATE_USER',
-        entityType: 'User',
-        entityId: id,
-        details: JSON.stringify({
-          updatedFields: Object.keys(allowed),
-          changes: allowed,
-        }),
-        ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || null,
-      },
-    }).catch(console.error);
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'UPDATE_USER',
+      targetType: 'User',
+      targetId: id,
+      newValue: allowed,
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+      metadata: { updatedFields: Object.keys(allowed) },
+    }).catch(() => {});
 
     return NextResponse.json({ user: updated });
   } catch (error) {

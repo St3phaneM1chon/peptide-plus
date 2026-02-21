@@ -15,6 +15,8 @@ import { STRIPE_API_VERSION } from '@/lib/stripe';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { z } from 'zod';
+import { validateCsrf } from '@/lib/csrf-middleware';
+import { applyRate, add, multiply, subtract, convertCurrency, toCents, proportionalDiscount, clamp } from '@/lib/decimal-calculator';
 
 // KB-PP-BUILD-002: Lazy init to avoid crash when STRIPE_SECRET_KEY is absent at build time
 let _stripe: Stripe | null = null;
@@ -62,6 +64,8 @@ const checkoutSchema = z.object({
   paymentMethod: z.string().max(50).optional(),
   giftCardCode: z.string().max(50).optional().nullable(),
   giftCardDiscount: z.number().optional(),
+  researchConsentAccepted: z.boolean().optional(),
+  researchConsentTimestamp: z.string().optional(),
 });
 
 // Server-side tax calculation - all Canadian provinces/territories
@@ -87,22 +91,18 @@ function calculateServerTaxes(subtotal: number, province: string) {
   const rates = CANADIAN_TAX_RATES[province.toUpperCase()] || CANADIAN_TAX_RATES['QC'];
 
   if (rates.hst) {
-    // HST provinces (ON, NB, NL, NS, PE)
-    tvh = Math.round(subtotal * rates.hst * 100) / 100;
+    tvh = applyRate(subtotal, rates.hst);
   } else if (rates.qst) {
-    // Quebec (GST + QST)
-    tps = Math.round(subtotal * rates.gst * 100) / 100;
-    tvq = Math.round(subtotal * rates.qst * 100) / 100;
+    tps = applyRate(subtotal, rates.gst);
+    tvq = applyRate(subtotal, rates.qst);
   } else if (rates.pst || rates.rst) {
-    // BC, SK (GST + PST) and MB (GST + RST)
-    tps = Math.round(subtotal * rates.gst * 100) / 100;
-    pst = Math.round(subtotal * (rates.pst || rates.rst || 0) * 100) / 100;
+    tps = applyRate(subtotal, rates.gst);
+    pst = applyRate(subtotal, rates.pst || rates.rst || 0);
   } else {
-    // GST-only provinces/territories (AB, YT, NT, NU)
-    tps = Math.round(subtotal * rates.gst * 100) / 100;
+    tps = applyRate(subtotal, rates.gst);
   }
 
-  return { tps, tvq, tvh, pst, total: Math.round((tps + tvq + tvh + pst) * 100) / 100 };
+  return { tps, tvq, tvh, pst, total: add(tps, tvq, tvh, pst) };
 }
 
 // Server-side shipping calculation (product-type aware)
@@ -119,6 +119,12 @@ function calculateServerShipping(subtotal: number, country: string, productTypes
 
 export async function POST(request: NextRequest) {
   try {
+    // SECURITY: CSRF protection for payment mutation endpoint
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     // Fix 4: Request body size limit (1MB)
     const contentLength = request.headers.get('content-length');
     if (contentLength && parseInt(contentLength, 10) > 1_000_000) {
@@ -246,10 +252,10 @@ export async function POST(request: NextRequest) {
       }
 
       const quantity = Math.max(1, Math.floor(item.quantity));
-      serverSubtotal += verifiedPrice * quantity;
+      serverSubtotal = add(serverSubtotal, multiply(verifiedPrice, quantity));
 
       // Convert price to selected currency for Stripe display
-      const priceConverted = Math.round(verifiedPrice * exchangeRate * 100) / 100;
+      const priceConverted = convertCurrency(verifiedPrice, exchangeRate);
 
       verifiedItems.push({
         productId: product.id,
@@ -264,7 +270,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    serverSubtotal = Math.round(serverSubtotal * 100) / 100;
+    // serverSubtotal already rounded via add()
 
     // =====================================================
     // SECURITY: Validate promo code server-side
@@ -354,19 +360,19 @@ export async function POST(request: NextRequest) {
           }
 
           if (promo.type === 'PERCENTAGE') {
-            serverPromoDiscount = Math.round(serverSubtotal * (Number(promo.value) / 100) * 100) / 100;
+            serverPromoDiscount = applyRate(serverSubtotal, Number(promo.value) / 100);
           } else {
-            serverPromoDiscount = Math.min(Number(promo.value), serverSubtotal);
+            serverPromoDiscount = clamp(Number(promo.value), serverSubtotal);
           }
           if (promo.maxDiscount) {
-            serverPromoDiscount = Math.min(serverPromoDiscount, Number(promo.maxDiscount));
+            serverPromoDiscount = clamp(serverPromoDiscount, Number(promo.maxDiscount));
           }
           validatedPromoCode = singlePromoCode;
         }
       }
     }
 
-    const discountedSubtotal = Math.max(0, serverSubtotal - serverPromoDiscount);
+    const discountedSubtotal = Math.max(0, subtract(serverSubtotal, serverPromoDiscount));
 
     // =====================================================
     // BE-PAY-04: Validate gift card server-side
@@ -382,16 +388,13 @@ export async function POST(request: NextRequest) {
         const isExpired = giftCard.expiresAt && new Date() > giftCard.expiresAt;
         if (!isExpired) {
           // Cap at remaining total after promo discount
-          serverGiftCardDiscount = Math.min(
-            Number(giftCard.balance),
-            discountedSubtotal
-          );
+          serverGiftCardDiscount = clamp(Number(giftCard.balance), discountedSubtotal);
           validatedGiftCardCode = giftCard.code;
         }
       }
     }
 
-    const subtotalAfterAllDiscounts = Math.max(0, discountedSubtotal - serverGiftCardDiscount);
+    const subtotalAfterAllDiscounts = Math.max(0, subtract(discountedSubtotal, serverGiftCardDiscount));
 
     // =====================================================
     // SECURITY: Calculate taxes and shipping server-side
@@ -480,7 +483,7 @@ export async function POST(request: NextRequest) {
           description: item.formatName || undefined,
           images: item.imageUrl ? [item.imageUrl] : undefined,
         },
-        unit_amount: Math.round(item.priceConverted * 100),
+        unit_amount: toCents(item.priceConverted),
       },
       quantity: item.quantity,
     }));
@@ -491,7 +494,7 @@ export async function POST(request: NextRequest) {
         price_data: {
           currency: stripeCurrency,
           product_data: { name: `Réduction (${validatedPromoCode})` },
-          unit_amount: Math.round(serverPromoDiscount * exchangeRate * 100),
+          unit_amount: toCents(convertCurrency(serverPromoDiscount, exchangeRate)),
         },
         quantity: 1,
       });
@@ -503,20 +506,19 @@ export async function POST(request: NextRequest) {
     }
 
     // Recalculate: apply all discounts (promo + gift card) proportionally to each item
-    const totalItemDiscount = serverPromoDiscount + serverGiftCardDiscount;
+    const totalItemDiscount = add(serverPromoDiscount, serverGiftCardDiscount);
     if (totalItemDiscount > 0) {
-      const discountRatio = totalItemDiscount / serverSubtotal;
       lineItems.forEach((li) => {
         const originalAmount = li.price_data!.unit_amount!;
-        const discountAmount = Math.round(originalAmount * discountRatio);
+        const discountAmount = proportionalDiscount(originalAmount, totalItemDiscount, serverSubtotal);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Stripe line item type does not expose writable unit_amount
         (li.price_data as any).unit_amount = originalAmount - discountAmount;
       });
     }
 
     // Convert shipping and taxes to selected currency for Stripe
-    const convertedShipping = Math.round(serverShipping * exchangeRate * 100) / 100;
-    const convertedTaxTotal = Math.round(serverTaxes.total * exchangeRate * 100) / 100;
+    const convertedShipping = convertCurrency(serverShipping, exchangeRate);
+    const convertedTaxTotal = convertCurrency(serverTaxes.total, exchangeRate);
 
     // Add shipping
     if (convertedShipping > 0) {
@@ -524,7 +526,7 @@ export async function POST(request: NextRequest) {
         price_data: {
           currency: stripeCurrency,
           product_data: { name: 'Frais de livraison' },
-          unit_amount: Math.round(convertedShipping * 100),
+          unit_amount: toCents(convertedShipping),
         },
         quantity: 1,
       });
@@ -536,7 +538,7 @@ export async function POST(request: NextRequest) {
         price_data: {
           currency: stripeCurrency,
           product_data: { name: 'Taxes' },
-          unit_amount: Math.round(convertedTaxTotal * 100),
+          unit_amount: toCents(convertedTaxTotal),
         },
         quantity: 1,
       });
@@ -619,6 +621,9 @@ export async function POST(request: NextRequest) {
         currencyCode: dbCurrency!.code,
         currencyId: dbCurrency!.id,
         exchangeRate: String(exchangeRate),
+        // Legal compliance: research consent
+        researchConsentAccepted: String(body.researchConsentAccepted || false),
+        researchConsentTimestamp: body.researchConsentTimestamp || '',
       },
       shipping_address_collection: {
         allowed_countries: ['CA', 'US', 'FR', 'DE', 'GB', 'AU', 'JP', 'MX', 'CL', 'PE', 'CO'],

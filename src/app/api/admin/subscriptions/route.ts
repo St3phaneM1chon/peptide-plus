@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 
 // GET /api/admin/subscriptions - List all subscriptions with filtering
 export const GET = withAdminGuard(async (request, { session }) => {
@@ -213,6 +214,16 @@ export const POST = withAdminGuard(async (request, { session }) => {
         nextDelivery,
       },
     });
+
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'CREATE_SUBSCRIPTION',
+      targetType: 'Subscription',
+      targetId: subscription.id,
+      newValue: { userId, productId, productName: product.name, frequency: freq, quantity: quantity || 1, discount },
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json({
       subscription: {

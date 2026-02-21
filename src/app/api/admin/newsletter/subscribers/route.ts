@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { addSubscriberSchema } from '@/lib/validations/newsletter';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 
 /**
  * GET /api/admin/newsletter/subscribers
@@ -85,7 +86,7 @@ export const GET = withAdminGuard(async (request, { session: _session }) => {
  * POST /api/admin/newsletter/subscribers
  * Add a new subscriber
  */
-export const POST = withAdminGuard(async (request, { session: _session }) => {
+export const POST = withAdminGuard(async (request, { session }) => {
   try {
     const body = await request.json();
 
@@ -137,6 +138,16 @@ export const POST = withAdminGuard(async (request, { session: _session }) => {
         isActive: true,
       },
     });
+
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'CREATE_NEWSLETTER_SUBSCRIBER',
+      targetType: 'NewsletterSubscriber',
+      targetId: subscriber.id,
+      newValue: { email, source: source || 'admin' },
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json(
       { success: true, subscriber },

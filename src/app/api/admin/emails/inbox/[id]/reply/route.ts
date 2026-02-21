@@ -10,6 +10,7 @@ import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { sendEmail } from '@/lib/email/email-service';
 import { generateUnsubscribeUrl } from '@/lib/email/unsubscribe';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 
 export const POST = withAdminGuard(
   async (request: NextRequest, { session, params }: { session: { user: { id: string; name?: string; email?: string } }; params: { id: string } }) => {
@@ -114,6 +115,16 @@ export const POST = withAdminGuard(
           details: JSON.stringify({ replyId: reply.id, to, subject }),
         },
       });
+
+      logAdminAction({
+        adminUserId: session.user.id,
+        action: 'REPLY_TO_CONVERSATION',
+        targetType: 'OutboundReply',
+        targetId: reply.id,
+        newValue: { conversationId, to, subject },
+        ipAddress: getClientIpFromRequest(request),
+        userAgent: request.headers.get('user-agent') || undefined,
+      }).catch(() => {});
 
       return NextResponse.json({ success: true, data: reply });
     } catch (error) {

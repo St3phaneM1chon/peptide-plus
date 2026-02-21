@@ -75,8 +75,17 @@ export default function WebinairesPage() {
 
   // Form modal state (Create/Edit)
   const [showForm, setShowForm] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [_editingWebinar, _setEditingWebinar] = useState<Webinar | null>(null);
+  const [editingWebinar, setEditingWebinar] = useState<Webinar | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  // Form fields
+  const [formTitle, setFormTitle] = useState('');
+  const [formDescription, setFormDescription] = useState('');
+  const [formDateTime, setFormDateTime] = useState('');
+  const [formDuration, setFormDuration] = useState(60);
+  const [formHost, setFormHost] = useState('');
+  const [formMaxSeats, setFormMaxSeats] = useState(100);
+  const [formMeetingLink, setFormMeetingLink] = useState('');
 
   // ─── Data fetching ──────────────────────────────────────────
 
@@ -120,6 +129,102 @@ export default function WebinairesPage() {
   const handleSelectWebinar = useCallback((id: string) => {
     setSelectedWebinarId(id);
   }, []);
+
+  const resetForm = () => {
+    setFormTitle('');
+    setFormDescription('');
+    setFormDateTime('');
+    setFormDuration(60);
+    setFormHost('');
+    setFormMaxSeats(100);
+    setFormMeetingLink('');
+  };
+
+  const openCreateForm = () => {
+    setEditingWebinar(null);
+    resetForm();
+    setShowForm(true);
+  };
+
+  const openEditForm = (webinar: Webinar) => {
+    setEditingWebinar(webinar);
+    setFormTitle(webinar.title);
+    setFormDescription(webinar.description);
+    setFormDateTime(webinar.scheduledAt ? webinar.scheduledAt.slice(0, 16) : '');
+    setFormDuration(webinar.duration);
+    setFormHost(webinar.host);
+    setFormMaxSeats(webinar.maxAttendees);
+    setFormMeetingLink(webinar.meetingUrl || '');
+    setShowForm(true);
+  };
+
+  const closeForm = () => {
+    setShowForm(false);
+    setEditingWebinar(null);
+    resetForm();
+  };
+
+  const handleSubmitWebinar = async () => {
+    if (!formTitle.trim()) return;
+    setSubmitting(true);
+    try {
+      const isEdit = !!editingWebinar;
+      const url = isEdit
+        ? `/api/admin/webinars/${editingWebinar.id}`
+        : '/api/admin/webinars';
+      const method = isEdit ? 'PATCH' : 'POST';
+
+      const body = {
+        title: formTitle.trim(),
+        description: formDescription.trim(),
+        scheduledAt: formDateTime || null,
+        duration: formDuration,
+        speaker: formHost.trim(),
+        registrationUrl: formMeetingLink.trim() || null,
+        maxAttendees: formMaxSeats,
+        isPublished: !!formDateTime,
+      };
+
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        toast.error(data.error || t(isEdit ? 'admin.webinars.updateError' : 'admin.webinars.createError'));
+        return;
+      }
+
+      toast.success(t(isEdit ? 'admin.webinars.updateSuccess' : 'admin.webinars.createSuccess'));
+      closeForm();
+      fetchWebinars();
+    } catch {
+      toast.error(t('admin.webinars.createError'));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleCancelWebinar = async (webinar: Webinar) => {
+    if (!confirm(t('admin.webinars.confirmCancel'))) return;
+    try {
+      const res = await fetch(`/api/admin/webinars/${webinar.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isPublished: false }),
+      });
+      if (!res.ok) {
+        toast.error(t('admin.webinars.cancelError'));
+        return;
+      }
+      toast.success(t('admin.webinars.cancelSuccess'));
+      fetchWebinars();
+    } catch {
+      toast.error(t('admin.webinars.cancelError'));
+    }
+  };
 
   // ─── Filtering ──────────────────────────────────────────────
 
@@ -201,7 +306,7 @@ export default function WebinairesPage() {
             <h1 className="text-xl font-bold text-slate-900">{t('admin.webinars.title')}</h1>
             <p className="text-sm text-slate-500 mt-0.5">{t('admin.webinars.subtitle')}</p>
           </div>
-          <Button variant="primary" icon={Plus} onClick={() => setShowForm(true)}>
+          <Button variant="primary" icon={Plus} onClick={openCreateForm}>
             {t('admin.webinars.newWebinar')}
           </Button>
         </div>
@@ -250,8 +355,8 @@ export default function WebinairesPage() {
                     <div className="flex items-center gap-2">
                       {selectedWebinar.status === 'SCHEDULED' && (
                         <>
-                          <Button variant="outline" size="sm">{t('admin.webinars.editWebinar')}</Button>
-                          <Button variant="danger" size="sm">{t('admin.webinars.cancelWebinar')}</Button>
+                          <Button variant="outline" size="sm" onClick={() => openEditForm(selectedWebinar)}>{t('admin.webinars.editWebinar')}</Button>
+                          <Button variant="danger" size="sm" onClick={() => handleCancelWebinar(selectedWebinar)}>{t('admin.webinars.cancelWebinar')}</Button>
                         </>
                       )}
                     </div>
@@ -400,44 +505,82 @@ export default function WebinairesPage() {
       {/* ─── CREATE/EDIT FORM MODAL ─────────────────────────────── */}
       <Modal
         isOpen={showForm}
-        onClose={() => setShowForm(false)}
-        title={t('admin.webinars.newWebinar')}
+        onClose={closeForm}
+        title={editingWebinar ? t('admin.webinars.editTitle') : t('admin.webinars.newWebinar')}
         footer={
           <>
-            <Button variant="secondary" onClick={() => setShowForm(false)}>
+            <Button variant="secondary" onClick={closeForm}>
               {t('admin.webinars.cancelButton')}
             </Button>
-            <Button variant="primary">
-              {t('admin.webinars.create')}
+            <Button
+              variant="primary"
+              onClick={handleSubmitWebinar}
+              disabled={submitting || !formTitle.trim()}
+              loading={submitting}
+            >
+              {submitting
+                ? t('admin.webinars.submitting')
+                : editingWebinar
+                  ? t('admin.webinars.update')
+                  : t('admin.webinars.create')}
             </Button>
           </>
         }
       >
         <div className="space-y-4">
           <FormField label={t('admin.webinars.formTitle')} required>
-            <Input type="text" />
+            <Input
+              type="text"
+              value={formTitle}
+              onChange={(e) => setFormTitle(e.target.value)}
+            />
           </FormField>
           <FormField label={t('admin.webinars.formDescription')} required>
-            <Textarea rows={3} />
+            <Textarea
+              rows={3}
+              value={formDescription}
+              onChange={(e) => setFormDescription(e.target.value)}
+            />
           </FormField>
           <div className="grid grid-cols-2 gap-4">
             <FormField label={t('admin.webinars.formDateTime')} required>
-              <Input type="datetime-local" />
+              <Input
+                type="datetime-local"
+                value={formDateTime}
+                onChange={(e) => setFormDateTime(e.target.value)}
+              />
             </FormField>
             <FormField label={t('admin.webinars.formDuration')} required>
-              <Input type="number" defaultValue={60} />
+              <Input
+                type="number"
+                value={formDuration}
+                onChange={(e) => setFormDuration(parseInt(e.target.value) || 0)}
+              />
             </FormField>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <FormField label={t('admin.webinars.formHost')} required>
-              <Input type="text" />
+              <Input
+                type="text"
+                value={formHost}
+                onChange={(e) => setFormHost(e.target.value)}
+              />
             </FormField>
             <FormField label={t('admin.webinars.formMaxSeats')}>
-              <Input type="number" defaultValue={100} />
+              <Input
+                type="number"
+                value={formMaxSeats}
+                onChange={(e) => setFormMaxSeats(parseInt(e.target.value) || 0)}
+              />
             </FormField>
           </div>
           <FormField label={t('admin.webinars.formMeetingLink')}>
-            <Input type="url" placeholder={t('admin.webinars.formMeetingPlaceholder')} />
+            <Input
+              type="url"
+              value={formMeetingLink}
+              onChange={(e) => setFormMeetingLink(e.target.value)}
+              placeholder={t('admin.webinars.formMeetingPlaceholder')}
+            />
           </FormField>
         </div>
       </Modal>

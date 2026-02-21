@@ -372,7 +372,7 @@ export default function LogsPage() {
                         <p className="text-slate-900">{selectedLog.userName || '-'}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-slate-500 mb-1">User ID</p>
+                        <p className="text-xs text-slate-500 mb-1">{t('admin.logs.colUserId')}</p>
                         <p className="text-slate-700 font-mono text-sm">{selectedLog.userId || '-'}</p>
                       </div>
                       <div>
@@ -386,7 +386,7 @@ export default function LogsPage() {
                     </div>
                     {selectedLog.userAgent && (
                       <div className="mt-4">
-                        <p className="text-xs text-slate-500 mb-1">User Agent</p>
+                        <p className="text-xs text-slate-500 mb-1">{t('admin.logs.colUserAgent')}</p>
                         <p className="text-slate-600 text-sm break-all">{selectedLog.userAgent}</p>
                       </div>
                     )}

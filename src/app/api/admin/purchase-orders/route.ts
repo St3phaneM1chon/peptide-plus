@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 
 // ─── GET /api/admin/purchase-orders ─────────────────────────────────────────────
 export const GET = withAdminGuard(async (request, { session }) => {
@@ -228,6 +229,16 @@ export const POST = withAdminGuard(async (request, { session }) => {
       },
       include: { items: true },
     });
+
+    logAdminAction({
+      adminUserId: session!.user.id,
+      action: 'CREATE_PURCHASE_ORDER',
+      targetType: 'PurchaseOrder',
+      targetId: po.id,
+      newValue: { poNumber, supplierName, department, itemCount: processedItems.length, total },
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     // Serialize Decimals
     return NextResponse.json(

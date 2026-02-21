@@ -10,6 +10,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { enqueue } from '@/lib/translation';
 
 // GET /api/admin/articles/[id] - Get single article
@@ -153,6 +154,18 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
     // Auto-enqueue translation (force re-translate on update)
     enqueue.article(id, true);
 
+    // Audit log (fire-and-forget)
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'UPDATE_ARTICLE',
+      targetType: 'Article',
+      targetId: id,
+      previousValue: { title: existing.title, isPublished: existing.isPublished },
+      newValue: updateData,
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
+
     // Handle translations if provided
     if (translations && Array.isArray(translations)) {
       for (const t of translations) {
@@ -221,6 +234,17 @@ export const DELETE = withAdminGuard(async (_request, { session, params }) => {
     await prisma.article.delete({
       where: { id },
     });
+
+    // Audit log (fire-and-forget)
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'DELETE_ARTICLE',
+      targetType: 'Article',
+      targetId: id,
+      previousValue: { title: existing.title },
+      ipAddress: getClientIpFromRequest(_request),
+      userAgent: _request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json({
       success: true,

@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 
 export const POST = withAdminGuard(
   async (request: NextRequest, { session, params }: { session: { user: { id: string } }; params: { id: string } }) => {
@@ -50,6 +51,16 @@ export const POST = withAdminGuard(
           details: JSON.stringify({ noteId: note.id }),
         },
       });
+
+      logAdminAction({
+        adminUserId: session.user.id,
+        action: 'ADD_CONVERSATION_NOTE',
+        targetType: 'ConversationNote',
+        targetId: note.id,
+        newValue: { conversationId, contentPreview: content.trim().substring(0, 200) },
+        ipAddress: getClientIpFromRequest(request),
+        userAgent: request.headers.get('user-agent') || undefined,
+      }).catch(() => {});
 
       return NextResponse.json({ note });
     } catch (error) {

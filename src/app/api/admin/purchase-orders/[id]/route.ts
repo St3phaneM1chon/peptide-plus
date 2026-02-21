@@ -10,6 +10,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 
 // Valid PO statuses and allowed transitions
 const VALID_STATUSES = [
@@ -346,6 +347,17 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
       },
     });
 
+    logAdminAction({
+      adminUserId: session!.user.id,
+      action: 'UPDATE_PURCHASE_ORDER',
+      targetType: 'PurchaseOrder',
+      targetId: id,
+      previousValue: { status: po.status, supplierName: po.supplierName },
+      newValue: updateData,
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
+
     return NextResponse.json(
       serializePO(updated as unknown as Record<string, unknown>)
     );
@@ -389,6 +401,16 @@ export const DELETE = withAdminGuard(async (_request, { session, params }) => {
     await prisma.purchaseOrder.delete({
       where: { id },
     });
+
+    logAdminAction({
+      adminUserId: session!.user.id,
+      action: 'DELETE_PURCHASE_ORDER',
+      targetType: 'PurchaseOrder',
+      targetId: id,
+      previousValue: { poNumber: po.poNumber, status: po.status },
+      ipAddress: getClientIpFromRequest(_request),
+      userAgent: _request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json({
       success: true,

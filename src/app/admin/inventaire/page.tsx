@@ -285,10 +285,11 @@ export default function InventairePage() {
             <p className="text-sm text-slate-500 mt-0.5">{t('admin.inventory.subtitle')}</p>
           </div>
           <div className="flex items-center gap-2">
-            <label className="cursor-pointer">
-              <Button variant="secondary" icon={Upload} size="sm" onClick={() => {}}>
+            <label className="cursor-pointer inline-block">
+              <span className="inline-flex items-center justify-center font-medium rounded-lg border transition-colors duration-150 bg-white text-slate-700 hover:bg-slate-50 active:bg-slate-100 border-slate-300 shadow-sm h-8 px-3 text-xs gap-1.5">
+                <Upload className="w-4 h-4" />
                 {t('admin.inventory.importCsv')}
-              </Button>
+              </span>
               <input
                 type="file"
                 accept=".csv"
@@ -308,10 +309,13 @@ export default function InventairePage() {
                       toast.error(data.error || t('admin.inventory.importError') || 'Import failed');
                       return;
                     }
-                    toast.success(t('admin.inventory.importSuccess') || 'Inventory imported successfully');
+                    const result = await res.json();
+                    toast.success(
+                      (t('admin.inventory.importSuccess') || 'Inventory imported successfully') +
+                      (result.imported ? ` (${result.imported} items)` : '')
+                    );
                     fetchInventory();
                   } catch {
-                    // TODO: Create API endpoint POST /api/admin/inventory/import
                     toast.error(t('admin.inventory.importError') || 'Import failed');
                   }
                   e.target.value = '';

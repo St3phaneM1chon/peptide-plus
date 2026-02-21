@@ -12,6 +12,7 @@ import { withAdminGuard } from '@/lib/admin-api-guard';
 import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
 import { randomUUID } from 'crypto';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 
 const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads');
 
@@ -217,6 +218,16 @@ export const POST = withAdminGuard(async (request, { session }) => {
 
       uploaded.push(media);
     }
+
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'UPLOAD_MEDIA',
+      targetType: 'Media',
+      targetId: uploaded[0]?.id || 'batch',
+      newValue: { folder, count: uploaded.length, files: uploaded.map(m => m.originalName) },
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json(
       { media: uploaded, count: uploaded.length },

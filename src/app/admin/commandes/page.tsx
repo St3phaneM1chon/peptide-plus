@@ -194,6 +194,9 @@ export default function OrdersPage() {
   const [searchValue, setSearchValue] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
+  // Email state
+  const [sendingEmail, setSendingEmail] = useState(false);
+
   // Refund states
   const [showRefundModal, setShowRefundModal] = useState(false);
   const [refundAmount, setRefundAmount] = useState('');
@@ -421,6 +424,149 @@ export default function OrdersPage() {
     }
   };
 
+  // ─── Export CSV ────────────────────────────────────────
+
+  const handleExportCsv = useCallback(() => {
+    if (orders.length === 0) {
+      toast.error(t('admin.commandes.noOrdersToExport'));
+      return;
+    }
+
+    const headers = [
+      'Order #', 'Date', 'Customer', 'Email', 'Status', 'Payment',
+      'Subtotal', 'Shipping', 'Discount', 'Tax', 'Total', 'Currency',
+      'Carrier', 'Tracking', 'Items',
+    ];
+
+    const rows = orders.map((o) => [
+      o.orderNumber,
+      new Date(o.createdAt).toISOString().slice(0, 10),
+      o.userName || o.shippingName || '',
+      o.userEmail || '',
+      o.status,
+      o.paymentStatus,
+      o.subtotal.toFixed(2),
+      o.shippingCost.toFixed(2),
+      o.discount.toFixed(2),
+      o.tax.toFixed(2),
+      o.total.toFixed(2),
+      o.currencyCode || 'CAD',
+      o.carrier || '',
+      o.trackingNumber || '',
+      String(o.items?.length || 0),
+    ]);
+
+    const BOM = '\uFEFF';
+    const csv =
+      BOM +
+      [headers, ...rows]
+        .map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(','))
+        .join('\n');
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `orders-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(t('admin.commandes.exportCsvSuccess'));
+  }, [orders, t]);
+
+  // ─── Send Confirmation Email ──────────────────────────
+
+  const handleSendConfirmationEmail = useCallback(async () => {
+    if (!selectedOrder) return;
+    setSendingEmail(true);
+    try {
+      const res = await fetch('/api/emails/send-order-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId: selectedOrder.id,
+          emailType: 'confirmation',
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        toast.error(data.error || t('admin.commandes.emailError'));
+        return;
+      }
+      toast.success(t('admin.commandes.emailSent'));
+    } catch {
+      toast.error(t('admin.commandes.emailError'));
+    } finally {
+      setSendingEmail(false);
+    }
+  }, [selectedOrder, t]);
+
+  // ─── Print Delivery Slip ──────────────────────────────
+
+  const handlePrintDeliverySlip = useCallback(() => {
+    if (!selectedOrder) return;
+
+    const itemsHtml = selectedOrder.items
+      .map(
+        (item) =>
+          `<tr>
+            <td style="padding:6px 12px;border-bottom:1px solid #e2e8f0">${item.productName}${item.formatName ? ` <small style="color:#64748b">(${item.formatName})</small>` : ''}</td>
+            <td style="padding:6px 12px;border-bottom:1px solid #e2e8f0;text-align:center">${item.quantity}</td>
+          </tr>`
+      )
+      .join('');
+
+    const html = `<!DOCTYPE html>
+<html><head><title>${t('admin.commandes.printDeliverySlipTitle')} - ${selectedOrder.orderNumber}</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 700px; margin: 0 auto; padding: 32px; color: #1e293b; }
+  h1 { font-size: 20px; margin-bottom: 4px; }
+  .meta { color: #64748b; font-size: 13px; margin-bottom: 24px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
+  .section h3 { font-size: 13px; text-transform: uppercase; color: #64748b; margin-bottom: 8px; letter-spacing: 0.05em; }
+  .section p { margin: 2px 0; font-size: 14px; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
+  th { text-align: left; padding: 8px 12px; background: #f8fafc; border-bottom: 2px solid #e2e8f0; font-size: 12px; text-transform: uppercase; color: #64748b; }
+  .notes { background: #f8fafc; padding: 12px; border-radius: 6px; font-size: 13px; }
+  @media print { body { padding: 0; } }
+</style></head><body>
+<h1>${t('admin.commandes.printDeliverySlipTitle')}</h1>
+<p class="meta">#${selectedOrder.orderNumber} &mdash; ${new Date(selectedOrder.createdAt).toLocaleDateString(locale)}</p>
+<div class="grid">
+  <div class="section">
+    <h3>${t('admin.commandes.printShipTo')}</h3>
+    <p><strong>${selectedOrder.shippingName}</strong></p>
+    <p>${selectedOrder.shippingAddress1}</p>
+    <p>${selectedOrder.shippingCity}, ${selectedOrder.shippingState} ${selectedOrder.shippingPostal}</p>
+    <p>${selectedOrder.shippingCountry}</p>
+  </div>
+  <div class="section">
+    <h3>${t('admin.commandes.customerTitle')}</h3>
+    <p>${selectedOrder.userName || ''}</p>
+    <p>${selectedOrder.userEmail || ''}</p>
+    ${selectedOrder.carrier ? `<p style="margin-top:12px"><strong>${t('admin.commandes.carrierLabel')}:</strong> ${selectedOrder.carrier}</p>` : ''}
+    ${selectedOrder.trackingNumber ? `<p><strong>${t('admin.commandes.trackingNumberLabel')}:</strong> ${selectedOrder.trackingNumber}</p>` : ''}
+  </div>
+</div>
+<table>
+  <thead><tr>
+    <th>${t('admin.commandes.colProduct')}</th>
+    <th style="text-align:center">${t('admin.commandes.colQty')}</th>
+  </tr></thead>
+  <tbody>${itemsHtml}</tbody>
+</table>
+${selectedOrder.adminNotes ? `<div class="notes"><strong>${t('admin.commandes.printNotes')}:</strong><br/>${selectedOrder.adminNotes.replace(/\n/g, '<br/>')}</div>` : ''}
+</body></html>`;
+
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(html);
+      printWindow.document.close();
+      printWindow.onload = () => {
+        printWindow.print();
+      };
+    }
+  }, [selectedOrder, t, locale]);
+
   // ─── Filtering ──────────────────────────────────────────────
 
   const filteredOrders = useMemo(() => {
@@ -498,7 +644,7 @@ export default function OrdersPage() {
             <h1 className="text-xl font-bold text-slate-900">{t('admin.commandes.title')}</h1>
             <p className="text-sm text-slate-500 mt-0.5">{t('admin.commandes.subtitle')}</p>
           </div>
-          <Button variant="secondary" icon={Download} size="sm">
+          <Button variant="secondary" icon={Download} size="sm" onClick={handleExportCsv}>
             {t('admin.commandes.exportCsv')}
           </Button>
         </div>
@@ -544,10 +690,10 @@ export default function OrdersPage() {
                   backLabel: t('admin.commandes.title'),
                   actions: (
                     <div className="flex items-center gap-2">
-                      <Button variant="ghost" size="sm" icon={Mail}>
-                        {t('admin.commandes.sendConfirmationEmail')}
+                      <Button variant="ghost" size="sm" icon={Mail} onClick={handleSendConfirmationEmail} disabled={sendingEmail}>
+                        {sendingEmail ? t('admin.commandes.emailSending') : t('admin.commandes.sendConfirmationEmail')}
                       </Button>
-                      <Button variant="ghost" size="sm" icon={Printer}>
+                      <Button variant="ghost" size="sm" icon={Printer} onClick={handlePrintDeliverySlip}>
                         {t('admin.commandes.printDeliverySlip')}
                       </Button>
                     </div>

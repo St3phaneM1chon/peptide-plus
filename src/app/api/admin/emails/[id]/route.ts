@@ -10,6 +10,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 
 // GET /api/admin/emails/[id] - Get a single template
 export const GET = withAdminGuard(async (_request, { session: _session, params }) => {
@@ -35,7 +36,7 @@ export const GET = withAdminGuard(async (_request, { session: _session, params }
 });
 
 // PATCH /api/admin/emails/[id] - Update an email template
-export const PATCH = withAdminGuard(async (request, { session: _session, params }) => {
+export const PATCH = withAdminGuard(async (request, { session, params }) => {
   try {
     const id = params!.id;
     const body = await request.json();
@@ -77,6 +78,17 @@ export const PATCH = withAdminGuard(async (request, { session: _session, params 
       data,
     });
 
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'UPDATE_EMAIL_TEMPLATE',
+      targetType: 'EmailTemplate',
+      targetId: id,
+      previousValue: { name: existing.name, subject: existing.subject, isActive: existing.isActive },
+      newValue: data,
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
+
     return NextResponse.json({ template });
   } catch (error) {
     console.error('Admin emails PATCH [id] error:', error);
@@ -88,7 +100,7 @@ export const PATCH = withAdminGuard(async (request, { session: _session, params 
 });
 
 // DELETE /api/admin/emails/[id] - Delete an email template
-export const DELETE = withAdminGuard(async (_request, { session: _session, params }) => {
+export const DELETE = withAdminGuard(async (_request, { session, params }) => {
   try {
     const id = params!.id;
 
@@ -103,6 +115,16 @@ export const DELETE = withAdminGuard(async (_request, { session: _session, param
     await prisma.emailTemplate.delete({
       where: { id },
     });
+
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'DELETE_EMAIL_TEMPLATE',
+      targetType: 'EmailTemplate',
+      targetId: id,
+      previousValue: { name: existing.name, subject: existing.subject },
+      ipAddress: getClientIpFromRequest(_request),
+      userAgent: _request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { enqueue } from '@/lib/translation';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 
 // GET /api/admin/content/faqs - List all FAQs
 export const GET = withAdminGuard(async (_request, { session }) => {
@@ -41,6 +42,16 @@ export const POST = withAdminGuard(async (request, { session }) => {
   // Auto-enqueue translation for all 21 locales
   enqueue.faq(faq.id);
 
+  logAdminAction({
+    adminUserId: session.user.id,
+    action: 'CREATE_FAQ',
+    targetType: 'Faq',
+    targetId: faq.id,
+    newValue: { question: question.substring(0, 200), category: category || 'general', isPublished: isPublished ?? true },
+    ipAddress: getClientIpFromRequest(request),
+    userAgent: request.headers.get('user-agent') || undefined,
+  }).catch(() => {});
+
   return NextResponse.json({ faq }, { status: 201 });
 });
 
@@ -67,6 +78,16 @@ export const PUT = withAdminGuard(async (request, { session }) => {
   // Auto-enqueue translation (force re-translate on update)
   enqueue.faq(faq.id, true);
 
+  logAdminAction({
+    adminUserId: session.user.id,
+    action: 'UPDATE_FAQ',
+    targetType: 'Faq',
+    targetId: id,
+    newValue: { question: question?.substring(0, 200), category, isPublished },
+    ipAddress: getClientIpFromRequest(request),
+    userAgent: request.headers.get('user-agent') || undefined,
+  }).catch(() => {});
+
   return NextResponse.json({ faq });
 });
 
@@ -80,5 +101,15 @@ export const DELETE = withAdminGuard(async (request, { session }) => {
   }
 
   await prisma.faq.delete({ where: { id } });
+
+  logAdminAction({
+    adminUserId: session.user.id,
+    action: 'DELETE_FAQ',
+    targetType: 'Faq',
+    targetId: id,
+    ipAddress: getClientIpFromRequest(request),
+    userAgent: request.headers.get('user-agent') || undefined,
+  }).catch(() => {});
+
   return NextResponse.json({ success: true });
 });

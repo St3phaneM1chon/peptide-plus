@@ -7,6 +7,8 @@ import { ChevronDown, ChevronRight } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
 import { useAdminLayout } from '@/lib/admin/admin-layout-context';
 import { useAdminNotifications } from '@/hooks/useAdminNotifications';
+import { useNavPages } from '@/hooks/useNavPages';
+import ChatPreview from './ChatPreview';
 import { folderSections } from '@/lib/admin/outlook-nav';
 import type { NavFolderGroup, NavFolderItem } from '@/lib/admin/outlook-nav';
 
@@ -59,7 +61,7 @@ function FolderGroup({
               ? <ChevronDown className="w-3 h-3 flex-shrink-0" />
               : <ChevronRight className="w-3 h-3 flex-shrink-0" />
           )}
-          <span>{t(group.labelKey)}</span>
+          <span>{group.labelKey?.startsWith('_dynamic_:') ? group.labelKey.slice(10) : t(group.labelKey)}</span>
         </button>
       )}
 
@@ -129,7 +131,7 @@ function FolderItem({
         aria-current={isActive ? 'page' : undefined}
       >
         <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-sky-700' : 'text-slate-400 group-hover:text-slate-500'}`} />
-        <span className="flex-1 truncate">{t(item.labelKey)}</span>
+        <span className="flex-1 truncate">{item.labelKey.startsWith('_dynamic_:') ? item.labelKey.slice(10) : t(item.labelKey)}</span>
 
         {/* Badge */}
         {badgeCount > 0 && (
@@ -180,9 +182,14 @@ export default function FolderPane() {
   const { t, dir } = useI18n();
   const { activeRailId, toggleFolderPane } = useAdminLayout();
   const badgeValues = useBadgeValues();
+  const dynamicGroups = useNavPages(activeRailId);
 
   const section = folderSections[activeRailId];
   if (!section) return null;
+
+  const allGroups = dynamicGroups.length > 0
+    ? [...section.groups, ...dynamicGroups]
+    : section.groups;
 
   return (
     <aside
@@ -207,7 +214,7 @@ export default function FolderPane() {
 
       {/* Scrollable tree */}
       <nav className="flex-1 overflow-y-auto outlook-scroll px-2 py-2">
-        {section.groups.map((group, idx) => (
+        {allGroups.map((group, idx) => (
           <FolderGroup
             key={group.labelKey ?? `group-${idx}`}
             group={group}
@@ -217,6 +224,9 @@ export default function FolderPane() {
           />
         ))}
       </nav>
+
+      {/* Chat messages preview widget */}
+      <ChatPreview />
     </aside>
   );
 }

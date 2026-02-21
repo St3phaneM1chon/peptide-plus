@@ -6,6 +6,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { prisma } from '@/lib/db';
 import { stripHtml, stripControlChars } from '@/lib/sanitize';
 
@@ -46,6 +47,16 @@ export const POST = withAdminGuard(async (request: NextRequest, { session, param
         repliedAt: new Date(),
       },
     });
+
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'RESPOND_TO_REVIEW',
+      targetType: 'Review',
+      targetId: id,
+      newValue: { reply: response.substring(0, 200) },
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json({ review: updated });
   } catch (error) {

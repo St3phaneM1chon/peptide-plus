@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 
 export const POST = withAdminGuard(async (request: NextRequest, { session, params }) => {
   try {
@@ -24,7 +25,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session, param
       return NextResponse.json({ error: 'Points insuffisants' }, { status: 400 });
     }
 
-    // Update user points, create transaction, and audit log in a single transaction
+    // Update user points and create transaction in a single transaction
     const [updatedUser, transaction] = await prisma.$transaction([
       prisma.user.update({
         where: { id },
@@ -42,18 +43,19 @@ export const POST = withAdminGuard(async (request: NextRequest, { session, param
           balanceAfter: newPoints,
         },
       }),
-      prisma.auditLog.create({
-        data: {
-          id: `audit_points_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 8)}`,
-          userId: session.user.id,
-          action: 'ADMIN_POINTS_ADJUSTMENT',
-          entityType: 'User',
-          entityId: id,
-          details: JSON.stringify({ amount, reason, newBalance: newPoints }),
-          ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || null,
-        },
-      }),
     ]);
+
+    // Audit log for points adjustment (fire-and-forget)
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'ADJUST_USER_POINTS',
+      targetType: 'User',
+      targetId: id,
+      previousValue: { loyaltyPoints: user.loyaltyPoints },
+      newValue: { loyaltyPoints: newPoints, amount, reason },
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json({
       user: updatedUser,

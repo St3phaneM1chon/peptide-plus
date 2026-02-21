@@ -21,6 +21,7 @@ model Account {
   scope             String?
   id_token          String?
   session_state     String?
+  updatedAt         DateTime @updatedAt
   user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
@@ -41,6 +42,7 @@ model AccountingAlert {
   resolvedAt DateTime?
   resolvedBy String?
   createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 
   @@index([createdAt])
   @@index([readAt])
@@ -69,7 +71,7 @@ model AccountingPeriod {
   closedBy         String?
   closingChecklist String?
   createdAt        DateTime  @default(now())
-  updatedAt        DateTime
+  updatedAt        DateTime  @updatedAt
 
   @@index([startDate])
   @@index([status])
@@ -116,7 +118,7 @@ model AccountingSettings {
   // Document Retention Policy
   blockDeletionDuringRetention Boolean @default(true)
 
-  updatedAt DateTime
+  updatedAt DateTime @updatedAt
 }
 
 model Ambassador {
@@ -133,7 +135,7 @@ model Ambassador {
   tier           String                 @default("BRONZE")
   joinedAt       DateTime               @default(now())
   createdAt      DateTime               @default(now())
-  updatedAt      DateTime
+  updatedAt      DateTime               @updatedAt
   user           User?                  @relation(fields: [userId], references: [id])
   commissions    AmbassadorCommission[]
   payouts        AmbassadorPayout[]
@@ -155,6 +157,7 @@ model AmbassadorCommission {
   paidOutAt        DateTime?
   payoutId         String?
   createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
   ambassador       Ambassador        @relation(fields: [ambassadorId], references: [id], onDelete: Cascade)
   payout           AmbassadorPayout? @relation(fields: [payoutId], references: [id])
 
@@ -173,6 +176,7 @@ model AmbassadorPayout {
   notes         String?
   processedById String?
   createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
   commissions   AmbassadorCommission[]
   ambassador    Ambassador             @relation(fields: [ambassadorId], references: [id], onDelete: Cascade)
 
@@ -198,7 +202,7 @@ model Article {
   metaTitle       String?
   metaDescription String?
   createdAt       DateTime             @default(now())
-  updatedAt       DateTime
+  updatedAt       DateTime             @updatedAt
   translations    ArticleTranslation[]
 
   @@index([category])
@@ -218,7 +222,7 @@ model ArticleTranslation {
   translatedBy    String?            @default("gpt-4o-mini")
   isApproved      Boolean            @default(false)
   createdAt       DateTime           @default(now())
-  updatedAt       DateTime
+  updatedAt       DateTime           @updatedAt
   qualityLevel    TranslationQuality @default(draft)
   article         Article            @relation(fields: [articleId], references: [id], onDelete: Cascade)
 
@@ -237,6 +241,7 @@ model AuditLog {
   ipAddress  String?
   userAgent  String?
   createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   @@index([action])
   @@index([action, createdAt])
@@ -259,7 +264,7 @@ model BankAccount {
   isActive       Boolean           @default(true)
   isDefault      Boolean           @default(false)
   createdAt      DateTime          @default(now())
-  updatedAt      DateTime
+  updatedAt      DateTime          @updatedAt
   transactions   BankTransaction[]
 
   @@index([type])
@@ -311,7 +316,7 @@ model BlogPost {
   metaTitle       String?
   metaDescription String?
   createdAt       DateTime              @default(now())
-  updatedAt       DateTime
+  updatedAt       DateTime              @updatedAt
   translations    BlogPostTranslation[]
 
   @@index([category])
@@ -332,7 +337,7 @@ model BlogPostTranslation {
   translatedBy    String?            @default("gpt-4o-mini")
   isApproved      Boolean            @default(false)
   createdAt       DateTime           @default(now())
-  updatedAt       DateTime
+  updatedAt       DateTime           @updatedAt
   qualityLevel    TranslationQuality @default(draft)
   blogPost        BlogPost           @relation(fields: [blogPostId], references: [id], onDelete: Cascade)
 
@@ -347,7 +352,7 @@ model Budget {
   year      Int
   isActive  Boolean      @default(true)
   createdAt DateTime     @default(now())
-  updatedAt DateTime
+  updatedAt DateTime     @updatedAt
   lines     BudgetLine[]
 
   @@index([year])
@@ -373,7 +378,7 @@ model BudgetLine {
   december    Decimal  @default(0) @db.Decimal(12, 2)
   total       Decimal  @default(0) @db.Decimal(12, 2)
   createdAt   DateTime @default(now())
-  updatedAt   DateTime
+  updatedAt   DateTime @updatedAt
   budget      Budget   @relation(fields: [budgetId], references: [id], onDelete: Cascade)
 
   @@index([accountCode])
@@ -389,7 +394,7 @@ model Bundle {
   discount    Decimal      @default(0) @db.Decimal(5, 2)
   isActive    Boolean      @default(true)
   createdAt   DateTime     @default(now())
-  updatedAt   DateTime
+  updatedAt   DateTime     @updatedAt
   items       BundleItem[]
 
   @@index([isActive])
@@ -415,7 +420,7 @@ model Cart {
   promoCodeId  String?
   expiresAt    DateTime?
   createdAt    DateTime   @default(now())
-  updatedAt    DateTime
+  updatedAt    DateTime   @updatedAt
   items        CartItem[]
 
   @@index([sessionId])
@@ -430,7 +435,7 @@ model CartItem {
   quantity   Int      @default(1)
   priceAtAdd Decimal  @db.Decimal(10, 2)
   createdAt  DateTime @default(now())
-  updatedAt  DateTime
+  updatedAt  DateTime @updatedAt
   cart       Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
 
   @@unique([cartId, productId, formatId])
@@ -448,7 +453,7 @@ model Category {
   isActive     Boolean               @default(true)
   parentId     String?
   createdAt    DateTime              @default(now())
-  updatedAt    DateTime
+  updatedAt    DateTime              @updatedAt
   parent       Category?             @relation("CategoryHierarchy", fields: [parentId], references: [id])
   children     Category[]            @relation("CategoryHierarchy")
   translations CategoryTranslation[]
@@ -467,7 +472,7 @@ model CategoryTranslation {
   translatedBy String?            @default("gpt-4o-mini")
   isApproved   Boolean            @default(false)
   createdAt    DateTime           @default(now())
-  updatedAt    DateTime
+  updatedAt    DateTime           @updatedAt
   qualityLevel TranslationQuality @default(draft)
   category     Category           @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
@@ -497,7 +502,7 @@ model ChartOfAccount {
   deductiblePercent  Int? // 100 = fully, 50 = meals, 0 = non-deductible
   isContra           Boolean          @default(false)
   createdAt          DateTime         @default(now())
-  updatedAt          DateTime
+  updatedAt          DateTime         @updatedAt
   parent             ChartOfAccount?  @relation("ChartOfAccountToChartOfAccount", fields: [parentId], references: [id])
   children           ChartOfAccount[] @relation("ChartOfAccountToChartOfAccount")
   journalLines       JournalLine[]
@@ -525,7 +530,7 @@ model ChatConversation {
   ipCountry       String?
   currentPage     String?
   createdAt       DateTime      @default(now())
-  updatedAt       DateTime
+  updatedAt       DateTime      @updatedAt
   lastMessageAt   DateTime      @default(now())
   closedAt        DateTime?
   messages        ChatMessage[]
@@ -548,6 +553,10 @@ model ChatMessage {
   isRead          Boolean          @default(false)
   isFromBot       Boolean          @default(false)
   metadata        String?
+  type            ChatMessageType  @default(TEXT)
+  attachmentUrl   String?
+  attachmentName  String?
+  attachmentSize  Int?
   createdAt       DateTime         @default(now())
   conversation    ChatConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 
@@ -567,7 +576,7 @@ model ChatSettings {
   notifyOnEscalation Boolean  @default(true)
   widgetColor        String   @default("#f97316")
   widgetPosition     String   @default("bottom-right")
-  updatedAt          DateTime
+  updatedAt          DateTime @updatedAt
 }
 
 model ClientReference {
@@ -580,7 +589,7 @@ model ClientReference {
   isPublished Boolean  @default(true)
   sortOrder   Int      @default(0)
   createdAt   DateTime @default(now())
-  updatedAt   DateTime
+  updatedAt   DateTime @updatedAt
 
   @@index([industry])
   @@index([isPublished])
@@ -600,7 +609,7 @@ model Company {
   ownerId        String            @unique
   isActive       Boolean           @default(true)
   createdAt      DateTime          @default(now())
-  updatedAt      DateTime
+  updatedAt      DateTime          @updatedAt
   owner          User              @relation(fields: [ownerId], references: [id])
   customers      CompanyCustomer[]
   purchases      Purchase[]
@@ -633,7 +642,7 @@ model Conversation {
   lastMessageAt DateTime           @default(now())
   unreadCount   Int                @default(1)
   createdAt     DateTime           @default(now())
-  updatedAt     DateTime
+  updatedAt     DateTime           @updatedAt
   assignedTo    User?              @relation("Conversation_assignedToIdToUser", fields: [assignedToId], references: [id])
   user          User               @relation("Conversation_userIdToUser", fields: [userId], references: [id], onDelete: Cascade)
   messages      Message[]
@@ -656,7 +665,7 @@ model CourseAccess {
   certificateNumber   String?
   certificateIssuedAt DateTime?
   createdAt           DateTime  @default(now())
-  updatedAt           DateTime
+  updatedAt           DateTime  @updatedAt
   product             Product   @relation(fields: [productId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   purchase            Purchase  @relation(fields: [purchaseId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   user                User      @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -687,7 +696,7 @@ model CreditNote {
   voidedBy         String?
   journalEntryId   String?
   createdAt        DateTime         @default(now())
-  updatedAt        DateTime
+  updatedAt        DateTime         @updatedAt
   deletedAt        DateTime?
   taxPst           Decimal          @default(0) @db.Decimal(12, 2)
   invoice          CustomerInvoice? @relation(fields: [invoiceId], references: [id])
@@ -709,8 +718,10 @@ model Currency {
   isDefault     Boolean  @default(false)
   isActive      Boolean  @default(true)
   createdAt     DateTime @default(now())
-  updatedAt     DateTime
+  updatedAt     DateTime @updatedAt
   orders        Order[]
+
+  @@index([code])
 }
 
 model CustomerInvoice {
@@ -786,7 +797,7 @@ model Discount {
   badgeColor   String?
   isActive     Boolean      @default(true)
   createdAt    DateTime     @default(now())
-  updatedAt    DateTime
+  updatedAt    DateTime     @updatedAt
 
   @@index([categoryId])
   @@index([isActive])
@@ -817,7 +828,7 @@ model EmailTemplate {
   isActive    Boolean  @default(true)
   locale      String   @default("fr")
   createdAt   DateTime @default(now())
-  updatedAt   DateTime
+  updatedAt   DateTime @updatedAt
 }
 
 model Expense {
@@ -886,7 +897,7 @@ model Faq {
   sortOrder    Int              @default(0)
   isPublished  Boolean          @default(true)
   createdAt    DateTime         @default(now())
-  updatedAt    DateTime
+  updatedAt    DateTime         @updatedAt
   translations FaqTranslation[]
 
   @@index([category])
@@ -900,7 +911,7 @@ model FaqTranslation {
   question     String
   answer       String
   createdAt    DateTime           @default(now())
-  updatedAt    DateTime
+  updatedAt    DateTime           @updatedAt
   contentHash  String?
   translatedBy String?            @default("gpt-4o-mini")
   isApproved   Boolean            @default(false)
@@ -966,7 +977,7 @@ model Guide {
   locale        String             @default("en")
   downloadCount Int                @default(0)
   createdAt     DateTime           @default(now())
-  updatedAt     DateTime
+  updatedAt     DateTime           @updatedAt
   translations  GuideTranslation[]
 
   @@index([category])
@@ -981,7 +992,7 @@ model GuideTranslation {
   title        String?
   description  String?
   createdAt    DateTime           @default(now())
-  updatedAt    DateTime
+  updatedAt    DateTime           @updatedAt
   contentHash  String?
   translatedBy String?            @default("gpt-4o-mini")
   isApproved   Boolean            @default(false)
@@ -1016,7 +1027,7 @@ model HeroSlide {
   startDate        DateTime?
   endDate          DateTime?
   createdAt        DateTime               @default(now())
-  updatedAt        DateTime
+  updatedAt        DateTime               @updatedAt
   translations     HeroSlideTranslation[]
 
   @@index([isActive, sortOrder])
@@ -1033,7 +1044,7 @@ model HeroSlideTranslation {
   cta2Text     String?
   statsJson    String?
   createdAt    DateTime           @default(now())
-  updatedAt    DateTime
+  updatedAt    DateTime           @updatedAt
   contentHash  String?
   translatedBy String?            @default("gpt-4o-mini")
   isApproved   Boolean            @default(false)
@@ -1105,7 +1116,7 @@ model JournalEntry {
   voidReason   String?
   attachments  String?
   createdAt    DateTime           @default(now())
-  updatedAt    DateTime
+  updatedAt    DateTime           @updatedAt
   deletedAt    DateTime?
   currency     String             @default("CAD")
   exchangeRate Decimal            @default(1.000000) @db.Decimal(10, 6)
@@ -1168,7 +1179,7 @@ model Media {
   folder       String   @default("general")
   uploadedBy   String?
   createdAt    DateTime @default(now())
-  updatedAt    DateTime
+  updatedAt    DateTime @updatedAt
 
   @@index([folder])
   @@index([mimeType])
@@ -1203,7 +1214,7 @@ model Module {
   duration    Int?
   contentUrl  String?
   createdAt   DateTime @default(now())
-  updatedAt   DateTime
+  updatedAt   DateTime @updatedAt
   grades      Grade[]
   product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
@@ -1224,7 +1235,7 @@ model NewsArticle {
   publishedAt  DateTime?
   locale       String                   @default("en")
   createdAt    DateTime                 @default(now())
-  updatedAt    DateTime
+  updatedAt    DateTime                 @updatedAt
   translations NewsArticleTranslation[]
 
   @@index([isPublished])
@@ -1240,7 +1251,7 @@ model NewsArticleTranslation {
   excerpt       String?
   content       String?
   createdAt     DateTime           @default(now())
-  updatedAt     DateTime
+  updatedAt     DateTime           @updatedAt
   contentHash   String?
   translatedBy  String?            @default("gpt-4o-mini")
   isApproved    Boolean            @default(false)
@@ -1249,6 +1260,7 @@ model NewsArticleTranslation {
 
   @@unique([newsArticleId, locale])
   @@index([newsArticleId])
+  @@index([locale])
 }
 
 model NewsletterSubscriber {
@@ -1278,7 +1290,7 @@ model NotificationPreference {
   birthdayOffers Boolean  @default(true)
   loyaltyUpdates Boolean  @default(true)
   createdAt      DateTime @default(now())
-  updatedAt      DateTime
+  updatedAt      DateTime @updatedAt
   user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
@@ -1318,7 +1330,7 @@ model Order {
   customerNotes         String?
   adminNotes            String?
   createdAt             DateTime        @default(now())
-  updatedAt             DateTime
+  updatedAt             DateTime        @updatedAt
   taxTps                Decimal         @default(0) @db.Decimal(10, 2)
   taxTvh                Decimal         @default(0) @db.Decimal(10, 2)
   taxTvq                Decimal         @default(0) @db.Decimal(10, 2)
@@ -1410,7 +1422,7 @@ model Page {
   isPublished     Boolean           @default(false)
   publishedAt     DateTime?
   createdAt       DateTime          @default(now())
-  updatedAt       DateTime
+  updatedAt       DateTime          @updatedAt
   createdBy       String?
   template        String            @default("default")
   translations    PageTranslation[]
@@ -1428,7 +1440,7 @@ model PageTranslation {
   metaTitle       String?
   metaDescription String?
   createdAt       DateTime           @default(now())
-  updatedAt       DateTime
+  updatedAt       DateTime           @updatedAt
   contentHash     String?
   translatedBy    String?            @default("gpt-4o-mini")
   isApproved      Boolean            @default(false)
@@ -1461,7 +1473,7 @@ model PaymentMethodConfig {
   minAmount   Decimal? @db.Decimal(10, 2)
   maxAmount   Decimal? @db.Decimal(10, 2)
   createdAt   DateTime @default(now())
-  updatedAt   DateTime
+  updatedAt   DateTime @updatedAt
 
   @@unique([countryCode, methodType])
   @@index([countryCode, isActive])
@@ -1490,7 +1502,7 @@ model PermissionGroup {
   color       String?
   isActive    Boolean                     @default(true)
   createdAt   DateTime                    @default(now())
-  updatedAt   DateTime
+  updatedAt   DateTime                    @updatedAt
   permissions PermissionGroupPermission[]
   users       UserPermissionGroup[]
 }
@@ -1559,7 +1571,7 @@ model Product {
   isActive            Boolean              @default(true)
   isFeatured          Boolean              @default(false)
   createdAt           DateTime             @default(now())
-  updatedAt           DateTime
+  updatedAt           DateTime             @updatedAt
   allowBackorder      Boolean              @default(false)
   aminoSequence       String?
   casNumber           String?
@@ -1619,7 +1631,7 @@ model ProductFormat {
   isDefault         Boolean                    @default(false)
   isActive          Boolean                    @default(true)
   createdAt         DateTime                   @default(now())
-  updatedAt         DateTime
+  updatedAt         DateTime                   @updatedAt
   availability      StockStatus                @default(IN_STOCK)
   availableDate     DateTime?
   barcode           String?
@@ -1653,7 +1665,7 @@ model ProductFormatTranslation {
   translatedBy  String?            @default("gpt-4o-mini")
   isApproved    Boolean            @default(false)
   createdAt     DateTime           @default(now())
-  updatedAt     DateTime
+  updatedAt     DateTime           @updatedAt
   qualityLevel  TranslationQuality @default(draft)
   productFormat ProductFormat      @relation(fields: [formatId], references: [id], onDelete: Cascade)
 
@@ -1687,7 +1699,7 @@ model ProductQuestion {
   answeredBy  String?
   isPublished Boolean  @default(false)
   createdAt   DateTime @default(now())
-  updatedAt   DateTime
+  updatedAt   DateTime @updatedAt
   product     Product  @relation(fields: [productId], references: [id])
   user        User     @relation(fields: [userId], references: [id])
 
@@ -1712,7 +1724,7 @@ model ProductTranslation {
   translatedBy        String?            @default("gpt-4o-mini")
   isApproved          Boolean            @default(false)
   createdAt           DateTime           @default(now())
-  updatedAt           DateTime
+  updatedAt           DateTime           @updatedAt
   customSections      Json?
   participateResearch String?
   relatedResearch     String?
@@ -1743,7 +1755,7 @@ model PromoCode {
   categoryIds       String?
   isActive          Boolean          @default(true)
   createdAt         DateTime         @default(now())
-  updatedAt         DateTime
+  updatedAt         DateTime         @updatedAt
   usages            PromoCodeUsage[]
 
   @@index([code])
@@ -1780,7 +1792,7 @@ model Purchase {
   receiptNumber   String?        @unique
   idempotencyKey  String?        @unique
   createdAt       DateTime       @default(now())
-  updatedAt       DateTime
+  updatedAt       DateTime       @updatedAt
   courseAccess    CourseAccess?
   company         Company?       @relation(fields: [companyId], references: [id])
   product         Product        @relation(fields: [productId], references: [id])
@@ -1814,7 +1826,7 @@ model PurchaseOrder {
   orderedAt         DateTime?
   receivedAt        DateTime?
   createdAt         DateTime            @default(now())
-  updatedAt         DateTime
+  updatedAt         DateTime            @updatedAt
   items             PurchaseOrderItem[]
 
   @@index([department])
@@ -1846,7 +1858,7 @@ model QuantityDiscount {
   maxQty    Int?
   discount  Decimal  @db.Decimal(5, 2)
   createdAt DateTime @default(now())
-  updatedAt DateTime
+  updatedAt DateTime @updatedAt
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@unique([productId, minQty])
@@ -1861,7 +1873,7 @@ model QuickReply {
   sortOrder    Int                     @default(0)
   isActive     Boolean                 @default(true)
   createdAt    DateTime                @default(now())
-  updatedAt    DateTime
+  updatedAt    DateTime                @updatedAt
   translations QuickReplyTranslation[]
 
   @@index([category])
@@ -1877,7 +1889,7 @@ model QuickReplyTranslation {
   translatedBy String?            @default("gpt-4o-mini")
   isApproved   Boolean            @default(false)
   createdAt    DateTime           @default(now())
-  updatedAt    DateTime
+  updatedAt    DateTime           @updatedAt
   qualityLevel TranslationQuality @default(draft)
   quickReply   QuickReply         @relation(fields: [quickReplyId], references: [id], onDelete: Cascade)
 
@@ -1898,7 +1910,7 @@ model Referral {
   qualifiedAt   DateTime?
   rewardedAt    DateTime?
   createdAt     DateTime  @default(now())
-  updatedAt     DateTime
+  updatedAt     DateTime  @updatedAt
   referred      User      @relation("Referral_referredIdToUser", fields: [referredId], references: [id])
   referrer      User      @relation("Referral_referrerIdToUser", fields: [referrerId], references: [id])
 
@@ -1918,7 +1930,7 @@ model ReturnRequest {
   resolution  String?
   adminNotes  String?
   createdAt   DateTime @default(now())
-  updatedAt   DateTime
+  updatedAt   DateTime @updatedAt
   order       Order    @relation(fields: [orderId], references: [id])
   user        User     @relation(fields: [userId], references: [id])
 
@@ -1961,7 +1973,7 @@ model Review {
   repliedAt    DateTime?
   helpfulCount Int           @default(0)
   createdAt    DateTime      @default(now())
-  updatedAt    DateTime
+  updatedAt    DateTime      @updatedAt
   product      Product       @relation(fields: [productId], references: [id])
   user         User          @relation(fields: [userId], references: [id])
   images       ReviewImage[]
@@ -2030,7 +2042,7 @@ model Shipping {
   instructions      String?
   signature         Boolean                 @default(false)
   createdAt         DateTime                @default(now())
-  updatedAt         DateTime
+  updatedAt         DateTime                @updatedAt
   purchase          Purchase                @relation(fields: [purchaseId], references: [id])
   statusHistory     ShippingStatusHistory[]
 
@@ -2064,7 +2076,7 @@ model ShippingZone {
   notes                 String?
   sortOrder             Int      @default(0)
   createdAt             DateTime @default(now())
-  updatedAt             DateTime
+  updatedAt             DateTime @updatedAt
 
   @@index([isActive])
 }
@@ -2078,7 +2090,7 @@ model SiteSetting {
   description String?
   updatedBy   String?
   createdAt   DateTime @default(now())
-  updatedAt   DateTime
+  updatedAt   DateTime @updatedAt
 
   @@index([module])
 }
@@ -2124,7 +2136,7 @@ model SiteSettings {
   subscriptionFreqs     String?
   testimonials          String?
   statsJson             String?
-  updatedAt             DateTime
+  updatedAt             DateTime @updatedAt
 }
 
 model StockAlert {
@@ -2157,7 +2169,7 @@ model Subscription {
   nextDelivery    DateTime
   lastDelivery    DateTime?
   createdAt       DateTime  @default(now())
-  updatedAt       DateTime
+  updatedAt       DateTime  @updatedAt
   cancelledAt     DateTime?
 
   @@index([formatId])
@@ -2190,7 +2202,7 @@ model SupplierInvoice {
   notes           String?
   journalEntryId  String?
   createdAt       DateTime      @default(now())
-  updatedAt       DateTime
+  updatedAt       DateTime      @updatedAt
   deletedAt       DateTime?
 
   @@index([dueDate])
@@ -2232,9 +2244,7 @@ model TaxReport {
   pdfUrl            String?
   notes             String?
   createdAt         DateTime        @default(now())
-  updatedAt         DateTime
-
-  // TODO #60: Add updatedAt DateTime @updatedAt field to TaxReport model
+  updatedAt         DateTime        @updatedAt
   //   Currently TaxReport has no updatedAt, making it impossible to track when reports are modified.
 
   @@unique([regionCode, year, month])
@@ -2258,7 +2268,7 @@ model Testimonial {
   isFeatured    Boolean                  @default(false)
   sortOrder     Int                      @default(0)
   createdAt     DateTime                 @default(now())
-  updatedAt     DateTime
+  updatedAt     DateTime                 @updatedAt
   translations  TestimonialTranslation[]
 
   @@index([isPublished])
@@ -2272,7 +2282,7 @@ model TestimonialTranslation {
   content       String?
   role          String?
   createdAt     DateTime           @default(now())
-  updatedAt     DateTime
+  updatedAt     DateTime           @updatedAt
   contentHash   String?
   translatedBy  String?            @default("gpt-4o-mini")
   isApproved    Boolean            @default(false)
@@ -2281,6 +2291,7 @@ model TestimonialTranslation {
 
   @@unique([testimonialId, locale])
   @@index([testimonialId])
+  @@index([locale])
 }
 
 model UatTestCase {
@@ -2339,7 +2350,7 @@ model UatTestRun {
   durationMs     Int?
   cleanedUp      Boolean       @default(false)
   createdAt      DateTime      @default(now())
-  updatedAt      DateTime
+  updatedAt      DateTime      @updatedAt
   testCases      UatTestCase[]
 }
 
@@ -2403,6 +2414,7 @@ model User {
   outboundReplies       OutboundReply[]
   conversationNotes     ConversationNote[]
   consentRecords        ConsentRecord[]
+  mailingListSubscriber MailingListSubscriber[] @relation("mailingListSubscriber")
 
   // RGPD: Terms of Service & Privacy Policy acceptance proof
   termsAcceptedAt   DateTime?
@@ -2445,7 +2457,7 @@ model UserAddress {
   phone         String?
   isDefault     Boolean  @default(false)
   createdAt     DateTime @default(now())
-  updatedAt     DateTime
+  updatedAt     DateTime @updatedAt
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
@@ -2473,7 +2485,7 @@ model UserPermissionOverride {
   grantedBy      String
   expiresAt      DateTime?
   createdAt      DateTime  @default(now())
-  updatedAt      DateTime
+  updatedAt      DateTime  @updatedAt
 
   @@unique([userId, permissionCode])
   @@index([permissionCode])
@@ -2505,7 +2517,7 @@ model Video {
   locale       String             @default("en")
   sortOrder    Int                @default(0)
   createdAt    DateTime           @default(now())
-  updatedAt    DateTime
+  updatedAt    DateTime           @updatedAt
   translations VideoTranslation[]
 
   @@index([category])
@@ -2523,7 +2535,7 @@ model VideoTranslation {
   translatedBy String?            @default("gpt-4o-mini")
   isApproved   Boolean            @default(false)
   createdAt    DateTime           @default(now())
-  updatedAt    DateTime
+  updatedAt    DateTime           @updatedAt
   qualityLevel TranslationQuality @default(draft)
   video        Video              @relation(fields: [videoId], references: [id], onDelete: Cascade)
 
@@ -2573,7 +2585,7 @@ model Webinar {
   locale          String               @default("en")
   sortOrder       Int                  @default(0)
   createdAt       DateTime             @default(now())
-  updatedAt       DateTime
+  updatedAt       DateTime             @updatedAt
   translations    WebinarTranslation[]
 
   @@index([isPublished])
@@ -2592,7 +2604,7 @@ model WebinarTranslation {
   translatedBy String?            @default("gpt-4o-mini")
   isApproved   Boolean            @default(false)
   createdAt    DateTime           @default(now())
-  updatedAt    DateTime
+  updatedAt    DateTime           @updatedAt
   qualityLevel TranslationQuality @default(draft)
   webinar      Webinar            @relation(fields: [webinarId], references: [id], onDelete: Cascade)
 
@@ -2618,7 +2630,7 @@ model WishlistCollection {
   name      String         @default("My Wishlist")
   isDefault Boolean        @default(false)
   createdAt DateTime       @default(now())
-  updatedAt DateTime
+  updatedAt DateTime       @updatedAt
   user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   items     WishlistItem[]
 
@@ -2718,6 +2730,12 @@ enum ChatSender {
   VISITOR
   ADMIN
   BOT
+}
+
+enum ChatMessageType {
+  TEXT
+  IMAGE
+  FILE
 }
 
 enum ChatStatus {
@@ -3373,4 +3391,163 @@ model ConsentRecord {
   @@index([email])
   @@index([userId])
   @@index([type])
+}
+
+// ── Admin Navigation (Web Navigator) ────────────────────────────
+
+model AdminNavSection {
+  id          String              @id @default(cuid())
+  railId      String
+  title       String
+  subtitle    String?
+  icon        String?
+  sortOrder   Int                 @default(0)
+  isActive    Boolean             @default(true)
+  subSections AdminNavSubSection[]
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  @@index([railId])
+  @@index([sortOrder])
+}
+
+model AdminNavSubSection {
+  id        String           @id @default(cuid())
+  sectionId String
+  title     String
+  subtitle  String?
+  icon      String?
+  sortOrder Int              @default(0)
+  isActive  Boolean          @default(true)
+  section   AdminNavSection  @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  pages     AdminNavPage[]
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  @@index([sectionId])
+  @@index([sortOrder])
+}
+
+model AdminNavPage {
+  id           String              @id @default(cuid())
+  subSectionId String
+  title        String
+  subtitle     String?
+  url          String
+  icon         String?
+  sortOrder    Int                 @default(0)
+  isActive     Boolean             @default(true)
+  openInNewTab Boolean             @default(false)
+  subSection   AdminNavSubSection  @relation(fields: [subSectionId], references: [id], onDelete: Cascade)
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+
+  @@index([subSectionId])
+  @@index([sortOrder])
+}
+
+model Supplier {
+  id         String            @id @default(cuid())
+  name       String
+  code       String?           @unique
+  email      String?
+  phone      String?
+  website    String?
+  address    String?
+  city       String?
+  province   String?
+  postalCode String?
+  country    String?           @default("CA")
+  notes      String?
+  isActive   Boolean           @default(true)
+  contacts   SupplierContact[]
+  links      SupplierLink[]
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+
+  @@index([name])
+  @@index([isActive])
+}
+
+model SupplierContact {
+  id         String   @id @default(cuid())
+  supplierId String
+  supplier   Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  department String
+  name       String
+  email      String?
+  phone      String?
+  extension  String?
+  title      String?
+  isPrimary  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([supplierId])
+}
+
+model SupplierLink {
+  id         String   @id @default(cuid())
+  supplierId String
+  supplier   Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  label      String
+  url        String
+  type       String   @default("other")
+  sortOrder  Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([supplierId])
+}
+
+// ── CASL-Compliant Mailing List ─────────────────────────────────
+
+model MailingListSubscriber {
+  id               String                  @id @default(cuid())
+  email            String                  @unique
+  name             String?
+  userId           String?
+  user             User?                   @relation("mailingListSubscriber", fields: [userId], references: [id], onDelete: SetNull)
+  status           MailingListStatus       @default(PENDING)
+  consentType      ConsentType             @default(EXPRESS)
+  consentDate      DateTime                @default(now())
+  consentIp        String?
+  consentMethod    String? // "website_form", "checkout", "account_settings"
+  confirmToken     String?                 @unique
+  confirmedAt      DateTime?
+  unsubscribedAt   DateTime?
+  unsubscribeToken String?                 @unique
+  preferences      MailingListPreference[]
+  createdAt        DateTime                @default(now())
+  updatedAt        DateTime                @updatedAt
+
+  @@index([email])
+  @@index([status])
+  @@index([confirmToken])
+  @@index([unsubscribeToken])
+}
+
+model MailingListPreference {
+  id           String                @id @default(cuid())
+  subscriberId String
+  subscriber   MailingListSubscriber @relation(fields: [subscriberId], references: [id], onDelete: Cascade)
+  category     String // "promotions", "promo_codes", "specials", "new_products"
+  isEnabled    Boolean               @default(true)
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+
+  @@unique([subscriberId, category])
+  @@index([subscriberId])
+}
+
+enum MailingListStatus {
+  PENDING // Awaiting confirmation (double opt-in)
+  ACTIVE // Confirmed and subscribed
+  UNSUBSCRIBED
+  BOUNCED
+}
+
+enum ConsentType {
+  EXPRESS // Active opt-in (CASL required)
+  IMPLIED // Existing business relationship (limited to 2 years)
 }

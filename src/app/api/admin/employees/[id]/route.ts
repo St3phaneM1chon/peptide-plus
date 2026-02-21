@@ -10,6 +10,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 
 // GET /api/admin/employees/[id] - Get employee detail
 export const GET = withAdminGuard(async (_request, { session, params }) => {
@@ -233,6 +234,18 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
       select: { permissionCode: true },
     });
 
+    // Audit log (fire-and-forget)
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'UPDATE_EMPLOYEE',
+      targetType: 'User',
+      targetId: id,
+      previousValue: { role: existing.role, name: existing.name },
+      newValue: updateData,
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
+
     return NextResponse.json({
       employee: {
         ...updated,
@@ -305,6 +318,18 @@ export const DELETE = withAdminGuard(async (_request, { session, params }) => {
     await prisma.userPermissionGroup.deleteMany({
       where: { userId: id },
     });
+
+    // Audit log (fire-and-forget)
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'DEACTIVATE_EMPLOYEE',
+      targetType: 'User',
+      targetId: id,
+      previousValue: { role: existing.role, name: existing.name, email: existing.email },
+      newValue: { role: 'PUBLIC', isActive: false },
+      ipAddress: getClientIpFromRequest(_request),
+      userAgent: _request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json({
       employee: {

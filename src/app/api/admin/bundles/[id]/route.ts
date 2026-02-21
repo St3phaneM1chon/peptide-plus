@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 
 // GET single bundle by ID
 export const GET = withAdminGuard(async (_request, { session, params }) => {
@@ -125,6 +126,18 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
       });
     }
 
+    // Audit log (fire-and-forget)
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'UPDATE_BUNDLE',
+      targetType: 'Bundle',
+      targetId: id,
+      previousValue: { name: existingBundle.name, slug: existingBundle.slug },
+      newValue: updateData,
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
+
     return NextResponse.json({ data: bundle });
   } catch (error) {
     console.error('Error updating bundle:', error);
@@ -154,6 +167,17 @@ export const DELETE = withAdminGuard(async (_request, { session, params }) => {
     await prisma.bundle.delete({
       where: { id },
     });
+
+    // Audit log (fire-and-forget)
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'DELETE_BUNDLE',
+      targetType: 'Bundle',
+      targetId: id,
+      previousValue: { name: bundle.name, slug: bundle.slug },
+      ipAddress: getClientIpFromRequest(_request),
+      userAgent: _request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json({ success: true });
   } catch (error) {

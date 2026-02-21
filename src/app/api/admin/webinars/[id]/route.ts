@@ -11,6 +11,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { enqueue } from '@/lib/translation';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 
 // GET /api/admin/webinars/[id] - Get single webinar
 export const GET = withAdminGuard(async (_request: NextRequest, { session, params }) => {
@@ -207,6 +208,17 @@ export const PATCH = withAdminGuard(async (request: NextRequest, { session, para
       return NextResponse.json({ webinar: updated });
     }
 
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'UPDATE_WEBINAR',
+      targetType: 'Webinar',
+      targetId: id,
+      previousValue: { title: existing.title, isPublished: existing.isPublished, isLive: existing.isLive },
+      newValue: updateData,
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
+
     return NextResponse.json({ webinar });
   } catch (error) {
     console.error('Admin webinar PATCH error:', error);
@@ -234,6 +246,16 @@ export const DELETE = withAdminGuard(async (_request: NextRequest, { session, pa
     await prisma.webinar.delete({
       where: { id },
     });
+
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'DELETE_WEBINAR',
+      targetType: 'Webinar',
+      targetId: id,
+      previousValue: { title: existing.title },
+      ipAddress: getClientIpFromRequest(_request),
+      userAgent: _request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json({
       success: true,

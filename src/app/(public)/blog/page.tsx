@@ -1,16 +1,48 @@
-'use client';
-
 /**
- * PAGE BLOG
+ * BLOG LIST PAGE - Server Component for SEO
+ *
+ * Fetches blog posts server-side so search engines can crawl content.
+ * Uses generateMetadata() for dynamic SEO tags.
  */
 
-import { useState, useEffect } from 'react';
+import { Metadata } from 'next';
 import Link from 'next/link';
-import { useI18n } from '@/i18n/client';
+import { prisma } from '@/lib/db';
+import { getServerLocale } from '@/i18n/server';
+import { withTranslations, DB_SOURCE_LOCALE } from '@/lib/translation';
+import { JsonLd } from '@/components/seo/JsonLd';
 
-// metadata moved to layout or head for client components
+// ISR: revalidate every 5 minutes
+export const revalidate = 300;
 
-interface BlogPost {
+// ---------------------------------------------------------------------------
+// Metadata
+// ---------------------------------------------------------------------------
+
+export async function generateMetadata(): Promise<Metadata> {
+  const siteUrl = 'https://biocyclepeptides.com';
+  return {
+    title: 'Blog - BioCycle Peptides',
+    description:
+      'Read the latest articles about research peptides, lab protocols, and scientific discoveries from the BioCycle Peptides team.',
+    alternates: {
+      canonical: `${siteUrl}/blog`,
+    },
+    openGraph: {
+      title: 'Blog - BioCycle Peptides',
+      description:
+        'Read the latest articles about research peptides, lab protocols, and scientific discoveries.',
+      url: `${siteUrl}/blog`,
+      type: 'website',
+    },
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Data fetching (server-side)
+// ---------------------------------------------------------------------------
+
+interface BlogPostRow {
   id: string;
   title: string;
   slug: string;
@@ -20,13 +52,76 @@ interface BlogPost {
   category: string | null;
   readTime: number | null;
   isFeatured: boolean;
-  publishedAt: string | null;
+  publishedAt: Date | null;
   locale: string;
 }
 
-function formatDate(dateString: string | null): string {
-  if (!dateString) return '';
-  const date = new Date(dateString);
+async function getBlogPosts(locale: string): Promise<BlogPostRow[]> {
+  let posts = await prisma.blogPost.findMany({
+    where: { isPublished: true },
+    orderBy: { publishedAt: 'desc' },
+    select: {
+      id: true,
+      title: true,
+      slug: true,
+      excerpt: true,
+      imageUrl: true,
+      author: true,
+      category: true,
+      readTime: true,
+      isFeatured: true,
+      publishedAt: true,
+      locale: true,
+    },
+  });
+
+  // Apply translations if needed
+  if (locale !== DB_SOURCE_LOCALE) {
+    posts = await withTranslations(posts, 'BlogPost', locale);
+  }
+
+  return posts;
+}
+
+// ---------------------------------------------------------------------------
+// Structured data (JSON-LD)
+// ---------------------------------------------------------------------------
+
+function blogListSchema(posts: BlogPostRow[]) {
+  const siteUrl = 'https://biocyclepeptides.com';
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Blog',
+    name: 'BioCycle Peptides Blog',
+    url: `${siteUrl}/blog`,
+    description:
+      'Research articles, lab protocols, and peptide science from BioCycle Peptides.',
+    publisher: {
+      '@type': 'Organization',
+      name: 'BioCycle Peptides',
+      url: siteUrl,
+    },
+    blogPost: posts.slice(0, 10).map((post) => ({
+      '@type': 'BlogPosting',
+      headline: post.title,
+      url: `${siteUrl}/blog/${post.slug}`,
+      ...(post.imageUrl ? { image: post.imageUrl } : {}),
+      datePublished: post.publishedAt?.toISOString(),
+      author: {
+        '@type': 'Organization',
+        name: post.author || 'BioCycle Peptides',
+      },
+      ...(post.excerpt ? { description: post.excerpt } : {}),
+    })),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function formatDate(date: Date | null): string {
+  if (!date) return '';
   return date.toLocaleDateString('fr-FR', {
     day: 'numeric',
     month: 'long',
@@ -34,26 +129,24 @@ function formatDate(dateString: string | null): string {
   });
 }
 
-export default function BlogPage() {
-  const [posts, setPosts] = useState<BlogPost[]>([]);
-  const [loading, setLoading] = useState(true);
-  const { locale } = useI18n();
+// ---------------------------------------------------------------------------
+// Page Component (Server Component)
+// ---------------------------------------------------------------------------
 
-  useEffect(() => {
-    async function fetchPosts() {
-      try {
-        const res = await fetch(`/api/blog?locale=${locale}`);
-        const data = await res.json();
-        setPosts(data.posts ?? []);
-      } catch (error) {
-        console.error('Failed to fetch blog posts:', error);
-        setPosts([]);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchPosts();
-  }, []);
+export default async function BlogPage() {
+  let locale: string;
+  try {
+    locale = await getServerLocale();
+  } catch {
+    locale = 'en';
+  }
+
+  let posts: BlogPostRow[] = [];
+  try {
+    posts = await getBlogPosts(locale);
+  } catch (error) {
+    console.error('Failed to fetch blog posts:', error);
+  }
 
   const featuredPost = posts.find((p) => p.isFeatured) || posts[0] || null;
   const otherPosts = featuredPost
@@ -64,58 +157,11 @@ export default function BlogPage() {
     ...Array.from(new Set(posts.map((p) => p.category).filter(Boolean))),
   ] as string[];
 
-  if (loading) {
-    return (
-      <div style={{ backgroundColor: 'var(--gray-100)' }}>
-        {/* Hero */}
-        <section
-          style={{
-            backgroundColor: 'var(--gray-500)',
-            color: 'white',
-            padding: '64px 24px',
-            textAlign: 'center',
-          }}
-        >
-          <h1 style={{ fontSize: '42px', fontWeight: 700, marginBottom: '16px' }}>Blog</h1>
-          <p style={{ fontSize: '18px', opacity: 0.9 }}>
-            Conseils, tendances et bonnes pratiques en formation professionnelle
-          </p>
-        </section>
-
-        {/* Loading state */}
-        <section style={{ padding: '64px 24px' }}>
-          <div
-            style={{
-              maxWidth: '1200px',
-              margin: '0 auto',
-              textAlign: 'center',
-              padding: '80px 0',
-            }}
-          >
-            <div
-              style={{
-                width: '40px',
-                height: '40px',
-                border: '3px solid var(--gray-200)',
-                borderTopColor: 'var(--gray-500)',
-                borderRadius: '50%',
-                animation: 'spin 0.8s linear infinite',
-                margin: '0 auto 16px',
-              }}
-            />
-            <p style={{ fontSize: '16px', color: 'var(--gray-400)' }}>
-              Chargement des articles...
-            </p>
-            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-          </div>
-        </section>
-      </div>
-    );
-  }
-
+  // Empty state
   if (posts.length === 0) {
     return (
       <div style={{ backgroundColor: 'var(--gray-100)' }}>
+        <JsonLd data={blogListSchema([])} />
         {/* Hero */}
         <section
           style={{
@@ -141,7 +187,6 @@ export default function BlogPage() {
               padding: '80px 0',
             }}
           >
-            <span style={{ fontSize: '64px', display: 'block', marginBottom: '24px' }}>📝</span>
             <h2
               style={{
                 fontSize: '24px',
@@ -161,23 +206,19 @@ export default function BlogPage() {
         {/* Newsletter */}
         <section style={{ backgroundColor: 'white', padding: '64px 24px', textAlign: 'center' }}>
           <div style={{ maxWidth: '500px', margin: '0 auto' }}>
-            <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '16px', color: 'var(--gray-500)' }}>
+            <h2
+              style={{
+                fontSize: '24px',
+                fontWeight: 700,
+                marginBottom: '16px',
+                color: 'var(--gray-500)',
+              }}
+            >
               Restez informé
             </h2>
             <p style={{ fontSize: '14px', color: 'var(--gray-400)', marginBottom: '24px' }}>
               Recevez nos derniers articles directement dans votre boîte courriel.
             </p>
-            <form style={{ display: 'flex', gap: '12px' }} onSubmit={(e) => e.preventDefault()}>
-              <input
-                type="email"
-                placeholder="Votre courriel"
-                className="form-input"
-                style={{ flex: 1 }}
-              />
-              <button type="submit" className="btn btn-primary">
-                S&apos;abonner
-              </button>
-            </form>
           </div>
         </section>
       </div>
@@ -186,6 +227,8 @@ export default function BlogPage() {
 
   return (
     <div style={{ backgroundColor: 'var(--gray-100)' }}>
+      <JsonLd data={blogListSchema(posts)} />
+
       {/* Hero */}
       <section
         style={{
@@ -233,10 +276,19 @@ export default function BlogPage() {
                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                   />
                 ) : (
-                  <span style={{ fontSize: '80px' }}>📚</span>
+                  <span style={{ fontSize: '80px' }} aria-hidden="true">
+                    Image
+                  </span>
                 )}
               </div>
-              <div style={{ padding: '40px 40px 40px 0', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+              <div
+                style={{
+                  padding: '40px 40px 40px 0',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                }}
+              >
                 <span
                   style={{
                     display: 'inline-block',
@@ -252,14 +304,29 @@ export default function BlogPage() {
                 >
                   {featuredPost.category}
                 </span>
-                <h2 style={{ fontSize: '28px', fontWeight: 700, marginBottom: '16px', color: 'var(--gray-500)' }}>
+                <h2
+                  style={{
+                    fontSize: '28px',
+                    fontWeight: 700,
+                    marginBottom: '16px',
+                    color: 'var(--gray-500)',
+                  }}
+                >
                   {featuredPost.title}
                 </h2>
-                <p style={{ fontSize: '16px', color: 'var(--gray-400)', lineHeight: 1.7, marginBottom: '24px' }}>
+                <p
+                  style={{
+                    fontSize: '16px',
+                    color: 'var(--gray-400)',
+                    lineHeight: 1.7,
+                    marginBottom: '24px',
+                  }}
+                >
                   {featuredPost.excerpt}
                 </p>
                 <p style={{ fontSize: '13px', color: 'var(--gray-400)' }}>
-                  {featuredPost.author} • {formatDate(featuredPost.publishedAt)} • {featuredPost.readTime} min de lecture
+                  {featuredPost.author} &bull; {formatDate(featuredPost.publishedAt)} &bull;{' '}
+                  {featuredPost.readTime} min de lecture
                 </p>
               </div>
             </Link>
@@ -271,7 +338,7 @@ export default function BlogPage() {
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px' }}>
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           {categories.map((cat, i) => (
-            <button
+            <span
               key={cat}
               style={{
                 padding: '8px 16px',
@@ -284,7 +351,7 @@ export default function BlogPage() {
               }}
             >
               {cat}
-            </button>
+            </span>
           ))}
         </div>
       </div>
@@ -326,7 +393,9 @@ export default function BlogPage() {
                       style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                     />
                   ) : (
-                    <span style={{ fontSize: '48px' }}>📝</span>
+                    <span style={{ fontSize: '48px' }} aria-hidden="true">
+                      Article
+                    </span>
                   )}
                 </div>
                 <div style={{ padding: '24px' }}>
@@ -344,25 +413,32 @@ export default function BlogPage() {
                   >
                     {post.category}
                   </span>
-                  <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '8px', color: 'var(--gray-500)' }}>
+                  <h3
+                    style={{
+                      fontSize: '18px',
+                      fontWeight: 600,
+                      marginBottom: '8px',
+                      color: 'var(--gray-500)',
+                    }}
+                  >
                     {post.title}
                   </h3>
-                  <p style={{ fontSize: '14px', color: 'var(--gray-400)', lineHeight: 1.6, marginBottom: '16px' }}>
+                  <p
+                    style={{
+                      fontSize: '14px',
+                      color: 'var(--gray-400)',
+                      lineHeight: 1.6,
+                      marginBottom: '16px',
+                    }}
+                  >
                     {post.excerpt}
                   </p>
                   <p style={{ fontSize: '12px', color: 'var(--gray-400)' }}>
-                    {formatDate(post.publishedAt)} • {post.readTime} min
+                    {formatDate(post.publishedAt)} &bull; {post.readTime} min
                   </p>
                 </div>
               </Link>
             ))}
-          </div>
-
-          {/* Load more */}
-          <div style={{ textAlign: 'center', marginTop: '48px' }}>
-            <button className="btn btn-secondary" style={{ padding: '12px 32px' }}>
-              Voir plus d&apos;articles
-            </button>
           </div>
         </div>
       </section>
@@ -370,23 +446,19 @@ export default function BlogPage() {
       {/* Newsletter */}
       <section style={{ backgroundColor: 'white', padding: '64px 24px', textAlign: 'center' }}>
         <div style={{ maxWidth: '500px', margin: '0 auto' }}>
-          <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '16px', color: 'var(--gray-500)' }}>
+          <h2
+            style={{
+              fontSize: '24px',
+              fontWeight: 700,
+              marginBottom: '16px',
+              color: 'var(--gray-500)',
+            }}
+          >
             Restez informé
           </h2>
           <p style={{ fontSize: '14px', color: 'var(--gray-400)', marginBottom: '24px' }}>
             Recevez nos derniers articles directement dans votre boîte courriel.
           </p>
-          <form style={{ display: 'flex', gap: '12px' }} onSubmit={(e) => e.preventDefault()}>
-            <input
-              type="email"
-              placeholder="Votre courriel"
-              className="form-input"
-              style={{ flex: 1 }}
-            />
-            <button type="submit" className="btn btn-primary">
-              S&apos;abonner
-            </button>
-          </form>
         </div>
       </section>
     </div>

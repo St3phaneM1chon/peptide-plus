@@ -6,6 +6,7 @@ import { db } from '@/lib/db';
 import { checkPasswordHistory, addToPasswordHistory } from '@/lib/password-history';
 import { validateCsrf } from '@/lib/csrf-middleware';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { passwordSchema } from '@/lib/security';
 import bcrypt from 'bcryptjs';
 
 export async function PUT(request: NextRequest) {
@@ -37,6 +38,16 @@ export async function PUT(request: NextRequest) {
     }
 
     const { currentPassword, newPassword } = await request.json();
+
+    // SECURITY: Validate new password meets complexity requirements
+    // (min 8 chars, uppercase, lowercase, digit, special character)
+    const passwordValidation = passwordSchema.safeParse(newPassword);
+    if (!passwordValidation.success) {
+      return NextResponse.json(
+        { error: passwordValidation.error.errors[0]?.message || 'Password does not meet requirements' },
+        { status: 400 }
+      );
+    }
 
     // Get user with password
     const user = await db.user.findUnique({

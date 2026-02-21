@@ -13,9 +13,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { getPayPalAccessToken, PAYPAL_API_URL } from '@/lib/paypal';
+import { validateCsrf } from '@/lib/csrf-middleware';
 
 export async function POST(request: NextRequest) {
   try {
+    // SECURITY: CSRF protection for payment mutation endpoint
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     // Fix 4: Request body size limit (1MB)
     const contentLength = request.headers.get('content-length');
     if (contentLength && parseInt(contentLength, 10) > 1_000_000) {
@@ -42,7 +49,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { items, currency = 'CAD', shippingInfo, promoCode, giftCardCode, giftCardDiscount: clientGiftCardDiscount } = body;
+    const { items, currency = 'CAD', shippingInfo, promoCode, giftCardCode, giftCardDiscount: clientGiftCardDiscount, researchConsentAccepted, researchConsentTimestamp } = body;
 
     if (!process.env.PAYPAL_CLIENT_ID || !process.env.PAYPAL_CLIENT_SECRET) {
       return NextResponse.json({ error: 'PayPal n\'est pas configuré' }, { status: 503 });
@@ -284,6 +291,7 @@ export async function POST(request: NextRequest) {
         intent: 'CAPTURE',
         purchase_units: [{
           reference_id: `order_${Date.now()}`,
+          custom_id: JSON.stringify({ researchConsentAccepted: !!researchConsentAccepted, researchConsentTimestamp: researchConsentTimestamp || '' }),
           description: 'Commande BioCycle Peptides',
           amount: {
             currency_code: currency.toUpperCase(),

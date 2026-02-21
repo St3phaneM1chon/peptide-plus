@@ -37,7 +37,7 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
   const [currency, setCurrencyState] = useState<Currency>(fallbackCurrencies[0]);
   const [currencies, setCurrencies] = useState<Currency[]>(fallbackCurrencies);
 
-  // Charger les devises depuis la DB via API puis la préférence locale
+  // Load currencies from DB + apply user preference or SiteSettings default
   useEffect(() => {
     fetch('/api/currencies')
       .then((res) => res.ok ? res.json() : null)
@@ -52,14 +52,17 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
             isDefault: c.isDefault,
           }));
           setCurrencies(dbCurrencies);
-          // Appliquer la préférence stockée
+
+          // Priority: 1) user stored preference, 2) DB default currency, 3) first currency
           const stored = localStorage.getItem(CURRENCY_STORAGE_KEY);
           if (stored) {
             const found = dbCurrencies.find((c) => c.code === stored);
-            if (found) setCurrencyState(found);
+            if (found) { setCurrencyState(found); return; }
           }
+          // Use the DB-configured default (from SiteSettings via isDefault flag)
+          const dbDefault = dbCurrencies.find((c) => c.isDefault);
+          if (dbDefault) setCurrencyState(dbDefault);
         } else {
-          // Fallback: utiliser les taux statiques + préférence locale
           const stored = localStorage.getItem(CURRENCY_STORAGE_KEY);
           if (stored) {
             const found = fallbackCurrencies.find((c) => c.code === stored);

@@ -92,6 +92,25 @@ export default function NewsletterPage() {
   const [newCampaign, setNewCampaign] = useState({ subject: '', content: '' });
   const [savingCampaign, setSavingCampaign] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [showStatsModal, setShowStatsModal] = useState(false);
+  const [statsLoading, setStatsLoading] = useState(false);
+  const [statsData, setStatsData] = useState<{
+    campaignId: string;
+    subject: string;
+    sentAt: string;
+    stats: {
+      sentCount: number;
+      openRate: number;
+      clickRate: number;
+      bounceRate: number;
+      unsubscribeRate: number;
+      openCount: number;
+      clickCount: number;
+      bounceCount: number;
+      unsubscribeCount: number;
+    };
+    subscriberContext: { totalActive: number; totalUnsubscribed: number };
+  } | null>(null);
 
   // Filter state
   const [searchValue, setSearchValue] = useState('');
@@ -443,7 +462,6 @@ export default function NewsletterPage() {
                             setSelectedId(null);
                             toast.success(t('admin.newsletter.subscriberDeleted') || 'Subscriber removed');
                           } catch {
-                            // TODO: Create API endpoint DELETE /api/admin/newsletter/subscribers/:id
                             toast.error(t('common.networkError'));
                           } finally {
                             setDeletingId(null);
@@ -578,7 +596,6 @@ export default function NewsletterPage() {
                                 toast.success(t('admin.newsletter.campaignSent') || 'Campaign sent');
                                 await fetchData();
                               } catch {
-                                // TODO: Create API endpoint PATCH /api/admin/newsletter/campaigns/:id
                                 toast.error(t('common.networkError'));
                               }
                             }}>
@@ -603,7 +620,6 @@ export default function NewsletterPage() {
                               toast.success(t('admin.newsletter.campaignCancelled') || 'Campaign cancelled');
                               await fetchData();
                             } catch {
-                              // TODO: Create API endpoint PATCH /api/admin/newsletter/campaigns/:id
                               toast.error(t('common.networkError'));
                             }
                           }}>
@@ -611,9 +627,25 @@ export default function NewsletterPage() {
                           </Button>
                         )}
                         {selectedCampaign.status === 'SENT' && (
-                          <Button variant="ghost" size="sm" icon={BarChart3} onClick={() => {
-                            // TODO: Create API endpoint GET /api/admin/newsletter/campaigns/:id/stats and modal/page for detailed statistics
-                            toast.info(t('admin.newsletter.statistics') + ' - Coming soon');
+                          <Button variant="ghost" size="sm" icon={BarChart3} onClick={async () => {
+                            setStatsLoading(true);
+                            setShowStatsModal(true);
+                            try {
+                              const res = await fetch(`/api/admin/newsletter/campaigns/${selectedCampaign.id}/stats`);
+                              if (!res.ok) {
+                                const data = await res.json().catch(() => ({}));
+                                toast.error(data.error || t('common.error'));
+                                setShowStatsModal(false);
+                                return;
+                              }
+                              const data = await res.json();
+                              setStatsData(data);
+                            } catch {
+                              toast.error(t('common.networkError'));
+                              setShowStatsModal(false);
+                            } finally {
+                              setStatsLoading(false);
+                            }
                           }}>
                             {t('admin.newsletter.statistics')}
                           </Button>
@@ -738,6 +770,95 @@ export default function NewsletterPage() {
             </Button>
           </div>
         </div>
+      </Modal>
+
+      {/* ─── CAMPAIGN STATS MODAL ─────────────────────────────────── */}
+      <Modal
+        isOpen={showStatsModal}
+        onClose={() => { setShowStatsModal(false); setStatsData(null); }}
+        title={t('admin.newsletter.statistics')}
+        size="lg"
+      >
+        {statsLoading ? (
+          <div className="flex items-center justify-center py-8" role="status" aria-label="Loading">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-sky-500" />
+            <span className="sr-only">Loading...</span>
+          </div>
+        ) : statsData ? (
+          <div className="space-y-6">
+            {/* Campaign info */}
+            <div className="bg-slate-50 rounded-lg p-4">
+              <h3 className="font-semibold text-slate-900 mb-1">{statsData.subject}</h3>
+              {statsData.sentAt && (
+                <p className="text-sm text-slate-500">
+                  {t('admin.newsletter.sentOn', { date: formatDate(statsData.sentAt) })}
+                </p>
+              )}
+            </div>
+
+            {/* Stats grid */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-sky-50 rounded-lg p-4 text-center">
+                <p className="text-2xl font-bold text-sky-700">{statsData.stats.sentCount}</p>
+                <p className="text-xs text-sky-600 mt-1">{t('admin.newsletter.statsSent') || 'Sent'}</p>
+              </div>
+              <div className="bg-emerald-50 rounded-lg p-4 text-center">
+                <p className="text-2xl font-bold text-emerald-700">{statsData.stats.openRate}%</p>
+                <p className="text-xs text-emerald-600 mt-1">{t('admin.newsletter.statsOpenRate') || 'Open Rate'}</p>
+              </div>
+              <div className="bg-violet-50 rounded-lg p-4 text-center">
+                <p className="text-2xl font-bold text-violet-700">{statsData.stats.clickRate}%</p>
+                <p className="text-xs text-violet-600 mt-1">{t('admin.newsletter.statsClickRate') || 'Click Rate'}</p>
+              </div>
+              <div className="bg-amber-50 rounded-lg p-4 text-center">
+                <p className="text-2xl font-bold text-amber-700">{statsData.stats.bounceRate}%</p>
+                <p className="text-xs text-amber-600 mt-1">{t('admin.newsletter.statsBounceRate') || 'Bounce Rate'}</p>
+              </div>
+            </div>
+
+            {/* Detailed counts */}
+            <div className="bg-slate-50 rounded-lg p-4">
+              <h3 className="font-semibold text-slate-900 mb-3">{t('admin.newsletter.statsDetails') || 'Details'}</h3>
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-600">{t('admin.newsletter.statsOpened') || 'Opened'}</span>
+                  <span className="font-medium text-slate-900">{statsData.stats.openCount}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-600">{t('admin.newsletter.statsClicked') || 'Clicked'}</span>
+                  <span className="font-medium text-slate-900">{statsData.stats.clickCount}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-600">{t('admin.newsletter.statsBounced') || 'Bounced'}</span>
+                  <span className="font-medium text-slate-900">{statsData.stats.bounceCount}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-600">{t('admin.newsletter.statsUnsubscribed') || 'Unsubscribed'}</span>
+                  <span className="font-medium text-slate-900">{statsData.stats.unsubscribeCount}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Subscriber context */}
+            <div className="bg-slate-50 rounded-lg p-4">
+              <h3 className="font-semibold text-slate-900 mb-3">{t('admin.newsletter.subscriberContext') || 'Subscriber Context'}</h3>
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-600">{t('admin.newsletter.activeSubscribers')}</span>
+                  <span className="font-medium text-slate-900">{statsData.subscriberContext.totalActive}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-600">{t('admin.newsletter.unsubscribed')}</span>
+                  <span className="font-medium text-slate-900">{statsData.subscriberContext.totalUnsubscribed}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <p className="text-sm text-slate-500 py-4 text-center">
+            {t('admin.newsletter.noStats') || 'No stats available.'}
+          </p>
+        )}
       </Modal>
     </div>
   );

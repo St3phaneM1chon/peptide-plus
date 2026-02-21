@@ -5,6 +5,7 @@ import { Plus, Pencil, Trash2, Percent, Zap, Package } from 'lucide-react';
 import { Button } from '@/components/admin/Button';
 import { StatCard } from '@/components/admin/StatCard';
 import { Modal } from '@/components/admin/Modal';
+import { FormField, Input } from '@/components/admin/FormField';
 import {
   ContentList,
   DetailPane,
@@ -71,7 +72,17 @@ export default function PromotionsPage() {
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [editingPromo, setEditingPromo] = useState<Promotion | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  // Form state
+  const [formName, setFormName] = useState('');
+  const [formType, setFormType] = useState<'PERCENTAGE' | 'FIXED_AMOUNT'>('PERCENTAGE');
+  const [formValue, setFormValue] = useState(10);
+  const [formStartDate, setFormStartDate] = useState('');
+  const [formEndDate, setFormEndDate] = useState('');
+  const [formAppliesToAll, setFormAppliesToAll] = useState(false);
 
   // Filter state
   const [searchValue, setSearchValue] = useState('');
@@ -100,6 +111,87 @@ export default function PromotionsPage() {
       setPromotions([]);
     }
     setLoading(false);
+  };
+
+  // ─── Form helpers ───────────────────────────────────────────
+
+  const resetForm = () => {
+    setFormName('');
+    setFormType('PERCENTAGE');
+    setFormValue(10);
+    setFormStartDate('');
+    setFormEndDate('');
+    setFormAppliesToAll(false);
+  };
+
+  const openCreateForm = () => {
+    setEditingPromo(null);
+    resetForm();
+    setShowForm(true);
+  };
+
+  const openEditForm = (promo: Promotion) => {
+    setEditingPromo(promo);
+    setFormName(promo.name);
+    setFormType(promo.discountType);
+    setFormValue(promo.discountValue);
+    setFormStartDate(promo.startsAt ? promo.startsAt.slice(0, 16) : '');
+    setFormEndDate(promo.endsAt ? promo.endsAt.slice(0, 16) : '');
+    setFormAppliesToAll(promo.type === 'FLASH_SALE');
+    setShowForm(true);
+  };
+
+  const closeForm = () => {
+    setShowForm(false);
+    setEditingPromo(null);
+    resetForm();
+  };
+
+  const handleSubmitPromotion = async () => {
+    if (!formName.trim()) return;
+    setSubmitting(true);
+    try {
+      const isEdit = !!editingPromo;
+      const url = isEdit
+        ? `/api/admin/promotions/${editingPromo.id}`
+        : '/api/admin/promotions';
+      const method = isEdit ? 'PATCH' : 'POST';
+
+      const body: Record<string, unknown> = {
+        name: formName.trim(),
+        type: formType,
+        value: formValue,
+        appliesToAll: formAppliesToAll,
+        isActive: true,
+      };
+
+      if (formStartDate) {
+        body.startsAt = new Date(formStartDate).toISOString();
+      }
+      if (formEndDate) {
+        body.endsAt = new Date(formEndDate).toISOString();
+      }
+
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        toast.error(data.error || t(isEdit ? 'admin.promotions.updateError' : 'admin.promotions.createError'));
+        return;
+      }
+
+      toast.success(t(isEdit ? 'admin.promotions.updateSuccess' : 'admin.promotions.createSuccess'));
+      closeForm();
+      fetchPromotions();
+    } catch {
+      toast.error(t('admin.promotions.createError'));
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   // ─── CRUD ─────────────────────────────────────────────────
@@ -225,7 +317,7 @@ export default function PromotionsPage() {
             <h1 className="text-xl font-bold text-slate-900">{t('admin.promotions.title')}</h1>
             <p className="text-sm text-slate-500 mt-0.5">{t('admin.promotions.subtitle')}</p>
           </div>
-          <Button variant="primary" icon={Plus} size="sm" onClick={() => setShowForm(true)}>
+          <Button variant="primary" icon={Plus} size="sm" onClick={openCreateForm}>
             {t('admin.promotions.newPromotion')}
           </Button>
         </div>
@@ -278,6 +370,7 @@ export default function PromotionsPage() {
                         variant="ghost"
                         size="sm"
                         icon={Pencil}
+                        onClick={() => openEditForm(selectedPromo)}
                       >
                         {t('admin.promotions.edit')}
                       </Button>
@@ -426,11 +519,87 @@ export default function PromotionsPage() {
       </div>
 
       {/* ─── FORM MODAL ─────────────────────────────────────────── */}
-      <Modal isOpen={showForm} onClose={() => setShowForm(false)} title={t('admin.promotions.modalTitle')}>
-        <p className="text-slate-500 mb-4">{t('admin.promotions.featureInDevelopment')}</p>
-        <Button variant="secondary" onClick={() => setShowForm(false)}>
-          {t('admin.promotions.close')}
-        </Button>
+      <Modal
+        isOpen={showForm}
+        onClose={closeForm}
+        title={editingPromo ? t('admin.promotions.editTitle') : t('admin.promotions.modalTitle')}
+        footer={
+          <>
+            <Button variant="secondary" onClick={closeForm}>
+              {t('admin.promotions.cancel')}
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleSubmitPromotion}
+              disabled={submitting || !formName.trim()}
+              loading={submitting}
+            >
+              {submitting
+                ? t('admin.promotions.submitting')
+                : editingPromo
+                  ? t('admin.promotions.update')
+                  : t('admin.promotions.create')}
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <FormField label={t('admin.promotions.formName')} required>
+            <Input
+              type="text"
+              value={formName}
+              onChange={(e) => setFormName(e.target.value)}
+              placeholder={t('admin.promotions.formNamePlaceholder')}
+            />
+          </FormField>
+          <div className="grid grid-cols-2 gap-4">
+            <FormField label={t('admin.promotions.formType')} required>
+              <select
+                value={formType}
+                onChange={(e) => setFormType(e.target.value as 'PERCENTAGE' | 'FIXED_AMOUNT')}
+                className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-sky-700 focus:border-sky-700"
+              >
+                <option value="PERCENTAGE">{t('admin.promoCodes.typePercentage')}</option>
+                <option value="FIXED_AMOUNT">{t('admin.promoCodes.typeFixedAmount')}</option>
+              </select>
+            </FormField>
+            <FormField label={t('admin.promotions.formValue')} required>
+              <Input
+                type="number"
+                min={0}
+                max={formType === 'PERCENTAGE' ? 100 : 99999}
+                step={formType === 'PERCENTAGE' ? 1 : 0.01}
+                value={formValue}
+                onChange={(e) => setFormValue(parseFloat(e.target.value) || 0)}
+              />
+            </FormField>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <FormField label={t('admin.promotions.formStartDate')}>
+              <Input
+                type="datetime-local"
+                value={formStartDate}
+                onChange={(e) => setFormStartDate(e.target.value)}
+              />
+            </FormField>
+            <FormField label={t('admin.promotions.formEndDate')}>
+              <Input
+                type="datetime-local"
+                value={formEndDate}
+                onChange={(e) => setFormEndDate(e.target.value)}
+              />
+            </FormField>
+          </div>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={formAppliesToAll}
+              onChange={(e) => setFormAppliesToAll(e.target.checked)}
+              className="rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+            />
+            <span className="text-sm text-slate-700">{t('admin.promotions.formAppliesToAll')}</span>
+          </label>
+        </div>
       </Modal>
     </div>
   );

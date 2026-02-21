@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { db } from '@/lib/db';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 
 // GET — List all upsell configs
 export const GET = withAdminGuard(async (_request, { session }) => {
@@ -100,6 +101,16 @@ export const POST = withAdminGuard(async (request, { session }) => {
       }
     }
 
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'UPSERT_UPSELL_CONFIG',
+      targetType: 'UpsellConfig',
+      targetId: config.id,
+      newValue: { productId: pId, ...data },
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
+
     return NextResponse.json({ config });
   } catch (error) {
     console.error('Error saving upsell config:', error);
@@ -118,6 +129,15 @@ export const DELETE = withAdminGuard(async (request, { session }) => {
     }
 
     await db.upsellConfig.delete({ where: { id } });
+
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'DELETE_UPSELL_CONFIG',
+      targetType: 'UpsellConfig',
+      targetId: id,
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json({ success: true });
   } catch (error) {

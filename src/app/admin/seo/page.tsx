@@ -228,17 +228,22 @@ export default function SEOPage() {
     });
   };
 
-  // Generate sitemap (placeholder - no dedicated endpoint)
+  // Generate sitemap via dedicated API endpoint
   const generateSitemap = async () => {
     try {
       const res = await fetch('/api/admin/seo/sitemap', { method: 'POST' });
       if (res.ok) {
-        toast.success(t('admin.seo.sitemapGenerated'));
+        const data = await res.json();
+        toast.success(
+          t('admin.seo.sitemapGenerated') +
+            (data.totalUrls ? ` (${data.totalUrls} URLs)` : '')
+        );
       } else {
-        toast.success(t('admin.seo.sitemapGenerated'));
+        const data = await res.json().catch(() => ({}));
+        toast.error(data.error || t('common.errorOccurred'));
       }
     } catch {
-      toast.success(t('admin.seo.sitemapGenerated'));
+      toast.error(t('common.errorOccurred'));
     }
   };
 

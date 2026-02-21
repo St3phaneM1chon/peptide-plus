@@ -25,6 +25,19 @@ export const createCampaignSchema = z.object({
 export type CreateCampaignInput = z.infer<typeof createCampaignSchema>;
 
 // ---------------------------------------------------------------------------
+// Update campaign (PATCH /api/admin/newsletter/campaigns/[id])
+// ---------------------------------------------------------------------------
+
+export const updateCampaignSchema = z.object({
+  status: campaignStatusEnum.optional(),
+  subject: z.string().min(1).max(500).optional(),
+  content: z.string().min(1).max(100000).optional(),
+  scheduledFor: z.string().datetime().optional().nullable(),
+});
+
+export type UpdateCampaignInput = z.infer<typeof updateCampaignSchema>;
+
+// ---------------------------------------------------------------------------
 // Add subscriber (POST /api/admin/newsletter/subscribers)
 // ---------------------------------------------------------------------------
 

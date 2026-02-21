@@ -19,6 +19,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { sendOrderLifecycleEmail } from '@/lib/email';
 import { apiSuccess, apiError, apiPaginated } from '@/lib/api-response';
 import { ErrorCode } from '@/lib/error-codes';
@@ -274,23 +275,16 @@ export const PUT = withAdminGuard(async (request, { session }) => {
     });
 
     // Audit log for order update (fire-and-forget)
-    prisma.auditLog.create({
-      data: {
-        id: `audit_update_order_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 8)}`,
-        userId: session.user.id,
-        action: 'ADMIN_UPDATE_ORDER',
-        entityType: 'Order',
-        entityId: orderId,
-        details: JSON.stringify({
-          previousStatus: existingOrder.status,
-          newStatus: status || existingOrder.status,
-          trackingNumber: trackingNumber || null,
-          carrier: carrier || null,
-          adminNotes: adminNotes || null,
-        }),
-        ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || null,
-      },
-    }).catch(console.error);
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'UPDATE_ORDER',
+      targetType: 'Order',
+      targetId: orderId,
+      previousValue: { status: existingOrder.status },
+      newValue: { status: status || existingOrder.status, trackingNumber: trackingNumber || null, carrier: carrier || null, adminNotes: adminNotes || null },
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json({ order });
   } catch (error) {
@@ -422,29 +416,16 @@ export const POST = withAdminGuard(async (request, { session }) => {
     const failCount = results.filter((r) => !r.success).length;
 
     // Audit log for batch order update (fire-and-forget, one entry for the whole batch)
-    prisma.auditLog.create({
-      data: {
-        id: `audit_batch_order_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 8)}`,
-        userId: session.user.id,
-        action: 'ADMIN_BATCH_UPDATE_ORDERS',
-        entityType: 'Order',
-        entityId: `batch_${orders.length}`,
-        details: JSON.stringify({
-          totalOrders: orders.length,
-          succeeded: successCount,
-          failed: failCount,
-          results: results.map((r) => ({
-            orderId: r.orderId,
-            orderNumber: r.orderNumber,
-            success: r.success,
-            previousStatus: r.previousStatus,
-            newStatus: r.newStatus,
-            error: r.error,
-          })),
-        }),
-        ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || null,
-      },
-    }).catch(console.error);
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'BATCH_UPDATE_ORDERS',
+      targetType: 'Order',
+      targetId: `batch_${orders.length}`,
+      newValue: { totalOrders: orders.length, succeeded: successCount, failed: failCount },
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+      metadata: { results: results.map((r) => ({ orderId: r.orderId, orderNumber: r.orderNumber, success: r.success, previousStatus: r.previousStatus, newStatus: r.newStatus, error: r.error })) },
+    }).catch(() => {});
 
     return NextResponse.json({
       success: failCount === 0,

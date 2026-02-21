@@ -90,7 +90,7 @@ interface TaxSummary {
 function getRegionTaxRate(regionCode: string): number {
   const rates: Record<string, number> = {
     QC: 0.14975, ON: 0.13, BC: 0.12, AB: 0.05,
-    MB: 0.12, SK: 0.11, NS: 0.15, NB: 0.15,
+    MB: 0.12, SK: 0.11, NS: 0.14, NB: 0.15,
     NL: 0.15, PE: 0.15, NT: 0.05, NU: 0.05, YT: 0.05,
     US: 0, FR: 0.20, GB: 0.20, JP: 0.10,
     AU: 0.10, AE: 0.05, IL: 0.17, CL: 0.19, PE_COUNTRY: 0.18,

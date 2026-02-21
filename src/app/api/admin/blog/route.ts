@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { enqueue } from '@/lib/translation';
 
 // GET /api/admin/blog - List all blog posts
@@ -217,6 +218,17 @@ export const POST = withAdminGuard(async (request, { session }) => {
 
     // Auto-enqueue translation for all 21 locales
     enqueue.blogPost(post.id);
+
+    // Audit log (fire-and-forget)
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'CREATE_BLOG_POST',
+      targetType: 'BlogPost',
+      targetId: post.id,
+      newValue: { title: post.title, slug: post.slug, isPublished: post.isPublished, category: post.category },
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json({ post }, { status: 201 });
   } catch (error) {

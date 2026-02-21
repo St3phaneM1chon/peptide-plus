@@ -187,7 +187,7 @@ export default function QuestionsPage() {
     return filteredQuestions.map((q) => ({
       id: q.id,
       avatar: { text: q.userName || 'U' },
-      title: q.userName || 'Utilisateur',
+      title: q.userName || t('admin.questions.anonymousUser'),
       subtitle: q.productName,
       preview: q.question.length > 80 ? q.question.slice(0, 80) + '...' : q.question,
       timestamp: q.createdAt,
@@ -270,7 +270,7 @@ export default function QuestionsPage() {
             selectedQuestion ? (
               <DetailPane
                 header={{
-                  title: selectedQuestion.userName || 'Utilisateur',
+                  title: selectedQuestion.userName || t('admin.questions.anonymousUser'),
                   subtitle: `${selectedQuestion.productName} - ${new Date(selectedQuestion.createdAt).toLocaleDateString(locale)}`,
                   avatar: { text: selectedQuestion.userName || 'U' },
                   onBack: () => setSelectedQuestionId(null),
@@ -362,7 +362,7 @@ export default function QuestionsPage() {
                   {/* Contact info */}
                   {selectedQuestion.userEmail && (
                     <div className="bg-slate-50 rounded-lg p-4">
-                      <h4 className="font-semibold text-slate-900 mb-2">Contact</h4>
+                      <h4 className="font-semibold text-slate-900 mb-2">{t('admin.questions.contactInfo')}</h4>
                       <p className="text-sm text-slate-600">{selectedQuestion.userEmail}</p>
                     </div>
                   )}

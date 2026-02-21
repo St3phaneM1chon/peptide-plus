@@ -32,18 +32,16 @@ export async function GET(request: NextRequest) {
       async () => {
         // Try pg_trgm similarity first for better suggestions
         try {
-          const results = await prisma.$queryRawUnsafe<{ name: string; slug: string }[]>(
-            `SELECT DISTINCT "name", "slug"
-             FROM "Product"
-             WHERE "isActive" = true
-               AND ("name" ILIKE $1 OR similarity("name", $2) > 0.3)
-             ORDER BY
-               CASE WHEN "name" ILIKE $1 THEN 0 ELSE 1 END,
-               "purchaseCount" DESC
-             LIMIT 5`,
-            `${query}%`,
-            query
-          );
+          const prefix = `${query}%`;
+          const results = await prisma.$queryRaw<{ name: string; slug: string }[]>`
+            SELECT DISTINCT "name", "slug"
+            FROM "Product"
+            WHERE "isActive" = true
+              AND ("name" ILIKE ${prefix} OR similarity("name", ${query}) > 0.3)
+            ORDER BY
+              CASE WHEN "name" ILIKE ${prefix} THEN 0 ELSE 1 END,
+              "purchaseCount" DESC
+            LIMIT 5`;
           return results;
         } catch {
           // Fallback to ILIKE if pg_trgm is not available

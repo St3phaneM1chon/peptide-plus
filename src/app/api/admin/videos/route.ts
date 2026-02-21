@@ -10,6 +10,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { enqueue } from '@/lib/translation';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 
 // GET /api/admin/videos - List all videos
 export const GET = withAdminGuard(async (request, { session }) => {
@@ -190,6 +191,16 @@ export const POST = withAdminGuard(async (request, { session }) => {
 
     // Auto-enqueue translation for all 21 locales
     enqueue.video(video.id);
+
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'CREATE_VIDEO',
+      targetType: 'Video',
+      targetId: video.id,
+      newValue: { title, slug: video.slug, category, isPublished: isPublished ?? false },
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json({ video }, { status: 201 });
   } catch (error) {

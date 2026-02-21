@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useI18n } from '@/i18n/client';
 
 export default function NewsletterPopup() {
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
   const { data: session } = useSession();
   const [isOpen, setIsOpen] = useState(false);
   const [email, setEmail] = useState('');
@@ -60,37 +60,35 @@ export default function NewsletterPopup() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
+
     try {
-      // Save to backend API
-      const response = await fetch('/api/newsletter', {
+      // CASL-compliant: Use double opt-in endpoint
+      const response = await fetch('/api/mailing-list/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email,
-          source: 'popup',
-          locale: locale || 'en',
-          marketingConsent: true,
-          consentTimestamp: new Date().toISOString(),
+          consentMethod: 'popup',
+          preferences: ['promotions', 'promo_codes', 'specials', 'new_products'],
         }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to subscribe');
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || 'Failed to subscribe');
       }
     } catch (error) {
       console.error('Newsletter subscription error:', error);
-      // Still continue to show success - local storage backup
     }
-    
+
     // Save subscription locally as backup
     localStorage.setItem('newsletter_subscribed', 'true');
     localStorage.setItem('newsletter_email', email);
-    
+
     // Generate discount code
     const discountCode = `WELCOME10-${Date.now().toString(36).toUpperCase().slice(-6)}`;
     localStorage.setItem('discount_code', discountCode);
-    
+
     setIsLoading(false);
     setIsSubmitted(true);
   };
@@ -232,8 +230,11 @@ export default function NewsletterPopup() {
             <h2 className="text-2xl font-bold text-gray-900 mb-2">
               {t('newsletter.successTitle')}
             </h2>
-            <p className="text-gray-600 mb-6">
-              {t('newsletter.successMessage')}
+            <p className="text-gray-600 mb-4">
+              {t('newsletter.confirmEmailSent')}
+            </p>
+            <p className="text-sm text-gray-500 mb-6">
+              {t('newsletter.checkSpam')}
             </p>
             
             {/* Discount Code Display */}

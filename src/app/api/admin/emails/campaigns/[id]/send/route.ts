@@ -11,6 +11,7 @@ import { withAdminGuard } from '@/lib/admin-api-guard';
 import { sendEmail } from '@/lib/email/email-service';
 import { generateUnsubscribeUrl } from '@/lib/email/unsubscribe';
 import { shouldSuppressEmail } from '@/lib/email/bounce-handler';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 
 export const POST = withAdminGuard(
   async (_request: NextRequest, { session, params }: { session: { user: { id: string } }; params: { id: string } }) => {
@@ -125,6 +126,16 @@ export const POST = withAdminGuard(
           }),
         },
       });
+
+      logAdminAction({
+        adminUserId: session.user.id,
+        action: 'SEND_EMAIL_CAMPAIGN',
+        targetType: 'EmailCampaign',
+        targetId: params.id,
+        newValue: { sent, failed, totalRecipients: validRecipients.length },
+        ipAddress: getClientIpFromRequest(_request),
+        userAgent: _request.headers.get('user-agent') || undefined,
+      }).catch(() => {});
 
       return NextResponse.json({
         success: true,
