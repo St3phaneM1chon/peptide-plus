@@ -267,3 +267,50 @@ export const PUT = withAdminGuard(async (request, { session }) => {
     );
   }
 });
+
+// PATCH /api/admin/settings - Partial update (single key-value)
+// Some admin pages (ambassador config, etc.) use PATCH for partial updates
+export const PATCH = withAdminGuard(async (request, { session }) => {
+  try {
+    const body = await request.json();
+    const { key, value, type, module, description } = body;
+
+    if (!key || value === undefined) {
+      return NextResponse.json({ error: 'key and value are required' }, { status: 400 });
+    }
+
+    const result = await prisma.siteSetting.upsert({
+      where: { key },
+      update: {
+        value: typeof value === 'object' ? JSON.stringify(value) : String(value),
+        ...(type && { type }),
+        ...(module && { module }),
+        ...(description !== undefined && { description }),
+        updatedBy: session.user.id,
+      },
+      create: {
+        key,
+        value: typeof value === 'object' ? JSON.stringify(value) : String(value),
+        type: type || 'text',
+        module: module || 'general',
+        description: description || null,
+        updatedBy: session.user.id,
+      },
+    });
+
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'PATCH_SETTING',
+      targetType: 'SiteSetting',
+      targetId: key,
+      newValue: { key, value: typeof value === 'string' ? value.substring(0, 200) : '(object)' },
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
+
+    return NextResponse.json({ success: true, setting: result });
+  } catch (error) {
+    console.error('Admin settings PATCH error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+});

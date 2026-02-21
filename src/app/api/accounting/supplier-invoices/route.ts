@@ -103,7 +103,7 @@ export const POST = withAdminGuard(async (request) => {
     const parsed = createSupplierInvoiceSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Données invalides', details: parsed.error.flatten().fieldErrors },
+        { error: 'Données invalides' },
         { status: 400 }
       );
     }

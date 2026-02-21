@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { sanitizeHtml, stripHtml } from '@/lib/validation';
 
 // GET /api/admin/content/pages - List all pages
 export const GET = withAdminGuard(async (_request, { session }) => {
@@ -28,6 +29,13 @@ export const POST = withAdminGuard(async (request, { session }) => {
     return NextResponse.json({ error: 'Title, slug, and content are required' }, { status: 400 });
   }
 
+  // BE-SEC-06: Sanitize content to prevent stored XSS
+  const safeTitle = typeof title === 'string' ? stripHtml(title) : title;
+  const safeContent = typeof content === 'string' ? sanitizeHtml(content) : content;
+  const safeExcerpt = typeof excerpt === 'string' ? stripHtml(excerpt) : excerpt;
+  const safeMetaTitle = typeof metaTitle === 'string' ? stripHtml(metaTitle) : metaTitle;
+  const safeMetaDesc = typeof metaDescription === 'string' ? stripHtml(metaDescription) : metaDescription;
+
   // Check slug uniqueness
   const existing = await prisma.page.findUnique({ where: { slug } });
   if (existing) {
@@ -36,12 +44,12 @@ export const POST = withAdminGuard(async (request, { session }) => {
 
   const page = await prisma.page.create({
     data: {
-      title,
+      title: safeTitle,
       slug,
-      content,
-      excerpt: excerpt || null,
-      metaTitle: metaTitle || null,
-      metaDescription: metaDescription || null,
+      content: safeContent,
+      excerpt: safeExcerpt || null,
+      metaTitle: safeMetaTitle || null,
+      metaDescription: safeMetaDesc || null,
       template: template || 'default',
       isPublished: isPublished || false,
       publishedAt: isPublished ? new Date() : null,
@@ -87,15 +95,22 @@ export const PUT = withAdminGuard(async (request, { session }) => {
   const wasPublished = existing.isPublished;
   const nowPublished = isPublished ?? existing.isPublished;
 
+  // BE-SEC-06: Sanitize content on update too
+  const safeTitle2 = typeof title === 'string' ? stripHtml(title) : title;
+  const safeContent2 = typeof content === 'string' ? sanitizeHtml(content) : content;
+  const safeExcerpt2 = typeof excerpt === 'string' ? stripHtml(excerpt) : excerpt;
+  const safeMetaTitle2 = typeof metaTitle === 'string' ? stripHtml(metaTitle) : metaTitle;
+  const safeMetaDesc2 = typeof metaDescription === 'string' ? stripHtml(metaDescription) : metaDescription;
+
   const page = await prisma.page.update({
     where: { id },
     data: {
-      title: title ?? existing.title,
+      title: safeTitle2 ?? existing.title,
       slug: slug ?? existing.slug,
-      content: content ?? existing.content,
-      excerpt: excerpt !== undefined ? excerpt : existing.excerpt,
-      metaTitle: metaTitle !== undefined ? metaTitle : existing.metaTitle,
-      metaDescription: metaDescription !== undefined ? metaDescription : existing.metaDescription,
+      content: safeContent2 ?? existing.content,
+      excerpt: safeExcerpt2 !== undefined ? safeExcerpt2 : existing.excerpt,
+      metaTitle: safeMetaTitle2 !== undefined ? safeMetaTitle2 : existing.metaTitle,
+      metaDescription: safeMetaDesc2 !== undefined ? safeMetaDesc2 : existing.metaDescription,
       template: template ?? existing.template,
       isPublished: nowPublished,
       publishedAt: !wasPublished && nowPublished ? new Date() : existing.publishedAt,

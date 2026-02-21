@@ -5,6 +5,7 @@ import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { enqueue } from '@/lib/translation';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { sanitizeSimpleHtml, stripHtml } from '@/lib/validation';
 
 // GET /api/admin/content/faqs - List all FAQs
 export const GET = withAdminGuard(async (_request, { session }) => {
@@ -29,10 +30,14 @@ export const POST = withAdminGuard(async (request, { session }) => {
     return NextResponse.json({ error: 'Question and answer are required' }, { status: 400 });
   }
 
+  // BE-SEC-06: Sanitize FAQ text content
+  const safeQuestion = typeof question === 'string' ? stripHtml(question) : question;
+  const safeAnswer = typeof answer === 'string' ? sanitizeSimpleHtml(answer) : answer;
+
   const faq = await prisma.faq.create({
     data: {
-      question,
-      answer,
+      question: safeQuestion,
+      answer: safeAnswer,
       category: category || 'general',
       sortOrder: sortOrder ?? 0,
       isPublished: isPublished ?? true,
@@ -64,11 +69,15 @@ export const PUT = withAdminGuard(async (request, { session }) => {
     return NextResponse.json({ error: 'FAQ ID is required' }, { status: 400 });
   }
 
+  // BE-SEC-06: Sanitize on update too
+  const safeQ = typeof question === 'string' ? stripHtml(question) : question;
+  const safeA = typeof answer === 'string' ? sanitizeSimpleHtml(answer) : answer;
+
   const faq = await prisma.faq.update({
     where: { id },
     data: {
-      ...(question !== undefined && { question }),
-      ...(answer !== undefined && { answer }),
+      ...(safeQ !== undefined && { question: safeQ }),
+      ...(safeA !== undefined && { answer: safeA }),
       ...(category !== undefined && { category }),
       ...(sortOrder !== undefined && { sortOrder }),
       ...(isPublished !== undefined && { isPublished }),

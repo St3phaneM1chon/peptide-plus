@@ -138,7 +138,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
     const parsed = postEntrySchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Données invalides', details: formatZodErrors(parsed.error) },
+        { error: 'Données invalides' },
         { status: 400 }
       );
     }
@@ -297,7 +297,7 @@ export const PUT = withAdminGuard(async (request, { session }) => {
     const putValidation = updateJournalEntrySchema.safeParse(body);
     if (!putValidation.success) {
       return NextResponse.json(
-        { error: 'Données invalides', details: formatZodErrors(putValidation.error) },
+        { error: 'Données invalides' },
         { status: 400 }
       );
     }

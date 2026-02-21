@@ -11,6 +11,7 @@ import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { enqueue } from '@/lib/translation';
+import { sanitizeHtml, stripHtml } from '@/lib/validation';
 
 // GET /api/admin/blog - List all blog posts
 export const GET = withAdminGuard(async (request, { session }) => {
@@ -172,12 +173,19 @@ export const POST = withAdminGuard(async (request, { session }) => {
       ? (Array.isArray(tags) ? JSON.stringify(tags) : tags)
       : null;
 
+    // BE-SEC-06: Sanitize rich-text content to prevent stored XSS
+    const safeTitle = typeof title === 'string' ? stripHtml(title) : title;
+    const safeExcerpt = typeof excerpt === 'string' ? stripHtml(excerpt) : excerpt;
+    const safeContent = typeof content === 'string' ? sanitizeHtml(content) : content;
+    const safeMetaTitle = typeof metaTitle === 'string' ? stripHtml(metaTitle) : metaTitle;
+    const safeMetaDesc = typeof metaDescription === 'string' ? stripHtml(metaDescription) : metaDescription;
+
     const post = await prisma.blogPost.create({
       data: {
-        title,
+        title: safeTitle,
         slug,
-        excerpt: excerpt || null,
-        content: content || null,
+        excerpt: safeExcerpt || null,
+        content: safeContent || null,
         imageUrl: imageUrl || null,
         author: author || null,
         category: category || null,
@@ -187,8 +195,8 @@ export const POST = withAdminGuard(async (request, { session }) => {
         isPublished: isPublished ?? false,
         publishedAt: publishedAt ? new Date(publishedAt) : (isPublished ? new Date() : null),
         locale: locale || 'en',
-        metaTitle: metaTitle || null,
-        metaDescription: metaDescription || null,
+        metaTitle: safeMetaTitle || null,
+        metaDescription: safeMetaDesc || null,
         ...(translations && translations.length > 0
           ? {
               translations: {

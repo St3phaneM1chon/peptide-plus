@@ -109,7 +109,7 @@ export const POST = withAdminGuard(async (request) => {
     const parsed = createCustomerInvoiceSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Données invalides', details: formatZodErrors(parsed.error) },
+        { error: 'Données invalides' },
         { status: 400 }
       );
     }

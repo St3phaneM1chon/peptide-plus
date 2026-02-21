@@ -4,6 +4,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { UserRole } from '@/types';
+import { sanitizeUrl } from '@/lib/sanitize';
+import { stripHtml } from '@/lib/validation';
 
 // GET - Liste toutes les slides (admin)
 export async function GET() {
@@ -48,6 +50,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // BE-SEC-06: Validate URLs to prevent SSRF and XSS via javascript: protocol
+    const safeBackgroundUrl = sanitizeUrl(backgroundUrl);
+    if (!safeBackgroundUrl) {
+      return NextResponse.json({ error: 'URL de fond invalide' }, { status: 400 });
+    }
+    const safeBackgroundMobile = backgroundMobile ? sanitizeUrl(backgroundMobile) : null;
+    if (backgroundMobile && !safeBackgroundMobile) {
+      return NextResponse.json({ error: 'URL mobile invalide' }, { status: 400 });
+    }
+
+    // Sanitize text fields
+    const safeTitle = typeof title === 'string' ? stripHtml(title) : title;
+    const safeSubtitle = typeof subtitle === 'string' ? stripHtml(subtitle) : subtitle;
+    const safeBadgeText = typeof badgeText === 'string' ? stripHtml(badgeText) : badgeText;
+
     const existing = await prisma.heroSlide.findUnique({ where: { slug } });
     if (existing) {
       return NextResponse.json({ error: 'Ce slug existe déjà' }, { status: 400 });
@@ -57,13 +74,13 @@ export async function POST(request: NextRequest) {
       data: {
         slug,
         mediaType: mediaType || 'IMAGE',
-        backgroundUrl,
-        backgroundMobile,
+        backgroundUrl: safeBackgroundUrl,
+        backgroundMobile: safeBackgroundMobile,
         overlayOpacity: overlayOpacity ?? 70,
         overlayGradient,
-        badgeText,
-        title,
-        subtitle,
+        badgeText: safeBadgeText,
+        title: safeTitle,
+        subtitle: safeSubtitle,
         ctaText,
         ctaUrl,
         ctaStyle,
