@@ -2611,6 +2611,8 @@
       "mediaX": "X (Twitter)",
       "mediaTikTok": "TikTok",
       "mediaGoogle": "Google Ads",
+      "mediaMeta": "Meta (FB/IG)",
+      "mediaLinkedIn": "LinkedIn",
       "mediaVideos": "Vidéos",
       "mediaImages": "Images",
       "mediaLibrary": "Bibliothèque"

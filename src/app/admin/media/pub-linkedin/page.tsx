@@ -1,27 +1,29 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Video } from 'lucide-react';
+import { Briefcase } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
 import { IntegrationCard } from '@/components/admin/IntegrationCard';
 
-export default function MediaYouTubePage() {
+export default function MediaLinkedInPage() {
   const { t } = useI18n();
   const [enabled, setEnabled] = useState(false);
-  const [channelId, setChannelId] = useState('');
-  const [apiKey, setApiKey] = useState('');
+  const [companyId, setCompanyId] = useState('');
+  const [appId, setAppId] = useState('');
   const [hasClientSecret, setHasClientSecret] = useState(false);
+  const [hasAccessToken, setHasAccessToken] = useState(false);
   const [webhookUrl, setWebhookUrl] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/admin/integrations/youtube')
+    fetch('/api/admin/integrations/linkedin')
       .then(res => res.json())
       .then(data => {
         setEnabled(data.enabled || false);
-        setChannelId(data.channelId || '');
-        setApiKey(data.apiKey || '');
+        setCompanyId(data.companyId || '');
+        setAppId(data.appId || '');
         setHasClientSecret(data.hasClientSecret || false);
+        setHasAccessToken(data.hasAccessToken || false);
         setWebhookUrl(data.webhookUrl || '');
       })
       .catch(console.error)
@@ -29,16 +31,16 @@ export default function MediaYouTubePage() {
   }, []);
 
   const handleSave = async () => {
-    const res = await fetch('/api/admin/integrations/youtube', {
+    const res = await fetch('/api/admin/integrations/linkedin', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ enabled, channelId, apiKey }),
+      body: JSON.stringify({ enabled, companyId, appId }),
     });
     if (!res.ok) throw new Error('Save failed');
   };
 
   const handleTest = async () => {
-    const res = await fetch('/api/admin/integrations/youtube', {
+    const res = await fetch('/api/admin/integrations/linkedin', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'test' }),
@@ -54,33 +56,42 @@ export default function MediaYouTubePage() {
   return (
     <div className="p-6 max-w-3xl">
       <IntegrationCard
-        title={t('admin.media.youtubeTitle')}
-        description="Connect your YouTube channel for video management, playlists, analytics, and ad campaigns. Free API — 10,000 units/day."
-        icon={<Video className="w-6 h-6" />}
-        color="from-red-500 to-red-600"
+        title="LinkedIn Marketing"
+        description="Connect LinkedIn Marketing API for B2B campaigns targeting researchers, lab directors, and biotech professionals. Free API access, 2-4 weeks approval."
+        icon={<Briefcase className="w-6 h-6" />}
+        color="from-blue-700 to-blue-800"
         enabled={enabled}
         onToggle={setEnabled}
         fields={[
           {
-            key: 'channelId',
-            label: 'Channel ID',
-            value: channelId,
-            onChange: setChannelId,
-            placeholder: 'UCxxxxxxxxxxxxxxxxxxxxxxxxx',
-            hint: 'Found in YouTube Studio > Settings > Channel > Advanced Settings',
+            key: 'companyId',
+            label: 'Company Page ID',
+            value: companyId,
+            onChange: setCompanyId,
+            placeholder: '12345678',
+            hint: 'Found in LinkedIn Admin Center > Page source URL or via API',
           },
           {
-            key: 'apiKey',
-            label: 'API Key (Data API v3)',
-            value: apiKey,
-            onChange: setApiKey,
-            placeholder: 'AIzaSy...',
-            hint: 'Create in Google Cloud Console > APIs & Services > Credentials',
+            key: 'appId',
+            label: 'App Client ID',
+            value: appId,
+            onChange: setAppId,
+            placeholder: '86xxxxxxxx',
+            hint: 'Found in LinkedIn Developer Portal > My Apps > Auth',
           },
           {
             key: 'clientSecret',
-            label: 'OAuth Client Secret',
+            label: 'Client Secret',
             value: hasClientSecret ? '********' : '',
+            onChange: () => {},
+            readOnly: true,
+            type: 'password',
+            hint: t('admin.integrations.secretEnvHint'),
+          },
+          {
+            key: 'accessToken',
+            label: 'Access Token',
+            value: hasAccessToken ? '********' : '',
             onChange: () => {},
             readOnly: true,
             type: 'password',
@@ -90,7 +101,7 @@ export default function MediaYouTubePage() {
         onSave={handleSave}
         onTest={handleTest}
         webhookUrl={webhookUrl}
-        docsUrl="https://developers.google.com/youtube/v3"
+        docsUrl="https://learn.microsoft.com/en-us/linkedin/marketing/"
       />
     </div>
   );

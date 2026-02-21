@@ -170,9 +170,11 @@ export const folderSections: Record<string, NavFolderSection> = {
         labelKey: 'admin.nav.mediaAds',
         items: [
           { href: '/admin/media/pub-youtube', labelKey: 'admin.nav.mediaYouTube', icon: Video },
+          { href: '/admin/media/pub-meta', labelKey: 'admin.nav.mediaMeta', icon: Globe },
           { href: '/admin/media/pub-x', labelKey: 'admin.nav.mediaX', icon: MessageCircle },
           { href: '/admin/media/pub-tiktok', labelKey: 'admin.nav.mediaTikTok', icon: Activity },
           { href: '/admin/media/pub-google', labelKey: 'admin.nav.mediaGoogle', icon: Search },
+          { href: '/admin/media/pub-linkedin', labelKey: 'admin.nav.mediaLinkedIn', icon: Briefcase },
         ],
         collapsible: true,
         defaultOpen: true,
