@@ -198,10 +198,11 @@ export default function OCRPage() {
             />
 
             {scanning ? (
-              <div className="text-center py-8">
+              <div className="text-center py-8" role="status" aria-label="Loading">
                 <div className="animate-spin h-12 w-12 border-4 border-emerald-500 border-t-transparent rounded-full mx-auto"></div>
                 <p className="text-slate-900 font-medium mt-4">{t('admin.ocrScan.analyzing')}</p>
                 <p className="text-sm text-slate-500 mt-1">{t('admin.ocrScan.aiExtraction')}</p>
+                <span className="sr-only">Loading...</span>
               </div>
             ) : uploadedImage ? (
               <div className="text-center">
@@ -308,7 +309,7 @@ export default function OCRPage() {
                 {extractedData.items && extractedData.items.length > 0 && (
                   <div>
                     <label className="block text-xs font-medium text-slate-500 mb-2">{t('admin.ocrScan.items')}</label>
-                    <div className="bg-slate-50 rounded-lg overflow-hidden border border-slate-200">
+                    <div className="bg-slate-50 rounded-lg overflow-hidden overflow-x-auto border border-slate-200">
                       <table className="w-full text-sm">
                         <thead className="bg-slate-100">
                           <tr>

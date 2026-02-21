@@ -37,9 +37,10 @@ import {
 } from 'lucide-react';
 import { PageHeader } from '@/components/admin/PageHeader';
 import { Button } from '@/components/admin/Button';
-import { StatusBadge } from '@/components/admin/StatusBadge';
+import { StatusBadge, type BadgeVariant } from '@/components/admin/StatusBadge';
 import { StatCard } from '@/components/admin/StatCard';
 import { useI18n } from '@/i18n/client';
+import { toast } from 'sonner';
 
 // ---------------------------------------------------------------------------
 // Interfaces
@@ -201,7 +202,6 @@ interface ReviewItem {
 // Constants
 // ---------------------------------------------------------------------------
 
-type BadgeVariant = 'success' | 'warning' | 'error' | 'info' | 'neutral' | 'primary';
 
 const statusConfig: Record<string, { variant: BadgeVariant; icon: typeof Clock }> = {
   PENDING: { variant: 'warning', icon: Clock },
@@ -299,7 +299,8 @@ export default function ClientDetailPage() {
       setSubscriptions(data.subscriptions || []);
       setReviews(data.reviews || []);
     } catch (err) {
-      console.error('Error fetching user:', err);
+      console.error(err);
+      toast.error(t('common.errorOccurred'));
     }
     setLoading(false);
   };
@@ -313,8 +314,9 @@ export default function ClientDetailPage() {
       hour: '2-digit', minute: '2-digit',
     });
 
-  const formatCurrency = (amount: number) =>
-    `${Number(amount).toFixed(2)} $`;
+  function formatCurrency(amount: number): string {
+    return new Intl.NumberFormat('fr-CA', { style: 'currency', currency: 'CAD' }).format(amount);
+  }
 
   // Toggle expanded conversation
   const toggleConversation = (convId: string) => {
@@ -348,7 +350,8 @@ export default function ClientDetailPage() {
         await fetchUserDetail();
       }
     } catch (err) {
-      console.error('Error adjusting points:', err);
+      console.error(err);
+      toast.error(t('common.errorOccurred'));
     }
     setPointsLoading(false);
   };
@@ -378,8 +381,9 @@ export default function ClientDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-96">
+      <div className="flex items-center justify-center h-96" role="status" aria-label="Loading">
         <div className="animate-spin rounded-full h-8 w-8 border-2 border-sky-500 border-t-transparent" />
+        <span className="sr-only">Loading...</span>
       </div>
     );
   }
@@ -455,13 +459,13 @@ export default function ClientDetailPage() {
 
       {/* Points Adjustment Modal */}
       {showPointsModal && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="points-modal-title">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
-            <h3 className="text-lg font-semibold text-slate-900 mb-4">
+            <h3 id="points-modal-title" className="text-lg font-semibold text-slate-900 mb-4">
               {t('admin.customerDetail.pointsModal.title')}
             </h3>
             <p className="text-sm text-slate-500 mb-4">
-              {t('admin.customerDetail.pointsModal.currentBalance')}: {user.loyaltyPoints.toLocaleString()} pts
+              {t('admin.customerDetail.pointsModal.currentBalance')}: {user.loyaltyPoints.toLocaleString(locale)} pts
             </p>
             <div className="space-y-3">
               <div>
@@ -556,7 +560,7 @@ export default function ClientDetailPage() {
             <div>
               <p className="text-xs text-slate-500 mb-1">{t('admin.customerDetail.profile.loyalty')}</p>
               <StatusBadge variant={tierVariants[user.loyaltyTier] || 'neutral'}>
-                {user.loyaltyTier} - {user.loyaltyPoints.toLocaleString()} pts
+                {user.loyaltyTier} - {user.loyaltyPoints.toLocaleString(locale)} pts
               </StatusBadge>
             </div>
             <div>
@@ -962,7 +966,7 @@ export default function ClientDetailPage() {
             {tierProgress.nextTier ? (
               <p className="text-sm text-slate-500">
                 {t('admin.customerDetail.loyalty.pointsRemaining', {
-                  points: tierProgress.remaining.toLocaleString(),
+                  points: tierProgress.remaining.toLocaleString(locale),
                   tier: tierProgress.nextTier,
                 })}
               </p>
@@ -972,7 +976,7 @@ export default function ClientDetailPage() {
               </p>
             )}
             <p className="text-xs text-slate-400 mt-1">
-              {t('admin.customerDetail.loyalty.lifetimePoints')}: {user.lifetimePoints.toLocaleString()} pts
+              {t('admin.customerDetail.loyalty.lifetimePoints')}: {user.lifetimePoints.toLocaleString(locale)} pts
             </p>
           </div>
 
@@ -1026,7 +1030,7 @@ export default function ClientDetailPage() {
             <div className="p-4 border-b border-slate-100 bg-slate-50">
               <h3 className="font-semibold text-slate-900">{t('admin.customerDetail.loyalty.history')}</h3>
               <p className="text-sm text-slate-500">
-                {user.loyaltyPoints.toLocaleString()} {t('admin.customerDetail.loyalty.currentPoints')} / {user.lifetimePoints.toLocaleString()} {t('admin.customerDetail.loyalty.cumulativePoints')}
+                {user.loyaltyPoints.toLocaleString(locale)} {t('admin.customerDetail.loyalty.currentPoints')} / {user.lifetimePoints.toLocaleString(locale)} {t('admin.customerDetail.loyalty.cumulativePoints')}
               </p>
             </div>
             {user.loyaltyTransactions.length > 0 ? (

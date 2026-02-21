@@ -17,50 +17,25 @@ import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import * as jose from 'jose';
 
+// Re-export from the shared module for backwards compatibility
+export { generateUnsubscribeUrl, generateUnsubscribeToken, type UnsubscribeCategory } from '@/lib/email/unsubscribe';
+
 // ---------------------------------------------------------------------------
-// Token utilities
+// Token utilities (verification only - generation moved to @/lib/email/unsubscribe)
 // ---------------------------------------------------------------------------
 
-const UNSUBSCRIBE_SECRET = new TextEncoder().encode(
-  process.env.UNSUBSCRIBE_SECRET || process.env.NEXTAUTH_SECRET || 'unsubscribe-fallback-secret-change-me'
-);
-
-export type UnsubscribeCategory = 'marketing' | 'transactional' | 'newsletter' | 'all';
+function getUnsubscribeSecret() {
+  const secret = process.env.UNSUBSCRIBE_SECRET || process.env.NEXTAUTH_SECRET;
+  if (!secret) {
+    throw new Error('UNSUBSCRIBE_SECRET or NEXTAUTH_SECRET must be configured');
+  }
+  return new TextEncoder().encode(secret);
+}
 
 interface UnsubscribePayload {
   email: string;
-  category: UnsubscribeCategory;
+  category: 'marketing' | 'transactional' | 'newsletter' | 'all';
   userId?: string;
-}
-
-/**
- * Generate an unsubscribe token (used in email templates)
- */
-export async function generateUnsubscribeToken(
-  email: string,
-  category: UnsubscribeCategory = 'marketing',
-  userId?: string
-): Promise<string> {
-  const token = await new jose.SignJWT({ email, category, userId })
-    .setProtectedHeader({ alg: 'HS256' })
-    .setExpirationTime('90d') // Token valid for 90 days
-    .setIssuedAt()
-    .sign(UNSUBSCRIBE_SECRET);
-
-  return token;
-}
-
-/**
- * Generate the full unsubscribe URL
- */
-export async function generateUnsubscribeUrl(
-  email: string,
-  category: UnsubscribeCategory = 'marketing',
-  userId?: string
-): Promise<string> {
-  const token = await generateUnsubscribeToken(email, category, userId);
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || 'https://biocyclepeptides.com';
-  return `${baseUrl}/api/unsubscribe?token=${token}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -78,7 +53,7 @@ export async function GET(request: NextRequest) {
     // Verify token
     let payload: UnsubscribePayload;
     try {
-      const { payload: verified } = await jose.jwtVerify(token, UNSUBSCRIBE_SECRET);
+      const { payload: verified } = await jose.jwtVerify(token, getUnsubscribeSecret());
       payload = verified as unknown as UnsubscribePayload;
     } catch {
       return NextResponse.json({ error: 'Invalid or expired token' }, { status: 400 });
@@ -124,7 +99,7 @@ export async function POST(request: NextRequest) {
 
     let payload: UnsubscribePayload;
     try {
-      const { payload: verified } = await jose.jwtVerify(token, UNSUBSCRIBE_SECRET);
+      const { payload: verified } = await jose.jwtVerify(token, getUnsubscribeSecret());
       payload = verified as unknown as UnsubscribePayload;
     } catch {
       return NextResponse.json({ error: 'Invalid or expired token' }, { status: 400 });

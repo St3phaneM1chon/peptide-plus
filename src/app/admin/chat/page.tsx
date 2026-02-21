@@ -27,6 +27,7 @@ import {
   Input,
 } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
+import { toast } from 'sonner';
 
 interface Message {
   id: string;
@@ -78,7 +79,7 @@ export default function AdminChatPage() {
     fetch('/api/chat/settings')
       .then(res => res.json())
       .then(setSettings)
-      .catch(console.error);
+      .catch((err) => { console.error(err); toast.error(t('common.errorOccurred')); });
   }, []);
 
   // Charger les conversations
@@ -88,7 +89,8 @@ export default function AdminChatPage() {
       const data = await res.json();
       setConversations(data.conversations || []);
     } catch (error) {
-      console.error('Load conversations error:', error);
+      console.error(error);
+      toast.error(t('common.errorOccurred'));
     }
   }, []);
 
@@ -111,7 +113,8 @@ export default function AdminChatPage() {
         setMessages(data.conversation.messages);
       }
     } catch (error) {
-      console.error('Load messages error:', error);
+      console.error(error);
+      toast.error(t('common.errorOccurred'));
     }
   }, [conversations]);
 
@@ -160,7 +163,8 @@ export default function AdminChatPage() {
       setMessages(prev => [...prev, data.message]);
       loadConversations();
     } catch (error) {
-      console.error('Send message error:', error);
+      console.error(error);
+      toast.error(t('common.errorOccurred'));
     } finally {
       setIsLoading(false);
     }
@@ -177,7 +181,8 @@ export default function AdminChatPage() {
       const data = await res.json();
       setSettings(data);
     } catch (error) {
-      console.error('Toggle status error:', error);
+      console.error(error);
+      toast.error(t('common.errorOccurred'));
     }
   };
 

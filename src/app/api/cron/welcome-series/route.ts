@@ -37,7 +37,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { db } from '@/lib/db';
-import { sendEmail, welcomeEmail } from '@/lib/email';
+import { sendEmail, welcomeEmail, generateUnsubscribeUrl } from '@/lib/email';
 import { withJobLock } from '@/lib/cron-lock';
 
 const BATCH_SIZE = 10;
@@ -201,6 +201,9 @@ export async function GET(request: NextRequest) {
               }
             }
 
+            // Generate unsubscribe URL (CAN-SPAM / RGPD / LCAP compliance)
+            const unsubscribeUrl = await generateUnsubscribeUrl(user.email, 'marketing', user.id).catch(() => undefined);
+
             // Use the marketing welcome template
             const emailContent = welcomeEmail({
               customerName: user.name || 'Client',
@@ -208,6 +211,7 @@ export async function GET(request: NextRequest) {
               welcomePoints: WELCOME_POINTS,
               referralCode: referralCode || '',
               locale: (user.locale as 'fr' | 'en') || 'fr',
+              unsubscribeUrl,
             });
 
             // Item 82: Use step-specific subject with template variables
@@ -220,6 +224,7 @@ export async function GET(request: NextRequest) {
               subject: followUpSubject,
               html: emailContent.html,
               tags: step.tags,
+              unsubscribeUrl,
             });
 
             // Log to EmailLog with step-specific templateId for dedup

@@ -5,6 +5,7 @@ import { RefreshCw, Plus, CreditCard, Landmark, PiggyBank, Check } from 'lucide-
 import { PageHeader, Button, StatusBadge, SectionCard } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
 import { sectionThemes } from '@/lib/admin/section-themes';
+import { toast } from 'sonner';
 
 interface BankAccount {
   id: string;
@@ -68,7 +69,8 @@ export default function BanquesPage() {
         setAccounts(mapped);
       }
     } catch (err) {
-      console.error('Error fetching bank accounts:', err);
+      console.error(err);
+      toast.error(t('common.errorOccurred'));
     } finally {
       setLoading(false);
     }
@@ -86,7 +88,8 @@ export default function BanquesPage() {
         setCurrencyRates(rates);
       }
     } catch (err) {
-      console.error('Error fetching currency rates:', err);
+      console.error(err);
+      toast.error(t('common.errorOccurred'));
     }
   };
 
@@ -103,7 +106,8 @@ export default function BanquesPage() {
         setExpectedInflows(total);
       }
     } catch (err) {
-      console.error('Error fetching expected inflows:', err);
+      console.error(err);
+      toast.error(t('common.errorOccurred'));
     }
   };
 
@@ -142,7 +146,8 @@ export default function BanquesPage() {
         setExpectedOutflows(total);
       }
     } catch (err) {
-      console.error('Error fetching expected outflows:', err);
+      console.error(err);
+      toast.error(t('common.errorOccurred'));
     }
   };
 
@@ -170,7 +175,8 @@ export default function BanquesPage() {
         setRecentTransactions(mapped);
       }
     } catch (err) {
-      console.error('Error fetching recent transactions:', err);
+      console.error(err);
+      toast.error(t('common.errorOccurred'));
     }
   };
 
@@ -213,7 +219,7 @@ export default function BanquesPage() {
   if (loading) return (
     <div aria-live="polite" aria-busy="true" className="p-8 space-y-4 animate-pulse">
       <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-1/3"></div>
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[1,2,3,4].map(i => <div key={i} className="h-24 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>)}
       </div>
       <div className="h-64 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
@@ -251,7 +257,7 @@ export default function BanquesPage() {
       </div>
 
       {/* Accounts Grid */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {accounts.map((account) => {
           const Icon = getAccountIcon(account.type);
           return (
@@ -302,6 +308,7 @@ export default function BanquesPage() {
           </a>
         }
       >
+        <div className="overflow-x-auto">
         <table className="w-full">
           <thead className="bg-slate-50">
             <tr>
@@ -344,11 +351,12 @@ export default function BanquesPage() {
             ))}
           </tbody>
         </table>
+        </div>
       </SectionCard>
 
       {/* Cash Flow Forecast */}
       <SectionCard title={t('admin.bankAccounts.cashFlowForecast')} theme={theme}>
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="p-4 bg-slate-50 rounded-lg">
             <p className="text-sm text-slate-500">{t('admin.bankAccounts.currentBalance')}</p>
             <p className="text-xl font-bold text-slate-900">{formatCurrency(totalBalance)}</p>

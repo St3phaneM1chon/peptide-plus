@@ -53,7 +53,7 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
       data: updateData,
     });
 
-    return NextResponse.json({ success: true, zone });
+    return NextResponse.json({ success: true, data: zone });
   } catch (error) {
     console.error('Update shipping zone error:', error);
     return NextResponse.json(

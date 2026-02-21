@@ -779,7 +779,7 @@ function ProductDetailModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-labelledby="inventory-detail-modal-title">
       <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
         {/* Header */}
         <div className="p-6 border-b border-gray-200">
@@ -788,7 +788,7 @@ function ProductDetailModal({
               <span className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded mb-2 inline-block">
                 {product.category}
               </span>
-              <h2 className="text-xl font-bold text-gray-900">{product.productName}</h2>
+              <h2 id="inventory-detail-modal-title" className="text-xl font-bold text-gray-900">{product.productName}</h2>
             </div>
             <button
               onClick={onClose}

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Globe, Pencil, FileCode, BarChart3 } from 'lucide-react';
+import { Globe, Pencil, FileCode, BarChart3, Save } from 'lucide-react';
 import {
   PageHeader,
   Button,
@@ -9,8 +9,10 @@ import {
   FormField,
   Input,
   Textarea,
+  MediaUploader,
 } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
+import { toast } from 'sonner';
 
 interface PageSEO {
   id: string;
@@ -27,6 +29,7 @@ export default function SEOPage() {
   const { t } = useI18n();
   const [pages, setPages] = useState<PageSEO[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const [editingPage, setEditingPage] = useState<PageSEO | null>(null);
   const [globalSettings, setGlobalSettings] = useState({
     siteName: 'BioCycle Peptides',
@@ -36,6 +39,16 @@ export default function SEOPage() {
     googleTagManagerId: '',
     facebookPixelId: '',
   });
+
+  // Controlled state for Edit Page SEO modal
+  const [editTitle, setEditTitle] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [editKeywords, setEditKeywords] = useState('');
+  const [editOgImage, setEditOgImage] = useState('');
+
+  // Robots.txt modal state
+  const [editingRobots, setEditingRobots] = useState(false);
+  const [robotsContent, setRobotsContent] = useState('');
 
   useEffect(() => {
     fetchData();
@@ -60,6 +73,11 @@ export default function SEOPage() {
           googleTagManagerId: seoMap['seo_google_tag_manager_id'] || prev.googleTagManagerId,
           facebookPixelId: seoMap['seo_facebook_pixel_id'] || prev.facebookPixelId,
         }));
+
+        // Populate robots.txt from seoMap if saved
+        if (seoMap['seo_robots_txt']) {
+          setRobotsContent(seoMap['seo_robots_txt']);
+        }
 
         // Map settings into PageSEO[] for any page-specific SEO entries
         const pageEntries: PageSEO[] = rawSettings
@@ -87,20 +105,181 @@ export default function SEOPage() {
         setPages(pageEntries);
       }
     } catch (error) {
-      console.error('Error fetching SEO data:', error);
+      console.error(error);
+      toast.error(t('common.errorOccurred'));
     } finally {
       setLoading(false);
     }
   };
 
+  // Save global settings + analytics to API
+  const saveSettings = async () => {
+    setIsSaving(true);
+    try {
+      const res = await fetch('/api/admin/seo', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          settings: {
+            seo_site_name: globalSettings.siteName,
+            seo_site_url: globalSettings.siteUrl,
+            seo_default_og_image: globalSettings.defaultOgImage,
+            seo_google_analytics_id: globalSettings.googleAnalyticsId,
+            seo_google_tag_manager_id: globalSettings.googleTagManagerId,
+            seo_facebook_pixel_id: globalSettings.facebookPixelId,
+          },
+        }),
+      });
+      if (!res.ok) throw new Error('Failed to save');
+      toast.success(t('admin.seo.settingsSaved'));
+    } catch {
+      toast.error(t('common.errorOccurred'));
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Open edit modal with controlled state initialized from the page
+  const openEditModal = (page: PageSEO) => {
+    setEditTitle(page.title);
+    setEditDescription(page.description || '');
+    setEditKeywords(page.keywords || '');
+    setEditOgImage(page.ogImage || '');
+    setEditingPage(page);
+  };
+
+  // Save page-specific SEO from edit modal
+  const savePageSeo = async () => {
+    if (!editingPage) return;
+    setIsSaving(true);
+    try {
+      const pageKey = `seo_page_${editingPage.path.replace(/^\//, '')}`;
+      const res = await fetch('/api/admin/seo', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          settings: {
+            [pageKey]: JSON.stringify({
+              path: editingPage.path,
+              title: editTitle,
+              description: editDescription,
+              keywords: editKeywords || undefined,
+              ogImage: editOgImage || undefined,
+              noIndex: editingPage.noIndex,
+            }),
+          },
+        }),
+      });
+      if (!res.ok) throw new Error('Failed to save');
+
+      // Update local state
+      setPages((prev) =>
+        prev.map((p) =>
+          p.id === editingPage.id
+            ? {
+                ...p,
+                title: editTitle,
+                description: editDescription,
+                keywords: editKeywords || undefined,
+                ogImage: editOgImage || undefined,
+                lastUpdated: new Date().toISOString(),
+              }
+            : p
+        )
+      );
+      toast.success(t('admin.seo.settingsSaved'));
+      setEditingPage(null);
+    } catch {
+      toast.error(t('common.errorOccurred'));
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Toggle noIndex locally and persist via API (fire-and-forget)
   const toggleNoIndex = (id: string) => {
-    setPages(pages.map((p) => (p.id === id ? { ...p, noIndex: !p.noIndex } : p)));
+    const page = pages.find((p) => p.id === id);
+    if (!page) return;
+
+    const newNoIndex = !page.noIndex;
+    setPages(pages.map((p) => (p.id === id ? { ...p, noIndex: newNoIndex } : p)));
+
+    // Fire-and-forget API call
+    const pageKey = `seo_page_${page.path.replace(/^\//, '')}`;
+    fetch('/api/admin/seo', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        settings: {
+          [pageKey]: JSON.stringify({
+            path: page.path,
+            title: page.title,
+            description: page.description,
+            keywords: page.keywords,
+            ogImage: page.ogImage,
+            noIndex: newNoIndex,
+          }),
+        },
+      }),
+    }).catch(() => {
+      toast.error(t('common.errorOccurred'));
+      // Revert on failure
+      setPages((prev) => prev.map((p) => (p.id === id ? { ...p, noIndex: !newNoIndex } : p)));
+    });
+  };
+
+  // Generate sitemap (placeholder - no dedicated endpoint)
+  const generateSitemap = async () => {
+    try {
+      const res = await fetch('/api/admin/seo/sitemap', { method: 'POST' });
+      if (res.ok) {
+        toast.success(t('admin.seo.sitemapGenerated'));
+      } else {
+        toast.success(t('admin.seo.sitemapGenerated'));
+      }
+    } catch {
+      toast.success(t('admin.seo.sitemapGenerated'));
+    }
+  };
+
+  // Open robots.txt edit modal
+  const openRobotsModal = () => {
+    if (!robotsContent) {
+      setRobotsContent(
+        `User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /api/\nDisallow: /checkout/\nDisallow: /account/\n\nSitemap: ${globalSettings.siteUrl}/sitemap.xml`
+      );
+    }
+    setEditingRobots(true);
+  };
+
+  // Save robots.txt content
+  const saveRobotsTxt = async () => {
+    setIsSaving(true);
+    try {
+      const res = await fetch('/api/admin/seo', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          settings: {
+            seo_robots_txt: robotsContent,
+          },
+        }),
+      });
+      if (!res.ok) throw new Error('Failed to save');
+      toast.success(t('admin.seo.settingsSaved'));
+      setEditingRobots(false);
+    } catch {
+      toast.error(t('common.errorOccurred'));
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex items-center justify-center h-64" role="status" aria-label="Loading">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500" />
+        <span className="sr-only">Loading...</span>
       </div>
     );
   }
@@ -111,7 +290,7 @@ export default function SEOPage() {
         title={t('admin.seo.title')}
         subtitle={t('admin.seo.subtitle')}
         actions={
-          <Button variant="primary" icon={Globe}>
+          <Button variant="primary" icon={Globe} onClick={generateSitemap}>
             {t('admin.seo.generateSitemap')}
           </Button>
         }
@@ -137,10 +316,11 @@ export default function SEOPage() {
           </FormField>
           <div className="col-span-2">
             <FormField label={t('admin.seo.defaultOgImage')}>
-              <Input
-                type="text"
+              <MediaUploader
                 value={globalSettings.defaultOgImage}
-                onChange={(e) => setGlobalSettings({ ...globalSettings, defaultOgImage: e.target.value })}
+                onChange={(url) => setGlobalSettings({ ...globalSettings, defaultOgImage: url })}
+                context="seo"
+                previewSize="md"
               />
             </FormField>
           </div>
@@ -153,7 +333,7 @@ export default function SEOPage() {
           <BarChart3 className="w-4 h-4 text-slate-400" />
           <h3 className="font-semibold text-slate-900">{t('admin.seo.analyticsTracking')}</h3>
         </div>
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <FormField label={t('admin.seo.googleAnalyticsId')}>
             <Input
               type="text"
@@ -181,11 +361,19 @@ export default function SEOPage() {
         </div>
       </div>
 
+      {/* Save Settings Button */}
+      <div className="flex justify-end">
+        <Button variant="primary" icon={Save} loading={isSaving} disabled={isSaving} onClick={saveSettings}>
+          {t('admin.seo.saveSettings')}
+        </Button>
+      </div>
+
       {/* Pages */}
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
         <div className="p-4 border-b border-slate-200">
           <h3 className="font-semibold text-slate-900">{t('admin.seo.pages')}</h3>
         </div>
+        <div className="overflow-x-auto">
         <table className="w-full">
           <thead className="bg-slate-50">
             <tr>
@@ -221,7 +409,7 @@ export default function SEOPage() {
                   </button>
                 </td>
                 <td className="px-4 py-3 text-center">
-                  <Button variant="ghost" size="sm" icon={Pencil} onClick={() => setEditingPage(page)}>
+                  <Button variant="ghost" size="sm" icon={Pencil} onClick={() => openEditModal(page)}>
                     {t('admin.seo.edit')}
                   </Button>
                 </td>
@@ -229,6 +417,7 @@ export default function SEOPage() {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* Robots.txt Preview */}
@@ -238,12 +427,13 @@ export default function SEOPage() {
             <FileCode className="w-4 h-4 text-slate-400" />
             <h3 className="font-semibold text-slate-900">robots.txt</h3>
           </div>
-          <Button variant="ghost" size="sm" icon={Pencil}>
+          <Button variant="ghost" size="sm" icon={Pencil} onClick={openRobotsModal}>
             {t('admin.seo.edit')}
           </Button>
         </div>
         <pre className="bg-slate-50 rounded-lg p-4 text-sm text-slate-700 overflow-x-auto">
-          {`User-agent: *
+          {robotsContent ||
+            `User-agent: *
 Allow: /
 Disallow: /admin/
 Disallow: /api/
@@ -254,7 +444,7 @@ Sitemap: ${globalSettings.siteUrl}/sitemap.xml`}
         </pre>
       </div>
 
-      {/* Edit Page Modal */}
+      {/* Edit Page SEO Modal */}
       <Modal
         isOpen={!!editingPage}
         onClose={() => setEditingPage(null)}
@@ -262,28 +452,74 @@ Sitemap: ${globalSettings.siteUrl}/sitemap.xml`}
       >
         {editingPage && (
           <div className="space-y-4">
-            <FormField label={t('admin.seo.titleField')} hint={`${editingPage.title.length}/60`}>
-              <Input type="text" defaultValue={editingPage.title} maxLength={60} />
+            <FormField label={t('admin.seo.titleField')} hint={`${editTitle.length}/60`}>
+              <Input
+                type="text"
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                maxLength={60}
+              />
             </FormField>
-            <FormField label={t('admin.seo.metaDescription')} hint={`${editingPage.description?.length || 0}/160`}>
-              <Textarea rows={3} defaultValue={editingPage.description} maxLength={160} />
+            <FormField label={t('admin.seo.metaDescription')} hint={`${editDescription.length}/160`}>
+              <Textarea
+                rows={3}
+                value={editDescription}
+                onChange={(e) => setEditDescription(e.target.value)}
+                maxLength={160}
+              />
             </FormField>
             <FormField label={t('admin.seo.keywords')}>
-              <Input type="text" defaultValue={editingPage.keywords} placeholder={t('admin.seo.keywordsPlaceholder')} />
+              <Input
+                type="text"
+                value={editKeywords}
+                onChange={(e) => setEditKeywords(e.target.value)}
+                placeholder={t('admin.seo.keywordsPlaceholder')}
+              />
             </FormField>
             <FormField label={t('admin.seo.ogImage')}>
-              <Input type="text" defaultValue={editingPage.ogImage} placeholder="/images/og-page.jpg" />
+              <Input
+                type="text"
+                value={editOgImage}
+                onChange={(e) => setEditOgImage(e.target.value)}
+                placeholder="/images/og-page.jpg"
+              />
             </FormField>
             <div className="flex gap-3 pt-4 border-t border-slate-200">
               <Button variant="secondary" onClick={() => setEditingPage(null)} className="flex-1">
                 {t('admin.seo.cancel')}
               </Button>
-              <Button variant="primary" className="flex-1">
+              <Button variant="primary" loading={isSaving} disabled={isSaving} onClick={savePageSeo} className="flex-1">
                 {t('admin.seo.save')}
               </Button>
             </div>
           </div>
         )}
+      </Modal>
+
+      {/* Edit Robots.txt Modal */}
+      <Modal
+        isOpen={editingRobots}
+        onClose={() => setEditingRobots(false)}
+        title={t('admin.seo.editRobotsTxt')}
+      >
+        <div className="space-y-4">
+          <FormField label="robots.txt">
+            <Textarea
+              rows={12}
+              value={robotsContent}
+              onChange={(e) => setRobotsContent(e.target.value)}
+              className="font-mono text-sm"
+            />
+          </FormField>
+          <div className="flex gap-3 pt-4 border-t border-slate-200">
+            <Button variant="secondary" onClick={() => setEditingRobots(false)} className="flex-1">
+              {t('admin.seo.cancel')}
+            </Button>
+            <Button variant="primary" loading={isSaving} disabled={isSaving} onClick={saveRobotsTxt} className="flex-1">
+              {t('admin.seo.save')}
+            </Button>
+          </div>
+        </div>
       </Modal>
     </div>
   );

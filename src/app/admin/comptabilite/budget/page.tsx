@@ -5,6 +5,7 @@ import { Pencil } from 'lucide-react';
 import { PageHeader, Button, SectionCard } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
 import { sectionThemes } from '@/lib/admin/section-themes';
+import { toast } from 'sonner';
 
 interface BudgetLine {
   id: string;
@@ -127,6 +128,8 @@ export default function BudgetPage() {
       setRevenueBudget(mappedRevenue);
       setExpenseBudget(mappedExpense);
     } catch (err) {
+      console.error(err);
+      toast.error(t('common.errorOccurred'));
       setError(err instanceof Error ? err.message : t('admin.budget.loadingError'));
     } finally {
       setLoading(false);
@@ -157,7 +160,7 @@ export default function BudgetPage() {
   if (loading) return (
     <div aria-live="polite" aria-busy="true" className="p-8 space-y-4 animate-pulse">
       <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-1/3"></div>
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[1,2,3,4].map(i => <div key={i} className="h-24 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>)}
       </div>
       <div className="h-64 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
@@ -189,7 +192,7 @@ export default function BudgetPage() {
       />
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white rounded-xl p-5 border border-slate-200">
           <p className="text-sm text-slate-500">{t('admin.budget.budgetedRevenue')}</p>
           <p className="text-2xl font-bold text-slate-900">{formatCurrency(totalRevenueBudget)}</p>
@@ -229,6 +232,7 @@ export default function BudgetPage() {
         {revenueBudget.length === 0 ? (
           <div className="p-8 text-center text-slate-400">{t('admin.budget.noRevenueBudget').replace('{year}', selectedYear)}</div>
         ) : (
+          <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-slate-50">
               <tr>
@@ -277,6 +281,7 @@ export default function BudgetPage() {
               </tr>
             </tfoot>
           </table>
+          </div>
         )}
       </SectionCard>
 
@@ -285,6 +290,7 @@ export default function BudgetPage() {
         {expenseBudget.length === 0 ? (
           <div className="p-8 text-center text-slate-400">{t('admin.budget.noExpenseBudget').replace('{year}', selectedYear)}</div>
         ) : (
+          <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-slate-50">
               <tr>
@@ -331,6 +337,7 @@ export default function BudgetPage() {
               </tr>
             </tfoot>
           </table>
+          </div>
         )}
       </SectionCard>
 

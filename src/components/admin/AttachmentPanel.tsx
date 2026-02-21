@@ -449,6 +449,9 @@ export function AttachmentPanel({ entityType, entityId, readOnly = false }: Atta
       {previewUrl && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Image preview"
           onClick={() => setPreviewUrl(null)}
         >
           <div className="relative max-w-3xl max-h-[85vh]" onClick={(e) => e.stopPropagation()}>

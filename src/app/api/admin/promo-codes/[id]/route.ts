@@ -11,6 +11,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { updatePromoCodeSchema, patchPromoCodeSchema } from '@/lib/validations/promo-code';
 
 // GET /api/admin/promo-codes/[id] - Get single promo code with usages
 export const GET = withAdminGuard(async (_request, { session, params }) => {
@@ -93,14 +94,14 @@ export const PUT = withAdminGuard(async (request, { session, params }) => {
     const id = params!.id;
     const body = await request.json();
 
-    const existing = await prisma.promoCode.findUnique({
-      where: { id },
-    });
-
-    if (!existing) {
-      return NextResponse.json({ error: 'Promo code not found' }, { status: 404 });
+    // Validate with Zod
+    const parsed = updatePromoCodeSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Validation error', details: parsed.error.flatten() },
+        { status: 400 }
+      );
     }
-
     const {
       code,
       description,
@@ -115,37 +116,14 @@ export const PUT = withAdminGuard(async (request, { session, params }) => {
       firstOrderOnly,
       productIds,
       categoryIds,
-    } = body;
+    } = parsed.data;
 
-    // Validate required fields
-    if (!code || !type || value === undefined || value === null) {
-      return NextResponse.json(
-        { error: 'code, type, and value are required' },
-        { status: 400 }
-      );
-    }
+    const existing = await prisma.promoCode.findUnique({
+      where: { id },
+    });
 
-    // Validate type
-    if (!['PERCENTAGE', 'FIXED_AMOUNT'].includes(type)) {
-      return NextResponse.json(
-        { error: 'type must be PERCENTAGE or FIXED_AMOUNT' },
-        { status: 400 }
-      );
-    }
-
-    // Validate value
-    if (typeof value !== 'number' || value <= 0) {
-      return NextResponse.json(
-        { error: 'value must be a positive number' },
-        { status: 400 }
-      );
-    }
-
-    if (type === 'PERCENTAGE' && value > 100) {
-      return NextResponse.json(
-        { error: 'Percentage value cannot exceed 100' },
-        { status: 400 }
-      );
+    if (!existing) {
+      return NextResponse.json({ error: 'Promo code not found' }, { status: 404 });
     }
 
     // Check for duplicate code (excluding current)
@@ -208,6 +186,16 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
     const id = params!.id;
     const body = await request.json();
 
+    // Validate with Zod
+    const parsed = patchPromoCodeSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Validation error', details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
+    const data = parsed.data;
+
     const existing = await prisma.promoCode.findUnique({
       where: { id },
     });
@@ -216,61 +204,55 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
       return NextResponse.json({ error: 'Promo code not found' }, { status: 404 });
     }
 
-    // Build update data from provided fields only
+    // Build update data from validated fields only
     const updateData: Record<string, unknown> = {};
 
-    if (body.isActive !== undefined) {
-      updateData.isActive = body.isActive;
+    if (data.isActive !== undefined) {
+      updateData.isActive = data.isActive;
     }
 
-    if (body.code !== undefined) {
-      updateData.code = body.code.toUpperCase();
+    if (data.code !== undefined) {
+      updateData.code = data.code.toUpperCase();
     }
 
-    if (body.description !== undefined) {
-      updateData.description = body.description || null;
+    if (data.description !== undefined) {
+      updateData.description = data.description || null;
     }
 
-    if (body.type !== undefined) {
-      if (!['PERCENTAGE', 'FIXED_AMOUNT'].includes(body.type)) {
-        return NextResponse.json(
-          { error: 'type must be PERCENTAGE or FIXED_AMOUNT' },
-          { status: 400 }
-        );
-      }
-      updateData.type = body.type;
+    if (data.type !== undefined) {
+      updateData.type = data.type;
     }
 
-    if (body.value !== undefined) {
-      updateData.value = body.value;
+    if (data.value !== undefined) {
+      updateData.value = data.value;
     }
 
-    if (body.minOrderAmount !== undefined) {
-      updateData.minOrderAmount = body.minOrderAmount;
+    if (data.minOrderAmount !== undefined) {
+      updateData.minOrderAmount = data.minOrderAmount;
     }
 
-    if (body.maxDiscount !== undefined) {
-      updateData.maxDiscount = body.maxDiscount;
+    if (data.maxDiscount !== undefined) {
+      updateData.maxDiscount = data.maxDiscount;
     }
 
-    if (body.usageLimit !== undefined) {
-      updateData.usageLimit = body.usageLimit;
+    if (data.usageLimit !== undefined) {
+      updateData.usageLimit = data.usageLimit;
     }
 
-    if (body.usageLimitPerUser !== undefined) {
-      updateData.usageLimitPerUser = body.usageLimitPerUser;
+    if (data.usageLimitPerUser !== undefined) {
+      updateData.usageLimitPerUser = data.usageLimitPerUser;
     }
 
-    if (body.startsAt !== undefined) {
-      updateData.startsAt = body.startsAt ? new Date(body.startsAt) : null;
+    if (data.startsAt !== undefined) {
+      updateData.startsAt = data.startsAt ? new Date(data.startsAt) : null;
     }
 
-    if (body.endsAt !== undefined) {
-      updateData.endsAt = body.endsAt ? new Date(body.endsAt) : null;
+    if (data.endsAt !== undefined) {
+      updateData.endsAt = data.endsAt ? new Date(data.endsAt) : null;
     }
 
-    if (body.firstOrderOnly !== undefined) {
-      updateData.firstOrderOnly = body.firstOrderOnly;
+    if (data.firstOrderOnly !== undefined) {
+      updateData.firstOrderOnly = data.firstOrderOnly;
     }
 
     const promoCode = await prisma.promoCode.update({

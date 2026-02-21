@@ -22,6 +22,7 @@ import {
 } from '@/components/admin';
 import { getAllCountriesWithCompliance } from '@/lib/countryObligations';
 import { useI18n } from '@/i18n/client';
+import { toast } from 'sonner';
 
 interface TaskWithCountry {
   id: string;
@@ -73,6 +74,8 @@ export default function FiscalTasksPage() {
           setApiReportTasks(reports);
         }
       } catch (err) {
+        console.error(err);
+        toast.error(t('common.errorOccurred'));
         setError(err instanceof Error ? err.message : t('admin.fiscalTasks.unknownError'));
       } finally {
         setLoading(false);

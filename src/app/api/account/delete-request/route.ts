@@ -21,6 +21,7 @@ import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { sendEmail } from '@/lib/email/email-service';
 import { baseTemplate } from '@/lib/email/templates/base-template';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { createHash } from 'crypto';
 
 // Grace period before permanent deletion (30 days)
@@ -38,6 +39,16 @@ export async function POST(request: NextRequest) {
     }
 
     const userId = session.user.id;
+
+    // SEC-002: Rate limit account deletion requests - 2 per user per day
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+    const rl = await rateLimitMiddleware(ip, '/api/account/delete-request', userId);
+    if (!rl.success) {
+      return NextResponse.json(
+        { error: rl.error!.message },
+        { status: 429, headers: rl.headers }
+      );
+    }
 
     // Parse optional reason from request body
     let reason = 'Not provided';
@@ -135,6 +146,60 @@ export async function POST(request: NextRequest) {
         where: { userId },
       });
 
+      // 7b. Delete password history
+      await tx.passwordHistory.deleteMany({
+        where: { userId },
+      });
+
+      // 7c. Delete subscriptions
+      await tx.subscription.deleteMany({
+        where: { userId },
+      });
+
+      // 7d. Delete price watches
+      await tx.priceWatch.deleteMany({
+        where: { userId },
+      });
+
+      // 7e. Delete saved cards (payment data)
+      await tx.savedCard.deleteMany({
+        where: { userId },
+      });
+
+      // 7f. Delete authenticators (WebAuthn)
+      await tx.authenticator.deleteMany({
+        where: { userId },
+      });
+
+      // 7g. Delete wishlist collections + items
+      await tx.wishlistCollection.deleteMany({
+        where: { userId },
+      });
+
+      // 7h. Anonymize referrals (both as referrer and referred)
+      await tx.referral.updateMany({
+        where: { OR: [{ referrerId: userId }, { referredId: userId }] },
+        data: { referralCode: '[deleted]' },
+      });
+
+      // 7i. Anonymize return requests
+      await tx.returnRequest.updateMany({
+        where: { userId },
+        data: { reason: '[Account deleted]', details: null, adminNotes: null },
+      });
+
+      // 7j. Anonymize purchases (remove payment IDs)
+      await tx.purchase.updateMany({
+        where: { userId },
+        data: { stripePaymentId: null, paypalOrderId: null },
+      });
+
+      // 7k. Anonymize consent records
+      await tx.consentRecord.updateMany({
+        where: { userId },
+        data: { email: anonymizedEmail, ipAddress: null },
+      });
+
       // 8. Anonymize reviews (keep for product integrity, remove PII)
       await tx.review.updateMany({
         where: { userId },
@@ -143,7 +208,54 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      // 9. Log the deletion request in AuditLog
+      // 9. Anonymize LoyaltyTransaction (keep for accounting, remove personal refs)
+      await tx.loyaltyTransaction.updateMany({
+        where: { userId },
+        data: {
+          description: '[Account deleted]',
+          metadata: null,
+        },
+      });
+
+      // 10. Anonymize ChatMessages via ChatConversation
+      //     First find the user's conversations, then anonymize messages
+      const userConversations = await tx.chatConversation.findMany({
+        where: { userId },
+        select: { id: true },
+      });
+      const conversationIds = userConversations.map((c) => c.id);
+
+      if (conversationIds.length > 0) {
+        await tx.chatMessage.updateMany({
+          where: { conversationId: { in: conversationIds } },
+          data: {
+            content: '[Deleted User Message]',
+            contentOriginal: null,
+            senderName: 'Deleted User',
+            metadata: null,
+          },
+        });
+      }
+
+      // Anonymize the ChatConversation records themselves
+      await tx.chatConversation.updateMany({
+        where: { userId },
+        data: {
+          visitorName: 'Deleted User',
+          visitorEmail: null,
+          userAgent: null,
+        },
+      });
+
+      // 11. Anonymize ProductQuestion (keep answer for community value)
+      await tx.productQuestion.updateMany({
+        where: { userId },
+        data: {
+          question: '[Question removed - account deleted]',
+        },
+      });
+
+      // 12. Log the deletion request in AuditLog
       await tx.auditLog.create({
         data: {
           id: `audit_delete_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 8)}`,

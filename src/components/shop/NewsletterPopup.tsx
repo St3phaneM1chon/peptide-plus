@@ -9,10 +9,10 @@ export default function NewsletterPopup() {
   const { data: session } = useSession();
   const [isOpen, setIsOpen] = useState(false);
   const [email, setEmail] = useState('');
-  const [birthDate, setBirthDate] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [emailError, setEmailError] = useState('');
+  const [marketingConsent, setMarketingConsent] = useState(false);
 
   useEffect(() => {
     // Don't show to logged-in users (they already have an account)
@@ -70,7 +70,8 @@ export default function NewsletterPopup() {
           email,
           source: 'popup',
           locale: locale || 'en',
-          ...(birthDate && { birthDate }),
+          marketingConsent: true,
+          consentTimestamp: new Date().toISOString(),
         }),
       });
 
@@ -85,9 +86,6 @@ export default function NewsletterPopup() {
     // Save subscription locally as backup
     localStorage.setItem('newsletter_subscribed', 'true');
     localStorage.setItem('newsletter_email', email);
-    if (birthDate) {
-      localStorage.setItem('newsletter_birthdate', birthDate);
-    }
     
     // Generate discount code
     const discountCode = `WELCOME10-${Date.now().toString(36).toUpperCase().slice(-6)}`;
@@ -154,23 +152,26 @@ export default function NewsletterPopup() {
                   )}
                 </div>
 
-                <div>
-                  <label htmlFor="newsletter-dob" className="block text-sm font-medium text-gray-700 mb-1">
-                    {t('newsletter.dobLabel', 'Date of Birth')} <span className="text-xs text-gray-400">({t('newsletter.dobOptional', 'optional - for a birthday surprise!')})</span>
-                  </label>
+                {/* RGPD/LCAP: Explicit marketing consent checkbox (opt-in) */}
+                <div className="flex items-start gap-3">
                   <input
-                    type="date"
-                    id="newsletter-dob"
-                    value={birthDate}
-                    onChange={(e) => setBirthDate(e.target.value)}
-                    max={new Date().toISOString().split('T')[0]}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+                    type="checkbox"
+                    id="newsletter-consent"
+                    checked={marketingConsent}
+                    onChange={(e) => setMarketingConsent(e.target.checked)}
+                    className="mt-1 h-4 w-4 rounded border-gray-300 text-orange-500 focus:ring-orange-500 cursor-pointer"
                   />
+                  <label htmlFor="newsletter-consent" className="text-xs text-gray-600 cursor-pointer leading-relaxed">
+                    {t('newsletter.consentCheckbox')}{' '}
+                    <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-orange-500 underline hover:text-orange-600">
+                      {t('newsletter.privacyPolicyLink')}
+                    </a>
+                  </label>
                 </div>
-                
+
                 <button
                   type="submit"
-                  disabled={isLoading}
+                  disabled={isLoading || !marketingConsent}
                   className="w-full py-3 px-4 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isLoading ? (

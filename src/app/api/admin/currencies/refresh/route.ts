@@ -25,9 +25,12 @@ export const POST = withAdminGuard(async (_request, { session }) => {
     );
 
     return NextResponse.json({
-      ...result,
-      triggeredBy: session.user.email,
-      durationMs: duration,
+      success: true,
+      data: {
+        ...result,
+        triggeredBy: session.user.email,
+        durationMs: duration,
+      },
     });
   } catch (error) {
     const duration = Date.now() - startTime;

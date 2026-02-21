@@ -18,6 +18,18 @@ const loginAttempts = new Map<string, {
   lockedUntil: number | null;
 }>();
 
+// Periodic cleanup of expired entries (every 10 minutes)
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, record] of loginAttempts.entries()) {
+    const windowExpired = now - record.firstAttempt > ATTEMPT_WINDOW_MS;
+    const lockExpired = !record.lockedUntil || record.lockedUntil <= now;
+    if (windowExpired && lockExpired) {
+      loginAttempts.delete(key);
+    }
+  }
+}, 600_000);
+
 /**
  * Vérifie si un compte est verrouillé
  */
@@ -120,8 +132,11 @@ export async function recordFailedAttempt(
       lockoutDuration: LOCKOUT_DURATION_MS,
     }));
 
-    // TODO: Envoyer une notification email à l'utilisateur
-    // await sendAccountLockedNotification(email, ipAddress);
+    // TODO (SEC-L05): Send brute-force lockout email notification to the user.
+    // The email should include: the locked email address, the IP that triggered
+    // the lockout, the lockout duration, and a link to reset password.
+    // Implementation: create sendAccountLockedNotification() in lib/email.ts
+    // await sendAccountLockedNotification(email, ipAddress, LOCKOUT_DURATION_MS);
 
     return {
       locked: true,

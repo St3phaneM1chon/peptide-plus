@@ -24,7 +24,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session, param
       return NextResponse.json({ error: 'Points insuffisants' }, { status: 400 });
     }
 
-    // Update user points and create transaction in a single transaction
+    // Update user points, create transaction, and audit log in a single transaction
     const [updatedUser, transaction] = await prisma.$transaction([
       prisma.user.update({
         where: { id },
@@ -38,8 +38,19 @@ export const POST = withAdminGuard(async (request: NextRequest, { session, param
           userId: id,
           type: amount > 0 ? 'EARN_BONUS' : 'ADJUST',
           points: amount,
-          description: `[Admin: ${session.user.name || session.user.email}] ${reason}`,
+          description: `[Admin adjustment] ${reason}`,
           balanceAfter: newPoints,
+        },
+      }),
+      prisma.auditLog.create({
+        data: {
+          id: `audit_points_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 8)}`,
+          userId: session.user.id,
+          action: 'ADMIN_POINTS_ADJUSTMENT',
+          entityType: 'User',
+          entityId: id,
+          details: JSON.stringify({ amount, reason, newBalance: newPoints }),
+          ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || null,
         },
       }),
     ]);

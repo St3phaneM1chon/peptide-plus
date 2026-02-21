@@ -7,6 +7,7 @@ import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 
 interface Currency {
+  id: string;
   code: string;
   name: string;
   symbol: string;
@@ -16,6 +17,15 @@ interface Currency {
   lastUpdated: string;
 }
 
+interface CurrencyForm {
+  code: string;
+  name: string;
+  symbol: string;
+  exchangeRate: string;
+}
+
+const emptyCurrencyForm: CurrencyForm = { code: '', name: '', symbol: '', exchangeRate: '1.0000' };
+
 export default function DevisesPage() {
   const { t, locale } = useI18n();
   const [currencies, setCurrencies] = useState<Currency[]>([]);
@@ -23,9 +33,21 @@ export default function DevisesPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [autoUpdate, setAutoUpdate] = useState(true);
   const [showAddCurrency, setShowAddCurrency] = useState(false);
+  const [editingCurrency, setEditingCurrency] = useState<Currency | null>(null);
+  const [form, setForm] = useState<CurrencyForm>(emptyCurrencyForm);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     fetchCurrencies();
+    // Load autoUpdate setting
+    fetch('/api/admin/settings')
+      .then(r => r.json())
+      .then(data => {
+        const settings = data.settings || [];
+        const autoSetting = settings.find?.((s: { key: string }) => s.key === 'currencies.autoUpdate');
+        if (autoSetting) setAutoUpdate(autoSetting.value === 'true');
+      })
+      .catch(() => {});
   }, []);
 
   const fetchCurrencies = async () => {
@@ -35,23 +57,144 @@ export default function DevisesPage() {
       setCurrencies(data.currencies || []);
     } catch (err) {
       console.error('Error fetching currencies:', err);
+      toast.error(t('common.error'));
       setCurrencies([]);
     }
     setLoading(false);
   };
 
-  const toggleActive = (code: string) => {
-    setCurrencies(currencies.map((c) => (c.code === code ? { ...c, isActive: !c.isActive } : c)));
+  const handleAutoUpdateToggle = async () => {
+    const newValue = !autoUpdate;
+    setAutoUpdate(newValue);
+    try {
+      await fetch('/api/admin/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 'currencies.autoUpdate': String(newValue) }),
+      });
+    } catch {
+      setAutoUpdate(!newValue);
+    }
   };
 
-  const setDefault = (code: string) => {
+  const toggleActive = async (id: string) => {
+    const currency = currencies.find((c) => c.id === id);
+    if (!currency) return;
+    const newActive = !currency.isActive;
+    // Optimistic update
+    setCurrencies(currencies.map((c) => (c.id === id ? { ...c, isActive: newActive } : c)));
+    try {
+      const res = await fetch(`/api/admin/currencies/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isActive: newActive }),
+      });
+      if (!res.ok) {
+        toast.error(t('admin.currencies.updateError') || 'Failed to update currency');
+        setCurrencies(currencies.map((c) => (c.id === id ? { ...c, isActive: !newActive } : c)));
+      }
+    } catch {
+      toast.error(t('admin.currencies.updateError') || 'Failed to update currency');
+      setCurrencies(currencies.map((c) => (c.id === id ? { ...c, isActive: !newActive } : c)));
+    }
+  };
+
+  const setDefault = async (id: string) => {
+    const prev = currencies;
+    // Optimistic update
     setCurrencies(
       currencies.map((c) => ({
         ...c,
-        isDefault: c.code === code,
-        isActive: c.code === code ? true : c.isActive,
+        isDefault: c.id === id,
+        isActive: c.id === id ? true : c.isActive,
       }))
     );
+    try {
+      const res = await fetch(`/api/admin/currencies/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isDefault: true }),
+      });
+      if (!res.ok) {
+        toast.error(t('admin.currencies.updateError') || 'Failed to set default');
+        setCurrencies(prev);
+      }
+    } catch {
+      toast.error(t('admin.currencies.updateError') || 'Failed to set default');
+      setCurrencies(prev);
+    }
+  };
+
+  const handleAddCurrency = async () => {
+    if (!form.code || !form.name || !form.symbol) {
+      toast.error(t('admin.currencies.fillRequired') || 'Please fill in all required fields');
+      return;
+    }
+    setSaving(true);
+    try {
+      const res = await fetch('/api/admin/currencies', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code: form.code.toUpperCase(),
+          name: form.name,
+          symbol: form.symbol,
+          exchangeRate: parseFloat(form.exchangeRate) || 1,
+        }),
+      });
+      if (res.ok) {
+        toast.success(t('admin.currencies.addSuccess') || 'Currency added');
+        setShowAddCurrency(false);
+        setForm(emptyCurrencyForm);
+        await fetchCurrencies();
+      } else {
+        const data = await res.json();
+        toast.error(data.error || t('common.saveFailed'));
+      }
+    } catch {
+      toast.error(t('common.saveFailed'));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleEditCurrency = async () => {
+    if (!editingCurrency || !form.name || !form.symbol) return;
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/admin/currencies/${editingCurrency.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: form.name,
+          symbol: form.symbol,
+          exchangeRate: parseFloat(form.exchangeRate) || editingCurrency.exchangeRate,
+        }),
+      });
+      if (res.ok) {
+        toast.success(t('admin.currencies.updateSuccess') || 'Currency updated');
+        setEditingCurrency(null);
+        setForm(emptyCurrencyForm);
+        await fetchCurrencies();
+      } else {
+        const data = await res.json();
+        toast.error(data.error || t('common.updateFailed'));
+      }
+    } catch {
+      toast.error(t('common.updateFailed'));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const openEdit = (currency: Currency) => {
+    setEditingCurrency(currency);
+    setForm({
+      code: currency.code,
+      name: currency.name,
+      symbol: currency.symbol,
+      exchangeRate: currency.exchangeRate.toFixed(6),
+    });
   };
 
   const updateExchangeRates = async () => {
@@ -61,14 +204,14 @@ export default function DevisesPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        toast.error(data.error || 'Failed to refresh rates');
+        toast.error(data.error || t('common.updateFailed'));
         return;
       }
 
       // Re-fetch currencies to get updated rates from DB
       await fetchCurrencies();
 
-      const updatedCount = data.updated?.length || 0;
+      const updatedCount = data.data?.updated?.length || 0;
       toast.success(
         updatedCount > 0
           ? `${updatedCount} ${t('admin.currencies.ratesUpdated')}`
@@ -76,7 +219,7 @@ export default function DevisesPage() {
       );
     } catch (err) {
       console.error('Error refreshing rates:', err);
-      toast.error('Failed to refresh exchange rates');
+      toast.error(t('common.updateFailed'));
     } finally {
       setRefreshing(false);
     }
@@ -84,8 +227,9 @@ export default function DevisesPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex items-center justify-center h-64" role="status" aria-label="Loading">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500" />
+        <span className="sr-only">Loading...</span>
       </div>
     );
   }
@@ -122,7 +266,7 @@ export default function DevisesPage() {
             <p className="text-sm text-slate-500">{t('admin.currencies.autoUpdateDescription')}</p>
           </div>
           <button
-            onClick={() => setAutoUpdate(!autoUpdate)}
+            onClick={handleAutoUpdateToggle}
             className={`w-12 h-6 rounded-full transition-colors relative ${autoUpdate ? 'bg-emerald-500' : 'bg-slate-300'}`}
           >
             <span className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${autoUpdate ? 'right-1' : 'left-1'}`} />
@@ -131,14 +275,14 @@ export default function DevisesPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <MiniStat icon={Coins} label={t('admin.currencies.totalCurrencies')} value={currencies.length} bg="bg-slate-100 text-slate-600" />
         <MiniStat icon={CheckCircle} label={t('admin.currencies.activeCurrencies')} value={currencies.filter((c) => c.isActive).length} bg="bg-emerald-100 text-emerald-600" />
         <MiniStat icon={Star} label={t('admin.currencies.defaultCurrency')} value={currencies.find((c) => c.isDefault)?.code || 'CAD'} bg="bg-sky-100 text-sky-600" />
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden overflow-x-auto">
         <table className="w-full">
           <thead className="bg-slate-50">
             <tr>
@@ -195,13 +339,13 @@ export default function DevisesPage() {
                     type="radio"
                     name="defaultCurrency"
                     checked={currency.isDefault}
-                    onChange={() => setDefault(currency.code)}
+                    onChange={() => setDefault(currency.id)}
                     className="w-4 h-4 text-sky-500 focus:ring-sky-500"
                   />
                 </td>
                 <td className="px-4 py-4 text-center">
                   <button
-                    onClick={() => toggleActive(currency.code)}
+                    onClick={() => toggleActive(currency.id)}
                     disabled={currency.isDefault}
                     className={`w-10 h-5 rounded-full transition-colors relative ${
                       currency.isActive ? 'bg-emerald-500' : 'bg-slate-300'
@@ -213,7 +357,7 @@ export default function DevisesPage() {
                   </button>
                 </td>
                 <td className="px-4 py-4 text-center">
-                  <Button variant="ghost" size="sm" icon={Pencil}>
+                  <Button variant="ghost" size="sm" icon={Pencil} onClick={() => openEdit(currency)}>
                     {t('admin.currencies.edit')}
                   </Button>
                 </td>
@@ -226,7 +370,7 @@ export default function DevisesPage() {
       {/* Conversion Preview */}
       <div className="bg-white rounded-xl border border-slate-200 p-6">
         <h3 className="font-semibold text-slate-900 mb-4">{t('admin.currencies.conversionPreview')}</h3>
-        <div className="grid grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
           {currencies
             .filter((c) => c.isActive && !c.isDefault)
             .map((currency) => (
@@ -239,11 +383,63 @@ export default function DevisesPage() {
       </div>
 
       {/* Add Currency Modal */}
-      <Modal isOpen={showAddCurrency} onClose={() => setShowAddCurrency(false)} title={t('admin.currencies.addCurrencyTitle')}>
-        <p className="text-slate-500 mb-4">{t('admin.currencies.inDevelopment')}</p>
-        <Button variant="secondary" onClick={() => setShowAddCurrency(false)}>
-          {t('admin.currencies.close')}
-        </Button>
+      <Modal isOpen={showAddCurrency} onClose={() => { setShowAddCurrency(false); setForm(emptyCurrencyForm); }} title={t('admin.currencies.addCurrencyTitle')}>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.currencies.codeLabel') || 'Code (ISO 4217)'}</label>
+            <input type="text" maxLength={3} value={form.code} onChange={e => setForm({ ...form, code: e.target.value.toUpperCase() })} placeholder="USD" className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-sky-500 focus:border-sky-500" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.currencies.nameLabel') || 'Name'}</label>
+            <input type="text" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="US Dollar" className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-sky-500 focus:border-sky-500" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.currencies.symbolLabel') || 'Symbol'}</label>
+            <input type="text" maxLength={5} value={form.symbol} onChange={e => setForm({ ...form, symbol: e.target.value })} placeholder="$" className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-sky-500 focus:border-sky-500" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.currencies.exchangeRateLabel') || 'Exchange Rate (vs CAD)'}</label>
+            <input type="number" step="0.000001" min="0" value={form.exchangeRate} onChange={e => setForm({ ...form, exchangeRate: e.target.value })} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-sky-500 focus:border-sky-500" />
+          </div>
+          <div className="flex gap-3 justify-end pt-2">
+            <Button variant="secondary" onClick={() => { setShowAddCurrency(false); setForm(emptyCurrencyForm); }}>
+              {t('common.cancel') || 'Cancel'}
+            </Button>
+            <Button variant="primary" onClick={handleAddCurrency} loading={saving}>
+              {t('admin.currencies.addCurrency')}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Edit Currency Modal */}
+      <Modal isOpen={!!editingCurrency} onClose={() => { setEditingCurrency(null); setForm(emptyCurrencyForm); }} title={`${t('admin.currencies.edit')} ${editingCurrency?.code || ''}`}>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.currencies.codeLabel') || 'Code'}</label>
+            <input type="text" value={form.code} disabled className="w-full border border-slate-200 bg-slate-50 rounded-lg px-3 py-2 text-sm text-slate-500" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.currencies.nameLabel') || 'Name'}</label>
+            <input type="text" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-sky-500 focus:border-sky-500" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.currencies.symbolLabel') || 'Symbol'}</label>
+            <input type="text" maxLength={5} value={form.symbol} onChange={e => setForm({ ...form, symbol: e.target.value })} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-sky-500 focus:border-sky-500" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.currencies.exchangeRateLabel') || 'Exchange Rate (vs CAD)'}</label>
+            <input type="number" step="0.000001" min="0" value={form.exchangeRate} onChange={e => setForm({ ...form, exchangeRate: e.target.value })} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-sky-500 focus:border-sky-500" />
+          </div>
+          <div className="flex gap-3 justify-end pt-2">
+            <Button variant="secondary" onClick={() => { setEditingCurrency(null); setForm(emptyCurrencyForm); }}>
+              {t('common.cancel') || 'Cancel'}
+            </Button>
+            <Button variant="primary" onClick={handleEditCurrency} loading={saving}>
+              {t('common.save') || 'Save'}
+            </Button>
+          </div>
+        </div>
       </Modal>
     </div>
   );

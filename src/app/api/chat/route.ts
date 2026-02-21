@@ -10,6 +10,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { db } from '@/lib/db';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { stripHtml, stripControlChars } from '@/lib/sanitize';
 import { v4 as uuidv4 } from 'uuid';
 
 // GET - Liste des conversations (admin only)
@@ -78,6 +79,10 @@ export async function POST(request: NextRequest) {
     // Utiliser visitorId fourni ou en générer un nouveau
     const finalVisitorId = visitorId || uuidv4();
 
+    // BE-SEC-03: Sanitize visitor-supplied text fields to prevent stored XSS
+    const sanitizedVisitorName = visitorName ? stripControlChars(stripHtml(String(visitorName))).trim().slice(0, 200) : null;
+    const sanitizedVisitorEmail = visitorEmail ? stripControlChars(String(visitorEmail)).trim().slice(0, 255) : null;
+
     // Chercher une conversation active existante
     let conversation = await db.chatConversation.findFirst({
       where: {
@@ -110,12 +115,12 @@ export async function POST(request: NextRequest) {
       conversation = await db.chatConversation.create({
         data: {
           visitorId: finalVisitorId,
-          visitorName: visitorName || null,
-          visitorEmail: visitorEmail || session?.user?.email || null,
+          visitorName: sanitizedVisitorName,
+          visitorEmail: sanitizedVisitorEmail || session?.user?.email || null,
           visitorLanguage: visitorLanguage || 'en',
           userId: session?.user?.id || null,
-          currentPage: currentPage || null,
-          userAgent: userAgent || null,
+          currentPage: currentPage ? stripControlChars(stripHtml(String(currentPage))).trim().slice(0, 500) : null,
+          userAgent: userAgent ? String(userAgent).slice(0, 500) : null,
         },
         include: {
           messages: true,

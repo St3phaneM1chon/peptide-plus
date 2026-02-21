@@ -116,7 +116,8 @@ export default function RapprochementPage() {
 
   const currentAccount = bankAccounts.find(a => a.id === selectedAccount);
   const bankBalance = currentAccount?.currentBalance || 0;
-  const bookBalance = bankBalance; // Simplified - in full impl, calculate from GL
+  // Calculate book balance from journal entries (sum credits - sum debits for this account)
+  const bookBalance = journalEntries.reduce((sum, e) => sum + e.totalCredits - e.totalDebits, 0);
   const difference = bankBalance - bookBalance;
 
   const handleMatch = (bankTx: BankTransaction) => {
@@ -174,7 +175,7 @@ export default function RapprochementPage() {
   if (loading) return (
     <div aria-live="polite" aria-busy="true" className="p-8 space-y-4 animate-pulse">
       <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-1/3"></div>
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[1,2,3,4].map(i => <div key={i} className="h-24 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>)}
       </div>
       <div className="h-64 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
@@ -242,7 +243,7 @@ export default function RapprochementPage() {
       </SectionCard>
 
       {/* Summary */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <SectionCard theme={theme}>
           <p className="text-sm text-slate-500">{t('admin.reconciliation.statementBalance')}</p>
           <p className="text-2xl font-bold text-slate-900">{formatCurrency(bankBalance)}</p>
@@ -272,7 +273,7 @@ export default function RapprochementPage() {
           theme={theme}
           noPadding
         >
-          <div className="max-h-[500px] overflow-y-auto">
+          <div className="max-h-[500px] overflow-y-auto overflow-x-auto">
             <table className="w-full">
               <thead className="bg-slate-50 sticky top-0">
                 <tr>
@@ -320,7 +321,7 @@ export default function RapprochementPage() {
           theme={theme}
           noPadding
         >
-          <div className="max-h-[500px] overflow-y-auto">
+          <div className="max-h-[500px] overflow-y-auto overflow-x-auto">
             <table className="w-full">
               <thead className="bg-slate-50 sticky top-0">
                 <tr>

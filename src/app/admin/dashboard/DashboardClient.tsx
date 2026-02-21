@@ -38,10 +38,6 @@ interface DashboardStats {
   lowStockFormats: number;
 }
 
-interface OrderItem {
-  id: string;
-}
-
 interface RecentOrder {
   id: string;
   orderNumber: string;
@@ -49,7 +45,8 @@ interface RecentOrder {
   paymentStatus: string;
   total: number;
   createdAt: string;
-  items: OrderItem[];
+  shippingName: string | null;
+  _count: { items: number };
 }
 
 interface RecentUser {
@@ -254,7 +251,7 @@ export default function DashboardClient({ stats, recentOrders, recentUsers }: Da
             {recentOrders.map((order) => {
               const orderStatus = getOrderStatusLabel(order.status);
               const paymentStatus = getPaymentStatusLabel(order.paymentStatus);
-              const itemCount = order.items.length;
+              const itemCount = order._count.items;
               return (
                 <div key={order.id} className="p-4 hover:bg-slate-50/50 transition-colors">
                   <div className="flex items-center justify-between mb-1.5">

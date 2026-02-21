@@ -3,9 +3,9 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
 import { ArrowLeft, Plus, Trash2, GripVertical, ExternalLink, FileText, ImageIcon, Video, Link2 } from 'lucide-react';
 import { getFormatTypes, getProductTypes, getAvailabilityOptions, VOLUME_OPTIONS, getStockDisplay } from '../product-constants';
+import { MediaUploader } from '@/components/admin/MediaUploader';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 
@@ -416,27 +416,21 @@ export default function NewProductClient({ categories }: Props) {
               <h2 className="text-lg font-semibold text-neutral-900 mb-4">{t('admin.productForm.mediaAndStatus')}</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
                 <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-1">{t('admin.productForm.mainImage')}</label>
-                  <input
-                    type="url"
-                    value={formData.imageUrl}
-                    onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  <MediaUploader
+                    value={formData.imageUrl === '/images/products/peptide-default.png' ? '' : formData.imageUrl}
+                    onChange={(url) => setFormData({ ...formData, imageUrl: url || '/images/products/peptide-default.png' })}
+                    context="product-image"
+                    label={t('admin.productForm.mainImage')}
+                    previewSize="md"
                   />
-                  {formData.imageUrl && formData.imageUrl !== '/images/products/peptide-default.png' && (
-                    <div className="mt-2">
-                      <Image src={formData.imageUrl} alt={t('admin.productForm.preview')} width={80} height={80} className="w-20 h-20 object-cover rounded-lg border border-neutral-200" unoptimized />
-                    </div>
-                  )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-1">{t('admin.productForm.videoYoutubeVimeo')}</label>
-                  <input
-                    type="url"
+                  <MediaUploader
                     value={formData.videoUrl}
-                    onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
-                    placeholder={t('admin.productForm.placeholderVideoUrl')}
-                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    onChange={(url) => setFormData({ ...formData, videoUrl: url })}
+                    context="product-video"
+                    label={t('admin.productForm.videoYoutubeVimeo')}
+                    previewSize="md"
                   />
                 </div>
               </div>
@@ -607,39 +601,30 @@ export default function NewProductClient({ categories }: Props) {
                         <p className="text-xs font-medium text-neutral-600 mb-3">{t('admin.productForm.mediaAndLinks')}</p>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                           <div>
-                            <label className="flex items-center gap-1.5 text-xs text-neutral-500 mb-1">
-                              <FileText className="w-3 h-3" /> PDF
-                            </label>
-                            <input
-                              type="url"
+                            <MediaUploader
                               value={pt.pdfUrl}
-                              onChange={(e) => updateProductText(pt.id, 'pdfUrl', e.target.value)}
-                              placeholder={t('admin.productForm.pdfUrl')}
-                              className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                              onChange={(url) => updateProductText(pt.id, 'pdfUrl', url)}
+                              context="product-doc"
+                              label="PDF"
+                              previewSize="sm"
                             />
                           </div>
                           <div>
-                            <label className="flex items-center gap-1.5 text-xs text-neutral-500 mb-1">
-                              <ImageIcon className="w-3 h-3" /> Image
-                            </label>
-                            <input
-                              type="url"
+                            <MediaUploader
                               value={pt.imageUrl}
-                              onChange={(e) => updateProductText(pt.id, 'imageUrl', e.target.value)}
-                              placeholder={t('admin.productForm.imageUrl')}
-                              className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                              onChange={(url) => updateProductText(pt.id, 'imageUrl', url)}
+                              context="product-image"
+                              label="Image"
+                              previewSize="sm"
                             />
                           </div>
                           <div>
-                            <label className="flex items-center gap-1.5 text-xs text-neutral-500 mb-1">
-                              <Video className="w-3 h-3" /> {t('admin.productForm.video')}
-                            </label>
-                            <input
-                              type="url"
+                            <MediaUploader
                               value={pt.videoUrl}
-                              onChange={(e) => updateProductText(pt.id, 'videoUrl', e.target.value)}
-                              placeholder={t('admin.productForm.videoUrl')}
-                              className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                              onChange={(url) => updateProductText(pt.id, 'videoUrl', url)}
+                              context="product-video"
+                              label={t('admin.productForm.video')}
+                              previewSize="sm"
                             />
                           </div>
                           <div>
@@ -955,20 +940,13 @@ function FormatCard({
           {/* Photo & Options */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-medium text-neutral-600 mb-1">{t('admin.productForm.formatPhoto')}</label>
-              <input
-                type="url"
+              <MediaUploader
                 value={format.imageUrl}
-                onChange={(e) => onUpdate({ imageUrl: e.target.value })}
-                placeholder={t('admin.productForm.imageUrl')}
-                className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                onChange={(url) => onUpdate({ imageUrl: url })}
+                context="product-image"
+                label={t('admin.productForm.formatPhoto')}
+                previewSize="sm"
               />
-              {format.imageUrl && (
-                <div className="mt-2 flex items-center gap-2">
-                  <Image src={format.imageUrl} alt="" width={48} height={48} className="w-12 h-12 object-cover rounded-lg border" unoptimized />
-                  <button onClick={() => onUpdate({ imageUrl: '' })} className="text-xs text-red-500 hover:text-red-700">{t('admin.productForm.delete')}</button>
-                </div>
-              )}
             </div>
             <div className="flex items-end gap-4 pb-2">
               <label className="flex items-center gap-2 cursor-pointer">

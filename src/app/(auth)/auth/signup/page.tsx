@@ -95,6 +95,7 @@ function SignUpContent() {
           name: formData.name,
           email: formData.email,
           password: formData.password,
+          acceptTerms: formData.acceptTerms,
         }),
       });
 

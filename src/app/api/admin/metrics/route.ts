@@ -12,7 +12,6 @@ export const GET = withAdminGuard(async () => {
   const summary = getMetricsSummary();
 
   return NextResponse.json({
-    success: true,
     data: summary,
     timestamp: new Date().toISOString(),
   });

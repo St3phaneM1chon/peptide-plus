@@ -4,19 +4,24 @@ export const dynamic = 'force-dynamic';
  * GDPR DATA EXPORT - Right to Data Portability
  *
  * GET /api/account/data-export
+ * GET /api/account/data-export?format=csv
  *
- * Returns a JSON file with all user personal data:
+ * Returns a file with all user personal data:
  *   - Profile information
  *   - Orders & purchase history
  *   - Reviews
  *   - Addresses
  *   - Preferences (notifications, wishlist)
- *   - Loyalty points
+ *   - Loyalty points & transactions
+ *   - Subscriptions, price watches, saved cards (masked)
+ *   - Referrals, return requests, product questions
+ *   - Chat conversations, consent records
  *
+ * Supports JSON (default) and CSV formats via ?format=csv query parameter.
  * Rate limited: 1 export per day per user.
  */
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
@@ -58,9 +63,156 @@ async function checkExportRateLimit(userId: string): Promise<boolean> {
   return true;
 }
 
-export async function GET() {
+// ---------------------------------------------------------------------------
+// CSV conversion helper
+// ---------------------------------------------------------------------------
+
+function escapeCsvValue(value: unknown): string {
+  if (value === null || value === undefined) return '';
+  const str = String(value);
+  // Escape if value contains comma, double-quote, or newline
+  if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+    return `"${str.replace(/"/g, '""')}"`;
+  }
+  return str;
+}
+
+function jsonToCsv(data: Record<string, unknown>): string {
+  const sections: string[] = [];
+
+  // Metadata section
+  if (data.exportMetadata) {
+    sections.push('=== EXPORT METADATA ===');
+    const meta = data.exportMetadata as Record<string, unknown>;
+    sections.push('Field,Value');
+    sections.push(
+      ...Object.entries(meta).map(
+        ([k, v]) => `${escapeCsvValue(k)},${escapeCsvValue(v)}`
+      )
+    );
+  }
+
+  // Profile section
+  if (data.profile) {
+    sections.push('\n=== PROFILE ===');
+    const profile = data.profile as Record<string, unknown>;
+    sections.push('Field,Value');
+    sections.push(
+      ...Object.entries(profile).map(
+        ([k, v]) => `${escapeCsvValue(k)},${escapeCsvValue(v)}`
+      )
+    );
+  }
+
+  // Orders section
+  const orders = data.orders as Array<Record<string, unknown>> | undefined;
+  if (orders?.length) {
+    sections.push('\n=== ORDERS ===');
+    // Flatten orders (exclude nested items for the main table)
+    const orderKeys = Object.keys(orders[0]).filter(
+      (k) => k !== 'items' && k !== 'shippingAddress'
+    );
+    sections.push(orderKeys.map(escapeCsvValue).join(','));
+    for (const order of orders) {
+      sections.push(
+        orderKeys
+          .map((k) => {
+            const val = order[k];
+            if (typeof val === 'object' && val !== null) {
+              return escapeCsvValue(JSON.stringify(val));
+            }
+            return escapeCsvValue(val);
+          })
+          .join(',')
+      );
+    }
+
+    // Order items sub-table
+    sections.push('\n=== ORDER ITEMS ===');
+    sections.push('orderId,productName,formatName,quantity,unitPrice,total');
+    for (const order of orders) {
+      const items = order.items as Array<Record<string, unknown>> | undefined;
+      if (items?.length) {
+        for (const item of items) {
+          sections.push(
+            [
+              escapeCsvValue(order.id),
+              escapeCsvValue(item.productName),
+              escapeCsvValue(item.formatName),
+              escapeCsvValue(item.quantity),
+              escapeCsvValue(item.unitPrice),
+              escapeCsvValue(item.total),
+            ].join(',')
+          );
+        }
+      }
+    }
+  }
+
+  // Reviews section
+  const reviews = data.reviews as Array<Record<string, unknown>> | undefined;
+  if (reviews?.length) {
+    sections.push('\n=== REVIEWS ===');
+    const headers = Object.keys(reviews[0]);
+    sections.push(headers.map(escapeCsvValue).join(','));
+    for (const review of reviews) {
+      sections.push(headers.map((h) => escapeCsvValue(review[h])).join(','));
+    }
+  }
+
+  // Addresses section
+  const addresses = data.addresses as Array<Record<string, unknown>> | undefined;
+  if (addresses?.length) {
+    sections.push('\n=== ADDRESSES ===');
+    const headers = Object.keys(addresses[0]);
+    sections.push(headers.map(escapeCsvValue).join(','));
+    for (const addr of addresses) {
+      sections.push(headers.map((h) => escapeCsvValue(addr[h])).join(','));
+    }
+  }
+
+  // Preferences section
+  if (data.preferences) {
+    sections.push('\n=== PREFERENCES ===');
+    const prefs = data.preferences as Record<string, unknown>;
+    sections.push('Setting,Value');
+    sections.push(
+      ...Object.entries(prefs).map(
+        ([k, v]) => `${escapeCsvValue(k)},${escapeCsvValue(v)}`
+      )
+    );
+  }
+
+  // Wishlist section
+  const wishlist = data.wishlist as Array<Record<string, unknown>> | undefined;
+  if (wishlist?.length) {
+    sections.push('\n=== WISHLIST ===');
+    const headers = Object.keys(wishlist[0]);
+    sections.push(headers.map(escapeCsvValue).join(','));
+    for (const item of wishlist) {
+      sections.push(headers.map((h) => escapeCsvValue(item[h])).join(','));
+    }
+  }
+
+  // Loyalty transactions section
+  const loyaltyTx = data.loyaltyTransactions as Array<Record<string, unknown>> | undefined;
+  if (loyaltyTx?.length) {
+    sections.push('\n=== LOYALTY TRANSACTIONS ===');
+    const headers = Object.keys(loyaltyTx[0]);
+    sections.push(headers.map(escapeCsvValue).join(','));
+    for (const tx of loyaltyTx) {
+      sections.push(headers.map((h) => escapeCsvValue(tx[h])).join(','));
+    }
+  }
+
+  return sections.join('\n');
+}
+
+export async function GET(request: NextRequest) {
   try {
     const session = await auth();
+    const { searchParams } = new URL(request.url);
+    const format = searchParams.get('format')?.toLowerCase() || 'json';
 
     if (!session?.user?.id) {
       return NextResponse.json(
@@ -81,8 +233,12 @@ export async function GET() {
     }
 
     // Collect all user data
-    const [user, orders, reviews, addresses, notificationPrefs, wishlistItems, loyaltyTransactions] =
-      await Promise.all([
+    const [
+      user, orders, reviews, addresses, notificationPrefs, wishlistItems,
+      loyaltyTransactions, subscriptions, priceWatches, savedCards,
+      referrals, returnRequests, productQuestions, chatConversations,
+      consentRecords,
+    ] = await Promise.all([
         prisma.user.findUnique({
           where: { id: userId },
           select: {
@@ -164,6 +320,45 @@ export async function GET() {
           },
           orderBy: { createdAt: 'desc' },
         }),
+        // COMP-010: 8 additional data categories for GDPR completeness
+        prisma.subscription.findMany({
+          where: { userId },
+          select: { id: true, productName: true, status: true, interval: true, createdAt: true },
+          orderBy: { createdAt: 'desc' },
+        }),
+        prisma.priceWatch.findMany({
+          where: { userId },
+          select: { id: true, productId: true, targetPrice: true, createdAt: true },
+        }),
+        prisma.savedCard.findMany({
+          where: { userId },
+          select: { id: true, brand: true, last4: true, expMonth: true, expYear: true },
+        }),
+        prisma.referral.findMany({
+          where: { OR: [{ referrerId: userId }, { referredId: userId }] },
+          select: { id: true, status: true, createdAt: true },
+          orderBy: { createdAt: 'desc' },
+        }),
+        prisma.returnRequest.findMany({
+          where: { userId },
+          select: { id: true, orderId: true, status: true, reason: true, createdAt: true },
+          orderBy: { createdAt: 'desc' },
+        }),
+        prisma.productQuestion.findMany({
+          where: { userId },
+          select: { id: true, productId: true, question: true, createdAt: true },
+          orderBy: { createdAt: 'desc' },
+        }),
+        prisma.chatConversation.findMany({
+          where: { userId },
+          select: { id: true, subject: true, status: true, createdAt: true },
+          orderBy: { createdAt: 'desc' },
+        }),
+        prisma.consentRecord.findMany({
+          where: session.user.email ? { email: session.user.email } : { userId },
+          select: { type: true, source: true, grantedAt: true, revokedAt: true },
+          orderBy: { grantedAt: 'desc' },
+        }),
       ]);
 
     if (!user) {
@@ -178,7 +373,7 @@ export async function GET() {
       exportMetadata: {
         exportDate: new Date().toISOString(),
         userId: user.id,
-        format: 'JSON',
+        format: format === 'csv' ? 'CSV' : 'JSON',
         version: '1.0',
         service: 'BioCycle Peptides',
       },
@@ -244,15 +439,67 @@ export async function GET() {
         ...lt,
         createdAt: lt.createdAt.toISOString(),
       })),
+      subscriptions: subscriptions.map((s) => ({
+        ...s,
+        createdAt: s.createdAt.toISOString(),
+      })),
+      priceWatches: priceWatches.map((pw) => ({
+        ...pw,
+        targetPrice: pw.targetPrice ? Number(pw.targetPrice) : null,
+        createdAt: pw.createdAt.toISOString(),
+      })),
+      savedCards: savedCards.map((sc) => ({
+        brand: sc.brand,
+        last4: sc.last4,
+        expiry: `${sc.expMonth}/${sc.expYear}`,
+      })),
+      referrals: referrals.map((r) => ({
+        ...r,
+        createdAt: r.createdAt.toISOString(),
+      })),
+      returnRequests: returnRequests.map((rr) => ({
+        ...rr,
+        createdAt: rr.createdAt.toISOString(),
+      })),
+      productQuestions: productQuestions.map((pq) => ({
+        ...pq,
+        createdAt: pq.createdAt.toISOString(),
+      })),
+      chatConversations: chatConversations.map((cc) => ({
+        ...cc,
+        createdAt: cc.createdAt.toISOString(),
+      })),
+      consents: consentRecords.map((c) => ({
+        type: c.type,
+        source: c.source,
+        grantedAt: c.grantedAt.toISOString(),
+        revokedAt: c.revokedAt?.toISOString() || null,
+      })),
     };
 
     logger.info('[data-export] User data export generated', {
       userId,
+      format,
       orderCount: orders.length,
       reviewCount: reviews.length,
     });
 
-    // Return as downloadable JSON
+    // Return as downloadable file in requested format
+    if (format === 'csv') {
+      const csvContent = jsonToCsv(exportData);
+      const filename = `biocycle-data-export-${userId.substring(0, 8)}-${Date.now()}.csv`;
+
+      return new NextResponse(csvContent, {
+        status: 200,
+        headers: {
+          'Content-Type': 'text/csv; charset=utf-8',
+          'Content-Disposition': `attachment; filename="${filename}"`,
+          'Cache-Control': 'no-store, no-cache',
+        },
+      });
+    }
+
+    // Default: JSON format
     const jsonContent = JSON.stringify(exportData, null, 2);
     const filename = `biocycle-data-export-${userId.substring(0, 8)}-${Date.now()}.json`;
 

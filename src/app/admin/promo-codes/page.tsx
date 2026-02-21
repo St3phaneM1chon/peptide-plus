@@ -1,16 +1,21 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Plus, Pencil, Trash2, Shuffle, Tag, CheckCircle, BarChart3 } from 'lucide-react';
+import { Button } from '@/components/admin/Button';
+import { StatCard } from '@/components/admin/StatCard';
+import { Modal } from '@/components/admin/Modal';
+import { FormField, Input } from '@/components/admin/FormField';
 import {
-  PageHeader,
-  Button,
-  Modal,
-  EmptyState,
-  FormField,
-  Input,
-} from '@/components/admin';
+  ContentList,
+  DetailPane,
+  MobileSplitLayout,
+} from '@/components/admin/outlook';
+import type { ContentListItem } from '@/components/admin/outlook';
 import { useI18n } from '@/i18n/client';
+import { toast } from 'sonner';
+
+// ── Types ─────────────────────────────────────────────────────
 
 interface PromoCode {
   id: string;
@@ -30,13 +35,45 @@ interface PromoCode {
   createdAt: string;
 }
 
+// ── Helpers ───────────────────────────────────────────────────
+
+function promoStatusBadgeVariant(
+  promo: PromoCode
+): 'success' | 'warning' | 'error' | 'neutral' {
+  const isExpired = promo.endsAt && new Date(promo.endsAt) < new Date();
+  const usageFull = promo.usageLimit && promo.usageCount >= promo.usageLimit;
+  if (isExpired) return 'error';
+  if (usageFull) return 'warning';
+  if (promo.isActive) return 'success';
+  return 'neutral';
+}
+
+function promoStatusLabel(promo: PromoCode, t: (key: string) => string): string {
+  const isExpired = promo.endsAt && new Date(promo.endsAt) < new Date();
+  const usageFull = promo.usageLimit && promo.usageCount >= promo.usageLimit;
+  if (isExpired) return t('admin.promoCodes.expired') || 'Expired';
+  if (usageFull) return t('admin.promoCodes.usageFull') || 'Full';
+  if (promo.isActive) return t('admin.promoCodes.active');
+  return t('admin.promoCodes.inactive') || 'Inactive';
+}
+
+// ── Main Component ────────────────────────────────────────────
+
 export default function PromoCodesPage() {
   const { t, locale, formatCurrency } = useI18n();
   const [promoCodes, setPromoCodes] = useState<PromoCode[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [editingCode, setEditingCode] = useState<PromoCode | null>(null);
   const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  // Filter state
+  const [searchValue, setSearchValue] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+
+  // Form state
   const [formData, setFormData] = useState({
     code: '',
     description: '',
@@ -51,6 +88,8 @@ export default function PromoCodesPage() {
     firstOrderOnly: false,
   });
 
+  // ─── Data fetching ──────────────────────────────────────────
+
   useEffect(() => {
     fetchPromoCodes();
   }, []);
@@ -63,12 +102,14 @@ export default function PromoCodesPage() {
     } catch (err) {
       console.error('Error fetching promo codes:', err);
       setPromoCodes([]);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
+  // ─── CRUD ─────────────────────────────────────────────────
+
   const generateCode = () => {
-    // SECURITY: Use crypto.getRandomValues for non-guessable promo codes
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     const randomBytes = crypto.getRandomValues(new Uint8Array(8));
     const code = Array.from(randomBytes).map(b => chars.charAt(b % chars.length)).join('');
@@ -85,7 +126,7 @@ export default function PromoCodesPage() {
         : '/api/admin/promo-codes';
       const method = editingCode ? 'PUT' : 'POST';
 
-      await fetch(url, {
+      const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -97,34 +138,64 @@ export default function PromoCodesPage() {
         }),
       });
 
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        toast.error(data.error || t('common.saveFailed'));
+        return;
+      }
+
+      toast.success(editingCode
+        ? (t('admin.promoCodes.updated') || 'Promo code updated')
+        : (t('admin.promoCodes.created') || 'Promo code created'));
       await fetchPromoCodes();
       resetForm();
     } catch (err) {
       console.error('Error saving promo code:', err);
+      toast.error(t('common.networkError'));
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
   };
 
   const toggleActive = async (id: string, isActive: boolean) => {
     try {
-      await fetch(`/api/admin/promo-codes/${id}`, {
+      const res = await fetch(`/api/admin/promo-codes/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ isActive: !isActive }),
       });
-      setPromoCodes(promoCodes.map((p) => (p.id === id ? { ...p, isActive: !isActive } : p)));
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        toast.error(data.error || t('common.updateFailed'));
+        return;
+      }
+      setPromoCodes(prev => prev.map((p) => (p.id === id ? { ...p, isActive: !isActive } : p)));
     } catch (err) {
       console.error('Error toggling status:', err);
+      toast.error(t('common.networkError'));
     }
   };
 
   const deletePromoCode = async (id: string) => {
     if (!confirm(t('admin.promoCodes.confirmDelete'))) return;
+    setDeletingId(id);
     try {
-      await fetch(`/api/admin/promo-codes/${id}`, { method: 'DELETE' });
-      setPromoCodes(promoCodes.filter((p) => p.id !== id));
+      const res = await fetch(`/api/admin/promo-codes/${id}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        toast.error(data.error || t('common.deleteFailed'));
+        return;
+      }
+      setPromoCodes(prev => prev.filter((p) => p.id !== id));
+      if (selectedId === id) {
+        setSelectedId(null);
+      }
+      toast.success(t('admin.promoCodes.deleted') || 'Promo code deleted');
     } catch (err) {
       console.error('Error deleting:', err);
+      toast.error(t('common.networkError'));
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -164,29 +235,109 @@ export default function PromoCodesPage() {
     setShowForm(true);
   };
 
-  const stats = {
+  const handleSelectPromo = useCallback((id: string) => {
+    setSelectedId(id);
+  }, []);
+
+  // ─── Filtering ──────────────────────────────────────────────
+
+  const filteredPromoCodes = useMemo(() => {
+    return promoCodes.filter(promo => {
+      // Status filter
+      if (statusFilter === 'active' && !promo.isActive) return false;
+      if (statusFilter === 'inactive' && promo.isActive) return false;
+      if (statusFilter === 'expired') {
+        const isExpired = promo.endsAt && new Date(promo.endsAt) < new Date();
+        if (!isExpired) return false;
+      }
+      // Search filter
+      if (searchValue) {
+        const search = searchValue.toLowerCase();
+        if (
+          !promo.code.toLowerCase().includes(search) &&
+          !promo.description?.toLowerCase().includes(search)
+        ) {
+          return false;
+        }
+      }
+      return true;
+    });
+  }, [promoCodes, statusFilter, searchValue]);
+
+  const stats = useMemo(() => ({
     total: promoCodes.length,
     active: promoCodes.filter((p) => p.isActive).length,
+    inactive: promoCodes.filter((p) => !p.isActive).length,
     totalUsage: promoCodes.reduce((sum, p) => sum + p.usageCount, 0),
-  };
+    expired: promoCodes.filter((p) => p.endsAt && new Date(p.endsAt) < new Date()).length,
+  }), [promoCodes]);
+
+  // ─── ContentList data ────────────────────────────────────────
+
+  const filterTabs = useMemo(() => [
+    { key: 'all', label: t('admin.promoCodes.filterAll') || 'All', count: stats.total },
+    { key: 'active', label: t('admin.promoCodes.active'), count: stats.active },
+    { key: 'inactive', label: t('admin.promoCodes.inactive') || 'Inactive', count: stats.inactive },
+    { key: 'expired', label: t('admin.promoCodes.expired') || 'Expired', count: stats.expired },
+  ], [t, stats]);
+
+  const listItems: ContentListItem[] = useMemo(() => {
+    return filteredPromoCodes.map((promo) => ({
+      id: promo.id,
+      avatar: { text: promo.code.slice(0, 2) },
+      title: promo.code,
+      subtitle: promo.type === 'PERCENTAGE'
+        ? `${promo.value}%`
+        : formatCurrency(promo.value),
+      preview: promo.description || (
+        promo.usageLimit
+          ? `${promo.usageCount} / ${promo.usageLimit} ${t('admin.promoCodes.colUsage').toLowerCase()}`
+          : `${promo.usageCount} ${t('admin.promoCodes.colUsage').toLowerCase()}`
+      ),
+      timestamp: promo.createdAt,
+      badges: [
+        {
+          text: promoStatusLabel(promo, t),
+          variant: promoStatusBadgeVariant(promo),
+        },
+        ...(promo.firstOrderOnly
+          ? [{ text: t('admin.promoCodes.firstOrderOnly'), variant: 'info' as const }]
+          : []),
+      ],
+    }));
+  }, [filteredPromoCodes, t, formatCurrency]);
+
+  // ─── Selected promo ──────────────────────────────────────────
+
+  const selectedPromo = useMemo(() => {
+    if (!selectedId) return null;
+    return promoCodes.find(p => p.id === selectedId) || null;
+  }, [promoCodes, selectedId]);
+
+  // ─── Render ──────────────────────────────────────────────────
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex items-center justify-center h-64" role="status" aria-label="Loading">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500" />
+        <span className="sr-only">Loading...</span>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title={t('admin.promoCodes.title')}
-        subtitle={t('admin.promoCodes.subtitle')}
-        actions={
+    <div className="h-full flex flex-col">
+      {/* Stat cards row */}
+      <div className="p-4 lg:p-6 pb-0 flex-shrink-0">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className="text-xl font-bold text-slate-900">{t('admin.promoCodes.title')}</h1>
+            <p className="text-sm text-slate-500 mt-0.5">{t('admin.promoCodes.subtitle')}</p>
+          </div>
           <Button
             variant="primary"
             icon={Plus}
+            size="sm"
             onClick={() => {
               resetForm();
               setShowForm(true);
@@ -194,155 +345,196 @@ export default function PromoCodesPage() {
           >
             {t('admin.promoCodes.newCode')}
           </Button>
-        }
-      />
-
-      {/* Stats */}
-      <div className="grid grid-cols-3 gap-4">
-        <div className="bg-white rounded-xl p-4 border border-slate-200 flex items-center gap-3">
-          <div className="w-9 h-9 bg-slate-100 rounded-lg flex items-center justify-center text-slate-600">
-            <Tag className="w-4 h-4" />
-          </div>
-          <div>
-            <p className="text-xs text-slate-500">{t('admin.promoCodes.totalCodes')}</p>
-            <p className="text-xl font-bold text-slate-900">{stats.total}</p>
-          </div>
         </div>
-        <div className="bg-white rounded-xl p-4 border border-emerald-200 flex items-center gap-3">
-          <div className="w-9 h-9 bg-emerald-100 rounded-lg flex items-center justify-center text-emerald-600">
-            <CheckCircle className="w-4 h-4" />
-          </div>
-          <div>
-            <p className="text-xs text-emerald-600">{t('admin.promoCodes.active')}</p>
-            <p className="text-xl font-bold text-emerald-700">{stats.active}</p>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl p-4 border border-sky-200 flex items-center gap-3">
-          <div className="w-9 h-9 bg-sky-100 rounded-lg flex items-center justify-center text-sky-600">
-            <BarChart3 className="w-4 h-4" />
-          </div>
-          <div>
-            <p className="text-xs text-sky-600">{t('admin.promoCodes.totalUsage')}</p>
-            <p className="text-xl font-bold text-sky-700">{stats.totalUsage}</p>
-          </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-4">
+          <StatCard label={t('admin.promoCodes.totalCodes')} value={stats.total} icon={Tag} />
+          <StatCard label={t('admin.promoCodes.active')} value={stats.active} icon={CheckCircle} />
+          <StatCard label={t('admin.promoCodes.totalUsage')} value={stats.totalUsage} icon={BarChart3} />
         </div>
       </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-slate-50">
-            <tr>
-              <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.promoCodes.colCode')}</th>
-              <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.promoCodes.colDiscount')}</th>
-              <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.promoCodes.colConditions')}</th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.promoCodes.colUsage')}</th>
-              <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.promoCodes.colValidity')}</th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.promoCodes.colStatus')}</th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.promoCodes.colActions')}</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {promoCodes.map((promo) => {
-              const isExpired = promo.endsAt && new Date(promo.endsAt) < new Date();
-              const usageFull = promo.usageLimit && promo.usageCount >= promo.usageLimit;
-              return (
-                <tr
-                  key={promo.id}
-                  className={`hover:bg-slate-50 ${!promo.isActive || isExpired || usageFull ? 'opacity-60' : ''}`}
-                >
-                  <td className="px-4 py-3">
-                    <p className="font-mono font-bold text-slate-900">{promo.code}</p>
-                    {promo.description && <p className="text-xs text-slate-500">{promo.description}</p>}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className="font-bold text-sky-600">
-                      {promo.type === 'PERCENTAGE' ? `${promo.value}%` : formatCurrency(promo.value)}
-                    </span>
-                    {promo.maxDiscount && <p className="text-xs text-slate-500">{t('admin.promoCodes.maxPrefix')} {formatCurrency(promo.maxDiscount)}</p>}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-slate-600">
-                    {promo.minOrderAmount && <p>{t('admin.promoCodes.minPrefix')} {formatCurrency(promo.minOrderAmount)}</p>}
-                    {promo.firstOrderOnly && <p className="text-sky-600">{t('admin.promoCodes.firstOrderOnly')}</p>}
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <span className="font-bold text-slate-900">{promo.usageCount}</span>
-                    {promo.usageLimit && <span className="text-slate-400"> / {promo.usageLimit}</span>}
-                  </td>
-                  <td className="px-4 py-3 text-sm">
-                    {promo.startsAt || promo.endsAt ? (
-                      <>
-                        {promo.startsAt && (
-                          <p className="text-slate-500">
-                            {t('admin.promoCodes.fromDate')} {new Date(promo.startsAt).toLocaleDateString(locale)}
-                          </p>
-                        )}
-                        {promo.endsAt && (
-                          <p className={isExpired ? 'text-red-500' : 'text-slate-500'}>
-                            {t('admin.promoCodes.toDate')} {new Date(promo.endsAt).toLocaleDateString(locale)}
-                          </p>
-                        )}
-                      </>
-                    ) : (
-                      <span className="text-slate-400">{t('admin.promoCodes.unlimited')}</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <button
-                      onClick={() => toggleActive(promo.id, promo.isActive)}
-                      className={`w-12 h-6 rounded-full transition-colors relative ${
-                        promo.isActive ? 'bg-emerald-500' : 'bg-slate-300'
-                      }`}
-                    >
-                      <span
-                        className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
-                          promo.isActive ? 'right-1' : 'left-1'
-                        }`}
-                      />
-                    </button>
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <div className="flex items-center justify-center gap-1">
-                      <Button variant="ghost" size="sm" icon={Pencil} onClick={() => startEdit(promo)}>
+      {/* Main content: list + detail */}
+      <div className="flex-1 min-h-0">
+        <MobileSplitLayout
+          listWidth={380}
+          showDetail={!!selectedId}
+          list={
+            <ContentList
+              items={listItems}
+              selectedId={selectedId}
+              onSelect={handleSelectPromo}
+              filterTabs={filterTabs}
+              activeFilter={statusFilter}
+              onFilterChange={setStatusFilter}
+              searchValue={searchValue}
+              onSearchChange={setSearchValue}
+              searchPlaceholder={t('admin.promoCodes.searchPlaceholder') || 'Rechercher un code...'}
+              loading={loading}
+              emptyIcon={Tag}
+              emptyTitle={t('admin.promoCodes.emptyTitle')}
+              emptyDescription={t('admin.promoCodes.emptyDescription')}
+            />
+          }
+          detail={
+            selectedPromo ? (
+              <DetailPane
+                header={{
+                  title: selectedPromo.code,
+                  subtitle: selectedPromo.description || (
+                    selectedPromo.type === 'PERCENTAGE'
+                      ? `${t('admin.promoCodes.typePercentage')} - ${selectedPromo.value}%`
+                      : `${t('admin.promoCodes.typeFixedAmount')} - ${formatCurrency(selectedPromo.value)}`
+                  ),
+                  avatar: { text: selectedPromo.code.slice(0, 2) },
+                  onBack: () => setSelectedId(null),
+                  backLabel: t('admin.promoCodes.title'),
+                  actions: (
+                    <div className="flex items-center gap-2">
+                      <Button variant="ghost" size="sm" icon={Pencil} onClick={() => startEdit(selectedPromo)}>
                         {t('admin.promoCodes.edit')}
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
                         icon={Trash2}
-                        onClick={() => deletePromoCode(promo.id)}
-                        className="text-slate-400 hover:text-red-600"
+                        disabled={deletingId === selectedPromo.id}
+                        onClick={() => deletePromoCode(selectedPromo.id)}
+                        className="text-red-600 hover:text-red-700"
                       />
                     </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-
-        {promoCodes.length === 0 && (
-          <EmptyState
-            icon={Tag}
-            title={t('admin.promoCodes.emptyTitle')}
-            description={t('admin.promoCodes.emptyDescription')}
-            action={
-              <Button
-                variant="primary"
-                icon={Plus}
-                onClick={() => {
-                  resetForm();
-                  setShowForm(true);
+                  ),
                 }}
               >
-                {t('admin.promoCodes.newCode')}
-              </Button>
-            }
-          />
-        )}
+                <div className="space-y-6">
+                  {/* Status toggle */}
+                  <div className="flex items-center justify-between bg-slate-50 rounded-lg p-4">
+                    <div>
+                      <h3 className="font-semibold text-slate-900">{t('admin.promoCodes.colStatus')}</h3>
+                      <p className="text-sm text-slate-500 mt-0.5">
+                        {promoStatusLabel(selectedPromo, t)}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => toggleActive(selectedPromo.id, selectedPromo.isActive)}
+                      className={`w-12 h-6 rounded-full transition-colors relative ${
+                        selectedPromo.isActive ? 'bg-emerald-500' : 'bg-slate-300'
+                      }`}
+                    >
+                      <span
+                        className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
+                          selectedPromo.isActive ? 'right-1' : 'left-1'
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  {/* Discount Info */}
+                  <div className="grid grid-cols-2 gap-6">
+                    <div>
+                      <h3 className="font-semibold text-slate-900 mb-3">{t('admin.promoCodes.colDiscount')}</h3>
+                      <p className="text-2xl font-bold text-sky-600">
+                        {selectedPromo.type === 'PERCENTAGE'
+                          ? `${selectedPromo.value}%`
+                          : formatCurrency(selectedPromo.value)}
+                      </p>
+                      <p className="text-sm text-slate-500 mt-1">
+                        {selectedPromo.type === 'PERCENTAGE'
+                          ? t('admin.promoCodes.typePercentage')
+                          : t('admin.promoCodes.typeFixedAmount')}
+                      </p>
+                      {selectedPromo.maxDiscount && (
+                        <p className="text-sm text-slate-500 mt-1">
+                          {t('admin.promoCodes.maxPrefix')} {formatCurrency(selectedPromo.maxDiscount)}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <h3 className="font-semibold text-slate-900 mb-3">{t('admin.promoCodes.colUsage')}</h3>
+                      <p className="text-2xl font-bold text-slate-900">
+                        {selectedPromo.usageCount}
+                        {selectedPromo.usageLimit && (
+                          <span className="text-slate-400 text-lg font-normal"> / {selectedPromo.usageLimit}</span>
+                        )}
+                      </p>
+                      {selectedPromo.usageLimitPerUser && (
+                        <p className="text-sm text-slate-500 mt-1">
+                          {t('admin.promoCodes.labelPerCustomerLimit')}: {selectedPromo.usageLimitPerUser}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Conditions */}
+                  <div className="bg-slate-50 rounded-lg p-4">
+                    <h3 className="font-semibold text-slate-900 mb-3">{t('admin.promoCodes.colConditions')}</h3>
+                    <div className="space-y-2">
+                      {selectedPromo.minOrderAmount && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-slate-600">{t('admin.promoCodes.labelMinOrder')}</span>
+                          <span className="font-medium text-slate-900">{formatCurrency(selectedPromo.minOrderAmount)}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between text-sm">
+                        <span className="text-slate-600">{t('admin.promoCodes.firstOrderOnlyCheckbox')}</span>
+                        <span className="font-medium text-slate-900">
+                          {selectedPromo.firstOrderOnly ? t('admin.promoCodes.active') : '---'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Validity dates */}
+                  <div className="bg-slate-50 rounded-lg p-4">
+                    <h3 className="font-semibold text-slate-900 mb-3">{t('admin.promoCodes.colValidity')}</h3>
+                    <div className="space-y-2">
+                      {selectedPromo.startsAt ? (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-slate-600">{t('admin.promoCodes.fromDate')}</span>
+                          <span className="font-medium text-slate-900">
+                            {new Date(selectedPromo.startsAt).toLocaleDateString(locale)}
+                          </span>
+                        </div>
+                      ) : null}
+                      {selectedPromo.endsAt ? (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-slate-600">{t('admin.promoCodes.toDate')}</span>
+                          <span className={`font-medium ${
+                            new Date(selectedPromo.endsAt) < new Date() ? 'text-red-600' : 'text-slate-900'
+                          }`}>
+                            {new Date(selectedPromo.endsAt).toLocaleDateString(locale)}
+                          </span>
+                        </div>
+                      ) : null}
+                      {!selectedPromo.startsAt && !selectedPromo.endsAt && (
+                        <p className="text-sm text-slate-400">{t('admin.promoCodes.unlimited')}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Meta info */}
+                  <div className="text-xs text-slate-400 pt-2 border-t border-slate-200">
+                    <p>ID: {selectedPromo.id}</p>
+                    <p>{t('admin.promoCodes.colCode')}: {selectedPromo.code}</p>
+                    <p>
+                      {t('admin.promoCodes.fromDate')} {new Date(selectedPromo.createdAt).toLocaleString(locale)}
+                    </p>
+                  </div>
+                </div>
+              </DetailPane>
+            ) : (
+              <DetailPane
+                isEmpty
+                emptyIcon={Tag}
+                emptyTitle={t('admin.promoCodes.emptyTitle')}
+                emptyDescription={t('admin.promoCodes.emptyDescription')}
+              />
+            )
+          }
+        />
       </div>
 
-      {/* Form Modal */}
+      {/* ─── CREATE/EDIT FORM MODAL ─────────────────────────────── */}
       <Modal
         isOpen={showForm}
         onClose={resetForm}

@@ -521,11 +521,11 @@ export default function InvoicesPage() {
       {/* INVOICE DETAIL MODAL */}
       {/* ===================================================== */}
       {viewingInvoice && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 no-print">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 no-print" role="dialog" aria-modal="true" aria-labelledby="invoice-detail-modal-title">
           <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
             {/* Modal header */}
             <div className="p-4 border-b border-gray-200 flex items-center justify-between flex-shrink-0 bg-gray-50">
-              <h2 className="text-lg font-bold text-gray-900">
+              <h2 id="invoice-detail-modal-title" className="text-lg font-bold text-gray-900">
                 {t('account.invoices.invoiceDetail') || 'Invoice'} {viewingInvoice.invoiceNumber}
               </h2>
               <div className="flex items-center gap-2">

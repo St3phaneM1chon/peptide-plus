@@ -15,6 +15,7 @@ import {
   type Column,
 } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
+import { toast } from 'sonner';
 
 type OrderItem = { id: string; date: string; customer: string; total: number; status: string; taxCollected: number };
 type MonthlySummaryItem = { month: string; orders: number; revenue: number; taxCollected: number; avgOrder: number };
@@ -71,6 +72,8 @@ export default function CountryDetailPage({ params }: { params: Promise<{ code: 
         // Orders are not available via a dedicated country-specific API, keep empty
         setOrders([]);
       } catch (err) {
+        console.error(err);
+        toast.error(t('common.errorOccurred'));
         setError(err instanceof Error ? err.message : t('admin.fiscalCountry.unknownError'));
       } finally {
         setLoading(false);
@@ -241,7 +244,7 @@ function OverviewTab({ country, t }: { country: CountryCompliance; t: TFunc }) {
         <h3 className="text-lg font-semibold text-slate-900 mb-4">
           {t('admin.fiscalCountry.shippingInfo')}
         </h3>
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <div>
             <div className="text-sm text-slate-500">{t('admin.fiscalCountry.estimatedDelay')}</div>
             <div className="font-bold">{t('admin.fiscalCountry.businessDays', { days: country.shippingDays })}</div>
@@ -305,7 +308,7 @@ function ObligationsTab({ country, t }: { country: CountryCompliance; t: TFunc }
 
               <p className="text-slate-700 mb-4">{obligation.description}</p>
 
-              <div className="grid grid-cols-3 gap-4 text-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
                 {obligation.rate && (
                   <div>
                     <span className="text-slate-500">{t('admin.fiscalCountry.rateLabel')}</span>
@@ -568,7 +571,7 @@ function ReportsTab({ country, monthlyData, t, locale }: { country: CountryCompl
 
       {/* Totals row displayed separately when data exists */}
       {monthlyData.length > 0 && (
-        <div className="bg-slate-100 rounded-lg p-4 grid grid-cols-5 gap-4 text-sm font-bold">
+        <div className="bg-slate-100 rounded-lg p-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 text-sm font-bold">
           <div>TOTAL</div>
           <div className="text-end">{totals.orders}</div>
           <div className="text-end text-green-600">${totals.revenue.toLocaleString(locale)}</div>

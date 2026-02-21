@@ -17,6 +17,8 @@ export interface BirthdayEmailData {
   bonusPoints: number;
   expiresAt: Date;
   locale?: 'fr' | 'en';
+  /** CAN-SPAM / RGPD / LCAP: unsubscribe URL (required for compliance) */
+  unsubscribeUrl?: string;
 }
 
 export function birthdayEmail(data: BirthdayEmailData): { subject: string; html: string } {
@@ -100,11 +102,12 @@ export function birthdayEmail(data: BirthdayEmailData): { subject: string; html:
   return {
     subject,
     html: baseTemplate({
-      preheader: isFr 
+      preheader: isFr
         ? `🎁 ${discountText} de rabais pour votre anniversaire + ${data.bonusPoints} points bonus!`
         : `🎁 ${discountText} off for your birthday + ${data.bonusPoints} bonus points!`,
       content,
       locale: data.locale,
+      unsubscribeUrl: data.unsubscribeUrl,
     }),
   };
 }
@@ -118,6 +121,8 @@ export interface WelcomeEmailData {
   welcomePoints: number;
   referralCode: string;
   locale?: 'fr' | 'en';
+  /** CAN-SPAM / RGPD / LCAP: unsubscribe URL (required for compliance) */
+  unsubscribeUrl?: string;
 }
 
 export function welcomeEmail(data: WelcomeEmailData): { subject: string; html: string } {
@@ -248,11 +253,12 @@ export function welcomeEmail(data: WelcomeEmailData): { subject: string; html: s
   return {
     subject,
     html: baseTemplate({
-      preheader: isFr 
+      preheader: isFr
         ? `Bienvenue! ${data.welcomePoints} points bonus vous attendent 🎁`
         : `Welcome! ${data.welcomePoints} bonus points await you 🎁`,
       content,
       locale: data.locale,
+      unsubscribeUrl: data.unsubscribeUrl,
     }),
   };
 }
@@ -273,6 +279,8 @@ export interface AbandonedCartEmailData {
   discountCode?: string;
   discountValue?: number;
   locale?: 'fr' | 'en';
+  /** CAN-SPAM / RGPD / LCAP: unsubscribe URL (required for compliance) */
+  unsubscribeUrl?: string;
 }
 
 export function abandonedCartEmail(data: AbandonedCartEmailData): { subject: string; html: string } {
@@ -354,11 +362,12 @@ export function abandonedCartEmail(data: AbandonedCartEmailData): { subject: str
   return {
     subject,
     html: baseTemplate({
-      preheader: isFr 
+      preheader: isFr
         ? `Vos articles vous attendent! ${data.discountCode ? `+ ${data.discountValue}% de rabais` : ''}`
         : `Your items are waiting! ${data.discountCode ? `+ ${data.discountValue}% off` : ''}`,
       content,
       locale: data.locale,
+      unsubscribeUrl: data.unsubscribeUrl,
     }),
   };
 }
@@ -374,6 +383,8 @@ export interface BackInStockEmailData {
   productUrl: string;
   productImageUrl?: string;
   locale?: 'fr' | 'en';
+  /** CAN-SPAM / RGPD / LCAP: unsubscribe URL (required for compliance) */
+  unsubscribeUrl?: string;
 }
 
 export function backInStockEmail(data: BackInStockEmailData): { subject: string; html: string } {
@@ -419,11 +430,12 @@ export function backInStockEmail(data: BackInStockEmailData): { subject: string;
   return {
     subject,
     html: baseTemplate({
-      preheader: isFr 
+      preheader: isFr
         ? `${data.productName} est de retour! Stock limité.`
         : `${data.productName} is back! Limited stock.`,
       content,
       locale: data.locale,
+      unsubscribeUrl: data.unsubscribeUrl,
     }),
   };
 }
@@ -438,6 +450,8 @@ export interface PointsExpiringEmailData {
   currentPoints: number;
   expiryDate: Date;
   locale?: 'fr' | 'en';
+  /** CAN-SPAM / RGPD / LCAP: unsubscribe URL (required for compliance) */
+  unsubscribeUrl?: string;
 }
 
 export function pointsExpiringEmail(data: PointsExpiringEmailData): { subject: string; html: string } {
@@ -503,6 +517,7 @@ export function pointsExpiringEmail(data: PointsExpiringEmailData): { subject: s
         : `${data.expiringPoints} points expire on ${expiryDateStr} - Use them!`,
       content,
       locale: data.locale,
+      unsubscribeUrl: data.unsubscribeUrl,
     }),
   };
 }
@@ -522,6 +537,8 @@ export interface PriceDropEmailData {
   priceDropPercent: number;
   targetPrice?: number;
   locale?: 'fr' | 'en';
+  /** CAN-SPAM / RGPD / LCAP: unsubscribe URL (required for compliance) */
+  unsubscribeUrl?: string;
 }
 
 export function priceDropEmail(data: PriceDropEmailData): { subject: string; html: string } {
@@ -616,6 +633,7 @@ export function priceDropEmail(data: PriceDropEmailData): { subject: string; htm
         : `${data.productName} - Now $${data.currentPrice.toFixed(2)} (save $${data.priceDrop.toFixed(2)})`,
       content,
       locale: data.locale,
+      unsubscribeUrl: data.unsubscribeUrl,
     }),
   };
 }

@@ -15,6 +15,19 @@ import { randomUUID } from 'crypto';
 
 const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads');
 
+/**
+ * SECURITY FIX: Sanitize folder path to prevent path traversal attacks.
+ * Removes ".." sequences, disallowed characters, duplicate slashes,
+ * and leading/trailing slashes.
+ */
+function sanitizeFolderPath(rawFolder: string): string {
+  return rawFolder
+    .replace(/\.\./g, '')                   // Remove path traversal sequences
+    .replace(/[^a-zA-Z0-9_\-\/]/g, '')      // Allow only safe chars
+    .replace(/\/+/g, '/')                    // Collapse duplicate slashes
+    .replace(/^\/|\/$/g, '');                // Strip leading/trailing slashes
+}
+
 // SECURITY FIX (BE-SEC-12): Allowed MIME types with their magic byte signatures
 // Validates that file content actually matches the declared MIME type
 const ALLOWED_MIME_SIGNATURES: Record<string, { bytes: number[]; offset?: number }[]> = {
@@ -23,6 +36,10 @@ const ALLOWED_MIME_SIGNATURES: Record<string, { bytes: number[]; offset?: number
   'image/gif': [{ bytes: [0x47, 0x49, 0x46] }],
   'image/webp': [{ bytes: [0x52, 0x49, 0x46, 0x46] }], // RIFF header
   'application/pdf': [{ bytes: [0x25, 0x50, 0x44, 0x46] }], // %PDF
+  'video/mp4': [
+    { bytes: [0x66, 0x74, 0x79, 0x70], offset: 4 }, // 'ftyp' at byte 4
+  ],
+  'video/webm': [{ bytes: [0x1A, 0x45, 0xDF, 0xA3] }], // EBML header
   'image/svg+xml': [], // SVGs are text-based, validated separately
 };
 
@@ -64,7 +81,8 @@ function validateMagicBytes(buffer: Buffer, declaredMime: string): boolean {
 export const GET = withAdminGuard(async (request, { session }) => {
   try {
     const { searchParams } = new URL(request.url);
-    const folder = searchParams.get('folder');
+    const rawFolder = searchParams.get('folder');
+    const folder = rawFolder ? sanitizeFolderPath(rawFolder) : null;
     const mimeType = searchParams.get('mimeType');
     const search = searchParams.get('search');
     const page = parseInt(searchParams.get('page') || '1', 10);
@@ -115,7 +133,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
   try {
     const formData = await request.formData();
     const files = formData.getAll('files') as File[];
-    const folder = (formData.get('folder') as string) || 'general';
+    const folder = sanitizeFolderPath((formData.get('folder') as string) || 'general');
     const alt = formData.get('alt') as string | null;
 
     if (!files || files.length === 0) {
@@ -126,7 +144,16 @@ export const POST = withAdminGuard(async (request, { session }) => {
     }
 
     // Ensure upload directory exists
-    const folderPath = path.join(UPLOAD_DIR, folder);
+    const folderPath = path.resolve(UPLOAD_DIR, folder);
+
+    // SECURITY: Verify resolved path is still within UPLOAD_DIR (defense in depth)
+    if (!folderPath.startsWith(UPLOAD_DIR)) {
+      return NextResponse.json(
+        { error: 'Invalid folder path' },
+        { status: 400 }
+      );
+    }
+
     await mkdir(folderPath, { recursive: true });
 
     const uploaded = [];

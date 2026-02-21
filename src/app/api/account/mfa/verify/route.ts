@@ -11,9 +11,22 @@ import { verifyTOTP } from '@/lib/mfa';
 import { decrypt } from '@/lib/security';
 import { prisma } from '@/lib/db';
 import { validateCsrf } from '@/lib/csrf-middleware';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
 
 export async function POST(request: NextRequest) {
   try {
+    // SECURITY (SEC-005): Rate limit MFA verify - 5 attempts per minute per IP
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip')
+      || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/account/mfa/verify');
+    if (!rl.success) {
+      return NextResponse.json(
+        { error: rl.error?.message || 'Too many attempts. Please try again later.' },
+        { status: 429 }
+      );
+    }
+
     // SECURITY (BE-SEC-15): CSRF protection for mutation endpoint
     const csrfValid = await validateCsrf(request);
     if (!csrfValid) {

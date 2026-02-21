@@ -22,7 +22,7 @@ export const GET = withAdminGuard(async (request: NextRequest, { session, params
       if (!status) {
         return NextResponse.json({ error: 'Run not found' }, { status: 404 });
       }
-      return NextResponse.json(status);
+      return NextResponse.json({ data: status });
     }
 
     const detail = await getRunDetail(id);
@@ -30,7 +30,7 @@ export const GET = withAdminGuard(async (request: NextRequest, { session, params
       return NextResponse.json({ error: 'Run not found' }, { status: 404 });
     }
 
-    return NextResponse.json(detail);
+    return NextResponse.json({ data: detail });
   } catch (error) {
     console.error('[UAT API] GET detail error:', error);
     return NextResponse.json({ error: 'Une erreur est survenue' }, { status: 500 });
@@ -43,7 +43,7 @@ export const DELETE = withAdminGuard(async (_request: NextRequest, { session, pa
     const id = params!.id;
     const result = await cleanupUatRun(id);
 
-    return NextResponse.json(result);
+    return NextResponse.json({ success: true, data: result });
   } catch (error) {
     console.error('[UAT API] DELETE error:', error);
     return NextResponse.json({ error: 'Une erreur est survenue' }, { status: 500 });

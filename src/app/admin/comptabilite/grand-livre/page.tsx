@@ -5,6 +5,7 @@ import { Printer, Download, Check, Clock } from 'lucide-react';
 import { PageHeader, Button, SectionCard } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
 import { sectionThemes } from '@/lib/admin/section-themes';
+import { toast } from 'sonner';
 
 interface Transaction {
   id: string;
@@ -74,7 +75,8 @@ export default function GrandLivrePage() {
         setAccounts(mapped);
       }
     } catch (err) {
-      console.error('Error fetching chart of accounts:', err);
+      console.error(err);
+      toast.error(t('common.errorOccurred'));
     }
   };
 
@@ -125,6 +127,7 @@ export default function GrandLivrePage() {
       }
     } catch (err) {
       console.error('Error fetching general ledger:', err);
+      toast.error(t('common.errorOccurred'));
       setError(err instanceof Error ? err.message : 'Impossible de charger les donn\u00e9es');
     } finally {
       setLoading(false);
@@ -152,7 +155,7 @@ export default function GrandLivrePage() {
   if (loading && accounts.length === 0) return (
     <div aria-live="polite" aria-busy="true" className="p-8 space-y-4 animate-pulse">
       <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-1/3"></div>
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[1,2,3,4].map(i => <div key={i} className="h-24 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>)}
       </div>
       <div className="h-64 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
@@ -188,7 +191,7 @@ export default function GrandLivrePage() {
 
       {/* Filters */}
       <SectionCard theme={theme}>
-        <div className="grid grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
           <div className="col-span-2">
             <label className="block text-xs font-medium text-slate-500 mb-1">{t('admin.generalLedger.accountLabel')}</label>
             <select

@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { createPromotionSchema } from '@/lib/validations/promotion';
 
 // GET /api/admin/promotions - List all promotions/discounts
 export const GET = withAdminGuard(async (request, { session }) => {
@@ -123,6 +124,15 @@ export const GET = withAdminGuard(async (request, { session }) => {
 export const POST = withAdminGuard(async (request, { session }) => {
   try {
     const body = await request.json();
+
+    // Validate with Zod
+    const parsed = createPromotionSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Validation error', details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
     const {
       name,
       type,
@@ -135,39 +145,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       startsAt,
       endsAt,
       isActive,
-    } = body;
-
-    // Validate required fields
-    if (!name || name.trim() === '') {
-      return NextResponse.json(
-        { error: 'Name is required' },
-        { status: 400 }
-      );
-    }
-
-    if (value === undefined || value === null || Number(value) < 0) {
-      return NextResponse.json(
-        { error: 'A valid discount value is required' },
-        { status: 400 }
-      );
-    }
-
-    // Validate discount type
-    const validTypes = ['PERCENTAGE', 'FIXED_AMOUNT'];
-    if (type && !validTypes.includes(type)) {
-      return NextResponse.json(
-        { error: `Invalid discount type. Must be one of: ${validTypes.join(', ')}` },
-        { status: 400 }
-      );
-    }
-
-    // Validate percentage range
-    if (type === 'PERCENTAGE' && Number(value) > 100) {
-      return NextResponse.json(
-        { error: 'Percentage discount cannot exceed 100%' },
-        { status: 400 }
-      );
-    }
+    } = parsed.data;
 
     // Validate category exists if provided
     if (categoryId) {
@@ -212,6 +190,27 @@ export const POST = withAdminGuard(async (request, { session }) => {
         isActive: isActive ?? true,
       },
     });
+
+    // Audit log for promotion creation (fire-and-forget)
+    prisma.auditLog.create({
+      data: {
+        id: `audit_create_promotion_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 8)}`,
+        userId: session.user.id,
+        action: 'ADMIN_CREATE_PROMOTION',
+        entityType: 'Discount',
+        entityId: discount.id,
+        details: JSON.stringify({
+          name: discount.name,
+          type: discount.type,
+          value: Number(discount.value),
+          appliesToAll: discount.appliesToAll,
+          categoryId: discount.categoryId,
+          productId: discount.productId,
+          isActive: discount.isActive,
+        }),
+        ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || null,
+      },
+    }).catch(console.error);
 
     // Fetch related names for response
     let categoryName: string | null = null;

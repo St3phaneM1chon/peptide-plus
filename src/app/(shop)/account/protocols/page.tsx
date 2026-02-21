@@ -642,16 +642,16 @@ function ProtocolDetailModal({
   }, [protocol.entries]);
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-labelledby="protocol-detail-modal-title">
       <div className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="p-6 border-b border-gray-200 flex-shrink-0">
           <div className="flex items-start justify-between">
             <div>
-              <h2 className="text-xl font-bold text-gray-900">{protocol.name}</h2>
+              <h2 id="protocol-detail-modal-title" className="text-xl font-bold text-gray-900">{protocol.name}</h2>
               <p className="text-sm text-gray-500 mt-1">{protocol.description}</p>
             </div>
-            <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg">✕</button>
+            <button onClick={onClose} aria-label="Close" className="p-2 hover:bg-gray-100 rounded-lg">✕</button>
           </div>
           <div className="flex flex-wrap gap-2 mt-4">
             {protocol.peptides.map(p => (
@@ -993,10 +993,10 @@ function NewProtocolModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-labelledby="create-protocol-modal-title">
       <div className="bg-white rounded-2xl max-w-lg w-full">
         <div className="p-6 border-b border-gray-200">
-          <h2 className="text-xl font-bold text-gray-900">{t('protocols.createNewProtocol')}</h2>
+          <h2 id="create-protocol-modal-title" className="text-xl font-bold text-gray-900">{t('protocols.createNewProtocol')}</h2>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">

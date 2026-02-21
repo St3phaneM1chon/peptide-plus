@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { prisma } from '@/lib/db';
-import { sendEmail, orderConfirmationEmail, type OrderData } from '@/lib/email';
+import { sendEmail, orderConfirmationEmail, generateUnsubscribeUrl, type OrderData } from '@/lib/email';
 import { createAccountingEntriesForOrder } from '@/lib/accounting/webhook-accounting.service';
 import { generateCOGSEntry } from '@/lib/inventory';
 import { qualifyReferral } from '@/lib/referral-qualify';
@@ -16,6 +16,8 @@ import { logger } from '@/lib/logger';
 import { sendOrderNotificationSms, sendPaymentFailureAlertSms } from '@/lib/sms';
 import { sanitizeWebhookPayload } from '@/lib/sanitize';
 import { getRedisClient, isRedisAvailable } from '@/lib/redis';
+import { clawbackAmbassadorCommission } from '@/lib/ambassador-commission';
+import { STRIPE_API_VERSION } from '@/lib/stripe';
 
 // Lazy-initialized Stripe client to avoid crashing during Next.js build/SSG
 // when STRIPE_SECRET_KEY is not available in the CI environment.
@@ -28,7 +30,7 @@ function getStripeWebhook(): Stripe {
       throw new Error('STRIPE_SECRET_KEY is required');
     }
     _stripeWebhook = new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: '2023-10-16',
+      apiVersion: STRIPE_API_VERSION,
     });
   }
   return _stripeWebhook;
@@ -372,7 +374,7 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
   // is in that currency. We still record the CAD amounts from metadata
   // for accounting, plus the exchange rate used at checkout time.
   const cadTotal = subtotal
-    ? subtotal - promoDiscount + totalTax + shippingCost
+    ? subtotal - promoDiscount - giftCardDiscount + totalTax + shippingCost
     : stripeTotal; // fallback
 
   // BUG 15: Declare orderNumber before transaction so it's accessible outside
@@ -401,7 +403,7 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
         userId: userId && userId !== 'guest' ? userId : `guest-${session.id}`,
         subtotal: stripeSubtotal,
         shippingCost,
-        discount: promoDiscount,
+        discount: promoDiscount + giftCardDiscount,
         tax: totalTax,
         taxTps,
         taxTvq,
@@ -455,12 +457,22 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
         data: { status: 'CONSUMED', orderId: newOrder.id, consumedAt: new Date() },
       });
 
-      // Decrement stock
+      // Decrement stock (floor at 0 to prevent negative inventory)
       if (reservation.formatId) {
-        await tx.productFormat.update({
+        const currentFormat = await tx.productFormat.findUnique({
           where: { id: reservation.formatId },
-          data: { stockQuantity: { decrement: reservation.quantity } },
+          select: { stockQuantity: true },
         });
+        const safeDecrement = Math.min(reservation.quantity, currentFormat?.stockQuantity ?? 0);
+        if (safeDecrement > 0) {
+          await tx.productFormat.update({
+            where: { id: reservation.formatId },
+            data: { stockQuantity: { decrement: safeDecrement } },
+          });
+        }
+        if (safeDecrement < reservation.quantity) {
+          console.warn(`[Stripe webhook] Stock floor hit for format ${reservation.formatId}: wanted to decrement ${reservation.quantity}, only decremented ${safeDecrement}`);
+        }
       }
 
       // Look up current WAC for accurate COGS
@@ -615,8 +627,10 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
       });
 
       if (ambassador && ambassador.status === 'ACTIVE') {
+        // commissionRate is stored as an integer percentage in the DB (e.g. 10 = 10%).
+        // Divide by 100 to get the decimal multiplier before applying to order total.
         const rate = Number(ambassador.commissionRate);
-        const commissionAmount = Math.round(Number(order.total) * rate) / 100;
+        const commissionAmount = Math.round(Number(order.total) * (rate / 100) * 100) / 100;
 
         await prisma.ambassadorCommission.upsert({
           where: {
@@ -785,6 +799,30 @@ async function handleRefund(charge: Stripe.Charge, eventId: string) {
     }
   }
 
+  // Clawback ambassador commission on refund (P2 #28 fix)
+  const isFullRefund = charge.amount_refunded === charge.amount;
+  try {
+    const result = await clawbackAmbassadorCommission(
+      order.id,
+      refundAmount,
+      orderTotal,
+      isFullRefund
+    );
+    if (result.clawbackAmount && result.clawbackAmount > 0) {
+      logger.info('Ambassador commission clawback on Stripe refund', {
+        orderId: order.id,
+        orderNumber: order.orderNumber,
+        clawbackAmount: result.clawbackAmount,
+        wasPaidOut: result.wasPaidOut,
+      });
+    }
+  } catch (commError) {
+    logger.error('Failed to clawback ambassador commission', {
+      orderId: order.id,
+      error: commError instanceof Error ? commError.message : String(commError),
+    });
+  }
+
   await completeWebhookEvent(eventId, order.id);
 }
 
@@ -833,6 +871,8 @@ async function sendOrderConfirmationEmailAsync(orderId: string, userId: string) 
         country: order.shippingCountry,
       },
       locale: (user.locale as 'fr' | 'en') || 'fr',
+      // CAN-SPAM / RGPD / LCAP compliance
+      unsubscribeUrl: await generateUnsubscribeUrl(user.email, 'transactional', user.id).catch(() => undefined),
     };
 
     const emailContent = orderConfirmationEmail(orderData);
@@ -842,6 +882,7 @@ async function sendOrderConfirmationEmailAsync(orderId: string, userId: string) 
       subject: emailContent.subject,
       html: emailContent.html,
       tags: ['order', 'confirmation', order.orderNumber],
+      unsubscribeUrl: orderData.unsubscribeUrl,
     });
 
     if (result.success) {

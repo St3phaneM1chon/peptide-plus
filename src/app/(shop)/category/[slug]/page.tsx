@@ -41,10 +41,25 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const title = category.parent
     ? `${translated.name} - ${category.parent.name} | BioCycle Peptides`
     : `${translated.name} | BioCycle Peptides`;
+  const description = translated.description || '';
 
   return {
     title,
-    description: translated.description || '',
+    description,
+    alternates: {
+      canonical: `https://biocyclepeptides.com/category/${slug}`,
+    },
+    openGraph: {
+      title,
+      description,
+      url: `https://biocyclepeptides.com/category/${slug}`,
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+    },
   };
 }
 

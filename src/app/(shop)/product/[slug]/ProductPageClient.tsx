@@ -297,6 +297,7 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
                 src={selectedImage}
                 alt={productName}
                 fill
+                sizes="(max-width: 1024px) 100vw, 448px"
                 className="object-contain"
                 priority
               />
@@ -1006,6 +1007,7 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
                       src={related.image || '/images/products/peptide-default.png'}
                       alt={getRelatedProductName(related)}
                       fill
+                      sizes="(max-width: 768px) 50vw, 25vw"
                       className="object-cover group-hover:scale-105 transition-transform"
                     />
                   </div>

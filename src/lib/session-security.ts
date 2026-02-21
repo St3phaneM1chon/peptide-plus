@@ -69,6 +69,7 @@ export function isSessionValid(sessionId: string): {
 export function invalidateSession(sessionId: string): void {
   lastActivityCache.delete(sessionId);
   sessionCreationCache.delete(sessionId);
+  sessionMetadataCache.delete(sessionId);
 }
 
 /**

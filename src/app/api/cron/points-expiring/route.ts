@@ -22,7 +22,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { sendEmail, pointsExpiringEmail } from '@/lib/email';
+import { sendEmail, pointsExpiringEmail, generateUnsubscribeUrl } from '@/lib/email';
 import { withJobLock } from '@/lib/cron-lock';
 
 const BATCH_SIZE = 10;
@@ -193,6 +193,9 @@ export async function GET(request: NextRequest) {
 
       const batchPromises = batch.map(async ([userId, data]) => {
         try {
+          // Generate unsubscribe URL (CAN-SPAM / RGPD / LCAP compliance)
+          const unsubscribeUrl = await generateUnsubscribeUrl(data.user.email, 'marketing', userId).catch(() => undefined);
+
           const emailContent = pointsExpiringEmail({
             customerName: data.user.name || 'Client',
             customerEmail: data.user.email,
@@ -200,6 +203,7 @@ export async function GET(request: NextRequest) {
             currentPoints: data.user.loyaltyPoints,
             expiryDate: data.expiryDate,
             locale: (data.user.locale as 'fr' | 'en') || 'fr',
+            unsubscribeUrl,
           });
 
           const result = await sendEmail({
@@ -207,6 +211,7 @@ export async function GET(request: NextRequest) {
             subject: emailContent.subject,
             html: emailContent.html,
             tags: ['points-expiring', 'automated', data.source],
+            unsubscribeUrl,
           });
 
           // Log to EmailLog

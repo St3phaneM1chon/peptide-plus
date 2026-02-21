@@ -111,6 +111,9 @@ export function DataTable<T>({
 
   return (
     <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+      <div aria-live="polite" aria-atomic="true" className="sr-only">
+        {data.length} {data.length === 1 ? 'row' : 'rows'}
+      </div>
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
@@ -121,7 +124,7 @@ export function DataTable<T>({
                     type="checkbox"
                     checked={allSelected}
                     onChange={toggleAll}
-                    className="rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                    className="rounded border-slate-300 text-sky-700 focus:ring-sky-700"
                   />
                 </th>
               )}
@@ -162,7 +165,7 @@ export function DataTable<T>({
                   className={`
                     transition-colors duration-150
                     ${onRowClick ? 'cursor-pointer hover:bg-slate-50/70' : ''}
-                    ${selectedIds?.has(id) ? 'bg-sky-50/60' : ''}
+                    ${selectedIds?.has(id) ? 'bg-sky-100' : ''}
                   `}
                   onClick={() => onRowClick?.(row)}
                 >
@@ -172,7 +175,7 @@ export function DataTable<T>({
                         type="checkbox"
                         checked={selectedIds?.has(id) || false}
                         onChange={() => toggleOne(id)}
-                        className="rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                        className="rounded border-slate-300 text-sky-700 focus:ring-sky-700"
                       />
                     </td>
                   )}

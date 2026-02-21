@@ -72,12 +72,64 @@ export interface PaginatedAuditLogs {
 }
 
 // ---------------------------------------------------------------------------
+// Sensitive data sanitization
+// ---------------------------------------------------------------------------
+
+const SENSITIVE_FIELDS = [
+  'accountnumber',
+  'apicredentials',
+  'password',
+  'secret',
+  'token',
+  'accesstoken',
+  'refreshtoken',
+  'apikey',
+  'secretkey',
+  'creditcard',
+  'cardnumber',
+  'cvv',
+  'ssn',
+  'sin',
+];
+
+/**
+ * Recursively sanitize an object by redacting fields whose names
+ * match known sensitive patterns (case-insensitive).
+ * Prevents bank account numbers, API keys, passwords, etc.
+ * from being persisted in audit logs.
+ */
+function sanitizeForLog(data: unknown): unknown {
+  if (data === null || data === undefined) return data;
+  if (typeof data !== 'object') return data;
+
+  if (Array.isArray(data)) {
+    return data.map((item) => sanitizeForLog(item));
+  }
+
+  const sanitized: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(data as Record<string, unknown>)) {
+    const keyLower = key.toLowerCase();
+    if (SENSITIVE_FIELDS.some((f) => keyLower.includes(f))) {
+      sanitized[key] = '***REDACTED***';
+    } else if (typeof value === 'object' && value !== null) {
+      sanitized[key] = sanitizeForLog(value);
+    } else {
+      sanitized[key] = value;
+    }
+  }
+  return sanitized;
+}
+
+// ---------------------------------------------------------------------------
 // Core function
 // ---------------------------------------------------------------------------
 
 /**
  * Log an admin action to the AuditLog table.
  * This should be called from admin API routes after performing actions.
+ *
+ * Sensitive fields (accountNumber, password, token, apiCredentials, etc.)
+ * are automatically redacted before being stored in the details JSON.
  */
 export async function logAdminAction(params: AdminAuditParams): Promise<void> {
   const {
@@ -94,9 +146,9 @@ export async function logAdminAction(params: AdminAuditParams): Promise<void> {
 
   try {
     const details: Record<string, unknown> = {};
-    if (previousValue !== undefined) details.previousValue = previousValue;
-    if (newValue !== undefined) details.newValue = newValue;
-    if (metadata) details.metadata = metadata;
+    if (previousValue !== undefined) details.previousValue = sanitizeForLog(previousValue);
+    if (newValue !== undefined) details.newValue = sanitizeForLog(newValue);
+    if (metadata) details.metadata = sanitizeForLog(metadata);
 
     const id = generateAuditId();
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import Image from 'next/image';
 import {
   Star,
@@ -12,19 +12,20 @@ import {
   MessageCircle,
   Camera,
 } from 'lucide-react';
+import { Button } from '@/components/admin/Button';
+import { Modal } from '@/components/admin/Modal';
+import { StatCard } from '@/components/admin/StatCard';
+import { FormField, Textarea } from '@/components/admin/FormField';
 import {
-  PageHeader,
-  Button,
-  Modal,
-  StatCard,
-  EmptyState,
-  StatusBadge,
-  FilterBar,
-  SelectFilter,
-  FormField,
-  Textarea,
-} from '@/components/admin';
+  ContentList,
+  DetailPane,
+  MobileSplitLayout,
+} from '@/components/admin/outlook';
+import type { ContentListItem } from '@/components/admin/outlook';
 import { useI18n } from '@/i18n/client';
+import { toast } from 'sonner';
+
+// ── Types ─────────────────────────────────────────────────────
 
 interface Review {
   id: string;
@@ -43,26 +44,48 @@ interface Review {
   createdAt: string;
 }
 
-const statusVariant: Record<string, 'warning' | 'success' | 'error'> = {
-  PENDING: 'warning',
-  APPROVED: 'success',
-  REJECTED: 'error',
-};
+// ── Helpers ───────────────────────────────────────────────────
+
+function statusBadgeVariant(status: string): 'success' | 'warning' | 'error' | 'info' | 'neutral' {
+  switch (status) {
+    case 'PENDING': return 'warning';
+    case 'APPROVED': return 'success';
+    case 'REJECTED': return 'error';
+    default: return 'neutral';
+  }
+}
+
+function ratingBadgeVariant(rating: number): 'success' | 'warning' | 'error' | 'info' | 'neutral' {
+  if (rating >= 4) return 'success';
+  if (rating >= 3) return 'info';
+  if (rating >= 2) return 'warning';
+  return 'error';
+}
+
+// ── Main Component ────────────────────────────────────────────
 
 export default function AvisPage() {
   const { t, locale } = useI18n();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState({ status: '', rating: '', search: '' });
-  const [selectedReview, setSelectedReview] = useState<Review | null>(null);
-  const [adminResponse, setAdminResponse] = useState('');
+  const [selectedReviewId, setSelectedReviewId] = useState<string | null>(null);
   const [updatingIds, setUpdatingIds] = useState<Set<string>>(new Set());
 
-  const statusLabel: Record<string, string> = {
+  // Filter state
+  const [searchValue, setSearchValue] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+
+  // Response modal state
+  const [showResponseModal, setShowResponseModal] = useState(false);
+  const [adminResponse, setAdminResponse] = useState('');
+
+  const statusLabel: Record<string, string> = useMemo(() => ({
     PENDING: t('admin.reviews.statusPending'),
     APPROVED: t('admin.reviews.statusApproved'),
     REJECTED: t('admin.reviews.statusRejected'),
-  };
+  }), [t]);
+
+  // ─── Data fetching ──────────────────────────────────────────
 
   useEffect(() => {
     fetchReviews();
@@ -75,6 +98,7 @@ export default function AvisPage() {
       setReviews(data.reviews || []);
     } catch (err) {
       console.error('Error fetching reviews:', err);
+      toast.error(t('common.error'));
       setReviews([]);
     }
     setLoading(false);
@@ -83,17 +107,23 @@ export default function AvisPage() {
   const updateReviewStatus = async (id: string, status: 'APPROVED' | 'REJECTED') => {
     setUpdatingIds(prev => new Set(prev).add(id));
     try {
-      await fetch(`/api/admin/reviews/${id}`, {
+      const res = await fetch(`/api/admin/reviews/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status }),
       });
-      setReviews(reviews.map(r => r.id === id ? { ...r, status } : r));
-      if (selectedReview?.id === id) {
-        setSelectedReview({ ...selectedReview, status });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        toast.error(data.error || t('common.updateFailed'));
+        return;
       }
+      setReviews(prev => prev.map(r => r.id === id ? { ...r, status } : r));
+      toast.success(status === 'APPROVED'
+        ? (t('admin.reviews.approved') || 'Review approved')
+        : (t('admin.reviews.rejected') || 'Review rejected'));
     } catch (err) {
       console.error('Error updating review:', err);
+      toast.error(t('common.networkError'));
     } finally {
       setUpdatingIds(prev => {
         const next = new Set(prev);
@@ -105,220 +135,301 @@ export default function AvisPage() {
 
   const submitAdminResponse = async (id: string) => {
     try {
-      await fetch(`/api/admin/reviews/${id}/respond`, {
+      const res = await fetch(`/api/admin/reviews/${id}/respond`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ response: adminResponse }),
       });
-      setReviews(reviews.map(r => r.id === id ? { ...r, adminResponse } : r));
-      if (selectedReview?.id === id) {
-        setSelectedReview({ ...selectedReview, adminResponse });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        toast.error(data.error || t('common.saveFailed'));
+        return;
       }
+      setReviews(prev => prev.map(r => r.id === id ? { ...r, adminResponse } : r));
       setAdminResponse('');
+      setShowResponseModal(false);
+      toast.success(t('admin.reviews.responsePublished') || 'Response published');
     } catch (err) {
       console.error('Error submitting response:', err);
+      toast.error(t('common.networkError'));
     }
   };
 
-  const filteredReviews = reviews.filter(review => {
-    if (filter.status && review.status !== filter.status) return false;
-    if (filter.rating && review.rating !== parseInt(filter.rating)) return false;
-    if (filter.search) {
-      const search = filter.search.toLowerCase();
-      if (!review.productName.toLowerCase().includes(search) &&
-          !review.content.toLowerCase().includes(search) &&
-          !review.userName?.toLowerCase().includes(search)) {
-        return false;
-      }
-    }
-    return true;
-  });
+  // ─── Filtering ──────────────────────────────────────────────
 
-  const stats = {
+  const filteredReviews = useMemo(() => {
+    return reviews.filter(review => {
+      if (statusFilter !== 'all' && review.status !== statusFilter) return false;
+      if (searchValue) {
+        const search = searchValue.toLowerCase();
+        if (!review.productName.toLowerCase().includes(search) &&
+            !review.content.toLowerCase().includes(search) &&
+            !review.userName?.toLowerCase().includes(search)) {
+          return false;
+        }
+      }
+      return true;
+    });
+  }, [reviews, statusFilter, searchValue]);
+
+  const stats = useMemo(() => ({
     total: reviews.length,
     pending: reviews.filter(r => r.status === 'PENDING').length,
     approved: reviews.filter(r => r.status === 'APPROVED').length,
-    avgRating: reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length || 0,
+    avgRating: reviews.length > 0 ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length : 0,
     withPhotos: reviews.filter(r => r.images && r.images.length > 0).length,
-  };
+  }), [reviews]);
 
-  const renderStars = (rating: number) => {
-    return (
-      <div className="flex gap-0.5">
-        {[1, 2, 3, 4, 5].map((star) => (
-          <Star
-            key={star}
-            className={`w-4 h-4 ${star <= rating ? 'text-yellow-400 fill-yellow-400' : 'text-slate-300'}`}
-          />
-        ))}
-      </div>
-    );
-  };
+  // ─── ContentList data ───────────────────────────────────────
+
+  const filterTabs = useMemo(() => [
+    { key: 'all', label: t('admin.reviews.allStatuses'), count: stats.total },
+    { key: 'PENDING', label: t('admin.reviews.statusPending'), count: stats.pending },
+    { key: 'APPROVED', label: t('admin.reviews.statusApproved'), count: stats.approved },
+    { key: 'REJECTED', label: t('admin.reviews.statusRejected'), count: reviews.filter(r => r.status === 'REJECTED').length },
+  ], [t, stats, reviews]);
+
+  const listItems: ContentListItem[] = useMemo(() => {
+    return filteredReviews.map((review) => ({
+      id: review.id,
+      avatar: { text: review.userName || 'A' },
+      title: review.userName || 'Anonyme',
+      subtitle: review.productName,
+      preview: review.content.length > 80 ? review.content.slice(0, 80) + '...' : review.content,
+      timestamp: review.createdAt,
+      badges: [
+        { text: `${review.rating}★`, variant: ratingBadgeVariant(review.rating) },
+        { text: statusLabel[review.status] || review.status, variant: statusBadgeVariant(review.status) },
+        ...(review.images && review.images.length > 0
+          ? [{ text: `📷 ${review.images.length}`, variant: 'neutral' as const }]
+          : []),
+      ],
+    }));
+  }, [filteredReviews, statusLabel]);
+
+  // ─── Selected review ───────────────────────────────────────
+
+  const selectedReview = useMemo(() => {
+    if (!selectedReviewId) return null;
+    return reviews.find(r => r.id === selectedReviewId) || null;
+  }, [reviews, selectedReviewId]);
+
+  const handleSelectReview = useCallback((id: string) => {
+    setSelectedReviewId(id);
+  }, []);
+
+  const renderStars = (rating: number) => (
+    <div className="flex gap-0.5">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <Star
+          key={star}
+          className={`w-4 h-4 ${star <= rating ? 'text-yellow-400 fill-yellow-400' : 'text-slate-300'}`}
+        />
+      ))}
+    </div>
+  );
+
+  // ─── Loading state ──────────────────────────────────────────
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex items-center justify-center h-64" role="status" aria-label="Loading">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500" />
+        <span className="sr-only">Loading...</span>
       </div>
     );
   }
 
+  // ─── Render ─────────────────────────────────────────────────
+
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title={t('admin.reviews.title')}
-        subtitle={t('admin.reviews.subtitle')}
-      />
-
-      {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        <StatCard label={t('admin.reviews.totalReviews')} value={stats.total} icon={MessageSquare} />
-        <StatCard label={t('admin.reviews.pending')} value={stats.pending} icon={Clock} />
-        <StatCard label={t('admin.reviews.approved')} value={stats.approved} icon={CheckCircle2} />
-        <StatCard label={t('admin.reviews.avgRating')} value={stats.avgRating.toFixed(1)} icon={Star} />
-        <StatCard label="With Photos" value={stats.withPhotos} icon={Camera} />
-      </div>
-
-      {/* Filters */}
-      <FilterBar
-        searchValue={filter.search}
-        onSearchChange={(v) => setFilter({ ...filter, search: v })}
-        searchPlaceholder={t('admin.reviews.searchPlaceholder')}
-      >
-        <SelectFilter
-          label={t('admin.reviews.allStatuses')}
-          value={filter.status}
-          onChange={(v) => setFilter({ ...filter, status: v })}
-          options={[
-            { value: 'PENDING', label: t('admin.reviews.statusPending') },
-            { value: 'APPROVED', label: t('admin.reviews.statusApproved') },
-            { value: 'REJECTED', label: t('admin.reviews.statusRejected') },
-          ]}
-        />
-        <SelectFilter
-          label={t('admin.reviews.allRatings')}
-          value={filter.rating}
-          onChange={(v) => setFilter({ ...filter, rating: v })}
-          options={[
-            { value: '5', label: t('admin.reviews.stars5') },
-            { value: '4', label: t('admin.reviews.stars4') },
-            { value: '3', label: t('admin.reviews.stars3') },
-            { value: '2', label: t('admin.reviews.stars2') },
-            { value: '1', label: t('admin.reviews.stars1') },
-          ]}
-        />
-      </FilterBar>
-
-      {/* Reviews List */}
-      <div className="space-y-4">
-        {filteredReviews.map((review) => (
-          <div key={review.id} className="bg-white rounded-xl border border-slate-200 p-6">
-            <div className="flex items-start justify-between mb-3">
-              <div>
-                <div className="flex items-center gap-3 mb-1">
-                  <span className="font-medium text-slate-900">{review.userName}</span>
-                  {review.isVerifiedPurchase && (
-                    <StatusBadge variant="success">{t('admin.reviews.verifiedPurchase')}</StatusBadge>
-                  )}
-                  <StatusBadge variant={statusVariant[review.status]} dot>
-                    {statusLabel[review.status]}
-                  </StatusBadge>
-                </div>
-                <p className="text-sm text-slate-500">
-                  {review.productName} &bull; {new Date(review.createdAt).toLocaleDateString(locale)}
-                </p>
-              </div>
-              {renderStars(review.rating)}
-            </div>
-
-            {review.title && (
-              <h4 className="font-semibold text-slate-900 mb-1">{review.title}</h4>
-            )}
-            <p className="text-slate-700 mb-3">{review.content}</p>
-
-            {/* Review Images */}
-            {review.images && review.images.length > 0 && (
-              <div className="flex gap-2 mb-3">
-                {review.images.map((img, idx) => (
-                  <div key={idx} className="relative w-20 h-20 rounded-lg overflow-hidden border border-slate-200">
-                    <Image
-                      src={img}
-                      alt={`Review image ${idx + 1}`}
-                      fill
-                      className="object-cover"
-                      unoptimized
-                    />
-                  </div>
-                ))}
-                <div className="flex items-center gap-1 px-2 text-xs text-slate-500">
-                  <Camera className="w-3 h-3" />
-                  {review.images.length}
-                </div>
-              </div>
-            )}
-
-            {review.adminResponse && (
-              <div className="bg-sky-50 rounded-lg p-3 mb-3">
-                <p className="text-sm font-medium text-sky-800 mb-1">{t('admin.reviews.responseBioCycle')}</p>
-                <p className="text-sm text-sky-700">{review.adminResponse}</p>
-              </div>
-            )}
-
-            <div className="flex gap-2 pt-3 border-t border-slate-100">
-              {review.status === 'PENDING' && (
-                <>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    icon={ThumbsUp}
-                    onClick={() => updateReviewStatus(review.id, 'APPROVED')}
-                    className="text-green-700 hover:bg-green-100"
-                    disabled={updatingIds.has(review.id)}
-                  >
-                    {updatingIds.has(review.id) ? '...' : t('admin.reviews.approve')}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    icon={ThumbsDown}
-                    onClick={() => updateReviewStatus(review.id, 'REJECTED')}
-                    className="text-red-700 hover:bg-red-100"
-                    disabled={updatingIds.has(review.id)}
-                  >
-                    {updatingIds.has(review.id) ? '...' : t('admin.reviews.reject')}
-                  </Button>
-                </>
-              )}
-              <Button
-                size="sm"
-                variant="ghost"
-                icon={MessageCircle}
-                onClick={() => { setSelectedReview(review); setAdminResponse(review.adminResponse || ''); }}
-                className="text-sky-700 hover:bg-sky-100"
-              >
-                {review.adminResponse ? t('admin.reviews.editResponse') : t('admin.reviews.respond')}
-              </Button>
-            </div>
+    <div className="h-full flex flex-col">
+      {/* Stat cards row */}
+      <div className="p-4 lg:p-6 pb-0 flex-shrink-0">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className="text-xl font-bold text-slate-900">{t('admin.reviews.title')}</h1>
+            <p className="text-sm text-slate-500 mt-0.5">{t('admin.reviews.subtitle')}</p>
           </div>
-        ))}
-
-        {filteredReviews.length === 0 && (
-          <EmptyState
-            icon={MessageSquare}
-            title={t('admin.reviews.emptyTitle')}
-            description={t('admin.reviews.emptyDescription')}
-          />
-        )}
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
+          <StatCard label={t('admin.reviews.totalReviews')} value={stats.total} icon={MessageSquare} />
+          <StatCard label={t('admin.reviews.pending')} value={stats.pending} icon={Clock} />
+          <StatCard label={t('admin.reviews.approved')} value={stats.approved} icon={CheckCircle2} />
+          <StatCard label={t('admin.reviews.avgRating')} value={stats.avgRating.toFixed(1)} icon={Star} />
+          <StatCard label={t('admin.reviews.withPhotos')} value={stats.withPhotos} icon={Camera} />
+        </div>
       </div>
 
-      {/* Response Modal */}
+      {/* Main content: list + detail */}
+      <div className="flex-1 min-h-0">
+        <MobileSplitLayout
+          listWidth={400}
+          showDetail={!!selectedReviewId}
+          list={
+            <ContentList
+              items={listItems}
+              selectedId={selectedReviewId}
+              onSelect={handleSelectReview}
+              filterTabs={filterTabs}
+              activeFilter={statusFilter}
+              onFilterChange={setStatusFilter}
+              searchValue={searchValue}
+              onSearchChange={setSearchValue}
+              searchPlaceholder={t('admin.reviews.searchPlaceholder')}
+              loading={loading}
+              emptyIcon={MessageSquare}
+              emptyTitle={t('admin.reviews.emptyTitle')}
+              emptyDescription={t('admin.reviews.emptyDescription')}
+            />
+          }
+          detail={
+            selectedReview ? (
+              <DetailPane
+                header={{
+                  title: selectedReview.userName || 'Anonyme',
+                  subtitle: `${selectedReview.productName} - ${new Date(selectedReview.createdAt).toLocaleDateString(locale)}`,
+                  avatar: { text: selectedReview.userName || 'A' },
+                  onBack: () => setSelectedReviewId(null),
+                  backLabel: t('admin.reviews.title'),
+                  actions: (
+                    <div className="flex items-center gap-2">
+                      {selectedReview.status === 'PENDING' && (
+                        <>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            icon={ThumbsUp}
+                            onClick={() => updateReviewStatus(selectedReview.id, 'APPROVED')}
+                            className="text-green-700 hover:bg-green-100"
+                            disabled={updatingIds.has(selectedReview.id)}
+                          >
+                            {updatingIds.has(selectedReview.id) ? '...' : t('admin.reviews.approve')}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            icon={ThumbsDown}
+                            onClick={() => updateReviewStatus(selectedReview.id, 'REJECTED')}
+                            className="text-red-700 hover:bg-red-100"
+                            disabled={updatingIds.has(selectedReview.id)}
+                          >
+                            {updatingIds.has(selectedReview.id) ? '...' : t('admin.reviews.reject')}
+                          </Button>
+                        </>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        icon={MessageCircle}
+                        onClick={() => {
+                          setAdminResponse(selectedReview.adminResponse || '');
+                          setShowResponseModal(true);
+                        }}
+                        className="text-sky-700 hover:bg-sky-100"
+                      >
+                        {selectedReview.adminResponse ? t('admin.reviews.editResponse') : t('admin.reviews.respond')}
+                      </Button>
+                    </div>
+                  ),
+                }}
+              >
+                <div className="space-y-6">
+                  {/* Rating display */}
+                  <div className="flex items-center gap-3">
+                    {renderStars(selectedReview.rating)}
+                    <span className="text-sm font-medium text-slate-700">
+                      {selectedReview.rating}/5
+                    </span>
+                    {selectedReview.isVerifiedPurchase && (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-50 text-emerald-700">
+                        {t('admin.reviews.verifiedPurchase')}
+                      </span>
+                    )}
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                      selectedReview.status === 'APPROVED' ? 'bg-emerald-50 text-emerald-700' :
+                      selectedReview.status === 'REJECTED' ? 'bg-red-50 text-red-700' :
+                      'bg-amber-50 text-amber-700'
+                    }`}>
+                      {statusLabel[selectedReview.status]}
+                    </span>
+                  </div>
+
+                  {/* Review title */}
+                  {selectedReview.title && (
+                    <h3 className="text-lg font-semibold text-slate-900">{selectedReview.title}</h3>
+                  )}
+
+                  {/* Review content */}
+                  <div className="bg-slate-50 rounded-lg p-4">
+                    <p className="text-slate-700 leading-relaxed">{selectedReview.content}</p>
+                  </div>
+
+                  {/* Review Images */}
+                  {selectedReview.images && selectedReview.images.length > 0 && (
+                    <div>
+                      <h4 className="text-sm font-medium text-slate-700 mb-2 flex items-center gap-1">
+                        <Camera className="w-4 h-4" />
+                        Photos ({selectedReview.images.length})
+                      </h4>
+                      <div className="flex gap-3 flex-wrap">
+                        {selectedReview.images.map((img, idx) => (
+                          <div key={idx} className="relative w-28 h-28 rounded-lg overflow-hidden border border-slate-200">
+                            <Image
+                              src={img}
+                              alt={`Review image ${idx + 1}`}
+                              fill
+                              sizes="112px"
+                              className="object-cover"
+                              unoptimized
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Product info */}
+                  <div className="bg-slate-50 rounded-lg p-4">
+                    <h4 className="font-semibold text-slate-900 mb-2">{t('admin.reviews.productInfo') || 'Produit'}</h4>
+                    <p className="text-slate-700">{selectedReview.productName}</p>
+                    <p className="text-sm text-slate-500 mt-1">
+                      {t('admin.reviews.reviewedOn') || 'Avis laiss\u00e9 le'} {new Date(selectedReview.createdAt).toLocaleDateString(locale)}
+                    </p>
+                    {selectedReview.userEmail && (
+                      <p className="text-sm text-slate-500">{selectedReview.userEmail}</p>
+                    )}
+                  </div>
+
+                  {/* Existing admin response */}
+                  {selectedReview.adminResponse && (
+                    <div className="bg-sky-50 rounded-lg p-4">
+                      <h4 className="text-sm font-medium text-sky-800 mb-2">{t('admin.reviews.responseBioCycle')}</h4>
+                      <p className="text-sm text-sky-700">{selectedReview.adminResponse}</p>
+                    </div>
+                  )}
+                </div>
+              </DetailPane>
+            ) : (
+              <DetailPane
+                isEmpty
+                emptyIcon={MessageSquare}
+                emptyTitle={t('admin.reviews.emptyTitle')}
+                emptyDescription={t('admin.reviews.emptyDescription')}
+              />
+            )
+          }
+        />
+      </div>
+
+      {/* ─── RESPONSE MODAL ────────────────────────────────────── */}
       <Modal
-        isOpen={!!selectedReview}
-        onClose={() => setSelectedReview(null)}
+        isOpen={showResponseModal}
+        onClose={() => setShowResponseModal(false)}
         title={t('admin.reviews.modalTitle')}
         footer={
           <>
-            <Button variant="secondary" onClick={() => setSelectedReview(null)}>
+            <Button variant="secondary" onClick={() => setShowResponseModal(false)}>
               {t('admin.reviews.cancel')}
             </Button>
             <Button
@@ -352,6 +463,7 @@ export default function AvisPage() {
                         src={img}
                         alt={`Review image ${idx + 1}`}
                         fill
+                        sizes="96px"
                         className="object-cover"
                         unoptimized
                       />

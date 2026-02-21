@@ -1,12 +1,14 @@
 export const dynamic = 'force-dynamic';
 
+import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { PERMISSION_MODULES, seedPermissions } from '@/lib/permissions';
-import { withApiHandler, apiSuccess, apiError, type ApiContext } from '@/lib/api-handler';
+import { withAdminGuard } from '@/lib/admin-api-guard';
+import { permissionPostSchema } from '@/lib/validations/permission';
 
 // GET /api/admin/permissions - List all permissions, groups, and overrides
-export const GET = withApiHandler(async (ctx: ApiContext) => {
-  const { searchParams } = new URL(ctx.request.url);
+export const GET = withAdminGuard(async (request, { session }) => {
+  const { searchParams } = new URL(request.url);
   const tab = searchParams.get('tab') || 'permissions';
 
   if (tab === 'permissions') {
@@ -19,7 +21,7 @@ export const GET = withApiHandler(async (ctx: ApiContext) => {
       orderBy: { module: 'asc' },
     });
 
-    return apiSuccess({ permissions, modules: PERMISSION_MODULES });
+    return NextResponse.json({ permissions, modules: PERMISSION_MODULES });
   }
 
   if (tab === 'groups') {
@@ -32,7 +34,7 @@ export const GET = withApiHandler(async (ctx: ApiContext) => {
       orderBy: { name: 'asc' },
     });
 
-    return apiSuccess({ groups });
+    return NextResponse.json({ groups });
   }
 
   if (tab === 'overrides') {
@@ -44,7 +46,7 @@ export const GET = withApiHandler(async (ctx: ApiContext) => {
       orderBy: { createdAt: 'desc' },
     });
 
-    return apiSuccess({ overrides });
+    return NextResponse.json({ overrides });
   }
 
   if (tab === 'users') {
@@ -69,24 +71,36 @@ export const GET = withApiHandler(async (ctx: ApiContext) => {
       orderBy: { name: 'asc' },
     });
 
-    return apiSuccess({ users });
+    return NextResponse.json({ users });
   }
 
-  return apiError('Invalid tab', 400);
-}, { roles: ['OWNER'] });
+  return NextResponse.json({ error: 'Invalid tab' }, { status: 400 });
+});
 
 // POST /api/admin/permissions - Create group or override
-export const POST = withApiHandler(async (ctx: ApiContext) => {
-  const body = await ctx.request.json();
-  const { action } = body;
+export const POST = withAdminGuard(async (request, { session }) => {
+  const body = await request.json();
+
+  // Validate with Zod discriminated union
+  const parsed = permissionPostSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: 'Validation error', details: parsed.error.flatten() },
+      { status: 400 }
+    );
+  }
+  const { action } = parsed.data;
 
   if (action === 'seed') {
     await seedPermissions();
-    return apiSuccess({ success: true });
+    return NextResponse.json({ success: true });
   }
 
+  // Use validated data for all actions
+  const validatedData = parsed.data;
+
   if (action === 'createGroup') {
-    const { name, description, color, permissionCodes } = body;
+    const { name, description, color, permissionCodes } = validatedData as Extract<typeof validatedData, { action: 'createGroup' }>;
 
     const group = await prisma.permissionGroup.create({
       data: { name, description, color },
@@ -105,11 +119,11 @@ export const POST = withApiHandler(async (ctx: ApiContext) => {
       });
     }
 
-    return apiSuccess({ group });
+    return NextResponse.json({ group });
   }
 
   if (action === 'updateGroup') {
-    const { groupId, name, description, color, permissionCodes } = body;
+    const { groupId, name, description, color, permissionCodes } = validatedData as Extract<typeof validatedData, { action: 'updateGroup' }>;
 
     await prisma.permissionGroup.update({
       where: { id: groupId },
@@ -131,45 +145,46 @@ export const POST = withApiHandler(async (ctx: ApiContext) => {
       });
     }
 
-    return apiSuccess({ success: true });
+    return NextResponse.json({ success: true });
   }
 
   if (action === 'deleteGroup') {
-    await prisma.permissionGroup.delete({ where: { id: body.groupId } });
-    return apiSuccess({ success: true });
+    const { groupId } = validatedData as Extract<typeof validatedData, { action: 'deleteGroup' }>;
+    await prisma.permissionGroup.delete({ where: { id: groupId } });
+    return NextResponse.json({ success: true });
   }
 
   if (action === 'assignGroup') {
-    const { userId, groupId } = body;
+    const { userId, groupId } = validatedData as Extract<typeof validatedData, { action: 'assignGroup' }>;
 
     await prisma.userPermissionGroup.upsert({
       where: { userId_groupId: { userId, groupId } },
       update: {},
-      create: { userId, groupId, assignedBy: ctx.session!.user.id },
+      create: { userId, groupId, assignedBy: session.user.id },
     });
 
-    return apiSuccess({ success: true });
+    return NextResponse.json({ success: true });
   }
 
   if (action === 'removeFromGroup') {
-    const { userId, groupId } = body;
+    const { userId, groupId } = validatedData as Extract<typeof validatedData, { action: 'removeFromGroup' }>;
 
     await prisma.userPermissionGroup.deleteMany({
       where: { userId, groupId },
     });
 
-    return apiSuccess({ success: true });
+    return NextResponse.json({ success: true });
   }
 
   if (action === 'setOverride') {
-    const { userId, permissionCode, granted, reason, expiresAt } = body;
+    const { userId, permissionCode, granted, reason, expiresAt } = validatedData as Extract<typeof validatedData, { action: 'setOverride' }>;
 
     await prisma.userPermissionOverride.upsert({
       where: { userId_permissionCode: { userId, permissionCode } },
       update: {
         granted,
         reason,
-        grantedBy: ctx.session!.user.id,
+        grantedBy: session.user.id,
         expiresAt: expiresAt ? new Date(expiresAt) : null,
       },
       create: {
@@ -177,34 +192,34 @@ export const POST = withApiHandler(async (ctx: ApiContext) => {
         permissionCode,
         granted,
         reason,
-        grantedBy: ctx.session!.user.id,
+        grantedBy: session.user.id,
         expiresAt: expiresAt ? new Date(expiresAt) : null,
       },
     });
 
-    return apiSuccess({ success: true });
+    return NextResponse.json({ success: true });
   }
 
   if (action === 'removeOverride') {
-    const { userId, permissionCode } = body;
+    const { userId, permissionCode } = validatedData as Extract<typeof validatedData, { action: 'removeOverride' }>;
 
     await prisma.userPermissionOverride.deleteMany({
       where: { userId, permissionCode },
     });
 
-    return apiSuccess({ success: true });
+    return NextResponse.json({ success: true });
   }
 
   if (action === 'updateDefaults') {
-    const { code, defaultOwner, defaultEmployee, defaultClient, defaultCustomer } = body;
+    const { code, defaultOwner, defaultEmployee, defaultClient, defaultCustomer } = validatedData as Extract<typeof validatedData, { action: 'updateDefaults' }>;
 
     await prisma.permission.update({
       where: { code },
       data: { defaultOwner, defaultEmployee, defaultClient, defaultCustomer },
     });
 
-    return apiSuccess({ success: true });
+    return NextResponse.json({ success: true });
   }
 
-  return apiError('Invalid action', 400);
-}, { roles: ['OWNER'] });
+  return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
+});

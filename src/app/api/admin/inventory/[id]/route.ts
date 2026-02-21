@@ -23,6 +23,13 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
       );
     }
 
+    if (typeof stockQuantity !== 'number' || stockQuantity < 0) {
+      return NextResponse.json(
+        { error: 'stockQuantity must be a non-negative number' },
+        { status: 400 }
+      );
+    }
+
     if (!reason) {
       return NextResponse.json(
         { error: 'reason is required for stock adjustments' },

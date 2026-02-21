@@ -31,7 +31,7 @@ export const GET = withAdminGuard(async (_request, { session, params }) => {
       );
     }
 
-    return NextResponse.json(bundle);
+    return NextResponse.json({ data: bundle });
   } catch (error) {
     console.error('Error fetching bundle:', error);
     return NextResponse.json(
@@ -125,7 +125,7 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
       });
     }
 
-    return NextResponse.json(bundle);
+    return NextResponse.json({ data: bundle });
   } catch (error) {
     console.error('Error updating bundle:', error);
     return NextResponse.json(

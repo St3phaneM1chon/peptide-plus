@@ -9,6 +9,7 @@ import { Modal } from '@/components/admin/Modal';
 import { EmptyState } from '@/components/admin/EmptyState';
 import { Input } from '@/components/admin/FormField';
 import { useI18n } from '@/i18n/client';
+import { toast } from 'sonner';
 
 type Tab = 'defaults' | 'groups' | 'overrides';
 
@@ -65,6 +66,9 @@ export default function PermissionsPage() {
   const [editingGroup, setEditingGroup] = useState<PermissionGroup | null>(null);
   const [groupForm, setGroupForm] = useState({ name: '', description: '', color: '#0ea5e9', permissionCodes: [] as string[] });
 
+  const [deletingGroupId, setDeletingGroupId] = useState<string | null>(null);
+  const [removingOverrideCode, setRemovingOverrideCode] = useState<string | null>(null);
+
   // Override state
   const [users, setUsers] = useState<UserBasic[]>([]);
   const [selectedUser, setSelectedUser] = useState<UserBasic | null>(null);
@@ -79,31 +83,54 @@ export default function PermissionsPage() {
 
   const fetchPermissions = useCallback(async () => {
     setLoading(true);
-    const res = await fetch('/api/admin/permissions?tab=permissions');
-    const data = await res.json();
-    setPermissions(data.permissions || []);
-    setModules(data.modules || {});
+    try {
+      const res = await fetch('/api/admin/permissions?tab=permissions');
+      if (!res.ok) { toast.error(t('common.errorOccurred')); setLoading(false); return; }
+      const data = await res.json();
+      setPermissions(data.permissions || []);
+      setModules(data.modules || {});
+    } catch (error) {
+      console.error(error);
+      toast.error(t('common.errorOccurred'));
+    }
     setLoading(false);
-  }, []);
+  }, [t]);
 
   const fetchGroups = useCallback(async () => {
-    const res = await fetch('/api/admin/permissions?tab=groups');
-    const data = await res.json();
-    setGroups(data.groups || []);
-  }, []);
+    try {
+      const res = await fetch('/api/admin/permissions?tab=groups');
+      if (!res.ok) { toast.error(t('common.errorOccurred')); return; }
+      const data = await res.json();
+      setGroups(data.groups || []);
+    } catch (error) {
+      console.error(error);
+      toast.error(t('common.errorOccurred'));
+    }
+  }, [t]);
 
   const searchUsers = useCallback(async (search: string) => {
     if (!search || search.length < 2) { setUsers([]); return; }
-    const res = await fetch(`/api/admin/permissions?tab=users&search=${encodeURIComponent(search)}`);
-    const data = await res.json();
-    setUsers(data.users || []);
+    try {
+      const res = await fetch(`/api/admin/permissions?tab=users&search=${encodeURIComponent(search)}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      setUsers(data.users || []);
+    } catch (error) {
+      console.error(error);
+    }
   }, []);
 
   const fetchOverrides = useCallback(async (userId: string) => {
-    const res = await fetch(`/api/admin/permissions?tab=overrides&userId=${userId}`);
-    const data = await res.json();
-    setOverrides(data.overrides || []);
-  }, []);
+    try {
+      const res = await fetch(`/api/admin/permissions?tab=overrides&userId=${userId}`);
+      if (!res.ok) { toast.error(t('common.errorOccurred')); return; }
+      const data = await res.json();
+      setOverrides(data.overrides || []);
+    } catch (error) {
+      console.error(error);
+      toast.error(t('common.errorOccurred'));
+    }
+  }, [t]);
 
   useEffect(() => {
     fetchPermissions();
@@ -117,7 +144,7 @@ export default function PermissionsPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'seed' }),
-      }).then(() => fetchPermissions());
+      }).then(() => fetchPermissions()).catch(() => toast.error(t('common.errorOccurred')));
     }
   }, [loading, permissions.length, fetchPermissions]);
 
@@ -131,24 +158,38 @@ export default function PermissionsPage() {
 
   const updateDefault = async (code: string, field: string, value: boolean) => {
     setPermissions(prev => prev.map(p => p.code === code ? { ...p, [field]: value } : p));
-    await fetch('/api/admin/permissions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'updateDefaults', code, [field]: value }),
-    });
+    try {
+      const res = await fetch('/api/admin/permissions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'updateDefaults', code, [field]: value }),
+      });
+      if (!res.ok) toast.error(t('common.errorOccurred'));
+    } catch (error) {
+      console.error(error);
+      toast.error(t('common.errorOccurred'));
+    }
   };
 
   const saveGroup = async () => {
     const action = editingGroup ? 'updateGroup' : 'createGroup';
-    await fetch('/api/admin/permissions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action,
-        groupId: editingGroup?.id,
-        ...groupForm,
-      }),
-    });
+    try {
+      const res = await fetch('/api/admin/permissions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action,
+          groupId: editingGroup?.id,
+          ...groupForm,
+        }),
+      });
+      if (!res.ok) { toast.error(t('common.errorOccurred')); return; }
+      toast.success(t('common.savedSuccessfully'));
+    } catch (error) {
+      console.error(error);
+      toast.error(t('common.errorOccurred'));
+      return;
+    }
     setGroupModal(false);
     setEditingGroup(null);
     setGroupForm({ name: '', description: '', color: '#0ea5e9', permissionCodes: [] });
@@ -157,40 +198,69 @@ export default function PermissionsPage() {
 
   const deleteGroup = async (groupId: string) => {
     if (!confirm(t('admin.permissions.deleteGroupConfirm'))) return;
-    await fetch('/api/admin/permissions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'deleteGroup', groupId }),
-    });
+    setDeletingGroupId(groupId);
+    try {
+      const res = await fetch('/api/admin/permissions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'deleteGroup', groupId }),
+      });
+      if (!res.ok) { toast.error(t('common.errorOccurred')); return; }
+      toast.success(t('common.deletedSuccessfully'));
+    } catch (error) {
+      console.error(error);
+      toast.error(t('common.errorOccurred'));
+      return;
+    } finally {
+      setDeletingGroupId(null);
+    }
     fetchGroups();
   };
 
   const toggleOverride = async (permissionCode: string, granted: boolean) => {
     if (!selectedUser) return;
-    await fetch('/api/admin/permissions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'setOverride',
-        userId: selectedUser.id,
-        permissionCode,
-        granted,
-      }),
-    });
+    try {
+      const res = await fetch('/api/admin/permissions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'setOverride',
+          userId: selectedUser.id,
+          permissionCode,
+          granted,
+        }),
+      });
+      if (!res.ok) { toast.error(t('common.errorOccurred')); return; }
+      toast.success(t('common.savedSuccessfully'));
+    } catch (error) {
+      console.error(error);
+      toast.error(t('common.errorOccurred'));
+      return;
+    }
     fetchOverrides(selectedUser.id);
   };
 
   const removeOverride = async (permissionCode: string) => {
     if (!selectedUser) return;
-    await fetch('/api/admin/permissions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'removeOverride',
-        userId: selectedUser.id,
-        permissionCode,
-      }),
-    });
+    setRemovingOverrideCode(permissionCode);
+    try {
+      const res = await fetch('/api/admin/permissions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'removeOverride',
+          userId: selectedUser.id,
+          permissionCode,
+        }),
+      });
+      if (!res.ok) { toast.error(t('common.errorOccurred')); return; }
+    } catch (error) {
+      console.error(error);
+      toast.error(t('common.errorOccurred'));
+      return;
+    } finally {
+      setRemovingOverrideCode(null);
+    }
     fetchOverrides(selectedUser.id);
   };
 
@@ -354,7 +424,7 @@ export default function PermissionsPage() {
                       >
                         {t('admin.permissions.edit')}
                       </Button>
-                      <Button size="sm" variant="ghost" icon={Trash2} onClick={() => deleteGroup(group.id)} />
+                      <Button size="sm" variant="ghost" icon={Trash2} disabled={deletingGroupId === group.id} onClick={() => deleteGroup(group.id)} />
                     </div>
                   </div>
                   <div className="mt-3 flex flex-wrap gap-1.5">
@@ -561,7 +631,8 @@ export default function PermissionsPage() {
                               {override && (
                                 <button
                                   onClick={() => removeOverride(perm.code)}
-                                  className="text-slate-400 hover:text-red-500 transition-colors"
+                                  disabled={removingOverrideCode === perm.code}
+                                  className="text-slate-400 hover:text-red-500 transition-colors disabled:opacity-50"
                                   title={t('admin.permissions.removeOverrideTitle')}
                                 >
                                   <X className="w-4 h-4" />

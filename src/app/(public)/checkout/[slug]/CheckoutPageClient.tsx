@@ -294,6 +294,7 @@ export function CheckoutPageClient({
                     src={product.imageUrl}
                     alt={product.name}
                     fill
+                    sizes="80px"
                     style={{ objectFit: 'cover' }}
                     unoptimized
                   />

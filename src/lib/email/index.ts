@@ -40,3 +40,30 @@ export {
   type PointsExpiringEmailData,
   type PriceDropEmailData,
 } from './templates/marketing-emails';
+
+// Unsubscribe URL generation (CAN-SPAM / RGPD / LCAP compliance)
+export {
+  generateUnsubscribeUrl,
+  generateUnsubscribeToken,
+  type UnsubscribeCategory,
+} from './unsubscribe';
+
+// Inbound email handler (Communication Hub)
+export {
+  processInboundEmail,
+  getConversationThread,
+  updateConversationStatus,
+  assignConversation,
+  updateConversationTags,
+  type InboundEmailPayload,
+  type ProcessedEmail,
+} from './inbound-handler';
+
+// Automation engine (Workflow execution)
+export {
+  handleEvent,
+  getPreBuiltFlows,
+  type FlowNode,
+  type FlowEdge,
+  type TriggerEvent,
+} from './automation-engine';

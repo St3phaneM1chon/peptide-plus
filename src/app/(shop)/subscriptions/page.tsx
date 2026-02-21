@@ -34,17 +34,17 @@ interface Subscription {
 }
 
 const getFrequencies = (t: (key: string) => string) => [
-  { id: 'WEEKLY', label: t('subscriptions.weekly') || 'Weekly', days: 7, discount: 20 },
-  { id: 'BIWEEKLY', label: t('subscriptions.biweekly') || 'Every 2 Weeks', days: 14, discount: 15 },
-  { id: 'MONTHLY', label: t('subscriptions.monthly') || 'Monthly', days: 30, discount: 10 },
-  { id: 'BIMONTHLY', label: t('subscriptions.bimonthly') || 'Every 2 Months', days: 60, discount: 5 },
+  { id: 'EVERY_2_MONTHS', label: t('subscriptions.every2Months') || 'Every 2 Months', days: 60, discount: 15 },
+  { id: 'EVERY_4_MONTHS', label: t('subscriptions.every4Months') || 'Every 4 Months', days: 120, discount: 12 },
+  { id: 'EVERY_6_MONTHS', label: t('subscriptions.every6Months') || 'Every 6 Months', days: 180, discount: 10 },
+  { id: 'EVERY_12_MONTHS', label: t('subscriptions.every12Months') || 'Every 12 Months', days: 365, discount: 5 },
 ];
 
 const getFrequencyLabels = (t: (key: string) => string): Record<string, string> => ({
-  WEEKLY: t('subscriptions.weekly') || 'Weekly',
-  BIWEEKLY: t('subscriptions.biweekly') || 'Every 2 Weeks',
-  MONTHLY: t('subscriptions.monthly') || 'Monthly',
-  BIMONTHLY: t('subscriptions.bimonthly') || 'Every 2 Months',
+  EVERY_2_MONTHS: t('subscriptions.every2Months') || 'Every 2 Months',
+  EVERY_4_MONTHS: t('subscriptions.every4Months') || 'Every 4 Months',
+  EVERY_6_MONTHS: t('subscriptions.every6Months') || 'Every 6 Months',
+  EVERY_12_MONTHS: t('subscriptions.every12Months') || 'Every 12 Months',
 });
 
 export default function SubscriptionsPage() {

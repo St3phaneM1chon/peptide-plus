@@ -23,6 +23,7 @@ import {
 import { PageHeader, StatCard, SectionCard, StatusBadge, Button, SelectFilter } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
 import { sectionThemes } from '@/lib/admin/section-themes';
+import { toast } from 'sonner';
 
 interface DashboardStats {
   tresorerie: number;
@@ -78,14 +79,16 @@ function RevenueExpensesChart({
   formatCurrency,
   revenueLabel,
   expensesLabel,
+  noDataLabel,
 }: {
   data: MonthlyTrend[];
   formatCurrency: (n: number) => string;
   revenueLabel: string;
   expensesLabel: string;
+  noDataLabel: string;
 }) {
   if (data.length === 0) {
-    return <div className="h-64 flex items-center justify-center text-slate-400 text-sm">No data available</div>;
+    return <div className="h-64 flex items-center justify-center text-slate-400 text-sm">{noDataLabel}</div>;
   }
 
   const maxVal = Math.max(...data.flatMap((d) => [d.revenue, d.expenses]), 1);
@@ -173,13 +176,15 @@ function CashFlowLineChart({
   data,
   formatCurrency,
   label,
+  noDataLabel,
 }: {
   data: MonthlyTrend[];
   formatCurrency: (n: number) => string;
   label: string;
+  noDataLabel: string;
 }) {
   if (data.length === 0) {
-    return <div className="h-52 flex items-center justify-center text-slate-400 text-sm">No data available</div>;
+    return <div className="h-52 flex items-center justify-center text-slate-400 text-sm">{noDataLabel}</div>;
   }
 
   const values = data.map((d) => d.cashFlow);
@@ -268,9 +273,13 @@ function CashFlowLineChart({
 function ExpenseDonutChart({
   data,
   formatCurrency,
+  noDataLabel,
+  totalLabel,
 }: {
   data: ExpenseCategory[];
   formatCurrency: (n: number) => string;
+  noDataLabel: string;
+  totalLabel: string;
 }) {
   const colors = [
     '#10b981', '#3b82f6', '#8b5cf6', '#0ea5e9',
@@ -278,7 +287,7 @@ function ExpenseDonutChart({
   ];
 
   if (data.length === 0) {
-    return <div className="h-52 flex items-center justify-center text-slate-400 text-sm">No data available</div>;
+    return <div className="h-52 flex items-center justify-center text-slate-400 text-sm">{noDataLabel}</div>;
   }
 
   const total = data.reduce((s, d) => s + d.total, 0);
@@ -328,7 +337,7 @@ function ExpenseDonutChart({
           </path>
         ))}
         {/* Center text */}
-        <text x={cx} y={cy - 6} textAnchor="middle" className="text-[11px] fill-slate-400">Total</text>
+        <text x={cx} y={cy - 6} textAnchor="middle" className="text-[11px] fill-slate-400">{totalLabel}</text>
         <text x={cx} y={cy + 12} textAnchor="middle" className="text-[13px] fill-slate-800 font-semibold">
           {formatCurrency(total)}
         </text>
@@ -391,7 +400,7 @@ export default function ComptabiliteDashboard() {
     try {
       const response = await fetch(`/api/accounting/dashboard?period=${selectedPeriod}`);
       if (!response.ok) {
-        throw new Error(`Erreur serveur (${response.status})`);
+        throw new Error(t('admin.accounting.serverError').replace('{status}', String(response.status)));
       }
       const data = await response.json();
 
@@ -438,7 +447,8 @@ export default function ComptabiliteDashboard() {
       }
     } catch (err) {
       console.error('Error fetching dashboard:', err);
-      setError(err instanceof Error ? err.message : 'Impossible de charger les donn\u00e9es du tableau de bord');
+      toast.error(t('common.errorOccurred'));
+      setError(err instanceof Error ? err.message : t('admin.accounting.loadError'));
     } finally {
       setLoading(false);
     }
@@ -466,7 +476,8 @@ export default function ComptabiliteDashboard() {
           setAlerts(mappedAlerts.slice(0, 5));
         }
       } catch (error) {
-        console.error('Error fetching alerts:', error);
+        console.error(error);
+        toast.error(t('common.errorOccurred'));
       }
     };
 
@@ -488,7 +499,7 @@ export default function ComptabiliteDashboard() {
   if (loading) return (
     <div aria-live="polite" aria-busy="true" className="p-8 space-y-4 animate-pulse">
       <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-1/3"></div>
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[1,2,3,4].map(i => <div key={i} className="h-24 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>)}
       </div>
       <div className="h-64 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
@@ -508,7 +519,7 @@ export default function ComptabiliteDashboard() {
             onClick={() => { setError(null); setLoading(true); fetchDashboard(); }}
             className="text-red-700 underline font-medium hover:text-red-800"
           >
-            Recharger
+            {t('admin.accounting.reload')}
           </button>
         </div>
       )}
@@ -534,7 +545,7 @@ export default function ComptabiliteDashboard() {
       />
 
       {/* ====== SECTION 1: KPI Summary Cards ====== */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           label={t('admin.accounting.treasury')}
           value={formatCurrency(stats.tresorerie)}
@@ -566,7 +577,7 @@ export default function ComptabiliteDashboard() {
       </div>
 
       {/* Financial KPIs Row */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white rounded-xl border border-slate-200 p-4">
           <div className="flex items-center gap-2 mb-1">
             <Clock className="w-4 h-4 text-blue-500" />
@@ -604,7 +615,7 @@ export default function ComptabiliteDashboard() {
       </div>
 
       {/* ====== SECTION 2: Charts Row - Revenue vs Expenses + Cash Flow ====== */}
-      <div className="grid grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {/* Revenue vs Expenses Bar Chart */}
         <SectionCard title={t('admin.accounting.revenueVsExpensesChart')} theme={theme} className="col-span-2">
           <RevenueExpensesChart
@@ -612,6 +623,7 @@ export default function ComptabiliteDashboard() {
             formatCurrency={formatCurrency}
             revenueLabel={t('admin.accounting.revenueLabel')}
             expensesLabel={t('admin.accounting.expensesLabel')}
+            noDataLabel={t('admin.accounting.noDataAvailable')}
           />
         </SectionCard>
 
@@ -621,6 +633,7 @@ export default function ComptabiliteDashboard() {
             data={monthlyTrends}
             formatCurrency={formatCurrency}
             label={t('admin.accounting.cashFlowTrendLabel')}
+            noDataLabel={t('admin.accounting.noDataAvailable')}
           />
         </SectionCard>
       </div>
@@ -632,6 +645,8 @@ export default function ComptabiliteDashboard() {
           <ExpenseDonutChart
             data={expensesByCategory}
             formatCurrency={formatCurrency}
+            noDataLabel={t('admin.accounting.noDataAvailable')}
+            totalLabel={t('common.total')}
           />
         </SectionCard>
 
@@ -716,7 +731,7 @@ export default function ComptabiliteDashboard() {
 
         {/* Quick Actions */}
         <SectionCard title={t('admin.accounting.quickActions')} theme={theme}>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             <Link
               href="/admin/comptabilite/ecritures?new=true"
               className="flex items-center gap-3 p-4 rounded-lg border border-emerald-100 bg-emerald-50/50 hover:bg-emerald-50 transition-colors group"

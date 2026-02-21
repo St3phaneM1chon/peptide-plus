@@ -14,8 +14,8 @@ interface RouteParams {
   params: Promise<{ id: string }>;
 }
 
-// Company information
-const COMPANY = {
+// Company information (tax numbers loaded from DB at runtime)
+const COMPANY_STATIC = {
   name: 'BioCycle Peptides Inc.',
   address: '1234 Boulevard des Sciences',
   city: 'Montreal, QC H3C 1K3',
@@ -23,9 +23,16 @@ const COMPANY = {
   phone: '(514) 555-0199',
   email: 'support@biocyclepeptides.com',
   website: 'www.biocyclepeptides.com',
-  tpsNumber: process.env.BUSINESS_TPS || '123456789 RT0001',
-  tvqNumber: process.env.BUSINESS_TVQ || '1234567890 TQ0001',
 };
+
+async function getCompanyInfo() {
+  const settings = await prisma.accountingSettings.findUnique({ where: { id: 'default' } });
+  return {
+    ...COMPANY_STATIC,
+    tpsNumber: settings?.tpsNumber || process.env.BUSINESS_TPS || '',
+    tvqNumber: settings?.tvqNumber || process.env.BUSINESS_TVQ || '',
+  };
+}
 
 // Payment method display names
 const PAYMENT_METHOD_LABELS: Record<string, string> = {
@@ -108,6 +115,15 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const currencySymbol = order.currency?.symbol || '$';
     const currencyCode = order.currency?.code || 'CAD';
     const invoiceNumber = `INV-${order.orderNumber}`;
+
+    // Load company info with tax numbers from DB
+    const COMPANY = await getCompanyInfo();
+    if (!COMPANY.tpsNumber || !COMPANY.tvqNumber) {
+      return NextResponse.json(
+        { error: 'Tax registration numbers not configured. Please configure in Accounting Settings.' },
+        { status: 500 }
+      );
+    }
 
     // Generate PDF
     const doc = new jsPDF({

@@ -21,7 +21,7 @@ export function organizationSchema() {
       url: `${SITE_URL}/contact`,
       availableLanguage: ['English', 'French'],
     },
-    sameAs: [],
+    // sameAs omitted until social profiles are configured
   };
 }
 

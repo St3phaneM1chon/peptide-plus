@@ -26,14 +26,37 @@ export default function CookieConsent() {
     }
   }, [isVisible]);
 
+  /**
+   * Persist consent choice to the backend API for RGPD/GDPR proof.
+   * Runs in the background so the banner dismisses instantly.
+   */
+  const saveConsentToBackend = (accepted: boolean) => {
+    const payload = {
+      analytics: accepted,
+      marketing: accepted,
+      personalization: accepted,
+    };
+
+    fetch('/api/consent', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    }).catch(() => {
+      // Silent catch - localStorage already records the choice for UI,
+      // and a retry could be attempted on next page load if needed.
+    });
+  };
+
   const handleAccept = () => {
     localStorage.setItem('cookie_consent', 'accepted');
     setIsVisible(false);
+    saveConsentToBackend(true);
   };
 
   const handleDecline = () => {
     localStorage.setItem('cookie_consent', 'declined');
     setIsVisible(false);
+    saveConsentToBackend(false);
   };
 
   if (!isVisible) return null;

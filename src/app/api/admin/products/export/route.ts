@@ -35,8 +35,33 @@ export const GET = withAdminGuard(async (request: NextRequest, { session: _sessi
     const { searchParams } = new URL(request.url);
     const exportFormat = searchParams.get('format') || 'csv';
 
+    // P-06 fix: Limit to 5000 records max to prevent OOM on large catalogs.
+    // Select only fields used in CSV and JSON export generation.
     const products = await prisma.product.findMany({
-      include: {
+      take: 5000,
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        productType: true,
+        categoryId: true,
+        description: true,
+        shortDescription: true,
+        isActive: true,
+        isFeatured: true,
+        isNew: true,
+        isBestseller: true,
+        price: true,
+        compareAtPrice: true,
+        purity: true,
+        molecularWeight: true,
+        casNumber: true,
+        molecularFormula: true,
+        sku: true,
+        manufacturer: true,
+        origin: true,
+        imageUrl: true,
+        createdAt: true,
         category: {
           select: { id: true, name: true },
         },

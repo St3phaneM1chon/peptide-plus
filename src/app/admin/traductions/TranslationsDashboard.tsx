@@ -27,6 +27,7 @@ import {
   Square,
 } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
+import { toast } from 'sonner';
 
 interface ModelCoverage {
   totalEntities: number;
@@ -194,11 +195,11 @@ function TranslationWizard({ overview, onClose, onComplete, getModelLabel, t }: 
   ];
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="translations-modal-title">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b">
-          <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+          <h2 id="translations-modal-title" className="text-lg font-bold text-gray-900 flex items-center gap-2">
             <Languages className="w-5 h-5 text-blue-600" />
             {t('admin.translationsDashboard.wizardTitle')}
           </h2>
@@ -276,7 +277,7 @@ function TranslationWizard({ overview, onClose, onComplete, getModelLabel, t }: 
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-blue-800">{t('admin.translationsDashboard.wizardTotalToTranslate')}</span>
                   <span className="text-lg font-bold text-blue-700">
-                    ~{analysisData.reduce((s, a) => s + a.estimate, 0).toLocaleString()}
+                    ~{analysisData.reduce((s, a) => s + a.estimate, 0).toLocaleString(locale)}
                   </span>
                 </div>
                 <p className="text-xs text-blue-600 mt-1">{t('admin.translationsDashboard.wizardLocales')}</p>
@@ -355,7 +356,7 @@ function TranslationWizard({ overview, onClose, onComplete, getModelLabel, t }: 
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-blue-800">
-                      {t('admin.translationsDashboard.wizardEstimate', { count: totalEstimate.toLocaleString() })}
+                      {t('admin.translationsDashboard.wizardEstimate', { count: totalEstimate.toLocaleString(locale) })}
                     </span>
                     <span className="text-xs text-blue-600">
                       {selectedModels.size} {t('admin.translationsDashboard.colType').toLowerCase()}(s)
@@ -413,7 +414,7 @@ function TranslationWizard({ overview, onClose, onComplete, getModelLabel, t }: 
 
               {/* Live queue stats */}
               {isTranslating && liveQueue && (
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
                   <div className="text-center p-2 bg-yellow-50 rounded-lg">
                     <p className="text-lg font-bold text-yellow-700">{liveQueue.pending}</p>
                     <p className="text-xs text-yellow-600">{t('admin.translationsDashboard.pending')}</p>
@@ -535,7 +536,7 @@ function TranslationWizard({ overview, onClose, onComplete, getModelLabel, t }: 
 // ---------------------------------------------------------------------------
 
 export default function TranslationsDashboard() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [overview, setOverview] = useState<Record<string, ModelCoverage>>({});
   const [queue, setQueue] = useState<QueueStats | null>(null);
   const [recentJobs, setRecentJobs] = useState<QueueJob[]>([]);
@@ -552,7 +553,8 @@ export default function TranslationsDashboard() {
       if (data.overview) setOverview(data.overview);
       if (data.queue) setQueue(data.queue);
     } catch (error) {
-      console.error('Error fetching translation status:', error);
+      console.error(error);
+      toast.error(t('common.errorOccurred'));
     } finally {
       setLoading(false);
     }
@@ -565,7 +567,8 @@ export default function TranslationsDashboard() {
       if (data.queue) setQueue(data.queue);
       if (data.recentJobs) setRecentJobs(data.recentJobs);
     } catch (error) {
-      console.error('Error fetching queue:', error);
+      console.error(error);
+      toast.error(t('common.errorOccurred'));
     }
   }, []);
 
@@ -613,9 +616,10 @@ export default function TranslationsDashboard() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="flex items-center justify-center min-h-[400px]" role="status" aria-label="Loading">
         <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
         <span className="ms-3 text-gray-500">{t('admin.translationsDashboard.loadingStats')}</span>
+        <span className="sr-only">Loading...</span>
       </div>
     );
   }
@@ -823,7 +827,7 @@ export default function TranslationsDashboard() {
         {showQueue && (
           <div className="px-6 pb-4">
             {queue && (
-              <div className="grid grid-cols-4 gap-3 mb-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
                 <div className="text-center p-3 bg-yellow-50 rounded-lg">
                   <p className="text-lg font-bold text-yellow-700">{queue.pending}</p>
                   <p className="text-xs text-yellow-600">{t('admin.translationsDashboard.pending')}</p>

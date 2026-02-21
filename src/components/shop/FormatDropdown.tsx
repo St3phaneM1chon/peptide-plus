@@ -144,6 +144,7 @@ export default function FormatDropdown({
                       src={format.imageUrl}
                       alt={format.name}
                       fill
+                      sizes="64px"
                       className="object-contain"
                     />
                   ) : (

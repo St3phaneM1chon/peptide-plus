@@ -3,11 +3,13 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { adminUpdateUserSchema } from '@/lib/validations/user';
 
 export const GET = withAdminGuard(async (_request, { session, params }) => {
   try {
     const id = params!.id;
 
+    // ---- Step 1: Fetch user (needed for referredById check) ----
     const user = await prisma.user.findUnique({
       where: { id },
       select: {
@@ -57,26 +59,109 @@ export const GET = withAdminGuard(async (_request, { session, params }) => {
       return NextResponse.json({ error: 'Utilisateur non trouvé' }, { status: 404 });
     }
 
-    // Get all orders for this user with full details
-    const rawOrders = await prisma.order.findMany({
-      where: { userId: id },
-      include: {
-        items: true,
-        currency: { select: { code: true, symbol: true } },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+    // ---- Step 2: Parallelize all independent queries ----
+    const [
+      rawOrders,
+      referredBy,
+      referrals,
+      conversationsResult,
+      subscriptionsResult,
+      reviewsResult,
+      wishlistResult,
+    ] = await Promise.all([
+      // Orders (limited to 50, with select for items)
+      prisma.order.findMany({
+        where: { userId: id },
+        include: {
+          items: {
+            select: {
+              id: true,
+              productId: true,
+              productName: true,
+              formatName: true,
+              sku: true,
+              quantity: true,
+              unitPrice: true,
+              discount: true,
+              total: true,
+            },
+          },
+          currency: { select: { code: true, symbol: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 50,
+      }),
 
-    // Enrich order items with product info (OrderItem has no direct relation to Product)
+      // Referrer info (conditional but still parallelizable with null fallback)
+      user.referredById
+        ? prisma.user.findUnique({
+            where: { id: user.referredById },
+            select: { id: true, name: true, email: true },
+          })
+        : Promise.resolve(null),
+
+      // Referrals made by this user
+      prisma.user.findMany({
+        where: { referredById: id },
+        select: { id: true, name: true, email: true, createdAt: true },
+        orderBy: { createdAt: 'desc' },
+      }),
+
+      // Chat conversations (with last 3 messages preview)
+      prisma.chatConversation.findMany({
+        where: { userId: id },
+        include: {
+          messages: {
+            orderBy: { createdAt: 'desc' as const },
+            take: 3,
+          },
+        },
+        orderBy: { updatedAt: 'desc' as const },
+        take: 20,
+      }).catch(() => [] as unknown[]),
+
+      // Subscriptions
+      prisma.subscription.findMany({
+        where: { userId: id },
+        orderBy: { createdAt: 'desc' as const },
+        take: 50,
+      }).catch(() => [] as never[]),
+
+      // Reviews (select only needed product fields)
+      prisma.review.findMany({
+        where: { userId: id },
+        include: {
+          product: { select: { name: true, slug: true } },
+        },
+        orderBy: { createdAt: 'desc' as const },
+        take: 50,
+      }).catch(() => [] as unknown[]),
+
+      // Wishlist items
+      prisma.wishlist.findMany({
+        where: { userId: id },
+        orderBy: { createdAt: 'desc' },
+        take: 50,
+      }).catch(() => [] as never[]),
+    ]);
+
+    // ---- Step 3: Enrich order items with product info (batch lookup) ----
     const allProductIds = [...new Set(rawOrders.flatMap((o) => o.items.map((i) => i.productId)))];
-    const products = allProductIds.length > 0
+    const wishlistProductIds = wishlistResult.length > 0
+      ? wishlistResult.map((w) => w.productId)
+      : [];
+
+    // Combine product IDs from orders + wishlist for a single batch query
+    const combinedProductIds = [...new Set([...allProductIds, ...wishlistProductIds])];
+    const products = combinedProductIds.length > 0
       ? await prisma.product.findMany({
-          where: { id: { in: allProductIds } },
-          select: { id: true, name: true, slug: true, imageUrl: true },
+          where: { id: { in: combinedProductIds } },
+          select: { id: true, name: true, slug: true, imageUrl: true, price: true },
         })
       : [];
     const productMap = new Map(products.map((p) => [p.id, p]));
 
+    // Transform orders (convert Decimal to Number)
     const orders = rawOrders.map((o) => ({
       ...o,
       total: Number(o.total),
@@ -93,17 +178,15 @@ export const GET = withAdminGuard(async (_request, { session, params }) => {
       })),
     }));
 
-    // Calculate totals
+    // Calculate order stats
     const paidOrders = orders.filter((o) => o.paymentStatus === 'PAID');
-    const totalSpent = paidOrders.reduce((sum, o) => sum + Number(o.total), 0);
+    const totalSpent = paidOrders.reduce((sum, o) => sum + o.total, 0);
 
-    // Year-to-date spending
     const yearStart = new Date(new Date().getFullYear(), 0, 1);
     const ytdSpent = paidOrders
       .filter((o) => new Date(o.createdAt) >= yearStart)
-      .reduce((sum, o) => sum + Number(o.total), 0);
+      .reduce((sum, o) => sum + o.total, 0);
 
-    // Total products purchased (sum of all item quantities across paid orders)
     const totalItemsPurchased = paidOrders.reduce(
       (sum, o) => sum + o.items.reduce((iSum, item) => iSum + item.quantity, 0),
       0
@@ -119,105 +202,25 @@ export const GET = withAdminGuard(async (_request, { session, params }) => {
       shippedOrders: orders.filter((o) => o.status === 'SHIPPED').length,
       deliveredOrders: orders.filter((o) => o.status === 'DELIVERED').length,
       cancelledOrders: orders.filter((o) => o.status === 'CANCELLED').length,
-      averageOrderValue:
-        paidOrders.length > 0
-          ? totalSpent / paidOrders.length
-          : 0,
+      averageOrderValue: paidOrders.length > 0 ? totalSpent / paidOrders.length : 0,
     };
 
-    // Get referrer info if referred
-    let referredBy = null;
-    if (user.referredById) {
-      referredBy = await prisma.user.findUnique({
-        where: { id: user.referredById },
-        select: { id: true, name: true, email: true },
-      });
-    }
+    // Convert subscription Decimal fields to Number
+    const subscriptions = subscriptionsResult.map((sub) => ({
+      ...sub,
+      unitPrice: sub.unitPrice ? Number(sub.unitPrice) : null,
+    }));
 
-    // Get referrals made by this user
-    const referrals = await prisma.user.findMany({
-      where: { referredById: id },
-      select: { id: true, name: true, email: true, createdAt: true },
-      orderBy: { createdAt: 'desc' },
+    // Enrich wishlist items with product data (reuse productMap from batch query)
+    const wishlist = wishlistResult.map((w) => {
+      const product = productMap.get(w.productId);
+      return {
+        ...w,
+        product: product
+          ? { ...product, price: Number(product.price) }
+          : null,
+      };
     });
-
-    // ---- NEW: Chat conversations (with last 3 messages preview) ----
-    let conversations: unknown[] = [];
-    try {
-      conversations = await prisma.chatConversation.findMany({
-        where: { userId: id },
-        include: {
-          messages: {
-            orderBy: { createdAt: 'desc' as const },
-            take: 3,
-          },
-        },
-        orderBy: { updatedAt: 'desc' as const },
-        take: 20,
-      });
-    } catch {
-      // Table may not exist yet
-      conversations = [];
-    }
-
-    // ---- NEW: Subscriptions ----
-    let subscriptions: unknown[] = [];
-    try {
-      const rawSubscriptions = await prisma.subscription.findMany({
-        where: { userId: id },
-        orderBy: { createdAt: 'desc' as const },
-      });
-      // Convert Decimal fields to Number
-      subscriptions = rawSubscriptions.map((sub: Record<string, unknown>) => ({
-        ...sub,
-        unitPrice: sub.unitPrice ? Number(sub.unitPrice) : null,
-      }));
-    } catch {
-      subscriptions = [];
-    }
-
-    // ---- NEW: Reviews ----
-    let reviews: unknown[] = [];
-    try {
-      reviews = await prisma.review.findMany({
-        where: { userId: id },
-        include: {
-          product: { select: { name: true, slug: true } },
-        },
-        orderBy: { createdAt: 'desc' as const },
-      });
-    } catch {
-      // Table may not exist yet
-      reviews = [];
-    }
-
-    // ---- NEW: Wishlist items (with product details) ----
-    let wishlist: unknown[] = [];
-    try {
-      const rawWishlist = await prisma.wishlist.findMany({
-        where: { userId: id },
-      });
-      // Fetch product details for each wishlist item
-      if (rawWishlist.length > 0) {
-        const productIds = rawWishlist.map((w: Record<string, unknown>) => w.productId as string);
-        const products = await prisma.product.findMany({
-          where: { id: { in: productIds } },
-          select: { id: true, name: true, slug: true, imageUrl: true, price: true },
-        });
-        const productMap = new Map(products.map((p) => [p.id, p]));
-        wishlist = rawWishlist.map((w: Record<string, unknown>) => {
-          const product = productMap.get(w.productId as string);
-          return {
-            ...w,
-            product: product
-              ? { ...product, price: Number(product.price) }
-              : null,
-          };
-        });
-      }
-    } catch {
-      wishlist = [];
-    }
 
     return NextResponse.json({
       user,
@@ -225,9 +228,9 @@ export const GET = withAdminGuard(async (_request, { session, params }) => {
       orderStats,
       referredBy,
       referrals,
-      conversations,
+      conversations: conversationsResult,
       subscriptions,
-      reviews,
+      reviews: reviewsResult,
       wishlist,
     });
   } catch (error) {
@@ -241,13 +244,24 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
     const id = params!.id;
     const body = await request.json();
 
-    // Whitelist allowed fields
+    // Validate with Zod (strict schema rejects unknown fields)
+    const parsed = adminUpdateUserSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Validation error', details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
+
+    const data = parsed.data;
+
+    // Build allowed update data from validated fields
     const allowed: Record<string, unknown> = {};
-    if (body.role !== undefined) allowed.role = body.role;
-    if (body.name !== undefined) allowed.name = body.name;
-    if (body.phone !== undefined) allowed.phone = body.phone;
-    if (body.locale !== undefined) allowed.locale = body.locale;
-    if (body.loyaltyTier !== undefined) allowed.loyaltyTier = body.loyaltyTier;
+    if (data.role !== undefined) allowed.role = data.role;
+    if (data.name !== undefined) allowed.name = data.name;
+    if (data.phone !== undefined) allowed.phone = data.phone;
+    if (data.locale !== undefined) allowed.locale = data.locale;
+    if (data.loyaltyTier !== undefined) allowed.loyaltyTier = data.loyaltyTier;
 
     if (Object.keys(allowed).length === 0) {
       return NextResponse.json({ error: 'Aucun champ à mettre à jour' }, { status: 400 });
@@ -257,6 +271,22 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
       where: { id },
       data: allowed,
     });
+
+    // Audit log for user update (fire-and-forget)
+    prisma.auditLog.create({
+      data: {
+        id: `audit_update_user_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 8)}`,
+        userId: session.user.id,
+        action: 'ADMIN_UPDATE_USER',
+        entityType: 'User',
+        entityId: id,
+        details: JSON.stringify({
+          updatedFields: Object.keys(allowed),
+          changes: allowed,
+        }),
+        ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || null,
+      },
+    }).catch(console.error);
 
     return NextResponse.json({ user: updated });
   } catch (error) {

@@ -7,6 +7,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { auth } from '@/lib/auth-config';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 
 export async function POST(request: NextRequest) {
@@ -25,7 +26,11 @@ export async function POST(request: NextRequest) {
       return res;
     }
 
-    const { code, subtotal } = await request.json();
+    const { code, subtotal, cartItems } = await request.json() as {
+      code: string;
+      subtotal: number;
+      cartItems?: Array<{ productId: string; quantity: number }>;
+    };
 
     if (!code) {
       return NextResponse.json(
@@ -69,6 +74,88 @@ export async function POST(request: NextRequest) {
         valid: false,
         error: 'Ce code promo a atteint sa limite d\'utilisation',
       });
+    }
+
+    // PAY-013: Vérifier la limite d'utilisation par utilisateur
+    if (promoCode.usageLimitPerUser) {
+      const session = await auth();
+      if (session?.user?.id) {
+        const userUsageCount = await prisma.order.count({
+          where: { userId: session.user.id, promoCode: upperCode, status: { not: 'CANCELLED' } },
+        });
+        if (userUsageCount >= promoCode.usageLimitPerUser) {
+          return NextResponse.json({
+            valid: false,
+            error: 'Vous avez atteint la limite d\'utilisation pour ce code',
+          }, { status: 400 });
+        }
+      }
+    }
+
+    // E-04: Vérifier firstOrderOnly - le code est réservé aux premières commandes
+    if (promoCode.firstOrderOnly) {
+      const session = await auth();
+      if (!session?.user?.id) {
+        return NextResponse.json({
+          valid: false,
+          error: 'Vous devez être connecté pour utiliser ce code promo',
+        });
+      }
+      const previousPaidOrders = await prisma.order.count({
+        where: { userId: session.user.id, paymentStatus: 'PAID' },
+      });
+      if (previousPaidOrders > 0) {
+        return NextResponse.json({
+          valid: false,
+          error: 'Ce code promo est réservé aux premières commandes',
+        });
+      }
+    }
+
+    // E-04: Vérifier productIds - le code ne s'applique qu'à certains produits
+    if (promoCode.productIds) {
+      if (!cartItems || cartItems.length === 0) {
+        // TODO: If cart items are not provided in the validate request,
+        // we skip this check here. The create-checkout route performs a
+        // server-side re-validation with the actual cart, so this is safe.
+      } else {
+        const allowedProductIds: string[] = JSON.parse(promoCode.productIds);
+        const cartProductIds = cartItems.map((item) => item.productId);
+        const hasMatchingProduct = cartProductIds.some((pid) =>
+          allowedProductIds.includes(pid)
+        );
+        if (!hasMatchingProduct) {
+          return NextResponse.json({
+            valid: false,
+            error: 'Ce code promo ne s\'applique pas aux produits de votre panier',
+          });
+        }
+      }
+    }
+
+    // E-04: Vérifier categoryIds - le code ne s'applique qu'à certaines catégories
+    if (promoCode.categoryIds) {
+      if (!cartItems || cartItems.length === 0) {
+        // TODO: Same as productIds - skip if cart items not provided;
+        // create-checkout will enforce this server-side.
+      } else {
+        const allowedCategoryIds: string[] = JSON.parse(promoCode.categoryIds);
+        const cartProductIds = cartItems.map((item) => item.productId);
+        const products = await prisma.product.findMany({
+          where: { id: { in: cartProductIds } },
+          select: { id: true, categoryId: true },
+        });
+        const cartCategoryIds = products.map((p) => p.categoryId);
+        const hasMatchingCategory = cartCategoryIds.some((cid) =>
+          allowedCategoryIds.includes(cid)
+        );
+        if (!hasMatchingCategory) {
+          return NextResponse.json({
+            valid: false,
+            error: 'Ce code promo ne s\'applique pas aux catégories de votre panier',
+          });
+        }
+      }
     }
 
     // Vérifier le montant minimum

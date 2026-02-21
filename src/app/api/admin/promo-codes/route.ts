@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { createPromoCodeSchema } from '@/lib/validations/promo-code';
 
 // GET /api/admin/promo-codes - List all promo codes with usage counts
 export const GET = withAdminGuard(async (request, { session }) => {
@@ -77,6 +78,15 @@ export const GET = withAdminGuard(async (request, { session }) => {
 export const POST = withAdminGuard(async (request, { session }) => {
   try {
     const body = await request.json();
+
+    // Validate with Zod
+    const parsed = createPromoCodeSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Validation error', details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
     const {
       code,
       description,
@@ -91,39 +101,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       firstOrderOnly,
       productIds,
       categoryIds,
-    } = body;
-
-    // Validate required fields
-    if (!code || !type || value === undefined || value === null) {
-      return NextResponse.json(
-        { error: 'code, type, and value are required' },
-        { status: 400 }
-      );
-    }
-
-    // Validate type
-    if (!['PERCENTAGE', 'FIXED_AMOUNT'].includes(type)) {
-      return NextResponse.json(
-        { error: 'type must be PERCENTAGE or FIXED_AMOUNT' },
-        { status: 400 }
-      );
-    }
-
-    // Validate value
-    if (typeof value !== 'number' || value <= 0) {
-      return NextResponse.json(
-        { error: 'value must be a positive number' },
-        { status: 400 }
-      );
-    }
-
-    // For percentage, cap at 100
-    if (type === 'PERCENTAGE' && value > 100) {
-      return NextResponse.json(
-        { error: 'Percentage value cannot exceed 100' },
-        { status: 400 }
-      );
-    }
+    } = parsed.data;
 
     // Check for duplicate code
     const existing = await prisma.promoCode.findUnique({

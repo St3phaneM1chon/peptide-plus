@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
  * Description complète, modules, avis, CTA achat
  */
 
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -14,6 +15,21 @@ import { getApiTranslator } from '@/i18n/server';
 
 interface CoursePageProps {
   params: Promise<{ slug: string }>;
+}
+
+export async function generateMetadata({ params }: CoursePageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const product = await prisma.product.findUnique({
+    where: { slug, isActive: true },
+    select: { name: true, shortDescription: true },
+  });
+
+  return {
+    title: product?.name ?? 'Course',
+    description: product?.shortDescription
+      ? String(product.shortDescription).slice(0, 160)
+      : 'Browse course details, modules, and reviews on BioCycle Peptides.',
+  };
 }
 
 async function getProduct(slug: string) {
@@ -171,6 +187,7 @@ export default async function CoursePage({ params }: CoursePageProps) {
                   src={product.imageUrl}
                   alt={product.name}
                   fill
+                  sizes="(max-width: 768px) 100vw, 300px"
                   className="object-cover"
                 />
               ) : (

@@ -391,7 +391,7 @@ export default function QuickEntryPage() {
   if (loading) return (
     <div aria-live="polite" aria-busy="true" className="p-8 space-y-4 animate-pulse">
       <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-1/3"></div>
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[1,2,3,4].map(i => <div key={i} className="h-24 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>)}
       </div>
       <div className="h-64 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
@@ -573,7 +573,7 @@ export default function QuickEntryPage() {
               {/* Preview */}
               <div>
                 <h3 className="text-sm font-medium text-slate-700 mb-2">{t('admin.quickEntry.entryPreview')}</h3>
-                <div className="bg-slate-50 rounded-lg overflow-hidden border border-slate-200">
+                <div className="bg-slate-50 rounded-lg overflow-hidden overflow-x-auto border border-slate-200">
                   <table className="w-full text-sm">
                     <thead className="bg-slate-100">
                       <tr>

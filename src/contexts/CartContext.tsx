@@ -35,38 +35,72 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 const CART_STORAGE_KEY = 'biocycle-cart';
+const CART_TTL_MS = 86400000; // 24 hours in milliseconds
+
+interface StoredCart {
+  items: CartItem[];
+  updatedAt: number;
+}
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
-  // Load cart from localStorage
+  // Load cart from localStorage with TTL check
   useEffect(() => {
     const stored = localStorage.getItem(CART_STORAGE_KEY);
     if (stored) {
       try {
-        setItems(JSON.parse(stored));
+        const parsed = JSON.parse(stored);
+
+        // Handle legacy format (plain array without timestamp)
+        if (Array.isArray(parsed)) {
+          // Migrate legacy cart: treat as fresh
+          setItems(parsed);
+        } else {
+          const { items: storedItems, updatedAt } = parsed as StoredCart;
+          const age = Date.now() - updatedAt;
+
+          if (age > CART_TTL_MS) {
+            // Cart expired - clear it and notify user
+            localStorage.removeItem(CART_STORAGE_KEY);
+            toast.info('Your cart has expired after 24 hours of inactivity. Prices may have changed.');
+          } else if (Array.isArray(storedItems)) {
+            setItems(storedItems);
+          }
+        }
       } catch {
         console.error('Failed to parse cart from localStorage');
+        localStorage.removeItem(CART_STORAGE_KEY);
       }
     }
     setIsLoaded(true);
   }, []);
 
-  // Save cart to localStorage
+  // Save cart to localStorage with timestamp
   useEffect(() => {
     if (isLoaded) {
-      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+      const storedCart: StoredCart = {
+        items,
+        updatedAt: Date.now(),
+      };
+      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(storedCart));
     }
   }, [items, isLoaded]);
 
-  // Cross-tab sync
+  // Cross-tab sync (handles new { items, updatedAt } format)
   useEffect(() => {
     const handleStorage = (e: StorageEvent) => {
       if (e.key === CART_STORAGE_KEY && e.newValue) {
         try {
-          setItems(JSON.parse(e.newValue));
+          const parsed = JSON.parse(e.newValue);
+          if (Array.isArray(parsed)) {
+            // Legacy format
+            setItems(parsed);
+          } else if (parsed && Array.isArray(parsed.items)) {
+            setItems(parsed.items);
+          }
         } catch {
           // ignore
         }

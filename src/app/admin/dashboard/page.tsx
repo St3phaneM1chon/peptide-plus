@@ -22,7 +22,7 @@ async function getAdminData() {
   const [
     totalOrders,
     pendingOrders,
-    monthlyOrders,
+    monthlyRevenueAgg,
     totalClients,
     totalCustomers,
     totalProducts,
@@ -38,13 +38,14 @@ async function getAdminData() {
       where: { status: { in: ['PENDING', 'CONFIRMED', 'PROCESSING'] } },
     }),
 
-    // Monthly orders with revenue
-    prisma.order.findMany({
+    // F1.6+F1.12: Monthly revenue via aggregate (excludes cancelled orders)
+    prisma.order.aggregate({
       where: {
         createdAt: { gte: startOfMonth },
         paymentStatus: 'PAID',
+        status: { notIn: ['CANCELLED', 'REFUNDED'] },
       },
-      select: { total: true },
+      _sum: { total: true },
     }),
 
     // Total companies (clients B2B)
@@ -56,35 +57,47 @@ async function getAdminData() {
     // Active products
     prisma.product.count({ where: { isActive: true } }),
 
-    // Low stock formats (stock below threshold)
-    prisma.productFormat.count({
-      where: {
-        trackInventory: true,
-        isActive: true,
-        stockQuantity: { lte: 10 },
-      },
-    }),
+    // F1.7: Low stock using per-format threshold via raw SQL
+    prisma.$queryRaw<[{ count: bigint }]>`
+      SELECT COUNT(*)::bigint as count FROM "ProductFormat"
+      WHERE "trackInventory" = true
+        AND "isActive" = true
+        AND "stockQuantity" <= "lowStockThreshold"
+    `.then(rows => Number(rows[0]?.count ?? 0)),
 
-    // Recent orders (last 10)
+    // F1.13: Recent orders with item count only (not full items)
     prisma.order.findMany({
       take: 10,
       orderBy: { createdAt: 'desc' },
-      include: { items: true },
+      select: {
+        id: true,
+        orderNumber: true,
+        status: true,
+        paymentStatus: true,
+        total: true,
+        createdAt: true,
+        shippingName: true,
+        _count: { select: { items: true } },
+      },
     }),
 
-    // Recent users
+    // Recent users (only needed fields)
     prisma.user.findMany({
       take: 10,
       orderBy: { createdAt: 'desc' },
       where: { role: { in: ['CUSTOMER', 'CLIENT'] } },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        image: true,
+        createdAt: true,
+      },
     }),
   ]);
 
-  // Calculate monthly revenue from Decimal values
-  const monthlyRevenue = monthlyOrders.reduce(
-    (sum, o) => sum + Number(o.total),
-    0
-  );
+  const monthlyRevenue = Number(monthlyRevenueAgg._sum.total ?? 0);
 
   return {
     stats: {
@@ -116,7 +129,15 @@ export default async function AdminDashboard() {
     redirect('/dashboard');
   }
 
-  const { stats, recentOrders, recentUsers } = await getAdminData();
+  let stats, recentOrders, recentUsers;
+  try {
+    ({ stats, recentOrders, recentUsers } = await getAdminData());
+  } catch (error) {
+    console.error('Dashboard data fetch failed:', error);
+    stats = { totalOrders: 0, pendingOrders: 0, monthlyRevenue: 0, totalClients: 0, totalCustomers: 0, totalProducts: 0, lowStockFormats: 0 };
+    recentOrders = [];
+    recentUsers = [];
+  }
 
   return (
     <DashboardClient

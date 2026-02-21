@@ -1,75 +1,66 @@
 export const dynamic = 'force-dynamic';
+
 /**
- * API - Admin Product Questions Management
- * GET: List all questions with user and product info
+ * Admin Questions API
+ * GET - List all product questions with user/product info
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { withAdminGuard } from '@/lib/admin-api-guard';
+import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 
-export const GET = withAdminGuard(async (request: NextRequest, { session }) => {
+// GET /api/admin/questions - List all questions
+export const GET = withAdminGuard(async (request) => {
   try {
     const { searchParams } = new URL(request.url);
-    const answered = searchParams.get('answered'); // 'true' or 'false'
-    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
-    const limit = Math.min(parseInt(searchParams.get('limit') || '20', 10), 100);
-    const skip = (page - 1) * limit;
+    const status = searchParams.get('status'); // 'answered' | 'unanswered'
+    const search = searchParams.get('search');
 
+    // Build where clause
     const where: Record<string, unknown> = {};
-    if (answered === 'true') {
+
+    if (status === 'answered') {
       where.answer = { not: null };
-    } else if (answered === 'false') {
+    } else if (status === 'unanswered') {
       where.answer = null;
     }
 
-    const [dbQuestions, total] = await Promise.all([
-      prisma.productQuestion.findMany({
-        where,
-        include: {
-          user: {
-            select: { id: true, name: true, email: true },
-          },
-          product: {
-            select: { id: true, name: true },
-          },
-        },
-        orderBy: { createdAt: 'desc' },
-        skip,
-        take: limit,
-      }),
-      prisma.productQuestion.count({ where }),
-    ]);
+    if (search) {
+      where.OR = [
+        { question: { contains: search, mode: 'insensitive' } },
+        { product: { name: { contains: search, mode: 'insensitive' } } },
+      ];
+    }
 
-    // Map DB model to frontend Question interface
-    const questions = dbQuestions.map((q) => ({
+    const rawQuestions = await prisma.productQuestion.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        user: { select: { id: true, name: true, email: true } },
+        product: { select: { id: true, name: true } },
+      },
+    });
+
+    const questions = rawQuestions.map((q) => ({
       id: q.id,
-      productId: q.product.id,
+      productId: q.productId,
       productName: q.product.name,
-      userId: q.user.id,
-      userName: q.user.name || q.user.email,
-      userEmail: q.user.email,
+      userId: q.userId,
+      userName: q.user?.name || 'Unknown',
+      userEmail: q.user?.email || '',
       question: q.question,
       answer: q.answer,
       answeredBy: q.answeredBy,
-      answeredAt: q.updatedAt.toISOString(),
+      answeredAt: q.updatedAt && q.answer ? q.updatedAt.toISOString() : null,
       isPublic: q.isPublished,
       createdAt: q.createdAt.toISOString(),
     }));
 
-    return NextResponse.json({
-      questions,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit),
-      },
-    });
+    return NextResponse.json({ questions });
   } catch (error) {
-    console.error('Error fetching questions:', error);
+    console.error('Admin questions GET error:', error);
     return NextResponse.json(
-      { error: 'Erreur lors de la récupération des questions' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

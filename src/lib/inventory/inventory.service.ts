@@ -110,12 +110,22 @@ export async function consumeReservation(
         data: { status: 'CONSUMED', orderId, consumedAt: new Date() },
       });
 
-      // Decrement stock
+      // Decrement stock (floor at 0 to prevent negative inventory)
       if (reservation.formatId) {
-        await tx.productFormat.update({
+        const currentFormat = await tx.productFormat.findUnique({
           where: { id: reservation.formatId },
-          data: { stockQuantity: { decrement: reservation.quantity } },
+          select: { stockQuantity: true },
         });
+        const safeDecrement = Math.min(reservation.quantity, currentFormat?.stockQuantity ?? 0);
+        if (safeDecrement > 0) {
+          await tx.productFormat.update({
+            where: { id: reservation.formatId },
+            data: { stockQuantity: { decrement: safeDecrement } },
+          });
+        }
+        if (safeDecrement < reservation.quantity) {
+          console.warn(`[consumeReservation] Stock floor hit for format ${reservation.formatId}: wanted to decrement ${reservation.quantity}, only decremented ${safeDecrement}`);
+        }
       }
 
       // Get current WAC for this product/format
@@ -234,10 +244,23 @@ export async function adjustStock(
           data: { stockQuantity: { increment: quantity } },
         });
       } else {
-        await tx.productFormat.update({
+        // Floor at 0 to prevent negative inventory
+        const currentFormat = await tx.productFormat.findUnique({
           where: { id: formatId },
-          data: { stockQuantity: { decrement: Math.abs(quantity) } },
+          select: { stockQuantity: true },
         });
+        const currentStock = currentFormat?.stockQuantity ?? 0;
+        const absQuantity = Math.abs(quantity);
+        const safeDecrement = Math.min(absQuantity, currentStock);
+        if (safeDecrement > 0) {
+          await tx.productFormat.update({
+            where: { id: formatId },
+            data: { stockQuantity: { decrement: safeDecrement } },
+          });
+        }
+        if (safeDecrement < absQuantity) {
+          console.warn(`[adjustStock] Stock floor hit for format ${formatId}: wanted to decrement ${absQuantity}, only decremented ${safeDecrement}`);
+        }
       }
     }
 

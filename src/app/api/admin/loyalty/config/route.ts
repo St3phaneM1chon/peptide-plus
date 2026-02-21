@@ -191,7 +191,7 @@ export const PUT = withAdminGuard(async (request: NextRequest, { session }) => {
       // Non-critical: SiteSettings sync is optional
     }
 
-    return NextResponse.json({ config, success: true });
+    return NextResponse.json({ success: true, data: config });
   } catch (error) {
     console.error('Admin loyalty config PUT error:', error);
     return NextResponse.json(

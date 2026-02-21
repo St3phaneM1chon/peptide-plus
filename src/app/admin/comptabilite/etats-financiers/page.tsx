@@ -182,7 +182,7 @@ export default function EtatsFinanciersPage() {
   if (loading) return (
     <div aria-live="polite" aria-busy="true" className="p-8 space-y-4 animate-pulse">
       <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-1/3"></div>
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[1,2,3,4].map(i => <div key={i} className="h-24 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>)}
       </div>
       <div className="h-64 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
@@ -296,6 +296,7 @@ export default function EtatsFinanciersPage() {
               {t('admin.financialStatements.noEntriesForPeriod')}
             </div>
           ) : (
+            <div className="overflow-x-auto">
             <table className="w-full">
               <tbody>
                 {/* Revenus */}
@@ -389,6 +390,7 @@ export default function EtatsFinanciersPage() {
                 </tr>
               </tbody>
             </table>
+            </div>
           )}
         </SectionCard>
       )}
@@ -401,6 +403,7 @@ export default function EtatsFinanciersPage() {
             {totalAssets === 0 ? (
               <div className="text-center py-8 text-slate-500">{t('admin.financialStatements.noAssetsRecorded')}</div>
             ) : (
+              <div className="overflow-x-auto">
               <table className="w-full">
                 <tbody>
                   {Object.keys(balanceSheet.assets.current).length > 0 && (
@@ -436,6 +439,7 @@ export default function EtatsFinanciersPage() {
                   <tr className="bg-blue-100"><td className="px-4 py-3 font-bold text-blue-900">{t('admin.financialStatements.totalAssets')}</td><td className="px-4 py-3 text-end font-bold text-blue-700">{formatCurrency(totalAssets)}</td></tr>
                 </tbody>
               </table>
+              </div>
             )}
           </SectionCard>
 
@@ -444,6 +448,7 @@ export default function EtatsFinanciersPage() {
             {totalLiabilities === 0 && totalEquity === 0 ? (
               <div className="text-center py-8 text-slate-500">{t('admin.financialStatements.noLiabilitiesRecorded')}</div>
             ) : (
+              <div className="overflow-x-auto">
               <table className="w-full">
                 <tbody>
                   {Object.keys(balanceSheet.liabilities.current).length > 0 && (
@@ -475,6 +480,7 @@ export default function EtatsFinanciersPage() {
                   <tr className="bg-red-100"><td className="px-4 py-3 font-bold text-red-900">{t('admin.financialStatements.totalLiabilitiesEquity')}</td><td className="px-4 py-3 text-end font-bold text-red-700">{formatCurrency((totalLiabilities + totalEquity))}</td></tr>
                 </tbody>
               </table>
+              </div>
             )}
           </SectionCard>
         </div>
@@ -488,6 +494,7 @@ export default function EtatsFinanciersPage() {
           headerAction={<span className="text-sm text-slate-500">BioCycle Peptides Inc. - {periodLabel}</span>}
           noPadding
         >
+          <div className="overflow-x-auto">
           <table className="w-full">
             <tbody>
               <tr className="bg-slate-50"><td colSpan={2} className="px-4 py-3 font-bold text-slate-900">{t('admin.financialStatements.operatingActivities')}</td></tr>
@@ -543,6 +550,7 @@ export default function EtatsFinanciersPage() {
               </tr>
             </tbody>
           </table>
+          </div>
         </SectionCard>
       )}
     </div>

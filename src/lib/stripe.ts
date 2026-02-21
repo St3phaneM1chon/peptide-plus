@@ -6,6 +6,12 @@
 import Stripe from 'stripe';
 import { PaymentMethod } from '@/types';
 
+/**
+ * Centralized Stripe API version. Update here when upgrading the Stripe SDK
+ * and all modules will pick up the new version automatically.
+ */
+export const STRIPE_API_VERSION = '2023-10-16' as const;
+
 // Lazy-initialized Stripe client to avoid crashing during Next.js build/SSG
 // when STRIPE_SECRET_KEY is not available in the CI environment.
 let _stripe: Stripe | null = null;
@@ -16,7 +22,7 @@ function getStripe(): Stripe {
       throw new Error('STRIPE_SECRET_KEY is required');
     }
     _stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: '2023-10-16',
+      apiVersion: STRIPE_API_VERSION,
       typescript: true,
     });
   }

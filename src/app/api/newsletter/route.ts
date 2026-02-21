@@ -8,6 +8,14 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { z } from 'zod';
+
+// API-003: Zod schema for newsletter subscription
+const newsletterSubscribeSchema = z.object({
+  email: z.string().email('Email invalide').max(254).transform(v => v.toLowerCase().trim()),
+  source: z.string().max(50).default('footer'),
+  locale: z.string().max(10).default('fr'),
+}).strict();
 
 export async function POST(request: NextRequest) {
   try {
@@ -27,27 +35,19 @@ export async function POST(request: NextRequest) {
 
     const rawBody = await request.json();
 
-    // BE-SEC-05: Validate and enforce length limits
-    const email = typeof rawBody.email === 'string' ? rawBody.email.trim().toLowerCase() : '';
-    const source = typeof rawBody.source === 'string' ? rawBody.source.slice(0, 50) : 'footer';
-    const locale = typeof rawBody.locale === 'string' ? rawBody.locale.slice(0, 10) : 'fr';
-    const birthDate = rawBody.birthDate;
-
-    if (!email || email.length > 254 || !email.includes('@')) {
+    // API-003: Validate input with Zod schema
+    const validation = newsletterSubscribeSchema.safeParse(rawBody);
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'Email invalide' },
+        { error: validation.error.errors[0].message },
         { status: 400 }
       );
     }
 
-    // Parse and validate birthDate if provided
-    let parsedBirthDate: Date | undefined;
-    if (birthDate) {
-      parsedBirthDate = new Date(birthDate);
-      if (isNaN(parsedBirthDate.getTime())) {
-        parsedBirthDate = undefined;
-      }
-    }
+    // RGPD Art. 5(1)(c) - Data minimization: birthDate is NOT collected here.
+    // Birthday offers are only available for authenticated users who provide
+    // their birthDate voluntarily in their account profile settings.
+    const { email, source, locale } = validation.data;
 
     // Vérifier si l'email existe déjà
     const existing = await prisma.newsletterSubscriber.findUnique({
@@ -55,13 +55,6 @@ export async function POST(request: NextRequest) {
     }).catch(() => null);
 
     if (existing) {
-      // Update birthDate if not already set
-      if (parsedBirthDate && !existing.birthDate) {
-        await prisma.newsletterSubscriber.update({
-          where: { id: existing.id },
-          data: { birthDate: parsedBirthDate },
-        }).catch(() => {});
-      }
       return NextResponse.json({
         success: true,
         message: 'Vous êtes déjà inscrit à notre newsletter !',
@@ -69,14 +62,13 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Créer l'inscription
+    // Créer l'inscription (no birthDate - data minimization principle)
     await prisma.newsletterSubscriber.create({
       data: {
         email: email.toLowerCase(),
         subscribedAt: new Date(),
         source: source || 'footer',
         locale: locale || 'fr',
-        ...(parsedBirthDate && { birthDate: parsedBirthDate }),
       },
     });
 
@@ -92,7 +84,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: 'Merci ! Vous êtes maintenant inscrit à notre newsletter.',
-    });
+    }, { status: 201 });
 
   } catch (error) {
     console.error('Newsletter subscription error:', error);

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import DOMPurify from 'isomorphic-dompurify';
 import { useI18n } from '@/i18n/client';
 import { sectionThemes } from '@/lib/admin/section-themes';
+import { toast } from 'sonner';
 
 interface SearchResult {
   id: string;
@@ -100,6 +101,7 @@ export default function SearchPage() {
       setResults(data.results || data.data || []);
     } catch (err) {
       console.error('Error searching:', err);
+      toast.error(t('common.errorOccurred'));
       setSearchError(t('admin.search.searchError'));
       setResults([]);
     } finally {
@@ -177,8 +179,9 @@ export default function SearchPage() {
             <span className="absolute start-4 top-1/2 -translate-y-1/2 text-xl">🔍</span>
             
             {loading && (
-              <div className="absolute end-4 top-1/2 -translate-y-1/2">
+              <div className="absolute end-4 top-1/2 -translate-y-1/2" role="status" aria-label="Loading">
                 <div className="animate-spin h-5 w-5 border-2 border-sky-500 border-t-transparent rounded-full"></div>
+                <span className="sr-only">Loading...</span>
               </div>
             )}
           </div>

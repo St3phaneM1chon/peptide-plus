@@ -17,6 +17,7 @@ import { createAccountingEntriesForOrder, createRefundAccountingEntries } from '
 import { consumeReservation } from '@/lib/inventory';
 import { getPayPalAccessToken, PAYPAL_API_URL } from '@/lib/paypal';
 import { sanitizeWebhookPayload } from '@/lib/sanitize';
+import { clawbackAmbassadorCommission } from '@/lib/ambassador-commission';
 
 /**
  * Verify PayPal webhook signature
@@ -352,6 +353,29 @@ async function handleCaptureRefunded(event: any, webhookRecordId: string) {
     } catch (invError) {
       logger.error('Failed to restore stock', { orderId: order.id, error: invError instanceof Error ? invError.message : String(invError) });
     }
+  }
+
+  // Clawback ambassador commission on refund (P2 #28 fix)
+  try {
+    const result = await clawbackAmbassadorCommission(
+      order.id,
+      refundAmount,
+      orderTotal,
+      isFullRefund
+    );
+    if (result.clawbackAmount && result.clawbackAmount > 0) {
+      logger.info('Ambassador commission clawback on PayPal refund', {
+        orderId: order.id,
+        orderNumber: order.orderNumber,
+        clawbackAmount: result.clawbackAmount,
+        wasPaidOut: result.wasPaidOut,
+      });
+    }
+  } catch (commError) {
+    logger.error('Failed to clawback ambassador commission', {
+      orderId: order.id,
+      error: commError instanceof Error ? commError.message : String(commError),
+    });
   }
 }
 

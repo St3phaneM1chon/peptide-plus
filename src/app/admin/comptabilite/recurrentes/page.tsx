@@ -29,7 +29,6 @@ export default function RecurringEntriesPage() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [showPreview, setShowPreview] = useState<RecurringEntry | null>(null);
-  const [, setEditingEntry] = useState<RecurringEntry | null>(null);
   const [processing, setProcessing] = useState(false);
 
   const frequencyLabels: Record<string, string> = {
@@ -189,7 +188,7 @@ export default function RecurringEntriesPage() {
     return (
       <div aria-live="polite" aria-busy="true" className="p-8 space-y-4 animate-pulse">
         <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-1/3"></div>
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[1,2,3,4].map(i => <div key={i} className="h-24 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>)}
         </div>
         <div className="h-64 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
@@ -250,6 +249,7 @@ export default function RecurringEntriesPage() {
 
       {/* List */}
       <SectionCard theme={theme} noPadding>
+        <div className="overflow-x-auto">
         <table className="w-full">
           <thead className="bg-slate-50">
             <tr>
@@ -316,7 +316,6 @@ export default function RecurringEntriesPage() {
                       &#128065;
                     </button>
                     <button
-                      onClick={() => setEditingEntry(entry)}
                       className="p-1.5 hover:bg-slate-100 rounded text-slate-400 hover:text-slate-700"
                       title={t('admin.recurringEntries.edit')}
                       aria-label={t('admin.recurringEntries.edit')}
@@ -351,6 +350,7 @@ export default function RecurringEntriesPage() {
             ))}
           </tbody>
         </table>
+        </div>
       </SectionCard>
 
       {/* Create Modal */}
@@ -411,7 +411,7 @@ export default function RecurringEntriesPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.recurringEntries.frequency')}</label>
                   <select

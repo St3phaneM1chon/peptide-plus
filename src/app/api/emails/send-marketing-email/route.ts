@@ -15,6 +15,7 @@ import {
   abandonedCartEmail,
   backInStockEmail,
   pointsExpiringEmail,
+  generateUnsubscribeUrl,
 } from '@/lib/email';
 
 type MarketingEmailType = 'birthday' | 'welcome' | 'abandoned-cart' | 'back-in-stock' | 'points-expiring';
@@ -61,7 +62,10 @@ export async function POST(request: NextRequest) {
     }
 
     let emailContent: { subject: string; html: string };
-    
+
+    // Generate unsubscribe URL (CAN-SPAM / RGPD / LCAP compliance)
+    const unsubscribeUrl = await generateUnsubscribeUrl(user.email, 'marketing', user.id).catch(() => undefined);
+
     switch (emailType) {
       case 'birthday': {
         // Générer un code promo pour l'anniversaire
@@ -78,6 +82,7 @@ export async function POST(request: NextRequest) {
           bonusPoints: 200, // 200 points bonus
           expiresAt,
           locale: (user.locale as 'fr' | 'en') || 'fr',
+          unsubscribeUrl,
         });
 
         // Ajouter les points bonus au compte
@@ -120,6 +125,7 @@ export async function POST(request: NextRequest) {
           welcomePoints: 500,
           referralCode,
           locale: (user.locale as 'fr' | 'en') || 'fr',
+          unsubscribeUrl,
         });
         break;
       }
@@ -136,6 +142,7 @@ export async function POST(request: NextRequest) {
           discountCode: 'COMEBACK10',
           discountValue: 10,
           locale: (user.locale as 'fr' | 'en') || 'fr',
+          unsubscribeUrl,
         });
         break;
       }
@@ -153,6 +160,7 @@ export async function POST(request: NextRequest) {
           productUrl,
           productImageUrl: data?.productImageUrl as string,
           locale: (user.locale as 'fr' | 'en') || 'fr',
+          unsubscribeUrl,
         });
         break;
       }
@@ -170,6 +178,7 @@ export async function POST(request: NextRequest) {
           currentPoints: user.loyaltyPoints,
           expiryDate,
           locale: (user.locale as 'fr' | 'en') || 'fr',
+          unsubscribeUrl,
         });
         break;
       }
@@ -184,6 +193,7 @@ export async function POST(request: NextRequest) {
       subject: emailContent.subject,
       html: emailContent.html,
       tags: ['marketing', emailType],
+      unsubscribeUrl,
     });
 
     if (!result.success) {
@@ -191,7 +201,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to send email' }, { status: 500 });
     }
 
-    console.log(`📧 Marketing email sent: ${emailType} to ${user.email}`);
+    console.log(`Marketing email sent: ${emailType} to ${user.email}`);
 
     return NextResponse.json({
       success: true,

@@ -13,7 +13,7 @@ import {
   ArrowRight,
   Loader2,
 } from 'lucide-react';
-import { PageHeader, StatusBadge, Button, SectionCard, type Column, DataTable } from '@/components/admin';
+import { PageHeader, StatusBadge, Button, SectionCard, type Column, DataTable, type BadgeVariant } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
 import { sectionThemes } from '@/lib/admin/section-themes';
 import { toast } from 'sonner';
@@ -51,7 +51,6 @@ interface TaxSummary {
   netTvh: number;
 }
 
-type BadgeVariant = 'neutral' | 'info' | 'warning' | 'success';
 
 export default function RapportsComptablesPage() {
   const { t, formatCurrency, formatDate } = useI18n();
@@ -154,7 +153,7 @@ export default function RapportsComptablesPage() {
   if (loading) return (
     <div aria-live="polite" aria-busy="true" className="p-8 space-y-4 animate-pulse">
       <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-1/3"></div>
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[1,2,3,4].map(i => <div key={i} className="h-24 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>)}
       </div>
       <div className="h-64 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
@@ -304,7 +303,7 @@ export default function RapportsComptablesPage() {
       {/* Management Reports Grid */}
       <div>
         <h2 className="text-lg font-semibold text-slate-900 mb-4">{t('admin.reports.managementReports')}</h2>
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {managementReports.map((report) => {
             const Icon = report.icon;
             // Map management report type to API report type
@@ -352,7 +351,7 @@ export default function RapportsComptablesPage() {
 
       {/* Annual Reports */}
       <SectionCard title={t('admin.reports.annualReports')} theme={theme}>
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
             <p className="text-sm text-blue-600">{t('admin.reports.federalDeclaration')}</p>
             <p className="font-bold text-blue-900 mt-1">{parseInt(selectedYear) - 1}</p>
@@ -388,7 +387,7 @@ export default function RapportsComptablesPage() {
       {/* Quick Stats */}
       <div className="bg-gradient-to-r from-emerald-600 to-emerald-700 rounded-xl p-6 text-white">
         <h3 className="font-semibold text-emerald-100 mb-4">{t('admin.reports.fiscalSummary', { year: selectedYear })}</h3>
-        <div className="grid grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <div>
             <p className="text-emerald-200 text-sm">{t('admin.reports.tpsCollected')}</p>
             <p className="text-2xl font-bold">{formatCurrency(totalTpsCollected)}</p>

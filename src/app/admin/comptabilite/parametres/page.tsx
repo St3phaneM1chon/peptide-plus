@@ -219,7 +219,7 @@ export default function ParametresComptablesPage() {
   if (loading) return (
     <div aria-live="polite" aria-busy="true" className="p-8 space-y-4 animate-pulse">
       <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-1/3"></div>
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[1,2,3,4].map(i => <div key={i} className="h-24 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>)}
       </div>
       <div className="h-64 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
@@ -389,6 +389,7 @@ export default function ParametresComptablesPage() {
           </SectionCard>
 
           <SectionCard title={t('admin.accountingSettings.taxRates')} theme={theme} noPadding>
+            <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-slate-50">
                 <tr>
@@ -413,6 +414,7 @@ export default function ParametresComptablesPage() {
                 <tr><td className="px-4 py-3">{t('admin.accounting.tax.pst')}</td><td className="px-4 py-3 text-slate-600">{t('admin.accountingSettings.britishColumbia')}</td><td className="px-4 py-3 text-end">7%</td><td className="px-4 py-3 text-center text-green-600">&#10003;</td></tr>
               </tbody>
             </table>
+            </div>
           </SectionCard>
 
           <SectionCard title={t('admin.accountingSettings.filingFrequency')} theme={theme}>
@@ -465,12 +467,12 @@ export default function ParametresComptablesPage() {
                       <option value="BC">{t('admin.accountingSettings.britishColumbia')} (BC)</option>
                       <option value="SK">Saskatchewan (SK)</option>
                       <option value="MB">Manitoba (MB)</option>
-                      <option value="NB">New Brunswick (NB)</option>
-                      <option value="NL">Newfoundland (NL)</option>
+                      <option value="NB">{t('admin.accounting.provinces.newBrunswick')} (NB)</option>
+                      <option value="NL">{t('admin.accounting.provinces.newfoundland')} (NL)</option>
                       <option value="NS">{t('admin.accountingSettings.novaScotia')} (NS)</option>
-                      <option value="PE">Prince Edward Island (PE)</option>
+                      <option value="PE">{t('admin.accounting.provinces.princeEdwardIsland')} (PE)</option>
                       <option value="YT">Yukon (YT)</option>
-                      <option value="NT">Northwest Territories (NT)</option>
+                      <option value="NT">{t('admin.accounting.provinces.northwestTerritories')} (NT)</option>
                       <option value="NU">Nunavut (NU)</option>
                     </select>
                   </FormField>
@@ -494,7 +496,7 @@ export default function ParametresComptablesPage() {
             <div className="space-y-4">
               {/* Read-only retention rules table */}
               <p className="text-sm text-slate-600">{t('admin.accountingSettings.retentionDescription')}</p>
-              <div className="overflow-hidden rounded-lg border border-slate-200">
+              <div className="overflow-hidden overflow-x-auto rounded-lg border border-slate-200">
                 <table className="w-full">
                   <thead className="bg-slate-50">
                     <tr>
@@ -505,15 +507,15 @@ export default function ParametresComptablesPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200">
-                    <tr><td className="px-4 py-2 text-sm">{locale === 'fr' ? 'Registres comptables generaux' : 'General accounting records'}</td><td className="px-4 py-2 text-center text-sm font-mono">6</td><td className="px-4 py-2 text-sm text-slate-600">CRA</td><td className="px-4 py-2 text-sm text-slate-500">s.230(4) ITA</td></tr>
-                    <tr><td className="px-4 py-2 text-sm">{locale === 'fr' ? 'Declarations T2' : 'T2 corporate returns'}</td><td className="px-4 py-2 text-center text-sm font-mono">6</td><td className="px-4 py-2 text-sm text-slate-600">CRA</td><td className="px-4 py-2 text-sm text-slate-500">IT-Folio S4-F14-C1</td></tr>
-                    <tr><td className="px-4 py-2 text-sm">{locale === 'fr' ? 'Registres TPS/TVQ' : 'GST/QST records'}</td><td className="px-4 py-2 text-center text-sm font-mono">6</td><td className="px-4 py-2 text-sm text-slate-600">CRA/RQ</td><td className="px-4 py-2 text-sm text-slate-500">s.286 ETA</td></tr>
-                    <tr><td className="px-4 py-2 text-sm">{locale === 'fr' ? 'Registres de paie' : 'Payroll records'}</td><td className="px-4 py-2 text-center text-sm font-mono">6</td><td className="px-4 py-2 text-sm text-slate-600">CRA/RQ</td><td className="px-4 py-2 text-sm text-slate-500">s.230(4) ITA</td></tr>
-                    <tr><td className="px-4 py-2 text-sm">{locale === 'fr' ? 'Copies T4/RL-1' : 'T4/RL-1 copies'}</td><td className="px-4 py-2 text-center text-sm font-mono">6</td><td className="px-4 py-2 text-sm text-slate-600">CRA/RQ</td><td className="px-4 py-2 text-sm text-slate-500">s.230(4) ITA</td></tr>
-                    <tr><td className="px-4 py-2 text-sm">{locale === 'fr' ? 'RE' : 'ROE'}</td><td className="px-4 py-2 text-center text-sm font-mono">6</td><td className="px-4 py-2 text-sm text-slate-600">Service Canada</td><td className="px-4 py-2 text-sm text-slate-500">EI Act s.87</td></tr>
-                    <tr><td className="px-4 py-2 text-sm">{locale === 'fr' ? 'Acte constitutif' : 'Articles of incorporation'}</td><td className="px-4 py-2 text-center text-sm font-mono">{t('admin.accountingSettings.retentionPermanent')}</td><td className="px-4 py-2 text-sm text-slate-600">{locale === 'fr' ? 'Droit corporatif' : 'Corporate law'}</td><td className="px-4 py-2 text-sm text-slate-500">CBCA/QBCA</td></tr>
-                    <tr><td className="px-4 py-2 text-sm">{locale === 'fr' ? 'PV assemblees' : 'Board minutes'}</td><td className="px-4 py-2 text-center text-sm font-mono">{t('admin.accountingSettings.retentionPermanent')}</td><td className="px-4 py-2 text-sm text-slate-600">{locale === 'fr' ? 'Droit corporatif' : 'Corporate law'}</td><td className="px-4 py-2 text-sm text-slate-500">CBCA s.20</td></tr>
-                    <tr><td className="px-4 py-2 text-sm">{locale === 'fr' ? 'Registre actions' : 'Share register'}</td><td className="px-4 py-2 text-center text-sm font-mono">{t('admin.accountingSettings.retentionPermanent')}</td><td className="px-4 py-2 text-sm text-slate-600">{locale === 'fr' ? 'Droit corporatif' : 'Corporate law'}</td><td className="px-4 py-2 text-sm text-slate-500">CBCA s.50</td></tr>
+                    <tr><td className="px-4 py-2 text-sm">{t('admin.accountingSettings.retGeneralRecords')}</td><td className="px-4 py-2 text-center text-sm font-mono">6</td><td className="px-4 py-2 text-sm text-slate-600">CRA</td><td className="px-4 py-2 text-sm text-slate-500">s.230(4) ITA</td></tr>
+                    <tr><td className="px-4 py-2 text-sm">{t('admin.accountingSettings.retT2Returns')}</td><td className="px-4 py-2 text-center text-sm font-mono">6</td><td className="px-4 py-2 text-sm text-slate-600">CRA</td><td className="px-4 py-2 text-sm text-slate-500">IT-Folio S4-F14-C1</td></tr>
+                    <tr><td className="px-4 py-2 text-sm">{t('admin.accountingSettings.retGstQstRecords')}</td><td className="px-4 py-2 text-center text-sm font-mono">6</td><td className="px-4 py-2 text-sm text-slate-600">CRA/RQ</td><td className="px-4 py-2 text-sm text-slate-500">s.286 ETA</td></tr>
+                    <tr><td className="px-4 py-2 text-sm">{t('admin.accountingSettings.retPayrollRecords')}</td><td className="px-4 py-2 text-center text-sm font-mono">6</td><td className="px-4 py-2 text-sm text-slate-600">CRA/RQ</td><td className="px-4 py-2 text-sm text-slate-500">s.230(4) ITA</td></tr>
+                    <tr><td className="px-4 py-2 text-sm">{t('admin.accountingSettings.retT4Rl1')}</td><td className="px-4 py-2 text-center text-sm font-mono">6</td><td className="px-4 py-2 text-sm text-slate-600">CRA/RQ</td><td className="px-4 py-2 text-sm text-slate-500">s.230(4) ITA</td></tr>
+                    <tr><td className="px-4 py-2 text-sm">{t('admin.accountingSettings.retRoe')}</td><td className="px-4 py-2 text-center text-sm font-mono">6</td><td className="px-4 py-2 text-sm text-slate-600">Service Canada</td><td className="px-4 py-2 text-sm text-slate-500">EI Act s.87</td></tr>
+                    <tr><td className="px-4 py-2 text-sm">{t('admin.accountingSettings.retArticlesIncorp')}</td><td className="px-4 py-2 text-center text-sm font-mono">{t('admin.accountingSettings.retentionPermanent')}</td><td className="px-4 py-2 text-sm text-slate-600">{t('admin.accountingSettings.retCorporateLaw')}</td><td className="px-4 py-2 text-sm text-slate-500">CBCA/QBCA</td></tr>
+                    <tr><td className="px-4 py-2 text-sm">{t('admin.accountingSettings.retBoardMinutes')}</td><td className="px-4 py-2 text-center text-sm font-mono">{t('admin.accountingSettings.retentionPermanent')}</td><td className="px-4 py-2 text-sm text-slate-600">{t('admin.accountingSettings.retCorporateLaw')}</td><td className="px-4 py-2 text-sm text-slate-500">CBCA s.20</td></tr>
+                    <tr><td className="px-4 py-2 text-sm">{t('admin.accountingSettings.retShareRegister')}</td><td className="px-4 py-2 text-center text-sm font-mono">{t('admin.accountingSettings.retentionPermanent')}</td><td className="px-4 py-2 text-sm text-slate-600">{t('admin.accountingSettings.retCorporateLaw')}</td><td className="px-4 py-2 text-sm text-slate-500">CBCA s.50</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -556,6 +558,7 @@ export default function ParametresComptablesPage() {
             }
             noPadding
           >
+            <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-slate-50">
                 <tr>
@@ -587,6 +590,7 @@ export default function ParametresComptablesPage() {
                 ))}
               </tbody>
             </table>
+            </div>
           </SectionCard>
 
           <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">

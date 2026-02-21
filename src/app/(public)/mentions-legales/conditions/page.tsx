@@ -3,182 +3,145 @@
 /**
  * PAGE CONDITIONS D'UTILISATION - BioCycle Peptides
  * Spécifique à la vente de peptides de recherche
+ * i18n: All text from legal.terms namespace
  */
 
+import { useI18n } from '@/i18n/client';
+
 export default function TermsPage() {
-  const lastUpdated = '25 janvier 2026';
+  const { t } = useI18n();
+  const lastUpdated = '2026-01-25';
   const siteName = process.env.NEXT_PUBLIC_SITE_NAME || 'BioCycle Peptides';
 
   return (
     <div style={{ backgroundColor: 'white', minHeight: '100vh' }}>
       <div style={{ maxWidth: '800px', margin: '0 auto', padding: '64px 24px' }}>
         <h1 style={{ fontSize: '36px', fontWeight: 700, marginBottom: '16px', color: '#1f2937' }}>
-          Conditions d&apos;utilisation
+          {t('legal.terms.title')}
         </h1>
         <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '48px' }}>
-          Dernière mise à jour: {lastUpdated}
+          {t('legal.lastUpdated', { date: lastUpdated })}
         </p>
 
         <div style={{ fontSize: '15px', color: '#374151', lineHeight: 1.8 }}>
-          <Section title="1. Acceptation des conditions">
-            <p>
-              En accédant ou en utilisant le site web de {siteName} (« le Site »), vous acceptez d&apos;être 
-              lié par ces conditions d&apos;utilisation. Si vous n&apos;acceptez pas ces conditions, vous ne 
-              devez pas utiliser le Site ni acheter nos produits.
-            </p>
+          <Section title={t('legal.terms.s1Title')}>
+            <p>{t('legal.terms.s1Text', { siteName })}</p>
           </Section>
 
-          <Section title="2. Description des produits">
-            <p>
-              {siteName} est un fournisseur canadien de peptides et composés de recherche de haute pureté. 
-              Nos produits comprennent:
-            </p>
+          <Section title={t('legal.terms.s2Title')}>
+            <p>{t('legal.terms.s2Text', { siteName })}</p>
             <ul>
-              <li>Peptides synthétiques (vials, cartouches)</li>
-              <li>Suppléments de recherche (NAD+, créatine, etc.)</li>
-              <li>Accessoires de laboratoire (seringues, solvants, aiguilles)</li>
-              <li>Kits et protocoles de recherche</li>
+              <li>{t('legal.terms.s2List1')}</li>
+              <li>{t('legal.terms.s2List2')}</li>
+              <li>{t('legal.terms.s2List3')}</li>
+              <li>{t('legal.terms.s2List4')}</li>
             </ul>
             <div style={{ marginTop: '16px', padding: '16px', backgroundColor: '#fef3c7', borderRadius: '8px', border: '1px solid #f59e0b' }}>
               <p style={{ fontWeight: 600, color: '#92400e', marginBottom: '8px' }}>
-                ⚠️ AVERTISSEMENT IMPORTANT - USAGE RECHERCHE UNIQUEMENT
+                {t('legal.terms.s2WarningTitle')}
               </p>
               <p style={{ color: '#92400e', fontSize: '14px' }}>
-                Tous nos produits sont destinés EXCLUSIVEMENT à des fins de recherche scientifique et de 
-                laboratoire. Ils ne sont PAS destinés à la consommation humaine ou animale, au diagnostic, 
-                au traitement ou à la prévention de maladies.
+                {t('legal.terms.s2WarningText')}
               </p>
             </div>
           </Section>
 
-          <Section title="3. Conditions d'achat">
-            <p>
-              Pour acheter sur notre site, vous devez:
-            </p>
+          <Section title={t('legal.terms.s3Title')}>
+            <p>{t('legal.terms.s3Text')}</p>
             <ul>
-              <li>Être âgé de 18 ans ou plus</li>
-              <li>Fournir des informations exactes et complètes</li>
-              <li>Accepter que les produits sont uniquement destinés à la recherche</li>
-              <li>Ne pas revendre nos produits à des fins de consommation humaine</li>
-              <li>Respecter toutes les lois et réglementations applicables dans votre juridiction</li>
+              <li>{t('legal.terms.s3List1')}</li>
+              <li>{t('legal.terms.s3List2')}</li>
+              <li>{t('legal.terms.s3List3')}</li>
+              <li>{t('legal.terms.s3List4')}</li>
+              <li>{t('legal.terms.s3List5')}</li>
             </ul>
           </Section>
 
-          <Section title="4. Compte utilisateur">
-            <p>
-              Lors de la création d&apos;un compte, vous vous engagez à:
-            </p>
+          <Section title={t('legal.terms.s4Title')}>
+            <p>{t('legal.terms.s4Text')}</p>
             <ul>
-              <li>Fournir des informations véridiques et à jour</li>
-              <li>Maintenir la confidentialité de vos identifiants</li>
-              <li>Notifier immédiatement tout accès non autorisé à votre compte</li>
-              <li>Ne pas partager votre compte avec des tiers</li>
-              <li>Être responsable de toutes les activités sous votre compte</li>
+              <li>{t('legal.terms.s4List1')}</li>
+              <li>{t('legal.terms.s4List2')}</li>
+              <li>{t('legal.terms.s4List3')}</li>
+              <li>{t('legal.terms.s4List4')}</li>
+              <li>{t('legal.terms.s4List5')}</li>
             </ul>
           </Section>
 
-          <Section title="5. Prix et paiement">
-            <p>
-              Tous les prix sont affichés en dollars canadiens (CAD) sauf indication contraire. 
-              Nous acceptons les modes de paiement suivants:
-            </p>
+          <Section title={t('legal.terms.s5Title')}>
+            <p>{t('legal.terms.s5Text')}</p>
             <ul>
-              <li>Cartes de crédit (Visa, Mastercard, American Express)</li>
-              <li>PayPal</li>
-              <li>Apple Pay / Google Pay</li>
+              <li>{t('legal.terms.s5List1')}</li>
+              <li>{t('legal.terms.s5List2')}</li>
+              <li>{t('legal.terms.s5List3')}</li>
             </ul>
             <p style={{ marginTop: '16px' }}>
-              Les taxes applicables (TPS/TVQ/TVH) seront ajoutées au moment du paiement selon votre 
-              province de livraison. Les commandes internationales peuvent être soumises à des droits 
-              de douane et taxes d&apos;importation à la charge de l&apos;acheteur.
+              {t('legal.terms.s5TaxText')}
             </p>
           </Section>
 
-          <Section title="6. Livraison">
-            <p>
-              Nous livrons au Canada et à l&apos;international. Les délais de livraison varient selon 
-              la destination:
-            </p>
+          <Section title={t('legal.terms.s6Title')}>
+            <p>{t('legal.terms.s6Text')}</p>
             <ul>
-              <li>Canada: 3-7 jours ouvrables</li>
-              <li>États-Unis: 5-10 jours ouvrables</li>
-              <li>International: 7-21 jours ouvrables</li>
+              <li>{t('legal.terms.s6List1')}</li>
+              <li>{t('legal.terms.s6List2')}</li>
+              <li>{t('legal.terms.s6List3')}</li>
             </ul>
             <p style={{ marginTop: '16px' }}>
-              Les produits sont expédiés avec des packs réfrigérants lorsque nécessaire et sont 
-              emballés de manière sécuritaire et discrète.
+              {t('legal.terms.s6ShippingNote')}
             </p>
           </Section>
 
-          <Section title="7. Politique de retour et remboursement">
-            <p>
-              Nous acceptons les retours dans les conditions suivantes:
-            </p>
+          <Section title={t('legal.terms.s7Title')}>
+            <p>{t('legal.terms.s7Text')}</p>
             <ul>
-              <li>Produits endommagés ou défectueux à la réception</li>
-              <li>Erreur de commande de notre part</li>
-              <li>Produits non conformes aux spécifications</li>
+              <li>{t('legal.terms.s7List1')}</li>
+              <li>{t('legal.terms.s7List2')}</li>
+              <li>{t('legal.terms.s7List3')}</li>
             </ul>
             <p style={{ marginTop: '16px' }}>
-              Les demandes de retour doivent être faites dans les 14 jours suivant la réception. 
-              Les produits ouverts ou utilisés ne peuvent être retournés pour des raisons de sécurité 
-              et de contrôle qualité.
+              {t('legal.terms.s7ReturnNote')}
             </p>
           </Section>
 
-          <Section title="8. Qualité et certifications">
-            <p>
-              Tous nos peptides sont:
-            </p>
+          <Section title={t('legal.terms.s8Title')}>
+            <p>{t('legal.terms.s8Text')}</p>
             <ul>
-              <li>Synthétisés selon les normes cGMP</li>
-              <li>Testés par des laboratoires tiers indépendants</li>
-              <li>Accompagnés d&apos;un certificat d&apos;analyse (COA)</li>
-              <li>Garantis à une pureté minimale de 99%</li>
+              <li>{t('legal.terms.s8List1')}</li>
+              <li>{t('legal.terms.s8List2')}</li>
+              <li>{t('legal.terms.s8List3')}</li>
+              <li>{t('legal.terms.s8List4')}</li>
             </ul>
           </Section>
 
-          <Section title="9. Propriété intellectuelle">
-            <p>
-              Tout le contenu du Site (textes, images, logos, données scientifiques, etc.) est protégé 
-              par le droit d&apos;auteur et appartient à {siteName}. Toute reproduction non autorisée 
-              est interdite.
-            </p>
+          <Section title={t('legal.terms.s9Title')}>
+            <p>{t('legal.terms.s9Text', { siteName })}</p>
           </Section>
 
-          <Section title="10. Limitation de responsabilité">
-            <p>
-              {siteName} ne pourra être tenu responsable:
-            </p>
+          <Section title={t('legal.terms.s10Title')}>
+            <p>{t('legal.terms.s10Text', { siteName })}</p>
             <ul>
-              <li>De tout usage des produits contraire aux présentes conditions</li>
-              <li>De toute consommation humaine ou animale de nos produits</li>
-              <li>Des résultats de recherche obtenus avec nos produits</li>
-              <li>Des retards de livraison causés par des tiers</li>
-              <li>Des dommages indirects ou consécutifs</li>
+              <li>{t('legal.terms.s10List1')}</li>
+              <li>{t('legal.terms.s10List2')}</li>
+              <li>{t('legal.terms.s10List3')}</li>
+              <li>{t('legal.terms.s10List4')}</li>
+              <li>{t('legal.terms.s10List5')}</li>
             </ul>
           </Section>
 
-          <Section title="11. Droit applicable">
-            <p>
-              Ces conditions sont régies par les lois de la province de Québec, Canada. Tout litige 
-              sera soumis à la compétence exclusive des tribunaux de Montréal, Québec.
-            </p>
+          <Section title={t('legal.terms.s11Title')}>
+            <p>{t('legal.terms.s11Text')}</p>
           </Section>
 
-          <Section title="12. Modifications">
-            <p>
-              Nous nous réservons le droit de modifier ces conditions à tout moment. Les modifications 
-              seront publiées sur cette page avec une nouvelle date de mise à jour. Votre utilisation 
-              continue du Site après modification constitue votre acceptation des nouvelles conditions.
-            </p>
+          <Section title={t('legal.terms.s12Title')}>
+            <p>{t('legal.terms.s12Text')}</p>
           </Section>
 
-          <Section title="13. Contact">
-            <p>Pour toute question concernant ces conditions:</p>
+          <Section title={t('legal.terms.s13Title')}>
+            <p>{t('legal.terms.s13Text')}</p>
             <ul style={{ listStyle: 'none', padding: 0 }}>
-              <li>📧 legal@biocyclepeptides.com</li>
-              <li>📍 Montréal, Québec, Canada</li>
+              <li>{t('legal.terms.s13Email')}</li>
+              <li>{t('legal.terms.s13Address')}</li>
             </ul>
           </Section>
         </div>

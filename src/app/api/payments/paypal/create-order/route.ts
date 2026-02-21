@@ -234,6 +234,28 @@ export async function POST(request: NextRequest) {
               },
             });
             ids.push(reservation.id);
+          } else {
+            // E-07: Also check stock for base products without formats
+            const [product] = await tx.$queryRaw<{ stock_quantity: number; track_inventory: boolean }[]>`
+              SELECT "stockQuantity" as stock_quantity, "trackInventory" as track_inventory
+              FROM "Product"
+              WHERE id = ${item.productId}
+              FOR UPDATE
+            `;
+
+            if (product?.track_inventory && product.stock_quantity < item.quantity) {
+              throw new Error(`Stock insuffisant pour ${item.name}. Disponible: ${product.stock_quantity}`);
+            }
+
+            const reservation = await tx.inventoryReservation.create({
+              data: {
+                productId: item.productId,
+                formatId: null,
+                quantity: item.quantity,
+                expiresAt: new Date(Date.now() + 30 * 60 * 1000), // 30 min TTL
+              },
+            });
+            ids.push(reservation.id);
           }
         }
         return ids;

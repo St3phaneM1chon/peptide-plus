@@ -354,10 +354,10 @@ export default function AddressesPage() {
 
         {/* Add/Edit Form Modal */}
         {showForm && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-labelledby="address-form-modal-title">
             <div className="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
               <div className="p-6 border-b border-gray-200">
-                <h2 className="text-xl font-bold text-gray-900">
+                <h2 id="address-form-modal-title" className="text-xl font-bold text-gray-900">
                   {editingAddress ? t('customerAddresses.editAddress') : t('customerAddresses.newAddress')}
                 </h2>
               </div>

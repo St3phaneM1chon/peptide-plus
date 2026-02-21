@@ -44,6 +44,7 @@ export default function ProductGallery({ images, productName }: ProductGalleryPr
           src={selectedImage.url}
           alt={selectedImage.alt}
           fill
+          sizes="(max-width: 768px) 100vw, 50vw"
           className={`object-cover transition-transform duration-300 ${
             isZoomed ? 'scale-150 cursor-zoom-out' : 'cursor-zoom-in'
           }`}
@@ -107,6 +108,7 @@ export default function ProductGallery({ images, productName }: ProductGalleryPr
                 src={image.url}
                 alt={image.alt}
                 fill
+                sizes="80px"
                 className="object-cover"
               />
               {/* Type Label */}

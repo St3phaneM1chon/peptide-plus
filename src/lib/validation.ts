@@ -402,6 +402,60 @@ export function isValidPromoCode(code: string): boolean {
 }
 
 // =====================================================
+// FILE UPLOAD VALIDATION
+// =====================================================
+
+/** Default maximum file size: 10MB */
+export const DEFAULT_MAX_FILE_SIZE = 10 * 1024 * 1024;
+
+/** Default allowed MIME types for file uploads */
+export const DEFAULT_ALLOWED_FILE_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+  'application/pdf',
+];
+
+export interface FileValidationOptions {
+  /** Maximum file size in bytes (default: 10MB) */
+  maxSize?: number;
+  /** Allowed MIME types (default: images + PDF) */
+  allowedTypes?: string[];
+}
+
+export interface FileValidationResult {
+  valid: boolean;
+  error?: string;
+}
+
+/**
+ * Validate an uploaded file's type and size.
+ * Should be called BEFORE any file processing or storage.
+ */
+export function validateUploadedFile(
+  file: { type: string; size: number; name: string },
+  options: FileValidationOptions = {}
+): FileValidationResult {
+  const maxSize = options.maxSize ?? DEFAULT_MAX_FILE_SIZE;
+  const allowedTypes = options.allowedTypes ?? DEFAULT_ALLOWED_FILE_TYPES;
+
+  if (file.size > maxSize) {
+    const maxMB = (maxSize / (1024 * 1024)).toFixed(0);
+    return { valid: false, error: `File too large (max ${maxMB}MB)` };
+  }
+
+  if (!allowedTypes.includes(file.type)) {
+    return {
+      valid: false,
+      error: `Invalid file type: ${file.type}. Allowed: ${allowedTypes.join(', ')}`,
+    };
+  }
+
+  return { valid: true };
+}
+
+// =====================================================
 // GENERIC SCHEMA VALIDATION
 // =====================================================
 

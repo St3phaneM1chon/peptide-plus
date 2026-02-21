@@ -12,7 +12,8 @@ export const dynamic = 'force-dynamic';
  */
 
 import { handlers } from '@/lib/auth-config';
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
 
 function fixAzureRequest(req: NextRequest): NextRequest {
   const xArrSsl = req.headers.get('x-arr-ssl');
@@ -49,4 +50,22 @@ function fixAzureRequest(req: NextRequest): NextRequest {
 }
 
 export const GET = (req: NextRequest) => handlers.GET(fixAzureRequest(req));
-export const POST = (req: NextRequest) => handlers.POST(fixAzureRequest(req));
+
+export const POST = async (req: NextRequest) => {
+  // SEC-002: Rate limit signin POST requests (credentials login) by IP
+  // This complements the per-email brute-force protection in auth-config.ts
+  const pathname = req.nextUrl.pathname;
+  if (pathname.includes('/callback/credentials') || pathname.includes('/signin')) {
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || req.headers.get('x-real-ip')
+      || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/auth/login');
+    if (!rl.success) {
+      return NextResponse.json(
+        { error: rl.error!.message },
+        { status: 429, headers: rl.headers }
+      );
+    }
+  }
+  return handlers.POST(fixAzureRequest(req));
+};

@@ -12,6 +12,7 @@ import { addToPasswordHistory } from '@/lib/password-history';
 import { sendWelcomeEmail } from '@/lib/email-service';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { z } from 'zod';
+import { PASSWORD_MIN_LENGTH } from '@/lib/constants';
 
 // Schéma de validation NYDFS-compliant
 const signupSchema = z.object({
@@ -19,11 +20,14 @@ const signupSchema = z.object({
   email: z.string().email('Email invalide'),
   password: z
     .string()
-    .min(12, 'Le mot de passe doit contenir au moins 12 caractères')
+    .min(PASSWORD_MIN_LENGTH, `Le mot de passe doit contenir au moins ${PASSWORD_MIN_LENGTH} caractères`)
     .regex(/[A-Z]/, 'Le mot de passe doit contenir au moins une majuscule')
     .regex(/[a-z]/, 'Le mot de passe doit contenir au moins une minuscule')
     .regex(/[0-9]/, 'Le mot de passe doit contenir au moins un chiffre')
     .regex(/[!@#$%^&*(),.?":{}|<>]/, 'Le mot de passe doit contenir au moins un caractère spécial'),
+  acceptTerms: z.boolean().refine((val) => val === true, {
+    message: 'Vous devez accepter les conditions d\'utilisation',
+  }),
 });
 
 export async function POST(request: NextRequest) {
@@ -49,7 +53,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { name, email, password } = result.data;
+    const { name, email, password, acceptTerms } = result.data;
 
     // Vérifier si l'email existe déjà
     const existingUser = await prisma.user.findUnique({
@@ -71,20 +75,19 @@ export async function POST(request: NextRequest) {
     // Hash du mot de passe (cost factor 12 pour NYDFS)
     const hashedPassword = await hash(password, 12);
 
-    // Check if this email has a newsletter subscription with birthDate
-    const newsletterSub = await prisma.newsletterSubscriber.findUnique({
-      where: { email: email.toLowerCase() },
-      select: { birthDate: true },
-    }).catch(() => null);
-
-    // Créer l'utilisateur (transfer birthDate from newsletter if available)
+    // Créer l'utilisateur
+    // RGPD Art. 5(1)(c): birthDate is NOT transferred from newsletter subscription.
+    // Users can provide their birthDate voluntarily in their account profile settings.
+    // RGPD: Record terms & privacy acceptance with timestamp and version
     const user = await prisma.user.create({
       data: {
         name,
         email: email.toLowerCase(),
         password: hashedPassword,
         role: 'CUSTOMER', // Rôle par défaut
-        ...(newsletterSub?.birthDate && { birthDate: newsletterSub.birthDate }),
+        termsAcceptedAt: acceptTerms ? new Date() : null,
+        termsVersion: acceptTerms ? '2026-02-20' : null,
+        privacyAcceptedAt: acceptTerms ? new Date() : null,
       },
     });
 
@@ -98,7 +101,12 @@ export async function POST(request: NextRequest) {
         action: 'USER_REGISTERED',
         entityType: 'User',
         entityId: user.id,
-        details: JSON.stringify({ email: user.email }),
+        details: JSON.stringify({
+          email: user.email,
+          termsAccepted: acceptTerms,
+          termsVersion: '2026-02-20',
+          termsAcceptedAt: user.termsAcceptedAt,
+        }),
         ipAddress: request.headers.get('x-forwarded-for') || 'unknown',
         userAgent: request.headers.get('user-agent') || 'unknown',
       },

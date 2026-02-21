@@ -229,11 +229,22 @@ export async function POST(request: NextRequest) {
               data: { status: 'CONSUMED', orderId: newOrder.id, consumedAt: new Date() },
             });
 
+            // Decrement stock (floor at 0 to prevent negative inventory)
             if (reservation.formatId) {
-              await tx.productFormat.update({
+              const currentFormat = await tx.productFormat.findUnique({
                 where: { id: reservation.formatId },
-                data: { stockQuantity: { decrement: reservation.quantity } },
+                select: { stockQuantity: true },
               });
+              const safeDecrement = Math.min(reservation.quantity, currentFormat?.stockQuantity ?? 0);
+              if (safeDecrement > 0) {
+                await tx.productFormat.update({
+                  where: { id: reservation.formatId },
+                  data: { stockQuantity: { decrement: safeDecrement } },
+                });
+              }
+              if (safeDecrement < reservation.quantity) {
+                console.warn(`[PayPal capture] Stock floor hit for format ${reservation.formatId}: wanted to decrement ${reservation.quantity}, only decremented ${safeDecrement}`);
+              }
             }
 
             // Look up current WAC for accurate COGS

@@ -15,7 +15,9 @@ export async function GET() {
       if (!byIndustry[ind]) byIndustry[ind] = [];
       byIndustry[ind].push(ref);
     }
-    return NextResponse.json({ references, byIndustry });
+    return NextResponse.json({ references, byIndustry }, {
+      headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600' },
+    });
   } catch (error) {
     console.error('Client references API error:', error);
     return NextResponse.json({ references: [], byIndustry: {} });

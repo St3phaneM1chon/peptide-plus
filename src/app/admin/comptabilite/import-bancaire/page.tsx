@@ -238,7 +238,7 @@ export default function BankImportPage() {
   if (loading) return (
     <div aria-live="polite" aria-busy="true" className="p-8 space-y-4 animate-pulse">
       <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-1/3"></div>
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[1,2,3,4].map(i => <div key={i} className="h-24 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>)}
       </div>
       <div className="h-64 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
@@ -432,7 +432,7 @@ export default function BankImportPage() {
               )}
 
               {/* Stats */}
-              <div className="grid grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <SectionCard theme={theme}>
                   <p className="text-sm text-slate-500">{t('admin.bankImport.transactions')}</p>
                   <p className="text-2xl font-bold text-slate-900">{importedTransactions.length}</p>
@@ -444,7 +444,7 @@ export default function BankImportPage() {
                 <SectionCard theme={theme}>
                   <p className="text-sm text-slate-500">{t('admin.bankImport.avgConfidence')}</p>
                   <p className="text-2xl font-bold text-green-600">
-                    {Math.round(importedTransactions.reduce((sum, t) => sum + t.confidence, 0) / importedTransactions.length * 100)}%
+                    {importedTransactions.length > 0 ? Math.round(importedTransactions.reduce((sum, t) => sum + t.confidence, 0) / importedTransactions.length * 100) : 0}%
                   </p>
                 </SectionCard>
                 <SectionCard theme={theme}>
@@ -484,6 +484,7 @@ export default function BankImportPage() {
                   </div>
                 </div>
               }>
+                <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead className="bg-slate-50">
                     <tr>
@@ -540,6 +541,7 @@ export default function BankImportPage() {
                     ))}
                   </tbody>
                 </table>
+                </div>
               </SectionCard>
             </>
           )}
@@ -549,6 +551,7 @@ export default function BankImportPage() {
       {/* History Tab */}
       {activeTab === 'history' && (
         <SectionCard title={t('admin.bankImport.tabHistory')} theme={theme} noPadding>
+          <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-slate-50">
               <tr>
@@ -576,6 +579,7 @@ export default function BankImportPage() {
               )}
             </tbody>
           </table>
+          </div>
         </SectionCard>
       )}
     </div>

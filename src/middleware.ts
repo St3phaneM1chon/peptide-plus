@@ -103,12 +103,8 @@ export async function middleware(request: NextRequest) {
   // Generate a correlation ID for every request (useful for tracing)
   const requestId = request.headers.get('x-request-id') || generateRequestId();
 
-  // Skip pour les fichiers statiques
-  if (
-    pathname.startsWith('/_next') ||
-    pathname.includes('.') ||
-    pathname.startsWith('/auth')
-  ) {
+  // Skip auth routes early (static files are already excluded by the matcher config below)
+  if (pathname.startsWith('/auth')) {
     const res = NextResponse.next();
     res.headers.set('x-request-id', requestId);
     return res;
@@ -160,6 +156,32 @@ export async function middleware(request: NextRequest) {
     return res;
   }
 
+  // --- Performance optimization: skip getToken() for public routes ---
+  // These routes never need authentication checks. By returning early we avoid
+  // the cost of JWT decoding (crypto) on every public page load.
+  const publicPathPrefixes = [
+    '/shop', '/products', '/blog', '/about', '/contact',
+    '/legal', '/faq', '/search', '/community',
+  ];
+  const isPublicPage =
+    pathname === '/' ||
+    publicPathPrefixes.some((prefix) => pathname === prefix || pathname.startsWith(prefix + '/'));
+
+  if (isPublicPage) {
+    // Still resolve locale from cookie / Accept-Language (no token needed)
+    let locale: Locale = defaultLocale;
+    const localeCookie = request.cookies.get('locale')?.value;
+    if (localeCookie && isValidLocale(localeCookie)) {
+      locale = localeCookie as Locale;
+    } else {
+      locale = getLocaleFromHeaders(request.headers.get('accept-language'));
+    }
+    const res = NextResponse.next();
+    res.headers.set('x-request-id', requestId);
+    res.headers.set('x-locale', locale);
+    return res;
+  }
+
   // Récupérer le token d'authentification
   // Cookie name matches the explicit config in auth-config.ts (no __Secure- prefix)
   // to avoid name mismatch on Azure where TLS terminates at the load balancer.
@@ -178,7 +200,6 @@ export async function middleware(request: NextRequest) {
       error: String(err),
       hasCookie: !!request.cookies.get('authjs.session-token'),
       cookieLength: request.cookies.get('authjs.session-token')?.value?.length || 0,
-      secret: process.env.AUTH_SECRET ? `SET(${process.env.AUTH_SECRET.length})` : 'MISSING',
     }));
   }
 

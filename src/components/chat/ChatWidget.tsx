@@ -200,8 +200,17 @@ export default function ChatWidget() {
       });
     } catch (error) {
       console.error('Send message error:', error);
-      // Remove temp message on error
-      setMessages(prev => prev.filter(m => m.id !== tempMessage.id));
+      // Remove temp message on error and show error in chat
+      setMessages(prev => {
+        const filtered = prev.filter(m => m.id !== tempMessage.id);
+        return [...filtered, {
+          id: `error_${Date.now()}`,
+          content: t('common.error'),
+          sender: 'BOT' as const,
+          createdAt: new Date().toISOString(),
+          isFromBot: true,
+        }];
+      });
     } finally {
       setIsLoading(false);
     }
@@ -250,7 +259,7 @@ export default function ChatWidget() {
 
       {/* Chat Window */}
       {isOpen && (
-        <div className="fixed bottom-24 end-6 w-[380px] max-w-[calc(100vw-48px)] bg-white rounded-2xl shadow-2xl overflow-hidden z-50 flex flex-col" style={{ height: '500px', maxHeight: 'calc(100vh - 140px)' }}>
+        <div className="fixed bottom-24 end-6 w-[min(380px,calc(100vw-2rem))] bg-white rounded-2xl shadow-2xl overflow-hidden z-50 flex flex-col" style={{ height: '500px', maxHeight: 'calc(100vh - 140px)' }}>
           {/* Header */}
           <div className="px-4 py-3 text-white flex items-center gap-3" style={{ backgroundColor: widgetColor }}>
             <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
@@ -324,7 +333,7 @@ export default function ChatWidget() {
                 type="text"
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
-                onKeyPress={handleKeyPress}
+                onKeyDown={handleKeyPress}
                 placeholder={t('chat.placeholder.typeMessage')}
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:border-orange-500 text-sm"
                 disabled={isLoading}

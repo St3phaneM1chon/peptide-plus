@@ -1,35 +1,78 @@
 export const dynamic = 'force-dynamic';
+
 /**
- * API - Admin Question Actions
- * PATCH: Update question (publish/unpublish, edit answer)
- * DELETE: Delete a question
+ * Admin Question Detail API
+ * DELETE - Delete a product question
+ * PATCH  - Update question (toggle visibility, edit answer)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 
-export const PATCH = withAdminGuard(async (request: NextRequest, { session, params }) => {
+// DELETE /api/admin/questions/[id] - Delete a question
+export const DELETE = withAdminGuard(async (_request, { session, params }) => {
+  try {
+    const id = params!.id;
+
+    const existing = await prisma.productQuestion.findUnique({
+      where: { id },
+    });
+
+    if (!existing) {
+      return NextResponse.json({ error: 'Question not found' }, { status: 404 });
+    }
+
+    await prisma.productQuestion.delete({
+      where: { id },
+    });
+
+    console.log(
+      JSON.stringify({
+        event: 'question_deleted',
+        timestamp: new Date().toISOString(),
+        questionId: id,
+        deletedBy: session.user.id,
+      })
+    );
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Admin question DELETE error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+});
+
+// PATCH /api/admin/questions/[id] - Update question (toggle public, update answer)
+export const PATCH = withAdminGuard(async (request, { session, params }) => {
   try {
     const id = params!.id;
     const body = await request.json();
-    const { answer, isPublished } = body;
 
-    // Check question exists
-    const existing = await prisma.productQuestion.findUnique({ where: { id } });
+    const existing = await prisma.productQuestion.findUnique({
+      where: { id },
+    });
+
     if (!existing) {
-      return NextResponse.json({ error: 'Question introuvable' }, { status: 404 });
+      return NextResponse.json({ error: 'Question not found' }, { status: 404 });
     }
 
     const updateData: Record<string, unknown> = {};
 
-    if (answer !== undefined) {
-      updateData.answer = answer;
+    if (body.isPublic !== undefined) {
+      updateData.isPublished = body.isPublic;
+    }
+
+    if (body.answer !== undefined) {
+      updateData.answer = body.answer;
       updateData.answeredBy = session.user.name || session.user.email || 'Admin';
     }
 
-    if (isPublished !== undefined) {
-      updateData.isPublished = isPublished;
+    if (Object.keys(updateData).length === 0) {
+      return NextResponse.json({ error: 'No fields to update' }, { status: 400 });
     }
 
     const updated = await prisma.productQuestion.update({
@@ -37,33 +80,19 @@ export const PATCH = withAdminGuard(async (request: NextRequest, { session, para
       data: updateData,
     });
 
-    return NextResponse.json({ question: updated });
+    return NextResponse.json({
+      question: {
+        id: updated.id,
+        isPublic: updated.isPublished,
+        answer: updated.answer,
+        answeredBy: updated.answeredBy,
+        updatedAt: updated.updatedAt.toISOString(),
+      },
+    });
   } catch (error) {
-    console.error('Error updating question:', error);
+    console.error('Admin question PATCH error:', error);
     return NextResponse.json(
-      { error: 'Erreur lors de la mise à jour de la question' },
-      { status: 500 }
-    );
-  }
-});
-
-export const DELETE = withAdminGuard(async (_request: NextRequest, { session, params }) => {
-  try {
-    const id = params!.id;
-
-    // Check question exists
-    const existing = await prisma.productQuestion.findUnique({ where: { id } });
-    if (!existing) {
-      return NextResponse.json({ error: 'Question introuvable' }, { status: 404 });
-    }
-
-    await prisma.productQuestion.delete({ where: { id } });
-
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error('Error deleting question:', error);
-    return NextResponse.json(
-      { error: 'Erreur lors de la suppression de la question' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

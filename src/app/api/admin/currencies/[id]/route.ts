@@ -62,7 +62,7 @@ export const PATCH = withAdminGuard(async (request, { session: _session, params 
 
     return NextResponse.json({
       success: true,
-      currency: {
+      data: {
         ...currency,
         exchangeRate: Number(currency.exchangeRate),
         lastUpdated: currency.rateUpdatedAt.toISOString(),

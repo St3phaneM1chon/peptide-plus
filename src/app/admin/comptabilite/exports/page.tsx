@@ -19,7 +19,6 @@ interface ExportJob {
 
 export default function ExportsPage() {
   const { t, formatDate, locale } = useI18n();
-  const [, setActiveExport] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
   const [exportConfig, setExportConfig] = useState({
     format: 'quickbooks',
@@ -152,7 +151,6 @@ export default function ExportsPage() {
         document.body.removeChild(a);
       }
 
-      setActiveExport(null);
       await loadHistory();
     } catch (err) {
       console.error('Error exporting:', err);
@@ -168,7 +166,7 @@ export default function ExportsPage() {
     return (
       <div aria-live="polite" aria-busy="true" className="p-8 space-y-4 animate-pulse">
         <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-1/3"></div>
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[1,2,3,4].map(i => <div key={i} className="h-24 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>)}
         </div>
         <div className="h-64 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
@@ -200,7 +198,6 @@ export default function ExportsPage() {
             key={format.id}
             onClick={() => {
               setExportConfig(prev => ({ ...prev, format: format.id }));
-              setActiveExport(format.id);
             }}
             className={`p-4 rounded-xl border transition-all text-start ${
               exportConfig.format === format.id
@@ -346,6 +343,7 @@ export default function ExportsPage() {
 
       {/* Export History */}
       <SectionCard title={t('admin.exports.exportHistory')} theme={theme} noPadding>
+        <div className="overflow-x-auto">
         <table className="w-full">
           <thead className="bg-slate-50">
             <tr>
@@ -392,6 +390,7 @@ export default function ExportsPage() {
             ))}
           </tbody>
         </table>
+        </div>
       </SectionCard>
     </div>
   );

@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowLeft, Plus, Trash2, GripVertical, ExternalLink, FileText, ImageIcon, Video, Link2, Globe, Check, AlertTriangle, Pencil } from 'lucide-react';
 import { getFormatTypes, getProductTypes, getAvailabilityOptions, VOLUME_OPTIONS, getStockDisplay } from '../product-constants';
+import { MediaUploader } from '@/components/admin/MediaUploader';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 
@@ -529,25 +530,21 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
               <h2 className="text-lg font-semibold text-neutral-900 mb-4">{t('admin.productForm.mediaAndStatus')}</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
                 <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-1">{t('admin.productForm.mainImage')}</label>
-                  <input
-                    type="url" value={formData.imageUrl}
-                    onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  <MediaUploader
+                    value={formData.imageUrl}
+                    onChange={(url) => setFormData({ ...formData, imageUrl: url })}
+                    context="product-image"
+                    label={t('admin.productForm.mainImage')}
+                    previewSize="md"
                   />
-                  {formData.imageUrl && (
-                    <div className="mt-2">
-                      <Image src={formData.imageUrl} alt={t('admin.productForm.preview')} width={80} height={80} className="w-20 h-20 object-cover rounded-lg border border-neutral-200" unoptimized />
-                    </div>
-                  )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-1">{t('admin.productForm.video')}</label>
-                  <input
-                    type="url" value={formData.videoUrl}
-                    onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
-                    placeholder="https://youtube.com/..."
-                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  <MediaUploader
+                    value={formData.videoUrl}
+                    onChange={(url) => setFormData({ ...formData, videoUrl: url })}
+                    context="product-video"
+                    label={t('admin.productForm.video')}
+                    previewSize="md"
                   />
                 </div>
               </div>
@@ -686,16 +683,31 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
                         <p className="text-xs font-medium text-neutral-600 mb-3">{t('admin.productForm.mediaAndLinks')}</p>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                           <div>
-                            <label className="flex items-center gap-1.5 text-xs text-neutral-500 mb-1"><FileText className="w-3 h-3" /> PDF</label>
-                            <input type="url" value={pt.pdfUrl} onChange={(e) => updateProductText(pt.id, 'pdfUrl', e.target.value)} placeholder={t('admin.productForm.pdfUrl')} className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500" />
+                            <MediaUploader
+                              value={pt.pdfUrl}
+                              onChange={(url) => updateProductText(pt.id, 'pdfUrl', url)}
+                              context="product-doc"
+                              label="PDF"
+                              previewSize="sm"
+                            />
                           </div>
                           <div>
-                            <label className="flex items-center gap-1.5 text-xs text-neutral-500 mb-1"><ImageIcon className="w-3 h-3" /> Image</label>
-                            <input type="url" value={pt.imageUrl} onChange={(e) => updateProductText(pt.id, 'imageUrl', e.target.value)} className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500" />
+                            <MediaUploader
+                              value={pt.imageUrl}
+                              onChange={(url) => updateProductText(pt.id, 'imageUrl', url)}
+                              context="product-image"
+                              label="Image"
+                              previewSize="sm"
+                            />
                           </div>
                           <div>
-                            <label className="flex items-center gap-1.5 text-xs text-neutral-500 mb-1"><Video className="w-3 h-3" /> {t('admin.productForm.video')}</label>
-                            <input type="url" value={pt.videoUrl} onChange={(e) => updateProductText(pt.id, 'videoUrl', e.target.value)} className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500" />
+                            <MediaUploader
+                              value={pt.videoUrl}
+                              onChange={(url) => updateProductText(pt.id, 'videoUrl', url)}
+                              context="product-video"
+                              label={t('admin.productForm.video')}
+                              previewSize="sm"
+                            />
                           </div>
                           <div>
                             <label className="flex items-center gap-1.5 text-xs text-neutral-500 mb-1"><ExternalLink className="w-3 h-3" /> {t('admin.productForm.externalLink')}</label>
@@ -822,9 +834,9 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
 
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" role="dialog" aria-modal="true" aria-labelledby="delete-confirm-title">
           <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-bold text-neutral-900 mb-2">{t('admin.productForm.deleteProductConfirm')}</h3>
+            <h3 id="delete-confirm-title" className="text-lg font-bold text-neutral-900 mb-2">{t('admin.productForm.deleteProductConfirm')}</h3>
             <p className="text-sm text-neutral-500 mb-6">
               {t('admin.productForm.deleteProductDescription', { name: product.name })}
             </p>
@@ -948,14 +960,13 @@ function EditFormatForm({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-xs font-medium text-neutral-600 mb-1">{t('admin.productForm.formatPhoto')}</label>
-          <input type="url" value={format.imageUrl || ''} onChange={(e) => setFormat({ ...format, imageUrl: e.target.value || null })} className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500" />
-          {format.imageUrl && (
-            <div className="mt-2 flex items-center gap-2">
-              <Image src={format.imageUrl} alt="" width={48} height={48} className="w-12 h-12 object-cover rounded-lg border" unoptimized />
-              <button onClick={() => setFormat({ ...format, imageUrl: null })} className="text-xs text-red-500">{t('admin.productForm.delete')}</button>
-            </div>
-          )}
+          <MediaUploader
+            value={format.imageUrl || ''}
+            onChange={(url) => setFormat({ ...format, imageUrl: url || null })}
+            context="product-image"
+            label={t('admin.productForm.formatPhoto')}
+            previewSize="sm"
+          />
         </div>
         <div className="flex items-end gap-4 pb-2">
           <label className="flex items-center gap-2 cursor-pointer">

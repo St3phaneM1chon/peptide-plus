@@ -235,6 +235,7 @@ export default function MegaMenu({ isOpen, onClose }: MegaMenuProps) {
                             src={primaryImage?.url || product.imageUrl || '/images/products/peptide-default.png'}
                             alt={product.name}
                             fill
+                            sizes="96px"
                             className="object-cover group-hover:scale-110 transition-transform duration-300"
                           />
                           {product.purity && (

@@ -65,40 +65,7 @@ const authorityBorderColors: Record<string, string> = {
   SERVICE_CANADA: 'border-l-green-500',
 };
 
-const categoryLabels: Record<string, { en: string; fr: string }> = {
-  payroll: { en: 'Payroll', fr: 'Paie' },
-  corporate_tax: { en: 'Corporate Tax', fr: 'Imp\u00f4t corporatif' },
-  sales_tax: { en: 'Sales Tax', fr: 'Taxes de vente' },
-  information_return: { en: 'Information Return', fr: 'D\u00e9claration' },
-  installment: { en: 'Installment', fr: 'Acompte provisionnel' },
-  other: { en: 'Other', fr: 'Autre' },
-};
-
-const statusOptions = [
-  { value: 'PENDING', label: 'Pending / En attente' },
-  { value: 'COMPLETED', label: 'Completed / Compl\u00e9t\u00e9' },
-  { value: 'OVERDUE', label: 'Overdue / En retard' },
-  { value: 'SKIPPED', label: 'Skipped / Ignor\u00e9' },
-];
-
-const categoryOptions = Object.entries(categoryLabels).map(([value, labels]) => ({
-  value,
-  label: `${labels.en} / ${labels.fr}`,
-}));
-
-const authorityOptions = [
-  { value: 'CRA', label: 'CRA' },
-  { value: 'RQ', label: 'Revenu Qu\u00e9bec' },
-  { value: 'BOTH', label: 'CRA + RQ' },
-  { value: 'SERVICE_CANADA', label: 'Service Canada' },
-];
-
-const frequencyOptions = [
-  { value: 'once', label: 'Once / Une fois' },
-  { value: 'monthly', label: 'Monthly / Mensuel' },
-  { value: 'quarterly', label: 'Quarterly / Trimestriel' },
-  { value: 'annual', label: 'Annual / Annuel' },
-];
+// Category/status/frequency labels moved inside component for i18n access
 
 // ---------------------------------------------------------------------------
 // Component
@@ -107,7 +74,42 @@ const frequencyOptions = [
 export default function CalendrierFiscalPage() {
   const { t, locale, formatCurrency, formatDate } = useI18n();
   const theme = sectionThemes.compliance;
-  const isFr = locale === 'fr';
+
+  // Bilingual category labels (i18n)
+  const categoryLabels: Record<string, string> = {
+    payroll: t('admin.accounting.fiscal.catPayroll'),
+    corporate_tax: t('admin.accounting.fiscal.catCorporateTax'),
+    sales_tax: t('admin.accounting.fiscal.catSalesTax'),
+    information_return: t('admin.accounting.fiscal.catInformationReturn'),
+    installment: t('admin.accounting.fiscal.catInstallment'),
+    other: t('admin.accounting.fiscal.catOther'),
+  };
+
+  const statusOptions = [
+    { value: 'PENDING', label: t('admin.accounting.fiscal.statusPending') },
+    { value: 'COMPLETED', label: t('admin.accounting.fiscal.statusCompleted') },
+    { value: 'OVERDUE', label: t('admin.accounting.fiscal.statusOverdue') },
+    { value: 'SKIPPED', label: t('admin.accounting.fiscal.statusSkipped') },
+  ];
+
+  const categoryOptions = Object.entries(categoryLabels).map(([value, label]) => ({
+    value,
+    label,
+  }));
+
+  const authorityOptions = [
+    { value: 'CRA', label: 'CRA' },
+    { value: 'RQ', label: t('admin.accounting.fiscal.authRQ') },
+    { value: 'BOTH', label: 'CRA + RQ' },
+    { value: 'SERVICE_CANADA', label: 'Service Canada' },
+  ];
+
+  const frequencyOptions = [
+    { value: 'once', label: t('admin.accounting.fiscal.freqOnce') },
+    { value: 'monthly', label: t('admin.accounting.fiscal.freqMonthly') },
+    { value: 'quarterly', label: t('admin.accounting.fiscal.freqQuarterly') },
+    { value: 'annual', label: t('admin.accounting.fiscal.freqAnnual') },
+  ];
 
   // State
   const [events, setEvents] = useState<FiscalEvent[]>([]);
@@ -174,17 +176,17 @@ export default function CalendrierFiscalPage() {
         toast.error(err.error || 'Failed to complete event');
         return;
       }
-      toast.success(isFr ? '\u00c9v\u00e9nement compl\u00e9t\u00e9' : 'Event completed');
+      toast.success(t('admin.accounting.fiscal.eventCompleted'));
       await fetchEvents();
     } catch (err) {
       console.error('Error completing event:', err);
-      toast.error(isFr ? 'Erreur lors de la mise \u00e0 jour' : 'Error updating event');
+      toast.error(t('admin.accounting.fiscal.errorUpdating'));
     }
   };
 
   const handleAddEvent = async () => {
     if (!formTitle || !formDueDate) {
-      toast.error(isFr ? 'Titre et date requis' : 'Title and date required');
+      toast.error(t('admin.accounting.fiscal.titleDateRequired'));
       return;
     }
 
@@ -213,13 +215,13 @@ export default function CalendrierFiscalPage() {
         return;
       }
 
-      toast.success(isFr ? '\u00c9v\u00e9nement cr\u00e9\u00e9' : 'Event created');
+      toast.success(t('admin.accounting.fiscal.eventCreated'));
       setShowAddModal(false);
       resetForm();
       await fetchEvents();
     } catch (err) {
       console.error('Error creating event:', err);
-      toast.error(isFr ? 'Erreur lors de la cr\u00e9ation' : 'Error creating event');
+      toast.error(t('admin.accounting.fiscal.errorCreating'));
     }
   };
 
@@ -242,16 +244,15 @@ export default function CalendrierFiscalPage() {
   // ---------------------------------------------------------------------------
 
   const getEventTitle = (event: FiscalEvent) => {
-    return isFr && event.titleFr ? event.titleFr : event.title;
+    return locale === 'fr' && event.titleFr ? event.titleFr : event.title;
   };
 
   const getEventDescription = (event: FiscalEvent) => {
-    return isFr && event.descriptionFr ? event.descriptionFr : event.description;
+    return locale === 'fr' && event.descriptionFr ? event.descriptionFr : event.description;
   };
 
   const getCategoryLabel = (cat: string) => {
-    const labels = categoryLabels[cat] || categoryLabels.other;
-    return isFr ? labels.fr : labels.en;
+    return categoryLabels[cat] || categoryLabels.other;
   };
 
   const getStatusVariant = (status: string): 'success' | 'warning' | 'error' | 'neutral' => {
@@ -265,10 +266,10 @@ export default function CalendrierFiscalPage() {
 
   const getStatusLabel = (status: string) => {
     switch (status) {
-      case 'COMPLETED': return isFr ? 'Compl\u00e9t\u00e9' : 'Completed';
-      case 'PENDING': return isFr ? 'En attente' : 'Pending';
-      case 'OVERDUE': return isFr ? 'En retard' : 'Overdue';
-      case 'SKIPPED': return isFr ? 'Ignor\u00e9' : 'Skipped';
+      case 'COMPLETED': return t('admin.accounting.fiscal.statusCompleted');
+      case 'PENDING': return t('admin.accounting.fiscal.statusPending');
+      case 'OVERDUE': return t('admin.accounting.fiscal.statusOverdue');
+      case 'SKIPPED': return t('admin.accounting.fiscal.statusSkipped');
       default: return status;
     }
   };
@@ -316,7 +317,7 @@ export default function CalendrierFiscalPage() {
     return (
       <div aria-live="polite" aria-busy="true" className="p-8 space-y-4 animate-pulse">
         <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-1/3"></div>
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="h-24 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
           ))}
@@ -334,10 +335,8 @@ export default function CalendrierFiscalPage() {
     <div className="space-y-6">
       {/* Page Header */}
       <PageHeader
-        title={isFr ? 'Calendrier Fiscal' : 'Fiscal Calendar'}
-        subtitle={isFr
-          ? '\u00c9ch\u00e9ances et obligations CRA / Revenu Qu\u00e9bec'
-          : 'CRA / Revenu Qu\u00e9bec deadlines and obligations'}
+        title={t('admin.accounting.fiscal.title')}
+        subtitle={t('admin.accounting.fiscal.subtitle')}
         theme={theme}
         actions={
           <Button
@@ -346,33 +345,33 @@ export default function CalendrierFiscalPage() {
             onClick={() => { resetForm(); setShowAddModal(true); }}
             className={`${theme.btnPrimary} border-transparent text-white`}
           >
-            {isFr ? 'Ajouter un \u00e9v\u00e9nement' : 'Add Event'}
+            {t('admin.accounting.fiscal.addEvent')}
           </Button>
         }
       />
 
       {/* Stats Row */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
-          label={isFr ? 'Total \u00e9v\u00e9nements' : 'Total Events'}
+          label={t('admin.accounting.fiscal.totalEvents')}
           value={stats.total}
           icon={Calendar}
           theme={theme}
         />
         <StatCard
-          label={isFr ? 'En attente' : 'Pending'}
+          label={t('admin.accounting.fiscal.statusPending')}
           value={stats.pending}
           icon={Clock}
           theme={theme}
         />
         <StatCard
-          label={isFr ? 'Compl\u00e9t\u00e9s' : 'Completed'}
+          label={t('admin.accounting.fiscal.completedPlural')}
           value={stats.completed}
           icon={CheckCircle}
           theme={theme}
         />
         <StatCard
-          label={isFr ? 'En retard' : 'Overdue'}
+          label={t('admin.accounting.fiscal.statusOverdue')}
           value={stats.overdue}
           icon={stats.overdue > 0 ? AlertTriangle : Clock}
           theme={theme}
@@ -384,22 +383,22 @@ export default function CalendrierFiscalPage() {
       <div className="flex items-center gap-4 flex-wrap">
         <div className="flex items-center gap-2 text-sm text-slate-500">
           <Filter className="w-4 h-4" />
-          <span>{isFr ? 'Filtres' : 'Filters'}:</span>
+          <span>{t('admin.accounting.fiscal.filters')}:</span>
         </div>
         <SelectFilter
-          label={isFr ? 'Ann\u00e9e' : 'Year'}
+          label={t('admin.accounting.fiscal.year')}
           value={String(selectedYear)}
           onChange={(v) => setSelectedYear(parseInt(v) || new Date().getFullYear())}
           options={yearOptions}
         />
         <SelectFilter
-          label={isFr ? 'Cat\u00e9gorie' : 'Category'}
+          label={t('admin.accounting.fiscal.category')}
           value={selectedCategory}
           onChange={setSelectedCategory}
           options={categoryOptions}
         />
         <SelectFilter
-          label={isFr ? 'Statut' : 'Status'}
+          label={t('admin.accounting.fiscal.status')}
           value={selectedStatus}
           onChange={setSelectedStatus}
           options={statusOptions}
@@ -408,16 +407,14 @@ export default function CalendrierFiscalPage() {
 
       {/* Calendar Timeline View */}
       {monthNames.length === 0 ? (
-        <SectionCard title={isFr ? 'Aucun \u00e9v\u00e9nement' : 'No Events'} theme={theme}>
+        <SectionCard title={t('admin.accounting.fiscal.noEvents')} theme={theme}>
           <div className="text-center py-12 text-slate-500">
             <Calendar className="w-12 h-12 mx-auto mb-3 text-slate-300" />
             <p className="text-lg font-medium">
-              {isFr ? 'Aucun \u00e9v\u00e9nement fiscal trouv\u00e9' : 'No fiscal events found'}
+              {t('admin.accounting.fiscal.noEventsFound')}
             </p>
             <p className="text-sm mt-1">
-              {isFr
-                ? 'Ajoutez des \u00e9v\u00e9nements ou modifiez vos filtres'
-                : 'Add events or adjust your filters'}
+              {t('admin.accounting.fiscal.noEventsHint')}
             </p>
           </div>
         </SectionCard>
@@ -476,10 +473,10 @@ export default function CalendrierFiscalPage() {
                                 : 'bg-green-100 text-green-700'
                           }`}>
                             {daysUntil < 0
-                              ? (isFr ? `${Math.abs(daysUntil)}j en retard` : `${Math.abs(daysUntil)}d overdue`)
+                              ? t('admin.accounting.fiscal.daysOverdue').replace('{n}', String(Math.abs(daysUntil)))
                               : daysUntil === 0
-                                ? (isFr ? "Aujourd'hui" : 'Today')
-                                : (isFr ? `${daysUntil}j restants` : `${daysUntil}d left`)}
+                                ? t('admin.accounting.fiscal.today')
+                                : t('admin.accounting.fiscal.daysLeft').replace('{n}', String(daysUntil))}
                           </span>
                         )}
 
@@ -509,7 +506,7 @@ export default function CalendrierFiscalPage() {
                         {event.reminderDate && (
                           <span className="inline-flex items-center gap-0.5 text-xs text-amber-600">
                             <Bell className="w-3 h-3" />
-                            {isFr ? 'Rappel' : 'Reminder'}
+                            {t('admin.accounting.fiscal.reminder')}
                           </span>
                         )}
                       </div>
@@ -523,10 +520,10 @@ export default function CalendrierFiscalPage() {
                           className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium
                             text-emerald-700 bg-emerald-50 border border-emerald-200
                             rounded-md hover:bg-emerald-100 transition-colors"
-                          title={isFr ? 'Marquer compl\u00e9t\u00e9' : 'Mark complete'}
+                          title={t('admin.accounting.fiscal.markComplete')}
                         >
                           <CheckCircle className="w-3.5 h-3.5" />
-                          {isFr ? 'Compl\u00e9ter' : 'Complete'}
+                          {t('admin.accounting.fiscal.complete')}
                         </button>
                       )}
                     </div>
@@ -542,17 +539,17 @@ export default function CalendrierFiscalPage() {
       <Modal
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
-        title={isFr ? 'Ajouter un \u00e9v\u00e9nement fiscal' : 'Add Fiscal Event'}
+        title={t('admin.accounting.fiscal.addFiscalEvent')}
         footer={
           <>
             <Button variant="ghost" onClick={() => setShowAddModal(false)}>
-              {isFr ? 'Annuler' : 'Cancel'}
+              {t('admin.accounting.fiscal.cancel')}
             </Button>
             <Button
               onClick={handleAddEvent}
               className={`${theme.btnPrimary} border-transparent text-white shadow-sm`}
             >
-              {isFr ? 'Cr\u00e9er' : 'Create'}
+              {t('admin.accounting.fiscal.create')}
             </Button>
           </>
         }
@@ -560,7 +557,7 @@ export default function CalendrierFiscalPage() {
         <div className="space-y-4">
           {/* Title EN / FR */}
           <div className="grid grid-cols-2 gap-4">
-            <FormField label={isFr ? 'Titre (EN)' : 'Title (EN)'}>
+            <FormField label={t('admin.accounting.fiscal.titleEn')}>
               <Input
                 type="text"
                 value={formTitle}
@@ -568,7 +565,7 @@ export default function CalendrierFiscalPage() {
                 placeholder="e.g. GST/QST remittance"
               />
             </FormField>
-            <FormField label={isFr ? 'Titre (FR)' : 'Title (FR)'}>
+            <FormField label={t('admin.accounting.fiscal.titleFr')}>
               <Input
                 type="text"
                 value={formTitleFr}
@@ -580,7 +577,7 @@ export default function CalendrierFiscalPage() {
 
           {/* Description EN / FR */}
           <div className="grid grid-cols-2 gap-4">
-            <FormField label="Description (EN)">
+            <FormField label={t('admin.accounting.fiscal.descriptionEn')}>
               <Input
                 type="text"
                 value={formDescription}
@@ -588,7 +585,7 @@ export default function CalendrierFiscalPage() {
                 placeholder="Details..."
               />
             </FormField>
-            <FormField label="Description (FR)">
+            <FormField label={t('admin.accounting.fiscal.descriptionFr')}>
               <Input
                 type="text"
                 value={formDescriptionFr}
@@ -600,14 +597,14 @@ export default function CalendrierFiscalPage() {
 
           {/* Due date & Reminder date */}
           <div className="grid grid-cols-2 gap-4">
-            <FormField label={isFr ? 'Date d\'\u00e9ch\u00e9ance' : 'Due Date'}>
+            <FormField label={t('admin.accounting.fiscal.dueDate')}>
               <Input
                 type="date"
                 value={formDueDate}
                 onChange={(e) => setFormDueDate(e.target.value)}
               />
             </FormField>
-            <FormField label={isFr ? 'Date de rappel' : 'Reminder Date'}>
+            <FormField label={t('admin.accounting.fiscal.reminderDate')}>
               <Input
                 type="date"
                 value={formReminderDate}
@@ -618,7 +615,7 @@ export default function CalendrierFiscalPage() {
 
           {/* Category & Authority */}
           <div className="grid grid-cols-2 gap-4">
-            <FormField label={isFr ? 'Cat\u00e9gorie' : 'Category'}>
+            <FormField label={t('admin.accounting.fiscal.category')}>
               <select
                 value={formCategory}
                 onChange={(e) => setFormCategory(e.target.value)}
@@ -630,7 +627,7 @@ export default function CalendrierFiscalPage() {
                 ))}
               </select>
             </FormField>
-            <FormField label={isFr ? 'Autorit\u00e9' : 'Authority'}>
+            <FormField label={t('admin.accounting.fiscal.authority')}>
               <select
                 value={formAuthority}
                 onChange={(e) => setFormAuthority(e.target.value)}
@@ -646,7 +643,7 @@ export default function CalendrierFiscalPage() {
 
           {/* Frequency & Amount */}
           <div className="grid grid-cols-2 gap-4">
-            <FormField label={isFr ? 'Fr\u00e9quence' : 'Frequency'}>
+            <FormField label={t('admin.accounting.fiscal.frequency')}>
               <select
                 value={formFrequency}
                 onChange={(e) => setFormFrequency(e.target.value)}
@@ -658,7 +655,7 @@ export default function CalendrierFiscalPage() {
                 ))}
               </select>
             </FormField>
-            <FormField label={isFr ? 'Montant ($)' : 'Amount ($)'}>
+            <FormField label={t('admin.accounting.fiscal.amount')}>
               <Input
                 type="number"
                 step="0.01"
@@ -679,7 +676,7 @@ export default function CalendrierFiscalPage() {
               className="w-4 h-4 rounded border-slate-300 text-amber-600"
             />
             <label htmlFor="isRecurring" className="text-sm text-slate-700">
-              {isFr ? '\u00c9v\u00e9nement r\u00e9current' : 'Recurring event'}
+              {t('admin.accounting.fiscal.recurringEvent')}
             </label>
           </div>
         </div>

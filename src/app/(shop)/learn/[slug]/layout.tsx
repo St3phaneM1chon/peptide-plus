@@ -1,4 +1,6 @@
 import { Metadata } from 'next';
+import { JsonLd } from '@/components/seo/JsonLd';
+import { articleSchema } from '@/lib/structured-data';
 
 const ARTICLE_META: Record<string, { title: string; description: string }> = {
   'what-are-peptides': {
@@ -75,6 +77,30 @@ export async function generateMetadata({
   };
 }
 
-export default function LearnArticleLayout({ children }: { children: React.ReactNode }) {
-  return children;
+export default async function LearnArticleLayout({
+  children,
+  params,
+}: {
+  children: React.ReactNode;
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  const meta = ARTICLE_META[slug];
+
+  if (!meta) {
+    return children;
+  }
+
+  const jsonLd = articleSchema({
+    headline: meta.title,
+    description: meta.description,
+    slug,
+  });
+
+  return (
+    <>
+      <JsonLd data={jsonLd} />
+      {children}
+    </>
+  );
 }

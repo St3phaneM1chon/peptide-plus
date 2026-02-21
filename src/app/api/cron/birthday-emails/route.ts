@@ -21,7 +21,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { sendEmail, birthdayEmail } from '@/lib/email';
+import { sendEmail, birthdayEmail, generateUnsubscribeUrl } from '@/lib/email';
 import { logger } from '@/lib/logger';
 import { withJobLock } from '@/lib/cron-lock';
 
@@ -237,6 +237,9 @@ export async function GET(request: NextRequest) {
             });
           });
 
+          // Generate unsubscribe URL (CAN-SPAM / RGPD / LCAP compliance)
+          const unsubscribeUrl = await generateUnsubscribeUrl(user.email, 'marketing', user.id).catch(() => undefined);
+
           // Generate and send email
           const emailContent = birthdayEmail({
             customerName: user.name || 'Client',
@@ -247,6 +250,7 @@ export async function GET(request: NextRequest) {
             bonusPoints: BONUS_POINTS,
             expiresAt,
             locale: (user.locale as 'fr' | 'en') || 'fr',
+            unsubscribeUrl,
           });
 
           const result = await sendEmail({
@@ -254,6 +258,7 @@ export async function GET(request: NextRequest) {
             subject: emailContent.subject,
             html: emailContent.html,
             tags: ['birthday', 'automated'],
+            unsubscribeUrl,
           });
 
           // Log to EmailLog table

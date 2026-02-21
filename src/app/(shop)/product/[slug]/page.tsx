@@ -122,7 +122,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       title: `${name} - ${subtitle}`,
       description,
       url: `https://biocyclepeptides.com/product/${slug}`,
-      type: 'website',
+      type: 'product',
       images: [
         {
           url: imageUrl,
@@ -248,8 +248,10 @@ export default async function ProductPage({ params }: PageProps) {
     }
   }
 
-  const relatedProducts = await getRelatedProductsFromDB(product.categoryId, product.id);
-  const promotion = await getActivePromotionForProduct(product.id);
+  const [relatedProducts, promotion] = await Promise.all([
+    getRelatedProductsFromDB(product.categoryId, product.id),
+    getActivePromotionForProduct(product.id),
+  ]);
   const transformedProduct = transformProductForClient(translatedProduct, relatedProducts, promotion);
 
   // Build JSON-LD structured data

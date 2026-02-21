@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
  * Reçoit et traite les messages du formulaire de contact
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { sendEmail } from '@/lib/email/email-service';
 import { escapeHtml } from '@/lib/security';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
 
     return apiSuccess({
       message: 'Votre message a été envoyé avec succès. Nous vous répondrons sous 24h.',
-    }, { request });
+    }, { status: 201, request });
 
   } catch (error) {
     console.error('Contact form error:', error);

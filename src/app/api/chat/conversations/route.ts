@@ -9,6 +9,7 @@ import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { getApiTranslator } from '@/i18n/server';
 import { UserRole } from '@/types';
+import { stripHtml, stripControlChars } from '@/lib/sanitize';
 import { z } from 'zod';
 
 const createConversationSchema = z.object({
@@ -110,16 +111,24 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { subject, message } = createConversationSchema.parse(body);
 
+    // BE-SEC-03: Sanitize user-supplied text to prevent stored XSS
+    const sanitizedSubject = subject ? stripControlChars(stripHtml(subject)).trim() : null;
+    const sanitizedMessage = stripControlChars(stripHtml(message)).trim();
+
+    if (!sanitizedMessage) {
+      return NextResponse.json({ error: 'Message cannot be empty after sanitization' }, { status: 400 });
+    }
+
     // Créer la conversation avec le premier message
     const conversation = await prisma.conversation.create({
       data: {
         userId: session.user.id,
-        subject: subject || null,
+        subject: sanitizedSubject,
         status: 'OPEN',
         messages: {
           create: {
             senderId: session.user.id,
-            content: message,
+            content: sanitizedMessage,
             type: 'TEXT',
           },
         },

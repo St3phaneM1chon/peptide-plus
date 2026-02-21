@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { useI18n } from '@/i18n/client';
 
 export default function AdminError({
   error,
@@ -9,6 +10,8 @@ export default function AdminError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const { t } = useI18n();
+
   useEffect(() => {
     console.error('Admin error:', error);
   }, [error]);
@@ -16,12 +19,12 @@ export default function AdminError({
   return (
     <div className="min-h-[60vh] flex items-center justify-center px-4">
       <div className="text-center max-w-md">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Admin Panel Error</h2>
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('admin.errors.adminPanelError')}</h2>
         <p className="text-gray-600 mb-4">
-          An error occurred in the admin panel.
+          {t('admin.errors.adminPanelErrorDesc')}
           {error.digest && (
             <span className="block text-sm text-gray-400 mt-1">
-              Error ID: {error.digest}
+              {t('admin.errors.errorId')}: {error.digest}
             </span>
           )}
         </p>
@@ -29,7 +32,7 @@ export default function AdminError({
           onClick={reset}
           className="px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
         >
-          Try again
+          {t('admin.errors.tryAgain')}
         </button>
       </div>
     </div>

@@ -40,7 +40,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { sendEmail, abandonedCartEmail } from '@/lib/email';
+import { sendEmail, abandonedCartEmail, generateUnsubscribeUrl } from '@/lib/email';
 import { logger } from '@/lib/logger';
 import { withJobLock } from '@/lib/cron-lock';
 
@@ -212,6 +212,9 @@ export async function GET(request: NextRequest) {
 
           const cartTotal = emailItems.reduce((sum, item) => sum + item.price, 0);
 
+          // Generate unsubscribe URL (CAN-SPAM / RGPD / LCAP compliance)
+          const unsubscribeUrl = await generateUnsubscribeUrl(user.email, 'marketing', user.id).catch(() => undefined);
+
           // Generate email content
           const emailContent = abandonedCartEmail({
             customerName: user.name || 'Client',
@@ -219,6 +222,7 @@ export async function GET(request: NextRequest) {
             items: emailItems,
             cartTotal,
             locale: (user.locale as 'fr' | 'en') || 'fr',
+            unsubscribeUrl,
           });
 
           const result = await sendEmail({
@@ -226,6 +230,7 @@ export async function GET(request: NextRequest) {
             subject: emailContent.subject,
             html: emailContent.html,
             tags: ['abandoned-cart', 'automated'],
+            unsubscribeUrl,
           });
 
           // Log to EmailLog

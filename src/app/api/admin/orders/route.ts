@@ -24,6 +24,14 @@ import { apiSuccess, apiError, apiPaginated } from '@/lib/api-response';
 import { ErrorCode } from '@/lib/error-codes';
 import { updateOrderStatusSchema, batchOrderUpdateSchema } from '@/lib/validations/order';
 
+// Shared validation error helper
+function validationError(parsed: { error: { flatten: () => unknown } }) {
+  return NextResponse.json(
+    { error: 'Validation error', details: parsed.error.flatten() },
+    { status: 400 }
+  );
+}
+
 // GET /api/admin/orders - List orders with filtering
 export const GET = withAdminGuard(async (request, { session }) => {
   try {
@@ -166,14 +174,22 @@ export const GET = withAdminGuard(async (request, { session }) => {
 export const PUT = withAdminGuard(async (request, { session }) => {
   try {
     const body = await request.json();
-    const { orderId, status, trackingNumber, carrier, adminNotes } = body;
 
-    if (!orderId) {
+    // Validate orderId separately (required for lookup)
+    const { orderId, ...rest } = body;
+    if (!orderId || typeof orderId !== 'string') {
       return NextResponse.json(
-        { error: 'orderId is required' },
+        { error: 'orderId is required and must be a string' },
         { status: 400 }
       );
     }
+
+    // Validate the update fields with Zod
+    const parsed = updateOrderStatusSchema.safeParse(rest);
+    if (!parsed.success) {
+      return validationError(parsed);
+    }
+    const { status, trackingNumber, carrier, adminNotes } = parsed.data;
 
     const existingOrder = await prisma.order.findUnique({
       where: { id: orderId },
@@ -186,13 +202,38 @@ export const PUT = withAdminGuard(async (request, { session }) => {
       );
     }
 
-    // Validate status transitions
-    const validStatuses = ['PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'];
+    // BE-PAY-09 + PAY-005: Order state machine - validate transitions
+    const VALID_TRANSITIONS: Record<string, string[]> = {
+      'PENDING': ['CONFIRMED', 'PROCESSING', 'CANCELLED'],
+      'CONFIRMED': ['PROCESSING', 'CANCELLED'],
+      'PROCESSING': ['SHIPPED', 'CANCELLED'],
+      'SHIPPED': ['DELIVERED', 'RETURNED'],
+      'DELIVERED': ['RETURNED', 'REFUNDED'],
+      'CANCELLED': [],   // Terminal state
+      'RETURNED': ['REFUNDED'],
+      'REFUNDED': [],    // Terminal state
+    };
+
+    const validStatuses = Object.keys(VALID_TRANSITIONS);
     if (status && !validStatuses.includes(status)) {
       return NextResponse.json(
         { error: `Invalid status. Must be one of: ${validStatuses.join(', ')}` },
         { status: 400 }
       );
+    }
+
+    // Validate state transition if status is changing
+    if (status && status !== existingOrder.status) {
+      const allowedNextStatuses = VALID_TRANSITIONS[existingOrder.status] || [];
+      if (!allowedNextStatuses.includes(status)) {
+        return NextResponse.json(
+          {
+            error: `Invalid status transition: ${existingOrder.status} -> ${status}. ` +
+              `Allowed transitions from ${existingOrder.status}: ${allowedNextStatuses.length > 0 ? allowedNextStatuses.join(', ') : 'none (terminal state)'}`,
+          },
+          { status: 400 }
+        );
+      }
     }
 
     // Build update data
@@ -232,6 +273,25 @@ export const PUT = withAdminGuard(async (request, { session }) => {
       },
     });
 
+    // Audit log for order update (fire-and-forget)
+    prisma.auditLog.create({
+      data: {
+        id: `audit_update_order_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 8)}`,
+        userId: session.user.id,
+        action: 'ADMIN_UPDATE_ORDER',
+        entityType: 'Order',
+        entityId: orderId,
+        details: JSON.stringify({
+          previousStatus: existingOrder.status,
+          newStatus: status || existingOrder.status,
+          trackingNumber: trackingNumber || null,
+          carrier: carrier || null,
+          adminNotes: adminNotes || null,
+        }),
+        ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || null,
+      },
+    }).catch(console.error);
+
     return NextResponse.json({ order });
   } catch (error) {
     console.error('Admin orders PUT error:', error);
@@ -247,53 +307,24 @@ export const PUT = withAdminGuard(async (request, { session }) => {
 export const POST = withAdminGuard(async (request, { session }) => {
   try {
     const body = await request.json();
-    const { orders } = body;
 
-    // Validate input
-    if (!Array.isArray(orders) || orders.length === 0) {
-      return NextResponse.json(
-        { error: 'orders must be a non-empty array of { orderId, status, trackingNumber?, carrier?, adminNotes? }' },
-        { status: 400 }
-      );
+    // Validate with Zod schema
+    const parsed = batchOrderUpdateSchema.safeParse(body);
+    if (!parsed.success) {
+      return validationError(parsed);
     }
+    const { orders } = parsed.data;
 
-    // Cap batch size to prevent abuse
-    const MAX_BATCH_SIZE = 50;
-    if (orders.length > MAX_BATCH_SIZE) {
-      return NextResponse.json(
-        { error: `Batch size exceeds maximum of ${MAX_BATCH_SIZE} orders` },
-        { status: 400 }
-      );
-    }
-
-    const validStatuses = ['PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'];
-
-    // Validate all entries before processing
-    for (const entry of orders) {
-      if (!entry.orderId) {
-        return NextResponse.json(
-          { error: 'Each entry must have an orderId' },
-          { status: 400 }
-        );
-      }
-      if (entry.status && !validStatuses.includes(entry.status)) {
-        return NextResponse.json(
-          { error: `Invalid status "${entry.status}" for order ${entry.orderId}. Must be one of: ${validStatuses.join(', ')}` },
-          { status: 400 }
-        );
-      }
-    }
-
-    // Valid state transitions
+    // PAY-005: Valid state transitions (must match single-order handler)
     const VALID_TRANSITIONS: Record<string, string[]> = {
-      'PENDING': ['CONFIRMED', 'CANCELLED'],
+      'PENDING': ['CONFIRMED', 'PROCESSING', 'CANCELLED'],
       'CONFIRMED': ['PROCESSING', 'CANCELLED'],
       'PROCESSING': ['SHIPPED', 'CANCELLED'],
       'SHIPPED': ['DELIVERED', 'RETURNED'],
       'DELIVERED': ['RETURNED', 'REFUNDED'],
+      'CANCELLED': [],   // Terminal state
       'RETURNED': ['REFUNDED'],
-      'CANCELLED': [],
-      'REFUNDED': [],
+      'REFUNDED': [],    // Terminal state
     };
 
     const results: Array<{
@@ -389,6 +420,31 @@ export const POST = withAdminGuard(async (request, { session }) => {
 
     const successCount = results.filter((r) => r.success).length;
     const failCount = results.filter((r) => !r.success).length;
+
+    // Audit log for batch order update (fire-and-forget, one entry for the whole batch)
+    prisma.auditLog.create({
+      data: {
+        id: `audit_batch_order_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 8)}`,
+        userId: session.user.id,
+        action: 'ADMIN_BATCH_UPDATE_ORDERS',
+        entityType: 'Order',
+        entityId: `batch_${orders.length}`,
+        details: JSON.stringify({
+          totalOrders: orders.length,
+          succeeded: successCount,
+          failed: failCount,
+          results: results.map((r) => ({
+            orderId: r.orderId,
+            orderNumber: r.orderNumber,
+            success: r.success,
+            previousStatus: r.previousStatus,
+            newStatus: r.newStatus,
+            error: r.error,
+          })),
+        }),
+        ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || null,
+      },
+    }).catch(console.error);
 
     return NextResponse.json({
       success: failCount === 0,

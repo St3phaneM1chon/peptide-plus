@@ -13,9 +13,11 @@ import {
   DataTable,
   type Column,
   SectionCard,
+  type BadgeVariant,
 } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
 import { sectionThemes } from '@/lib/admin/section-themes';
+import { toast } from 'sonner';
 
 interface SupplierInvoice {
   id: string;
@@ -35,7 +37,6 @@ interface SupplierInvoice {
   category: string;
 }
 
-type BadgeVariant = 'success' | 'warning' | 'error' | 'info' | 'neutral';
 
 export default function FacturesFournisseursPage() {
   const { t, locale, formatCurrency } = useI18n();
@@ -75,6 +76,7 @@ export default function FacturesFournisseursPage() {
       setInvoices(data.invoices ?? []);
     } catch (err) {
       console.error('Error fetching supplier invoices:', err);
+      toast.error(t('common.errorOccurred'));
       setError(err instanceof Error ? err.message : t('admin.supplierInvoices.fetchError'));
       setInvoices([]);
     } finally {
@@ -96,7 +98,8 @@ export default function FacturesFournisseursPage() {
       if (!response.ok) throw new Error(t('admin.supplierInvoices.apiError', { status: response.status }));
       await fetchInvoices();
     } catch (err) {
-      console.error('Error approving invoice:', err);
+      console.error(err);
+      toast.error(t('common.errorOccurred'));
     }
   };
 
@@ -110,7 +113,8 @@ export default function FacturesFournisseursPage() {
       if (!response.ok) throw new Error(t('admin.supplierInvoices.apiError', { status: response.status }));
       await fetchInvoices();
     } catch (err) {
-      console.error('Error updating invoice:', err);
+      console.error(err);
+      toast.error(t('common.errorOccurred'));
     }
   };
 
@@ -119,7 +123,7 @@ export default function FacturesFournisseursPage() {
   if (loading) return (
     <div aria-live="polite" aria-busy="true" className="p-8 space-y-4 animate-pulse">
       <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-1/3"></div>
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[1,2,3,4].map(i => <div key={i} className="h-24 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>)}
       </div>
       <div className="h-64 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
@@ -252,7 +256,7 @@ export default function FacturesFournisseursPage() {
       />
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard label={t('admin.supplierInvoices.totalInvoices')} value={invoices.length} icon={FileText} theme={theme} />
         <StatCard label={t('admin.supplierInvoices.toPay')} value={formatCAD(totalPending)} icon={Clock} theme={theme} />
         <StatCard label={t('admin.supplierInvoices.overdue')} value={formatCAD(totalOverdue)} icon={AlertTriangle} theme={theme} />
@@ -333,6 +337,7 @@ export default function FacturesFournisseursPage() {
             </div>
 
             <SectionCard theme={theme} noPadding>
+              <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-slate-50">
                   <tr>
@@ -349,6 +354,7 @@ export default function FacturesFournisseursPage() {
                   ))}
                 </tbody>
               </table>
+              </div>
             </SectionCard>
 
             <div className="flex justify-end">

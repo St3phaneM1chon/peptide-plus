@@ -5,7 +5,7 @@ import {
   Settings, ShoppingCart, Package, Bell, Lock, Link2,
   Save,
 } from 'lucide-react';
-import { Button, FormField, Input } from '@/components/admin';
+import { Button, FormField, Input, MediaUploader } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 
@@ -14,6 +14,7 @@ export default function ParametresPage() {
   const [settings, setSettings] = useState({
     // General
     siteName: 'BioCycle Peptides',
+    logoUrl: '',
     siteEmail: 'info@biocycle.ca',
     supportEmail: 'support@biocycle.ca',
     phone: '+1 (888) 555-0123',
@@ -70,6 +71,7 @@ export default function ParametresPage() {
 
       setSettings({
         siteName: ss.companyName || 'BioCycle Peptides',
+        logoUrl: ss.logoUrl || '',
         siteEmail: ss.email || 'info@biocycle.ca',
         supportEmail: ss.supportEmail || 'support@biocycle.ca',
         phone: ss.phone || '+1 (888) 555-0123',
@@ -108,6 +110,7 @@ export default function ParametresPage() {
         body: JSON.stringify({
           siteSettings: {
             companyName: settings.siteName,
+            logoUrl: settings.logoUrl,
             email: settings.siteEmail,
             supportEmail: settings.supportEmail,
             phone: settings.phone,
@@ -142,8 +145,9 @@ export default function ParametresPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex items-center justify-center h-64" role="status" aria-label="Loading">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500" />
+        <span className="sr-only">Loading...</span>
       </div>
     );
   }
@@ -202,6 +206,14 @@ export default function ParametresPage() {
                   type="text"
                   value={settings.siteName}
                   onChange={(e) => setSettings({ ...settings, siteName: e.target.value })}
+                />
+              </FormField>
+              <FormField label={t('admin.settingsPage.logo')}>
+                <MediaUploader
+                  value={settings.logoUrl}
+                  onChange={(url) => setSettings({ ...settings, logoUrl: url })}
+                  context="logo"
+                  previewSize="sm"
                 />
               </FormField>
               <FormField label={t('admin.settingsPage.mainEmail')}>
@@ -439,7 +451,10 @@ export default function ParametresPage() {
                     <p className="text-sm text-slate-500">{t('admin.settingsPage.paypalPayments')}</p>
                   </div>
                 </div>
-                <Button variant="ghost" size="sm" className="text-sky-600 hover:text-sky-700 bg-sky-100 hover:bg-sky-200">
+                <Button variant="ghost" size="sm" className="text-sky-600 hover:text-sky-700 bg-sky-100 hover:bg-sky-200" onClick={() => {
+                  // TODO: Create PayPal integration settings modal/page
+                  toast.info('PayPal ' + t('admin.settingsPage.configure') + ' - Coming soon');
+                }}>
                   {t('admin.settingsPage.configure')}
                 </Button>
               </div>
@@ -454,7 +469,10 @@ export default function ParametresPage() {
                     <p className="text-sm text-slate-500">{t('admin.settingsPage.trafficStats')}</p>
                   </div>
                 </div>
-                <Button variant="ghost" size="sm" className="text-sky-600 hover:text-sky-700 bg-sky-100 hover:bg-sky-200">
+                <Button variant="ghost" size="sm" className="text-sky-600 hover:text-sky-700 bg-sky-100 hover:bg-sky-200" onClick={() => {
+                  // TODO: Create Google Analytics integration settings modal/page
+                  toast.info('Google Analytics ' + t('admin.settingsPage.configure') + ' - Coming soon');
+                }}>
                   {t('admin.settingsPage.configure')}
                 </Button>
               </div>

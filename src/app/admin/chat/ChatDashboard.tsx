@@ -7,6 +7,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from '@/i18n/client';
+import { toast } from 'sonner';
 
 interface Stats {
   open: number;
@@ -76,7 +77,7 @@ interface ChatDashboardProps {
 }
 
 export function ChatDashboard({ initialStats, agents, quickReplies, currentUserId: _currentUserId }: ChatDashboardProps) {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const [stats] = useState(initialStats);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
@@ -95,7 +96,8 @@ export function ChatDashboard({ initialStats, agents, quickReplies, currentUserI
       const data = await res.json();
       setConversations(data.conversations || []);
     } catch (error) {
-      console.error('Error loading conversations:', error);
+      console.error(error);
+      toast.error(t('common.errorOccurred'));
     }
   }, [filter]);
 
@@ -111,7 +113,8 @@ export function ChatDashboard({ initialStats, agents, quickReplies, currentUserI
         setMessages(data.conversation.messages || []);
       }
     } catch (error) {
-      console.error('Error loading messages:', error);
+      console.error(error);
+      toast.error(t('common.errorOccurred'));
     } finally {
       setLoading(false);
     }
@@ -135,7 +138,8 @@ export function ChatDashboard({ initialStats, agents, quickReplies, currentUserI
         scrollToBottom();
       }
     } catch (error) {
-      console.error('Error polling:', error);
+      console.error(error);
+      toast.error(t('common.errorOccurred'));
     }
   }, [selectedConversation?.id, messages]);
 
@@ -187,6 +191,7 @@ export function ChatDashboard({ initialStats, agents, quickReplies, currentUserI
       }
     } catch (error) {
       console.error('Error sending message:', error);
+      toast.error(t('common.errorOccurred'));
       if (!content) setNewMessage(messageContent);
     } finally {
       setSending(false);
@@ -210,7 +215,8 @@ export function ChatDashboard({ initialStats, agents, quickReplies, currentUserI
         loadConversations();
       }
     } catch (error) {
-      console.error('Error updating conversation:', error);
+      console.error(error);
+      toast.error(t('common.errorOccurred'));
     }
   };
 
@@ -236,9 +242,9 @@ export function ChatDashboard({ initialStats, agents, quickReplies, currentUserI
         {/* Stats */}
         <div style={{ padding: '16px', borderBottom: '1px solid var(--gray-200)' }}>
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'space-between' }}>
-            <StatBadge label="Ouvertes" value={stats.open} color="#4CAF50" />
-            <StatBadge label="En attente" value={stats.pending} color="#FF9800" />
-            <StatBadge label="Non lus" value={stats.unread} color="#f44336" />
+            <StatBadge label={t('admin.chat.openLabel')} value={stats.open} color="#4CAF50" />
+            <StatBadge label={t('admin.chat.pendingLabel')} value={stats.pending} color="#FF9800" />
+            <StatBadge label={t('admin.chat.unreadLabel')} value={stats.unread} color="#f44336" />
           </div>
         </div>
 
@@ -261,7 +267,7 @@ export function ChatDashboard({ initialStats, agents, quickReplies, currentUserI
                   color: 'var(--gray-500)',
                 }}
               >
-                {status === 'OPEN' ? 'Ouvertes' : status === 'PENDING' ? 'En attente' : status === 'RESOLVED' ? 'Résolues' : 'Fermées'}
+                {status === 'OPEN' ? t('admin.chat.statusOpen') : status === 'PENDING' ? t('admin.chat.statusPending') : status === 'RESOLVED' ? t('admin.chat.statusResolved') : t('admin.chat.statusClosed')}
               </button>
             ))}
           </div>
@@ -272,7 +278,7 @@ export function ChatDashboard({ initialStats, agents, quickReplies, currentUserI
           {conversations.length === 0 ? (
             <div style={{ padding: '40px 20px', textAlign: 'center' }}>
               <p style={{ color: 'var(--gray-400)', fontSize: '14px' }}>
-                Aucune conversation
+                {t('admin.chat.noConversations')}
               </p>
             </div>
           ) : (
@@ -307,7 +313,7 @@ export function ChatDashboard({ initialStats, agents, quickReplies, currentUserI
                     )}
                   </div>
                   <span style={{ fontSize: '11px', color: 'var(--gray-400)' }}>
-                    {formatTime(conv.lastMessageAt)}
+                    {formatTime(conv.lastMessageAt, t, locale)}
                   </span>
                 </div>
                 <p
@@ -319,7 +325,7 @@ export function ChatDashboard({ initialStats, agents, quickReplies, currentUserI
                     whiteSpace: 'nowrap',
                   }}
                 >
-                  {conv.messages?.[0]?.content || conv.subject || 'Nouvelle conversation'}
+                  {conv.messages?.[0]?.content || conv.subject || t('admin.chat.newConversation')}
                 </p>
               </button>
             ))
@@ -376,10 +382,10 @@ export function ChatDashboard({ initialStats, agents, quickReplies, currentUserI
                   fontSize: '13px',
                 }}
               >
-                <option value="OPEN">Ouverte</option>
-                <option value="PENDING">En attente</option>
-                <option value="RESOLVED">Résolue</option>
-                <option value="CLOSED">Fermée</option>
+                <option value="OPEN">{t('admin.chat.statusOpen')}</option>
+                <option value="PENDING">{t('admin.chat.statusPending')}</option>
+                <option value="RESOLVED">{t('admin.chat.statusResolved')}</option>
+                <option value="CLOSED">{t('admin.chat.statusClosed')}</option>
               </select>
               
               <select
@@ -392,7 +398,7 @@ export function ChatDashboard({ initialStats, agents, quickReplies, currentUserI
                   fontSize: '13px',
                 }}
               >
-                <option value="">Non assigné</option>
+                <option value="">{t('admin.chat.unassigned')}</option>
                 {agents.map((agent) => (
                   <option key={agent.id} value={agent.id}>
                     {agent.name || agent.email}
@@ -422,6 +428,7 @@ export function ChatDashboard({ initialStats, agents, quickReplies, currentUserI
                 <AdminMessageBubble
                   key={msg.id}
                   message={msg}
+                  locale={locale}
                 />
               ))
             )}
@@ -480,7 +487,7 @@ export function ChatDashboard({ initialStats, agents, quickReplies, currentUserI
                     sendMessage();
                   }
                 }}
-                placeholder="Écrire une réponse..."
+                placeholder={t('admin.chat.dashboardReplyPlaceholder')}
                 rows={2}
                 style={{
                   flex: 1,
@@ -502,7 +509,7 @@ export function ChatDashboard({ initialStats, agents, quickReplies, currentUserI
                   opacity: newMessage.trim() && !sending ? 1 : 0.5,
                 }}
               >
-                Envoyer
+                {t('admin.chat.send')}
               </button>
             </div>
           </form>
@@ -519,7 +526,7 @@ export function ChatDashboard({ initialStats, agents, quickReplies, currentUserI
         >
           <p style={{ fontSize: '48px', marginBottom: '16px' }}>💬</p>
           <p style={{ fontSize: '16px', color: 'var(--gray-400)' }}>
-            Sélectionnez une conversation
+            {t('admin.chat.selectConversation')}
           </p>
         </div>
       )}
@@ -536,7 +543,7 @@ function StatBadge({ label, value, color }: { label: string; value: number; colo
   );
 }
 
-function AdminMessageBubble({ message }: { message: Message }) {
+function AdminMessageBubble({ message, locale }: { message: Message; locale: string }) {
   if (message.isSystem) {
     return (
       <div style={{ textAlign: 'center', fontSize: '12px', color: 'var(--gray-400)', padding: '8px' }}>
@@ -566,14 +573,14 @@ function AdminMessageBubble({ message }: { message: Message }) {
         )}
         <p style={{ margin: 0, whiteSpace: 'pre-wrap', lineHeight: 1.5 }}>{message.content}</p>
         <p style={{ fontSize: '10px', marginTop: '6px', opacity: 0.7, textAlign: 'right' }}>
-          {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          {new Date(message.createdAt).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}
         </p>
       </div>
     </div>
   );
 }
 
-function formatTime(dateString: string): string {
+function formatTime(dateString: string, t: (key: string) => string, locale: string): string {
   const date = new Date(dateString);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
@@ -581,11 +588,11 @@ function formatTime(dateString: string): string {
   const diffHours = Math.floor(diffMs / 3600000);
   const diffDays = Math.floor(diffMs / 86400000);
 
-  if (diffMins < 1) return 'À l\'instant';
+  if (diffMins < 1) return t('admin.chat.dashboardJustNow');
   if (diffMins < 60) return `${diffMins}m`;
   if (diffHours < 24) return `${diffHours}h`;
-  if (diffDays < 7) return `${diffDays}j`;
-  return date.toLocaleDateString();
+  if (diffDays < 7) return `${diffDays}${t('admin.chat.daysAbbrev')}`;
+  return date.toLocaleDateString(locale);
 }
 
 export default ChatDashboard;

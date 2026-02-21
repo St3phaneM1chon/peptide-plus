@@ -37,7 +37,6 @@ export default function CurrencyPage() {
   const [foreignAccounts, setForeignAccounts] = useState<ForeignAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [, setSelectedCurrency] = useState<string | null>(null);
   // Converter state
   const [converterAmount, setConverterAmount] = useState<number>(100);
   const [converterCurrency, setConverterCurrency] = useState<string>('');
@@ -190,7 +189,7 @@ export default function CurrencyPage() {
   const theme = sectionThemes.bank;
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64"><div className="animate-spin h-8 w-8 border-4 border-sky-500 border-t-transparent rounded-full"></div></div>;
+    return <div className="flex items-center justify-center h-64" role="status" aria-label="Loading"><div className="animate-spin h-8 w-8 border-4 border-sky-500 border-t-transparent rounded-full"></div><span className="sr-only">Loading...</span></div>;
   }
 
   return (
@@ -261,7 +260,7 @@ export default function CurrencyPage() {
               theme={theme}
               className="hover:border-sky-300 cursor-pointer transition-colors"
             >
-              <div onClick={() => setSelectedCurrency(currency.code)}>
+              <div>
                 <div className="flex justify-between items-start">
                   <div>
                     <div className="flex items-center gap-2">
@@ -305,6 +304,7 @@ export default function CurrencyPage() {
       {activeTab === 'accounts' && (
         <div className="space-y-4">
           <SectionCard title={t('admin.multiCurrency.foreignAccounts')} theme={theme} noPadding>
+            <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-slate-50">
                 <tr>
@@ -360,6 +360,7 @@ export default function CurrencyPage() {
                 </tr>
               </tfoot>
             </table>
+            </div>
           </SectionCard>
 
           {/* Add account */}
@@ -414,7 +415,7 @@ export default function CurrencyPage() {
           </div>
 
           {/* Stats -- only current rate is available, no historical min/max/volatility */}
-          <div className="grid grid-cols-4 gap-4 p-4 border-t border-slate-200">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 p-4 border-t border-slate-200">
             <div>
               <p className="text-xs text-slate-500">{t('admin.multiCurrency.average')}</p>
               <p className="font-medium text-slate-900">{selectedRate != null ? selectedRate.toFixed(4) : '\u2014'}</p>

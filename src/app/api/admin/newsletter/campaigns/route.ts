@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
+import { createCampaignSchema } from '@/lib/validations/newsletter';
 
 const CAMPAIGNS_KEY = 'newsletter_campaigns';
 
@@ -87,17 +88,17 @@ export const GET = withAdminGuard(async (_request, { session: _session }) => {
 export const POST = withAdminGuard(async (request: NextRequest, { session }) => {
   try {
     const body = await request.json();
-    const { subject, content, status } = body;
 
-    if (!subject || !content) {
+    // Validate with Zod
+    const parsed = createCampaignSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Subject and content are required' },
+        { error: 'Validation error', details: parsed.error.flatten() },
         { status: 400 }
       );
     }
-
-    const validStatuses = ['DRAFT', 'SCHEDULED', 'SENT'];
-    const campaignStatus = validStatuses.includes(status) ? status : 'DRAFT';
+    const { subject, content, status, scheduledFor } = parsed.data;
+    const campaignStatus = status;
 
     // Count active subscribers for recipientCount
     const recipientCount = await prisma.newsletterSubscriber.count({
@@ -110,7 +111,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
       subject,
       content,
       status: campaignStatus,
-      scheduledFor: body.scheduledFor || undefined,
+      scheduledFor: scheduledFor || undefined,
       sentAt: campaignStatus === 'SENT' ? now : undefined,
       recipientCount: campaignStatus === 'SENT' ? recipientCount : 0,
       createdAt: now,

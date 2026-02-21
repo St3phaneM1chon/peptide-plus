@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { PageHeader, Button, StatusBadge, DataTable, type Column } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
+import { toast } from 'sonner';
 
 type SalesDataItem = { code: string; country: string; flag: string; orders: number; revenue: number; taxCollected: number; avgOrder: number; growth: number };
 type MonthlyTrendItem = { month: string; orders: number; revenue: number };
@@ -126,6 +127,8 @@ export default function GlobalReportsPage() {
         // We don't have a dedicated recent orders API, leave empty or fetch if available
         setRecentOrders([]);
       } catch (err) {
+        console.error(err);
+        toast.error(t('common.errorOccurred'));
         setError(err instanceof Error ? err.message : t('admin.fiscalReports.unknownError'));
       } finally {
         setLoading(false);
@@ -344,7 +347,7 @@ export default function GlobalReportsPage() {
               </tbody>
               <tfoot>
                 <tr className="bg-slate-100 font-bold">
-                  <td className="py-3 px-4">TOTAL</td>
+                  <td className="py-3 px-4">{t('common.total').toUpperCase()}</td>
                   <td className="py-3 px-4 text-end">{totals.totalOrders.toLocaleString(locale)}</td>
                   <td className="py-3 px-4 text-end text-green-600">${totals.totalRevenue.toLocaleString(locale)}</td>
                   <td className="py-3 px-4 text-end text-slate-600">${totals.totalTax.toLocaleString(locale)}</td>

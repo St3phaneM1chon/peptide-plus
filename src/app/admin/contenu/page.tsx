@@ -66,6 +66,7 @@ export default function ContenuPage() {
     title: '', slug: '', content: '', excerpt: '', metaTitle: '', metaDescription: '', template: 'default', isPublished: false,
   });
   const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   // FAQ modal
   const [faqModal, setFaqModal] = useState(false);
@@ -75,15 +76,27 @@ export default function ContenuPage() {
   });
 
   const fetchPages = useCallback(async () => {
-    const res = await fetch('/api/admin/content/pages');
-    const data = await res.json();
-    setPages(data.pages || []);
+    try {
+      const res = await fetch('/api/admin/content/pages');
+      const data = await res.json();
+      setPages(data.pages || []);
+    } catch (err) {
+      console.error('Error fetching pages:', err);
+      toast.error(t('common.error'));
+      setPages([]);
+    }
   }, []);
 
   const fetchFaqs = useCallback(async () => {
-    const res = await fetch('/api/admin/content/faqs');
-    const data = await res.json();
-    setFaqs(data.faqs || []);
+    try {
+      const res = await fetch('/api/admin/content/faqs');
+      const data = await res.json();
+      setFaqs(data.faqs || []);
+    } catch (err) {
+      console.error('Error fetching FAQs:', err);
+      toast.error(t('common.error'));
+      setFaqs([]);
+    }
   }, []);
 
   useEffect(() => {
@@ -109,39 +122,66 @@ export default function ContenuPage() {
 
   const savePage = async () => {
     setSaving(true);
-    const method = editingPage ? 'PUT' : 'POST';
-    const body = editingPage ? { id: editingPage.id, ...pageForm } : pageForm;
+    try {
+      const method = editingPage ? 'PUT' : 'POST';
+      const body = editingPage ? { id: editingPage.id, ...pageForm } : pageForm;
 
-    const res = await fetch('/api/admin/content/pages', {
-      method,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
+      const res = await fetch('/api/admin/content/pages', {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
 
-    if (res.ok) {
-      setPageModal(false);
-      setEditingPage(null);
-      fetchPages();
-    } else {
-      const err = await res.json();
-      toast.error(err.error || t('admin.content.errorSavingPage'));
+      if (res.ok) {
+        setPageModal(false);
+        setEditingPage(null);
+        fetchPages();
+      } else {
+        const err = await res.json();
+        toast.error(err.error || t('admin.content.errorSavingPage'));
+      }
+    } catch {
+      toast.error(t('common.networkError'));
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
   };
 
   const deletePage = async (id: string) => {
     if (!confirm(t('admin.content.deletePageConfirm'))) return;
-    await fetch(`/api/admin/content/pages?id=${id}`, { method: 'DELETE' });
-    fetchPages();
+    setDeletingId(id);
+    try {
+      const res = await fetch(`/api/admin/content/pages?id=${id}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        toast.error(data.error || t('common.deleteFailed'));
+        return;
+      }
+      toast.success(t('admin.content.pageDeleted') || 'Page deleted');
+      fetchPages();
+    } catch {
+      toast.error(t('common.networkError'));
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   const togglePagePublished = async (page: Page) => {
-    await fetch('/api/admin/content/pages', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: page.id, isPublished: !page.isPublished }),
-    });
-    fetchPages();
+    try {
+      const res = await fetch('/api/admin/content/pages', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: page.id, isPublished: !page.isPublished }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        toast.error(data.error || t('common.updateFailed'));
+        return;
+      }
+      fetchPages();
+    } catch {
+      toast.error(t('common.networkError'));
+    }
   };
 
   // FAQ CRUD
@@ -161,39 +201,69 @@ export default function ContenuPage() {
 
   const saveFaq = async () => {
     setSaving(true);
-    const method = editingFaq ? 'PUT' : 'POST';
-    const body = editingFaq ? { id: editingFaq.id, ...faqForm } : faqForm;
+    try {
+      const method = editingFaq ? 'PUT' : 'POST';
+      const body = editingFaq ? { id: editingFaq.id, ...faqForm } : faqForm;
 
-    const res = await fetch('/api/admin/content/faqs', {
-      method,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
+      const res = await fetch('/api/admin/content/faqs', {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
 
-    if (res.ok) {
-      setFaqModal(false);
-      setEditingFaq(null);
-      fetchFaqs();
-    } else {
-      const err = await res.json();
-      toast.error(err.error || t('admin.content.errorSavingFaq'));
+      if (res.ok) {
+        setFaqModal(false);
+        setEditingFaq(null);
+        fetchFaqs();
+      } else {
+        const err = await res.json();
+        toast.error(err.error || t('admin.content.errorSavingFaq'));
+      }
+    } catch {
+      toast.error(t('common.networkError'));
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
   };
 
   const deleteFaq = async (id: string) => {
     if (!confirm(t('admin.content.deleteFaqConfirm'))) return;
-    await fetch(`/api/admin/content/faqs?id=${id}`, { method: 'DELETE' });
-    fetchFaqs();
+    setDeletingId(id);
+    try {
+      const res = await fetch(`/api/admin/content/faqs?id=${id}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        toast.error(data.error || t('common.deleteFailed'));
+        return;
+      }
+      toast.success(t('admin.content.faqDeleted') || 'FAQ deleted');
+      fetchFaqs();
+    } catch {
+      toast.error(t('common.networkError'));
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   const toggleFaqPublished = async (faq: FAQItem) => {
-    await fetch('/api/admin/content/faqs', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: faq.id, isPublished: !faq.isPublished }),
-    });
-    fetchFaqs();
+    try {
+      const res = await fetch('/api/admin/content/faqs', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: faq.id, isPublished: !faq.isPublished }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        toast.error(data.error || t('common.updateFailed'));
+        return;
+      }
+      toast.success(faq.isPublished
+        ? (t('admin.content.faqUnpublished') || 'FAQ unpublished')
+        : (t('admin.content.faqPublished') || 'FAQ published'));
+      fetchFaqs();
+    } catch {
+      toast.error(t('common.networkError'));
+    }
   };
 
   // Filtered data
@@ -259,8 +329,9 @@ export default function ContenuPage() {
       />
 
       {loading ? (
-        <div className="flex items-center justify-center h-64">
+        <div className="flex items-center justify-center h-64" role="status" aria-label="Loading">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500" />
+          <span className="sr-only">Loading...</span>
         </div>
       ) : activeTab === 'pages' ? (
         /* Pages Tab */
@@ -272,7 +343,7 @@ export default function ContenuPage() {
             action={<Button variant="primary" icon={Plus} onClick={() => openPageModal()}>{t('admin.content.createPage')}</Button>}
           />
         ) : (
-          <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
+          <div className="bg-white border border-slate-200 rounded-lg overflow-hidden overflow-x-auto">
             <table className="w-full">
               <thead className="bg-slate-50">
                 <tr>
@@ -315,7 +386,7 @@ export default function ContenuPage() {
                         <a href={`/${page.slug}`} target="_blank" rel="noopener noreferrer">
                           <Button size="sm" variant="ghost" icon={ExternalLink} />
                         </a>
-                        <Button size="sm" variant="ghost" icon={Trash2} onClick={() => deletePage(page.id)} />
+                        <Button size="sm" variant="ghost" icon={Trash2} disabled={deletingId === page.id} onClick={() => deletePage(page.id)} />
                       </div>
                     </td>
                   </tr>
@@ -357,7 +428,7 @@ export default function ContenuPage() {
                             )}
                           </button>
                           <Button size="sm" variant="ghost" icon={Pencil} onClick={() => openFaqModal(faq)} />
-                          <Button size="sm" variant="ghost" icon={Trash2} onClick={() => deleteFaq(faq.id)} />
+                          <Button size="sm" variant="ghost" icon={Trash2} disabled={deletingId === faq.id} onClick={() => deleteFaq(faq.id)} />
                         </div>
                       </div>
                     </div>

@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useCallback } from 'react';
+import { useAdminSSE } from './useAdminSSE';
 
 interface NotificationCounts {
   pendingOrders: number;
@@ -16,62 +17,22 @@ const DEFAULT_COUNTS: NotificationCounts = {
 
 /**
  * Hook for real-time admin notification badge counts via SSE.
- * Connects to /api/admin/notifications/stream.
- * Automatically reconnects on failure with exponential backoff.
+ * Connects to /api/admin/notifications/stream through a shared
+ * EventSource singleton (see useAdminSSE) so that multiple components
+ * using this hook share a single connection instead of opening duplicates.
  */
 export function useAdminNotifications() {
   const [counts, setCounts] = useState<NotificationCounts>(DEFAULT_COUNTS);
-  const [connected, setConnected] = useState(false);
-  const retryCount = useRef(0);
-  const eventSourceRef = useRef<EventSource | null>(null);
 
-  useEffect(() => {
-    let mounted = true;
-    let retryTimeout: ReturnType<typeof setTimeout>;
-
-    function connect() {
-      if (!mounted) return;
-
-      const es = new EventSource('/api/admin/notifications/stream');
-      eventSourceRef.current = es;
-
-      es.onopen = () => {
-        if (mounted) {
-          setConnected(true);
-          retryCount.current = 0;
-        }
-      };
-
-      es.onmessage = (event) => {
-        if (!mounted) return;
-        try {
-          const data = JSON.parse(event.data) as NotificationCounts;
-          setCounts(data);
-        } catch {
-          // Ignore parse errors
-        }
-      };
-
-      es.onerror = () => {
-        es.close();
-        if (mounted) {
-          setConnected(false);
-          // Exponential backoff: 1s, 2s, 4s, 8s, max 30s
-          const delay = Math.min(1000 * Math.pow(2, retryCount.current), 30000);
-          retryCount.current++;
-          retryTimeout = setTimeout(connect, delay);
-        }
-      };
+  const handleMessage = useCallback((data: unknown) => {
+    if (data && typeof data === 'object') {
+      setCounts(data as NotificationCounts);
     }
-
-    connect();
-
-    return () => {
-      mounted = false;
-      clearTimeout(retryTimeout);
-      eventSourceRef.current?.close();
-    };
   }, []);
 
-  return { ...counts, connected };
+  useAdminSSE('/api/admin/notifications/stream', {
+    message: handleMessage,
+  });
+
+  return { ...counts };
 }

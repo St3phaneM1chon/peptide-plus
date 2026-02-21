@@ -15,6 +15,7 @@ import {
   SelectFilter,
 } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
+import { toast } from 'sonner';
 
 interface SalesData {
   date: string;
@@ -44,7 +45,7 @@ interface DashboardData {
 }
 
 export default function RapportsPage() {
-  const { t, locale } = useI18n();
+  const { t, formatCurrency } = useI18n();
   const [period, setPeriod] = useState<'7d' | '30d' | '90d' | '1y'>('30d');
   const [loading, setLoading] = useState(true);
   const [salesData, setSalesData] = useState<SalesData[]>([]);
@@ -169,7 +170,8 @@ export default function RapportsPage() {
         setRegionData(regions);
       }
     } catch (err) {
-      console.error('Error fetching reports data:', err);
+      console.error(err);
+      toast.error(t('common.error'));
     } finally {
       setLoading(false);
     }
@@ -198,8 +200,9 @@ export default function RapportsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex items-center justify-center h-64" role="status" aria-label="Loading">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500" />
+        <span className="sr-only">Loading...</span>
       </div>
     );
   }
@@ -230,10 +233,10 @@ export default function RapportsPage() {
       />
 
       {/* Main Stats */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           label={t('admin.reports.totalRevenue')}
-          value={`${totalRevenue.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`}
+          value={formatCurrency(totalRevenue)}
           icon={DollarSign}
           trend={previousPeriodRevenue > 0 ? { value: Math.round(revenueTrend * 10) / 10, label: t('admin.reports.vsPreviousPeriod') } : undefined}
         />
@@ -245,7 +248,7 @@ export default function RapportsPage() {
         />
         <StatCard
           label={t('admin.reports.avgCart')}
-          value={`${avgOrderValue.toFixed(2)} $`}
+          value={formatCurrency(avgOrderValue)}
           icon={ShoppingBag}
           trend={previousAvgOrder > 0 ? { value: Math.round(avgOrderTrend * 10) / 10, label: t('admin.reports.vsPreviousPeriod') } : undefined}
         />
@@ -274,7 +277,7 @@ export default function RapportsPage() {
                 >
                   <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-slate-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap z-10">
                     {day.date}<br/>
-                    {day.revenue.toLocaleString(locale)} $<br/>
+                    {formatCurrency(day.revenue)}<br/>
                     {t('admin.reports.ordersCount', { count: day.orders })}
                   </div>
                 </div>
@@ -311,7 +314,7 @@ export default function RapportsPage() {
                     </div>
                   </div>
                   <div className="text-end">
-                    <p className="font-semibold text-slate-900">{product.revenue.toLocaleString(locale)} $</p>
+                    <p className="font-semibold text-slate-900">{formatCurrency(product.revenue)}</p>
                     <p className="text-xs text-slate-500">{t('admin.reports.salesCount', { count: product.sales })}</p>
                   </div>
                 </div>
@@ -339,7 +342,7 @@ export default function RapportsPage() {
                     </div>
                   </div>
                   <div className="text-end">
-                    <p className="font-semibold text-slate-900">{region.revenue.toLocaleString(locale)} $</p>
+                    <p className="font-semibold text-slate-900">{formatCurrency(region.revenue)}</p>
                     <p className="text-xs text-slate-500">{t('admin.reports.ordersCount', { count: region.orders })}</p>
                   </div>
                 </div>

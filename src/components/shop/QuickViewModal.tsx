@@ -245,6 +245,7 @@ export default function QuickViewModal({ slug, isOpen, onClose }: QuickViewModal
                   src={product.productImage}
                   alt={getProductName()}
                   fill
+                  sizes="(max-width: 768px) 100vw, 50vw"
                   className="object-contain"
                   priority
                 />

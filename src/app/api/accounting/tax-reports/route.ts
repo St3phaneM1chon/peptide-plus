@@ -124,11 +124,16 @@ export const POST = withAdminGuard(async (request) => {
 
     // Calculate taxes collected from paid orders
     // Safety limit to prevent unbounded queries on large datasets
+    // Map regionCode to shippingState for filtering (e.g. QC, ON, BC)
+    const regionFilter: Record<string, unknown> = {
+      paymentStatus: 'PAID',
+      createdAt: { gte: startDate, lte: endDate },
+    };
+    if (regionCode && regionCode !== 'ALL') {
+      regionFilter.shippingState = regionCode;
+    }
     const orders = await prisma.order.findMany({
-      where: {
-        paymentStatus: 'PAID',
-        createdAt: { gte: startDate, lte: endDate },
-      },
+      where: regionFilter,
       select: { taxTps: true, taxTvq: true, taxTvh: true, total: true },
       take: 10000,
     });

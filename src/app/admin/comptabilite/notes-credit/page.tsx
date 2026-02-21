@@ -5,12 +5,13 @@ import { Eye, Download, FileText, DollarSign, CheckCircle, XCircle } from 'lucid
 import { PageHeader } from '@/components/admin/PageHeader';
 import { Button } from '@/components/admin/Button';
 import { Modal } from '@/components/admin/Modal';
-import { StatusBadge } from '@/components/admin/StatusBadge';
+import { StatusBadge, type BadgeVariant } from '@/components/admin/StatusBadge';
 import { StatCard } from '@/components/admin/StatCard';
 import { FilterBar, SelectFilter } from '@/components/admin/FilterBar';
 import { DataTable, type Column } from '@/components/admin/DataTable';
 import { useI18n } from '@/i18n/client';
 import { sectionThemes } from '@/lib/admin/section-themes';
+import { toast } from 'sonner';
 
 interface CreditNote {
   id: string;
@@ -43,7 +44,6 @@ interface Stats {
   voidCount: number;
 }
 
-type BadgeVariant = 'success' | 'warning' | 'error' | 'info' | 'neutral';
 
 export default function NotesCreditPage() {
   const { t, locale, formatCurrency } = useI18n();
@@ -85,6 +85,7 @@ export default function NotesCreditPage() {
       setStats(data.stats ?? { totalCount: 0, totalAmount: 0, issuedCount: 0, issuedAmount: 0, voidCount: 0 });
     } catch (err) {
       console.error('Error fetching credit notes:', err);
+      toast.error(t('common.errorOccurred'));
       setError(err instanceof Error ? err.message : t('admin.creditNotes.loadError'));
       setCreditNotes([]);
     } finally {
@@ -101,7 +102,7 @@ export default function NotesCreditPage() {
   if (loading) return (
     <div aria-live="polite" aria-busy="true" className="p-8 space-y-4 animate-pulse">
       <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-1/3"></div>
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[1,2,3,4].map(i => <div key={i} className="h-24 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>)}
       </div>
       <div className="h-64 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
@@ -209,7 +210,7 @@ export default function NotesCreditPage() {
       />
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard label={t('admin.creditNotes.totalNotes')} value={stats.totalCount} icon={FileText} theme={theme} />
         <StatCard label={t('admin.creditNotes.totalAmount')} value={formatCAD(stats.totalAmount)} icon={DollarSign} theme={theme} />
         <StatCard label={t('admin.creditNotes.inEffect')} value={stats.issuedCount} icon={CheckCircle} theme={theme} />

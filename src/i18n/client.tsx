@@ -17,6 +17,7 @@ interface I18nContextType {
   messages: Messages;
   setLocale: (locale: Locale) => void;
   t: (key: string, params?: Record<string, string | number>) => string;
+  tp: (key: string, count: number, params?: Record<string, string | number>) => string;
   formatDate: (date: Date | string) => string;
   formatCurrency: (amount: number) => string;
   formatNumber: (amount: number) => string;
@@ -104,6 +105,29 @@ export function I18nProvider({ children, locale: initialLocale, messages }: I18n
     return value;
   }, [messages]);
 
+  // Fonction de traduction pluralisée
+  // Utilise Intl.PluralRules pour supporter toutes les formes plurielles
+  // (ex: arabe a 6 formes, polonais 3, russe 3, etc.)
+  // Convention: clés avec suffixes _zero, _one, _two, _few, _many, _other
+  const tp = useCallback((key: string, count: number, params?: Record<string, string | number>): string => {
+    const pluralRule = new Intl.PluralRules(locale);
+    const category = pluralRule.select(count); // 'zero' | 'one' | 'two' | 'few' | 'many' | 'other'
+
+    const allParams = { ...params, count };
+
+    // Try specific plural form first, then _other fallback, then base key
+    const pluralKey = `${key}_${category}`;
+    const otherKey = `${key}_other`;
+
+    const pluralResult = t(pluralKey, allParams);
+    if (pluralResult !== pluralKey) return pluralResult;
+
+    const otherResult = t(otherKey, allParams);
+    if (otherResult !== otherKey) return otherResult;
+
+    return t(key, allParams);
+  }, [locale, t]);
+
   // Formatage de date
   const formatDate = useCallback((date: Date | string): string => {
     const d = typeof date === 'string' ? new Date(date) : date;
@@ -128,6 +152,7 @@ export function I18nProvider({ children, locale: initialLocale, messages }: I18n
     messages,
     setLocale,
     t,
+    tp,
     formatDate,
     formatCurrency,
     formatNumber,
@@ -152,8 +177,8 @@ export function useI18n() {
 
 // Hook pour la traduction uniquement
 export function useTranslation() {
-  const { t, locale } = useI18n();
-  return { t, locale };
+  const { t, tp, locale } = useI18n();
+  return { t, tp, locale };
 }
 
 // Hook pour le formatage

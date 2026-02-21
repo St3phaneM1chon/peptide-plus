@@ -14,6 +14,7 @@
 
 import { prisma } from '@/lib/db';
 import { sendEmail } from './email-service';
+import { generateUnsubscribeUrl } from './unsubscribe';
 import {
   orderConfirmationEmail,
   orderProcessingEmail,
@@ -90,7 +91,14 @@ export async function sendOrderLifecycleEmail(
       return;
     }
 
-    // ── 3. Build OrderData ────────────────────────────────────────────────
+    // ── 3. Generate unsubscribe URL (CAN-SPAM / RGPD / LCAP compliance) ─
+    const unsubscribeUrl = await generateUnsubscribeUrl(
+      user.email,
+      'transactional',
+      user.id,
+    ).catch(() => undefined);
+
+    // ── 4. Build OrderData ────────────────────────────────────────────────
     const locale = (user.locale === 'en' ? 'en' : 'fr') as 'fr' | 'en';
 
     const orderData: OrderData = {
@@ -126,9 +134,10 @@ export async function sendOrderLifecycleEmail(
       cancellationReason: options.cancellationReason,
       refundAmount: options.refundAmount,
       refundIsPartial: options.refundIsPartial,
+      unsubscribeUrl,
     };
 
-    // ── 4. Pick template ──────────────────────────────────────────────────
+    // ── 5. Pick template ──────────────────────────────────────────────────
     let emailContent: { subject: string; html: string };
 
     switch (event) {
@@ -155,15 +164,16 @@ export async function sendOrderLifecycleEmail(
         return;
     }
 
-    // ── 5. Send ───────────────────────────────────────────────────────────
+    // ── 6. Send ───────────────────────────────────────────────────────────
     const result = await sendEmail({
       to: { email: user.email, name: user.name || undefined },
       subject: emailContent.subject,
       html: emailContent.html,
       tags: ['order', event.toLowerCase(), order.orderNumber],
+      unsubscribeUrl,
     });
 
-    // ── 6. Audit log ──────────────────────────────────────────────────────
+    // ── 7. Audit log ──────────────────────────────────────────────────────
     await prisma.auditLog.create({
       data: {
         userId: user.id,

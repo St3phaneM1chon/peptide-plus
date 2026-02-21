@@ -110,7 +110,41 @@ const testimonials = [
   },
 ];
 
-export default function HomePage() {
+interface HomePageProps {
+  initialHeroSlides?: HeroSlideData[];
+}
+
+// Re-export the HeroSlide type for parent components
+export interface HeroSlideData {
+  id: string;
+  slug: string;
+  mediaType: 'IMAGE' | 'VIDEO' | 'ANIMATION';
+  backgroundUrl: string;
+  backgroundMobile?: string | null;
+  overlayOpacity: number;
+  overlayGradient?: string | null;
+  badgeText?: string | null;
+  title: string;
+  subtitle?: string | null;
+  ctaText?: string | null;
+  ctaUrl?: string | null;
+  ctaStyle?: string | null;
+  cta2Text?: string | null;
+  cta2Url?: string | null;
+  cta2Style?: string | null;
+  statsJson?: string | null;
+  translations: {
+    locale: string;
+    badgeText?: string | null;
+    title: string;
+    subtitle?: string | null;
+    ctaText?: string | null;
+    cta2Text?: string | null;
+    statsJson?: string | null;
+  }[];
+}
+
+export default function HomePage({ initialHeroSlides }: HomePageProps) {
   const { t, locale } = useI18n();
   const [products, setProducts] = useState<ApiProduct[]>([]);
   const [articles, setArticles] = useState<Article[]>([]);
@@ -193,7 +227,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Slider */}
-      <HeroSlider />
+      <HeroSlider initialSlides={initialHeroSlides} />
 
       {/* Trust Badges Hero */}
       <TrustBadgesHero />

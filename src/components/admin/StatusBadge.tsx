@@ -1,6 +1,6 @@
 'use client';
 
-type BadgeVariant = 'success' | 'warning' | 'error' | 'info' | 'neutral' | 'primary';
+export type BadgeVariant = 'success' | 'warning' | 'error' | 'info' | 'neutral' | 'primary';
 
 interface StatusBadgeProps {
   children: React.ReactNode;

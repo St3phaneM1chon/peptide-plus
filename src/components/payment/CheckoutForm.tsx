@@ -313,7 +313,7 @@ function StripeCheckoutForm({
     }
 
     if (result.error) {
-      setError(result.error.message || 'Une erreur est survenue');
+      setError(result.error.message || t('common.errorOccurred'));
       setIsLoading(false);
     }
   };

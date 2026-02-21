@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic';
  * Gère produits DIGITAL (accès immédiat) et PHYSICAL (avec livraison)
  */
 
+import type { Metadata } from 'next';
 import { redirect, notFound } from 'next/navigation';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
@@ -12,6 +13,22 @@ import { CheckoutPageClient } from './CheckoutPageClient';
 
 interface CheckoutPageProps {
   params: Promise<{ slug: string }>;
+}
+
+export async function generateMetadata({ params }: CheckoutPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const product = await prisma.product.findUnique({
+    where: { slug, isActive: true },
+    select: { name: true },
+  });
+
+  return {
+    title: product ? `Checkout - ${product.name}` : 'Checkout',
+    description: product
+      ? `Complete your purchase of ${product.name} from BioCycle Peptides.`
+      : 'Complete your purchase from BioCycle Peptides.',
+    robots: { index: false, follow: false },
+  };
 }
 
 async function getProduct(slug: string) {

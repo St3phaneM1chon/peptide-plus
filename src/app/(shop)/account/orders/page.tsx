@@ -966,9 +966,9 @@ export default function OrdersPage() {
 
         {/* Cancel Order Confirmation Modal */}
         {cancelConfirmOrder && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-labelledby="cancel-order-modal-title">
             <div className="bg-white rounded-2xl max-w-md w-full p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">
+              <h2 id="cancel-order-modal-title" className="text-xl font-bold text-gray-900 mb-4">
                 {t('account.orders.cancelOrderConfirmTitle') || 'Cancel Order?'}
               </h2>
               <p className="text-gray-600 mb-4">
@@ -1084,11 +1084,11 @@ function EditAddressModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-labelledby="edit-shipping-modal-title">
       <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
         {/* Modal Header */}
         <div className="p-6 border-b border-gray-200 flex items-center justify-between flex-shrink-0">
-          <h2 className="text-xl font-bold text-gray-900">
+          <h2 id="edit-shipping-modal-title" className="text-xl font-bold text-gray-900">
             {t('account.orders.editShippingAddress') || 'Edit Shipping Address'}
           </h2>
           <button
@@ -1302,11 +1302,11 @@ function InvoiceModal({
   const shipping = order.shippingAddress;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-labelledby="invoice-preview-modal-title">
       <div className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
         {/* Modal Header */}
         <div className="p-4 border-b border-gray-200 flex items-center justify-between flex-shrink-0">
-          <h2 className="text-lg font-bold">{t('account.orders.invoiceTitle')} {order.orderNumber}</h2>
+          <h2 id="invoice-preview-modal-title" className="text-lg font-bold">{t('account.orders.invoiceTitle')} {order.orderNumber}</h2>
           <div className="flex items-center gap-2">
             <button
               onClick={onPrint}

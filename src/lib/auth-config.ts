@@ -13,6 +13,7 @@ import { PrismaAdapter } from '@auth/prisma-adapter';
 import { compare } from 'bcryptjs';
 import { prisma } from './db';
 import { UserRole } from '@/types';
+import { encryptToken } from './token-encryption';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AuthProvider = any;
@@ -49,13 +50,13 @@ const oauthProviders: AuthProvider[] = [
       ]
     : []),
 
-  // Apple (TRUSTED - Apple always verifies email ownership)
+  // Apple — email is verified by Apple, but we no longer enable dangerous linking
+  // to reduce attack surface. Only Google retains it (needed for Gmail account merging).
   ...(process.env.APPLE_CLIENT_ID && process.env.APPLE_CLIENT_SECRET
     ? [
         AppleProvider({
           clientId: process.env.APPLE_CLIENT_ID,
           clientSecret: process.env.APPLE_CLIENT_SECRET,
-          allowDangerousEmailAccountLinking: true,
         }),
       ]
     : []),
@@ -142,6 +143,7 @@ const providers = [
             mfaSecret = await decrypt(user.mfaSecret!);
           } catch {
             // If decryption fails, use raw value as fallback
+            console.warn('MFA: decryption failed, falling back to raw secret. This may indicate a missing/changed MFA_ENCRYPTION_KEY.');
           }
 
           const isValidMFA = verifyTOTP(
@@ -179,9 +181,24 @@ const providers = [
 // CONFIGURATION NEXTAUTH
 // =====================================================
 
+// Wrap PrismaAdapter to encrypt OAuth tokens before storing in DB
+const baseAdapter = PrismaAdapter(prisma);
+const encryptedAdapter = {
+  ...baseAdapter,
+  linkAccount: async (account: Parameters<NonNullable<typeof baseAdapter.linkAccount>>[0]) => {
+    const encryptedAccount = {
+      ...account,
+      access_token: (await encryptToken(account.access_token ?? null)) ?? undefined,
+      refresh_token: (await encryptToken(account.refresh_token ?? null)) ?? undefined,
+      id_token: (await encryptToken(account.id_token ?? null)) ?? undefined,
+    };
+    return baseAdapter.linkAccount!(encryptedAccount);
+  },
+};
+
 export const authConfig: NextAuthConfig = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  adapter: PrismaAdapter(prisma) as any,
+  adapter: encryptedAdapter as any,
   providers,
 
   // CRITICAL: Trust proxy headers (Azure App Service terminates TLS at load balancer)
@@ -261,10 +278,13 @@ export const authConfig: NextAuthConfig = {
           try {
             const existingUser = await prisma.user.findUnique({
               where: { email: user.email! },
+              select: { id: true, mfaEnabled: true, termsAcceptedAt: true },
             });
 
-            // Si nouveau utilisateur OAuth ou sans MFA, permettre quand même la connexion
-            // MFA peut être configuré plus tard
+            // RGPD: If OAuth user hasn't accepted terms, redirect to accept-terms page
+            // This covers new OAuth signups and existing users who never accepted terms.
+            // We allow the signIn to proceed (user is authenticated) but flag
+            // the need for terms acceptance in the JWT callback below.
             if (!existingUser || !existingUser.mfaEnabled) {
               // Permettre la connexion, MFA optionnel
               return true;
@@ -300,16 +320,19 @@ export const authConfig: NextAuthConfig = {
             try {
               const dbUser = await prisma.user.findUnique({
                 where: { id: user.id! },
-                select: { role: true, mfaEnabled: true, name: true, image: true },
+                select: { role: true, mfaEnabled: true, name: true, image: true, termsAcceptedAt: true },
               });
               token.role = (dbUser?.role as UserRole) || UserRole.CUSTOMER;
               token.mfaEnabled = dbUser?.mfaEnabled || false;
+              // RGPD: Flag OAuth users who haven't accepted terms yet
+              token.needsTerms = !dbUser?.termsAcceptedAt;
               // Use DB values for name/image if available (most up-to-date)
               if (dbUser?.name) token.name = dbUser.name;
               if (dbUser?.image) token.picture = dbUser.image;
             } catch {
               token.role = UserRole.CUSTOMER;
               token.mfaEnabled = false;
+              token.needsTerms = true;
             }
           } else {
             token.role = ((user as unknown as Record<string, unknown>).role as UserRole) || UserRole.CUSTOMER;
@@ -347,6 +370,7 @@ export const authConfig: NextAuthConfig = {
         session.user.role = token.role as UserRole;
         session.user.mfaEnabled = token.mfaEnabled as boolean;
         session.user.mfaVerified = true; // Si on arrive ici, MFA est vérifié
+        session.user.needsTerms = (token.needsTerms as boolean) || false;
         // Ensure name/email/image are passed through from JWT
         if (token.name) session.user.name = token.name as string;
         if (token.email) session.user.email = token.email as string;
@@ -453,6 +477,7 @@ declare module 'next-auth' {
       role: UserRole;
       mfaEnabled: boolean;
       mfaVerified: boolean;
+      needsTerms: boolean;
     };
   }
 
@@ -467,6 +492,7 @@ declare module 'next-auth/jwt' {
     id: string;
     role: UserRole;
     mfaEnabled: boolean;
+    needsTerms: boolean;
   }
 }
 

@@ -23,7 +23,12 @@ export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
 
 export const adminUpdateUserSchema = z.object({
   role: z.enum(['PUBLIC', 'CUSTOMER', 'CLIENT_B2B', 'EMPLOYEE', 'OWNER']).optional(),
+  name: nameSchema.optional(),
+  phone: phoneSchema,
+  locale: z.string().min(2).max(10).optional(),
   loyaltyTier: z.enum(['BRONZE', 'SILVER', 'GOLD', 'PLATINUM', 'DIAMOND']).optional(),
   loyaltyPoints: z.number().int().min(0).optional(),
   isActive: z.boolean().optional(),
 }).strict(); // Item 25
+
+export type AdminUpdateUserInput = z.infer<typeof adminUpdateUserSchema>;

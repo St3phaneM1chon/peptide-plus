@@ -26,6 +26,7 @@ export const paymentStatusEnum = z.enum([
   'FAILED',
   'REFUNDED',
   'PARTIAL_REFUND',
+  'REFUND_PENDING',
 ]);
 
 // ---------------------------------------------------------------------------

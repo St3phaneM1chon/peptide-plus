@@ -126,10 +126,11 @@ export default function UatPage() {
       try {
         const res = await fetch(`/api/admin/uat/${pollingRunId}?status=true`);
         if (res.ok) {
-          const data = await res.json();
+          const json = await res.json();
+          const statusData = json.data;
           // Update the run in the list
-          setRuns(prev => prev.map(r => r.id === pollingRunId ? { ...r, ...data } : r));
-          if (data.status !== 'RUNNING') {
+          setRuns(prev => prev.map(r => r.id === pollingRunId ? { ...r, ...statusData } : r));
+          if (statusData.status !== 'RUNNING') {
             setPollingRunId(null);
             fetchRuns();
           }
@@ -174,8 +175,8 @@ export default function UatPage() {
     try {
       const res = await fetch(`/api/admin/uat/${runId}`);
       if (res.ok) {
-        const data = await res.json();
-        setRunDetail(data);
+        const json = await res.json();
+        setRunDetail(json.data);
       }
     } catch (e) {
       console.error('Failed to fetch run detail:', e);
@@ -191,8 +192,8 @@ export default function UatPage() {
     try {
       const res = await fetch(`/api/admin/uat/${runId}`, { method: 'DELETE' });
       if (res.ok) {
-        const data = await res.json();
-        const counts = Object.entries(data.deleted).map(([k, v]) => `${k}: ${v}`).join(', ');
+        const json = await res.json();
+        const counts = Object.entries(json.data.deleted).map(([k, v]) => `${k}: ${v}`).join(', ');
         toast.success(`${t('admin.uat.cleanupDone')}\n\n${counts}`);
         fetchRuns();
         if (selectedRunId === runId) {
@@ -229,9 +230,9 @@ export default function UatPage() {
 
       {/* Launch Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="uat-modal-title">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
-            <h2 className="text-lg font-bold text-slate-800 mb-4">{t('admin.uat.newRunTitle')}</h2>
+            <h2 id="uat-modal-title" className="text-lg font-bold text-slate-800 mb-4">{t('admin.uat.newRunTitle')}</h2>
             <div className="space-y-4">
               <label className="flex items-center gap-3 cursor-pointer">
                 <input
@@ -296,8 +297,9 @@ export default function UatPage() {
         </div>
 
         {loading ? (
-          <div className="p-8 text-center text-slate-400">
+          <div className="p-8 text-center text-slate-400" role="status" aria-label="Loading">
             <Loader2 className="w-6 h-6 animate-spin mx-auto" />
+            <span className="sr-only">Loading...</span>
           </div>
         ) : runs.length === 0 ? (
           <div className="p-8 text-center text-slate-400">
@@ -431,9 +433,10 @@ function RunDetailPanel({
 
   if (loading) {
     return (
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8 text-center">
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8 text-center" role="status" aria-label="Loading">
         <Loader2 className="w-6 h-6 animate-spin mx-auto text-purple-500" />
         <p className="text-sm text-slate-400 mt-2">{t('admin.uat.loadingDetail')}</p>
+        <span className="sr-only">Loading...</span>
       </div>
     );
   }
@@ -472,7 +475,7 @@ function RunDetailPanel({
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-4 gap-4 p-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 p-5">
         <SummaryCard label={t('admin.uat.totalLabel')} value={run.totalScenarios} color="text-slate-700" />
         <SummaryCard label={t('admin.uat.passedLabel')} value={run.passedCount} color="text-green-600" />
         <SummaryCard label={t('admin.uat.failedLabel')} value={run.failedCount} color="text-red-600" />
@@ -625,20 +628,21 @@ function TestCasesTable({
 }
 
 function TaxDisplay({ taxes }: { taxes: Record<string, number> | null }) {
+  const { t, formatCurrency } = useI18n();
   if (!taxes) return <span className="text-xs text-slate-400">-</span>;
   return (
     <div className="flex gap-3 text-xs font-mono">
-      {taxes.tps !== undefined && taxes.tps > 0 && <span>TPS: {Number(taxes.tps).toFixed(2)}$</span>}
-      {taxes.tvq !== undefined && taxes.tvq > 0 && <span>TVQ: {Number(taxes.tvq).toFixed(2)}$</span>}
-      {taxes.tvh !== undefined && taxes.tvh > 0 && <span>TVH: {Number(taxes.tvh).toFixed(2)}$</span>}
-      {taxes.pst !== undefined && taxes.pst > 0 && <span>PST: {Number(taxes.pst).toFixed(2)}$</span>}
-      {taxes.total !== undefined && <span className="font-bold">Total: {Number(taxes.total).toFixed(2)}$</span>}
+      {taxes.tps !== undefined && taxes.tps > 0 && <span>{t('admin.accounting.tax.tps')}: {formatCurrency(Number(taxes.tps))}</span>}
+      {taxes.tvq !== undefined && taxes.tvq > 0 && <span>{t('admin.accounting.tax.tvq')}: {formatCurrency(Number(taxes.tvq))}</span>}
+      {taxes.tvh !== undefined && taxes.tvh > 0 && <span>{t('admin.accounting.tax.tvh')}: {formatCurrency(Number(taxes.tvh))}</span>}
+      {taxes.pst !== undefined && taxes.pst > 0 && <span>{t('admin.accounting.tax.pst')}: {formatCurrency(Number(taxes.pst))}</span>}
+      {taxes.total !== undefined && <span className="font-bold">{t('admin.uat.totalLabel')}: {formatCurrency(Number(taxes.total))}</span>}
     </div>
   );
 }
 
 function TaxReportTable({ taxReport }: { taxReport: TaxReport }) {
-  const { t } = useI18n();
+  const { t, formatCurrency } = useI18n();
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
@@ -647,10 +651,10 @@ function TaxReportTable({ taxReport }: { taxReport: TaxReport }) {
             <th className="px-3 py-2">{t('admin.uat.region')}</th>
             <th className="px-3 py-2 text-end">{t('admin.uat.sales')}</th>
             <th className="px-3 py-2 text-end">{t('admin.uat.totalSales')}</th>
-            <th className="px-3 py-2 text-end">TPS</th>
-            <th className="px-3 py-2 text-end">TVQ</th>
-            <th className="px-3 py-2 text-end">TVH</th>
-            <th className="px-3 py-2 text-end">PST</th>
+            <th className="px-3 py-2 text-end">{t('admin.accounting.tax.tps')}</th>
+            <th className="px-3 py-2 text-end">{t('admin.accounting.tax.tvq')}</th>
+            <th className="px-3 py-2 text-end">{t('admin.accounting.tax.tvh')}</th>
+            <th className="px-3 py-2 text-end">{t('admin.accounting.tax.pst')}</th>
             <th className="px-3 py-2 text-end">{t('admin.uat.totalTaxes')}</th>
             <th className="px-3 py-2 text-end">{t('admin.uat.expectedCol')}</th>
             <th className="px-3 py-2 text-end">{t('admin.uat.difference')}</th>
@@ -661,15 +665,15 @@ function TaxReportTable({ taxReport }: { taxReport: TaxReport }) {
             <tr key={row.region} className="hover:bg-slate-50">
               <td className="px-3 py-2 font-medium">{row.region}</td>
               <td className="px-3 py-2 text-end font-mono">{row.salesCount}</td>
-              <td className="px-3 py-2 text-end font-mono">{row.totalSales.toFixed(2)}$</td>
-              <td className="px-3 py-2 text-end font-mono">{row.tpsCollected > 0 ? `${row.tpsCollected.toFixed(2)}$` : '-'}</td>
-              <td className="px-3 py-2 text-end font-mono">{row.tvqCollected > 0 ? `${row.tvqCollected.toFixed(2)}$` : '-'}</td>
-              <td className="px-3 py-2 text-end font-mono">{row.tvhCollected > 0 ? `${row.tvhCollected.toFixed(2)}$` : '-'}</td>
-              <td className="px-3 py-2 text-end font-mono">{row.pstCollected > 0 ? `${row.pstCollected.toFixed(2)}$` : '-'}</td>
-              <td className="px-3 py-2 text-end font-mono font-medium">{row.totalTaxCollected.toFixed(2)}$</td>
-              <td className="px-3 py-2 text-end font-mono">{row.expectedTotalTax.toFixed(2)}$</td>
+              <td className="px-3 py-2 text-end font-mono">{formatCurrency(row.totalSales)}</td>
+              <td className="px-3 py-2 text-end font-mono">{row.tpsCollected > 0 ? formatCurrency(row.tpsCollected) : '-'}</td>
+              <td className="px-3 py-2 text-end font-mono">{row.tvqCollected > 0 ? formatCurrency(row.tvqCollected) : '-'}</td>
+              <td className="px-3 py-2 text-end font-mono">{row.tvhCollected > 0 ? formatCurrency(row.tvhCollected) : '-'}</td>
+              <td className="px-3 py-2 text-end font-mono">{row.pstCollected > 0 ? formatCurrency(row.pstCollected) : '-'}</td>
+              <td className="px-3 py-2 text-end font-mono font-medium">{formatCurrency(row.totalTaxCollected)}</td>
+              <td className="px-3 py-2 text-end font-mono">{formatCurrency(row.expectedTotalTax)}</td>
               <td className={`px-3 py-2 text-end font-mono font-medium ${Math.abs(row.difference) > 0.01 ? 'text-red-600' : 'text-green-600'}`}>
-                {row.difference > 0 ? '+' : ''}{row.difference.toFixed(2)}$
+                {row.difference > 0 ? '+' : ''}{formatCurrency(row.difference)}
               </td>
             </tr>
           ))}
@@ -678,12 +682,12 @@ function TaxReportTable({ taxReport }: { taxReport: TaxReport }) {
           <tr className="border-t-2 border-slate-200 font-bold">
             <td className="px-3 py-2">{t('admin.uat.totalRow')}</td>
             <td className="px-3 py-2 text-end">{taxReport.rows.reduce((s, r) => s + r.salesCount, 0)}</td>
-            <td className="px-3 py-2 text-end font-mono">{taxReport.totalSales.toFixed(2)}$</td>
+            <td className="px-3 py-2 text-end font-mono">{formatCurrency(taxReport.totalSales)}</td>
             <td className="px-3 py-2" colSpan={4}></td>
-            <td className="px-3 py-2 text-end font-mono">{taxReport.totalTaxCollected.toFixed(2)}$</td>
-            <td className="px-3 py-2 text-end font-mono">{taxReport.totalExpectedTax.toFixed(2)}$</td>
+            <td className="px-3 py-2 text-end font-mono">{formatCurrency(taxReport.totalTaxCollected)}</td>
+            <td className="px-3 py-2 text-end font-mono">{formatCurrency(taxReport.totalExpectedTax)}</td>
             <td className={`px-3 py-2 text-end font-mono ${Math.abs(taxReport.totalDifference) > 0.01 ? 'text-red-600' : 'text-green-600'}`}>
-              {taxReport.totalDifference > 0 ? '+' : ''}{taxReport.totalDifference.toFixed(2)}$
+              {taxReport.totalDifference > 0 ? '+' : ''}{formatCurrency(taxReport.totalDifference)}
             </td>
           </tr>
         </tfoot>

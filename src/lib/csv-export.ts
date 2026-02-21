@@ -8,12 +8,26 @@
  * - Wraps in quotes if contains comma, quote, or newline
  * - Doubles any quotes inside the value
  */
+/**
+ * Sanitizes a value against CSV formula injection (CWE-1236).
+ * Prefixes dangerous characters with a single quote to defuse formulas.
+ */
+function sanitizeCsvFormula(value: string): string {
+  if (value.length > 0 && /^[=+\-@\t\r]/.test(value)) {
+    return `'${value}`;
+  }
+  return value;
+}
+
 function escapeCSVField(value: string | number | null | undefined): string {
   if (value === null || value === undefined) {
     return '';
   }
 
-  const stringValue = String(value);
+  let stringValue = String(value);
+
+  // Sanitize against formula injection
+  stringValue = sanitizeCsvFormula(stringValue);
 
   // If the value contains comma, quote, or newline, wrap it in quotes
   if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n') || stringValue.includes('\r')) {

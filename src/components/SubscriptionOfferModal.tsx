@@ -21,7 +21,7 @@ export default function SubscriptionOfferModal({
   onDecline,
 }: SubscriptionOfferModalProps) {
   const { t } = useI18n();
-  const [selectedFrequency, setSelectedFrequency] = useState('MONTHLY');
+  const [selectedFrequency, setSelectedFrequency] = useState('EVERY_2_MONTHS');
   const dialogRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
 
@@ -71,10 +71,10 @@ export default function SubscriptionOfferModal({
   }, [handleKeyDown]);
 
   const FREQUENCIES = [
-    { id: 'WEEKLY', label: t('subscriptions.weekly'), discount: 20 },
-    { id: 'BIWEEKLY', label: t('subscriptions.biweekly'), discount: 15 },
-    { id: 'MONTHLY', label: t('subscriptions.monthly'), discount: 10 },
-    { id: 'BIMONTHLY', label: t('subscriptions.bimonthly'), discount: 5 },
+    { id: 'EVERY_2_MONTHS', label: t('subscriptions.every2Months') || 'Every 2 Months', discount: 15 },
+    { id: 'EVERY_4_MONTHS', label: t('subscriptions.every4Months') || 'Every 4 Months', discount: 12 },
+    { id: 'EVERY_6_MONTHS', label: t('subscriptions.every6Months') || 'Every 6 Months', discount: 10 },
+    { id: 'EVERY_12_MONTHS', label: t('subscriptions.every12Months') || 'Every 12 Months', discount: 5 },
   ];
 
   const selected = FREQUENCIES.find((f) => f.id === selectedFrequency)!;

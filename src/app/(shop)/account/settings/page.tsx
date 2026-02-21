@@ -39,6 +39,7 @@ export default function SettingsPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   
   // Profile form
   const [profileData, setProfileData] = useState<ProfileData>({
@@ -763,13 +764,35 @@ export default function SettingsPage() {
         isOpen={showDeleteConfirm}
         title={t('account.deleteAccount') || 'Delete Account'}
         message={t('account.deleteConfirm')}
-        confirmLabel={t('account.deleteAccount') || 'Delete Account'}
+        confirmLabel={isDeletingAccount ? (t('account.deleting') || 'Deleting...') : (t('account.deleteAccount') || 'Delete Account')}
         onConfirm={() => {
-          setShowDeleteConfirm(false);
-          // Handle account deletion
-          toast.info(t('account.deletionRequested'));
+          setIsDeletingAccount(true);
+          fetch('/api/account/delete-request', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ reason: 'User requested account deletion' }),
+          })
+            .then(async (res) => {
+              const data = await res.json();
+              if (res.ok) {
+                setShowDeleteConfirm(false);
+                toast.success(data.message || t('account.deletionRequested'));
+                router.push('/');
+              } else if (res.status === 401) {
+                toast.error(t('account.errorAuth') || 'Authentication required. Please sign in again.');
+                router.push('/auth/signin');
+              } else {
+                toast.error(data.error || t('account.errorGeneric'));
+              }
+            })
+            .catch(() => {
+              toast.error(t('account.errorGeneric') || 'An error occurred. Please try again.');
+            })
+            .finally(() => {
+              setIsDeletingAccount(false);
+            });
         }}
-        onCancel={() => setShowDeleteConfirm(false)}
+        onCancel={() => !isDeletingAccount && setShowDeleteConfirm(false)}
         variant="danger"
       />
     </div>

@@ -9,13 +9,15 @@ import {
 import { PageHeader } from '@/components/admin/PageHeader';
 import { Button } from '@/components/admin/Button';
 import { Modal } from '@/components/admin/Modal';
-import { StatusBadge } from '@/components/admin/StatusBadge';
+import { StatusBadge, type BadgeVariant } from '@/components/admin/StatusBadge';
 import { StatCard } from '@/components/admin/StatCard';
 import { FilterBar, SelectFilter } from '@/components/admin/FilterBar';
 import { DataTable, type Column } from '@/components/admin/DataTable';
 import { FormField, Input, Textarea } from '@/components/admin/FormField';
 import { useI18n } from '@/i18n/client';
 import { sectionThemes } from '@/lib/admin/section-themes';
+import { toast } from 'sonner';
+import { GST_RATE, QST_RATE } from '@/lib/tax-constants';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -57,14 +59,6 @@ interface Invoice {
   createdAt: string;
 }
 
-type BadgeVariant = 'success' | 'warning' | 'error' | 'info' | 'neutral';
-
-// ---------------------------------------------------------------------------
-// Tax constants (Quebec)
-// ---------------------------------------------------------------------------
-
-const GST_RATE = 0.05;
-const QST_RATE = 0.09975;
 
 // ---------------------------------------------------------------------------
 // Form types for create/edit
@@ -215,6 +209,7 @@ export default function FacturesClientsPage() {
       setInvoices(data.invoices ?? []);
     } catch (err) {
       console.error('Error fetching customer invoices:', err);
+      toast.error(t('common.errorOccurred'));
       setError(err instanceof Error ? err.message : t('admin.customerInvoices.loadError'));
       setInvoices([]);
     } finally {
@@ -650,7 +645,7 @@ export default function FacturesClientsPage() {
   if (loading) return (
     <div aria-live="polite" aria-busy="true" className="p-8 space-y-4 animate-pulse">
       <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-1/3"></div>
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[1,2,3,4].map(i => <div key={i} className="h-24 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>)}
       </div>
       <div className="h-64 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
@@ -707,7 +702,7 @@ export default function FacturesClientsPage() {
       />
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           label={t('admin.customerInvoices.totalInvoices')}
           value={`${invoices.length} (${totalDraft} ${t('admin.customerInvoices.draft')})`}
@@ -817,7 +812,7 @@ export default function FacturesClientsPage() {
           </FormField>
 
           {/* Dates & Terms */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <FormField label={t('admin.customerInvoices.invoiceDate')}>
               <Input
                 type="date"
@@ -1107,6 +1102,7 @@ export default function FacturesClientsPage() {
             </div>
 
             {/* Items */}
+            <div className="overflow-x-auto">
             <table className="w-full border border-slate-200 rounded-lg overflow-hidden">
               <thead className="bg-slate-50">
                 <tr>
@@ -1135,6 +1131,7 @@ export default function FacturesClientsPage() {
                 ))}
               </tbody>
             </table>
+            </div>
 
             {/* Totals */}
             <div className="flex justify-end">

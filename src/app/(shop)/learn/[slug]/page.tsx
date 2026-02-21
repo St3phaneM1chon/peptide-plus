@@ -1,8 +1,29 @@
 'use client';
 
-import { useParams } from 'next/navigation';
+import { useParams, notFound } from 'next/navigation';
 import Link from 'next/link';
 import DOMPurify from 'isomorphic-dompurify';
+
+// Map article slugs to related product pages
+const articleProductMap: Record<string, { slug: string; name: string }[]> = {
+  'bpc-157-research-overview': [
+    { slug: 'bpc-157', name: 'BPC-157' },
+  ],
+  'tb500-healing-peptide': [
+    { slug: 'tb-500', name: 'TB-500' },
+  ],
+  'glp1-agonists-explained': [
+    { slug: 'semaglutide', name: 'Semaglutide' },
+    { slug: 'tirzepatide', name: 'Tirzepatide' },
+    { slug: 'retatrutide', name: 'Retatrutide' },
+  ],
+  'how-to-reconstitute-peptides': [
+    { slug: 'bac-water', name: 'Bacteriostatic Water' },
+  ],
+  'peptide-calculator-guide': [
+    { slug: 'bac-water', name: 'Bacteriostatic Water' },
+  ],
+};
 
 // Article content data
 const articlesContent: Record<string, {
@@ -520,16 +541,7 @@ export default function ArticlePage() {
   const article = articlesContent[slug];
 
   if (!article) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Article Not Found</h1>
-          <Link href="/learn" className="text-orange-600 hover:underline">
-            Back to Learning Center
-          </Link>
-        </div>
-      </div>
-    );
+    notFound();
   }
 
   return (
@@ -591,6 +603,27 @@ export default function ArticlePage() {
             }}
           />
         </div>
+
+        {/* Related Products CTA */}
+        {articleProductMap[slug] && articleProductMap[slug].length > 0 && (
+          <div className="mt-8 p-6 bg-purple-50 border border-purple-100 rounded-lg">
+            <h3 className="font-semibold text-gray-900 mb-3">Interested in {articleProductMap[slug].length === 1 ? 'this peptide' : 'these peptides'}?</h3>
+            <div className="flex flex-wrap gap-3">
+              {articleProductMap[slug].map((product) => (
+                <Link
+                  key={product.slug}
+                  href={`/product/${product.slug}`}
+                  className="inline-flex items-center gap-1 text-purple-600 hover:text-purple-700 font-medium transition-colors"
+                >
+                  View {product.name}
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Related Articles */}
         <div className="mt-12">

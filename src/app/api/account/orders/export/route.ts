@@ -63,9 +63,11 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch orders with items
+    // P-06 fix: Limit to 5000 records max to prevent OOM on large accounts
     const orders = await prisma.order.findMany({
       where: whereClause,
       orderBy: { createdAt: 'desc' },
+      take: 5000,
       include: {
         items: {
           select: {

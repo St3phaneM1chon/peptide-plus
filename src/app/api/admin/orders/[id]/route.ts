@@ -12,6 +12,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import Stripe from 'stripe';
+import { STRIPE_API_VERSION } from '@/lib/stripe';
 import {
   createRefundAccountingEntries,
   createCreditNote,
@@ -20,13 +21,20 @@ import {
 import { generateCOGSEntry } from '@/lib/inventory';
 import { sendOrderLifecycleEmail } from '@/lib/email';
 import { getPayPalAccessToken, PAYPAL_API_URL } from '@/lib/paypal';
+import { updateOrderStatusSchema, createRefundSchema } from '@/lib/validations/order';
+import { clawbackAmbassadorCommission } from '@/lib/ambassador-commission';
+import { z } from 'zod';
+
+const reshipSchema = z.object({
+  reason: z.string().min(1, 'A reason is required for re-shipment').max(500),
+}).strict();
 
 // KB-PP-BUILD-002: Lazy init to avoid crash when STRIPE_SECRET_KEY is absent at build time
 let _stripe: Stripe | null = null;
 function getStripe(): Stripe {
   if (!_stripe) {
     if (!process.env.STRIPE_SECRET_KEY) throw new Error('STRIPE_SECRET_KEY not configured');
-    _stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2023-10-16' });
+    _stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: STRIPE_API_VERSION });
   }
   return _stripe;
 }
@@ -189,7 +197,16 @@ async function handleOrderUpdate(
   session: { user: { id: string; role: string; name?: string | null; email?: string | null } }
 ) {
   const body = await request.json();
-  const { status, trackingNumber, carrier, adminNotes } = body;
+
+  // Validate with Zod
+  const parsed = updateOrderStatusSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: 'Validation error', details: parsed.error.flatten() },
+      { status: 400 }
+    );
+  }
+  const { status, trackingNumber, carrier, adminNotes } = parsed.data;
 
   const existingOrder = await prisma.order.findUnique({
     where: { id },
@@ -199,15 +216,17 @@ async function handleOrderUpdate(
     return NextResponse.json({ error: 'Order not found' }, { status: 404 });
   }
 
-  // BE-PAY-09: Order state machine - validate transitions
+  // BE-PAY-09 + PAY-005: Order state machine - validate transitions
+  // Note: CONFIRMED is set by payment webhooks (Stripe/PayPal), not by admin manual action.
+  // Admin uses this map to advance orders through fulfillment (CONFIRMED -> PROCESSING -> SHIPPED -> etc.)
   const VALID_TRANSITIONS: Record<string, string[]> = {
-    'PENDING': ['CONFIRMED', 'CANCELLED'],
+    'PENDING': ['CONFIRMED', 'PROCESSING', 'CANCELLED'],
     'CONFIRMED': ['PROCESSING', 'CANCELLED'],
     'PROCESSING': ['SHIPPED', 'CANCELLED'],
     'SHIPPED': ['DELIVERED', 'RETURNED'],
     'DELIVERED': ['RETURNED', 'REFUNDED'],
-    'RETURNED': ['REFUNDED'],
     'CANCELLED': [],   // Terminal state
+    'RETURNED': ['REFUNDED'],
     'REFUNDED': [],    // Terminal state
   };
 
@@ -268,6 +287,25 @@ async function handleOrderUpdate(
       currency: { select: { code: true, symbol: true } },
     },
   });
+
+  // Audit log for order update (fire-and-forget)
+  prisma.auditLog.create({
+    data: {
+      id: `audit_update_order_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 8)}`,
+      userId: session.user.id,
+      action: 'ADMIN_UPDATE_ORDER',
+      entityType: 'Order',
+      entityId: id,
+      details: JSON.stringify({
+        previousStatus: existingOrder.status,
+        newStatus: status || existingOrder.status,
+        trackingNumber: trackingNumber || null,
+        carrier: carrier || null,
+        adminNotes: adminNotes || null,
+      }),
+      ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || null,
+    },
+  }).catch(console.error);
 
   // Send lifecycle email on status change (fire-and-forget)
   if (status && status !== existingOrder.status) {
@@ -353,26 +391,21 @@ async function handleRefund(
   session: { user: { id: string; role: string; name?: string | null; email?: string | null } }
 ) {
   const body = await request.json();
-  const { amount, reason } = body;
 
-  if (!amount || amount <= 0) {
+  // Validate with Zod
+  const parsed = createRefundSchema.safeParse(body);
+  if (!parsed.success) {
     return NextResponse.json(
-      { error: 'A positive refund amount is required' },
+      { error: 'Validation error', details: parsed.error.flatten() },
       { status: 400 }
     );
   }
-
-  if (!reason) {
-    return NextResponse.json(
-      { error: 'A reason is required for refunds' },
-      { status: 400 }
-    );
-  }
+  const { amount, reason } = parsed.data;
 
   // Find the order
   const order = await prisma.order.findUnique({
     where: { id: orderId },
-    include: { items: true },
+    include: { items: true, currency: { select: { code: true } } },
   });
 
   if (!order) {
@@ -460,7 +493,7 @@ async function handleRefund(
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(
-          isFullRefund ? {} : { amount: { value: amount.toFixed(2), currency_code: 'CAD' } }
+          isFullRefund ? {} : { amount: { value: amount.toFixed(2), currency_code: order.currency?.code || 'CAD' } }
         ),
       });
 
@@ -504,55 +537,57 @@ async function handleRefund(
     refundPst
   );
 
-  // Update order status
-  await prisma.order.update({
-    where: { id: orderId },
-    data: {
-      paymentStatus: isFullRefund ? 'REFUNDED' : 'PARTIAL_REFUND',
-      status: isFullRefund ? 'CANCELLED' : order.status,
-      adminNotes: order.adminNotes
-        ? `${order.adminNotes}\n[REFUND] ${new Date().toISOString()} - $${amount} - ${reason}`
-        : `[REFUND] ${new Date().toISOString()} - $${amount} - ${reason}`,
-    },
-  });
+  // Update order status + restore stock atomically in a single transaction
+  await prisma.$transaction(async (tx) => {
+    await tx.order.update({
+      where: { id: orderId },
+      data: {
+        paymentStatus: isFullRefund ? 'REFUNDED' : 'PARTIAL_REFUND',
+        status: isFullRefund ? 'CANCELLED' : order.status,
+        adminNotes: order.adminNotes
+          ? `${order.adminNotes}\n[REFUND] ${new Date().toISOString()} - $${amount} - ${reason}`
+          : `[REFUND] ${new Date().toISOString()} - $${amount} - ${reason}`,
+      },
+    });
 
-  // Restore stock for full refunds
-  if (isFullRefund) {
-    for (const item of order.items) {
-      if (item.formatId) {
-        await prisma.productFormat.update({
-          where: { id: item.formatId },
-          data: { stockQuantity: { increment: item.quantity } },
+    // Restore stock for full refunds
+    if (isFullRefund) {
+      for (const item of order.items) {
+        if (item.formatId) {
+          await tx.productFormat.update({
+            where: { id: item.formatId },
+            data: { stockQuantity: { increment: item.quantity } },
+          });
+        }
+
+        // Get current WAC
+        const lastTransaction = await tx.inventoryTransaction.findFirst({
+          where: {
+            productId: item.productId,
+            formatId: item.formatId,
+          },
+          orderBy: { createdAt: 'desc' },
+          select: { runningWAC: true },
+        });
+        const wac = lastTransaction ? Number(lastTransaction.runningWAC) : 0;
+
+        // Create RETURN inventory transaction
+        await tx.inventoryTransaction.create({
+          data: {
+            productId: item.productId,
+            formatId: item.formatId,
+            type: 'RETURN',
+            quantity: item.quantity,
+            unitCost: wac,
+            runningWAC: wac,
+            orderId: order.id,
+            reason: `Admin refund: ${reason}`,
+            createdBy: session.user.id,
+          },
         });
       }
-
-      // Get current WAC
-      const lastTransaction = await prisma.inventoryTransaction.findFirst({
-        where: {
-          productId: item.productId,
-          formatId: item.formatId,
-        },
-        orderBy: { createdAt: 'desc' },
-        select: { runningWAC: true },
-      });
-      const wac = lastTransaction ? Number(lastTransaction.runningWAC) : 0;
-
-      // Create RETURN inventory transaction
-      await prisma.inventoryTransaction.create({
-        data: {
-          productId: item.productId,
-          formatId: item.formatId,
-          type: 'RETURN',
-          quantity: item.quantity,
-          unitCost: wac,
-          runningWAC: wac,
-          orderId: order.id,
-          reason: `Admin refund: ${reason}`,
-          createdBy: session.user.id,
-        },
-      });
     }
-  }
+  });
 
   // Find linked invoice & create CreditNote
   let creditNoteId: string | null = null;
@@ -584,6 +619,47 @@ async function handleRefund(
     issuedBy: session.user.id,
   });
 
+  // Clawback ambassador commission on refund (P2 #28 fix)
+  let commissionClawback: { clawbackAmount?: number; wasPaidOut?: boolean } = {};
+  try {
+    const clawbackResult = await clawbackAmbassadorCommission(
+      orderId,
+      amount,
+      orderTotal,
+      isFullRefund
+    );
+    if (clawbackResult.clawbackAmount && clawbackResult.clawbackAmount > 0) {
+      commissionClawback = {
+        clawbackAmount: clawbackResult.clawbackAmount,
+        wasPaidOut: clawbackResult.wasPaidOut,
+      };
+    }
+  } catch (commError) {
+    console.error('Failed to clawback ambassador commission:', commError);
+  }
+
+  // Audit log for refund (fire-and-forget)
+  prisma.auditLog.create({
+    data: {
+      id: `audit_refund_order_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 8)}`,
+      userId: session.user.id,
+      action: 'ADMIN_REFUND_ORDER',
+      entityType: 'Order',
+      entityId: orderId,
+      details: JSON.stringify({
+        amount,
+        reason,
+        isFullRefund,
+        previousPaymentStatus: order.paymentStatus,
+        newPaymentStatus: isFullRefund ? 'REFUNDED' : 'PARTIAL_REFUND',
+        journalEntryId: entryId,
+        creditNoteId,
+        commissionClawback: commissionClawback.clawbackAmount ? commissionClawback : null,
+      }),
+      ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || null,
+    },
+  }).catch(console.error);
+
   // ── Send refund email (fire-and-forget) ──────────────────────────────
   sendOrderLifecycleEmail(orderId, 'REFUNDED', {
     refundAmount: amount,
@@ -613,6 +689,9 @@ async function handleRefund(
         tvq: refundTvq,
         tvh: refundTvh,
       },
+      commissionClawback: commissionClawback.clawbackAmount
+        ? commissionClawback
+        : null,
     },
   });
 }
@@ -625,14 +704,16 @@ async function handleReship(
   session: { user: { id: string; role: string; name?: string | null; email?: string | null } }
 ) {
   const body = await request.json();
-  const { reason } = body;
 
-  if (!reason) {
+  // Validate with Zod
+  const parsed = reshipSchema.safeParse(body);
+  if (!parsed.success) {
     return NextResponse.json(
-      { error: 'A reason is required for re-shipment' },
+      { error: 'Validation error', details: parsed.error.flatten() },
       { status: 400 }
     );
   }
+  const { reason } = parsed.data;
 
   // Find the original order
   const order = await prisma.order.findUnique({
@@ -717,62 +798,87 @@ async function handleReship(
 
   const replacementOrderNumber = replacementOrder.orderNumber;
 
-  // Process inventory: LOSS on original + SALE on replacement + decrement stock
-  let totalLossAmount = 0;
+  // BUG 10: Wrap all inventory mutations in a single transaction for atomicity.
+  // If any LOSS/SALE/stock-decrement fails, the entire batch rolls back.
+  const totalLossAmount = await prisma.$transaction(async (tx) => {
+    let lossAccumulator = 0;
 
-  for (const item of order.items) {
-    // Get current WAC
-    const lastTransaction = await prisma.inventoryTransaction.findFirst({
-      where: {
-        productId: item.productId,
-        formatId: item.formatId,
-      },
-      orderBy: { createdAt: 'desc' },
-      select: { runningWAC: true },
-    });
-    const wac = lastTransaction ? Number(lastTransaction.runningWAC) : 0;
-    totalLossAmount += wac * item.quantity;
-
-    // LOSS transaction on the original order (colis perdu)
-    await prisma.inventoryTransaction.create({
-      data: {
-        productId: item.productId,
-        formatId: item.formatId,
-        type: 'LOSS',
-        quantity: -item.quantity,
-        unitCost: wac,
-        runningWAC: wac,
-        orderId: order.id,
-        reason: `Colis perdu: ${reason}`,
-        createdBy: session.user.id,
-      },
-    });
-
-    // SALE transaction on the replacement order (new shipment from stock)
-    await prisma.inventoryTransaction.create({
-      data: {
-        productId: item.productId,
-        formatId: item.formatId,
-        type: 'SALE',
-        quantity: -item.quantity,
-        unitCost: wac,
-        runningWAC: wac,
-        orderId: replacementOrder.id,
-        reason: `Re-expedition ${replacementOrderNumber}`,
-        createdBy: session.user.id,
-      },
-    });
-
-    // Decrement stock
-    if (item.formatId) {
-      await prisma.productFormat.update({
-        where: { id: item.formatId },
-        data: { stockQuantity: { decrement: item.quantity } },
+    for (const item of order.items) {
+      // Get current WAC
+      const lastTransaction = await tx.inventoryTransaction.findFirst({
+        where: {
+          productId: item.productId,
+          formatId: item.formatId,
+        },
+        orderBy: { createdAt: 'desc' },
+        select: { runningWAC: true },
       });
-    }
-  }
+      const wac = lastTransaction ? Number(lastTransaction.runningWAC) : 0;
+      lossAccumulator += wac * item.quantity;
 
-  // Create inventory loss accounting entry
+      // LOSS transaction on the original order (colis perdu)
+      await tx.inventoryTransaction.create({
+        data: {
+          productId: item.productId,
+          formatId: item.formatId,
+          type: 'LOSS',
+          quantity: -item.quantity,
+          unitCost: wac,
+          runningWAC: wac,
+          orderId: order.id,
+          reason: `Colis perdu: ${reason}`,
+          createdBy: session.user.id,
+        },
+      });
+
+      // SALE transaction on the replacement order (new shipment from stock)
+      await tx.inventoryTransaction.create({
+        data: {
+          productId: item.productId,
+          formatId: item.formatId,
+          type: 'SALE',
+          quantity: -item.quantity,
+          unitCost: wac,
+          runningWAC: wac,
+          orderId: replacementOrder.id,
+          reason: `Re-expedition ${replacementOrderNumber}`,
+          createdBy: session.user.id,
+        },
+      });
+
+      // Decrement stock (floor at 0 to prevent negative inventory)
+      if (item.formatId) {
+        const currentFormat = await tx.productFormat.findUnique({
+          where: { id: item.formatId },
+          select: { stockQuantity: true },
+        });
+        const safeDecrement = Math.min(item.quantity, currentFormat?.stockQuantity ?? 0);
+        if (safeDecrement > 0) {
+          await tx.productFormat.update({
+            where: { id: item.formatId },
+            data: { stockQuantity: { decrement: safeDecrement } },
+          });
+        }
+        if (safeDecrement < item.quantity) {
+          console.warn(`[Admin reship] Stock floor hit for format ${item.formatId}: wanted to decrement ${item.quantity}, only decremented ${safeDecrement}`);
+        }
+      }
+    }
+
+    // Update original order admin notes (inside transaction for consistency)
+    await tx.order.update({
+      where: { id: orderId },
+      data: {
+        adminNotes: order.adminNotes
+          ? `${order.adminNotes}\n[RESHIP] ${new Date().toISOString()} - Re-expedition ${replacementOrderNumber} - ${reason}`
+          : `[RESHIP] ${new Date().toISOString()} - Re-expedition ${replacementOrderNumber} - ${reason}`,
+      },
+    });
+
+    return lossAccumulator;
+  });
+
+  // Create inventory loss accounting entry (outside transaction - non-critical)
   let lossEntryId: string | null = null;
   if (totalLossAmount > 0) {
     lossEntryId = await createInventoryLossEntry(
@@ -790,15 +896,26 @@ async function handleReship(
     console.error(`Failed to create COGS entry for reship ${replacementOrderNumber}:`, cogsError);
   }
 
-  // Update original order admin notes
-  await prisma.order.update({
-    where: { id: orderId },
+  // Audit log for reship (fire-and-forget)
+  prisma.auditLog.create({
     data: {
-      adminNotes: order.adminNotes
-        ? `${order.adminNotes}\n[RESHIP] ${new Date().toISOString()} - Re-expedition ${replacementOrderNumber} - ${reason}`
-        : `[RESHIP] ${new Date().toISOString()} - Re-expedition ${replacementOrderNumber} - ${reason}`,
+      id: `audit_reship_order_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 8)}`,
+      userId: session.user.id,
+      action: 'ADMIN_RESHIP_ORDER',
+      entityType: 'Order',
+      entityId: orderId,
+      details: JSON.stringify({
+        reason,
+        originalOrderNumber: order.orderNumber,
+        replacementOrderId: replacementOrder.id,
+        replacementOrderNumber,
+        itemsReshipped: order.items.length,
+        totalLossAmount: Math.round(totalLossAmount * 100) / 100,
+        lossEntryId,
+      }),
+      ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || null,
     },
-  });
+  }).catch(console.error);
 
   return NextResponse.json({
     success: true,

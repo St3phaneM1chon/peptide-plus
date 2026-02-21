@@ -11,6 +11,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
+import { STRIPE_API_VERSION } from '@/lib/stripe';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { z } from 'zod';
@@ -20,7 +21,7 @@ let _stripe: Stripe | null = null;
 function getStripe(): Stripe {
   if (!_stripe) {
     if (!process.env.STRIPE_SECRET_KEY) throw new Error('STRIPE_SECRET_KEY not configured');
-    _stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2023-10-16' });
+    _stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: STRIPE_API_VERSION });
   }
   return _stripe;
 }
@@ -288,6 +289,70 @@ export async function POST(request: NextRequest) {
         const withinUsageLimit = !promo.usageLimit || promo.usageCount < promo.usageLimit;
 
         if (notExpired && withinUsageLimit) {
+          // E-05: Per-user promo usage limit check (prevents abuse before payment)
+          if (session?.user?.id && promo.usageLimitPerUser) {
+            const userUsageCount = await prisma.promoCodeUsage.count({
+              where: { promoCodeId: promo.id, userId: session.user.id },
+            });
+            if (userUsageCount >= promo.usageLimitPerUser) {
+              return NextResponse.json(
+                { error: 'Vous avez atteint la limite d\'utilisation de ce code promo' },
+                { status: 400 }
+              );
+            }
+          }
+
+          // E-04: firstOrderOnly check at checkout
+          if (promo.firstOrderOnly && session?.user?.id) {
+            const previousPaidOrders = await prisma.order.count({
+              where: { userId: session.user.id, paymentStatus: 'PAID' },
+            });
+            if (previousPaidOrders > 0) {
+              return NextResponse.json(
+                { error: 'Ce code promo est réservé aux premières commandes' },
+                { status: 400 }
+              );
+            }
+          }
+
+          // E-04: productIds restriction check at checkout
+          if (promo.productIds) {
+            const allowedProductIds: string[] = JSON.parse(promo.productIds);
+            const cartProductIds = verifiedItems.map((item) => item.productId);
+            const hasMatchingProduct = cartProductIds.some((pid) =>
+              allowedProductIds.includes(pid)
+            );
+            if (!hasMatchingProduct) {
+              return NextResponse.json(
+                { error: 'Ce code promo ne s\'applique pas aux produits de votre panier' },
+                { status: 400 }
+              );
+            }
+          }
+
+          // E-04: categoryIds restriction check at checkout
+          if (promo.categoryIds) {
+            const allowedCategoryIds: string[] = JSON.parse(promo.categoryIds);
+            const cartProductCategoryIds = await Promise.all(
+              verifiedItems.map(async (item) => {
+                const product = await prisma.product.findUnique({
+                  where: { id: item.productId },
+                  select: { categoryId: true },
+                });
+                return product?.categoryId;
+              })
+            );
+            const hasMatchingCategory = cartProductCategoryIds.some(
+              (cid) => cid && allowedCategoryIds.includes(cid)
+            );
+            if (!hasMatchingCategory) {
+              return NextResponse.json(
+                { error: 'Ce code promo ne s\'applique pas aux catégories de votre panier' },
+                { status: 400 }
+              );
+            }
+          }
+
           if (promo.type === 'PERCENTAGE') {
             serverPromoDiscount = Math.round(serverSubtotal * (Number(promo.value) / 100) * 100) / 100;
           } else {

@@ -31,9 +31,12 @@ import {
   FormField,
   Input,
   Textarea,
+  type BadgeVariant,
 } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
 import { sectionThemes } from '@/lib/admin/section-themes';
+import { toast } from 'sonner';
+import { GST_RATE, QST_RATE } from '@/lib/tax-constants';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -73,7 +76,6 @@ interface ExpenseData {
 }
 
 type ExpenseStatusType = 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'REJECTED' | 'REIMBURSED';
-type BadgeVariant = 'success' | 'warning' | 'error' | 'info' | 'neutral';
 
 interface ExpenseStats {
   totalCount: number;
@@ -101,9 +103,6 @@ const CATEGORY_DEDUCTIBILITY: Record<string, number> = {
 };
 
 const PAYMENT_METHODS = ['cash', 'credit_card', 'debit', 'company_card', 'reimbursement'] as const;
-
-const GST_RATE = 0.05;
-const QST_RATE = 0.09975;
 
 // ---------------------------------------------------------------------------
 // Page Component
@@ -151,6 +150,7 @@ export default function DepensesPage() {
   const [showMileage, setShowMileage] = useState(false);
   const [formSaving, setFormSaving] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const formatCAD = formatCurrency;
 
@@ -214,6 +214,7 @@ export default function DepensesPage() {
       setStats(data.stats ?? null);
     } catch (err) {
       console.error('Error fetching expenses:', err);
+      toast.error(t('common.errorOccurred'));
       setError(err instanceof Error ? err.message : t('admin.expenses.fetchError'));
       setExpenses([]);
     } finally {
@@ -337,6 +338,7 @@ export default function DepensesPage() {
       await fetchExpenses();
     } catch (err) {
       console.error('Error saving expense:', err);
+      toast.error(t('common.errorOccurred'));
       setError(err instanceof Error ? err.message : 'Error saving');
     } finally {
       setFormSaving(false);
@@ -368,6 +370,7 @@ export default function DepensesPage() {
       await fetchExpenses();
     } catch (err) {
       console.error('Error changing status:', err);
+      toast.error(t('common.errorOccurred'));
       setError(err instanceof Error ? err.message : t('admin.expenses.transitionError'));
     }
   };
@@ -378,12 +381,16 @@ export default function DepensesPage() {
 
   const handleDelete = async (expenseId: string) => {
     if (!confirm(t('admin.expenses.confirmDelete'))) return;
+    setDeletingId(expenseId);
     try {
       const response = await fetch(`/api/accounting/expenses?id=${expenseId}`, { method: 'DELETE' });
       if (!response.ok) throw new Error(`Error ${response.status}`);
       await fetchExpenses();
     } catch (err) {
-      console.error('Error deleting expense:', err);
+      console.error(err);
+      toast.error(t('common.errorOccurred'));
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -395,7 +402,7 @@ export default function DepensesPage() {
     return (
       <div aria-live="polite" aria-busy="true" className="p-8 space-y-4 animate-pulse">
         <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-1/3" />
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map(i => <div key={i} className="h-24 bg-slate-200 dark:bg-slate-700 rounded-xl" />)}
         </div>
         <div className="h-64 bg-slate-200 dark:bg-slate-700 rounded-xl" />
@@ -423,7 +430,7 @@ export default function DepensesPage() {
       header: t('admin.expenses.colDate'),
       render: (exp) => (
         <span className="text-sm text-slate-600">
-          {new Date(exp.date).toLocaleDateString(locale === 'fr' ? 'fr-CA' : 'en-CA')}
+          {new Date(exp.date).toLocaleDateString(locale)}
         </span>
       ),
     },
@@ -500,7 +507,7 @@ export default function DepensesPage() {
           <button
             onClick={(e) => { e.stopPropagation(); setSelectedExpense(exp); setShowDetailModal(true); }}
             className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100"
-            title="View"
+            title={t('common.view')}
           >
             <Eye className="w-4 h-4" />
           </button>
@@ -509,14 +516,15 @@ export default function DepensesPage() {
               <button
                 onClick={(e) => { e.stopPropagation(); openEditForm(exp); }}
                 className="p-1.5 text-slate-400 hover:text-blue-600 rounded-lg hover:bg-blue-50"
-                title="Edit"
+                title={t('common.edit')}
               >
                 <Pencil className="w-4 h-4" />
               </button>
               <button
                 onClick={(e) => { e.stopPropagation(); handleDelete(exp.id); }}
-                className="p-1.5 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50"
-                title="Delete"
+                disabled={deletingId === exp.id}
+                className="p-1.5 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50 disabled:opacity-50"
+                title={t('common.delete')}
               >
                 <Trash2 className="w-4 h-4" />
               </button>
@@ -868,7 +876,7 @@ export default function DepensesPage() {
               <div>
                 <p className="font-mono text-lg font-semibold text-slate-900">{selectedExpense.expenseNumber}</p>
                 <p className="text-sm text-slate-500">
-                  {new Date(selectedExpense.date).toLocaleDateString(locale === 'fr' ? 'fr-CA' : 'en-CA')}
+                  {new Date(selectedExpense.date).toLocaleDateString(locale)}
                 </p>
               </div>
               <StatusBadge variant={statusConfig[selectedExpense.status]?.variant ?? 'neutral'}>
@@ -970,7 +978,7 @@ export default function DepensesPage() {
                 </p>
                 {selectedExpense.approvedAt && (
                   <p className="text-sm text-emerald-600">
-                    {t('admin.expenses.approvedAt')}: {new Date(selectedExpense.approvedAt).toLocaleString(locale === 'fr' ? 'fr-CA' : 'en-CA')}
+                    {t('admin.expenses.approvedAt')}: {new Date(selectedExpense.approvedAt).toLocaleString(locale)}
                   </p>
                 )}
               </div>

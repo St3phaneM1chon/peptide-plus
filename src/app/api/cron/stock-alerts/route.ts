@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { sendEmail } from '@/lib/email/email-service';
 import { backInStockEmail } from '@/lib/email-templates';
+import { generateUnsubscribeUrl } from '@/lib/email/unsubscribe';
 import { type Locale } from '@/i18n/config';
 import { withJobLock } from '@/lib/cron-lock';
 
@@ -118,6 +119,10 @@ export async function POST(request: NextRequest) {
 
             // Product is back in stock - send notification
             const locale: Locale = 'en'; // Default locale, could be user preference
+
+            // Generate unsubscribe URL (CAN-SPAM / RGPD / LCAP compliance)
+            const unsubscribeUrl = await generateUnsubscribeUrl(alert.email, 'marketing').catch(() => undefined);
+
             const emailTemplate = backInStockEmail(
               {
                 productName: alert.product.name,
@@ -127,7 +132,8 @@ export async function POST(request: NextRequest) {
                 currency: 'CAD',
                 imageUrl,
               },
-              locale
+              locale,
+              unsubscribeUrl
             );
 
             const emailResult = await sendEmail({
@@ -135,6 +141,7 @@ export async function POST(request: NextRequest) {
               subject: emailTemplate.subject,
               html: emailTemplate.html,
               tags: ['stock-alert', 'back-in-stock'],
+              unsubscribeUrl,
             });
 
             if (emailResult.success) {

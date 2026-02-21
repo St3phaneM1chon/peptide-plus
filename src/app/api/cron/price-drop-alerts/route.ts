@@ -17,7 +17,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { sendEmail, priceDropEmail } from '@/lib/email';
+import { sendEmail, priceDropEmail, generateUnsubscribeUrl } from '@/lib/email';
 import { logger } from '@/lib/logger';
 import { withJobLock } from '@/lib/cron-lock';
 
@@ -118,6 +118,9 @@ export async function GET(request: NextRequest) {
           const priceDrop = originalPrice - currentPrice;
           const priceDropPercent = (priceDrop / originalPrice) * 100;
 
+          // Generate unsubscribe URL (CAN-SPAM / RGPD / LCAP compliance)
+          const unsubscribeUrl = await generateUnsubscribeUrl(watch.user.email, 'marketing', watch.userId).catch(() => undefined);
+
           // Generate email content
           const emailContent = priceDropEmail({
             customerName: watch.user.name || 'Customer',
@@ -131,6 +134,7 @@ export async function GET(request: NextRequest) {
             priceDropPercent,
             targetPrice,
             locale: (watch.user.locale as 'fr' | 'en') || 'fr',
+            unsubscribeUrl,
           });
 
           const result = await sendEmail({
@@ -138,6 +142,7 @@ export async function GET(request: NextRequest) {
             subject: emailContent.subject,
             html: emailContent.html,
             tags: ['price-drop', 'automated'],
+            unsubscribeUrl,
           });
 
           // Mark as notified

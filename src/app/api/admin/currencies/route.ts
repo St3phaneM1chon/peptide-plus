@@ -97,7 +97,7 @@ export const POST = withAdminGuard(async (request, { session: _session }) => {
     return NextResponse.json(
       {
         success: true,
-        currency: {
+        data: {
           ...currency,
           exchangeRate: Number(currency.exchangeRate),
           lastUpdated: currency.rateUpdatedAt.toISOString(),

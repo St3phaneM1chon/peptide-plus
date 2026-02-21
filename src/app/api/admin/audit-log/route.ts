@@ -59,5 +59,5 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
 
   const result = await queryAuditLogs(filters, page, limit);
 
-  return NextResponse.json(result);
+  return NextResponse.json({ data: result });
 });

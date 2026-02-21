@@ -41,7 +41,7 @@ interface ShippingZone {
 }
 
 export default function LivraisonPage() {
-  const { t } = useI18n();
+  const { t, formatCurrency } = useI18n();
   const [zones, setZones] = useState<ShippingZone[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -57,6 +57,8 @@ export default function LivraisonPage() {
       const data = await res.json();
       setZones(data.zones || []);
     } catch (err) {
+      console.error('Error fetching shipping zones:', err);
+      toast.error(t('common.error'));
       setZones([]);
     }
     setLoading(false);
@@ -151,14 +153,95 @@ export default function LivraisonPage() {
     }
   };
 
+  const [formName, setFormName] = useState('');
+  const [formCountries, setFormCountries] = useState('');
+  const [formBaseFee, setFormBaseFee] = useState('0');
+  const [formPerItemFee, setFormPerItemFee] = useState('0');
+  const [formFreeThreshold, setFormFreeThreshold] = useState('');
+  const [formMinDays, setFormMinDays] = useState('3');
+  const [formMaxDays, setFormMaxDays] = useState('7');
+  const [saving, setSaving] = useState(false);
+
+  const resetForm = () => {
+    setFormName('');
+    setFormCountries('');
+    setFormBaseFee('0');
+    setFormPerItemFee('0');
+    setFormFreeThreshold('');
+    setFormMinDays('3');
+    setFormMaxDays('7');
+  };
+
+  const loadZoneIntoForm = (zone: ShippingZone) => {
+    setFormName(zone.name);
+    setFormCountries(zone.countries.join(', '));
+    const method = zone.methods[0];
+    if (method) {
+      setFormBaseFee(String(method.price));
+      setFormMinDays(String(method.minDays));
+      setFormMaxDays(String(method.maxDays));
+      setFormFreeThreshold(method.freeAbove ? String(method.freeAbove) : '');
+    }
+    setFormPerItemFee('0');
+  };
+
+  const handleSaveZone = async () => {
+    if (!formName.trim()) {
+      toast.error(t('admin.shipping.nameRequired') || 'Zone name is required');
+      return;
+    }
+    const countries = formCountries.split(',').map(c => c.trim()).filter(Boolean);
+    if (countries.length === 0) {
+      toast.error(t('admin.shipping.countriesRequired') || 'At least one country is required');
+      return;
+    }
+    setSaving(true);
+    const payload = {
+      name: formName.trim(),
+      countries,
+      baseFee: parseFloat(formBaseFee) || 0,
+      perItemFee: parseFloat(formPerItemFee) || 0,
+      freeShippingThreshold: formFreeThreshold ? parseFloat(formFreeThreshold) : null,
+      estimatedDaysMin: parseInt(formMinDays) || 3,
+      estimatedDaysMax: parseInt(formMaxDays) || 7,
+    };
+    try {
+      const url = editingZone
+        ? `/api/admin/shipping/zones/${editingZone.id}`
+        : '/api/admin/shipping/zones';
+      const res = await fetch(url, {
+        method: editingZone ? 'PATCH' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) {
+        toast.success(editingZone
+          ? (t('admin.shipping.zoneUpdated') || 'Zone updated')
+          : (t('admin.shipping.zoneCreated') || 'Zone created'));
+        setShowForm(false);
+        setEditingZone(null);
+        resetForm();
+        await fetchZones();
+      } else {
+        const data = await res.json();
+        toast.error(data.error || 'Failed to save zone');
+      }
+    } catch {
+      toast.error('Failed to save zone');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const getCountryName = (code: string): string => {
     return t(`admin.shipping.countries.${code}`) || code;
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex items-center justify-center h-64" role="status" aria-label="Loading">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500" />
+        <span className="sr-only">Loading...</span>
       </div>
     );
   }
@@ -182,7 +265,7 @@ export default function LivraisonPage() {
       />
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <StatCard
           label={t('admin.shipping.zones')}
           value={zones.length}
@@ -242,7 +325,7 @@ export default function LivraisonPage() {
                     variant="ghost"
                     size="sm"
                     icon={Pencil}
-                    onClick={() => setEditingZone(zone)}
+                    onClick={() => { setEditingZone(zone); loadZoneIntoForm(zone); }}
                   >
                     {t('admin.shipping.edit')}
                   </Button>
@@ -250,7 +333,7 @@ export default function LivraisonPage() {
               </div>
             </div>
 
-            <div className="p-4">
+            <div className="p-4 overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="text-xs text-slate-500 uppercase">
@@ -271,7 +354,7 @@ export default function LivraisonPage() {
                         {method.minDays}-{method.maxDays} {t('admin.shipping.days')}
                       </td>
                       <td className="py-3 text-end font-medium text-slate-900">
-                        {method.price.toFixed(2)} $
+                        {formatCurrency(method.price)}
                       </td>
                       <td className="py-3 text-end text-slate-600">
                         {method.freeAbove ? `${method.freeAbove} $` : '-'}
@@ -292,7 +375,13 @@ export default function LivraisonPage() {
                   ))}
                 </tbody>
               </table>
-              <button className="mt-3 text-sm text-sky-600 hover:text-sky-700 inline-flex items-center gap-1">
+              <button
+                onClick={() => {
+                  // TODO: Create API endpoint POST /api/admin/shipping/zones/:id/methods and modal for adding a new method
+                  toast.info(t('admin.shipping.addMethod') + ' - Coming soon');
+                }}
+                className="mt-3 text-sm text-sky-600 hover:text-sky-700 inline-flex items-center gap-1"
+              >
                 <Plus className="w-3.5 h-3.5" />
                 {t('admin.shipping.addMethod')}
               </button>
@@ -325,19 +414,53 @@ export default function LivraisonPage() {
       {/* Form Modal */}
       <Modal
         isOpen={modalIsOpen}
-        onClose={() => { setShowForm(false); setEditingZone(null); }}
+        onClose={() => { setShowForm(false); setEditingZone(null); resetForm(); }}
         title={editingZone ? t('admin.shipping.editZone') : t('admin.shipping.newZoneTitle')}
         size="md"
-        footer={
-          <Button
-            variant="secondary"
-            onClick={() => { setShowForm(false); setEditingZone(null); }}
-          >
-            {t('admin.shipping.close')}
-          </Button>
-        }
       >
-        <p className="text-slate-500">{t('admin.shipping.inDevelopment')}</p>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.shipping.zoneName') || 'Zone Name'}</label>
+            <input type="text" value={formName} onChange={e => setFormName(e.target.value)} placeholder="Canada, USA, Europe..." className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-sky-500 focus:border-sky-500" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.shipping.countriesLabel') || 'Countries (comma-separated ISO codes)'}</label>
+            <input type="text" value={formCountries} onChange={e => setFormCountries(e.target.value)} placeholder="CA, US, FR, DE..." className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-sky-500 focus:border-sky-500" />
+            <p className="text-xs text-slate-400 mt-1">{t('admin.shipping.countriesHint') || 'Use ISO 3166-1 alpha-2 codes'}</p>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.shipping.baseFee') || 'Base Fee ($)'}</label>
+              <input type="number" step="0.01" min="0" value={formBaseFee} onChange={e => setFormBaseFee(e.target.value)} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-sky-500 focus:border-sky-500" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.shipping.perItemFee') || 'Per Item Fee ($)'}</label>
+              <input type="number" step="0.01" min="0" value={formPerItemFee} onChange={e => setFormPerItemFee(e.target.value)} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-sky-500 focus:border-sky-500" />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.shipping.freeAbove') || 'Free Shipping Threshold ($)'}</label>
+            <input type="number" step="0.01" min="0" value={formFreeThreshold} onChange={e => setFormFreeThreshold(e.target.value)} placeholder={t('admin.shipping.optional') || 'Optional'} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-sky-500 focus:border-sky-500" />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.shipping.minDays') || 'Min Delivery Days'}</label>
+              <input type="number" min="1" value={formMinDays} onChange={e => setFormMinDays(e.target.value)} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-sky-500 focus:border-sky-500" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.shipping.maxDays') || 'Max Delivery Days'}</label>
+              <input type="number" min="1" value={formMaxDays} onChange={e => setFormMaxDays(e.target.value)} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-sky-500 focus:border-sky-500" />
+            </div>
+          </div>
+          <div className="flex gap-3 justify-end pt-2">
+            <Button variant="secondary" onClick={() => { setShowForm(false); setEditingZone(null); resetForm(); }}>
+              {t('common.cancel') || 'Cancel'}
+            </Button>
+            <Button variant="primary" onClick={handleSaveZone} loading={saving}>
+              {editingZone ? (t('common.save') || 'Save') : (t('admin.shipping.createZone') || 'Create Zone')}
+            </Button>
+          </div>
+        </div>
       </Modal>
     </>
   );

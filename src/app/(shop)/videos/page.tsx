@@ -332,12 +332,13 @@ export default function VideosPage() {
 
       {/* Video Player Modal */}
       {playingVideo && (
-        <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-labelledby="video-player-modal-title">
           <div className="w-full max-w-4xl">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-white font-bold text-xl">{playingVideo.title}</h3>
+              <h3 id="video-player-modal-title" className="text-white font-bold text-xl">{playingVideo.title}</h3>
               <button
                 onClick={() => setPlayingVideo(null)}
+                aria-label="Close video player"
                 className="p-2 text-white hover:bg-white/10 rounded-lg"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

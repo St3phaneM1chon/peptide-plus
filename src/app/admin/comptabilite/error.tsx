@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { useI18n } from '@/i18n/client';
 
 export default function ComptabiliteError({
   error,
@@ -9,6 +10,8 @@ export default function ComptabiliteError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const { t } = useI18n();
+
   useEffect(() => {
     console.error('Erreur module comptabilite:', error);
   }, [error]);
@@ -33,10 +36,10 @@ export default function ComptabiliteError({
         </div>
 
         <h2 className="text-lg font-semibold text-slate-900 mb-2">
-          Une erreur est survenue dans le module comptabilit&eacute;
+          {t('admin.errors.comptabiliteError')}
         </h2>
         <p className="text-sm text-slate-500 mb-6">
-          Veuillez r&eacute;essayer. Si le probl&egrave;me persiste, contactez le support technique.
+          {t('admin.errors.comptabiliteErrorDesc')}
         </p>
 
         <button
@@ -56,12 +59,12 @@ export default function ComptabiliteError({
               d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182"
             />
           </svg>
-          R&eacute;essayer
+          {t('admin.errors.tryAgain')}
         </button>
 
         <details className="mt-6 text-left">
           <summary className="text-xs text-slate-400 cursor-pointer hover:text-slate-600">
-            D&eacute;tails techniques
+            {t('admin.errors.technicalDetails')}
           </summary>
           <pre className="mt-2 p-3 bg-slate-50 rounded-lg text-xs text-slate-600 overflow-auto max-h-32 border border-slate-200">
             {error.message}

@@ -130,7 +130,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       },
     });
 
-    return NextResponse.json({ success: true, zone }, { status: 201 });
+    return NextResponse.json({ success: true, data: zone }, { status: 201 });
   } catch (error) {
     console.error('Create shipping zone error:', error);
     return NextResponse.json(

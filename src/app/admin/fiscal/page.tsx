@@ -99,7 +99,7 @@ function getRegionTaxRate(regionCode: string): number {
 }
 
 export default function FiscalPage() {
-  const { t, locale } = useI18n();
+  const { t, locale, formatCurrency } = useI18n();
   const [activeTab, setActiveTab] = useState<TabKey>('reports');
   const [reports, setReports] = useState<TaxReport[]>([]);
   const [selectedYear, setSelectedYear] = useState(2026);
@@ -283,7 +283,6 @@ export default function FiscalPage() {
     taxExemptProducts: [] as string[],
   });
 
-  const [, setSelectedRegionDetail] = useState<TaxRegion | null>(null);
 
   // --- Column definitions for DataTable ---
 
@@ -302,13 +301,13 @@ export default function FiscalPage() {
       key: 'totalSales',
       header: t('admin.fiscal.columns.sales'),
       align: 'right',
-      render: (r) => <span className="font-medium text-slate-900">{r.totalSales.toLocaleString(locale)} $</span>,
+      render: (r) => <span className="font-medium text-slate-900">{formatCurrency(r.totalSales)}</span>,
     },
     {
       key: 'taxableAmount',
       header: t('admin.fiscal.columns.taxableAmount'),
       align: 'right',
-      render: (r) => <span className="text-slate-600">{r.taxableAmount.toLocaleString(locale)} $</span>,
+      render: (r) => <span className="text-slate-600">{formatCurrency(r.taxableAmount)}</span>,
     },
     {
       key: 'taxRate',
@@ -320,7 +319,7 @@ export default function FiscalPage() {
       key: 'taxCollected',
       header: t('admin.fiscal.columns.taxCollected'),
       align: 'right',
-      render: (r) => <span className="font-bold text-green-600">{r.taxCollected.toLocaleString(locale)} $</span>,
+      render: (r) => <span className="font-bold text-green-600">{formatCurrency(r.taxCollected)}</span>,
     },
     {
       key: 'orderCount',
@@ -366,13 +365,13 @@ export default function FiscalPage() {
       key: 'totalSales',
       header: t('admin.fiscal.columns.sales'),
       align: 'right',
-      render: (r) => <span className="font-medium text-slate-900">{r.totalSales.toLocaleString(locale)} $</span>,
+      render: (r) => <span className="font-medium text-slate-900">{formatCurrency(r.totalSales)}</span>,
     },
     {
       key: 'taxCollected',
       header: t('admin.fiscal.columns.taxes'),
       align: 'right',
-      render: (r) => <span className="font-medium text-green-600">{r.taxCollected.toLocaleString(locale)} $</span>,
+      render: (r) => <span className="font-medium text-green-600">{formatCurrency(r.taxCollected)}</span>,
     },
     {
       key: 'orderCount',
@@ -464,7 +463,7 @@ export default function FiscalPage() {
       header: t('admin.fiscal.columns.actions'),
       align: 'center',
       render: (r) => (
-        <Button size="sm" variant="primary" onClick={() => setSelectedRegionDetail(r)}>
+        <Button size="sm" variant="primary">
           {t('admin.fiscal.columns.details')}
         </Button>
       ),
@@ -556,15 +555,15 @@ export default function FiscalPage() {
       />
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           label={t('admin.fiscal.stats.totalSales').replace('{year}', String(selectedYear))}
-          value={`${totalSales.toLocaleString(locale)} $`}
+          value={formatCurrency(totalSales)}
           icon={DollarSign}
         />
         <StatCard
           label={t('admin.fiscal.stats.taxCollected')}
-          value={`${totalTaxCollected.toLocaleString(locale)} $`}
+          value={formatCurrency(totalTaxCollected)}
           icon={Receipt}
           className="bg-green-50 border-green-200"
         />
@@ -649,14 +648,14 @@ export default function FiscalPage() {
                 <div className="flex items-center text-sm">
                   <span className="font-bold text-sky-900 w-[200px]">{t('admin.fiscal.annualReports.totalAnnual')}</span>
                   <span className="font-bold text-sky-900 flex-1 text-end">
-                    {annualReports.reduce((s, r) => s + r.totalSales, 0).toLocaleString(locale)} $
+                    {formatCurrency(annualReports.reduce((s, r) => s + r.totalSales, 0))}
                   </span>
                   <span className="font-bold text-sky-900 flex-1 text-end">
-                    {annualReports.reduce((s, r) => s + r.taxableAmount, 0).toLocaleString(locale)} $
+                    {formatCurrency(annualReports.reduce((s, r) => s + r.taxableAmount, 0))}
                   </span>
                   <span className="flex-1" />
                   <span className="font-bold text-green-700 flex-1 text-end">
-                    {annualReports.reduce((s, r) => s + r.taxCollected, 0).toLocaleString(locale)} $
+                    {formatCurrency(annualReports.reduce((s, r) => s + r.taxCollected, 0))}
                   </span>
                   <span className="font-bold text-sky-900 flex-1 text-center">
                     {annualReports.reduce((s, r) => s + r.orderCount, 0)}
@@ -840,7 +839,7 @@ export default function FiscalPage() {
               {annualReports.map((report) => (
                 <div key={report.id} className="p-4 bg-slate-50 rounded-lg">
                   <p className="font-medium text-slate-900">{report.region}</p>
-                  <p className="text-2xl font-bold text-green-600 mt-1">{report.taxCollected.toLocaleString(locale)} $</p>
+                  <p className="text-2xl font-bold text-green-600 mt-1">{formatCurrency(report.taxCollected)}</p>
                   <p className="text-xs text-slate-500 mt-1">{t('admin.fiscal.regionSummary.orders').replace('{count}', String(report.orderCount))}</p>
                   <p className="text-xs text-slate-500">{t('admin.fiscal.regionSummary.rate').replace('{rate}', String(report.taxRate))}</p>
                 </div>
@@ -903,15 +902,15 @@ export default function FiscalPage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="p-4 bg-slate-50 rounded-lg text-center">
                 <p className="text-sm text-slate-500">{t('admin.fiscal.modal.totalSales')}</p>
-                <p className="text-xl font-bold text-slate-900">{selectedReport.totalSales.toLocaleString(locale)} $</p>
+                <p className="text-xl font-bold text-slate-900">{formatCurrency(selectedReport.totalSales)}</p>
               </div>
               <div className="p-4 bg-slate-50 rounded-lg text-center">
                 <p className="text-sm text-slate-500">{t('admin.fiscal.modal.taxableAmount')}</p>
-                <p className="text-xl font-bold text-slate-900">{selectedReport.taxableAmount.toLocaleString(locale)} $</p>
+                <p className="text-xl font-bold text-slate-900">{formatCurrency(selectedReport.taxableAmount)}</p>
               </div>
               <div className="p-4 bg-green-50 rounded-lg text-center">
                 <p className="text-sm text-green-600">{t('admin.fiscal.modal.taxCollected')}</p>
-                <p className="text-xl font-bold text-green-700">{selectedReport.taxCollected.toLocaleString(locale)} $</p>
+                <p className="text-xl font-bold text-green-700">{formatCurrency(selectedReport.taxCollected)}</p>
               </div>
               <div className="p-4 bg-blue-50 rounded-lg text-center">
                 <p className="text-sm text-blue-600">{t('admin.fiscal.modal.orders')}</p>
@@ -981,15 +980,15 @@ export default function FiscalPage() {
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-slate-600">{t('admin.fiscal.modal.grossSales')}</span>
-                  <span>{selectedReport.totalSales.toLocaleString(locale)} $</span>
+                  <span>{formatCurrency(selectedReport.totalSales)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-600">{t('admin.fiscal.modal.nonTaxableSales')}</span>
-                  <span>-{(selectedReport.totalSales - selectedReport.taxableAmount).toLocaleString(locale)} $</span>
+                  <span>-{formatCurrency(selectedReport.totalSales - selectedReport.taxableAmount)}</span>
                 </div>
                 <div className="flex justify-between border-t border-slate-200 pt-2">
                   <span className="font-medium">{t('admin.fiscal.modal.taxableAmountCalc')}</span>
-                  <span className="font-medium">{selectedReport.taxableAmount.toLocaleString(locale)} $</span>
+                  <span className="font-medium">{formatCurrency(selectedReport.taxableAmount)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-600">{t('admin.fiscal.modal.taxRateCalc')}</span>
@@ -997,7 +996,7 @@ export default function FiscalPage() {
                 </div>
                 <div className="flex justify-between border-t border-slate-200 pt-2">
                   <span className="font-bold text-green-700">{t('admin.fiscal.modal.taxToRemit')}</span>
-                  <span className="font-bold text-green-700">{selectedReport.taxCollected.toLocaleString(locale)} $</span>
+                  <span className="font-bold text-green-700">{formatCurrency(selectedReport.taxCollected)}</span>
                 </div>
               </div>
             </div>

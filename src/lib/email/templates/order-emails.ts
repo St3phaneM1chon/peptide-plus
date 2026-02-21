@@ -41,6 +41,8 @@ export interface OrderData {
   cancellationReason?: string;
   refundAmount?: number;
   refundIsPartial?: boolean;
+  /** CAN-SPAM / RGPD / LCAP: unsubscribe URL (required for compliance) */
+  unsubscribeUrl?: string;
 }
 
 // Helpers
@@ -186,11 +188,12 @@ export function orderConfirmationEmail(data: OrderData): { subject: string; html
   return {
     subject,
     html: baseTemplate({
-      preheader: isFr 
+      preheader: isFr
         ? `Commande #${data.orderNumber} confirmée - Merci pour votre achat!`
         : `Order #${data.orderNumber} confirmed - Thank you for your purchase!`,
       content,
       locale: data.locale,
+      unsubscribeUrl: data.unsubscribeUrl,
     }),
   };
 }
@@ -288,11 +291,12 @@ export function orderProcessingEmail(data: OrderData): { subject: string; html: 
   return {
     subject,
     html: baseTemplate({
-      preheader: isFr 
+      preheader: isFr
         ? `Votre commande #${data.orderNumber} est en cours de préparation`
         : `Your order #${data.orderNumber} is being prepared`,
       content,
       locale: data.locale,
+      unsubscribeUrl: data.unsubscribeUrl,
     }),
   };
 }
@@ -365,11 +369,12 @@ export function orderShippedEmail(data: OrderData): { subject: string; html: str
   return {
     subject,
     html: baseTemplate({
-      preheader: isFr 
+      preheader: isFr
         ? `Votre commande #${data.orderNumber} est en route - Suivez votre colis!`
         : `Your order #${data.orderNumber} is on its way - Track your package!`,
       content,
       locale: data.locale,
+      unsubscribeUrl: data.unsubscribeUrl,
     }),
   };
 }
@@ -459,11 +464,12 @@ export function orderDeliveredEmail(data: OrderData): { subject: string; html: s
   return {
     subject,
     html: baseTemplate({
-      preheader: isFr 
+      preheader: isFr
         ? `Votre commande #${data.orderNumber} est arrivée - Donnez-nous votre avis!`
         : `Your order #${data.orderNumber} has arrived - Give us your feedback!`,
       content,
       locale: data.locale,
+      unsubscribeUrl: data.unsubscribeUrl,
     }),
   };
 }
@@ -544,6 +550,7 @@ export function satisfactionSurveyEmail(data: OrderData): { subject: string; htm
         : `Give your feedback and earn 50 loyalty points!`,
       content,
       locale: data.locale,
+      unsubscribeUrl: data.unsubscribeUrl,
     }),
   };
 }
@@ -642,6 +649,7 @@ export function orderCancelledEmail(data: OrderData): { subject: string; html: s
         : `Your order #${data.orderNumber} has been cancelled`,
       content,
       locale: data.locale,
+      unsubscribeUrl: data.unsubscribeUrl,
     }),
   };
 }
@@ -751,6 +759,7 @@ export function orderRefundEmail(data: OrderData): { subject: string; html: stri
         : `Your refund of ${formatPrice(refundAmount, currency)} has been processed`,
       content,
       locale: data.locale,
+      unsubscribeUrl: data.unsubscribeUrl,
     }),
   };
 }

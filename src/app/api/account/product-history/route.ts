@@ -26,19 +26,44 @@ export async function GET() {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Get all order items from non-cancelled orders
-    const orders = await db.order.findMany({
+    // PERF-003: Push aggregation to database using groupBy instead of loading all orders into JS
+    const aggregated = await db.orderItem.groupBy({
+      by: ['productId', 'formatId', 'productName', 'formatName'],
       where: {
-        userId: user.id,
-        status: { not: 'CANCELLED' },
+        order: {
+          userId: user.id,
+          status: { not: 'CANCELLED' },
+        },
       },
-      include: {
-        items: true,
-      },
-      orderBy: { createdAt: 'desc' },
+      _sum: { quantity: true },
+      _count: { _all: true },
+      _max: { createdAt: true },
     });
 
-    // Aggregate by productId + formatId
+    if (aggregated.length === 0) {
+      return NextResponse.json({ categories: [] });
+    }
+
+    // For lastOrderedPrice, fetch the most recent order item per (productId, formatId) group.
+    // This is still much cheaper than loading all 200 orders with all items.
+    const latestPricePromises = aggregated.map((group) =>
+      db.orderItem.findFirst({
+        where: {
+          productId: group.productId,
+          formatId: group.formatId,
+          order: {
+            userId: user.id,
+            status: { not: 'CANCELLED' },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+        select: { unitPrice: true },
+      })
+    );
+
+    const latestPrices = await Promise.all(latestPricePromises);
+
+    // Build productMap from aggregated data
     const productMap = new Map<
       string,
       {
@@ -53,36 +78,24 @@ export async function GET() {
       }
     >();
 
-    for (const order of orders) {
-      for (const item of order.items) {
-        const key = `${item.productId}__${item.formatId || 'null'}`;
-        const existing = productMap.get(key);
-
-        if (existing) {
-          existing.totalOrdered += item.quantity;
-          existing.orderCount += 1;
-          if (order.createdAt.toISOString() > existing.lastOrderDate) {
-            existing.lastOrderDate = order.createdAt.toISOString();
-            existing.lastOrderedPrice = Number(item.unitPrice);
-          }
-        } else {
-          productMap.set(key, {
-            productId: item.productId,
-            formatId: item.formatId,
-            productName: item.productName,
-            formatName: item.formatName,
-            totalOrdered: item.quantity,
-            orderCount: 1,
-            lastOrderDate: order.createdAt.toISOString(),
-            lastOrderedPrice: Number(item.unitPrice),
-          });
-        }
-      }
+    for (let i = 0; i < aggregated.length; i++) {
+      const group = aggregated[i];
+      const key = `${group.productId}__${group.formatId || 'null'}`;
+      productMap.set(key, {
+        productId: group.productId,
+        formatId: group.formatId,
+        productName: group.productName,
+        formatName: group.formatName,
+        totalOrdered: group._sum.quantity || 0,
+        orderCount: group._count._all,
+        lastOrderDate: group._max.createdAt?.toISOString() || new Date().toISOString(),
+        lastOrderedPrice: latestPrices[i]?.unitPrice ? Number(latestPrices[i]!.unitPrice) : 0,
+      });
     }
 
     // Get product details for all unique product IDs
-    const productIds = [...new Set([...productMap.values()].map((p) => p.productId))];
-    const formatIds = [...new Set([...productMap.values()].map((p) => p.formatId).filter(Boolean))] as string[];
+    const productIds = [...new Set(aggregated.map((g) => g.productId))];
+    const formatIds = [...new Set(aggregated.map((g) => g.formatId).filter(Boolean))] as string[];
 
     const [products, formats] = await Promise.all([
       db.product.findMany({

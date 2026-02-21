@@ -11,6 +11,7 @@ import './globals.css';
 import { Providers } from './providers';
 import { cookies, headers } from 'next/headers';
 import { locales, defaultLocale, isValidLocale, type Locale, localeDirections } from '@/i18n/config';
+import Script from 'next/script';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { organizationSchema, websiteSchema } from '@/lib/structured-data';
 import { TranslationNotice } from '@/components/ui/TranslationNotice';
@@ -186,17 +187,9 @@ export default async function RootLayout({
           <link key={loc} rel="alternate" hrefLang={loc} href={`https://biocyclepeptides.com?lang=${loc}`} />
         ))}
         <link rel="alternate" hrefLang="x-default" href="https://biocyclepeptides.com" />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              if ('serviceWorker' in navigator) {
-                window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js');
-                });
-              }
-            `,
-          }}
-        />
+        <Script id="sw-register" strategy="afterInteractive">
+          {`if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/sw.js'); }`}
+        </Script>
       </head>
       <body className={inter.className}>
         <GoogleAnalytics />

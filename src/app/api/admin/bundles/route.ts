@@ -145,7 +145,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       },
     });
 
-    return NextResponse.json(bundle, { status: 201 });
+    return NextResponse.json({ data: bundle }, { status: 201 });
   } catch (error) {
     console.error('Error creating bundle:', error);
     return NextResponse.json(

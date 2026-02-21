@@ -24,6 +24,8 @@ export interface SendEmailOptions {
   replyTo?: string;
   attachments?: EmailAttachment[];
   tags?: string[];
+  /** Unsubscribe URL for List-Unsubscribe header (CAN-SPAM / RGPD / LCAP compliance) */
+  unsubscribeUrl?: string;
 }
 
 export interface EmailResult {
@@ -82,6 +84,13 @@ async function sendViaResend(options: SendEmailOptions): Promise<EmailResult> {
     return logEmail(options);
   }
 
+  // Build List-Unsubscribe headers for CAN-SPAM / RGPD / LCAP compliance
+  const headers: Record<string, string> = {};
+  if (options.unsubscribeUrl) {
+    headers['List-Unsubscribe'] = `<${options.unsubscribeUrl}>`;
+    headers['List-Unsubscribe-Post'] = 'List-Unsubscribe=One-Click';
+  }
+
   const response = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: {
@@ -90,14 +99,15 @@ async function sendViaResend(options: SendEmailOptions): Promise<EmailResult> {
     },
     body: JSON.stringify({
       from: `${options.from?.name} <${options.from?.email}>`,
-      to: Array.isArray(options.to) 
-        ? options.to.map(r => r.email) 
+      to: Array.isArray(options.to)
+        ? options.to.map(r => r.email)
         : [options.to.email],
       subject: options.subject,
       html: options.html,
       text: options.text,
       reply_to: options.replyTo,
       tags: options.tags?.map(t => ({ name: t, value: 'true' })),
+      ...(Object.keys(headers).length > 0 ? { headers } : {}),
     }),
   });
 
@@ -122,6 +132,13 @@ async function sendViaSendGrid(options: SendEmailOptions): Promise<EmailResult> 
 
   const recipients = Array.isArray(options.to) ? options.to : [options.to];
 
+  // Build SendGrid headers for CAN-SPAM / RGPD / LCAP compliance
+  const sgHeaders: Record<string, string> = {};
+  if (options.unsubscribeUrl) {
+    sgHeaders['List-Unsubscribe'] = `<${options.unsubscribeUrl}>`;
+    sgHeaders['List-Unsubscribe-Post'] = 'List-Unsubscribe=One-Click';
+  }
+
   const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
     method: 'POST',
     headers: {
@@ -131,6 +148,7 @@ async function sendViaSendGrid(options: SendEmailOptions): Promise<EmailResult> 
     body: JSON.stringify({
       personalizations: [{
         to: recipients.map(r => ({ email: r.email, name: r.name })),
+        ...(Object.keys(sgHeaders).length > 0 ? { headers: sgHeaders } : {}),
       }],
       from: { email: options.from?.email, name: options.from?.name },
       reply_to: options.replyTo ? { email: options.replyTo } : undefined,
@@ -175,6 +193,7 @@ async function logEmail(options: SendEmailOptions): Promise<EmailResult> {
   console.log(`To: ${recipients.map(r => r.name ? `${r.name} <${r.email}>` : r.email).join(', ')}`);
   console.log(`Subject: ${options.subject}`);
   if (options.replyTo) console.log(`Reply-To: ${options.replyTo}`);
+  if (options.unsubscribeUrl) console.log(`List-Unsubscribe: <${options.unsubscribeUrl}>`);
   console.log('-'.repeat(60));
   // Log une version simplifiée du HTML
   const textPreview = options.text || options.html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').substring(0, 500);

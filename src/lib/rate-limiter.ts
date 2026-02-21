@@ -179,6 +179,9 @@ const RATE_LIMIT_CONFIGS: Record<string, { windowMs: number; maxRequests: number
 
   // SEC-27: Password change - 5 per user per hour
   'account/password': { windowMs: 3600000, maxRequests: 5 },
+
+  // SEC-002: Account deletion - 2 per user per day (irreversible action)
+  'account/delete-request': { windowMs: 86400000, maxRequests: 2 },
 };
 
 // ---------------------------------------------------------------------------
@@ -220,8 +223,9 @@ function getEndpointType(path: string): string {
     if (segments[1] === 'orders' && segments[2] === 'track') return 'orders/track';
     // Stock alerts
     if (segments[1] === 'stock-alerts') return 'stock-alerts';
-    // Account: distinguish /api/account/password
+    // Account: distinguish /api/account/password and /api/account/delete-request
     if (segments[1] === 'account' && segments[2] === 'password') return 'account/password';
+    if (segments[1] === 'account' && segments[2] === 'delete-request') return 'account/delete-request';
     return segments[1] || 'default';
   }
 

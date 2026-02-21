@@ -6,6 +6,7 @@
 import { createCipheriv, createDecipheriv, randomBytes, scrypt } from 'crypto';
 import { promisify } from 'util';
 import { z } from 'zod';
+import { PASSWORD_MIN_LENGTH } from '@/lib/constants';
 
 const scryptAsync = promisify(scrypt);
 
@@ -104,7 +105,7 @@ export const emailSchema = z
  */
 export const passwordSchema = z
   .string()
-  .min(14, 'Minimum 14 caractères requis')
+  .min(PASSWORD_MIN_LENGTH, `Minimum ${PASSWORD_MIN_LENGTH} caractères requis`)
   .max(128, 'Maximum 128 caractères')
   .regex(/[A-Z]/, 'Au moins une majuscule requise')
   .regex(/[a-z]/, 'Au moins une minuscule requise')
@@ -271,6 +272,17 @@ interface RateLimitEntry {
 
 const rateLimitStore = new Map<string, RateLimitEntry>();
 
+// Periodic cleanup of expired rate limit entries (every 5 minutes)
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, entry] of rateLimitStore.entries()) {
+    // Remove entries older than 10 minutes (generous window)
+    if (now - entry.firstRequest > 600_000) {
+      rateLimitStore.delete(key);
+    }
+  }
+}, 300_000);
+
 /**
  * Vérifie le rate limit pour une clé donnée
  */
@@ -317,6 +329,16 @@ export function checkRateLimit(
 // ============================================
 
 const csrfTokens = new Map<string, number>();
+
+// Periodic cleanup of expired CSRF tokens (every 10 minutes)
+setInterval(() => {
+  const oneHourAgo = Date.now() - 3600_000;
+  for (const [token, timestamp] of csrfTokens.entries()) {
+    if (timestamp < oneHourAgo) {
+      csrfTokens.delete(token);
+    }
+  }
+}, 600_000);
 
 /**
  * Génère un token CSRF

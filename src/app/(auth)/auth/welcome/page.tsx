@@ -20,20 +20,31 @@ function WelcomeContent() {
       return;
     }
 
+    // RGPD: Check if user needs to accept terms (new OAuth users)
+    const needsTerms = (session.user as Record<string, unknown>)?.needsTerms;
+
     // Redirect to callbackUrl if present, otherwise role-based redirect
     const callbackUrl = searchParams.get('callbackUrl');
+    let destination: string;
     if (callbackUrl && callbackUrl.includes('/auth/post-login')) {
-      router.replace('/auth/post-login');
+      destination = '/auth/post-login';
     } else if (callbackUrl) {
-      router.replace(callbackUrl);
+      destination = callbackUrl;
     } else {
       const role = (session.user as Record<string, unknown>)?.role;
       if (role === 'OWNER' || role === 'EMPLOYEE' || role === 'CLIENT') {
-        router.replace('/admin');
+        destination = '/admin';
       } else {
         // CUSTOMER -> page d'accueil
-        router.replace('/');
+        destination = '/';
       }
+    }
+
+    // If terms not accepted, redirect to accept-terms first
+    if (needsTerms) {
+      router.replace(`/auth/accept-terms?callbackUrl=${encodeURIComponent(destination)}`);
+    } else {
+      router.replace(destination);
     }
   }, [session, status, router, searchParams]);
 

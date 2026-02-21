@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useI18n } from '@/i18n/client';
 import { PageHeader, SectionCard, Button } from '@/components/admin';
 import { sectionThemes } from '@/lib/admin/section-themes';
+import { toast } from 'sonner';
 
 interface CashFlowProjection {
   period: string;
@@ -49,6 +50,8 @@ export default function ForecastingPage() {
         setMonthlyRevenue(data.totalRevenue || 0);
         setMonthlyExpenses(data.totalExpenses || 0);
       } catch (err) {
+        console.error(err);
+        toast.error(t('common.errorOccurred'));
         setError(err instanceof Error ? err.message : t('admin.forecasts.errorLoading'));
       } finally {
         setLoading(false);
@@ -165,7 +168,7 @@ export default function ForecastingPage() {
   if (loading) return (
     <div aria-live="polite" aria-busy="true" className="p-8 space-y-4 animate-pulse">
       <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-1/3"></div>
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[1,2,3,4].map(i => <div key={i} className="h-24 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>)}
       </div>
       <div className="h-64 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
@@ -281,6 +284,7 @@ export default function ForecastingPage() {
 
           {/* Detailed Table */}
           <SectionCard title={t('admin.forecasts.tabCashFlow')} theme={theme} noPadding>
+            <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-slate-50">
                 <tr>
@@ -309,6 +313,7 @@ export default function ForecastingPage() {
                 ))}
               </tbody>
             </table>
+            </div>
           </SectionCard>
         </div>
       )}

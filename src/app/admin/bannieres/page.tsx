@@ -26,6 +26,7 @@ import {
   FormField,
   Input,
   Textarea,
+  MediaUploader,
 } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
@@ -99,6 +100,7 @@ export default function BannieresPage() {
   const [translations, setTranslations] = useState<Record<string, Translation>>({});
   const [activeTab, setActiveTab] = useState('general');
   const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const fetchSlides = async () => {
     try {
@@ -106,10 +108,13 @@ export default function BannieresPage() {
       if (!res.ok) throw new Error();
       const data = await res.json();
       setSlides(data.slides || []);
-    } catch {
+    } catch (err) {
+      console.error('Error fetching slides:', err);
+      toast.error(t('common.error'));
       setSlides([]);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   useEffect(() => { fetchSlides(); }, []);
@@ -160,7 +165,6 @@ export default function BannieresPage() {
       if (!res.ok) {
         const data = await res.json();
         toast.error(data.error || t('admin.banners.error'));
-        setSaving(false);
         return;
       }
 
@@ -168,22 +172,42 @@ export default function BannieresPage() {
       fetchSlides();
     } catch {
       toast.error(t('admin.banners.connectionError'));
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
   };
 
   const toggleActive = async (slide: HeroSlide) => {
-    await fetch(`/api/hero-slides/${slide.id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ isActive: !slide.isActive }),
-    });
-    fetchSlides();
+    try {
+      const res = await fetch(`/api/hero-slides/${slide.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isActive: !slide.isActive }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        toast.error(data.error || t('admin.banners.errorToggle') || 'Failed to update slide');
+        return;
+      }
+      toast.success(slide.isActive
+        ? (t('admin.banners.slideDeactivated') || 'Slide deactivated')
+        : (t('admin.banners.slideActivated') || 'Slide activated'));
+      fetchSlides();
+    } catch {
+      toast.error('Network error');
+    }
   };
 
   const deleteSlide = async (id: string) => {
     if (!confirm(t('admin.banners.confirmDelete'))) return;
-    await fetch(`/api/hero-slides/${id}`, { method: 'DELETE' });
+    setDeletingId(id);
+    try {
+      const res = await fetch(`/api/hero-slides/${id}`, { method: 'DELETE' });
+      if (!res.ok) { toast.error(t('admin.banners.deleteError')); return; }
+      toast.success(t('admin.banners.slideDeleted'));
+    } catch { toast.error(t('common.networkError')); } finally {
+      setDeletingId(null);
+    }
     fetchSlides();
   };
 
@@ -217,8 +241,9 @@ export default function BannieresPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex items-center justify-center h-64" role="status" aria-label="Loading">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500" />
+        <span className="sr-only">Loading...</span>
       </div>
     );
   }
@@ -264,7 +289,7 @@ export default function BannieresPage() {
       />
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <StatCard
           label={t('admin.banners.total')}
           value={slides.length}
@@ -321,6 +346,7 @@ export default function BannieresPage() {
                     src={slide.backgroundUrl}
                     alt=""
                     fill
+                    sizes="128px"
                     className="object-cover"
                     unoptimized
                   />
@@ -357,7 +383,7 @@ export default function BannieresPage() {
                   <Button size="sm" variant="secondary" icon={Pencil} onClick={() => openEdit(slide)}>
                     {t('admin.banners.editSlide')}
                   </Button>
-                  <Button size="sm" variant="danger" icon={Trash2} onClick={() => deleteSlide(slide.id)}>
+                  <Button size="sm" variant="danger" icon={Trash2} disabled={deletingId === slide.id} onClick={() => deleteSlide(slide.id)}>
                     {t('admin.banners.deleteSlide')}
                   </Button>
                 </div>
@@ -477,21 +503,19 @@ export default function BannieresPage() {
               </select>
             </FormField>
             <FormField label={t('admin.banners.backgroundUrl')} required>
-              <Input
+              <MediaUploader
                 value={form.backgroundUrl}
-                onChange={(e) => setForm({ ...form, backgroundUrl: e.target.value })}
-                placeholder="https://images.unsplash.com/..."
+                onChange={(url) => setForm({ ...form, backgroundUrl: url })}
+                context="banner"
+                previewSize="lg"
               />
-              {form.backgroundUrl && (
-                <div className="mt-2 h-32 rounded-lg overflow-hidden bg-slate-100 relative">
-                  <Image src={form.backgroundUrl} alt="" fill className="object-cover" sizes="(max-width: 768px) 100vw, 50vw" unoptimized />
-                </div>
-              )}
             </FormField>
             <FormField label={t('admin.banners.mobileUrl')}>
-              <Input
-                value={form.backgroundMobile}
-                onChange={(e) => setForm({ ...form, backgroundMobile: e.target.value })}
+              <MediaUploader
+                value={form.backgroundMobile || ''}
+                onChange={(url) => setForm({ ...form, backgroundMobile: url })}
+                context="banner"
+                previewSize="md"
               />
             </FormField>
             <FormField label={t('admin.banners.overlayOpacity', { value: form.overlayOpacity })}>
@@ -519,7 +543,7 @@ export default function BannieresPage() {
           <div className="space-y-6">
             <div>
               <h3 className="font-medium text-slate-900 mb-3">{t('admin.banners.primaryCta')}</h3>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <FormField label={t('admin.banners.ctaText')}>
                   <Input
                     value={form.ctaText}
@@ -549,7 +573,7 @@ export default function BannieresPage() {
             </div>
             <div>
               <h3 className="font-medium text-slate-900 mb-3">{t('admin.banners.secondaryCta')}</h3>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <FormField label={t('admin.banners.ctaText')}>
                   <Input
                     value={form.cta2Text}

@@ -23,9 +23,11 @@ import {
   FormField,
   Input,
   Textarea,
+  MediaUploader,
   type Column,
 } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
+import { toast } from 'sonner';
 
 interface Category {
   id: string;
@@ -60,6 +62,7 @@ export default function CategoriesPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   // Fetch categories
   useEffect(() => {
@@ -73,8 +76,9 @@ export default function CategoriesPage() {
       setCategories(data.categories || []);
     } catch (err) {
       console.error('Error fetching categories:', err);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   // Get parent categories (no parentId) for the dropdown
@@ -147,17 +151,24 @@ export default function CategoriesPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || t('admin.categories.error'));
-        setSaving(false);
+        const msg = data.error || t('admin.categories.error');
+        setError(msg);
+        toast.error(msg);
         return;
       }
 
       await fetchCategories();
+      toast.success(editingId
+        ? (t('admin.categories.updated') || 'Category updated')
+        : (t('admin.categories.created') || 'Category created'));
       resetForm();
     } catch {
-      setError(t('admin.categories.connectionError'));
+      const msg = t('admin.categories.connectionError');
+      setError(msg);
+      toast.error(msg);
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
   };
 
   const resetForm = () => {
@@ -188,28 +199,41 @@ export default function CategoriesPage() {
 
   const toggleActive = async (catId: string, currentStatus: boolean) => {
     try {
-      await fetch(`/api/categories/${catId}`, {
+      const res = await fetch(`/api/categories/${catId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ isActive: !currentStatus }),
       });
-      await fetchCategories();
-    } catch (err) {
-      console.error('Error toggling status:', err);
-    }
-  };
-
-  const handleDelete = async (catId: string) => {
-    try {
-      const res = await fetch(`/api/categories/${catId}`, { method: 'DELETE' });
-      const data = await res.json();
       if (!res.ok) {
-        setError(data.error || 'Erreur lors de la suppression');
+        const data = await res.json().catch(() => ({}));
+        toast.error(data.error || t('common.updateFailed'));
         return;
       }
       await fetchCategories();
     } catch (err) {
+      console.error('Error toggling status:', err);
+      toast.error(t('common.networkError'));
+    }
+  };
+
+  const handleDelete = async (catId: string) => {
+    setDeletingId(catId);
+    try {
+      const res = await fetch(`/api/categories/${catId}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (!res.ok) {
+        const msg = data.error || t('common.deleteFailed');
+        setError(msg);
+        toast.error(msg);
+        return;
+      }
+      await fetchCategories();
+      toast.success(t('admin.categories.deleted') || 'Category deleted');
+    } catch (err) {
       console.error('Error deleting:', err);
+      toast.error(t('common.networkError'));
+    } finally {
+      setDeletingId(null);
     }
     setDeleteConfirm(null);
   };
@@ -439,11 +463,11 @@ export default function CategoriesPage() {
 
           <div className="grid grid-cols-[2fr_1fr] gap-4">
             <FormField label={t('admin.categories.fieldImageUrl')}>
-              <Input
-                type="url"
+              <MediaUploader
                 value={formData.imageUrl}
-                onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                placeholder="https://..."
+                onChange={(url) => setFormData({ ...formData, imageUrl: url })}
+                context="category"
+                previewSize="sm"
               />
             </FormField>
             <FormField label={t('admin.categories.fieldSortOrder')}>
@@ -471,6 +495,7 @@ export default function CategoriesPage() {
             <Button
               variant="primary"
               className="bg-red-600 hover:bg-red-700"
+              disabled={!!deletingId}
               onClick={() => deleteConfirm && handleDelete(deleteConfirm)}
             >
               {t('admin.categories.confirmDelete') || 'Delete'}

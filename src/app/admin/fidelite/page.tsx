@@ -24,7 +24,7 @@ interface LoyaltyConfig {
 }
 
 export default function FidelitePage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [config, setConfig] = useState<LoyaltyConfig | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -41,6 +41,7 @@ export default function FidelitePage() {
       setConfig(data.config || null);
     } catch (err) {
       console.error('Error fetching loyalty config:', err);
+      toast.error(t('common.error'));
       setConfig(null);
     }
     setLoading(false);
@@ -72,8 +73,9 @@ export default function FidelitePage() {
 
   if (loading || !config) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex items-center justify-center h-64" role="status" aria-label="Loading">
         <Loader2 className="w-8 h-8 animate-spin text-sky-500" />
+        <span className="sr-only">Loading...</span>
       </div>
     );
   }
@@ -153,7 +155,10 @@ export default function FidelitePage() {
       <div className="bg-white rounded-xl border border-slate-200 p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-semibold text-slate-900">{t('admin.loyalty.loyaltyTiers')}</h3>
-          <Button variant="ghost" size="sm" icon={Plus} className="text-sky-600 hover:text-sky-700">
+          <Button variant="ghost" size="sm" icon={Plus} className="text-sky-600 hover:text-sky-700" onClick={() => {
+            // TODO: Create API endpoint POST /api/admin/loyalty/tiers and modal for adding a new tier
+            toast.info(t('admin.loyalty.addTier') + ' - Coming soon');
+          }}>
             {t('admin.loyalty.addTier')}
           </Button>
         </div>
@@ -166,7 +171,7 @@ export default function FidelitePage() {
             >
               <div className="text-center mb-3">
                 <h4 className="font-bold text-lg">{tier.name}</h4>
-                <p className="text-sm opacity-75">{tier.minPoints.toLocaleString()}+ pts</p>
+                <p className="text-sm opacity-75">{tier.minPoints.toLocaleString(locale)}+ pts</p>
               </div>
 
               <div className="space-y-2 mb-3">
@@ -205,7 +210,7 @@ export default function FidelitePage() {
       {/* Simulation */}
       <div className="bg-sky-50 rounded-xl border border-sky-200 p-6">
         <h3 className="font-semibold text-sky-900 mb-4">{t('admin.loyalty.simulation')}</h3>
-        <div className="grid grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           <FormField label={t('admin.loyalty.purchaseAmount')}>
             <Input
               type="number"

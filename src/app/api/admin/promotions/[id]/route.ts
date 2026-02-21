@@ -30,6 +30,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { patchPromotionSchema } from '@/lib/validations/promotion';
 
 // Helper: map a Discount record to the frontend promotion shape
 async function mapDiscountToPromotion(discount: {
@@ -129,6 +130,16 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
     const id = params!.id;
     const body = await request.json();
 
+    // Validate with Zod
+    const parsed = patchPromotionSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Validation error', details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
+    const data = parsed.data;
+
     // Verify discount exists
     const existing = await prisma.discount.findUnique({
       where: { id },
@@ -141,56 +152,40 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
       );
     }
 
-    // Build update data from allowed fields
-    const updateData: Record<string, unknown> = {};
-
-    if (body.name !== undefined) {
-      if (!body.name || body.name.trim() === '') {
-        return NextResponse.json(
-          { error: 'Name cannot be empty' },
-          { status: 400 }
-        );
-      }
-      updateData.name = body.name.trim();
-    }
-
-    if (body.type !== undefined) {
-      const validTypes = ['PERCENTAGE', 'FIXED_AMOUNT'];
-      if (!validTypes.includes(body.type)) {
-        return NextResponse.json(
-          { error: `Invalid discount type. Must be one of: ${validTypes.join(', ')}` },
-          { status: 400 }
-        );
-      }
-      updateData.type = body.type;
-    }
-
-    if (body.value !== undefined) {
-      if (Number(body.value) < 0) {
-        return NextResponse.json(
-          { error: 'Discount value cannot be negative' },
-          { status: 400 }
-        );
-      }
-      // Check percentage cap
-      const effectiveType = body.type || existing.type;
-      if (effectiveType === 'PERCENTAGE' && Number(body.value) > 100) {
+    // Cross-field validation: percentage cap check
+    if (data.value !== undefined) {
+      const effectiveType = data.type || existing.type;
+      if (effectiveType === 'PERCENTAGE' && data.value > 100) {
         return NextResponse.json(
           { error: 'Percentage discount cannot exceed 100%' },
           { status: 400 }
         );
       }
-      updateData.value = Number(body.value);
     }
 
-    if (body.appliesToAll !== undefined) {
-      updateData.appliesToAll = Boolean(body.appliesToAll);
+    // Build update data from validated fields
+    const updateData: Record<string, unknown> = {};
+
+    if (data.name !== undefined) {
+      updateData.name = data.name;
     }
 
-    if (body.categoryId !== undefined) {
-      if (body.categoryId) {
+    if (data.type !== undefined) {
+      updateData.type = data.type;
+    }
+
+    if (data.value !== undefined) {
+      updateData.value = data.value;
+    }
+
+    if (data.appliesToAll !== undefined) {
+      updateData.appliesToAll = data.appliesToAll;
+    }
+
+    if (data.categoryId !== undefined) {
+      if (data.categoryId) {
         const category = await prisma.category.findUnique({
-          where: { id: body.categoryId },
+          where: { id: data.categoryId },
           select: { id: true },
         });
         if (!category) {
@@ -200,13 +195,13 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
           );
         }
       }
-      updateData.categoryId = body.categoryId || null;
+      updateData.categoryId = data.categoryId || null;
     }
 
-    if (body.productId !== undefined) {
-      if (body.productId) {
+    if (data.productId !== undefined) {
+      if (data.productId) {
         const product = await prisma.product.findUnique({
-          where: { id: body.productId },
+          where: { id: data.productId },
           select: { id: true },
         });
         if (!product) {
@@ -216,27 +211,27 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
           );
         }
       }
-      updateData.productId = body.productId || null;
+      updateData.productId = data.productId || null;
     }
 
-    if (body.badge !== undefined) {
-      updateData.badge = body.badge || null;
+    if (data.badge !== undefined) {
+      updateData.badge = data.badge || null;
     }
 
-    if (body.badgeColor !== undefined) {
-      updateData.badgeColor = body.badgeColor || null;
+    if (data.badgeColor !== undefined) {
+      updateData.badgeColor = data.badgeColor || null;
     }
 
-    if (body.startsAt !== undefined) {
-      updateData.startsAt = body.startsAt ? new Date(body.startsAt) : null;
+    if (data.startsAt !== undefined) {
+      updateData.startsAt = data.startsAt ? new Date(data.startsAt) : null;
     }
 
-    if (body.endsAt !== undefined) {
-      updateData.endsAt = body.endsAt ? new Date(body.endsAt) : null;
+    if (data.endsAt !== undefined) {
+      updateData.endsAt = data.endsAt ? new Date(data.endsAt) : null;
     }
 
-    if (body.isActive !== undefined) {
-      updateData.isActive = Boolean(body.isActive);
+    if (data.isActive !== undefined) {
+      updateData.isActive = data.isActive;
     }
 
     // Perform update
@@ -244,6 +239,23 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
       where: { id },
       data: updateData,
     });
+
+    // Audit log for promotion update (fire-and-forget)
+    prisma.auditLog.create({
+      data: {
+        id: `audit_update_promotion_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 8)}`,
+        userId: session.user.id,
+        action: 'ADMIN_UPDATE_PROMOTION',
+        entityType: 'Discount',
+        entityId: id,
+        details: JSON.stringify({
+          updatedFields: Object.keys(updateData),
+          changes: updateData,
+          previousName: existing.name,
+        }),
+        ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || null,
+      },
+    }).catch(console.error);
 
     const promotion = await mapDiscountToPromotion(discount);
 
@@ -278,6 +290,21 @@ export const DELETE = withAdminGuard(async (_request, { session, params }) => {
     await prisma.discount.delete({
       where: { id },
     });
+
+    // Audit log for promotion deletion (fire-and-forget)
+    prisma.auditLog.create({
+      data: {
+        id: `audit_delete_promotion_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 8)}`,
+        userId: session.user.id,
+        action: 'ADMIN_DELETE_PROMOTION',
+        entityType: 'Discount',
+        entityId: id,
+        details: JSON.stringify({
+          deletedName: existing.name,
+        }),
+        ipAddress: null,
+      },
+    }).catch(console.error);
 
     return NextResponse.json({
       success: true,

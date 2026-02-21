@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useI18n } from '@/i18n/client';
 import { PageHeader, SectionCard, Button } from '@/components/admin';
 import { sectionThemes } from '@/lib/admin/section-themes';
+import { toast } from 'sonner';
 
 interface AuditEntry {
   id: string;
@@ -106,6 +107,7 @@ export default function AuditTrailPage() {
       setEntries(data.entries || data.data || []);
     } catch (err) {
       console.error('Error loading audit entries:', err);
+      toast.error(t('common.errorOccurred'));
       setError(t('admin.audit.errorLoadAudit'));
       setEntries([]);
     } finally {
@@ -164,7 +166,7 @@ export default function AuditTrailPage() {
     return (
       <div aria-live="polite" aria-busy="true" className="p-8 space-y-4 animate-pulse">
         <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-1/3"></div>
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[1,2,3,4].map(i => <div key={i} className="h-24 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>)}
         </div>
         <div className="h-64 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
@@ -368,7 +370,7 @@ export default function AuditTrailPage() {
               {selectedEntry.changes.length > 0 && (
                 <div>
                   <p className="text-sm font-medium text-slate-600 mb-2">{t('admin.audit.modificationsLabel')}</p>
-                  <div className="bg-slate-50 rounded-lg overflow-hidden">
+                  <div className="bg-slate-50 rounded-lg overflow-hidden overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead className="bg-slate-100">
                         <tr>

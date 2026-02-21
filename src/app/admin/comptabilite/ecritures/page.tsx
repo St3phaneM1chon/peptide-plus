@@ -32,6 +32,7 @@ import {
 } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
+import { fetchWithRetry } from '@/lib/fetch-with-retry';
 import { sectionThemes } from '@/lib/admin/section-themes';
 
 interface JournalEntry {
@@ -130,7 +131,7 @@ export default function EcrituresPage() {
       if (selectedStatus) params.set('status', selectedStatus);
       if (selectedType) params.set('type', selectedType);
       if (searchTerm) params.set('search', searchTerm);
-      const res = await fetch(`/api/accounting/entries?${params.toString()}`);
+      const res = await fetchWithRetry(`/api/accounting/entries?${params.toString()}`);
       if (!res.ok) {
         throw new Error(`Erreur serveur (${res.status})`);
       }
@@ -450,7 +451,7 @@ export default function EcrituresPage() {
   if (loading) return (
     <div aria-live="polite" aria-busy="true" className="p-8 space-y-4 animate-pulse">
       <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-1/3"></div>
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[1,2,3,4].map(i => <div key={i} className="h-24 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>)}
       </div>
       <div className="h-64 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
@@ -580,7 +581,7 @@ export default function EcrituresPage() {
             {/* Journal Lines */}
             <div>
               <h4 className="font-medium text-slate-900 mb-3">{t('admin.entries.entryLines')}</h4>
-              <div className="border border-slate-200 rounded-lg overflow-hidden">
+              <div className="border border-slate-200 rounded-lg overflow-hidden overflow-x-auto">
                 <table className="w-full">
                   <thead className="bg-slate-50">
                     <tr>
@@ -650,7 +651,7 @@ export default function EcrituresPage() {
       >
         <div className="space-y-6">
           {/* Header Fields */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <FormField label={t('admin.entries.dateLabel')}>
               <Input type="date" value={newEntryDate} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewEntryDate(e.target.value)} />
             </FormField>
@@ -669,7 +670,7 @@ export default function EcrituresPage() {
                 {t('admin.entries.addLine')}
               </Button>
             </div>
-            <div className="border border-slate-200 rounded-lg overflow-hidden">
+            <div className="border border-slate-200 rounded-lg overflow-hidden overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-slate-50">
                   <tr>

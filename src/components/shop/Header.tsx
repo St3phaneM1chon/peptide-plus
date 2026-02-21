@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import { useCart } from '@/contexts/CartContext';
 import { useCurrency } from '@/contexts/CurrencyContext';
@@ -33,6 +33,7 @@ export default function Header() {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
 
   const pathname = usePathname();
+  const router = useRouter();
 
 
   // Close dropdowns on route change
@@ -94,8 +95,8 @@ export default function Header() {
       }).catch(() => {});
     }
 
-    // Reload to apply new locale
-    window.location.assign(window.location.href);
+    // Refresh to apply new locale (SPA-friendly)
+    router.refresh();
   };
 
   const handleSignOut = async () => {

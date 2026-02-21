@@ -11,6 +11,8 @@ export const dynamic = 'force-dynamic';
  *   - Abandoned carts:   90 days (soft delete)
  *   - Chat messages:     1 year (soft delete / anonymize)
  *   - Email logs:        2 years (delete)
+ *   - Password history:  2 years (delete - GDPR data minimization)
+ *   - Audit logs:        5 years (delete - fiscal compliance retention)
  *
  * Authentication: Requires CRON_SECRET in Authorization header.
  * All deletions are soft (marked) unless specified otherwise for truly ephemeral data.
@@ -36,6 +38,8 @@ const RETENTION_POLICIES: RetentionPolicy[] = [
   { name: 'abandoned-carts', description: 'Abandoned shopping carts', maxAgeDays: 90 },
   { name: 'chat-messages', description: 'Chat message logs', maxAgeDays: 365 },
   { name: 'email-logs', description: 'Email send logs', maxAgeDays: 730 },
+  { name: 'password-history', description: 'Old password hashes (GDPR)', maxAgeDays: 730 },
+  { name: 'audit-logs', description: 'Audit trail entries (fiscal compliance - 7yr Canadian tax law)', maxAgeDays: 2557 },
 ];
 
 // ---------------------------------------------------------------------------
@@ -157,6 +161,42 @@ export async function POST(request: NextRequest) {
         logger.error('[data-retention] Email logs cleanup failed', { error: msg });
       }
 
+      // 5. Password history - purge entries older than 2 years (GDPR data minimization)
+      try {
+        const twoYearsAgo = new Date(now);
+        twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2);
+
+        const passwordHistoryResult = await prisma.passwordHistory.deleteMany({
+          where: {
+            createdAt: { lt: twoYearsAgo },
+          },
+        });
+        results['password-history'] = { deleted: passwordHistoryResult.count };
+        logger.info('[data-retention] Password history purged', { deleted: passwordHistoryResult.count });
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        results['password-history'] = { deleted: 0, error: msg };
+        logger.error('[data-retention] Password history purge failed', { error: msg });
+      }
+
+      // 6. Audit logs - delete entries older than 7 years (Canadian tax law ITA s. 230(4))
+      try {
+        const sevenYearsAgo = new Date(now);
+        sevenYearsAgo.setFullYear(sevenYearsAgo.getFullYear() - 7);
+
+        const auditLogResult = await prisma.auditLog.deleteMany({
+          where: {
+            createdAt: { lt: sevenYearsAgo },
+          },
+        });
+        results['audit-logs'] = { deleted: auditLogResult.count };
+        logger.info('[data-retention] Audit logs cleaned', { deleted: auditLogResult.count });
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        results['audit-logs'] = { deleted: 0, error: msg };
+        logger.error('[data-retention] Audit logs cleanup failed', { error: msg });
+      }
+
       // Log summary
       const totalDeleted = Object.values(results).reduce((sum, r) => sum + r.deleted, 0);
       const hasErrors = Object.values(results).some((r) => r.error);
@@ -200,7 +240,12 @@ export async function GET() {
     const now = new Date();
 
     // Count records that would be affected by each policy
-    const [expiredSessions, oldCarts, oldChatMessages, oldEmailLogs] = await Promise.all([
+    const twoYearsAgoCheck = new Date(now);
+    twoYearsAgoCheck.setFullYear(twoYearsAgoCheck.getFullYear() - 2);
+    const sevenYearsAgoCheck = new Date(now);
+    sevenYearsAgoCheck.setFullYear(sevenYearsAgoCheck.getFullYear() - 7);
+
+    const [expiredSessions, oldCarts, oldChatMessages, oldEmailLogs, oldPasswordHistory, oldAuditLogs] = await Promise.all([
       prisma.session.count({
         where: { expires: { lt: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000) } },
       }),
@@ -219,6 +264,12 @@ export async function GET() {
       prisma.emailLog.count({
         where: { sentAt: { lt: new Date(now.getTime() - 730 * 24 * 60 * 60 * 1000) } },
       }),
+      prisma.passwordHistory.count({
+        where: { createdAt: { lt: twoYearsAgoCheck } },
+      }),
+      prisma.auditLog.count({
+        where: { createdAt: { lt: sevenYearsAgoCheck } },
+      }),
     ]);
 
     return NextResponse.json({
@@ -230,8 +281,10 @@ export async function GET() {
         'abandoned-carts': oldCarts,
         'chat-messages': oldChatMessages,
         'email-logs': oldEmailLogs,
+        'password-history': oldPasswordHistory,
+        'audit-logs': oldAuditLogs,
       },
-      totalPending: expiredSessions + oldCarts + oldChatMessages + oldEmailLogs,
+      totalPending: expiredSessions + oldCarts + oldChatMessages + oldEmailLogs + oldPasswordHistory + oldAuditLogs,
     });
   } catch (error) {
     return NextResponse.json(

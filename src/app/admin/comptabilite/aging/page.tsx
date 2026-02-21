@@ -18,6 +18,7 @@ import {
   EmptyState,
   SectionCard,
 } from '@/components/admin';
+import { toast } from 'sonner';
 
 interface AgingBucket {
   label: string;
@@ -77,6 +78,7 @@ export default function AgingPage() {
       setStats(data.stats);
     } catch (error) {
       console.error('Error fetching aging report:', error);
+      toast.error(t('common.errorOccurred'));
       setReport(null);
       setStats(null);
     } finally {
@@ -95,7 +97,8 @@ export default function AgingPage() {
       a.download = `aging-${reportType.toLowerCase()}-${new Date().toISOString().split('T')[0]}.csv`;
       a.click();
     } catch (error) {
-      console.error('Export error:', error);
+      console.error(error);
+      toast.error(t('common.errorOccurred'));
     } finally {
       setExporting(false);
     }
@@ -168,8 +171,9 @@ export default function AgingPage() {
       />
 
       {loading ? (
-        <div className="flex items-center justify-center h-64">
+        <div className="flex items-center justify-center h-64" role="status" aria-label="Loading">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-500" />
+          <span className="sr-only">Loading...</span>
         </div>
       ) : report && stats ? (
         <>
@@ -250,6 +254,7 @@ export default function AgingPage() {
             </div>
 
             {/* Bucket Table */}
+            <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-slate-200">
@@ -286,6 +291,7 @@ export default function AgingPage() {
                 </tr>
               </tfoot>
             </table>
+            </div>
           </SectionCard>
 
           {/* By Customer/Supplier */}

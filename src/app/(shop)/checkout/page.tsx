@@ -1531,6 +1531,7 @@ export default function CheckoutPage() {
                     </div>
                     <button
                       onClick={removePromoCode}
+                      aria-label="Remove promo code"
                       className="text-green-700 hover:text-green-900"
                     >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1577,6 +1578,7 @@ export default function CheckoutPage() {
                     </div>
                     <button
                       onClick={removeGiftCard}
+                      aria-label="Remove gift card"
                       className="text-orange-700 hover:text-orange-900"
                     >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -37,7 +37,9 @@ export async function GET() {
       { ttl: CacheTTL.CONFIG, tags: [CacheTags.CONFIG] },
     );
 
-    return NextResponse.json({ currencies });
+    return NextResponse.json({ currencies }, {
+      headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600' },
+    });
   } catch (error) {
     console.error('Currencies API error:', error);
     return NextResponse.json({ currencies: [] }, { status: 500 });

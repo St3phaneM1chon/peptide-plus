@@ -193,6 +193,46 @@ function ResetPasswordContent() {
                 className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 placeholder="••••••••"
               />
+              {/* Password strength indicator */}
+              {password.length > 0 && (() => {
+                const checks = [
+                  password.length >= 8,
+                  /[A-Z]/.test(password),
+                  /[a-z]/.test(password),
+                  /[0-9]/.test(password),
+                  /[^A-Za-z0-9]/.test(password),
+                ];
+                const strength = checks.filter(Boolean).length;
+                const labels = [
+                  t('auth.passwordVeryWeak'),
+                  t('auth.passwordWeak'),
+                  t('auth.passwordMedium'),
+                  t('auth.passwordStrong'),
+                  t('auth.passwordVeryStrong'),
+                ];
+                const colors = ['bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-lime-500', 'bg-green-500'];
+                const label = labels[Math.max(0, strength - 1)] || labels[0];
+                const color = colors[Math.max(0, strength - 1)] || colors[0];
+                return (
+                  <div className="mt-2">
+                    <div className="flex gap-1 mb-1">
+                      {[1, 2, 3, 4, 5].map((level) => (
+                        <div
+                          key={level}
+                          className={`h-1.5 flex-1 rounded-full transition-colors ${
+                            level <= strength ? color : 'bg-gray-200'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <p className={`text-xs ${
+                      strength >= 4 ? 'text-green-600' : strength >= 3 ? 'text-yellow-600' : 'text-red-600'
+                    }`}>
+                      {t('auth.passwordStrengthLabel')}: {label}
+                    </p>
+                  </div>
+                );
+              })()}
               <div className="mt-2 text-xs text-gray-500 space-y-1">
                 <p className={password.length >= 8 ? 'text-green-600' : ''}>
                   {password.length >= 8 ? '✓' : '○'} {t('auth.passwordMinChars')}

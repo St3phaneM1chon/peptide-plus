@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
+import { addSubscriberSchema } from '@/lib/validations/newsletter';
 
 /**
  * GET /api/admin/newsletter/subscribers
@@ -87,14 +88,16 @@ export const GET = withAdminGuard(async (request, { session: _session }) => {
 export const POST = withAdminGuard(async (request, { session: _session }) => {
   try {
     const body = await request.json();
-    const { email, name, source, locale } = body;
 
-    if (!email) {
+    // Validate with Zod
+    const parsed = addSubscriberSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Email is required' },
+        { error: 'Validation error', details: parsed.error.flatten() },
         { status: 400 }
       );
     }
+    const { email, name, source, locale } = parsed.data;
 
     // Check for existing subscriber
     const existing = await prisma.newsletterSubscriber.findUnique({

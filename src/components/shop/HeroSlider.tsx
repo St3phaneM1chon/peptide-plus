@@ -51,13 +51,18 @@ function getLocalizedField(
   return slide[field];
 }
 
+interface HeroSliderProps {
+  /** Pre-fetched slides from SSR for instant LCP rendering. */
+  initialSlides?: HeroSlide[];
+}
+
 // Simple in-memory cache for hero slides to avoid refetching on re-mounts
 let heroSlidesCache: { data: HeroSlide[] | null; timestamp: number } = { data: null, timestamp: 0 };
 const HERO_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
-export default function HeroSlider() {
+export default function HeroSlider({ initialSlides }: HeroSliderProps) {
   const { t, locale } = useI18n();
-  const [slides, setSlides] = useState<HeroSlide[]>(heroSlidesCache.data || []);
+  const [slides, setSlides] = useState<HeroSlide[]>(initialSlides || heroSlidesCache.data || []);
   const [current, setCurrent] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -65,12 +70,19 @@ export default function HeroSlider() {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
+    // If we have SSR-provided slides, populate cache and skip fetch
+    if (initialSlides && initialSlides.length > 0) {
+      heroSlidesCache = { data: initialSlides, timestamp: Date.now() };
+      return;
+    }
+
     const now = Date.now();
     if (heroSlidesCache.data && (now - heroSlidesCache.timestamp) < HERO_CACHE_TTL) {
       setSlides(heroSlidesCache.data);
       return;
     }
 
+    // Fallback: client-side fetch only when no SSR data was provided
     fetch('/api/hero-slides/active')
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
@@ -80,7 +92,7 @@ export default function HeroSlider() {
         }
       })
       .catch(() => {});
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const goTo = useCallback(
     (index: number) => {

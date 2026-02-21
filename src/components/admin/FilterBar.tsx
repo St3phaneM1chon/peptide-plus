@@ -23,7 +23,7 @@ export function FilterBar({ searchValue, onSearchChange, searchPlaceholder = 'Se
             onChange={e => onSearchChange(e.target.value)}
             placeholder={searchPlaceholder}
             className="w-full h-9 ps-9 pe-8 rounded-lg border border-slate-300 text-sm text-slate-900 placeholder-slate-400
-              focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-shadow"
+              focus:outline-none focus:ring-2 focus:ring-sky-700 focus:border-sky-700 transition-shadow"
           />
           {searchValue && (
             <button
@@ -63,7 +63,7 @@ export function SelectFilter({ label, value, onChange, options }: SelectFilterPr
       value={value}
       onChange={e => onChange(e.target.value)}
       className="h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-700
-        bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+        bg-white focus:outline-none focus:ring-2 focus:ring-sky-700 focus:border-sky-700"
       aria-label={label}
     >
       <option value="">{label}</option>

@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
  * Redirige vers le bon type de suivi selon le produit
  */
 
+import type { Metadata } from 'next';
 import React from 'react';
 import { redirect, notFound } from 'next/navigation';
 import { auth } from '@/lib/auth-config';
@@ -12,6 +13,16 @@ import { PhysicalDeliveryTracking } from '@/components/order/PhysicalDeliveryTra
 
 interface TrackingPageProps {
   params: Promise<{ orderId: string }>;
+}
+
+export async function generateMetadata({ params }: TrackingPageProps): Promise<Metadata> {
+  const { orderId } = await params;
+
+  return {
+    title: `Order Tracking - ${orderId}`,
+    description: 'Track the status and delivery of your BioCycle Peptides order.',
+    robots: { index: false, follow: false },
+  };
 }
 
 async function getOrder(orderId: string, userId: string) {

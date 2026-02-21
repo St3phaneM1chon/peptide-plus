@@ -41,6 +41,7 @@ export default function BundleCard({ bundle }: BundleCardProps) {
             src={bundle.image}
             alt={bundle.name}
             fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
             className="object-cover group-hover:scale-105 transition-transform duration-300"
           />
         ) : (
@@ -101,6 +102,7 @@ export default function BundleCard({ bundle }: BundleCardProps) {
                   src={item.product.imageUrl}
                   alt={item.product.name}
                   fill
+                  sizes="48px"
                   className="object-cover rounded"
                 />
               ) : (

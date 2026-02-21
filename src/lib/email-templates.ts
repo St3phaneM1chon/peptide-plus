@@ -60,12 +60,12 @@ const emailConfig = {
 /**
  * Template de base pour tous les emails
  */
-function baseTemplate(content: string, locale: Locale = 'fr'): string {
+function baseTemplate(content: string, locale: Locale = 'fr', unsubscribeUrl?: string): string {
   const t = createServerTranslator(locale);
-  
+
   return `
 <!DOCTYPE html>
-<html lang="${locale}" dir="${locale === 'ar' ? 'rtl' : 'ltr'}">
+<html lang="${locale}" dir="${['ar', 'ar-dz', 'ar-lb', 'ar-ma'].includes(locale) || locale.startsWith('ar') ? 'rtl' : 'ltr'}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -146,6 +146,7 @@ function baseTemplate(content: string, locale: Locale = 'fr'): string {
       <p>
         <a href="${emailConfig.baseUrl}/mentions-legales/conditions">${t('footer.terms')}</a> |
         <a href="${emailConfig.baseUrl}/mentions-legales/confidentialite">${t('footer.privacy')}</a>
+        ${unsubscribeUrl ? ` | <a href="${unsubscribeUrl}" style="color: #666666;">${locale === 'fr' ? 'Se désabonner' : locale === 'en' ? 'Unsubscribe' : 'Cancelar suscripción'}</a>` : ''}
       </p>
       <p>${emailConfig.supportEmail}</p>
     </div>
@@ -453,7 +454,7 @@ export function receiptEmail(
 /**
  * Email de retour en stock
  */
-export function backInStockEmail(data: BackInStockData, locale: Locale = 'fr'): { subject: string; html: string } {
+export function backInStockEmail(data: BackInStockData, locale: Locale = 'fr', unsubscribeUrl?: string): { subject: string; html: string } {
   const t = createServerTranslator(locale);
   const formattedPrice = formatCurrencyServer(data.price, locale, data.currency);
   const productUrl = `${emailConfig.baseUrl}/product/${data.productSlug}`;
@@ -506,7 +507,7 @@ export function backInStockEmail(data: BackInStockData, locale: Locale = 'fr'): 
 
   return {
     subject: `🔔 ${data.productName} ${locale === 'fr' ? 'est de nouveau disponible!' : locale === 'en' ? 'is back in stock!' : '¡está de nuevo en stock!'}`,
-    html: baseTemplate(content, locale),
+    html: baseTemplate(content, locale, unsubscribeUrl),
   };
 }
 

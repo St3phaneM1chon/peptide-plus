@@ -17,5 +17,5 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
 
   const analytics = await getSearchAnalytics(days);
 
-  return NextResponse.json(analytics);
+  return NextResponse.json({ data: analytics });
 });

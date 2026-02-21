@@ -160,6 +160,7 @@ export default function BundleDetailPage() {
                 src={bundle.image}
                 alt={bundle.name}
                 fill
+                sizes="(max-width: 1024px) 100vw, 50vw"
                 className="object-cover"
                 priority
               />
@@ -281,6 +282,7 @@ export default function BundleDetailPage() {
                           src={item.product.imageUrl}
                           alt={item.product.name}
                           fill
+                          sizes="80px"
                           className="object-cover rounded"
                         />
                       ) : (

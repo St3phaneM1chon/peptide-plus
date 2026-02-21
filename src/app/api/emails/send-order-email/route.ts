@@ -17,6 +17,7 @@ import {
   orderCancelledEmail,
   orderRefundEmail,
   satisfactionSurveyEmail,
+  generateUnsubscribeUrl,
   type OrderData,
 } from '@/lib/email';
 
@@ -110,6 +111,8 @@ export async function POST(request: NextRequest) {
       cancellationReason,
       refundAmount,
       refundIsPartial,
+      // CAN-SPAM / RGPD / LCAP compliance
+      unsubscribeUrl: await generateUnsubscribeUrl(user.email, 'transactional', order.userId).catch(() => undefined),
     };
 
     // Générer l'email selon le type
@@ -150,6 +153,7 @@ export async function POST(request: NextRequest) {
       subject: emailContent.subject,
       html: emailContent.html,
       tags: ['order', emailType, order.orderNumber],
+      unsubscribeUrl: orderData.unsubscribeUrl,
     });
 
     if (!result.success) {

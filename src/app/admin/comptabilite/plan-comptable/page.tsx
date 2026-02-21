@@ -75,6 +75,12 @@ export default function PlanComptablePage() {
   const [batchAssigning, setBatchAssigning] = useState(false);
 
   // GIFI modal state
+  const [modalCode, setModalCode] = useState('');
+  const [modalType, setModalType] = useState('ASSET');
+  const [modalName, setModalName] = useState('');
+  const [modalCategory, setModalCategory] = useState('');
+  const [modalParent, setModalParent] = useState('');
+  const [modalActive, setModalActive] = useState(true);
   const [modalGifiCode, setModalGifiCode] = useState('');
   const [modalGifiName, setModalGifiName] = useState('');
   const [modalCcaClass, setModalCcaClass] = useState('');
@@ -136,6 +142,12 @@ export default function PlanComptablePage() {
   // Reset modal GIFI fields when editing account changes
   const openModal = (account: Account | null) => {
     setEditingAccount(account);
+    setModalCode(account?.code || '');
+    setModalType(account?.type || 'ASSET');
+    setModalName(account?.name || '');
+    setModalCategory(account?.category || '');
+    setModalParent(account?.parentId || '');
+    setModalActive(account?.isActive ?? true);
     setModalGifiCode(account?.gifiCode || '');
     setModalGifiName(account?.gifiName || '');
     setModalCcaClass(account?.ccaClass != null ? String(account.ccaClass) : '');
@@ -147,10 +159,8 @@ export default function PlanComptablePage() {
   };
 
   const handleSuggestGifi = async () => {
-    const nameInput = document.querySelector<HTMLInputElement>('#accountName');
-    const typeSelect = document.querySelector<HTMLSelectElement>('#accountType');
-    const name = nameInput?.value || editingAccount?.name || '';
-    const type = typeSelect?.value || editingAccount?.type || '';
+    const name = modalName || editingAccount?.name || '';
+    const type = modalType || editingAccount?.type || '';
 
     if (!name) return;
 
@@ -189,21 +199,14 @@ export default function PlanComptablePage() {
   };
 
   const handleSaveAccount = async () => {
-    const codeInput = document.querySelector<HTMLInputElement>('#accountCode');
-    const typeSelect = document.querySelector<HTMLSelectElement>('#accountType');
-    const nameInput = document.querySelector<HTMLInputElement>('#accountName');
-    const categoryInput = document.querySelector<HTMLInputElement>('#accountCategory');
-    const parentSelect = document.querySelector<HTMLSelectElement>('#accountParent');
-    const activeCheckbox = document.querySelector<HTMLInputElement>('#isActive');
-
     const payload: Record<string, unknown> = {
-      code: codeInput?.value || '',
-      name: nameInput?.value || '',
-      type: typeSelect?.value || 'ASSET',
-      normalBalance: ['ASSET', 'EXPENSE'].includes(typeSelect?.value || '') ? 'DEBIT' : 'CREDIT',
-      description: categoryInput?.value || '',
-      parentId: parentSelect?.value || null,
-      isActive: activeCheckbox?.checked ?? true,
+      code: modalCode,
+      name: modalName,
+      type: modalType,
+      normalBalance: ['ASSET', 'EXPENSE'].includes(modalType) ? 'DEBIT' : 'CREDIT',
+      description: modalCategory,
+      parentId: modalParent || null,
+      isActive: modalActive,
     };
 
     try {
@@ -387,7 +390,7 @@ export default function PlanComptablePage() {
   if (loading) return (
     <div aria-live="polite" aria-busy="true" className="p-8 space-y-4 animate-pulse">
       <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-1/3"></div>
-      <div className="grid grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
         {[1,2,3,4,5].map(i => <div key={i} className="h-24 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>)}
       </div>
       <div className="h-64 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
@@ -423,7 +426,7 @@ export default function PlanComptablePage() {
       />
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
         {Object.entries(accountTypes).map(([key, value]) => {
           const colors = summaryCardColors[value.color];
           return (
@@ -489,6 +492,7 @@ export default function PlanComptablePage() {
 
       {/* Accounts Table */}
       <SectionCard title={t('admin.chartOfAccounts.title')} theme={theme} noPadding>
+        <div className="overflow-x-auto">
         <table className="w-full">
           <thead className="bg-slate-50">
             <tr>
@@ -610,6 +614,7 @@ export default function PlanComptablePage() {
             })}
           </tbody>
         </table>
+        </div>
       </SectionCard>
 
       {/* Account Modal (enhanced with GIFI/Fiscal section) */}
@@ -638,14 +643,16 @@ export default function PlanComptablePage() {
               <Input
                 id="accountCode"
                 type="text"
-                defaultValue={editingAccount?.code || ''}
+                value={modalCode}
+                onChange={(e) => setModalCode(e.target.value)}
                 placeholder="1000"
               />
             </FormField>
             <FormField label={t('admin.chartOfAccounts.type')}>
               <select
                 id="accountType"
-                defaultValue={editingAccount?.type || 'ASSET'}
+                value={modalType}
+                onChange={(e) => setModalType(e.target.value)}
                 className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white
                   focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-shadow"
               >
@@ -661,7 +668,8 @@ export default function PlanComptablePage() {
             <Input
               id="accountName"
               type="text"
-              defaultValue={editingAccount?.name || ''}
+              value={modalName}
+              onChange={(e) => setModalName(e.target.value)}
               placeholder={t('admin.chartOfAccounts.placeholderAccountName')}
             />
           </FormField>
@@ -669,14 +677,16 @@ export default function PlanComptablePage() {
             <Input
               id="accountCategory"
               type="text"
-              defaultValue={editingAccount?.category || ''}
+              value={modalCategory}
+              onChange={(e) => setModalCategory(e.target.value)}
               placeholder={t('admin.chartOfAccounts.currentAssets')}
             />
           </FormField>
           <FormField label={t('admin.chartOfAccounts.parentAccount')}>
             <select
               id="accountParent"
-              defaultValue={editingAccount?.parentId || ''}
+              value={modalParent}
+              onChange={(e) => setModalParent(e.target.value)}
               className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white
                 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-shadow"
             >
@@ -690,7 +700,8 @@ export default function PlanComptablePage() {
             <input
               type="checkbox"
               id="isActive"
-              defaultChecked={editingAccount?.isActive ?? true}
+              checked={modalActive}
+              onChange={(e) => setModalActive(e.target.checked)}
               className="w-4 h-4 rounded border-slate-300 text-emerald-600"
             />
             <label htmlFor="isActive" className="text-sm text-slate-700">{t('admin.chartOfAccounts.activeAccount')}</label>

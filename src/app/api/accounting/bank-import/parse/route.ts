@@ -23,6 +23,19 @@ export const POST = withAdminGuard(async (request) => {
       return NextResponse.json({ error: 'Aucun fichier fourni' }, { status: 400 });
     }
 
+    // Validate file type - only CSV/text files allowed for bank imports
+    const ALLOWED_BANK_IMPORT_TYPES = ['text/csv', 'text/plain', 'application/csv', 'application/vnd.ms-excel'];
+    if (file.type && !ALLOWED_BANK_IMPORT_TYPES.includes(file.type)) {
+      // Also allow files with .csv extension regardless of MIME (some browsers send generic types)
+      if (!file.name.toLowerCase().endsWith('.csv')) {
+        return NextResponse.json(
+          { error: 'Type de fichier invalide. Seuls les fichiers CSV sont acceptés.' },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Validate file size (max 10MB)
     if (file.size > 10 * 1024 * 1024) {
       return NextResponse.json({ error: 'Fichier trop volumineux (max 10 Mo)' }, { status: 400 });
     }

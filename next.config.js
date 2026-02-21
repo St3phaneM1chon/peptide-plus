@@ -3,8 +3,9 @@ const nextConfig = {
   // Production: Standalone build for Azure/Docker deployment
   output: 'standalone',
   
-  // TypeScript: 484 pre-existing errors need fixing before enabling strict mode
-  // TODO: Fix all TS errors then set to false (Sprint 2+)
+  // TypeScript: ~958 pre-existing errors (checked 2026-02-20) need fixing before enabling strict build checks
+  // TODO: Fix all TS errors then set ignoreBuildErrors to false
+  // WARNING: ignoreBuildErrors:true allows deploying with TS errors - track progress and flip ASAP
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -98,15 +99,7 @@ const nextConfig = {
   // Compression automatique
   compress: true,
   
-  // Optimiser les packages
-  modularizeImports: {
-    'lucide-react': {
-      transform: 'lucide-react/dist/esm/icons/{{member}}',
-    },
-    'date-fns': {
-      transform: 'date-fns/{{member}}',
-    },
-  },
+  // Package optimization moved to experimental.optimizePackageImports (modularizeImports is deprecated in Next.js 15)
   
   // Exclude jsdom-based packages from server webpack bundling.
   // jsdom@28 (used by isomorphic-dompurify) loads default-stylesheet.css

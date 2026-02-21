@@ -422,12 +422,12 @@ export default function WebinarsPage() {
 
       {/* Registration Modal */}
       {showRegistrationModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-labelledby="webinar-registration-modal-title">
           <div className="bg-white rounded-2xl max-w-md w-full">
             <div className="p-6 border-b">
               <div className="flex items-center justify-between">
-                <h3 className="text-xl font-bold">Register for Webinar</h3>
-                <button onClick={() => setShowRegistrationModal(null)} className="p-2 hover:bg-neutral-100 rounded-lg">
+                <h3 id="webinar-registration-modal-title" className="text-xl font-bold">Register for Webinar</h3>
+                <button onClick={() => setShowRegistrationModal(null)} aria-label="Close" className="p-2 hover:bg-neutral-100 rounded-lg">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>

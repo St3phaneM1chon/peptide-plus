@@ -37,7 +37,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { sendEmail, satisfactionSurveyEmail, type OrderData } from '@/lib/email';
+import { sendEmail, satisfactionSurveyEmail, generateUnsubscribeUrl, type OrderData } from '@/lib/email';
 import { withJobLock } from '@/lib/cron-lock';
 
 // Defaults (overridden by SiteSetting values)
@@ -168,6 +168,8 @@ export async function GET(request: NextRequest) {
             country: order.shippingCountry,
           },
           locale: (user.locale as 'fr' | 'en') || 'fr',
+          // Generate unsubscribe URL (CAN-SPAM / RGPD / LCAP compliance)
+          unsubscribeUrl: await generateUnsubscribeUrl(user.email, 'marketing', user.id).catch(() => undefined),
         };
 
         const emailContent = satisfactionSurveyEmail(orderData);
@@ -177,6 +179,7 @@ export async function GET(request: NextRequest) {
           subject: emailContent.subject,
           html: emailContent.html,
           tags: ['satisfaction', 'automated', order.orderNumber],
+          unsubscribeUrl: orderData.unsubscribeUrl,
         });
 
         // Log to EmailLog for deduplication on future runs
@@ -227,5 +230,3 @@ export async function GET(request: NextRequest) {
     }
   });
 }
-
-export { GET as POST };

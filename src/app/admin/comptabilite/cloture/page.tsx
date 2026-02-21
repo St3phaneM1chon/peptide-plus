@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Check, Loader2, Info, Save, Lock } from 'lucide-react';
-import { PageHeader, StatusBadge, Button, SectionCard } from '@/components/admin';
+import { PageHeader, StatusBadge, Button, SectionCard, type BadgeVariant } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
 import { sectionThemes } from '@/lib/admin/section-themes';
 import { toast } from 'sonner';
@@ -25,7 +25,6 @@ interface Period {
   closingChecklist?: string | null;
 }
 
-type BadgeVariant = 'info' | 'warning' | 'success' | 'neutral';
 
 export default function CloturePage() {
   const { t, formatDate } = useI18n();
@@ -132,7 +131,7 @@ export default function CloturePage() {
   if (loading) return (
     <div aria-live="polite" aria-busy="true" className="p-8 space-y-4 animate-pulse">
       <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-1/3"></div>
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[1,2,3,4].map(i => <div key={i} className="h-24 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>)}
       </div>
       <div className="h-64 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
@@ -168,7 +167,7 @@ export default function CloturePage() {
       />
 
       {/* Period Cards */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {periods.map((period) => {
           const savedChecklist: ChecklistItem[] = period.closingChecklist
             ? (() => { try { return JSON.parse(period.closingChecklist); } catch { return []; } })()
@@ -225,9 +224,10 @@ export default function CloturePage() {
 
           <div className="p-6">
             {checklistLoading ? (
-              <div className="text-center py-8 text-slate-500">
+              <div className="text-center py-8 text-slate-500" role="status" aria-label="Loading">
                 <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
                 {t('admin.closing.analyzing')}
+                <span className="sr-only">Loading...</span>
               </div>
             ) : checklist.length === 0 ? (
               <div className="text-center py-8 text-slate-500">

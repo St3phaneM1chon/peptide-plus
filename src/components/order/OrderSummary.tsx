@@ -93,6 +93,7 @@ export function OrderSummary({ order }: OrderSummaryProps) {
               src={order.product.imageUrl}
               alt={order.product.name}
               fill
+              sizes="80px"
               style={{ objectFit: 'cover' }}
               unoptimized
             />

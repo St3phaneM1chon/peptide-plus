@@ -406,6 +406,7 @@ export default function WishlistPage() {
                       src={item.product.imageUrl || '/images/products/peptide-default.png'}
                       alt={item.product.name}
                       fill
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                       className="object-cover hover:scale-105 transition-transform duration-300"
                     />
                     {item.product.category && (
@@ -529,9 +530,9 @@ export default function WishlistPage() {
 
       {/* Create List Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-labelledby="create-wishlist-modal-title">
           <div className="bg-white rounded-xl max-w-md w-full p-6">
-            <h3 className="text-xl font-bold mb-4">Create New Wishlist</h3>
+            <h3 id="create-wishlist-modal-title" className="text-xl font-bold mb-4">Create New Wishlist</h3>
             <input
               type="text"
               value={newListName}
@@ -565,9 +566,9 @@ export default function WishlistPage() {
 
       {/* Rename List Modal */}
       {showRenameModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-labelledby="rename-wishlist-modal-title">
           <div className="bg-white rounded-xl max-w-md w-full p-6">
-            <h3 className="text-xl font-bold mb-4">Rename Wishlist</h3>
+            <h3 id="rename-wishlist-modal-title" className="text-xl font-bold mb-4">Rename Wishlist</h3>
             <input
               type="text"
               value={renameValue}
@@ -602,9 +603,9 @@ export default function WishlistPage() {
 
       {/* Move Item Modal */}
       {showMoveModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-labelledby="move-wishlist-item-modal-title">
           <div className="bg-white rounded-xl max-w-md w-full p-6">
-            <h3 className="text-xl font-bold mb-4">Move to Another List</h3>
+            <h3 id="move-wishlist-item-modal-title" className="text-xl font-bold mb-4">Move to Another List</h3>
             <select
               value={moveTargetId || ''}
               onChange={(e) => setMoveTargetId(e.target.value)}

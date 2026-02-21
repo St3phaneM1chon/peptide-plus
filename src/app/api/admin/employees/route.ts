@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { inviteEmployeeSchema } from '@/lib/validations/employee';
 
 // GET /api/admin/employees - List employees and owners
 export const GET = withAdminGuard(async (request: NextRequest, { session }) => {
@@ -165,24 +166,17 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
     }
 
     const body = await request.json();
-    const { email, name, role, permissions } = body;
 
-    if (!email || !name) {
+    // Validate with Zod
+    const parsed = inviteEmployeeSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Email and name are required' },
+        { error: 'Validation error', details: parsed.error.flatten() },
         { status: 400 }
       );
     }
-
-    // Validate role
-    const validRoles = ['EMPLOYEE', 'OWNER'];
-    const targetRole = role || 'EMPLOYEE';
-    if (!validRoles.includes(targetRole)) {
-      return NextResponse.json(
-        { error: `Invalid role. Must be one of: ${validRoles.join(', ')}` },
-        { status: 400 }
-      );
-    }
+    const { email, name, role, permissions } = parsed.data;
+    const targetRole = role;
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({

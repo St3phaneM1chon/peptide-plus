@@ -280,12 +280,12 @@ export default function ProductQA({ productId: _productId, productName }: Produc
 
       {/* Ask Question Modal */}
       {showAskQuestion && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-labelledby="ask-question-modal-title">
           <div className="bg-white rounded-2xl max-w-lg w-full">
             <div className="p-6 border-b">
               <div className="flex items-center justify-between">
-                <h3 className="text-xl font-bold">{t('qa.askAbout') || 'Ask about'} {productName}</h3>
-                <button onClick={() => setShowAskQuestion(false)} className="p-2 hover:bg-neutral-100 rounded-lg">
+                <h3 id="ask-question-modal-title" className="text-xl font-bold">{t('qa.askAbout') || 'Ask about'} {productName}</h3>
+                <button onClick={() => setShowAskQuestion(false)} aria-label="Close" className="p-2 hover:bg-neutral-100 rounded-lg">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>

@@ -47,6 +47,7 @@ export default function MediasPage() {
   const [filter, setFilter] = useState({ type: '', search: '' });
   const [selectedFile, setSelectedFile] = useState<MediaFile | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchFiles();
@@ -79,9 +80,12 @@ export default function MediasPage() {
             };
           })
         );
+      } else {
+        toast.error(t('common.error'));
       }
     } catch (error) {
       console.error('Error fetching media files:', error);
+      toast.error(t('common.error'));
     } finally {
       setLoading(false);
     }
@@ -106,25 +110,61 @@ export default function MediasPage() {
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const uploadedFiles = e.target.files;
-    if (!uploadedFiles) return;
+    if (!uploadedFiles || uploadedFiles.length === 0) return;
 
     setUploading(true);
-    // Simulate upload
-    await new Promise(r => setTimeout(r, 1500));
-    setUploading(false);
-    toast.success(t('admin.mediaManager.uploadSuccess'));
+    try {
+      const formData = new FormData();
+      for (const file of Array.from(uploadedFiles)) {
+        formData.append('files', file);
+      }
+      formData.append('folder', 'general');
+
+      const res = await fetch('/api/admin/medias', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (res.ok) {
+        toast.success(t('admin.mediaManager.uploadSuccess'));
+        fetchFiles();
+      } else {
+        const data = await res.json();
+        toast.error(data.error || t('admin.mediaManager.uploadError'));
+      }
+    } catch {
+      toast.error(t('admin.mediaManager.uploadError'));
+    } finally {
+      setUploading(false);
+      // Reset input so same files can be re-selected
+      e.target.value = '';
+    }
   };
 
-  const deleteFile = (id: string) => {
+  const deleteFile = async (id: string) => {
     if (!confirm(t('admin.mediaManager.deleteConfirm'))) return;
-    setFiles(files.filter(f => f.id !== id));
-    if (selectedFile?.id === id) setSelectedFile(null);
+    setDeletingId(id);
+    try {
+      const res = await fetch(`/api/admin/medias/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        setFiles(files.filter(f => f.id !== id));
+        if (selectedFile?.id === id) setSelectedFile(null);
+        toast.success(t('admin.mediaManager.deleteSuccess'));
+      } else {
+        toast.error(t('admin.mediaManager.deleteError'));
+      }
+    } catch {
+      toast.error(t('admin.mediaManager.deleteError'));
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex items-center justify-center h-64" role="status" aria-label="Loading">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500" />
+        <span className="sr-only">Loading...</span>
       </div>
     );
   }
@@ -182,6 +222,7 @@ export default function MediasPage() {
           variant="danger"
           size="sm"
           icon={Trash2}
+          disabled={deletingId === file.id}
           onClick={() => deleteFile(file.id)}
         >
           {t('admin.mediaManager.delete')}
@@ -207,7 +248,7 @@ export default function MediasPage() {
         multiple
         onChange={handleUpload}
         className="hidden"
-        accept="image/*,video/*,.pdf"
+        accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/webm,application/pdf"
       />
     </label>
   );
@@ -353,6 +394,7 @@ export default function MediasPage() {
             <Button
               variant="danger"
               icon={Trash2}
+              disabled={!!deletingId}
               onClick={() => {
                 if (selectedFile) deleteFile(selectedFile.id);
               }}

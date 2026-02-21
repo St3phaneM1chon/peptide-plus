@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Send,
   Users,
@@ -13,17 +13,20 @@ import {
   Trash2,
   XCircle,
 } from 'lucide-react';
+import { Button } from '@/components/admin/Button';
+import { StatCard } from '@/components/admin/StatCard';
+import { Modal } from '@/components/admin/Modal';
+import { FormField, Input, Textarea } from '@/components/admin/FormField';
 import {
-  PageHeader,
-  Button,
-  Modal,
-  StatusBadge,
-  FormField,
-  Input,
-  Textarea,
-} from '@/components/admin';
+  ContentList,
+  DetailPane,
+  MobileSplitLayout,
+} from '@/components/admin/outlook';
+import type { ContentListItem } from '@/components/admin/outlook';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
+
+// ── Types ─────────────────────────────────────────────────────
 
 interface Subscriber {
   id: string;
@@ -47,14 +50,36 @@ interface Campaign {
   clickRate?: number;
 }
 
-const statusVariant: Record<string, 'success' | 'neutral' | 'error' | 'info' | 'warning'> = {
-  ACTIVE: 'success',
-  UNSUBSCRIBED: 'neutral',
-  BOUNCED: 'error',
-  DRAFT: 'neutral',
-  SCHEDULED: 'info',
-  SENT: 'success',
-};
+// ── Helpers ───────────────────────────────────────────────────
+
+function subscriberBadgeVariant(status: string): 'success' | 'warning' | 'error' | 'neutral' {
+  switch (status) {
+    case 'ACTIVE': return 'success';
+    case 'UNSUBSCRIBED': return 'neutral';
+    case 'BOUNCED': return 'error';
+    default: return 'neutral';
+  }
+}
+
+function campaignBadgeVariant(status: string): 'success' | 'warning' | 'error' | 'info' | 'neutral' {
+  switch (status) {
+    case 'DRAFT': return 'neutral';
+    case 'SCHEDULED': return 'info';
+    case 'SENT': return 'success';
+    default: return 'neutral';
+  }
+}
+
+function sourceBadgeVariant(source: string): 'success' | 'warning' | 'error' | 'info' | 'neutral' {
+  switch (source) {
+    case 'popup': return 'info';
+    case 'footer': return 'neutral';
+    case 'checkout': return 'warning';
+    default: return 'neutral';
+  }
+}
+
+// ── Main Component ────────────────────────────────────────────
 
 export default function NewsletterPage() {
   const { t, locale } = useI18n();
@@ -62,13 +87,28 @@ export default function NewsletterPage() {
   const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showComposer, setShowComposer] = useState(false);
   const [newCampaign, setNewCampaign] = useState({ subject: '', content: '' });
   const [savingCampaign, setSavingCampaign] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  // Filter state
+  const [searchValue, setSearchValue] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+
+  // ─── Data fetching ──────────────────────────────────────────
 
   useEffect(() => {
     fetchData();
   }, []);
+
+  // Reset selection when switching tabs
+  useEffect(() => {
+    setSelectedId(null);
+    setSearchValue('');
+    setStatusFilter('all');
+  }, [activeTab]);
 
   const createCampaign = async (status: 'DRAFT' | 'SCHEDULED' | 'SENT') => {
     if (!newCampaign.subject.trim() || !newCampaign.content.trim()) {
@@ -89,8 +129,7 @@ export default function NewsletterPage() {
       });
       if (!res.ok) {
         const data = await res.json();
-        toast.error(data.error || 'Failed to create campaign');
-        setSavingCampaign(false);
+        toast.error(data.error || t('common.saveFailed'));
         return;
       }
 
@@ -105,9 +144,10 @@ export default function NewsletterPage() {
       await fetchData();
     } catch (err) {
       console.error('Error creating campaign:', err);
-      toast.error('An error occurred');
+      toast.error(t('common.error'));
+    } finally {
+      setSavingCampaign(false);
     }
-    setSavingCampaign(false);
   };
 
   const fetchData = async () => {
@@ -122,15 +162,28 @@ export default function NewsletterPage() {
       setCampaigns(campData.campaigns || []);
     } catch (err) {
       console.error('Error fetching newsletter data:', err);
+      toast.error(t('common.error'));
       setSubscribers([]);
       setCampaigns([]);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
-  const stats = {
+  const handleSelect = useCallback((id: string) => {
+    setSelectedId(id);
+  }, []);
+
+  const formatDate = (dateStr: string) => {
+    return new Date(dateStr).toLocaleDateString(locale);
+  };
+
+  // ─── Stats ──────────────────────────────────────────────────
+
+  const stats = useMemo(() => ({
     totalSubscribers: subscribers.filter((s) => s.status === 'ACTIVE').length,
     unsubscribed: subscribers.filter((s) => s.status === 'UNSUBSCRIBED').length,
+    bounced: subscribers.filter((s) => s.status === 'BOUNCED').length,
     totalCampaigns: campaigns.length,
     avgOpenRate:
       campaigns.filter((c) => c.openRate).reduce((sum, c) => sum + (c.openRate || 0), 0) /
@@ -138,177 +191,522 @@ export default function NewsletterPage() {
     fromPopup: subscribers.filter((s) => s.source === 'popup' && s.status === 'ACTIVE').length,
     fromFooter: subscribers.filter((s) => s.source === 'footer' && s.status === 'ACTIVE').length,
     fromCheckout: subscribers.filter((s) => s.source === 'checkout' && s.status === 'ACTIVE').length,
-  };
+    draftCampaigns: campaigns.filter((c) => c.status === 'DRAFT').length,
+    sentCampaigns: campaigns.filter((c) => c.status === 'SENT').length,
+  }), [subscribers, campaigns]);
 
-  const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString(locale);
-  };
+  // ─── ContentList data for Subscribers ─────────────────────────
+
+  const subscriberFilterTabs = useMemo(() => [
+    { key: 'all', label: t('admin.newsletter.filterAll') || 'All', count: subscribers.length },
+    { key: 'ACTIVE', label: t('admin.newsletter.activeSubscribers'), count: stats.totalSubscribers },
+    { key: 'UNSUBSCRIBED', label: t('admin.newsletter.unsubscribed'), count: stats.unsubscribed },
+    { key: 'BOUNCED', label: t('admin.newsletter.bounced') || 'Bounced', count: stats.bounced },
+  ], [t, subscribers.length, stats]);
+
+  const filteredSubscribers = useMemo(() => {
+    return subscribers.filter(sub => {
+      if (statusFilter !== 'all' && sub.status !== statusFilter) return false;
+      if (searchValue) {
+        const search = searchValue.toLowerCase();
+        if (!sub.email.toLowerCase().includes(search)) return false;
+      }
+      return true;
+    });
+  }, [subscribers, statusFilter, searchValue]);
+
+  const subscriberListItems: ContentListItem[] = useMemo(() => {
+    return filteredSubscribers.map((sub) => ({
+      id: sub.id,
+      avatar: { text: sub.email },
+      title: sub.email,
+      subtitle: `${sub.locale.toUpperCase()} - ${sub.source || 'N/A'}`,
+      preview: formatDate(sub.subscribedAt),
+      timestamp: sub.subscribedAt,
+      badges: [
+        { text: sub.status, variant: subscriberBadgeVariant(sub.status) },
+        { text: sub.source || 'N/A', variant: sourceBadgeVariant(sub.source) },
+      ],
+    }));
+  }, [filteredSubscribers, locale]);
+
+  // ─── ContentList data for Campaigns ──────────────────────────
+
+  const campaignFilterTabs = useMemo(() => [
+    { key: 'all', label: t('admin.newsletter.filterAll') || 'All', count: campaigns.length },
+    { key: 'DRAFT', label: t('admin.newsletter.statusDraft') || 'Draft', count: stats.draftCampaigns },
+    { key: 'SENT', label: t('admin.newsletter.statusSent') || 'Sent', count: stats.sentCampaigns },
+  ], [t, campaigns.length, stats]);
+
+  const filteredCampaigns = useMemo(() => {
+    return campaigns.filter(campaign => {
+      if (statusFilter !== 'all' && campaign.status !== statusFilter) return false;
+      if (searchValue) {
+        const search = searchValue.toLowerCase();
+        if (!campaign.subject.toLowerCase().includes(search)) return false;
+      }
+      return true;
+    });
+  }, [campaigns, statusFilter, searchValue]);
+
+  const campaignListItems: ContentListItem[] = useMemo(() => {
+    return filteredCampaigns.map((campaign) => ({
+      id: campaign.id,
+      avatar: { text: campaign.subject },
+      title: campaign.subject,
+      subtitle: campaign.recipientCount > 0
+        ? t('admin.newsletter.recipients', { count: campaign.recipientCount })
+        : undefined,
+      preview: campaign.content.slice(0, 100),
+      timestamp: campaign.sentAt || campaign.scheduledFor || undefined,
+      badges: [
+        { text: campaign.status, variant: campaignBadgeVariant(campaign.status) },
+        ...(campaign.openRate
+          ? [{ text: `${campaign.openRate}% open`, variant: 'success' as const }]
+          : []),
+      ],
+    }));
+  }, [filteredCampaigns, t]);
+
+  // ─── Selected items ──────────────────────────────────────────
+
+  const selectedSubscriber = useMemo(() => {
+    if (!selectedId || activeTab !== 'subscribers') return null;
+    return subscribers.find(s => s.id === selectedId) || null;
+  }, [subscribers, selectedId, activeTab]);
+
+  const selectedCampaign = useMemo(() => {
+    if (!selectedId || activeTab !== 'campaigns') return null;
+    return campaigns.find(c => c.id === selectedId) || null;
+  }, [campaigns, selectedId, activeTab]);
+
+  // ─── Render ──────────────────────────────────────────────────
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex items-center justify-center h-64" role="status" aria-label="Loading">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500" />
+        <span className="sr-only">Loading...</span>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title={t('admin.newsletter.title')}
-        subtitle={t('admin.newsletter.subtitle')}
-        actions={
-          <Button variant="primary" icon={Send} onClick={() => setShowComposer(true)}>
-            {t('admin.newsletter.newCampaign')}
-          </Button>
-        }
-      />
-
-      {/* Stats */}
-      <div className="grid grid-cols-4 gap-4">
-        <StatMini icon={Users} label={t('admin.newsletter.activeSubscribers')} value={stats.totalSubscribers} bg="bg-sky-50 text-sky-600" />
-        <StatMini icon={UserMinus} label={t('admin.newsletter.unsubscribed')} value={stats.unsubscribed} bg="bg-slate-50 text-slate-500" />
-        <StatMini icon={Mail} label={t('admin.newsletter.campaigns')} value={stats.totalCampaigns} bg="bg-indigo-50 text-indigo-600" />
-        <StatMini
-          icon={BarChart3}
-          label={t('admin.newsletter.avgOpenRate')}
-          value={`${stats.avgOpenRate.toFixed(1)}%`}
-          bg="bg-emerald-50 text-emerald-600"
-        />
-      </div>
-
-      {/* Source breakdown */}
-      <div className="bg-white rounded-xl p-6 border border-slate-200">
-        <h3 className="text-base font-semibold text-slate-900 mb-4">{t('admin.newsletter.subscriptionsBySource')}</h3>
-        <div className="grid grid-cols-3 gap-4">
-          <SourceCard label={t('admin.newsletter.welcomePopup')} value={stats.fromPopup} total={stats.totalSubscribers} color="violet" tOfTotal={t} />
-          <SourceCard label={t('admin.newsletter.footer')} value={stats.fromFooter} total={stats.totalSubscribers} color="sky" tOfTotal={t} />
-          <SourceCard label={t('admin.newsletter.checkout')} value={stats.fromCheckout} total={stats.totalSubscribers} color="amber" tOfTotal={t} />
-        </div>
-      </div>
-
-      {/* Tabs */}
-      <div className="border-b border-slate-200">
-        <nav className="flex gap-8">
-          {(['subscribers', 'campaigns'] as const).map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`py-3 border-b-2 font-medium text-sm transition-colors ${
-                activeTab === tab
-                  ? 'border-sky-500 text-sky-600'
-                  : 'border-transparent text-slate-500 hover:text-slate-700'
-              }`}
-            >
-              {tab === 'subscribers'
-                ? t('admin.newsletter.tabSubscribers', { count: subscribers.length })
-                : t('admin.newsletter.tabCampaigns', { count: campaigns.length })}
-            </button>
-          ))}
-        </nav>
-      </div>
-
-      {/* Content */}
-      {activeTab === 'subscribers' ? (
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-          <div className="p-4 border-b border-slate-200 flex items-center justify-between">
-            <input
-              type="text"
-              placeholder={t('admin.newsletter.searchEmail')}
-              className="px-4 py-2 border border-slate-300 rounded-lg w-64 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
-            />
-            <Button variant="secondary" icon={Download}>
+    <div className="h-full flex flex-col">
+      {/* Header + Stats */}
+      <div className="p-4 lg:p-6 pb-0 flex-shrink-0">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className="text-xl font-bold text-slate-900">{t('admin.newsletter.title')}</h1>
+            <p className="text-sm text-slate-500 mt-0.5">{t('admin.newsletter.subtitle')}</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="secondary" icon={Download} size="sm" onClick={() => {
+              if (subscribers.length === 0) return;
+              const headers = ['Email', 'Locale', 'Source', 'Status', 'Subscribed At'];
+              const rows = subscribers.map(sub => [
+                sub.email,
+                sub.locale,
+                sub.source,
+                sub.status,
+                new Date(sub.subscribedAt).toLocaleDateString(locale),
+              ]);
+              const BOM = '\uFEFF';
+              const csv = BOM + [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+              const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = `newsletter-subscribers-${new Date().toISOString().slice(0, 10)}.csv`;
+              a.click();
+              URL.revokeObjectURL(url);
+              toast.success(t('admin.newsletter.exportSuccess') || 'Subscribers exported');
+            }}>
               {t('admin.newsletter.exportCSV')}
             </Button>
+            <Button variant="primary" icon={Send} size="sm" onClick={() => setShowComposer(true)}>
+              {t('admin.newsletter.newCampaign')}
+            </Button>
           </div>
-          <table className="w-full">
-            <thead className="bg-slate-50">
-              <tr>
-                <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.newsletter.colEmail')}</th>
-                <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.newsletter.colLanguage')}</th>
-                <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.newsletter.colSource')}</th>
-                <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.newsletter.colStatus')}</th>
-                <th className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{t('admin.newsletter.colSubscribedAt')}</th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">{t('admin.newsletter.colActions')}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {subscribers.map((sub) => (
-                <tr key={sub.id} className="hover:bg-slate-50/50">
-                  <td className="px-4 py-3 font-medium text-slate-900">{sub.email}</td>
-                  <td className="px-4 py-3 text-slate-500">{sub.locale.toUpperCase()}</td>
-                  <td className="px-4 py-3">
-                    <StatusBadge
-                      variant={sub.source === 'popup' ? 'primary' : sub.source === 'footer' ? 'info' : 'neutral'}
-                    >
-                      {sub.source || 'N/A'}
-                    </StatusBadge>
-                  </td>
-                  <td className="px-4 py-3">
-                    <StatusBadge variant={statusVariant[sub.status]}>{sub.status}</StatusBadge>
-                  </td>
-                  <td className="px-4 py-3 text-slate-500">
-                    {formatDate(sub.subscribedAt)}
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <Button variant="ghost" size="sm" icon={Trash2} className="text-slate-400 hover:text-red-600" />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
         </div>
-      ) : (
-        <div className="space-y-4">
-          {campaigns.map((campaign) => (
-            <div key={campaign.id} className="bg-white rounded-xl border border-slate-200 p-6">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <h3 className="font-bold text-slate-900">{campaign.subject}</h3>
-                    <StatusBadge variant={statusVariant[campaign.status]}>{campaign.status}</StatusBadge>
-                  </div>
-                  <div className="flex flex-wrap gap-4 text-sm text-slate-500">
-                    {campaign.sentAt && (
-                      <span>{t('admin.newsletter.sentOn', { date: formatDate(campaign.sentAt) })}</span>
-                    )}
-                    {campaign.scheduledFor && (
-                      <span>{t('admin.newsletter.scheduledFor', { date: formatDate(campaign.scheduledFor) })}</span>
-                    )}
-                    {campaign.recipientCount > 0 && <span>{t('admin.newsletter.recipients', { count: campaign.recipientCount })}</span>}
-                    {campaign.openRate && <span className="text-emerald-600">{t('admin.newsletter.openRate', { rate: campaign.openRate })}</span>}
-                    {campaign.clickRate && <span className="text-sky-600">{t('admin.newsletter.clickRate', { rate: campaign.clickRate })}</span>}
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  {campaign.status === 'DRAFT' && (
-                    <>
-                      <Button variant="ghost" size="sm" icon={Pencil}>
-                        {t('admin.newsletter.edit')}
-                      </Button>
-                      <Button variant="primary" size="sm" icon={Send}>
-                        {t('admin.newsletter.send')}
-                      </Button>
-                    </>
-                  )}
-                  {campaign.status === 'SCHEDULED' && (
-                    <Button variant="ghost" size="sm" icon={XCircle} className="text-red-600">
-                      {t('admin.newsletter.cancel')}
-                    </Button>
-                  )}
-                  {campaign.status === 'SENT' && (
-                    <Button variant="ghost" size="sm" icon={BarChart3}>
-                      {t('admin.newsletter.statistics')}
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
 
-      {/* Composer Modal */}
+        {/* Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+          <StatCard label={t('admin.newsletter.activeSubscribers')} value={stats.totalSubscribers} icon={Users} />
+          <StatCard label={t('admin.newsletter.unsubscribed')} value={stats.unsubscribed} icon={UserMinus} />
+          <StatCard label={t('admin.newsletter.campaigns')} value={stats.totalCampaigns} icon={Mail} />
+          <StatCard label={t('admin.newsletter.avgOpenRate')} value={`${stats.avgOpenRate.toFixed(1)}%`} icon={BarChart3} />
+        </div>
+
+        {/* Source breakdown */}
+        <div className="bg-white rounded-lg p-4 border border-slate-200 mb-4">
+          <h3 className="text-sm font-semibold text-slate-900 mb-3">{t('admin.newsletter.subscriptionsBySource')}</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <SourceCard
+              label={t('admin.newsletter.welcomePopup')}
+              value={stats.fromPopup}
+              total={stats.totalSubscribers}
+              color="violet"
+              tOfTotal={t}
+            />
+            <SourceCard
+              label={t('admin.newsletter.footer')}
+              value={stats.fromFooter}
+              total={stats.totalSubscribers}
+              color="sky"
+              tOfTotal={t}
+            />
+            <SourceCard
+              label={t('admin.newsletter.checkout')}
+              value={stats.fromCheckout}
+              total={stats.totalSubscribers}
+              color="amber"
+              tOfTotal={t}
+            />
+          </div>
+        </div>
+
+        {/* Tab switcher: Subscribers vs Campaigns */}
+        <div className="border-b border-slate-200">
+          <nav className="flex gap-8">
+            {(['subscribers', 'campaigns'] as const).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`py-3 border-b-2 font-medium text-sm transition-colors ${
+                  activeTab === tab
+                    ? 'border-sky-500 text-sky-600'
+                    : 'border-transparent text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                {tab === 'subscribers'
+                  ? t('admin.newsletter.tabSubscribers', { count: subscribers.length })
+                  : t('admin.newsletter.tabCampaigns', { count: campaigns.length })}
+              </button>
+            ))}
+          </nav>
+        </div>
+      </div>
+
+      {/* Main content: list + detail */}
+      <div className="flex-1 min-h-0">
+        {activeTab === 'subscribers' ? (
+          <MobileSplitLayout
+            listWidth={400}
+            showDetail={!!selectedId}
+            list={
+              <ContentList
+                items={subscriberListItems}
+                selectedId={selectedId}
+                onSelect={handleSelect}
+                filterTabs={subscriberFilterTabs}
+                activeFilter={statusFilter}
+                onFilterChange={setStatusFilter}
+                searchValue={searchValue}
+                onSearchChange={setSearchValue}
+                searchPlaceholder={t('admin.newsletter.searchEmail')}
+                loading={loading}
+                emptyIcon={Users}
+                emptyTitle={t('admin.newsletter.emptySubscribers') || 'No subscribers'}
+                emptyDescription={t('admin.newsletter.emptySubscribersDesc') || 'No subscribers yet.'}
+              />
+            }
+            detail={
+              selectedSubscriber ? (
+                <DetailPane
+                  header={{
+                    title: selectedSubscriber.email,
+                    subtitle: `${selectedSubscriber.locale.toUpperCase()} - ${selectedSubscriber.source || 'N/A'}`,
+                    avatar: { text: selectedSubscriber.email },
+                    onBack: () => setSelectedId(null),
+                    backLabel: t('admin.newsletter.tabSubscribers', { count: subscribers.length }),
+                    actions: (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        icon={Trash2}
+                        className="text-red-600 hover:text-red-700"
+                        disabled={deletingId === selectedSubscriber.id}
+                        onClick={async () => {
+                          if (!confirm(t('admin.newsletter.deleteSubscriberConfirm') || `Remove ${selectedSubscriber.email}?`)) return;
+                          setDeletingId(selectedSubscriber.id);
+                          try {
+                            const res = await fetch(`/api/admin/newsletter/subscribers/${selectedSubscriber.id}`, {
+                              method: 'DELETE',
+                            });
+                            if (!res.ok) {
+                              const data = await res.json().catch(() => ({}));
+                              toast.error(data.error || t('common.deleteFailed'));
+                              return;
+                            }
+                            setSubscribers(prev => prev.filter(s => s.id !== selectedSubscriber.id));
+                            setSelectedId(null);
+                            toast.success(t('admin.newsletter.subscriberDeleted') || 'Subscriber removed');
+                          } catch {
+                            // TODO: Create API endpoint DELETE /api/admin/newsletter/subscribers/:id
+                            toast.error(t('common.networkError'));
+                          } finally {
+                            setDeletingId(null);
+                          }
+                        }}
+                      />
+                    ),
+                  }}
+                >
+                  <div className="space-y-6">
+                    {/* Status */}
+                    <div className="bg-slate-50 rounded-lg p-4">
+                      <h3 className="font-semibold text-slate-900 mb-3">{t('admin.newsletter.colStatus')}</h3>
+                      <div className="flex items-center gap-2">
+                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
+                          selectedSubscriber.status === 'ACTIVE'
+                            ? 'bg-emerald-100 text-emerald-700'
+                            : selectedSubscriber.status === 'BOUNCED'
+                              ? 'bg-red-100 text-red-700'
+                              : 'bg-slate-100 text-slate-600'
+                        }`}>
+                          {selectedSubscriber.status}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Details */}
+                    <div className="space-y-4">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-slate-600">{t('admin.newsletter.colEmail')}</span>
+                        <span className="font-medium text-slate-900">{selectedSubscriber.email}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-slate-600">{t('admin.newsletter.colLanguage')}</span>
+                        <span className="font-medium text-slate-900">{selectedSubscriber.locale.toUpperCase()}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-slate-600">{t('admin.newsletter.colSource')}</span>
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                          selectedSubscriber.source === 'popup' ? 'bg-sky-50 text-sky-700'
+                          : selectedSubscriber.source === 'footer' ? 'bg-slate-100 text-slate-600'
+                          : 'bg-amber-50 text-amber-700'
+                        }`}>
+                          {selectedSubscriber.source || 'N/A'}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-slate-600">{t('admin.newsletter.colSubscribedAt')}</span>
+                        <span className="font-medium text-slate-900">{formatDate(selectedSubscriber.subscribedAt)}</span>
+                      </div>
+                      {selectedSubscriber.unsubscribedAt && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-slate-600">{t('admin.newsletter.unsubscribedAt') || 'Unsubscribed at'}</span>
+                          <span className="font-medium text-red-600">{formatDate(selectedSubscriber.unsubscribedAt)}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Meta */}
+                    <div className="text-xs text-slate-400 pt-2 border-t border-slate-200">
+                      <p>ID: {selectedSubscriber.id}</p>
+                    </div>
+                  </div>
+                </DetailPane>
+              ) : (
+                <DetailPane
+                  isEmpty
+                  emptyIcon={Users}
+                  emptyTitle={t('admin.newsletter.selectSubscriber') || 'Select a subscriber'}
+                  emptyDescription={t('admin.newsletter.selectSubscriberDesc') || 'Select a subscriber to see details.'}
+                />
+              )
+            }
+          />
+        ) : (
+          <MobileSplitLayout
+            listWidth={400}
+            showDetail={!!selectedId}
+            list={
+              <ContentList
+                items={campaignListItems}
+                selectedId={selectedId}
+                onSelect={handleSelect}
+                filterTabs={campaignFilterTabs}
+                activeFilter={statusFilter}
+                onFilterChange={setStatusFilter}
+                searchValue={searchValue}
+                onSearchChange={setSearchValue}
+                searchPlaceholder={t('admin.newsletter.searchCampaign') || 'Search campaigns...'}
+                loading={loading}
+                emptyIcon={Mail}
+                emptyTitle={t('admin.newsletter.emptyCampaigns') || 'No campaigns'}
+                emptyDescription={t('admin.newsletter.emptyCampaignsDesc') || 'No campaigns yet.'}
+              />
+            }
+            detail={
+              selectedCampaign ? (
+                <DetailPane
+                  header={{
+                    title: selectedCampaign.subject,
+                    subtitle: selectedCampaign.sentAt
+                      ? t('admin.newsletter.sentOn', { date: formatDate(selectedCampaign.sentAt) })
+                      : selectedCampaign.scheduledFor
+                        ? t('admin.newsletter.scheduledFor', { date: formatDate(selectedCampaign.scheduledFor) })
+                        : 'DRAFT',
+                    avatar: { text: selectedCampaign.subject },
+                    onBack: () => setSelectedId(null),
+                    backLabel: t('admin.newsletter.tabCampaigns', { count: campaigns.length }),
+                    actions: (
+                      <div className="flex items-center gap-2">
+                        {selectedCampaign.status === 'DRAFT' && (
+                          <>
+                            <Button variant="ghost" size="sm" icon={Pencil} onClick={() => {
+                              setNewCampaign({ subject: selectedCampaign.subject, content: selectedCampaign.content });
+                              setShowComposer(true);
+                            }}>
+                              {t('admin.newsletter.edit')}
+                            </Button>
+                            <Button variant="primary" size="sm" icon={Send} onClick={async () => {
+                              if (!confirm(t('admin.newsletter.sendConfirm') || `Send "${selectedCampaign.subject}" to all active subscribers?`)) return;
+                              try {
+                                const res = await fetch(`/api/admin/newsletter/campaigns/${selectedCampaign.id}`, {
+                                  method: 'PATCH',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ status: 'SENT' }),
+                                });
+                                if (!res.ok) {
+                                  const data = await res.json().catch(() => ({}));
+                                  toast.error(data.error || t('common.saveFailed'));
+                                  return;
+                                }
+                                toast.success(t('admin.newsletter.campaignSent') || 'Campaign sent');
+                                await fetchData();
+                              } catch {
+                                // TODO: Create API endpoint PATCH /api/admin/newsletter/campaigns/:id
+                                toast.error(t('common.networkError'));
+                              }
+                            }}>
+                              {t('admin.newsletter.send')}
+                            </Button>
+                          </>
+                        )}
+                        {selectedCampaign.status === 'SCHEDULED' && (
+                          <Button variant="ghost" size="sm" icon={XCircle} className="text-red-600" onClick={async () => {
+                            if (!confirm(t('admin.newsletter.cancelConfirm') || 'Cancel this scheduled campaign?')) return;
+                            try {
+                              const res = await fetch(`/api/admin/newsletter/campaigns/${selectedCampaign.id}`, {
+                                method: 'PATCH',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ status: 'DRAFT' }),
+                              });
+                              if (!res.ok) {
+                                const data = await res.json().catch(() => ({}));
+                                toast.error(data.error || t('common.updateFailed'));
+                                return;
+                              }
+                              toast.success(t('admin.newsletter.campaignCancelled') || 'Campaign cancelled');
+                              await fetchData();
+                            } catch {
+                              // TODO: Create API endpoint PATCH /api/admin/newsletter/campaigns/:id
+                              toast.error(t('common.networkError'));
+                            }
+                          }}>
+                            {t('admin.newsletter.cancel')}
+                          </Button>
+                        )}
+                        {selectedCampaign.status === 'SENT' && (
+                          <Button variant="ghost" size="sm" icon={BarChart3} onClick={() => {
+                            // TODO: Create API endpoint GET /api/admin/newsletter/campaigns/:id/stats and modal/page for detailed statistics
+                            toast.info(t('admin.newsletter.statistics') + ' - Coming soon');
+                          }}>
+                            {t('admin.newsletter.statistics')}
+                          </Button>
+                        )}
+                      </div>
+                    ),
+                  }}
+                >
+                  <div className="space-y-6">
+                    {/* Status */}
+                    <div className="bg-slate-50 rounded-lg p-4">
+                      <div className="flex items-center gap-2">
+                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
+                          selectedCampaign.status === 'SENT'
+                            ? 'bg-emerald-100 text-emerald-700'
+                            : selectedCampaign.status === 'SCHEDULED'
+                              ? 'bg-sky-100 text-sky-700'
+                              : 'bg-slate-100 text-slate-600'
+                        }`}>
+                          {selectedCampaign.status}
+                        </span>
+                        {selectedCampaign.recipientCount > 0 && (
+                          <span className="text-sm text-slate-600">
+                            {t('admin.newsletter.recipients', { count: selectedCampaign.recipientCount })}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Stats (if sent) */}
+                    {selectedCampaign.status === 'SENT' && (
+                      <div className="grid grid-cols-2 gap-4">
+                        {selectedCampaign.openRate !== undefined && (
+                          <div className="bg-emerald-50 rounded-lg p-4 text-center">
+                            <p className="text-2xl font-bold text-emerald-700">{selectedCampaign.openRate}%</p>
+                            <p className="text-xs text-emerald-600 mt-1">{t('admin.newsletter.openRate', { rate: selectedCampaign.openRate })}</p>
+                          </div>
+                        )}
+                        {selectedCampaign.clickRate !== undefined && (
+                          <div className="bg-sky-50 rounded-lg p-4 text-center">
+                            <p className="text-2xl font-bold text-sky-700">{selectedCampaign.clickRate}%</p>
+                            <p className="text-xs text-sky-600 mt-1">{t('admin.newsletter.clickRate', { rate: selectedCampaign.clickRate })}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Content preview */}
+                    <div>
+                      <h3 className="font-semibold text-slate-900 mb-3">{t('admin.newsletter.content')}</h3>
+                      <div className="bg-slate-50 rounded-lg p-4 text-sm text-slate-700 whitespace-pre-wrap font-mono">
+                        {selectedCampaign.content}
+                      </div>
+                    </div>
+
+                    {/* Dates */}
+                    <div className="bg-slate-50 rounded-lg p-4">
+                      <div className="space-y-2">
+                        {selectedCampaign.sentAt && (
+                          <div className="flex justify-between text-sm">
+                            <span className="text-slate-600">{t('admin.newsletter.sentOn', { date: '' }).replace(': ', '')}</span>
+                            <span className="font-medium text-slate-900">{formatDate(selectedCampaign.sentAt)}</span>
+                          </div>
+                        )}
+                        {selectedCampaign.scheduledFor && (
+                          <div className="flex justify-between text-sm">
+                            <span className="text-slate-600">{t('admin.newsletter.scheduledFor', { date: '' }).replace(': ', '')}</span>
+                            <span className="font-medium text-slate-900">{formatDate(selectedCampaign.scheduledFor)}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Meta */}
+                    <div className="text-xs text-slate-400 pt-2 border-t border-slate-200">
+                      <p>ID: {selectedCampaign.id}</p>
+                    </div>
+                  </div>
+                </DetailPane>
+              ) : (
+                <DetailPane
+                  isEmpty
+                  emptyIcon={Mail}
+                  emptyTitle={t('admin.newsletter.selectCampaign') || 'Select a campaign'}
+                  emptyDescription={t('admin.newsletter.selectCampaignDesc') || 'Select a campaign to see details.'}
+                />
+              )
+            }
+          />
+        )}
+      </div>
+
+      {/* ─── COMPOSER MODAL ─────────────────────────────────────── */}
       <Modal isOpen={showComposer} onClose={() => setShowComposer(false)} title={t('admin.newsletter.modalTitle')} size="lg">
         <div className="space-y-4">
           <FormField label={t('admin.newsletter.subject')} required>
@@ -345,29 +743,7 @@ export default function NewsletterPage() {
   );
 }
 
-function StatMini({
-  icon: Icon,
-  label,
-  value,
-  bg,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  value: number | string;
-  bg: string;
-}) {
-  return (
-    <div className="bg-white rounded-xl p-4 border border-slate-200 flex items-center gap-3">
-      <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${bg}`}>
-        <Icon className="w-4 h-4" />
-      </div>
-      <div>
-        <p className="text-xs text-slate-500">{label}</p>
-        <p className="text-xl font-bold text-slate-900">{value}</p>
-      </div>
-    </div>
-  );
-}
+// ── Helper Components ───────────────────────────────────────────
 
 function SourceCard({
   label,
@@ -389,9 +765,9 @@ function SourceCard({
     amber: 'bg-teal-50 border-teal-200 text-teal-700',
   };
   return (
-    <div className={`rounded-lg p-4 border ${colors[color]}`}>
+    <div className={`rounded-lg p-3 border ${colors[color]}`}>
       <p className="text-sm font-medium mb-1">{label}</p>
-      <p className="text-3xl font-bold">{value}</p>
+      <p className="text-2xl font-bold">{value}</p>
       <p className="text-xs mt-1 opacity-75">{tOfTotal('admin.newsletter.ofTotal', { pct })}</p>
     </div>
   );

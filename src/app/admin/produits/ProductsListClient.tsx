@@ -14,19 +14,16 @@ import {
   FlaskConical,
   Pill,
   Wrench,
-  ImageIcon,
   Upload,
   FileDown,
 } from 'lucide-react';
+import { Button, StatusBadge } from '@/components/admin';
 import {
-  PageHeader,
-  Button,
-  FilterBar,
-  SelectFilter,
-  DataTable,
-  StatusBadge,
-  type Column,
-} from '@/components/admin';
+  ContentList,
+  DetailPane,
+  MobileSplitLayout,
+} from '@/components/admin/outlook';
+import type { ContentListItem } from '@/components/admin/outlook';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 
@@ -112,13 +109,15 @@ export default function ProductsListClient({
   const { t } = useI18n();
   const [products, setProducts] = useState<Product[]>(initialProducts);
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('');
-  const [stockFilter, setStockFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
   const [importing, setImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // ─── Business logic (unchanged) ─────────────────────────────
 
   const handleExport = async () => {
     setExporting(true);
@@ -179,64 +178,29 @@ export default function ProductsListClient({
         console.warn('Import errors:', summary.errors);
       }
 
-      // Reload the page to refresh data
       window.location.reload();
     } catch (error) {
       console.error('Import error:', error);
       toast.error(t('admin.products.importError') || 'Import failed');
     } finally {
       setImporting(false);
-      // Reset file input so the same file can be selected again
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
     }
   };
 
-  const filteredProducts = useMemo(() => {
-    return products.filter((product) => {
-      if (
-        search &&
-        !product.name.toLowerCase().includes(search.toLowerCase()) &&
-        !product.slug.toLowerCase().includes(search.toLowerCase())
-      ) {
-        return false;
-      }
-
-      if (categoryFilter && product.category.slug !== categoryFilter) {
-        return false;
-      }
-
-      if (statusFilter === 'active' && !product.isActive) return false;
-      if (statusFilter === 'inactive' && product.isActive) return false;
-      if (statusFilter === 'featured' && !product.isFeatured) return false;
-
-      if (stockFilter && product.formats) {
-        const hasOutOfStock = product.formats.some((f) => f.availability === 'OUT_OF_STOCK');
-        const allOutOfStock = product.formats.every(
-          (f) => f.availability === 'OUT_OF_STOCK' || f.availability === 'DISCONTINUED'
-        );
-        const hasLowStock = product.formats.some((f) => f.stockQuantity > 0 && f.stockQuantity <= 10);
-
-        if (stockFilter === 'outOfStock' && !hasOutOfStock) return false;
-        if (stockFilter === 'allOutOfStock' && !allOutOfStock) return false;
-        if (stockFilter === 'lowStock' && !hasLowStock) return false;
-      }
-
-      return true;
-    });
-  }, [products, search, categoryFilter, stockFilter, statusFilter]);
-
   const handleDelete = async (id: string) => {
-    if (!confirm(t('admin.products.confirmDelete'))) {
-      return;
-    }
+    if (!confirm(t('admin.products.confirmDelete'))) return;
 
     setDeleting(id);
     try {
       const res = await fetch(`/api/products/${id}`, { method: 'DELETE' });
       if (res.ok) {
         setProducts(products.filter((p) => p.id !== id));
+        if (selectedProductId === id) {
+          setSelectedProductId(null);
+        }
       } else {
         toast.error(t('admin.products.deleteError'));
       }
@@ -248,126 +212,71 @@ export default function ProductsListClient({
     }
   };
 
-  const categoryOptions = categories.map((c) => ({ value: c.slug, label: c.name }));
+  // ─── Filtering ──────────────────────────────────────────────
 
-  const stockOptions = [
-    { value: 'lowStock', label: t('admin.products.filterLowStock') },
-    { value: 'outOfStock', label: t('admin.products.filterWithOutOfStock') },
-    { value: 'allOutOfStock', label: t('admin.products.filterAllOutOfStock') },
-  ];
+  const filteredProducts = useMemo(() => {
+    return products.filter((product) => {
+      if (
+        search &&
+        !product.name.toLowerCase().includes(search.toLowerCase()) &&
+        !product.slug.toLowerCase().includes(search.toLowerCase()) &&
+        !product.category.name.toLowerCase().includes(search.toLowerCase())
+      ) {
+        return false;
+      }
+      if (categoryFilter && product.category.slug !== categoryFilter) return false;
+      if (statusFilter === 'active' && !product.isActive) return false;
+      if (statusFilter === 'inactive' && product.isActive) return false;
+      if (statusFilter === 'featured' && !product.isFeatured) return false;
+      if (statusFilter === 'peptide' && product.productType !== 'PEPTIDE') return false;
+      if (statusFilter === 'supplement' && product.productType !== 'SUPPLEMENT') return false;
+      if (statusFilter === 'accessory' && product.productType !== 'ACCESSORY') return false;
+      return true;
+    });
+  }, [products, search, statusFilter, categoryFilter]);
 
-  const statusOptions = [
-    { value: 'active', label: t('admin.products.filterActive') },
-    { value: 'inactive', label: t('admin.products.filterInactive') },
-    { value: 'featured', label: t('admin.products.filterFeatured') },
-  ];
+  const selectedProduct = useMemo(
+    () => products.find((p) => p.id === selectedProductId) || null,
+    [products, selectedProductId]
+  );
 
-  const columns: Column<Product>[] = [
-    {
-      key: 'name',
-      header: t('admin.products.colProduct'),
-      sortable: true,
-      render: (product) => (
-        <div className="flex items-center gap-3">
-          <div className="w-11 h-11 bg-slate-100 rounded-lg overflow-hidden flex-shrink-0">
-            {product.imageUrl ? (
-              <Image src={product.imageUrl} alt={product.name} width={44} height={44} className="w-full h-full object-cover" unoptimized />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-slate-300">
-                <ImageIcon className="w-5 h-5" />
-              </div>
-            )}
-          </div>
-          <div className="min-w-0">
-            <p className="font-medium text-slate-900 truncate">{product.name}</p>
-            <p className="text-xs text-slate-400 truncate">{product.slug}</p>
-            {product.purity && (
-              <p className="text-xs text-emerald-600">{t('admin.products.purity')}: {product.purity}%</p>
-            )}
-          </div>
-        </div>
-      ),
-    },
-    {
-      key: 'category',
-      header: t('admin.products.colCategory'),
-      render: (product) => (
-        <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-slate-100 text-slate-600">
-          {product.category.name}
-        </span>
-      ),
-    },
-    {
-      key: 'price',
-      header: t('admin.products.colPrice'),
-      sortable: true,
-      align: 'right',
-      render: (product) => (
-        <span className="font-semibold text-slate-900">${Number(product.price).toFixed(2)}</span>
-      ),
-    },
-    {
-      key: 'formats',
-      header: t('admin.products.colFormats'),
-      align: 'center',
-      render: (product) => (
-        <span className="text-sm text-slate-500">{product.formats?.length || 0}</span>
-      ),
-    },
-    {
-      key: 'stock',
-      header: t('admin.products.colStock'),
-      render: (product) => {
-        const stockStatus = getProductStockStatus(product, t);
-        return <StatusBadge variant={stockStatus.variant}>{stockStatus.label}</StatusBadge>;
-      },
-    },
-    {
-      key: 'status',
-      header: t('admin.products.colStatus'),
-      render: (product) => (
-        <div className="flex items-center gap-1.5">
-          <StatusBadge variant={product.isActive ? 'success' : 'error'}>
-            {product.isActive ? t('admin.products.active') : t('admin.products.inactive')}
-          </StatusBadge>
-          {product.isFeatured && (
-            <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-          )}
-        </div>
-      ),
-    },
-    {
-      key: 'actions',
-      header: t('admin.products.colActions'),
-      align: 'right',
-      render: (product) => (
-        <div className="flex items-center justify-end gap-1">
-          <Link href={`/admin/produits/${product.id}`}>
-            <Button variant="ghost" size="sm" icon={Pencil}>
-              {t('admin.products.edit')}
-            </Button>
-          </Link>
-          <Link href={`/product/${product.slug}`} target="_blank">
-            <Button variant="ghost" size="sm" icon={ExternalLink} />
-          </Link>
-          {isOwner && (
-            <Button
-              variant="ghost"
-              size="sm"
-              icon={deleting === product.id ? Loader2 : Trash2}
-              onClick={() => handleDelete(product.id)}
-              disabled={deleting === product.id}
-              className="text-slate-400 hover:text-red-600"
-            />
-          )}
-        </div>
-      ),
-    },
-  ];
+  // ─── ContentList data ───────────────────────────────────────
+
+  const filterTabs = useMemo(() => [
+    { key: 'all', label: t('common.total'), count: stats.total },
+    { key: 'active', label: t('admin.products.active'), count: stats.active },
+    { key: 'peptide', label: t('admin.products.peptides'), count: stats.peptides },
+    { key: 'supplement', label: t('admin.products.supplements'), count: stats.supplements },
+    { key: 'accessory', label: t('admin.products.accessories'), count: stats.accessories },
+  ], [t, stats]);
+
+  const listItems: ContentListItem[] = useMemo(() =>
+    filteredProducts.map((p) => {
+      const stockStatus = getProductStockStatus(p, t);
+      const badges: ContentListItem['badges'] = [
+        { text: stockStatus.label, variant: stockStatus.variant },
+      ];
+      if (!p.isActive) badges.push({ text: t('admin.products.inactive'), variant: 'error' });
+      if (p.isFeatured) badges.push({ text: '★', variant: 'warning' });
+
+      return {
+        id: p.id,
+        avatar: p.imageUrl ? { text: p.name, imageUrl: p.imageUrl } : { text: p.name },
+        title: p.name,
+        subtitle: `${p.category.name} · $${Number(p.price).toFixed(2)}`,
+        preview: p.formats
+          ? `${p.formats.length} format${p.formats.length > 1 ? 's' : ''}`
+          : t('admin.products.noFormats'),
+        timestamp: p.createdAt,
+        badges,
+      };
+    }),
+  [filteredProducts, t]);
+
+  // ─── Render ─────────────────────────────────────────────────
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
+    <div className="h-full flex flex-col">
       {/* Hidden file input for CSV import */}
       <input
         ref={fileInputRef}
@@ -377,17 +286,23 @@ export default function ProductsListClient({
         className="hidden"
       />
 
-      <PageHeader
-        title={t('admin.products.title')}
-        subtitle={t('admin.products.subtitle', { total: stats.total, active: stats.active, featured: stats.featured })}
-        actions={
-          <>
+      {/* Header + Stats */}
+      <div className="p-4 lg:p-6 pb-0 flex-shrink-0">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className="text-xl font-bold text-slate-900">{t('admin.products.title')}</h1>
+            <p className="text-sm text-slate-500 mt-0.5">
+              {t('admin.products.subtitle', { total: stats.total, active: stats.active, featured: stats.featured })}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
             {isOwner && (
               <Button
                 variant="secondary"
                 icon={importing ? Loader2 : Upload}
                 onClick={() => fileInputRef.current?.click()}
                 disabled={importing}
+                size="sm"
               >
                 {t('admin.products.importCsv') || 'Import CSV'}
               </Button>
@@ -397,67 +312,228 @@ export default function ProductsListClient({
               icon={exporting ? Loader2 : FileDown}
               onClick={handleExport}
               disabled={exporting}
+              size="sm"
             >
               {t('admin.products.export') || 'Export CSV'}
             </Button>
             <Link href="/admin/produits/nouveau">
-              <Button variant="primary" icon={Plus}>
+              <Button variant="primary" icon={Plus} size="sm">
                 {t('admin.products.newProduct')}
               </Button>
             </Link>
-          </>
-        }
-      />
+          </div>
+        </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <MiniStat icon={Package} label={t('common.total')} value={stats.total} />
-        <MiniStat icon={FlaskConical} label={t('admin.products.peptides')} value={stats.peptides} />
-        <MiniStat icon={Pill} label={t('admin.products.supplements')} value={stats.supplements} />
-        <MiniStat icon={Wrench} label={t('admin.products.accessories')} value={stats.accessories} />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+          <MiniStat icon={Package} label={t('common.total')} value={stats.total} />
+          <MiniStat icon={FlaskConical} label={t('admin.products.peptides')} value={stats.peptides} />
+          <MiniStat icon={Pill} label={t('admin.products.supplements')} value={stats.supplements} />
+          <MiniStat icon={Wrench} label={t('admin.products.accessories')} value={stats.accessories} />
+        </div>
+
+        {/* Category filter */}
+        {categories.length > 0 && (
+          <div className="mb-4">
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="h-8 px-3 text-sm border border-slate-200 rounded-lg bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+            >
+              <option value="">{t('admin.products.allCategories')}</option>
+              {categories.map((c) => (
+                <option key={c.id} value={c.slug}>{c.name}</option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
 
-      {/* Filters */}
-      <FilterBar
-        searchValue={search}
-        onSearchChange={setSearch}
-        searchPlaceholder={t('admin.products.searchPlaceholder')}
-      >
-        <SelectFilter
-          label={t('admin.products.allCategories')}
-          value={categoryFilter}
-          onChange={setCategoryFilter}
-          options={categoryOptions}
-        />
-        <SelectFilter
-          label={t('admin.products.allStock')}
-          value={stockFilter}
-          onChange={setStockFilter}
-          options={stockOptions}
-        />
-        <SelectFilter
-          label={t('admin.products.allStatuses')}
-          value={statusFilter}
-          onChange={setStatusFilter}
-          options={statusOptions}
-        />
-      </FilterBar>
+      {/* Main: list + detail */}
+      <div className="flex-1 min-h-0">
+        <MobileSplitLayout
+          listWidth={380}
+          showDetail={!!selectedProductId}
+          list={
+            <ContentList
+              items={listItems}
+              selectedId={selectedProductId}
+              onSelect={setSelectedProductId}
+              filterTabs={filterTabs}
+              activeFilter={statusFilter}
+              onFilterChange={setStatusFilter}
+              searchValue={search}
+              onSearchChange={setSearch}
+              searchPlaceholder={t('admin.products.searchPlaceholder')}
+              emptyIcon={Package}
+              emptyTitle={t('admin.products.emptyTitle')}
+              emptyDescription={t('admin.products.emptyDescription')}
+            />
+          }
+          detail={
+            selectedProduct ? (
+              <DetailPane
+                header={{
+                  title: selectedProduct.name,
+                  subtitle: selectedProduct.category.name,
+                  avatar: selectedProduct.imageUrl
+                    ? { text: selectedProduct.name, imageUrl: selectedProduct.imageUrl }
+                    : { text: selectedProduct.name },
+                  onBack: () => setSelectedProductId(null),
+                  backLabel: t('admin.products.title'),
+                  actions: (
+                    <div className="flex items-center gap-2">
+                      <Link href={`/admin/produits/${selectedProduct.id}`}>
+                        <Button variant="primary" size="sm" icon={Pencil}>
+                          {t('admin.products.edit')}
+                        </Button>
+                      </Link>
+                      <Link href={`/product/${selectedProduct.slug}`} target="_blank">
+                        <Button variant="ghost" size="sm" icon={ExternalLink}>
+                          {t('admin.outlook.viewSite')}
+                        </Button>
+                      </Link>
+                      {isOwner && (
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          icon={deleting === selectedProduct.id ? Loader2 : Trash2}
+                          onClick={() => handleDelete(selectedProduct.id)}
+                          disabled={deleting === selectedProduct.id}
+                        />
+                      )}
+                    </div>
+                  ),
+                }}
+              >
+                <div className="space-y-6">
+                  {/* Product Image */}
+                  {selectedProduct.imageUrl && (
+                    <div className="rounded-lg overflow-hidden border border-slate-200">
+                      <Image
+                        src={selectedProduct.imageUrl}
+                        alt={selectedProduct.name}
+                        width={400}
+                        height={300}
+                        className="w-full h-48 object-cover"
+                        unoptimized
+                      />
+                    </div>
+                  )}
 
-      {/* Table */}
-      <DataTable
-        columns={columns}
-        data={filteredProducts}
-        keyExtractor={(p) => p.id}
-        emptyTitle={t('admin.products.emptyTitle')}
-        emptyDescription={t('admin.products.emptyDescription')}
-        emptyAction={
-          <Link href="/admin/produits/nouveau">
-            <Button variant="primary" icon={Plus}>
-              {t('admin.products.createProduct')}
-            </Button>
-          </Link>
-        }
-      />
+                  {/* Info Grid */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-slate-50 rounded-lg p-3">
+                      <p className="text-xs text-slate-500">{t('admin.products.colPrice')}</p>
+                      <p className="text-xl font-bold text-slate-900">${Number(selectedProduct.price).toFixed(2)}</p>
+                    </div>
+                    <div className="bg-slate-50 rounded-lg p-3">
+                      <p className="text-xs text-slate-500">{t('admin.products.colStatus')}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <StatusBadge variant={selectedProduct.isActive ? 'success' : 'error'}>
+                          {selectedProduct.isActive ? t('admin.products.active') : t('admin.products.inactive')}
+                        </StatusBadge>
+                        {selectedProduct.isFeatured && <Star className="w-4 h-4 text-amber-500 fill-amber-500" />}
+                      </div>
+                    </div>
+                    {selectedProduct.purity && (
+                      <div className="bg-slate-50 rounded-lg p-3">
+                        <p className="text-xs text-slate-500">{t('admin.products.purity')}</p>
+                        <p className="text-lg font-bold text-emerald-700">{selectedProduct.purity}%</p>
+                      </div>
+                    )}
+                    <div className="bg-slate-50 rounded-lg p-3">
+                      <p className="text-xs text-slate-500">{t('admin.products.colCategory')}</p>
+                      <p className="text-sm font-medium text-slate-900">{selectedProduct.category.name}</p>
+                    </div>
+                  </div>
+
+                  {/* Badges */}
+                  <div className="flex flex-wrap gap-2">
+                    {selectedProduct.isNew && (
+                      <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-emerald-100 text-emerald-700">
+                        {t('admin.products.new')}
+                      </span>
+                    )}
+                    {selectedProduct.isBestseller && (
+                      <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-amber-100 text-amber-700">
+                        {t('admin.products.bestseller')}
+                      </span>
+                    )}
+                    <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-slate-100 text-slate-600">
+                      {selectedProduct.productType}
+                    </span>
+                  </div>
+
+                  {/* Formats Table */}
+                  {selectedProduct.formats && selectedProduct.formats.length > 0 && (
+                    <div>
+                      <h3 className="font-semibold text-slate-900 mb-3">
+                        {t('admin.products.colFormats')} ({selectedProduct.formats.length})
+                      </h3>
+                      <div className="border border-slate-200 rounded-lg overflow-hidden overflow-x-auto">
+                        <table className="w-full">
+                          <thead className="bg-slate-50">
+                            <tr>
+                              <th className="px-3 py-2 text-start text-xs font-medium text-slate-500 uppercase">Format</th>
+                              <th className="px-3 py-2 text-end text-xs font-medium text-slate-500 uppercase">{t('admin.products.colPrice')}</th>
+                              <th className="px-3 py-2 text-center text-xs font-medium text-slate-500 uppercase">{t('admin.products.colStock')}</th>
+                              <th className="px-3 py-2 text-center text-xs font-medium text-slate-500 uppercase">{t('admin.products.colStatus')}</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100">
+                            {selectedProduct.formats.map((fmt) => (
+                              <tr key={fmt.id}>
+                                <td className="px-3 py-2 text-sm text-slate-900">{fmt.name}</td>
+                                <td className="px-3 py-2 text-sm text-end text-slate-700">${Number(fmt.price).toFixed(2)}</td>
+                                <td className="px-3 py-2 text-sm text-center">
+                                  <span className={`font-medium ${
+                                    fmt.stockQuantity === 0 ? 'text-red-600' :
+                                    fmt.stockQuantity <= 10 ? 'text-amber-600' :
+                                    'text-slate-700'
+                                  }`}>
+                                    {fmt.stockQuantity}
+                                  </span>
+                                </td>
+                                <td className="px-3 py-2 text-center">
+                                  <StatusBadge
+                                    variant={
+                                      fmt.availability === 'OUT_OF_STOCK' || fmt.availability === 'DISCONTINUED'
+                                        ? 'error'
+                                        : fmt.isActive
+                                          ? 'success'
+                                          : 'neutral'
+                                    }
+                                  >
+                                    {fmt.availability === 'OUT_OF_STOCK' ? t('admin.products.outOfStock') :
+                                     fmt.availability === 'DISCONTINUED' ? t('admin.products.discontinued') :
+                                     fmt.isActive ? t('admin.products.active') : t('admin.products.inactive')}
+                                  </StatusBadge>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Slug */}
+                  <div className="text-xs text-slate-400">
+                    Slug: <code className="bg-slate-100 px-1 py-0.5 rounded">{selectedProduct.slug}</code>
+                  </div>
+                </div>
+              </DetailPane>
+            ) : (
+              <DetailPane
+                isEmpty
+                emptyIcon={Package}
+                emptyTitle={t('admin.products.emptyTitle')}
+                emptyDescription={t('admin.products.emptyDescription')}
+              />
+            )
+          }
+        />
+      </div>
     </div>
   );
 }

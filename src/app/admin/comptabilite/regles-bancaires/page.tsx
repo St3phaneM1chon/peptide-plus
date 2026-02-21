@@ -117,6 +117,7 @@ export default function ReglesBancairesPage() {
   const [saving, setSaving] = useState(false);
   const [applying, setApplying] = useState(false);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   // ---------------------------------------------------------------------------
   // Data fetching
@@ -322,7 +323,7 @@ export default function ReglesBancairesPage() {
 
   const handleDelete = async (rule: BankRule) => {
     if (!confirm(t('admin.bankRules.confirmDelete') || `Delete rule "${rule.name}"?`)) return;
-
+    setDeletingId(rule.id);
     try {
       const res = await fetch(`/api/accounting/bank-rules?id=${rule.id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Failed to delete rule');
@@ -330,6 +331,8 @@ export default function ReglesBancairesPage() {
       fetchRules();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Error deleting rule');
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -408,8 +411,9 @@ export default function ReglesBancairesPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="flex items-center justify-center min-h-[400px]" role="status" aria-label="Loading">
         <Loader2 className="w-8 h-8 animate-spin text-sky-500" />
+        <span className="sr-only">Loading...</span>
       </div>
     );
   }
@@ -502,14 +506,14 @@ export default function ReglesBancairesPage() {
                           <button
                             onClick={() => changePriority(rule, 'up')}
                             className="p-0.5 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600"
-                            title="Increase priority"
+                            title={t('admin.bankRules.increasePriority')}
                           >
                             <ArrowUp className="w-3 h-3" />
                           </button>
                           <button
                             onClick={() => changePriority(rule, 'down')}
                             className="p-0.5 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600"
-                            title="Decrease priority"
+                            title={t('admin.bankRules.decreasePriority')}
                           >
                             <ArrowDown className="w-3 h-3" />
                           </button>
@@ -586,7 +590,8 @@ export default function ReglesBancairesPage() {
                         </button>
                         <button
                           onClick={() => handleDelete(rule)}
-                          className="p-1.5 rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-600 transition-colors"
+                          disabled={deletingId === rule.id}
+                          className="p-1.5 rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-600 transition-colors disabled:opacity-50"
                           title={t('admin.bankRules.delete') || 'Delete'}
                         >
                           <Trash2 className="w-4 h-4" />

@@ -10,6 +10,7 @@ import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { getApiTranslator } from '@/i18n/server';
 import { UserRole } from '@/types';
+import { stripHtml, stripControlChars } from '@/lib/sanitize';
 import { z } from 'zod';
 
 interface RouteParams {
@@ -135,15 +136,21 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Conversation is closed' }, { status: 400 });
     }
 
+    // BE-SEC-03: Sanitize user-supplied text to prevent stored XSS
+    const sanitizedContent = stripControlChars(stripHtml(data.content)).trim();
+    if (!sanitizedContent) {
+      return NextResponse.json({ error: 'Message cannot be empty after sanitization' }, { status: 400 });
+    }
+
     // Créer le message
     const message = await prisma.message.create({
       data: {
         conversationId: id,
         senderId: session.user.id,
         type: data.type,
-        content: data.content,
+        content: sanitizedContent,
         attachmentUrl: data.attachmentUrl,
-        attachmentName: data.attachmentName,
+        attachmentName: data.attachmentName ? stripControlChars(stripHtml(data.attachmentName)).trim() : undefined,
         attachmentSize: data.attachmentSize,
       },
       include: {
