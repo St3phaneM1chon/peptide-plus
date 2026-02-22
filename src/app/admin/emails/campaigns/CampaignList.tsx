@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import {
   Megaphone, Plus, Send, Edit, Trash2, Calendar,
-  Users, BarChart3, Eye, Copy,
+  BarChart3,
 } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
@@ -67,7 +67,7 @@ export default function CampaignList({ onEditCampaign }: CampaignListProps) {
         body: JSON.stringify({
           name: `${t('admin.emails.campaigns.campaignPrefix')} ${new Date().toLocaleDateString(locale)}`,
           subject: t('admin.emails.campaigns.newCampaignSubject'),
-          htmlContent: '<h1>Bonjour {{prenom}}</h1><p>Contenu de la campagne...</p>',
+          htmlContent: '<h1>Hello {{prenom}}</h1><p>Campaign content here...</p>',
         }),
       });
       if (res.ok) {

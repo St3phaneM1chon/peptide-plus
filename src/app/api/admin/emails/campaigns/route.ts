@@ -11,6 +11,11 @@ import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 
+function safeParseJson<T>(str: string | null | undefined, fallback: T): T {
+  if (!str) return fallback;
+  try { return JSON.parse(str); } catch { return fallback; }
+}
+
 export const GET = withAdminGuard(async (request, { session: _session }) => {
   try {
     const { searchParams } = new URL(request.url);
@@ -33,9 +38,9 @@ export const GET = withAdminGuard(async (request, { session: _session }) => {
 
     const campaignsWithStats = campaigns.map(c => ({
       ...c,
-      stats: c.stats ? JSON.parse(c.stats) : { sent: 0, delivered: 0, opened: 0, clicked: 0, bounced: 0, revenue: 0 },
-      segmentQuery: c.segmentQuery ? JSON.parse(c.segmentQuery) : null,
-      abTestConfig: c.abTestConfig ? JSON.parse(c.abTestConfig) : null,
+      stats: safeParseJson(c.stats, { sent: 0, delivered: 0, opened: 0, clicked: 0, bounced: 0, revenue: 0 }),
+      segmentQuery: safeParseJson(c.segmentQuery, null),
+      abTestConfig: safeParseJson(c.abTestConfig, null),
     }));
 
     return NextResponse.json({

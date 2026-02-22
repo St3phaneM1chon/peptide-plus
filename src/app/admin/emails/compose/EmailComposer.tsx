@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { Send, Paperclip, X, Bold, Italic, Underline, Save } from 'lucide-react';
 import { toast } from 'sonner';
+import DOMPurify from 'dompurify';
 import { useI18n } from '@/i18n/client';
 import { Button } from '@/components/admin';
 
@@ -19,6 +20,19 @@ export default function EmailComposer({ onClose, replyTo }: EmailComposerProps) 
   const [showCc, setShowCc] = useState(false);
   const [sending, setSending] = useState(false);
   const bodyRef = useRef<HTMLDivElement>(null);
+
+  // Sanitize replyTo body to prevent XSS
+  const sanitizedReplyHtml = useMemo(() => {
+    if (!replyTo?.body) return undefined;
+    const cleanBody = DOMPurify.sanitize(replyTo.body, {
+      ALLOWED_TAGS: ['p', 'br', 'b', 'i', 'u', 'strong', 'em', 'a', 'span', 'div', 'ul', 'ol', 'li', 'blockquote', 'h1', 'h2', 'h3', 'h4', 'img', 'table', 'tr', 'td', 'th', 'thead', 'tbody'],
+      ALLOWED_ATTR: ['href', 'src', 'alt', 'style', 'class', 'target'],
+      ALLOW_DATA_ATTR: false,
+    });
+    const dateStr = new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+    const safeFrom = DOMPurify.sanitize(replyTo.to);
+    return `<br/><br/><div style="border-left:2px solid #94a3b8;padding-left:12px;color:#64748b;margin-top:16px"><p>${dateStr}, ${safeFrom}:</p>${cleanBody}</div>`;
+  }, [replyTo]);
 
   const execCommand = (cmd: string) => {
     document.execCommand(cmd, false);
@@ -62,8 +76,12 @@ export default function EmailComposer({ onClose, replyTo }: EmailComposerProps) 
       body: bodyRef.current?.innerHTML ?? '',
       savedAt: new Date().toISOString(),
     };
-    const drafts = JSON.parse(localStorage.getItem('emailDrafts') || '[]');
+    let drafts: unknown[];
+    try { drafts = JSON.parse(localStorage.getItem('emailDrafts') || '[]'); } catch { drafts = []; }
+    if (!Array.isArray(drafts)) drafts = [];
     drafts.push(draft);
+    // Keep only the 10 most recent drafts to prevent localStorage bloat
+    if (drafts.length > 10) drafts = drafts.slice(-10);
     localStorage.setItem('emailDrafts', JSON.stringify(drafts));
     toast.success(t('admin.emailComposer.draftSaved'));
   };
@@ -152,9 +170,7 @@ export default function EmailComposer({ onClose, replyTo }: EmailComposerProps) 
         suppressContentEditableWarning
         className="flex-1 px-4 py-3 text-sm text-slate-900 overflow-y-auto focus:outline-none"
         data-placeholder={t('admin.emailComposer.bodyPlaceholder')}
-        dangerouslySetInnerHTML={replyTo ? {
-          __html: `<br/><br/><div style="border-left:2px solid #94a3b8;padding-left:12px;color:#64748b;margin-top:16px"><p>Le ${new Date().toLocaleDateString()}, ${replyTo.to} a écrit :</p>${replyTo.body}</div>`
-        } : undefined}
+        dangerouslySetInnerHTML={sanitizedReplyHtml ? { __html: sanitizedReplyHtml } : undefined}
       />
     </div>
   );

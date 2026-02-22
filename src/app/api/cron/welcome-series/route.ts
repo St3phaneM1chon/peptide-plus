@@ -179,8 +179,29 @@ export async function GET(request: NextRequest) {
       for (let i = 0; i < eligibleUsers.length; i += BATCH_SIZE) {
         const batch = eligibleUsers.slice(i, i + BATCH_SIZE);
 
+        // Batch-fetch notification preferences to avoid N+1 queries
+        const batchUserIds = batch.map((u) => u.id);
+        const batchPrefs = await db.notificationPreference.findMany({
+          where: { userId: { in: batchUserIds } },
+          select: { userId: true, newsletter: true },
+        });
+        const prefsMap = new Map(batchPrefs.map((p) => [p.userId, p]));
+
         const batchPromises = batch.map(async (user) => {
           try {
+            // Check bounce suppression before sending
+            const { shouldSuppressEmail } = await import('@/lib/email/bounce-handler');
+            const { suppressed } = await shouldSuppressEmail(user.email);
+            if (suppressed) {
+              return { step: step.id, userId: user.id, email: user.email, success: false, error: 'Bounce-suppressed' };
+            }
+
+            // Check notification preferences (batch-fetched above)
+            const prefs = prefsMap.get(user.id);
+            if (prefs && !prefs.newsletter) {
+              return { step: step.id, userId: user.id, email: user.email, success: false, error: 'Opted out' };
+            }
+
             // Generate a referral code if user doesn't have one
             let referralCode = user.referralCode;
             if (!referralCode) {

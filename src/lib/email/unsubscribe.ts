@@ -30,7 +30,7 @@ export async function generateUnsubscribeToken(
 ): Promise<string> {
   const token = await new jose.SignJWT({ email, category, userId })
     .setProtectedHeader({ alg: 'HS256' })
-    .setExpirationTime('90d')
+    .setExpirationTime('365d')
     .setIssuedAt()
     .sign(getSecret());
 

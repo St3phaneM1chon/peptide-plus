@@ -125,7 +125,8 @@ jobs:
               NEXT_PUBLIC_SUPPORT_EMAIL=support@biocyclepeptides.com \
               SMTP_HOST=smtp.office365.com \
               SMTP_PORT=587 \
-              "SMTP_FROM=BioCycle Peptides <noreply@biocyclepeptides.com>"
+              "SMTP_FROM=BioCycle Peptides <noreply@biocyclepeptides.com>" \
+              EMAIL_PROVIDER=resend
 
       - name: Configure App Settings (secrets)
         run: |
@@ -143,6 +144,8 @@ jobs:
           if [ -n "$SMTP_U" ]; then ARGS="$ARGS SMTP_USER=$SMTP_U"; fi
           if [ -n "$SMTP_P" ]; then ARGS="$ARGS SMTP_PASSWORD=$SMTP_P"; fi
           if [ -n "$ENC_KEY" ]; then ARGS="$ARGS ENCRYPTION_KEY=$ENC_KEY"; fi
+          if [ -n "$RESEND_AK" ]; then ARGS="$ARGS RESEND_API_KEY=$RESEND_AK"; fi
+          if [ -n "$RESEND_WS" ]; then ARGS="$ARGS RESEND_WEBHOOK_SECRET=$RESEND_WS"; fi
 
           if [ -n "$ARGS" ]; then
             az webapp config appsettings set \
@@ -166,6 +169,8 @@ jobs:
           SMTP_U: ${{ secrets.SMTP_USER }}
           SMTP_P: ${{ secrets.SMTP_PASSWORD }}
           ENC_KEY: ${{ secrets.ENCRYPTION_KEY }}
+          RESEND_AK: ${{ secrets.RESEND_API_KEY }}
+          RESEND_WS: ${{ secrets.RESEND_WEBHOOK_SECRET }}
 
       - name: Verify standalone package
         run: |

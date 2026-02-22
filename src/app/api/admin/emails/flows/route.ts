@@ -11,6 +11,11 @@ import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 
+function safeParseJson<T>(str: string | null | undefined, fallback: T): T {
+  if (!str) return fallback;
+  try { return JSON.parse(str); } catch { return fallback; }
+}
+
 export const GET = withAdminGuard(async (request, { session: _session }) => {
   try {
     const { searchParams } = new URL(request.url);
@@ -29,9 +34,9 @@ export const GET = withAdminGuard(async (request, { session: _session }) => {
     // Parse stats for each flow
     const flowsWithStats = flows.map(f => ({
       ...f,
-      nodes: JSON.parse(f.nodes),
-      edges: JSON.parse(f.edges),
-      stats: f.stats ? JSON.parse(f.stats) : { triggered: 0, sent: 0, opened: 0, clicked: 0, revenue: 0 },
+      nodes: safeParseJson(f.nodes, []),
+      edges: safeParseJson(f.edges, []),
+      stats: safeParseJson(f.stats, { triggered: 0, sent: 0, opened: 0, clicked: 0, revenue: 0 }),
     }));
 
     return NextResponse.json({ flows: flowsWithStats });
@@ -74,8 +79,8 @@ export const POST = withAdminGuard(async (request, { session }) => {
     return NextResponse.json({
       flow: {
         ...flow,
-        nodes: JSON.parse(flow.nodes),
-        edges: JSON.parse(flow.edges),
+        nodes: safeParseJson(flow.nodes, []),
+        edges: safeParseJson(flow.edges, []),
       },
     });
   } catch (error) {

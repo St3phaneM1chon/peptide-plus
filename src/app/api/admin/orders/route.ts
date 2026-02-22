@@ -21,6 +21,7 @@ import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { sendOrderLifecycleEmail } from '@/lib/email';
+import { handleEvent } from '@/lib/email/automation-engine';
 import { apiSuccess, apiError, apiPaginated } from '@/lib/api-response';
 import { ErrorCode } from '@/lib/error-codes';
 import { updateOrderStatusSchema, batchOrderUpdateSchema } from '@/lib/validations/order';
@@ -286,6 +287,34 @@ export const PUT = withAdminGuard(async (request, { session }) => {
       userAgent: request.headers.get('user-agent') || undefined,
     }).catch(() => {});
 
+    // Trigger automation engine for order lifecycle events (fire-and-forget)
+    if (status && status !== existingOrder.status) {
+      const automationMap: Record<string, string> = {
+        SHIPPED: 'order.shipped',
+        DELIVERED: 'order.delivered',
+      };
+      const triggerEvent = automationMap[status];
+      if (triggerEvent) {
+        const user = await prisma.user.findUnique({
+          where: { id: order.userId },
+          select: { email: true, name: true },
+        });
+        if (user) {
+          handleEvent(triggerEvent as Parameters<typeof handleEvent>[0], {
+            email: user.email,
+            name: user.name,
+            userId: order.userId,
+            orderId: order.id,
+            orderNumber: order.orderNumber,
+            trackingNumber: trackingNumber || order.trackingNumber || '',
+            carrier: carrier || order.carrier || '',
+          }).catch((err) => {
+            console.error(`[AutomationEngine] Failed to handle ${triggerEvent}:`, err);
+          });
+        }
+      }
+    }
+
     return NextResponse.json({ order });
   } catch (error) {
     console.error('Admin orders PUT error:', error);
@@ -393,6 +422,31 @@ export const POST = withAdminGuard(async (request, { session }) => {
             ).catch((err) => {
               console.error(`Failed to send ${status} email for order ${orderId}:`, err);
             });
+          }
+
+          // Trigger automation engine for order lifecycle events (fire-and-forget)
+          const automationMap: Record<string, string> = {
+            SHIPPED: 'order.shipped',
+            DELIVERED: 'order.delivered',
+          };
+          const triggerEvent = automationMap[status];
+          if (triggerEvent) {
+            prisma.order.findUnique({
+              where: { id: orderId },
+              select: { userId: true, orderNumber: true, trackingNumber: true, carrier: true, user: { select: { email: true, name: true } } },
+            }).then((o) => {
+              if (o?.user) {
+                handleEvent(triggerEvent as Parameters<typeof handleEvent>[0], {
+                  email: o.user.email,
+                  name: o.user.name,
+                  userId: o.userId,
+                  orderId,
+                  orderNumber: o.orderNumber,
+                  trackingNumber: o.trackingNumber || '',
+                  carrier: o.carrier || '',
+                }).catch(() => {});
+              }
+            }).catch(() => {});
           }
         }
 

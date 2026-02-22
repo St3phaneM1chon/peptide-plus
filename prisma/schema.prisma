@@ -806,16 +806,19 @@ model Discount {
 }
 
 model EmailLog {
-  id         String   @id
+  id         String   @id @default(cuid())
   templateId String?
   to         String
   subject    String
   status     String   @default("sent")
   error      String?
+  messageId  String?
   sentAt     DateTime @default(now())
 
   @@index([sentAt])
   @@index([to])
+  @@index([to, status])
+  @@index([messageId])
 }
 
 model EmailTemplate {
@@ -3230,7 +3233,7 @@ model InboundEmail {
   isSpam         Boolean                  @default(false)
   spamScore      Float?
   receivedAt     DateTime                 @default(now())
-  conversation   EmailConversation?       @relation(fields: [conversationId], references: [id])
+  conversation   EmailConversation?       @relation(fields: [conversationId], references: [id], onDelete: SetNull)
   attachments    InboundEmailAttachment[]
 
   @@index([from])
@@ -3264,8 +3267,8 @@ model EmailConversation {
   lastMessageAt   DateTime               @default(now())
   createdAt       DateTime               @default(now())
   updatedAt       DateTime               @updatedAt
-  customer        User?                  @relation("customerConversations", fields: [customerId], references: [id])
-  assignedTo      User?                  @relation("assignedConversations", fields: [assignedToId], references: [id])
+  customer        User?                  @relation("customerConversations", fields: [customerId], references: [id], onDelete: SetNull)
+  assignedTo      User?                  @relation("assignedConversations", fields: [assignedToId], references: [id], onDelete: SetNull)
   inboundEmails   InboundEmail[]
   outboundReplies OutboundReply[]
   notes           ConversationNote[]
@@ -3290,7 +3293,7 @@ model OutboundReply {
   scheduledFor   DateTime?
   sentAt         DateTime?
   createdAt      DateTime          @default(now())
-  conversation   EmailConversation @relation(fields: [conversationId], references: [id])
+  conversation   EmailConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   sender         User              @relation(fields: [senderId], references: [id])
 
   @@index([conversationId])
@@ -3304,7 +3307,7 @@ model ConversationNote {
   content        String
   mentions       String?
   createdAt      DateTime          @default(now())
-  conversation   EmailConversation @relation(fields: [conversationId], references: [id])
+  conversation   EmailConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   author         User              @relation(fields: [authorId], references: [id])
 
   @@index([conversationId])
@@ -3317,7 +3320,7 @@ model ConversationActivity {
   action         String
   details        String?
   createdAt      DateTime          @default(now())
-  conversation   EmailConversation @relation(fields: [conversationId], references: [id])
+  conversation   EmailConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 
   @@index([conversationId])
   @@index([createdAt])
@@ -3340,16 +3343,17 @@ model CannedResponse {
 }
 
 model EmailAutomationFlow {
-  id          String   @id @default(cuid())
+  id          String               @id @default(cuid())
   name        String
   description String?
   trigger     String
   nodes       String
   edges       String
-  isActive    Boolean  @default(false)
+  isActive    Boolean              @default(false)
   stats       String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  executions  EmailFlowExecution[]
 
   @@index([trigger])
   @@index([isActive])
@@ -3391,6 +3395,45 @@ model ConsentRecord {
   @@index([email])
   @@index([userId])
   @@index([type])
+}
+
+// ── Email Settings & Segments ────────────────────────────────────
+
+model EmailSettings {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
+model EmailSegment {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  query       String   // JSON: segment filter criteria
+  color       String?
+  contactCount Int     @default(0)
+  createdBy   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([createdBy])
+}
+
+model EmailFlowExecution {
+  id          String               @id @default(cuid())
+  flowId      String
+  email       String
+  currentNode String
+  context     String               // JSON: execution context
+  status      String               @default("WAITING") // WAITING, RUNNING, COMPLETED, FAILED, CANCELLED
+  executeAt   DateTime
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  flow        EmailAutomationFlow  @relation(fields: [flowId], references: [id], onDelete: Cascade)
+
+  @@index([status, executeAt])
+  @@index([flowId])
+  @@index([email])
 }
 
 // ── Admin Navigation (Web Navigator) ────────────────────────────

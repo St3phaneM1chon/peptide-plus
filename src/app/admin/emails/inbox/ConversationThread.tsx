@@ -85,7 +85,7 @@ export default function ConversationThread({ conversationId, onBack }: Conversat
           body: JSON.stringify({
             to,
             subject: `Re: ${conversation.subject}`,
-            htmlBody: `<div>${replyContent.replace(/\n/g, '<br>')}</div>`,
+            htmlBody: DOMPurify.sanitize(`<div>${replyContent.replace(/\n/g, '<br>')}</div>`),
             textBody: replyContent,
           }),
         });
@@ -263,7 +263,7 @@ export default function ConversationThread({ conversationId, onBack }: Conversat
                       <Send className="h-3 w-3 text-sky-600" />
                     </div>
                     <span className="text-sm font-medium text-sky-900">
-                      {((item.data.sender as Record<string, unknown>)?.name as string) || 'Support'}
+                      {((item.data.sender as Record<string, unknown>)?.name as string) || t('admin.emails.inbox.agent')}
                     </span>
                     <span className="text-xs text-sky-400">
                       {new Date(item.timestamp).toLocaleString(locale)}

@@ -237,7 +237,7 @@ export async function GET(request: NextRequest) {
       user, orders, reviews, addresses, notificationPrefs, wishlistItems,
       loyaltyTransactions, subscriptions, priceWatches, savedCards,
       referrals, returnRequests, productQuestions, chatConversations,
-      consentRecords,
+      consentRecords, emailLogs, mailingListSubscribers,
     ] = await Promise.all([
         prisma.user.findUnique({
           where: { id: userId },
@@ -359,6 +359,22 @@ export async function GET(request: NextRequest) {
           select: { type: true, source: true, grantedAt: true, revokedAt: true },
           orderBy: { grantedAt: 'desc' },
         }),
+        // GDPR: include email logs sent to the user
+        session.user.email
+          ? prisma.emailLog.findMany({
+              where: { to: session.user.email },
+              select: { subject: true, status: true, sentAt: true },
+              orderBy: { sentAt: 'desc' },
+              take: 100,
+            })
+          : Promise.resolve([]),
+        // GDPR: include mailing list subscription data
+        session.user.email
+          ? prisma.mailingListSubscriber.findMany({
+              where: { email: session.user.email.toLowerCase() },
+              select: { status: true, preferences: true, consentDate: true, confirmedAt: true, unsubscribedAt: true },
+            })
+          : Promise.resolve([]),
       ]);
 
     if (!user) {
@@ -474,6 +490,18 @@ export async function GET(request: NextRequest) {
         source: c.source,
         grantedAt: c.grantedAt.toISOString(),
         revokedAt: c.revokedAt?.toISOString() || null,
+      })),
+      emailLogs: emailLogs.map((el) => ({
+        subject: el.subject,
+        status: el.status,
+        sentAt: el.sentAt.toISOString(),
+      })),
+      mailingListSubscriptions: mailingListSubscribers.map((ml) => ({
+        status: ml.status,
+        preferences: ml.preferences,
+        consentDate: ml.consentDate?.toISOString() || null,
+        confirmedAt: ml.confirmedAt?.toISOString() || null,
+        unsubscribedAt: ml.unsubscribedAt?.toISOString() || null,
       })),
     };
 

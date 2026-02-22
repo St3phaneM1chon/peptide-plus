@@ -25,7 +25,7 @@ export function AdminLayoutProvider({
   initialRailId?: string;
 }) {
   const [activeRailId, setActiveRailId] = useState(initialRailId);
-  const [folderPaneOpen, setFolderPaneOpenState] = useState(true);
+  const [folderPaneOpen, setFolderPaneOpenState] = useState(initialRailId !== 'dashboard');
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 

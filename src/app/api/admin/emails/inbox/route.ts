@@ -19,6 +19,9 @@ export const GET = withAdminGuard(async (request, { session: _session }) => {
     const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
     const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '25')));
 
+    // Build where conditions using AND to combine search + snooze filters properly
+    const andConditions: Record<string, unknown>[] = [];
+
     const where: Record<string, unknown> = {};
 
     if (status && status !== 'ALL') {
@@ -31,19 +34,26 @@ export const GET = withAdminGuard(async (request, { session: _session }) => {
       where.priority = priority;
     }
     if (search) {
-      where.OR = [
-        { subject: { contains: search, mode: 'insensitive' } },
-        { inboundEmails: { some: { from: { contains: search, mode: 'insensitive' } } } },
-        { inboundEmails: { some: { textBody: { contains: search, mode: 'insensitive' } } } },
-      ];
+      andConditions.push({
+        OR: [
+          { subject: { contains: search, mode: 'insensitive' } },
+          { inboundEmails: { some: { from: { contains: search, mode: 'insensitive' } } } },
+          { inboundEmails: { some: { textBody: { contains: search, mode: 'insensitive' } } } },
+        ],
+      });
     }
     // Hide snoozed conversations unless specifically queried
     if (!searchParams.get('showSnoozed')) {
-      where.OR = [
-        ...(Array.isArray(where.OR) ? where.OR : []),
-        { snoozedUntil: null },
-        { snoozedUntil: { lt: new Date() } },
-      ];
+      andConditions.push({
+        OR: [
+          { snoozedUntil: null },
+          { snoozedUntil: { lt: new Date() } },
+        ],
+      });
+    }
+
+    if (andConditions.length > 0) {
+      where.AND = andConditions;
     }
 
     const [conversations, total, statusCounts] = await Promise.all([

@@ -4,6 +4,8 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { sendEmail } from '@/lib/email/email-service';
+import { generateUnsubscribeUrl } from '@/lib/email/unsubscribe';
+import { escapeHtml } from '@/lib/email/templates/base-template';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 
 // POST /api/admin/emails/send - Send email (direct compose or template-based test)
@@ -37,11 +39,16 @@ export const POST = withAdminGuard(async (request, { session }) => {
         for (const [key, value] of Object.entries(variables)) {
           const placeholder = `{{${key}}}`;
           const regex = new RegExp(placeholder.replace(/[{}]/g, '\\$&'), 'g');
-          emailSubject = emailSubject.replace(regex, String(value));
-          html = html.replace(regex, String(value));
+          const strVal = String(value);
+          // HTML-escape for HTML context, raw for subject (plain text)
+          emailSubject = emailSubject.replace(regex, strVal);
+          html = html.replace(regex, escapeHtml(strVal));
         }
       }
     }
+
+    // Generate unsubscribe URL for compliance (CAN-SPAM / RGPD / LCAP)
+    const unsubscribeUrl = await generateUnsubscribeUrl(to, 'marketing').catch(() => undefined);
 
     // Send via configured provider
     const result = await sendEmail({
@@ -50,17 +57,18 @@ export const POST = withAdminGuard(async (request, { session }) => {
       html,
       text,
       tags: [templateId ? 'admin-template-test' : 'admin-direct'],
+      unsubscribeUrl,
     });
 
-    // Log the email
+    // Log the email with messageId for webhook correlation
     const emailLog = await prisma.emailLog.create({
       data: {
-        id: crypto.randomUUID(),
         templateId: templateId || null,
         to,
         subject: emailSubject,
-        status: result.success ? 'SENT' : 'FAILED',
+        status: result.success ? 'sent' : 'failed',
         error: result.error || null,
+        messageId: result.messageId || null,
       },
     });
 

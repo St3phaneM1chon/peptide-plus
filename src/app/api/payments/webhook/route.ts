@@ -707,6 +707,31 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
     await sendOrderConfirmationEmailAsync(order.id, userId);
   }
 
+  // Trigger automation engine for order.created (fire-and-forget)
+  if (userId && userId !== 'guest') {
+    try {
+      const { handleEvent } = await import('@/lib/email/automation-engine');
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { email: true, name: true },
+      });
+      if (user) {
+        handleEvent('order.created', {
+          email: user.email,
+          name: user.name,
+          userId,
+          orderId: order.id,
+          orderNumber,
+          total: cadTotal,
+        }).catch((err) => {
+          logger.error('[AutomationEngine] Failed to handle order.created', { error: String(err) });
+        });
+      }
+    } catch {
+      // Don't fail the webhook for automation errors
+    }
+  }
+
   // Send SMS notification to admin (non-blocking)
   sendOrderNotificationSms(Number(cadTotal), orderNumber).catch((err) => {
     logger.error('Failed to send order SMS', { orderNumber, error: String(err) });

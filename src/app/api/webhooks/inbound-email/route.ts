@@ -1,24 +1,75 @@
+export const dynamic = 'force-dynamic';
+
 import { NextRequest, NextResponse } from 'next/server';
+import { createHmac, timingSafeEqual } from 'crypto';
 import { prisma } from '@/lib/db';
 
 /**
  * POST /api/webhooks/inbound-email
- * Receives inbound emails from Resend/SendGrid Inbound Parse
- * Webhook secret validation via INBOUND_EMAIL_WEBHOOK_SECRET env var
+ * Receives inbound emails from Resend (Svix) or SendGrid Inbound Parse.
+ * Auth: Svix HMAC-SHA256 signature (Resend) or Bearer token fallback.
+ * Uses INBOUND_EMAIL_WEBHOOK_SECRET if set, otherwise falls back to RESEND_WEBHOOK_SECRET.
  */
+
+function verifyResendSignature(
+  rawBody: string,
+  headers: { svixId: string; svixTimestamp: string; svixSignature: string },
+  secret: string,
+): boolean {
+  const secretBytes = Buffer.from(secret.replace('whsec_', ''), 'base64');
+  const toSign = `${headers.svixId}.${headers.svixTimestamp}.${rawBody}`;
+  const expectedSig = createHmac('sha256', secretBytes).update(toSign).digest('base64');
+
+  const signatures = headers.svixSignature.split(' ');
+  for (const sig of signatures) {
+    const sigValue = sig.startsWith('v1,') ? sig.slice(3) : sig;
+    try {
+      if (timingSafeEqual(Buffer.from(expectedSig), Buffer.from(sigValue))) {
+        return true;
+      }
+    } catch {
+      continue;
+    }
+  }
+  return false;
+}
+
 export async function POST(request: NextRequest) {
   try {
-    // Verify webhook secret
-    const webhookSecret = process.env.INBOUND_EMAIL_WEBHOOK_SECRET;
-    if (webhookSecret) {
+    // Use dedicated secret or fall back to shared Resend webhook secret
+    const webhookSecret = process.env.INBOUND_EMAIL_WEBHOOK_SECRET || process.env.RESEND_WEBHOOK_SECRET;
+    if (!webhookSecret) {
+      console.error('[Webhook] No webhook secret configured (INBOUND_EMAIL_WEBHOOK_SECRET or RESEND_WEBHOOK_SECRET)');
+      return NextResponse.json({ error: 'Webhook not configured' }, { status: 503 });
+    }
+
+    // Read raw body for signature verification
+    const rawBody = await request.text();
+
+    // Verify Svix signature (Resend format)
+    const svixId = request.headers.get('svix-id');
+    const svixTimestamp = request.headers.get('svix-timestamp');
+    const svixSignature = request.headers.get('svix-signature');
+
+    if (svixId && svixTimestamp && svixSignature) {
+      const ts = parseInt(svixTimestamp, 10);
+      const now = Math.floor(Date.now() / 1000);
+      if (Math.abs(now - ts) > 300) {
+        return NextResponse.json({ error: 'Timestamp expired' }, { status: 401 });
+      }
+      if (!verifyResendSignature(rawBody, { svixId, svixTimestamp, svixSignature }, webhookSecret)) {
+        console.warn('[Webhook] Invalid inbound email signature');
+        return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
+      }
+    } else {
+      // No Svix headers — check Bearer token fallback
       const authHeader = request.headers.get('authorization');
-      const querySecret = request.nextUrl.searchParams.get('secret');
-      if (authHeader !== `Bearer ${webhookSecret}` && querySecret !== webhookSecret) {
+      if (authHeader !== `Bearer ${webhookSecret}`) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
     }
 
-    const body = await request.json();
+    const body = JSON.parse(rawBody);
 
     // Normalize payload from different providers
     const payload = normalizePayload(body);
@@ -150,7 +201,7 @@ export async function POST(request: NextRequest) {
             filename: att.filename || 'attachment',
             mimeType: att.contentType || 'application/octet-stream',
             size: att.size || 0,
-            storageUrl: `pending://${inboundEmail.id}/${att.filename}`, // TODO: Upload to Azure Blob
+            storageUrl: `pending://${inboundEmail.id}/${att.filename}`,
           },
         });
       }

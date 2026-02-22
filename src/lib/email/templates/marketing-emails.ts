@@ -3,7 +3,7 @@
  * Anniversaire, bienvenue, réactivation, etc.
  */
 
-import { baseTemplate, emailComponents } from './base-template';
+import { baseTemplate, emailComponents, escapeHtml } from './base-template';
 
 // ============================================
 // 1. EMAIL D'ANNIVERSAIRE AVEC CADEAU
@@ -23,6 +23,7 @@ export interface BirthdayEmailData {
 
 export function birthdayEmail(data: BirthdayEmailData): { subject: string; html: string } {
   const isFr = data.locale !== 'en';
+  const safeName = escapeHtml(data.customerName);
   const discountText = data.discountType === 'percentage' 
     ? `${data.discountValue}%` 
     : `$${data.discountValue}`;
@@ -46,9 +47,9 @@ export function birthdayEmail(data: BirthdayEmailData): { subject: string; html:
       ${isFr ? 'Joyeux anniversaire!' : 'Happy birthday!'}
     </h1>
     <p style="font-size: 18px; color: #4b5563; text-align: center;">
-      ${isFr 
-        ? `${data.customerName}, toute l'équipe BioCycle Peptides vous souhaite un merveilleux anniversaire! 🎈`
-        : `${data.customerName}, the entire BioCycle Peptides team wishes you a wonderful birthday! 🎈`}
+      ${isFr
+        ? `${safeName}, toute l'équipe BioCycle Peptides vous souhaite un merveilleux anniversaire! 🎈`
+        : `${safeName}, the entire BioCycle Peptides team wishes you a wonderful birthday! 🎈`}
     </p>
 
     <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 16px; padding: 32px; margin: 32px 0; text-align: center; border: 2px dashed #f59e0b;">
@@ -127,6 +128,7 @@ export interface WelcomeEmailData {
 
 export function welcomeEmail(data: WelcomeEmailData): { subject: string; html: string } {
   const isFr = data.locale !== 'en';
+  const safeName = escapeHtml(data.customerName);
 
   const subject = isFr
     ? `🎉 Bienvenue chez BioCycle Peptides, ${data.customerName}!`
@@ -143,9 +145,9 @@ export function welcomeEmail(data: WelcomeEmailData): { subject: string; html: s
       ${isFr ? 'Bienvenue dans la famille!' : 'Welcome to the family!'}
     </h1>
     <p style="font-size: 16px; color: #4b5563; text-align: center;">
-      ${isFr 
-        ? `Bonjour ${data.customerName}, nous sommes ravis de vous compter parmi nos chercheurs!`
-        : `Hello ${data.customerName}, we're thrilled to have you among our researchers!`}
+      ${isFr
+        ? `Bonjour ${safeName}, nous sommes ravis de vous compter parmi nos chercheurs!`
+        : `Hello ${safeName}, we're thrilled to have you among our researchers!`}
     </p>
 
     ${data.welcomePoints > 0 ? `
@@ -285,6 +287,7 @@ export interface AbandonedCartEmailData {
 
 export function abandonedCartEmail(data: AbandonedCartEmailData): { subject: string; html: string } {
   const isFr = data.locale !== 'en';
+  const safeName = escapeHtml(data.customerName);
 
   const subject = isFr
     ? `🛒 Vous avez oublié quelque chose, ${data.customerName}?`
@@ -312,9 +315,9 @@ export function abandonedCartEmail(data: AbandonedCartEmailData): { subject: str
       ${isFr ? '🛒 Votre panier vous attend!' : '🛒 Your cart is waiting!'}
     </h1>
     <p style="font-size: 16px; color: #4b5563;">
-      ${isFr 
-        ? `Bonjour ${data.customerName}, il semble que vous avez laissé des articles dans votre panier.`
-        : `Hello ${data.customerName}, it looks like you left some items in your cart.`}
+      ${isFr
+        ? `Bonjour ${safeName}, il semble que vous avez laissé des articles dans votre panier.`
+        : `Hello ${safeName}, it looks like you left some items in your cart.`}
     </p>
 
     <h2 style="font-size: 18px; margin-top: 24px;">${isFr ? 'Dans votre panier' : 'In your cart'}</h2>
@@ -389,6 +392,7 @@ export interface BackInStockEmailData {
 
 export function backInStockEmail(data: BackInStockEmailData): { subject: string; html: string } {
   const isFr = data.locale !== 'en';
+  const safeName = escapeHtml(data.customerName);
 
   const subject = isFr
     ? `🔔 ${data.productName} est de retour en stock!`
@@ -399,9 +403,9 @@ export function backInStockEmail(data: BackInStockEmailData): { subject: string;
       ${isFr ? '🔔 De retour en stock!' : '🔔 Back in stock!'}
     </h1>
     <p style="font-size: 16px; color: #4b5563; text-align: center;">
-      ${isFr 
-        ? `Bonjour ${data.customerName}, le produit que vous attendiez est de nouveau disponible!`
-        : `Hello ${data.customerName}, the product you were waiting for is available again!`}
+      ${isFr
+        ? `Bonjour ${safeName}, le produit que vous attendiez est de nouveau disponible!`
+        : `Hello ${safeName}, the product you were waiting for is available again!`}
     </p>
 
     <div style="background-color: #f9fafb; border-radius: 12px; padding: 24px; margin: 24px 0; text-align: center;">
@@ -456,6 +460,7 @@ export interface PointsExpiringEmailData {
 
 export function pointsExpiringEmail(data: PointsExpiringEmailData): { subject: string; html: string } {
   const isFr = data.locale !== 'en';
+  const safeName = escapeHtml(data.customerName);
 
   const expiryDateStr = data.expiryDate.toLocaleDateString(isFr ? 'fr-CA' : 'en-CA', {
     year: 'numeric',
@@ -472,9 +477,9 @@ export function pointsExpiringEmail(data: PointsExpiringEmailData): { subject: s
       ${isFr ? '⚠️ Points en expiration!' : '⚠️ Points expiring!'}
     </h1>
     <p style="font-size: 16px; color: #4b5563; text-align: center;">
-      ${isFr 
-        ? `Bonjour ${data.customerName}, certains de vos points de fidélité vont expirer bientôt!`
-        : `Hello ${data.customerName}, some of your loyalty points are about to expire!`}
+      ${isFr
+        ? `Bonjour ${safeName}, certains de vos points de fidélité vont expirer bientôt!`
+        : `Hello ${safeName}, some of your loyalty points are about to expire!`}
     </p>
 
     <div style="background-color: #fef2f2; border: 2px solid #fecaca; border-radius: 12px; padding: 24px; margin: 24px 0; text-align: center;">
@@ -543,6 +548,7 @@ export interface PriceDropEmailData {
 
 export function priceDropEmail(data: PriceDropEmailData): { subject: string; html: string } {
   const isFr = data.locale !== 'en';
+  const safeName = escapeHtml(data.customerName);
 
   const subject = isFr
     ? `💰 ${data.productName} - Prix réduit de ${data.priceDropPercent.toFixed(0)}%!`
@@ -556,8 +562,8 @@ export function priceDropEmail(data: PriceDropEmailData): { subject: string; htm
     </h1>
     <p style="font-size: 16px; color: #4b5563; text-align: center;">
       ${isFr
-        ? `Bonjour ${data.customerName}, le produit que vous suivez est maintenant en solde!`
-        : `Hello ${data.customerName}, the product you're watching is now on sale!`}
+        ? `Bonjour ${safeName}, le produit que vous suivez est maintenant en solde!`
+        : `Hello ${safeName}, the product you're watching is now on sale!`}
     </p>
 
     <div style="background-color: #f9fafb; border-radius: 12px; padding: 24px; margin: 24px 0; text-align: center;">

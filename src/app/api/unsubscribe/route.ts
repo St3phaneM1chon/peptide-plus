@@ -59,18 +59,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid or expired token' }, { status: 400 });
     }
 
-    // For one-click unsubscribe (List-Unsubscribe-Post header), process immediately
-    const oneClick = request.nextUrl.searchParams.get('oneclick');
-    if (oneClick === 'true') {
-      await processUnsubscribe(payload.email, payload.category, payload.userId);
-      return NextResponse.json({
-        success: true,
-        message: 'You have been unsubscribed',
-        email: maskEmail(payload.email),
-        category: payload.category,
-      });
-    }
-
+    // GET is read-only: return info for the unsubscribe confirmation page
+    // One-click unsubscribe MUST use POST per RFC 8058 — never mutate on GET
     return NextResponse.json({
       email: maskEmail(payload.email),
       category: payload.category,
@@ -90,8 +80,19 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json().catch(() => ({}));
-    const token = body.token || request.nextUrl.searchParams.get('token');
+    // RFC 8058: Gmail/Yahoo send one-click unsubscribe as form-urlencoded
+    // with body "List-Unsubscribe=One-Click" and the token in the URL
+    const contentType = request.headers.get('content-type') || '';
+    let token: string | null = null;
+
+    if (contentType.includes('application/x-www-form-urlencoded')) {
+      // RFC 8058 one-click POST: token comes from query string
+      token = request.nextUrl.searchParams.get('token');
+    } else {
+      // Standard JSON POST from our own UI
+      const body = await request.json().catch(() => ({}));
+      token = body.token || request.nextUrl.searchParams.get('token');
+    }
 
     if (!token) {
       return NextResponse.json({ error: 'Missing token' }, { status: 400 });
@@ -105,7 +106,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid or expired token' }, { status: 400 });
     }
 
-    const category = body.category || payload.category;
+    // Always use the JWT-provided category — do not allow POST body to override
+    // the token's category, as that would let an attacker unsubscribe a user from
+    // a category they didn't intend to leave.
+    const category = payload.category;
     await processUnsubscribe(payload.email, category, payload.userId);
 
     return NextResponse.json({
@@ -134,10 +138,16 @@ async function processUnsubscribe(
   const normalizedEmail = email.toLowerCase().trim();
 
   // 1. Update NewsletterSubscriber if category is newsletter or all
-  if (category === 'newsletter' || category === 'all') {
+  if (category === 'newsletter' || category === 'all' || category === 'marketing') {
     await prisma.newsletterSubscriber.updateMany({
       where: { email: normalizedEmail },
       data: { isActive: false, unsubscribedAt: new Date() },
+    }).catch(() => {});
+
+    // Cross-sync: also unsubscribe from MailingListSubscriber
+    await prisma.mailingListSubscriber.updateMany({
+      where: { email: normalizedEmail, status: { not: 'UNSUBSCRIBED' } },
+      data: { status: 'UNSUBSCRIBED', unsubscribedAt: new Date() },
     }).catch(() => {});
   }
 
@@ -186,7 +196,28 @@ async function processUnsubscribe(
     }
   }
 
-  // 3. Log the unsubscribe action
+  // 3. Revoke ConsentRecord (RGPD compliance)
+  const consentTypes = category === 'all'
+    ? ['newsletter', 'marketing']
+    : category === 'transactional' ? [] : [category];
+
+  if (consentTypes.length > 0) {
+    await prisma.consentRecord.updateMany({
+      where: {
+        email: normalizedEmail,
+        type: { in: consentTypes },
+        revokedAt: null,
+      },
+      data: { revokedAt: new Date() },
+    }).catch((err) => {
+      logger.error('[unsubscribe] Failed to revoke ConsentRecord', {
+        email: normalizedEmail,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    });
+  }
+
+  // 4. Log the unsubscribe action
   await prisma.auditLog.create({
     data: {
       id: `unsub-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,

@@ -48,6 +48,22 @@ export async function GET(request: Request) {
       },
     });
 
+    // Revoke consent records (RGPD Art. 7(3))
+    await prisma.consentRecord.updateMany({
+      where: {
+        email: subscriber.email.toLowerCase(),
+        type: { in: ['marketing', 'newsletter'] },
+        revokedAt: null,
+      },
+      data: { revokedAt: new Date() },
+    }).catch(() => {});
+
+    // Cross-sync: also unsubscribe from NewsletterSubscriber
+    await prisma.newsletterSubscriber.updateMany({
+      where: { email: subscriber.email.toLowerCase() },
+      data: { unsubscribedAt: new Date() },
+    }).catch(() => {});
+
     logUnsubscribe(subscriber.id, subscriber.email, ip, 'one-click-link');
     return NextResponse.redirect(new URL('/?unsubscribe=success', request.url));
   } catch (error) {
@@ -69,19 +85,20 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { email, token } = body;
+    const { token } = body;
 
-    if (!email && !token) {
-      return NextResponse.json({ error: 'Email or token required' }, { status: 400 });
+    // SEC: Require token only — accepting raw email enables email enumeration attacks
+    if (!token) {
+      return NextResponse.json({ error: 'Token required' }, { status: 400 });
     }
 
-    const where = token
-      ? { unsubscribeToken: token as string }
-      : { email: (email as string).toLowerCase() };
-    const subscriber = await prisma.mailingListSubscriber.findFirst({ where });
+    const subscriber = await prisma.mailingListSubscriber.findFirst({
+      where: { unsubscribeToken: token as string },
+    });
 
     if (!subscriber) {
-      return NextResponse.json({ error: 'Subscriber not found' }, { status: 404 });
+      // Return generic success to prevent enumeration
+      return NextResponse.json({ success: true });
     }
 
     await prisma.mailingListSubscriber.update({
@@ -91,6 +108,22 @@ export async function POST(request: NextRequest) {
         unsubscribedAt: new Date(),
       },
     });
+
+    // Revoke consent records (RGPD Art. 7(3))
+    await prisma.consentRecord.updateMany({
+      where: {
+        email: subscriber.email.toLowerCase(),
+        type: { in: ['marketing', 'newsletter'] },
+        revokedAt: null,
+      },
+      data: { revokedAt: new Date() },
+    }).catch(() => {});
+
+    // Cross-sync: also unsubscribe from NewsletterSubscriber if present
+    await prisma.newsletterSubscriber.updateMany({
+      where: { email: subscriber.email.toLowerCase() },
+      data: { unsubscribedAt: new Date() },
+    }).catch(() => {});
 
     logUnsubscribe(subscriber.id, subscriber.email, ip, 'api-post');
     return NextResponse.json({ success: true });

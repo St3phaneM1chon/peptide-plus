@@ -2,7 +2,7 @@
  * Templates d'emails pour les commandes - BioCycle Peptides
  */
 
-import { baseTemplate, emailComponents } from './base-template';
+import { baseTemplate, emailComponents, escapeHtml } from './base-template';
 
 // Types
 export interface OrderItem {
@@ -83,9 +83,9 @@ export function orderConfirmationEmail(data: OrderData): { subject: string; html
       ${isFr ? '🎉 Merci pour votre commande!' : '🎉 Thank you for your order!'}
     </h1>
     <p style="font-size: 16px; color: #4b5563;">
-      ${isFr 
-        ? `Bonjour ${data.customerName}, nous avons bien reçu votre commande et nous la préparons avec soin.`
-        : `Hello ${data.customerName}, we've received your order and are preparing it with care.`}
+      ${isFr
+        ? `Bonjour ${escapeHtml(data.customerName)}, nous avons bien reçu votre commande et nous la préparons avec soin.`
+        : `Hello ${escapeHtml(data.customerName)}, we've received your order and are preparing it with care.`}
     </p>
 
     <div style="background-color: #f9fafb; border-radius: 8px; padding: 20px; margin: 24px 0;">
@@ -214,8 +214,8 @@ export function orderProcessingEmail(data: OrderData): { subject: string; html: 
     </h1>
     <p style="font-size: 16px; color: #4b5563;">
       ${isFr 
-        ? `Bonjour ${data.customerName}, bonne nouvelle! Votre commande est en cours de préparation dans notre laboratoire.`
-        : `Hello ${data.customerName}, great news! Your order is being prepared in our laboratory.`}
+        ? `Bonjour ${escapeHtml(data.customerName)}, bonne nouvelle! Votre commande est en cours de préparation dans notre laboratoire.`
+        : `Hello ${escapeHtml(data.customerName)}, great news! Your order is being prepared in our laboratory.`}
     </p>
 
     <div style="background-color: #eff6ff; border-radius: 8px; padding: 24px; margin: 24px 0; text-align: center;">
@@ -317,8 +317,8 @@ export function orderShippedEmail(data: OrderData): { subject: string; html: str
     </h1>
     <p style="font-size: 16px; color: #4b5563;">
       ${isFr 
-        ? `Bonjour ${data.customerName}, excellente nouvelle! Votre commande a été expédiée et est en route vers vous.`
-        : `Hello ${data.customerName}, excellent news! Your order has been shipped and is on its way to you.`}
+        ? `Bonjour ${escapeHtml(data.customerName)}, excellente nouvelle! Votre commande a été expédiée et est en route vers vous.`
+        : `Hello ${escapeHtml(data.customerName)}, excellent news! Your order has been shipped and is on its way to you.`}
     </p>
 
     ${data.trackingNumber && data.trackingUrl && data.carrier 
@@ -395,8 +395,8 @@ export function orderDeliveredEmail(data: OrderData): { subject: string; html: s
     </h1>
     <p style="font-size: 16px; color: #4b5563;">
       ${isFr 
-        ? `Bonjour ${data.customerName}, votre commande #${data.orderNumber} a été livrée avec succès!`
-        : `Hello ${data.customerName}, your order #${data.orderNumber} has been successfully delivered!`}
+        ? `Bonjour ${escapeHtml(data.customerName)}, votre commande #${data.orderNumber} a été livrée avec succès!`
+        : `Hello ${escapeHtml(data.customerName)}, your order #${data.orderNumber} has been successfully delivered!`}
     </p>
 
     <div style="background-color: #d1fae5; border-radius: 12px; padding: 32px; margin: 24px 0; text-align: center;">
@@ -481,8 +481,8 @@ export function satisfactionSurveyEmail(data: OrderData): { subject: string; htm
   const isFr = data.locale !== 'en';
 
   const subject = isFr
-    ? `⭐ ${data.customerName}, comment s'est passée votre commande?`
-    : `⭐ ${data.customerName}, how was your order?`;
+    ? `⭐ ${escapeHtml(data.customerName)}, comment s'est passée votre commande?`
+    : `⭐ ${escapeHtml(data.customerName)}, how was your order?`;
 
   const content = `
     <h1 style="color: #CC5500; margin-bottom: 8px; text-align: center;">
@@ -490,8 +490,8 @@ export function satisfactionSurveyEmail(data: OrderData): { subject: string; htm
     </h1>
     <p style="font-size: 16px; color: #4b5563; text-align: center;">
       ${isFr 
-        ? `Bonjour ${data.customerName}, nous espérons que vous êtes satisfait de votre récente commande #${data.orderNumber}.`
-        : `Hello ${data.customerName}, we hope you're satisfied with your recent order #${data.orderNumber}.`}
+        ? `Bonjour ${escapeHtml(data.customerName)}, nous espérons que vous êtes satisfait de votre récente commande #${data.orderNumber}.`
+        : `Hello ${escapeHtml(data.customerName)}, we hope you're satisfied with your recent order #${data.orderNumber}.`}
     </p>
 
     <div style="text-align: center; margin: 32px 0;">
@@ -576,8 +576,8 @@ export function orderCancelledEmail(data: OrderData): { subject: string; html: s
     </h1>
     <p style="font-size: 16px; color: #4b5563;">
       ${isFr
-        ? `Bonjour ${data.customerName}, nous vous confirmons que votre commande #${data.orderNumber} a été annulée.`
-        : `Hello ${data.customerName}, we confirm that your order #${data.orderNumber} has been cancelled.`}
+        ? `Bonjour ${escapeHtml(data.customerName)}, nous vous confirmons que votre commande #${data.orderNumber} a été annulée.`
+        : `Hello ${escapeHtml(data.customerName)}, we confirm that your order #${data.orderNumber} has been cancelled.`}
     </p>
 
     ${data.cancellationReason ? `
@@ -673,8 +673,8 @@ export function orderRefundEmail(data: OrderData): { subject: string; html: stri
     </h1>
     <p style="font-size: 16px; color: #4b5563;">
       ${isFr
-        ? `Bonjour ${data.customerName}, nous vous confirmons qu'un remboursement ${isPartial ? 'partiel ' : ''}a été traité pour votre commande #${data.orderNumber}.`
-        : `Hello ${data.customerName}, we confirm that a ${isPartial ? 'partial ' : ''}refund has been processed for your order #${data.orderNumber}.`}
+        ? `Bonjour ${escapeHtml(data.customerName)}, nous vous confirmons qu'un remboursement ${isPartial ? 'partiel ' : ''}a été traité pour votre commande #${data.orderNumber}.`
+        : `Hello ${escapeHtml(data.customerName)}, we confirm that a ${isPartial ? 'partial ' : ''}refund has been processed for your order #${data.orderNumber}.`}
     </p>
 
     <div style="background-color: #d1fae5; border-radius: 12px; padding: 32px; margin: 24px 0; text-align: center;">

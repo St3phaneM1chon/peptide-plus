@@ -2,6 +2,16 @@
  * Template de base pour tous les emails BioCycle Peptides
  */
 
+/** Shared HTML escape utility — use for all user-supplied strings in email templates */
+export function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
 export interface BaseTemplateData {
   preheader?: string;
   content: string;
@@ -106,7 +116,7 @@ export function baseTemplate(data: BaseTemplateData): string {
                 ${unsubscribeUrl ? `&nbsp;|&nbsp;<a href="${unsubscribeUrl}" style="color: #6b7280; text-decoration: underline;">${isFr ? 'Se désabonner' : 'Unsubscribe'}</a>` : ''}
               </p>
               <p style="margin: 0; font-size: 11px; color: #9ca3af;">
-                © ${new Date().getFullYear()} BioCycle Peptides Inc. Montréal, Québec, Canada
+                © ${new Date().getFullYear()} BioCycle Peptides Inc. 1234 Research Blvd, Suite 100, Montréal, QC H2X 1Y6, Canada
               </p>
             </td>
           </tr>

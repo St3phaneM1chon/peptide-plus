@@ -255,7 +255,23 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      // 12. Log the deletion request in AuditLog
+      // 12. Anonymize email logs (GDPR - remove PII from email records)
+      await tx.emailLog.updateMany({
+        where: { to: originalEmail },
+        data: { to: anonymizedEmail },
+      });
+
+      // 13. Delete mailing list subscriptions
+      await tx.mailingListSubscriber.deleteMany({
+        where: { email: originalEmail.toLowerCase() },
+      });
+
+      // 14. Delete newsletter subscriptions
+      await tx.newsletterSubscriber.deleteMany({
+        where: { email: originalEmail.toLowerCase() },
+      });
+
+      // 15. Log the deletion request in AuditLog
       await tx.auditLog.create({
         data: {
           id: `audit_delete_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 8)}`,

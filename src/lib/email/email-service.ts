@@ -26,6 +26,10 @@ export interface SendEmailOptions {
   tags?: string[];
   /** Unsubscribe URL for List-Unsubscribe header (CAN-SPAM / RGPD / LCAP compliance) */
   unsubscribeUrl?: string;
+  /** In-Reply-To header for email threading */
+  inReplyTo?: string;
+  /** References header for email threading */
+  references?: string;
 }
 
 export interface EmailResult {
@@ -84,12 +88,15 @@ async function sendViaResend(options: SendEmailOptions): Promise<EmailResult> {
     return logEmail(options);
   }
 
-  // Build List-Unsubscribe headers for CAN-SPAM / RGPD / LCAP compliance
+  // Build headers for compliance and threading
   const headers: Record<string, string> = {};
   if (options.unsubscribeUrl) {
-    headers['List-Unsubscribe'] = `<${options.unsubscribeUrl}>`;
+    headers['List-Unsubscribe'] = `<mailto:unsubscribe@biocyclepeptides.com>, <${options.unsubscribeUrl}>`;
     headers['List-Unsubscribe-Post'] = 'List-Unsubscribe=One-Click';
   }
+  // Email threading headers
+  if (options.inReplyTo) headers['In-Reply-To'] = options.inReplyTo;
+  if (options.references) headers['References'] = options.references;
 
   const response = await fetch('https://api.resend.com/emails', {
     method: 'POST',
@@ -106,8 +113,15 @@ async function sendViaResend(options: SendEmailOptions): Promise<EmailResult> {
       html: options.html,
       text: options.text,
       reply_to: options.replyTo,
-      tags: options.tags?.map(t => ({ name: t, value: 'true' })),
+      tags: options.tags?.slice(0, 5).map(t => ({ name: t.slice(0, 256), value: 'true' })),
       ...(Object.keys(headers).length > 0 ? { headers } : {}),
+      ...(options.attachments?.length ? {
+        attachments: options.attachments.map(a => ({
+          filename: a.filename,
+          content: a.content,
+          content_type: a.contentType,
+        })),
+      } : {}),
     }),
   });
 
@@ -132,12 +146,14 @@ async function sendViaSendGrid(options: SendEmailOptions): Promise<EmailResult> 
 
   const recipients = Array.isArray(options.to) ? options.to : [options.to];
 
-  // Build SendGrid headers for CAN-SPAM / RGPD / LCAP compliance
+  // Build SendGrid headers for compliance and threading (top-level, not in personalizations)
   const sgHeaders: Record<string, string> = {};
   if (options.unsubscribeUrl) {
-    sgHeaders['List-Unsubscribe'] = `<${options.unsubscribeUrl}>`;
+    sgHeaders['List-Unsubscribe'] = `<mailto:unsubscribe@biocyclepeptides.com>, <${options.unsubscribeUrl}>`;
     sgHeaders['List-Unsubscribe-Post'] = 'List-Unsubscribe=One-Click';
   }
+  if (options.inReplyTo) sgHeaders['In-Reply-To'] = options.inReplyTo;
+  if (options.references) sgHeaders['References'] = options.references;
 
   const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
     method: 'POST',
@@ -148,7 +164,6 @@ async function sendViaSendGrid(options: SendEmailOptions): Promise<EmailResult> 
     body: JSON.stringify({
       personalizations: [{
         to: recipients.map(r => ({ email: r.email, name: r.name })),
-        ...(Object.keys(sgHeaders).length > 0 ? { headers: sgHeaders } : {}),
       }],
       from: { email: options.from?.email, name: options.from?.name },
       reply_to: options.replyTo ? { email: options.replyTo } : undefined,
@@ -157,6 +172,15 @@ async function sendViaSendGrid(options: SendEmailOptions): Promise<EmailResult> 
         { type: 'text/plain', value: options.text || '' },
         { type: 'text/html', value: options.html },
       ],
+      ...(Object.keys(sgHeaders).length > 0 ? { headers: sgHeaders } : {}),
+      ...(options.attachments?.length ? {
+        attachments: options.attachments.map(a => ({
+          filename: a.filename,
+          content: a.content,
+          type: a.contentType,
+          disposition: 'attachment' as const,
+        })),
+      } : {}),
     }),
   });
 
@@ -171,13 +195,67 @@ async function sendViaSendGrid(options: SendEmailOptions): Promise<EmailResult> 
 /**
  * Envoi via SMTP (nodemailer)
  */
+// Cached SMTP transporter (lazy singleton to reuse connection pool)
+let _smtpTransporter: unknown = null;
+let _smtpConfig = '';
+
 async function sendViaSMTP(options: SendEmailOptions): Promise<EmailResult> {
-  // Pour SMTP, vous devrez installer nodemailer
-  // npm install nodemailer
-  // et configurer SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS
-  
-  console.warn('SMTP not implemented yet, falling back to log');
-  return logEmail(options);
+  const host = process.env.SMTP_HOST;
+  const port = parseInt(process.env.SMTP_PORT || '587', 10);
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASSWORD || process.env.SMTP_PASS;
+
+  if (!host || !user || !pass) {
+    console.warn('SMTP not configured (SMTP_HOST, SMTP_USER, SMTP_PASSWORD), falling back to log');
+    return logEmail(options);
+  }
+
+  const nodemailer = await import('nodemailer');
+
+  // Reuse transporter if config hasn't changed
+  const configKey = `${host}:${port}:${user}`;
+  if (!_smtpTransporter || _smtpConfig !== configKey) {
+    _smtpTransporter = nodemailer.default.createTransport({
+      host,
+      port,
+      secure: port === 465,
+      auth: { user, pass },
+    });
+    _smtpConfig = configKey;
+  }
+
+  const transporter = _smtpTransporter as ReturnType<typeof nodemailer.default.createTransport>;
+  const recipients = Array.isArray(options.to) ? options.to : [options.to];
+  // Sanitize names to prevent CRLF header injection
+  const sanitizeName = (name: string) => name.replace(/[\r\n]/g, '');
+  const toAddresses = recipients.map(r => r.name ? `"${sanitizeName(r.name)}" <${r.email}>` : r.email).join(', ');
+
+  const headers: Record<string, string> = {};
+  if (options.unsubscribeUrl) {
+    headers['List-Unsubscribe'] = `<mailto:unsubscribe@biocyclepeptides.com>, <${options.unsubscribeUrl}>`;
+    headers['List-Unsubscribe-Post'] = 'List-Unsubscribe=One-Click';
+  }
+  if (options.inReplyTo) headers['In-Reply-To'] = options.inReplyTo;
+  if (options.references) headers['References'] = options.references;
+
+  const info = await transporter.sendMail({
+    from: options.from?.name ? `"${sanitizeName(options.from.name)}" <${options.from.email}>` : options.from?.email,
+    to: toAddresses,
+    replyTo: options.replyTo,
+    subject: options.subject,
+    html: options.html,
+    text: options.text,
+    headers: Object.keys(headers).length > 0 ? headers : undefined,
+    ...(options.attachments?.length ? {
+      attachments: options.attachments.map(a => ({
+        filename: a.filename,
+        content: Buffer.from(a.content, 'base64'),
+        contentType: a.contentType,
+      })),
+    } : {}),
+  });
+
+  return { success: true, messageId: info.messageId };
 }
 
 /**

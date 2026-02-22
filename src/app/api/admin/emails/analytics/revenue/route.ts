@@ -9,6 +9,11 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 
+function safeParseJson<T>(str: string | null | undefined, fallback: T): T {
+  if (!str) return fallback;
+  try { return JSON.parse(str); } catch { return fallback; }
+}
+
 export const GET = withAdminGuard(async (request, { session: _session }) => {
   try {
     const { searchParams } = new URL(request.url);
@@ -38,7 +43,7 @@ export const GET = withAdminGuard(async (request, { session: _session }) => {
 
     // Parse stats and calculate revenue
     const campaignRevenue = campaigns.map(c => {
-      const stats = c.stats ? JSON.parse(c.stats) : {};
+      const stats = safeParseJson<Record<string, number>>(c.stats, {});
       return {
         id: c.id,
         name: c.name,
@@ -55,7 +60,7 @@ export const GET = withAdminGuard(async (request, { session: _session }) => {
     });
 
     const flowRevenue = flows.map(f => {
-      const stats = f.stats ? JSON.parse(f.stats) : {};
+      const stats = safeParseJson<Record<string, number>>(f.stats, {});
       return {
         id: f.id,
         name: f.name,

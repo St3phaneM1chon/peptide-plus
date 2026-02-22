@@ -96,7 +96,7 @@ export const GET = withAdminGuard(async (_request, { session: _session }) => {
         name: 'Newsletter',
         description: 'Abonnes newsletter',
         color: '#10B981',
-        count: await prisma.newsletterSubscriber.count({ where: { newsletter: true } }),
+        count: await prisma.newsletterSubscriber.count({ where: { isActive: true } }),
         type: 'builtin' as const,
       },
       {
@@ -117,8 +117,23 @@ export const GET = withAdminGuard(async (_request, { session: _session }) => {
       },
     ];
 
+    // Load custom segments from DB
+    const customSegments = await prisma.emailSegment.findMany({
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const customWithType = customSegments.map(s => ({
+      id: s.id,
+      name: s.name,
+      description: s.description,
+      color: s.color || '#6B7280',
+      count: s.contactCount,
+      type: 'custom' as const,
+      query: s.query,
+    }));
+
     return NextResponse.json({
-      segments: [...segmentsWithCounts, ...builtInSegments],
+      segments: [...segmentsWithCounts, ...builtInSegments, ...customWithType],
       totalUsers,
     });
   } catch (error) {
@@ -167,20 +182,38 @@ async function countSegment(query: Record<string, unknown>, now: Date): Promise<
   }
 }
 
-export const POST = withAdminGuard(async (request, { session: _session }) => {
+export const POST = withAdminGuard(async (request, { session }) => {
   try {
     const body = await request.json();
-    const { name, description, query } = body;
+    const { name, description, query, color } = body;
 
     if (!name || !query) {
       return NextResponse.json({ error: 'Name and query are required' }, { status: 400 });
     }
 
-    // For now, store custom segments as automation flows with a special trigger
-    // TODO: Create dedicated CustomSegment model if needed
-    return NextResponse.json({
-      segment: { id: `custom-${Date.now()}`, name, description, query, type: 'custom', count: 0 },
+    // Validate query is a non-null object
+    let queryStr: string;
+    if (typeof query === 'string') {
+      try { JSON.parse(query); queryStr = query; } catch {
+        return NextResponse.json({ error: 'query must be valid JSON' }, { status: 400 });
+      }
+    } else if (typeof query === 'object' && query !== null) {
+      queryStr = JSON.stringify(query);
+    } else {
+      return NextResponse.json({ error: 'query must be a JSON object or string' }, { status: 400 });
+    }
+
+    const segment = await prisma.emailSegment.create({
+      data: {
+        name,
+        description: description || null,
+        query: queryStr,
+        color: color || '#6B7280',
+        createdBy: session.user.id,
+      },
     });
+
+    return NextResponse.json({ segment: { ...segment, type: 'custom' } });
   } catch (error) {
     console.error('[Segments] Create error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

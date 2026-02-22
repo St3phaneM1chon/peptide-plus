@@ -66,6 +66,18 @@ export async function POST(request: NextRequest) {
           locale: locale || 'fr',
         },
       });
+
+      // RGPD Art. 6/7: Create ConsentRecord for provable consent trail
+      await prisma.consentRecord.create({
+        data: {
+          email: email.toLowerCase(),
+          type: 'newsletter',
+          source: `website_${source || 'footer'}`,
+          consentText: 'J\'accepte de recevoir la newsletter et les promotions de BioCycle Peptides.',
+          grantedAt: new Date(),
+          ipAddress: ip,
+        },
+      }).catch(() => {}); // Best-effort: don't fail subscribe if consent record fails
     }
 
     // Forward to CASL-compliant double opt-in endpoint

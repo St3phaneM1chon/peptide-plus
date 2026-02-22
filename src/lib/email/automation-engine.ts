@@ -11,6 +11,7 @@
  */
 
 import { prisma } from '@/lib/db';
+import { escapeHtml } from '@/lib/email/templates/base-template';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -108,19 +109,11 @@ export async function handleEvent(
       const triggerNode = nodes.find((n) => n.type === 'trigger');
       if (!triggerNode) continue;
 
-      // Walk the graph starting from the trigger
-      await executeFlowFromNode(flow.id, triggerNode.id, nodes, edges, context);
+      // Walk the graph starting from the trigger (inject flowId for delay scheduling)
+      await executeFlowFromNode(flow.id, triggerNode.id, nodes, edges, { ...context, _flowId: flow.id });
 
-      // Increment the "triggered" counter
-      const stats: FlowStats = flow.stats
-        ? JSON.parse(flow.stats)
-        : { triggered: 0, sent: 0, opened: 0, clicked: 0, revenue: 0 };
-      stats.triggered = (stats.triggered || 0) + 1;
-
-      await prisma.emailAutomationFlow.update({
-        where: { id: flow.id },
-        data: { stats: JSON.stringify(stats) },
-      });
+      // Atomically increment the "triggered" counter to avoid race conditions
+      await incrementFlowStat(flow.id, 'triggered');
     } catch (error) {
       console.error(`[AutomationEngine] Error executing flow ${flow.id}:`, error);
     }
@@ -136,17 +129,31 @@ export async function handleEvent(
  * For condition nodes the boolean result decides which outgoing edges to
  * follow (edges whose `sourceHandle` matches `"true"` or `"false"`).
  */
+const FLOW_MAX_NODES = 50; // Max nodes to process per execution (prevents runaway flows)
+
 async function executeFlowFromNode(
   flowId: string,
   nodeId: string,
   nodes: FlowNode[],
   edges: FlowEdge[],
   context: Record<string, unknown>,
+  visited: Set<string> = new Set(),
 ): Promise<void> {
+  // Cycle detection + execution budget: prevent infinite recursion and runaway flows
+  if (visited.has(nodeId)) return;
+  if (visited.size >= FLOW_MAX_NODES) {
+    console.warn(`[AutomationEngine] Flow ${flowId}: max node limit (${FLOW_MAX_NODES}) reached, stopping`);
+    return;
+  }
+  visited.add(nodeId);
+
   const node = nodes.find((n) => n.id === nodeId);
   if (!node) return;
 
   const result = await executeNode(node, context);
+
+  // Delay nodes schedule via DB and halt graph traversal — cron picks up later
+  if (node.type === 'delay') return;
 
   // Determine which edges to follow
   let nextEdges = edges.filter((e) => e.source === nodeId);
@@ -157,7 +164,7 @@ async function executeFlowFromNode(
   }
 
   for (const edge of nextEdges) {
-    await executeFlowFromNode(flowId, edge.target, nodes, edges, context);
+    await executeFlowFromNode(flowId, edge.target, nodes, edges, context, visited);
   }
 }
 
@@ -184,11 +191,28 @@ async function executeNode(
       const email = context.email as string | undefined;
       if (!email || !node.data.subject) return true;
 
+      // Check bounce suppression before sending
+      const { shouldSuppressEmail } = await import('@/lib/email/bounce-handler');
+      const { suppressed } = await shouldSuppressEmail(email);
+      if (suppressed) return true;
+
+      // RGPD compliance: verify active consent before sending marketing emails
+      const activeConsent = await prisma.consentRecord.findFirst({
+        where: {
+          email: email.toLowerCase(),
+          type: { in: ['marketing', 'newsletter'] },
+          revokedAt: null,
+          OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
+        },
+        select: { id: true },
+      });
+      if (!activeConsent) return true;
+
       const { sendEmail } = await import('@/lib/email/email-service');
       const { generateUnsubscribeUrl } = await import('@/lib/email/unsubscribe');
 
-      const html = replaceVariables(node.data.htmlContent || '', context);
-      const subject = replaceVariables(node.data.subject, context);
+      const html = replaceVariables(node.data.htmlContent || '', context, true);
+      const subject = replaceVariables(node.data.subject, context, false);
 
       // Generate unsubscribe URL (CAN-SPAM / RGPD / LCAP compliance)
       const unsubscribeUrl = await generateUnsubscribeUrl(
@@ -197,26 +221,40 @@ async function executeNode(
         (context.userId as string) || undefined,
       ).catch(() => undefined);
 
-      await sendEmail({
+      const result = await sendEmail({
         to: { email, name: (context.name as string) || undefined },
         subject,
         html,
         unsubscribeUrl,
       });
+
+      // Increment 'sent' stat on successful send
+      if (result.success && context._flowId) {
+        await incrementFlowStat(context._flowId as string, 'sent').catch(() => {});
+      }
       return true;
     }
 
     // -- Delay ------------------------------------------------------------
     case 'delay': {
-      // In production this should enqueue a delayed job (Bull / BullMQ / pg-boss).
-      // For now we log the intent so the caller can wire up the queue later.
-      console.log(
-        `[AutomationEngine] Delay: ${node.data.delayAmount} ${node.data.delayUnit}` +
-          ` for ${context.email ?? 'unknown'}`,
-      );
-      // TODO: Integrate a job queue (Bull/BullMQ) to schedule the
-      // continuation of the flow after the delay elapses.
-      return true;
+      // Schedule delayed execution via EmailFlowExecution table.
+      // The /api/cron/email-flows endpoint processes these when executeAt arrives.
+      const delayMs = getDelayMs(node.data.delayAmount, node.data.delayUnit);
+      const email = context.email as string;
+      if (email && context._flowId) {
+        await prisma.emailFlowExecution.create({
+          data: {
+            flowId: context._flowId as string,
+            email,
+            currentNode: node.id,
+            context: JSON.stringify(context),
+            status: 'WAITING',
+            executeAt: new Date(Date.now() + delayMs),
+          },
+        });
+      }
+      // Return false to stop recursive execution — the cron will pick it up
+      return false;
     }
 
     // -- Condition --------------------------------------------------------
@@ -268,13 +306,56 @@ async function executeNode(
 // ---------------------------------------------------------------------------
 
 /**
+ * Convert delay amount + unit to milliseconds
+ */
+function getDelayMs(amount?: number, unit?: string): number {
+  const a = amount || 1;
+  switch (unit) {
+    case 'minutes': return a * 60 * 1000;
+    case 'hours': return a * 60 * 60 * 1000;
+    case 'days': return a * 24 * 60 * 60 * 1000;
+    case 'weeks': return a * 7 * 24 * 60 * 60 * 1000;
+    default: return a * 60 * 60 * 1000;
+  }
+}
+
+/**
+ * Atomically increment a stat counter on an EmailAutomationFlow.
+ * Uses raw SQL to avoid read-modify-write race conditions.
+ */
+export async function incrementFlowStat(
+  flowId: string,
+  stat: keyof FlowStats,
+  amount: number = 1,
+): Promise<void> {
+  try {
+    // PostgreSQL JSON atomic update: increment a single key within the stats JSON
+    await prisma.$executeRaw`
+      UPDATE "EmailAutomationFlow"
+      SET stats = jsonb_set(
+        COALESCE(stats::jsonb, '{"triggered":0,"sent":0,"opened":0,"clicked":0,"revenue":0}'::jsonb),
+        ${`{${stat}}`}::text[],
+        (COALESCE((stats::jsonb->>${stat})::int, 0) + ${amount})::text::jsonb
+      )
+      WHERE id = ${flowId}
+    `;
+  } catch (err) {
+    console.error(`[AutomationEngine] Failed to increment stat ${stat} for flow ${flowId}:`, err);
+  }
+}
+
+/**
  * Replace `{{variable}}` placeholders in a template string with values
  * from the context map. Supports nested dot-notation keys (one level).
  * Unresolved placeholders are left as-is.
+ *
+ * @param htmlContext If true, values are HTML-escaped to prevent XSS.
+ *                   Use false for plain-text contexts like email subjects.
  */
 function replaceVariables(
   template: string,
   context: Record<string, unknown>,
+  htmlContext: boolean = true,
 ): string {
   return template.replace(/\{\{(\w+(?:\.\w+)?)\}\}/g, (match, key: string) => {
     // Support one level of nesting: "order.total" -> context.order?.total
@@ -284,7 +365,9 @@ function replaceVariables(
       if (value === null || value === undefined) break;
       value = (value as Record<string, unknown>)[part];
     }
-    return value !== undefined && value !== null ? String(value) : match;
+    if (value === undefined || value === null) return match;
+    const strValue = String(value);
+    return htmlContext ? escapeHtml(strValue) : strValue;
   });
 }
 

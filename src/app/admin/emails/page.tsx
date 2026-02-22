@@ -18,6 +18,7 @@ import ConversationThread from './inbox/ConversationThread';
 import FlowList from './flows/FlowList';
 import dynamic from 'next/dynamic';
 import CampaignList from './campaigns/CampaignList';
+import CampaignEditor from './campaigns/CampaignEditor';
 import SegmentBuilder from './segments/SegmentBuilder';
 import { toast } from 'sonner';
 
@@ -98,13 +99,43 @@ export default function EmailsPage() {
   const [editingFlowId, setEditingFlowId] = useState<string | null>(null);
   const [creatingFlow, setCreatingFlow] = useState(false);
 
+  // Campaign state
+  const [editingCampaignId, setEditingCampaignId] = useState<string | null>(null);
+
   // Inbox notification count
   const [inboxCount, setInboxCount] = useState(0);
+
+  // Email settings state
+  const [emailSettings, setEmailSettings] = useState<Record<string, string>>({});
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
+
+  // Email auth status (loaded from settings or defaults to unknown)
+  const emailAuthStatus = {
+    spf: emailSettings['auth.spf'] || 'unknown',
+    dkim: emailSettings['auth.dkim'] || 'unknown',
+    dmarc: emailSettings['auth.dmarc'] || 'unknown',
+    bimi: emailSettings['auth.bimi'] || 'unknown',
+  };
 
   useEffect(() => {
     fetchData();
     fetchInboxCount();
   }, []);
+
+  // Load email settings when settings tab is activated
+  useEffect(() => {
+    if (activeTab === 'settings' && !settingsLoaded) {
+      fetch('/api/admin/emails/settings')
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+          if (data?.settings) {
+            setEmailSettings(data.settings);
+            setSettingsLoaded(true);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [activeTab, settingsLoaded]);
 
   const fetchData = async () => {
     try {
@@ -439,7 +470,14 @@ export default function EmailsPage() {
 
       {/* ==================== CAMPAIGNS TAB ==================== */}
       {activeTab === 'campaigns' && (
-        <CampaignList onEditCampaign={(id) => toast.info(`${t('admin.emailConfig.editCampaign') || 'Edit campaign'} #${id} — ${t('common.comingSoon') || 'Coming soon'}`)} />
+        editingCampaignId ? (
+          <CampaignEditor
+            campaignId={editingCampaignId}
+            onBack={() => setEditingCampaignId(null)}
+          />
+        ) : (
+          <CampaignList onEditCampaign={(id) => setEditingCampaignId(id)} />
+        )
       )}
 
       {/* ==================== FLOWS TAB ==================== */}
@@ -465,25 +503,25 @@ export default function EmailsPage() {
 
       {/* ==================== SETTINGS TAB ==================== */}
       {activeTab === 'settings' && (
-        <div className="bg-white rounded-xl border border-slate-200 p-6 space-y-6" data-email-settings="">
+        <div key={settingsLoaded ? 'loaded' : 'loading'} className="bg-white rounded-xl border border-slate-200 p-6 space-y-6" data-email-settings="">
           <div>
             <h3 className="font-semibold text-slate-900 mb-4">{t('admin.emailConfig.smtpConfig')}</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField label={t('admin.emailConfig.provider')}>
-                <select data-field="provider" className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
-                  <option>Resend</option>
-                  <option>SendGrid</option>
-                  <option>{t('admin.emailConfig.customSmtp')}</option>
+                <select data-field="provider" defaultValue={emailSettings['email.provider'] || 'Resend'} className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
+                  <option value="Resend">Resend</option>
+                  <option value="SendGrid">SendGrid</option>
+                  <option value="SMTP">{t('admin.emailConfig.customSmtp')}</option>
                 </select>
               </FormField>
               <FormField label={t('admin.emailConfig.senderEmail')}>
-                <Input type="email" defaultValue="noreply@biocycle.ca" data-field="senderEmail" />
+                <Input type="email" defaultValue={emailSettings['email.senderEmail'] || 'noreply@biocyclepeptides.com'} data-field="senderEmail" />
               </FormField>
               <FormField label={t('admin.emailConfig.senderName')}>
-                <Input type="text" defaultValue="BioCycle Peptides" data-field="senderName" />
+                <Input type="text" defaultValue={emailSettings['email.senderName'] || 'BioCycle Peptides'} data-field="senderName" />
               </FormField>
               <FormField label={t('admin.emailConfig.replyEmail')}>
-                <Input type="email" defaultValue="support@biocycle.ca" data-field="replyEmail" />
+                <Input type="email" defaultValue={emailSettings['email.replyEmail'] || 'support@biocyclepeptides.com'} data-field="replyEmail" />
               </FormField>
             </div>
           </div>
@@ -532,10 +570,10 @@ export default function EmailsPage() {
             <h3 className="font-semibold text-slate-900 mb-4">{t('admin.emailConfig.emailAuthTitle')}</h3>
             <div className="space-y-3">
               {[
-                { name: 'SPF', status: 'configured', desc: 'Sender Policy Framework' },
-                { name: 'DKIM', status: 'configured', desc: 'DomainKeys Identified Mail' },
-                { name: 'DMARC', status: 'warning', desc: 'Domain-based Message Auth' },
-                { name: 'BIMI', status: 'missing', desc: 'Brand Indicators for Message Identification' },
+                { name: 'SPF', status: emailAuthStatus?.spf || 'unknown', desc: 'Sender Policy Framework' },
+                { name: 'DKIM', status: emailAuthStatus?.dkim || 'unknown', desc: 'DomainKeys Identified Mail' },
+                { name: 'DMARC', status: emailAuthStatus?.dmarc || 'unknown', desc: 'Domain-based Message Auth' },
+                { name: 'BIMI', status: emailAuthStatus?.bimi || 'unknown', desc: 'Brand Indicators for Message Identification' },
               ].map(item => (
                 <div key={item.name} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                   <div>
@@ -554,32 +592,49 @@ export default function EmailsPage() {
             </div>
           </div>
 
-          <Button variant="primary" icon={Save} onClick={async () => {
-            try {
-              const form = document.querySelector('[data-email-settings]');
-              if (!form) return;
-              const provider = form.querySelector<HTMLSelectElement>('[data-field="provider"]')?.value;
-              const senderEmail = form.querySelector<HTMLInputElement>('[data-field="senderEmail"]')?.value;
-              const senderName = form.querySelector<HTMLInputElement>('[data-field="senderName"]')?.value;
-              const replyEmail = form.querySelector<HTMLInputElement>('[data-field="replyEmail"]')?.value;
-              const res = await fetch('/api/admin/settings', {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  'email.provider': provider,
-                  'email.senderEmail': senderEmail,
-                  'email.senderName': senderName,
-                  'email.replyEmail': replyEmail,
-                }),
-              });
-              if (res.ok) toast.success(t('common.saved') || 'Saved');
-              else toast.error(t('common.errorOccurred'));
-            } catch {
-              toast.error(t('common.errorOccurred'));
-            }
-          }}>
-            {t('admin.emailConfig.save')}
-          </Button>
+          <div className="flex gap-3">
+            <Button variant="primary" icon={Save} onClick={async () => {
+              try {
+                const form = document.querySelector('[data-email-settings]');
+                if (!form) return;
+                const provider = form.querySelector<HTMLSelectElement>('[data-field="provider"]')?.value;
+                const senderEmail = form.querySelector<HTMLInputElement>('[data-field="senderEmail"]')?.value;
+                const senderName = form.querySelector<HTMLInputElement>('[data-field="senderName"]')?.value;
+                const replyEmail = form.querySelector<HTMLInputElement>('[data-field="replyEmail"]')?.value;
+                const res = await fetch('/api/admin/emails/settings', {
+                  method: 'PUT',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    'email.provider': provider,
+                    'email.senderEmail': senderEmail,
+                    'email.senderName': senderName,
+                    'email.replyEmail': replyEmail,
+                  }),
+                });
+                if (res.ok) {
+                  toast.success(t('common.saved') || 'Saved');
+                  setSettingsLoaded(false); // Reload settings
+                } else {
+                  toast.error(t('common.errorOccurred'));
+                }
+              } catch {
+                toast.error(t('common.errorOccurred'));
+              }
+            }}>
+              {t('admin.emailConfig.save')}
+            </Button>
+            <Button variant="secondary" icon={SendHorizontal} onClick={async () => {
+              try {
+                const res = await fetch('/api/admin/emails/test', { method: 'POST' });
+                if (res.ok) toast.success(t('admin.emailConfig.testEmailSent') || 'Test email sent!');
+                else toast.error(t('admin.emailConfig.testEmailFailed') || 'Test email failed');
+              } catch {
+                toast.error(t('admin.emailConfig.testEmailFailed') || 'Test email failed');
+              }
+            }}>
+              {t('admin.emailConfig.testConnection') || 'Test Connection'}
+            </Button>
+          </div>
         </div>
       )}
 
