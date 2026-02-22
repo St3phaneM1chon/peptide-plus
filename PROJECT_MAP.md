@@ -1,10 +1,10 @@
 # PROJECT MAP - peptide-plus (BioCycle Peptides)
-# LAST UPDATED: 2026-02-21
+# LAST UPDATED: 2026-02-22
 # RULE: This file MUST be updated after every feature addition/modification
 # SEE: .claude/rules/project-map-mandatory.md for enforcement rules
 
 ## QUICK STATS
-- **Pages**: 180+ | **API Routes**: 311 | **Prisma Models**: 101 | **Enums**: 30 | **Components**: 109 | **Hooks**: 12
+- **Pages**: 180+ | **API Routes**: 315 | **Prisma Models**: 104 | **Enums**: 30 | **Components**: 109 | **Hooks**: 12
 - **Stack**: Next.js 15 (App Router), TypeScript strict, Prisma 5.22, PostgreSQL 15, Redis
 - **i18n**: 22 languages (fr reference) | **Auth**: NextAuth v5 + MFA + WebAuthn
 - **Hosting**: Azure App Service | **Payments**: Stripe + PayPal
@@ -663,14 +663,14 @@ All use `useI18n` only: `/mentions-legales/confidentialite`, `/mentions-legales/
 |-------|--------|------|
 | /api/webhooks/stripe | proxy → /api/payments/webhook | stripe-sig |
 | /api/webhooks/paypal | WebhookEvent,Order,OrderItem,ProductFormat,InventoryTransaction,Ambassador | paypal-sig |
-| /api/webhooks/email-bounce | via bounce-handler | webhook-secret |
+| /api/webhooks/email-bounce | EmailLog,BounceRecord via bounce-handler | svix-signature (Resend) |
 | /api/webhooks/inbound-email | InboundEmail,EmailConversation | webhook-secret |
 
-### Cron Jobs (11 routes, all cron-secret auth)
-abandoned-cart, birthday-emails, data-retention, dependency-check, points-expiring, price-drop-alerts, release-reservations, satisfaction-survey, stock-alerts, update-exchange-rates, welcome-series
+### Cron Jobs (12 routes, all cron-secret auth)
+abandoned-cart, birthday-emails, data-retention, dependency-check, email-flows, points-expiring, price-drop-alerts, release-reservations, satisfaction-survey, stock-alerts, update-exchange-rates, welcome-series
 
 ### Admin Core (100+ routes)
-orders, users/[id], users/[id]/points, employees, inventory, currencies, settings, seo, emails/send, promotions, promo-codes, reviews, suppliers, subscriptions, loyalty/*, translations, nav-sections, nav-subsections, nav-pages, medias, webinars, videos, logs, audit-log, metrics, cache-stats, permissions, shipping/*, uat, reports
+orders, users/[id], users/[id]/points, employees, inventory, currencies, settings, seo, emails/send, emails/settings, emails/mailing-list, emails/mailing-list/import, promotions, promo-codes, reviews, suppliers, subscriptions, loyalty/*, translations, nav-sections, nav-subsections, nav-pages, medias, webinars, videos, logs, audit-log, metrics, cache-stats, permissions, shipping/*, uat, reports
 
 ### Public Utility (30+ routes)
 products, categories, blog, articles, reviews, ambassadors, referrals, loyalty, gift-cards, currencies, contact, consent, csrf, health, hero-slides, testimonials, videos, webinars, search/suggest, social-proof, stock-alerts, price-watch, promo/validate, upsell, bundles
@@ -763,7 +763,7 @@ ALL follow pattern: `1:N Cascade`, `@@unique([parentId, locale])`, `translatedBy
 - AccountingSettings, ChatSettings, SiteSettings, SiteSetting
 - AuditLog, AuditTrail, SearchLog (polymorphic entityType/entityId)
 - DocumentAttachment (polymorphic)
-- EmailAutomationFlow, EmailCampaign, EmailLog, EmailTemplate, CannedResponse
+- EmailAutomationFlow, EmailCampaign, EmailLog, EmailTemplate, CannedResponse, EmailSettings, EmailSegment, EmailFlowExecution
 - FiscalCalendarEvent, FiscalYear, AccountingPeriod, AccountingAlert
 - Media, NewsletterSubscriber, PaymentMethodConfig, RecurringEntryTemplate
 - ShippingZone, TranslationFeedback, TranslationJob, VerificationToken, Wishlist, ClientReference

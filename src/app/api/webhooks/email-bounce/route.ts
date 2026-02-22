@@ -117,6 +117,13 @@ async function processResendWebhook(payload: {
   data: { email_id?: string; to?: string[]; created_at?: string; bounce_type?: string };
 }): Promise<void> {
   const { type, data } = payload;
+
+  // Inbound email has a different payload shape — handle before the to-address guard
+  if (type === 'email.received') {
+    await processInboundResendEmail(data as Record<string, unknown>);
+    return;
+  }
+
   const email = data.to?.[0];
   if (!email) return;
 
@@ -217,7 +224,68 @@ async function processResendWebhook(payload: {
         timestamp: data.created_at ? new Date(data.created_at) : undefined,
       });
       break;
+
+    // email.received is handled above (before the to-address guard)
   }
+}
+
+/**
+ * Process inbound email from Resend webhook.
+ * The webhook payload only has metadata — fetch the full body via Resend API.
+ */
+async function processInboundResendEmail(data: Record<string, unknown>): Promise<void> {
+  const emailId = data.email_id as string;
+  if (!emailId) {
+    logger.warn('[email-bounce-webhook] email.received: no email_id');
+    return;
+  }
+
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    logger.warn('[email-bounce-webhook] email.received: RESEND_API_KEY not configured, cannot fetch email body');
+    return;
+  }
+
+  // Fetch full email content from Resend Received Emails API
+  const res = await fetch(`https://api.resend.com/emails/${emailId}`, {
+    headers: { 'Authorization': `Bearer ${apiKey}` },
+  });
+
+  if (!res.ok) {
+    logger.warn(`[email-bounce-webhook] email.received: failed to fetch email ${emailId}: ${res.status}`);
+    return;
+  }
+
+  const emailData = await res.json() as Record<string, unknown>;
+
+  // Forward to inbound email webhook handler via internal fetch
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || 'https://biocyclepeptides.com';
+  const webhookSecret = process.env.INBOUND_EMAIL_WEBHOOK_SECRET || process.env.RESEND_WEBHOOK_SECRET;
+
+  await fetch(`${baseUrl}/api/webhooks/inbound-email`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(webhookSecret ? { 'Authorization': `Bearer ${webhookSecret}` } : {}),
+    },
+    body: JSON.stringify({
+      data: {
+        from: emailData.from,
+        to: emailData.to,
+        subject: emailData.subject,
+        html: emailData.html,
+        text: emailData.text,
+        message_id: emailData.message_id || emailId,
+        in_reply_to: emailData.in_reply_to,
+        references: emailData.references,
+        attachments: emailData.attachments,
+      },
+    }),
+  }).catch(err => {
+    logger.error('[email-bounce-webhook] email.received: failed to forward to inbound handler', {
+      error: err instanceof Error ? err.message : String(err),
+    });
+  });
 }
 
 async function processSendGridEvent(event: {
