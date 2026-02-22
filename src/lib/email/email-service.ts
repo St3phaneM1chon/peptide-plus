@@ -210,12 +210,16 @@ async function sendViaSMTP(options: SendEmailOptions): Promise<EmailResult> {
     return logEmail(options);
   }
 
-  const nodemailer = await import('nodemailer');
+  // Use eval('require') to prevent webpack from bundling nodemailer at build time.
+  // nodemailer is only needed at runtime when SMTP provider is selected.
+  // eslint-disable-next-line no-eval
+  const nodemailer = eval('require')('nodemailer') as typeof import('nodemailer');
 
   // Reuse transporter if config hasn't changed
   const configKey = `${host}:${port}:${user}`;
   if (!_smtpTransporter || _smtpConfig !== configKey) {
-    _smtpTransporter = nodemailer.default.createTransport({
+    const nm = (nodemailer as { default?: typeof nodemailer }).default || nodemailer;
+    _smtpTransporter = nm.createTransport({
       host,
       port,
       secure: port === 465,
