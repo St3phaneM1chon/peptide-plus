@@ -104,7 +104,7 @@ const nextConfig = {
   // Exclude jsdom-based packages from server webpack bundling.
   // jsdom@28 (used by isomorphic-dompurify) loads default-stylesheet.css
   // via fs.readFileSync which webpack cannot resolve during build.
-  serverExternalPackages: ['isomorphic-dompurify', 'jsdom'],
+  serverExternalPackages: ['isomorphic-dompurify', 'jsdom', 'nodemailer'],
 
   // Experimental optimizations
   experimental: {
