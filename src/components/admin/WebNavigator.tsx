@@ -140,7 +140,7 @@ export function WebNavigator({ url, title, subtitle }: WebNavigatorProps) {
             ref={iframeRef}
             src={url}
             className="w-full h-full border-0"
-            sandbox="allow-forms allow-popups allow-popups-to-escape-sandbox"
+            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
             referrerPolicy="no-referrer"
             onLoad={() => setLoading(false)}
             onError={() => { setLoading(false); setError(true); }}

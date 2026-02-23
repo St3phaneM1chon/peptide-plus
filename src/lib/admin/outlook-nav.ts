@@ -14,6 +14,7 @@ import {
   BookOpen, Import, Ruler, Scale, Calendar, FileCheck, Zap, Target,
   Trash2, AlertTriangle, StickyNote, FolderSearch, FileEdit, Globe,
 } from 'lucide-react';
+import { TeamsIcon, ZoomIcon, WebexIcon, GoogleMeetIcon } from '@/components/admin/icons/platform-icons';
 
 // ── Icon Rail (left vertical strip) ──────────────────────────
 
@@ -157,6 +158,16 @@ export const folderSections: Record<string, NavFolderSection> = {
     railId: 'media',
     title: 'admin.nav.mediaSection',
     groups: [
+      {
+        labelKey: 'admin.nav.mediaPlatforms',
+        items: [
+          { href: '/admin/media/launch-teams', labelKey: 'admin.nav.launchTeams', icon: TeamsIcon as unknown as LucideIcon },
+          { href: '/admin/media/launch-zoom', labelKey: 'admin.nav.launchZoom', icon: ZoomIcon as unknown as LucideIcon },
+          { href: '/admin/media/launch-webex', labelKey: 'admin.nav.launchWebex', icon: WebexIcon as unknown as LucideIcon },
+          { href: '/admin/media/launch-google-meet', labelKey: 'admin.nav.launchGoogleMeet', icon: GoogleMeetIcon as unknown as LucideIcon },
+        ],
+        defaultOpen: true,
+      },
       {
         labelKey: 'admin.nav.mediaAPIs',
         items: [

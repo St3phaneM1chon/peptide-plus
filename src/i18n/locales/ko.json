@@ -2966,6 +2966,11 @@
       "mediaAPIs": "Communication APIs",
       "mediaAds": "Ad Placement",
       "mediaManagement": "Media Management",
+      "mediaPlatforms": "Platforms",
+      "launchTeams": "Microsoft Teams",
+      "launchZoom": "Zoom",
+      "launchWebex": "Webex",
+      "launchGoogleMeet": "Google Meet",
       "mediaZoom": "Zoom API",
       "mediaWhatsApp": "WhatsApp API",
       "mediaTeams": "Teams API",
@@ -3221,7 +3226,19 @@
       "imagesTitle": "Image Management",
       "imagesDesc": "Upload and manage your images",
       "libraryTitle": "Media Library",
-      "libraryDesc": "Browse all your media files"
+      "libraryDesc": "Browse all your media files",
+      "openDesktopApp": "Open Desktop App",
+      "useWebVersion": "Web Version",
+      "desktopAppDialogTitle": "Open Application?",
+      "desktopAppDialogMessage": "Would you like to open the desktop application instead of the web version?",
+      "platformTeams": "Microsoft Teams",
+      "platformTeamsDesc": "Collaborate with your team via Microsoft Teams",
+      "platformZoom": "Zoom",
+      "platformZoomDesc": "Launch Zoom meetings and webinars",
+      "platformWebex": "Webex",
+      "platformWebexDesc": "Access Cisco Webex for video conferencing",
+      "platformGoogleMeet": "Google Meet",
+      "platformGoogleMeetDesc": "Start a video call with Google Meet"
     },
     "integrations": {
       "connected": "Connected successfully",
@@ -3241,7 +3258,11 @@
       "teamsWebhookHint": "Create an Incoming Webhook in your Teams channel and paste the URL here",
       "teamsOptionalGraphApi": "Optional - only needed for Graph API integration (advanced)",
       "webhookUrl": "Webhook URL",
-      "docs": "문서"
+      "docs": "문서",
+      "publicLinkLabel": "Public Contact Link",
+      "publicLinkHint": "URL displayed on the contact page for customers to reach you via this platform",
+      "publicLinkWhatsAppHint": "WhatsApp link format: https://wa.me/15145551234 (with country code, no spaces)",
+      "publicLinkTeamsHint": "Teams meeting or chat link that customers can use to contact you"
     },
     "emailComposer": {
       "send": "Send",
@@ -5358,7 +5379,11 @@
     "title": "문의하기",
     "trackOrderLink": "주문 추적",
     "weekdayHours": "월요일 - 금요일: 오전 9시 - 오후 5시 (EST)",
-    "weekendHours": "토요일 - 일요일: 휴무"
+    "weekendHours": "토요일 - 일요일: 휴무",
+    "meetWithUs": "저희와 소통하세요",
+    "joinZoom": "Zoom 참여",
+    "chatWhatsApp": "WhatsApp 채팅",
+    "joinTeams": "Teams 참여"
   },
   "cookies": {
     "accept": "모두 수락",

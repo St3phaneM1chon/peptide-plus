@@ -2966,6 +2966,11 @@
       "mediaAPIs": "Communication APIs",
       "mediaAds": "Ad Placement",
       "mediaManagement": "Media Management",
+      "mediaPlatforms": "Platforms",
+      "launchTeams": "Microsoft Teams",
+      "launchZoom": "Zoom",
+      "launchWebex": "Webex",
+      "launchGoogleMeet": "Google Meet",
       "mediaZoom": "Zoom API",
       "mediaWhatsApp": "WhatsApp API",
       "mediaTeams": "Teams API",
@@ -3221,7 +3226,19 @@
       "imagesTitle": "Image Management",
       "imagesDesc": "Upload and manage your images",
       "libraryTitle": "Media Library",
-      "libraryDesc": "Browse all your media files"
+      "libraryDesc": "Browse all your media files",
+      "openDesktopApp": "Open Desktop App",
+      "useWebVersion": "Web Version",
+      "desktopAppDialogTitle": "Open Application?",
+      "desktopAppDialogMessage": "Would you like to open the desktop application instead of the web version?",
+      "platformTeams": "Microsoft Teams",
+      "platformTeamsDesc": "Collaborate with your team via Microsoft Teams",
+      "platformZoom": "Zoom",
+      "platformZoomDesc": "Launch Zoom meetings and webinars",
+      "platformWebex": "Webex",
+      "platformWebexDesc": "Access Cisco Webex for video conferencing",
+      "platformGoogleMeet": "Google Meet",
+      "platformGoogleMeetDesc": "Start a video call with Google Meet"
     },
     "integrations": {
       "connected": "Connected successfully",
@@ -3241,7 +3258,11 @@
       "teamsWebhookHint": "Create an Incoming Webhook in your Teams channel and paste the URL here",
       "teamsOptionalGraphApi": "Optional - only needed for Graph API integration (advanced)",
       "webhookUrl": "Webhook URL",
-      "docs": "Documentation"
+      "docs": "Documentation",
+      "publicLinkLabel": "Public Contact Link",
+      "publicLinkHint": "URL displayed on the contact page for customers to reach you via this platform",
+      "publicLinkWhatsAppHint": "WhatsApp link format: https://wa.me/15145551234 (with country code, no spaces)",
+      "publicLinkTeamsHint": "Teams meeting or chat link that customers can use to contact you"
     },
     "emailComposer": {
       "send": "Send",
@@ -5358,7 +5379,11 @@
     "title": "हमसे संपर्क करें",
     "trackOrderLink": "मेरे आदेश को ट्रैक करें",
     "weekdayHours": "सोमवार - शुक्रवार: सुबह 9:00 बजे - शाम 5:00 बजे (EST)",
-    "weekendHours": "शनिवार - रविवार: बंद"
+    "weekendHours": "शनिवार - रविवार: बंद",
+    "meetWithUs": "हमसे संपर्क करें",
+    "joinZoom": "Zoom पर जुड़ें",
+    "chatWhatsApp": "WhatsApp पर चैट करें",
+    "joinTeams": "Teams पर जुड़ें"
   },
   "cookies": {
     "accept": "सभी स्वीकार करें",

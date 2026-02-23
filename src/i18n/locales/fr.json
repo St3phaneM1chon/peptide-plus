@@ -1758,7 +1758,11 @@
     "connectionError": "Erreur de connexion. Veuillez réessayer.",
     "placeholderName": "Jean Dupont",
     "placeholderEmail": "jean@exemple.com",
-    "placeholderOrganization": "Université McGill"
+    "placeholderOrganization": "Université McGill",
+    "meetWithUs": "Communiquez avec nous",
+    "joinZoom": "Rejoindre sur Zoom",
+    "chatWhatsApp": "Discuter sur WhatsApp",
+    "joinTeams": "Rejoindre sur Teams"
   },
   "trackOrder": {
     "title": "Suivre votre commande",
@@ -2614,6 +2618,11 @@
       "mediaAPIs": "APIs Communication",
       "mediaAds": "Placement Publicitaire",
       "mediaManagement": "Gestion Médias",
+      "mediaPlatforms": "Plateformes",
+      "launchTeams": "Microsoft Teams",
+      "launchZoom": "Zoom",
+      "launchWebex": "Webex",
+      "launchGoogleMeet": "Google Meet",
       "mediaZoom": "API Zoom",
       "mediaWhatsApp": "API WhatsApp",
       "mediaTeams": "API Teams",
@@ -2884,7 +2893,19 @@
       "imagesTitle": "Gestion des Images",
       "imagesDesc": "Uploadez et gérez vos images",
       "libraryTitle": "Bibliothèque Média",
-      "libraryDesc": "Parcourez tous vos fichiers média"
+      "libraryDesc": "Parcourez tous vos fichiers média",
+      "openDesktopApp": "Ouvrir l'app bureau",
+      "useWebVersion": "Version web",
+      "desktopAppDialogTitle": "Ouvrir l'application ?",
+      "desktopAppDialogMessage": "Voulez-vous ouvrir l'application bureau au lieu de la version web ?",
+      "platformTeams": "Microsoft Teams",
+      "platformTeamsDesc": "Collaborez avec votre équipe via Microsoft Teams",
+      "platformZoom": "Zoom",
+      "platformZoomDesc": "Lancez des réunions et webinaires Zoom",
+      "platformWebex": "Webex",
+      "platformWebexDesc": "Accédez à Cisco Webex pour vos visioconférences",
+      "platformGoogleMeet": "Google Meet",
+      "platformGoogleMeetDesc": "Démarrez un appel vidéo avec Google Meet"
     },
     "integrations": {
       "connected": "Connecté avec succès",
@@ -2904,7 +2925,11 @@
       "teamsWebhookHint": "Créez un Webhook entrant dans votre canal Teams et collez l'URL ici",
       "teamsOptionalGraphApi": "Optionnel - requis uniquement pour l'intégration API Graph (avancé)",
       "webhookUrl": "Webhook URL",
-      "docs": "Documentation"
+      "docs": "Documentation",
+      "publicLinkLabel": "Lien public de contact",
+      "publicLinkHint": "URL affichée sur la page contact pour que les clients vous joignent via cette plateforme",
+      "publicLinkWhatsAppHint": "Format du lien WhatsApp : https://wa.me/15145551234 (avec indicatif pays, sans espaces)",
+      "publicLinkTeamsHint": "Lien de réunion ou de chat Teams que les clients peuvent utiliser pour vous contacter"
     },
     "viewSite": "Voir le site",
     "notifications": "Notifications",

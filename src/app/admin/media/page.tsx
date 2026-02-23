@@ -4,9 +4,11 @@ import { useState, useEffect } from 'react';
 import { useI18n } from '@/i18n/client';
 import {
   Video, MessageCircle, Users, Search, Activity, Globe, Briefcase,
-  Image as ImageIcon, FolderOpen, CheckCircle2, XCircle, Loader2,
+  Image as ImageIcon, FolderOpen, CheckCircle2, XCircle, Loader2, Monitor, ExternalLink,
 } from 'lucide-react';
 import Link from 'next/link';
+import { TeamsIcon, ZoomIcon, WebexIcon, GoogleMeetIcon } from '@/components/admin/icons/platform-icons';
+import { platforms } from '@/lib/admin/platform-config';
 
 interface PlatformStatus {
   key: string;
@@ -24,6 +26,13 @@ interface MediaStats {
   videoFileCount: number;
   pdfCount: number;
 }
+
+const PLATFORM_LAUNCHERS = [
+  { id: 'teams', href: '/admin/media/launch-teams', icon: TeamsIcon, gradient: platforms.teams.color, nameKey: platforms.teams.nameKey, descKey: platforms.teams.descKey, hasDesktop: true },
+  { id: 'zoom', href: '/admin/media/launch-zoom', icon: ZoomIcon, gradient: platforms.zoom.color, nameKey: platforms.zoom.nameKey, descKey: platforms.zoom.descKey, hasDesktop: true },
+  { id: 'webex', href: '/admin/media/launch-webex', icon: WebexIcon, gradient: platforms.webex.color, nameKey: platforms.webex.nameKey, descKey: platforms.webex.descKey, hasDesktop: true },
+  { id: 'google-meet', href: '/admin/media/launch-google-meet', icon: GoogleMeetIcon, gradient: platforms['google-meet'].color, nameKey: platforms['google-meet'].nameKey, descKey: platforms['google-meet'].descKey, hasDesktop: false },
+];
 
 // F60 FIX: Move platformDefs outside component to avoid recreating on every render
 const PLATFORM_DEFS = [
@@ -109,6 +118,27 @@ export default function MediaDashboardPage() {
         <StatCard icon={<Video className="w-5 h-5" />} label={t('admin.media.videosTitle')} value={stats?.totalVideos || 0} color="text-red-600" />
         <StatCard icon={<ImageIcon className="w-5 h-5" />} label={t('admin.media.imagesTitle')} value={stats?.imageCount || 0} color="text-emerald-600" />
         <StatCard icon={<CheckCircle2 className="w-5 h-5" />} label={t('admin.integrations.connected')} value={`${enabledCount}/${configuredCount}`} color="text-green-600" />
+      </div>
+
+      {/* Communication Platforms - Launch directly */}
+      <div>
+        <h2 className="text-lg font-semibold text-slate-800 mb-3">{t('admin.nav.mediaPlatforms')}</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          {PLATFORM_LAUNCHERS.map((p) => (
+            <Link key={p.id} href={p.href} className="group">
+              <div className={`flex items-center gap-3 p-4 bg-gradient-to-r ${p.gradient} rounded-lg text-white hover:opacity-90 transition-opacity`}>
+                <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center flex-shrink-0">
+                  <p.icon className="w-5 h-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium truncate">{t(p.nameKey)}</p>
+                  <p className="text-xs text-white/70 truncate">{t(p.descKey)}</p>
+                </div>
+                {p.hasDesktop && <Monitor className="w-4 h-4 text-white/50 flex-shrink-0" />}
+              </div>
+            </Link>
+          ))}
+        </div>
       </div>
 
       {/* Platform integrations grid */}
