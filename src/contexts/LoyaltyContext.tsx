@@ -87,6 +87,39 @@ export function LoyaltyProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<LoyaltyState>(defaultState);
   const [isLoading, setIsLoading] = useState(true);
 
+  const generateReferralCode = useCallback(() => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    const randomBytes = crypto.getRandomValues(new Uint8Array(6));
+    const randomStr = Array.from(randomBytes).map(b => chars[b % chars.length]).join('');
+    if (session?.user?.name) {
+      return `${session.user.name.split(' ')[0].toUpperCase()}${randomStr.substring(0, 4)}`;
+    }
+    return `PP${randomStr}`;
+  }, [session?.user?.name]);
+
+  const loadLoyaltyData = useCallback(async () => {
+    try {
+      const res = await fetch('/api/loyalty');
+      if (res.ok) {
+        const data = await res.json();
+        const tier = [...LOYALTY_TIERS].reverse().find(t => data.lifetimePoints >= t.minPoints) || LOYALTY_TIERS[0];
+        setState({
+          points: data.points || 0,
+          lifetimePoints: data.lifetimePoints || 0,
+          tier,
+          transactions: data.transactions || [],
+          activeRewards: data.activeRewards || [],
+          referralCode: data.referralCode || generateReferralCode(),
+          referralCount: data.referralCount || 0,
+        });
+      }
+    } catch (error) {
+      console.error('Error loading loyalty data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [session?.user?.name, generateReferralCode]);
+
   // Load loyalty data
   useEffect(() => {
     if (session?.user?.email) {
@@ -119,44 +152,6 @@ export function LoyaltyProvider({ children }: { children: ReactNode }) {
       setState(prev => ({ ...prev, tier: newTier }));
     }
   }, [state.lifetimePoints, state.tier.id]);
-
-  const loadLoyaltyData = useCallback(async () => {
-    try {
-      const res = await fetch('/api/loyalty');
-      if (res.ok) {
-        const data = await res.json();
-        const tier = [...LOYALTY_TIERS].reverse().find(t => data.lifetimePoints >= t.minPoints) || LOYALTY_TIERS[0];
-        setState({
-          points: data.points || 0,
-          lifetimePoints: data.lifetimePoints || 0,
-          tier,
-          transactions: data.transactions || [],
-          activeRewards: data.activeRewards || [],
-          referralCode: data.referralCode || generateReferralCode(),
-          referralCount: data.referralCount || 0,
-        });
-      } else {
-        // API returned error, use default state
-        // Loyalty API returned non-OK status, use default state
-      }
-    } catch (error) {
-      console.error('Error loading loyalty data:', error);
-      // Continue with default state, don't crash
-    } finally {
-      setIsLoading(false);
-    }
-  }, [session?.user?.name]);
-
-  const generateReferralCode = () => {
-    // SECURITY: Use crypto.getRandomValues for non-guessable referral codes
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    const randomBytes = crypto.getRandomValues(new Uint8Array(6));
-    const randomStr = Array.from(randomBytes).map(b => chars[b % chars.length]).join('');
-    if (session?.user?.name) {
-      return `${session.user.name.split(' ')[0].toUpperCase()}${randomStr.substring(0, 4)}`;
-    }
-    return `PP${randomStr}`;
-  };
 
   const earnPoints = async (amount: number, description: string, orderId?: string) => {
     const pointsEarned = Math.floor(amount * state.tier.multiplier);
