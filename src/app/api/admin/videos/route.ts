@@ -11,6 +11,7 @@ import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { enqueue } from '@/lib/translation';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { logger } from '@/lib/logger';
 
 // GET /api/admin/videos - List all videos
 export const GET = withAdminGuard(async (request, { session }) => {
@@ -68,15 +69,17 @@ export const GET = withAdminGuard(async (request, { session }) => {
       prisma.video.count({ where }),
     ]);
 
-    // Parse tags for frontend
+    // FIX: F65 - Normalize tags parsing: try JSON array first, then CSV fallback, always filter empty entries
     const enrichedVideos = videos.map(v => {
       let parsedTags: string[] = [];
       if (v.tags) {
         try {
-          parsedTags = JSON.parse(v.tags);
+          const parsed = JSON.parse(v.tags);
+          parsedTags = Array.isArray(parsed) ? parsed.map(String) : [String(parsed)];
         } catch {
           parsedTags = v.tags.split(',').map(t => t.trim());
         }
+        parsedTags = parsedTags.filter(Boolean);
       }
 
       return {
@@ -96,7 +99,7 @@ export const GET = withAdminGuard(async (request, { session }) => {
       },
     });
   } catch (error) {
-    console.error('Admin videos GET error:', error);
+    logger.error('Admin videos GET error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -132,6 +135,14 @@ export const POST = withAdminGuard(async (request, { session }) => {
       );
     }
 
+    // FIX: F16 - Validate URL fields (must start with http:// or https:// or /)
+    if (videoUrl && !videoUrl.startsWith('http://') && !videoUrl.startsWith('https://') && !videoUrl.startsWith('/')) {
+      return NextResponse.json({ error: 'videoUrl must be a valid URL' }, { status: 400 });
+    }
+    if (thumbnailUrl && !thumbnailUrl.startsWith('http://') && !thumbnailUrl.startsWith('https://') && !thumbnailUrl.startsWith('/')) {
+      return NextResponse.json({ error: 'thumbnailUrl must be a valid URL' }, { status: 400 });
+    }
+
     // Generate slug from title
     const baseSlug = title
       .toLowerCase()
@@ -140,12 +151,12 @@ export const POST = withAdminGuard(async (request, { session }) => {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '');
 
-    // Ensure slug uniqueness
+    // FIX: F24 - Use single-query check + UUID suffix instead of while loop
     let slug = baseSlug;
-    let slugSuffix = 1;
-    while (await prisma.video.findUnique({ where: { slug } })) {
-      slug = `${baseSlug}-${slugSuffix}`;
-      slugSuffix++;
+    const existingSlug = await prisma.video.findUnique({ where: { slug } });
+    if (existingSlug) {
+      const { randomUUID } = await import('crypto');
+      slug = `${baseSlug}-${randomUUID().slice(0, 8)}`;
     }
 
     // Prepare tags as JSON string
@@ -189,8 +200,13 @@ export const POST = withAdminGuard(async (request, { session }) => {
       },
     });
 
-    // Auto-enqueue translation for all 21 locales
-    enqueue.video(video.id);
+    // F48 FIX: Catch and log enqueue errors instead of letting them fail silently
+    try {
+      await enqueue.video(video.id);
+    } catch (enqueueErr) {
+      logger.error('Failed to enqueue video translation', { error: enqueueErr instanceof Error ? enqueueErr.message : String(enqueueErr) });
+      // Non-blocking: video is created, translation will need manual trigger
+    }
 
     logAdminAction({
       adminUserId: session.user.id,
@@ -204,7 +220,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
 
     return NextResponse.json({ video }, { status: 201 });
   } catch (error) {
-    console.error('Admin videos POST error:', error);
+    logger.error('Admin videos POST error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

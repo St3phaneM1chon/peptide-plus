@@ -15,11 +15,11 @@ import { withJobLock } from '@/lib/cron-lock';
 import { escapeHtml } from '@/lib/email/templates/base-template';
 
 export async function GET(request: NextRequest) {
-  // Verify cron secret to prevent unauthorized access (fail-closed)
+  // FLAW-006 FIX: Only accept cron secret via Authorization header, not query string.
+  // Query string secrets appear in server logs, browser history, CDN logs, and Referer headers.
   const cronSecret = process.env.CRON_SECRET;
   const authHeader = request.headers.get('authorization');
-  const querySecret = request.nextUrl.searchParams.get('secret');
-  if (!cronSecret || (authHeader !== `Bearer ${cronSecret}` && querySecret !== cronSecret)) {
+  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -42,8 +42,13 @@ export async function GET(request: NextRequest) {
     let processed = 0;
     let failed = 0;
 
-    for (const execution of readyExecutions) {
-      try {
+    // FIX: FLAW-032 - Process executions in parallel batches of 10 instead of sequentially.
+    // With 50 executions and network latency per email, sequential processing can timeout on serverless.
+    const BATCH_SIZE = 10;
+    for (let batchStart = 0; batchStart < readyExecutions.length; batchStart += BATCH_SIZE) {
+      const batch = readyExecutions.slice(batchStart, batchStart + BATCH_SIZE);
+
+      const results = await Promise.allSettled(batch.map(async (execution) => {
         // Mark as running (prevents re-processing on concurrent cron calls)
         await prisma.emailFlowExecution.update({
           where: { id: execution.id },
@@ -60,8 +65,7 @@ export async function GET(request: NextRequest) {
             where: { id: execution.id },
             data: { status: 'FAILED' },
           });
-          failed++;
-          continue;
+          throw new Error('Flow inactive or not found');
         }
 
         let nodes: Array<{ id: string; type: string; data: Record<string, unknown> }>;
@@ -77,8 +81,7 @@ export async function GET(request: NextRequest) {
             where: { id: execution.id },
             data: { status: 'FAILED' },
           });
-          failed++;
-          continue;
+          throw parseErr;
         }
 
         // The currentNode is a delay node. Get outgoing edges to find the next nodes to process.
@@ -94,14 +97,20 @@ export async function GET(request: NextRequest) {
           where: { id: execution.id },
           data: { status: 'COMPLETED' },
         });
-        processed++;
-      } catch (error) {
-        console.error(`[CronEmailFlows] Error processing execution ${execution.id}:`, error);
-        await prisma.emailFlowExecution.update({
-          where: { id: execution.id },
-          data: { status: 'FAILED' },
-        }).catch(() => {});
-        failed++;
+      }));
+
+      for (let i = 0; i < results.length; i++) {
+        if (results[i].status === 'fulfilled') {
+          processed++;
+        } else {
+          failed++;
+          const execution = batch[i];
+          console.error(`[CronEmailFlows] Error processing execution ${execution.id}:`, (results[i] as PromiseRejectedResult).reason);
+          await prisma.emailFlowExecution.update({
+            where: { id: execution.id },
+            data: { status: 'FAILED' },
+          }).catch(() => {});
+        }
       }
     }
 
@@ -166,18 +175,19 @@ async function processNode(
           unsubscribeUrl,
         });
 
-        // Create EmailLog and increment flow 'sent' stat
-        if (result.success) {
-          await prisma.emailLog.create({
-            data: {
-              to: email,
-              subject,
-              status: 'sent',
-              templateId: `flow:${flowId}`,
-              messageId: result.messageId || undefined,
-            },
-          }).catch(() => {});
+        // FIX: FLAW-072 - Log EmailLog on both success and failure
+        await prisma.emailLog.create({
+          data: {
+            to: email,
+            subject,
+            status: result.success ? 'sent' : 'failed',
+            templateId: `flow:${flowId}`,
+            messageId: result.messageId || undefined,
+            error: result.success ? null : 'Send failed',
+          },
+        }).catch(() => {});
 
+        if (result.success) {
           // Atomically increment 'sent' stat
           try {
             await prisma.$executeRaw`

@@ -13,6 +13,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { roundCurrency } from '@/lib/financial';
+import { logger } from '@/lib/logger';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -204,7 +205,7 @@ export const GET = withAdminGuard(async (request) => {
       },
     });
   } catch (error) {
-    console.error('Budget comparison error:', error);
+    logger.error('Budget comparison error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la comparaison budget vs reel' },
       { status: 500 }

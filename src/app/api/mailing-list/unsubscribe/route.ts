@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { logger } from '@/lib/logger';
 
 function getIp(request: Request): string {
   return request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
@@ -11,14 +12,12 @@ function getIp(request: Request): string {
 }
 
 function logUnsubscribe(subscriberId: string, email: string, ip: string, method: string) {
-  console.log(JSON.stringify({
-    event: 'mailing_list_unsubscribed',
-    timestamp: new Date().toISOString(),
+  logger.info('mailing_list_unsubscribed', {
     subscriberId,
     email: email.replace(/^(.{2}).*(@.*)$/, '$1***$2'),
     ip,
     method,
-  }));
+  });
 }
 
 // GET - One-click unsubscribe (from email link)
@@ -67,7 +66,7 @@ export async function GET(request: Request) {
     logUnsubscribe(subscriber.id, subscriber.email, ip, 'one-click-link');
     return NextResponse.redirect(new URL('/?unsubscribe=success', request.url));
   } catch (error) {
-    console.error('Mailing list unsubscribe error:', error);
+    logger.error('Mailing list unsubscribe error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.redirect(new URL('/?unsubscribe=error', request.url));
   }
 }
@@ -128,7 +127,7 @@ export async function POST(request: NextRequest) {
     logUnsubscribe(subscriber.id, subscriber.email, ip, 'api-post');
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Mailing list unsubscribe error:', error);
+    logger.error('Mailing list unsubscribe error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

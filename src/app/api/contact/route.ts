@@ -1,5 +1,7 @@
 export const dynamic = 'force-dynamic';
 
+// TODO: F-100 - Contact messages are email-only; save to DB (ContactMessage model) as backup if email fails
+
 /**
  * API Contact - BioCycle Peptides
  * Reçoit et traite les messages du formulaire de contact
@@ -8,6 +10,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest } from 'next/server';
 import { sendEmail } from '@/lib/email/email-service';
 import { escapeHtml } from '@/lib/security';
+import { logger } from '@/lib/logger';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { stripHtml, stripControlChars } from '@/lib/sanitize';
 import { apiSuccess, apiError, validateContentType } from '@/lib/api-response';
@@ -74,7 +77,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!result.success) {
-      console.error('Contact email failed:', result.error);
+      logger.error('Contact email failed', { error: result.error instanceof Error ? result.error.message : String(result.error) });
       return apiError('Erreur lors de l\'envoi du message. Veuillez réessayer.', ErrorCode.INTERNAL_ERROR, { request });
     }
 
@@ -83,7 +86,7 @@ export async function POST(request: NextRequest) {
     }, { status: 201, request });
 
   } catch (error) {
-    console.error('Contact form error:', error);
+    logger.error('Contact form error', { error: error instanceof Error ? error.message : String(error) });
     return apiError('Une erreur est survenue lors de l\'envoi du message', ErrorCode.INTERNAL_ERROR, { request });
   }
 }

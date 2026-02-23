@@ -169,8 +169,7 @@ export default function InvoicesPage() {
     if (session?.user) {
       fetchInvoices(currentPage);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session, currentPage]);
+  }, [session, currentPage, fetchInvoices]);
 
   // Apply date filter
   const handleDateFilter = () => {

@@ -7,6 +7,7 @@ import RecentlyViewed from '@/components/shop/RecentlyViewed';
 import Breadcrumbs from '@/components/ui/Breadcrumbs';
 import { useI18n } from '@/i18n/client';
 import { useCurrency } from '@/contexts/CurrencyContext';
+import { NEW_PRODUCT_DAYS } from '@/lib/constants';
 
 interface ApiProduct {
   id: string;
@@ -66,6 +67,11 @@ export default function ShopPage() {
   const [products, setProducts] = useState<ApiProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [totalProducts, setTotalProducts] = useState(0);
+  const [currentPage, setCurrentPage] = useState(
+    Math.max(1, parseInt(searchParams.get('page') || '1', 10))
+  );
+  const PRODUCTS_PER_PAGE = 24;
 
   // Filter states - initialize from URL params
   const [selectedCategory, setSelectedCategory] = useState(
@@ -104,15 +110,35 @@ export default function ShopPage() {
     router.replace(`${pathname}${search ? `?${search}` : ''}`, { scroll: false });
   }, [searchParams, router, pathname]);
 
-  // Fetch products from API with locale for translations
+  // BUG-008 FIX: Server-side pagination instead of loading all products at once
   useEffect(() => {
     async function fetchProducts() {
       try {
-        const res = await fetch(`/api/products?locale=${locale}&limit=200`);
+        setLoading(true);
+        // Build server-side query with filters and pagination
+        const params = new URLSearchParams();
+        params.set('locale', locale);
+        params.set('page', String(currentPage));
+        params.set('limit', String(PRODUCTS_PER_PAGE));
+        if (selectedCategory !== 'all') params.set('category', selectedCategory);
+        if (showInStockOnly) params.set('inStock', 'true');
+        if (priceRange[0] > 0) params.set('minPrice', String(priceRange[0]));
+        if (priceRange[1] < 5000) params.set('maxPrice', String(priceRange[1]));
+        params.set('facets', 'true');
+
+        const res = await fetch(`/api/products?${params.toString()}`);
         if (!res.ok) throw new Error('Failed to fetch products');
         const data = await res.json();
         const list = Array.isArray(data) ? data : data.products || data.data?.products || data.data || [];
         setProducts(list.filter((p: ApiProduct) => p.isActive));
+        // Use pagination total from API if available
+        if (data.pagination?.total != null) {
+          setTotalProducts(data.pagination.total);
+        } else if (data.total != null) {
+          setTotalProducts(data.total);
+        } else {
+          setTotalProducts(list.length);
+        }
       } catch (err) {
         console.error('Error fetching products:', err);
         setError('Unable to load products');
@@ -121,7 +147,7 @@ export default function ShopPage() {
       }
     }
     fetchProducts();
-  }, [locale]);
+  }, [locale, currentPage, selectedCategory, showInStockOnly, priceRange]);
 
   // Build hierarchical categories from loaded products
   const categories = useMemo<CategoryCount[]>(() => {
@@ -229,7 +255,8 @@ export default function ShopPage() {
         category: p.category?.name || '',
         categorySlug: p.category?.slug || '',
         inStock: hasStock,
-        isNew: new Date(p.createdAt) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+        // BUG-019 FIX: Use constant instead of hardcoded 30 days
+        isNew: new Date(p.createdAt) > new Date(Date.now() - NEW_PRODUCT_DAYS * 24 * 60 * 60 * 1000),
         isBestseller: p.isFeatured,
         formats: activeFormats.map((f) => ({
           id: f.id,
@@ -429,7 +456,7 @@ export default function ShopPage() {
                 }}
                 className="text-sm text-orange-600 hover:underline"
               >
-                Reset filters
+                {t('shop.resetFilters') || 'Reset filters'}
               </button>
             </div>
           </aside>
@@ -439,7 +466,7 @@ export default function ShopPage() {
             {/* Sort & Count */}
             <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
               <p className="text-neutral-500">
-                {loading ? '...' : `${filteredProducts.length} ${filteredProducts.length === 1 ? 'product' : 'products'}`}
+                {loading ? '...' : `${filteredProducts.length} ${t('shop.productCount') || 'product'}${filteredProducts.length !== 1 ? 's' : ''}`}
               </p>
 
               <div className="flex items-center gap-2">
@@ -499,7 +526,7 @@ export default function ShopPage() {
                   onClick={() => window.location.reload()}
                   className="text-orange-600 hover:underline"
                 >
-                  Retry
+                  {t('shop.retry') || 'Retry'}
                 </button>
               </div>
             )}
@@ -516,16 +543,41 @@ export default function ShopPage() {
             {/* Empty State */}
             {!loading && !error && filteredProducts.length === 0 && (
               <div className="text-center py-16">
-                <p className="text-neutral-500 text-lg mb-4">No products found</p>
+                <p className="text-neutral-500 text-lg mb-4">{t('shop.noProducts') || 'No products found'}</p>
                 <button
                   onClick={() => {
                     setSelectedCategory('all');
                     setPriceRange([0, maxPrice]);
                     setShowInStockOnly(false);
+                    setCurrentPage(1);
+                    router.replace(pathname, { scroll: false });
                   }}
                   className="text-orange-600 hover:underline"
                 >
-                  Clear all filters
+                  {t('shop.clearFilters') || 'Clear all filters'}
+                </button>
+              </div>
+            )}
+
+            {/* BUG-008 FIX: Server-side pagination controls */}
+            {!loading && !error && totalProducts > PRODUCTS_PER_PAGE && (
+              <div className="flex justify-center items-center gap-2 mt-8">
+                <button
+                  onClick={() => { const p = Math.max(1, currentPage - 1); setCurrentPage(p); updateUrlParams({ page: String(p) }); }}
+                  disabled={currentPage <= 1}
+                  className="px-4 py-2 border border-neutral-200 rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neutral-50"
+                >
+                  {t('common.previous') || 'Previous'}
+                </button>
+                <span className="text-sm text-neutral-600">
+                  {currentPage} / {Math.ceil(totalProducts / PRODUCTS_PER_PAGE)}
+                </span>
+                <button
+                  onClick={() => { const p = currentPage + 1; setCurrentPage(p); updateUrlParams({ page: String(p) }); }}
+                  disabled={currentPage >= Math.ceil(totalProducts / PRODUCTS_PER_PAGE)}
+                  className="px-4 py-2 border border-neutral-200 rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neutral-50"
+                >
+                  {t('common.next') || 'Next'}
                 </button>
               </div>
             )}

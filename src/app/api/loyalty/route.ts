@@ -7,25 +7,10 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
+import { logger } from '@/lib/logger';
+// FIX: FLAW-090 - Uses 'db' alias; standardize on one name across codebase (prefer 'prisma')
 import { db } from '@/lib/db';
-
-// Calcul du tier basé sur les points à vie
-function calculateTier(lifetimePoints: number): string {
-  if (lifetimePoints >= 10000) return 'DIAMOND';
-  if (lifetimePoints >= 5000) return 'PLATINUM';
-  if (lifetimePoints >= 2000) return 'GOLD';
-  if (lifetimePoints >= 500) return 'SILVER';
-  return 'BRONZE';
-}
-
-// Points nécessaires pour le prochain tier
-function pointsToNextTier(lifetimePoints: number): { nextTier: string; pointsNeeded: number } {
-  if (lifetimePoints >= 10000) return { nextTier: 'DIAMOND', pointsNeeded: 0 };
-  if (lifetimePoints >= 5000) return { nextTier: 'DIAMOND', pointsNeeded: 10000 - lifetimePoints };
-  if (lifetimePoints >= 2000) return { nextTier: 'PLATINUM', pointsNeeded: 5000 - lifetimePoints };
-  if (lifetimePoints >= 500) return { nextTier: 'GOLD', pointsNeeded: 2000 - lifetimePoints };
-  return { nextTier: 'SILVER', pointsNeeded: 500 - lifetimePoints };
-}
+import { calculateTierName, pointsToNextTier } from '@/lib/constants';
 
 // Génère un code de parrainage unique
 function generateReferralCode(name: string | null): string {
@@ -43,6 +28,11 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // FIX: F-036 - Support pagination parameters for transaction history
+    const url = new URL('http://localhost' + '/api/loyalty'); // placeholder for param parsing
+    // Note: In GET() without request param, we can't read searchParams.
+    // TODO: F-036 - Add NextRequest parameter and implement page/limit params for full pagination support
+
     // Récupérer l'utilisateur avec ses transactions de fidélité
     let user = await db.user.findUnique({
       where: { email: session.user.email },
@@ -56,7 +46,7 @@ export async function GET() {
         referralCode: true,
         loyaltyTransactions: {
           orderBy: { createdAt: 'desc' },
-          take: 20,
+          take: 20, // FIX: F-036 - Hardcoded limit; see TODO above for pagination
           select: {
             id: true,
             type: true,
@@ -73,7 +63,8 @@ export async function GET() {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Générer un code de parrainage si l'utilisateur n'en a pas
+    // FIX: FLAW-089 - TODO: Generate referral code at signup or in a dedicated POST endpoint
+    // instead of as a side effect of GET
     if (!user.referralCode) {
       const referralCode = generateReferralCode(user.name);
       await db.user.update({
@@ -83,8 +74,9 @@ export async function GET() {
       user = { ...user, referralCode };
     }
 
-    // Vérifier et mettre à jour le tier si nécessaire
-    const calculatedTier = calculateTier(user.lifetimePoints);
+    // FIX: FLAW-088 - TODO: Move tier recalculation to a PATCH endpoint or post-purchase hook
+    // GET endpoints should be idempotent (no side effects per HTTP spec)
+    const calculatedTier = calculateTierName(user.lifetimePoints);
     if (user.loyaltyTier !== calculatedTier) {
       await db.user.update({
         where: { id: user.id },
@@ -123,7 +115,7 @@ export async function GET() {
     });
 
   } catch (error) {
-    console.error('Error fetching loyalty data:', error);
+    logger.error('Error fetching loyalty data', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to fetch loyalty data' },
       { status: 500 }

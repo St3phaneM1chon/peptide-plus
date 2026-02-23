@@ -9,6 +9,7 @@ import {
   generateBalanceSheetHTML,
   generateJournalEntryHTML,
 } from '@/lib/accounting';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/accounting/reports/pdf
@@ -213,7 +214,7 @@ export const GET = withAdminGuard(async (request) => {
       },
     });
   } catch (error) {
-    console.error('Generate PDF error:', error);
+    logger.error('Generate PDF error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la génération du rapport' },
       { status: 500 }
@@ -267,7 +268,7 @@ export const POST = withAdminGuard(async (request) => {
       },
     });
   } catch (error) {
-    console.error('Generate custom PDF error:', error);
+    logger.error('Generate custom PDF error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la génération du rapport personnalisé' },
       { status: 500 }

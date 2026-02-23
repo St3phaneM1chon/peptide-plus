@@ -10,11 +10,8 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
-
-function safeParseJson<T>(str: string | null | undefined, fallback: T): T {
-  if (!str) return fallback;
-  try { return JSON.parse(str); } catch { return fallback; }
-}
+import { safeParseJson } from '@/lib/email/utils';
+import { logger } from '@/lib/logger';
 
 export const GET = withAdminGuard(async (request, { session: _session }) => {
   try {
@@ -41,7 +38,7 @@ export const GET = withAdminGuard(async (request, { session: _session }) => {
 
     return NextResponse.json({ flows: flowsWithStats });
   } catch (error) {
-    console.error('[Flows] Error:', error);
+    logger.error('[Flows] Error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 });
@@ -84,7 +81,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       },
     });
   } catch (error) {
-    console.error('[Flows] Create error:', error);
+    logger.error('[Flows] Create error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 });

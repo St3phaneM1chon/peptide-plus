@@ -248,8 +248,7 @@ export default function CheckoutPage() {
           // Keep existing discount on network error
         });
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [subtotal]);
+  }, [subtotal, promoApplied, removePromoCode]);
 
   // Auto-fill from session when user is logged in
   useEffect(() => {
@@ -1487,8 +1486,9 @@ export default function CheckoutPage() {
                       <span className="text-sm text-gray-700 leading-relaxed">
                         {(() => {
                           const raw = t('checkout.researchConsentLabel');
-                          const termsLink = `<a href="/mentions-legales/conditions" target="_blank" class="text-orange-600 underline hover:text-orange-700 font-medium">${t('checkout.researchConsentTerms')}</a>`;
-                          const privacyLink = `<a href="/mentions-legales/confidentialite" target="_blank" class="text-orange-600 underline hover:text-orange-700 font-medium">${t('checkout.researchConsentPrivacy')}</a>`;
+                          // FIX: Add rel="noopener noreferrer" to target="_blank" links
+                          const termsLink = `<a href="/mentions-legales/conditions" target="_blank" rel="noopener noreferrer" class="text-orange-600 underline hover:text-orange-700 font-medium">${t('checkout.researchConsentTerms')}</a>`;
+                          const privacyLink = `<a href="/mentions-legales/confidentialite" target="_blank" rel="noopener noreferrer" class="text-orange-600 underline hover:text-orange-700 font-medium">${t('checkout.researchConsentPrivacy')}</a>`;
                           const html = raw.replace('{termsLink}', termsLink).replace('{privacyLink}', privacyLink);
                           return <span dangerouslySetInnerHTML={{ __html: html }} />;
                         })()}

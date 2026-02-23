@@ -2,10 +2,13 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useI18n } from '@/i18n/client';
+// FIX: F32 - TODO: Implement edit modal and delete button using Edit2/Trash2 icons
+//   connected to PATCH/DELETE /api/admin/videos/[id]
 import {
   Video, Plus, Search, Eye, EyeOff, Star, Trash2, Edit2,
   Loader2, ChevronLeft, ChevronRight, ExternalLink,
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface VideoItem {
   id: string;
@@ -37,11 +40,14 @@ export default function MediaVideosPage() {
   const [videos, setVideos] = useState<VideoItem[]>([]);
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [loading, setLoading] = useState(true);
+  const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
   const [filterPublished, setFilterPublished] = useState<string>('');
   const [page, setPage] = useState(1);
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
+  // FIX: F51 - Track form-level error message for display within the form
+  const [formError, setFormError] = useState<string | null>(null);
   const [form, setForm] = useState({
     title: '', description: '', videoUrl: '', thumbnailUrl: '',
     duration: '', category: '', tags: '', instructor: '',
@@ -67,23 +73,58 @@ export default function MediaVideosPage() {
 
   useEffect(() => { loadVideos(); }, [loadVideos]);
 
+  // F73 FIX: Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => { setSearch(searchInput); setPage(1); }, 300);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
+    setFormError(null); // FIX: F51 - Clear previous errors
     try {
       const tags = form.tags ? form.tags.split(',').map(t => t.trim()).filter(Boolean) : [];
+      // F33 FIX: Validate video URL format before submission
+      if (form.videoUrl && !/^https?:\/\/.+/i.test(form.videoUrl)) {
+        const msg = t('admin.media.invalidVideoUrl') || 'Please enter a valid URL starting with http:// or https://';
+        toast.error(msg);
+        setFormError(msg); // FIX: F51 - Show error in form
+        setSaving(false);
+        return;
+      }
+      if (form.thumbnailUrl && !/^https?:\/\/.+/i.test(form.thumbnailUrl)) {
+        const msg = t('admin.media.invalidThumbnailUrl') || 'Please enter a valid thumbnail URL';
+        toast.error(msg);
+        setFormError(msg); // FIX: F51 - Show error in form
+        setSaving(false);
+        return;
+      }
+
       const res = await fetch('/api/admin/videos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...form, tags }),
       });
+      // F31 FIX: Show error/success feedback on video creation
       if (res.ok) {
         setShowForm(false);
+        setFormError(null);
         setForm({ title: '', description: '', videoUrl: '', thumbnailUrl: '', duration: '', category: '', tags: '', instructor: '', isFeatured: false, isPublished: false });
         loadVideos();
+        toast.success(t('admin.media.videoCreated') || 'Video created successfully');
+      } else {
+        const data = await res.json().catch(() => ({}));
+        const errorMsg = data.error || t('admin.media.videoCreateFailed') || 'Failed to create video';
+        toast.error(errorMsg);
+        // FIX: F51 - Show error inside form so user sees it without toast
+        setFormError(errorMsg);
       }
     } catch (err) {
       console.error('Failed to create video:', err);
+      const errorMsg = t('admin.media.videoCreateFailed') || 'Failed to create video';
+      toast.error(errorMsg);
+      setFormError(errorMsg); // FIX: F51
     } finally {
       setSaving(false);
     }
@@ -105,19 +146,24 @@ export default function MediaVideosPage() {
       {/* Create form */}
       {showForm && (
         <form onSubmit={handleCreate} className="bg-white rounded-lg border border-slate-200 p-4 space-y-3">
+          {/* FIX: F51 - Display form-level error message */}
+          {formError && (
+            <div className="p-2 bg-red-50 border border-red-200 rounded text-sm text-red-700">{formError}</div>
+          )}
+          {/* FIX: F39 - Use i18n for all form placeholders and labels */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <input className="border border-slate-300 rounded px-3 py-2 text-sm" placeholder="Title *" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} required />
-            <input className="border border-slate-300 rounded px-3 py-2 text-sm" placeholder="Video URL" value={form.videoUrl} onChange={e => setForm({ ...form, videoUrl: e.target.value })} />
-            <input className="border border-slate-300 rounded px-3 py-2 text-sm" placeholder="Thumbnail URL" value={form.thumbnailUrl} onChange={e => setForm({ ...form, thumbnailUrl: e.target.value })} />
-            <input className="border border-slate-300 rounded px-3 py-2 text-sm" placeholder="Duration (e.g. 12:30)" value={form.duration} onChange={e => setForm({ ...form, duration: e.target.value })} />
-            <input className="border border-slate-300 rounded px-3 py-2 text-sm" placeholder="Category" value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} />
-            <input className="border border-slate-300 rounded px-3 py-2 text-sm" placeholder="Instructor" value={form.instructor} onChange={e => setForm({ ...form, instructor: e.target.value })} />
-            <input className="border border-slate-300 rounded px-3 py-2 text-sm" placeholder="Tags (comma-separated)" value={form.tags} onChange={e => setForm({ ...form, tags: e.target.value })} />
+            <input className="border border-slate-300 rounded px-3 py-2 text-sm" placeholder={t('admin.media.videoTitlePlaceholder') || 'Title *'} value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} required />
+            <input className="border border-slate-300 rounded px-3 py-2 text-sm" placeholder={t('admin.media.videoUrlPlaceholder') || 'Video URL'} value={form.videoUrl} onChange={e => setForm({ ...form, videoUrl: e.target.value })} />
+            <input className="border border-slate-300 rounded px-3 py-2 text-sm" placeholder={t('admin.media.thumbnailUrlPlaceholder') || 'Thumbnail URL'} value={form.thumbnailUrl} onChange={e => setForm({ ...form, thumbnailUrl: e.target.value })} />
+            <input className="border border-slate-300 rounded px-3 py-2 text-sm" placeholder={t('admin.media.durationPlaceholder') || 'Duration (e.g. 12:30)'} value={form.duration} onChange={e => setForm({ ...form, duration: e.target.value })} />
+            <input className="border border-slate-300 rounded px-3 py-2 text-sm" placeholder={t('admin.media.categoryPlaceholder') || 'Category'} value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} />
+            <input className="border border-slate-300 rounded px-3 py-2 text-sm" placeholder={t('admin.media.instructorPlaceholder') || 'Instructor'} value={form.instructor} onChange={e => setForm({ ...form, instructor: e.target.value })} />
+            <input className="border border-slate-300 rounded px-3 py-2 text-sm" placeholder={t('admin.media.tagsPlaceholder') || 'Tags (comma-separated)'} value={form.tags} onChange={e => setForm({ ...form, tags: e.target.value })} />
           </div>
-          <textarea className="w-full border border-slate-300 rounded px-3 py-2 text-sm" placeholder="Description" rows={2} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
+          <textarea className="w-full border border-slate-300 rounded px-3 py-2 text-sm" placeholder={t('admin.media.descriptionPlaceholder') || 'Description'} rows={2} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
           <div className="flex items-center gap-4">
-            <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.isPublished} onChange={e => setForm({ ...form, isPublished: e.target.checked })} /> Published</label>
-            <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.isFeatured} onChange={e => setForm({ ...form, isFeatured: e.target.checked })} /> Featured</label>
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.isPublished} onChange={e => setForm({ ...form, isPublished: e.target.checked })} /> {t('admin.media.published') || 'Published'}</label>
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.isFeatured} onChange={e => setForm({ ...form, isFeatured: e.target.checked })} /> {t('admin.media.featured') || 'Featured'}</label>
             <button type="submit" disabled={saving} className="ml-auto px-4 py-2 bg-sky-600 text-white rounded text-sm hover:bg-sky-700 disabled:opacity-50">
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : t('common.save')}
             </button>
@@ -132,18 +178,19 @@ export default function MediaVideosPage() {
           <input
             className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-sm"
             placeholder={t('common.search')}
-            value={search}
-            onChange={e => { setSearch(e.target.value); setPage(1); }}
+            value={searchInput}
+            onChange={e => setSearchInput(e.target.value)}
           />
         </div>
+        {/* FIX: F41 - Use i18n for filter option labels */}
         <select
           className="border border-slate-300 rounded-lg px-3 py-2 text-sm"
           value={filterPublished}
           onChange={e => { setFilterPublished(e.target.value); setPage(1); }}
         >
-          <option value="">All</option>
-          <option value="true">Published</option>
-          <option value="false">Draft</option>
+          <option value="">{t('common.all') || 'All'}</option>
+          <option value="true">{t('admin.media.published') || 'Published'}</option>
+          <option value="false">{t('admin.media.draft') || 'Draft'}</option>
         </select>
       </div>
 
@@ -166,8 +213,9 @@ export default function MediaVideosPage() {
                 <div className="flex items-center gap-3 text-xs text-slate-500">
                   {v.duration && <span>{v.duration}</span>}
                   {v.category && <span className="bg-slate-100 px-1.5 py-0.5 rounded">{v.category}</span>}
-                  <span>{v.views} views</span>
-                  {v.instructor && <span>by {v.instructor}</span>}
+                  {/* FIX: F40 - Use i18n for "views" and "by" labels */}
+                  <span>{v.views} {t('admin.media.views') || 'views'}</span>
+                  {v.instructor && <span>{t('admin.media.by') || 'by'} {v.instructor}</span>}
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -191,7 +239,8 @@ export default function MediaVideosPage() {
             <ChevronLeft className="w-5 h-5" />
           </button>
           <span className="text-sm text-slate-600">{page} / {pagination.totalPages}</span>
-          <button disabled={!pagination.hasMore} onClick={() => setPage(p => p + 1)} className="p-2 rounded hover:bg-slate-100 disabled:opacity-30">
+          {/* FIX: F93 - Use page >= totalPages for consistency with other pagination components */}
+          <button disabled={page >= pagination.totalPages} onClick={() => setPage(p => p + 1)} className="p-2 rounded hover:bg-slate-100 disabled:opacity-30">
             <ChevronRight className="w-5 h-5" />
           </button>
         </div>

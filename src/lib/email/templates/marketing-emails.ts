@@ -1,9 +1,34 @@
 /**
  * Templates d'emails marketing - BioCycle Peptides
  * Anniversaire, bienvenue, réactivation, etc.
+ *
+ * TODO: FLAW-083 - All templates use locale?: 'fr' | 'en' with binary isFr logic.
+ * The app supports 22 locales but marketing emails only work in French and English.
+ * Implement a translation system for email content supporting at least es, de, ar, zh.
  */
 
 import { baseTemplate, emailComponents, escapeHtml } from './base-template';
+
+const SHOP_URL = process.env.NEXT_PUBLIC_SHOP_URL || 'https://biocyclepeptides.com';
+
+// FLAW-096 FIX: Sanitize customer names for email subjects (strip control chars, limit length)
+function safeSubjectName(name: string): string {
+  return name.replace(/[\x00-\x1F\x7F<>]/g, '').substring(0, 60);
+}
+
+/**
+ * #28 Security: Validate URLs before embedding in email templates.
+ * Only allows http: and https: protocols to prevent javascript:, data:,
+ * or other dangerous URI schemes from being injected via user-supplied data.
+ */
+function isSafeUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
 
 // ============================================
 // 1. EMAIL D'ANNIVERSAIRE AVEC CADEAU
@@ -29,13 +54,15 @@ export function birthdayEmail(data: BirthdayEmailData): { subject: string; html:
     : `$${data.discountValue}`;
 
   const subject = isFr
-    ? `🎂 Joyeux anniversaire ${data.customerName}! Un cadeau vous attend`
-    : `🎂 Happy birthday ${data.customerName}! A gift awaits you`;
+    ? `🎂 Joyeux anniversaire ${safeSubjectName(data.customerName)}! Un cadeau vous attend`
+    : `🎂 Happy birthday ${safeSubjectName(data.customerName)}! A gift awaits you`;
 
+  // FLAW-100 FIX: Use explicit timezone for consistent dates across server environments
   const expiryDate = data.expiresAt.toLocaleDateString(isFr ? 'fr-CA' : 'en-CA', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
+    timeZone: 'America/Toronto',
   });
 
   const content = `
@@ -83,7 +110,7 @@ export function birthdayEmail(data: BirthdayEmailData): { subject: string; html:
 
     ${emailComponents.button(
       isFr ? '🛒 Utiliser mon cadeau' : '🛒 Use my gift',
-      `https://biocyclepeptides.com/shop?promo=${data.discountCode}`
+      `${SHOP_URL}/shop?promo=${data.discountCode}`
     )}
 
     <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 32px 0;">
@@ -131,8 +158,8 @@ export function welcomeEmail(data: WelcomeEmailData): { subject: string; html: s
   const safeName = escapeHtml(data.customerName);
 
   const subject = isFr
-    ? `🎉 Bienvenue chez BioCycle Peptides, ${data.customerName}!`
-    : `🎉 Welcome to BioCycle Peptides, ${data.customerName}!`;
+    ? `🎉 Bienvenue chez BioCycle Peptides, ${safeSubjectName(data.customerName)}!`
+    : `🎉 Welcome to BioCycle Peptides, ${safeSubjectName(data.customerName)}!`;
 
   const content = `
     <div style="text-align: center; margin-bottom: 24px;">
@@ -230,12 +257,46 @@ export function welcomeEmail(data: WelcomeEmailData): { subject: string; html: s
 
     ${emailComponents.button(
       isFr ? 'Explorer nos produits' : 'Explore our products',
-      'https://biocyclepeptides.com/shop'
+      `${SHOP_URL}/shop`
     )}
+
+    ${emailComponents.divider()}
+
+    <h2 style="font-size: 18px; margin-top: 24px;">
+      ${isFr ? '📬 Ce que vous recevrez' : '📬 What to expect'}
+    </h2>
+    <ul style="color: #4b5563; padding-left: 20px; line-height: 1.8;">
+      <li>${isFr ? 'Newsletter mensuelle avec les nouveaux produits et promotions' : 'Monthly newsletter with new products and promotions'}</li>
+      <li>${isFr ? 'Alertes de prix sur vos produits suivis' : 'Price alerts on your watched products'}</li>
+      <li>${isFr ? 'Articles de recherche et guides scientifiques' : 'Research articles and scientific guides'}</li>
+    </ul>
+
+    <h2 style="font-size: 18px; margin-top: 24px;">
+      ${isFr ? '🔬 Categories populaires' : '🔬 Popular categories'}
+    </h2>
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+      <tr>
+        <td style="padding: 8px 4px; text-align: center;">
+          <a href="${SHOP_URL}/shop?category=peptides" style="display: inline-block; background-color: #f3f4f6; border-radius: 8px; padding: 12px 16px; text-decoration: none; color: #1f2937; font-weight: 600; font-size: 14px;">
+            ${isFr ? 'Peptides' : 'Peptides'}
+          </a>
+        </td>
+        <td style="padding: 8px 4px; text-align: center;">
+          <a href="${SHOP_URL}/shop?category=lab-supplies" style="display: inline-block; background-color: #f3f4f6; border-radius: 8px; padding: 12px 16px; text-decoration: none; color: #1f2937; font-weight: 600; font-size: 14px;">
+            ${isFr ? 'Materiel de labo' : 'Lab supplies'}
+          </a>
+        </td>
+        <td style="padding: 8px 4px; text-align: center;">
+          <a href="${SHOP_URL}/shop?category=bundles" style="display: inline-block; background-color: #f3f4f6; border-radius: 8px; padding: 12px 16px; text-decoration: none; color: #1f2937; font-weight: 600; font-size: 14px;">
+            ${isFr ? 'Ensembles' : 'Bundles'}
+          </a>
+        </td>
+      </tr>
+    </table>
 
     <div style="background-color: #f9fafb; border-radius: 12px; padding: 24px; margin: 32px 0; text-align: center;">
       <p style="margin: 0 0 12px 0; font-size: 14px; color: #6b7280;">
-        ${isFr ? '👥 Parrainez vos collègues et gagnez 500 points!' : '👥 Refer colleagues and earn 500 points!'}
+        ${isFr ? '👥 Parrainez vos collegues et gagnez 500 points!' : '👥 Refer colleagues and earn 500 points!'}
       </p>
       <p style="margin: 0 0 8px 0; font-size: 12px; color: #9ca3af;">
         ${isFr ? 'Votre code de parrainage' : 'Your referral code'}
@@ -245,10 +306,17 @@ export function welcomeEmail(data: WelcomeEmailData): { subject: string; html: s
       </p>
     </div>
 
+    ${emailComponents.divider()}
+
+    <h2 style="font-size: 16px; text-align: center; margin-top: 24px;">
+      ${isFr ? '💬 Besoin d\'aide?' : '💬 Need help?'}
+    </h2>
     <p style="font-size: 14px; color: #6b7280; text-align: center;">
-      ${isFr 
-        ? 'Des questions? Notre équipe est là pour vous aider: support@biocyclepeptides.com'
-        : 'Questions? Our team is here to help: support@biocyclepeptides.com'}
+      ${isFr
+        ? 'Notre equipe est disponible du lundi au vendredi, 9h-17h EST.'
+        : 'Our team is available Monday to Friday, 9am-5pm EST.'}
+      <br>
+      <a href="mailto:support@biocyclepeptides.com" style="color: #CC5500;">support@biocyclepeptides.com</a>
     </p>
   `;
 
@@ -290,17 +358,18 @@ export function abandonedCartEmail(data: AbandonedCartEmailData): { subject: str
   const safeName = escapeHtml(data.customerName);
 
   const subject = isFr
-    ? `🛒 Vous avez oublié quelque chose, ${data.customerName}?`
-    : `🛒 Did you forget something, ${data.customerName}?`;
+    ? `🛒 Vous avez oublié quelque chose, ${safeSubjectName(data.customerName)}?`
+    : `🛒 Did you forget something, ${safeSubjectName(data.customerName)}?`;
 
+  // #26/#28 Security fix: escape item names and validate image URLs
   const itemsHtml = data.items.slice(0, 3).map(item => `
     <tr>
       <td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
           <tr>
-            ${item.imageUrl ? `<td width="60" style="padding-right: 12px;"><img src="${item.imageUrl}" alt="${item.name}" width="60" height="60" style="border-radius: 8px;"></td>` : ''}
+            ${item.imageUrl && isSafeUrl(item.imageUrl) ? `<td width="60" style="padding-right: 12px;"><img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name)}" width="60" height="60" style="border-radius: 8px;"></td>` : ''}
             <td>
-              <p style="margin: 0; font-weight: 600; color: #1f2937;">${item.name}</p>
+              <p style="margin: 0; font-weight: 600; color: #1f2937;">${escapeHtml(item.name)}</p>
               <p style="margin: 4px 0 0 0; font-size: 14px; color: #6b7280;">Qty: ${item.quantity}</p>
             </td>
             <td align="right" style="font-weight: 600; color: #CC5500;">$${item.price.toFixed(2)}</td>
@@ -352,7 +421,7 @@ export function abandonedCartEmail(data: AbandonedCartEmailData): { subject: str
 
     ${emailComponents.button(
       isFr ? 'Finaliser ma commande' : 'Complete my order',
-      'https://biocyclepeptides.com/checkout'
+      `${SHOP_URL}/checkout`
     )}
 
     <p style="font-size: 14px; color: #6b7280; text-align: center; margin-top: 24px;">
@@ -377,6 +446,8 @@ export function abandonedCartEmail(data: AbandonedCartEmailData): { subject: str
 
 // ============================================
 // 4. EMAIL RÉAPPROVISIONNEMENT (BACK IN STOCK)
+// FIX: FLAW-097 - TODO: Consolidate with backInStockEmail in src/lib/email-templates.ts
+// Two different implementations exist with different parameter signatures.
 // ============================================
 export interface BackInStockEmailData {
   customerName: string;
@@ -409,17 +480,17 @@ export function backInStockEmail(data: BackInStockEmailData): { subject: string;
     </p>
 
     <div style="background-color: #f9fafb; border-radius: 12px; padding: 24px; margin: 24px 0; text-align: center;">
-      ${data.productImageUrl ? `
-      <img src="${data.productImageUrl}" alt="${data.productName}" width="150" height="150" style="border-radius: 8px; margin-bottom: 16px;">
+      ${data.productImageUrl && isSafeUrl(data.productImageUrl) ? `
+      <img src="${escapeHtml(data.productImageUrl)}" alt="${escapeHtml(data.productName)}" width="150" height="150" style="border-radius: 8px; margin-bottom: 16px;">
       ` : ''}
-      <h2 style="margin: 0 0 8px 0; font-size: 20px; color: #1f2937;">${data.productName}</h2>
+      <h2 style="margin: 0 0 8px 0; font-size: 20px; color: #1f2937;">${escapeHtml(data.productName)}</h2>
       <p style="margin: 0; font-size: 24px; font-weight: bold; color: #CC5500;">$${data.productPrice.toFixed(2)}</p>
     </div>
 
     ${emailComponents.warningBox(`
       <p style="margin: 0; color: #92400e; text-align: center;">
         <strong>⚡ ${isFr ? 'Stock limité!' : 'Limited stock!'}</strong><br>
-        ${isFr 
+        ${isFr
           ? 'Commandez rapidement avant rupture de stock.'
           : 'Order quickly before it sells out again.'}
       </p>
@@ -427,7 +498,7 @@ export function backInStockEmail(data: BackInStockEmailData): { subject: string;
 
     ${emailComponents.button(
       isFr ? 'Commander maintenant' : 'Order now',
-      data.productUrl
+      isSafeUrl(data.productUrl) ? data.productUrl : '#'
     )}
   `;
 
@@ -462,10 +533,12 @@ export function pointsExpiringEmail(data: PointsExpiringEmailData): { subject: s
   const isFr = data.locale !== 'en';
   const safeName = escapeHtml(data.customerName);
 
+  // FLAW-100 FIX: Use explicit timezone for consistent dates across server environments
   const expiryDateStr = data.expiryDate.toLocaleDateString(isFr ? 'fr-CA' : 'en-CA', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
+    timeZone: 'America/Toronto',
   });
 
   const subject = isFr
@@ -510,7 +583,7 @@ export function pointsExpiringEmail(data: PointsExpiringEmailData): { subject: s
 
     ${emailComponents.button(
       isFr ? 'Utiliser mes points' : 'Use my points',
-      'https://biocyclepeptides.com/rewards'
+      `${SHOP_URL}/rewards`
     )}
   `;
 
@@ -554,7 +627,7 @@ export function priceDropEmail(data: PriceDropEmailData): { subject: string; htm
     ? `💰 ${data.productName} - Prix réduit de ${data.priceDropPercent.toFixed(0)}%!`
     : `💰 ${data.productName} - Price dropped ${data.priceDropPercent.toFixed(0)}%!`;
 
-  const productUrl = `https://biocyclepeptides.com/product/${data.productSlug}`;
+  const productUrl = `${SHOP_URL}/product/${data.productSlug}`;
 
   const content = `
     <h1 style="color: #059669; margin-bottom: 8px; text-align: center;">
@@ -567,10 +640,10 @@ export function priceDropEmail(data: PriceDropEmailData): { subject: string; htm
     </p>
 
     <div style="background-color: #f9fafb; border-radius: 12px; padding: 24px; margin: 24px 0; text-align: center;">
-      ${data.productImageUrl ? `
-      <img src="${data.productImageUrl}" alt="${data.productName}" width="150" height="150" style="border-radius: 8px; margin-bottom: 16px;">
+      ${data.productImageUrl && isSafeUrl(data.productImageUrl) ? `
+      <img src="${escapeHtml(data.productImageUrl)}" alt="${escapeHtml(data.productName)}" width="150" height="150" style="border-radius: 8px; margin-bottom: 16px;">
       ` : ''}
-      <h2 style="margin: 0 0 16px 0; font-size: 20px; color: #1f2937;">${data.productName}</h2>
+      <h2 style="margin: 0 0 16px 0; font-size: 20px; color: #1f2937;">${escapeHtml(data.productName)}</h2>
 
       <div style="display: inline-block; background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border-radius: 12px; padding: 20px; margin-bottom: 16px;">
         <p style="margin: 0 0 4px 0; font-size: 12px; color: #065f46; text-transform: uppercase; letter-spacing: 1px;">

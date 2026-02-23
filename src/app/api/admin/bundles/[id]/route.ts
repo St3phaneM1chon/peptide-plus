@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { logger } from '@/lib/logger';
 
 // GET single bundle by ID
 export const GET = withAdminGuard(async (_request, { session, params }) => {
@@ -34,7 +35,7 @@ export const GET = withAdminGuard(async (_request, { session, params }) => {
 
     return NextResponse.json({ data: bundle });
   } catch (error) {
-    console.error('Error fetching bundle:', error);
+    logger.error('Error fetching bundle', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to fetch bundle' },
       { status: 500 }
@@ -140,7 +141,7 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
 
     return NextResponse.json({ data: bundle });
   } catch (error) {
-    console.error('Error updating bundle:', error);
+    logger.error('Error updating bundle', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to update bundle' },
       { status: 500 }
@@ -181,7 +182,7 @@ export const DELETE = withAdminGuard(async (_request, { session, params }) => {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error deleting bundle:', error);
+    logger.error('Error deleting bundle', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to delete bundle' },
       { status: 500 }

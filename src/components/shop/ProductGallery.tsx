@@ -4,10 +4,13 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { useI18n } from '@/i18n/client';
 
+// FIX: BUG-090 - Document image types used in the product gallery
+/** Product image with typed category for display logic */
 interface ProductImage {
   id: string;
   url: string;
   alt: string;
+  /** Image type: main product shot, vial close-up, cartridge view, kit layout, capsule photo, or lifestyle marketing image */
   type: 'main' | 'vial' | 'cartridge' | 'kit' | 'capsule' | 'lifestyle';
 }
 
@@ -39,6 +42,7 @@ export default function ProductGallery({ images, productName }: ProductGalleryPr
   return (
     <div className="space-y-4">
       {/* Main Image */}
+      {/* TODO: BUG-087 - Enhance zoom to follow mouse cursor position instead of simple scale toggle */}
       <div className="relative aspect-square bg-neutral-100 rounded-2xl overflow-hidden group">
         <Image
           src={selectedImage.url}
@@ -104,12 +108,14 @@ export default function ProductGallery({ images, productName }: ProductGalleryPr
                   : 'border-neutral-200 hover:border-neutral-300'
               }`}
             >
+              {/* FIX: BUG-096 - Add lazy loading for thumbnails (only main image has priority) */}
               <Image
                 src={image.url}
                 alt={image.alt}
                 fill
                 sizes="80px"
                 className="object-cover"
+                loading="lazy"
               />
               {/* Type Label */}
               <span className="absolute bottom-0 inset-x-0 bg-black/60 text-white text-[10px] text-center py-0.5 capitalize">

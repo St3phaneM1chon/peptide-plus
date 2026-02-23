@@ -148,16 +148,8 @@ export default function LogsPage() {
 
   // ─── Data fetching ──────────────────────────────────────────
 
-  useEffect(() => {
-    fetchLogs();
-    if (autoRefresh) {
-      const interval = setInterval(fetchLogs, 10000);
-      return () => clearInterval(interval);
-    }
-    return undefined;
-  }, [autoRefresh, levelFilter, searchValue]);
-
-  const fetchLogs = async () => {
+  // FAILLE-031 FIX: Wrap fetchLogs in useCallback with proper dependencies
+  const fetchLogs = useCallback(async () => {
     try {
       const params = new URLSearchParams();
       if (levelFilter && levelFilter !== 'all') params.set('level', levelFilter);
@@ -173,16 +165,38 @@ export default function LogsPage() {
       setLogs([]);
     }
     setLoading(false);
-  };
+  }, [levelFilter, searchValue, t]);
+
+  useEffect(() => {
+    fetchLogs();
+    if (autoRefresh) {
+      // FAILLE-030 FIX: Add jitter to auto-refresh interval to prevent thundering herd
+      const jitter = Math.floor(Math.random() * 3000); // 0-3s jitter
+      const interval = setInterval(fetchLogs, 10000 + jitter);
+      return () => clearInterval(interval);
+    }
+    return undefined;
+  }, [autoRefresh, fetchLogs]);
 
   const handleSelectLog = useCallback((id: string) => {
     setSelectedLogId(id);
   }, []);
 
+  // FAILLE-029 FIX: Sanitize CSV values to prevent Excel formula injection
+  const sanitizeCSVValue = useCallback((val: string): string => {
+    // If value starts with =, +, -, @, tab, or CR, prefix with single quote to neutralize formula
+    if (/^[=+\-@\t\r]/.test(val)) {
+      return `'${val}`;
+    }
+    return val;
+  }, []);
+
   const handleExportCSV = useCallback(() => {
     if (filteredLogs.length === 0) return;
+    // FIX: FAILLE-071 - Limit CSV export to 5000 entries to prevent browser memory issues
+    const exportLogs = filteredLogs.slice(0, 5000);
     const headers = ['Timestamp', 'Level', 'Action', 'User', 'IP', 'Details'];
-    const rows = filteredLogs.map((log) => [
+    const rows = exportLogs.map((log) => [
       new Date(log.timestamp).toLocaleString(locale),
       log.level,
       log.action,
@@ -191,7 +205,7 @@ export default function LogsPage() {
       log.details ? JSON.stringify(log.details) : '',
     ]);
     const BOM = '\uFEFF';
-    const csv = BOM + [headers, ...rows].map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const csv = BOM + [headers, ...rows].map((r) => r.map((v) => `"${sanitizeCSVValue(String(v)).replace(/"/g, '""')}"`).join(',')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -199,7 +213,7 @@ export default function LogsPage() {
     a.download = `audit-logs-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-  }, [filteredLogs, locale]);
+  }, [filteredLogs, locale, sanitizeCSVValue]);
 
   // ─── Action labels (i18n) ──────────────────────────────────
 
@@ -218,6 +232,8 @@ export default function LogsPage() {
 
   // ─── Filtering ──────────────────────────────────────────────
 
+  // TODO: FAILLE-068 - JSON.stringify(log.details) on every search keystroke is O(n*m).
+  //       Pre-compute a searchable string per log entry during fetch for better performance.
   const filteredLogs = useMemo(() => {
     return logs.filter(log => {
       if (levelFilter !== 'all' && log.level !== levelFilter) return false;

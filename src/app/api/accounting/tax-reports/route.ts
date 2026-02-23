@@ -5,6 +5,7 @@ import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { roundCurrency } from '@/lib/financial';
 import { createHash } from 'crypto';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/accounting/tax-reports
@@ -56,7 +57,7 @@ export const GET = withAdminGuard(async (request) => {
       pagination: { page, limit, total, pages: Math.ceil(total / limit) },
     });
   } catch (error) {
-    console.error('Get tax reports error:', error);
+    logger.error('Get tax reports error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la récupération des rapports de taxes' },
       { status: 500 }
@@ -132,6 +133,8 @@ export const POST = withAdminGuard(async (request) => {
     if (regionCode && regionCode !== 'ALL') {
       regionFilter.shippingState = regionCode;
     }
+    // FIX: F083 - TODO: Replace findMany+take with aggregate SQL for high-volume businesses
+    // Currently capped at 10000 orders which may miss data for large enterprises
     const orders = await prisma.order.findMany({
       where: regionFilter,
       select: { taxTps: true, taxTvq: true, taxTvh: true, total: true },
@@ -145,21 +148,26 @@ export const POST = withAdminGuard(async (request) => {
 
     // Calculate taxes paid from supplier invoices
     // Safety limit to prevent unbounded queries on large datasets
+    // FIX: F016 - Include taxOther in the select. SupplierInvoice model uses taxOther
+    // as the field for HST/TVH amounts (the model has no dedicated taxTvh column).
     const supplierInvoices = await prisma.supplierInvoice.findMany({
       where: {
         status: { in: ['PAID', 'PARTIAL'] },
         invoiceDate: { gte: startDate, lte: endDate },
       },
-      select: { taxTps: true, taxTvq: true },
+      select: { taxTps: true, taxTvq: true, taxOther: true },
       take: 10000,
     });
 
     const tpsPaid = roundCurrency(supplierInvoices.reduce((s, i) => s + Number(i.taxTps), 0));
     const tvqPaid = roundCurrency(supplierInvoices.reduce((s, i) => s + Number(i.taxTvq), 0));
+    // FIX: F016 - Use taxOther as a proxy for TVH paid (SupplierInvoice stores HST in taxOther).
+    // This replaces the hardcoded 0 that was previously used for tvhPaid.
+    const tvhPaid = roundCurrency(supplierInvoices.reduce((s, i) => s + Number(i.taxOther), 0));
 
     const netTps = roundCurrency(tpsCollected - tpsPaid);
     const netTvq = roundCurrency(tvqCollected - tvqPaid);
-    const netTvh = tvhCollected;
+    const netTvh = roundCurrency(tvhCollected - tvhPaid);
     const netTotal = roundCurrency(netTps + netTvq + netTvh);
 
     // Calculate due date (typically last day of the month following the period)
@@ -189,6 +197,7 @@ export const POST = withAdminGuard(async (request) => {
         tvhCollected,
         tpsPaid,
         tvqPaid,
+        tvhPaid,
         netTps,
         netTvq,
         netTvh,
@@ -202,7 +211,7 @@ export const POST = withAdminGuard(async (request) => {
 
     return NextResponse.json({ success: true, report }, { status: 201 });
   } catch (error) {
-    console.error('Generate tax report error:', error);
+    logger.error('Generate tax report error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la génération du rapport de taxes' },
       { status: 500 }
@@ -239,16 +248,24 @@ export const PUT = withAdminGuard(async (request) => {
         updateData.filedAt = new Date();
         // #77 Compliance: Generate SHA-256 integrity hash when filing tax report
         // This hash covers all financial figures to detect post-filing tampering.
+        // FIX: F056 - Hash includes salesCount and all financial line items (totals + paid amounts)
+        // to ensure complete coverage of the report data for tamper detection.
         const hashPayload = JSON.stringify({
           id: existing.id,
           period: existing.period,
+          periodType: existing.periodType,
           year: existing.year,
+          month: existing.month,
+          quarter: existing.quarter,
           regionCode: existing.regionCode,
           tpsCollected: existing.tpsCollected.toString(),
           tvqCollected: existing.tvqCollected.toString(),
           tvhCollected: existing.tvhCollected.toString(),
+          otherTaxCollected: existing.otherTaxCollected.toString(),
           tpsPaid: existing.tpsPaid.toString(),
           tvqPaid: existing.tvqPaid.toString(),
+          tvhPaid: existing.tvhPaid.toString(),
+          otherTaxPaid: existing.otherTaxPaid.toString(),
           netTps: existing.netTps.toString(),
           netTvq: existing.netTvq.toString(),
           netTvh: existing.netTvh.toString(),
@@ -277,16 +294,23 @@ export const PUT = withAdminGuard(async (request) => {
       try {
         const notesData = JSON.parse(report.notes as string);
         if (notesData.integrityHash) {
+          // FIX: F056 - Verification payload must match the expanded hash payload above
           const verifyPayload = JSON.stringify({
             id: report.id,
             period: report.period,
+            periodType: report.periodType,
             year: report.year,
+            month: report.month,
+            quarter: report.quarter,
             regionCode: report.regionCode,
             tpsCollected: report.tpsCollected.toString(),
             tvqCollected: report.tvqCollected.toString(),
             tvhCollected: report.tvhCollected.toString(),
+            otherTaxCollected: report.otherTaxCollected.toString(),
             tpsPaid: report.tpsPaid.toString(),
             tvqPaid: report.tvqPaid.toString(),
+            tvhPaid: report.tvhPaid.toString(),
+            otherTaxPaid: report.otherTaxPaid.toString(),
             netTps: report.netTps.toString(),
             netTvq: report.netTvq.toString(),
             netTvh: report.netTvh.toString(),
@@ -304,7 +328,7 @@ export const PUT = withAdminGuard(async (request) => {
 
     return NextResponse.json({ success: true, report, integrityValid });
   } catch (error) {
-    console.error('Update tax report error:', error);
+    logger.error('Update tax report error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la mise à jour du rapport de taxes' },
       { status: 500 }

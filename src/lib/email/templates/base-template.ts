@@ -18,6 +18,17 @@ export interface BaseTemplateData {
   footerText?: string;
   unsubscribeUrl?: string;
   locale?: 'fr' | 'en';
+  darkMode?: boolean;
+  socialLinks?: {
+    facebook?: string;
+    instagram?: string;
+    linkedin?: string;
+    twitter?: string;
+  };
+  /** Override the company name in the footer. Defaults to 'BioCycle Peptides Inc.' */
+  companyName?: string;
+  /** Override the company address in the footer. Defaults to 'Montreal, QC, Canada' */
+  companyAddress?: string;
 }
 
 // const LOGO_URL = 'https://biocyclepeptides.com/images/logo-email.png'; // For future use
@@ -25,7 +36,12 @@ const BRAND_COLOR = '#CC5500'; // Orange
 const DARK_COLOR = '#1f2937';
 
 export function baseTemplate(data: BaseTemplateData): string {
-  const { preheader = '', content, footerText, unsubscribeUrl, locale = 'fr' } = data;
+  const {
+    preheader = '', content, footerText, unsubscribeUrl, locale = 'fr',
+    darkMode = false, socialLinks,
+    companyName = 'BioCycle Peptides Inc.',
+    companyAddress = 'Montréal, QC, Canada',
+  } = data;
 
   const isFr = locale === 'fr';
   
@@ -68,11 +84,23 @@ export function baseTemplate(data: BaseTemplateData): string {
       .content { padding: 20px !important; }
       .button { display: block !important; text-align: center; }
     }
+    ${darkMode ? `
+    @media (prefers-color-scheme: dark) {
+      body { background-color: #1a1a2e !important; }
+      .content { background-color: #16213e !important; color: #e0e0e0 !important; }
+      .footer { background-color: #0f3460 !important; }
+      h1, h2, h3 { color: #e0e0e0 !important; }
+      p { color: #c4c4c4 !important; }
+    }
+    ` : ''}
   </style>
 </head>
 <body>
   <!-- Preheader -->
-  <div class="preheader">${preheader}&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;</div>
+  <div style="display:none;font-size:1px;color:#ffffff;line-height:1px;max-height:0px;max-width:0px;opacity:0;overflow:hidden;">
+    ${preheader}
+    ${'&zwnj;&nbsp;'.repeat(40)}
+  </div>
   
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f3f4f6;">
     <tr>
@@ -109,6 +137,14 @@ export function baseTemplate(data: BaseTemplateData): string {
               <p style="margin: 0 0 12px 0; font-size: 12px; color: #6b7280;">
                 ${footerText || defaultFooter}
               </p>
+              ${socialLinks ? `
+              <p style="margin: 0 0 12px 0; font-size: 14px;">
+                ${socialLinks.facebook ? `<a href="${socialLinks.facebook}" style="color: #6b7280; text-decoration: none; margin: 0 6px;">Facebook</a>` : ''}
+                ${socialLinks.instagram ? `<a href="${socialLinks.instagram}" style="color: #6b7280; text-decoration: none; margin: 0 6px;">Instagram</a>` : ''}
+                ${socialLinks.linkedin ? `<a href="${socialLinks.linkedin}" style="color: #6b7280; text-decoration: none; margin: 0 6px;">LinkedIn</a>` : ''}
+                ${socialLinks.twitter ? `<a href="${socialLinks.twitter}" style="color: #6b7280; text-decoration: none; margin: 0 6px;">X</a>` : ''}
+              </p>
+              ` : ''}
               <p style="margin: 0 0 12px 0; font-size: 12px; color: #9ca3af;">
                 <a href="https://biocyclepeptides.com/contact" style="color: #6b7280; text-decoration: underline;">${contactText}</a>
                 &nbsp;|&nbsp;
@@ -116,7 +152,7 @@ export function baseTemplate(data: BaseTemplateData): string {
                 ${unsubscribeUrl ? `&nbsp;|&nbsp;<a href="${unsubscribeUrl}" style="color: #6b7280; text-decoration: underline;">${isFr ? 'Se désabonner' : 'Unsubscribe'}</a>` : ''}
               </p>
               <p style="margin: 0; font-size: 11px; color: #9ca3af;">
-                © ${new Date().getFullYear()} BioCycle Peptides Inc. 1234 Research Blvd, Suite 100, Montréal, QC H2X 1Y6, Canada
+                © ${new Date().getFullYear()} ${companyName} ${companyAddress}
               </p>
             </td>
           </tr>
@@ -155,12 +191,15 @@ export const emailComponents = {
     </div>
   `,
   
-  orderItem: (name: string, quantity: number, price: string, imageUrl?: string) => `
+  orderItem: (name: string, quantity: number, price: string, imageUrl?: string) => {
+    // Faille MEDIUM: validate imageUrl is a safe http/https URL before embedding
+    const safeImage = imageUrl && /^https?:\/\//.test(imageUrl) ? imageUrl : undefined;
+    return `
     <tr>
       <td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
           <tr>
-            ${imageUrl ? `<td width="60" style="padding-right: 12px;"><img src="${imageUrl}" alt="${name}" width="60" height="60" style="border-radius: 8px; object-fit: cover;"></td>` : ''}
+            ${safeImage ? `<td width="60" style="padding-right: 12px;"><img src="${safeImage}" alt="${escapeHtml(name)}" width="60" height="60" style="border-radius: 8px; object-fit: cover;"></td>` : ''}
             <td>
               <p style="margin: 0; font-weight: 600; color: #1f2937;">${name}</p>
               <p style="margin: 4px 0 0 0; font-size: 14px; color: #6b7280;">Qty: ${quantity}</p>
@@ -170,7 +209,8 @@ export const emailComponents = {
         </table>
       </td>
     </tr>
-  `,
+  `;
+  },
   
   trackingInfo: (carrier: string, trackingNumber: string, trackingUrl: string, isFr: boolean = true) => `
     <div style="background-color: #eff6ff; border: 1px solid #93c5fd; border-radius: 8px; padding: 20px; margin: 20px 0; text-align: center;">

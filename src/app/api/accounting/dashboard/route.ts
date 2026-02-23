@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { logger } from '@/lib/logger';
 
 // #99 In-memory cache for expensive dashboard aggregate queries.
 // Dashboard data changes infrequently relative to how often it's fetched,
@@ -57,7 +58,7 @@ export const GET = withAdminGuard(async (request) => {
     ) {
       dashboardCacheHits++;
       if ((dashboardCacheHits + dashboardCacheMisses) % 100 === 0) {
-        console.info('Dashboard cache stats:', { hits: dashboardCacheHits, misses: dashboardCacheMisses });
+        logger.info('Dashboard cache stats:', { hits: dashboardCacheHits, misses: dashboardCacheMisses });
       }
       return NextResponse.json({
         ...dashboardCache.data,
@@ -406,7 +407,7 @@ export const GET = withAdminGuard(async (request) => {
 
     return NextResponse.json(responseData);
   } catch (error) {
-    console.error('Dashboard error:', error);
+    logger.error('Dashboard error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la récupération du tableau de bord' },
       { status: 500 }

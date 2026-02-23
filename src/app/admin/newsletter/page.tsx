@@ -118,10 +118,6 @@ export default function NewsletterPage() {
 
   // ─── Data fetching ──────────────────────────────────────────
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
   // Reset selection when switching tabs
   useEffect(() => {
     setSelectedId(null);
@@ -169,7 +165,8 @@ export default function NewsletterPage() {
     }
   };
 
-  const fetchData = async () => {
+  // FIX: FLAW-055 - Wrap fetchData in useCallback for stable reference
+  const fetchData = useCallback(async () => {
     try {
       const [subsRes, campRes] = await Promise.all([
         fetch('/api/admin/newsletter/subscribers'),
@@ -187,7 +184,12 @@ export default function NewsletterPage() {
     } finally {
       setLoading(false);
     }
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [t]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const handleSelect = useCallback((id: string) => {
     setSelectedId(id);
@@ -880,10 +882,11 @@ function SourceCard({
   tOfTotal: (key: string, params?: Record<string, string | number>) => string;
 }) {
   const pct = total > 0 ? ((value / total) * 100).toFixed(1) : '0';
+  // FLAW-016 FIX: amber color was using teal classes instead of amber
   const colors = {
     violet: 'bg-violet-50 border-violet-200 text-violet-700',
     sky: 'bg-sky-50 border-sky-200 text-sky-700',
-    amber: 'bg-teal-50 border-teal-200 text-teal-700',
+    amber: 'bg-amber-50 border-amber-200 text-amber-700',
   };
   return (
     <div className={`rounded-lg p-3 border ${colors[color]}`}>

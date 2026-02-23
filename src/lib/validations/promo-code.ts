@@ -1,5 +1,8 @@
 /**
  * Promo Code Zod Validation Schemas
+ *
+ * TODO: F-058 - PATCH schema missing refine for percentage <= 100; add same validation as create
+ * TODO: F-089 - promoCodeTypeEnum duplicated in promotion.ts; extract to shared file
  */
 
 import { z } from 'zod';
@@ -19,6 +22,7 @@ export const createPromoCodeSchema = z.object({
   description: z.string().max(500).optional().nullable(),
   type: promoCodeTypeEnum,
   value: z.number().positive('Value must be a positive number').max(99999.99),
+  // FIX: FLAW-098 - 0 means "no minimum order amount"; null/undefined also means no minimum
   minOrderAmount: z.number().min(0).max(99999.99).optional().nullable(),
   maxDiscount: z.number().min(0).max(99999.99).optional().nullable(),
   usageLimit: z.number().int().min(1).optional().nullable(),
@@ -50,6 +54,7 @@ export type UpdatePromoCodeInput = z.infer<typeof updatePromoCodeSchema>;
 // Partial update promo code (PATCH /api/admin/promo-codes/[id])
 // ---------------------------------------------------------------------------
 
+// FLOW-099 FIX: Add percentage max validation to patch schema (same as create)
 export const patchPromoCodeSchema = z.object({
   code: z.string().min(1).max(50).optional(),
   description: z.string().max(500).optional().nullable(),
@@ -65,6 +70,9 @@ export const patchPromoCodeSchema = z.object({
   isActive: z.boolean().optional(),
   productIds: z.string().max(5000).optional().nullable(),
   categoryIds: z.string().max(5000).optional().nullable(),
-});
+}).refine(
+  (data) => !(data.type === 'PERCENTAGE' && data.value !== undefined && data.value > 100),
+  { message: 'Percentage discount cannot exceed 100%', path: ['value'] }
+);
 
 export type PatchPromoCodeInput = z.infer<typeof patchPromoCodeSchema>;

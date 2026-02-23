@@ -25,39 +25,42 @@ interface MediaStats {
   pdfCount: number;
 }
 
+// F60 FIX: Move platformDefs outside component to avoid recreating on every render
+const PLATFORM_DEFS = [
+  { key: 'zoom', label: 'Zoom', href: '/admin/media/api-zoom', color: 'bg-blue-500', IconComp: Video },
+  { key: 'whatsapp', label: 'WhatsApp', href: '/admin/media/api-whatsapp', color: 'bg-green-500', IconComp: MessageCircle },
+  { key: 'teams', label: 'Teams', href: '/admin/media/api-teams', color: 'bg-purple-500', IconComp: Users },
+  { key: 'youtube', label: 'YouTube', href: '/admin/media/pub-youtube', color: 'bg-red-500', IconComp: Video },
+  { key: 'meta', label: 'Meta (FB/IG)', href: '/admin/media/pub-meta', color: 'bg-blue-600', IconComp: Globe },
+  { key: 'x', label: 'X (Twitter)', href: '/admin/media/pub-x', color: 'bg-slate-800', IconComp: MessageCircle },
+  { key: 'tiktok', label: 'TikTok', href: '/admin/media/pub-tiktok', color: 'bg-pink-500', IconComp: Activity },
+  { key: 'google', label: 'Google Ads', href: '/admin/media/pub-google', color: 'bg-yellow-500', IconComp: Search },
+  { key: 'linkedin', label: 'LinkedIn', href: '/admin/media/pub-linkedin', color: 'bg-blue-700', IconComp: Briefcase },
+];
+
 export default function MediaDashboardPage() {
   const { t } = useI18n();
   const [platforms, setPlatforms] = useState<PlatformStatus[]>([]);
   const [stats, setStats] = useState<MediaStats | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const platformDefs = [
-    { key: 'zoom', label: 'Zoom', icon: <Video className="w-5 h-5" />, href: '/admin/media/api-zoom', color: 'bg-blue-500' },
-    { key: 'whatsapp', label: 'WhatsApp', icon: <MessageCircle className="w-5 h-5" />, href: '/admin/media/api-whatsapp', color: 'bg-green-500' },
-    { key: 'teams', label: 'Teams', icon: <Users className="w-5 h-5" />, href: '/admin/media/api-teams', color: 'bg-purple-500' },
-    { key: 'youtube', label: 'YouTube', icon: <Video className="w-5 h-5" />, href: '/admin/media/pub-youtube', color: 'bg-red-500' },
-    { key: 'meta', label: 'Meta (FB/IG)', icon: <Globe className="w-5 h-5" />, href: '/admin/media/pub-meta', color: 'bg-blue-600' },
-    { key: 'x', label: 'X (Twitter)', icon: <MessageCircle className="w-5 h-5" />, href: '/admin/media/pub-x', color: 'bg-slate-800' },
-    { key: 'tiktok', label: 'TikTok', icon: <Activity className="w-5 h-5" />, href: '/admin/media/pub-tiktok', color: 'bg-pink-500' },
-    { key: 'google', label: 'Google Ads', icon: <Search className="w-5 h-5" />, href: '/admin/media/pub-google', color: 'bg-yellow-500' },
-    { key: 'linkedin', label: 'LinkedIn', icon: <Briefcase className="w-5 h-5" />, href: '/admin/media/pub-linkedin', color: 'bg-blue-700' },
-  ];
-
   useEffect(() => {
     const loadAll = async () => {
       // Load platform statuses in parallel
-      const statusPromises = platformDefs.map(async (p) => {
+      const statusPromises = PLATFORM_DEFS.map(async (p) => {
         try {
           const res = await fetch(`/api/admin/integrations/${p.key}`);
-          if (!res.ok) return { ...p, enabled: null };
+          const icon = <p.IconComp className="w-5 h-5" />;
+          if (!res.ok) return { ...p, icon, enabled: null };
           const data = await res.json();
-          return { ...p, enabled: data.enabled || false };
+          return { ...p, icon, enabled: data.enabled || false };
         } catch {
-          return { ...p, enabled: null };
+          return { ...p, icon: <p.IconComp className="w-5 h-5" />, enabled: null };
         }
       });
 
-      // Load media stats
+      // FIX: F52 - TODO: Create a single /api/admin/medias/stats endpoint that aggregates all counts in one DB query
+      // Load media stats (currently 5 separate requests)
       const statsPromise = Promise.all([
         fetch('/api/admin/medias?limit=1').then(r => r.json()).catch(() => ({ pagination: { total: 0 } })),
         fetch('/api/admin/videos?limit=1').then(r => r.json()).catch(() => ({ pagination: { total: 0 } })),
@@ -83,7 +86,6 @@ export default function MediaDashboardPage() {
     };
 
     loadAll();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (loading) {
@@ -150,6 +152,8 @@ export default function MediaDashboardPage() {
   );
 }
 
+// FIX: F85 - Local StatCard shadows admin StatCard; different props so intentional.
+// FIX: F84 - TODO: Extract QuickLink to src/components/admin/QuickLink.tsx for reuse
 function StatCard({ icon, label, value, color }: { icon: React.ReactNode; label: string; value: number | string; color: string }) {
   return (
     <div className="bg-white rounded-lg border border-slate-200 p-4">

@@ -5,6 +5,9 @@ import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { adminUpdateUserSchema } from '@/lib/validations/user';
+import { hasPermission, type PermissionCode } from '@/lib/permissions';
+import { UserRole } from '@/types';
+import { logger } from '@/lib/logger';
 
 export const GET = withAdminGuard(async (_request, { session, params }) => {
   try {
@@ -30,7 +33,8 @@ export const GET = withAdminGuard(async (_request, { session, params }) => {
         loyaltyTier: true,
         referralCode: true,
         referredById: true,
-        stripeCustomerId: true,
+        // FAILLE-028 FIX: stripeCustomerId excluded from response (PII/payment data)
+        // stripeCustomerId: true,
         createdAt: true,
         updatedAt: true,
         addresses: {
@@ -235,7 +239,7 @@ export const GET = withAdminGuard(async (_request, { session, params }) => {
       wishlist,
     });
   } catch (error) {
-    console.error('Admin user detail error:', error);
+    logger.error('Admin user detail error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
   }
 });
@@ -255,6 +259,37 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
     }
 
     const data = parsed.data;
+
+    // FAILLE-062 FIX: Prevent self-role modification to avoid lockout
+    if (data.role !== undefined && id === session.user.id) {
+      return NextResponse.json(
+        { error: 'Cannot change your own role' },
+        { status: 403 }
+      );
+    }
+
+    // SECURITY (FAILLE-001): Role hierarchy check - only OWNER can change roles
+    if (data.role !== undefined) {
+      const callerRole = session.user.role as string;
+      if (callerRole !== UserRole.OWNER) {
+        return NextResponse.json(
+          { error: 'Seul le propriétaire peut modifier les rôles' },
+          { status: 403 }
+        );
+      }
+      // Additionally check granular permission
+      const canChangeRole = await hasPermission(
+        session.user.id,
+        callerRole as 'OWNER' | 'EMPLOYEE' | 'CLIENT' | 'CUSTOMER' | 'PUBLIC',
+        'users.change_role' as PermissionCode
+      );
+      if (!canChangeRole) {
+        return NextResponse.json(
+          { error: 'Permission users.change_role requise' },
+          { status: 403 }
+        );
+      }
+    }
 
     // Build allowed update data from validated fields
     const allowed: Record<string, unknown> = {};
@@ -283,11 +318,11 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
       metadata: { updatedFields: Object.keys(allowed) },
-    }).catch(() => {});
+    }).catch((e) => logger.error('[audit]', { error: e instanceof Error ? e.message : String(e) }));
 
     return NextResponse.json({ user: updated });
   } catch (error) {
-    console.error('Admin user update error:', error);
+    logger.error('Admin user update error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
   }
 });

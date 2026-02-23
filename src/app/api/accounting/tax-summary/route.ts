@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { roundCurrency } from '@/lib/financial';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/accounting/tax-summary
@@ -79,7 +80,7 @@ export const GET = withAdminGuard(async (request) => {
       totalSales,
     });
   } catch (error) {
-    console.error('Tax summary error:', error);
+    logger.error('Tax summary error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la génération du sommaire de taxes' },
       { status: 500 }

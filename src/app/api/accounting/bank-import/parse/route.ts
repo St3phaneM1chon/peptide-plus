@@ -8,6 +8,7 @@ import {
   detectCSVFormat,
   categorizeTransaction,
 } from '@/lib/accounting';
+import { logger } from '@/lib/logger';
 
 /**
  * POST /api/accounting/bank-import/parse
@@ -79,7 +80,7 @@ export const POST = withAdminGuard(async (request) => {
       count: mapped.length,
     });
   } catch (error) {
-    console.error('Bank import parse error:', error);
+    logger.error('Bank import parse error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de l\'analyse du fichier CSV' },
       { status: 500 }

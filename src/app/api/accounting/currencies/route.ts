@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/accounting/currencies
@@ -30,7 +31,7 @@ export const GET = withAdminGuard(async (request) => {
 
     return NextResponse.json({ currencies: mapped });
   } catch (error) {
-    console.error('Get currencies error:', error);
+    logger.error('Get currencies error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la récupération des devises' },
       { status: 500 }
@@ -68,7 +69,7 @@ export const POST = withAdminGuard(async (request) => {
 
     return NextResponse.json({ success: true, currency }, { status: 201 });
   } catch (error) {
-    console.error('Create currency error:', error);
+    logger.error('Create currency error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la création de la devise' },
       { status: 500 }
@@ -108,7 +109,7 @@ export const PUT = withAdminGuard(async (request) => {
 
     return NextResponse.json({ success: true, currency });
   } catch (error) {
-    console.error('Update currency error:', error);
+    logger.error('Update currency error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la mise à jour de la devise' },
       { status: 500 }

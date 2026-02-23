@@ -421,7 +421,8 @@ export async function runYearEndClose(year: number, closedBy: string): Promise<{
       const parsed = parseInt(maxRow.max_num.split('-').pop() || '0');
       if (!isNaN(parsed)) nextNum = parsed + 1;
     }
-    const entryNumber = `${prefix}${String(nextNum).padStart(4, '0')}`;
+    // F-063 FIX: Use 5-digit padding for consistency with other entry generators
+    const entryNumber = `${prefix}${String(nextNum).padStart(5, '0')}`;
 
     const closingEntry = await tx.journalEntry.create({
       data: {

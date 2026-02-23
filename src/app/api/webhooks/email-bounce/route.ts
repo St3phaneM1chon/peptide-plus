@@ -14,9 +14,43 @@ import { createHmac, timingSafeEqual } from 'crypto';
 import { recordBounce, updateDeliveryStatus } from '@/lib/email/bounce-handler';
 import { logger } from '@/lib/logger';
 
+// Basic in-memory rate limiting: max 100 events per second per provider
+// NOTE: This state lives in the Node.js process memory and is NOT distributed.
+// It works correctly for single-instance deployments only. For multi-instance
+// (e.g. Azure scale-out), replace with Redis-backed rate limiting.
+const rateLimitState: { windowStart: number; count: number } = {
+  windowStart: 0,
+  count: 0,
+};
+const RATE_LIMIT_MAX = 100;
+const RATE_LIMIT_WINDOW_MS = 1000;
+
+function checkRateLimit(): boolean {
+  const now = Date.now();
+  if (now - rateLimitState.windowStart >= RATE_LIMIT_WINDOW_MS) {
+    rateLimitState.windowStart = now;
+    rateLimitState.count = 1;
+    return true;
+  }
+  rateLimitState.count++;
+  return rateLimitState.count <= RATE_LIMIT_MAX;
+}
+
 /**
  * Verify Resend/Svix webhook signature (HMAC-SHA256).
- * Resend sends: svix-id, svix-timestamp, svix-signature headers.
+ *
+ * Supported webhook signature formats:
+ * 1. **Svix (Resend default)**: Uses `svix-id`, `svix-timestamp`, and `svix-signature`
+ *    headers. The secret is base64-encoded with a `whsec_` prefix. Signature is
+ *    computed as HMAC-SHA256 over `{svix-id}.{svix-timestamp}.{rawBody}`.
+ *    The `svix-signature` header may contain multiple `v1,{base64}` signatures
+ *    separated by spaces; any match is accepted.
+ *
+ * 2. **Bearer token fallback**: When Svix headers are absent, the webhook is
+ *    authenticated via `Authorization: Bearer {RESEND_WEBHOOK_SECRET}`.
+ *    This is useful for manual testing or non-Svix providers.
+ *
+ * Configure via: RESEND_WEBHOOK_SECRET environment variable.
  */
 function verifyResendSignature(
   rawBody: string,
@@ -45,6 +79,12 @@ function verifyResendSignature(
 
 export async function POST(request: NextRequest) {
   try {
+    // Security: basic rate limiting to prevent webhook flood / DoS
+    if (!checkRateLimit()) {
+      logger.warn('[email-bounce-webhook] Rate limit exceeded (>100 events/second)');
+      return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
+    }
+
     const rawBody = await request.text();
 
     // Verify Resend webhook signature if secret is configured
@@ -53,10 +93,21 @@ export async function POST(request: NextRequest) {
     const svixTimestamp = request.headers.get('svix-timestamp');
     const svixSignature = request.headers.get('svix-signature');
 
-    // Fail-closed: if no webhook secret is configured, reject ALL webhooks
+    // Fail-closed: if no webhook secret is configured, reject ALL webhooks.
+    // To fix: set RESEND_WEBHOOK_SECRET in your environment variables.
+    // This value is found in the Resend dashboard under Webhooks > Signing Secret.
+    // It starts with "whsec_" for Svix-based signatures or can be any shared secret
+    // for Bearer token authentication.
     if (!webhookSecret) {
-      logger.warn('[email-bounce-webhook] RESEND_WEBHOOK_SECRET not configured — rejecting webhook');
-      return NextResponse.json({ error: 'Webhook secret not configured' }, { status: 500 });
+      logger.warn(
+        '[email-bounce-webhook] RESEND_WEBHOOK_SECRET not configured — rejecting webhook. ' +
+        'Set the RESEND_WEBHOOK_SECRET env var to the signing secret from your Resend dashboard ' +
+        '(Webhooks > Signing Secret). The value starts with "whsec_" for Svix signatures.',
+      );
+      return NextResponse.json(
+        { error: 'Webhook secret not configured. Set RESEND_WEBHOOK_SECRET env var.' },
+        { status: 500 },
+      );
     }
 
     if (svixId && svixTimestamp && svixSignature) {
@@ -85,21 +136,57 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
     }
 
+    // Faille #39 - Polymorphic payload documentation:
+    // This webhook intentionally accepts 3 different payload formats to support multiple
+    // email providers (Resend, SendGrid, generic). This is safe because:
+    // 1. All requests are authenticated via HMAC signature (Resend/Svix) or Bearer token
+    // 2. Signature verification happens BEFORE payload parsing (fail-closed)
+    // 3. Each format is dispatched to a type-safe handler with explicit field extraction
+    // 4. No user-supplied data is used in raw SQL or eval — only known fields are extracted
+
+    // Track event counts for the response summary
+    const eventCounts: Record<string, number> = {};
+    const trackEvent = (type: string) => {
+      eventCounts[type] = (eventCounts[type] || 0) + 1;
+    };
+
     // Detect provider format and process
+    let provider = 'unknown';
+    let eventsProcessed = 0;
+
     if (body && typeof body === 'object' && 'type' in body && 'data' in body) {
-      // Resend webhook format
-      await processResendWebhook(body as { type: string; data: { email_id?: string; to?: string[]; created_at?: string; bounce_type?: string } });
+      // Resend webhook format: { type: "email.bounced", data: { ... } }
+      provider = 'resend';
+      const resendBody = body as { type: string; data: { email_id?: string; to?: string[]; created_at?: string; bounce_type?: string } };
+      trackEvent(resendBody.type);
+      eventsProcessed = 1;
+      await processResendWebhook(resendBody);
     } else if (Array.isArray(body)) {
-      // SendGrid event webhook format (array of events)
+      // SendGrid event webhook format: [{ event: "bounce", email: "...", ... }, ...]
+      provider = 'sendgrid';
+      eventsProcessed = body.length;
       for (const event of body) {
+        if (event && typeof event === 'object' && event.event) {
+          trackEvent(event.event);
+        }
         await processSendGridEvent(event);
       }
     } else if (body && typeof body === 'object' && 'event' in body) {
-      // Generic format
-      await processGenericEvent(body as { event: string; email: string; bounceType?: string; provider?: string; reason?: string; messageId?: string });
+      // Generic format: { event: "bounce", email: "...", ... }
+      const genericBody = body as { event: string; email: string; bounceType?: string; provider?: string; reason?: string; messageId?: string };
+      provider = genericBody.provider || 'generic';
+      trackEvent(genericBody.event);
+      eventsProcessed = 1;
+      await processGenericEvent(genericBody);
     }
 
-    return NextResponse.json({ received: true });
+    return NextResponse.json({
+      received: true,
+      provider,
+      eventsProcessed,
+      eventCounts,
+      processedAt: new Date().toISOString(),
+    });
   } catch (error) {
     logger.error('[email-bounce-webhook] Error processing webhook', {
       error: error instanceof Error ? error.message : String(error),

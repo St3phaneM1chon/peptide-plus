@@ -361,12 +361,20 @@ export async function evaluateAlertRules(): Promise<{
   // Persist new alerts to AccountingAlert table
   let created = 0;
   for (const alert of allAlerts) {
-    // Deterministic id to avoid duplicates for the same entity + rule
-    const alertId = `auto-${alert.ruleType}-${alert.entityId || alert.title}`.substring(0, 255);
+    // FIX (F036): Use SHA-256 hash for deterministic alertId to prevent
+    // collisions when titles are long (previously truncated to 255 chars)
+    const rawId = `auto-${alert.ruleType}-${alert.entityId || alert.title}`;
+    // Use a simple hash to stay within 255 chars and guarantee uniqueness
+    const encoder = new TextEncoder();
+    const data = encoder.encode(rawId);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    const alertId = `auto-${alert.ruleType}-${hashHex}`.substring(0, 255);
 
-    // Upsert: only create if not already existing and unresolved
-    const existing = await prisma.accountingAlert.findUnique({ where: { id: alertId } });
-    if (!existing || existing.resolvedAt) {
+    // FIX (F035): Use upsert directly without findUnique to avoid race condition
+    // where two concurrent evaluations could both create the same alert
+    try {
       await prisma.accountingAlert.upsert({
         where: { id: alertId },
         create: {
@@ -383,11 +391,15 @@ export async function evaluateAlertRules(): Promise<{
           severity: alert.severity,
           title: alert.title,
           message: alert.message,
+          // Only reset resolved state if it was previously resolved
           resolvedAt: null,
           resolvedBy: null,
         },
       });
       created++;
+    } catch (error) {
+      // Ignore unique constraint violations from concurrent writes
+      console.warn('Alert upsert warning:', error instanceof Error ? error.message : String(error));
     }
   }
 
@@ -401,9 +413,12 @@ export async function evaluateAlertRules(): Promise<{
 /**
  * Get all active (unacknowledged / unresolved) alerts from the database.
  */
+// FIX: F097 - Added limit/offset pagination parameters
 export async function getActiveAlerts(options?: {
   type?: string;
   acknowledged?: boolean;
+  limit?: number;
+  offset?: number;
 }): Promise<{
   alerts: Array<{
     id: string;
@@ -434,13 +449,22 @@ export async function getActiveAlerts(options?: {
     where.readAt = null;
   }
 
-  const alerts = await prisma.accountingAlert.findMany({
-    where,
-    orderBy: { createdAt: 'desc' },
-  });
+  // FIX: F097 - Add pagination limit to prevent loading unbounded alert lists
+  const take = options?.limit ?? 100;
+  const skip = options?.offset ?? 0;
+
+  const [alerts, total] = await Promise.all([
+    prisma.accountingAlert.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      take,
+      skip,
+    }),
+    prisma.accountingAlert.count({ where }),
+  ]);
 
   return {
     alerts,
-    total: alerts.length,
+    total,
   };
 }

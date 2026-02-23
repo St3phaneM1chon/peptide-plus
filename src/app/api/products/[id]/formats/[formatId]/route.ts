@@ -4,6 +4,34 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth-config';
 import { enqueue } from '@/lib/translation';
+import { logger } from '@/lib/logger';
+import { z } from 'zod';
+
+// BUG-009 FIX: Zod validation schema for format updates
+const updateFormatSchema = z.object({
+  formatType: z.string().max(50).optional(),
+  name: z.string().max(200).optional(),
+  description: z.string().max(2000).optional().nullable(),
+  imageUrl: z.string().url().max(2000).optional().nullable(),
+  dosageMg: z.number().optional().nullable(),
+  volumeMl: z.number().optional().nullable(),
+  unitCount: z.number().int().optional().nullable(),
+  costPrice: z.number().min(0).optional().nullable(),
+  price: z.number().min(0).optional(),
+  comparePrice: z.number().min(0).optional().nullable(),
+  sku: z.string().max(100).optional().nullable(),
+  barcode: z.string().max(100).optional().nullable(),
+  stockQuantity: z.number().int().min(0).optional(),
+  lowStockThreshold: z.number().int().min(0).optional(),
+  trackInventory: z.boolean().optional(),
+  availability: z.string().max(50).optional(),
+  availableDate: z.string().optional().nullable(),
+  discontinuedAt: z.string().optional().nullable(),
+  weightGrams: z.number().min(0).optional().nullable(),
+  sortOrder: z.number().int().optional(),
+  isDefault: z.boolean().optional(),
+  isActive: z.boolean().optional(),
+});
 
 // GET single format
 export async function GET(
@@ -22,7 +50,7 @@ export async function GET(
 
     return NextResponse.json(format);
   } catch (error) {
-    console.error('Error fetching format:', error);
+    logger.error('Error fetching format', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to fetch format' },
       { status: 500 }
@@ -43,6 +71,15 @@ export async function PUT(
     }
 
     const body = await request.json();
+
+    // BUG-009 FIX: Validate body with Zod before destructuring to prevent mass assignment
+    const validation = updateFormatSchema.safeParse(body);
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: validation.error.errors[0]?.message || 'Invalid format data', details: validation.error.errors },
+        { status: 400 }
+      );
+    }
     const {
       formatType,
       name,
@@ -66,7 +103,7 @@ export async function PUT(
       sortOrder,
       isDefault,
       isActive,
-    } = body;
+    } = validation.data;
 
     // Check if format exists
     const existingFormat = await prisma.productFormat.findUnique({
@@ -77,18 +114,24 @@ export async function PUT(
       return NextResponse.json({ error: 'Format not found' }, { status: 404 });
     }
 
-    // If this is set as default, unset other defaults
+    // BUG-044 FIX: Use transaction for atomic default toggle
     if (isDefault && !existingFormat.isDefault) {
-      await prisma.productFormat.updateMany({
-        where: { productId: id, id: { not: formatId } },
-        data: { isDefault: false },
-      });
+      await prisma.$transaction([
+        prisma.productFormat.updateMany({
+          where: { productId: id, id: { not: formatId } },
+          data: { isDefault: false },
+        }),
+        prisma.productFormat.update({
+          where: { id: formatId },
+          data: { isDefault: true },
+        }),
+      ]);
     }
 
-    // Calculate inStock based on stockQuantity and availability
+    // BUG-010 FIX: Include LIMITED availability as in-stock (not just IN_STOCK)
     const newStockQuantity = stockQuantity ?? existingFormat.stockQuantity;
     const newAvailability = availability ?? existingFormat.availability;
-    const inStock = newStockQuantity > 0 && newAvailability === 'IN_STOCK';
+    const inStock = newStockQuantity > 0 && ['IN_STOCK', 'LIMITED'].includes(newAvailability);
 
     const format = await prisma.productFormat.update({
       where: { id: formatId },
@@ -124,7 +167,7 @@ export async function PUT(
 
     return NextResponse.json(format);
   } catch (error) {
-    console.error('Error updating format:', error);
+    logger.error('Error updating format', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to update format' },
       { status: 500 }
@@ -153,13 +196,15 @@ export async function DELETE(
       return NextResponse.json({ error: 'Format not found' }, { status: 404 });
     }
 
-    await prisma.productFormat.delete({
+    // BUG-018 FIX: Soft-delete instead of hard-delete to preserve OrderItem references
+    await prisma.productFormat.update({
       where: { id: formatId },
+      data: { isActive: false, discontinuedAt: new Date() },
     });
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error deleting format:', error);
+    logger.error('Error deleting format', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to delete format' },
       { status: 500 }

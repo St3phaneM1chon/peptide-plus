@@ -12,6 +12,7 @@ import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { enqueue } from '@/lib/translation';
+import { logger } from '@/lib/logger';
 
 // GET /api/admin/articles/[id] - Get single article
 export const GET = withAdminGuard(async (_request, { session, params }) => {
@@ -51,7 +52,7 @@ export const GET = withAdminGuard(async (_request, { session, params }) => {
       },
     });
   } catch (error) {
-    console.error('Admin article GET error:', error);
+    logger.error('Admin article GET error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -209,7 +210,7 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
 
     return NextResponse.json({ article });
   } catch (error) {
-    console.error('Admin article PATCH error:', error);
+    logger.error('Admin article PATCH error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -251,7 +252,7 @@ export const DELETE = withAdminGuard(async (_request, { session, params }) => {
       message: `Article "${existing.title}" deleted successfully`,
     });
   } catch (error) {
-    console.error('Admin article DELETE error:', error);
+    logger.error('Admin article DELETE error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

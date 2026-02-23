@@ -1,8 +1,13 @@
 export const dynamic = 'force-dynamic';
 
+// TODO: F-068 - referralCode generated with Date.now().toString(36) is predictable; use crypto.randomUUID().slice(0,8)
+// TODO: F-080 - Manual role check instead of withAdminGuard; inconsistent with promo-code routes
+// TODO: F-096 - Error messages mix French and English; return error codes and translate client-side
+
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth-config';
+import { logger } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
   try {
@@ -27,12 +32,9 @@ export async function GET(request: NextRequest) {
       orderBy: { totalEarnings: 'desc' },
     });
 
-    // Ensure commissions exist for all paid orders using ambassador referral codes.
-    // This backfills commissions for orders that were placed before the tracking system.
-    const allCodes = ambassadors.map((a) => a.referralCode);
-    if (allCodes.length > 0) {
-      await syncCommissionsForCodes(ambassadors);
-    }
+    // FIX: FLAW-004 - Removed syncCommissionsForCodes from GET handler.
+    // GET should be read-only (REST convention). Sync should be done via
+    // a dedicated POST /api/ambassadors/sync-commissions endpoint or cron job.
 
     // PERF 86: Batch aggregate all order totals, pending commissions, and paid commissions
     // in 3 queries instead of 3 * N per-ambassador queries.
@@ -98,12 +100,12 @@ export async function GET(request: NextRequest) {
         earningsUpdates.map(({ id, totalEarnings }) =>
           prisma.ambassador.update({ where: { id }, data: { totalEarnings } })
         )
-      ).catch((err) => console.error('Ambassador earnings sync error:', err));
+      ).catch((err) => logger.error('Ambassador earnings sync error', { error: err instanceof Error ? err.message : String(err) }));
     }
 
     return NextResponse.json({ ambassadors: formatted });
   } catch (error) {
-    console.error('Ambassadors API error:', error);
+    logger.error('Ambassadors API error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ ambassadors: [] });
   }
 }
@@ -112,8 +114,13 @@ export async function GET(request: NextRequest) {
  * Sync commission records for all paid orders that used ambassador referral codes.
  * Creates AmbassadorCommission entries for any orders that don't already have one.
  * Uses batch queries to avoid N+1 performance issues.
+ *
+ * FIX: FLAW-004 - This function is no longer called from GET handler.
+ * It should be triggered via a dedicated POST /api/ambassadors/sync-commissions
+ * endpoint or via a cron job. Kept here for reuse.
  */
-async function syncCommissionsForCodes(
+// Exported for reuse in dedicated sync endpoint/cron job
+export async function syncCommissionsForCodes(
   ambassadors: Array<{
     id: string;
     referralCode: string;
@@ -209,13 +216,21 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { userId, name, email, commissionRate } = body;
 
-    // Generate unique referral code
-    const code = `AMB-${Date.now().toString(36).toUpperCase()}`;
+    // F-034 FIX: Validate ambassador name is non-empty
+    if (!name || typeof name !== 'string' || !name.trim()) {
+      return NextResponse.json({ error: 'Name is required' }, { status: 400 });
+    }
 
+    // Generate unique referral code
+    // F-068 FIX: Use crypto random instead of predictable Date.now()
+    const code = `AMB-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
+
+    // TODO: F-047 - Ambassador.id lacks @default(cuid()) in schema; Prisma auto-generates but should be explicit
+    // TODO: F-048 - Referral.status should be a Prisma enum (PENDING, QUALIFIED, REWARDED, CANCELLED) instead of free String
     const ambassador = await prisma.ambassador.create({
       data: {
         userId: userId || null,
-        name: name || '',
+        name: name.trim(),
         email: email || null,
         referralCode: code,
         commissionRate: commissionRate || 10,
@@ -226,7 +241,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ ambassador }, { status: 201 });
   } catch (error) {
-    console.error('Create ambassador error:', error);
+    logger.error('Create ambassador error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Erreur lors de la création' }, { status: 500 });
   }
 }

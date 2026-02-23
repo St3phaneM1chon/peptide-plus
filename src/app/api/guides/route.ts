@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { logger } from '@/lib/logger';
 
 export async function GET() {
   try {
@@ -17,7 +18,7 @@ export async function GET() {
       headers: { 'Cache-Control': 'public, s-maxage=600, stale-while-revalidate=1200' },
     });
   } catch (error) {
-    console.error('Guides API error:', error);
+    logger.error('Guides API error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ guides: [] });
   }
 }

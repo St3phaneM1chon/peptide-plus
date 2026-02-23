@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/accounting/bank-transactions
@@ -78,7 +79,7 @@ export const GET = withAdminGuard(async (request) => {
       },
     });
   } catch (error) {
-    console.error('Get bank transactions error:', error);
+    logger.error('Get bank transactions error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la récupération des transactions bancaires' },
       { status: 500 }
@@ -134,7 +135,7 @@ export const POST = withAdminGuard(async (request) => {
       importBatch,
     }, { status: 201 });
   } catch (error) {
-    console.error('Import transactions error:', error);
+    logger.error('Import transactions error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de l\'import des transactions' },
       { status: 500 }
@@ -177,7 +178,7 @@ export const PUT = withAdminGuard(async (request) => {
       transaction: { ...transaction, amount: Number(transaction.amount) },
     });
   } catch (error) {
-    console.error('Update bank transaction error:', error);
+    logger.error('Update bank transaction error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la mise à jour de la transaction bancaire' },
       { status: 500 }

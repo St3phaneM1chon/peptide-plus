@@ -192,6 +192,8 @@ export function calculateNextRunDate(
   switch (frequency) {
     case 'DAILY':
       next.setDate(next.getDate() + 1);
+      // FIX: F091 - Fix time to 00:00:00 UTC to prevent temporal drift on daily entries
+      next.setUTCHours(0, 0, 0, 0);
       break;
 
     case 'WEEKLY':
@@ -326,7 +328,8 @@ export async function processDueRecurringEntries(): Promise<{
             const parsed = parseInt(maxRow.max_num.split('-').pop() || '0');
             if (!isNaN(parsed)) nextNum = parsed + 1;
           }
-          const entryNumber = `${prefix}${String(nextNum).padStart(4, '0')}`;
+          // F063 FIX: Use padStart(5) for consistent entry number format
+          const entryNumber = `${prefix}${String(nextNum).padStart(5, '0')}`;
 
           return tx.journalEntry.create({
             data: {
@@ -379,13 +382,23 @@ export async function processDueRecurringEntries(): Promise<{
         template.monthOfYear
       );
 
+      // FIX (F042): Read existing templateData and merge with new values
+      // instead of rebuilding a partial object that loses existing fields
+      const existingTemplateData = typeof template.templateData === 'object' && template.templateData !== null
+        ? (template.templateData as Record<string, unknown>)
+        : {};
+
       await prisma.recurringEntryTemplate.update({
         where: { id: template.id },
         data: {
           lastRunDate: now,
           nextRunDate: nextRun,
           templateData: {
-            ...(typeof template === 'object' ? { lines: template.lines, autoPost: template.autoPost, notifyOnCreate: template.notifyOnCreate, totalRuns: template.totalRuns + 1 } : {}),
+            ...existingTemplateData,
+            lines: template.lines,
+            autoPost: template.autoPost,
+            notifyOnCreate: template.notifyOnCreate,
+            totalRuns: template.totalRuns + 1,
           },
         },
       });

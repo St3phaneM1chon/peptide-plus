@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { getUpcomingDeadlines, FISCAL_DEADLINES } from '@/lib/accounting/canadian-tax-config';
+import { logger } from '@/lib/logger';
 
 export const GET = withAdminGuard(async (request: NextRequest) => {
   try {
@@ -39,7 +40,7 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
 
     return NextResponse.json({ events, upcomingFromConfig, stats, year });
   } catch (error) {
-    console.error('Fiscal calendar error:', error);
+    logger.error('Fiscal calendar error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to fetch fiscal calendar' }, { status: 500 });
   }
 });
@@ -68,7 +69,7 @@ export const POST = withAdminGuard(async (request: NextRequest) => {
 
     return NextResponse.json({ event }, { status: 201 });
   } catch (error) {
-    console.error('Create fiscal event error:', error);
+    logger.error('Create fiscal event error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to create fiscal event' }, { status: 500 });
   }
 });
@@ -100,7 +101,7 @@ export const PATCH = withAdminGuard(async (request: NextRequest) => {
 
     return NextResponse.json({ event });
   } catch (error) {
-    console.error('Update fiscal event error:', error);
+    logger.error('Update fiscal event error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to update fiscal event' }, { status: 500 });
   }
 });

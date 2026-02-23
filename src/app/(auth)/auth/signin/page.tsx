@@ -94,7 +94,9 @@ function SignInContent() {
             router.push('/admin');
             return;
           }
-        } catch {}
+        } catch {
+          // Session check failed - fall through to default redirect
+        }
         router.push('/');
       } else {
         router.push(callbackUrl);

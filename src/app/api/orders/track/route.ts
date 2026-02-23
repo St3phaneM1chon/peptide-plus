@@ -7,6 +7,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { logger } from '@/lib/logger';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 
 const STATUS_LABELS: Record<string, string> = {
@@ -111,7 +112,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Order tracking error:', error);
+    logger.error('Order tracking error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { found: false, error: 'Erreur de recherche' },
       { status: 500 }

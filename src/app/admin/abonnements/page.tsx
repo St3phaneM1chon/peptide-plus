@@ -1,3 +1,6 @@
+// TODO: F-061 - catch (err) in fetchSubscriptions: use _err or omit variable name
+// TODO: F-074 - Monthly revenue uses 1/6 for EVERY_6_MONTHS; round result to 2 decimal places
+// TODO: F-087 - Config section hardcodes "15%" instead of displaying actual configurable value
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -97,9 +100,29 @@ export default function AbonnementsPage() {
 
   // ─── Data fetching ──────────────────────────────────────────
 
+  // FIX F-030: Load subscription config from API instead of hardcoding "15%"
   useEffect(() => {
     fetchSubscriptions();
+    fetchSubscriptionConfig();
   }, []);
+
+  const fetchSubscriptionConfig = async () => {
+    try {
+      const res = await fetch('/api/admin/settings?key=subscription_config');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.value) {
+          const config = typeof data.value === 'string' ? JSON.parse(data.value) : data.value;
+          if (config.defaultDiscount !== undefined) setCfgDiscount(String(config.defaultDiscount));
+          if (config.freeShipping !== undefined) setCfgFreeShipping(config.freeShipping);
+          if (config.reminderDays !== undefined) setCfgReminderDays(String(config.reminderDays));
+          if (config.maxPausesPerYear !== undefined) setCfgMaxPauses(String(config.maxPausesPerYear));
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching subscription config:', err);
+    }
+  };
 
   const fetchSubscriptions = async () => {
     try {
@@ -233,10 +256,11 @@ export default function AbonnementsPage() {
     active: subscriptions.filter(s => s.status === 'ACTIVE').length,
     paused: subscriptions.filter(s => s.status === 'PAUSED').length,
     cancelled: subscriptions.filter(s => s.status === 'CANCELLED').length,
-    monthlyRevenue: subscriptions.filter(s => s.status === 'ACTIVE').reduce((sum, s) => {
+    // F-074 FIX: Round to 2 decimals to avoid floating point display issues
+    monthlyRevenue: Math.round(subscriptions.filter(s => s.status === 'ACTIVE').reduce((sum, s) => {
       const multiplier = s.frequency === 'EVERY_2_MONTHS' ? 0.5 : s.frequency === 'EVERY_4_MONTHS' ? 0.25 : s.frequency === 'EVERY_6_MONTHS' ? (1/6) : (1/12);
       return sum + (s.price * (1 - s.discount / 100) * multiplier);
-    }, 0),
+    }, 0) * 100) / 100,
   }), [subscriptions]);
 
   // ─── ContentList data ───────────────────────────────────────
@@ -333,19 +357,19 @@ export default function AbonnementsPage() {
           <h3 className="font-semibold text-slate-900 mb-3">{t('admin.subscriptions.subscriptionConfig')}</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="p-3 bg-slate-50 rounded-lg text-center">
-              <p className="font-bold text-lg">15%</p>
+              <p className="font-bold text-lg">{cfgDiscount}%</p>
               <p className="text-sm text-slate-500">{t('admin.subscriptions.subscriberDiscount')}</p>
             </div>
             <div className="p-3 bg-slate-50 rounded-lg text-center">
-              <p className="font-bold text-lg">{t('admin.subscriptions.free')}</p>
+              <p className="font-bold text-lg">{cfgFreeShipping ? t('admin.subscriptions.free') : t('admin.subscriptions.paid') || 'Paid'}</p>
               <p className="text-sm text-slate-500">{t('admin.subscriptions.subscriberShipping')}</p>
             </div>
             <div className="p-3 bg-slate-50 rounded-lg text-center">
-              <p className="font-bold text-lg">{t('admin.subscriptions.days', { count: '3' })}</p>
+              <p className="font-bold text-lg">{t('admin.subscriptions.days', { count: cfgReminderDays })}</p>
               <p className="text-sm text-slate-500">{t('admin.subscriptions.reminderBeforeDelivery')}</p>
             </div>
             <div className="p-3 bg-slate-50 rounded-lg text-center">
-              <p className="font-bold text-lg">{t('admin.subscriptions.pausePerYear', { count: '1' })}</p>
+              <p className="font-bold text-lg">{t('admin.subscriptions.pausePerYear', { count: cfgMaxPauses })}</p>
               <p className="text-sm text-slate-500">{t('admin.subscriptions.allowedPause')}</p>
             </div>
           </div>

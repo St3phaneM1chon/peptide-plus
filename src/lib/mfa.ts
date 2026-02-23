@@ -14,7 +14,8 @@ authenticator.options = {
   step: 30, // Nouvelle code toutes les 30 secondes
 };
 
-const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || 'SecureApp';
+// FAILLE-069 FIX: Use correct app name as fallback instead of generic 'SecureApp'
+const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || 'BioCycle Peptides';
 
 // =====================================================
 // TOTP (Google Authenticator, etc.)
@@ -55,8 +56,12 @@ export function verifyTOTP(secret: string, token: string): boolean {
 
 /**
  * Génère le code TOTP actuel (pour tests uniquement!)
+ * AMELIORATION FID-002: Restricted to non-production environments
  */
 export function generateCurrentTOTP(secret: string): string {
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('generateCurrentTOTP is disabled in production');
+  }
   return authenticator.generate(secret);
 }
 
@@ -94,19 +99,44 @@ export async function hashBackupCode(code: string): Promise<string> {
 /**
  * Vérifie un code de backup
  */
+// FAILLE-043 FIX: Rate limit backup code verification attempts
+const backupCodeAttempts = new Map<string, { count: number; firstAttempt: number }>();
+const BACKUP_CODE_MAX_ATTEMPTS = 5;
+const BACKUP_CODE_WINDOW_MS = 3600_000; // 1 hour
+
 export async function verifyBackupCode(
   code: string,
-  hashedCodes: string[]
+  hashedCodes: string[],
+  userId?: string
 ): Promise<{ valid: boolean; usedIndex: number }> {
+  // Rate limit check (keyed by userId if available)
+  if (userId) {
+    const now = Date.now();
+    const attempt = backupCodeAttempts.get(userId);
+    if (attempt) {
+      if (now - attempt.firstAttempt > BACKUP_CODE_WINDOW_MS) {
+        backupCodeAttempts.set(userId, { count: 1, firstAttempt: now });
+      } else if (attempt.count >= BACKUP_CODE_MAX_ATTEMPTS) {
+        return { valid: false, usedIndex: -1 };
+      } else {
+        attempt.count++;
+      }
+    } else {
+      backupCodeAttempts.set(userId, { count: 1, firstAttempt: now });
+    }
+  }
+
   const { compare } = await import('bcryptjs');
-  
+
   for (let i = 0; i < hashedCodes.length; i++) {
     const isValid = await compare(code.toUpperCase(), hashedCodes[i]);
     if (isValid) {
+      // Reset attempts on success
+      if (userId) backupCodeAttempts.delete(userId);
       return { valid: true, usedIndex: i };
     }
   }
-  
+
   return { valid: false, usedIndex: -1 };
 }
 
@@ -206,7 +236,7 @@ export async function verifyMFACode(
   // Essayer les backup codes
   if (user.mfaBackupCodes) {
     const hashedCodes = JSON.parse(await decrypt(user.mfaBackupCodes));
-    const { valid, usedIndex } = await verifyBackupCode(code, hashedCodes);
+    const { valid, usedIndex } = await verifyBackupCode(code, hashedCodes, userId);
     
     if (valid) {
       // Supprimer le code utilisé

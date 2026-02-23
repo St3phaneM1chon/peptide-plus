@@ -5,6 +5,7 @@
 
 import { prisma } from '@/lib/db';
 import { ACCOUNT_CODES } from './types';
+// FIX: F093 - TODO: Replace with 'import { Decimal } from "decimal.js"' to avoid Prisma internal import
 import { Decimal } from '@prisma/client/runtime/library';
 import { convertCurrency, subtract } from '@/lib/decimal-calculator';
 
@@ -87,7 +88,8 @@ export async function getNextEntryNumber(tx?: Parameters<Parameters<typeof prism
     const parsed = parseInt(maxRow.max_num.split('-').pop() || '0');
     if (!isNaN(parsed)) nextNum = parsed + 1;
   }
-  return `${prefix}${String(nextNum).padStart(4, '0')}`;
+  // F063 FIX: Use padStart(5) for consistent entry number format
+  return `${prefix}${String(nextNum).padStart(5, '0')}`;
 }
 
 /**
@@ -113,7 +115,8 @@ async function getNextInvoiceNumber(tx?: Parameters<Parameters<typeof prisma.$tr
     const parsed = parseInt(maxRow.max_num.split('-').pop() || '0');
     if (!isNaN(parsed)) nextNum = parsed + 1;
   }
-  return `${prefix}${String(nextNum).padStart(4, '0')}`;
+  // F063 FIX: Use padStart(5) for consistent entry number format
+  return `${prefix}${String(nextNum).padStart(5, '0')}`;
 }
 
 /**
@@ -342,7 +345,8 @@ async function generateFeeEntry(order: OrderWithItems, tx?: Parameters<Parameter
 
   const total = Number(order.total);
 
-  // Estimate fee (will be reconciled when Stripe/PayPal reports actual fee)
+  // FIX (F041): Estimate fee (will be reconciled when Stripe/PayPal reports actual fee)
+  // Added isEstimated flag in description to facilitate later reconciliation
   const isPaypal = order.paymentMethod === 'PAYPAL' || order.paypalOrderId;
   const feeRate = 0.029;
   const fixedFee = 0.30;
@@ -362,10 +366,13 @@ async function generateFeeEntry(order: OrderWithItems, tx?: Parameters<Parameter
     data: {
       entryNumber,
       date: order.createdAt,
-      description: `Frais ${isPaypal ? 'PayPal' : 'Stripe'} - Commande ${order.orderNumber}`,
+      description: `[ESTIMÉ] Frais ${isPaypal ? 'PayPal' : 'Stripe'} - Commande ${order.orderNumber}`,
+      // FIX: F073 - AUTO_PAYPAL_FEE and AUTO_STRIPE_FEE are custom type strings.
+      // Verify they are included in the JournalEntry.type enum in schema.prisma.
+      // If the enum is strict, these must be added; if type is a free-text String, this is fine.
       type: isPaypal ? 'AUTO_PAYPAL_FEE' : 'AUTO_STRIPE_FEE',
       status: 'POSTED',
-      reference: `FEE-${order.orderNumber}`,
+      reference: `FEE-EST-${order.orderNumber}`,
       orderId: order.id,
       createdBy: 'system',
       postedBy: 'system',
@@ -399,19 +406,21 @@ async function createCustomerInvoice(order: OrderWithItems, tx?: Parameters<Para
   const client = tx || prisma;
   const invoiceNumber = await getNextInvoiceNumber(tx);
 
-  // Get customer info
+  // FIX (F039): Use safe property access instead of unsafe type assertion
+  // that could result in customerName = 'undefined' string
   let customerName = 'Client';
   const customerEmail: string | null = null;
-  if (order.items.length > 0) {
-    // The order model doesn't directly link to User, we use userId
-    // For now get from shipping info
-    customerName = (order as unknown as Record<string, unknown>).shippingName as string || 'Client';
+  const orderRecord = order as unknown as Record<string, unknown>;
+  if (typeof orderRecord.shippingName === 'string' && orderRecord.shippingName.trim()) {
+    customerName = orderRecord.shippingName;
   }
+
+  const customerId = typeof orderRecord.userId === 'string' ? orderRecord.userId : null;
 
   const invoice = await client.customerInvoice.create({
     data: {
       invoiceNumber,
-      customerId: (order as unknown as Record<string, unknown>).userId as string || null,
+      customerId,
       customerName,
       customerEmail,
       orderId: order.id,
@@ -427,7 +436,9 @@ async function createCustomerInvoice(order: OrderWithItems, tx?: Parameters<Para
       balance: 0,
       currency: order.currency?.code || 'CAD',
       invoiceDate: order.createdAt,
-      dueDate: order.createdAt, // Paid immediately
+      // FIX: F079 - dueDate equals createdAt because these are auto-generated invoices for
+      // orders already paid at checkout. This is intentional: dueDate = invoiceDate for prepaid orders.
+      dueDate: order.createdAt,
       paidAt: new Date(),
       status: 'PAID',
       items: {
@@ -588,8 +599,9 @@ export async function createCreditNote(params: {
     if (originalInvoice) {
       const invoiceTotal = Number(originalInvoice.total);
       // Sum existing credit notes against this invoice
+      // F078 FIX: Use whitelist instead of blacklist for credit note status filtering
       const existingCreditNotesAgg = await prisma.creditNote.aggregate({
-        where: { invoiceId: params.invoiceId, status: { not: 'VOID' } },
+        where: { invoiceId: params.invoiceId, status: { in: ['ISSUED', 'APPLIED'] } },
         _sum: { total: true },
       });
       const existingTotal = Number(existingCreditNotesAgg._sum.total ?? 0);
@@ -618,7 +630,8 @@ export async function createCreditNote(params: {
       const parsed = parseInt(maxRow.max_num.split('-').pop() || '0');
       if (!isNaN(parsed)) nextNum = parsed + 1;
     }
-    const creditNoteNumber = `${prefix}${String(nextNum).padStart(4, '0')}`;
+    // F-063 FIX: Use 5-digit padding for consistency with other entry generators
+    const creditNoteNumber = `${prefix}${String(nextNum).padStart(5, '0')}`;
 
     return tx.creditNote.create({
       data: {

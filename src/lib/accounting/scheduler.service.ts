@@ -43,13 +43,21 @@ export interface SchedulerRunResult {
 // Helpers
 // ---------------------------------------------------------------------------
 
+// F064 FIX: Add per-task timeout to prevent one task from blocking all others
+const TASK_TIMEOUT_MS = 300_000; // 5 minutes
+
 async function runTask(
   name: string,
   fn: () => Promise<Record<string, unknown>>
 ): Promise<ScheduledTaskResult> {
   const start = Date.now();
   try {
-    const details = await fn();
+    const details = await Promise.race([
+      fn(),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error(`Task '${name}' timed out after ${TASK_TIMEOUT_MS}ms`)), TASK_TIMEOUT_MS)
+      ),
+    ]);
     return {
       task: name,
       success: true,
@@ -76,6 +84,7 @@ async function runTask(
  *
  * Call this from an API endpoint guarded by API key authentication.
  * Tasks run sequentially to avoid overwhelming the database.
+ * FIX: F089 - TODO: Persist SchedulerRunResult in a dedicated DB table for execution history
  */
 export async function runScheduledTasks(): Promise<SchedulerRunResult> {
   const startedAt = new Date();

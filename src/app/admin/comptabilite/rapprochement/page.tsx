@@ -53,24 +53,24 @@ export default function RapprochementPage() {
   const [matching, setMatching] = useState(false);
 
   // Fetch bank accounts on mount
-  useEffect(() => {
-    async function fetchAccounts() {
-      try {
-        const res = await fetch('/api/accounting/bank-accounts');
-        if (!res.ok) throw new Error(t('admin.reconciliation.errorLoadAccounts'));
-        const data = await res.json();
-        setBankAccounts(data.accounts || []);
-        if (data.accounts?.length > 0 && !selectedAccount) {
-          setSelectedAccount(data.accounts[0].id);
-        }
-      } catch (err) {
-        console.error('Fetch bank accounts error:', err);
-        setError(err instanceof Error ? err.message : 'Impossible de charger les comptes bancaires');
+  const fetchBankAccounts = useCallback(async () => {
+    try {
+      const res = await fetch('/api/accounting/bank-accounts');
+      if (!res.ok) throw new Error(t('admin.reconciliation.errorLoadAccounts'));
+      const data = await res.json();
+      setBankAccounts(data.accounts || []);
+      if (data.accounts?.length > 0 && !selectedAccount) {
+        setSelectedAccount(data.accounts[0].id);
       }
+    } catch (err) {
+      console.error('Fetch bank accounts error:', err);
+      setError(err instanceof Error ? err.message : 'Impossible de charger les comptes bancaires');
     }
-    fetchAccounts();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [t, selectedAccount]);
+
+  useEffect(() => {
+    fetchBankAccounts();
+  }, [fetchBankAccounts]);
 
   // Fetch transactions and journal entries when account or month changes
   const fetchData = useCallback(async () => {
@@ -101,7 +101,7 @@ export default function RapprochementPage() {
     } finally {
       setLoading(false);
     }
-  }, [selectedAccount, selectedMonth]);
+  }, [selectedAccount, selectedMonth, t]);
 
   useEffect(() => {
     fetchData();

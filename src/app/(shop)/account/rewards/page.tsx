@@ -41,45 +41,30 @@ interface Reward {
   available: boolean;
 }
 
-// Configuration des niveaux - benefits keys resolved at render time via t()
-const LOYALTY_LEVELS_CONFIG: LoyaltyLevel[] = [
-  {
-    name: 'Bronze',
-    minPoints: 0,
-    color: 'from-amber-600 to-amber-700',
-    icon: '🥉',
-    benefitKeys: ['customerRewards.benefit1PointPerDollar', 'customerRewards.benefitMemberOffers'],
-    discount: 0,
-    pointsMultiplier: 1,
-  },
-  {
-    name: 'Silver',
-    minPoints: 500,
-    color: 'from-gray-400 to-gray-500',
-    icon: '🥈',
-    benefitKeys: ['customerRewards.benefit1_25PointsPerDollar', 'customerRewards.benefit5PercentDiscount', 'customerRewards.benefitPriorityAccess'],
-    discount: 5,
-    pointsMultiplier: 1.25,
-  },
-  {
-    name: 'Gold',
-    minPoints: 1500,
-    color: 'from-yellow-500 to-amber-500',
-    icon: '🥇',
-    benefitKeys: ['customerRewards.benefit1_5PointsPerDollar', 'customerRewards.benefit10PercentDiscount', 'customerRewards.benefitFreeShipping', 'customerRewards.benefitPrioritySupport'],
-    discount: 10,
-    pointsMultiplier: 1.5,
-  },
-  {
-    name: 'Platinum',
-    minPoints: 5000,
-    color: 'from-slate-600 to-slate-800',
-    icon: '💎',
-    benefitKeys: ['customerRewards.benefit2PointsPerDollar', 'customerRewards.benefit15PercentDiscount', 'customerRewards.benefitFreeExpressShipping', 'customerRewards.benefitVipAccess', 'customerRewards.benefitDedicatedAdvisor'],
-    discount: 15,
-    pointsMultiplier: 2,
-  },
-];
+import { LOYALTY_TIER_THRESHOLDS } from '@/lib/constants';
+
+// Configuration des niveaux - derived from CANONICAL thresholds in constants.ts
+// benefits keys resolved at render time via t()
+const tierExtras: Record<string, { color: string; icon: string; benefitKeys: string[]; discount: number }> = {
+  BRONZE:   { color: 'from-amber-600 to-amber-700', icon: '🥉', benefitKeys: ['customerRewards.benefit1PointPerDollar', 'customerRewards.benefitMemberOffers'], discount: 0 },
+  SILVER:   { color: 'from-gray-400 to-gray-500', icon: '🥈', benefitKeys: ['customerRewards.benefit1_25PointsPerDollar', 'customerRewards.benefit5PercentDiscount', 'customerRewards.benefitPriorityAccess'], discount: 5 },
+  GOLD:     { color: 'from-yellow-500 to-amber-500', icon: '🥇', benefitKeys: ['customerRewards.benefit1_5PointsPerDollar', 'customerRewards.benefit10PercentDiscount', 'customerRewards.benefitFreeShipping', 'customerRewards.benefitPrioritySupport'], discount: 10 },
+  PLATINUM: { color: 'from-slate-600 to-slate-800', icon: '💎', benefitKeys: ['customerRewards.benefit2PointsPerDollar', 'customerRewards.benefit15PercentDiscount', 'customerRewards.benefitFreeExpressShipping', 'customerRewards.benefitVipAccess', 'customerRewards.benefitDedicatedAdvisor'], discount: 15 },
+  DIAMOND:  { color: 'from-indigo-600 to-indigo-800', icon: '💠', benefitKeys: ['customerRewards.benefit3PointsPerDollar', 'customerRewards.benefit20PercentDiscount', 'customerRewards.benefitFreeExpressShipping', 'customerRewards.benefitVipAccess', 'customerRewards.benefitDedicatedAdvisor'], discount: 20 },
+};
+
+const LOYALTY_LEVELS_CONFIG: LoyaltyLevel[] = LOYALTY_TIER_THRESHOLDS.map(tier => {
+  const extra = tierExtras[tier.id] || tierExtras.BRONZE;
+  return {
+    name: tier.name,
+    minPoints: tier.minPoints,
+    color: extra.color,
+    icon: extra.icon,
+    benefitKeys: extra.benefitKeys,
+    discount: extra.discount,
+    pointsMultiplier: tier.multiplier,
+  };
+});
 
 // Récompenses disponibles - names/descriptions resolved via t() at render time
 const AVAILABLE_REWARDS_CONFIG = [

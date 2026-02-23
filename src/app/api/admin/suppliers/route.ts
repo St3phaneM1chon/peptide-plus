@@ -10,6 +10,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { logger } from '@/lib/logger';
 
 // GET /api/admin/suppliers - List suppliers
 export const GET = withAdminGuard(async (request) => {
@@ -50,7 +51,7 @@ export const GET = withAdminGuard(async (request) => {
 
     return NextResponse.json({ suppliers, total, page, limit });
   } catch (error) {
-    console.error('Suppliers GET error:', error);
+    logger.error('Suppliers GET error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -152,7 +153,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
 
     return NextResponse.json(supplier, { status: 201 });
   } catch (error) {
-    console.error('Suppliers POST error:', error);
+    logger.error('Suppliers POST error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

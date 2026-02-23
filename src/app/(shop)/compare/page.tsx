@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, Suspense } from 'react';
+import { useEffect, useState, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useCompare } from '@/hooks/useCompare';
 import { useI18n } from '@/i18n/client';
@@ -62,37 +62,37 @@ function ComparePageContent() {
   // Get slugs from URL or localStorage
   const slugsFromUrl = searchParams.get('products')?.split(',').filter(Boolean) || [];
   const slugsToFetch = slugsFromUrl.length > 0 ? slugsFromUrl : productSlugs;
+  const slugsKey = slugsToFetch.join(',');
 
-  useEffect(() => {
+  const fetchProducts = useCallback(async () => {
     if (slugsToFetch.length === 0) {
       setIsLoading(false);
       return;
     }
 
-    const fetchProducts = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const locale = typeof window !== 'undefined' ? localStorage.getItem('locale') || 'en' : 'en';
-        const response = await fetch(`/api/products/compare?slugs=${slugsToFetch.join(',')}&locale=${locale}`);
+    setIsLoading(true);
+    setError(null);
+    try {
+      const locale = typeof window !== 'undefined' ? localStorage.getItem('locale') || 'en' : 'en';
+      const response = await fetch(`/api/products/compare?slugs=${slugsKey}&locale=${locale}`);
 
-        if (!response.ok) {
-          throw new Error('Failed to fetch products');
-        }
-
-        const data = await response.json();
-        setProducts(data.products || []);
-      } catch (err) {
-        console.error('Error fetching products:', err);
-        setError(t('compare.fetchError'));
-      } finally {
-        setIsLoading(false);
+      if (!response.ok) {
+        throw new Error('Failed to fetch products');
       }
-    };
 
+      const data = await response.json();
+      setProducts(data.products || []);
+    } catch (err) {
+      console.error('Error fetching products:', err);
+      setError(t('compare.fetchError'));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [slugsKey, slugsToFetch.length, t]);
+
+  useEffect(() => {
     fetchProducts();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [slugsToFetch.join(',')]);
+  }, [fetchProducts]);
 
   const handleRemoveProduct = (slug: string) => {
     removeFromCompare(slug);

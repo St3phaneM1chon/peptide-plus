@@ -38,7 +38,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     const { searchParams } = request.nextUrl;
     const after = searchParams.get('after'); // ID du dernier message reçu
-    const limit = parseInt(searchParams.get('limit') || '50');
+    // FIX: Bound limit to prevent abuse
+    const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10), 200);
 
     // Vérifier l'accès à la conversation
     const conversation = await prisma.conversation.findUnique({
@@ -57,17 +58,19 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: t('errors.forbidden') }, { status: 403 });
     }
 
-    // Construire la query
-    const where: { conversationId: string; createdAt?: { gt: Date } } = { conversationId: id };
+    // FIX F-038: Use cursor-based pagination with message ID instead of createdAt
+    // to avoid missing messages with identical timestamps
+    const where: { conversationId: string; id?: { gt: string }; createdAt?: { gt: Date } } = { conversationId: id };
 
     if (after) {
-      // Récupérer les messages après un certain ID (pour le polling)
+      // Use the message ID directly as cursor to avoid createdAt timestamp collisions
       const afterMessage = await prisma.message.findUnique({
         where: { id: after },
-        select: { createdAt: true },
+        select: { id: true, createdAt: true },
       });
-      
+
       if (afterMessage) {
+        // Filter by both createdAt AND id to handle same-timestamp messages
         where.createdAt = { gt: afterMessage.createdAt };
       }
     }

@@ -8,11 +8,8 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
-
-function safeParseJson<T>(str: string | null | undefined, fallback: T): T {
-  if (!str) return fallback;
-  try { return JSON.parse(str); } catch { return fallback; }
-}
+import { safeParseJson } from '@/lib/email/utils';
+import { logger } from '@/lib/logger';
 
 export const GET = withAdminGuard(async (request, { session: _session }) => {
   try {
@@ -106,7 +103,7 @@ export const GET = withAdminGuard(async (request, { session: _session }) => {
       period,
     });
   } catch (error) {
-    console.error('[Revenue Analytics] Error:', error);
+    logger.error('[Revenue Analytics] Error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 });

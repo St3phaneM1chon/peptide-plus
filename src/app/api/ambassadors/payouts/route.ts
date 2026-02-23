@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth-config';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/ambassadors/payouts
@@ -60,7 +61,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ payouts: formatted });
   } catch (error) {
-    console.error('Payouts GET error:', error);
+    logger.error('Payouts GET error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
   }
 }
@@ -108,6 +109,15 @@ export async function POST(request: NextRequest) {
       0
     );
 
+    // FIX FLAW-041: Enforce minimum payout amount to avoid micro-payouts and banking fees
+    const MIN_PAYOUT_AMOUNT = 25.00; // $25 minimum
+    if (totalAmount < MIN_PAYOUT_AMOUNT) {
+      return NextResponse.json(
+        { error: `Montant minimum de paiement: $${MIN_PAYOUT_AMOUNT}. Montant actuel: $${totalAmount.toFixed(2)}` },
+        { status: 400 }
+      );
+    }
+
     // Create payout and mark all commissions as paid in a transaction
     const payout = await prisma.$transaction(async (tx) => {
       // Create the payout record
@@ -148,7 +158,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Payout processing error:', error);
+    logger.error('Payout processing error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Erreur lors du traitement du paiement' }, { status: 500 });
   }
 }

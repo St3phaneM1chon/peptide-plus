@@ -99,29 +99,66 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // DI-64: Deduplicate - filter out orders that already had a satisfaction survey sent
+    // FIX: FLAW-013 - Dedup using orderId stored in EmailLog metadata field
+    // instead of fragile subject line parsing. We store the orderId in the
+    // messageId field (repurposed as metadata) when creating the EmailLog entry.
+    // For backward compat, also check subject-based matching as fallback.
+    const orderIds = deliveredOrders.map((o) => o.id);
     const orderNumbers = deliveredOrders.map((o) => o.orderNumber);
-    const alreadySentLogs = orderNumbers.length > 0
+    const alreadySentLogs = orderIds.length > 0
       ? await db.emailLog.findMany({
           where: {
             templateId: 'satisfaction-survey',
             status: 'sent',
-            to: { in: deliveredOrders.map((o) => o.userId) }, // rough filter
+            OR: [
+              // Primary: match by messageId field (stores orderId metadata)
+              { messageId: { in: orderIds.map((id) => `order:${id}`) } },
+              // Fallback: match by subject containing order number (legacy entries)
+              { subject: { in: orderNumbers.map((num) => `%${num}%`) } },
+            ],
           },
-          select: { subject: true },
+          select: { messageId: true, subject: true },
         })
       : [];
-    // Extract order numbers from subjects like "Satisfaction survey - #ORD-xxx"
+    const alreadySentOrderIds = new Set<string>();
     const alreadySentOrderNumbers = new Set<string>();
     for (const log of alreadySentLogs) {
-      for (const orderNumber of orderNumbers) {
-        if (log.subject?.includes(orderNumber)) {
-          alreadySentOrderNumbers.add(orderNumber);
+      // Check messageId-based dedup (new format: "order:{orderId}")
+      if (log.messageId?.startsWith('order:')) {
+        alreadySentOrderIds.add(log.messageId.replace('order:', ''));
+      }
+      // Fallback: check subject-based dedup (legacy)
+      if (log.subject) {
+        for (const orderNumber of orderNumbers) {
+          if (log.subject.includes(orderNumber)) {
+            alreadySentOrderNumbers.add(orderNumber);
+          }
         }
       }
     }
-    const filteredOrders = deliveredOrders.filter(
-      (o) => !alreadySentOrderNumbers.has(o.orderNumber)
+    const dedupedOrders = deliveredOrders.filter(
+      (o) => !alreadySentOrderIds.has(o.id) && !alreadySentOrderNumbers.has(o.orderNumber)
+    );
+
+    // FLAW-044 FIX: Check notification preferences and marketing consent
+    // Filter out users who opted out of marketing or survey emails
+    const dedupedUserIds = [...new Set(dedupedOrders.map((o) => o.userId))];
+    const optedOutUserIds = new Set<string>();
+    if (dedupedUserIds.length > 0) {
+      const notifPrefs = await db.notificationPreference.findMany({
+        where: {
+          userId: { in: dedupedUserIds },
+          OR: [
+            { promotions: false },
+            { orderUpdates: false },
+          ],
+        },
+        select: { userId: true },
+      }).catch(() => [] as { userId: string }[]);
+      notifPrefs.forEach((p) => optedOutUserIds.add(p.userId));
+    }
+    const filteredOrders = dedupedOrders.filter(
+      (o) => !optedOutUserIds.has(o.userId)
     );
 
     console.log(`Found ${deliveredOrders.length} delivered orders, ${filteredOrders.length} after dedup`);
@@ -182,7 +219,8 @@ export async function GET(request: NextRequest) {
           unsubscribeUrl: orderData.unsubscribeUrl,
         });
 
-        // Log to EmailLog for deduplication on future runs
+        // FIX: FLAW-013 - Store orderId in messageId field for reliable deduplication
+        // instead of relying on subject line parsing.
         await db.emailLog.create({
           data: {
             templateId: 'satisfaction-survey',
@@ -190,6 +228,7 @@ export async function GET(request: NextRequest) {
             subject: emailContent.subject,
             status: result.success ? 'sent' : 'failed',
             error: result.success ? null : 'Send failed',
+            messageId: `order:${order.id}`,
           },
         }).catch((err: unknown) => console.error('Failed to create email log', err));
 

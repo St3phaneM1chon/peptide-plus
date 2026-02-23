@@ -48,6 +48,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { logger } from '@/lib/logger';
 
 export const GET = withAdminGuard(async (request: NextRequest, { session }) => {
   try {
@@ -125,7 +126,7 @@ export const GET = withAdminGuard(async (request: NextRequest, { session }) => {
       },
     });
   } catch (error) {
-    console.error('Admin users API error:', error);
+    logger.error('Admin users API error', { error: error instanceof Error ? error.message : String(error) });
     // SEC-33: Return 500 status on error instead of 200
     return NextResponse.json({ error: 'Internal server error', users: [] }, { status: 500 });
   }

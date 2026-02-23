@@ -161,7 +161,11 @@ export default function InboxView({ onSelectConversation, selectedId }: InboxVie
           conversations.map((conv) => {
             const StatusIcon = statusIcons[conv.status] || Circle;
             const lastEmail = conv.inboundEmails[0];
-            const tags = conv.tags ? JSON.parse(conv.tags) : [];
+            // #24 Security fix: wrap JSON.parse in try-catch to avoid crash on malformed tags
+            let tags: string[] = [];
+            if (conv.tags) {
+              try { const parsed = JSON.parse(conv.tags); tags = Array.isArray(parsed) ? parsed : []; } catch { tags = []; }
+            }
             const isSelected = selectedId === conv.id;
 
             return (

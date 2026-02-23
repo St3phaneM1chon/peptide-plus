@@ -12,6 +12,7 @@ import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { enqueue } from '@/lib/translation';
+import { logger } from '@/lib/logger';
 
 // GET /api/admin/blog/[id] - Get single blog post
 export const GET = withAdminGuard(async (_request, { session, params }) => {
@@ -51,7 +52,7 @@ export const GET = withAdminGuard(async (_request, { session, params }) => {
       },
     });
   } catch (error) {
-    console.error('Admin blog post GET error:', error);
+    logger.error('Admin blog post GET error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -207,7 +208,7 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
 
     return NextResponse.json({ post });
   } catch (error) {
-    console.error('Admin blog post PATCH error:', error);
+    logger.error('Admin blog post PATCH error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -249,7 +250,7 @@ export const DELETE = withAdminGuard(async (_request, { session, params }) => {
       message: `Blog post "${existing.title}" deleted successfully`,
     });
   } catch (error) {
-    console.error('Admin blog post DELETE error:', error);
+    logger.error('Admin blog post DELETE error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

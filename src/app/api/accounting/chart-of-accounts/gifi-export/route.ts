@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/accounting/chart-of-accounts/gifi-export
@@ -61,7 +62,7 @@ export const GET = withAdminGuard(async (_request, { session }) => {
     const filename = `gifi-mapping-${date}.csv`;
 
     // Audit log
-    console.info('AUDIT: GIFI export', {
+    logger.info('AUDIT: GIFI export', {
       exportedBy: session.user.id || session.user.email,
       exportedAt: new Date().toISOString(),
       accountCount: accounts.length,
@@ -74,7 +75,7 @@ export const GET = withAdminGuard(async (_request, { session }) => {
       },
     });
   } catch (error) {
-    console.error('GIFI export error:', error);
+    logger.error('GIFI export error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Error exporting GIFI mappings' },
       { status: 500 }

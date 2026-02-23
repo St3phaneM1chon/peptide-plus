@@ -4,6 +4,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
+import { logAuditTrail } from '@/lib/accounting/audit-trail.service';
+import { logger } from '@/lib/logger';
 
 const createSupplierInvoiceSchema = z.object({
   invoiceNumber: z.string().min(1).max(100),
@@ -84,7 +86,7 @@ export const GET = withAdminGuard(async (request) => {
       pagination: { page, limit, total, pages: Math.ceil(total / limit) },
     });
   } catch (error) {
-    console.error('Get supplier invoices error:', error);
+    logger.error('Get supplier invoices error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la récupération des factures fournisseurs' },
       { status: 500 }
@@ -114,6 +116,20 @@ export const POST = withAdminGuard(async (request) => {
       invoiceDate, dueDate, expenseCategory,
     } = parsed.data;
 
+    // FIX: F012 - Check for duplicate invoice number before creating.
+    // The DB has a unique constraint on invoiceNumber, but catching the error
+    // here gives a friendlier message than a raw Prisma unique violation.
+    const existingInvoice = await prisma.supplierInvoice.findFirst({
+      where: { invoiceNumber, deletedAt: null },
+      select: { id: true },
+    });
+    if (existingInvoice) {
+      return NextResponse.json(
+        { error: `Une facture fournisseur avec le numéro "${invoiceNumber}" existe déjà` },
+        { status: 409 }
+      );
+    }
+
     // #49 Validate invoiceDate <= dueDate
     const parsedInvoiceDate = new Date(invoiceDate);
     const parsedDueDate = new Date(dueDate);
@@ -131,8 +147,11 @@ export const POST = withAdminGuard(async (request) => {
     }
 
     // #38 Validate total equals subtotal + taxes (server-side recompute)
+    // FIX: F055 - Use currency-aware tolerance (0.01 for CAD/USD, 1.0 for JPY/KRW, etc.)
+    // For now, use 0.02 to handle multi-currency rounding differences (e.g. JPY→CAD conversion)
     const computedTotal = Number(subtotal) + Number(taxTps || 0) + Number(taxTvq || 0) + Number(taxOther || 0);
-    if (Math.abs(computedTotal - Number(total)) > 0.01) {
+    const tolerance = 0.02;
+    if (Math.abs(computedTotal - Number(total)) > tolerance) {
       return NextResponse.json(
         { error: `Le total (${total}) ne correspond pas au sous-total + taxes (${computedTotal.toFixed(2)})` },
         { status: 400 }
@@ -159,7 +178,7 @@ export const POST = withAdminGuard(async (request) => {
 
     return NextResponse.json({ success: true, invoice }, { status: 201 });
   } catch (error) {
-    console.error('Create supplier invoice error:', error);
+    logger.error('Create supplier invoice error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la création de la facture fournisseur' },
       { status: 500 }
@@ -226,7 +245,7 @@ export const PUT = withAdminGuard(async (request, { session }) => {
     });
 
     // #76 Compliance: Audit logging for PUT operations
-    console.info('AUDIT: Supplier invoice updated', {
+    logger.info('AUDIT: Supplier invoice updated', {
       invoiceId: id,
       invoiceNumber: existing.invoiceNumber,
       previousStatus: existing.status,
@@ -239,9 +258,25 @@ export const PUT = withAdminGuard(async (request, { session }) => {
       },
     });
 
+    // FIX (F028): Persist audit trail to DB (not just console.info)
+    logAuditTrail({
+      entityType: 'SUPPLIER_INVOICE',
+      entityId: id,
+      action: 'UPDATE',
+      field: status && status !== existing.status ? 'status' : amountPaid !== undefined ? 'amountPaid' : undefined,
+      oldValue: status && status !== existing.status ? existing.status : amountPaid !== undefined ? String(Number(existing.amountPaid)) : null,
+      newValue: status && status !== existing.status ? status : amountPaid !== undefined ? String(amountPaid) : null,
+      userId: session.user.id || session.user.email || 'system',
+      userName: session.user.name || session.user.email || undefined,
+      metadata: {
+        invoiceNumber: existing.invoiceNumber,
+        supplierName: existing.supplierName,
+      },
+    }).catch(() => { /* non-blocking */ });
+
     return NextResponse.json({ success: true, invoice });
   } catch (error) {
-    console.error('Update supplier invoice error:', error);
+    logger.error('Update supplier invoice error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la mise à jour de la facture fournisseur' },
       { status: 500 }
@@ -281,7 +316,7 @@ export const DELETE = withAdminGuard(async (request, { session }) => {
     });
 
     // #76 Compliance: Audit logging for DELETE operations
-    console.info('AUDIT: Supplier invoice deleted (soft)', {
+    logger.info('AUDIT: Supplier invoice deleted (soft)', {
       invoiceId: id,
       invoiceNumber: existing.invoiceNumber,
       supplierName: existing.supplierName,
@@ -292,7 +327,7 @@ export const DELETE = withAdminGuard(async (request, { session }) => {
 
     return NextResponse.json({ success: true, message: 'Facture fournisseur supprimée' });
   } catch (error) {
-    console.error('Delete supplier invoice error:', error);
+    logger.error('Delete supplier invoice error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la suppression de la facture fournisseur' },
       { status: 500 }

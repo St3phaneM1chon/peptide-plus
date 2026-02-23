@@ -1,3 +1,4 @@
+// TODO: F-054 - typeLabels recreated every render without useMemo; wrap in useMemo for performance
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -78,31 +79,35 @@ export default function PromotionsPage() {
 
   // Form state
   const [formName, setFormName] = useState('');
+  // FIX F-019: Support all 5 promotion types (PRODUCT_DISCOUNT, CATEGORY_DISCOUNT, BUNDLE, BUY_X_GET_Y, FLASH_SALE)
+  const [formPromoKind, setFormPromoKind] = useState<Promotion['type']>('PRODUCT_DISCOUNT');
   const [formType, setFormType] = useState<'PERCENTAGE' | 'FIXED_AMOUNT'>('PERCENTAGE');
   const [formValue, setFormValue] = useState(10);
   const [formStartDate, setFormStartDate] = useState('');
   const [formEndDate, setFormEndDate] = useState('');
   const [formAppliesToAll, setFormAppliesToAll] = useState(false);
+  // FIX F-019: Type-specific fields
+  const [formBuyQty, setFormBuyQty] = useState(2);
+  const [formGetQty, setFormGetQty] = useState(1);
+  const [formMinQuantity, setFormMinQuantity] = useState(1);
 
   // Filter state
   const [searchValue, setSearchValue] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
-  const typeLabels: Record<string, string> = {
+  // FIX: FLAW-084 - Memoize typeLabels to avoid recreation on every render
+  const typeLabels: Record<string, string> = useMemo(() => ({
     PRODUCT_DISCOUNT: t('admin.promotions.typeProductDiscount'),
     CATEGORY_DISCOUNT: t('admin.promotions.typeCategoryDiscount'),
     BUNDLE: t('admin.promotions.typeBundle'),
     BUY_X_GET_Y: t('admin.promotions.typeBuyXGetY'),
     FLASH_SALE: t('admin.promotions.typeFlashSale'),
-  };
+  }), [t]);
 
   // ─── Data fetching ──────────────────────────────────────────
 
-  useEffect(() => {
-    fetchPromotions();
-  }, []);
-
-  const fetchPromotions = async () => {
+  // FIX: FLAW-054/FLAW-055 - Wrap fetchPromotions in useCallback for stable reference
+  const fetchPromotions = useCallback(async () => {
     try {
       const res = await fetchWithRetry('/api/admin/promotions');
       const data = await res.json();
@@ -111,17 +116,25 @@ export default function PromotionsPage() {
       setPromotions([]);
     }
     setLoading(false);
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchPromotions();
+  }, [fetchPromotions]);
 
   // ─── Form helpers ───────────────────────────────────────────
 
   const resetForm = () => {
     setFormName('');
+    setFormPromoKind('PRODUCT_DISCOUNT');
     setFormType('PERCENTAGE');
     setFormValue(10);
     setFormStartDate('');
     setFormEndDate('');
     setFormAppliesToAll(false);
+    setFormBuyQty(2);
+    setFormGetQty(1);
+    setFormMinQuantity(1);
   };
 
   const openCreateForm = () => {
@@ -133,11 +146,15 @@ export default function PromotionsPage() {
   const openEditForm = (promo: Promotion) => {
     setEditingPromo(promo);
     setFormName(promo.name);
+    setFormPromoKind(promo.type);
     setFormType(promo.discountType);
     setFormValue(promo.discountValue);
     setFormStartDate(promo.startsAt ? promo.startsAt.slice(0, 16) : '');
     setFormEndDate(promo.endsAt ? promo.endsAt.slice(0, 16) : '');
     setFormAppliesToAll(promo.type === 'FLASH_SALE');
+    setFormBuyQty(promo.buyQuantity ?? 2);
+    setFormGetQty(promo.getQuantity ?? 1);
+    setFormMinQuantity(promo.minQuantity ?? 1);
     setShowForm(true);
   };
 
@@ -157,13 +174,24 @@ export default function PromotionsPage() {
         : '/api/admin/promotions';
       const method = isEdit ? 'PATCH' : 'POST';
 
+      // FIX F-019: Send both type (promo kind) and discountType (discount method)
       const body: Record<string, unknown> = {
         name: formName.trim(),
-        type: formType,
-        value: formValue,
-        appliesToAll: formAppliesToAll,
+        type: formPromoKind,
+        discountType: formType,
+        discountValue: formValue,
+        appliesToAll: formAppliesToAll || formPromoKind === 'FLASH_SALE',
         isActive: true,
       };
+
+      // Add type-specific fields
+      if (formPromoKind === 'BUY_X_GET_Y') {
+        body.buyQuantity = formBuyQty;
+        body.getQuantity = formGetQty;
+      }
+      if (formPromoKind === 'BUNDLE' || formPromoKind === 'BUY_X_GET_Y') {
+        body.minQuantity = formMinQuantity;
+      }
 
       if (formStartDate) {
         body.startsAt = new Date(formStartDate).toISOString();
@@ -196,21 +224,24 @@ export default function PromotionsPage() {
 
   // ─── CRUD ─────────────────────────────────────────────────
 
-  const toggleActive = async (id: string, isActive: boolean) => {
-    setPromotions(prev => prev.map((p) => (p.id === id ? { ...p, isActive: !isActive } : p)));
+  // FIX F-020: Use functional state updater to correctly capture value for rollback
+  const toggleActive = async (id: string, currentIsActive: boolean) => {
+    const newIsActive = !currentIsActive;
+    setPromotions(prev => prev.map((p) => (p.id === id ? { ...p, isActive: newIsActive } : p)));
     try {
       const res = await fetch(`/api/admin/promotions/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isActive: !isActive }),
+        body: JSON.stringify({ isActive: newIsActive }),
       });
       if (!res.ok) {
-        setPromotions(prev => prev.map((p) => (p.id === id ? { ...p, isActive } : p)));
+        // Revert: set back to currentIsActive (the value before this toggle)
+        setPromotions(prev => prev.map((p) => (p.id === id ? { ...p, isActive: currentIsActive } : p)));
         const data = await res.json().catch(() => ({}));
         toast.error(data.error || t('common.updateFailed'));
       }
     } catch {
-      setPromotions(prev => prev.map((p) => (p.id === id ? { ...p, isActive } : p)));
+      setPromotions(prev => prev.map((p) => (p.id === id ? { ...p, isActive: currentIsActive } : p)));
       toast.error(t('common.networkError'));
     }
   };
@@ -552,6 +583,22 @@ export default function PromotionsPage() {
               placeholder={t('admin.promotions.formNamePlaceholder')}
             />
           </FormField>
+
+          {/* FIX F-019: Promotion kind selector - supports all 5 types */}
+          <FormField label={t('admin.promotions.formPromoKind') || 'Promotion type'} required>
+            <select
+              value={formPromoKind}
+              onChange={(e) => setFormPromoKind(e.target.value as Promotion['type'])}
+              className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-sky-700 focus:border-sky-700"
+            >
+              <option value="PRODUCT_DISCOUNT">{typeLabels.PRODUCT_DISCOUNT}</option>
+              <option value="CATEGORY_DISCOUNT">{typeLabels.CATEGORY_DISCOUNT}</option>
+              <option value="BUNDLE">{typeLabels.BUNDLE}</option>
+              <option value="BUY_X_GET_Y">{typeLabels.BUY_X_GET_Y}</option>
+              <option value="FLASH_SALE">{typeLabels.FLASH_SALE}</option>
+            </select>
+          </FormField>
+
           <div className="grid grid-cols-2 gap-4">
             <FormField label={t('admin.promotions.formType')} required>
               <select
@@ -574,6 +621,44 @@ export default function PromotionsPage() {
               />
             </FormField>
           </div>
+
+          {/* FIX F-019: BUY_X_GET_Y specific fields */}
+          {formPromoKind === 'BUY_X_GET_Y' && (
+            <div className="grid grid-cols-2 gap-4">
+              <FormField label={t('admin.promotions.formBuyQty') || 'Buy quantity'} required>
+                <Input
+                  type="number"
+                  min={1}
+                  max={100}
+                  value={formBuyQty}
+                  onChange={(e) => setFormBuyQty(parseInt(e.target.value) || 1)}
+                />
+              </FormField>
+              <FormField label={t('admin.promotions.formGetQty') || 'Get free quantity'} required>
+                <Input
+                  type="number"
+                  min={1}
+                  max={100}
+                  value={formGetQty}
+                  onChange={(e) => setFormGetQty(parseInt(e.target.value) || 1)}
+                />
+              </FormField>
+            </div>
+          )}
+
+          {/* FIX F-019: Min quantity for BUNDLE and BUY_X_GET_Y */}
+          {(formPromoKind === 'BUNDLE' || formPromoKind === 'BUY_X_GET_Y') && (
+            <FormField label={t('admin.promotions.minQuantity') || 'Minimum quantity'}>
+              <Input
+                type="number"
+                min={1}
+                max={1000}
+                value={formMinQuantity}
+                onChange={(e) => setFormMinQuantity(parseInt(e.target.value) || 1)}
+              />
+            </FormField>
+          )}
+
           <div className="grid grid-cols-2 gap-4">
             <FormField label={t('admin.promotions.formStartDate')}>
               <Input
@@ -593,8 +678,9 @@ export default function PromotionsPage() {
           <label className="flex items-center gap-2 cursor-pointer">
             <input
               type="checkbox"
-              checked={formAppliesToAll}
+              checked={formAppliesToAll || formPromoKind === 'FLASH_SALE'}
               onChange={(e) => setFormAppliesToAll(e.target.checked)}
+              disabled={formPromoKind === 'FLASH_SALE'}
               className="rounded border-slate-300 text-sky-600 focus:ring-sky-500"
             />
             <span className="text-sm text-slate-700">{t('admin.promotions.formAppliesToAll')}</span>

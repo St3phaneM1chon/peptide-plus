@@ -72,20 +72,32 @@ export async function fetchBOCRate(currency: string): Promise<number> {
 }
 
 /**
- * Fallback exchange rates (updated periodically)
+ * Fallback exchange rates
+ * FIX (F020): Added lastUpdated date and warning when fallback rates are stale.
+ * These rates should be updated periodically or stored in DB via a cron job.
  */
-function getFallbackRate(currency: string): number {
-  const fallbackRates: Record<string, number> = {
-    USD: 1.35,
-    EUR: 1.47,
-    GBP: 1.71,
-    CHF: 1.52,
-    JPY: 0.009,
-    AUD: 0.89,
-    MXN: 0.079,
+const FALLBACK_RATES: { rates: Record<string, number>; lastUpdated: string } = {
+  rates: {
+    USD: 1.44,
+    EUR: 1.51,
+    GBP: 1.81,
+    CHF: 1.62,
+    JPY: 0.0095,
+    AUD: 0.91,
+    MXN: 0.071,
     CAD: 1,
-  };
-  return fallbackRates[currency] || 1;
+  },
+  lastUpdated: '2026-02-22',
+};
+
+function getFallbackRate(currency: string): number {
+  // Warn if fallback rates are more than 30 days old
+  const ageMs = Date.now() - new Date(FALLBACK_RATES.lastUpdated).getTime();
+  const ageDays = ageMs / (1000 * 60 * 60 * 24);
+  if (ageDays > 30) {
+    console.warn(`STALE FALLBACK RATES: Last updated ${FALLBACK_RATES.lastUpdated} (${Math.round(ageDays)} days ago). Update FALLBACK_RATES in currency.service.ts.`);
+  }
+  return FALLBACK_RATES.rates[currency] || 1;
 }
 
 /**
@@ -216,16 +228,18 @@ export function createFxJournalEntry(
   const isGain = fxGainLoss > 0;
   const absAmount = Math.abs(fxGainLoss);
 
+  // FIX: F013 - Use separate accounts for FX gain (7020) and FX loss (7010)
+  // instead of the same account '7000' for both
   return {
     lines: [
       {
-        accountCode: isGain ? '1010' : '7000',
+        accountCode: isGain ? '1010' : '7010',
         accountName: isGain ? 'Compte bancaire' : 'Perte de change',
         debit: isGain ? absAmount : 0,
         credit: isGain ? 0 : absAmount,
       },
       {
-        accountCode: isGain ? '7000' : '1010',
+        accountCode: isGain ? '7020' : '1010',
         accountName: isGain ? 'Gain de change' : 'Compte bancaire',
         debit: isGain ? 0 : absAmount,
         credit: isGain ? absAmount : 0,
@@ -254,35 +268,68 @@ export function formatCurrency(
 
 /**
  * Get historical exchange rates for a period
+ * FIX (F019): Now fetches real historical rates from BOC Valet API
+ * with fallback to static rates if the API fails.
  */
 export async function getHistoricalRates(
   currency: string,
   startDate: Date,
   endDate: Date
 ): Promise<{ date: Date; rate: number }[]> {
-  // TODO: In production, fetch from BOC historical Valet API:
-  // https://www.bankofcanada.ca/valet/observations/FX{CURRENCY}CAD/json?start_date=...&end_date=...
-  // For now, use static fallback rates. These are the same conservative estimates
-  // used by getFallbackRate() and should be updated periodically.
-  console.warn('getHistoricalRates: BOC historical API not implemented, using static fallback rates.', {
-    currency,
-    startDate: startDate.toISOString(),
-    endDate: endDate.toISOString(),
-  });
-
-  const baseRate = getFallbackRate(currency);
-  const rates: { date: Date; rate: number }[] = [];
-
-  const current = new Date(startDate);
-  while (current <= endDate) {
-    rates.push({
-      date: new Date(current),
-      rate: baseRate,
-    });
-    current.setDate(current.getDate() + 1);
+  if (currency === 'CAD') {
+    // No conversion needed for CAD -> CAD
+    const rates: { date: Date; rate: number }[] = [];
+    const current = new Date(startDate);
+    while (current <= endDate) {
+      rates.push({ date: new Date(current), rate: 1 });
+      current.setDate(current.getDate() + 1);
+    }
+    return rates;
   }
 
-  return rates;
+  try {
+    const start = startDate.toISOString().split('T')[0];
+    const end = endDate.toISOString().split('T')[0];
+    const response = await fetch(
+      `https://www.bankofcanada.ca/valet/observations/FX${currency}CAD/json?start_date=${start}&end_date=${end}`
+    );
+
+    if (!response.ok) {
+      throw new Error(`BOC Valet API returned ${response.status}`);
+    }
+
+    const data = await response.json();
+    const observations = data.observations;
+
+    if (observations && observations.length > 0) {
+      const rateKey = `FX${currency}CAD`;
+      return observations
+        .filter((obs: Record<string, { v?: string }>) => obs[rateKey]?.v)
+        .map((obs: Record<string, { v?: string } | string>) => ({
+          date: new Date(obs.d as string),
+          rate: parseFloat((obs[rateKey] as { v?: string })?.v || '1'),
+        }));
+    }
+
+    throw new Error('No observations returned from BOC API');
+  } catch (error) {
+    console.warn('getHistoricalRates: BOC API failed, using fallback rates.', {
+      currency,
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString(),
+      error: error instanceof Error ? error.message : String(error),
+    });
+
+    // Fallback: use static rate for all dates
+    const baseRate = getFallbackRate(currency);
+    const rates: { date: Date; rate: number }[] = [];
+    const current = new Date(startDate);
+    while (current <= endDate) {
+      rates.push({ date: new Date(current), rate: baseRate });
+      current.setDate(current.getDate() + 1);
+    }
+    return rates;
+  }
 }
 
 /**
@@ -352,9 +399,10 @@ export async function revalueForeignAccounts(
     }
   }
 
+  // FIX: F013 - Use separate accounts for unrealized FX gain (7020) vs loss (7010)
   if (lines.length > 0) {
     lines.push({
-      accountCode: totalAdjustment > 0 ? '7000' : '7000',
+      accountCode: totalAdjustment > 0 ? '7020' : '7010',
       accountName: totalAdjustment > 0 ? 'Gain de change non réalisé' : 'Perte de change non réalisée',
       debit: totalAdjustment < 0 ? Math.abs(totalAdjustment) : 0,
       credit: totalAdjustment > 0 ? totalAdjustment : 0,

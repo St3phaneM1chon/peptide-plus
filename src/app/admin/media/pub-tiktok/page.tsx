@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Activity } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
 import { IntegrationCard } from '@/components/admin/IntegrationCard';
+import { toast } from 'sonner';
 
 export default function MediaTikTokPage() {
   const { t } = useI18n();
@@ -30,13 +31,19 @@ export default function MediaTikTokPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  // FIX: F20 - Add try/catch with toast.error() for network/save failures
   const handleSave = async () => {
-    const res = await fetch('/api/admin/integrations/tiktok', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ enabled, advertiserId, appId }),
-    });
-    if (!res.ok) throw new Error('Save failed');
+    try {
+      const res = await fetch('/api/admin/integrations/tiktok', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled, advertiserId, appId }),
+      });
+      if (!res.ok) throw new Error('Save failed');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Save failed');
+      throw err; // Re-throw so IntegrationCard can handle state
+    }
   };
 
   const handleTest = async () => {
@@ -57,7 +64,8 @@ export default function MediaTikTokPage() {
     <div className="p-6 max-w-3xl">
       <IntegrationCard
         title={t('admin.media.tiktokTitle')}
-        description="Connect TikTok Marketing API for content posting, ad campaigns, and analytics. Note: TikTok Shop is not available for research peptides."
+        // FIX: F35 - Use i18n for description instead of hardcoded English
+        description={t('admin.media.tiktokDescription') || 'Connect TikTok Marketing API for content posting, ad campaigns, and analytics.'}
         icon={<Activity className="w-6 h-6" />}
         color="from-pink-500 to-pink-600"
         enabled={enabled}

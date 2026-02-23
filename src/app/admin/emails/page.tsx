@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Component, type ReactNode, type ErrorInfo } from 'react';
 import {
   Mail, SendHorizontal, CheckCircle2, XCircle, BarChart3,
   LayoutTemplate, Save, Eye, Inbox, Megaphone, GitBranch,
-  PieChart, Settings, Users,
+  PieChart, Settings, Users, AlertTriangle, RefreshCw,
 } from 'lucide-react';
 import {
   PageHeader, StatCard, StatusBadge, Button, Modal,
@@ -21,6 +21,64 @@ import CampaignList from './campaigns/CampaignList';
 import CampaignEditor from './campaigns/CampaignEditor';
 import SegmentBuilder from './segments/SegmentBuilder';
 import { toast } from 'sonner';
+
+// ---- Error Boundary ----
+
+interface ErrorBoundaryProps {
+  children: ReactNode;
+  fallbackTitle?: string;
+  fallbackDescription?: string;
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+}
+
+class EmailErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
+    console.error('[EmailAdmin] Rendering error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex flex-col items-center justify-center min-h-[300px] bg-red-50 border border-red-200 rounded-xl p-8 text-center">
+          <AlertTriangle className="h-10 w-10 text-red-500 mb-4" />
+          <h3 className="text-lg font-semibold text-red-800 mb-2">
+            {this.props.fallbackTitle || 'Something went wrong'}
+          </h3>
+          <p className="text-sm text-red-600 mb-4 max-w-md">
+            {this.props.fallbackDescription || 'An unexpected error occurred while rendering this section. Please try refreshing the page.'}
+          </p>
+          {this.state.error && (
+            <pre className="text-xs text-red-500 bg-red-100 rounded p-2 mb-4 max-w-lg overflow-auto">
+              {this.state.error.message}
+            </pre>
+          )}
+          <button
+            onClick={() => this.setState({ hasError: false, error: null })}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700 transition-colors"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Try Again
+          </button>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
 
 const FlowEditor = dynamic(() => import('./flows/FlowEditor'), {
   ssr: false,
@@ -319,6 +377,10 @@ export default function EmailsPage() {
   }
 
   return (
+    <EmailErrorBoundary
+      fallbackTitle={t('admin.emailConfig.errorBoundaryTitle') || 'Email admin error'}
+      fallbackDescription={t('admin.emailConfig.errorBoundaryDescription') || 'An unexpected error occurred in the email administration panel. Please try refreshing.'}
+    >
     <div className="space-y-6">
       <PageHeader
         title={t('admin.emailConfig.hubTitle')}
@@ -649,9 +711,16 @@ export default function EmailsPage() {
             <Button variant="secondary" icon={Eye} onClick={() => {
               if (editingTemplate) {
                 const contentInput = document.querySelector<HTMLTextAreaElement>('[data-template-content]');
+                const rawHtml = contentInput?.value || editingTemplate.content;
+                // Security: Use Blob URL with a fully sandboxed iframe (no allow-scripts) to prevent XSS
+                const wrapper = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Preview</title><style>body{margin:0;}</style></head><body>${rawHtml}</body></html>`;
+                const blob = new Blob([wrapper], { type: 'text/html' });
+                const blobUrl = URL.createObjectURL(blob);
                 const preview = window.open('', '_blank');
-                if (preview && contentInput) {
-                  preview.document.write(contentInput.value || editingTemplate.content);
+                if (preview) {
+                  preview.document.write(`<!DOCTYPE html><html><head><title>Email Preview</title></head><body style="margin:0;">
+                    <iframe sandbox="allow-same-origin" style="width:100%;height:100vh;border:none;" src="${blobUrl}"></iframe>
+                  </body></html>`);
                   preview.document.close();
                 }
               }
@@ -672,5 +741,6 @@ export default function EmailsPage() {
         )}
       </Modal>
     </div>
+    </EmailErrorBoundary>
   );
 }

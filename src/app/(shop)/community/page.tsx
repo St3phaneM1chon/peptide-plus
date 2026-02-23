@@ -1,6 +1,10 @@
+// TODO: F-052 - Add explicit ReviewStatus enum to Prisma schema instead of deriving from booleans
+// TODO: F-055 - Calculate popular tags dynamically from posts instead of hardcoded fallback
+// TODO: F-072 - Add skeleton loading state for when backend data loading is implemented
+// TODO: F-086 - Add dynamic SEO meta (Open Graph, Twitter Card) via a parent layout.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useSession } from 'next-auth/react';
@@ -51,13 +55,33 @@ const getCategories = (t: (key: string) => string) => [
 
 export default function CommunityPage() {
   const { data: session } = useSession();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const categories = getCategories(t);
   const [activeCategory, setActiveCategory] = useState('all');
   const [posts, setPosts] = useState<Post[]>([]);
-  const [sortBy, setSortBy] = useState<'recent' | 'popular' | 'replies'>('recent');
+  // F-064 FIX: Persist sort preference in localStorage
+  const [sortBy, setSortBy] = useState<'recent' | 'popular' | 'replies'>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('community-sort');
+      if (saved === 'recent' || saved === 'popular' || saved === 'replies') return saved;
+    }
+    return 'recent';
+  });
   const [showNewPost, setShowNewPost] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  // FIX F-032: Debounce search query to avoid excessive re-renders with future API calls
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    debounceTimer.current = setTimeout(() => setDebouncedSearch(searchQuery), 300);
+    return () => { if (debounceTimer.current) clearTimeout(debounceTimer.current); };
+  }, [searchQuery]);
+
+  // F-064 FIX: Save sort preference to localStorage
+  useEffect(() => {
+    localStorage.setItem('community-sort', sortBy);
+  }, [sortBy]);
 
   // New post form
   const [newPost, setNewPost] = useState({
@@ -69,11 +93,13 @@ export default function CommunityPage() {
 
   const filteredPosts = posts
     .filter(p => activeCategory === 'all' || p.category === activeCategory)
-    .filter(p => 
-      p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
-    )
+    .filter(p => {
+      if (!debouncedSearch) return true;
+      const search = debouncedSearch.toLowerCase();
+      return p.title.toLowerCase().includes(search) ||
+        p.content.toLowerCase().includes(search) ||
+        p.tags.some(tag => tag.toLowerCase().includes(search));
+    })
     .sort((a, b) => {
       // Pinned posts first
       if (a.isPinned && !b.isPinned) return -1;
@@ -90,12 +116,14 @@ export default function CommunityPage() {
     e.preventDefault();
     if (!session) return;
 
+    // F-024 FIX: Sanitize HTML in user-generated content
+    const sanitize = (str: string) => str.replace(/[<>&"'`]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&#x27;', '`': '&#x60;' }[c] || c));
     const post: Post = {
-      id: Date.now().toString(),
-      userId: session.user?.email || '',
+      id: crypto.randomUUID(),
+      userId: session.user?.id || 'anonymous',  // FIX F-023: Never expose email as public identifier
       userName: session.user?.name || 'Anonymous',
-      title: newPost.title,
-      content: newPost.content,
+      title: sanitize(newPost.title),
+      content: sanitize(newPost.content),
       category: newPost.category,
       tags: newPost.tags.split(',').map(t => t.trim().toLowerCase()).filter(Boolean),
       likes: 0,
@@ -110,15 +138,27 @@ export default function CommunityPage() {
     setNewPost({ title: '', content: '', category: 'general', tags: '' });
   };
 
+  // F-080 FIX: Close new post modal on Escape key
+  useEffect(() => {
+    if (!showNewPost) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setShowNewPost(false);
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [showNewPost]);
+
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
     const now = new Date();
     const diffHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-    
-    if (diffHours < 1) return 'Just now';
-    if (diffHours < 24) return `${diffHours}h ago`;
-    if (diffHours < 48) return 'Yesterday';
-    return date.toLocaleDateString('en-CA', { month: 'short', day: 'numeric' });
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffHours < 1) return t('community.timeJustNow') || 'Just now';
+    if (diffHours < 24) return (t('community.timeHoursAgo') || '{count}h ago').replace('{count}', String(diffHours));
+    if (diffHours < 48) return t('community.timeYesterday') || 'Yesterday';
+    if (diffDays < 30) return (t('community.timeDaysAgo') || '{count}d ago').replace('{count}', String(diffDays));
+    return date.toLocaleDateString(locale, { month: 'short', day: 'numeric' });
   };
 
   const getCategoryInfo = (categoryId: string) => {
@@ -127,6 +167,21 @@ export default function CommunityPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Demo Notice Banner - F-001 fix: No backend persistence yet */}
+      <div className="bg-amber-50 border-b border-amber-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+          <div className="flex items-center gap-2 text-amber-800 text-sm">
+            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+            <p>
+              <strong>{t('community.demoBannerTitle') || 'Demo Mode'}:</strong>{' '}
+              {t('community.demoBannerDesc') || 'This community forum is currently in preview mode. Posts are not saved and will be lost when you leave the page. Full persistence is coming soon!'}
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Hero */}
       <section className="bg-gradient-to-br from-purple-600 to-purple-700 text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -141,6 +196,8 @@ export default function CommunityPage() {
           </p>
 
           {/* Stats */}
+          {/* TODO: F-081 - Stats show computed local values only; wire to backend API when community system is implemented */}
+          {/* TODO: F-091 - Add age verification disclaimer for peptide-related discussions */}
           <div className="flex flex-wrap gap-6 mt-8">
             <div className="bg-white/10 px-6 py-3 rounded-lg">
               <p className="text-2xl font-bold">{posts.length}</p>
@@ -151,7 +208,8 @@ export default function CommunityPage() {
               <p className="text-sm text-purple-200">Replies</p>
             </div>
             <div className="bg-white/10 px-6 py-3 rounded-lg">
-              <p className="text-2xl font-bold">-</p>
+              {/* F-058 FIX: Show unique author count instead of placeholder "-" */}
+              <p className="text-2xl font-bold">{new Set(posts.map(p => p.userName)).size}</p>
               <p className="text-sm text-purple-200">Members</p>
             </div>
           </div>
@@ -212,7 +270,12 @@ export default function CommunityPage() {
             <div className="bg-white rounded-xl shadow-sm border border-neutral-200 p-4">
               <h3 className="font-bold mb-3">{t('community.popularTags') || 'Popular Tags'}</h3>
               <div className="flex flex-wrap gap-2">
-                {['bpc-157', 'semaglutide', 'reconstitution', 'storage', 'beginner', 'tb-500', 'research'].map((tag) => (
+                {/* F-039 FIX: Dynamic tags from posts, fallback to defaults */}
+                {(posts.length > 0
+                  ? [...posts.flatMap(p => p.tags).reduce((acc, tag) => acc.set(tag, (acc.get(tag) || 0) + 1), new Map<string, number>()).entries()]
+                      .sort((a, b) => b[1] - a[1]).slice(0, 7).map(([tag]) => tag)
+                  : ['bpc-157', 'semaglutide', 'reconstitution', 'storage', 'beginner', 'tb-500', 'research']
+                ).map((tag) => (
                   <button
                     key={tag}
                     onClick={() => setSearchQuery(tag)}
@@ -238,8 +301,20 @@ export default function CommunityPage() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder={t('community.searchPlaceholder') || 'Search discussions...'}
-                  className="w-full ps-12 pe-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full ps-12 pe-10 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                 />
+                {/* FIX: F-095 - Add clear button when search has text */}
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    aria-label={t('common.clear') || 'Clear search'}
+                    className="absolute end-3 top-1/2 -translate-y-1/2 p-1 text-neutral-400 hover:text-neutral-600 rounded-full hover:bg-neutral-100"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
               </div>
               <select
                 value={sortBy}
@@ -305,8 +380,9 @@ export default function CommunityPage() {
                         <div className="flex items-start gap-4">
                           {/* Avatar */}
                           <div className="hidden sm:block">
+                            {/* FIX: F-067 - Removed unoptimized to use Next.js image optimization */}
                             {post.userAvatar ? (
-                              <Image src={post.userAvatar} alt={post.userName} width={48} height={48} className="w-12 h-12 rounded-full" unoptimized />
+                              <Image src={post.userAvatar} alt={post.userName} width={48} height={48} className="w-12 h-12 rounded-full" />
                             ) : (
                               <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
                                 <span className="text-purple-600 font-bold text-lg">{post.userName.charAt(0)}</span>
@@ -416,6 +492,7 @@ export default function CommunityPage() {
                   placeholder={t('community.placeholderPostTitle')}
                   className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                   required
+                  maxLength={200}
                 />
               </div>
 
@@ -441,6 +518,7 @@ export default function CommunityPage() {
                   rows={6}
                   className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
                   required
+                  maxLength={10000}
                 />
               </div>
 

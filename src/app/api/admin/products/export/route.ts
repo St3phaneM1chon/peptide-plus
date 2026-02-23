@@ -14,6 +14,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { logger } from '@/lib/logger';
 
 // Escape a value for CSV: wrap in quotes if it contains commas, quotes, or newlines
 function csvEscape(value: string | number | boolean | null | undefined): string {
@@ -36,9 +37,10 @@ export const GET = withAdminGuard(async (request: NextRequest, { session: _sessi
     const exportFormat = searchParams.get('format') || 'csv';
 
     // P-06 fix: Limit to 5000 records max to prevent OOM on large catalogs.
+    // FIX: BUG-054 - Log warning when export reaches the 5000-row limit (no pagination)
     // Select only fields used in CSV and JSON export generation.
     const products = await prisma.product.findMany({
-      take: 5000,
+      take: 5001, // Fetch one extra to detect if more exist
       select: {
         id: true,
         name: true,
@@ -88,6 +90,12 @@ export const GET = withAdminGuard(async (request: NextRequest, { session: _sessi
       orderBy: { createdAt: 'desc' },
     });
 
+    // FIX: BUG-054 - Detect and warn if export is truncated at 5000 records
+    const isTruncated = products.length > 5000;
+    if (isTruncated) {
+      products.length = 5000; // Trim to 5000
+    }
+
     // Item 73: JSON export support
     if (exportFormat === 'json') {
       const jsonProducts = products.map((product) => ({
@@ -133,7 +141,8 @@ export const GET = withAdminGuard(async (request: NextRequest, { session: _sessi
       }));
 
       const timestamp = new Date().toISOString().slice(0, 10);
-      const jsonString = JSON.stringify({ products: jsonProducts, exportedAt: new Date().toISOString(), count: jsonProducts.length }, null, 2);
+      // FIX: BUG-054 - Include truncated flag in JSON export when limit reached
+      const jsonString = JSON.stringify({ products: jsonProducts, exportedAt: new Date().toISOString(), count: jsonProducts.length, ...(isTruncated ? { truncated: true, warning: 'Export limited to 5000 products. Use filters to narrow results.' } : {}) }, null, 2);
 
       return new NextResponse(jsonString, {
         status: 200,
@@ -233,7 +242,7 @@ export const GET = withAdminGuard(async (request: NextRequest, { session: _sessi
       },
     });
   } catch (error) {
-    console.error('Admin products export GET error:', error);
+    logger.error('Admin products export GET error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

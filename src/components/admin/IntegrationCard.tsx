@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { CheckCircle2, XCircle, Loader2, Plug, Copy, ExternalLink } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
 
+// FIX: F94 - TODO: Add pattern (regex) validation for ID fields (Advertiser ID, Channel ID, etc.)
 interface ConfigField {
   key: string;
   label: string;
@@ -13,6 +14,7 @@ interface ConfigField {
   type?: 'text' | 'password' | 'url';
   readOnly?: boolean;
   hint?: string;
+  pattern?: string;
 }
 
 interface IntegrationCardProps {
@@ -57,6 +59,10 @@ export function IntegrationCard({
       await onSave();
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
+    } catch (err) {
+      // F34 FIX: Show error feedback when save fails instead of silently failing
+      console.error('Integration save failed:', err);
+      setTestResult({ success: false, error: err instanceof Error ? err.message : 'Save failed' });
     } finally {
       setSaving(false);
     }
@@ -68,8 +74,11 @@ export function IntegrationCard({
     try {
       const result = await onTest();
       setTestResult(result);
+      // F92 FIX: Auto-clear test result after 10 seconds
+      setTimeout(() => setTestResult(null), 10000);
     } catch {
       setTestResult({ success: false, error: 'Connection test failed' });
+      setTimeout(() => setTestResult(null), 10000);
     } finally {
       setTesting(false);
     }
@@ -131,7 +140,7 @@ export function IntegrationCard({
         {/* Webhook URL */}
         {webhookUrl && (
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Webhook URL</label>
+            <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.integrations.webhookUrl')}</label>
             <div className="flex items-center gap-2">
               <input
                 type="text"
@@ -192,7 +201,7 @@ export function IntegrationCard({
               className="px-4 py-2 text-slate-500 rounded-lg text-sm hover:text-sky-600 transition-colors flex items-center gap-1"
             >
               <ExternalLink className="w-4 h-4" />
-              Docs
+              {t('admin.integrations.docs')}
             </a>
           )}
         </div>

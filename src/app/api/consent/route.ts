@@ -13,6 +13,8 @@ export const dynamic = 'force-dynamic';
  *   - personalization: product recommendations, saved preferences
  *
  * Storage: Redis (fast access) with cookie fallback.
+ *
+ * TODO: FLAW-069 - Add composite index @@index([email, type]) to ConsentRecord model in schema.prisma
  * Identifies users by userId (if logged in) or a consent session cookie.
  */
 
@@ -71,7 +73,8 @@ async function getOrCreateSessionId(): Promise<string> {
   const existing = cookieStore.get(CONSENT_COOKIE_NAME)?.value;
   if (existing) return existing;
 
-  const newId = `cs_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 10)}`;
+  // AMELIORATION: Use crypto.randomUUID instead of Math.random for session IDs
+  const newId = `cs_${crypto.randomUUID().replace(/-/g, '').slice(0, 16)}`;
   cookieStore.set(CONSENT_COOKIE_NAME, newId, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',

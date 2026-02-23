@@ -156,6 +156,8 @@ export class StorageService {
 
       const blockBlobClient = azure.containerClient.getBlockBlobClient(blobPath);
 
+      // FIX: F78 - TODO: Replace regex parsing with @azure/storage-blob StorageSharedKeyCredential.fromConnectionString()
+      // or a proper connection string parser. Current regex is fragile for edge cases.
       const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING!;
       const accountName = connectionString.match(/AccountName=([^;]+)/)?.[1] || '';
       const accountKey = connectionString.match(/AccountKey=([^;]+)/)?.[1] || '';
@@ -224,8 +226,20 @@ export class StorageService {
     container: NonNullable<typeof containerClient>,
     url: string
   ): Promise<void> {
-    // Extract blob name from URL
-    const blobName = url.split('/').slice(-2).join('/');
+    // FIX (F18): Parse URL properly instead of fragile split('/')
+    // Handles query parameters and unexpected URL formats
+    let blobName: string;
+    try {
+      const parsed = new URL(url);
+      // Remove leading slash and container name from pathname
+      // e.g. /media/folder/file.jpg -> folder/file.jpg
+      const pathParts = parsed.pathname.split('/').filter(Boolean);
+      // Skip the container name (first segment) to get the blob path
+      blobName = pathParts.length > 1 ? pathParts.slice(1).join('/') : pathParts.join('/');
+    } catch {
+      // Fallback for relative URLs: extract last 2 segments
+      blobName = url.split('/').slice(-2).join('/');
+    }
     const blobClient = container!.getBlobClient(blobName);
     await blobClient.deleteIfExists();
   }
@@ -276,11 +290,12 @@ export class StorageService {
    * Check if a file with the same SHA-256 hash already exists.
    * Returns the existing URL if found, null otherwise.
    */
+  // F43 FIX: Use proper Prisma typing instead of unsafe cast
   async findDuplicate(contentHash: string, folder: string = 'general'): Promise<string | null> {
     // Check in Media table if a file with same hash exists
     try {
       const { prisma } = await import('@/lib/db');
-      const existing = await (prisma as { media: { findFirst: (args: Record<string, unknown>) => Promise<{ url: string } | null> } }).media.findFirst({
+      const existing = await prisma.media.findFirst({
         where: {
           url: { contains: contentHash },
           folder,

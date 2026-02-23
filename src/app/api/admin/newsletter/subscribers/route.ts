@@ -5,6 +5,7 @@ import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { addSubscriberSchema } from '@/lib/validations/newsletter';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/admin/newsletter/subscribers
@@ -74,7 +75,7 @@ export const GET = withAdminGuard(async (request, { session: _session }) => {
       },
     });
   } catch (error) {
-    console.error('Get newsletter subscribers error:', error);
+    logger.error('Get newsletter subscribers error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Error fetching newsletter subscribers' },
       { status: 500 }
@@ -154,7 +155,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       { status: 201 }
     );
   } catch (error) {
-    console.error('Create newsletter subscriber error:', error);
+    logger.error('Create newsletter subscriber error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Error creating subscriber' },
       { status: 500 }

@@ -3,10 +3,12 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
+import { Prisma } from '@prisma/client';
 import { roundCurrency } from '@/lib/financial';
 import { formatZodErrors, logAuditTrail } from '@/lib/accounting';
 import { updateJournalEntrySchema } from '@/lib/accounting/validation';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 /**
  * GET /api/accounting/entries
  * List journal entries with filters
@@ -100,7 +102,7 @@ export const GET = withAdminGuard(async (request, { session }) => {
       },
     });
   } catch (error) {
-    console.error('Get entries error:', error);
+    logger.error('Get entries error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la récupération des écritures' },
       { status: 500 }
@@ -254,9 +256,13 @@ export const POST = withAdminGuard(async (request, { session }) => {
           lines: { include: { account: { select: { code: true, name: true } } } },
         },
       });
+    }, {
+      // FIX (F004): Use Serializable isolation for financial journal entries
+      // to prevent phantom reads and ensure data consistency
+      isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
     });
 
-    
+
     // Phase 4 Compliance: Audit trail logging
     logAuditTrail({
       entityType: 'JournalEntry',
@@ -267,7 +273,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       metadata: { entryNumber: entry.entryNumber, status: entry.status },
     });
 
-    console.info('Journal entry created:', {
+    logger.info('Journal entry created:', {
       entryId: entry.id,
       entryNumber: entry.entryNumber,
       type: type || 'MANUAL',
@@ -278,7 +284,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
 
     return NextResponse.json({ success: true, entry });
   } catch (error) {
-    console.error('Create entry error:', error);
+    logger.error('Create entry error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la création de l\'écriture' },
       { status: 500 }
@@ -417,6 +423,7 @@ export const PUT = withAdminGuard(async (request, { session }) => {
 
       // #81 Error Recovery: Wrap deleteMany+createMany+update in $transaction
       // to ensure atomicity - if createMany fails, deleteMany is rolled back
+      // FIX (F004): Use RepeatableRead isolation to prevent phantom reads
       const updated = await prisma.$transaction(async (tx) => {
         await tx.journalLine.deleteMany({ where: { entryId: id } });
         await tx.journalLine.createMany({
@@ -435,10 +442,12 @@ export const PUT = withAdminGuard(async (request, { session }) => {
             lines: { include: { account: { select: { code: true, name: true } } } },
           },
         });
+      }, {
+        isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead,
       });
 
       // #91 Log audit trail for the modification
-      console.info('Entry modified:', {
+      logger.info('Entry modified:', {
         entryId: id,
         modifiedBy: session.user.id || session.user.email,
         modifiedAt: new Date().toISOString(),
@@ -463,7 +472,7 @@ export const PUT = withAdminGuard(async (request, { session }) => {
     });
 
     // #91 Log audit trail for the modification
-    console.info('Entry modified:', {
+    logger.info('Entry modified:', {
       entryId: id,
       modifiedBy: session.user.id || session.user.email,
       modifiedAt: new Date().toISOString(),
@@ -478,7 +487,7 @@ export const PUT = withAdminGuard(async (request, { session }) => {
 
     return NextResponse.json({ success: true, entry: updated });
   } catch (error) {
-    console.error('Update entry error:', error);
+    logger.error('Update entry error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la mise à jour' },
       { status: 500 }
@@ -550,7 +559,7 @@ export const DELETE = withAdminGuard(async (request, { session }) => {
         userName: session.user.name || undefined,
         metadata: { entryNumber: existing.entryNumber },
       });
-      console.info('Journal entry deleted:', {
+      logger.info('Journal entry deleted:', {
         entryId: id,
         entryNumber: existing.entryNumber,
         action: 'delete',
@@ -648,7 +657,7 @@ export const DELETE = withAdminGuard(async (request, { session }) => {
 
     return NextResponse.json({ error: 'Action invalide' }, { status: 400 });
   } catch (error) {
-    console.error('Delete/void entry error:', error);
+    logger.error('Delete/void entry error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de l\'opération' },
       { status: 500 }

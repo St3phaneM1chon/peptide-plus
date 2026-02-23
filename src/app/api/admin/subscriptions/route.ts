@@ -10,6 +10,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { logger } from '@/lib/logger';
 
 // GET /api/admin/subscriptions - List all subscriptions with filtering
 export const GET = withAdminGuard(async (request, { session }) => {
@@ -101,7 +102,7 @@ export const GET = withAdminGuard(async (request, { session }) => {
       },
     });
   } catch (error) {
-    console.error('Admin subscriptions GET error:', error);
+    logger.error('Admin subscriptions GET error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -246,7 +247,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       },
     }, { status: 201 });
   } catch (error) {
-    console.error('Admin subscriptions POST error:', error);
+    logger.error('Admin subscriptions POST error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

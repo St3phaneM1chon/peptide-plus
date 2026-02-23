@@ -69,7 +69,7 @@ export default function HeroSlider({ initialSlides }: HeroSliderProps) {
   const touchStartX = useRef(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  useEffect(() => {
+  const loadSlides = useCallback(() => {
     // If we have SSR-provided slides, populate cache and skip fetch
     if (initialSlides && initialSlides.length > 0) {
       heroSlidesCache = { data: initialSlides, timestamp: Date.now() };
@@ -92,7 +92,11 @@ export default function HeroSlider({ initialSlides }: HeroSliderProps) {
         }
       })
       .catch(() => {});
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [initialSlides]);
+
+  useEffect(() => {
+    loadSlides();
+  }, [loadSlides]);
 
   const goTo = useCallback(
     (index: number) => {
@@ -162,7 +166,9 @@ export default function HeroSlider({ initialSlides }: HeroSliderProps) {
   let stats: StatItem[] = [];
   try {
     if (rawStats) stats = JSON.parse(rawStats);
-  } catch {}
+  } catch {
+    // Invalid JSON in statsJson - use empty stats
+  }
 
   const ctaClasses: Record<string, string> = {
     primary:

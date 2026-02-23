@@ -25,6 +25,7 @@ import { getPayPalAccessToken, PAYPAL_API_URL } from '@/lib/paypal';
 import { updateOrderStatusSchema, createRefundSchema } from '@/lib/validations/order';
 import { clawbackAmbassadorCommission } from '@/lib/ambassador-commission';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 const reshipSchema = z.object({
   reason: z.string().min(1, 'A reason is required for re-shipment').max(500),
@@ -183,7 +184,7 @@ export const GET = withAdminGuard(async (_request, { session, params }) => {
       })),
     });
   } catch (error) {
-    console.error('Admin order detail GET error:', error);
+    logger.error('Admin order detail GET error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -315,7 +316,7 @@ async function handleOrderUpdate(
           carrier: carrier || undefined,
         },
       ).catch((err) => {
-        console.error(`Failed to send ${emailEvent} email for order ${id}:`, err);
+        logger.error(`Failed to send ${emailEvent} email for order ${id}`, { error: err instanceof Error ? err.message : String(err) });
       });
     }
   }
@@ -328,7 +329,7 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
   try {
     return await handleOrderUpdate(request, params!.id, session);
   } catch (error) {
-    console.error('Admin order PATCH error:', error);
+    logger.error('Admin order PATCH error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -341,7 +342,7 @@ export const PUT = withAdminGuard(async (request, { session, params }) => {
   try {
     return await handleOrderUpdate(request, params!.id, session);
   } catch (error) {
-    console.error('Admin order PUT error:', error);
+    logger.error('Admin order PUT error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -369,7 +370,7 @@ export const POST = withAdminGuard(async (request, { session, params }) => {
       { status: 400 }
     );
   } catch (error) {
-    console.error('Admin order POST error:', error);
+    logger.error('Admin order POST error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -455,7 +456,7 @@ async function handleRefund(
         reason: 'requested_by_customer',
       });
     } catch (stripeError) {
-      console.error('Stripe refund failed:', stripeError);
+      logger.error('Stripe refund failed', { error: stripeError instanceof Error ? stripeError.message : String(stripeError) });
       return NextResponse.json(
         { error: `Stripe refund failed: ${stripeError instanceof Error ? stripeError.message : 'Unknown error'}` },
         { status: 502 }
@@ -493,14 +494,14 @@ async function handleRefund(
 
       if (!refundRes.ok) {
         const refundError = await refundRes.json();
-        console.error('PayPal refund failed:', refundError);
+        logger.error('PayPal refund failed', { error: refundError instanceof Error ? refundError.message : String(refundError) });
         return NextResponse.json(
           { error: `PayPal refund failed: ${refundError.message || JSON.stringify(refundError)}` },
           { status: 502 }
         );
       }
     } catch (paypalError) {
-      console.error('PayPal refund failed:', paypalError);
+      logger.error('PayPal refund failed', { error: paypalError instanceof Error ? paypalError.message : String(paypalError) });
       return NextResponse.json(
         { error: `PayPal refund failed: ${paypalError instanceof Error ? paypalError.message : 'Unknown error'}` },
         { status: 502 }
@@ -629,7 +630,7 @@ async function handleRefund(
       };
     }
   } catch (commError) {
-    console.error('Failed to clawback ambassador commission:', commError);
+    logger.error('Failed to clawback ambassador commission', { error: commError instanceof Error ? commError.message : String(commError) });
   }
 
   // Audit log for refund (fire-and-forget)
@@ -650,7 +651,7 @@ async function handleRefund(
     refundAmount: amount,
     refundIsPartial: !isFullRefund,
   }).catch((err) => {
-    console.error(`Failed to send REFUNDED email for order ${orderId}:`, err);
+    logger.error(`Failed to send REFUNDED email for order ${orderId}`, { error: err instanceof Error ? err.message : String(err) });
   });
 
   // If full refund also triggers a cancellation, send the cancelled email too
@@ -658,7 +659,7 @@ async function handleRefund(
     sendOrderLifecycleEmail(orderId, 'CANCELLED', {
       cancellationReason: reason,
     }).catch((err) => {
-      console.error(`Failed to send CANCELLED email for order ${orderId}:`, err);
+      logger.error(`Failed to send CANCELLED email for order ${orderId}`, { error: err instanceof Error ? err.message : String(err) });
     });
   }
 
@@ -845,7 +846,7 @@ async function handleReship(
           });
         }
         if (safeDecrement < item.quantity) {
-          console.warn(`[Admin reship] Stock floor hit for format ${item.formatId}: wanted to decrement ${item.quantity}, only decremented ${safeDecrement}`);
+          logger.warn(`[Admin reship] Stock floor hit for format ${item.formatId}: wanted to decrement ${item.quantity}, only decremented ${safeDecrement}`);
         }
       }
     }
@@ -878,7 +879,7 @@ async function handleReship(
   try {
     await generateCOGSEntry(replacementOrder.id);
   } catch (cogsError) {
-    console.error(`Failed to create COGS entry for reship ${replacementOrderNumber}:`, cogsError);
+    logger.error(`Failed to create COGS entry for reship ${replacementOrderNumber}`, { error: cogsError instanceof Error ? cogsError.message : String(cogsError) });
   }
 
   // Audit log for reship (fire-and-forget)

@@ -10,6 +10,7 @@ import {
   recordTemplateUsage,
   KEYBOARD_SHORTCUTS,
 } from '@/lib/accounting/quick-entry.service';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/accounting/quick-entry
@@ -33,7 +34,7 @@ export const GET = withAdminGuard(async (request, { session }) => {
       categories: ['SALES', 'PURCHASES', 'PAYROLL', 'TAXES', 'ADJUSTMENTS', 'OTHER'],
     });
   } catch (error) {
-    console.error('Erreur récupération templates quick-entry:', error);
+    logger.error('Erreur récupération templates quick-entry', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la récupération des templates de saisie rapide' },
       { status: 500 }
@@ -147,7 +148,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
 
     return NextResponse.json({ success: true, entry: savedEntry }, { status: 201 });
   } catch (error) {
-    console.error('Erreur création saisie rapide:', error);
+    logger.error('Erreur création saisie rapide', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la création de la saisie rapide' },
       { status: 500 }

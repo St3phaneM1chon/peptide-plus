@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/accounting/budgets
@@ -54,7 +55,7 @@ export const GET = withAdminGuard(async (request) => {
       pagination: { page, limit, total, pages: Math.ceil(total / limit) },
     });
   } catch (error) {
-    console.error('Get budgets error:', error);
+    logger.error('Get budgets error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la récupération des budgets' },
       { status: 500 }
@@ -168,7 +169,7 @@ export const POST = withAdminGuard(async (request) => {
 
     return NextResponse.json({ success: true, budget }, { status: 201 });
   } catch (error) {
-    console.error('Create budget error:', error);
+    logger.error('Create budget error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la création du budget' },
       { status: 500 }
@@ -224,7 +225,7 @@ export const PUT = withAdminGuard(async (request, { session }) => {
     });
 
     // #79 Compliance: Audit logging for budget modifications
-    console.info('AUDIT: Budget line updated', {
+    logger.info('AUDIT: Budget line updated', {
       budgetLineId: lineId,
       budgetId: existing.budgetId,
       accountCode: existing.accountCode,
@@ -237,7 +238,7 @@ export const PUT = withAdminGuard(async (request, { session }) => {
 
     return NextResponse.json({ success: true, line });
   } catch (error) {
-    console.error('Update budget line error:', error);
+    logger.error('Update budget line error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la mise à jour de la ligne budgétaire' },
       { status: 500 }
@@ -277,7 +278,7 @@ export const DELETE = withAdminGuard(async (request, { session }) => {
     });
 
     // #79 Compliance: Audit logging for budget soft-delete
-    console.info('AUDIT: Budget soft-deleted', {
+    logger.info('AUDIT: Budget soft-deleted', {
       budgetId: id,
       budgetName: existing.name,
       budgetYear: existing.year,
@@ -287,7 +288,7 @@ export const DELETE = withAdminGuard(async (request, { session }) => {
 
     return NextResponse.json({ success: true, message: 'Budget désactivé' });
   } catch (error) {
-    console.error('Delete budget error:', error);
+    logger.error('Delete budget error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la suppression du budget' },
       { status: 500 }

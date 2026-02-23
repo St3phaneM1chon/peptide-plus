@@ -13,6 +13,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { logger } from '@/lib/logger';
 
 // SEC-21: Only use INTERNAL_WEBHOOK_SECRET - do not fall back to STRIPE_WEBHOOK_SECRET
 const INTERNAL_SECRET = process.env.INTERNAL_WEBHOOK_SECRET;
@@ -21,7 +22,7 @@ export async function POST(request: NextRequest) {
   try {
     // SECURITY: Require INTERNAL_WEBHOOK_SECRET to be configured
     if (!INTERNAL_SECRET) {
-      console.error('INTERNAL_WEBHOOK_SECRET is not configured');
+      logger.error('INTERNAL_WEBHOOK_SECRET is not configured');
       return NextResponse.json(
         { error: 'Server configuration error' },
         { status: 500 }
@@ -96,7 +97,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Gift card activation error:', error);
+    logger.error('Gift card activation error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to activate gift card' },
       { status: 500 }

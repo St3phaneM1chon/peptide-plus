@@ -12,6 +12,7 @@ import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { enqueue } from '@/lib/translation';
 import { sanitizeHtml, stripHtml } from '@/lib/validation';
+import { logger } from '@/lib/logger';
 
 // GET /api/admin/blog - List all blog posts
 export const GET = withAdminGuard(async (request, { session }) => {
@@ -97,7 +98,7 @@ export const GET = withAdminGuard(async (request, { session }) => {
       },
     });
   } catch (error) {
-    console.error('Admin blog GET error:', error);
+    logger.error('Admin blog GET error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -240,7 +241,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
 
     return NextResponse.json({ post }, { status: 201 });
   } catch (error) {
-    console.error('Admin blog POST error:', error);
+    logger.error('Admin blog POST error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

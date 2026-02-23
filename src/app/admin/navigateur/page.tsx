@@ -117,8 +117,7 @@ export default function NavigateurPage() {
         setSelectedSubSection(updatedSub ?? null);
       }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sections]);
+  }, [sections, selectedSection, selectedSubSection]);
 
   if (loading) {
     return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500" /></div>;

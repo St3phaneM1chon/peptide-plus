@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { logger } from '@/lib/logger';
 
 export const GET = withAdminGuard(async (request) => {
   try {
@@ -39,7 +40,7 @@ export const GET = withAdminGuard(async (request) => {
 
     return NextResponse.json({ subscribers, total, page, limit, statusCounts });
   } catch (error) {
-    console.error('Admin mailing list GET error:', error);
+    logger.error('Admin mailing list GET error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 });

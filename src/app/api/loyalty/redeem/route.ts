@@ -7,21 +7,41 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
+import { logger } from '@/lib/logger';
 import { db } from '@/lib/db';
+import { LOYALTY_REWARDS_CATALOG } from '@/lib/constants';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
+import { redeemRewardSchema } from '@/lib/validations';
 
-// Récompenses disponibles
-const REWARDS = {
-  DISCOUNT_5: { points: 500, value: 5, type: 'discount', description: '$5 off your next order' },
-  DISCOUNT_10: { points: 900, value: 10, type: 'discount', description: '$10 off your next order' },
-  DISCOUNT_25: { points: 2000, value: 25, type: 'discount', description: '$25 off your next order' },
-  DISCOUNT_50: { points: 3500, value: 50, type: 'discount', description: '$50 off your next order' },
-  DISCOUNT_100: { points: 6000, value: 100, type: 'discount', description: '$100 off your next order' },
-  FREE_SHIPPING: { points: 300, value: 0, type: 'shipping', description: 'Free shipping on next order' },
-  DOUBLE_POINTS: { points: 1000, value: 0, type: 'bonus', description: 'Double points on next purchase' },
-};
+// Rewards imported from single source of truth
+const REWARDS = LOYALTY_REWARDS_CATALOG;
 
 export async function POST(request: NextRequest) {
   try {
+    // FIX F-025: Add rate limiting and CSRF validation
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip')
+      || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/loyalty/redeem');
+    if (!rl.success) {
+      const res = NextResponse.json(
+        { error: rl.error!.message },
+        { status: 429 }
+      );
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      const preSession = await auth();
+      if (!preSession?.user) {
+        return NextResponse.json({ error: 'CSRF validation failed' }, { status: 403 });
+      }
+    }
+
     const session = await auth();
 
     if (!session?.user?.email) {
@@ -29,12 +49,14 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { rewardId } = body;
-
-    // Validation
-    if (!rewardId) {
-      return NextResponse.json({ error: 'Reward ID is required' }, { status: 400 });
+    const parsed = redeemRewardSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues[0]?.message || 'Invalid input' },
+        { status: 400 }
+      );
     }
+    const { rewardId } = parsed.data;
 
     const reward = REWARDS[rewardId as keyof typeof REWARDS];
     if (!reward) {
@@ -55,6 +77,9 @@ export async function POST(request: NextRequest) {
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
+
+    // FIX: F-038 - lifetimePoints is monotonically increasing (never decremented on redemptions).
+    // Only loyaltyPoints (spendable balance) decreases. Tier is based on lifetimePoints.
 
     // Vérifier que l'utilisateur a assez de points
     if (user.loyaltyPoints < reward.points) {
@@ -114,24 +139,78 @@ export async function POST(request: NextRequest) {
     const newPoints = transaction.newPoints;
 
     // Créer un code promo si c'est une réduction
+    // FLAW-039 FIX: If promo code creation fails, we must handle it properly
+    // since the user already lost their points in the transaction above.
     if (reward.type === 'discount' && reward.value > 0) {
-      try {
-        await db.promoCode.create({
-          data: {
-            code: rewardCode,
-            description: `Loyalty reward: ${reward.description}`,
-            type: 'FIXED_AMOUNT',
-            value: reward.value,
-            usageLimit: 1,
-            usageLimitPerUser: 1,
-            isActive: true,
-            endsAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // Expire dans 90 jours
-          },
-        });
-      } catch (e) {
-        console.log('PromoCode creation skipped (table may not exist):', e);
+      let promoCreated = false;
+      let retryCode = rewardCode;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          await db.promoCode.create({
+            data: {
+              code: retryCode,
+              description: `Loyalty reward: ${reward.description}`,
+              type: 'FIXED_AMOUNT',
+              value: reward.value,
+              usageLimit: 1,
+              usageLimitPerUser: 1,
+              isActive: true,
+              endsAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // Expire dans 90 jours
+            },
+          });
+          promoCreated = true;
+          rewardCode = retryCode; // Use the code that succeeded
+          break;
+        } catch (e) {
+          logger.error(`PromoCode creation attempt ${attempt + 1} failed`, { error: e instanceof Error ? e.message : String(e) });
+          // Generate a new code for retry (in case of duplicate)
+          retryCode = `BC${Date.now().toString(36).toUpperCase()}${crypto.randomUUID().replace(/-/g, '').substring(0, 6).toUpperCase()}`;
+        }
+      }
+      if (!promoCreated) {
+        // Critical: user lost points but no promo code was created
+        // Roll back by giving points back
+        logger.error('CRITICAL: PromoCode creation failed after 3 attempts, rolling back loyalty points');
+        await db.$transaction([
+          db.user.update({
+            where: { id: user.id },
+            data: { loyaltyPoints: { increment: reward.points } },
+          }),
+          db.loyaltyTransaction.create({
+            data: {
+              userId: user.id,
+              type: 'EARN_BONUS',
+              points: reward.points,
+              description: `Automatic rollback: promo code creation failed for reward ${rewardId}`,
+              balanceAfter: user.loyaltyPoints, // original balance
+            },
+          }),
+        ]).catch(rollbackErr => logger.error('CRITICAL: Rollback also failed', { error: rollbackErr instanceof Error ? rollbackErr.message : String(rollbackErr) }));
+
+        return NextResponse.json(
+          { error: 'Failed to create discount code. Your points have been refunded.' },
+          { status: 500 }
+        );
       }
     }
+
+    // AUDIT: Log redemption for traceability
+    logAdminAction({
+      adminUserId: session.user.id || 'system',
+      action: 'LOYALTY_REDEEM_REWARD',
+      targetType: 'User',
+      targetId: user.id,
+      newValue: {
+        rewardId,
+        pointsSpent: reward.points,
+        newBalance: newPoints,
+        rewardCode,
+        rewardType: reward.type,
+        rewardValue: reward.value,
+      },
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch((err) => logger.error('Audit log failed (redeem)', { error: err instanceof Error ? err.message : String(err) }));
 
     return NextResponse.json({
       success: true,
@@ -155,7 +234,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error redeeming loyalty points:', error);
+    logger.error('Error redeeming loyalty points', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to redeem points' },
       { status: 500 }
@@ -200,7 +279,7 @@ export async function GET() {
     });
 
   } catch (error) {
-    console.error('Error fetching rewards:', error);
+    logger.error('Error fetching rewards', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to fetch rewards' },
       { status: 500 }

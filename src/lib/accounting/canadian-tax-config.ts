@@ -152,6 +152,8 @@ export interface PayrollRate {
   authority: string;
 }
 
+// FIX: F099 - These rates are specific to fiscal year 2026. TODO: Add year parameter
+// and load rates from DB/config for automatic annual updates.
 export const PAYROLL_RATES_QC_2026: PayrollRate[] = [
   { id: 'qpp-base', name: 'QPP Base', nameFr: 'RRQ de base', employeeRate: 5.30, employerRate: 5.30, maxInsurableEarnings: 74600, annualExemption: 3500, maxContributionEmployee: 3768, maxContributionEmployer: 3768, authority: 'RQ' },
   { id: 'qpp2', name: 'QPP2', nameFr: 'RRQ2', employeeRate: 4.00, employerRate: 4.00, maxInsurableEarnings: 85000, annualExemption: 74600, maxContributionEmployee: 416, maxContributionEmployer: 416, authority: 'RQ' },
@@ -238,13 +240,36 @@ export const TAX_CREDITS: TaxCredit[] = [
 
 /**
  * Find the tax rate configuration for a given province/territory code.
+ *
+ * FIX: F005 - When `asOfDate` is provided, only rates whose `effectiveDate`
+ * is on or before that date are considered. This correctly handles NS HST
+ * dropping from 15% to 14% on 2025-04-01 (and any future rate changes).
+ * If multiple entries exist for the same province, the one with the latest
+ * effectiveDate that is still <= asOfDate wins.
+ *
  * @param provinceCode - Two-letter province code (e.g. 'QC', 'ON', 'AB')
+ * @param asOfDate - Optional transaction date for effectiveDate filtering
  * @returns The ProvincialTaxRate entry or undefined if not found.
  */
-export function getTaxRateForProvince(provinceCode: string): ProvincialTaxRate | undefined {
-  return PROVINCIAL_TAX_RATES.find(
-    (rate) => rate.provinceCode === provinceCode.toUpperCase()
+export function getTaxRateForProvince(
+  provinceCode: string,
+  asOfDate?: Date
+): ProvincialTaxRate | undefined {
+  const code = provinceCode.toUpperCase();
+  const candidates = PROVINCIAL_TAX_RATES.filter(
+    (rate) => rate.provinceCode === code
   );
+
+  if (candidates.length === 0) return undefined;
+  if (candidates.length === 1 || !asOfDate) return candidates[candidates.length - 1];
+
+  // FIX: F005 - Filter by effectiveDate <= asOfDate and pick the most recent
+  const dateStr = asOfDate.toISOString().split('T')[0]; // YYYY-MM-DD
+  const applicable = candidates
+    .filter((r) => r.effectiveDate <= dateStr)
+    .sort((a, b) => a.effectiveDate.localeCompare(b.effectiveDate));
+
+  return applicable.length > 0 ? applicable[applicable.length - 1] : candidates[0];
 }
 
 /**
@@ -256,17 +281,23 @@ export function getTaxRateForProvince(provinceCode: string): ProvincialTaxRate |
  * future place-of-supply rule refinements but the current implementation
  * applies destination-based taxation.
  *
+ * FIX: F005 - Added optional `asOfDate` parameter so the correct rate is
+ * selected when a province has had rate changes (e.g. NS HST 15% -> 14%
+ * effective 2025-04-01).
+ *
  * @param amount - The pre-tax amount in CAD.
  * @param fromProvince - Province code where the seller is located.
  * @param toProvince - Province code where the buyer is located (destination).
+ * @param asOfDate - Optional transaction date for effectiveDate-based rate lookup.
  * @returns Breakdown of GST, PST, HST and total tax.
  */
 export function calculateSalesTax(
   amount: number,
   _fromProvince: string,
-  toProvince: string
+  toProvince: string,
+  asOfDate?: Date
 ): { gst: number; pst: number; hst: number; total: number } {
-  const rate = getTaxRateForProvince(toProvince);
+  const rate = getTaxRateForProvince(toProvince, asOfDate);
 
   if (!rate) {
     return { gst: 0, pst: 0, hst: 0, total: 0 };

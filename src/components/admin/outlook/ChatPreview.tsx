@@ -79,6 +79,8 @@ export default function ChatPreview() {
   );
 }
 
+// TODO: F-083 - Hardcoded English time labels ('now', 'm', 'h'). Use i18n translation keys.
+// TODO: F-098 - Uses new Date(dateStr) which depends on browser timezone; consider UTC normalization.
 function formatRelativeTime(dateStr: string): string {
   const date = new Date(dateStr);
   const now = new Date();

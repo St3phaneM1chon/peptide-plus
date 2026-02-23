@@ -10,6 +10,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 import { prisma } from '@/lib/db';
 
 const COOKIE_NAME = 'recently_viewed';
@@ -74,7 +75,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ products: sorted });
   } catch (error) {
-    console.error('Recently viewed error:', error);
+    logger.error('Recently viewed error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ products: [] });
   }
 }
@@ -86,6 +87,19 @@ export async function POST(request: NextRequest) {
 
     if (!productId || typeof productId !== 'string') {
       return NextResponse.json({ error: 'productId required' }, { status: 400 });
+    }
+    // BUG-073 FIX: Validate productId format to prevent arbitrary cookie injection
+    if (!/^[a-z0-9]{20,30}$/.test(productId)) {
+      return NextResponse.json({ error: 'Invalid productId format' }, { status: 400 });
+    }
+
+    // FIX: BUG-059 - Verify product exists in DB before adding to viewed cookie
+    const productExists = await prisma.product.findUnique({
+      where: { id: productId },
+      select: { id: true },
+    });
+    if (!productExists) {
+      return NextResponse.json({ error: 'Product not found' }, { status: 404 });
     }
 
     // Get existing cookie
@@ -111,7 +125,7 @@ export async function POST(request: NextRequest) {
 
     return response;
   } catch (error) {
-    console.error('Recently viewed POST error:', error);
+    logger.error('Recently viewed POST error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to update viewed' }, { status: 500 });
   }
 }

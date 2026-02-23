@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { prisma } from '@/lib/db';
+import { logger } from '@/lib/logger';
 
 /**
  * PATCH /api/admin/currencies/[id]
@@ -82,7 +83,7 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
       },
     });
   } catch (error) {
-    console.error('Update currency error:', error);
+    logger.error('Update currency error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Error updating currency' },
       { status: 500 }
@@ -143,7 +144,7 @@ export const DELETE = withAdminGuard(async (_request, { session, params }) => {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Delete currency error:', error);
+    logger.error('Delete currency error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Error deleting currency' },
       { status: 500 }

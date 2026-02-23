@@ -25,6 +25,7 @@ import { handleEvent } from '@/lib/email/automation-engine';
 import { apiSuccess, apiError, apiPaginated } from '@/lib/api-response';
 import { ErrorCode } from '@/lib/error-codes';
 import { updateOrderStatusSchema, batchOrderUpdateSchema } from '@/lib/validations/order';
+import { logger } from '@/lib/logger';
 
 // Shared validation error helper
 function validationError(parsed: { error: { flatten: () => unknown } }) {
@@ -164,7 +165,7 @@ export const GET = withAdminGuard(async (request, { session }) => {
       },
     });
   } catch (error) {
-    console.error('Admin orders GET error:', error);
+    logger.error('Admin orders GET error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -309,7 +310,7 @@ export const PUT = withAdminGuard(async (request, { session }) => {
             trackingNumber: trackingNumber || order.trackingNumber || '',
             carrier: carrier || order.carrier || '',
           }).catch((err) => {
-            console.error(`[AutomationEngine] Failed to handle ${triggerEvent}:`, err);
+            logger.error(`[AutomationEngine] Failed to handle ${triggerEvent}`, { error: err instanceof Error ? err.message : String(err) });
           });
         }
       }
@@ -317,7 +318,7 @@ export const PUT = withAdminGuard(async (request, { session }) => {
 
     return NextResponse.json({ order });
   } catch (error) {
-    console.error('Admin orders PUT error:', error);
+    logger.error('Admin orders PUT error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -420,7 +421,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
               status as 'CONFIRMED' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED',
               { trackingNumber: trackingNumber || undefined, carrier: carrier || undefined },
             ).catch((err) => {
-              console.error(`Failed to send ${status} email for order ${orderId}:`, err);
+              logger.error(`Failed to send ${status} email for order ${orderId}`, { error: err instanceof Error ? err.message : String(err) });
             });
           }
 
@@ -491,7 +492,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       results,
     });
   } catch (error) {
-    console.error('Admin orders batch POST error:', error);
+    logger.error('Admin orders batch POST error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -4,6 +4,17 @@ import { NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { PROVINCIAL_TAX_RATES } from '@/lib/accounting/canadian-tax-config';
+import { logger } from '@/lib/logger';
+
+// FIX: F006 - Shared due date calculation used by both GET and POST
+// GST/QST filing deadline: last day of the month following the reporting period end
+// (i.e. +1 month then set day=0 to get last day of that month)
+function calculateGstQstDueDate(periodEndDate: Date): Date {
+  const dueDate = new Date(periodEndDate);
+  dueDate.setMonth(dueDate.getMonth() + 2);
+  dueDate.setDate(0); // Last day of previous month = last day of month after period end
+  return dueDate;
+}
 
 // ---------------------------------------------------------------------------
 // Quick Method rates by province (services sector)
@@ -26,6 +37,10 @@ const QUICK_METHOD_RATES: Record<string, { gst: number; qst: number }> = {
   NU: { gst: 3.6, qst: 0 },
 };
 
+// FIX: F066 - The Quick Method is only available if annual taxable supplies (including GST/HST)
+// are $400,000 or less. The $30K threshold below is for the 1% credit on first $30K of supplies.
+// TODO: Add validation that the business qualifies for Quick Method (annual revenue <= $400K)
+// before allowing method='quick'. Currently no annual revenue check is performed.
 const QUICK_METHOD_CREDIT_THRESHOLD = 30000;
 const QUICK_METHOD_CREDIT_RATE_GST = 1; // 1% credit on first $30K
 
@@ -91,6 +106,7 @@ export const GET = withAdminGuard(async (request) => {
     // -----------------------------------------------------------------------
     const taxAccountCodes = ['1400', '1410', '2020', '2030'];
 
+    // FIX: F084 - TODO: Replace findMany+take:50000 with aggregate SQL to avoid OOM on large datasets
     const journalLines = await prisma.journalLine.findMany({
       where: {
         entry: {
@@ -313,7 +329,7 @@ export const GET = withAdminGuard(async (request) => {
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error('GST/QST declaration GET error:', error);
+    logger.error('GST/QST declaration GET error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors du calcul de la declaration TPS/TVQ' },
       { status: 500 }
@@ -408,10 +424,8 @@ export const POST = withAdminGuard(async (request) => {
     const netTotal = declarationData?.totalRemittance || 0;
     const totalSales = declarationData?.supplies?.total || 0;
 
-    // Due date: last day of the month following the period end
-    const dueDate = new Date(end);
-    dueDate.setMonth(dueDate.getMonth() + 2);
-    dueDate.setDate(0); // Last day of next month
+    // FIX: F006 - Use shared calculateGstQstDueDate() for consistent due date calculation
+    const dueDate = calculateGstQstDueDate(end);
 
     // Region name mapping
     const regionMap: Record<string, string> = {
@@ -476,7 +490,7 @@ export const POST = withAdminGuard(async (request) => {
       { status: 201 }
     );
   } catch (error) {
-    console.error('GST/QST declaration POST error:', error);
+    logger.error('GST/QST declaration POST error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la sauvegarde de la declaration TPS/TVQ' },
       { status: 500 }

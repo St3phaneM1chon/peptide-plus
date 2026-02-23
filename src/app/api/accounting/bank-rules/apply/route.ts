@@ -5,6 +5,7 @@ import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import type { BankRule, BankTransaction } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
+import { logger } from '@/lib/logger';
 
 // ---------------------------------------------------------------------------
 // Rule matching logic
@@ -178,7 +179,7 @@ export const POST = withAdminGuard(async (request) => {
       results,
     });
   } catch (error) {
-    console.error('POST /api/accounting/bank-rules/apply error:', error);
+    logger.error('POST /api/accounting/bank-rules/apply error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Internal error' },
       { status: 500 }

@@ -10,6 +10,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import DOMPurify from 'isomorphic-dompurify';
+import { logger } from '@/lib/logger';
 
 // GET /api/admin/emails - List all email templates
 export const GET = withAdminGuard(async (request, { session: _session }) => {
@@ -20,10 +22,47 @@ export const GET = withAdminGuard(async (request, { session: _session }) => {
     const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
     const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '50')));
 
+    const search = searchParams.get('search');
+    const category = searchParams.get('category');
+
     const where: Record<string, unknown> = {};
-    if (locale) where.locale = locale;
+    const andConditions: Record<string, unknown>[] = [];
+
+    // Security: whitelist locale values to prevent injection
+    const ALLOWED_LOCALES = ['fr', 'en'];
+    if (locale) {
+      where.locale = ALLOWED_LOCALES.includes(locale) ? locale : 'fr';
+    }
     if (active !== null && active !== undefined && active !== '') {
       where.isActive = active === 'true';
+    }
+    if (search) {
+      andConditions.push({
+        OR: [
+          { name: { contains: search, mode: 'insensitive' } },
+          { subject: { contains: search, mode: 'insensitive' } },
+        ],
+      });
+    }
+
+    // Filter by category using name prefix convention
+    // Categories: 'transactional', 'marketing', 'notification', 'system'
+    const CATEGORY_PREFIXES: Record<string, string[]> = {
+      transactional: ['order-', 'invoice-', 'payment-', 'shipping-', 'receipt-', 'refund-'],
+      marketing: ['promo-', 'campaign-', 'newsletter-', 'welcome-', 'upsell-', 'winback-'],
+      notification: ['alert-', 'notify-', 'reminder-', 'review-', 'stock-', 'loyalty-'],
+      system: ['verify-', 'reset-', 'password-', 'auth-', 'admin-', 'system-', 'test-'],
+    };
+    if (category && CATEGORY_PREFIXES[category]) {
+      andConditions.push({
+        OR: CATEGORY_PREFIXES[category].map((prefix) => ({
+          name: { startsWith: prefix },
+        })),
+      });
+    }
+
+    if (andConditions.length > 0) {
+      where.AND = andConditions;
     }
 
     const [templates, total] = await Promise.all([
@@ -46,7 +85,7 @@ export const GET = withAdminGuard(async (request, { session: _session }) => {
       },
     });
   } catch (error) {
-    console.error('Admin emails GET error:', error);
+    logger.error('Admin emails GET error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -54,11 +93,54 @@ export const GET = withAdminGuard(async (request, { session: _session }) => {
   }
 });
 
-// POST /api/admin/emails - Create a new email template
+// POST /api/admin/emails - Create a new email template (or clone from sourceId)
 export const POST = withAdminGuard(async (request, { session }) => {
   try {
     const body = await request.json();
-    const { name, subject, htmlContent, textContent, variables, isActive, locale } = body;
+    const { name, subject, htmlContent, textContent, variables, isActive, locale, sourceId } = body;
+
+    // Clone mode: duplicate an existing template
+    if (sourceId) {
+      const source = await prisma.emailTemplate.findUnique({ where: { id: sourceId } });
+      if (!source) {
+        return NextResponse.json({ error: 'Source template not found' }, { status: 404 });
+      }
+
+      const clonedName = name || `${source.name} (Copy)`;
+
+      // Ensure unique name
+      const existingClone = await prisma.emailTemplate.findUnique({ where: { name: clonedName } });
+      if (existingClone) {
+        return NextResponse.json(
+          { error: 'A template with this name already exists. Please provide a different name.' },
+          { status: 409 }
+        );
+      }
+
+      const cloned = await prisma.emailTemplate.create({
+        data: {
+          name: clonedName,
+          subject: source.subject,
+          htmlContent: source.htmlContent,
+          textContent: source.textContent,
+          variables: source.variables || [],
+          isActive: false, // Clones start inactive to avoid accidental sends
+          locale: source.locale,
+        },
+      });
+
+      logAdminAction({
+        adminUserId: session.user.id,
+        action: 'CLONE_EMAIL_TEMPLATE',
+        targetType: 'EmailTemplate',
+        targetId: cloned.id,
+        newValue: { name: clonedName, sourceId, status: 'cloned' },
+        ipAddress: getClientIpFromRequest(request),
+        userAgent: request.headers.get('user-agent') || undefined,
+      }).catch(() => {});
+
+      return NextResponse.json({ template: cloned }, { status: 201 });
+    }
 
     // Validate required fields
     if (!name || !subject || !htmlContent) {
@@ -80,11 +162,54 @@ export const POST = withAdminGuard(async (request, { session }) => {
       );
     }
 
+    // Security #17: Validate variable names are alphanumeric + dot + underscore only
+    if (variables !== undefined && variables !== null) {
+      if (!Array.isArray(variables)) {
+        return NextResponse.json(
+          { error: 'variables must be an array of strings' },
+          { status: 400 }
+        );
+      }
+      // Security: limit variable count and name length to prevent abuse
+      if (variables.length > 20) {
+        return NextResponse.json(
+          { error: 'Too many variables (max 20)' },
+          { status: 400 }
+        );
+      }
+      const validVarName = /^[a-zA-Z0-9._]+$/;
+      for (const v of variables) {
+        if (typeof v !== 'string' || !validVarName.test(v)) {
+          return NextResponse.json(
+            { error: `Invalid variable name: "${v}". Only alphanumeric, dot, and underscore are allowed.` },
+            { status: 400 }
+          );
+        }
+        if (v.length > 50) {
+          return NextResponse.json(
+            { error: `Variable name too long: "${v}" (max 50 chars)` },
+            { status: 400 }
+          );
+        }
+      }
+    }
+
+    // Security #16: Sanitize htmlContent to prevent stored XSS
+    const sanitizedHtml = DOMPurify.sanitize(htmlContent, {
+      ALLOWED_TAGS: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'br', 'hr', 'ul', 'ol', 'li',
+        'a', 'img', 'strong', 'em', 'b', 'i', 'u', 'span', 'div', 'table', 'thead', 'tbody',
+        'tr', 'th', 'td', 'blockquote', 'pre', 'code', 'sup', 'sub', 'center', 'font'],
+      ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'style', 'width', 'height',
+        'align', 'valign', 'bgcolor', 'color', 'border', 'cellpadding', 'cellspacing',
+        'target', 'rel', 'id', 'colspan', 'rowspan', 'face', 'size'],
+      ALLOW_DATA_ATTR: false,
+    });
+
     const template = await prisma.emailTemplate.create({
       data: {
         name,
         subject,
-        htmlContent,
+        htmlContent: sanitizedHtml,
         textContent: textContent || null,
         variables: variables || [],
         isActive: isActive ?? true,
@@ -102,9 +227,23 @@ export const POST = withAdminGuard(async (request, { session }) => {
       userAgent: request.headers.get('user-agent') || undefined,
     }).catch(() => {});
 
-    return NextResponse.json({ template }, { status: 201 });
+    // UX hints for subject/preheader optimization
+    const hints: Record<string, unknown> = {};
+    if (subject.length > 50) {
+      hints.subjectLengthWarning = 'Subject line exceeds recommended 50 characters for optimal mobile display';
+    }
+    if (!body.preheader) {
+      hints.preheaderMissing = true;
+    }
+
+    const response: Record<string, unknown> = { template };
+    if (Object.keys(hints).length > 0) {
+      response.hints = hints;
+    }
+
+    return NextResponse.json(response, { status: 201 });
   } catch (error) {
-    console.error('Admin emails POST error:', error);
+    logger.error('Admin emails POST error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

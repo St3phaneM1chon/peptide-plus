@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/admin/payment-methods
@@ -33,7 +34,7 @@ export const GET = withAdminGuard(async (_request, { session }) => {
       })),
     });
   } catch (error) {
-    console.error('Get payment method configs error:', error);
+    logger.error('Get payment method configs error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Error fetching payment method configurations' },
       { status: 500 }
@@ -135,7 +136,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       { status: existing ? 200 : 201 }
     );
   } catch (error) {
-    console.error('Create/update payment method config error:', error);
+    logger.error('Create/update payment method config error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Error saving payment method configuration' },
       { status: 500 }
@@ -174,7 +175,7 @@ export const DELETE = withAdminGuard(async (request, { session }) => {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Delete payment method config error:', error);
+    logger.error('Delete payment method config error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Error deleting payment method configuration' },
       { status: 500 }

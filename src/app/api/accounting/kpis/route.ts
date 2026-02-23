@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { calculateKPIs, getKPITrend } from '@/lib/accounting/kpi.service';
 import type { FinancialKPIs } from '@/lib/accounting/kpi.service';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/accounting/kpis
@@ -85,7 +86,7 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
       ...(previousKPIs ? { previousPeriodKPIs: previousKPIs } : {}),
     });
   } catch (error) {
-    console.error('[KPIs API] Error:', error);
+    logger.error('[KPIs API] Error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors du calcul des KPIs' },
       { status: 500 },

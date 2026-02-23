@@ -9,6 +9,7 @@ import {
   type EntityType,
   type AuditAction,
 } from '@/lib/accounting';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/accounting/audit-trail
@@ -120,7 +121,7 @@ export const GET = withAdminGuard(async (request) => {
       },
     });
   } catch (error) {
-    console.error('Audit trail error:', error);
+    logger.error('Audit trail error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: "Erreur lors de la récupération de la piste d'audit" },
       { status: 500 }

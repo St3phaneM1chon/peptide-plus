@@ -12,6 +12,7 @@ import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { purchaseStock, adjustStock } from '@/lib/inventory';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { logger } from '@/lib/logger';
 
 // GET /api/admin/inventory - List products with inventory info
 export const GET = withAdminGuard(async (request, { session }) => {
@@ -103,7 +104,7 @@ export const GET = withAdminGuard(async (request, { session }) => {
       lowStockCount: inventoryItems.filter((item) => item.isLowStock).length,
     });
   } catch (error) {
-    console.error('Admin inventory GET error:', error);
+    logger.error('Admin inventory GET error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -138,9 +139,10 @@ export const POST = withAdminGuard(async (request, { session }) => {
           { status: 400 }
         );
       }
-      if (item.unitCost < 0) {
+      // BUG-037 FIX: Reject zero unitCost (would corrupt WAC calculation)
+      if (item.unitCost <= 0) {
         return NextResponse.json(
-          { error: 'Unit cost cannot be negative' },
+          { error: 'Unit cost must be greater than zero' },
           { status: 400 }
         );
       }
@@ -175,7 +177,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       { status: 201 }
     );
   } catch (error) {
-    console.error('Admin inventory POST error:', error);
+    logger.error('Admin inventory POST error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -233,7 +235,7 @@ export const PUT = withAdminGuard(async (request, { session }) => {
       message: `Stock adjusted by ${quantity} for product ${productId}`,
     });
   } catch (error) {
-    console.error('Admin inventory PUT error:', error);
+    logger.error('Admin inventory PUT error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -66,11 +66,12 @@ export async function POST(request: Request) {
       where: { id: session.user.id },
       select: { image: true },
     });
+    // FIX: F83 - Log old avatar deletion failure instead of silently ignoring
     if (currentUser?.image) {
       try {
         await storage.delete(currentUser.image);
-      } catch {
-        // Old file might not exist or be external (OAuth avatar), ignore
+      } catch (deleteErr) {
+        console.warn('FIX: F83 - Failed to delete old avatar, may be orphaned:', currentUser.image, deleteErr);
       }
     }
 

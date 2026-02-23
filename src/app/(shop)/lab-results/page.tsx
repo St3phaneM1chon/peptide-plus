@@ -7,7 +7,8 @@ export const metadata: Metadata = {
   description: 'View third-party lab test results and Certificates of Analysis (COA) for all BioCycle Peptides research compounds. 99%+ purity verified.',
 };
 
-export const revalidate = 3600; // ISR: revalidate every hour
+// BUG-060 FIX: Reduce ISR cache to 5 min for fresher data
+export const revalidate = 300;
 
 export default async function LabResultsPage() {
   let coaData: { id: string; productName: string; batchNumber: string; testDate: string; purity: number | null; status: 'passed'; pdfUrl: string; hplcUrl: string }[] = [];

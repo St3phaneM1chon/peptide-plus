@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
+import { logger } from '@/lib/logger';
 
 // ---------------------------------------------------------------------------
 // GET /api/accounting/fiscal-years - List all fiscal years
@@ -21,7 +22,7 @@ export const GET = withAdminGuard(async (_request) => {
       })),
     });
   } catch (error) {
-    console.error('Get fiscal years error:', error);
+    logger.error('Get fiscal years error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la récupération des exercices fiscaux' },
       { status: 500 }
@@ -76,7 +77,7 @@ export const POST = withAdminGuard(async (request) => {
 
     return NextResponse.json({ success: true, fiscalYear }, { status: 201 });
   } catch (error) {
-    console.error('Create fiscal year error:', error);
+    logger.error('Create fiscal year error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la création de l\'exercice fiscal' },
       { status: 500 }
@@ -181,7 +182,7 @@ export const PUT = withAdminGuard(async (request, { session }) => {
       });
 
       // #73 Compliance: Audit log for fiscal year reopen
-      console.info('AUDIT: Fiscal year reopened', {
+      logger.info('AUDIT: Fiscal year reopened', {
         fiscalYearId: id,
         fiscalYearName: existing.name,
         reopenedBy: session.user?.id || session.user?.email || 'unknown',
@@ -205,7 +206,7 @@ export const PUT = withAdminGuard(async (request, { session }) => {
 
     return NextResponse.json({ success: true, fiscalYear: updated });
   } catch (error) {
-    console.error('Update fiscal year error:', error);
+    logger.error('Update fiscal year error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la mise à jour de l\'exercice fiscal' },
       { status: 500 }

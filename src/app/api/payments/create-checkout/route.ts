@@ -17,6 +17,7 @@ import { prisma } from '@/lib/db';
 import { z } from 'zod';
 import { validateCsrf } from '@/lib/csrf-middleware';
 import { applyRate, add, multiply, subtract, convertCurrency, toCents, proportionalDiscount, clamp } from '@/lib/decimal-calculator';
+import { logger } from '@/lib/logger';
 
 // KB-PP-BUILD-002: Lazy init to avoid crash when STRIPE_SECRET_KEY is absent at build time
 let _stripe: Stripe | null = null;
@@ -470,7 +471,7 @@ export async function POST(request: NextRequest) {
         });
       }
       const errorMsg = stockError instanceof Error ? stockError.message : 'Erreur lors de la réservation du stock';
-      console.error('Stock reservation error:', stockError);
+      logger.error('Stock reservation error', { error: stockError instanceof Error ? stockError.message : String(stockError) });
       return NextResponse.json({ error: errorMsg }, { status: 400 });
     }
 
@@ -641,7 +642,7 @@ export async function POST(request: NextRequest) {
       url: checkoutSession.url,
     });
   } catch (error) {
-    console.error('Stripe checkout error:', error);
+    logger.error('Stripe checkout error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la création du paiement' },
       { status: 500 }

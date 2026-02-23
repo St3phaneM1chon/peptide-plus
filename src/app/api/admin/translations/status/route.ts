@@ -24,6 +24,7 @@ import {
   getJobs,
   type TranslatableModel,
 } from '@/lib/translation';
+import { logger } from '@/lib/logger';
 
 const ALL_MODELS: TranslatableModel[] = [
   'Product', 'ProductFormat', 'Category', 'Article',
@@ -79,7 +80,7 @@ export const GET = withAdminGuard(async (request: NextRequest, { session }) => {
       queue: queueStats,
     });
   } catch (error) {
-    console.error('Error fetching translation status:', error);
+    logger.error('Error fetching translation status', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la récupération du statut' },
       { status: 500 }

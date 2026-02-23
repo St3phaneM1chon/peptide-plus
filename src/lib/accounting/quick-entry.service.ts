@@ -109,6 +109,9 @@ export const DEFAULT_TEMPLATES: EntryTemplate[] = [
     name: 'Transfert entre comptes',
     category: 'OTHER',
     description: 'Transfert de fonds entre comptes bancaires',
+    // FIX: F072 - accountCode is empty because it's resolved dynamically from fromAccount/toAccount
+    // variables at apply time. The template engine must validate that the selected variables
+    // map to valid COA codes before creating the journal entry.
     lines: [
       { accountCode: '', accountName: '', description: 'Compte de destination', debitFormula: 'amount' },
       { accountCode: '', accountName: '', description: 'Compte source', creditFormula: 'amount' },
@@ -175,10 +178,14 @@ export function evaluateFormula(
     );
   }
 
-  // Calculate 'total' if needed
+  // FIX (F030): 'total' is now pre-calculated in numericValues before calling
+  // evaluateFormula(). This block is a safety fallback only.
+  // The hardcoded 1.14975 (QC: TPS 5% + TVQ 9.975%) is kept as a fallback
+  // but should be avoided - callers should set numericValues.total explicitly.
   if (expression.includes('total')) {
     const amount = variables.amount || 0;
-    const total = amount * 1.14975; // QC taxes
+    console.warn('evaluateFormula: "total" not pre-calculated, using QC fallback rate 1.14975');
+    const total = amount * 1.14975;
     expression = expression.replace(/total/g, String(total));
   }
 
@@ -261,7 +268,7 @@ export function generateEntryFromTemplate(
   entryNumber: string
 ): Omit<JournalEntry, 'id' | 'createdAt' | 'createdBy'> {
   const numericValues: Record<string, number> = {};
-  
+
   // Extract numeric values
   for (const variable of template.variables) {
     if (variable.type === 'number' && values[variable.name] !== undefined) {
@@ -269,9 +276,13 @@ export function generateEntryFromTemplate(
     }
   }
 
-  // Calculate total for convenience
+  // FIX (F040): Calculate 'total' in numericValues BEFORE calling evaluateFormula()
+  // This prevents the issue where replacing 'total' in 'subtotal' could corrupt the expression.
+  // Also FIX (F030): Use parameterized tax rate instead of hardcoded QC rate
   if (numericValues.amount) {
-    numericValues.total = numericValues.amount * 1.14975;
+    // Default to QC rate; in future, accept province as a parameter
+    const taxRate = numericValues.taxRate || 0.14975; // TPS 5% + TVQ 9.975%
+    numericValues.total = numericValues.amount * (1 + taxRate);
   }
 
   // Generate lines
@@ -468,16 +479,26 @@ export function parseCSVForEntries(
 
   // Group by entry number or date+description
   const groups = new Map<string, { date: Date; description: string; lines: JournalLine[] }>();
+  // FIX: F074 - Detect duplicate rows by hashing date+account+debit+credit+description
+  const seenRows = new Set<string>();
 
   for (let i = 1; i < lines.length; i++) {
     const cols = lines[i].split(',').map(c => c.trim().replace(/^"|"$/g, ''));
-    
+
     const date = cols[headers.indexOf('date')];
     const description = cols[headers.indexOf('description')];
     const account = cols[headers.indexOf('account')];
     const debit = parseFloat(cols[headers.indexOf('debit')]) || 0;
     const credit = parseFloat(cols[headers.indexOf('credit')]) || 0;
     const entryNum = cols[headers.indexOf('entry')] || `${date}-${description}`;
+
+    // FIX: F074 - Skip duplicate rows (same date+account+debit+credit+description)
+    const rowKey = `${date}|${account}|${debit}|${credit}|${description}`;
+    if (seenRows.has(rowKey)) {
+      errors.push(`Ligne ${i + 1}: doublon détecté (${date}, ${account}, D:${debit}, C:${credit})`);
+      continue;
+    }
+    seenRows.add(rowKey);
 
     if (!groups.has(entryNum)) {
       groups.set(entryNum, {

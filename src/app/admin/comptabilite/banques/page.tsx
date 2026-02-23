@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { RefreshCw, Plus, CreditCard, Landmark, PiggyBank, Check } from 'lucide-react';
 import { PageHeader, Button, StatusBadge, SectionCard } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
@@ -39,18 +39,7 @@ export default function BanquesPage() {
   const [expectedOutflows, setExpectedOutflows] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    Promise.all([
-      fetchBankAccounts(),
-      fetchCurrencyRates(),
-      fetchExpectedInflows(),
-      fetchExpectedOutflows(),
-      fetchRecentTransactions(),
-    ]);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const fetchBankAccounts = async () => {
+  const fetchBankAccounts = useCallback(async () => {
     try {
       const res = await fetch('/api/accounting/bank-accounts');
       const json = await res.json();
@@ -74,9 +63,9 @@ export default function BanquesPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [t]);
 
-  const fetchCurrencyRates = async () => {
+  const fetchCurrencyRates = useCallback(async () => {
     try {
       const res = await fetch('/api/accounting/currencies');
       const json = await res.json();
@@ -91,9 +80,9 @@ export default function BanquesPage() {
       console.error(err);
       toast.error(t('common.errorOccurred'));
     }
-  };
+  }, [t]);
 
-  const fetchExpectedInflows = async () => {
+  const fetchExpectedInflows = useCallback(async () => {
     try {
       const res = await fetch('/api/accounting/customer-invoices?status=PENDING&limit=1000');
       const json = await res.json();
@@ -109,9 +98,9 @@ export default function BanquesPage() {
       console.error(err);
       toast.error(t('common.errorOccurred'));
     }
-  };
+  }, [t]);
 
-  const fetchExpectedOutflows = async () => {
+  const fetchExpectedOutflows = useCallback(async () => {
     try {
       const res = await fetch('/api/accounting/recurring');
       if (!res.ok) {
@@ -149,7 +138,7 @@ export default function BanquesPage() {
       console.error(err);
       toast.error(t('common.errorOccurred'));
     }
-  };
+  }, [t]);
 
   const mapBankType = (type: string): BankAccount['type'] => {
     if (type === 'SAVINGS') return 'SAVINGS';
@@ -158,7 +147,7 @@ export default function BanquesPage() {
   };
 
   // Fetch recent transactions from bank-transactions API
-  const fetchRecentTransactions = async () => {
+  const fetchRecentTransactions = useCallback(async () => {
     try {
       const res = await fetch('/api/accounting/bank-transactions?limit=6');
       const json = await res.json();
@@ -178,7 +167,17 @@ export default function BanquesPage() {
       console.error(err);
       toast.error(t('common.errorOccurred'));
     }
-  };
+  }, [t]);
+
+  useEffect(() => {
+    Promise.all([
+      fetchBankAccounts(),
+      fetchCurrencyRates(),
+      fetchExpectedInflows(),
+      fetchExpectedOutflows(),
+      fetchRecentTransactions(),
+    ]);
+  }, [fetchBankAccounts, fetchCurrencyRates, fetchExpectedInflows, fetchExpectedOutflows, fetchRecentTransactions]);
 
   const totalBalance = accounts.reduce((sum, acc) => {
     if (acc.currency !== 'CAD') {

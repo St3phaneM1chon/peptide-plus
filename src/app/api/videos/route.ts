@@ -30,6 +30,8 @@ export async function GET(request: NextRequest) {
       where.category = category;
     }
 
+    // FIX: F69 - TODO: Add database indexes on Video.title, Video.description, Video.instructor
+    // for search performance, or migrate to PostgreSQL full-text search (GIN index on tsvector)
     if (search) {
       where.OR = [
         { title: { contains: search, mode: 'insensitive' } },
@@ -60,19 +62,23 @@ export async function GET(request: NextRequest) {
       translatedVideos = await withTranslations(videos, 'Video', locale);
     }
 
-    // Parse tags for frontend
+    // FIX: F65 - Normalize tags parsing: try JSON array first, then CSV fallback, always filter empty entries
     const enrichedVideos = translatedVideos.map(v => {
       let parsedTags: string[] = [];
       if (v.tags) {
         try {
-          parsedTags = JSON.parse(v.tags);
+          const parsed = JSON.parse(v.tags);
+          parsedTags = Array.isArray(parsed) ? parsed.map(String) : [String(parsed)];
         } catch {
           parsedTags = v.tags.split(',').map(t => t.trim());
         }
+        parsedTags = parsedTags.filter(Boolean);
       }
 
+      // F47 FIX: Strip internal translation records from public API response
+      const { translations: _translations, ...publicFields } = v;
       return {
-        ...v,
+        ...publicFields,
         tags: parsedTags,
       };
     });

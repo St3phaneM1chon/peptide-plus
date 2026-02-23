@@ -1,4 +1,5 @@
-export const revalidate = 3600; // ISR: revalidate every hour
+// BUG-060 FIX: Reduce ISR cache to 5 min for faster price/stock propagation
+export const revalidate = 300;
 
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
@@ -274,13 +275,14 @@ export default async function ProductPage({ params }: PageProps) {
     categoryName: product.category?.name || undefined,
   });
 
+  // FIX: BUG-061 - Use translated category name for JSON-LD breadcrumbs
   const breadcrumbItems = [
     { name: 'Home', url: '/' },
   ];
-  if (product.category) {
+  if (translatedProduct.category) {
     breadcrumbItems.push({
-      name: product.category.name,
-      url: `/shop?category=${product.category.slug}`,
+      name: translatedProduct.category.name,
+      url: `/shop?category=${product.category?.slug}`,
     });
   }
   breadcrumbItems.push({

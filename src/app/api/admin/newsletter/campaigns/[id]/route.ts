@@ -12,6 +12,7 @@ import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { updateCampaignSchema } from '@/lib/validations/newsletter';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { logger } from '@/lib/logger';
 
 const CAMPAIGNS_KEY = 'newsletter_campaigns';
 
@@ -172,7 +173,7 @@ export const PATCH = withAdminGuard(async (request: NextRequest, { session, para
       campaign,
     });
   } catch (error) {
-    console.error('PATCH newsletter campaign error:', error);
+    logger.error('PATCH newsletter campaign error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Error updating campaign' },
       { status: 500 }
@@ -207,7 +208,7 @@ export const GET = withAdminGuard(async (_request: NextRequest, { session: _sess
 
     return NextResponse.json({ campaign });
   } catch (error) {
-    console.error('GET newsletter campaign error:', error);
+    logger.error('GET newsletter campaign error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Error fetching campaign' },
       { status: 500 }

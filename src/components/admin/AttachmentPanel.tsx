@@ -24,6 +24,8 @@ import {
   Table,
   AlertCircle,
 } from 'lucide-react';
+// FIX: F59 - Use shared formatFileSize utility instead of local duplicate
+import { formatFileSize } from '@/lib/format-utils';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -78,11 +80,7 @@ function getFileExtension(fileName: string): string {
   return (fileName.split('.').pop() || '').toLowerCase();
 }
 
-function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
+// FIX: F59 - formatFileSize moved to shared @/lib/format-utils
 
 function isImageFile(fileType: string): boolean {
   return IMAGE_EXTENSIONS.has(fileType);

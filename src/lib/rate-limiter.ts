@@ -39,7 +39,8 @@ interface RedisClient {
   expire(key: string, seconds: number): Promise<number>;
   ttl(key: string): Promise<number>;
   del(...keys: string[]): Promise<number>;
-  keys(pattern: string): Promise<string[]>;
+  // FAILLE-048 FIX: Removed keys() from interface - use scanStream instead
+  scanStream?(options: { match: string; count: number }): NodeJS.ReadableStream;
   status?: string;
   quit(): Promise<string>;
 }
@@ -147,6 +148,11 @@ const RATE_LIMIT_CONFIGS: Record<string, { windowMs: number; maxRequests: number
   // Admin - modere
   'admin': { windowMs: 60000, maxRequests: 100 },
 
+  // FIX: F023 - Accounting API: stricter rate limiting (50 req/min) to protect
+  // financial data endpoints from abuse. Write operations are even more limited.
+  'accounting': { windowMs: 60000, maxRequests: 50 },
+  'accounting/write': { windowMs: 60000, maxRequests: 20 },
+
   // Chat - permissif (general)
   'chat': { windowMs: 60000, maxRequests: 120 },
 
@@ -173,6 +179,15 @@ const RATE_LIMIT_CONFIGS: Record<string, { windowMs: number; maxRequests: number
 
   // SEC-24: Stock alerts - 10 per IP per hour
   'stock-alerts': { windowMs: 3600000, maxRequests: 10 },
+
+  // FLAW-FIX: Referral code generation - 5 per user per hour (prevents abuse)
+  'referrals/generate': { windowMs: 3600000, maxRequests: 5 },
+
+  // FLAW-FIX: Referral code application - 10 per user per hour
+  'referrals/apply': { windowMs: 3600000, maxRequests: 10 },
+
+  // FLAW-FIX: Mailing list subscribe - 5 per IP per hour (uses 'newsletter' config via path mapping)
+  'mailing-list/subscribe': { windowMs: 3600000, maxRequests: 5 },
 
   // SEC-25: Chat route - 10 per user per hour
   'chat/route': { windowMs: 3600000, maxRequests: 10 },
@@ -210,6 +225,9 @@ function getEndpointType(path: string): string {
   if (segments[0] === 'api') {
     if (segments[1] === 'auth') return `auth/${segments[2] || 'default'}`;
     if (segments[1] === 'admin') return 'admin';
+    // FIX: F023 - Route accounting endpoints to specific rate limit config
+    // Write operations (POST/PUT/DELETE handled via path depth) get stricter limits
+    if (segments[1] === 'accounting') return segments.length > 3 ? 'accounting/write' : 'accounting';
     if (segments[1] === 'checkout' || segments[1] === 'payments') return segments[1];
     // Chat: distinguish /api/chat/message from /api/chat
     if (segments[1] === 'chat' && segments[2] === 'message') return 'chat/message';
@@ -223,6 +241,11 @@ function getEndpointType(path: string): string {
     if (segments[1] === 'orders' && segments[2] === 'track') return 'orders/track';
     // Stock alerts
     if (segments[1] === 'stock-alerts') return 'stock-alerts';
+    // Referrals: distinguish /api/referrals/generate and /api/referrals/apply
+    if (segments[1] === 'referrals' && segments[2] === 'generate') return 'referrals/generate';
+    if (segments[1] === 'referrals' && segments[2] === 'apply') return 'referrals/apply';
+    // Mailing list: distinguish /api/mailing-list/subscribe
+    if (segments[1] === 'mailing-list' && segments[2] === 'subscribe') return 'mailing-list/subscribe';
     // Account: distinguish /api/account/password and /api/account/delete-request
     if (segments[1] === 'account' && segments[2] === 'password') return 'account/password';
     if (segments[1] === 'account' && segments[2] === 'delete-request') return 'account/delete-request';
@@ -407,9 +430,13 @@ export function cleanupRateLimitCache(): void {
   }
 }
 
-// Periodic in-memory cleanup (every 5 minutes)
+// FAILLE-049 FIX: Only run in-memory cleanup when Redis is not handling TTL
 if (typeof setInterval !== 'undefined') {
-  setInterval(cleanupRateLimitCache, 5 * 60 * 1000);
+  setInterval(() => {
+    if (!redisAvailable) {
+      cleanupRateLimitCache();
+    }
+  }, 5 * 60 * 1000);
 }
 
 // ---------------------------------------------------------------------------
@@ -454,21 +481,28 @@ export async function getRateLimitStats(): Promise<{
   entriesByEndpoint: Record<string, number>;
   backend: 'redis' | 'memory';
 }> {
-  // Try Redis first
-  if (redisAvailable && redisClient) {
+  // FAILLE-048 FIX: Use SCAN instead of KEYS to avoid O(n) blocking command
+  if (redisAvailable && redisClient && redisClient.scanStream) {
     try {
-      const keys = await redisClient.keys(`${REDIS_KEY_PREFIX}:*`);
       const stats: Record<string, number> = {};
+      let totalEntries = 0;
 
-      for (const key of keys) {
-        // Key format: rl:{identity}:{endpoint}
-        const parts = key.split(':');
-        const endpoint = parts.slice(2).join(':') || 'unknown';
-        stats[endpoint] = (stats[endpoint] || 0) + 1;
-      }
+      const stream = redisClient.scanStream({ match: `${REDIS_KEY_PREFIX}:*`, count: 100 });
+      await new Promise<void>((resolve, reject) => {
+        stream.on('data', (keys: string[]) => {
+          for (const key of keys) {
+            totalEntries++;
+            const parts = key.split(':');
+            const endpoint = parts.slice(2).join(':') || 'unknown';
+            stats[endpoint] = (stats[endpoint] || 0) + 1;
+          }
+        });
+        stream.on('end', resolve);
+        stream.on('error', reject);
+      });
 
       return {
-        totalEntries: keys.length,
+        totalEntries,
         entriesByEndpoint: stats,
         backend: 'redis',
       };

@@ -13,6 +13,7 @@ import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { updatePromoCodeSchema, patchPromoCodeSchema } from '@/lib/validations/promo-code';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { logger } from '@/lib/logger';
 
 // GET /api/admin/promo-codes/[id] - Get single promo code with usages
 export const GET = withAdminGuard(async (_request, { session, params }) => {
@@ -81,7 +82,7 @@ export const GET = withAdminGuard(async (_request, { session, params }) => {
       })),
     });
   } catch (error) {
-    console.error('Admin promo-code GET error:', error);
+    logger.error('Admin promo-code GET error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -184,7 +185,7 @@ export const PUT = withAdminGuard(async (request, { session, params }) => {
       },
     });
   } catch (error) {
-    console.error('Admin promo-code PUT error:', error);
+    logger.error('Admin promo-code PUT error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -296,7 +297,7 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
       },
     });
   } catch (error) {
-    console.error('Admin promo-code PATCH error:', error);
+    logger.error('Admin promo-code PATCH error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -362,7 +363,7 @@ export const DELETE = withAdminGuard(async (request, { session, params }) => {
 
     return NextResponse.json({ success: true, deleted: true });
   } catch (error) {
-    console.error('Admin promo-code DELETE error:', error);
+    logger.error('Admin promo-code DELETE error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

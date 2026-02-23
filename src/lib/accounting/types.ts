@@ -97,7 +97,10 @@ export const ACCOUNT_CODES = {
   INVENTORY_LOSS: '6900',
 
   // Other (7000-7999)
-  FX_GAINS_LOSSES: '7000',
+  FX_GAINS_LOSSES: '7000', // Kept for backward compatibility
+  // FIX: F013 - Separate accounts for FX gains vs losses for proper P&L reporting
+  FX_LOSS: '7010',
+  FX_GAIN: '7020',
   INTEREST_INCOME: '7100',
   INTEREST_EXPENSE: '7200',
 } as const;

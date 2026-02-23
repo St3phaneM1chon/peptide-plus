@@ -50,12 +50,13 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Check if referrer has reached the max referral limit (50)
+    // FLAW-066 FIX: Use named constant for referral limit
+    const MAX_REFERRALS_PER_USER = parseInt(process.env.MAX_REFERRALS_PER_USER || '50', 10);
     const referralCount = await prisma.referral.count({
       where: { referrerId: referrer.id },
     });
 
-    if (referralCount >= 50) {
+    if (referralCount >= MAX_REFERRALS_PER_USER) {
       return NextResponse.json({
         valid: false,
         error: 'This referral code has reached its maximum usage limit',

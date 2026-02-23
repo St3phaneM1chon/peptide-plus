@@ -17,6 +17,7 @@ import crypto from 'crypto';
 import Stripe from 'stripe';
 import { z } from 'zod';
 import { auth } from '@/lib/auth-config';
+import { logger } from '@/lib/logger';
 import { prisma } from '@/lib/db';
 import { getOrCreateStripeCustomer } from '@/lib/stripe';
 import { calculateTaxAmount } from '@/lib/tax-rates';
@@ -216,7 +217,7 @@ export async function POST(request: NextRequest) {
       error: `Payment status: ${paymentIntent.status}`,
     });
   } catch (error) {
-    console.error('Error charging saved card:', error);
+    logger.error('Error charging saved card', { error: error instanceof Error ? error.message : String(error) });
 
     // Handle Stripe-specific errors with user-friendly messages
     if (error instanceof Stripe.errors.StripeCardError) {

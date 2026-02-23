@@ -4,12 +4,15 @@
  */
 
 import { prisma } from '@/lib/db';
+import { LOYALTY_POINTS_CONFIG } from '@/lib/constants';
+// FLAW-077 FIX: Use structured logger instead of console.log
+import { logger } from '@/lib/logger';
 
 // Minimum order amount to qualify a referral ($25)
 const MIN_ORDER_AMOUNT = 25;
 
-// Points awarded to the referrer
-const REFERRAL_BONUS_POINTS = 1000;
+// Points awarded to the referrer - from single source of truth
+const REFERRAL_BONUS_POINTS = LOYALTY_POINTS_CONFIG.referralBonus;
 
 /**
  * Qualify a referral - award points to the referrer
@@ -114,18 +117,23 @@ export async function qualifyReferral(
           lifetimePoints: { increment: REFERRAL_BONUS_POINTS },
         },
       });
+
+      // FIX: F-042 - Increment totalReferrals on the Ambassador record if one exists for the referrer
+      await tx.ambassador.updateMany({
+        where: { userId: referral.referrerId },
+        data: { totalReferrals: { increment: 1 } },
+      });
     });
 
-    console.log(
-      `Referral qualified: ${REFERRAL_BONUS_POINTS} points awarded to referrer ${referral.referrerId} for order ${orderId}`
-    );
+    // FLAW-077 FIX: Use structured logger
+    logger.info(`Referral qualified: ${REFERRAL_BONUS_POINTS} points awarded to referrer ${referral.referrerId} for order ${orderId}`);
 
     return {
       success: true,
       message: `Referral qualified! ${REFERRAL_BONUS_POINTS} points awarded to referrer.`,
     };
   } catch (error) {
-    console.error('Error qualifying referral:', error);
+    logger.error('Error qualifying referral:', error);
     return {
       success: false,
       message: error instanceof Error ? error.message : 'Unknown error',

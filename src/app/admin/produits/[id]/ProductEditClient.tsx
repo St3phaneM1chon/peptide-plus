@@ -98,8 +98,10 @@ interface Props {
   isOwner: boolean;
 }
 
-const ALL_LOCALES = ['en', 'fr', 'es', 'de', 'it', 'pt', 'nl', 'pl', 'cs', 'ro', 'hu', 'sv', 'da', 'fi', 'nb', 'ja', 'ko', 'zh', 'ar', 'he', 'tr', 'ru'];
+// BUG-032 FIX: Import locales from central config instead of hardcoding a mismatched list
+import { locales as ALL_LOCALES } from '@/i18n/config';
 
+// TODO: BUG-080 - Add beforeunload event listener and router guard for unsaved changes warning
 export default function ProductEditClient({ product, categories, isOwner }: Props) {
   const router = useRouter();
   const { t } = useI18n();
@@ -120,7 +122,8 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
     description: product.description || '',
     productType: product.productType,
     price: product.price,
-    compareAtPrice: product.compareAtPrice || '',
+    // BUG-069 FIX: Use null instead of '' for optional numeric field
+    compareAtPrice: product.compareAtPrice ?? null,
     purity: product.purity ? String(product.purity) : '99.30',
     molecularWeight: product.molecularWeight ? String(product.molecularWeight) : '',
     casNumber: product.casNumber || '',
@@ -172,7 +175,8 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
   // Product texts management
   const addProductText = () => {
     const newText: ProductText = {
-      id: `text-${Date.now()}`,
+      // BUG-095 FIX: Use crypto.randomUUID for unique IDs
+      id: `text-${crypto.randomUUID().slice(0, 12)}`,
       name: '', title: '', subtitle: '', intro: '', text: '', summary: '',
       pdfUrl: '', imageUrl: '', videoUrl: '', externalLink: '', internalLink: '', references: '',
     };
@@ -216,6 +220,8 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
     }
   };
 
+  // TODO: BUG-049 - Send only changed fields (diff with initial) to avoid overwriting parallel edits
+  // TODO: BUG-075 - Add optimistic update: update local state immediately, rollback on error
   const handleSaveFormat = async (format: ProductFormat) => {
     try {
       const res = await fetch(`/api/products/${product.id}/formats/${format.id}`, {
@@ -233,6 +239,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
     }
   };
 
+  // TODO: BUG-094 - Replace native confirm() with custom Modal component for consistent styling
   const handleDeleteFormat = async (formatId: string) => {
     if (!confirm(t('admin.productForm.deleteFormatConfirm'))) return;
     try {
@@ -260,6 +267,8 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
         }),
       });
       if (res.ok) {
+        // FIX: BUG-098 - Show success toast after product save
+        toast.success(t('admin.productForm.updateSuccess') || 'Product updated successfully');
         router.refresh();
       } else {
         const data = await res.json();
@@ -293,6 +302,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
   const translatedCount = translationStatuses.length;
   const approvedCount = translationStatuses.filter(ts => ts.isApproved).length;
 
+  // TODO: BUG-086 - Replace emoji icons (📋📝📦) with Lucide icons for cross-platform consistency
   const tabs = [
     { id: 'header' as const, label: t('admin.productForm.tabHeader'), icon: '📋', count: null },
     { id: 'texts' as const, label: t('admin.productForm.tabTexts'), icon: '📝', count: productTexts.length },
@@ -328,6 +338,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
             >
               {t('admin.productForm.viewProduct')}
             </Link>
+            {/* TODO: BUG-093 - Add overlay/disable form fields during save to prevent unintended edits */}
             <button
               onClick={handleSaveProduct}
               disabled={saving}
@@ -631,6 +642,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
                     className="flex items-center justify-between p-4 cursor-pointer hover:bg-neutral-50 transition-colors"
                   >
                     <div className="flex items-center gap-3">
+                      {/* TODO: BUG-099 - GripVertical icon implies drag-and-drop but it is not implemented; either add dnd-kit or remove icon */}
                       <GripVertical className="w-4 h-4 text-neutral-300" />
                       <div>
                         <p className="font-medium text-neutral-900">{pt.name || t('admin.productForm.untitledText')}</p>

@@ -10,6 +10,7 @@ import { prisma } from '@/lib/db';
 import { createAccountingEntriesForOrder } from '@/lib/accounting/webhook-accounting.service';
 import { getPayPalAccessToken, PAYPAL_API_URL } from '@/lib/paypal';
 import { validateCsrf } from '@/lib/csrf-middleware';
+import { logger } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
   try {
@@ -250,7 +251,7 @@ export async function POST(request: NextRequest) {
                 });
               }
               if (safeDecrement < reservation.quantity) {
-                console.warn(`[PayPal capture] Stock floor hit for format ${reservation.formatId}: wanted to decrement ${reservation.quantity}, only decremented ${safeDecrement}`);
+                logger.warn(`[PayPal capture] Stock floor hit for format ${reservation.formatId}`, { wanted: reservation.quantity, decremented: safeDecrement });
               }
             }
 
@@ -286,7 +287,7 @@ export async function POST(request: NextRequest) {
       try {
         await createAccountingEntriesForOrder(order.id);
       } catch (acctError) {
-        console.error('Failed to create PayPal accounting entries:', acctError);
+        logger.error('Failed to create PayPal accounting entries', { error: acctError instanceof Error ? acctError.message : String(acctError) });
       }
 
       // Track promo code usage
@@ -308,7 +309,7 @@ export async function POST(request: NextRequest) {
             });
           }
         } catch (promoError) {
-          console.error('Failed to track promo code usage:', promoError);
+          logger.error('Failed to track promo code usage', { error: promoError instanceof Error ? promoError.message : String(promoError) });
         }
       }
 
@@ -328,13 +329,13 @@ export async function POST(request: NextRequest) {
             `;
 
             if (!giftCard || !giftCard.is_active || giftCard.balance <= 0) {
-              console.warn(`Gift card ${giftCardCode} invalid or zero balance, skipping deduction`);
+              logger.warn('Gift card invalid or zero balance, skipping deduction', { giftCardCode });
               return;
             }
 
             // Check expiration
             if (giftCard.expires_at && new Date() > giftCard.expires_at) {
-              console.warn(`Gift card ${giftCardCode} expired, skipping deduction`);
+              logger.warn('Gift card expired, skipping deduction', { giftCardCode });
               return;
             }
 
@@ -352,11 +353,11 @@ export async function POST(request: NextRequest) {
                 },
               });
 
-              console.log(`Gift card ${giftCardCode} decremented by $${amountToDeduct}, new balance: $${newBalance}`);
+              logger.info('Gift card decremented', { giftCardCode, amountDeducted: amountToDeduct, newBalance });
             }
           });
         } catch (gcError) {
-          console.error('Failed to decrement gift card balance:', gcError);
+          logger.error('Failed to decrement gift card balance', { error: gcError instanceof Error ? gcError.message : String(gcError) });
           // Don't fail the order for gift card errors
         }
       }
@@ -389,10 +390,10 @@ export async function POST(request: NextRequest) {
               },
               update: {},
             });
-            console.log(`Ambassador commission: ${commissionAmount}$ for ${ambassador.name} (order ${order.orderNumber})`);
+            logger.info('Ambassador commission created', { commissionAmount, ambassadorName: ambassador.name, orderNumber: order.orderNumber });
           }
         } catch (commError) {
-          console.error('Failed to create ambassador commission:', commError);
+          logger.error('Failed to create ambassador commission', { error: commError instanceof Error ? commError.message : String(commError) });
         }
       }
 
@@ -435,7 +436,7 @@ export async function POST(request: NextRequest) {
       );
     }
   } catch (error) {
-    console.error('Error capturing PayPal payment:', error);
+    logger.error('Error capturing PayPal payment', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la capture du paiement' },
       { status: 500 }

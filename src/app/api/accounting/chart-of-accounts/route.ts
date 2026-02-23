@@ -1,11 +1,16 @@
 export const dynamic = 'force-dynamic';
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
+import { randomUUID } from 'crypto';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
+import { logger } from '@/lib/logger';
 
-// #82 Audit: In-memory cache for chart of accounts (rarely changes)
-const COA_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+// FIX: F004 - In-memory cache is useless in serverless (each invocation gets a fresh
+// module scope). Kept as a minor optimization for long-lived dev servers / non-serverless
+// runtimes, but marked with a short TTL and a comment so no one relies on it for correctness.
+// In production (Vercel / Azure serverless), this cache is effectively always cold.
+const COA_CACHE_TTL_MS = 60 * 1000; // 1 minute (reduced from 5 min — serverless rarely benefits)
 let coaCache: {
   data: unknown;
   timestamp: number;
@@ -47,7 +52,7 @@ export const GET = withAdminGuard(async (request) => {
 
     return NextResponse.json({ accounts });
   } catch (error) {
-    console.error('Get chart of accounts error:', error);
+    logger.error('Get chart of accounts error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la récupération du plan comptable' },
       { status: 500 }
@@ -125,6 +130,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
 
     const account = await prisma.chartOfAccount.create({
       data: {
+        id: randomUUID(),
         code,
         name,
         type,
@@ -139,7 +145,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
     coaCache = null; // #82 Audit: Invalidate cache on mutation
 
     // #74 Compliance: Audit logging for CREATE operation
-    console.info('AUDIT: Chart of accounts CREATE', {
+    logger.info('AUDIT: Chart of accounts CREATE', {
       accountId: account.id,
       accountCode: code,
       accountName: name,
@@ -150,7 +156,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
 
     return NextResponse.json({ success: true, account }, { status: 201 });
   } catch (error) {
-    console.error('Create account error:', error);
+    logger.error('Create account error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la création du compte' },
       { status: 500 }
@@ -217,7 +223,7 @@ export const PUT = withAdminGuard(async (request, { session }) => {
     coaCache = null; // #82 Audit: Invalidate cache on mutation
 
     // #74 Compliance: Audit logging for UPDATE operation
-    console.info('AUDIT: Chart of accounts UPDATE', {
+    logger.info('AUDIT: Chart of accounts UPDATE', {
       accountId: id,
       accountCode: existing.code,
       updatedBy: session.user.id || session.user.email,
@@ -237,7 +243,7 @@ export const PUT = withAdminGuard(async (request, { session }) => {
 
     return NextResponse.json({ success: true, account });
   } catch (error) {
-    console.error('Update account error:', error);
+    logger.error('Update account error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la mise à jour du compte' },
       { status: 500 }
@@ -279,12 +285,17 @@ export const DELETE = withAdminGuard(async (request, { session }) => {
       );
     }
 
-    await prisma.chartOfAccount.delete({ where: { id } });
+    // FIX (F025): Use soft-delete (isActive: false) instead of hard-delete
+    // to preserve referential integrity and audit trail history
+    await prisma.chartOfAccount.update({
+      where: { id },
+      data: { isActive: false },
+    });
 
     coaCache = null; // #82 Audit: Invalidate cache on mutation
 
     // #74 Compliance: Audit logging for DELETE operation
-    console.info('AUDIT: Chart of accounts DELETE', {
+    logger.info('AUDIT: Chart of accounts DELETE', {
       accountId: id,
       accountCode: existing.code,
       accountName: existing.name,
@@ -294,7 +305,7 @@ export const DELETE = withAdminGuard(async (request, { session }) => {
 
     return NextResponse.json({ success: true, message: 'Compte supprimé' });
   } catch (error) {
-    console.error('Delete account error:', error);
+    logger.error('Delete account error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la suppression du compte' },
       { status: 500 }

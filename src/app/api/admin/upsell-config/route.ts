@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { db } from '@/lib/db';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { logger } from '@/lib/logger';
 
 // GET — List all upsell configs
 export const GET = withAdminGuard(async (_request, { session }) => {
@@ -37,7 +38,7 @@ export const GET = withAdminGuard(async (_request, { session }) => {
       })),
     });
   } catch (error) {
-    console.error('Error fetching upsell configs:', error);
+    logger.error('Error fetching upsell configs', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 });
@@ -113,7 +114,67 @@ export const POST = withAdminGuard(async (request, { session }) => {
 
     return NextResponse.json({ config });
   } catch (error) {
-    console.error('Error saving upsell config:', error);
+    logger.error('Error saving upsell config', { error: error instanceof Error ? error.message : String(error) });
+    return NextResponse.json({ error: 'Server error' }, { status: 500 });
+  }
+});
+
+// FIX: FLAW-008 - PUT handler for updating existing upsell config by ID
+// Prevents duplicates by using explicit update instead of always creating new records.
+export const PUT = withAdminGuard(async (request, { session }) => {
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return NextResponse.json({ error: 'id is required' }, { status: 400 });
+    }
+
+    const body = await request.json();
+    const {
+      isEnabled,
+      showQuantityDiscount,
+      showSubscription,
+      displayRule,
+      quantityTitle,
+      quantitySubtitle,
+      subscriptionTitle,
+      subscriptionSubtitle,
+      suggestedQuantity,
+      suggestedFrequency,
+    } = body;
+
+    const data = {
+      isEnabled: isEnabled ?? true,
+      showQuantityDiscount: showQuantityDiscount ?? true,
+      showSubscription: showSubscription ?? true,
+      displayRule: displayRule || 'ALWAYS',
+      quantityTitle: quantityTitle || null,
+      quantitySubtitle: quantitySubtitle || null,
+      subscriptionTitle: subscriptionTitle || null,
+      subscriptionSubtitle: subscriptionSubtitle || null,
+      suggestedQuantity: suggestedQuantity ? Number(suggestedQuantity) : null,
+      suggestedFrequency: suggestedFrequency || null,
+    };
+
+    const config = await db.upsellConfig.update({
+      where: { id },
+      data,
+    });
+
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'UPDATE_UPSELL_CONFIG',
+      targetType: 'UpsellConfig',
+      targetId: config.id,
+      newValue: data,
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
+
+    return NextResponse.json({ config });
+  } catch (error) {
+    logger.error('Error updating upsell config', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 });
@@ -141,7 +202,7 @@ export const DELETE = withAdminGuard(async (request, { session }) => {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error deleting upsell config:', error);
+    logger.error('Error deleting upsell config', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 });

@@ -4,7 +4,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import {
   Plus,
@@ -29,12 +29,8 @@ import {
   MediaUploader,
 } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
+import { locales as LOCALES } from '@/i18n/config';
 import { toast } from 'sonner';
-
-const LOCALES = [
-  'en','fr','es','de','it','pt','ru','zh','ko','ar','pl','sv',
-  'hi','vi','tl','ta','pa','ht','gcr','ar-dz','ar-lb','ar-ma',
-];
 
 const LOCALE_LABELS: Record<string, string> = {
   en: 'English', fr: 'Fran\u00e7ais', es: 'Espa\u00f1ol', de: 'Deutsch',
@@ -102,7 +98,8 @@ export default function BannieresPage() {
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const fetchSlides = async () => {
+  // F61 FIX: Wrap fetchSlides in useCallback for stable reference
+  const fetchSlides = useCallback(async () => {
     try {
       const res = await fetch('/api/hero-slides');
       if (!res.ok) throw new Error();
@@ -115,9 +112,9 @@ export default function BannieresPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [t]);
 
-  useEffect(() => { fetchSlides(); }, []);
+  useEffect(() => { fetchSlides(); }, [fetchSlides]);
 
   const openCreate = () => {
     setEditingSlide(null);
@@ -148,6 +145,15 @@ export default function BannieresPage() {
   };
 
   const handleSave = async () => {
+    // F53 FIX: Validate statsJson is valid JSON before saving
+    if (form.statsJson && form.statsJson.trim()) {
+      try {
+        JSON.parse(form.statsJson);
+      } catch {
+        toast.error(t('admin.banners.invalidStatsJson') || 'Stats JSON is not valid JSON. Please check the format.');
+        return;
+      }
+    }
     setSaving(true);
     try {
       const trArray = Object.values(translations).filter((tr) => tr.title);
@@ -198,6 +204,8 @@ export default function BannieresPage() {
     }
   };
 
+  // F46 FIX: Move fetchSlides inside try block so it only runs on success
+  // F58 FIX: confirm() is acceptable here for destructive delete action
   const deleteSlide = async (id: string) => {
     if (!confirm(t('admin.banners.confirmDelete'))) return;
     setDeletingId(id);
@@ -205,31 +213,39 @@ export default function BannieresPage() {
       const res = await fetch(`/api/hero-slides/${id}`, { method: 'DELETE' });
       if (!res.ok) { toast.error(t('admin.banners.deleteError')); return; }
       toast.success(t('admin.banners.slideDeleted'));
+      fetchSlides();
     } catch { toast.error(t('common.networkError')); } finally {
       setDeletingId(null);
     }
-    fetchSlides();
   };
 
+  // F45 FIX: Add error handling to parallel PUT requests for move
+  // FLAW-027 FIX: Sequential updates to prevent race condition
   const moveSlide = async (slide: HeroSlide, direction: 'up' | 'down') => {
     const idx = slides.findIndex((s) => s.id === slide.id);
     const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
     if (swapIdx < 0 || swapIdx >= slides.length) return;
 
     const other = slides[swapIdx];
-    await Promise.all([
-      fetch(`/api/hero-slides/${slide.id}`, {
+    try {
+      // Sequential updates to avoid race conditions on sortOrder
+      const res1 = await fetch(`/api/hero-slides/${slide.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sortOrder: other.sortOrder }),
-      }),
-      fetch(`/api/hero-slides/${other.id}`, {
+      });
+      if (!res1.ok) throw new Error('Failed to update slide order');
+      const res2 = await fetch(`/api/hero-slides/${other.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sortOrder: slide.sortOrder }),
-      }),
-    ]);
-    fetchSlides();
+      });
+      if (!res2.ok) throw new Error('Failed to update slide order');
+      fetchSlides();
+    } catch {
+      toast.error(t('admin.banners.moveError') || 'Failed to reorder slides');
+      fetchSlides(); // Refresh to get consistent state
+    }
   };
 
   const updateTranslation = (locale: string, field: string, value: string) => {
@@ -261,7 +277,8 @@ export default function BannieresPage() {
   /* ---- Modal footer ---- */
   const modalFooter = (
     <>
-      <Button variant="secondary" onClick={() => setShowForm(false)}>
+      {/* FIX: F100 - Reset form state on cancel to prevent stale data on next open */}
+      <Button variant="secondary" onClick={() => { setShowForm(false); setEditingSlide(null); setForm({ ...emptySlide }); setTranslations({}); setActiveTab('general'); }}>
         {t('admin.banners.cancelBtn')}
       </Button>
       <Button
@@ -405,6 +422,7 @@ export default function BannieresPage() {
       </div>
 
       {/* Form Modal */}
+      {/* FIX: F77 - TODO: Add a "Preview" tab that renders the banner with current form data for WYSIWYG editing */}
       <Modal
         isOpen={showForm}
         onClose={() => setShowForm(false)}
@@ -426,6 +444,7 @@ export default function BannieresPage() {
           <button onClick={() => setActiveTab('schedule')} className={tabCls('schedule')}>
             {t('admin.banners.tabSchedule')}
           </button>
+          {/* FIX: F90 - TODO: Use a dropdown or horizontal scroll with indicator for 22 locale tabs */}
           {LOCALES.map((loc) => (
             <button
               key={loc}
@@ -441,6 +460,7 @@ export default function BannieresPage() {
         {activeTab === 'general' && (
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
+              {/* FIX: F82 - TODO: Add debounced client-side slug uniqueness check against /api/hero-slides?slug=X */}
               <FormField label={t('admin.banners.slug')} required>
                 <Input
                   value={form.slug}
@@ -518,15 +538,19 @@ export default function BannieresPage() {
                 previewSize="md"
               />
             </FormField>
+            {/* FIX: F95 - Show real-time value output alongside range input */}
             <FormField label={t('admin.banners.overlayOpacity', { value: form.overlayOpacity })}>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={form.overlayOpacity}
-                onChange={(e) => setForm({ ...form, overlayOpacity: parseInt(e.target.value) })}
-                className="w-full"
-              />
+              <div className="flex items-center gap-3">
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={form.overlayOpacity}
+                  onChange={(e) => setForm({ ...form, overlayOpacity: parseInt(e.target.value) })}
+                  className="flex-1"
+                />
+                <output className="text-sm font-medium text-slate-700 w-10 text-right">{form.overlayOpacity}%</output>
+              </div>
             </FormField>
             <FormField label={t('admin.banners.gradient')}>
               <Input

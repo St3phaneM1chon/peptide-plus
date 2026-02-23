@@ -12,6 +12,7 @@ import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { enqueue } from '@/lib/translation';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { logger } from '@/lib/logger';
 
 // GET /api/admin/videos/[id] - Get single video
 export const GET = withAdminGuard(async (_request, { session, params }) => {
@@ -51,7 +52,7 @@ export const GET = withAdminGuard(async (_request, { session, params }) => {
       },
     });
   } catch (error) {
-    console.error('Admin video GET error:', error);
+    logger.error('Admin video GET error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -104,20 +105,30 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-|-$/g, '');
 
+      // FIX: F24 - Use single-query check + UUID suffix instead of while loop
       let slug = baseSlug;
-      let slugSuffix = 1;
-      let existingSlug = await prisma.video.findUnique({ where: { slug } });
-      while (existingSlug && existingSlug.id !== id) {
-        slug = `${baseSlug}-${slugSuffix}`;
-        slugSuffix++;
-        existingSlug = await prisma.video.findUnique({ where: { slug } });
+      const existingSlug = await prisma.video.findUnique({ where: { slug } });
+      if (existingSlug && existingSlug.id !== id) {
+        const { randomUUID } = await import('crypto');
+        slug = `${baseSlug}-${randomUUID().slice(0, 8)}`;
       }
       updateData.slug = slug;
     }
 
     if (description !== undefined) updateData.description = description;
-    if (thumbnailUrl !== undefined) updateData.thumbnailUrl = thumbnailUrl;
-    if (videoUrl !== undefined) updateData.videoUrl = videoUrl;
+    // FIX: F16 - Validate URL fields (must start with http:// or https://)
+    if (thumbnailUrl !== undefined) {
+      if (thumbnailUrl && !thumbnailUrl.startsWith('http://') && !thumbnailUrl.startsWith('https://') && !thumbnailUrl.startsWith('/')) {
+        return NextResponse.json({ error: 'thumbnailUrl must be a valid URL' }, { status: 400 });
+      }
+      updateData.thumbnailUrl = thumbnailUrl;
+    }
+    if (videoUrl !== undefined) {
+      if (videoUrl && !videoUrl.startsWith('http://') && !videoUrl.startsWith('https://') && !videoUrl.startsWith('/')) {
+        return NextResponse.json({ error: 'videoUrl must be a valid URL' }, { status: 400 });
+      }
+      updateData.videoUrl = videoUrl;
+    }
     if (duration !== undefined) updateData.duration = duration;
     if (category !== undefined) updateData.category = category;
     if (tags !== undefined) {
@@ -126,7 +137,17 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
         : null;
     }
     if (instructor !== undefined) updateData.instructor = instructor;
-    if (views !== undefined) updateData.views = parseInt(String(views), 10);
+    // FIX: F15 - Validate views count (must be non-negative finite number)
+    if (views !== undefined) {
+      const parsedViews = parseInt(String(views), 10);
+      if (!Number.isFinite(parsedViews) || parsedViews < 0) {
+        return NextResponse.json(
+          { error: 'views must be a non-negative number' },
+          { status: 400 }
+        );
+      }
+      updateData.views = parsedViews;
+    }
     if (isFeatured !== undefined) updateData.isFeatured = isFeatured;
     if (isPublished !== undefined) updateData.isPublished = isPublished;
     if (locale !== undefined) updateData.locale = locale;
@@ -143,6 +164,18 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
 
     // Auto-enqueue translation (force re-translate on update)
     enqueue.video(id, true);
+
+    // F76 FIX: Log admin action BEFORE translations block to ensure audit logging for all PATCH paths
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'UPDATE_VIDEO',
+      targetType: 'Video',
+      targetId: id,
+      previousValue: { title: existing.title, isPublished: existing.isPublished },
+      newValue: updateData,
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     // Handle translations if provided
     if (translations && Array.isArray(translations)) {
@@ -179,20 +212,9 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
       return NextResponse.json({ video: updated });
     }
 
-    logAdminAction({
-      adminUserId: session.user.id,
-      action: 'UPDATE_VIDEO',
-      targetType: 'Video',
-      targetId: id,
-      previousValue: { title: existing.title, isPublished: existing.isPublished },
-      newValue: updateData,
-      ipAddress: getClientIpFromRequest(request),
-      userAgent: request.headers.get('user-agent') || undefined,
-    }).catch(() => {});
-
     return NextResponse.json({ video });
   } catch (error) {
-    console.error('Admin video PATCH error:', error);
+    logger.error('Admin video PATCH error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -233,7 +255,7 @@ export const DELETE = withAdminGuard(async (_request, { session, params }) => {
       message: `Video "${existing.title}" deleted successfully`,
     });
   } catch (error) {
-    console.error('Admin video DELETE error:', error);
+    logger.error('Admin video DELETE error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

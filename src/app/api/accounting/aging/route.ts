@@ -9,6 +9,7 @@ import {
   getAgingSummaryStats,
   exportAgingToCSV,
 } from '@/lib/accounting';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/accounting/aging
@@ -97,7 +98,7 @@ export const GET = withAdminGuard(async (request) => {
       priority,
     });
   } catch (error) {
-    console.error('Get aging report error:', error);
+    logger.error('Get aging report error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la génération du rapport d\'aging' },
       { status: 500 }

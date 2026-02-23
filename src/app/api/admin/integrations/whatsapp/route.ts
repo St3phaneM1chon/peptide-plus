@@ -5,6 +5,7 @@ import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { testWhatsAppConnection, clearWhatsAppConfigCache } from '@/lib/integrations/whatsapp';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { logger } from '@/lib/logger';
 
 // GET - Retrieve WhatsApp configuration (no secrets exposed)
 export const GET = withAdminGuard(async () => {
@@ -28,7 +29,7 @@ export const GET = withAdminGuard(async () => {
       webhookVerifyToken: process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN ? '***configured***' : '',
     });
   } catch (error) {
-    console.error('Get WhatsApp config error:', error);
+    logger.error('Get WhatsApp config error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to get config' }, { status: 500 });
   }
 });
@@ -66,7 +67,7 @@ export const PUT = withAdminGuard(async (request, { session }) => {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Update WhatsApp config error:', error);
+    logger.error('Update WhatsApp config error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to update config' }, { status: 500 });
   }
 });
@@ -83,7 +84,7 @@ export const POST = withAdminGuard(async (request) => {
 
     return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
   } catch (error) {
-    console.error('WhatsApp action error:', error);
+    logger.error('WhatsApp action error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Action failed' }, { status: 500 });
   }
 });

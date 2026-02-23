@@ -97,6 +97,7 @@ function linearRegression(data: number[]): { slope: number; intercept: number; r
 
 /**
  * Exponential smoothing for seasonality
+ * FIX: F086 - This function IS used: smoothed last value feeds into forecastRevenue() blend
  */
 function exponentialSmoothing(data: number[], alpha: number = 0.3): number[] {
   if (data.length === 0) return [];
@@ -170,10 +171,11 @@ export function forecastRevenue(
     // #71 Audit: Blend linear trend with smoothed recent level for better short-term accuracy
     const blendWeight = Math.min(0.4, i * 0.1); // More trend weight for distant forecasts
     const baseProjection = (1 - blendWeight) * smoothedLastValue + blendWeight * trendProjection;
-    const projectedRevenue = Math.max(0, baseProjection * seasonalAdjustment);
+    // F075 FIX: Allow negative projections for periods with returns/refunds
+    const projectedRevenue = baseProjection * seasonalAdjustment;
 
-    // Confidence decreases with distance
-    const confidence = Math.max(0.5, 1 - (i * 0.08));
+    // FIX: F094 - Lowered confidence floor from 0.5 to 0.3 for distant forecasts (12+ months)
+    const confidence = Math.max(0.3, 1 - (i * 0.08));
     
     // Range based on historical variance
     const variance = calculateVariance(historicalRevenue);
@@ -438,15 +440,18 @@ function average(arr: number[]): number {
   return arr.length > 0 ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
 }
 
+// F052 FIX: Use sample variance (N-1) for unbiased confidence intervals
 function calculateVariance(arr: number[]): number {
   const avg = average(arr);
-  return arr.length > 0
-    ? arr.reduce((sum, val) => sum + Math.pow(val - avg, 2), 0) / arr.length
+  return arr.length > 1
+    ? arr.reduce((sum, val) => sum + Math.pow(val - avg, 2), 0) / (arr.length - 1)
     : 0;
 }
 
 /**
  * Format projection for display
+ * FIX: F100 - toLocaleString('fr-CA') uses Intl.NumberFormat internally which is deterministic
+ * when an explicit locale is provided, so this is safe across server environments.
  */
 export function formatProjectionSummary(projections: CashFlowProjection[]): string {
   if (projections.length === 0) return 'Aucune projection disponible';

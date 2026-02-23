@@ -379,7 +379,9 @@ export default function ProductCard({
             <button
               onClick={(e) => {
                 e.preventDefault();
-                setQuantity(quantity + 1);
+                // BUG-053 FIX: Cap quantity at stock level
+                const maxQty = selectedFormat?.stockQuantity || 99;
+                setQuantity(Math.min(quantity + 1, maxQty));
               }}
               aria-label={t('shop.aria.increaseQuantity')}
               className="w-8 h-8 flex items-center justify-center text-neutral-600 hover:bg-neutral-100"

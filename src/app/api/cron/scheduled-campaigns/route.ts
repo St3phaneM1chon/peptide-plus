@@ -25,11 +25,11 @@ import { escapeHtml } from '@/lib/email/templates/base-template';
 import { withJobLock } from '@/lib/cron-lock';
 
 export async function GET(request: NextRequest) {
-  // Fail-closed authentication
+  // FLAW-007 FIX: Only accept cron secret via Authorization header, not query string.
+  // Query string secrets appear in server logs, browser history, CDN logs, and Referer headers.
   const cronSecret = process.env.CRON_SECRET;
   const authHeader = request.headers.get('authorization');
-  const querySecret = request.nextUrl.searchParams.get('secret');
-  if (!cronSecret || (authHeader !== `Bearer ${cronSecret}` && querySecret !== cronSecret)) {
+  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -88,15 +88,38 @@ export async function GET(request: NextRequest) {
             where.orders = { some: {} };
           }
 
-          recipients = await prisma.user.findMany({
-            where: { ...where, emailVerified: { not: null } },
-            select: { id: true, email: true, name: true },
-          });
+          // FLAW-036 FIX: Paginate audience query to avoid loading ALL users into memory
+          recipients = [];
+          let cursor: string | undefined;
+          const PAGE_SIZE = 500;
+          while (true) {
+            const batch = await prisma.user.findMany({
+              where: { ...where, emailVerified: { not: null } },
+              select: { id: true, email: true, name: true },
+              take: PAGE_SIZE,
+              ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
+              orderBy: { id: 'asc' },
+            });
+            recipients.push(...batch);
+            if (batch.length < PAGE_SIZE) break;
+            cursor = batch[batch.length - 1].id;
+          }
         } else {
-          recipients = await prisma.user.findMany({
-            where: { emailVerified: { not: null } },
-            select: { id: true, email: true, name: true },
-          });
+          recipients = [];
+          let cursor: string | undefined;
+          const PAGE_SIZE = 500;
+          while (true) {
+            const batch = await prisma.user.findMany({
+              where: { emailVerified: { not: null } },
+              select: { id: true, email: true, name: true },
+              take: PAGE_SIZE,
+              ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
+              orderBy: { id: 'asc' },
+            });
+            recipients.push(...batch);
+            if (batch.length < PAGE_SIZE) break;
+            cursor = batch[batch.length - 1].id;
+          }
         }
 
         // Batch-fetch consent and prefs
@@ -122,14 +145,26 @@ export async function GET(request: NextRequest) {
         const prefsMap = new Map(allPrefs.map(p => [p.userId, p]));
         const consentEmails = new Set(allConsents.map(c => c.email.toLowerCase()));
 
-        const validRecipients: typeof recipients = [];
-        for (const r of recipients) {
-          const { suppressed } = await shouldSuppressEmail(r.email);
-          if (suppressed) continue;
+        // FLAW-037 FIX: Batch bounce check instead of sequential per-user
+        // First apply non-async filters
+        const preFilteredRecipients = recipients.filter(r => {
           const prefs = prefsMap.get(r.id);
-          if (prefs && !prefs.newsletter && !prefs.promotions) continue;
-          if (!consentEmails.has(r.email.toLowerCase())) continue;
-          validRecipients.push(r);
+          if (prefs && !prefs.newsletter && !prefs.promotions) return false;
+          if (!consentEmails.has(r.email.toLowerCase())) return false;
+          return true;
+        });
+
+        // Then check bounce suppression in parallel batches of 50
+        const validRecipients: typeof recipients = [];
+        const BOUNCE_BATCH_SIZE = 50;
+        for (let b = 0; b < preFilteredRecipients.length; b += BOUNCE_BATCH_SIZE) {
+          const batch = preFilteredRecipients.slice(b, b + BOUNCE_BATCH_SIZE);
+          const results = await Promise.all(
+            batch.map(r => shouldSuppressEmail(r.email).then(res => ({ r, suppressed: res.suppressed })))
+          );
+          for (const { r, suppressed } of results) {
+            if (!suppressed) validRecipients.push(r);
+          }
         }
 
         // Send to each recipient with throttle to avoid provider rate limits

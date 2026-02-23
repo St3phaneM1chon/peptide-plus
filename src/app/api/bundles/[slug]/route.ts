@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { logger } from '@/lib/logger';
 
 export async function GET(
   request: Request,
@@ -94,7 +95,7 @@ export async function GET(
       savings: Math.round(savings * 100) / 100,
     });
   } catch (error) {
-    console.error('Error fetching bundle:', error);
+    logger.error('Error fetching bundle', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to fetch bundle' },
       { status: 500 }

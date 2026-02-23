@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { createCustomerInvoiceSchema, formatZodErrors, logAuditTrail } from '@/lib/accounting';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/accounting/customer-invoices
@@ -89,7 +90,7 @@ export const GET = withAdminGuard(async (request) => {
       pagination: { page, limit, total, pages: Math.ceil(total / limit) },
     });
   } catch (error) {
-    console.error('Get customer invoices error:', error);
+    logger.error('Get customer invoices error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la récupération des factures clients' },
       { status: 500 }
@@ -136,6 +137,8 @@ export const POST = withAdminGuard(async (request) => {
     }
 
     // #37 Calculate subtotal from items: quantity * unitPrice - discount
+    // TODO: F054 - discount is always treated as absolute amount. Add discountType field
+    // ('ABSOLUTE' | 'PERCENTAGE') to CustomerInvoiceItem schema to support percentage discounts.
     const subtotal = items.reduce(
       (sum: number, item) =>
         sum + (item.quantity * item.unitPrice - (item.discount || 0)),
@@ -199,7 +202,7 @@ export const POST = withAdminGuard(async (request) => {
 
     return NextResponse.json({ success: true, invoice }, { status: 201 });
   } catch (error) {
-    console.error('Create customer invoice error:', error);
+    logger.error('Create customer invoice error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la création de la facture' },
       { status: 500 }
@@ -293,7 +296,7 @@ export const PUT = withAdminGuard(async (request, { session }) => {
 
     // #75 Compliance: Audit logging for status changes
     if (status && status !== existing.status) {
-      console.info('AUDIT: Customer invoice status change', {
+      logger.info('AUDIT: Customer invoice status change', {
         invoiceId: id,
         invoiceNumber: existing.invoiceNumber,
         previousStatus: existing.status,
@@ -318,7 +321,7 @@ export const PUT = withAdminGuard(async (request, { session }) => {
 
     return NextResponse.json({ success: true, invoice });
   } catch (error) {
-    console.error('Update customer invoice error:', error);
+    logger.error('Update customer invoice error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la mise à jour de la facture' },
       { status: 500 }
@@ -368,7 +371,7 @@ export const DELETE = withAdminGuard(async (request, { session }) => {
 
     return NextResponse.json({ success: true, message: 'Facture supprimée' });
   } catch (error) {
-    console.error('Delete customer invoice error:', error);
+    logger.error('Delete customer invoice error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la suppression de la facture' },
       { status: 500 }

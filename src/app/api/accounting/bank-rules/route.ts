@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
+import { logger } from '@/lib/logger';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -70,7 +71,7 @@ export const GET = withAdminGuard(async (request) => {
       stats: { total, active, inactive, totalApplied },
     });
   } catch (error) {
-    console.error('GET /api/accounting/bank-rules error:', error);
+    logger.error('GET /api/accounting/bank-rules error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Internal error' },
       { status: 500 }
@@ -157,7 +158,7 @@ export const POST = withAdminGuard(async (request) => {
 
     return NextResponse.json({ rule }, { status: 201 });
   } catch (error) {
-    console.error('POST /api/accounting/bank-rules error:', error);
+    logger.error('POST /api/accounting/bank-rules error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Internal error' },
       { status: 500 }
@@ -267,7 +268,7 @@ export const PUT = withAdminGuard(async (request) => {
       },
     });
   } catch (error) {
-    console.error('PUT /api/accounting/bank-rules error:', error);
+    logger.error('PUT /api/accounting/bank-rules error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Internal error' },
       { status: 500 }
@@ -297,7 +298,7 @@ export const DELETE = withAdminGuard(async (request) => {
 
     return NextResponse.json({ success: true, deletedId: id });
   } catch (error) {
-    console.error('DELETE /api/accounting/bank-rules error:', error);
+    logger.error('DELETE /api/accounting/bank-rules error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Internal error' },
       { status: 500 }

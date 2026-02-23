@@ -46,8 +46,11 @@ interface MatchFeatures {
   historicalMatch: number; // 0-1
 }
 
-// Learned patterns storage (in production, store in database)
-const learnedPatterns: Map<string, MatchingRule> = new Map();
+// FIX (F029): learnedPatterns are stored in-memory and lost on server restart.
+// In serverless environments, patterns must be loaded from DB on startup.
+// TODO: Persist patterns to BankRule table or a dedicated LearnedPattern table.
+// For now, we export the map so callers can serialize/restore it.
+export const learnedPatterns: Map<string, MatchingRule> = new Map();
 
 /**
  * Calculate feature vector for a potential match
@@ -130,8 +133,9 @@ function calculateFeatures(
  * Calculate text similarity using word overlap (Jaccard)
  */
 function calculateTextSimilarity(text1: string, text2: string): number {
-  const words1 = new Set(text1.split(/\s+/).filter(w => w.length > 2));
-  const words2 = new Set(text2.split(/\s+/).filter(w => w.length > 2));
+  // FIX: F095 - Lowered min word length from 3 to 2 to keep bank codes like "TD", "RBC", "FX"
+  const words1 = new Set(text1.split(/\s+/).filter(w => w.length >= 2));
+  const words2 = new Set(text2.split(/\s+/).filter(w => w.length >= 2));
 
   if (words1.size === 0 || words2.size === 0) return 0;
 
@@ -153,19 +157,27 @@ function calculateTextSimilarity(text1: string, text2: string): number {
 /**
  * Count longest common substring
  */
+// F080 FIX: Limit string length and use rolling array for O(min(m,n)) space
 function countCommonSubstring(str1: string, str2: string): number {
-  const m = str1.length;
-  const n = str2.length;
-  const dp: number[][] = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));
+  const maxLen = 100;
+  const a = str1.substring(0, maxLen);
+  const b = str2.substring(0, maxLen);
+  const m = a.length;
+  const n = b.length;
+  const prev: number[] = Array(n + 1).fill(0);
+  const curr: number[] = Array(n + 1).fill(0);
   let maxLength = 0;
 
   for (let i = 1; i <= m; i++) {
     for (let j = 1; j <= n; j++) {
-      if (str1[i - 1] === str2[j - 1]) {
-        dp[i][j] = dp[i - 1][j - 1] + 1;
-        maxLength = Math.max(maxLength, dp[i][j]);
+      if (a[i - 1] === b[j - 1]) {
+        curr[j] = prev[j - 1] + 1;
+        maxLength = Math.max(maxLength, curr[j]);
+      } else {
+        curr[j] = 0;
       }
     }
+    for (let j = 0; j <= n; j++) { prev[j] = curr[j]; curr[j] = 0; }
   }
 
   return maxLength;
@@ -468,6 +480,7 @@ export function detectAnomalies(
   historicalAverage: Map<string, number>
 ): { transactionId: string; type: string; severity: 'LOW' | 'MEDIUM' | 'HIGH'; message: string }[] {
   const anomalies: { transactionId: string; type: string; severity: 'LOW' | 'MEDIUM' | 'HIGH'; message: string }[] = [];
+  const seenDupeKeys = new Set<string>();
 
   for (const tx of transactions) {
     const category = tx.category || 'default';
@@ -483,22 +496,17 @@ export function detectAnomalies(
       });
     }
 
-    // Check for duplicate (same amount, same day, similar description)
-    const duplicates = transactions.filter(other =>
-      other.id !== tx.id &&
-      Math.abs(other.amount - tx.amount) < 0.01 &&
-      Math.abs(new Date(other.date).getTime() - new Date(tx.date).getTime()) < 86400000 &&
-      calculateTextSimilarity(other.description, tx.description) > 0.7
-    );
-
-    if (duplicates.length > 0) {
+    // F076 FIX: O(n) hash-based duplicate detection instead of O(n²) nested filter
+    const dupeKey = `${tx.amount.toFixed(2)}|${new Date(tx.date).toISOString().slice(0, 10)}`;
+    if (seenDupeKeys.has(dupeKey)) {
       anomalies.push({
         transactionId: tx.id,
         type: 'POTENTIAL_DUPLICATE',
         severity: 'MEDIUM',
-        message: `Doublon potentiel avec ${duplicates.length} autre(s) transaction(s)`,
+        message: `Doublon potentiel: même montant et même jour`,
       });
     }
+    seenDupeKeys.add(dupeKey);
   }
 
   return anomalies;

@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { encrypt, decrypt } from '@/lib/security';
+import { logger } from '@/lib/logger';
 
 // ---------------------------------------------------------------------------
 // Helpers for encrypted fields
@@ -53,7 +54,7 @@ export const GET = withAdminGuard(async (_request, { session }) => {
 
     return NextResponse.json({ accounts: mapped });
   } catch (error) {
-    console.error('Get bank accounts error:', error);
+    logger.error('Get bank accounts error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la récupération des comptes bancaires' },
       { status: 500 }
@@ -102,7 +103,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       },
     }, { status: 201 });
   } catch (error) {
-    console.error('Create bank account error:', error);
+    logger.error('Create bank account error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la création du compte bancaire' },
       { status: 500 }
@@ -158,7 +159,7 @@ export const PUT = withAdminGuard(async (request, { session }) => {
       },
     });
   } catch (error) {
-    console.error('Update bank account error:', error);
+    logger.error('Update bank account error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la mise à jour du compte bancaire' },
       { status: 500 }
@@ -183,7 +184,10 @@ export const DELETE = withAdminGuard(async (request, { session }) => {
       return NextResponse.json({ error: 'Compte bancaire non trouvé' }, { status: 404 });
     }
 
-    // Soft-delete by deactivating
+    // FIX (F027): Soft-delete by deactivating and setting updatedAt.
+    // NOTE: BankAccount model uses isActive (not deletedAt) for soft-delete.
+    // This is consistent with the schema definition. Other entities use deletedAt.
+    // TODO: Consider adding deletedAt to BankAccount schema for full consistency.
     await prisma.bankAccount.update({
       where: { id },
       data: { isActive: false },
@@ -191,7 +195,7 @@ export const DELETE = withAdminGuard(async (request, { session }) => {
 
     return NextResponse.json({ success: true, message: 'Compte bancaire désactivé' });
   } catch (error) {
-    console.error('Delete bank account error:', error);
+    logger.error('Delete bank account error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la suppression du compte bancaire' },
       { status: 500 }

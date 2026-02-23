@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { logAuditTrail } from '@/lib/accounting';
+import { logger } from '@/lib/logger';
 
 /**
  * POST /api/accounting/customer-invoices/[id]/send
@@ -97,7 +98,7 @@ export const POST = withAdminGuard(async (_request: NextRequest, { session, para
       message: 'Facture envoyée avec succès (statut mis à jour)',
     });
   } catch (error) {
-    console.error('Send customer invoice error:', error);
+    logger.error('Send customer invoice error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: "Erreur lors de l'envoi de la facture" },
       { status: 500 }

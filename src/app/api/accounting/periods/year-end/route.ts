@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { runYearEndClose } from '@/lib/accounting/period-close.service';
+import { logger } from '@/lib/logger';
 
 export const POST = withAdminGuard(async (request, { session }) => {
   try {
@@ -25,7 +26,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       periodsCreated: result.periodsCreated,
     });
   } catch (error) {
-    console.error('Error running year-end close:', error);
+    logger.error('Error running year-end close', { error: error instanceof Error ? error.message : String(error) });
     // #86 Error Recovery: Distinguish 400 (validation) from 500 (server) errors
     const rawMessage = error instanceof Error ? error.message : 'Une erreur est survenue';
     const isValidationError = rawMessage.includes('not locked') ||

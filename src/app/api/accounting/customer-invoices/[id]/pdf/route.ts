@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/accounting/customer-invoices/[id]/pdf
@@ -227,7 +228,7 @@ export const GET = withAdminGuard(async (_request: NextRequest, { params }) => {
       },
     });
   } catch (error) {
-    console.error('Generate invoice PDF error:', error);
+    logger.error('Generate invoice PDF error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la generation de la facture PDF' },
       { status: 500 }

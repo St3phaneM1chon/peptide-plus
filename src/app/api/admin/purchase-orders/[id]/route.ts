@@ -11,6 +11,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { logger } from '@/lib/logger';
 
 // Valid PO statuses and allowed transitions
 const VALID_STATUSES = [
@@ -182,7 +183,7 @@ export const GET = withAdminGuard(async (_request, { session, params }) => {
       supplierInvoice,
     });
   } catch (error) {
-    console.error('Admin purchase order GET error:', error);
+    logger.error('Admin purchase order GET error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -362,7 +363,7 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
       serializePO(updated as unknown as Record<string, unknown>)
     );
   } catch (error) {
-    console.error('Admin purchase order PATCH error:', error);
+    logger.error('Admin purchase order PATCH error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -417,7 +418,7 @@ export const DELETE = withAdminGuard(async (_request, { session, params }) => {
       message: `Purchase order ${po.poNumber} deleted`,
     });
   } catch (error) {
-    console.error('Admin purchase order DELETE error:', error);
+    logger.error('Admin purchase order DELETE error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

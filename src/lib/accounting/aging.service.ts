@@ -3,6 +3,9 @@
  * Tracks accounts receivable and payable by age
  */
 
+// FIX: F061 - These interfaces are local duplicates of types in ./types.ts.
+// TODO: Import Invoice, AgingBucket, AgingReport, CustomerAgingSummary from './types'
+// once they are added there, and remove these local definitions.
 interface Invoice {
   id: string;
   invoiceNumber: string;
@@ -202,6 +205,8 @@ export function getCollectionPriority(
   for (const inv of allOverdue) {
     const daysOverdue = daysBetween(new Date(inv.dueDate), now);
     
+    // FIX: F067 - $500/$200 thresholds are hardcoded without currency awareness.
+    // TODO: Make thresholds configurable per currency (e.g. 500 CAD vs 50000 JPY).
     // High priority: >60 days OR >$500
     if (daysOverdue > 60 || inv.balance > 500) {
       highPriority.push(inv);
@@ -227,7 +232,10 @@ export function getCollectionPriority(
 /**
  * Generate aging summary statistics
  */
-export function getAgingSummaryStats(report: AgingReport): {
+/**
+ * FIX (F034): Accept optional previousReport to compute trend instead of always 'STABLE'
+ */
+export function getAgingSummaryStats(report: AgingReport, previousReport?: AgingReport): {
   currentPercentage: number;
   overduePercentage: number;
   criticalPercentage: number; // >90 days
@@ -267,14 +275,31 @@ export function getAgingSummaryStats(report: AgingReport): {
     recommendations.push('Considérer une agence de recouvrement pour les gros montants en souffrance');
   }
 
+  // FIX (F034): Compute trend by comparing with previous report if available
+  let trend: 'IMPROVING' | 'STABLE' | 'WORSENING' = 'STABLE';
+  if (previousReport) {
+    const prevStats = getAgingSummaryStats(previousReport);
+    const scoreDiff = healthScore - prevStats.healthScore;
+    if (scoreDiff > 5) {
+      trend = 'IMPROVING';
+    } else if (scoreDiff < -5) {
+      trend = 'WORSENING';
+    }
+  }
+
   return {
     currentPercentage,
     overduePercentage,
     criticalPercentage,
     healthScore: Math.round(healthScore),
-    trend: 'STABLE', // Would need historical data to determine
+    trend,
     recommendations,
   };
+}
+
+// FIX: F098 - Escape HTML special characters to prevent XSS in aging report output
+function escapeHtml(str: string): string {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
 /**
@@ -350,7 +375,7 @@ export function formatAgingReportHTML(report: AgingReport): string {
     <tbody>
       ${report.byCustomer.slice(0, 20).map(customer => `
         <tr>
-          <td>${customer.name}</td>
+          <td>${escapeHtml(customer.name)}</td>
           <td>${customer.current > 0 ? customer.current.toFixed(2) + ' $' : '-'}</td>
           <td>${customer.days1to30 > 0 ? customer.days1to30.toFixed(2) + ' $' : '-'}</td>
           <td>${customer.days31to60 > 0 ? customer.days31to60.toFixed(2) + ' $' : '-'}</td>
@@ -371,9 +396,11 @@ export function formatAgingReportHTML(report: AgingReport): string {
 export function exportAgingToCSV(report: AgingReport): string {
   const headers = ['Client/Fournisseur', 'Email', 'Courant', '1-30 jours', '31-60 jours', '61-90 jours', '90+ jours', 'Total', 'Plus vieille facture (jours)'];
   
+  // F085 FIX: Escape newlines and quotes in CSV fields
+  const csvEscape = (s: string) => `"${s.replace(/"/g, '""').replace(/[\r\n]+/g, ' ')}"`;
   const rows = report.byCustomer.map(c => [
-    `"${c.name}"`,
-    c.email || '',
+    csvEscape(c.name),
+    csvEscape(c.email || ''),
     c.current.toFixed(2),
     c.days1to30.toFixed(2),
     c.days31to60.toFixed(2),

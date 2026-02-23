@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { fullStripeSync, getStripeBalance } from '@/lib/accounting';
 import { prisma } from '@/lib/db';
+import { logger } from '@/lib/logger';
 
 /**
  * POST /api/accounting/stripe-sync
@@ -68,7 +69,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
     // Perform sync with structured logging (only after idempotency check passes)
     const syncId = `sync-${Date.now()}`;
     const syncStartTime = Date.now();
-    console.info('Stripe sync started:', { syncId, startDate, endDate, initiatedBy: session.user.id || session.user.email });
+    logger.info('Stripe sync started:', { syncId, startDate, endDate, initiatedBy: session.user.id || session.user.email });
 
     const result = await fullStripeSync(parsedStart, parsedEnd);
 
@@ -179,7 +180,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
     }
 
     const syncDuration = Date.now() - syncStartTime;
-    console.info('Stripe sync completed:', {
+    logger.info('Stripe sync completed:', {
       syncId,
       entriesCreated: result.entriesCreated,
       transactionsImported: result.transactionsImported,
@@ -201,7 +202,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       errors: result.errors,
     });
   } catch (error) {
-    console.error('Stripe sync error:', error);
+    logger.error('Stripe sync error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la synchronisation Stripe' },
       { status: 500 }
@@ -222,7 +223,7 @@ export const GET = withAdminGuard(async () => {
       lastSync: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('Stripe balance error:', error);
+    logger.error('Stripe balance error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la récupération du solde Stripe' },
       { status: 500 }

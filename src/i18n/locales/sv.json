@@ -3239,7 +3239,9 @@
       "teamsSetupDesc": "Connect Microsoft Teams for internal order notifications and team alerts. Supports Incoming Webhooks and Graph API.",
       "teamsWebhookLabel": "Incoming Webhook URL",
       "teamsWebhookHint": "Create an Incoming Webhook in your Teams channel and paste the URL here",
-      "teamsOptionalGraphApi": "Optional - only needed for Graph API integration (advanced)"
+      "teamsOptionalGraphApi": "Optional - only needed for Graph API integration (advanced)",
+      "webhookUrl": "Webhook URL",
+      "docs": "Dokumentation"
     },
     "emailComposer": {
       "send": "Send",
@@ -5257,6 +5259,10 @@
     "subtitle": "Anslut med andra forskare, dela erfarenheter, ställ frågor och lär av gemenskapen.",
     "support": "Support",
     "tagsPlaceholder": "t.ex: bpc-157, rekonstitution, nybörjare",
+    "timeDaysAgo": "{count}d sedan",
+    "timeHoursAgo": "{count}h sedan",
+    "timeJustNow": "Just nu",
+    "timeYesterday": "Igår",
     "title": "Gemenskapsforum",
     "tryDifferent": "Försök med en annan sökning eller starta en ny diskussion!"
   },
@@ -6731,7 +6737,10 @@
       "removeFromWishlist": "Remove from wishlist"
     },
     "youSave": "Du sparar",
-    "researchDisclaimer": "FOR RESEARCH USE ONLY: This product is intended for laboratory and research purposes only. Not for human or animal consumption. By purchasing, you confirm this product will be used exclusively for legitimate research."
+    "researchDisclaimer": "FOR RESEARCH USE ONLY: This product is intended for laboratory and research purposes only. Not for human or animal consumption. By purchasing, you confirm this product will be used exclusively for legitimate research.",
+    "resetFilters": "Reset filters",
+    "retry": "Retry",
+    "productCount": "product"
   },
   "subscriptions": {
     "availableProducts": "Tillgängliga för Prenumeration",

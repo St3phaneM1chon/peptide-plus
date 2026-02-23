@@ -1,12 +1,22 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { toast } from 'sonner';
 import Breadcrumbs from '@/components/ui/Breadcrumbs';
-import { useLoyalty, LOYALTY_TIERS, LOYALTY_REWARDS, LOYALTY_CONFIG } from '@/contexts/LoyaltyContext';
+import { useLoyalty, LOYALTY_TIERS, LOYALTY_REWARDS } from '@/contexts/LoyaltyContext';
+import { LOYALTY_POINTS_CONFIG } from '@/lib/constants';
 import { useI18n } from '@/i18n/client';
+
+// FIX F-024: Load loyalty config from API instead of hardcoded LOYALTY_CONFIG context
+interface LoyaltyConfigValues {
+  pointsPerDollar: number;
+  pointsValue: number;
+  referralBonus: number;
+  birthdayBonus: number;
+  reviewBonus: number;
+}
 
 export default function RewardsPage() {
   const { data: session } = useSession();
@@ -23,10 +33,43 @@ export default function RewardsPage() {
     redeemReward,
     isLoading,
   } = useLoyalty();
-  
+
   const [activeTab, setActiveTab] = useState<'overview' | 'rewards' | 'history' | 'referral'>('overview');
   const [redeemingId, setRedeemingId] = useState<string | null>(null);
   const [copiedCode, setCopiedCode] = useState(false);
+
+  // FIX F-024: API-loaded config with constants as fallback defaults
+  const [loyaltyConfig, setLoyaltyConfig] = useState<LoyaltyConfigValues>({
+    pointsPerDollar: LOYALTY_POINTS_CONFIG.pointsPerDollar,
+    pointsValue: LOYALTY_POINTS_CONFIG.pointsValue,
+    referralBonus: LOYALTY_POINTS_CONFIG.referralBonus,
+    birthdayBonus: LOYALTY_POINTS_CONFIG.birthdayBonus,
+    reviewBonus: LOYALTY_POINTS_CONFIG.reviewBonus,
+  });
+
+  // FIX F-024: Fetch loyalty config from public API on mount
+  useEffect(() => {
+    async function fetchLoyaltyConfig() {
+      try {
+        const res = await fetch('/api/loyalty/config');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.config) {
+            setLoyaltyConfig({
+              pointsPerDollar: data.config.pointsPerDollar ?? LOYALTY_POINTS_CONFIG.pointsPerDollar,
+              pointsValue: data.config.pointsValue ?? LOYALTY_POINTS_CONFIG.pointsValue,
+              referralBonus: data.config.referralBonus ?? LOYALTY_POINTS_CONFIG.referralBonus,
+              birthdayBonus: data.config.birthdayBonus ?? LOYALTY_POINTS_CONFIG.birthdayBonus,
+              reviewBonus: data.config.reviewBonus ?? LOYALTY_POINTS_CONFIG.reviewBonus,
+            });
+          }
+        }
+      } catch {
+        // On error, keep using the constant defaults already set in state
+      }
+    }
+    fetchLoyaltyConfig();
+  }, []);
 
   const tierProgress = getTierProgress();
   const nextTier = LOYALTY_TIERS.find(t => t.minPoints > lifetimePoints);
@@ -85,12 +128,13 @@ export default function RewardsPage() {
                 </p>
               )}
             </div>
-            
+
             <div className="text-center md:text-end">
               <p className="text-white/80 text-sm">{t('rewards.availablePoints') || 'Available Points'}</p>
               <p className="text-5xl font-bold">{points.toLocaleString()}</p>
               <p className="text-white/80 text-sm mt-1">
-                ≈ ${(points * LOYALTY_CONFIG.pointsValue).toFixed(2)} {t('rewards.inRewards') || 'in rewards'}
+                {/* FIX F-024: Use API-loaded pointsValue */}
+                &asymp; ${(points * loyaltyConfig.pointsValue).toFixed(2)} {t('rewards.inRewards') || 'in rewards'}
               </p>
             </div>
           </div>
@@ -103,7 +147,7 @@ export default function RewardsPage() {
                 <span className="text-sm">{nextTier.name}</span>
               </div>
               <div className="h-3 bg-white/20 rounded-full overflow-hidden">
-                <div 
+                <div
                   className="h-full bg-white rounded-full transition-all duration-500"
                   style={{ width: `${tierProgress.percentage}%` }}
                 />
@@ -147,14 +191,15 @@ export default function RewardsPage() {
             <div className="bg-white rounded-xl shadow-sm border border-neutral-200 p-6">
               <h2 className="text-xl font-bold mb-4">{t('rewards.howToEarn') || 'How to Earn Points'}</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* FIX F-024: Use API-loaded config values */}
                 {[
-                  { icon: '🛒', title: t('rewards.earnShopping') || 'Shopping', desc: `${LOYALTY_CONFIG.pointsPerDollar} points per $1`, highlight: true },
-                  { icon: '⭐', title: t('rewards.earnReview') || 'Write a Review', desc: `+${LOYALTY_CONFIG.reviewBonus} points` },
-                  { icon: '👥', title: t('rewards.earnReferral') || 'Refer a Friend', desc: `+${LOYALTY_CONFIG.referralBonus} points` },
-                  { icon: '🎂', title: t('rewards.earnBirthday') || 'Birthday Bonus', desc: `+${LOYALTY_CONFIG.birthdayBonus} points` },
+                  { icon: '🛒', title: t('rewards.earnShopping') || 'Shopping', desc: `${loyaltyConfig.pointsPerDollar} points per $1`, highlight: true },
+                  { icon: '⭐', title: t('rewards.earnReview') || 'Write a Review', desc: `+${loyaltyConfig.reviewBonus} points` },
+                  { icon: '👥', title: t('rewards.earnReferral') || 'Refer a Friend', desc: `+${loyaltyConfig.referralBonus} points` },
+                  { icon: '🎂', title: t('rewards.earnBirthday') || 'Birthday Bonus', desc: `+${loyaltyConfig.birthdayBonus} points` },
                 ].map((item, i) => (
-                  <div 
-                    key={i} 
+                  <div
+                    key={i}
                     className={`p-4 rounded-lg ${item.highlight ? 'bg-orange-50 border-2 border-orange-200' : 'bg-neutral-50'}`}
                   >
                     <span className="text-3xl">{item.icon}</span>
@@ -170,7 +215,7 @@ export default function RewardsPage() {
               <h2 className="text-xl font-bold mb-4">{t('rewards.tierBenefits') || 'Membership Tiers'}</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {LOYALTY_TIERS.map((tierItem) => (
-                  <div 
+                  <div
                     key={tierItem.id}
                     className={`p-4 rounded-lg border-2 ${tier.id === tierItem.id ? 'border-orange-500 bg-orange-50' : 'border-neutral-200'}`}
                   >
@@ -227,7 +272,7 @@ export default function RewardsPage() {
               {LOYALTY_REWARDS.map((reward) => {
                 const canRedeem = canRedeemReward(reward.id);
                 return (
-                  <div 
+                  <div
                     key={reward.id}
                     className={`p-4 rounded-lg border-2 transition-all ${
                       canRedeem ? 'border-orange-200 hover:border-orange-400' : 'border-neutral-200 opacity-60'
@@ -337,7 +382,7 @@ export default function RewardsPage() {
               <p className="text-white/80 mb-6 max-w-md mx-auto">
                 {t('rewards.referDesc') || 'Share your referral link with friends. They get $10 off their first order, and you earn 1,000 bonus points!'}
               </p>
-              
+
               {session ? (
                 <div className="bg-white/10 rounded-lg p-4 max-w-md mx-auto">
                   <p className="text-sm text-white/80 mb-2">{t('rewards.yourReferralLink') || 'Your Referral Link'}</p>
@@ -355,7 +400,7 @@ export default function RewardsPage() {
                       {copiedCode ? `✓ ${t('common.copied') || 'Copied!'}` : t('common.copy') || 'Copy'}
                     </button>
                   </div>
-                  
+
                   <div className="flex items-center justify-center gap-4 mt-4">
                     <button className="p-2 bg-white/20 rounded-full hover:bg-white/30">
                       <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -396,7 +441,8 @@ export default function RewardsPage() {
                 <p className="text-neutral-500">{t('rewards.friendsReferred') || 'Friends Referred'}</p>
               </div>
               <div className="bg-white rounded-xl shadow-sm border border-neutral-200 p-6 text-center">
-                <p className="text-3xl font-bold text-orange-500">{(referralCount * LOYALTY_CONFIG.referralBonus).toLocaleString()}</p>
+                {/* FIX F-024: Use API-loaded referralBonus */}
+                <p className="text-3xl font-bold text-orange-500">{(referralCount * loyaltyConfig.referralBonus).toLocaleString()}</p>
                 <p className="text-neutral-500">{t('rewards.pointsEarned') || 'Points Earned'}</p>
               </div>
               <div className="bg-white rounded-xl shadow-sm border border-neutral-200 p-6 text-center">

@@ -174,10 +174,6 @@ export default function ProductsListClient({
         (summary.errors.length > 0 ? `, ${summary.errors.length} errors` : '')
       );
 
-      if (summary.errors.length > 0) {
-        console.warn('Import errors:', summary.errors);
-      }
-
       window.location.reload();
     } catch (error) {
       console.error('Import error:', error);
@@ -259,11 +255,25 @@ export default function ProductsListClient({
       if (!p.isActive) badges.push({ text: t('admin.products.inactive'), variant: 'error' });
       if (p.isFeatured) badges.push({ text: '★', variant: 'warning' });
 
+      // FIX: BUG-070 - Show format price range instead of base product price
+      const activeFormats = (p.formats || []).filter((f: { isActive: boolean; price: unknown }) => f.isActive);
+      let priceDisplay: string;
+      if (activeFormats.length > 0) {
+        const prices = activeFormats.map((f: { price: unknown }) => Number(f.price));
+        const minPrice = Math.min(...prices);
+        const maxPrice = Math.max(...prices);
+        priceDisplay = minPrice === maxPrice
+          ? `CA$${minPrice.toFixed(2)}`
+          : `CA$${minPrice.toFixed(2)}-${maxPrice.toFixed(2)}`;
+      } else {
+        priceDisplay = `CA$${Number(p.price).toFixed(2)}`;
+      }
+
       return {
         id: p.id,
         avatar: p.imageUrl ? { text: p.name, imageUrl: p.imageUrl } : { text: p.name },
         title: p.name,
-        subtitle: `${p.category.name} · $${Number(p.price).toFixed(2)}`,
+        subtitle: `${p.category.name} · ${priceDisplay}`,
         preview: p.formats
           ? `${p.formats.length} format${p.formats.length > 1 ? 's' : ''}`
           : t('admin.products.noFormats'),
@@ -424,7 +434,7 @@ export default function ProductsListClient({
                   <div className="grid grid-cols-2 gap-4">
                     <div className="bg-slate-50 rounded-lg p-3">
                       <p className="text-xs text-slate-500">{t('admin.products.colPrice')}</p>
-                      <p className="text-xl font-bold text-slate-900">${Number(selectedProduct.price).toFixed(2)}</p>
+                      <p className="text-xl font-bold text-slate-900">CA${Number(selectedProduct.price).toFixed(2)}</p>
                     </div>
                     <div className="bg-slate-50 rounded-lg p-3">
                       <p className="text-xs text-slate-500">{t('admin.products.colStatus')}</p>
@@ -484,7 +494,7 @@ export default function ProductsListClient({
                             {selectedProduct.formats.map((fmt) => (
                               <tr key={fmt.id}>
                                 <td className="px-3 py-2 text-sm text-slate-900">{fmt.name}</td>
-                                <td className="px-3 py-2 text-sm text-end text-slate-700">${Number(fmt.price).toFixed(2)}</td>
+                                <td className="px-3 py-2 text-sm text-end text-slate-700">CA${Number(fmt.price).toFixed(2)}</td>
                                 <td className="px-3 py-2 text-sm text-center">
                                   <span className={`font-medium ${
                                     fmt.stockQuantity === 0 ? 'text-red-600' :

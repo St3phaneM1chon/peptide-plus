@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { cacheGetOrSet, CacheKeys, CacheTags, CacheTTL } from '@/lib/cache';
+import { logger } from '@/lib/logger';
 
 export async function GET() {
   try {
@@ -41,7 +42,7 @@ export async function GET() {
       headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600' },
     });
   } catch (error) {
-    console.error('Currencies API error:', error);
+    logger.error('Currencies API error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ currencies: [] }, { status: 500 });
   }
 }

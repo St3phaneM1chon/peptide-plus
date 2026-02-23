@@ -3239,7 +3239,9 @@
       "teamsSetupDesc": "Connect Microsoft Teams for internal order notifications and team alerts. Supports Incoming Webhooks and Graph API.",
       "teamsWebhookLabel": "Incoming Webhook URL",
       "teamsWebhookHint": "Create an Incoming Webhook in your Teams channel and paste the URL here",
-      "teamsOptionalGraphApi": "Optional - only needed for Graph API integration (advanced)"
+      "teamsOptionalGraphApi": "Optional - only needed for Graph API integration (advanced)",
+      "webhookUrl": "Webhook URL",
+      "docs": "Documentation"
     },
     "emailComposer": {
       "send": "Send",
@@ -5257,6 +5259,10 @@
     "subtitle": "Kết nối với các nhà nghiên cứu khác, chia sẻ kinh nghiệm, đặt câu hỏi và học hỏi từ cộng đồng.",
     "support": "Hỗ Trợ",
     "tagsPlaceholder": "ví dụ: bpc-157, tái cấu thành, người mới bắt đầu",
+    "timeDaysAgo": "{count} ngày trước",
+    "timeHoursAgo": "{count} giờ trước",
+    "timeJustNow": "Vừa xong",
+    "timeYesterday": "Hôm qua",
     "title": "Diễn Đàn Cộng Đồng",
     "tryDifferent": "Thử tìm kiếm khác hoặc bắt đầu một thảo luận mới!"
   },
@@ -6731,7 +6737,10 @@
       "removeFromWishlist": "Remove from wishlist"
     },
     "youSave": "Bạn tiết kiệm",
-    "researchDisclaimer": "FOR RESEARCH USE ONLY: This product is intended for laboratory and research purposes only. Not for human or animal consumption. By purchasing, you confirm this product will be used exclusively for legitimate research."
+    "researchDisclaimer": "FOR RESEARCH USE ONLY: This product is intended for laboratory and research purposes only. Not for human or animal consumption. By purchasing, you confirm this product will be used exclusively for legitimate research.",
+    "resetFilters": "Reset filters",
+    "retry": "Retry",
+    "productCount": "product"
   },
   "subscriptions": {
     "availableProducts": "Có Sẵn Để Đăng Ký",

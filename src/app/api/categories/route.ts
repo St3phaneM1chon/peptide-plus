@@ -8,17 +8,38 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { UserRole } from '@/types';
+import { logger } from '@/lib/logger';
 import { withTranslations, enqueue, DB_SOURCE_LOCALE } from '@/lib/translation';
 import { isValidLocale, defaultLocale } from '@/i18n/config';
-import { cacheGetOrSet, CacheTags, CacheTTL } from '@/lib/cache';
+import { cacheGetOrSet, cacheInvalidateTag, CacheTags, CacheTTL } from '@/lib/cache';
+import { z } from 'zod';
+import { stripHtml, stripControlChars } from '@/lib/sanitize';
+
+// BUG-004 FIX: Add Zod validation schema for category creation
+const createCategorySchema = z.object({
+  name: z.string().min(1, 'Category name is required').max(200).transform(v => stripControlChars(stripHtml(v)).trim()),
+  slug: z.string().min(1, 'Slug is required').max(200).regex(/^[a-z0-9-]+$/, 'Slug must be lowercase alphanumeric with hyphens'),
+  description: z.string().max(5000).optional().nullable().transform(v => v ? stripControlChars(stripHtml(v)).trim() : v),
+  imageUrl: z.string().url().max(2000).optional().nullable(),
+  sortOrder: z.number().int().min(0).optional(),
+  parentId: z.string().optional().nullable(),
+});
 
 // GET - Liste des catégories
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const includeInactive = searchParams.get('includeInactive') === 'true';
     const tree = searchParams.get('tree') === 'true';
     const locale = searchParams.get('locale') || defaultLocale;
+
+    // BUG-015 FIX: Only allow includeInactive for authenticated admin/owner users
+    let includeInactive = false;
+    if (searchParams.get('includeInactive') === 'true') {
+      const session = await auth();
+      if (session?.user?.role === UserRole.EMPLOYEE || session?.user?.role === UserRole.OWNER) {
+        includeInactive = true;
+      }
+    }
 
     const where: Record<string, unknown> = {};
     if (!includeInactive) where.isActive = true;
@@ -110,7 +131,7 @@ export async function GET(request: NextRequest) {
       headers: { 'Cache-Control': 'public, s-maxage=600, stale-while-revalidate=1200' },
     });
   } catch (error) {
-    console.error('Error fetching categories:', error);
+    logger.error('Error fetching categories', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la récupération des catégories' },
       { status: 500 }
@@ -132,15 +153,16 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, slug, description, imageUrl, sortOrder, parentId } = body;
 
-    // Validation
-    if (!name || !slug) {
+    // BUG-004 FIX: Validate with Zod schema instead of simple truthy checks
+    const validation = createCategorySchema.safeParse(body);
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'Champs requis: name, slug' },
+        { error: validation.error.errors[0]?.message || 'Invalid category data', details: validation.error.errors },
         { status: 400 }
       );
     }
+    const { name, slug, description, imageUrl, sortOrder, parentId } = validation.data;
 
     // Vérifier l'unicité du slug
     const existingCategory = await prisma.category.findUnique({
@@ -184,12 +206,15 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // BUG-017 FIX: Invalidate category cache after creation
+    cacheInvalidateTag(CacheTags.CATEGORIES);
+
     // Enqueue automatic translation to all locales
     enqueue.category(category.id);
 
     return NextResponse.json({ category }, { status: 201 });
   } catch (error) {
-    console.error('Error creating category:', error);
+    logger.error('Error creating category', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la création de la catégorie' },
       { status: 500 }

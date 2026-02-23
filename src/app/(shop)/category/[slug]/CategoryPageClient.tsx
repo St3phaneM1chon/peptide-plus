@@ -145,7 +145,7 @@ export default function CategoryPageClient({ category, products }: CategoryPageC
                     {child.name}
                   </span>
                   <span className="text-xs text-neutral-400">
-                    {child.productCount} {child.productCount === 1 ? 'product' : 'products'}
+                    {child.productCount} {t('shop.productCount') || 'product'}{child.productCount !== 1 ? 's' : ''}
                   </span>
                 </Link>
               ))}

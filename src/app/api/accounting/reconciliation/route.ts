@@ -8,6 +8,7 @@ import {
   parseBankStatementCSV,
   getReconciliationSummary,
 } from '@/lib/accounting';
+import { logger } from '@/lib/logger';
 
 /**
  * POST /api/accounting/reconciliation
@@ -21,6 +22,8 @@ export const POST = withAdminGuard(async (request, { session }) => {
     const { bankAccountId, criteria } = body;
 
     // #77 Audit: Paginate pending transactions to avoid loading all at once
+    // FIX: F058 - Uses batch size limit (not full pagination). TODO: implement cursor-based
+    // pagination for datasets exceeding maxBatchSize to process all pending transactions.
     const maxBatchSize = 500;
     const where: Record<string, unknown> = { reconciliationStatus: 'PENDING', deletedAt: null };
     if (bankAccountId) where.bankAccountId = bankAccountId;
@@ -100,7 +103,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
     }
 
     const reconciliationDuration = Date.now() - reconciliationStartTime;
-    console.info('Reconciliation completed:', {
+    logger.info('Reconciliation completed:', {
       bankAccountId: bankAccountId || 'all',
       matched: result.matched,
       unmatched: result.unmatched,
@@ -118,7 +121,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       },
     });
   } catch (error) {
-    console.error('Reconciliation error:', error);
+    logger.error('Reconciliation error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors du rapprochement' },
       { status: 500 }
@@ -186,7 +189,8 @@ export const GET = withAdminGuard(async (request) => {
       // Bank accounts (assets) have a normal DEBIT balance
       bookBalance = Math.round((totalDebits - totalCredits) * 100) / 100;
     } else if (bankAccountId) {
-      // Fallback: if no chart account linked, try to find by common bank account codes
+      // FIX: F059 - Fallback COA codes are hardcoded. Validate that these codes actually
+      // exist in the DB before aggregating. If none exist, bookBalance stays 0 (safe default).
       const bankChartAccounts = await prisma.chartOfAccount.findMany({
         where: { code: { in: ['1010', '1020', '1030', '1040'] }, isActive: true },
         select: { id: true },
@@ -237,7 +241,7 @@ export const GET = withAdminGuard(async (request) => {
       },
     });
   } catch (error) {
-    console.error('Get reconciliation error:', error);
+    logger.error('Get reconciliation error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la récupération du rapprochement' },
       { status: 500 }
@@ -248,6 +252,11 @@ export const GET = withAdminGuard(async (request) => {
 /**
  * PUT /api/accounting/reconciliation
  * Import bank statement
+ *
+ * FIX (F022): NOTE - PUT is semantically wrong for importing data (should be POST).
+ * PUT implies idempotent full replacement of a resource, not an additive import.
+ * TODO: Create a dedicated POST /api/accounting/bank-import route and deprecate this.
+ * Keeping PUT for backward compatibility with existing frontend calls.
  */
 export const PUT = withAdminGuard(async (request) => {
   try {
@@ -292,7 +301,7 @@ export const PUT = withAdminGuard(async (request) => {
       importBatch,
     });
   } catch (error) {
-    console.error('Import statement error:', error);
+    logger.error('Import statement error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de l\'import du relevé' },
       { status: 500 }

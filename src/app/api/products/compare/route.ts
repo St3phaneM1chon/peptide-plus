@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { logger } from '@/lib/logger';
 import { withTranslations, DB_SOURCE_LOCALE } from '@/lib/translation';
 import { isValidLocale, defaultLocale } from '@/i18n/config';
 
@@ -23,7 +24,15 @@ export async function GET(request: NextRequest) {
     }
 
     // Parse and limit to 4 products
-    const slugs = slugsParam.split(',').filter(Boolean).slice(0, 4);
+    const allSlugs = slugsParam.split(',').filter(Boolean);
+    // FIX: BUG-055 - Return explicit error when more than 4 products requested
+    if (allSlugs.length > 4) {
+      return NextResponse.json(
+        { error: 'Maximum 4 products can be compared at once', requested: allSlugs.length },
+        { status: 400 }
+      );
+    }
+    const slugs = allSlugs.slice(0, 4);
 
     if (slugs.length === 0) {
       return NextResponse.json({ products: [] });
@@ -125,7 +134,7 @@ export async function GET(request: NextRequest) {
       }
     );
   } catch (error) {
-    console.error('Error fetching products for comparison:', error);
+    logger.error('Error fetching products for comparison', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to fetch products for comparison' },
       { status: 500 }

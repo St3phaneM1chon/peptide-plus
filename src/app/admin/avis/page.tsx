@@ -1,3 +1,6 @@
+// TODO: F-084 - Show "-" instead of "0.0" for avgRating when there are no reviews
+// TODO: F-090 - Add aria-label to star rating SVGs for accessibility (e.g. "{n} out of 5 stars")
+// TODO: F-099 - Frontend ignores pagination metadata returned by /api/admin/reviews
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -78,6 +81,8 @@ export default function AvisPage() {
   // Response modal state
   const [showResponseModal, setShowResponseModal] = useState(false);
   const [adminResponse, setAdminResponse] = useState('');
+  // FIX F-026: Add submitting state to prevent double-click
+  const [submittingResponse, setSubmittingResponse] = useState(false);
 
   const statusLabel: Record<string, string> = useMemo(() => ({
     PENDING: t('admin.reviews.statusPending'),
@@ -87,11 +92,8 @@ export default function AvisPage() {
 
   // ─── Data fetching ──────────────────────────────────────────
 
-  useEffect(() => {
-    fetchReviews();
-  }, []);
-
-  const fetchReviews = async () => {
+  // F-069 FIX: Wrap fetchReviews in useCallback for stable reference
+  const fetchReviews = useCallback(async () => {
     try {
       const res = await fetch('/api/admin/reviews');
       const data = await res.json();
@@ -102,8 +104,14 @@ export default function AvisPage() {
       setReviews([]);
     }
     setLoading(false);
-  };
+  }, [t]);
 
+  useEffect(() => {
+    fetchReviews();
+  }, [fetchReviews]);
+
+  // TODO: F-056 - Consider passing status filter to API (/api/admin/reviews?status=) for server-side filtering
+  // TODO: F-070 - Add confirmation modal before approve/reject to prevent accidental clicks
   const updateReviewStatus = async (id: string, status: 'APPROVED' | 'REJECTED') => {
     setUpdatingIds(prev => new Set(prev).add(id));
     try {
@@ -134,6 +142,9 @@ export default function AvisPage() {
   };
 
   const submitAdminResponse = async (id: string) => {
+    // FIX F-026: Prevent double-click with submitting state
+    if (submittingResponse) return;
+    setSubmittingResponse(true);
     try {
       const res = await fetch(`/api/admin/reviews/${id}/respond`, {
         method: 'POST',
@@ -152,6 +163,8 @@ export default function AvisPage() {
     } catch (err) {
       console.error('Error submitting response:', err);
       toast.error(t('common.networkError'));
+    } finally {
+      setSubmittingResponse(false);
     }
   };
 
@@ -368,6 +381,7 @@ export default function AvisPage() {
                   {/* Review Images */}
                   {selectedReview.images && selectedReview.images.length > 0 && (
                     <div>
+                      {/* TODO: F-073 - Add lightbox/modal for viewing review images at full size */}
                       <h4 className="text-sm font-medium text-slate-700 mb-2 flex items-center gap-1">
                         <Camera className="w-4 h-4" />
                         Photos ({selectedReview.images.length})
@@ -381,7 +395,7 @@ export default function AvisPage() {
                               fill
                               sizes="112px"
                               className="object-cover"
-                              unoptimized
+                              /* FIX F-035: Removed unoptimized to use Next.js image optimization */
                             />
                           </div>
                         ))}
@@ -465,7 +479,7 @@ export default function AvisPage() {
                         fill
                         sizes="96px"
                         className="object-cover"
-                        unoptimized
+                        /* F-035 FIX: Removed unoptimized to use Next.js image optimization */
                       />
                     </div>
                   ))}

@@ -5,6 +5,7 @@ import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { testZoomConnection, clearZoomConfigCache } from '@/lib/integrations/zoom';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { logger } from '@/lib/logger';
 
 // GET - Retrieve Zoom configuration (no secrets exposed)
 export const GET = withAdminGuard(async () => {
@@ -28,7 +29,7 @@ export const GET = withAdminGuard(async () => {
       webhookUrl: `${process.env.NEXTAUTH_URL || ''}/api/webhooks/zoom`,
     });
   } catch (error) {
-    console.error('Get Zoom config error:', error);
+    logger.error('Get Zoom config error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to get config' }, { status: 500 });
   }
 });
@@ -66,7 +67,7 @@ export const PUT = withAdminGuard(async (request, { session }) => {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Update Zoom config error:', error);
+    logger.error('Update Zoom config error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to update config' }, { status: 500 });
   }
 });
@@ -83,7 +84,7 @@ export const POST = withAdminGuard(async (request) => {
 
     return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
   } catch (error) {
-    console.error('Zoom action error:', error);
+    logger.error('Zoom action error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Action failed' }, { status: 500 });
   }
 });

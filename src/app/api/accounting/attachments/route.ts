@@ -11,10 +11,11 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
-import { writeFile, mkdir, unlink } from 'fs/promises';
-import { existsSync } from 'fs';
-import { join } from 'path';
 import { randomUUID } from 'crypto';
+import { storage } from '@/lib/storage';
+import { logger } from '@/lib/logger';
+// FIX: F59 - Use shared formatFileSize utility instead of local duplicate
+import { formatFileSize } from '@/lib/format-utils';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -48,12 +49,7 @@ const VALID_ENTITY_TYPES = new Set([
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
+// FIX: F59 - formatFileSize moved to shared @/lib/format-utils
 
 /**
  * Sanitize a file extension: strip non-alphanumeric chars and lowercase.
@@ -102,7 +98,7 @@ export const GET = withAdminGuard(async (request) => {
       },
     });
   } catch (error) {
-    console.error('Attachment GET error:', error);
+    logger.error('Attachment GET error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to retrieve attachments' },
       { status: 500 }
@@ -162,25 +158,37 @@ export const POST = withAdminGuard(async (request, { session }) => {
     const extension = sanitizeExtension(rawExtension) || ALLOWED_MIME_TYPES[mimeType];
     const uniqueName = `${randomUUID()}.${extension}`;
 
-    // ------ Ensure upload directory ------
-
-    const relativeDir = join('uploads', 'attachments', entityType, entityId);
-    const uploadDir = join(process.cwd(), 'public', relativeDir);
-
-    if (!existsSync(uploadDir)) {
-      await mkdir(uploadDir, { recursive: true });
-    }
-
-    // ------ Write file to disk ------
+    // ------ Read file content and validate magic bytes (FIX F17) ------
 
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
-    const filePath = join(uploadDir, uniqueName);
-    await writeFile(filePath, buffer);
 
-    // ------ Create Prisma record ------
+    // SECURITY FIX (F17): Validate magic bytes match declared MIME type
+    const MAGIC_BYTES: Record<string, number[]> = {
+      'application/pdf': [0x25, 0x50, 0x44, 0x46], // %PDF
+      'image/jpeg': [0xFF, 0xD8, 0xFF],
+      'image/png': [0x89, 0x50, 0x4E, 0x47],
+      'image/gif': [0x47, 0x49, 0x46],
+      'image/webp': [0x52, 0x49, 0x46, 0x46], // RIFF
+    };
 
-    const relativePath = `/${relativeDir}/${uniqueName}`.replace(/\\/g, '/');
+    const expectedBytes = MAGIC_BYTES[mimeType];
+    if (expectedBytes) {
+      const header = buffer.subarray(0, expectedBytes.length);
+      const matches = expectedBytes.every((b, i) => header[i] === b);
+      if (!matches) {
+        return NextResponse.json(
+          { error: `File content does not match declared type (${mimeType}). Possible file spoofing detected.` },
+          { status: 400 }
+        );
+      }
+    }
+
+    // ------ Upload via StorageService (FIX F11: persists on Azure) ------
+
+    const folder = `attachments/${entityType}/${entityId}`;
+    const result = await storage.upload(buffer, uniqueName, mimeType, { folder });
+    const relativePath = result.url;
 
     const attachment = await prisma.documentAttachment.create({
       data: {
@@ -197,7 +205,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
 
     return NextResponse.json({ attachment }, { status: 201 });
   } catch (error) {
-    console.error('Attachment POST error:', error);
+    logger.error('Attachment POST error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to upload attachment' },
       { status: 500 }
@@ -234,16 +242,13 @@ export const DELETE = withAdminGuard(async (request) => {
       );
     }
 
-    // ------ Remove file from disk ------
+    // ------ Remove file from storage (FIX F11: works with Azure Blob or local) ------
 
-    const absolutePath = join(process.cwd(), 'public', attachment.fileUrl);
     try {
-      if (existsSync(absolutePath)) {
-        await unlink(absolutePath);
-      }
+      await storage.delete(attachment.fileUrl);
     } catch (fsError) {
       // Log but don't fail the DB deletion
-      console.warn('Failed to delete file from disk:', fsError);
+      logger.warn('Failed to delete file from storage', { error: fsError instanceof Error ? fsError.message : String(fsError) });
     }
 
     // ------ Delete Prisma record ------
@@ -254,7 +259,7 @@ export const DELETE = withAdminGuard(async (request) => {
 
     return NextResponse.json({ success: true, deletedId: id });
   } catch (error) {
-    console.error('Attachment DELETE error:', error);
+    logger.error('Attachment DELETE error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to delete attachment' },
       { status: 500 }

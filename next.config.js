@@ -20,6 +20,24 @@ const nextConfig = {
   // Sécurité: Headers HTTP stricts
   async headers() {
     return [
+      // FIX: F22 - Security headers for uploaded files to prevent inline execution
+      {
+        source: '/uploads/:path*',
+        headers: [
+          {
+            key: 'Content-Disposition',
+            value: 'attachment',
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'Content-Security-Policy',
+            value: "default-src 'none'; style-src 'none'; script-src 'none'",
+          },
+        ],
+      },
       {
         source: '/:path*',
         headers: [

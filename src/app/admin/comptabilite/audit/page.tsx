@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useI18n } from '@/i18n/client';
 import { PageHeader, SectionCard, Button } from '@/components/admin';
 import { sectionThemes } from '@/lib/admin/section-themes';
@@ -77,20 +77,7 @@ export default function AuditTrailPage() {
 
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadEntries();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Refetch when date filters change
-  useEffect(() => {
-    if (filters.dateFrom || filters.dateTo) {
-      loadEntries();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters.dateFrom, filters.dateTo]);
-
-  const loadEntries = async () => {
+  const loadEntries = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -113,7 +100,18 @@ export default function AuditTrailPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters.action, filters.dateFrom, filters.dateTo, filters.entityType, t]);
+
+  useEffect(() => {
+    loadEntries();
+  }, [loadEntries]);
+
+  // Refetch when date filters change
+  useEffect(() => {
+    if (filters.dateFrom || filters.dateTo) {
+      loadEntries();
+    }
+  }, [filters.dateFrom, filters.dateTo, loadEntries]);
 
   const filteredEntries = entries.filter(entry => {
     if (filters.action && entry.action !== filters.action) return false;

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import DOMPurify from 'isomorphic-dompurify';
 import { useI18n } from '@/i18n/client';
 import { sectionThemes } from '@/lib/admin/section-themes';
@@ -64,25 +64,9 @@ export default function SearchPage() {
   // Popular search terms
   const popularTerms = ['Stripe', t('admin.accounting.tax.tps'), t('admin.search.termRefund'), 'Postes Canada', 'Azure', 'Marketing'];
 
-  // Debounced search
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (query.length >= 2) {
-        handleSearch();
-        setSuggestions([]);
-      } else {
-        setResults([]);
-        setSuggestions([]);
-      }
-    }, 300);
-
-    return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query]);
-
   const [searchError, setSearchError] = useState<string | null>(null);
 
-  const handleSearch = async () => {
+  const handleSearch = useCallback(async () => {
     setLoading(true);
     setSearchError(null);
 
@@ -107,7 +91,22 @@ export default function SearchPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [query, filters, t]);
+
+  // Debounced search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (query.length >= 2) {
+        handleSearch();
+        setSuggestions([]);
+      } else {
+        setResults([]);
+        setSuggestions([]);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [query, handleSearch]);
 
   const handleSaveSearch = () => {
     const name = prompt(t('admin.search.saveSearchPrompt'));

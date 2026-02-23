@@ -114,11 +114,18 @@ Retourne UNIQUEMENT le JSON, sans markdown ni explication.`,
       if (data.invoiceDate) data.invoiceDate = new Date(data.invoiceDate);
       if (data.dueDate) data.dueDate = new Date(data.dueDate);
 
+      // F-049 FIX: Compute confidence dynamically based on fields extracted
+      const extractedFields = [
+        data.invoiceNumber, data.invoiceDate, data.supplierName,
+        data.subtotal, data.total, data.lineItems?.length,
+      ].filter(Boolean).length;
+      const dynamicConfidence = Math.min(0.95, 0.5 + extractedFields * 0.08);
+
       return {
         success: true,
         data: {
           ...data,
-          confidence: 0.85, // Vision API generally reliable
+          confidence: dynamicConfidence,
         },
         processingTime: Date.now() - startTime,
       };
@@ -295,7 +302,8 @@ export async function processInvoiceFromText(
       taxTps: amounts.taxTps,
       taxTvq: amounts.taxTvq,
       total: amounts.total,
-      currency: rawText.includes('$') ? 'CAD' : undefined,
+      // FIX: F081 - Detect common currency symbols beyond just apostrophe/dollar
+      currency: detectCurrency(rawText),
       confidence: 0.6, // Lower confidence for text-only processing
       rawText,
     };
@@ -428,6 +436,20 @@ export function createInvoiceFromOCR(
 }
 
 /**
+ * FIX: F081 - Detect currency from common symbols ($, EUR, GBP, etc.)
+ */
+function detectCurrency(text: string): string | undefined {
+  if (/\$|CAD|CA\$/i.test(text)) return 'CAD';
+  if (/USD|US\$/i.test(text)) return 'USD';
+  if (/€|EUR/i.test(text)) return 'EUR';
+  if (/£|GBP/i.test(text)) return 'GBP';
+  if (/¥|JPY|CNY/i.test(text)) return 'JPY';
+  // Fallback: if $ is present without other clues, assume CAD (Canadian business context)
+  if (/\$/.test(text)) return 'CAD';
+  return undefined;
+}
+
+/**
  * Supported file types for OCR
  */
 export const SUPPORTED_FILE_TYPES = [
@@ -452,11 +474,11 @@ export function validateOCRFile(
     };
   }
 
-  // Max 20MB
-  if (file.size > 20 * 1024 * 1024) {
+  // FIX: F087 - Reduced from 20MB to 10MB for serverless compatibility (Azure Functions memory limits)
+  if (file.size > 10 * 1024 * 1024) {
     return {
       valid: false,
-      error: 'Le fichier est trop volumineux (max 20 Mo)',
+      error: 'Le fichier est trop volumineux (max 10 Mo)',
     };
   }
 

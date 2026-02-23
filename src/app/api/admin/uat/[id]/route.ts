@@ -10,6 +10,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { getRunDetail, getRunStatus, cleanupUatRun } from '@/lib/uat/runner';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { logger } from '@/lib/logger';
 
 // GET — Run detail
 export const GET = withAdminGuard(async (request: NextRequest, { session, params }) => {
@@ -33,7 +34,7 @@ export const GET = withAdminGuard(async (request: NextRequest, { session, params
 
     return NextResponse.json({ data: detail });
   } catch (error) {
-    console.error('[UAT API] GET detail error:', error);
+    logger.error('[UAT API] GET detail error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Une erreur est survenue' }, { status: 500 });
   }
 });
@@ -55,7 +56,7 @@ export const DELETE = withAdminGuard(async (_request: NextRequest, { session, pa
 
     return NextResponse.json({ success: true, data: result });
   } catch (error) {
-    console.error('[UAT API] DELETE error:', error);
+    logger.error('[UAT API] DELETE error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Une erreur est survenue' }, { status: 500 });
   }
 });

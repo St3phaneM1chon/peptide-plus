@@ -1,20 +1,16 @@
 export const dynamic = 'force-dynamic';
 
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth-config';
+// FIX: F5 - Migrated to withAdminGuard for consistent auth + CSRF + rate limiting
+import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { UserRole } from '@/types';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import { sanitizeUrl } from '@/lib/sanitize';
 import { stripHtml } from '@/lib/validation';
+import { logger } from '@/lib/logger';
 
 // GET - Liste toutes les slides (admin)
-export async function GET() {
+export const GET = withAdminGuard(async () => {
   try {
-    const session = await auth();
-    if (!session?.user || (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER)) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 403 });
-    }
-
     const slides = await prisma.heroSlide.findMany({
       include: { translations: true },
       orderBy: { sortOrder: 'asc' },
@@ -22,19 +18,14 @@ export async function GET() {
 
     return NextResponse.json({ slides });
   } catch (error) {
-    console.error('Error fetching hero slides:', error);
+    logger.error('Error fetching hero slides', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
   }
-}
+});
 
-// POST - Créer une slide
-export async function POST(request: NextRequest) {
+// POST - Creer une slide
+export const POST = withAdminGuard(async (request) => {
   try {
-    const session = await auth();
-    if (!session?.user || (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER)) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 403 });
-    }
-
     const body = await request.json();
     const {
       slug, mediaType, backgroundUrl, backgroundMobile, overlayOpacity,
@@ -60,14 +51,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'URL mobile invalide' }, { status: 400 });
     }
 
-    // Sanitize text fields
+    // FIX: F7 - Sanitize text fields to prevent XSS
     const safeTitle = typeof title === 'string' ? stripHtml(title) : title;
     const safeSubtitle = typeof subtitle === 'string' ? stripHtml(subtitle) : subtitle;
     const safeBadgeText = typeof badgeText === 'string' ? stripHtml(badgeText) : badgeText;
 
     const existing = await prisma.heroSlide.findUnique({ where: { slug } });
     if (existing) {
-      return NextResponse.json({ error: 'Ce slug existe déjà' }, { status: 400 });
+      return NextResponse.json({ error: 'Ce slug existe deja' }, { status: 400 });
+    }
+
+    // FIX: F26 - Validate statsJson before save
+    let validatedStatsJson = undefined;
+    if (statsJson) {
+      try {
+        JSON.parse(typeof statsJson === 'string' ? statsJson : JSON.stringify(statsJson));
+        validatedStatsJson = statsJson;
+      } catch {
+        return NextResponse.json({ error: 'statsJson is not valid JSON' }, { status: 400 });
+      }
     }
 
     const slide = await prisma.heroSlide.create({
@@ -81,13 +83,13 @@ export async function POST(request: NextRequest) {
         badgeText: safeBadgeText,
         title: safeTitle,
         subtitle: safeSubtitle,
-        ctaText,
-        ctaUrl,
+        ctaText: typeof ctaText === 'string' ? stripHtml(ctaText) : ctaText,
+        ctaUrl: ctaUrl ? sanitizeUrl(ctaUrl) || undefined : undefined,
         ctaStyle,
-        cta2Text,
-        cta2Url,
+        cta2Text: typeof cta2Text === 'string' ? stripHtml(cta2Text) : cta2Text,
+        cta2Url: cta2Url ? sanitizeUrl(cta2Url) || undefined : undefined,
         cta2Style,
-        statsJson,
+        statsJson: validatedStatsJson,
         sortOrder: sortOrder ?? 0,
         isActive: isActive !== undefined ? isActive : true,
         startDate: startDate ? new Date(startDate) : null,
@@ -109,7 +111,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ slide }, { status: 201 });
   } catch (error) {
-    console.error('Error creating hero slide:', error);
+    logger.error('Error creating hero slide', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
   }
-}
+});

@@ -213,21 +213,28 @@ export async function applyPaymentMatch(
     return { success: false, message: 'Comptes comptables (débiteurs/banque) introuvables' };
   }
 
-  // Generate entry number
+  // FIX (F037): Move entry number generation INSIDE the transaction with FOR UPDATE
+  // to prevent race conditions where two concurrent requests get the same number
   const year = new Date().getFullYear();
   const prefix = `JV-${year}-`;
-  const lastEntry = await prisma.journalEntry.findFirst({
-    where: { entryNumber: { startsWith: prefix } },
-    orderBy: { entryNumber: 'desc' },
-    select: { entryNumber: true },
-  });
-  const nextNum = lastEntry
-    ? String(parseInt(lastEntry.entryNumber.replace(prefix, ''), 10) + 1).padStart(5, '0')
-    : '00001';
-  const entryNumber = `${prefix}${nextNum}`;
 
   // Create journal entry + update invoice + reconcile bank tx in a transaction
   const result = await prisma.$transaction(async (tx) => {
+    // Generate entry number inside transaction with FOR UPDATE lock
+    const [maxRow] = await tx.$queryRaw<{ max_num: string | null }[]>`
+      SELECT MAX("entryNumber") as max_num
+      FROM "JournalEntry"
+      WHERE "entryNumber" LIKE ${prefix + '%'}
+      FOR UPDATE
+    `;
+
+    let nextSeq = 1;
+    if (maxRow?.max_num) {
+      const parsed = parseInt(maxRow.max_num.split('-').pop() || '0');
+      if (!isNaN(parsed)) nextSeq = parsed + 1;
+    }
+    const entryNumber = `${prefix}${String(nextSeq).padStart(5, '0')}`;
+
     // 1. Create journal entry: Debit Cash, Credit Accounts Receivable
     const entry = await tx.journalEntry.create({
       data: {

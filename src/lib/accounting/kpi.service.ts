@@ -104,6 +104,19 @@ function round2(value: number): number {
 // Main KPI Calculation
 // ---------------------------------------------------------------------------
 
+// FIX: F038 - Performance: calculateKPIs() currently makes ~15 sequential DB queries
+// via sumByAccountType(). getKPITrend(kpi, 6) amplifies this to ~90 queries.
+// TODO: Refactor to use a single GROUP BY query:
+//   SELECT ca.type, LEFT(ca.code, 2) as prefix,
+//          SUM(jl.debit) as total_debit, SUM(jl.credit) as total_credit
+//   FROM "JournalLine" jl
+//   JOIN "ChartOfAccount" ca ON jl."accountId" = ca.id
+//   JOIN "JournalEntry" je ON jl."entryId" = je.id
+//   WHERE je.status = 'POSTED' AND je."deletedAt" IS NULL
+//     AND je.date BETWEEN $1 AND $2
+//   GROUP BY ca.type, LEFT(ca.code, 2)
+// Then compute all KPIs from the aggregated result in-memory.
+// This would reduce 15 queries to 1-2 queries per period.
 export async function calculateKPIs(startDate: Date, endDate: Date): Promise<FinancialKPIs> {
   const periodDays = Math.max(
     1,

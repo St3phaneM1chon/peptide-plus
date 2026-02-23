@@ -208,7 +208,10 @@
       "removeFromWishlist": "Remove from wishlist",
       "addToWishlist": "Add to wishlist",
       "moveToList": "Move to another list"
-    }
+    },
+    "resetFilters": "Reset filters",
+    "retry": "Retry",
+    "productCount": "product"
   },
   "home": {
     "heroTitle": "The Best Research Peptides in Canada",
@@ -1001,7 +1004,11 @@
     "tagsPlaceholder": "e.g., bpc-157, reconstitution, beginner",
     "placeholderPostTitle": "What's your question or topic?",
     "placeholderPostBody": "Share your thoughts, questions, or experiences...",
-    "placeholderTags": "e.g., bpc-157, reconstitution, beginner"
+    "placeholderTags": "e.g., bpc-157, reconstitution, beginner",
+    "timeJustNow": "Just now",
+    "timeHoursAgo": "{count}h ago",
+    "timeYesterday": "Yesterday",
+    "timeDaysAgo": "{count}d ago"
   },
   "webinars": {
     "title": "Webinars & Events",
@@ -2895,7 +2902,9 @@
       "teamsSetupDesc": "Connect Microsoft Teams for internal order notifications and team alerts. Supports Incoming Webhooks and Graph API.",
       "teamsWebhookLabel": "Incoming Webhook URL",
       "teamsWebhookHint": "Create an Incoming Webhook in your Teams channel and paste the URL here",
-      "teamsOptionalGraphApi": "Optional - only needed for Graph API integration (advanced)"
+      "teamsOptionalGraphApi": "Optional - only needed for Graph API integration (advanced)",
+      "webhookUrl": "Webhook URL",
+      "docs": "Documentation"
     },
     "viewSite": "View site",
     "notifications": "Notifications",

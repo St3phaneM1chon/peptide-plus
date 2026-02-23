@@ -5,30 +5,66 @@
 
 import { prisma } from './db';
 import { createSecurityLog } from './security';
+import { getRedisClient, isRedisAvailable } from './redis';
 
 // Configuration
 const MAX_FAILED_ATTEMPTS = 3;         // Nombre max de tentatives (Chubb: 3)
 const LOCKOUT_DURATION_MS = 30 * 60 * 1000; // 30 minutes de lockout
 const ATTEMPT_WINDOW_MS = 15 * 60 * 1000;   // Fenêtre de 15 minutes
+const REDIS_KEY_PREFIX = 'bf:login:';
+const REDIS_TTL_SECONDS = 15 * 60; // 15 minutes TTL for Redis keys
+const MAP_MAX_SIZE = 10_000; // FAILLE-005: Max entries in fallback Map
 
-// Cache en mémoire pour les performances
+// Cache en mémoire pour les performances (fallback when Redis unavailable)
 const loginAttempts = new Map<string, {
   attempts: number;
   firstAttempt: number;
   lockedUntil: number | null;
 }>();
 
-// Periodic cleanup of expired entries (every 10 minutes)
-setInterval(() => {
-  const now = Date.now();
-  for (const [key, record] of loginAttempts.entries()) {
-    const windowExpired = now - record.firstAttempt > ATTEMPT_WINDOW_MS;
-    const lockExpired = !record.lockedUntil || record.lockedUntil <= now;
-    if (windowExpired && lockExpired) {
-      loginAttempts.delete(key);
-    }
+// FAILLE-005: Helper to enforce Map size limit
+function enforceMapSizeLimit(): void {
+  if (loginAttempts.size <= MAP_MAX_SIZE) return;
+  // Remove oldest entries (first inserted = first iterated in Map)
+  const entriesToRemove = loginAttempts.size - MAP_MAX_SIZE + 1000; // remove 1000 extra to avoid frequent cleanup
+  let removed = 0;
+  for (const key of loginAttempts.keys()) {
+    if (removed >= entriesToRemove) break;
+    loginAttempts.delete(key);
+    removed++;
   }
-}, 600_000);
+}
+
+// FAILLE-005: Redis-backed attempt tracking helpers
+async function getRedisRecord(key: string): Promise<{ attempts: number; firstAttempt: number; lockedUntil: number | null } | null> {
+  try {
+    const redis = await getRedisClient();
+    if (!redis) return null;
+    const data = await redis.get(`${REDIS_KEY_PREFIX}${key}`);
+    if (!data) return null;
+    return JSON.parse(data);
+  } catch {
+    return null;
+  }
+}
+
+async function setRedisRecord(key: string, record: { attempts: number; firstAttempt: number; lockedUntil: number | null }): Promise<boolean> {
+  try {
+    const redis = await getRedisClient();
+    if (!redis) return false;
+    await redis.set(`${REDIS_KEY_PREFIX}${key}`, JSON.stringify(record), 'EX', REDIS_TTL_SECONDS);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function deleteRedisRecord(key: string): Promise<void> {
+  try {
+    const redis = await getRedisClient();
+    if (redis) await redis.del(`${REDIS_KEY_PREFIX}${key}`);
+  } catch { /* ignore */ }
+}
 
 /**
  * Vérifie si un compte est verrouillé
@@ -39,8 +75,12 @@ export async function isAccountLocked(email: string): Promise<{
   attempts: number;
 }> {
   const key = email.toLowerCase();
-  const record = loginAttempts.get(key);
   const now = Date.now();
+
+  // FAILLE-005: Try Redis first, fall back to Map
+  const record = isRedisAvailable()
+    ? (await getRedisRecord(key)) ?? loginAttempts.get(key)
+    : loginAttempts.get(key);
 
   if (!record) {
     return { locked: false, remainingTime: 0, attempts: 0 };
@@ -58,6 +98,7 @@ export async function isAccountLocked(email: string): Promise<{
   // Réinitialiser si la fenêtre est expirée
   if (now - record.firstAttempt > ATTEMPT_WINDOW_MS) {
     loginAttempts.delete(key);
+    deleteRedisRecord(key).catch(() => {});
     return { locked: false, remainingTime: 0, attempts: 0 };
   }
 
@@ -82,7 +123,10 @@ export async function recordFailedAttempt(
   const key = email.toLowerCase();
   const now = Date.now();
 
-  let record = loginAttempts.get(key);
+  // FAILLE-005: Try Redis first, fall back to Map
+  let record = isRedisAvailable()
+    ? (await getRedisRecord(key)) ?? loginAttempts.get(key)
+    : loginAttempts.get(key);
 
   // Nouvelle entrée ou fenêtre expirée
   if (!record || now - record.firstAttempt > ATTEMPT_WINDOW_MS) {
@@ -91,9 +135,15 @@ export async function recordFailedAttempt(
       firstAttempt: now,
       lockedUntil: null,
     };
-    loginAttempts.set(key, record);
   } else {
     record.attempts++;
+  }
+
+  // Store in Redis if available, otherwise Map with size limit
+  const storedInRedis = await setRedisRecord(key, record);
+  if (!storedInRedis) {
+    enforceMapSizeLimit();
+    loginAttempts.set(key, record);
   }
 
   // Log de sécurité
@@ -118,11 +168,16 @@ export async function recordFailedAttempt(
         timestamp: new Date().toISOString(),
       }),
     },
-  }).catch(() => {}); // Silently fail si pas de user
+  }).catch((e) => console.error('Audit log failed:', e.message)); // FAILLE-058 FIX: Log errors instead of silencing
 
   // Vérifier si on doit verrouiller
   if (record.attempts >= MAX_FAILED_ATTEMPTS) {
     record.lockedUntil = now + LOCKOUT_DURATION_MS;
+    // Update Redis/Map with lockout
+    const updatedInRedis = await setRedisRecord(key, record);
+    if (!updatedInRedis) {
+      loginAttempts.set(key, record);
+    }
 
     // Log critique
     console.log(createSecurityLog('critical', 'account_locked', {
@@ -153,8 +208,11 @@ export async function recordFailedAttempt(
 /**
  * Réinitialise les tentatives après une connexion réussie
  */
-export function clearFailedAttempts(email: string): void {
-  loginAttempts.delete(email.toLowerCase());
+// FAILLE-045 FIX: Make async to properly await Redis cleanup
+export async function clearFailedAttempts(email: string): Promise<void> {
+  const key = email.toLowerCase();
+  loginAttempts.delete(key);
+  await deleteRedisRecord(key).catch(() => {});
 }
 
 /**
@@ -169,10 +227,10 @@ export async function checkLoginAttempt(
   const { locked, remainingTime } = await isAccountLocked(email);
 
   if (locked) {
-    const minutes = Math.ceil(remainingTime / 60000);
+    // FAILLE-041 FIX: Use generic message that doesn't reveal account existence
     return {
       allowed: false,
-      message: `Compte temporairement verrouillé. Réessayez dans ${minutes} minute(s).`,
+      message: 'Identifiants invalides ou compte temporairement verrouillé.',
     };
   }
 
@@ -222,7 +280,7 @@ export async function loginRateLimitMiddleware(
 }
 
 // ============================================
-// NETTOYAGE PÉRIODIQUE
+// NETTOYAGE PÉRIODIQUE (FAILLE-007: single interval only)
 // ============================================
 
 /**
@@ -230,18 +288,21 @@ export async function loginRateLimitMiddleware(
  */
 export function cleanupExpiredAttempts(): void {
   const now = Date.now();
-  
+
   for (const [key, record] of loginAttempts.entries()) {
     const isExpired = now - record.firstAttempt > ATTEMPT_WINDOW_MS;
     const lockoutExpired = record.lockedUntil && record.lockedUntil < now;
-    
+
     if (isExpired || lockoutExpired) {
       loginAttempts.delete(key);
     }
   }
+
+  // FAILLE-005: Also enforce size limit during cleanup
+  enforceMapSizeLimit();
 }
 
-// Nettoyage toutes les 5 minutes
+// FAILLE-007: Single cleanup interval (5 minutes) with typeof guard
 if (typeof setInterval !== 'undefined') {
   setInterval(cleanupExpiredAttempts, 5 * 60 * 1000);
 }

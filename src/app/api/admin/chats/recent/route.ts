@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/admin/chats/recent
@@ -17,6 +18,8 @@ export const GET = withAdminGuard(async () => {
     const conversations = await prisma.chatConversation.findMany({
       where: {
         lastMessageAt: { gte: since },
+        // FIX F-040: Only show active/waiting conversations, not closed/archived
+        status: { in: ['ACTIVE', 'WAITING_ADMIN'] },
       },
       orderBy: { lastMessageAt: 'desc' },
       take: 20,
@@ -72,7 +75,7 @@ export const GET = withAdminGuard(async () => {
 
     return NextResponse.json({ chats });
   } catch (error) {
-    console.error('Recent chats error:', error);
+    logger.error('Recent chats error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

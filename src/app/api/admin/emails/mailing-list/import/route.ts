@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { shouldSuppressEmail } from '@/lib/email/bounce-handler';
+import { logger } from '@/lib/logger';
 
 export const POST = withAdminGuard(async (request: NextRequest) => {
   try {
@@ -47,30 +48,54 @@ export const POST = withAdminGuard(async (request: NextRequest) => {
       );
     }
 
+    const validLocales = ['en', 'fr', 'ar', 'de', 'es', 'hi', 'it', 'ko', 'pt', 'ru', 'sv', 'zh', 'vi', 'pl', 'ta', 'tl', 'pa', 'ht', 'gcr', 'ar-dz', 'ar-lb', 'ar-ma'];
+
     let imported = 0;
+    let updated = 0;
     let skipped = 0;
     let failed = 0;
     let preservedUnsubscribed = 0;
+    let duplicatesInCsv = 0;
+    let invalidLocales = 0;
+    const errors: Array<{ row: number; email: string; reason: string }> = [];
 
-    for (const contact of contacts) {
+    // Track emails seen in this import batch to reject intra-CSV duplicates
+    const seenEmails = new Set<string>();
+
+    for (let i = 0; i < contacts.length; i++) {
+      const contact = contacts[i];
       const email = (contact.email || '').toLowerCase().trim();
-      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+      // Faille #40: Stricter email regex — rejects "a@.com", requires valid domain labels
+      if (!email || !/^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/.test(email)) {
         skipped++;
+        errors.push({ row: i + 1, email: email || '(empty)', reason: 'invalid_email' });
         continue;
       }
+
+      // Reject duplicate emails within the same CSV upload
+      if (seenEmails.has(email)) {
+        duplicatesInCsv++;
+        errors.push({ row: i + 1, email, reason: 'duplicate_in_csv' });
+        continue;
+      }
+      seenEmails.add(email);
 
       // Sanitize name: strip HTML, limit length
       const rawName = contact.name ? String(contact.name).slice(0, 200) : null;
       const safeName = rawName?.replace(/<[^>]*>/g, '') || null;
       // Validate locale against known list
-      const validLocales = ['en', 'fr', 'ar', 'de', 'es', 'hi', 'it', 'ko', 'pt', 'ru', 'sv', 'zh', 'vi', 'pl', 'ta', 'tl', 'pa', 'ht', 'gcr', 'ar-dz', 'ar-lb', 'ar-ma'];
-      const locale = validLocales.includes(contact.locale) ? contact.locale : 'fr';
+      const localeValid = validLocales.includes(contact.locale);
+      if (contact.locale && !localeValid) {
+        invalidLocales++;
+        // Don't reject — use default, but track it
+      }
+      const locale = localeValid ? contact.locale : 'fr';
 
       try {
         // RGPD compliance: check if subscriber previously unsubscribed
         const existing = await prisma.newsletterSubscriber.findUnique({
           where: { email },
-          select: { isActive: true, unsubscribedAt: true },
+          select: { id: true, isActive: true, unsubscribedAt: true },
         });
 
         if (existing && !existing.isActive && existing.unsubscribedAt) {
@@ -79,30 +104,59 @@ export const POST = withAdminGuard(async (request: NextRequest) => {
           continue;
         }
 
-        await prisma.newsletterSubscriber.upsert({
-          where: { email },
-          create: {
-            id: crypto.randomUUID(),
-            email,
-            name: safeName,
-            locale,
-            source: 'csv-import',
-            isActive: true,
-          },
-          update: {
-            name: safeName || undefined,
-            // Only set active if not previously unsubscribed (handled above)
-          },
-        });
-        imported++;
+        if (existing) {
+          // Update existing subscriber
+          await prisma.newsletterSubscriber.update({
+            where: { email },
+            data: {
+              name: safeName || undefined,
+            },
+          });
+          updated++;
+        } else {
+          // Create new subscriber
+          await prisma.newsletterSubscriber.create({
+            data: {
+              id: crypto.randomUUID(),
+              email,
+              name: safeName,
+              locale,
+              source: 'csv-import',
+              isActive: true,
+            },
+          });
+          imported++;
+        }
       } catch {
         failed++;
+        errors.push({ row: i + 1, email, reason: 'db_error' });
       }
     }
 
-    return NextResponse.json({ success: true, imported, skipped, failed, preservedUnsubscribed, total: contacts.length });
+    return NextResponse.json({
+      success: true,
+      summary: {
+        total: contacts.length,
+        created: imported,
+        updated,
+        skipped,
+        failed,
+        duplicatesInCsv,
+        invalidLocales,
+        preservedUnsubscribed,
+      },
+      // Legacy fields for backward compatibility
+      imported,
+      skipped,
+      failed,
+      preservedUnsubscribed,
+      total: contacts.length,
+      // First 50 errors for debugging (avoid huge payloads)
+      errors: errors.slice(0, 50),
+      supportedLocales: validLocales,
+    });
   } catch (error) {
-    console.error('[MailingList Import] Error:', error);
+    logger.error('[MailingList Import] Error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 });

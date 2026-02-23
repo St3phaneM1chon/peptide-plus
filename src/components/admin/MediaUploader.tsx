@@ -63,12 +63,18 @@ export function MediaUploader({
 
   const config = CONTEXT_CONFIG[context];
 
+  // FIX: F25 - Extract pathname before regex matching to handle Azure Blob URLs with query params
   const getMediaType = (url: string): 'image' | 'video' | 'pdf' | 'unknown' => {
-    const lower = url.toLowerCase();
-    if (/\.(jpe?g|png|gif|webp|avif|svg)(\?|$)/i.test(lower)) return 'image';
-    if (/\.(mp4|webm|ogg|mov)(\?|$)/i.test(lower)) return 'video';
-    if (/\.pdf(\?|$)/i.test(lower)) return 'pdf';
-    if (lower.startsWith('/uploads/') || lower.startsWith('/images/')) return 'image';
+    let pathname: string;
+    try {
+      pathname = new URL(url, 'http://localhost').pathname.toLowerCase();
+    } catch {
+      pathname = url.toLowerCase();
+    }
+    if (/\.(jpe?g|png|gif|webp|avif|svg)$/i.test(pathname)) return 'image';
+    if (/\.(mp4|webm|ogg|mov)$/i.test(pathname)) return 'video';
+    if (/\.pdf$/i.test(pathname)) return 'pdf';
+    if (pathname.startsWith('/uploads/') || pathname.startsWith('/images/')) return 'image';
     return 'unknown';
   };
 
@@ -91,7 +97,7 @@ export function MediaUploader({
     setUploading(true);
     setProgress(0);
 
-    // Animate progress bar
+    // FIX: F91 - TODO: Replace simulated progress with real XMLHttpRequest.upload.onprogress
     const progressInterval = setInterval(() => {
       setProgress(prev => Math.min(prev + 3, 90));
     }, 80);

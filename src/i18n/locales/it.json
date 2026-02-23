@@ -3239,7 +3239,9 @@
       "teamsSetupDesc": "Connect Microsoft Teams for internal order notifications and team alerts. Supports Incoming Webhooks and Graph API.",
       "teamsWebhookLabel": "Incoming Webhook URL",
       "teamsWebhookHint": "Create an Incoming Webhook in your Teams channel and paste the URL here",
-      "teamsOptionalGraphApi": "Optional - only needed for Graph API integration (advanced)"
+      "teamsOptionalGraphApi": "Optional - only needed for Graph API integration (advanced)",
+      "webhookUrl": "Webhook URL",
+      "docs": "Documentazione"
     },
     "emailComposer": {
       "send": "Send",
@@ -5257,6 +5259,10 @@
     "subtitle": "Connettiti con altri ricercatori, condividi esperienze, fai domande e impara dalla comunità.",
     "support": "Supporto",
     "tagsPlaceholder": "es: bpc-157, ricostituzione, principiante",
+    "timeDaysAgo": "{count}g fa",
+    "timeHoursAgo": "{count}h fa",
+    "timeJustNow": "Proprio ora",
+    "timeYesterday": "Ieri",
     "title": "Forum della comunità",
     "tryDifferent": "Prova una ricerca diversa o inizia una nuova discussione!"
   },
@@ -6731,7 +6737,10 @@
       "removeFromWishlist": "Remove from wishlist"
     },
     "youSave": "Risparmi",
-    "researchDisclaimer": "FOR RESEARCH USE ONLY: This product is intended for laboratory and research purposes only. Not for human or animal consumption. By purchasing, you confirm this product will be used exclusively for legitimate research."
+    "researchDisclaimer": "FOR RESEARCH USE ONLY: This product is intended for laboratory and research purposes only. Not for human or animal consumption. By purchasing, you confirm this product will be used exclusively for legitimate research.",
+    "resetFilters": "Reset filters",
+    "retry": "Retry",
+    "productCount": "product"
   },
   "subscriptions": {
     "availableProducts": "Disponibili per abbonamento",

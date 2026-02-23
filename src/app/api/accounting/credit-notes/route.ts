@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
+import { logger } from '@/lib/logger';
 
 // #65 Audit: Valid status transitions for credit notes
 const VALID_CREDIT_NOTE_TRANSITIONS: Record<string, string[]> = {
@@ -99,7 +100,7 @@ export const GET = withAdminGuard(async (request) => {
       pagination: { page, limit, total, pages: Math.ceil(total / limit) },
     });
   } catch (error) {
-    console.error('Get credit notes error:', error);
+    logger.error('Get credit notes error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la recuperation des notes de credit' },
       { status: 500 }

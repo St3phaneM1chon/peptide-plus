@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/accounting/periods
@@ -25,7 +26,7 @@ export const GET = withAdminGuard(async (request) => {
 
     return NextResponse.json({ periods });
   } catch (error) {
-    console.error('Get periods error:', error);
+    logger.error('Get periods error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la récupération des périodes comptables' },
       { status: 500 }
@@ -93,7 +94,7 @@ export const POST = withAdminGuard(async (request) => {
 
     return NextResponse.json({ success: true, period }, { status: 201 });
   } catch (error) {
-    console.error('Create period error:', error);
+    logger.error('Create period error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la création de la période comptable' },
       { status: 500 }
@@ -130,7 +131,7 @@ export const DELETE = withAdminGuard(async (request) => {
 
     return NextResponse.json({ success: true, message: 'Période comptable supprimée' });
   } catch (error) {
-    console.error('Delete period error:', error);
+    logger.error('Delete period error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la suppression de la période comptable' },
       { status: 500 }

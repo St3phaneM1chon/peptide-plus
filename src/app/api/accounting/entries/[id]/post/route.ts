@@ -5,6 +5,7 @@ import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { logAuditTrail } from '@/lib/accounting';
 import { roundCurrency } from '@/lib/financial';
+import { logger } from '@/lib/logger';
 
 /**
  * POST /api/accounting/entries/[id]/post
@@ -91,7 +92,7 @@ export const POST = withAdminGuard(async (_request, { session, params }) => {
       message: `Écriture ${updated.entryNumber} validée avec succès`,
     });
   } catch (error) {
-    console.error('Post entry error:', error);
+    logger.error('Post entry error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la validation' },
       { status: 500 }

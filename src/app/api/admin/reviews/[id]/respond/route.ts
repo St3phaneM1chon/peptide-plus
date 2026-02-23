@@ -9,6 +9,7 @@ import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { prisma } from '@/lib/db';
 import { stripHtml, stripControlChars } from '@/lib/sanitize';
+import { logger } from '@/lib/logger';
 
 export const POST = withAdminGuard(async (request: NextRequest, { session, params }) => {
   try {
@@ -60,7 +61,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session, param
 
     return NextResponse.json({ review: updated });
   } catch (error) {
-    console.error('Error responding to review:', error);
+    logger.error('Error responding to review', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de l\'ajout de la réponse' },
       { status: 500 }

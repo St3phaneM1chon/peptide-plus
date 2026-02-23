@@ -7,9 +7,8 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { validateCsrf } from '@/lib/csrf-middleware';
-import { writeFile, mkdir } from 'fs/promises';
-import { join } from 'path';
-import { existsSync } from 'fs';
+import { storage } from '@/lib/storage';
+import { logger } from '@/lib/logger';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const MAX_IMAGES = 3;
@@ -42,13 +41,6 @@ export async function POST(request: NextRequest) {
 
     const uploadedUrls: string[] = [];
 
-    // TODO: migrate to Azure Blob Storage - local filesystem writes do not persist on Azure App Service
-    // Ensure upload directory exists
-    const uploadDir = join(process.cwd(), 'public', 'uploads', 'reviews');
-    if (!existsSync(uploadDir)) {
-      await mkdir(uploadDir, { recursive: true });
-    }
-
     for (const file of files) {
       // Validate file type
       if (!ALLOWED_TYPES.includes(file.type)) {
@@ -68,7 +60,8 @@ export async function POST(request: NextRequest) {
 
       // Generate unique filename with sanitized extension
       const timestamp = Date.now();
-      const randomString = Math.random().toString(36).substring(2, 8);
+      // FIX: F54 - Use crypto.randomUUID() instead of Math.random() for secure filename generation
+      const { randomUUID } = await import('crypto');
       const rawExtension = file.name.split('.').pop() || '';
       const extension = rawExtension.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() || 'jpg';
       // Only allow known image extensions
@@ -78,7 +71,7 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
       }
-      const filename = `review_${timestamp}_${randomString}.${extension}`;
+      const filename = `review_${timestamp}_${randomUUID().slice(0, 8)}.${extension}`;
 
       // Convert file to buffer and validate magic bytes
       const bytes = await file.arrayBuffer();
@@ -94,16 +87,14 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      const filepath = join(uploadDir, filename);
-      await writeFile(filepath, buffer);
-
-      // Store the public URL
-      uploadedUrls.push(`/uploads/reviews/${filename}`);
+      // FIX (F10): Use StorageService instead of local filesystem (persists on Azure)
+      const result = await storage.upload(buffer, filename, file.type, { folder: 'reviews' });
+      uploadedUrls.push(result.url);
     }
 
     return NextResponse.json({ urls: uploadedUrls });
   } catch (error) {
-    console.error('Error uploading review images:', error);
+    logger.error('Error uploading review images', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to upload images' },
       { status: 500 }

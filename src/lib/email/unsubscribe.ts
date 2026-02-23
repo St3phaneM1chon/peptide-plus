@@ -10,7 +10,7 @@
 
 import * as jose from 'jose';
 
-export type UnsubscribeCategory = 'marketing' | 'transactional' | 'newsletter' | 'all';
+export type UnsubscribeCategory = 'marketing' | 'transactional' | 'newsletter' | 'all' | 'preferences';
 
 const getSecret = () => {
   const secret = process.env.UNSUBSCRIBE_SECRET || process.env.NEXTAUTH_SECRET;
@@ -30,7 +30,7 @@ export async function generateUnsubscribeToken(
 ): Promise<string> {
   const token = await new jose.SignJWT({ email, category, userId })
     .setProtectedHeader({ alg: 'HS256' })
-    .setExpirationTime('365d')
+    .setExpirationTime(process.env.UNSUBSCRIBE_TOKEN_EXPIRATION || '180d')
     .setIssuedAt()
     .sign(getSecret());
 
@@ -50,5 +50,22 @@ export async function generateUnsubscribeUrl(
     process.env.NEXT_PUBLIC_APP_URL ||
     process.env.NEXTAUTH_URL ||
     'https://biocyclepeptides.com';
-  return `${baseUrl}/api/unsubscribe?token=${token}`;
+  return `${baseUrl}/api/unsubscribe?token=${encodeURIComponent(token)}`;
+}
+
+/**
+ * Generate a signed URL for the email preference center.
+ * Uses the same HMAC signing as unsubscribe but with category='preferences'
+ * so the preference center page can verify the token and identify the user.
+ */
+export async function generatePreferenceCenterUrl(
+  email: string,
+  userId?: string,
+): Promise<string> {
+  const token = await generateUnsubscribeToken(email, 'preferences', userId);
+  const baseUrl =
+    process.env.NEXT_PUBLIC_APP_URL ||
+    process.env.NEXTAUTH_URL ||
+    'https://biocyclepeptides.com';
+  return `${baseUrl}/email-preferences?token=${encodeURIComponent(token)}`;
 }

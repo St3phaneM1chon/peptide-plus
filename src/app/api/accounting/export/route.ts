@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { roundCurrency } from '@/lib/financial';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/accounting/export
@@ -69,7 +70,7 @@ export const GET = withAdminGuard(async (request, { session }) => {
     // Log export metrics
     const exportDuration = Date.now() - exportStartTime;
     const exportSizeBytes = new Blob([csv]).size;
-    console.info('Export completed:', {
+    logger.info('Export completed:', {
       type: exportType,
       filename,
       format,
@@ -112,7 +113,7 @@ export const GET = withAdminGuard(async (request, { session }) => {
       },
     });
   } catch (error) {
-    console.error('Export error:', error);
+    logger.error('Export error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: "Erreur lors de l'export" },
       { status: 500 }

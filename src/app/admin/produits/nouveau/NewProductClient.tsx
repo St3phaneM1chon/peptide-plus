@@ -77,9 +77,11 @@ export default function NewProductClient({ categories }: Props) {
     casNumber: '',
     molecularFormula: '',
     storageConditions: '',
-    imageUrl: '/images/products/peptide-default.png',
+    // FIX: BUG-066 - Use empty string for imageUrl default; placeholder shown via component fallback
+    imageUrl: '',
     videoUrl: '',
-    categoryId: categories[0]?.id || '',
+    // FIX: BUG-048 - Don't auto-select first category; force explicit selection
+    categoryId: '',
     isFeatured: false,
     isNew: true,
     isBestseller: false,
@@ -91,6 +93,7 @@ export default function NewProductClient({ categories }: Props) {
   const [editingTextId, setEditingTextId] = useState<string | null>(null);
 
   // Auto-generate slug
+  // TODO: BUG-079 - Add debounced slug uniqueness check via /api/products?slug=xxx
   const handleNameChange = (name: string) => {
     const slug = name
       .toLowerCase()
@@ -104,7 +107,8 @@ export default function NewProductClient({ categories }: Props) {
   // Product texts
   const addProductText = () => {
     const newText: ProductText = {
-      id: `text-${Date.now()}`,
+      // BUG-095 FIX: Use crypto.randomUUID for unique IDs
+      id: `text-${crypto.randomUUID().slice(0, 12)}`,
       name: '',
       title: '',
       subtitle: '',
@@ -180,6 +184,7 @@ export default function NewProductClient({ categories }: Props) {
           purity: formData.purity ? parseFloat(formData.purity) : null,
           molecularWeight: formData.molecularWeight ? parseFloat(formData.molecularWeight as string) : null,
           customSections: productTexts.map(({ id: _id, ...rest }) => rest),
+          // TODO: BUG-047 - Add client-side Zod validation for formats before sending to API
           formats: formats.map(({ id: _id, ...f }) => f),
         }),
       });
@@ -605,7 +610,7 @@ export default function NewProductClient({ categories }: Props) {
                               value={pt.pdfUrl}
                               onChange={(url) => updateProductText(pt.id, 'pdfUrl', url)}
                               context="product-doc"
-                              label="PDF"
+                              label={t('admin.productForm.pdf') || 'PDF'} // FIX: BUG-050 - Use i18n key instead of hardcoded string
                               previewSize="sm"
                             />
                           </div>
@@ -614,7 +619,7 @@ export default function NewProductClient({ categories }: Props) {
                               value={pt.imageUrl}
                               onChange={(url) => updateProductText(pt.id, 'imageUrl', url)}
                               context="product-image"
-                              label="Image"
+                              label={t('admin.productForm.image') || 'Image'} // FIX: BUG-050 - Use i18n key instead of hardcoded string
                               previewSize="sm"
                             />
                           </div>

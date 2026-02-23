@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
+import { logger } from '@/lib/logger';
 import { UserRole } from '@/types';
 import { withTranslations, getTranslatedFieldsBatch, enqueue, DB_SOURCE_LOCALE } from '@/lib/translation';
 import { isValidLocale, defaultLocale } from '@/i18n/config';
@@ -307,7 +308,7 @@ export async function GET(request: NextRequest) {
       cacheControl: 'public, s-maxage=300, stale-while-revalidate=600',
     });
   } catch (error) {
-    console.error('Error fetching products:', error);
+    logger.error('Error fetching products', { error: error instanceof Error ? error.message : String(error) });
     return apiError('Erreur lors de la récupération des produits', ErrorCode.INTERNAL_ERROR, { request });
   }
 }
@@ -342,6 +343,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // BUG-001 FIX: Use validated data from Zod instead of raw body to prevent field injection
     const {
       // Base
       name: rawName,
@@ -388,13 +390,13 @@ export async function POST(request: NextRequest) {
       // Relations
       images,
       formats,
-    } = body;
+    } = validation.data;
 
     // BE-SEC-03: Sanitize product name (strip HTML to prevent stored XSS in admin views)
     const name = stripControlChars(stripHtml(String(rawName))).trim();
 
-    // Validation (Zod already checked required fields, this is a safety net)
-    if (!name || !slug || !price || !categoryId) {
+    // BUG-014 FIX: Use explicit null/undefined checks instead of falsy checks (price=0 is valid for free samples)
+    if (!name || !slug || (price === undefined || price === null) || !categoryId) {
       return apiError('Champs requis: name, slug, price, categoryId', ErrorCode.MISSING_FIELD, { request });
     }
 
@@ -418,7 +420,7 @@ export async function POST(request: NextRequest) {
         description,
         fullDetails,
         specifications,
-        productType: productType || 'DIGITAL',
+        productType: productType || 'PEPTIDE',
         // Prix
         price,
         compareAtPrice,
@@ -510,7 +512,7 @@ export async function POST(request: NextRequest) {
 
     return apiSuccess({ product }, { status: 201, request });
   } catch (error) {
-    console.error('Error creating product:', error);
+    logger.error('Error creating product', { error: error instanceof Error ? error.message : String(error) });
     return apiError('Erreur lors de la création du produit', ErrorCode.INTERNAL_ERROR, { request });
   }
 }

@@ -5,6 +5,7 @@
 
 import { prisma } from './db';
 import { createSecurityLog } from './security';
+import { logger } from '@/lib/logger';
 
 // Configuration conforme NYDFS
 const SESSION_INACTIVITY_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes (requis NYDFS)
@@ -124,31 +125,32 @@ export async function detectSessionAnomaly(
 
   // Changement d'IP
   if (storedMetadata.ipAddress !== currentMetadata.ipAddress) {
-    console.log(createSecurityLog('warn', 'session_ip_change', {
+    logger.warn('session_ip_change', {
       sessionId,
       oldIp: storedMetadata.ipAddress,
       newIp: currentMetadata.ipAddress,
-    }));
+    });
     return { anomaly: true, type: 'ip_change' };
   }
 
   // Changement de User-Agent
   if (storedMetadata.userAgent !== currentMetadata.userAgent) {
-    console.log(createSecurityLog('warn', 'session_user_agent_change', {
+    logger.warn('session_user_agent_change', {
       sessionId,
       oldUserAgent: storedMetadata.userAgent,
       newUserAgent: currentMetadata.userAgent,
-    }));
+    });
     return { anomaly: true, type: 'user_agent_change' };
   }
 
   // Changement de pays
   if (storedMetadata.country && storedMetadata.country !== currentMetadata.country) {
-    console.log(createSecurityLog('critical', 'session_country_change', {
+    logger.warn('session_country_change', {
       sessionId,
       oldCountry: storedMetadata.country,
       newCountry: currentMetadata.country,
-    }));
+      severity: 'critical',
+    });
     return { anomaly: true, type: 'country_change' };
   }
 
@@ -183,7 +185,7 @@ export async function invalidateAllUserSessions(userId: string): Promise<void> {
     },
   });
 
-  console.log(createSecurityLog('info', 'all_sessions_invalidated', { userId }));
+  logger.info('all_sessions_invalidated', { userId });
 }
 
 // ============================================
@@ -277,22 +279,18 @@ export async function enforceMaxSessions(
       },
     });
 
-    console.log(
-      createSecurityLog('info', 'max_sessions_enforced', {
+    logger.info('max_sessions_enforced', {
         userId,
         maxSessions,
         existingCount: existingSessions.length,
         deletedCount: sessionsToRemove,
-      })
-    );
+    });
   } catch (error) {
     // Resilient: log the error but do not block the login flow
-    console.error(
-      createSecurityLog('error', 'enforce_max_sessions_failed', {
+    logger.error('enforce_max_sessions_failed', {
         userId,
         error: error instanceof Error ? error.message : String(error),
-      })
-    );
+    });
   }
 }
 
@@ -308,6 +306,13 @@ export function cleanupExpiredSessions(): void {
       invalidateSession(sessionId);
     }
   }
+
+  // FAILLE-060 FIX: Also cleanup expired sessions in the database
+  import('@/lib/db').then(({ prisma }) => {
+    prisma.session.deleteMany({
+      where: { expires: { lt: new Date() } },
+    }).catch((e: Error) => logger.error('DB session cleanup failed', { error: e.message }));
+  }).catch(() => {});
 }
 
 // Nettoyage toutes les 5 minutes

@@ -75,7 +75,9 @@ function categoryForCode(code: string): { category: GifiCategoryKey; range: stri
   if (num >= 2600 && num <= 3139) return { category: 'CURRENT_LIABILITIES', range: '2600-3139' };
   if (num >= 3140 && num <= 3449) return { category: 'LONG_TERM_LIABILITIES', range: '3140-3449' };
   if (num >= 3450 && num <= 3620) return { category: 'EQUITY', range: '3450-3620' };
-  if (num >= 3621 && num <= 3849) return { category: 'EQUITY', range: '3450-3620' };
+  // FIX: F071 - Range label was inaccurate ('3450-3620' for codes 3621-3849).
+  // CRA GIFI codes 3621-3849 are indeed EQUITY but form their own sub-range.
+  if (num >= 3621 && num <= 3849) return { category: 'EQUITY', range: '3621-3849' };
   if (num >= 7000 && num <= 8089) return { category: 'REVENUE', range: '7000-8089' };
   if (num >= 8090 && num <= 8518) return { category: 'COST_OF_SALES', range: '8090-8518' };
   if (num >= 8519 && num <= 9369) return { category: 'OPERATING_EXPENSES', range: '8519-9369' };

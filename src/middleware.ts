@@ -1,23 +1,28 @@
 /**
  * MIDDLEWARE NEXT.JS
  * Gestion des locales, authentification et permissions granulaires
+ *
+ * TODO: FAILLE-082 - No DB schema verification at startup; add health check with prisma.$queryRaw for critical tables
+ * TODO: FAILLE-089 - No helmet/next-secure-headers package; consider adding centralized security headers management
  */
 
 import { NextResponse, type NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 import { defaultLocale, isValidLocale, type Locale, getLocaleFromHeaders } from '@/i18n/config';
+import { roleHasPermission } from '@/lib/permission-constants';
 
-// Lightweight UUID v4 generator for Edge runtime (no crypto.randomUUID in all runtimes)
+// FAILLE-099 FIX: Use crypto.getRandomValues fallback instead of Math.random
 function generateRequestId(): string {
   try {
     return crypto.randomUUID();
   } catch {
-    // Fallback for environments without crypto.randomUUID
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-      const r = (Math.random() * 16) | 0;
-      const v = c === 'x' ? r : (r & 0x3) | 0x8;
-      return v.toString(16);
-    });
+    // Fallback using crypto.getRandomValues (available in Edge runtime)
+    const bytes = new Uint8Array(16);
+    crypto.getRandomValues(bytes);
+    bytes[6] = (bytes[6] & 0x0f) | 0x40; // version 4
+    bytes[8] = (bytes[8] & 0x3f) | 0x80; // variant 1
+    const hex = Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+    return `${hex.slice(0,8)}-${hex.slice(8,12)}-${hex.slice(12,16)}-${hex.slice(16,20)}-${hex.slice(20)}`;
   }
 }
 
@@ -62,6 +67,8 @@ const ADMIN_ROUTE_PERMISSIONS: Record<string, string> = {
   '/admin/comptabilite': 'accounting.view',
   '/admin/permissions': 'users.manage_permissions',
   '/admin/settings': 'admin.settings',
+  // FAILLE-061 FIX: Restrict audit logs to users with audit_log permission
+  '/admin/logs': 'admin.audit_log',
 };
 
 // Routes admin/owner uniquement
@@ -70,32 +77,8 @@ const ownerRoutes = ['/owner'];
 // Routes pour les clients (compagnies)
 const clientRoutes = ['/client', '/dashboard/client'];
 
-// Role-based default permissions (lightweight subset for middleware - no DB queries)
-// This mirrors ROLE_DEFAULTS from src/lib/permissions.ts but is kept small for edge runtime.
-const EMPLOYEE_PERMISSIONS = new Set([
-  'products.view', 'products.create', 'products.edit', 'products.manage_formats', 'products.manage_images', 'products.manage_inventory',
-  'categories.view', 'categories.create', 'categories.edit',
-  'orders.view', 'orders.edit', 'orders.export',
-  'users.view',
-  'cms.pages.view', 'cms.pages.create', 'cms.pages.edit', 'cms.faq.manage', 'cms.blog.manage', 'cms.hero.manage',
-  'accounting.view',
-  'shipping.view', 'shipping.update_status',
-  'marketing.promos.manage', 'marketing.discounts.manage', 'marketing.newsletter.manage',
-  'chat.view', 'chat.respond',
-  'media.view', 'media.upload',
-  'analytics.view',
-  'seo.edit',
-]);
-
-/**
- * Check if a role has a given permission code (fast, no DB).
- * For fine-grained per-user overrides, the page-level check via hasPermission() is authoritative.
- */
-function roleHasPermission(role: string, permissionCode: string): boolean {
-  if (role === 'OWNER') return true;
-  if (role === 'EMPLOYEE') return EMPLOYEE_PERMISSIONS.has(permissionCode);
-  return false;
-}
+// FAILLE-009: EMPLOYEE_PERMISSIONS and roleHasPermission moved to
+// src/lib/permission-constants.ts (single source of truth)
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -114,6 +97,7 @@ export async function middleware(request: NextRequest) {
   // Skip health checks from logging to avoid noise
   const isHealthCheck = pathname === '/api/health';
   if (!isHealthCheck) {
+    // TODO: FAILLE-081 - 10% sampling silences 90% of requests; use structured logging service with configurable sampling
     // In production sample at 10%, in dev log all
     const isProduction = process.env.NODE_ENV === 'production';
     const shouldLog = !isProduction || Math.random() < 0.1;
@@ -127,8 +111,13 @@ export async function middleware(request: NextRequest) {
         method: request.method,
         path: pathname,
         requestId,
-        userAgent: request.headers.get('user-agent')?.substring(0, 100),
-        ip: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip'),
+        // FAILLE-064 FIX: Increase UA truncation from 100 to 256 for better anomaly detection
+        userAgent: request.headers.get('user-agent')?.substring(0, 256),
+        // FAILLE-063 FIX: Validate IP format before logging to prevent log injection
+        ip: (() => {
+          const raw = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip');
+          return raw && /^[\d.:a-fA-F]{3,45}$/.test(raw) ? raw : undefined;
+        })(),
         timestamp: new Date().toISOString(),
       };
       console.log(JSON.stringify(logEntry));
@@ -142,8 +131,10 @@ export async function middleware(request: NextRequest) {
       const preflightResponse = new NextResponse(null, { status: 204 });
       preflightResponse.headers.set('Access-Control-Allow-Origin', process.env.NEXT_PUBLIC_APP_URL || 'https://biocyclepeptides.com');
       preflightResponse.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-      preflightResponse.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-idempotency-key, x-request-id');
-      preflightResponse.headers.set('Access-Control-Max-Age', '86400');
+      // AMELIORATION SYS-001: Include x-csrf-token in CORS allowed headers for cross-origin CSRF protection
+      preflightResponse.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-idempotency-key, x-request-id, x-csrf-token');
+      // FAILLE-080 FIX: Reduce CORS preflight cache to 1h (was 24h) for faster CORS policy updates
+      preflightResponse.headers.set('Access-Control-Max-Age', '3600');
       preflightResponse.headers.set('x-request-id', requestId);
       return preflightResponse;
     }
@@ -152,7 +143,7 @@ export async function middleware(request: NextRequest) {
     res.headers.set('x-request-id', requestId);
     res.headers.set('Access-Control-Allow-Origin', process.env.NEXT_PUBLIC_APP_URL || 'https://biocyclepeptides.com');
     res.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-    res.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-idempotency-key, x-request-id');
+    res.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-idempotency-key, x-request-id, x-csrf-token');
     return res;
   }
 
@@ -185,11 +176,16 @@ export async function middleware(request: NextRequest) {
   // Récupérer le token d'authentification
   // Cookie name matches the explicit config in auth-config.ts (no __Secure- prefix)
   // to avoid name mismatch on Azure where TLS terminates at the load balancer.
+  // FAILLE-023 FIX: Warn if no auth secret is configured
+  if (!process.env.AUTH_SECRET && !process.env.NEXTAUTH_SECRET) {
+    console.warn(JSON.stringify({ event: 'middleware_no_auth_secret', pathname }));
+  }
   let token = null;
   try {
     token = await getToken({
       req: request,
-      secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
+      // FAILLE-023 FIX: Use AUTH_SECRET with NEXTAUTH_SECRET fallback (both are valid)
+      secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
       secureCookie: false,
       cookieName: 'authjs.session-token',
     });
@@ -300,6 +296,12 @@ export async function middleware(request: NextRequest) {
     url.pathname = '/';
     return NextResponse.redirect(url);
   }
+
+  // AMELIORATION SYS-002: Security headers to mitigate XSS, clickjacking, MIME sniffing
+  response.headers.set('X-Content-Type-Options', 'nosniff');
+  response.headers.set('X-Frame-Options', 'DENY');
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
 
   return response;
 }

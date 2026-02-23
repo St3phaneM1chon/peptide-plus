@@ -9,6 +9,7 @@ import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { getPayPalAccessToken, PAYPAL_API_URL } from '@/lib/paypal';
 import { validateCsrf } from '@/lib/csrf-middleware';
+import { logger } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
   try {
@@ -130,7 +131,7 @@ export async function POST(request: NextRequest) {
     const orderData = await orderResponse.json();
 
     if (orderData.error) {
-      console.error('PayPal error:', orderData.error);
+      logger.error('PayPal error', { error: orderData.error });
       return NextResponse.json({ error: 'Erreur PayPal' }, { status: 500 });
     }
 
@@ -160,7 +161,7 @@ export async function POST(request: NextRequest) {
       approvalUrl,
     });
   } catch (error) {
-    console.error('Error creating PayPal order:', error);
+    logger.error('Error creating PayPal order', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la création de la commande PayPal' },
       { status: 500 }

@@ -87,7 +87,8 @@ export default function QuickViewModal({ slug, isOpen, onClose }: QuickViewModal
     };
 
     fetchProduct();
-  }, [isOpen, slug, onClose]);
+  // BUG-046 FIX: Include locale in dependency array
+  }, [isOpen, slug, onClose, locale]);
 
   // Close on Escape key + focus trap
   const handleKeyDown = useCallback(
@@ -359,7 +360,8 @@ export default function QuickViewModal({ slug, isOpen, onClose }: QuickViewModal
                   </button>
                   <span className="w-12 text-center text-lg font-medium">{quantity}</span>
                   <button
-                    onClick={() => setQuantity(quantity + 1)}
+                    // BUG-029 FIX: Cap quantity at selected format's stock level
+                    onClick={() => setQuantity(Math.min(quantity + 1, selectedFormat?.stockQuantity || 99))}
                     aria-label={t('shop.aria.increaseQuantity')}
                     className="w-10 h-10 flex items-center justify-center text-neutral-600 hover:bg-neutral-100"
                   >

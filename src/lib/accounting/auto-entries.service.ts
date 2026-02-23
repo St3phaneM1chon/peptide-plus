@@ -73,13 +73,19 @@ interface StripePayoutData {
   currency: string;
 }
 
+// FIX: F018 - Use crypto.randomUUID() instead of Date.now() for temporary IDs
 // generateEntryNumber returns a temporary placeholder entry number.
 // The real entry number is generated atomically in the API route using
 // SELECT MAX(entryNumber) FOR UPDATE inside a transaction before persisting,
 // to avoid duplicates across concurrent requests and server restarts.
 // (see webhook-accounting.service.ts getNextEntryNumber())
 function generateEntryNumber(): string {
-  return `TEMP-${Date.now()}`;
+  return `TEMP-${crypto.randomUUID()}`;
+}
+
+// FIX: F018 - Helper to generate unique line/entry IDs with crypto.randomUUID()
+function uniqueId(prefix: string): string {
+  return `${prefix}-${crypto.randomUUID()}`;
 }
 
 /**
@@ -160,7 +166,7 @@ export function generateSaleEntry(order: OrderData): JournalEntry {
 
   // DEBIT: Bank account for total received
   lines.push({
-    id: `line-${Date.now()}-1`,
+    id: `${uniqueId('line')}-1`,
     accountCode: bankAccount,
     accountName: getAccountName(bankAccount),
     description: `Paiement reçu commande ${order.orderNumber}`,
@@ -170,7 +176,7 @@ export function generateSaleEntry(order: OrderData): JournalEntry {
 
   // CREDIT: Sales revenue (before taxes)
   lines.push({
-    id: `line-${Date.now()}-2`,
+    id: `${uniqueId('line')}-2`,
     accountCode: salesAccount,
     accountName: getAccountName(salesAccount),
     description: `Vente ${order.orderNumber}`,
@@ -181,7 +187,7 @@ export function generateSaleEntry(order: OrderData): JournalEntry {
   // CREDIT: Shipping charged to customer
   if (order.shipping > 0) {
     lines.push({
-      id: `line-${Date.now()}-3`,
+      id: `${uniqueId('line')}-3`,
       accountCode: ACCOUNT_CODES.SHIPPING_CHARGED,
       accountName: 'Frais de livraison facturés',
       description: `Frais livraison ${order.orderNumber}`,
@@ -193,7 +199,7 @@ export function generateSaleEntry(order: OrderData): JournalEntry {
   // CREDIT: TPS payable
   if (order.tps > 0) {
     lines.push({
-      id: `line-${Date.now()}-4`,
+      id: `${uniqueId('line')}-4`,
       accountCode: ACCOUNT_CODES.TPS_PAYABLE,
       accountName: 'TPS à payer',
       description: `TPS sur ${order.orderNumber}`,
@@ -205,7 +211,7 @@ export function generateSaleEntry(order: OrderData): JournalEntry {
   // CREDIT: TVQ payable
   if (order.tvq > 0) {
     lines.push({
-      id: `line-${Date.now()}-5`,
+      id: `${uniqueId('line')}-5`,
       accountCode: ACCOUNT_CODES.TVQ_PAYABLE,
       accountName: 'TVQ à payer',
       description: `TVQ sur ${order.orderNumber}`,
@@ -217,7 +223,7 @@ export function generateSaleEntry(order: OrderData): JournalEntry {
   // CREDIT: TVH payable (for other provinces)
   if (order.tvh > 0) {
     lines.push({
-      id: `line-${Date.now()}-6`,
+      id: `${uniqueId('line')}-6`,
       accountCode: ACCOUNT_CODES.TVH_PAYABLE,
       accountName: 'TVH à payer',
       description: `TVH sur ${order.orderNumber}`,
@@ -229,7 +235,7 @@ export function generateSaleEntry(order: OrderData): JournalEntry {
   // CREDIT: PST payable (BC, SK, MB) — separate from TVQ, uses account PST_PAYABLE (2150)
   if (order.pst && order.pst > 0) {
     lines.push({
-      id: `line-${Date.now()}-7`,
+      id: `${uniqueId('line')}-7`,
       accountCode: ACCOUNT_CODES.PST_PAYABLE,
       accountName: 'PST à payer',
       description: `PST sur ${order.orderNumber}`,
@@ -241,7 +247,7 @@ export function generateSaleEntry(order: OrderData): JournalEntry {
   // DEBIT: Discount given (contra-revenue)
   if (order.discount > 0) {
     lines.push({
-      id: `line-${Date.now()}-8`,
+      id: `${uniqueId('line')}-8`,
       accountCode: ACCOUNT_CODES.DISCOUNTS_RETURNS,
       accountName: 'Remises et retours',
       description: `Rabais ${order.orderNumber}`,
@@ -251,7 +257,7 @@ export function generateSaleEntry(order: OrderData): JournalEntry {
   }
 
   return {
-    id: `entry-${Date.now()}`,
+    id: `${uniqueId('entry')}`,
     entryNumber: generateEntryNumber(),
     date: order.date,
     description: `Vente en ligne ${order.orderNumber} - ${order.customer.name}`,
@@ -298,7 +304,7 @@ export function generateFeeEntry(
 
   const lines: JournalLine[] = [
     {
-      id: `line-${Date.now()}-1`,
+      id: `${uniqueId('line')}-1`,
       accountCode: feeAccount,
       accountName: getAccountName(feeAccount),
       description: `Frais ${paymentMethod} sur ${orderNumber}`,
@@ -306,7 +312,7 @@ export function generateFeeEntry(
       credit: 0,
     },
     {
-      id: `line-${Date.now()}-2`,
+      id: `${uniqueId('line')}-2`,
       accountCode: bankAccount,
       accountName: getAccountName(bankAccount),
       description: `Frais ${paymentMethod} sur ${orderNumber}`,
@@ -316,7 +322,7 @@ export function generateFeeEntry(
   ];
 
   return {
-    id: `entry-fee-${Date.now()}`,
+    id: `${uniqueId('entry-fee')}`,
     entryNumber: generateEntryNumber(),
     date,
     description: `Frais ${paymentMethod} - Commande ${orderNumber}`,
@@ -357,7 +363,7 @@ export function generateRefundEntry(refund: RefundData): JournalEntry {
 
   // DEBIT: Discounts/Returns (contra-revenue)
   lines.push({
-    id: `line-${Date.now()}-1`,
+    id: `${uniqueId('line')}-1`,
     accountCode: ACCOUNT_CODES.DISCOUNTS_RETURNS,
     accountName: 'Remises et retours',
     description: `Remboursement ${refund.orderNumber}`,
@@ -368,7 +374,7 @@ export function generateRefundEntry(refund: RefundData): JournalEntry {
   // DEBIT: TPS payable (reverse)
   if (refund.tps > 0) {
     lines.push({
-      id: `line-${Date.now()}-2`,
+      id: `${uniqueId('line')}-2`,
       accountCode: ACCOUNT_CODES.TPS_PAYABLE,
       accountName: 'TPS à payer',
       description: `TPS remboursée ${refund.orderNumber}`,
@@ -380,7 +386,7 @@ export function generateRefundEntry(refund: RefundData): JournalEntry {
   // DEBIT: TVQ payable (reverse)
   if (refund.tvq > 0) {
     lines.push({
-      id: `line-${Date.now()}-3`,
+      id: `${uniqueId('line')}-3`,
       accountCode: ACCOUNT_CODES.TVQ_PAYABLE,
       accountName: 'TVQ à payer',
       description: `TVQ remboursée ${refund.orderNumber}`,
@@ -392,7 +398,7 @@ export function generateRefundEntry(refund: RefundData): JournalEntry {
   // DEBIT: TVH payable (reverse)
   if (refund.tvh > 0) {
     lines.push({
-      id: `line-${Date.now()}-4`,
+      id: `${uniqueId('line')}-4`,
       accountCode: ACCOUNT_CODES.TVH_PAYABLE,
       accountName: 'TVH à payer',
       description: `TVH remboursée ${refund.orderNumber}`,
@@ -403,7 +409,7 @@ export function generateRefundEntry(refund: RefundData): JournalEntry {
 
   // CREDIT: Bank account
   lines.push({
-    id: `line-${Date.now()}-5`,
+    id: `${uniqueId('line')}-5`,
     accountCode: bankAccount,
     accountName: getAccountName(bankAccount),
     description: `Remboursement ${refund.orderNumber}`,
@@ -412,7 +418,7 @@ export function generateRefundEntry(refund: RefundData): JournalEntry {
   });
 
   return {
-    id: `entry-refund-${Date.now()}`,
+    id: `${uniqueId('entry-refund')}`,
     entryNumber: generateEntryNumber(),
     date: refund.date,
     description: `Remboursement ${refund.orderNumber} - ${refund.reason}`,
@@ -434,7 +440,7 @@ export function generateStripePayoutEntry(payout: StripePayoutData): JournalEntr
   const lines: JournalLine[] = [
     // DEBIT: Main bank account
     {
-      id: `line-${Date.now()}-1`,
+      id: `${uniqueId('line')}-1`,
       accountCode: ACCOUNT_CODES.CASH_BANK_MAIN,
       accountName: 'Compte bancaire principal',
       description: `Virement Stripe ${payout.id}`,
@@ -443,7 +449,7 @@ export function generateStripePayoutEntry(payout: StripePayoutData): JournalEntr
     },
     // CREDIT: Stripe account
     {
-      id: `line-${Date.now()}-2`,
+      id: `${uniqueId('line')}-2`,
       accountCode: ACCOUNT_CODES.CASH_STRIPE,
       accountName: 'Compte Stripe',
       description: `Virement vers banque ${payout.id}`,
@@ -453,11 +459,15 @@ export function generateStripePayoutEntry(payout: StripePayoutData): JournalEntr
   ];
 
   return {
-    id: `entry-payout-${Date.now()}`,
+    id: `${uniqueId('entry-payout')}`,
     entryNumber: generateEntryNumber(),
     date: payout.date,
     description: `Virement Stripe vers banque - ${payout.net.toFixed(2)} ${payout.currency}`,
-    type: 'AUTO_SALE', // Using AUTO_SALE for transfers
+    // FIX: F011 - Use ADJUSTMENT instead of AUTO_SALE for Stripe payouts (bank transfers).
+    // AUTO_SALE misrepresents the nature of a payout (it's a fund transfer, not a sale).
+    // If a dedicated AUTO_PAYOUT type is added to the JournalEntryType enum in the future,
+    // this should be updated to use it.
+    type: 'ADJUSTMENT',
     status: 'POSTED',
     reference: payout.id,
     lines,
@@ -480,7 +490,7 @@ export function generateRecurringEntry(
 ): JournalEntry {
   const lines: JournalLine[] = [
     {
-      id: `line-${Date.now()}-1`,
+      id: `${uniqueId('line')}-1`,
       accountCode: debitAccount,
       accountName: getAccountName(debitAccount),
       description,
@@ -488,7 +498,7 @@ export function generateRecurringEntry(
       credit: 0,
     },
     {
-      id: `line-${Date.now()}-2`,
+      id: `${uniqueId('line')}-2`,
       accountCode: creditAccount,
       accountName: getAccountName(creditAccount),
       description,
@@ -498,7 +508,7 @@ export function generateRecurringEntry(
   ];
 
   return {
-    id: `entry-recurring-${Date.now()}`,
+    id: `${uniqueId('entry-recurring')}`,
     entryNumber: generateEntryNumber(),
     date,
     description,
@@ -659,6 +669,9 @@ export function validateEntry(entry: JournalEntry): { valid: boolean; difference
 /**
  * Get account name from account code
  */
+// FIX: F069 - Added missing account names for PST_PAYABLE, INTL_TAX_PAYABLE,
+// ACCOUNTS_RECEIVABLE_INTL, INVENTORY, ACCOUNTS_PAYABLE, and other ACCOUNT_CODES entries
+// that were previously falling through to the generic `Compte ${code}` fallback.
 function getAccountName(code: string): string {
   const names: Record<string, string> = {
     [ACCOUNT_CODES.CASH_BANK_MAIN]: 'Compte bancaire principal (CAD)',
@@ -667,22 +680,42 @@ function getAccountName(code: string): string {
     [ACCOUNT_CODES.CASH_STRIPE]: 'Compte Stripe',
     [ACCOUNT_CODES.ACCOUNTS_RECEIVABLE_CA]: 'Comptes clients Canada',
     [ACCOUNT_CODES.ACCOUNTS_RECEIVABLE_US]: 'Comptes clients USA',
+    [ACCOUNT_CODES.ACCOUNTS_RECEIVABLE_INTL]: 'Comptes clients International',
+    [ACCOUNT_CODES.INVENTORY]: 'Inventaire',
+    [ACCOUNT_CODES.INVENTORY_IN_TRANSIT]: 'Inventaire en transit',
+    [ACCOUNT_CODES.INVENTORY_OBSOLESCENCE]: 'Provision pour désuétude',
+    [ACCOUNT_CODES.PREPAID_EXPENSES]: 'Charges payées d\'avance',
+    [ACCOUNT_CODES.EQUIPMENT]: 'Équipement',
+    [ACCOUNT_CODES.ACCUMULATED_DEPRECIATION]: 'Amortissement cumulé',
+    [ACCOUNT_CODES.ACCOUNTS_PAYABLE]: 'Comptes fournisseurs',
     [ACCOUNT_CODES.TPS_PAYABLE]: 'TPS à payer',
     [ACCOUNT_CODES.TVQ_PAYABLE]: 'TVQ à payer',
     [ACCOUNT_CODES.TVH_PAYABLE]: 'TVH à payer',
+    [ACCOUNT_CODES.PST_PAYABLE]: 'TVP à payer',
+    [ACCOUNT_CODES.INTL_TAX_PAYABLE]: 'Taxes internationales à payer',
+    [ACCOUNT_CODES.DEFERRED_REVENUE]: 'Revenus reportés',
+    [ACCOUNT_CODES.SHARE_CAPITAL]: 'Capital-actions',
+    [ACCOUNT_CODES.RETAINED_EARNINGS]: 'Bénéfices non répartis',
     [ACCOUNT_CODES.SALES_CANADA]: 'Ventes Canada',
     [ACCOUNT_CODES.SALES_USA]: 'Ventes USA',
     [ACCOUNT_CODES.SALES_EUROPE]: 'Ventes Europe',
     [ACCOUNT_CODES.SALES_OTHER]: 'Ventes autres pays',
     [ACCOUNT_CODES.SHIPPING_CHARGED]: 'Frais de livraison facturés',
     [ACCOUNT_CODES.DISCOUNTS_RETURNS]: 'Remises et retours',
+    [ACCOUNT_CODES.PURCHASES]: 'Achats',
+    [ACCOUNT_CODES.CUSTOMS_DUTIES]: 'Droits de douane',
+    [ACCOUNT_CODES.INBOUND_SHIPPING]: 'Frais de livraison entrants',
     [ACCOUNT_CODES.STRIPE_FEES]: 'Frais Stripe',
     [ACCOUNT_CODES.PAYPAL_FEES]: 'Frais PayPal',
     [ACCOUNT_CODES.BANK_FEES]: 'Frais bancaires',
     [ACCOUNT_CODES.DEPRECIATION]: 'Amortissement',
-    [ACCOUNT_CODES.ACCUMULATED_DEPRECIATION]: 'Amortissement cumulé',
+    [ACCOUNT_CODES.FX_GAINS_LOSSES]: 'Gains/pertes de change',
+    [ACCOUNT_CODES.FX_LOSS]: 'Pertes de change',
+    [ACCOUNT_CODES.FX_GAIN]: 'Gains de change',
+    [ACCOUNT_CODES.INTEREST_INCOME]: 'Revenus d\'intérêts',
+    [ACCOUNT_CODES.INTEREST_EXPENSE]: 'Charges d\'intérêts',
   };
-  
+
   return names[code] || `Compte ${code}`;
 }
 

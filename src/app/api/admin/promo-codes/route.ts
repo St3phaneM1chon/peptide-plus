@@ -1,5 +1,7 @@
 export const dynamic = 'force-dynamic';
 
+// TODO: F-073 - usageCount field and _count.usages are two sources of truth; use only _count.usages or sync via trigger
+
 /**
  * Admin Promo Codes API
  * GET  - List all promo codes with usage stats
@@ -11,6 +13,7 @@ import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { createPromoCodeSchema } from '@/lib/validations/promo-code';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { logger } from '@/lib/logger';
 
 // GET /api/admin/promo-codes - List all promo codes with usage counts
 export const GET = withAdminGuard(async (request, { session }) => {
@@ -67,7 +70,7 @@ export const GET = withAdminGuard(async (request, { session }) => {
       },
     });
   } catch (error) {
-    console.error('Admin promo-codes GET error:', error);
+    logger.error('Admin promo-codes GET error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -157,7 +160,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       },
     }, { status: 201 });
   } catch (error) {
-    console.error('Admin promo-codes POST error:', error);
+    logger.error('Admin promo-codes POST error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

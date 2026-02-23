@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Globe, Pencil, FileCode, BarChart3, Save } from 'lucide-react';
 import {
   PageHeader,
@@ -50,11 +50,8 @@ export default function SEOPage() {
   const [editingRobots, setEditingRobots] = useState(false);
   const [robotsContent, setRobotsContent] = useState('');
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
+  // FIX: FLAW-055 - Wrap fetchData in useCallback for stable reference
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       const res = await fetch('/api/admin/seo');
@@ -110,7 +107,12 @@ export default function SEOPage() {
     } finally {
       setLoading(false);
     }
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [t]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   // Save global settings + analytics to API
   const saveSettings = async () => {
@@ -221,6 +223,14 @@ export default function SEOPage() {
           }),
         },
       }),
+    }).then((res) => {
+      // FLAW-051 FIX: Add success feedback for toggleNoIndex
+      if (res && res.ok) {
+        toast.success(t('admin.seo.settingsSaved'));
+      } else if (res) {
+        toast.error(t('common.errorOccurred'));
+        setPages((prev) => prev.map((p) => (p.id === id ? { ...p, noIndex: !newNoIndex } : p)));
+      }
     }).catch(() => {
       toast.error(t('common.errorOccurred'));
       // Revert on failure
@@ -481,6 +491,7 @@ Sitemap: ${globalSettings.siteUrl}/sitemap.xml`}
                 placeholder={t('admin.seo.keywordsPlaceholder')}
               />
             </FormField>
+            {/* FIX: FLAW-085 - TODO: Replace plain Input with MediaUploader component for consistent OG image selection */}
             <FormField label={t('admin.seo.ogImage')}>
               <Input
                 type="text"

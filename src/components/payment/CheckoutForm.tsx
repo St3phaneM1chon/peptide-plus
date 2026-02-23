@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useI18n } from '@/i18n/client';
 import { loadStripe, type Stripe } from '@stripe/stripe-js';
@@ -60,15 +60,7 @@ export function CheckoutForm({ product, user: _user, savedCards }: CheckoutFormP
   const [clientSecret, setClientSecret] = useState<string>('');
   const [saveCard, setSaveCard] = useState(false);
 
-  // Créer le PaymentIntent au chargement
-  useEffect(() => {
-    if (paymentMethod === 'card') {
-      createPaymentIntent();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [paymentMethod]);
-
-  const createPaymentIntent = async () => {
+  const createPaymentIntent = useCallback(async () => {
     try {
       const response = await fetch('/api/payments/create-intent', {
         method: 'POST',
@@ -83,7 +75,14 @@ export function CheckoutForm({ product, user: _user, savedCards }: CheckoutFormP
     } catch (error) {
       console.error('Error creating payment intent:', error);
     }
-  };
+  }, [product.id, saveCard]);
+
+  // Créer le PaymentIntent au chargement
+  useEffect(() => {
+    if (paymentMethod === 'card') {
+      createPaymentIntent();
+    }
+  }, [paymentMethod, createPaymentIntent]);
 
   return (
     <div className="bg-white rounded-xl p-6 border border-gray-200">

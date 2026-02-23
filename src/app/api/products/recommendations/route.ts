@@ -12,6 +12,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { logger } from '@/lib/logger';
 
 interface ProductRecommendation {
   id: string;
@@ -33,7 +34,8 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const productIdsParam = searchParams.get('productIds');
-    const limit = parseInt(searchParams.get('limit') || '4');
+    // FIX: Bound limit to prevent abuse
+    const limit = Math.min(Math.max(1, parseInt(searchParams.get('limit') || '4', 10)), 20);
 
     if (!productIdsParam) {
       return NextResponse.json(
@@ -219,7 +221,7 @@ export async function GET(request: NextRequest) {
       }
     );
   } catch (error) {
-    console.error('Recommendations error:', error);
+    logger.error('Recommendations error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to fetch recommendations' },
       { status: 500 }

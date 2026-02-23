@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth-config';
 import { enqueue } from '@/lib/translation';
+import { logger } from '@/lib/logger';
 
 // GET all formats for a product
 export async function GET(
@@ -19,7 +20,7 @@ export async function GET(
 
     return NextResponse.json(formats);
   } catch (error) {
-    console.error('Error fetching formats:', error);
+    logger.error('Error fetching formats', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to fetch formats' },
       { status: 500 }
@@ -62,53 +63,62 @@ export async function POST(
       isActive,
     } = body;
 
-    // If this is set as default, unset other defaults
-    if (isDefault) {
-      await prisma.productFormat.updateMany({
+    // FIX: BUG-043 - Warn when creating inactive format (isActive explicitly false)
+    const warningMessage = isActive === false
+      ? 'Format created but marked as inactive — it will not be visible to customers.'
+      : undefined;
+
+    // BUG-044 FIX: Wrap default toggle + create in transaction to prevent race condition
+    const format = await prisma.$transaction(async (tx) => {
+      // If this is set as default, unset other defaults
+      if (isDefault) {
+        await tx.productFormat.updateMany({
+          where: { productId: id },
+          data: { isDefault: false },
+        });
+      }
+
+      // Get max sortOrder
+      const maxSort = await tx.productFormat.aggregate({
         where: { productId: id },
-        data: { isDefault: false },
+        _max: { sortOrder: true },
       });
-    }
 
-    // Get max sortOrder
-    const maxSort = await prisma.productFormat.aggregate({
-      where: { productId: id },
-      _max: { sortOrder: true },
-    });
-
-    const format = await prisma.productFormat.create({
-      data: {
-        productId: id,
-        formatType,
-        name,
-        description,
-        imageUrl,
-        dosageMg,
-        volumeMl,
-        unitCount,
-        costPrice,
-        price,
-        comparePrice,
-        sku,
-        barcode,
-        stockQuantity: stockQuantity ?? 0,
-        lowStockThreshold: lowStockThreshold ?? 10,
-        inStock: (stockQuantity ?? 0) > 0,
-        availability: availability ?? 'IN_STOCK',
-        availableDate: availableDate ? new Date(availableDate) : null,
-        weightGrams,
-        isDefault: isDefault ?? false,
-        isActive: isActive ?? true,
-        sortOrder: (maxSort._max.sortOrder ?? 0) + 1,
-      },
+      return tx.productFormat.create({
+        data: {
+          productId: id,
+          formatType,
+          name,
+          description,
+          imageUrl,
+          dosageMg,
+          volumeMl,
+          unitCount,
+          costPrice,
+          price,
+          comparePrice,
+          sku,
+          barcode,
+          stockQuantity: stockQuantity ?? 0,
+          lowStockThreshold: lowStockThreshold ?? 10,
+          inStock: (stockQuantity ?? 0) > 0,
+          availability: availability ?? 'IN_STOCK',
+          availableDate: availableDate ? new Date(availableDate) : null,
+          weightGrams,
+          isDefault: isDefault ?? false,
+          isActive: isActive ?? true,
+          sortOrder: (maxSort._max.sortOrder ?? 0) + 1,
+        },
+      });
     });
 
     // Auto-enqueue translation for all 21 locales
     enqueue.productFormat(format.id);
 
-    return NextResponse.json(format, { status: 201 });
+    // FIX: BUG-043 - Include warning in response if format was created inactive
+    return NextResponse.json({ ...format, ...(warningMessage ? { warning: warningMessage } : {}) }, { status: 201 });
   } catch (error) {
-    console.error('Error creating format:', error);
+    logger.error('Error creating format', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to create format' },
       { status: 500 }

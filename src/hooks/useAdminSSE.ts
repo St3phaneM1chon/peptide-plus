@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 type SSEHandler = (data: unknown) => void;
 
@@ -53,13 +53,18 @@ export function useAdminSSE(
   url: string,
   handlers: Record<string, SSEHandler>,
 ) {
+  const handlersRef = useRef(handlers);
+  handlersRef.current = handlers;
+
   useEffect(() => {
     const es = getSharedSSE(url);
 
     const listeners: Array<[string, (e: MessageEvent) => void]> = [];
 
-    for (const [event, handler] of Object.entries(handlers)) {
+    for (const [event] of Object.entries(handlersRef.current)) {
       const listener = (e: MessageEvent) => {
+        const handler = handlersRef.current[event];
+        if (!handler) return;
         try {
           const data = JSON.parse(e.data);
           handler(data);
@@ -83,6 +88,5 @@ export function useAdminSSE(
       }
       releaseSharedSSE();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [url]);
 }

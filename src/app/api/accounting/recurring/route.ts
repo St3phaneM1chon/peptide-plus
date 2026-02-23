@@ -8,6 +8,7 @@ import {
   processDueRecurringEntries,
   previewRecurringSchedule,
 } from '@/lib/accounting';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/accounting/recurring
@@ -28,7 +29,7 @@ export const GET = withAdminGuard(async () => {
       })),
     });
   } catch (error) {
-    console.error('Get recurring entries error:', error);
+    logger.error('Get recurring entries error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la récupération des écritures récurrentes' },
       { status: 500 }
@@ -99,7 +100,7 @@ export const POST = withAdminGuard(async (request) => {
 
     return NextResponse.json({ success: true, template }, { status: 201 });
   } catch (error) {
-    console.error('Create recurring template error:', error);
+    logger.error('Create recurring template error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la création du modèle récurrent' },
       { status: 500 }
@@ -120,7 +121,7 @@ export const PUT = withAdminGuard(async () => {
       ...result,
     });
   } catch (error) {
-    console.error('Process recurring entries error:', error);
+    logger.error('Process recurring entries error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors du traitement des écritures récurrentes' },
       { status: 500 }

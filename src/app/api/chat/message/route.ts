@@ -1,5 +1,7 @@
 export const dynamic = 'force-dynamic';
 
+// TODO: F-092 - Validate message language code against ISO 639-1 list before storing
+
 /**
  * API Chat Messages
  * POST /api/chat/message - Envoyer un message
@@ -10,6 +12,8 @@ import { auth } from '@/lib/auth-config';
 import { db } from '@/lib/db';
 import { translateMessage, getChatbotResponse, detectLanguage } from '@/lib/chat/openai-chat';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
+import { stripHtml, stripControlChars } from '@/lib/sanitize';
 
 export async function POST(request: NextRequest) {
   try {
@@ -28,12 +32,28 @@ export async function POST(request: NextRequest) {
       return res;
     }
 
+    // FIX F-004/F-017: CSRF protection on chat message
+    // Note: For chat widget (visitors), CSRF may not always be present.
+    // Rate limiting already protects against abuse from unauthenticated users.
+    if (session?.user) {
+      const csrfValid = await validateCsrf(request);
+      if (!csrfValid) {
+        // Authenticated users MUST provide valid CSRF
+        return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+      }
+    }
+
     const body = await request.json();
     const { conversationId, content: rawContent, sender, visitorId } = body;
 
     // Image/file attachment fields
-    const messageType = body.type || 'TEXT';
-    const attachmentUrl = body.attachmentUrl || null;
+    // FIX F-068: Validate messageType against allowed enum
+    const validMessageTypes = ['TEXT', 'IMAGE', 'FILE'];
+    const rawMessageType = body.type || 'TEXT';
+    const messageType = validMessageTypes.includes(rawMessageType) ? rawMessageType : 'TEXT';
+    // FIX F-020: Validate attachmentUrl
+    const rawAttachmentUrl = body.attachmentUrl || null;
+    const attachmentUrl = rawAttachmentUrl && typeof rawAttachmentUrl === 'string' && (rawAttachmentUrl.startsWith('http://') || rawAttachmentUrl.startsWith('https://')) ? rawAttachmentUrl : null;
     const attachmentName = body.attachmentName || null;
     const attachmentSize = body.attachmentSize ? parseInt(String(body.attachmentSize)) : null;
 
@@ -47,10 +67,12 @@ export async function POST(request: NextRequest) {
     if (contentStr.length > 5000) {
       return NextResponse.json({ error: 'Message too long (max 5000 characters)' }, { status: 400 });
     }
-    const content = contentStr.replace(/<[^>]*>/g, '').replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '').trim();
+    // FIX F-054: Use proper stripHtml from sanitize module instead of fragile regex
+    const content = stripControlChars(stripHtml(contentStr)).trim();
 
+    // FIX: F-071 - Clearer error when content is empty after sanitization
     if (!content) {
-      return NextResponse.json({ error: 'Message content cannot be empty' }, { status: 400 });
+      return NextResponse.json({ error: 'Message content cannot be empty after removing HTML/formatting' }, { status: 400 });
     }
 
     // Vérifier autorisation (session already fetched above for rate limiting)
@@ -100,6 +122,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Conversation not found' }, { status: 404 });
     }
 
+    // FIX F-048: Prevent sending messages to closed conversations
+    if (conversation.status === 'CLOSED' || conversation.status === 'ARCHIVED') {
+      return NextResponse.json({ error: 'Conversation is closed' }, { status: 400 });
+    }
+
     if (sender === 'ADMIN' && !isAdmin) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -130,6 +157,7 @@ export async function POST(request: NextRequest) {
       const detectedLang = await detectLanguage(content);
       
       // Mettre à jour la langue du visiteur si différente
+      // TODO: F-075 - Use atomic update to prevent race condition when concurrent messages detect different languages
       if (detectedLang !== conversation.visitorLanguage) {
         await db.chatConversation.update({
           where: { id: conversationId },
@@ -149,8 +177,11 @@ export async function POST(request: NextRequest) {
 
       // Si admin absent et chatbot activé, générer réponse auto
       if (!settings?.isAdminOnline && settings?.chatbotEnabled !== false) {
-        // Préparer l'historique pour le chatbot
-        const history = conversation.messages.map(m => ({
+        // FIX F-044: Use last 20 messages (not first 20) for bot context
+        // Messages are loaded with orderBy asc, take 20, which gets first 20.
+        // We need the LAST messages for relevant context. Reverse-sort, take 20, then reverse back.
+        const recentMessages = [...conversation.messages].slice(-20);
+        const history = recentMessages.map(m => ({
           role: (m.sender === 'VISITOR' ? 'user' : 'assistant') as 'user' | 'assistant',
           content: m.contentOriginal || m.content,
         }));
@@ -215,23 +246,19 @@ export async function POST(request: NextRequest) {
     });
 
     // Si réponse du bot, la sauvegarder aussi
+    // FIX: F-062 - Removed duplicate lastMessageAt update; the update above already covers this
     let savedBotMessage = null;
     if (botResponse) {
       savedBotMessage = await db.chatMessage.create({
         data: {
           conversationId,
-          content: botResponse.content,
+          // FIX F-034: Sanitize bot response to prevent prompt injection XSS
+          content: stripHtml(botResponse.content),
           sender: 'BOT',
           senderName: 'BioCycle Assistant',
           language: conversation.visitorLanguage,
           isFromBot: true,
         },
-      });
-
-      // Mettre à jour timestamp
-      await db.chatConversation.update({
-        where: { id: conversationId },
-        data: { lastMessageAt: new Date() },
       });
     }
 

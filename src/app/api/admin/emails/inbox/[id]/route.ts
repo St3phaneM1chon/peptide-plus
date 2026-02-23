@@ -10,6 +10,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { logger } from '@/lib/logger';
 
 export const GET = withAdminGuard(
   async (request: NextRequest, { session: _session, params }: { session: unknown; params: { id: string } }) => {
@@ -58,6 +59,30 @@ export const GET = withAdminGuard(
 
       if (!conversation) {
         return NextResponse.json({ error: 'Conversation not found' }, { status: 404 });
+      }
+
+      // Auto-reopen snoozed conversations whose snooze time has passed
+      if (
+        conversation.status === 'SNOOZED' &&
+        conversation.snoozedUntil &&
+        new Date(conversation.snoozedUntil) <= new Date()
+      ) {
+        await prisma.$transaction([
+          prisma.emailConversation.update({
+            where: { id },
+            data: { status: 'OPEN', snoozedUntil: null },
+          }),
+          prisma.conversationActivity.create({
+            data: {
+              conversationId: id,
+              actorId: null,
+              action: 'snooze_expired',
+              details: JSON.stringify({ previousSnoozedUntil: conversation.snoozedUntil }),
+            },
+          }),
+        ]);
+        conversation.status = 'OPEN';
+        conversation.snoozedUntil = null;
       }
 
       // Build unified timeline
@@ -115,7 +140,7 @@ export const GET = withAdminGuard(
 
       return NextResponse.json({ conversation, timeline, customerStats });
     } catch (error) {
-      console.error('[Admin Inbox Detail] Error:', error);
+      logger.error('[Admin Inbox Detail] Error', { error: error instanceof Error ? error.message : String(error) });
       return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
   }
@@ -126,7 +151,7 @@ export const PUT = withAdminGuard(
     try {
       const { id } = params;
       const body = await request.json();
-      const { status, assignedToId, priority, tags, snoozedUntil } = body;
+      const { status, assignedToId, priority, tags, snoozedUntil, internalNote } = body;
 
       const existing = await prisma.emailConversation.findUnique({
         where: { id },
@@ -174,10 +199,53 @@ export const PUT = withAdminGuard(
       }
 
       if (snoozedUntil !== undefined) {
-        updates.snoozedUntil = snoozedUntil ? new Date(snoozedUntil) : null;
+        if (snoozedUntil) {
+          const snoozeDate = new Date(snoozedUntil);
+          if (isNaN(snoozeDate.getTime())) {
+            return NextResponse.json({ error: 'Invalid snoozedUntil date' }, { status: 400 });
+          }
+          const now = new Date();
+          if (snoozeDate <= now) {
+            return NextResponse.json({ error: 'snoozedUntil must be a future date' }, { status: 400 });
+          }
+          const maxSnooze = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+          if (snoozeDate > maxSnooze) {
+            return NextResponse.json({ error: 'snoozedUntil cannot be more than 30 days ahead' }, { status: 400 });
+          }
+          updates.snoozedUntil = snoozeDate;
+          updates.status = 'SNOOZED';
+          activities.push({
+            action: 'snoozed',
+            details: JSON.stringify({ until: snoozedUntil }),
+          });
+        } else {
+          // Clear snooze
+          updates.snoozedUntil = null;
+          if (existing.status === 'SNOOZED') {
+            updates.status = 'OPEN';
+          }
+          activities.push({
+            action: 'snooze_cleared',
+            details: JSON.stringify({ previousStatus: existing.status }),
+          });
+        }
+      }
+
+      // Handle inline internal note (convenience shortcut — full notes via POST /inbox/[id]/note)
+      const noteOps = [];
+      if (typeof internalNote === 'string' && internalNote.trim()) {
+        noteOps.push(
+          prisma.conversationNote.create({
+            data: {
+              conversationId: id,
+              authorId: session.user.id,
+              content: internalNote.trim(),
+            },
+          })
+        );
         activities.push({
-          action: 'snoozed',
-          details: JSON.stringify({ until: snoozedUntil }),
+          action: 'note_added',
+          details: JSON.stringify({ preview: internalNote.trim().substring(0, 200) }),
         });
       }
 
@@ -193,6 +261,7 @@ export const PUT = withAdminGuard(
             },
           })
         ),
+        ...noteOps,
       ]);
 
       logAdminAction({
@@ -208,7 +277,7 @@ export const PUT = withAdminGuard(
 
       return NextResponse.json({ conversation });
     } catch (error) {
-      console.error('[Admin Inbox Update] Error:', error);
+      logger.error('[Admin Inbox Update] Error', { error: error instanceof Error ? error.message : String(error) });
       return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
   }

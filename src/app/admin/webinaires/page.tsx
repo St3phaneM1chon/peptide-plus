@@ -89,11 +89,8 @@ export default function WebinairesPage() {
 
   // ─── Data fetching ──────────────────────────────────────────
 
-  useEffect(() => {
-    fetchWebinars();
-  }, []);
-
-  const fetchWebinars = async () => {
+  // FIX: FLAW-055 - Wrap fetchWebinars in useCallback for stable reference
+  const fetchWebinars = useCallback(async () => {
     try {
       setLoading(true);
       const res = await fetch('/api/admin/webinars');
@@ -124,7 +121,12 @@ export default function WebinairesPage() {
     } finally {
       setLoading(false);
     }
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [t]);
+
+  useEffect(() => {
+    fetchWebinars();
+  }, [fetchWebinars]);
 
   const handleSelectWebinar = useCallback((id: string) => {
     setSelectedWebinarId(id);
@@ -207,13 +209,14 @@ export default function WebinairesPage() {
     }
   };
 
+  // FLAW-023 FIX: Send status CANCELLED instead of just isPublished:false
   const handleCancelWebinar = async (webinar: Webinar) => {
     if (!confirm(t('admin.webinars.confirmCancel'))) return;
     try {
       const res = await fetch(`/api/admin/webinars/${webinar.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isPublished: false }),
+        body: JSON.stringify({ status: 'CANCELLED', isPublished: false }),
       });
       if (!res.ok) {
         toast.error(t('admin.webinars.cancelError'));
@@ -483,8 +486,23 @@ export default function WebinairesPage() {
                   </div>
 
                   {/* Action Buttons */}
+                  {/* FIX: FLAW-022 - Button was a non-functional stub with no onClick handler.
+                      Disabled until WebinarRegistration model is created (FLAW-045/IMP-002).
+                      TODO: Implement onClick to show modal with registered attendees once
+                      WebinarRegistration model and API exist. */}
                   <div className="flex gap-2 pt-2">
-                    <Button variant="ghost" size="sm" icon={Users}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      icon={Users}
+                      disabled
+                      title="Registration tracking coming soon"
+                      onClick={() => {
+                        // TODO: FLAW-045/IMP-002 - Show registered attendees modal
+                        // Requires WebinarRegistration model (userId, webinarId, registeredAt, attended)
+                        toast.info(t('admin.webinars.registrationTrackingComingSoon') || 'Registration tracking coming soon');
+                      }}
+                    >
                       {t('admin.webinars.viewRegistered')}
                     </Button>
                   </div>

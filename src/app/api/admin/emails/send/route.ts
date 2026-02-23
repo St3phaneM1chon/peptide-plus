@@ -7,6 +7,7 @@ import { sendEmail } from '@/lib/email/email-service';
 import { generateUnsubscribeUrl } from '@/lib/email/unsubscribe';
 import { escapeHtml } from '@/lib/email/templates/base-template';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { logger } from '@/lib/logger';
 
 // POST /api/admin/emails/send - Send email (direct compose or template-based test)
 export const POST = withAdminGuard(async (request, { session }) => {
@@ -89,7 +90,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       message: result.success ? `Email sent to ${to}` : `Failed: ${result.error}`,
     });
   } catch (error) {
-    console.error('Admin email send POST error:', error);
+    logger.error('Admin email send POST error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 });

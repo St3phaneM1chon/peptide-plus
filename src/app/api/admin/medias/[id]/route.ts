@@ -12,13 +12,23 @@ import { withAdminGuard } from '@/lib/admin-api-guard';
 import { unlink } from 'fs/promises';
 import path from 'path';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { logger } from '@/lib/logger';
+
+// F21 FIX: Sanitize folder path to prevent path traversal
+function sanitizeFolderPath(rawFolder: string): string {
+  return rawFolder
+    .replace(/\.\./g, '')
+    .replace(/[^a-zA-Z0-9_\-\/]/g, '')
+    .replace(/\/+/g, '/')
+    .replace(/^\/|\/$/g, '');
+}
 
 // PATCH /api/admin/medias/[id] - Update media metadata
 export const PATCH = withAdminGuard(async (request, { session, params }) => {
   try {
     const id = params!.id;
     const body = await request.json();
-    const { alt, folder } = body;
+    const { alt, folder: rawFolder } = body;
 
     const existing = await prisma.media.findUnique({
       where: { id },
@@ -30,7 +40,7 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
 
     const data: Record<string, unknown> = {};
     if (alt !== undefined) data.alt = alt;
-    if (folder !== undefined) data.folder = folder;
+    if (rawFolder !== undefined) data.folder = sanitizeFolderPath(String(rawFolder));
 
     const media = await prisma.media.update({
       where: { id },
@@ -50,7 +60,7 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
 
     return NextResponse.json({ media });
   } catch (error) {
-    console.error('Admin medias PATCH [id] error:', error);
+    logger.error('Admin medias PATCH [id] error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -59,7 +69,7 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
 });
 
 // DELETE /api/admin/medias/[id] - Delete a media file
-export const DELETE = withAdminGuard(async (_request, { session, params }) => {
+export const DELETE = withAdminGuard(async (request, { session, params }) => {
   try {
     const id = params!.id;
 
@@ -71,13 +81,20 @@ export const DELETE = withAdminGuard(async (_request, { session, params }) => {
       return NextResponse.json({ error: 'Media not found' }, { status: 404 });
     }
 
-    // Try to delete the physical file
+    // F55 FIX: Handle both local and Azure URLs properly
     try {
-      const filePath = path.join(process.cwd(), 'public', existing.url);
-      await unlink(filePath);
+      if (existing.url.startsWith('http://') || existing.url.startsWith('https://')) {
+        // Azure Blob Storage URL - use storage service to delete
+        const { storage } = await import('@/lib/storage');
+        await storage.delete(existing.url);
+      } else {
+        // Local filesystem path
+        const filePath = path.join(process.cwd(), 'public', existing.url);
+        await unlink(filePath);
+      }
     } catch {
       // File might already be deleted or on external storage - continue anyway
-      console.warn(`Could not delete physical file for media ${id}: ${existing.url}`);
+      logger.warn(`Could not delete physical file for media ${id}: ${existing.url}`);
     }
 
     // Delete database record
@@ -91,13 +108,13 @@ export const DELETE = withAdminGuard(async (_request, { session, params }) => {
       targetType: 'Media',
       targetId: id,
       previousValue: { filename: existing.filename, originalName: existing.originalName, url: existing.url },
-      ipAddress: getClientIpFromRequest(_request),
-      userAgent: _request.headers.get('user-agent') || undefined,
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
     }).catch(() => {});
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Admin medias DELETE [id] error:', error);
+    logger.error('Admin medias DELETE [id] error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -6,7 +6,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Plus,
   Pencil,
@@ -108,6 +108,7 @@ export default function CategoriesPage() {
     }
 
     // Also include orphans (categories with parentId pointing to missing parent)
+    // TODO: BUG-057 - Add "Fix orphans" action button to re-parent or remove orphan categories
     const allIds = new Set(categories.map(c => c.id));
     const orphans = categories.filter(c => c.parentId && !allIds.has(c.parentId));
     for (const orphan of orphans) {
@@ -171,14 +172,14 @@ export default function CategoriesPage() {
     }
   };
 
-  const resetForm = () => {
+  const resetForm = useCallback(() => {
     setFormData({ name: '', slug: '', description: '', imageUrl: '', sortOrder: 0, parentId: '' });
     setEditingId(null);
     setShowForm(false);
     setError('');
-  };
+  }, []);
 
-  const startEdit = (cat: Category) => {
+  const startEdit = useCallback((cat: Category) => {
     setFormData({
       name: cat.name,
       slug: cat.slug,
@@ -189,15 +190,15 @@ export default function CategoriesPage() {
     });
     setEditingId(cat.id);
     setShowForm(true);
-  };
+  }, []);
 
-  const startCreateChild = (parentId: string) => {
+  const startCreateChild = useCallback((parentId: string) => {
     resetForm();
     setFormData(prev => ({ ...prev, parentId }));
     setShowForm(true);
-  };
+  }, [resetForm]);
 
-  const toggleActive = async (catId: string, currentStatus: boolean) => {
+  const toggleActive = useCallback(async (catId: string, currentStatus: boolean) => {
     try {
       const res = await fetch(`/api/categories/${catId}`, {
         method: 'PUT',
@@ -214,7 +215,7 @@ export default function CategoriesPage() {
       console.error('Error toggling status:', err);
       toast.error(t('common.networkError'));
     }
-  };
+  }, [t]);
 
   const handleDelete = async (catId: string) => {
     setDeletingId(catId);
@@ -344,8 +345,7 @@ export default function CategoriesPage() {
         </div>
       ),
     },
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  ], [locale, treeCategories]);
+  ], [locale, treeCategories, t, toggleActive, startEdit, startCreateChild]);
 
   return (
     <>

@@ -11,11 +11,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
-
-function safeParseJson<T>(str: string | null | undefined, fallback: T): T {
-  if (!str) return fallback;
-  try { return JSON.parse(str); } catch { return fallback; }
-}
+import { safeParseJson } from '@/lib/email/utils';
+import { validateNode } from '@/lib/email/automation-engine';
+import { logger } from '@/lib/logger';
 
 /** Validate flow graph: check for orphan nodes, invalid edges, missing trigger */
 function validateFlowGraph(
@@ -53,22 +51,80 @@ function validateFlowGraph(
 }
 
 export const GET = withAdminGuard(
-  async (_request: NextRequest, { session: _session, params }: { session: unknown; params: { id: string } }) => {
+  async (request: NextRequest, { session: _session, params }: { session: unknown; params: { id: string } }) => {
     try {
       const flow = await prisma.emailAutomationFlow.findUnique({ where: { id: params.id } });
       if (!flow) {
         return NextResponse.json({ error: 'Flow not found' }, { status: 404 });
       }
-      return NextResponse.json({
+
+      const url = new URL(request.url);
+      const format = url.searchParams.get('format');
+
+      // Export flow as downloadable JSON (excludes id and timestamps)
+      if (format === 'json') {
+        const exportData = {
+          name: flow.name,
+          description: flow.description,
+          trigger: flow.trigger,
+          nodes: safeParseJson(flow.nodes, []),
+          edges: safeParseJson(flow.edges, []),
+        };
+        const jsonContent = JSON.stringify(exportData, null, 2);
+        const safeName = flow.name.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 50);
+
+        return new Response(jsonContent, {
+          status: 200,
+          headers: {
+            'Content-Type': 'application/json; charset=utf-8',
+            'Content-Disposition': `attachment; filename="flow-${safeName}.json"`,
+          },
+        });
+      }
+
+      const includeHistory = url.searchParams.get('includeHistory') === 'true';
+
+      const response: Record<string, unknown> = {
         flow: {
           ...flow,
           nodes: safeParseJson(flow.nodes, []),
           edges: safeParseJson(flow.edges, []),
           stats: safeParseJson(flow.stats, { triggered: 0, sent: 0, opened: 0, clicked: 0, revenue: 0 }),
         },
-      });
+      };
+
+      if (includeHistory) {
+        const executions = await prisma.emailFlowExecution.findMany({
+          where: { flowId: params.id },
+          orderBy: { createdAt: 'desc' },
+          take: 20,
+          select: {
+            id: true,
+            email: true,
+            status: true,
+            currentNode: true,
+            context: true,
+            executeAt: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+        });
+
+        response.executions = executions.map((ex) => ({
+          id: ex.id,
+          email: ex.email,
+          status: ex.status,
+          currentNode: ex.currentNode,
+          context: safeParseJson(ex.context, null),
+          startedAt: ex.createdAt,
+          completedAt: ex.status === 'COMPLETED' || ex.status === 'FAILED' ? ex.updatedAt : null,
+          executeAt: ex.executeAt,
+        }));
+      }
+
+      return NextResponse.json(response);
     } catch (error) {
-      console.error('[Flow Detail] Error:', error);
+      logger.error('[Flow Detail] Error', { error: error instanceof Error ? error.message : String(error) });
       return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
   }
@@ -122,7 +178,7 @@ export const PUT = withAdminGuard(
         },
       });
     } catch (error) {
-      console.error('[Flow Update] Error:', error);
+      logger.error('[Flow Update] Error', { error: error instanceof Error ? error.message : String(error) });
       return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
   }
@@ -150,7 +206,109 @@ export const DELETE = withAdminGuard(
 
       return NextResponse.json({ success: true });
     } catch (error) {
-      console.error('[Flow Delete] Error:', error);
+      logger.error('[Flow Delete] Error', { error: error instanceof Error ? error.message : String(error) });
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    }
+  }
+);
+
+// POST /api/admin/emails/flows/[id] - Dry-run validation (validate without executing)
+export const POST = withAdminGuard(
+  async (request: NextRequest, { session: _session, params }: { session: unknown; params: { id: string } }) => {
+    try {
+      const body = await request.json().catch(() => ({}));
+      const action = body.action;
+
+      if (action !== 'validate') {
+        return NextResponse.json({ error: 'Unknown action. Use { "action": "validate" }' }, { status: 400 });
+      }
+
+      const flow = await prisma.emailAutomationFlow.findUnique({ where: { id: params.id } });
+      if (!flow) {
+        return NextResponse.json({ error: 'Flow not found' }, { status: 404 });
+      }
+
+      const nodes = safeParseJson<Array<{ id: string; type: string; data: Record<string, unknown> }>>(flow.nodes, []);
+      const edges = safeParseJson<Array<{ source: string; target: string; sourceHandle?: string }>>(flow.edges, []);
+
+      const errors: string[] = [];
+      const warnings: string[] = [];
+
+      // 1. Graph structure validation (orphans, edges, trigger)
+      const graphResult = validateFlowGraph(nodes, edges);
+      errors.push(...graphResult.errors);
+
+      // 2. Per-node validation using the engine's validateNode
+      const validNodeTypes = ['trigger', 'email', 'send_email', 'sms', 'delay', 'condition', 'push'];
+      for (const node of nodes) {
+        if (!validNodeTypes.includes(node.type)) {
+          errors.push(`Node "${node.id}" has unknown type: "${node.type}"`);
+          continue;
+        }
+        // Cast to FlowNode-compatible shape for validateNode
+        const nodeError = validateNode(node as Parameters<typeof validateNode>[0]);
+        if (nodeError) {
+          errors.push(nodeError);
+        }
+      }
+
+      // 3. Warnings for common issues
+      if (nodes.length === 1 && nodes[0]?.type === 'trigger') {
+        warnings.push('Flow has only a trigger node with no actions — it will do nothing when triggered');
+      }
+
+      const emailNodes = nodes.filter(n => n.type === 'email' || n.type === 'send_email');
+      for (const en of emailNodes) {
+        if (en.data.templateId) {
+          // Check template exists
+          const tmpl = await prisma.emailTemplate.findUnique({ where: { id: en.data.templateId as string } });
+          if (!tmpl) {
+            warnings.push(`Email node "${en.id}" references templateId "${en.data.templateId}" which does not exist`);
+          } else if (!tmpl.isActive) {
+            warnings.push(`Email node "${en.id}" references template "${tmpl.name}" which is inactive`);
+          }
+        }
+      }
+
+      // Check for unreachable nodes (nodes not reachable from trigger via BFS)
+      const triggerNode = nodes.find(n => n.type === 'trigger');
+      if (triggerNode) {
+        const reachable = new Set<string>();
+        const queue = [triggerNode.id];
+        while (queue.length > 0) {
+          const current = queue.shift()!;
+          if (reachable.has(current)) continue;
+          reachable.add(current);
+          for (const edge of edges) {
+            if (edge.source === current && !reachable.has(edge.target)) {
+              queue.push(edge.target);
+            }
+          }
+        }
+        for (const node of nodes) {
+          if (!reachable.has(node.id)) {
+            warnings.push(`Node "${node.id}" (${node.type}) is unreachable from the trigger`);
+          }
+        }
+      }
+
+      return NextResponse.json({
+        flowId: flow.id,
+        flowName: flow.name,
+        valid: errors.length === 0,
+        errors,
+        warnings,
+        summary: {
+          totalNodes: nodes.length,
+          totalEdges: edges.length,
+          nodeTypes: nodes.reduce((acc, n) => {
+            acc[n.type] = (acc[n.type] || 0) + 1;
+            return acc;
+          }, {} as Record<string, number>),
+        },
+      });
+    } catch (error) {
+      logger.error('[Flow Validate] Error', { error: error instanceof Error ? error.message : String(error) });
       return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
   }

@@ -10,6 +10,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { logger } from '@/lib/logger';
 
 // DELETE /api/admin/questions/[id] - Delete a question
 export const DELETE = withAdminGuard(async (_request, { session, params }) => {
@@ -28,14 +29,10 @@ export const DELETE = withAdminGuard(async (_request, { session, params }) => {
       where: { id },
     });
 
-    console.log(
-      JSON.stringify({
-        event: 'question_deleted',
-        timestamp: new Date().toISOString(),
+    logger.info('question_deleted', {
         questionId: id,
         deletedBy: session.user.id,
-      })
-    );
+      });
 
     logAdminAction({
       adminUserId: session.user.id,
@@ -49,7 +46,7 @@ export const DELETE = withAdminGuard(async (_request, { session, params }) => {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Admin question DELETE error:', error);
+    logger.error('Admin question DELETE error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -112,7 +109,7 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
       },
     });
   } catch (error) {
-    console.error('Admin question PATCH error:', error);
+    logger.error('Admin question PATCH error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

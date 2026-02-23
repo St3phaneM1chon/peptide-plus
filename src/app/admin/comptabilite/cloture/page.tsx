@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Check, Loader2, Info, Save, Lock } from 'lucide-react';
 import { PageHeader, StatusBadge, Button, SectionCard, type BadgeVariant } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
@@ -37,7 +37,7 @@ export default function CloturePage() {
   const [error, setError] = useState<string | null>(null);
 
   // Fetch all periods, returns the first period code so callers can kick off checklist in parallel
-  const fetchPeriods = async (): Promise<string | null> => {
+  const fetchPeriods = useCallback(async (): Promise<string | null> => {
     try {
       const res = await fetch('/api/accounting/periods');
       if (!res.ok) throw new Error(t('admin.closing.errorLoadPeriods'));
@@ -58,10 +58,10 @@ export default function CloturePage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [t, selectedPeriod]);
 
   // Fetch checklist for selected period
-  const fetchChecklist = async (code: string) => {
+  const fetchChecklist = useCallback(async (code: string) => {
     if (!code) return;
     setChecklistLoading(true);
     try {
@@ -85,7 +85,7 @@ export default function CloturePage() {
     } finally {
       setChecklistLoading(false);
     }
-  };
+  }, [t, periods]);
 
   // Lock/close a period
   const handleLockPeriod = async () => {
@@ -116,15 +116,13 @@ export default function CloturePage() {
     fetchPeriods().then((firstCode) => {
       if (firstCode) fetchChecklist(firstCode);
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [fetchPeriods, fetchChecklist]);
 
   useEffect(() => {
     if (selectedPeriod) {
       fetchChecklist(selectedPeriod);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedPeriod]);
+  }, [selectedPeriod, fetchChecklist]);
 
   const theme = sectionThemes.compliance;
 

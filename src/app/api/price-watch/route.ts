@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth-config';
+import { logger } from '@/lib/logger';
 import { validateCsrf } from '@/lib/csrf-middleware';
 
 /**
@@ -66,7 +67,7 @@ export async function GET(request: NextRequest) {
       count: watchesWithPrices.length,
     });
   } catch (error) {
-    console.error('Error fetching price watches:', error);
+    logger.error('Error fetching price watches', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to fetch price watches' },
       { status: 500 }
@@ -172,7 +173,7 @@ export async function POST(request: NextRequest) {
       },
     }, { status: 201 });
   } catch (error) {
-    console.error('Error creating price watch:', error);
+    logger.error('Error creating price watch', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to create price watch' },
       { status: 500 }
@@ -230,7 +231,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    console.error('Error deleting price watch:', error);
+    logger.error('Error deleting price watch', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to delete price watch' },
       { status: 500 }

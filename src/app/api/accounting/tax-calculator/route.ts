@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { calculateSalesTax, getTaxRateForProvince } from '@/lib/accounting/canadian-tax-config';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/accounting/tax-calculator
@@ -68,7 +69,7 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
       totalRate: toRate.totalRate,
     });
   } catch (error) {
-    console.error('Tax calculator error:', error);
+    logger.error('Tax calculator error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors du calcul des taxes' },
       { status: 500 }

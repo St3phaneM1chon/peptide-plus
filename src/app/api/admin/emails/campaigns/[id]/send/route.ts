@@ -14,15 +14,20 @@ import { shouldSuppressEmail } from '@/lib/email/bounce-handler';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 
 import { escapeHtml } from '@/lib/email/templates/base-template';
+import { logger } from '@/lib/logger';
+
+// Frequency cap: skip recipients who received a campaign email within this window
+const CAMPAIGN_FREQUENCY_CAP_HOURS = parseInt(process.env.CAMPAIGN_FREQUENCY_CAP_HOURS || '24', 10);
 
 export const POST = withAdminGuard(
   async (_request: NextRequest, { session, params }: { session: { user: { id: string } }; params: { id: string } }) => {
     try {
       // Atomic status guard: update only if status is sendable (prevents TOCTOU race)
+      // Also allow resuming PAUSED campaigns
       const { count: updated } = await prisma.emailCampaign.updateMany({
         where: {
           id: params.id,
-          status: { in: ['DRAFT', 'SCHEDULED', 'FAILED'] },
+          status: { in: ['DRAFT', 'SCHEDULED', 'FAILED', 'PAUSED'] },
         },
         data: { status: 'SENDING' },
       });
@@ -48,6 +53,15 @@ export const POST = withAdminGuard(
       let recipients: Array<{ email: string; name: string | null; id: string }>;
 
       if (campaign.segmentQuery) {
+        // Faille #37: Reject oversized segmentQuery to prevent JSON injection / DoS
+        if (campaign.segmentQuery.length > 10000) {
+          await prisma.emailCampaign.update({
+            where: { id: params.id },
+            data: { status: 'FAILED' },
+          });
+          return NextResponse.json({ error: 'segmentQuery too large (max 10KB)' }, { status: 400 });
+        }
+
         let query: Record<string, unknown>;
         try {
           query = JSON.parse(campaign.segmentQuery);
@@ -63,14 +77,31 @@ export const POST = withAdminGuard(
 
         if (query.loyaltyTier) where.loyaltyTier = query.loyaltyTier;
         if (query.locale) where.locale = query.locale;
+
+        // Faille #38: Validate parseFloat results to prevent Prisma injection via NaN/Infinity/negative
+        let parsedMinOrderValue: number | null = null;
+        if (query.minOrderValue !== undefined && query.minOrderValue !== null) {
+          parsedMinOrderValue = parseFloat(String(query.minOrderValue));
+          if (!Number.isFinite(parsedMinOrderValue) || parsedMinOrderValue < 0) {
+            await prisma.emailCampaign.update({
+              where: { id: params.id },
+              data: { status: 'FAILED' },
+            });
+            return NextResponse.json(
+              { error: 'Invalid minOrderValue: must be a finite non-negative number' },
+              { status: 400 },
+            );
+          }
+        }
+
         // Build orders filter without overwriting: merge hasOrdered + minOrderValue
-        if (query.hasOrdered && query.minOrderValue) {
+        if (query.hasOrdered && parsedMinOrderValue !== null) {
           where.orders = {
-            some: { total: { gte: parseFloat(String(query.minOrderValue)) } },
+            some: { total: { gte: parsedMinOrderValue } },
           };
-        } else if (query.minOrderValue) {
+        } else if (parsedMinOrderValue !== null) {
           where.orders = {
-            some: { total: { gte: parseFloat(String(query.minOrderValue)) } },
+            some: { total: { gte: parsedMinOrderValue } },
           };
         } else if (query.hasOrdered) {
           where.orders = { some: {} };
@@ -134,19 +165,84 @@ export const POST = withAdminGuard(
         validRecipients.push(r);
       }
 
+      // Determine resume offset: if resuming from PAUSED, skip already-sent recipients
+      let existingStats: Record<string, unknown> = {};
+      if (campaign.stats) {
+        try { existingStats = JSON.parse(campaign.stats); } catch { /* ignore */ }
+      }
+      const resumeOffset = typeof existingStats.sentCount === 'number' ? existingStats.sentCount : 0;
+
       // Send to each recipient with basic throttle to avoid provider rate limits
       let sent = 0;
       let failed = 0;
+      let paused = false;
       const BATCH_SIZE = 10;
       const BATCH_DELAY_MS = 1000; // 1s pause between batches (~10/s max)
+      const totalCount = validRecipients.length;
 
-      for (let i = 0; i < validRecipients.length; i++) {
-        // Throttle: pause between batches
-        if (i > 0 && i % BATCH_SIZE === 0) {
+      for (let i = resumeOffset; i < validRecipients.length; i++) {
+        // Throttle: pause between batches + check for pause signal
+        if (i > resumeOffset && i % BATCH_SIZE === 0) {
           await new Promise(resolve => setTimeout(resolve, BATCH_DELAY_MS));
+
+          // Check if campaign was paused externally (via PUT status=PAUSED)
+          const current = await prisma.emailCampaign.findUnique({
+            where: { id: params.id },
+            select: { status: true },
+          });
+          if (current?.status === 'PAUSED') {
+            paused = true;
+            // Save progress so the campaign can resume later
+            await prisma.emailCampaign.update({
+              where: { id: params.id },
+              data: {
+                stats: JSON.stringify({
+                  ...existingStats,
+                  sent: (typeof existingStats.sent === 'number' ? existingStats.sent : 0) + sent,
+                  failed: (typeof existingStats.failed === 'number' ? existingStats.failed : 0) + failed,
+                  sentCount: resumeOffset + sent + failed, // progress offset for resume
+                  totalCount,
+                  delivered: existingStats.delivered ?? 0,
+                  opened: existingStats.opened ?? 0,
+                  clicked: existingStats.clicked ?? 0,
+                  bounced: existingStats.bounced ?? 0,
+                  revenue: existingStats.revenue ?? 0,
+                  totalRecipients: totalCount,
+                  pausedAt: new Date().toISOString(),
+                }),
+              },
+            });
+            logger.info('[Campaign Send] Paused by admin', {
+              campaignId: params.id,
+              sentSoFar: resumeOffset + sent,
+              totalCount,
+            });
+            break;
+          }
         }
         const recipient = validRecipients[i];
         try {
+          // Frequency cap: skip if recipient received a campaign email recently
+          if (CAMPAIGN_FREQUENCY_CAP_HOURS > 0) {
+            const cutoff = new Date(Date.now() - CAMPAIGN_FREQUENCY_CAP_HOURS * 60 * 60 * 1000);
+            const recentCampaign = await prisma.emailLog.findFirst({
+              where: {
+                to: recipient.email,
+                templateId: { startsWith: 'campaign:' },
+                sentAt: { gt: cutoff },
+              },
+              select: { id: true },
+            });
+            if (recentCampaign) {
+              logger.info('[Campaign Send] Frequency cap: skipping recipient', {
+                email: recipient.email,
+                campaignId: params.id,
+                capHours: CAMPAIGN_FREQUENCY_CAP_HOURS,
+              });
+              continue;
+            }
+          }
+
           // Personalize content - HTML-escape user data to prevent XSS
           const safeName = escapeHtml(recipient.name || 'Client');
           const safeEmail = escapeHtml(recipient.email);
@@ -191,21 +287,45 @@ export const POST = withAdminGuard(
         }
       }
 
-      // Update campaign status and stats
+      // If paused, progress was already saved above; return partial result
+      if (paused) {
+        logAdminAction({
+          adminUserId: session.user.id,
+          action: 'PAUSE_EMAIL_CAMPAIGN',
+          targetType: 'EmailCampaign',
+          targetId: params.id,
+          newValue: { sent, failed, paused: true, sentCount: resumeOffset + sent + failed, totalCount },
+          ipAddress: getClientIpFromRequest(_request),
+          userAgent: _request.headers.get('user-agent') || undefined,
+        }).catch(() => {});
+
+        return NextResponse.json({
+          success: true,
+          paused: true,
+          stats: { sent, failed, sentCount: resumeOffset + sent + failed, totalCount },
+        });
+      }
+
+      // Completed: update campaign status and stats
+      const totalSent = (typeof existingStats.sent === 'number' ? existingStats.sent : 0) + sent;
+      const totalFailed = (typeof existingStats.failed === 'number' ? existingStats.failed : 0) + failed;
+
       await prisma.emailCampaign.update({
         where: { id: params.id },
         data: {
           status: 'SENT',
           sentAt: new Date(),
           stats: JSON.stringify({
-            sent,
-            failed,
-            delivered: 0,
-            opened: 0,
-            clicked: 0,
-            bounced: 0,
-            revenue: 0,
-            totalRecipients: validRecipients.length,
+            sent: totalSent,
+            failed: totalFailed,
+            delivered: existingStats.delivered ?? 0,
+            opened: existingStats.opened ?? 0,
+            clicked: existingStats.clicked ?? 0,
+            bounced: existingStats.bounced ?? 0,
+            revenue: existingStats.revenue ?? 0,
+            totalRecipients: totalCount,
+            sentCount: totalCount,
+            totalCount,
           }),
         },
       });
@@ -215,17 +335,17 @@ export const POST = withAdminGuard(
         action: 'SEND_EMAIL_CAMPAIGN',
         targetType: 'EmailCampaign',
         targetId: params.id,
-        newValue: { sent, failed, totalRecipients: validRecipients.length },
+        newValue: { sent: totalSent, failed: totalFailed, totalRecipients: totalCount },
         ipAddress: getClientIpFromRequest(_request),
         userAgent: _request.headers.get('user-agent') || undefined,
       }).catch(() => {});
 
       return NextResponse.json({
         success: true,
-        stats: { sent, failed, totalRecipients: validRecipients.length },
+        stats: { sent: totalSent, failed: totalFailed, sentCount: totalCount, totalCount },
       });
     } catch (error) {
-      console.error('[Campaign Send] Error:', error);
+      logger.error('[Campaign Send] Error', { error: error instanceof Error ? error.message : String(error) });
       // Mark as FAILED (not DRAFT) to prevent duplicate sends on retry
       await prisma.emailCampaign.update({
         where: { id: params.id },

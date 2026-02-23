@@ -50,6 +50,7 @@ import { NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { logger } from '@/lib/logger';
 
 // GET - List quantity discounts for a product
 export const GET = withAdminGuard(async (request, { session: _session }) => {
@@ -77,7 +78,7 @@ export const GET = withAdminGuard(async (request, { session: _session }) => {
 
     return NextResponse.json({ discounts: formattedDiscounts });
   } catch (error) {
-    console.error('Error fetching quantity discounts:', error);
+    logger.error('Error fetching quantity discounts', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to fetch quantity discounts' },
       { status: 500 }
@@ -186,7 +187,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       discounts: formattedDiscounts,
     });
   } catch (error) {
-    console.error('Error creating/updating quantity discounts:', error);
+    logger.error('Error creating/updating quantity discounts', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to save quantity discounts' },
       { status: 500 }
@@ -225,7 +226,7 @@ export const DELETE = withAdminGuard(async (request, { session }) => {
       message: 'Quantity discount tier deleted successfully',
     });
   } catch (error) {
-    console.error('Error deleting quantity discount:', error);
+    logger.error('Error deleting quantity discount', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to delete quantity discount' },
       { status: 500 }

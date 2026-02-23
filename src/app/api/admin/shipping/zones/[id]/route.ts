@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { logger } from '@/lib/logger';
 
 /**
  * PATCH /api/admin/shipping/zones/[id]
@@ -67,7 +68,7 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
 
     return NextResponse.json({ success: true, data: zone });
   } catch (error) {
-    console.error('Update shipping zone error:', error);
+    logger.error('Update shipping zone error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Error updating shipping zone' },
       { status: 500 }
@@ -108,7 +109,7 @@ export const DELETE = withAdminGuard(async (_request, { session, params }) => {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Delete shipping zone error:', error);
+    logger.error('Delete shipping zone error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Error deleting shipping zone' },
       { status: 500 }

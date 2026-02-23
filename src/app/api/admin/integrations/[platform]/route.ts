@@ -14,6 +14,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { logger } from '@/lib/logger';
 
 const VALID_PLATFORMS = [
   'zoom', 'whatsapp', 'teams', 'youtube', 'x', 'tiktok', 'google', 'meta', 'linkedin',
@@ -269,7 +270,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
           });
       }
     } catch (error) {
-      console.error(`Integration test error (${platform}):`, error);
+      logger.error(`Integration test error (${platform})`, { error: error instanceof Error ? error.message : String(error) });
       return NextResponse.json({ success: false, error: 'Connection test failed' });
     }
   }

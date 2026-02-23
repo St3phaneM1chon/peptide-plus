@@ -1,5 +1,7 @@
 export const dynamic = 'force-dynamic';
 
+// TODO: F-081 - Response exposes user emails/userIds in JSON; only return aggregate stats if endpoint is public
+
 /**
  * CRON Job - Rappel de points de fidelite qui expirent
  *
@@ -23,6 +25,8 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { sendEmail, pointsExpiringEmail, generateUnsubscribeUrl } from '@/lib/email';
+// FLAW-063 FIX: Import bounce suppression to skip hard-bounced addresses
+import { shouldSuppressEmail } from '@/lib/email/bounce-handler';
 import { withJobLock } from '@/lib/cron-lock';
 
 const BATCH_SIZE = 10;
@@ -41,6 +45,80 @@ export async function GET(request: NextRequest) {
     const startTime = Date.now();
 
     try {
+      // === FIX F-011: ACTUALLY EXPIRE past-due points ===
+      // Find transactions with expiresAt in the past that haven't been expired yet
+      const now = new Date();
+      const expiredTransactions = await db.loyaltyTransaction.findMany({
+        where: {
+          points: { gt: 0 },
+          expiresAt: { lt: now },
+          // Only EARN types that haven't been offset by an EXPIRE transaction
+          type: { startsWith: 'EARN' },
+        },
+        include: {
+          user: {
+            select: { id: true, loyaltyPoints: true },
+          },
+        },
+      });
+
+      // Group expired points by user
+      const expiredByUser: Record<string, { userId: string; totalExpired: number; transactionIds: string[] }> = {};
+      for (const tx of expiredTransactions) {
+        // Check if an EXPIRE transaction already exists for this transaction (idempotency)
+        const existingExpire = await db.loyaltyTransaction.findFirst({
+          where: {
+            userId: tx.userId,
+            type: 'EXPIRE',
+            description: { contains: tx.id },
+          },
+        });
+        if (existingExpire) continue;
+
+        if (!expiredByUser[tx.userId]) {
+          expiredByUser[tx.userId] = { userId: tx.userId, totalExpired: 0, transactionIds: [] };
+        }
+        expiredByUser[tx.userId].totalExpired += tx.points;
+        expiredByUser[tx.userId].transactionIds.push(tx.id);
+      }
+
+      let expiredCount = 0;
+      for (const data of Object.values(expiredByUser)) {
+        if (data.totalExpired <= 0) continue;
+        try {
+          await db.$transaction(async (tx) => {
+            // Deduct expired points from user balance
+            const updatedUser = await tx.user.update({
+              where: { id: data.userId },
+              data: { loyaltyPoints: { decrement: Math.min(data.totalExpired, data.totalExpired) } },
+              select: { loyaltyPoints: true },
+            });
+            // Ensure points don't go negative
+            if (updatedUser.loyaltyPoints < 0) {
+              await tx.user.update({
+                where: { id: data.userId },
+                data: { loyaltyPoints: 0 },
+              });
+            }
+            // Create EXPIRE transaction for audit trail
+            await tx.loyaltyTransaction.create({
+              data: {
+                userId: data.userId,
+                type: 'EXPIRE',
+                points: -data.totalExpired,
+                description: `Points expired (refs: ${data.transactionIds.join(', ')})`,
+                balanceAfter: Math.max(0, updatedUser.loyaltyPoints),
+              },
+            });
+          });
+          expiredCount++;
+        } catch (err) {
+          console.error(`[CRON:POINTS] Failed to expire points for user ${data.userId}:`, err);
+        }
+      }
+
+      console.log(`[CRON:POINTS] Expired points for ${expiredCount} users (${Object.keys(expiredByUser).length} total)`);
+
       // === STRATEGY 1: Points with explicit expiresAt in ~30 days ===
     const thirtyDaysFromNow = new Date();
     thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
@@ -170,6 +248,25 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // FLAW-043 FIX: Check notification preferences - respect users who opted out of loyalty updates
+    const remainingUserIds = Object.keys(userPointsMap);
+    if (remainingUserIds.length > 0) {
+      const notifPrefs = await db.notificationPreference.findMany({
+        where: {
+          userId: { in: remainingUserIds },
+          loyaltyUpdates: false,
+        },
+        select: { userId: true },
+      }).catch(() => [] as { userId: string }[]);
+
+      const optedOutUserIds = new Set(notifPrefs.map((p) => p.userId));
+      for (const userId of remainingUserIds) {
+        if (optedOutUserIds.has(userId)) {
+          delete userPointsMap[userId];
+        }
+      }
+    }
+
     const eligibleUsers = Object.entries(userPointsMap);
 
     console.log(
@@ -193,6 +290,12 @@ export async function GET(request: NextRequest) {
 
       const batchPromises = batch.map(async ([userId, data]) => {
         try {
+          // FLAW-063 FIX: Check bounce suppression before sending
+          const { suppressed } = await shouldSuppressEmail(data.user.email);
+          if (suppressed) {
+            return { userId, email: data.user.email, expiringPoints: data.expiringPoints, source: data.source, success: false, error: 'bounce_suppressed' };
+          }
+
           // Generate unsubscribe URL (CAN-SPAM / RGPD / LCAP compliance)
           const unsubscribeUrl = await generateUnsubscribeUrl(data.user.email, 'marketing', userId).catch(() => undefined);
 
@@ -215,6 +318,7 @@ export async function GET(request: NextRequest) {
           });
 
           // Log to EmailLog
+          // TODO: FLAW-065 - Add userId field to EmailLog model for efficient user-based queries
           await db.emailLog.create({
             data: {
               templateId: 'points-expiring',
@@ -285,12 +389,21 @@ export async function GET(request: NextRequest) {
       sent: successCount,
       failed: failCount,
       durationMs: duration,
+      pointsExpired: {
+        usersProcessed: expiredCount,
+        totalUsersWithExpiredPoints: Object.keys(expiredByUser).length,
+      },
       breakdown: {
         explicitExpiry: expiringTransactions.length,
         inactiveUsers: inactiveUsersWithPoints.length,
         afterDedup: eligibleUsers.length,
       },
-      results,
+      // FIX F-081: Don't expose user emails/IDs in the response - return only aggregate stats
+      summary: {
+        totalProcessed: eligibleUsers.length,
+        emailsSent: successCount,
+        emailsFailed: failCount,
+      },
     });
     } catch (error) {
       console.error('[CRON:POINTS] Job error:', error);

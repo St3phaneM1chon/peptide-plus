@@ -5,6 +5,7 @@ import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { testTeamsConnection, clearTeamsConfigCache } from '@/lib/integrations/teams';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { logger } from '@/lib/logger';
 
 // GET - Retrieve Teams configuration (no secrets exposed)
 export const GET = withAdminGuard(async () => {
@@ -28,7 +29,7 @@ export const GET = withAdminGuard(async () => {
       hasWebhookUrl: !!(config.webhook_url || process.env.TEAMS_WEBHOOK_URL),
     });
   } catch (error) {
-    console.error('Get Teams config error:', error);
+    logger.error('Get Teams config error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to get config' }, { status: 500 });
   }
 });
@@ -67,7 +68,7 @@ export const PUT = withAdminGuard(async (request, { session }) => {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Update Teams config error:', error);
+    logger.error('Update Teams config error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to update config' }, { status: 500 });
   }
 });
@@ -84,7 +85,7 @@ export const POST = withAdminGuard(async (request) => {
 
     return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
   } catch (error) {
-    console.error('Teams action error:', error);
+    logger.error('Teams action error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Action failed' }, { status: 500 });
   }
 });

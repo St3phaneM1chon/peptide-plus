@@ -10,7 +10,7 @@
  * (#72): EXIF metadata is stripped (except orientation) for privacy.
  */
 
-import { storage, UploadResult, StorageOptions } from '@/lib/storage';
+import { storage, StorageOptions } from '@/lib/storage';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -97,6 +97,9 @@ export async function optimizeImage(
     .rotate() // auto-rotate based on EXIF orientation
     .withMetadata({ orientation: undefined }); // strip all EXIF except what rotate() uses
 
+  // FIX: F42 - Collect variant generation errors and surface them
+  const variantErrors: string[] = [];
+
   // Generate resized WebP variants
   for (const variant of VARIANTS) {
     try {
@@ -125,15 +128,24 @@ export async function optimizeImage(
         format: 'webp',
       });
     } catch (error) {
-      console.error(`Failed to generate ${variant.name} variant:`, error);
+      // FIX: F42 - Collect errors instead of silently swallowing
+      const errMsg = `Failed to generate ${variant.name} variant: ${error instanceof Error ? error.message : String(error)}`;
+      console.error(errMsg);
+      variantErrors.push(errMsg);
     }
   }
 
-  // Upload original (converted to WebP for consistency, with EXIF stripped)
+  // FIX: F42 - If ALL variants failed, throw so the caller knows optimization failed
+  if (variants.length === 0 && variantErrors.length > 0) {
+    throw new Error(`All image variants failed: ${variantErrors.join('; ')}`);
+  }
+
+  // FIX: F75 - Upload original converted to WebP (WebP supports transparency/alpha channel).
+  // TODO: For PNGs with specific ICC color profiles, consider preserving original format as fallback.
   try {
     const originalWebp = await baseImage
       .clone()
-      .webp({ quality: 85 })
+      .webp({ quality: 85, alphaQuality: 100 }) // FIX: F75 - Preserve full alpha quality for transparent images
       .toBuffer();
 
     const originalFilename = `${baseName}-original.webp`;

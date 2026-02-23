@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
+import { logger } from '@/lib/logger';
 
 // ---------------------------------------------------------------------------
 // GET /api/accounting/trial-balance
@@ -81,7 +82,7 @@ export const GET = withAdminGuard(async (request) => {
       asOfDate: asOfDate.toISOString(),
     });
   } catch (error) {
-    console.error('Trial balance error:', error);
+    logger.error('Trial balance error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la génération de la balance de vérification' },
       { status: 500 }

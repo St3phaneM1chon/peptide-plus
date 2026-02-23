@@ -3239,7 +3239,9 @@
       "teamsSetupDesc": "Connect Microsoft Teams for internal order notifications and team alerts. Supports Incoming Webhooks and Graph API.",
       "teamsWebhookLabel": "Incoming Webhook URL",
       "teamsWebhookHint": "Create an Incoming Webhook in your Teams channel and paste the URL here",
-      "teamsOptionalGraphApi": "Optional - only needed for Graph API integration (advanced)"
+      "teamsOptionalGraphApi": "Optional - only needed for Graph API integration (advanced)",
+      "webhookUrl": "Webhook URL",
+      "docs": "Documentation"
     },
     "emailComposer": {
       "send": "Send",
@@ -5257,6 +5259,10 @@
     "subtitle": "மற்ற ஆராய்ச்சியாளர்களுடன் இணைந்து, அனுபவங்களை பகிர்ந்து, கேள்விகள் கேளுங்கள், மற்றும் சமூகத்திலிருந்து கற்றுக்கொள்ளுங்கள்.",
     "support": "ஆதரவு",
     "tagsPlaceholder": "எடுத்துக்காட்டு: bpc-157, மீண்டும் அமைப்பு, தொடக்கவர்",
+    "timeDaysAgo": "{count} நாட்களுக்கு முன்",
+    "timeHoursAgo": "{count} மணி நேரத்திற்கு முன்",
+    "timeJustNow": "இப்போது",
+    "timeYesterday": "நேற்று",
     "title": "சமூக மன்றம்",
     "tryDifferent": "மற்ற தேடல் முயற்சிக்கவும் அல்லது புதிய விவாதத்தை தொடங்கவும்!"
   },
@@ -6731,7 +6737,10 @@
       "removeFromWishlist": "Remove from wishlist"
     },
     "youSave": "நீங்கள் சேமிக்கிறீர்கள்",
-    "researchDisclaimer": "FOR RESEARCH USE ONLY: This product is intended for laboratory and research purposes only. Not for human or animal consumption. By purchasing, you confirm this product will be used exclusively for legitimate research."
+    "researchDisclaimer": "FOR RESEARCH USE ONLY: This product is intended for laboratory and research purposes only. Not for human or animal consumption. By purchasing, you confirm this product will be used exclusively for legitimate research.",
+    "resetFilters": "Reset filters",
+    "retry": "Retry",
+    "productCount": "product"
   },
   "subscriptions": {
     "availableProducts": "சந்தாவிற்காக கிடைக்கிறது",

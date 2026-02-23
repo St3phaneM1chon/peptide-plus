@@ -13,6 +13,7 @@
  */
 
 import { prisma } from '@/lib/db';
+import { logger } from '@/lib/logger';
 import { sendEmail } from './email-service';
 import { generateUnsubscribeUrl } from './unsubscribe';
 import {
@@ -50,6 +51,8 @@ export interface OrderEmailOptions {
   refundAmount?: number;
   /** Whether the refund is partial (for REFUNDED emails) */
   refundIsPartial?: boolean;
+  /** Override locale for the email (defaults to user profile locale, then 'fr') */
+  locale?: 'fr' | 'en';
 }
 
 // ─── Main dispatcher ─────────────────────────────────────────────────────────
@@ -76,7 +79,7 @@ export async function sendOrderLifecycleEmail(
     });
 
     if (!order) {
-      console.error(`[OrderLifecycleEmail] Order ${orderId} not found — skipping ${event} email`);
+      logger.error('[OrderLifecycleEmail] Order not found — skipping email', { orderId, event });
       return;
     }
 
@@ -87,7 +90,7 @@ export async function sendOrderLifecycleEmail(
     });
 
     if (!user) {
-      console.error(`[OrderLifecycleEmail] User ${order.userId} not found — skipping ${event} email for order ${order.orderNumber}`);
+      logger.error('[OrderLifecycleEmail] User not found — skipping email', { userId: order.userId, event, orderNumber: order.orderNumber });
       return;
     }
 
@@ -99,7 +102,12 @@ export async function sendOrderLifecycleEmail(
     ).catch(() => undefined);
 
     // ── 4. Build OrderData ────────────────────────────────────────────────
-    const locale = (user.locale === 'en' ? 'en' : 'fr') as 'fr' | 'en';
+    // Locale priority: explicit option > user profile > default 'fr'
+    const locale: 'fr' | 'en' = options.locale
+      ? options.locale
+      : user.locale === 'en'
+        ? 'en'
+        : 'fr';
 
     const orderData: OrderData = {
       orderNumber: order.orderNumber,
@@ -160,7 +168,7 @@ export async function sendOrderLifecycleEmail(
         emailContent = orderRefundEmail(orderData);
         break;
       default:
-        console.error(`[OrderLifecycleEmail] Unknown event: ${event}`);
+        logger.error('[OrderLifecycleEmail] Unknown event', { event });
         return;
     }
 
@@ -190,19 +198,15 @@ export async function sendOrderLifecycleEmail(
         }),
       },
     }).catch((err) => {
-      console.error('[OrderLifecycleEmail] Failed to write audit log:', err);
+      logger.error('[OrderLifecycleEmail] Failed to write audit log', { error: err instanceof Error ? err.message : String(err) });
     });
 
     if (result.success) {
-      console.log(
-        `[OrderLifecycleEmail] ${event} email sent for order ${order.orderNumber} to ${user.email} (msgId: ${result.messageId})`,
-      );
+      logger.info('[OrderLifecycleEmail] Email sent', { event, orderNumber: order.orderNumber, to: user.email, messageId: result.messageId });
     } else {
-      console.error(
-        `[OrderLifecycleEmail] Failed to send ${event} email for order ${order.orderNumber}: ${result.error}`,
-      );
+      logger.error('[OrderLifecycleEmail] Failed to send email', { event, orderNumber: order.orderNumber, error: result.error });
     }
   } catch (error) {
-    console.error(`[OrderLifecycleEmail] Unexpected error sending ${event} email for order ${orderId}:`, error);
+    logger.error('[OrderLifecycleEmail] Unexpected error sending email', { event, orderId, error: error instanceof Error ? error.message : String(error) });
   }
 }

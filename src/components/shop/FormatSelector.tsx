@@ -1,5 +1,7 @@
 'use client';
 
+import { useI18n } from '@/i18n/client';
+
 export type FormatType = 'vial_2ml' | 'vial_10ml' | 'cartridge_3ml' | 'cartridge_kit_12' | 'capsule' | 'pack_10' | 'syringe' | 'accessory';
 
 interface Format {
@@ -19,16 +21,16 @@ interface FormatSelectorProps {
   formatPrice: (price: number) => string;
 }
 
-// Format icons/images mapping
-const formatImages: Record<FormatType, { icon: string; label: string }> = {
-  vial_2ml: { icon: '💉', label: 'Vial 2ml' },
-  vial_10ml: { icon: '🧪', label: 'Vial 10ml' },
-  cartridge_3ml: { icon: '💊', label: 'Cartridge 3ml' },
-  cartridge_kit_12: { icon: '📦', label: 'Kit 12 Cartridges' },
-  capsule: { icon: '💊', label: 'Capsules' },
-  pack_10: { icon: '📦', label: '10-Pack' },
-  syringe: { icon: '💉', label: 'Syringe' },
-  accessory: { icon: '🔧', label: 'Accessory' },
+// FIX: BUG-067 - Format icons mapping; labels now come from format.name (DB) instead of hardcoded English
+const formatIcons: Record<FormatType, string> = {
+  vial_2ml: '💉',
+  vial_10ml: '🧪',
+  cartridge_3ml: '💊',
+  cartridge_kit_12: '📦',
+  capsule: '💊',
+  pack_10: '📦',
+  syringe: '💉',
+  accessory: '🔧',
 };
 
 export default function FormatSelector({ 
@@ -37,15 +39,18 @@ export default function FormatSelector({
   onSelect, 
   formatPrice 
 }: FormatSelectorProps) {
+  const { t } = useI18n();
   return (
     <div className="space-y-3">
       <label id="format-selector-label" className="text-sm text-neutral-500 uppercase tracking-wider block">
-        Select Format:
+        {t('shop.selectFormat') || 'Select Format'}:
       </label>
 
+      {/* TODO: BUG-097 - Add onKeyDown handler for ArrowUp/ArrowDown keyboard navigation within radiogroup */}
       <div className="grid grid-cols-2 gap-3" role="radiogroup" aria-labelledby="format-selector-label">
         {formats.map((format) => {
-          const formatInfo = formatImages[format.type] || { icon: '📦', label: format.name };
+          // FIX: BUG-067 - Use format.name from DB as label; only icon from static map
+          const formatIcon = formatIcons[format.type] || '📦';
           const isSelected = selectedFormat.id === format.id;
           
           return (
@@ -53,7 +58,7 @@ export default function FormatSelector({
               key={format.id}
               role="radio"
               aria-checked={isSelected}
-              aria-label={`${format.name} - ${formatPrice(format.price)}${!format.inStock ? ' (out of stock)' : ''}`}
+              aria-label={`${format.name} - ${formatPrice(format.price)}${!format.inStock ? ` (${t('shop.outOfStock')})` : ''}`}
               onClick={() => onSelect(format)}
               disabled={!format.inStock}
               className={`relative flex items-center gap-3 p-3 rounded-xl border-2 text-start transition-all ${
@@ -68,7 +73,7 @@ export default function FormatSelector({
               <div className={`w-12 h-12 rounded-lg flex items-center justify-center text-2xl ${
                 isSelected ? 'bg-orange-100' : 'bg-neutral-100'
               }`}>
-                {formatInfo.icon}
+                {formatIcon}
               </div>
               
               {/* Format Info */}
@@ -102,14 +107,14 @@ export default function FormatSelector({
               {/* Out of Stock Badge */}
               {!format.inStock && (
                 <span className="absolute top-2 end-2 text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full">
-                  Out of stock
+                  {t('shop.outOfStock') || 'Out of stock'}
                 </span>
               )}
 
               {/* Low Stock Warning */}
               {format.inStock && format.stockQuantity <= 5 && (
                 <span className="absolute bottom-1 end-2 text-xs text-amber-600">
-                  {format.stockQuantity} left
+                  {format.stockQuantity} {t('shop.left') || 'left'}
                 </span>
               )}
             </button>

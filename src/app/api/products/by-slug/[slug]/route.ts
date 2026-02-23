@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { logger } from '@/lib/logger';
 import { withTranslation, getTranslatedFields, DB_SOURCE_LOCALE } from '@/lib/translation';
 import { defaultLocale } from '@/i18n/config';
 
@@ -15,8 +16,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const { slug } = await params;
     const locale = request.nextUrl.searchParams.get('locale') || defaultLocale;
 
-    const product = await prisma.product.findUnique({
-      where: { slug },
+    // BUG-003 FIX: Filter on isActive to prevent exposing inactive products via QuickView
+    const product = await prisma.product.findFirst({
+      where: { slug, isActive: true },
       include: {
         category: {
           select: { id: true, name: true, slug: true },
@@ -93,7 +95,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json({ product: transformedProduct });
   } catch (error) {
-    console.error('Error fetching product by slug:', error);
+    logger.error('Error fetching product by slug', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to fetch product' },
       { status: 500 }

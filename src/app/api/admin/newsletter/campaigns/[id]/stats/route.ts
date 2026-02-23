@@ -15,6 +15,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
+import { logger } from '@/lib/logger';
 
 const CAMPAIGNS_KEY = 'newsletter_campaigns';
 
@@ -121,7 +122,7 @@ export const GET = withAdminGuard(async (_request: NextRequest, { session: _sess
       },
     });
   } catch (error) {
-    console.error('GET newsletter campaign stats error:', error);
+    logger.error('GET newsletter campaign stats error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Error fetching campaign stats' },
       { status: 500 }

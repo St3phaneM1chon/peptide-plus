@@ -7,6 +7,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
+import { logger } from '@/lib/logger';
 
 export const GET = withAdminGuard(async (request: NextRequest, { session }) => {
   try {
@@ -91,7 +92,7 @@ export const GET = withAdminGuard(async (request: NextRequest, { session }) => {
       },
     });
   } catch (error) {
-    console.error('Error fetching reviews:', error);
+    logger.error('Error fetching reviews', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la récupération des avis' },
       { status: 500 }

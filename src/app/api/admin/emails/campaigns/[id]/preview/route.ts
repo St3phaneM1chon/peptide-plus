@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { escapeHtml } from '@/lib/email/templates/base-template';
+import { logger } from '@/lib/logger';
 
 const SAMPLE_VARS: Record<string, string> = {
   prenom: 'Jean',
@@ -44,7 +45,7 @@ export const GET = withAdminGuard(
         variables: Object.keys(SAMPLE_VARS),
       });
     } catch (error) {
-      console.error('[Campaign Preview] Error:', error);
+      logger.error('[Campaign Preview] Error', { error: error instanceof Error ? error.message : String(error) });
       return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
   }

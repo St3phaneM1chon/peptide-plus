@@ -1,6 +1,11 @@
 /**
  * Accounting Alerts Service
  * Intelligent notifications for financial events
+ *
+ * FIX: F060 - This service overlaps with alert-rules.service.ts (DB-persisted rules).
+ * TODO: Consolidate alert logic. This file handles in-memory alert generation from data;
+ * alert-rules.service.ts handles user-configured DB-based alert rules. Eventually merge
+ * or clearly separate responsibilities (this = built-in alerts, rules = custom alerts).
  */
 
 import { Alert, TaxReport } from './types';
@@ -171,7 +176,8 @@ export function generateClosingAlerts(
     if (lastClosedPeriod !== prevPeriod) {
       alerts.push({
         id: `closing-${prevPeriod}`,
-        type: 'RECONCILIATION_PENDING',
+        // F068 FIX: Use correct alert type for period closing
+        type: 'PERIOD_CLOSE_PENDING',
         severity: dayOfMonth > 15 ? 'HIGH' : 'MEDIUM',
         title: `Clôture de période en attente`,
         message: `La période ${getMonthName(prevMonth)} ${prevYear} n'est pas encore clôturée.`,
@@ -275,7 +281,8 @@ export function getNextTaxDeadline(
     case 'QUARTERLY':
       const currentQuarter = Math.ceil(currentMonth / 3);
       const quarterEndMonth = currentQuarter * 3;
-      // Due one month after quarter end
+      // FIX: F065 - Q4 year boundary: when quarterEndMonth=12, dueMonth rolls to 1 and
+      // dueYear increments. new Date(year+1, 1, 0) correctly gives Jan 31 of next year.
       const dueMonth = quarterEndMonth === 12 ? 1 : quarterEndMonth + 1;
       const dueYear = quarterEndMonth === 12 ? currentYear + 1 : currentYear;
       deadline = new Date(dueYear, dueMonth, 0);
@@ -313,16 +320,18 @@ export function getAlertStyle(alert: Alert): { icon: string; bgColor: string; te
     LOW: { bgColor: 'bg-blue-50', textColor: 'text-blue-800', borderColor: 'border-blue-200' },
   };
 
-  const typeIcons = {
-    OVERDUE_INVOICE: '💰',
-    LOW_CASH: '🏦',
-    TAX_DUE: '📋',
-    RECONCILIATION_PENDING: '🔄',
-    EXPENSE_ANOMALY: '📊',
+  // F077 FIX: Use icon names instead of emojis for cross-platform consistency
+  const typeIcons: Record<string, string> = {
+    OVERDUE_INVOICE: 'alert-circle',
+    LOW_CASH: 'trending-down',
+    TAX_DUE: 'file-text',
+    RECONCILIATION_PENDING: 'refresh-cw',
+    PERIOD_CLOSE_PENDING: 'calendar-check',
+    EXPENSE_ANOMALY: 'bar-chart-2',
   };
 
   return {
-    icon: typeIcons[alert.type],
+    icon: typeIcons[alert.type] || 'info',
     ...severityStyles[alert.severity],
   };
 }

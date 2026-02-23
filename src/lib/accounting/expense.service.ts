@@ -60,7 +60,8 @@ export async function createExpenseEntry(data: {
       const parsed = parseInt(maxRow.max_num.split('-').pop() || '0');
       if (!isNaN(parsed)) nextNum = parsed + 1;
     }
-    const entryNumber = `${prefix}${String(nextNum).padStart(4, '0')}`;
+    // F-063 FIX: Use 5-digit padding for consistency with other entry generators
+    const entryNumber = `${prefix}${String(nextNum).padStart(5, '0')}`;
 
     return tx.journalEntry.create({
       data: {
@@ -171,8 +172,10 @@ export async function getDepartmentBudgetVsActual(
       'july', 'august', 'september', 'october', 'november', 'december',
     ] as const;
 
+    // FIX (F021): Filter budget lines by department (costCenter) to avoid
+    // summing ALL expense lines regardless of department
     for (const line of budget.lines) {
-      if (line.type === 'EXPENSE') {
+      if (line.type === 'EXPENSE' && (!line.costCenter || line.costCenter === department)) {
         if (month) {
           budgeted += Number(line[monthFields[month - 1]]);
         } else {

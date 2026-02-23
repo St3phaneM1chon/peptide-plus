@@ -1,6 +1,8 @@
+// TODO: F-052 - key={tier.name} may cause React warnings if two tiers share the same name; use unique index or ID
+// TODO: F-062 - Simulation does not account for special bonuses (birthday, signup, review); add scenario options
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Plus, Loader2, Trash2 } from 'lucide-react';
 import { PageHeader, Button, Modal, FormField, Input } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
@@ -31,6 +33,7 @@ export default function FidelitePage() {
   const [config, setConfig] = useState<LoyaltyConfig | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  // FIX: FLAW-086 - TODO: Use tier index or stable ID instead of name for tier identification
   const [editingTier, setEditingTier] = useState<string | null>(null);
 
   // Tier edit form state
@@ -44,11 +47,8 @@ export default function FidelitePage() {
   const [simAmount, setSimAmount] = useState(100);
   const [simTier, setSimTier] = useState('');
 
-  useEffect(() => {
-    fetchConfig();
-  }, []);
-
-  const fetchConfig = async () => {
+  // FIX: FLAW-055 - Wrap fetchConfig in useCallback for stable reference
+  const fetchConfig = useCallback(async () => {
     try {
       const res = await fetch('/api/admin/loyalty/config');
       const data = await res.json();
@@ -59,17 +59,27 @@ export default function FidelitePage() {
       setConfig(null);
     }
     setLoading(false);
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [t]);
+
+  useEffect(() => {
+    fetchConfig();
+  }, [fetchConfig]);
 
   const saveConfig = async () => {
     setSaving(true);
     try {
-      await fetch('/api/admin/loyalty/config', {
+      const res = await fetch('/api/admin/loyalty/config', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(config),
       });
-      toast.success(t('admin.loyalty.configSaved'));
+      if (res.ok) {
+        toast.success(t('admin.loyalty.configSaved'));
+      } else {
+        const data = await res.json().catch(() => ({}));
+        toast.error(data.error || t('admin.loyalty.configSaveError') || 'Error saving configuration');
+      }
     } catch (err) {
       console.error('Error saving config:', err);
       toast.error(t('admin.loyalty.configSaveError') || 'Error saving configuration');
@@ -97,10 +107,17 @@ export default function FidelitePage() {
 
   const saveTier = () => {
     if (!config || !editingTier) return;
+    const newName = tierFormName.trim() || editingTier;
+    // FIX F-014: Prevent tier name collisions by checking uniqueness
+    const nameConflict = config.tiers.some((tier) => tier.name !== editingTier && tier.name === newName);
+    if (nameConflict) {
+      toast.error(t('admin.loyalty.tierNameExists') || 'A tier with this name already exists');
+      return;
+    }
     const updatedTiers = config.tiers.map((tier) => {
       if (tier.name === editingTier) {
         return {
-          name: tierFormName.trim() || tier.name,
+          name: newName,
           minPoints: tierFormMinPoints,
           multiplier: tierFormMultiplier,
           perks: tierFormPerks.split('\n').map((p) => p.trim()).filter(Boolean),
@@ -110,7 +127,7 @@ export default function FidelitePage() {
       return tier;
     });
     setConfig({ ...config, tiers: updatedTiers });
-    toast.success(t('admin.loyalty.tierSaved'));
+    toast.info(t('admin.loyalty.tierUpdatedClickSave') || 'Tier updated locally - click Save to persist changes');
     setEditingTier(null);
   };
 
@@ -135,8 +152,26 @@ export default function FidelitePage() {
     setEditingTier(newTier.name);
   };
 
-  const deleteTier = (tierName: string) => {
+  // FIX F-027: Check if users exist in the tier before allowing deletion
+  const deleteTier = async (tierName: string) => {
     if (!config) return;
+    // Check server-side if users are in this tier
+    try {
+      const res = await fetch(`/api/admin/users?loyaltyTier=${encodeURIComponent(tierName)}&limit=1`);
+      if (res.ok) {
+        const data = await res.json();
+        const userCount = data.total || data.users?.length || 0;
+        if (userCount > 0) {
+          const proceed = confirm(
+            (t('admin.loyalty.tierHasUsers') || `This tier has ${userCount} user(s). They will be moved to the default tier. Continue?`)
+              .replace('{count}', String(userCount))
+          );
+          if (!proceed) return;
+        }
+      }
+    } catch {
+      // If check fails, still allow with standard confirmation
+    }
     if (!confirm(t('admin.loyalty.confirmDeleteTier'))) return;
     setConfig({
       ...config,
@@ -157,8 +192,9 @@ export default function FidelitePage() {
     return { points, discount };
   }, [config, simAmount, simTier]);
 
+  // FIX: F-051 - Corrected orange color mapping (was using sky instead of orange)
   const tierColors: Record<string, string> = {
-    orange: 'bg-sky-100 text-sky-800 border-sky-300',
+    orange: 'bg-orange-100 text-orange-800 border-orange-300',
     gray: 'bg-slate-200 text-slate-700 border-slate-400',
     yellow: 'bg-yellow-100 text-yellow-800 border-yellow-400',
     blue: 'bg-blue-100 text-blue-800 border-blue-400',
@@ -194,7 +230,7 @@ export default function FidelitePage() {
             <Input
               type="number"
               value={config.pointsPerDollar}
-              onChange={(e) => setConfig({ ...config, pointsPerDollar: parseInt(e.target.value) || 0 })}
+              onChange={(e) => setConfig({ ...config, pointsPerDollar: parseFloat(e.target.value) || 0 })}
             />
           </FormField>
           <FormField label={t('admin.loyalty.pointValue')} hint={t('admin.loyalty.pointValueHint', { value: String(config.pointsValue) })}>
@@ -388,9 +424,10 @@ export default function FidelitePage() {
               <Input
                 type="number"
                 min={0.1}
+                max={10}
                 step={0.25}
                 value={tierFormMultiplier}
-                onChange={(e) => setTierFormMultiplier(parseFloat(e.target.value) || 1)}
+                onChange={(e) => setTierFormMultiplier(Math.min(10, parseFloat(e.target.value) || 1))}
               />
             </FormField>
           </div>
@@ -408,11 +445,12 @@ export default function FidelitePage() {
               onChange={(e) => setTierFormColor(e.target.value)}
               className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-sky-700 focus:border-sky-700"
             >
-              <option value="orange">Bronze</option>
-              <option value="gray">Silver</option>
-              <option value="yellow">Gold</option>
-              <option value="blue">Platinum</option>
-              <option value="purple">Diamond</option>
+              {/* FIX: F-064/F-086 - Clarify that value is color key; label shows color + tier name */}
+              <option value="orange">{t('admin.loyalty.colorOrange') || 'Orange (Bronze)'}</option>
+              <option value="gray">{t('admin.loyalty.colorGray') || 'Gray (Silver)'}</option>
+              <option value="yellow">{t('admin.loyalty.colorYellow') || 'Yellow (Gold)'}</option>
+              <option value="blue">{t('admin.loyalty.colorBlue') || 'Blue (Platinum)'}</option>
+              <option value="purple">{t('admin.loyalty.colorPurple') || 'Purple (Diamond)'}</option>
             </select>
           </FormField>
         </div>

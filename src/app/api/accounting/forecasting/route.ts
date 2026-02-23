@@ -11,6 +11,7 @@ import {
   STANDARD_SCENARIOS,
   getForecastMetrics,
 } from '@/lib/accounting/forecasting.service';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/accounting/forecasting
@@ -93,7 +94,7 @@ export const GET = withAdminGuard(async (request) => {
       },
     });
   } catch (error) {
-    console.error('Erreur lors de la génération des prévisions:', error);
+    logger.error('Erreur lors de la génération des prévisions', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la génération des prévisions financières' },
       { status: 500 }
@@ -142,7 +143,7 @@ export const POST = withAdminGuard(async (request) => {
 
     return NextResponse.json({ projections, alerts });
   } catch (error) {
-    console.error('Erreur lors de la projection de trésorerie:', error);
+    logger.error('Erreur lors de la projection de trésorerie', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la projection de trésorerie' },
       { status: 500 }

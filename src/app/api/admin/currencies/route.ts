@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { prisma } from '@/lib/db';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/admin/currencies
@@ -33,7 +34,7 @@ export const GET = withAdminGuard(async (_request, { session: _session }) => {
 
     return NextResponse.json({ currencies: mapped });
   } catch (error) {
-    console.error('Get currencies error:', error);
+    logger.error('Get currencies error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Error fetching currencies' },
       { status: 500 }
@@ -118,7 +119,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       { status: 201 }
     );
   } catch (error) {
-    console.error('Create currency error:', error);
+    logger.error('Create currency error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Error creating currency' },
       { status: 500 }

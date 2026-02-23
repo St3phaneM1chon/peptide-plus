@@ -4,11 +4,14 @@
  */
 
 import { randomBytes, createHmac } from 'crypto';
-import { cookies } from 'next/headers';
+// NOTE: cookies() from 'next/headers' is loaded dynamically inside server-only
+// functions to avoid breaking client component imports of this module.
+// See: verifyCSRFMiddleware() and setCSRFCookie()
 
 // SECURITY: In production, CSRF_SECRET or NEXTAUTH_SECRET must be set.
 // In development, use a stable dev-only secret instead of the insecure 'build-placeholder'.
-const DEV_FALLBACK_SECRET = 'dev-csrf-secret-not-for-production-use-only';
+// FAILLE-035 FIX: Use random secret in dev to avoid deterministic tokens
+const DEV_FALLBACK_SECRET = randomBytes(32).toString('hex');
 
 function resolveCSRFSecret(): string {
   const secret = process.env.CSRF_SECRET || process.env.NEXTAUTH_SECRET;
@@ -33,9 +36,16 @@ function resolveCSRFSecret(): string {
   return DEV_FALLBACK_SECRET;
 }
 
-const CSRF_SECRET: string = resolveCSRFSecret();
+// FAILLE-036 FIX: Lazy resolve to avoid cold-start issues where env vars aren't ready yet
+let _csrfSecret: string | null = null;
+function getCSRFSecret(): string {
+  if (!_csrfSecret) _csrfSecret = resolveCSRFSecret();
+  return _csrfSecret;
+}
 const CSRF_COOKIE_NAME = 'csrf-token';
 const CSRF_HEADER_NAME = 'x-csrf-token';
+// TODO: FAILLE-065 - No auto-refresh mechanism for expired CSRF tokens. If admin leaves page open >1h,
+//       all mutations will fail 403. Add a refresh interceptor that detects 403 CSRF and re-fetches token.
 const TOKEN_EXPIRY_MS = 3600000; // 1 heure
 
 interface CSRFToken {
@@ -51,7 +61,7 @@ export function generateCSRFToken(): CSRFToken {
   const token = randomBytes(32).toString('hex');
   const expires = Date.now() + TOKEN_EXPIRY_MS;
   const data = `${token}:${expires}`;
-  const signature = createHmac('sha256', CSRF_SECRET).update(data).digest('hex');
+  const signature = createHmac('sha256', getCSRFSecret()).update(data).digest('hex');
 
   return { token, expires, signature };
 }
@@ -94,7 +104,7 @@ export function verifyCSRFToken(encoded: string, headerToken: string): {
 
   // Vérifier la signature
   const data = `${csrfData.token}:${csrfData.expires}`;
-  const expectedSignature = createHmac('sha256', CSRF_SECRET).update(data).digest('hex');
+  const expectedSignature = createHmac('sha256', getCSRFSecret()).update(data).digest('hex');
 
   if (csrfData.signature !== expectedSignature) {
     return { valid: false, error: 'Signature CSRF invalide' };
@@ -121,19 +131,27 @@ export async function verifyCSRFMiddleware(request: Request): Promise<{
     return { valid: true };
   }
 
+  const { cookies } = await import('next/headers');
   const cookieStore = await cookies();
   const cookieToken = cookieStore.get(CSRF_COOKIE_NAME)?.value;
   const headerToken = request.headers.get(CSRF_HEADER_NAME);
 
   if (!cookieToken) {
+    // FAILLE-079 FIX: Log CSRF validation failures for security monitoring
+    console.warn(JSON.stringify({ event: 'csrf_failed', reason: 'missing_cookie', method: request.method, url: request.url }));
     return { valid: false, error: 'Cookie CSRF manquant' };
   }
 
   if (!headerToken) {
+    console.warn(JSON.stringify({ event: 'csrf_failed', reason: 'missing_header', method: request.method, url: request.url }));
     return { valid: false, error: 'Header CSRF manquant' };
   }
 
-  return verifyCSRFToken(cookieToken, headerToken);
+  const result = verifyCSRFToken(cookieToken, headerToken);
+  if (!result.valid) {
+    console.warn(JSON.stringify({ event: 'csrf_failed', reason: 'invalid_token', method: request.method, url: request.url }));
+  }
+  return result;
 }
 
 /**
@@ -144,6 +162,7 @@ export async function setCSRFCookie(): Promise<string> {
   const csrfToken = generateCSRFToken();
   const encoded = encodeCSRFToken(csrfToken);
   
+  const { cookies } = await import('next/headers');
   const cookieStore = await cookies();
   cookieStore.set(CSRF_COOKIE_NAME, encoded, {
     httpOnly: false, // Doit être lisible par JS pour l'envoyer dans le header

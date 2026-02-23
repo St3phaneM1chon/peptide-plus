@@ -18,6 +18,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { logger } from '@/lib/logger';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -85,7 +86,7 @@ export const GET = withAdminGuard(async () => {
       total: zones.length,
     });
   } catch (error) {
-    console.error('GET shipping-methods error:', error);
+    logger.error('GET shipping-methods error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Error fetching shipping methods' },
       { status: 500 },
@@ -169,7 +170,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
       { status: 201 },
     );
   } catch (error) {
-    console.error('POST shipping-methods error:', error);
+    logger.error('POST shipping-methods error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Error creating shipping method' },
       { status: 500 },

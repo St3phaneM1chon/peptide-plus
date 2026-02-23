@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { logger } from '@/lib/logger';
 
 // Pre-defined RFM segments
 const RFM_SEGMENTS = [
@@ -56,15 +57,17 @@ const RFM_SEGMENTS = [
   },
 ];
 
-export const GET = withAdminGuard(async (_request, { session: _session }) => {
+export const GET = withAdminGuard(async (request, { session: _session }) => {
   try {
+    const { searchParams } = new URL(request.url);
+    const refreshCounts = searchParams.get('refreshCounts') === 'true';
     const now = new Date();
 
     // Calculate RFM segment counts
     const segmentsWithCounts = await Promise.all(
       RFM_SEGMENTS.map(async (segment) => {
         const count = await countSegment(segment.query, now);
-        return { ...segment, count, type: 'rfm' as const };
+        return { ...segment, count, lastCountedAt: now.toISOString(), type: 'rfm' as const };
       })
     );
 
@@ -79,6 +82,7 @@ export const GET = withAdminGuard(async (_request, { session: _session }) => {
         description: 'Tous les utilisateurs avec email verifie',
         color: '#1F2937',
         count: totalUsers,
+        lastCountedAt: now.toISOString(),
         type: 'builtin' as const,
       },
       {
@@ -89,6 +93,7 @@ export const GET = withAdminGuard(async (_request, { session: _session }) => {
         count: await prisma.user.count({
           where: { loyaltyTier: { in: ['GOLD', 'PLATINUM', 'DIAMOND'] } },
         }),
+        lastCountedAt: now.toISOString(),
         type: 'builtin' as const,
       },
       {
@@ -97,6 +102,7 @@ export const GET = withAdminGuard(async (_request, { session: _session }) => {
         description: 'Abonnes newsletter',
         color: '#10B981',
         count: await prisma.newsletterSubscriber.count({ where: { isActive: true } }),
+        lastCountedAt: now.toISOString(),
         type: 'builtin' as const,
       },
       {
@@ -105,6 +111,7 @@ export const GET = withAdminGuard(async (_request, { session: _session }) => {
         description: 'Clients en francais',
         color: '#3B82F6',
         count: await prisma.user.count({ where: { locale: 'fr' } }),
+        lastCountedAt: now.toISOString(),
         type: 'builtin' as const,
       },
       {
@@ -113,6 +120,7 @@ export const GET = withAdminGuard(async (_request, { session: _session }) => {
         description: 'Clients en anglais',
         color: '#EF4444',
         count: await prisma.user.count({ where: { locale: 'en' } }),
+        lastCountedAt: now.toISOString(),
         type: 'builtin' as const,
       },
     ];
@@ -122,27 +130,79 @@ export const GET = withAdminGuard(async (_request, { session: _session }) => {
       orderBy: { createdAt: 'desc' },
     });
 
-    const customWithType = customSegments.map(s => ({
-      id: s.id,
-      name: s.name,
-      description: s.description,
-      color: s.color || '#6B7280',
-      count: s.contactCount,
-      type: 'custom' as const,
-      query: s.query,
-    }));
+    // If refreshCounts=true, recalculate counts for custom segments and persist them
+    let customWithType;
+    if (refreshCounts && customSegments.length > 0) {
+      customWithType = await Promise.all(
+        customSegments.map(async (s) => {
+          let queryObj: Record<string, unknown> = {};
+          try {
+            queryObj = JSON.parse(s.query);
+          } catch { /* use empty query */ }
+
+          const count = await countSegment(queryObj, now);
+
+          // Persist the recalculated count
+          await prisma.emailSegment.update({
+            where: { id: s.id },
+            data: { contactCount: count },
+          }).catch(() => {}); // non-blocking
+
+          return {
+            id: s.id,
+            name: s.name,
+            description: s.description,
+            color: s.color || '#6B7280',
+            count,
+            lastCountedAt: now.toISOString(),
+            type: 'custom' as const,
+            query: s.query,
+          };
+        })
+      );
+    } else {
+      customWithType = customSegments.map(s => ({
+        id: s.id,
+        name: s.name,
+        description: s.description,
+        color: s.color || '#6B7280',
+        count: s.contactCount,
+        lastCountedAt: s.updatedAt.toISOString(),
+        type: 'custom' as const,
+        query: s.query,
+      }));
+    }
 
     return NextResponse.json({
       segments: [...segmentsWithCounts, ...builtInSegments, ...customWithType],
       totalUsers,
+      countedAt: now.toISOString(),
     });
   } catch (error) {
-    console.error('[Segments] Error:', error);
+    logger.error('[Segments] Error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 });
 
-async function countSegment(query: Record<string, unknown>, now: Date): Promise<number> {
+// Security: whitelist allowed query fields to prevent arbitrary Prisma injection
+const ALLOWED_SEGMENT_FIELDS = new Set([
+  'minOrders', 'maxOrders', 'minSpent', 'maxSpent',
+  'lastOrderDays', 'lastOrderDaysMin', 'lastOrderDaysMax',
+  'hasOrders', 'isVerified', 'newsletter', 'totalSpent',
+]);
+
+function sanitizeSegmentQuery(query: Record<string, unknown>): Record<string, unknown> {
+  const sanitized: Record<string, unknown> = {};
+  for (const key of Object.keys(query)) {
+    if (ALLOWED_SEGMENT_FIELDS.has(key)) {
+      sanitized[key] = query[key];
+    }
+  }
+  return sanitized;
+}
+
+async function countSegment(rawQuery: Record<string, unknown>, now: Date): Promise<number> {
+  const query = sanitizeSegmentQuery(rawQuery);
   const where: Record<string, unknown> = { emailVerified: { not: null } };
 
   if (query.minOrders !== undefined || query.maxOrders !== undefined) {
@@ -185,10 +245,53 @@ async function countSegment(query: Record<string, unknown>, now: Date): Promise<
 export const POST = withAdminGuard(async (request, { session }) => {
   try {
     const body = await request.json();
-    const { name, description, query, color } = body;
+    const { name, description, query, color, sourceId } = body;
 
+    // Clone mode: duplicate an existing custom segment
+    if (sourceId) {
+      const source = await prisma.emailSegment.findUnique({ where: { id: sourceId } });
+      if (!source) {
+        return NextResponse.json({ error: 'Source segment not found' }, { status: 404 });
+      }
+
+      // Recalculate the contact count for the cloned segment
+      let queryObj: Record<string, unknown> = {};
+      try { queryObj = JSON.parse(source.query); } catch { /* use empty */ }
+      const count = await countSegment(queryObj, new Date());
+
+      const cloned = await prisma.emailSegment.create({
+        data: {
+          name: name || `${source.name} (Copy)`,
+          description: source.description,
+          query: source.query,
+          color: source.color || '#6B7280',
+          contactCount: count,
+          createdBy: session.user.id,
+        },
+      });
+
+      return NextResponse.json({
+        segment: {
+          id: cloned.id,
+          name: cloned.name,
+          description: cloned.description,
+          color: cloned.color || '#6B7280',
+          count,
+          lastCountedAt: new Date().toISOString(),
+          type: 'custom' as const,
+          query: cloned.query,
+        },
+      });
+    }
+
+    // Normal creation mode
     if (!name || !query) {
       return NextResponse.json({ error: 'Name and query are required' }, { status: 400 });
+    }
+
+    // Security: reject oversized query strings to prevent DoS / injection
+    if (typeof query === 'string' && query.length > 10000) {
+      return NextResponse.json({ error: 'query too large (max 10KB)' }, { status: 400 });
     }
 
     // Validate query is a non-null object
@@ -215,7 +318,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
 
     return NextResponse.json({ segment: { ...segment, type: 'custom' } });
   } catch (error) {
-    console.error('[Segments] Create error:', error);
+    logger.error('[Segments] Create error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 });

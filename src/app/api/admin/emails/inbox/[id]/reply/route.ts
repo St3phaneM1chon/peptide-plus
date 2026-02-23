@@ -11,6 +11,7 @@ import { withAdminGuard } from '@/lib/admin-api-guard';
 import { sendEmail } from '@/lib/email/email-service';
 import { generateUnsubscribeUrl } from '@/lib/email/unsubscribe';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { logger } from '@/lib/logger';
 
 export const POST = withAdminGuard(
   async (request: NextRequest, { session, params }: { session: { user: { id: string; name?: string; email?: string } }; params: { id: string } }) => {
@@ -21,6 +22,39 @@ export const POST = withAdminGuard(
 
       if (!to || !subject || !htmlBody) {
         return NextResponse.json({ error: 'Missing required fields: to, subject, htmlBody' }, { status: 400 });
+      }
+
+      // Security #13: Validate email format and strip header injection characters
+      const emailRegex = /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/;
+      const sanitizedTo = String(to).replace(/[\r\n]/g, '').trim();
+      if (!emailRegex.test(sanitizedTo) || sanitizedTo !== String(to).trim()) {
+        return NextResponse.json({ error: 'Invalid email address format' }, { status: 400 });
+      }
+
+      // Security: validate htmlBody type and size
+      if (htmlBody !== undefined && htmlBody !== null) {
+        if (typeof htmlBody !== 'string') {
+          return NextResponse.json({ error: 'htmlBody must be a string' }, { status: 400 });
+        }
+        if (htmlBody.length > 512000) { // 500KB max
+          return NextResponse.json({ error: 'htmlBody too large (max 500KB)' }, { status: 400 });
+        }
+      }
+
+      // Security: validate scheduledFor date
+      if (scheduledFor) {
+        const scheduledDate = new Date(scheduledFor);
+        if (isNaN(scheduledDate.getTime())) {
+          return NextResponse.json({ error: 'Invalid scheduledFor date' }, { status: 400 });
+        }
+        const now = new Date();
+        if (scheduledDate.getTime() < now.getTime()) {
+          return NextResponse.json({ error: 'scheduledFor cannot be in the past' }, { status: 400 });
+        }
+        const maxFuture = new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000); // 90 days
+        if (scheduledDate.getTime() > maxFuture.getTime()) {
+          return NextResponse.json({ error: 'scheduledFor cannot be more than 90 days in the future' }, { status: 400 });
+        }
       }
 
       const conversation = await prisma.emailConversation.findUnique({
@@ -37,7 +71,7 @@ export const POST = withAdminGuard(
         data: {
           conversationId,
           senderId: session.user.id,
-          to,
+          to: sanitizedTo,
           subject,
           htmlBody,
           textBody: textBody || null,
@@ -50,10 +84,10 @@ export const POST = withAdminGuard(
       if (!scheduledFor) {
         try {
           // Generate unsubscribe URL (CAN-SPAM / RGPD / LCAP compliance)
-          const unsubscribeUrl = await generateUnsubscribeUrl(to, 'transactional').catch(() => undefined);
+          const unsubscribeUrl = await generateUnsubscribeUrl(sanitizedTo, 'transactional').catch(() => undefined);
 
           const result = await sendEmail({
-            to: { email: to },
+            to: { email: sanitizedTo },
             subject,
             html: htmlBody,
             text: textBody,
@@ -77,7 +111,7 @@ export const POST = withAdminGuard(
           await prisma.emailLog.create({
             data: {
               id: `reply-${reply.id}`,
-              to,
+              to: sanitizedTo,
               subject,
               status: result.success ? 'sent' : 'failed',
               error: result.error || null,
@@ -88,7 +122,7 @@ export const POST = withAdminGuard(
             where: { id: reply.id },
             data: { status: 'failed' },
           });
-          console.error('[Reply] Send error:', sendError);
+          logger.error('[Reply] Send error', { error: sendError instanceof Error ? sendError.message : String(sendError) });
         }
       }
 
@@ -112,7 +146,7 @@ export const POST = withAdminGuard(
           conversationId,
           actorId: session.user.id,
           action: 'replied',
-          details: JSON.stringify({ replyId: reply.id, to, subject }),
+          details: JSON.stringify({ replyId: reply.id, to: sanitizedTo, subject }),
         },
       });
 
@@ -121,14 +155,14 @@ export const POST = withAdminGuard(
         action: 'REPLY_TO_CONVERSATION',
         targetType: 'OutboundReply',
         targetId: reply.id,
-        newValue: { conversationId, to, subject },
+        newValue: { conversationId, to: sanitizedTo, subject },
         ipAddress: getClientIpFromRequest(request),
         userAgent: request.headers.get('user-agent') || undefined,
       }).catch(() => {});
 
       return NextResponse.json({ success: true, data: reply });
     } catch (error) {
-      console.error('[Reply] Error:', error);
+      logger.error('[Reply] Error', { error: error instanceof Error ? error.message : String(error) });
       return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
   }

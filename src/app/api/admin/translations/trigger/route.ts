@@ -19,6 +19,7 @@ import {
   type TranslatableModel,
 } from '@/lib/translation';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { logger } from '@/lib/logger';
 
 const VALID_MODELS: TranslatableModel[] = [
   'Product', 'ProductFormat', 'Category', 'Article',
@@ -124,7 +125,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
       locales: results.map(r => r.locale),
     });
   } catch (error) {
-    console.error('Error triggering translation:', error);
+    logger.error('Error triggering translation', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors du déclenchement de la traduction' },
       { status: 500 }

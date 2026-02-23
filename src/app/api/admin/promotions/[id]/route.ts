@@ -32,8 +32,10 @@ import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { patchPromotionSchema } from '@/lib/validations/promotion';
+import { logger } from '@/lib/logger';
 
-// Helper: map a Discount record to the frontend promotion shape
+// FIX: FLAW-028 - Fetch category/product names in parallel instead of sequential N+1 queries.
+// Note: Discount model lacks @relation directives (FLAW-040), so we use Promise.all instead of include.
 async function mapDiscountToPromotion(discount: {
   id: string;
   name: string;
@@ -50,24 +52,15 @@ async function mapDiscountToPromotion(discount: {
   createdAt: Date;
   updatedAt: Date;
 }) {
-  let categoryName: string | null = null;
-  let productName: string | null = null;
-
-  if (discount.categoryId) {
-    const cat = await prisma.category.findUnique({
-      where: { id: discount.categoryId },
-      select: { name: true },
-    });
-    categoryName = cat?.name || null;
-  }
-
-  if (discount.productId) {
-    const prod = await prisma.product.findUnique({
-      where: { id: discount.productId },
-      select: { name: true },
-    });
-    productName = prod?.name || null;
-  }
+  // Parallel fetch instead of sequential to reduce latency
+  const [category, product] = await Promise.all([
+    discount.categoryId
+      ? prisma.category.findUnique({ where: { id: discount.categoryId }, select: { name: true } })
+      : null,
+    discount.productId
+      ? prisma.product.findUnique({ where: { id: discount.productId }, select: { name: true } })
+      : null,
+  ]);
 
   return {
     id: discount.id,
@@ -83,9 +76,9 @@ async function mapDiscountToPromotion(discount: {
     discountValue: Number(discount.value),
     appliesToAll: discount.appliesToAll,
     categoryId: discount.categoryId,
-    categoryName,
+    categoryName: category?.name || null,
     productId: discount.productId,
-    productName,
+    productName: product?.name || null,
     badge: discount.badge,
     badgeColor: discount.badgeColor,
     startsAt: discount.startsAt?.toISOString() || null,
@@ -117,7 +110,7 @@ export const GET = withAdminGuard(async (_request, { session, params }) => {
 
     return NextResponse.json({ promotion });
   } catch (error) {
-    console.error('Admin promotion GET error:', error);
+    logger.error('Admin promotion GET error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -257,7 +250,7 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
 
     return NextResponse.json({ promotion });
   } catch (error) {
-    console.error('Admin promotion PATCH error:', error);
+    logger.error('Admin promotion PATCH error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -303,7 +296,7 @@ export const DELETE = withAdminGuard(async (_request, { session, params }) => {
       message: `Promotion "${existing.name}" deleted`,
     });
   } catch (error) {
-    console.error('Admin promotion DELETE error:', error);
+    logger.error('Admin promotion DELETE error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

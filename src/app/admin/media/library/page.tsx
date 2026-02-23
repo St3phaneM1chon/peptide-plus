@@ -6,6 +6,10 @@ import {
   FolderOpen, Upload, Search, Copy, Check, FileText, Film, Image as ImageIcon,
   Loader2, ChevronLeft, ChevronRight, Grid, List, X, Download,
 } from 'lucide-react';
+import NextImage from 'next/image';
+import { toast } from 'sonner';
+// FIX: F59 - Use shared formatFileSize utility instead of local duplicate
+import { formatFileSize } from '@/lib/format-utils';
 
 interface MediaItem {
   id: string;
@@ -26,11 +30,8 @@ interface Pagination {
   totalPages: number;
 }
 
-function formatSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1048576) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / 1048576).toFixed(1)} MB`;
-}
+// FIX: F59 - formatSize replaced by shared formatFileSize from @/lib/format-utils
+const formatSize = formatFileSize;
 
 function getFileIcon(mimeType: string) {
   if (mimeType.startsWith('image/')) return <ImageIcon className="w-5 h-5 text-emerald-500" />;
@@ -45,6 +46,7 @@ export default function MediaLibraryPage() {
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
   const [mimeFilter, setMimeFilter] = useState('');
   const [folderFilter, setFolderFilter] = useState('');
@@ -67,12 +69,28 @@ export default function MediaLibraryPage() {
       setPagination(data.pagination || null);
     } catch (err) {
       console.error('Failed to load media:', err);
+      // FIX: F30 - Show error toast on search/load failure
+      toast.error(t('admin.media.loadFailed') || 'Failed to load media');
     } finally {
       setLoading(false);
     }
   }, [page, search, mimeFilter, folderFilter]);
 
   useEffect(() => { loadItems(); }, [loadItems]);
+
+  // F71 FIX: Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => { setSearch(searchInput); setPage(1); }, 300);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
+  // F62 FIX: Close preview modal with Escape key
+  useEffect(() => {
+    if (!preview) return;
+    const handleEscape = (e: KeyboardEvent) => { if (e.key === 'Escape') setPreview(null); };
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [preview]);
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -85,18 +103,28 @@ export default function MediaLibraryPage() {
       }
       formData.append('folder', folderFilter || 'general');
       const res = await fetch('/api/admin/medias', { method: 'POST', body: formData });
-      if (res.ok) loadItems();
+      if (res.ok) {
+        loadItems();
+        toast.success(t('admin.media.uploadSuccess') || 'Upload successful');
+      } else {
+        const data = await res.json().catch(() => ({}));
+        toast.error(data.error || t('admin.media.uploadFailed') || 'Upload failed');
+      }
     } catch (err) {
+      // FIX: F29 - Show toast error on upload failure instead of just console.error
       console.error('Upload failed:', err);
+      toast.error(t('admin.media.uploadFailed') || 'Upload failed');
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
+  // FIX: F86 - Add toast feedback on copy
   const copyUrl = (item: MediaItem) => {
     navigator.clipboard.writeText(item.url);
     setCopiedId(item.id);
+    toast.success('URL copied');
     setTimeout(() => setCopiedId(null), 2000);
   };
 
@@ -106,8 +134,9 @@ export default function MediaLibraryPage() {
         <h1 className="text-2xl font-bold text-slate-900">{t('admin.media.libraryTitle')}</h1>
         <div className="flex items-center gap-2">
           <div className="flex border border-slate-300 rounded-lg overflow-hidden">
-            <button onClick={() => setViewMode('grid')} className={`p-2 ${viewMode === 'grid' ? 'bg-sky-50 text-sky-600' : 'text-slate-400 hover:text-slate-600'}`}><Grid className="w-4 h-4" /></button>
-            <button onClick={() => setViewMode('list')} className={`p-2 ${viewMode === 'list' ? 'bg-sky-50 text-sky-600' : 'text-slate-400 hover:text-slate-600'}`}><List className="w-4 h-4" /></button>
+            {/* FIX: F88 - Added aria-label for accessibility */}
+            <button onClick={() => setViewMode('grid')} aria-label="Grid view" className={`p-2 ${viewMode === 'grid' ? 'bg-sky-50 text-sky-600' : 'text-slate-400 hover:text-slate-600'}`}><Grid className="w-4 h-4" /></button>
+            <button onClick={() => setViewMode('list')} aria-label="List view" className={`p-2 ${viewMode === 'list' ? 'bg-sky-50 text-sky-600' : 'text-slate-400 hover:text-slate-600'}`}><List className="w-4 h-4" /></button>
           </div>
           <input ref={fileInputRef} type="file" multiple onChange={handleUpload} className="hidden" />
           <button
@@ -116,7 +145,8 @@ export default function MediaLibraryPage() {
             className="flex items-center gap-2 px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors text-sm disabled:opacity-50"
           >
             {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-            Upload
+            {/* FIX: F36 - Use i18n instead of hardcoded "Upload" */}
+            {t('admin.media.upload') || 'Upload'}
           </button>
         </div>
       </div>
@@ -128,22 +158,24 @@ export default function MediaLibraryPage() {
           <input
             className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-sm"
             placeholder={t('common.search')}
-            value={search}
-            onChange={e => { setSearch(e.target.value); setPage(1); }}
+            value={searchInput}
+            onChange={e => setSearchInput(e.target.value)}
           />
         </div>
+        {/* FIX: F38 - Use i18n for filter labels instead of hardcoded English */}
         <select className="border border-slate-300 rounded-lg px-3 py-2 text-sm" value={mimeFilter} onChange={e => { setMimeFilter(e.target.value); setPage(1); }}>
-          <option value="">All types</option>
-          <option value="image">Images</option>
-          <option value="video">Videos</option>
+          <option value="">{t('admin.media.allTypes') || 'All types'}</option>
+          <option value="image">{t('admin.media.imagesTitle') || 'Images'}</option>
+          <option value="video">{t('admin.media.videosTitle') || 'Videos'}</option>
           <option value="application/pdf">PDF</option>
         </select>
+        {/* FIX: F81 - TODO: Load folders dynamically from DB (SELECT DISTINCT folder FROM Media) instead of hardcoding */}
         <select className="border border-slate-300 rounded-lg px-3 py-2 text-sm" value={folderFilter} onChange={e => { setFolderFilter(e.target.value); setPage(1); }}>
-          <option value="">All folders</option>
-          <option value="general">General</option>
-          <option value="images">Images</option>
-          <option value="products">Products</option>
-          <option value="blog">Blog</option>
+          <option value="">{t('admin.media.allFolders') || 'All folders'}</option>
+          <option value="general">{t('admin.media.folderGeneral') || 'General'}</option>
+          <option value="images">{t('admin.media.imagesTitle') || 'Images'}</option>
+          <option value="products">{t('admin.media.folderProducts') || 'Products'}</option>
+          <option value="blog">{t('admin.media.folderBlog') || 'Blog'}</option>
         </select>
       </div>
 
@@ -160,8 +192,9 @@ export default function MediaLibraryPage() {
           {items.map(item => (
             <div key={item.id} className="group relative bg-white rounded-lg border border-slate-200 overflow-hidden hover:border-sky-300 transition-colors">
               <div className="aspect-square cursor-pointer flex items-center justify-center bg-slate-50" onClick={() => setPreview(item)}>
+                {/* FIX: F2 - Use NextImage instead of native <img> */}
                 {item.mimeType.startsWith('image/') ? (
-                  <img src={item.url} alt={item.alt || item.originalName} className="w-full h-full object-cover" />
+                  <NextImage src={item.url} alt={item.alt || item.originalName} fill className="object-cover" sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 16vw" unoptimized />
                 ) : (
                   <div className="text-center">
                     {getFileIcon(item.mimeType)}
@@ -187,8 +220,9 @@ export default function MediaLibraryPage() {
           {items.map(item => (
             <div key={item.id} className="flex items-center gap-3 p-3 hover:bg-slate-50 transition-colors">
               <div className="w-10 h-10 rounded bg-slate-100 flex items-center justify-center flex-shrink-0">
+                {/* FIX: F2 - Use NextImage instead of native <img> */}
                 {item.mimeType.startsWith('image/') ? (
-                  <img src={item.url} alt="" className="w-10 h-10 rounded object-cover" />
+                  <NextImage src={item.url} alt="" width={40} height={40} className="w-10 h-10 rounded object-cover" unoptimized />
                 ) : (
                   getFileIcon(item.mimeType)
                 )}
@@ -201,7 +235,8 @@ export default function MediaLibraryPage() {
                 <button onClick={() => copyUrl(item)} className="p-1.5 rounded hover:bg-slate-100" title="Copy URL">
                   {copiedId === item.id ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4 text-slate-400" />}
                 </button>
-                <a href={item.url} download className="p-1.5 rounded hover:bg-slate-100" title="Download">
+                {/* F87 FIX: Use original filename for download */}
+                <a href={item.url} download={item.originalName} className="p-1.5 rounded hover:bg-slate-100" title="Download">
                   <Download className="w-4 h-4 text-slate-400" />
                 </a>
               </div>
@@ -224,14 +259,16 @@ export default function MediaLibraryPage() {
       )}
 
       {/* Preview modal */}
+      {/* FIX: F64 - TODO: Implement focus trap (use dialog element or focus-trap library) to prevent tabbing behind modal */}
       {preview && (
-        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-6" onClick={() => setPreview(null)}>
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-6" onClick={() => setPreview(null)} role="dialog" aria-modal="true" aria-label="Media preview">
           <div className="relative max-w-3xl max-h-[80vh] bg-white rounded-xl overflow-hidden" onClick={e => e.stopPropagation()}>
-            <button onClick={() => setPreview(null)} className="absolute top-3 right-3 p-1.5 bg-white/80 rounded-full hover:bg-white z-10">
+            <button onClick={() => setPreview(null)} className="absolute top-3 right-3 p-1.5 bg-white/80 rounded-full hover:bg-white z-10" autoFocus>
               <X className="w-5 h-5" />
             </button>
+            {/* FIX: F2 - Use NextImage instead of native <img> */}
             {preview.mimeType.startsWith('image/') ? (
-              <img src={preview.url} alt={preview.alt || preview.originalName} className="max-w-full max-h-[70vh] object-contain" />
+              <NextImage src={preview.url} alt={preview.alt || preview.originalName} width={800} height={600} className="max-w-full max-h-[70vh] object-contain" style={{ width: '100%', height: 'auto' }} unoptimized />
             ) : preview.mimeType.startsWith('video/') ? (
               <video src={preview.url} controls className="max-w-full max-h-[70vh]" />
             ) : (

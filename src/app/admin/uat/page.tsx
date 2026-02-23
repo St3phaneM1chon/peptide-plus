@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
+import { addCSRFHeader } from '@/lib/csrf';
 
 // =====================================================
 // TYPES
@@ -149,7 +150,7 @@ export default function UatPage() {
     try {
       const res = await fetch('/api/admin/uat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ canadaOnly }),
       });
       if (res.ok) {
@@ -190,7 +191,7 @@ export default function UatPage() {
     if (!confirm(t('admin.uat.cleanupConfirm'))) return;
     setCleaningUp(runId);
     try {
-      const res = await fetch(`/api/admin/uat/${runId}`, { method: 'DELETE' });
+      const res = await fetch(`/api/admin/uat/${runId}`, { method: 'DELETE', headers: addCSRFHeader() });
       if (res.ok) {
         const json = await res.json();
         const counts = Object.entries(json.data.deleted).map(([k, v]) => `${k}: ${v}`).join(', ');

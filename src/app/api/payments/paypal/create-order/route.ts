@@ -14,6 +14,7 @@ import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { getPayPalAccessToken, PAYPAL_API_URL } from '@/lib/paypal';
 import { validateCsrf } from '@/lib/csrf-middleware';
+import { logger } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
   try {
@@ -275,7 +276,7 @@ export async function POST(request: NextRequest) {
         });
       }
       const errorMsg = stockError instanceof Error ? stockError.message : 'Erreur lors de la réservation du stock';
-      console.error('Stock reservation error (PayPal):', stockError);
+      logger.error('Stock reservation error (PayPal)', { error: stockError instanceof Error ? stockError.message : String(stockError) });
       return NextResponse.json({ error: errorMsg }, { status: 400 });
     }
 
@@ -353,7 +354,7 @@ export async function POST(request: NextRequest) {
     const order = await response.json();
 
     if (!response.ok) {
-      console.error('PayPal order creation error:', order);
+      logger.error('PayPal order creation error', { order });
       return NextResponse.json({ error: 'Erreur lors de la création de la commande PayPal' }, { status: 500 });
     }
 
@@ -365,7 +366,7 @@ export async function POST(request: NextRequest) {
       giftCardDiscount: serverGiftCardDiscount || undefined,
     });
   } catch (error) {
-    console.error('PayPal error:', error);
+    logger.error('PayPal error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Erreur PayPal' }, { status: 500 });
   }
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Calendar, Clock, CheckCircle, AlertTriangle, Bell, Plus, Filter } from 'lucide-react';
 import {
   PageHeader,
@@ -137,7 +137,7 @@ export default function CalendrierFiscalPage() {
   // Data fetching
   // ---------------------------------------------------------------------------
 
-  const fetchEvents = async () => {
+  const fetchEvents = useCallback(async () => {
     try {
       const params = new URLSearchParams({ year: String(selectedYear) });
       if (selectedCategory) params.set('category', selectedCategory);
@@ -153,12 +153,11 @@ export default function CalendrierFiscalPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedYear, selectedCategory, selectedStatus]);
 
   useEffect(() => {
     fetchEvents();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedYear, selectedCategory, selectedStatus]);
+  }, [fetchEvents]);
 
   // ---------------------------------------------------------------------------
   // Handlers

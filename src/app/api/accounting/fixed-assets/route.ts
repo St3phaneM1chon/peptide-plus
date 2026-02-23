@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
+import { logger } from '@/lib/logger';
 // CCA_CLASSES available if needed for validation: import { CCA_CLASSES } from '@/lib/accounting/canadian-tax-config';
 
 // =============================================================================
@@ -68,7 +69,7 @@ export const GET = withAdminGuard(async (request) => {
 
     return NextResponse.json({ assets, stats });
   } catch (error) {
-    console.error('GET fixed-assets error:', error);
+    logger.error('GET fixed-assets error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la recuperation des immobilisations' },
       { status: 500 }
@@ -164,7 +165,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       },
     });
 
-    console.info('AUDIT: FixedAsset CREATE', {
+    logger.info('AUDIT: FixedAsset CREATE', {
       assetId: asset.id,
       assetNumber,
       name,
@@ -175,7 +176,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
 
     return NextResponse.json({ success: true, asset }, { status: 201 });
   } catch (error) {
-    console.error('POST fixed-assets error:', error);
+    logger.error('POST fixed-assets error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la creation de l\'immobilisation' },
       { status: 500 }
@@ -283,7 +284,7 @@ export const PATCH = withAdminGuard(async (request, { session }) => {
           }),
         ]);
 
-        console.info('AUDIT: FixedAsset DEPRECIATE (super deduction)', {
+        logger.info('AUDIT: FixedAsset DEPRECIATE (super deduction)', {
           assetId: id,
           fiscalYear,
           ccaClaimed,
@@ -347,7 +348,7 @@ export const PATCH = withAdminGuard(async (request, { session }) => {
         }),
       ]);
 
-      console.info('AUDIT: FixedAsset DEPRECIATE', {
+      logger.info('AUDIT: FixedAsset DEPRECIATE', {
         assetId: id,
         fiscalYear,
         openingUCC,
@@ -391,7 +392,7 @@ export const PATCH = withAdminGuard(async (request, { session }) => {
       updateData.disposalProceeds = proceeds;
       updateData.disposalGainLoss = Math.round((proceeds - Number(asset.currentBookValue)) * 100) / 100;
 
-      console.info('AUDIT: FixedAsset DISPOSE', {
+      logger.info('AUDIT: FixedAsset DISPOSE', {
         assetId: id,
         assetNumber: asset.assetNumber,
         bookValue: Number(asset.currentBookValue),
@@ -414,7 +415,7 @@ export const PATCH = withAdminGuard(async (request, { session }) => {
       },
     });
 
-    console.info('AUDIT: FixedAsset UPDATE', {
+    logger.info('AUDIT: FixedAsset UPDATE', {
       assetId: id,
       assetNumber: asset.assetNumber,
       updatedBy: session.user.id || session.user.email,
@@ -423,7 +424,7 @@ export const PATCH = withAdminGuard(async (request, { session }) => {
 
     return NextResponse.json({ success: true, asset: updatedAsset });
   } catch (error) {
-    console.error('PATCH fixed-assets error:', error);
+    logger.error('PATCH fixed-assets error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la mise a jour de l\'immobilisation' },
       { status: 500 }

@@ -44,7 +44,6 @@ export default function InstallPWA() {
 
     // Check if app was successfully installed
     window.addEventListener('appinstalled', () => {
-      console.log('PWA was installed successfully');
       setShowBanner(false);
       setDeferredPrompt(null);
     });
@@ -64,8 +63,6 @@ export default function InstallPWA() {
 
     // Wait for the user's response
     const { outcome } = await deferredPrompt.userChoice;
-
-    console.log(`User response to install prompt: ${outcome}`);
 
     // Clear the deferred prompt
     setDeferredPrompt(null);

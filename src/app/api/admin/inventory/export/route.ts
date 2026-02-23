@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { logger } from '@/lib/logger';
 
 // Escape a value for CSV: wrap in quotes if it contains commas, quotes, or newlines
 function csvEscape(value: string | number | boolean | null | undefined): string {
@@ -26,10 +27,10 @@ function csvRow(values: (string | number | boolean | null | undefined)[]): strin
 // GET /api/admin/inventory/export - Export inventory as CSV
 export const GET = withAdminGuard(async (_request, { session }) => {
   try {
+    // FIX: BUG-068 - Include all formats (not just active+tracked) with flags for full audit
     const formats = await prisma.productFormat.findMany({
       where: {
-        isActive: true,
-        trackInventory: true,
+        trackInventory: true, // Keep trackInventory filter (non-tracked items have no stock to report)
       },
       include: {
         product: {
@@ -104,7 +105,7 @@ export const GET = withAdminGuard(async (_request, { session }) => {
       },
     });
   } catch (error) {
-    console.error('Admin inventory export GET error:', error);
+    logger.error('Admin inventory export GET error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

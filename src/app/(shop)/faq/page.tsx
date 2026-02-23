@@ -1,5 +1,5 @@
-// Revalidate FAQ data every hour (3600s) instead of force-dynamic
-export const revalidate = 3600;
+// BUG-060 FIX: Reduce ISR cache to 5 min for fresher data
+export const revalidate = 300;
 
 import { Metadata } from 'next';
 import FaqPageClient from './FaqPageClient';

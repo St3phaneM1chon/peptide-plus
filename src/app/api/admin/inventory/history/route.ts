@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { logger } from '@/lib/logger';
 
 // GET /api/admin/inventory/history - Inventory transaction history
 export const GET = withAdminGuard(async (request, { session }) => {
@@ -103,7 +104,7 @@ export const GET = withAdminGuard(async (request, { session }) => {
       hasMore: offset + limit < total,
     });
   } catch (error) {
-    console.error('Admin inventory history error:', error);
+    logger.error('Admin inventory history error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

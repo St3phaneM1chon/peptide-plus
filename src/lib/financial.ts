@@ -12,10 +12,28 @@
 
 /**
  * Round a monetary amount to 2 decimal places (cents).
- * Uses banker's rounding via Math.round to match standard accounting practice.
+ * FIX (F003): Implements true banker's rounding (round half to even),
+ * which rounds 0.5 to the nearest even number to eliminate systematic bias.
+ * Math.round(0.5) returns 1 (always rounds up), but banker's rounding
+ * returns 0 (rounds to nearest even). This prevents cumulative rounding
+ * errors across thousands of financial transactions.
  */
 export function roundCurrency(amount: number): number {
-  return Math.round(amount * 100) / 100;
+  const shifted = amount * 100;
+  const truncated = Math.trunc(shifted);
+  const remainder = Math.abs(shifted - truncated);
+
+  // If exactly at 0.5, round to nearest even (banker's rounding)
+  if (Math.abs(remainder - 0.5) < 1e-10) {
+    // If truncated is even, keep it; if odd, round away from zero
+    if (truncated % 2 === 0) {
+      return truncated / 100;
+    }
+    return (truncated + (shifted > 0 ? 1 : -1)) / 100;
+  }
+
+  // For all other cases, use standard rounding
+  return Math.round(shifted) / 100;
 }
 
 /**

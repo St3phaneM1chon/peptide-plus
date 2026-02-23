@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useI18n } from '@/i18n/client';
 import { sectionThemes } from '@/lib/admin/section-themes';
 import { PageHeader, SectionCard } from '@/components/admin';
@@ -63,39 +63,39 @@ export default function BankImportPage() {
   const [csvFormat, setCsvFormat] = useState<'desjardins' | 'td' | 'rbc' | 'generic'>('desjardins');
 
   // Fetch bank accounts on mount
-  useEffect(() => {
-    async function fetchBankAccounts() {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await fetch('/api/accounting/bank-accounts');
-        if (!res.ok) throw new Error(t('admin.bankImport.errorLoadAccounts'));
-        const data = await res.json();
-        const accounts = data.accounts || [];
-        setBankAccounts(accounts);
-        if (accounts.length > 0 && !selectedBankAccountId) {
-          setSelectedBankAccountId(accounts[0].id);
-        }
-        // Map bank accounts to connections format for the connections tab
-        setConnections(accounts.filter((a: BankAccount) => a.isActive).map((a: BankAccount) => ({
-          id: a.id,
-          bankName: a.institution,
-          accountName: a.name,
-          accountMask: a.accountNumber ? `****${a.accountNumber.slice(-4)}` : '',
-          balance: a.currentBalance,
-          currency: a.currency || 'CAD',
-          lastSync: new Date(),
-          status: 'ACTIVE' as const,
-        })));
-      } catch (err) {
-        setError(err instanceof Error ? err.message : t('admin.bankImport.errorLoading'));
-      } finally {
-        setLoading(false);
+  const fetchBankAccounts = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/accounting/bank-accounts');
+      if (!res.ok) throw new Error(t('admin.bankImport.errorLoadAccounts'));
+      const data = await res.json();
+      const accounts = data.accounts || [];
+      setBankAccounts(accounts);
+      if (accounts.length > 0 && !selectedBankAccountId) {
+        setSelectedBankAccountId(accounts[0].id);
       }
+      // Map bank accounts to connections format for the connections tab
+      setConnections(accounts.filter((a: BankAccount) => a.isActive).map((a: BankAccount) => ({
+        id: a.id,
+        bankName: a.institution,
+        accountName: a.name,
+        accountMask: a.accountNumber ? `****${a.accountNumber.slice(-4)}` : '',
+        balance: a.currentBalance,
+        currency: a.currency || 'CAD',
+        lastSync: new Date(),
+        status: 'ACTIVE' as const,
+      })));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('admin.bankImport.errorLoading'));
+    } finally {
+      setLoading(false);
     }
+  }, [t, selectedBankAccountId]);
+
+  useEffect(() => {
     fetchBankAccounts();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [fetchBankAccounts]);
 
   // Fetch import history (recent bank transactions grouped by importBatch)
   useEffect(() => {

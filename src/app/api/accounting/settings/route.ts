@@ -5,6 +5,7 @@ import { withAdminGuard } from '@/lib/admin-api-guard';
 import { UserRole } from '@/types';
 import { prisma } from '@/lib/db';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 // #89 Audit: Zod schema for accounting settings validation
 const accountingSettingsSchema = z.object({
@@ -48,7 +49,7 @@ export const GET = withAdminGuard(async () => {
 
     return NextResponse.json({ settings });
   } catch (error) {
-    console.error('Get settings error:', error);
+    logger.error('Get settings error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la récupération des paramètres' },
       { status: 500 }
@@ -91,7 +92,7 @@ export const PUT = withAdminGuard(async (request, { session }) => {
       });
       if (previousSettings) {
         // Store a snapshot as a JSON audit log entry
-        console.info('Settings backup before update:', {
+        logger.info('Settings backup before update:', {
           backupAt: new Date().toISOString(),
           modifiedBy: session.user.id || session.user.email,
           previousValues: previousSettings,
@@ -99,7 +100,7 @@ export const PUT = withAdminGuard(async (request, { session }) => {
       }
     } catch (backupError) {
       // #98 Non-blocking: log but don't fail the update if backup fails
-      console.warn('Failed to backup settings before update:', backupError);
+      logger.warn('Failed to backup settings before update', { error: backupError instanceof Error ? backupError.message : String(backupError) });
     }
 
     const settings = await prisma.accountingSettings.upsert({
@@ -121,7 +122,7 @@ export const PUT = withAdminGuard(async (request, { session }) => {
       } : null,
     });
   } catch (error) {
-    console.error('Update settings error:', error);
+    logger.error('Update settings error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la mise à jour des paramètres' },
       { status: 500 }

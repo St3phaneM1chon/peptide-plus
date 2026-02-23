@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { createHmac, timingSafeEqual } from 'crypto';
 import { prisma } from '@/lib/db';
+import { logger } from '@/lib/logger';
 
 /**
  * POST /api/webhooks/inbound-email
@@ -34,17 +35,42 @@ function verifyResendSignature(
   return false;
 }
 
+// Allowed MIME types for email attachments
+const ALLOWED_ATTACHMENT_MIME_TYPES = new Set([
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'text/csv',
+  'text/plain',
+  'image/png',
+  'image/jpeg',
+  'image/gif',
+  'application/zip',
+  'message/rfc822', // .eml
+]);
+
+// Maximum total payload size: 30MB
+const MAX_PAYLOAD_SIZE = 30_000_000;
+
 export async function POST(request: NextRequest) {
   try {
     // Use dedicated secret or fall back to shared Resend webhook secret
     const webhookSecret = process.env.INBOUND_EMAIL_WEBHOOK_SECRET || process.env.RESEND_WEBHOOK_SECRET;
     if (!webhookSecret) {
-      console.error('[Webhook] No webhook secret configured (INBOUND_EMAIL_WEBHOOK_SECRET or RESEND_WEBHOOK_SECRET)');
+      logger.error('[Webhook] No webhook secret configured (INBOUND_EMAIL_WEBHOOK_SECRET or RESEND_WEBHOOK_SECRET)');
       return NextResponse.json({ error: 'Webhook not configured' }, { status: 503 });
     }
 
     // Read raw body for signature verification
     const rawBody = await request.text();
+
+    // Validate total payload size
+    if (rawBody.length > MAX_PAYLOAD_SIZE) {
+      logger.warn(`[Webhook] Payload too large: ${rawBody.length} bytes (max ${MAX_PAYLOAD_SIZE})`);
+      return NextResponse.json({ error: 'Payload too large' }, { status: 413 });
+    }
 
     // Verify Svix signature (Resend format)
     const svixId = request.headers.get('svix-id');
@@ -58,7 +84,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Timestamp expired' }, { status: 401 });
       }
       if (!verifyResendSignature(rawBody, { svixId, svixTimestamp, svixSignature }, webhookSecret)) {
-        console.warn('[Webhook] Invalid inbound email signature');
+        logger.warn('[Webhook] Invalid inbound email signature');
         return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
       }
     } else {
@@ -69,7 +95,12 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const body = JSON.parse(rawBody);
+    let body: Record<string, unknown>;
+    try {
+      body = JSON.parse(rawBody);
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+    }
 
     // Normalize payload from different providers
     const payload = normalizePayload(body);
@@ -192,14 +223,19 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Store attachments if any
+    // Store attachments if any (with MIME type validation)
     if (payload.attachments?.length) {
       for (const att of payload.attachments) {
+        const mimeType = (att.contentType || 'application/octet-stream').toLowerCase();
+        if (!ALLOWED_ATTACHMENT_MIME_TYPES.has(mimeType)) {
+          logger.warn(`[Webhook] Rejected attachment with disallowed MIME type: ${mimeType}`, { filename: att.filename || 'unknown' });
+          continue;
+        }
         await prisma.inboundEmailAttachment.create({
           data: {
             inboundEmailId: inboundEmail.id,
             filename: att.filename || 'attachment',
-            mimeType: att.contentType || 'application/octet-stream',
+            mimeType,
             size: att.size || 0,
             storageUrl: `pending://${inboundEmail.id}/${att.filename}`,
           },
@@ -214,7 +250,7 @@ export async function POST(request: NextRequest) {
       isNewConversation,
     });
   } catch (error) {
-    console.error('[Webhook] Inbound email error:', error);
+    logger.error('[Webhook] Inbound email error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -300,5 +336,6 @@ function extractName(str: string | undefined): string | undefined {
 }
 
 function generateMessageId(): string {
-  return `<${Date.now()}.${Math.random().toString(36).slice(2)}@biocycle.ca>`;
+  // AMELIORATION: Use crypto.randomUUID instead of Math.random for message IDs
+  return `<${Date.now()}.${crypto.randomUUID().replace(/-/g, '')}@biocycle.ca>`;
 }

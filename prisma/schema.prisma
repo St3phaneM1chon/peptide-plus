@@ -122,7 +122,7 @@ model AccountingSettings {
 }
 
 model Ambassador {
-  id             String                 @id
+  id             String                 @id @default(cuid())
   userId         String?
   name           String
   email          String?
@@ -539,6 +539,8 @@ model ChatConversation {
   @@index([status])
   @@index([userId])
   @@index([visitorId])
+  // FIX F-037: Composite index for the common query pattern: findFirst where visitorId + status
+  @@index([visitorId, status])
 }
 
 model ChatMessage {
@@ -819,6 +821,35 @@ model EmailLog {
   @@index([to])
   @@index([to, status])
   @@index([messageId])
+  @@index([status])
+}
+
+// Faille #11: Persistent bounce tracking (was in-memory only, lost on restart)
+model EmailBounce {
+  id         String   @id @default(cuid())
+  email      String
+  bounceType String   // 'hard' or 'soft'
+  provider   String
+  reason     String?
+  messageId  String?
+  count      Int      @default(1)
+  lastBounce DateTime @default(now())
+  createdAt  DateTime @default(now())
+
+  @@index([email])
+  @@index([email, bounceType])
+}
+
+// Faille #12: Persistent suppression list for hard-bounced/complained emails
+model EmailSuppression {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  reason    String   // 'hard_bounce', 'complaint', 'manual'
+  provider  String?
+  createdAt DateTime @default(now())
+  expiresAt DateTime? // null = permanent suppression
+
+  @@index([email])
 }
 
 model EmailTemplate {
@@ -1167,6 +1198,7 @@ model LoyaltyTransaction {
   user         User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([createdAt])
+  @@index([expiresAt])
   @@index([type])
   @@index([userId])
 }
@@ -1180,12 +1212,16 @@ model Media {
   url          String
   alt          String?
   folder       String   @default("general")
+  // TODO (F14): Add FK relation to User model for uploadedBy field
+  // Requires coordinated migration: uploadedBy String? @db.VarChar(255)
+  // uploader User? @relation("MediaUploader", fields: [uploadedBy], references: [id])
   uploadedBy   String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
   @@index([folder])
   @@index([mimeType])
+  @@index([uploadedBy])
 }
 
 model Message {
@@ -1906,7 +1942,7 @@ model Referral {
   referrerId    String
   referredId    String
   referralCode  String
-  status        String    @default("PENDING")
+  status        ReferralStatus @default(PENDING)
   orderAmount   Decimal?  @db.Decimal(10, 2)
   pointsAwarded Int       @default(0)
   discountGiven Decimal?  @db.Decimal(10, 2)
@@ -2892,6 +2928,14 @@ enum ReconciliationStatus {
   MANUAL
 }
 
+enum ReferralStatus {
+  PENDING
+  QUALIFIED
+  REWARDED
+  EXPIRED
+  CANCELLED
+}
+
 enum ShippingStatus {
   PENDING
   PROCESSING
@@ -3289,6 +3333,7 @@ model OutboundReply {
   subject        String
   htmlBody       String
   textBody       String?
+  messageId      String?
   status         String            @default("sent")
   scheduledFor   DateTime?
   sentAt         DateTime?
@@ -3298,6 +3343,7 @@ model OutboundReply {
 
   @@index([conversationId])
   @@index([senderId])
+  @@index([messageId])
 }
 
 model ConversationNote {
@@ -3390,11 +3436,12 @@ model ConsentRecord {
   expiresAt   DateTime?
   revokedAt   DateTime?
   ipAddress   String?
-  user        User?     @relation(fields: [userId], references: [id])
+  user        User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([email])
   @@index([userId])
   @@index([type])
+  @@index([email, type])
 }
 
 // ── Email Settings & Segments ────────────────────────────────────

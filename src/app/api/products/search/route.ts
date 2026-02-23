@@ -3,21 +3,35 @@ export const dynamic = 'force-dynamic';
  * API - Product Search
  * Supports: ?q=query&category=slug&minPrice=0&maxPrice=500&inStock=true&purity=99&sort=relevance&limit=50
  */
+// TODO: BUG-077 - Integrate multiLanguageSearch() from @/lib/search.ts when locale !== 'en'
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { logger } from '@/lib/logger';
 import { Prisma } from '@prisma/client';
 import { withTranslations, getTranslatedFieldsBatch, DB_SOURCE_LOCALE } from '@/lib/translation';
 import { defaultLocale } from '@/i18n/config';
 import { cacheGetOrSet, cacheInvalidateTag, CacheKeys } from '@/lib/cache';
 import { logSearch } from '@/lib/search-analytics';
 import { createHash } from 'crypto';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
 
 export async function GET(request: NextRequest) {
   try {
+    // BUG-033 FIX: Add rate limiting to search API (30 req/min per IP via rate-limiter config)
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rlResult = await rateLimitMiddleware(ip, '/api/products/search');
+    if (!rlResult.success) {
+      return NextResponse.json(
+        { error: rlResult.error?.message || 'Too many requests' },
+        { status: 429, headers: rlResult.headers }
+      );
+    }
+
     const searchStart = Date.now();
     const { searchParams } = new URL(request.url);
-    const q = searchParams.get('q')?.trim() || '';
+    // BUG-034 FIX: Limit search query length to prevent oversized DB queries
+    const q = (searchParams.get('q')?.trim() || '').slice(0, 200);
     const category = searchParams.get('category');
     const minPrice = searchParams.get('minPrice');
     const maxPrice = searchParams.get('maxPrice');
@@ -102,7 +116,10 @@ export async function GET(request: NextRequest) {
         break;
       case 'relevance':
       default:
-        orderBy = { isFeatured: 'desc' };
+        // BUG-035 NOTE: Currently uses isFeatured as proxy for relevance.
+        // TODO: Implement ts_rank-based scoring via fullTextSearch() from lib/search.ts
+        // for true relevance ranking when a search query is provided.
+        orderBy = q ? { createdAt: 'desc' } : { isFeatured: 'desc' };
         break;
     }
 
@@ -219,7 +236,7 @@ export async function GET(request: NextRequest) {
       }
     );
   } catch (error) {
-    console.error('Search error:', error);
+    logger.error('Search error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Search failed' },
       { status: 500 }

@@ -8,6 +8,7 @@ import {
   getFilterOptions,
   getPopularSearchTerms,
 } from '@/lib/accounting/search.service';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/accounting/search
@@ -57,8 +58,9 @@ export const GET = withAdminGuard(async (request) => {
     const statuses = searchParams.get('statuses')?.split(',');
     const sortBy = (searchParams.get('sortBy') || 'date') as 'date' | 'amount' | 'relevance';
     const sortOrder = (searchParams.get('sortOrder') || 'desc') as 'asc' | 'desc';
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '20');
+    // FIX: Bound pagination params to prevent abuse
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
+    const limit = Math.min(Math.max(1, parseInt(searchParams.get('limit') || '20', 10)), 100);
 
     const results = await advancedSearch({
       query,
@@ -76,7 +78,7 @@ export const GET = withAdminGuard(async (request) => {
 
     return NextResponse.json(results);
   } catch (error) {
-    console.error('Erreur lors de la recherche comptable:', error);
+    logger.error('Erreur lors de la recherche comptable', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la recherche comptable' },
       { status: 500 }

@@ -9,6 +9,7 @@ import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { prisma } from '@/lib/db';
 import { stripHtml, stripControlChars } from '@/lib/sanitize';
+import { logger } from '@/lib/logger';
 
 export const POST = withAdminGuard(async (request: NextRequest, { session, params }) => {
   try {
@@ -45,7 +46,8 @@ export const POST = withAdminGuard(async (request: NextRequest, { session, param
       data: {
         answer: answer.trim(),
         answeredBy: session.user.name || session.user.email || 'Admin',
-        isPublished: true, // Auto-publish when answered
+        // FIX: F-063 - Allow admin to control publication; default to true for backward compat
+        isPublished: body.isPublished !== undefined ? !!body.isPublished : true,
       },
     });
 
@@ -61,7 +63,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session, param
 
     return NextResponse.json({ question: updated });
   } catch (error) {
-    console.error('Error answering question:', error);
+    logger.error('Error answering question', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de l\'ajout de la réponse' },
       { status: 500 }

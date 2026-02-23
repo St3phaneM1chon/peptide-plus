@@ -274,7 +274,8 @@ export async function POST(request: NextRequest) {
       // 15. Log the deletion request in AuditLog
       await tx.auditLog.create({
         data: {
-          id: `audit_delete_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 8)}`,
+          // AMELIORATION: Use crypto.randomUUID instead of Math.random for audit IDs
+          id: `audit_delete_${Date.now().toString(36)}_${crypto.randomUUID().slice(0, 8)}`,
           userId,
           action: 'ACCOUNT_DELETION_REQUEST',
           entityType: 'User',

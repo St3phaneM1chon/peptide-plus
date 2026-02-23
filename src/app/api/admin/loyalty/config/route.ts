@@ -10,6 +10,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { LOYALTY_POINTS_CONFIG, LOYALTY_TIER_THRESHOLDS } from '@/lib/constants';
+import { logger } from '@/lib/logger';
 
 interface LoyaltyTier {
   name: string;
@@ -28,49 +30,20 @@ interface LoyaltyConfig {
   tiers: LoyaltyTier[];
 }
 
+// Default config derived from CANONICAL constants in @/lib/constants.ts
 const DEFAULT_CONFIG: LoyaltyConfig = {
-  pointsPerDollar: 10,
-  pointsValue: 0.01,
+  pointsPerDollar: LOYALTY_POINTS_CONFIG.pointsPerDollar,
+  pointsValue: LOYALTY_POINTS_CONFIG.pointsValue,
   minRedemption: 500,
-  referralBonus: 500,
-  birthdayBonus: 200,
-  tiers: [
-    {
-      name: 'Bronze',
-      minPoints: 0,
-      multiplier: 1,
-      perks: ['10 pts/$', 'Free shipping over $100'],
-      color: 'orange',
-    },
-    {
-      name: 'Silver',
-      minPoints: 1000,
-      multiplier: 1.25,
-      perks: ['12.5 pts/$', 'Free shipping over $75', '5% off accessories'],
-      color: 'gray',
-    },
-    {
-      name: 'Gold',
-      minPoints: 5000,
-      multiplier: 1.5,
-      perks: ['15 pts/$', 'Free shipping', '10% off accessories', 'Early access'],
-      color: 'yellow',
-    },
-    {
-      name: 'Platinum',
-      minPoints: 15000,
-      multiplier: 2,
-      perks: ['20 pts/$', 'Free shipping', '15% off everything', 'Priority support', 'Early access'],
-      color: 'blue',
-    },
-    {
-      name: 'Diamond',
-      minPoints: 50000,
-      multiplier: 3,
-      perks: ['30 pts/$', 'Free express shipping', '20% off everything', 'Dedicated support', 'Exclusive products'],
-      color: 'purple',
-    },
-  ],
+  referralBonus: LOYALTY_POINTS_CONFIG.referralBonus,
+  birthdayBonus: LOYALTY_POINTS_CONFIG.birthdayBonus,
+  tiers: LOYALTY_TIER_THRESHOLDS.map(tier => ({
+    name: tier.name,
+    minPoints: tier.minPoints,
+    multiplier: tier.multiplier,
+    perks: [`${tier.multiplier * LOYALTY_POINTS_CONFIG.pointsPerDollar} pts/$`],
+    color: tier.color,
+  })),
 };
 
 const LOYALTY_CONFIG_KEY = 'loyalty_config';
@@ -119,7 +92,7 @@ export const GET = withAdminGuard(async (_request, { session }) => {
 
     return NextResponse.json({ config });
   } catch (error) {
-    console.error('Admin loyalty config GET error:', error);
+    logger.error('Admin loyalty config GET error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -132,13 +105,13 @@ export const PUT = withAdminGuard(async (request: NextRequest, { session }) => {
   try {
     const body = await request.json();
 
-    // Validate required fields
+    // FIX F-023: Use explicit undefined check instead of || to allow 0 values
     const config: LoyaltyConfig = {
-      pointsPerDollar: Number(body.pointsPerDollar) || DEFAULT_CONFIG.pointsPerDollar,
-      pointsValue: Number(body.pointsValue) || DEFAULT_CONFIG.pointsValue,
-      minRedemption: Number(body.minRedemption) || DEFAULT_CONFIG.minRedemption,
-      referralBonus: Number(body.referralBonus) || DEFAULT_CONFIG.referralBonus,
-      birthdayBonus: Number(body.birthdayBonus) || DEFAULT_CONFIG.birthdayBonus,
+      pointsPerDollar: body.pointsPerDollar !== undefined && body.pointsPerDollar !== null ? Number(body.pointsPerDollar) : DEFAULT_CONFIG.pointsPerDollar,
+      pointsValue: body.pointsValue !== undefined && body.pointsValue !== null ? Number(body.pointsValue) : DEFAULT_CONFIG.pointsValue,
+      minRedemption: body.minRedemption !== undefined && body.minRedemption !== null ? Number(body.minRedemption) : DEFAULT_CONFIG.minRedemption,
+      referralBonus: body.referralBonus !== undefined && body.referralBonus !== null ? Number(body.referralBonus) : DEFAULT_CONFIG.referralBonus,
+      birthdayBonus: body.birthdayBonus !== undefined && body.birthdayBonus !== null ? Number(body.birthdayBonus) : DEFAULT_CONFIG.birthdayBonus,
       tiers: Array.isArray(body.tiers) ? body.tiers : DEFAULT_CONFIG.tiers,
     };
 
@@ -188,8 +161,9 @@ export const PUT = withAdminGuard(async (request: NextRequest, { session }) => {
           rewardTiers: configJson,
         },
       });
-    } catch {
-      // Non-critical: SiteSettings sync is optional
+    } catch (syncErr) {
+      // Non-critical: SiteSettings sync is optional, but log for diagnostics
+      logger.error('Non-critical: SiteSettings rewardTiers sync failed', { error: syncErr instanceof Error ? syncErr.message : String(syncErr) });
     }
 
     logAdminAction({
@@ -200,11 +174,11 @@ export const PUT = withAdminGuard(async (request: NextRequest, { session }) => {
       newValue: { pointsPerDollar: config.pointsPerDollar, pointsValue: config.pointsValue, tierCount: config.tiers.length },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch(() => {});
+    }).catch((err) => logger.error('Audit log failed for UPDATE_LOYALTY_CONFIG', { error: err instanceof Error ? err.message : String(err) }));
 
     return NextResponse.json({ success: true, data: config });
   } catch (error) {
-    console.error('Admin loyalty config PUT error:', error);
+    logger.error('Admin loyalty config PUT error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

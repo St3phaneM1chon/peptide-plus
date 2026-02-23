@@ -58,6 +58,8 @@ export async function clawbackAmbassadorCommission(
       };
     }
 
+    // FIX: FLAW-081 - Number() conversion from Prisma Decimal can lose precision for large values.
+    // TODO: Consider using decimal.js for arbitrary precision arithmetic.
     const originalCommission = Number(commission.commissionAmount);
     if (originalCommission <= 0) {
       return {

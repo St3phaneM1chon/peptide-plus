@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Plus,
   Eye,
@@ -124,7 +124,7 @@ export default function EcrituresPage() {
     { accountCode: '', description: '', debit: '', credit: '' },
   ]);
 
-  const fetchEntries = async () => {
+  const fetchEntries = useCallback(async () => {
     setError(null);
     try {
       const params = new URLSearchParams();
@@ -164,12 +164,11 @@ export default function EcrituresPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedStatus, selectedType, searchTerm, t]);
 
   useEffect(() => {
     fetchEntries();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedStatus, selectedType, searchTerm]);
+  }, [fetchEntries]);
 
   // Fetch chart of accounts for new entry form
   useEffect(() => {

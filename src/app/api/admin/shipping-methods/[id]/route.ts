@@ -14,6 +14,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { logger } from '@/lib/logger';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -87,7 +88,7 @@ export const GET = withAdminGuard(async (_request: NextRequest, { params }) => {
 
     return NextResponse.json({ shippingMethod: mapZone(zone) });
   } catch (error) {
-    console.error('GET shipping-methods/[id] error:', error);
+    logger.error('GET shipping-methods/[id] error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Error fetching shipping method' },
       { status: 500 },
@@ -169,7 +170,7 @@ export const PUT = withAdminGuard(async (request: NextRequest, { session, params
       shippingMethod: mapZone(zone),
     });
   } catch (error) {
-    console.error('PUT shipping-methods/[id] error:', error);
+    logger.error('PUT shipping-methods/[id] error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Error updating shipping method' },
       { status: 500 },
@@ -214,7 +215,7 @@ export const DELETE = withAdminGuard(
 
       return NextResponse.json({ success: true });
     } catch (error) {
-      console.error('DELETE shipping-methods/[id] error:', error);
+      logger.error('DELETE shipping-methods/[id] error', { error: error instanceof Error ? error.message : String(error) });
       return NextResponse.json(
         { error: 'Error deleting shipping method' },
         { status: 500 },

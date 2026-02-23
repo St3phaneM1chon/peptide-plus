@@ -65,14 +65,17 @@ export function autoReconcile(
 
   for (const bankTx of unmatchedBank) {
     const suggestions = findMatches(bankTx, unmatchedEntries, criteria);
-    
+
     if (suggestions.length > 0) {
       const bestMatch = suggestions[0];
-      
+
       if (bestMatch.confidence >= criteria.minConfidenceScore) {
-        // Auto-match with high confidence
+        // FIX: F070 - Mutating input objects is a side-effect that couples this function
+        // to the caller's state. We still mutate here for backward compatibility with
+        // reconciliation/route.ts which reads the mutated status. TODO: Return matched IDs
+        // in the result instead and stop mutating inputs.
         bankTx.reconciliationStatus = 'MATCHED';
-        bankTx.matchedJournalEntryId = bestMatch.journalEntryId;
+        (bankTx as Record<string, unknown>).matchedJournalEntryId = bestMatch.journalEntryId;
         result.matched++;
       } else {
         // Suggest for manual review
@@ -240,6 +243,7 @@ export function markAsUnmatched(bankTx: BankTransaction, reason: string): void {
 
 /**
  * Create a journal entry from an unmatched bank transaction
+ * FIX: F018 - Use crypto.randomUUID() instead of Date.now() for unique IDs
  */
 export function createEntryFromBankTransaction(
   bankTx: BankTransaction,
@@ -248,10 +252,10 @@ export function createEntryFromBankTransaction(
   description: string
 ): JournalEntry {
   const isCredit = bankTx.type === 'CREDIT';
-  
+
   return {
-    id: `entry-from-bank-${Date.now()}`,
-    entryNumber: `JV-BANK-${Date.now()}`,
+    id: `entry-from-bank-${crypto.randomUUID()}`,
+    entryNumber: `JV-BANK-${crypto.randomUUID().substring(0, 8)}`,
     date: new Date(bankTx.date),
     description,
     type: 'MANUAL',
@@ -259,7 +263,7 @@ export function createEntryFromBankTransaction(
     reference: bankTx.reference,
     lines: [
       {
-        id: `line-${Date.now()}-1`,
+        id: `line-${crypto.randomUUID()}-1`,
         accountCode: isCredit ? debitAccount : creditAccount,
         accountName: isCredit ? debitAccount : creditAccount,
         description,
@@ -267,7 +271,7 @@ export function createEntryFromBankTransaction(
         credit: isCredit ? 0 : bankTx.amount,
       },
       {
-        id: `line-${Date.now()}-2`,
+        id: `line-${crypto.randomUUID()}-2`,
         accountCode: isCredit ? creditAccount : debitAccount,
         accountName: isCredit ? creditAccount : debitAccount,
         description,
@@ -371,8 +375,9 @@ export function parseBankStatementCSV(
 
     if (isNaN(amount) || amount === 0) continue;
 
+    // FIX: F018 - Use crypto.randomUUID() instead of Date.now() for unique IDs
     transactions.push({
-      id: `import-${Date.now()}-${i}`,
+      id: `import-${crypto.randomUUID()}`,
       bankAccountId,
       date,
       description,

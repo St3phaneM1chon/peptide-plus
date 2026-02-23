@@ -11,6 +11,7 @@ import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { inviteEmployeeSchema } from '@/lib/validations/employee';
+import { logger } from '@/lib/logger';
 
 // GET /api/admin/employees - List employees and owners
 export const GET = withAdminGuard(async (request: NextRequest, { session }) => {
@@ -147,7 +148,7 @@ export const GET = withAdminGuard(async (request: NextRequest, { session }) => {
       },
     });
   } catch (error) {
-    console.error('Admin employees GET error:', error);
+    logger.error('Admin employees GET error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -260,7 +261,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
       },
     });
   } catch (error) {
-    console.error('Admin employees POST error:', error);
+    logger.error('Admin employees POST error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

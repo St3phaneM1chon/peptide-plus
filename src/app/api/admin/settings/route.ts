@@ -1,5 +1,9 @@
 export const dynamic = 'force-dynamic';
 
+// TODO: FAILLE-094 - SiteSettings create uses empty defaults; provide sensible initial values or show setup wizard
+// TODO: FAILLE-095 - parseSafe returns 'unknown'; use generic type parameter for better type safety
+// TODO: FAILLE-098 - Every GET re-fetches SiteSettings from DB; add in-memory cache with 30s TTL
+
 /**
  * Admin Settings API
  * GET  - Retrieve all settings (SiteSettings singleton + SiteSetting key-value pairs)
@@ -43,9 +47,20 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { logger } from '@/lib/logger';
+
+// FAILLE-026 FIX: Zod schema for PUT body validation
+const settingsPutSchema = z.object({
+  siteSettings: z.record(z.unknown()).optional(),
+  settings: z.union([
+    z.array(z.object({ key: z.string(), value: z.unknown(), type: z.string().optional(), module: z.string().optional(), description: z.string().nullish() })),
+    z.record(z.unknown()),
+  ]).optional(),
+}).strict();
 
 // GET /api/admin/settings - Get all settings
 export const GET = withAdminGuard(async (_request, { session: _session }) => {
@@ -61,9 +76,10 @@ export const GET = withAdminGuard(async (_request, { session: _session }) => {
       });
     }
 
-    // Fetch all key-value SiteSetting entries
+    // FAILLE-040 FIX: Add take limit to prevent unbounded query
     const siteSettingEntries = await prisma.siteSetting.findMany({
       orderBy: [{ module: 'asc' }, { key: 'asc' }],
+      take: 500,
     });
 
     // Group SiteSetting entries by module
@@ -101,9 +117,16 @@ export const GET = withAdminGuard(async (_request, { session: _session }) => {
       }
     };
 
+    // FAILLE-041 FIX: Filter sensitive email fields for non-OWNER roles
+    const filteredSiteSettings = { ...siteSettings };
+    if (_session.user.role !== 'OWNER') {
+      delete (filteredSiteSettings as Record<string, unknown>).legalEmail;
+      delete (filteredSiteSettings as Record<string, unknown>).privacyEmail;
+    }
+
     return NextResponse.json({
       siteSettings: {
-        ...siteSettings,
+        ...filteredSiteSettings,
         freeShippingThreshold: siteSettings.freeShippingThreshold
           ? Number(siteSettings.freeShippingThreshold)
           : null,
@@ -122,7 +145,7 @@ export const GET = withAdminGuard(async (_request, { session: _session }) => {
       settings: settingsByModule,
     });
   } catch (error) {
-    console.error('Admin settings GET error:', error);
+    logger.error('Admin settings GET error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -134,7 +157,12 @@ export const GET = withAdminGuard(async (_request, { session: _session }) => {
 export const PUT = withAdminGuard(async (request, { session }) => {
   try {
     const body = await request.json();
-    const { siteSettings: siteSettingsData, settings: keyValueSettings } = body;
+    // FAILLE-026 FIX: Validate PUT body with Zod
+    const parsed = settingsPutSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Validation error', details: parsed.error.flatten() }, { status: 400 });
+    }
+    const { siteSettings: siteSettingsData, settings: keyValueSettings } = parsed.data;
 
     const results: { siteSettings?: unknown; updatedKeys?: string[] } = {};
 
@@ -253,14 +281,14 @@ export const PUT = withAdminGuard(async (request, { session }) => {
       newValue: { updatedKeys: results.updatedKeys, hasSiteSettings: !!results.siteSettings },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch(() => {});
+    }).catch((e) => logger.error('[audit]', { error: e instanceof Error ? e.message : String(e) }));
 
     return NextResponse.json({
       success: true,
       ...results,
     });
   } catch (error) {
-    console.error('Admin settings PUT error:', error);
+    logger.error('Admin settings PUT error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -277,6 +305,11 @@ export const PATCH = withAdminGuard(async (request, { session }) => {
 
     if (!key || value === undefined) {
       return NextResponse.json({ error: 'key and value are required' }, { status: 400 });
+    }
+
+    // FAILLE-027 FIX: Validate key format (alphanumeric, dots, underscores, hyphens only, max 100 chars)
+    if (typeof key !== 'string' || key.length > 100 || !/^[a-zA-Z0-9._-]+$/.test(key)) {
+      return NextResponse.json({ error: 'Invalid key format' }, { status: 400 });
     }
 
     const result = await prisma.siteSetting.upsert({
@@ -306,11 +339,11 @@ export const PATCH = withAdminGuard(async (request, { session }) => {
       newValue: { key, value: typeof value === 'string' ? value.substring(0, 200) : '(object)' },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch(() => {});
+    }).catch((e) => logger.error('[audit]', { error: e instanceof Error ? e.message : String(e) }));
 
     return NextResponse.json({ success: true, setting: result });
   } catch (error) {
-    console.error('Admin settings PATCH error:', error);
+    logger.error('Admin settings PATCH error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 });

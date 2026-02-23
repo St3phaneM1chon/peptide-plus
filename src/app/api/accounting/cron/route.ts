@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { timingSafeEqual } from 'crypto';
 import { runScheduledTasks } from '@/lib/accounting';
+import { logger } from '@/lib/logger';
 
 /**
  * POST /api/accounting/cron
@@ -27,7 +28,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const cronSecret = process.env.CRON_SECRET;
 
   if (!cronSecret) {
-    console.error('[cron] CRON_SECRET environment variable is not configured');
+    logger.error('[cron] CRON_SECRET environment variable is not configured');
     return NextResponse.json(
       { error: 'Cron non configur\u00e9 (CRON_SECRET manquant)' },
       { status: 500 }
@@ -65,7 +66,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       ...result,
     });
   } catch (error) {
-    console.error('[cron] Scheduler error:', error);
+    logger.error('[cron] Scheduler error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       {
         error: 'Erreur lors de l\u2019ex\u00e9cution des t\u00e2ches planifi\u00e9es',

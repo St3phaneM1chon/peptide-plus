@@ -8,6 +8,7 @@
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import Link from 'next/link';
+import DOMPurify from 'isomorphic-dompurify';
 import { prisma } from '@/lib/db';
 import { getServerLocale } from '@/i18n/server';
 import { getTranslatedFields, DB_SOURCE_LOCALE } from '@/lib/translation';
@@ -346,7 +347,7 @@ export default async function BlogPostPage({ params }: PageProps) {
               lineHeight: 1.8,
               color: 'var(--gray-500)',
             }}
-            dangerouslySetInnerHTML={{ __html: content }}
+            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content, { ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'ul', 'ol', 'li', 'h2', 'h3', 'h4', 'h5', 'h6', 'a', 'span', 'blockquote', 'img', 'figure', 'figcaption', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'pre', 'code', 'div', 'sub', 'sup', 'hr'], ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'src', 'alt', 'width', 'height', 'style'] }) }}
           />
         ) : (
           <p style={{ fontSize: '16px', color: 'var(--gray-400)' }}>

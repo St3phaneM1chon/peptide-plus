@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import {
   Landmark,
@@ -395,7 +395,7 @@ export default function ComptabiliteDashboard() {
   });
 
   // Fetch dashboard data from API
-  const fetchDashboard = async () => {
+  const fetchDashboard = useCallback(async () => {
     setError(null);
     try {
       const response = await fetch(`/api/accounting/dashboard?period=${selectedPeriod}`);
@@ -452,12 +452,11 @@ export default function ComptabiliteDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedPeriod, t]);
 
   useEffect(() => {
     fetchDashboard();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedPeriod]);
+  }, [fetchDashboard]);
 
   // Fetch alerts from API
   useEffect(() => {

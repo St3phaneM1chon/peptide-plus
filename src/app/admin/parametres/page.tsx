@@ -8,6 +8,7 @@ import {
 import { Button, FormField, Input, MediaUploader } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
+import { addCSRFHeader } from '@/lib/csrf';
 
 export default function ParametresPage() {
   const { t } = useI18n();
@@ -106,7 +107,7 @@ export default function ParametresPage() {
     try {
       const res = await fetch('/api/admin/settings', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           siteSettings: {
             companyName: settings.siteName,

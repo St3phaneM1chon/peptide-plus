@@ -9,6 +9,7 @@ import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { UserRole } from '@/types';
 import { z } from 'zod';
+import { stripHtml, stripControlChars } from '@/lib/sanitize';
 
 const quickReplySchema = z.object({
   title: z.string().min(1).max(100),
@@ -58,10 +59,18 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const data = quickReplySchema.parse(body);
 
+    // FIX F-017/F-046: Sanitize quick reply content to prevent stored XSS
+    const sanitizedTitle = stripControlChars(stripHtml(data.title)).trim();
+    const sanitizedContent = stripControlChars(stripHtml(data.content)).trim();
+
+    if (!sanitizedTitle || !sanitizedContent) {
+      return NextResponse.json({ error: 'Title and content cannot be empty after sanitization' }, { status: 400 });
+    }
+
     const quickReply = await prisma.quickReply.create({
       data: {
-        title: data.title,
-        content: data.content,
+        title: sanitizedTitle,
+        content: sanitizedContent,
         category: data.category,
         sortOrder: data.sortOrder || 0,
       },

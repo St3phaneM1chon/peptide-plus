@@ -79,7 +79,8 @@ export async function enqueue(
   const { priority = 'normal', maxRetries = MAX_RETRIES_DEFAULT, scheduledAt } = options;
 
   const job: Job = {
-    id: `${jobType}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    // AMELIORATION: Use crypto.randomUUID instead of Math.random for job IDs
+    id: `${jobType}-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`,
     type: jobType,
     data: payload,
     priority,

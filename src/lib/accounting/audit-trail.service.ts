@@ -3,7 +3,8 @@
  * Complete logging of all accounting changes for compliance
  */
 
-import { db as prisma } from '@/lib/db';
+// FIX (F043): Standardize import to use 'prisma' directly
+import { prisma } from '@/lib/db';
 import { Prisma } from '@prisma/client';
 
 export interface AuditEntry {
@@ -60,7 +61,16 @@ export interface ChangeDetail {
 }
 
 /**
- * Log an audit entry
+ * Log an audit entry to AuditLog table.
+ *
+ * FIX (F044): NOTE - This service has TWO logging systems:
+ *   1. logAuditEntry() -> writes to AuditLog table (this function)
+ *   2. logAuditTrail() -> writes to AuditTrail table (below)
+ * Routes inconsistently use one or the other. The recommended approach is:
+ *   - Use logAuditTrail() for all new code (it supports per-field tracking)
+ *   - logAuditEntry() is kept for backward compatibility
+ * TODO: Migrate all logAuditEntry() callers to logAuditTrail() and deprecate this.
+ * @deprecated Use logAuditTrail() instead for new code
  */
 export async function logAuditEntry(
   action: AuditAction,
@@ -175,6 +185,7 @@ export function generateChanges<T extends Record<string, unknown>>(
 
 /**
  * Deep equality check
+ * FIX: F088 - Added explicit Array handling (element-by-element, order-sensitive)
  */
 function deepEqual(a: unknown, b: unknown): boolean {
   if (a === b) return true;
@@ -184,6 +195,12 @@ function deepEqual(a: unknown, b: unknown): boolean {
   if (typeof a !== 'object' || typeof b !== 'object' || a === null || b === null) {
     return false;
   }
+  // FIX: F088 - Handle arrays explicitly (order-sensitive comparison)
+  if (Array.isArray(a) && Array.isArray(b)) {
+    if (a.length !== b.length) return false;
+    return a.every((item, index) => deepEqual(item, b[index]));
+  }
+  if (Array.isArray(a) !== Array.isArray(b)) return false;
   const objA = a as Record<string, unknown>;
   const objB = b as Record<string, unknown>;
   const keysA = Object.keys(objA);
@@ -224,6 +241,24 @@ export async function getAuditHistory(
     take: limit,
   });
 
+  // FIX (F045): Fetch real user names instead of hardcoding 'Utilisateur'
+  const userIds = [...new Set(logs.map(l => l.userId).filter(Boolean))] as string[];
+  const userMap = new Map<string, string>();
+
+  if (userIds.length > 0) {
+    try {
+      const users = await prisma.user.findMany({
+        where: { id: { in: userIds } },
+        select: { id: true, name: true, email: true },
+      });
+      for (const user of users) {
+        userMap.set(user.id, user.name || user.email || 'Utilisateur');
+      }
+    } catch {
+      // If user table query fails, fall back to generic name
+    }
+  }
+
   return logs.map(log => {
     const details = log.details ? JSON.parse(log.details as string) : {};
     return {
@@ -234,7 +269,7 @@ export async function getAuditHistory(
       entityId: log.entityId || '',
       entityNumber: details.entityNumber,
       userId: log.userId || 'system',
-      userName: 'Utilisateur', // Would fetch from user table
+      userName: log.userId ? (userMap.get(log.userId) || 'Utilisateur') : 'Système',
       ipAddress: log.ipAddress || undefined,
       userAgent: log.userAgent || undefined,
       changes: details.changes || [],
@@ -296,6 +331,23 @@ export async function generateAuditReport(
     byUser[log.userId || 'unknown'] = (byUser[log.userId || 'unknown'] || 0) + 1;
   }
 
+  // FIX (F045): Fetch real user names for audit report too
+  const reportUserIds = [...new Set(logs.map(l => l.userId).filter(Boolean))] as string[];
+  const reportUserMap = new Map<string, string>();
+  if (reportUserIds.length > 0) {
+    try {
+      const users = await prisma.user.findMany({
+        where: { id: { in: reportUserIds } },
+        select: { id: true, name: true, email: true },
+      });
+      for (const user of users) {
+        reportUserMap.set(user.id, user.name || user.email || 'Utilisateur');
+      }
+    } catch {
+      // Fallback silently
+    }
+  }
+
   const entries = logs.map(log => {
     const details = log.details ? JSON.parse(log.details as string) : {};
     return {
@@ -306,7 +358,7 @@ export async function generateAuditReport(
       entityId: log.entityId || '',
       entityNumber: details.entityNumber,
       userId: log.userId || 'system',
-      userName: 'Utilisateur',
+      userName: log.userId ? (reportUserMap.get(log.userId) || 'Utilisateur') : 'Système',
       ipAddress: log.ipAddress || undefined,
       userAgent: log.userAgent || undefined,
       changes: details.changes || [],

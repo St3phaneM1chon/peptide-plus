@@ -68,6 +68,7 @@ function WhatsAppIcon({ className }: { className?: string }) {
 }
 
 // -- Status badge component --
+// TODO: F-060 - Status labels are hardcoded in English; use t() for each label
 
 function StatusBadge({ status }: { status: string }) {
   const config: Record<string, { bg: string; text: string; icon: React.ReactNode; label: string }> = {

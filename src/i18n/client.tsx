@@ -39,11 +39,10 @@ export function I18nProvider({ children, locale: initialLocale, messages }: I18n
   // Charger la locale sauvegardée
   useEffect(() => {
     const savedLocale = localStorage.getItem('locale') as Locale;
-    if (savedLocale && locales.includes(savedLocale) && savedLocale !== locale) {
+    if (savedLocale && locales.includes(savedLocale) && savedLocale !== initialLocale) {
       setLocaleState(savedLocale);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [initialLocale]);
 
   // Mettre à jour la direction du document
   useEffect(() => {

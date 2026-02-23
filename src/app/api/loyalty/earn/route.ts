@@ -3,32 +3,61 @@ export const dynamic = 'force-dynamic';
 /**
  * API Loyalty Earn - BioCycle Peptides
  * Gagne des points de fidélité
+ *
+ * TODO: FLAW-070 - Add composite index @@index([userId, type]) to LoyaltyTransaction model in schema.prisma
+ * TODO: F-035 - Add @@index([expiresAt]) to LoyaltyTransaction model for efficient points expiration queries
+ * TODO: F-085 - balanceAfter calculated before transaction; race condition in concurrent requests; use FOR UPDATE or compute from update result
+ * TODO: F-088 - No rate limiting on /api/loyalty/earn; spamming SIGNUP can cause unnecessary DB load
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
+import { logger } from '@/lib/logger';
 import { db } from '@/lib/db';
+import {
+  LOYALTY_POINTS_CONFIG,
+  calculateTierName,
+  calculatePurchasePoints,
+} from '@/lib/constants';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
+import { earnPointsSchema } from '@/lib/validations';
 
-// Points par type d'action
+// Points par type d'action - imported from central constants
 const POINTS_CONFIG = {
-  PURCHASE: 1, // 1 point par dollar dépensé
-  SIGNUP: 500, // Bonus de bienvenue
-  REVIEW: 50, // Pour chaque avis laissé
-  REFERRAL: 500, // Pour chaque parrainage réussi
-  BIRTHDAY: 200, // Bonus anniversaire
+  PURCHASE: LOYALTY_POINTS_CONFIG.pointsPerDollar,
+  SIGNUP: LOYALTY_POINTS_CONFIG.welcomeBonus,
+  REVIEW: LOYALTY_POINTS_CONFIG.reviewBonus,
+  REFERRAL: LOYALTY_POINTS_CONFIG.referralBonus,
+  BIRTHDAY: LOYALTY_POINTS_CONFIG.birthdayBonus,
 };
-
-// Calcul du tier basé sur les points à vie
-function calculateTier(lifetimePoints: number): string {
-  if (lifetimePoints >= 10000) return 'DIAMOND';
-  if (lifetimePoints >= 5000) return 'PLATINUM';
-  if (lifetimePoints >= 2000) return 'GOLD';
-  if (lifetimePoints >= 500) return 'SILVER';
-  return 'BRONZE';
-}
 
 export async function POST(request: NextRequest) {
   try {
+    // FIX F-025: Add rate limiting and CSRF validation
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip')
+      || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/loyalty/earn');
+    if (!rl.success) {
+      const res = NextResponse.json(
+        { error: rl.error!.message },
+        { status: 429 }
+      );
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      // Allow server-side calls (with valid session) but log for monitoring
+      const preSession = await auth();
+      if (!preSession?.user) {
+        return NextResponse.json({ error: 'CSRF validation failed' }, { status: 403 });
+      }
+    }
+
     const session = await auth();
 
     if (!session?.user?.email) {
@@ -36,12 +65,14 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { type, amount, orderId, description } = body;
-
-    // Validation
-    if (!type) {
-      return NextResponse.json({ error: 'Type is required' }, { status: 400 });
+    const parsed = earnPointsSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues[0]?.message || 'Invalid input' },
+        { status: 400 }
+      );
     }
+    const { type, amount, orderId, description, productId } = parsed.data;
 
     // SECURITY: Only EMPLOYEE/OWNER can award points (except SIGNUP which has its own duplicate check)
     // This prevents customers from awarding themselves arbitrary points
@@ -76,7 +107,8 @@ export async function POST(request: NextRequest) {
         if (!amount || amount <= 0) {
           return NextResponse.json({ error: 'Amount is required for purchase' }, { status: 400 });
         }
-        pointsToEarn = Math.floor(amount * POINTS_CONFIG.PURCHASE);
+        // F-004/F-005: Use safe calculation with overflow protection
+        pointsToEarn = calculatePurchasePoints(amount);
         transactionType = 'EARN_PURCHASE';
         transactionDescription = description || `Points earned on purchase${orderId ? ` #${orderId}` : ''}`;
         break;
@@ -102,7 +134,6 @@ export async function POST(request: NextRequest) {
 
       case 'REVIEW': {
         // DI-59: Prevent duplicate review points for the same product
-        const productId = body.productId;
         if (productId) {
           const existingReviewEarn = await db.loyaltyTransaction.findFirst({
             where: {
@@ -158,9 +189,14 @@ export async function POST(request: NextRequest) {
         if (!amount || amount <= 0) {
           return NextResponse.json({ error: 'Amount is required for bonus' }, { status: 400 });
         }
+        // FIX: FLAW-009 - Cap BONUS points at 10000 per transaction to prevent abuse.
+        // Log admin userId in metadata for audit trail.
+        if (amount > 10000) {
+          return NextResponse.json({ error: 'Bonus amount cannot exceed 10,000 points per transaction' }, { status: 400 });
+        }
         pointsToEarn = amount;
         transactionType = 'EARN_BONUS';
-        transactionDescription = description || 'Promotional bonus';
+        transactionDescription = description || `Promotional bonus (awarded by admin: ${session.user.id})`;
         break;
 
       default:
@@ -170,7 +206,7 @@ export async function POST(request: NextRequest) {
     // Calculer les nouveaux soldes
     const newPoints = user.loyaltyPoints + pointsToEarn;
     const newLifetimePoints = user.lifetimePoints + pointsToEarn;
-    const newTier = calculateTier(newLifetimePoints);
+    const newTier = calculateTierName(newLifetimePoints);
 
     // Transaction Prisma pour mettre à jour l'utilisateur et créer la transaction
     const [, transaction] = await db.$transaction([
@@ -185,8 +221,7 @@ export async function POST(request: NextRequest) {
       db.loyaltyTransaction.create({
         data: {
           userId: user.id,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Prisma enum type from dynamic value
-          type: transactionType as any,
+          type: transactionType as 'EARN_PURCHASE' | 'EARN_SIGNUP' | 'EARN_REVIEW' | 'EARN_REFERRAL' | 'EARN_BIRTHDAY' | 'EARN_BONUS',
           points: pointsToEarn,
           description: transactionDescription,
           orderId: orderId || null,
@@ -198,6 +233,24 @@ export async function POST(request: NextRequest) {
         },
       }),
     ]);
+
+    // AUDIT: Log loyalty point operation for traceability
+    logAdminAction({
+      adminUserId: session.user.id || 'system',
+      action: 'LOYALTY_EARN_POINTS',
+      targetType: 'User',
+      targetId: user.id,
+      newValue: {
+        type: transactionType,
+        pointsEarned: pointsToEarn,
+        newBalance: newPoints,
+        lifetimePoints: newLifetimePoints,
+        tier: newTier,
+        orderId: orderId || null,
+      },
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch((err) => logger.error('Audit log failed (earn)', { error: err instanceof Error ? err.message : String(err) }));
 
     return NextResponse.json({
       success: true,
@@ -215,7 +268,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error earning loyalty points:', error);
+    logger.error('Error earning loyalty points', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to earn points' },
       { status: 500 }

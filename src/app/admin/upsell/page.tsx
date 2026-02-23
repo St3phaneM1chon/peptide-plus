@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import Image from 'next/image';
 import { Plus, Pencil, Trash2, Zap, Package, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/admin/Button';
 import { StatCard } from '@/components/admin/StatCard';
@@ -88,12 +89,8 @@ export default function UpsellAdminPage() {
 
   // ─── Data fetching ──────────────────────────────────────────
 
-  useEffect(() => {
-    fetchConfigs();
-    fetchProducts();
-  }, []);
-
-  const fetchConfigs = async () => {
+  // FIX: FLAW-055 - Wrap fetchConfigs in useCallback for stable reference
+  const fetchConfigs = useCallback(async () => {
     try {
       const res = await fetch('/api/admin/upsell-config');
       const data = await res.json();
@@ -103,8 +100,15 @@ export default function UpsellAdminPage() {
     } finally {
       setLoading(false);
     }
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [t]);
 
+  useEffect(() => {
+    fetchConfigs();
+    fetchProducts();
+  }, [fetchConfigs]);
+
+  // TODO: FLAW-049 - limit=500 truncates large catalogs; implement server-side search/autocomplete
   const fetchProducts = async () => {
     try {
       const res = await fetch('/api/products?limit=500&fields=id,name,slug');
@@ -158,11 +162,17 @@ export default function UpsellAdminPage() {
     setShowForm(true);
   };
 
+  // FIX: FLAW-008 - Use PUT when editing existing config (editingConfig.id exists),
+  // POST only for new configs, to prevent creating duplicates.
   const handleSave = async () => {
     setSaving(true);
     try {
-      const res = await fetch('/api/admin/upsell-config', {
-        method: 'POST',
+      const isUpdate = !!editingConfig?.id;
+      const url = isUpdate
+        ? `/api/admin/upsell-config?id=${editingConfig.id}`
+        : '/api/admin/upsell-config';
+      const res = await fetch(url, {
+        method: isUpdate ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           productId: formProductId || null,
@@ -179,7 +189,12 @@ export default function UpsellAdminPage() {
         }),
       });
 
-      if (!res.ok) throw new Error('Failed to save');
+      // FIX: FLAW-073 - Show specific error for uniqueness constraint violation (only 1 global config allowed)
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        toast.error(errData.error || t('toast.admin.upsellSaveError'));
+        return;
+      }
 
       toast.success(t('admin.upsell.saveSuccess'));
       setShowForm(false);
@@ -451,11 +466,14 @@ export default function UpsellAdminPage() {
                   {selectedConfig.productImage && (
                     <div>
                       <h3 className="font-semibold text-slate-900 mb-3">{t('admin.upsell.productImage') || 'Product Image'}</h3>
-                      <div className="w-24 h-24 bg-slate-100 rounded-lg overflow-hidden">
-                        <img
+                      {/* FIX: FLAW-050 - Use Next.js Image for automatic optimization, WebP, lazy loading */}
+                      <div className="w-24 h-24 bg-slate-100 rounded-lg overflow-hidden relative">
+                        <Image
                           src={selectedConfig.productImage}
                           alt={selectedConfig.productName || ''}
-                          className="w-full h-full object-cover"
+                          fill
+                          className="object-cover"
+                          sizes="96px"
                         />
                       </div>
                     </div>

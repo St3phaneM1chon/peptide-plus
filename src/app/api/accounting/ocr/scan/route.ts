@@ -7,6 +7,7 @@ import {
   validateOCRFile,
   createInvoiceFromOCR,
 } from '@/lib/accounting';
+import { logger } from '@/lib/logger';
 
 /**
  * POST /api/accounting/ocr/scan
@@ -55,7 +56,7 @@ export const POST = withAdminGuard(async (request) => {
       processingTime: result.processingTime,
     });
   } catch (error) {
-    console.error('OCR scan error:', error);
+    logger.error('OCR scan error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors du scan OCR' },
       { status: 500 }

@@ -208,7 +208,10 @@
       "removeFromWishlist": "Retirer de la liste de souhaits",
       "addToWishlist": "Ajouter à la liste de souhaits",
       "moveToList": "Déplacer vers une autre liste"
-    }
+    },
+    "resetFilters": "Reset filters",
+    "retry": "Retry",
+    "productCount": "product"
   },
   "home": {
     "heroTitle": "Les meilleurs peptides de recherche au Canada",
@@ -1001,7 +1004,11 @@
     "tagsPlaceholder": "ex: bpc-157, reconstitution, débutant",
     "placeholderPostTitle": "Quelle est votre question ou sujet?",
     "placeholderPostBody": "Partagez vos pensées, questions ou expériences...",
-    "placeholderTags": "ex: bpc-157, reconstitution, débutant"
+    "placeholderTags": "ex: bpc-157, reconstitution, débutant",
+    "timeJustNow": "A l'instant",
+    "timeHoursAgo": "Il y a {count}h",
+    "timeYesterday": "Hier",
+    "timeDaysAgo": "Il y a {count}j"
   },
   "webinars": {
     "title": "Webinaires et événements",
@@ -2895,7 +2902,9 @@
       "teamsSetupDesc": "Connectez Microsoft Teams pour les notifications internes de commandes et alertes d'équipe. Supporte les Webhooks et l'API Graph.",
       "teamsWebhookLabel": "URL du Webhook entrant",
       "teamsWebhookHint": "Créez un Webhook entrant dans votre canal Teams et collez l'URL ici",
-      "teamsOptionalGraphApi": "Optionnel - requis uniquement pour l'intégration API Graph (avancé)"
+      "teamsOptionalGraphApi": "Optionnel - requis uniquement pour l'intégration API Graph (avancé)",
+      "webhookUrl": "Webhook URL",
+      "docs": "Documentation"
     },
     "viewSite": "Voir le site",
     "notifications": "Notifications",

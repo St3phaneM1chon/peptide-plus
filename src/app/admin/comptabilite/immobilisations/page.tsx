@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Building2,
   Plus,
@@ -133,9 +133,7 @@ export default function ImmobilisationsPage() {
   // Data fetching
   // ---------------------------------------------------------------------------
 
-  useEffect(() => { fetchAssets(); fetchAccounts(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const fetchAssets = async () => {
+  const fetchAssets = useCallback(async () => {
     try {
       const params = new URLSearchParams();
       if (statusFilter) params.set('status', statusFilter);
@@ -149,9 +147,9 @@ export default function ImmobilisationsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [statusFilter, ccaClassFilter, search]);
 
-  const fetchAccounts = async () => {
+  const fetchAccounts = useCallback(async () => {
     try {
       const res = await fetch('/api/accounting/chart-of-accounts');
       const json = await res.json();
@@ -163,10 +161,12 @@ export default function ImmobilisationsPage() {
     } catch (err) {
       console.error('Error fetching accounts:', err);
     }
-  };
+  }, []);
+
+  useEffect(() => { fetchAssets(); fetchAccounts(); }, [fetchAssets, fetchAccounts]);
 
   // Refetch when filters change
-  useEffect(() => { fetchAssets(); }, [statusFilter, ccaClassFilter]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { fetchAssets(); }, [fetchAssets]);
 
   // ---------------------------------------------------------------------------
   // Handlers

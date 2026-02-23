@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { getDaysPastDue, getBucket, getBucketLabels, DEFAULT_AGING_BUCKETS } from '@/lib/accounting/aging-utils';
+import { logger } from '@/lib/logger';
 
 // ---------------------------------------------------------------------------
 // GET /api/accounting/ap-aging
@@ -99,7 +100,7 @@ export const GET = withAdminGuard(async (request) => {
       summary,
     });
   } catch (error) {
-    console.error('AP aging report error:', error);
+    logger.error('AP aging report error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la génération du rapport d\'ancienneté des comptes fournisseurs' },
       { status: 500 }

@@ -19,6 +19,7 @@ import { prisma } from '@/lib/db';
 import { TRANSLATABLE_FIELDS, type TranslatableModel } from '@/lib/translation';
 import { cacheDelete } from '@/lib/cache';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { logger } from '@/lib/logger';
 
 const TRANSLATION_TABLE_MAP: Record<TranslatableModel, string> = {
   Product: 'productTranslation',
@@ -74,7 +75,7 @@ export const GET = withAdminGuard(async (request: NextRequest, { session, params
       return NextResponse.json({ translations });
     }
   } catch (error) {
-    console.error('Error fetching translation:', error);
+    logger.error('Error fetching translation', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Erreur' }, { status: 500 });
   }
 });
@@ -139,7 +140,7 @@ export const PUT = withAdminGuard(async (request: NextRequest, { session, params
       translation,
     });
   } catch (error) {
-    console.error('Error updating translation:', error);
+    logger.error('Error updating translation', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Erreur' }, { status: 500 });
   }
 });
@@ -201,7 +202,7 @@ export const DELETE = withAdminGuard(async (request: NextRequest, { session, par
       });
     }
   } catch (error) {
-    console.error('Error deleting translation:', error);
+    logger.error('Error deleting translation', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Erreur' }, { status: 500 });
   }
 });

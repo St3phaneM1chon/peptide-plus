@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { logger } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
   try {
@@ -50,7 +51,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('[TranslationFeedback] Error:', error);
+    logger.error('[TranslationFeedback] Error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to save feedback' }, { status: 500 });
   }
 }

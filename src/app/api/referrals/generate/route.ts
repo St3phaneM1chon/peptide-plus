@@ -6,10 +6,13 @@ export const dynamic = 'force-dynamic';
  * Format: first 3 letters of name (uppercased) + 5 random alphanumeric chars
  */
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth-config';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import crypto from 'crypto';
 
+// FLAW-003 FIX: Use crypto.randomBytes instead of Math.random() for referral code generation
 function generateCode(name: string | null | undefined): string {
   // Take first 3 letters of name, fallback to 'REF'
   const prefix = (name || 'REF')
@@ -18,21 +21,33 @@ function generateCode(name: string | null | undefined): string {
     .toUpperCase()
     .padEnd(3, 'X');
 
-  // Generate 5 random alphanumeric characters
+  // Generate 5 cryptographically secure random alphanumeric characters
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  const randomBytes = crypto.randomBytes(5);
   let suffix = '';
   for (let i = 0; i < 5; i++) {
-    suffix += chars.charAt(Math.floor(Math.random() * chars.length));
+    suffix += chars.charAt(randomBytes[i] % chars.length);
   }
 
   return `${prefix}${suffix}`;
 }
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // FLAW-FIX: Rate limit referral code generation - 5 per user per hour
+    const rl = await rateLimitMiddleware(session.user.id, '/api/referrals/generate', session.user.id);
+    if (!rl.success) {
+      const res = NextResponse.json(
+        { error: rl.error!.message },
+        { status: 429 }
+      );
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
     }
 
     const userId = session.user.id;

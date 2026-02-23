@@ -1,12 +1,28 @@
 export const dynamic = 'force-dynamic';
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { logger } from '@/lib/logger';
 import { sendEmail } from '@/lib/email/email-service';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import crypto from 'crypto';
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
+    // FLAW-FIX: Rate limit newsletter signup - 5 per IP per hour (prevents spam/abuse)
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip')
+      || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/newsletter');
+    if (!rl.success) {
+      const res = NextResponse.json(
+        { error: rl.error!.message },
+        { status: 429 }
+      );
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+
     const body = await request.json();
     const { email, name, preferences, consentMethod } = body;
 
@@ -25,10 +41,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: 'Already subscribed' });
     }
 
-    // Get IP for CASL compliance
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip')
-      || 'unknown';
+    // IP already extracted above for rate limiting; reuse for CASL compliance
 
     const confirmToken = crypto.randomBytes(32).toString('hex');
     const unsubscribeToken = crypto.randomBytes(32).toString('hex');
@@ -99,7 +112,7 @@ export async function POST(request: Request) {
             Si vous n'avez pas fait cette demande, ignorez simplement ce message.
           </p>
           <p style="font-size:12px;color:#666;">
-            <strong>Votre consentement :</strong> Enregistr\u00e9 le ${consentDateStr} depuis l'adresse IP ${ip}.<br/>
+            <strong>Votre consentement :</strong> Enregistr\u00e9 le ${consentDateStr}.<br/>
             <strong>Droit de retrait :</strong> Vous pouvez retirer votre consentement \u00e0 tout moment en cliquant sur le lien de d\u00e9sabonnement pr\u00e9sent dans chaque courriel, ou en visitant : <a href="${unsubscribeUrl}">${unsubscribeUrl}</a><br/>
             <strong>Cat\u00e9gories :</strong> ${selectedPrefs.join(', ')}
           </p>
@@ -117,7 +130,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, message: 'Confirmation email sent. Please check your inbox.' });
   } catch (error) {
-    console.error('Mailing list subscribe error:', error);
+    logger.error('Mailing list subscribe error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

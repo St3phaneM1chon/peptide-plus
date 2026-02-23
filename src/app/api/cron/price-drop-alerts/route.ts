@@ -18,6 +18,8 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { sendEmail, priceDropEmail, generateUnsubscribeUrl } from '@/lib/email';
+// FLAW-061 FIX: Import bounce suppression to skip hard-bounced addresses
+import { shouldSuppressEmail } from '@/lib/email/bounce-handler';
 import { logger } from '@/lib/logger';
 import { withJobLock } from '@/lib/cron-lock';
 
@@ -112,6 +114,12 @@ export async function GET(request: NextRequest) {
 
       const batchPromises = batch.map(async (watch) => {
         try {
+          // FLAW-061 FIX: Check bounce suppression before sending
+          const { suppressed } = await shouldSuppressEmail(watch.user.email);
+          if (suppressed) {
+            return { productId: watch.product.id, productName: watch.product.name, email: watch.user.email, priceDrop: 0, success: false, error: 'bounce_suppressed' };
+          }
+
           const currentPrice = Number(watch.product.price);
           const originalPrice = Number(watch.originalPrice);
           const targetPrice = watch.targetPrice ? Number(watch.targetPrice) : undefined;

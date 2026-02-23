@@ -2,70 +2,44 @@
 
 import { createContext, useContext, useState, useEffect, useMemo, useCallback, ReactNode } from 'react';
 import { useSession } from 'next-auth/react';
+import {
+  LOYALTY_POINTS_CONFIG,
+  LOYALTY_TIER_THRESHOLDS,
+  LOYALTY_REWARDS_CATALOG,
+} from '@/lib/constants';
 
-// Points configuration
-export const LOYALTY_CONFIG = {
-  pointsPerDollar: 10, // 10 points per $1 spent
-  pointsValue: 0.01, // 1 point = $0.01
-  welcomeBonus: 500, // 500 points for new members
-  reviewBonus: 100, // 100 points per review
-  referralBonus: 1000, // 1000 points for referrer
-  referralBonusReferee: 500, // 500 points for referee
-  birthdayBonus: 500, // 500 points on birthday
-  subscriptionBonus: 200, // 200 bonus points per subscription order
-};
+// Re-export from constants for backward compatibility
+export const LOYALTY_CONFIG = LOYALTY_POINTS_CONFIG;
 
-// Tier configuration
-export const LOYALTY_TIERS = [
-  {
-    id: 'bronze',
-    name: 'Bronze',
-    icon: '🥉',
-    minPoints: 0,
-    multiplier: 1,
-    benefits: ['10 points per $1 spent', 'Access to member-only sales', 'Free shipping over $100'],
-    color: 'from-amber-600 to-amber-700',
-  },
-  {
-    id: 'silver',
-    name: 'Silver',
-    icon: '🥈',
-    minPoints: 2500,
-    multiplier: 1.25,
-    benefits: ['12.5 points per $1 spent', 'Early access to new products', 'Free shipping over $75', '5% off all orders'],
-    color: 'from-gray-400 to-gray-500',
-  },
-  {
-    id: 'gold',
-    name: 'Gold',
-    icon: '🥇',
-    minPoints: 7500,
-    multiplier: 1.5,
-    benefits: ['15 points per $1 spent', 'Priority customer support', 'Free shipping over $50', '10% off all orders', 'Exclusive Gold sales'],
-    color: 'from-yellow-500 to-yellow-600',
-  },
-  {
-    id: 'platinum',
-    name: 'Platinum',
-    icon: '💎',
-    minPoints: 15000,
-    multiplier: 2,
-    benefits: ['20 points per $1 spent', 'Dedicated account manager', 'Free shipping on all orders', '15% off all orders', 'VIP access to events', 'Free samples with every order'],
-    color: 'from-purple-500 to-purple-600',
-  },
-];
+// Map canonical tier thresholds to client-side format with icons/benefits
+export const LOYALTY_TIERS = LOYALTY_TIER_THRESHOLDS.map(tier => {
+  const extras: Record<string, { icon: string; benefits: string[]; color: string }> = {
+    BRONZE:   { icon: '🥉', benefits: [`${tier.multiplier * LOYALTY_POINTS_CONFIG.pointsPerDollar} points per $1 spent`, 'Access to member-only sales', 'Free shipping over $100'], color: 'from-amber-600 to-amber-700' },
+    SILVER:   { icon: '🥈', benefits: [`${tier.multiplier * LOYALTY_POINTS_CONFIG.pointsPerDollar} points per $1 spent`, 'Early access to new products', 'Free shipping over $75', '5% off all orders'], color: 'from-gray-400 to-gray-500' },
+    GOLD:     { icon: '🥇', benefits: [`${tier.multiplier * LOYALTY_POINTS_CONFIG.pointsPerDollar} points per $1 spent`, 'Priority customer support', 'Free shipping over $50', '10% off all orders', 'Exclusive Gold sales'], color: 'from-yellow-500 to-yellow-600' },
+    PLATINUM: { icon: '💎', benefits: [`${tier.multiplier * LOYALTY_POINTS_CONFIG.pointsPerDollar} points per $1 spent`, 'Dedicated account manager', 'Free shipping on all orders', '15% off all orders', 'VIP access to events'], color: 'from-purple-500 to-purple-600' },
+    DIAMOND:  { icon: '💠', benefits: [`${tier.multiplier * LOYALTY_POINTS_CONFIG.pointsPerDollar} points per $1 spent`, 'Free express shipping', '20% off everything', 'Dedicated support', 'Exclusive products'], color: 'from-indigo-500 to-indigo-700' },
+  };
+  const extra = extras[tier.id] || extras.BRONZE;
+  return {
+    id: tier.id.toLowerCase(),
+    name: tier.name,
+    icon: extra.icon,
+    minPoints: tier.minPoints,
+    multiplier: tier.multiplier,
+    benefits: extra.benefits,
+    color: extra.color,
+  };
+});
 
-// Rewards catalog
-export const LOYALTY_REWARDS = [
-  { id: 'discount-5', name: '$5 Off', points: 500, type: 'discount', value: 5 },
-  { id: 'discount-10', name: '$10 Off', points: 1000, type: 'discount', value: 10 },
-  { id: 'discount-25', name: '$25 Off', points: 2500, type: 'discount', value: 25 },
-  { id: 'discount-50', name: '$50 Off', points: 5000, type: 'discount', value: 50 },
-  { id: 'free-shipping', name: 'Free Shipping', points: 300, type: 'shipping', value: 0 },
-  { id: 'bac-water-free', name: 'Free BAC Water (10ml)', points: 800, type: 'product', value: 'bac-water-10ml' },
-  { id: 'syringes-free', name: 'Free Syringe Pack (10)', points: 600, type: 'product', value: 'syringes-10' },
-  { id: 'double-points', name: 'Double Points (Next Order)', points: 1500, type: 'multiplier', value: 2 },
-];
+// Rewards catalog - mapped from canonical definition for client-side use
+export const LOYALTY_REWARDS = Object.entries(LOYALTY_REWARDS_CATALOG).map(([key, r]) => ({
+  id: key,
+  name: r.description,
+  points: r.points,
+  type: r.type,
+  value: r.value,
+}));
 
 interface LoyaltyTransaction {
   id: string;
@@ -89,7 +63,7 @@ interface LoyaltyState {
 interface LoyaltyContextType extends LoyaltyState {
   isLoading: boolean;
   earnPoints: (amount: number, description: string, orderId?: string) => void;
-  redeemReward: (rewardId: string) => boolean;
+  redeemReward: (rewardId: string) => Promise<boolean>;
   getPointsForPurchase: (amount: number) => number;
   getDiscountFromPoints: (points: number) => number;
   getTierProgress: () => { current: number; next: number; percentage: number };
@@ -136,8 +110,7 @@ export function LoyaltyProvider({ children }: { children: ReactNode }) {
       }
       setIsLoading(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session]);
+  }, [session, loadLoyaltyData]);
 
   // Update tier when points change
   useEffect(() => {
@@ -145,8 +118,7 @@ export function LoyaltyProvider({ children }: { children: ReactNode }) {
     if (newTier.id !== state.tier.id) {
       setState(prev => ({ ...prev, tier: newTier }));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.lifetimePoints]);
+  }, [state.lifetimePoints, state.tier.id]);
 
   const loadLoyaltyData = useCallback(async () => {
     try {
@@ -173,7 +145,6 @@ export function LoyaltyProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.user?.name]);
 
   const generateReferralCode = () => {
@@ -232,34 +203,57 @@ export function LoyaltyProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const redeemReward = (rewardId: string): boolean => {
+  const redeemReward = async (rewardId: string): Promise<boolean> => {
     const reward = LOYALTY_REWARDS.find(r => r.id === rewardId);
     if (!reward || state.points < reward.points) return false;
 
-    const transaction: LoyaltyTransaction = {
-      id: Date.now().toString(),
-      type: 'redeem',
-      points: -reward.points,
-      description: `Redeemed: ${reward.name}`,
-      date: new Date().toISOString(),
-    };
+    // FIX F-003: Call API FIRST, only update local state on success
+    if (session?.user?.email) {
+      try {
+        const res = await fetch('/api/loyalty/redeem', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ rewardId }),
+        });
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}));
+          console.error('Redeem API error:', errorData);
+          return false;
+        }
+        const data = await res.json();
+        // Update state from server response for consistency
+        setState(prev => ({
+          ...prev,
+          points: data.newBalance ?? (prev.points - reward.points),
+          transactions: [{
+            id: data.transaction?.id || Date.now().toString(),
+            type: 'redeem' as const,
+            points: -reward.points,
+            description: `Redeemed: ${reward.name}`,
+            date: data.transaction?.date || new Date().toISOString(),
+          }, ...prev.transactions],
+          activeRewards: [...prev.activeRewards, rewardId],
+        }));
+        return true;
+      } catch (error) {
+        console.error('Redeem network error:', error);
+        return false;
+      }
+    }
 
+    // Offline / not authenticated: local-only update
     setState(prev => ({
       ...prev,
       points: prev.points - reward.points,
-      transactions: [transaction, ...prev.transactions],
+      transactions: [{
+        id: Date.now().toString(),
+        type: 'redeem' as const,
+        points: -reward.points,
+        description: `Redeemed: ${reward.name}`,
+        date: new Date().toISOString(),
+      }, ...prev.transactions],
       activeRewards: [...prev.activeRewards, rewardId],
     }));
-
-    // Save to backend
-    if (session?.user?.email) {
-      fetch('/api/loyalty/redeem', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ rewardId }),
-      });
-    }
-
     return true;
   };
 

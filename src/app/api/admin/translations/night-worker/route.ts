@@ -15,10 +15,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { processNightJobs, getQueueStats, cleanupJobs } from '@/lib/translation';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { logger } from '@/lib/logger';
 
 export const POST = withAdminGuard(async (request: NextRequest, { session }) => {
   try {
-    console.log('[NightWorker] Starting night translation processing...');
+    logger.info('[NightWorker] Starting night translation processing...');
 
     // Process all pending Pass 2 and Pass 3 jobs
     const results = await processNightJobs();
@@ -29,7 +30,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
     // Get updated stats
     const stats = await getQueueStats();
 
-    console.log(`[NightWorker] Done. Pass 2: ${results.pass2.processed} ok / ${results.pass2.errors} err. Pass 3: ${results.pass3.processed} ok / ${results.pass3.errors} err. Cleaned: ${cleaned}`);
+    logger.info(`[NightWorker] Done. Pass 2: ${results.pass2.processed} ok / ${results.pass2.errors} err. Pass 3: ${results.pass3.processed} ok / ${results.pass3.errors} err. Cleaned: ${cleaned}`);
 
     logAdminAction({
       adminUserId: session.user.id,
@@ -49,7 +50,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('[NightWorker] Error:', error);
+    logger.error('[NightWorker] Error', { error: error instanceof Error ? error.message : String(error) });
     // BE-SEC-04: Don't leak error details in production
     return NextResponse.json(
       { error: 'Night worker failed', ...(process.env.NODE_ENV === 'development' ? { details: error instanceof Error ? error.message : String(error) } : {}) },

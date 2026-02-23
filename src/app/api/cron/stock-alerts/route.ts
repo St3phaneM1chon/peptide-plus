@@ -7,6 +7,8 @@ import { backInStockEmail } from '@/lib/email-templates';
 import { generateUnsubscribeUrl } from '@/lib/email/unsubscribe';
 import { type Locale } from '@/i18n/config';
 import { withJobLock } from '@/lib/cron-lock';
+// FLAW-059 FIX: Use structured logger instead of raw console.log/console.error
+import { logger } from '@/lib/logger';
 
 /**
  * POST /api/cron/stock-alerts
@@ -23,7 +25,7 @@ export async function POST(request: NextRequest) {
   const cronSecret = process.env.CRON_SECRET;
 
   if (!cronSecret) {
-    console.error('CRON_SECRET not configured');
+    logger.error('CRON_SECRET not configured');
     return NextResponse.json(
       { error: 'Cron secret not configured' },
       { status: 500 }
@@ -69,7 +71,7 @@ export async function POST(request: NextRequest) {
       take: 100, // Process in batches of 100
     });
 
-    console.log(`Found ${pendingAlerts.length} pending stock alerts to process`);
+    logger.info(`Found ${pendingAlerts.length} pending stock alerts to process`);
 
     let processedCount = 0;
     let sentCount = 0;
@@ -117,8 +119,16 @@ export async function POST(request: NextRequest) {
               return;
             }
 
-            // Product is back in stock - send notification
-            const locale: Locale = 'en'; // Default locale, could be user preference
+            // FIX: FLAW-057 - Look up user locale instead of hardcoding 'en'
+            // TODO: FLAW-058 - Add optional userId field to StockAlert model for direct user relation
+            let locale: Locale = 'en';
+            const alertUser = await prisma.user.findFirst({
+              where: { email: alert.email },
+              select: { locale: true },
+            }).catch(() => null);
+            if (alertUser?.locale && (alertUser.locale === 'fr' || alertUser.locale === 'en')) {
+              locale = alertUser.locale as Locale;
+            }
 
             // Generate unsubscribe URL (CAN-SPAM / RGPD / LCAP compliance)
             const unsubscribeUrl = await generateUnsubscribeUrl(alert.email, 'marketing').catch(() => undefined);
@@ -155,17 +165,17 @@ export async function POST(request: NextRequest) {
               });
 
               sentCount++;
-              console.log(`Sent stock alert to ${alert.email} for product ${alert.product.slug}`);
+              logger.info(`Sent stock alert to ${alert.email} for product ${alert.product.slug}`);
             } else {
               errorCount++;
-              console.error(
+              logger.error(
                 `Failed to send stock alert to ${alert.email}:`,
                 emailResult.error
               );
             }
           } catch (error) {
             errorCount++;
-            console.error(`Error processing alert ${alert.id}:`, error);
+            logger.error(`Error processing alert ${alert.id}:`, error);
           }
         })
       );
@@ -184,7 +194,7 @@ export async function POST(request: NextRequest) {
         message: `Processed ${processedCount} alerts, sent ${sentCount} emails, ${errorCount} errors`,
       });
     } catch (error) {
-      console.error('Stock alerts cron error:', error);
+      logger.error('Stock alerts cron error:', error);
       // BE-SEC-04: Don't leak error details in production
       return NextResponse.json(
         {
@@ -200,8 +210,22 @@ export async function POST(request: NextRequest) {
 /**
  * GET /api/cron/stock-alerts
  * Health check endpoint
+ * FIX: FLAW-011 - Require Authorization header to prevent unauthenticated access
+ * to business data (pending/total alert counts).
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
+  // FIX: FLAW-011 - Add Authorization: Bearer CRON_SECRET check on GET too
+  const authHeader = request.headers.get('authorization');
+  const cronSecret = process.env.CRON_SECRET;
+
+  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+    // Return minimal health status without sensitive counts for unauthenticated requests
+    return NextResponse.json({
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+    });
+  }
+
   try {
     const pendingCount = await prisma.stockAlert.count({
       where: { notified: false },

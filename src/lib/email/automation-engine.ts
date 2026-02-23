@@ -12,6 +12,7 @@
 
 import { prisma } from '@/lib/db';
 import { escapeHtml } from '@/lib/email/templates/base-template';
+import { logger } from '@/lib/logger';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -54,12 +55,26 @@ export interface FlowEdge {
   label?: string;
 }
 
+/** Typed context passed through flow nodes during execution */
+export interface FlowContext {
+  email: string;
+  name?: string;
+  userId?: string;
+  orderId?: string;
+  orderTotal?: number;
+  locale?: string;
+  _flowId?: string;
+  [key: string]: unknown; // Allow extra fields
+}
+
 /** Runtime statistics persisted alongside each flow */
 export interface FlowStats {
   triggered: number;
   sent: number;
+  delivered: number;
   opened: number;
   clicked: number;
+  bounced: number;
   revenue: number;
 }
 
@@ -81,6 +96,29 @@ export type TriggerEvent =
   | 'reorder.due';
 
 // ---------------------------------------------------------------------------
+// Active flows cache (avoids DB round-trip on every event)
+// ---------------------------------------------------------------------------
+
+let activeFlowsCache: { flows: { id: string; trigger: string; nodes: string; edges: string }[]; cachedAt: number } | null = null;
+const FLOW_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
+async function getActiveFlows(trigger: string) {
+  if (activeFlowsCache && Date.now() - activeFlowsCache.cachedAt < FLOW_CACHE_TTL_MS) {
+    return activeFlowsCache.flows.filter(f => f.trigger === trigger);
+  }
+  const flows = await prisma.emailAutomationFlow.findMany({
+    where: { isActive: true },
+  });
+  activeFlowsCache = { flows, cachedAt: Date.now() };
+  return flows.filter(f => f.trigger === trigger);
+}
+
+/** Clear the active flows cache (call when flows are created, updated, or deleted) */
+export function clearFlowCache(): void {
+  activeFlowsCache = null;
+}
+
+// ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
 
@@ -94,11 +132,9 @@ export type TriggerEvent =
  */
 export async function handleEvent(
   event: TriggerEvent,
-  context: Record<string, unknown>,
+  context: FlowContext,
 ): Promise<void> {
-  const flows = await prisma.emailAutomationFlow.findMany({
-    where: { trigger: event, isActive: true },
-  });
+  const flows = await getActiveFlows(event);
 
   for (const flow of flows) {
     try {
@@ -115,7 +151,7 @@ export async function handleEvent(
       // Atomically increment the "triggered" counter to avoid race conditions
       await incrementFlowStat(flow.id, 'triggered');
     } catch (error) {
-      console.error(`[AutomationEngine] Error executing flow ${flow.id}:`, error);
+      logger.error(`[automation] Error executing flow ${flow.id}`, { error });
     }
   }
 }
@@ -130,19 +166,26 @@ export async function handleEvent(
  * follow (edges whose `sourceHandle` matches `"true"` or `"false"`).
  */
 const FLOW_MAX_NODES = 50; // Max nodes to process per execution (prevents runaway flows)
+const FLOW_EXECUTION_TIMEOUT_MS = 30000; // 30s max execution time per flow
 
 async function executeFlowFromNode(
   flowId: string,
   nodeId: string,
   nodes: FlowNode[],
   edges: FlowEdge[],
-  context: Record<string, unknown>,
+  context: FlowContext,
   visited: Set<string> = new Set(),
+  executionStart: number = Date.now(),
 ): Promise<void> {
+  // Timeout guard: prevent flows from running too long
+  if (Date.now() - executionStart > FLOW_EXECUTION_TIMEOUT_MS) {
+    logger.error('[automation] Flow execution timeout', { flowId });
+    return;
+  }
   // Cycle detection + execution budget: prevent infinite recursion and runaway flows
   if (visited.has(nodeId)) return;
   if (visited.size >= FLOW_MAX_NODES) {
-    console.warn(`[AutomationEngine] Flow ${flowId}: max node limit (${FLOW_MAX_NODES}) reached, stopping`);
+    logger.warn(`[automation] Flow ${flowId}: max node limit (${FLOW_MAX_NODES}) reached, stopping`);
     return;
   }
   visited.add(nodeId);
@@ -164,7 +207,65 @@ async function executeFlowFromNode(
   }
 
   for (const edge of nextEdges) {
-    await executeFlowFromNode(flowId, edge.target, nodes, edges, context, visited);
+    await executeFlowFromNode(flowId, edge.target, nodes, edges, context, visited, executionStart);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Node validation
+// ---------------------------------------------------------------------------
+
+/**
+ * Validate that a flow node has all required fields for its type.
+ * Returns null if valid, or an error message string if invalid.
+ */
+export function validateNode(node: FlowNode): string | null {
+  switch (node.type) {
+    case 'trigger':
+      if (!node.data.triggerEvent) {
+        return `Trigger node "${node.id}" is missing required field: eventType (triggerEvent)`;
+      }
+      return null;
+
+    case 'email':
+    case 'send_email' as FlowNode['type']:
+      if (!node.data.templateId && !node.data.subject) {
+        return `Email node "${node.id}" requires either templateId or subject`;
+      }
+      return null;
+
+    case 'delay':
+      if (!node.data.delayAmount || node.data.delayAmount <= 0) {
+        return `Delay node "${node.id}" requires delayAmount > 0`;
+      }
+      if (!node.data.delayUnit || !['minutes', 'hours', 'days', 'weeks'].includes(node.data.delayUnit)) {
+        return `Delay node "${node.id}" requires a valid delayUnit (minutes, hours, days, weeks)`;
+      }
+      return null;
+
+    case 'condition':
+      if (!node.data.conditionField) {
+        return `Condition node "${node.id}" requires a field (conditionField)`;
+      }
+      if (!node.data.conditionOperator) {
+        return `Condition node "${node.id}" requires an operator (conditionOperator)`;
+      }
+      return null;
+
+    case 'sms':
+      if (!node.data.smsMessage) {
+        return `SMS node "${node.id}" requires smsMessage`;
+      }
+      return null;
+
+    case 'push':
+      if (!node.data.pushTitle) {
+        return `Push node "${node.id}" requires pushTitle`;
+      }
+      return null;
+
+    default:
+      return null;
   }
 }
 
@@ -179,8 +280,15 @@ async function executeFlowFromNode(
  */
 async function executeNode(
   node: FlowNode,
-  context: Record<string, unknown>,
+  context: FlowContext,
 ): Promise<boolean> {
+  // Validate node before execution
+  const validationError = validateNode(node);
+  if (validationError) {
+    logger.warn(`[automation] Skipping invalid node: ${validationError}`);
+    return true; // Skip and continue to next nodes
+  }
+
   switch (node.type) {
     // -- Trigger (already matched) ----------------------------------------
     case 'trigger':
@@ -196,17 +304,24 @@ async function executeNode(
       const { suppressed } = await shouldSuppressEmail(email);
       if (suppressed) return true;
 
+      // Transactional emails (order confirmations, shipping, refunds) are always
+      // sent regardless of marketing consent — they are legally required / expected.
+      const isTransactional = node.data.templateId &&
+        /^(order:|shipping:|refund:)/.test(node.data.templateId);
+
       // RGPD compliance: verify active consent before sending marketing emails
-      const activeConsent = await prisma.consentRecord.findFirst({
-        where: {
-          email: email.toLowerCase(),
-          type: { in: ['marketing', 'newsletter'] },
-          revokedAt: null,
-          OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
-        },
-        select: { id: true },
-      });
-      if (!activeConsent) return true;
+      if (!isTransactional) {
+        const activeConsent = await prisma.consentRecord.findFirst({
+          where: {
+            email: email.toLowerCase(),
+            type: { in: ['marketing', 'newsletter'] },
+            revokedAt: null,
+            OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
+          },
+          select: { id: true },
+        });
+        if (!activeConsent) return true;
+      }
 
       const { sendEmail } = await import('@/lib/email/email-service');
       const { generateUnsubscribeUrl } = await import('@/lib/email/unsubscribe');
@@ -242,12 +357,28 @@ async function executeNode(
       const delayMs = getDelayMs(node.data.delayAmount, node.data.delayUnit);
       const email = context.email as string;
       if (email && context._flowId) {
+        // Faille MEDIUM: limit serialized context size to 10 KB
+        const MAX_CONTEXT_SIZE = 10240;
+        let serializedContext = JSON.stringify(context);
+        if (serializedContext.length > MAX_CONTEXT_SIZE) {
+          logger.warn(
+            `[automation] Context too large (${serializedContext.length} bytes) for flow ${context._flowId}, trimming non-essential fields`,
+          );
+          // Keep only essential fields, drop anything else
+          const essentialKeys = ['email', 'name', 'userId', 'orderId', '_flowId'] as const;
+          const trimmedContext: Partial<FlowContext> = {};
+          for (const key of essentialKeys) {
+            if (key in context) trimmedContext[key] = context[key];
+          }
+          serializedContext = JSON.stringify(trimmedContext);
+        }
+
         await prisma.emailFlowExecution.create({
           data: {
             flowId: context._flowId as string,
             email,
             currentNode: node.id,
-            context: JSON.stringify(context),
+            context: serializedContext,
             status: 'WAITING',
             executeAt: new Date(Date.now() + delayMs),
           },
@@ -280,8 +411,8 @@ async function executeNode(
 
     // -- SMS (placeholder) ------------------------------------------------
     case 'sms': {
-      console.log(
-        `[AutomationEngine] SMS to ${context.phone ?? 'unknown'}: ${node.data.smsMessage}`,
+      logger.info(
+        `[automation] SMS to ${context.phone ?? 'unknown'}: ${node.data.smsMessage}`,
       );
       // TODO: Integrate Twilio or another SMS provider
       return true;
@@ -289,8 +420,8 @@ async function executeNode(
 
     // -- Push notification (placeholder) ----------------------------------
     case 'push': {
-      console.log(
-        `[AutomationEngine] Push: ${node.data.pushTitle} - ${node.data.pushBody}`,
+      logger.info(
+        `[automation] Push: ${node.data.pushTitle} - ${node.data.pushBody}`,
       );
       // TODO: Integrate Web Push / Firebase Cloud Messaging
       return true;
@@ -309,7 +440,7 @@ async function executeNode(
  * Convert delay amount + unit to milliseconds
  */
 function getDelayMs(amount?: number, unit?: string): number {
-  const a = amount || 1;
+  const a = Math.max(1, amount || 1);
   switch (unit) {
     case 'minutes': return a * 60 * 1000;
     case 'hours': return a * 60 * 60 * 1000;
@@ -333,42 +464,69 @@ export async function incrementFlowStat(
     await prisma.$executeRaw`
       UPDATE "EmailAutomationFlow"
       SET stats = jsonb_set(
-        COALESCE(stats::jsonb, '{"triggered":0,"sent":0,"opened":0,"clicked":0,"revenue":0}'::jsonb),
+        COALESCE(stats::jsonb, '{"triggered":0,"sent":0,"delivered":0,"opened":0,"clicked":0,"bounced":0,"revenue":0}'::jsonb),
         ${`{${stat}}`}::text[],
         (COALESCE((stats::jsonb->>${stat})::int, 0) + ${amount})::text::jsonb
       )
       WHERE id = ${flowId}
     `;
   } catch (err) {
-    console.error(`[AutomationEngine] Failed to increment stat ${stat} for flow ${flowId}:`, err);
+    logger.error(`[automation] Failed to increment stat ${stat} for flow ${flowId}`, { error: err });
   }
 }
 
 /**
  * Replace `{{variable}}` placeholders in a template string with values
- * from the context map. Supports nested dot-notation keys (one level).
+ * from the context map. Supports nested dot-notation keys up to 2 levels deep.
  * Unresolved placeholders are left as-is.
+ *
+ * Security (#27): Uses hasOwnProperty checks to prevent prototype pollution
+ * (e.g. {{constructor.prototype}} or {{__proto__}}) and limits nesting depth to 2.
  *
  * @param htmlContext If true, values are HTML-escaped to prevent XSS.
  *                   Use false for plain-text contexts like email subjects.
  */
+const MAX_VARIABLE_DEPTH = 2;
+/** Maximum output size after variable replacement (1 MB) */
+export const MAX_REPLACEMENT_OUTPUT_SIZE = 1_048_576;
+
+/** Pre-compiled regex for {{variable}} replacement (avoids re-creation on every call) */
+const VARIABLE_PATTERN = /\{\{(\w+(?:\.\w+)?)\}\}/g;
+
 function replaceVariables(
   template: string,
-  context: Record<string, unknown>,
+  context: FlowContext,
   htmlContext: boolean = true,
 ): string {
-  return template.replace(/\{\{(\w+(?:\.\w+)?)\}\}/g, (match, key: string) => {
-    // Support one level of nesting: "order.total" -> context.order?.total
+  const result = template.replace(VARIABLE_PATTERN, (match, key: string) => {
     const parts = key.split('.');
+    // #27 Security fix: limit depth to prevent deep property traversal
+    if (parts.length > MAX_VARIABLE_DEPTH) return match;
     let value: unknown = context;
     for (const part of parts) {
       if (value === null || value === undefined) break;
+      // #27 Security fix: hasOwnProperty check to prevent prototype pollution
+      // Blocks access to __proto__, constructor, prototype, etc.
+      if (typeof value !== 'object' || !Object.prototype.hasOwnProperty.call(value, part)) {
+        value = undefined;
+        break;
+      }
       value = (value as Record<string, unknown>)[part];
     }
     if (value === undefined || value === null) return match;
     const strValue = String(value);
     return htmlContext ? escapeHtml(strValue) : strValue;
   });
+
+  // Faille MEDIUM: guard against excessively large output after replacement
+  if (result.length > MAX_REPLACEMENT_OUTPUT_SIZE) {
+    logger.warn(
+      `[automation] Variable replacement output too large (${result.length} chars), truncating to ${MAX_REPLACEMENT_OUTPUT_SIZE}`,
+    );
+    return result.slice(0, MAX_REPLACEMENT_OUTPUT_SIZE);
+  }
+
+  return result;
 }
 
 // ---------------------------------------------------------------------------

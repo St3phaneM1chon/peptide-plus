@@ -21,11 +21,16 @@ interface EmailProvider {
   send(to: string, subject: string, html: string): Promise<boolean>;
 }
 
-// Provider qui délègue à lib/email/email-service.ts (Resend, SendGrid, ou SMTP)
+// FIX: FLAW-076 - Cache the dynamically imported email module after first use
+let _cachedSendEmail: typeof import('@/lib/email/email-service').sendEmail | null = null;
+
 const emailProviderImpl: EmailProvider = {
   async send(to: string, subject: string, html: string): Promise<boolean> {
-    const { sendEmail } = await import('@/lib/email/email-service');
-    const result = await sendEmail({
+    if (!_cachedSendEmail) {
+      const mod = await import('@/lib/email/email-service');
+      _cachedSendEmail = mod.sendEmail;
+    }
+    const result = await _cachedSendEmail({
       to: { email: to },
       subject,
       html,
@@ -83,8 +88,18 @@ export async function sendOrderConfirmation(
   const { subject, html } = orderConfirmationEmail(data, locale);
   
   const sent = await emailProvider.send(email, subject, html);
-  
-  // Log
+
+  // FIX: FLAW-075 - Log to EmailLog for consistency (not just AuditLog)
+  await prisma.emailLog.create({
+    data: {
+      templateId: 'order-confirmation',
+      to: email,
+      subject,
+      status: sent ? 'sent' : 'failed',
+    },
+  }).catch((err: unknown) => logger.error('Failed to create email log', { error: err instanceof Error ? err.message : String(err) }));
+
+  // Also log to AuditLog for audit trail
   await prisma.auditLog.create({
     data: {
       userId,
@@ -93,7 +108,7 @@ export async function sendOrderConfirmation(
       details: JSON.stringify({ type: 'ORDER_CONFIRMATION', orderNumber: data.orderNumber, locale, sent }),
     },
   }).catch((err: unknown) => logger.error('Failed to create audit log', { error: err instanceof Error ? err.message : String(err) }));
-  
+
   return sent;
 }
 
@@ -110,9 +125,14 @@ export async function sendWelcomeEmail(
 ) {
   const locale = await getUserLocale(userId);
   const { subject, html } = welcomeEmail(data, locale);
-  
+
   const sent = await emailProvider.send(email, subject, html);
-  
+
+  // FIX: FLAW-075 - Log to EmailLog for consistency
+  await prisma.emailLog.create({
+    data: { templateId: 'welcome', to: email, subject, status: sent ? 'sent' : 'failed' },
+  }).catch((err: unknown) => logger.error('Failed to create email log', { error: err instanceof Error ? err.message : String(err) }));
+
   await prisma.auditLog.create({
     data: {
       userId,
@@ -121,7 +141,7 @@ export async function sendWelcomeEmail(
       details: JSON.stringify({ type: 'WELCOME', locale, sent }),
     },
   }).catch((err: unknown) => logger.error('Failed to create audit log', { error: err instanceof Error ? err.message : String(err) }));
-  
+
   return sent;
 }
 
@@ -139,9 +159,14 @@ export async function sendPasswordResetEmail(
 ) {
   const locale = await getUserLocale(userId);
   const { subject, html } = passwordResetEmail(data, locale);
-  
+
   const sent = await emailProvider.send(email, subject, html);
-  
+
+  // FIX: FLAW-075 - Log to EmailLog for consistency
+  await prisma.emailLog.create({
+    data: { templateId: 'password-reset', to: email, subject, status: sent ? 'sent' : 'failed' },
+  }).catch((err: unknown) => logger.error('Failed to create email log', { error: err instanceof Error ? err.message : String(err) }));
+
   await prisma.auditLog.create({
     data: {
       userId,
@@ -150,7 +175,7 @@ export async function sendPasswordResetEmail(
       details: JSON.stringify({ type: 'PASSWORD_RESET', locale, sent }),
     },
   }).catch((err: unknown) => logger.error('Failed to create audit log', { error: err instanceof Error ? err.message : String(err) }));
-  
+
   return sent;
 }
 
@@ -172,9 +197,14 @@ export async function sendShippingUpdate(
 ) {
   const locale = await getUserLocale(userId);
   const { subject, html } = shippingUpdateEmail(data, locale);
-  
+
   const sent = await emailProvider.send(email, subject, html);
-  
+
+  // FIX: FLAW-075 - Log to EmailLog for consistency
+  await prisma.emailLog.create({
+    data: { templateId: 'shipping-update', to: email, subject, status: sent ? 'sent' : 'failed' },
+  }).catch((err: unknown) => logger.error('Failed to create email log', { error: err instanceof Error ? err.message : String(err) }));
+
   await prisma.auditLog.create({
     data: {
       userId,
@@ -183,7 +213,7 @@ export async function sendShippingUpdate(
       details: JSON.stringify({ type: 'SHIPPING_UPDATE', orderNumber: data.orderNumber, status: data.status, locale, sent }),
     },
   }).catch((err: unknown) => logger.error('Failed to create audit log', { error: err instanceof Error ? err.message : String(err) }));
-  
+
   return sent;
 }
 
@@ -206,9 +236,14 @@ export async function sendReceiptEmail(
 ) {
   const locale = await getUserLocale(userId);
   const { subject, html } = receiptEmail(data, locale);
-  
+
   const sent = await emailProvider.send(email, subject, html);
-  
+
+  // FIX: FLAW-075 - Log to EmailLog for consistency
+  await prisma.emailLog.create({
+    data: { templateId: 'receipt', to: email, subject, status: sent ? 'sent' : 'failed' },
+  }).catch((err: unknown) => logger.error('Failed to create email log', { error: err instanceof Error ? err.message : String(err) }));
+
   await prisma.auditLog.create({
     data: {
       userId,
@@ -217,7 +252,7 @@ export async function sendReceiptEmail(
       details: JSON.stringify({ type: 'RECEIPT', orderNumber: data.orderNumber, locale, sent }),
     },
   }).catch((err: unknown) => logger.error('Failed to create audit log', { error: err instanceof Error ? err.message : String(err) }));
-  
+
   return sent;
 }
 
@@ -242,7 +277,11 @@ export async function sendOrderCancellation(
 
   const sent = await emailProvider.send(email, subject, html);
 
-  // Log
+  // FIX: FLAW-075 - Log to EmailLog for consistency
+  await prisma.emailLog.create({
+    data: { templateId: 'order-cancellation', to: email, subject, status: sent ? 'sent' : 'failed' },
+  }).catch((err: unknown) => logger.error('Failed to create email log', { error: err instanceof Error ? err.message : String(err) }));
+
   await prisma.auditLog.create({
     data: {
       userId,

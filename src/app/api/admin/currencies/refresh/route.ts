@@ -10,20 +10,19 @@ import { NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { updateExchangeRates } from '@/lib/exchange-rates';
+import { logger } from '@/lib/logger';
 
 export const POST = withAdminGuard(async (_request, { session }) => {
   const startTime = Date.now();
 
   try {
-    console.log(`[CRON:RATES] Manual refresh triggered by ${session.user.email}`);
+    logger.info(`[CRON:RATES] Manual refresh triggered by ${session.user.email}`);
 
     const result = await updateExchangeRates();
     const duration = Date.now() - startTime;
 
-    console.log(
-      `[CRON:RATES] Manual refresh complete: ${result.updated.length} updated, ` +
-      `${result.skipped.length} skipped, ${result.errors.length} errors, ${duration}ms`
-    );
+    logger.info(`[CRON:RATES] Manual refresh complete: ${result.updated.length} updated, ` +
+      `${result.skipped.length} skipped, ${result.errors.length} errors, ${duration}ms`);
 
     // Audit log (fire-and-forget)
     logAdminAction({
@@ -46,7 +45,7 @@ export const POST = withAdminGuard(async (_request, { session }) => {
     });
   } catch (error) {
     const duration = Date.now() - startTime;
-    console.error('[CRON:RATES] Manual refresh error:', error);
+    logger.error('[CRON:RATES] Manual refresh error', { error: error instanceof Error ? error.message : String(error) });
 
     // BE-SEC-04: Don't leak error details in production
     return NextResponse.json(

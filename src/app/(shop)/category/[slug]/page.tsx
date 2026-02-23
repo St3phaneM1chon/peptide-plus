@@ -1,4 +1,8 @@
-export const revalidate = 3600; // ISR: revalidate every hour
+// BUG-060 FIX: Reduce ISR cache to 5 min for faster price/stock propagation
+// TODO: BUG-072 - Add pagination/limit when fetching products for category and children
+// TODO: BUG-091 - Audit CSS classes for RTL support: use start/end instead of left/right
+// TODO: BUG-100 - Apply translations uniformly to all product fields in category listing (some fields untranslated)
+export const revalidate = 300;
 
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';

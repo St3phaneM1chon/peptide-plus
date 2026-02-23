@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { MessageCircle } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
 import { IntegrationCard } from '@/components/admin/IntegrationCard';
+import { toast } from 'sonner';
 
 export default function MediaWhatsAppPage() {
   const { t } = useI18n();
@@ -28,13 +29,19 @@ export default function MediaWhatsAppPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  // FIX: F20 - Add try/catch with toast.error() for network/save failures
   const handleSave = async () => {
-    const res = await fetch('/api/admin/integrations/whatsapp', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ enabled, phoneNumberId, businessAccountId }),
-    });
-    if (!res.ok) throw new Error('Save failed');
+    try {
+      const res = await fetch('/api/admin/integrations/whatsapp', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled, phoneNumberId, businessAccountId }),
+      });
+      if (!res.ok) throw new Error('Save failed');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Save failed');
+      throw err;
+    }
   };
 
   const handleTest = async () => {

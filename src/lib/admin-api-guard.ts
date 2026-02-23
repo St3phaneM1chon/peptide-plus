@@ -23,6 +23,7 @@ import { validateCsrf } from '@/lib/csrf-middleware';
 import { checkRateLimit } from '@/lib/security';
 import { UserRole } from '@/types';
 import { logger } from '@/lib/logger';
+import { hasPermission, type PermissionCode } from '@/lib/permissions';
 import type { Session } from 'next-auth';
 
 // ---------------------------------------------------------------------------
@@ -34,11 +35,13 @@ type AdminHandler = (
   context: { session: Session; params?: Record<string, string> }
 ) => Promise<NextResponse>;
 
-interface AdminGuardOptions {
+export interface AdminGuardOptions {
   /** Skip CSRF validation for this route (e.g. GET-only endpoints). Default: false */
   skipCsrf?: boolean;
   /** Override rate limit (requests per minute). Default: 60 for reads, 30 for writes */
   rateLimit?: number;
+  /** If set, check that the user has this specific permission (via hasPermission from permissions.ts) */
+  requiredPermission?: PermissionCode;
 }
 
 // ---------------------------------------------------------------------------
@@ -62,12 +65,14 @@ const ADMIN_ROLES = new Set<string>([UserRole.EMPLOYEE, UserRole.OWNER]);
 // Helpers
 // ---------------------------------------------------------------------------
 
+// FAILLE-055 FIX: Validate IP format to prevent spoofed/malicious values
 function getClientIp(request: NextRequest): string {
-  return (
+  const raw =
     request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-    request.headers.get('x-real-ip') ||
-    '127.0.0.1'
-  );
+    request.headers.get('x-real-ip');
+  // Accept only valid IPv4/IPv6 patterns (3-45 chars, hex digits, dots, colons)
+  if (raw && /^[\d.:a-fA-F]{3,45}$/.test(raw)) return raw;
+  return '127.0.0.1';
 }
 
 function jsonError(message: string, status: number, headers?: Record<string, string>): NextResponse {
@@ -108,6 +113,14 @@ export function withAdminGuard(
       }
 
       // ---------------------------------------------------------------
+      // 1b. FIX: FAILLE-066 - Reject oversized JSON bodies (max 1MB)
+      // ---------------------------------------------------------------
+      const contentLength = request.headers.get('content-length');
+      if (contentLength && parseInt(contentLength, 10) > 1_048_576) {
+        return jsonError('Request body too large', 413);
+      }
+
+      // ---------------------------------------------------------------
       // 2. Role check - only EMPLOYEE and OWNER can access admin APIs
       // ---------------------------------------------------------------
       const userRole = session.user.role as string;
@@ -121,6 +134,24 @@ export function withAdminGuard(
           method: request.method,
         });
         return jsonError('Forbidden', 403);
+      }
+
+      // ---------------------------------------------------------------
+      // 2b. Granular permission check (FAILLE-002)
+      // ---------------------------------------------------------------
+      if (options?.requiredPermission) {
+        const userRoleMapped = userRole as 'OWNER' | 'EMPLOYEE' | 'CLIENT' | 'CUSTOMER' | 'PUBLIC';
+        const hasPerm = await hasPermission(session.user.id, userRoleMapped, options.requiredPermission);
+        if (!hasPerm) {
+          logger.warn('Admin permission denied', {
+            event: 'admin_permission_denied',
+            userId: session.user.id,
+            role: userRole,
+            requiredPermission: options.requiredPermission,
+            path: new URL(request.url).pathname,
+          });
+          return jsonError('Insufficient permissions', 403);
+        }
       }
 
       // ---------------------------------------------------------------
@@ -147,7 +178,9 @@ export function withAdminGuard(
       // ---------------------------------------------------------------
       const ip = getClientIp(request);
       const pathname = new URL(request.url).pathname;
-      const rateLimitKey = `admin:${ip}:${pathname}`;
+      // FAILLE-078 FIX: Normalize dynamic segments so rate limit buckets are shared per route pattern
+      const normalizedPath = pathname.replace(/\/[a-zA-Z0-9_-]{20,}(?=\/|$)/g, '/[id]');
+      const rateLimitKey = `admin:${ip}:${normalizedPath}`;
 
       const maxRequests =
         options?.rateLimit ??
@@ -191,10 +224,8 @@ export function withAdminGuard(
         stack: error instanceof Error ? error.stack : undefined,
       });
 
-      const message =
-        process.env.NODE_ENV === 'development' && error instanceof Error
-          ? error.message
-          : 'Internal server error';
+      // FAILLE-022 FIX: Never expose error.message to client, even in dev
+      const message = 'Internal server error';
 
       return jsonError(message, 500);
     }

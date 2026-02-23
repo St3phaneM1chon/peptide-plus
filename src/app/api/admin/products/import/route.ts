@@ -15,6 +15,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { logger } from '@/lib/logger';
 
 // ---------------------------------------------------------------------------
 // CSV parsing with proper quote handling
@@ -365,7 +366,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       },
     });
   } catch (error) {
-    console.error('Admin products import POST error:', error);
+    logger.error('Admin products import POST error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

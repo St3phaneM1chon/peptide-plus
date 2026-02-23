@@ -3239,7 +3239,9 @@
       "teamsSetupDesc": "Connect Microsoft Teams for internal order notifications and team alerts. Supports Incoming Webhooks and Graph API.",
       "teamsWebhookLabel": "Incoming Webhook URL",
       "teamsWebhookHint": "Create an Incoming Webhook in your Teams channel and paste the URL here",
-      "teamsOptionalGraphApi": "Optional - only needed for Graph API integration (advanced)"
+      "teamsOptionalGraphApi": "Optional - only needed for Graph API integration (advanced)",
+      "webhookUrl": "Webhook URL",
+      "docs": "Documentation"
     },
     "emailComposer": {
       "send": "Send",
@@ -5257,6 +5259,10 @@
     "subtitle": "Makipag-ugnayan sa mga kapwa mananaliksik, ibahagi ang mga karanasan, magtanong, at matuto mula sa komunidad.",
     "support": "Suporta",
     "tagsPlaceholder": "hal. bpc-157, reconstitution, baguhan",
+    "timeDaysAgo": "{count}d nakaraan",
+    "timeHoursAgo": "{count}h nakaraan",
+    "timeJustNow": "Ngayon lang",
+    "timeYesterday": "Kahapon",
     "title": "Pangkat ng Komunidad",
     "tryDifferent": "Subukan ang ibang paghahanap o magsimula ng bagong talakayan!"
   },
@@ -6731,7 +6737,10 @@
       "removeFromWishlist": "Remove from wishlist"
     },
     "youSave": "Ikaw ay nakakatipid ng",
-    "researchDisclaimer": "FOR RESEARCH USE ONLY: This product is intended for laboratory and research purposes only. Not for human or animal consumption. By purchasing, you confirm this product will be used exclusively for legitimate research."
+    "researchDisclaimer": "FOR RESEARCH USE ONLY: This product is intended for laboratory and research purposes only. Not for human or animal consumption. By purchasing, you confirm this product will be used exclusively for legitimate research.",
+    "resetFilters": "Reset filters",
+    "retry": "Retry",
+    "productCount": "product"
   },
   "subscriptions": {
     "availableProducts": "Available para sa Subscription",

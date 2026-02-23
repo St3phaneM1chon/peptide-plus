@@ -17,7 +17,8 @@ export const discountTypeEnum = z.enum(['PERCENTAGE', 'FIXED_AMOUNT']);
 export const createPromotionSchema = z.object({
   name: z.string().min(1, 'Name is required').max(200).transform((v) => v.trim()),
   type: discountTypeEnum.optional().default('PERCENTAGE'),
-  value: z.number().min(0, 'Value must be non-negative').max(99999.99),
+  // FLAW-078 FIX: Minimum 0.01 to prevent zero-value discounts
+  value: z.number().min(0.01, 'Value must be greater than zero').max(99999.99),
   appliesToAll: z.boolean().optional().default(false),
   categoryId: z.string().max(100).optional().nullable(),
   productId: z.string().max(100).optional().nullable(),
@@ -43,7 +44,8 @@ export type CreatePromotionInput = z.infer<typeof createPromotionSchema>;
 export const patchPromotionSchema = z.object({
   name: z.string().min(1).max(200).transform((v) => v.trim()).optional(),
   type: discountTypeEnum.optional(),
-  value: z.number().min(0).max(99999.99).optional(),
+  // FLAW-078 FIX: Minimum 0.01 to prevent zero-value discounts
+  value: z.number().min(0.01).max(99999.99).optional(),
   appliesToAll: z.boolean().optional(),
   categoryId: z.string().max(100).optional().nullable(),
   productId: z.string().max(100).optional().nullable(),

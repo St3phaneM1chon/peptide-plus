@@ -8,6 +8,7 @@ import {
   getGifiCode,
   GIFI_CODES,
 } from '@/lib/accounting/gifi-codes';
+import { logger } from '@/lib/logger';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -132,7 +133,7 @@ export const GET = withAdminGuard(async (request) => {
 
     return NextResponse.json({ suggestions });
   } catch (error) {
-    console.error('GIFI suggest error:', error);
+    logger.error('GIFI suggest error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Error suggesting GIFI codes' },
       { status: 500 }
@@ -205,7 +206,7 @@ export const POST = withAdminGuard(async (_request, { session }) => {
     }
 
     // Audit log
-    console.info('AUDIT: GIFI batch auto-assign', {
+    logger.info('AUDIT: GIFI batch auto-assign', {
       assignedBy: session.user.id || session.user.email,
       assignedAt: new Date().toISOString(),
       totalProcessed: accountsWithoutGifi.length,
@@ -220,7 +221,7 @@ export const POST = withAdminGuard(async (_request, { session }) => {
       suggestions,
     });
   } catch (error) {
-    console.error('GIFI batch assign error:', error);
+    logger.error('GIFI batch assign error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Error during batch GIFI assignment' },
       { status: 500 }

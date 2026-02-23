@@ -13,8 +13,13 @@ import { PrismaAdapter } from '@auth/prisma-adapter';
 import { compare } from 'bcryptjs';
 import { prisma } from './db';
 import { UserRole } from '@/types';
+import { logger } from '@/lib/logger';
 import { encryptToken } from './token-encryption';
 
+// TODO: FAILLE-085 - Replace 'any' with proper type: import type { Provider } from 'next-auth/providers'
+// TODO: FAILLE-086 - Cookie name forced to authjs.session-token (no __Secure- prefix) for Azure; review when Azure supports HTTPS E2E
+// TODO: FAILLE-091 - encryptedAdapter cast as any; type correctly or use 'satisfies' for partial verification
+// TODO: FAILLE-092 - signOut event logs userId but not IP/user-agent; add for suspicious logout tracing
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AuthProvider = any;
 
@@ -73,7 +78,8 @@ const oauthProviders: AuthProvider[] = [
             return {
               id: data.id,
               name: data.name,
-              email: data.email ?? `twitter_${data.id}@noemail.biocyclepeptides.com`,
+              // FAILLE-034 FIX: Use RFC 6761 .invalid TLD instead of a real domain
+              email: data.email ?? `twitter_${data.id}@noreply.invalid`,
               image: data.profile_image_url,
             };
           },
@@ -137,13 +143,15 @@ const providers = [
           }
 
           const { verifyTOTP } = await import('./mfa');
-          let mfaSecret = user.mfaSecret!;
+          let mfaSecret: string;
           try {
             const { decrypt } = await import('./security');
             mfaSecret = await decrypt(user.mfaSecret!);
-          } catch {
-            // If decryption fails, use raw value as fallback
-            console.warn('MFA: decryption failed, falling back to raw secret. This may indicate a missing/changed MFA_ENCRYPTION_KEY.');
+          } catch (decryptError) {
+            // SECURITY (FAILLE-003): Never fall back to raw secret.
+            // On decryption failure, auth fails and user must re-setup MFA.
+            logger.error('MFA: decryption failed. User must re-setup MFA.', { error: decryptError instanceof Error ? decryptError.message : String(decryptError) });
+            return null;
           }
 
           const isValidMFA = verifyTOTP(
@@ -170,7 +178,7 @@ const providers = [
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any;
       } catch (error) {
-        console.error('[auth] authorize error:', error);
+        logger.error('[auth] authorize error', { error: error instanceof Error ? error.message : String(error) });
         return null;
       }
     },
@@ -253,31 +261,35 @@ export const authConfig: NextAuthConfig = {
     // Autorisation de connexion
     async signIn({ user, account, profile }) {
       try {
-        // Log d'audit
-        console.log(
-          JSON.stringify({
-            event: 'signin_attempt',
-            timestamp: new Date().toISOString(),
+        // Log d'audit (FAILLE-021 FIX: mask email in logs)
+        const maskedEmail = user.email
+          ? user.email.replace(/^(.{2}).*(@.*)$/, '$1***$2')
+          : undefined;
+        logger.info('signin_attempt', {
             userId: user.id,
-            email: user.email,
+            email: maskedEmail,
             provider: account?.provider,
-          })
-        );
+        });
 
         // SECURITY: For Google OAuth, require verified email (OWASP recommendation)
         if (account?.provider === 'google') {
           const googleProfile = profile as { email_verified?: boolean } | undefined;
           if (!googleProfile?.email_verified) {
-            console.error('Google sign-in rejected: email not verified');
+            logger.error('Google sign-in rejected: email not verified');
             return false;
           }
         }
 
         // Pour les providers OAuth, vérifier l'utilisateur
         if (account?.provider !== 'credentials') {
+          // FAILLE-075 FIX: Reject OAuth login if email is null/undefined
+          if (!user.email) {
+            logger.error('OAuth sign-in rejected: no email from provider', { provider: account?.provider });
+            return false;
+          }
           try {
             const existingUser = await prisma.user.findUnique({
-              where: { email: user.email! },
+              where: { email: user.email },
               select: { id: true, mfaEnabled: true, termsAcceptedAt: true },
             });
 
@@ -287,10 +299,11 @@ export const authConfig: NextAuthConfig = {
             // the need for terms acceptance in the JWT callback below.
             if (!existingUser || !existingUser.mfaEnabled) {
               // Permettre la connexion, MFA optionnel
+              // TODO: FAILLE-053 - If existingUser has MFA enabled, OAuth login should redirect to MFA verification page
               return true;
             }
           } catch (dbError) {
-            console.error('Database error in signIn:', dbError);
+            logger.error('Database error in signIn', { error: dbError instanceof Error ? dbError.message : String(dbError) });
             // SECURITY FIX: Fail-closed -- deny login if DB is unavailable
             return false;
           }
@@ -298,7 +311,7 @@ export const authConfig: NextAuthConfig = {
 
         return true;
       } catch (error) {
-        console.error('Error in signIn callback:', error);
+        logger.error('Error in signIn callback', { error: error instanceof Error ? error.message : String(error) });
         // SECURITY FIX: Fail-closed -- deny login on unexpected errors
         return false;
       }
@@ -341,6 +354,8 @@ export const authConfig: NextAuthConfig = {
         }
 
         // Rafraîchir les données utilisateur périodiquement
+        // TODO: FAILLE-054 - Role JWT is only refreshed on trigger 'update'. Consider adding periodic re-fetch
+        //       (e.g., every 5 minutes based on token.iat) to detect role changes made by other admins.
         if (trigger === 'update' && token.id) {
           try {
             const dbUser = await prisma.user.findUnique({
@@ -352,13 +367,13 @@ export const authConfig: NextAuthConfig = {
               token.mfaEnabled = dbUser.mfaEnabled;
             }
           } catch (dbError) {
-            console.error('Database error in jwt callback:', dbError);
+            logger.error('Database error in jwt callback', { error: dbError instanceof Error ? dbError.message : String(dbError) });
           }
         }
 
         return token;
       } catch (error) {
-        console.error('Error in jwt callback:', error);
+        logger.error('Error in jwt callback', { error: error instanceof Error ? error.message : String(error) });
         return token;
       }
     },
@@ -369,12 +384,22 @@ export const authConfig: NextAuthConfig = {
         session.user.id = token.id as string;
         session.user.role = token.role as UserRole;
         session.user.mfaEnabled = token.mfaEnabled as boolean;
+        // TODO: FAILLE-059 - mfaVerified is always true here, even for OAuth users who didn't verify MFA.
+        //       Track actual MFA verification state in the JWT and propagate it correctly.
         session.user.mfaVerified = true; // Si on arrive ici, MFA est vérifié
         session.user.needsTerms = (token.needsTerms as boolean) || false;
         // Ensure name/email/image are passed through from JWT
         if (token.name) session.user.name = token.name as string;
         if (token.email) session.user.email = token.email as string;
         if (token.picture) session.user.image = token.picture as string;
+
+        // SECURITY (FAILLE-006): Record user activity for session security tracking
+        try {
+          const { recordUserActivity } = await import('./session-security');
+          recordUserActivity(token.id as string);
+        } catch {
+          // Non-blocking: session security module failure should not break auth
+        }
       }
       return session;
     },
@@ -406,15 +431,28 @@ export const authConfig: NextAuthConfig = {
     async signIn({ user, account }) {
       try {
         // Log uniquement en console pour éviter les erreurs de DB
-        console.log(JSON.stringify({
-          event: 'signin_success',
-          timestamp: new Date().toISOString(),
+        // FAILLE-021 FIX: mask email in logs
+        const maskedEmail = user.email
+          ? user.email.replace(/^(.{2}).*(@.*)$/, '$1***$2')
+          : undefined;
+        logger.info('signin_success', {
           userId: user.id,
-          email: user.email,
+          email: maskedEmail,
           provider: account?.provider,
-        }));
+        });
+
+        // SECURITY (FAILLE-006): Record session creation for security tracking
+        if (user.id) {
+          try {
+            const { recordSessionCreation } = await import('./session-security');
+            recordSessionCreation(user.id);
+          } catch {
+            // Non-blocking
+          }
+        }
       } catch (error) {
-        console.error('Error in signIn event:', error);
+        // FAILLE-074 FIX: Use structured logger instead of console.error
+        logger.error('Error in signIn event', { error: error instanceof Error ? error.message : String(error) });
       }
     },
     async createUser({ user }) {
@@ -427,43 +465,45 @@ export const authConfig: NextAuthConfig = {
             data: { role: UserRole.CUSTOMER },
           });
         }
-        console.log(JSON.stringify({
-          event: 'user_created_oauth',
-          timestamp: new Date().toISOString(),
+        // FAILLE-021 FIX: mask email in logs
+        const maskedNewEmail = user.email
+          ? user.email.replace(/^(.{2}).*(@.*)$/, '$1***$2')
+          : undefined;
+        logger.info('user_created_oauth', {
           userId: user.id,
-          email: user.email,
-        }));
+          email: maskedNewEmail,
+        });
       } catch (error) {
-        console.error('Error in createUser event:', error);
+        // FAILLE-074 FIX: Use structured logger instead of console.error
+        logger.error('Error in createUser event', { error: error instanceof Error ? error.message : String(error) });
       }
     },
     async linkAccount({ user, account }) {
       try {
-        console.log(JSON.stringify({
-          event: 'account_linked',
-          timestamp: new Date().toISOString(),
+        logger.info('account_linked', {
           userId: user.id,
           provider: account.provider,
-        }));
+        });
       } catch (error) {
-        console.error('Error in linkAccount event:', error);
+        // FAILLE-074 FIX: Use structured logger instead of console.error
+        logger.error('Error in linkAccount event', { error: error instanceof Error ? error.message : String(error) });
       }
     },
     async signOut(message) {
       try {
         const tokenId = 'token' in message ? (message.token as { id?: string })?.id : undefined;
-        console.log(JSON.stringify({
-          event: 'signout',
-          timestamp: new Date().toISOString(),
+        logger.info('signout', {
           userId: tokenId,
-        }));
+        });
       } catch (error) {
-        console.error('Error in signOut event:', error);
+        // FAILLE-074 FIX: Use structured logger instead of console.error
+        logger.error('Error in signOut event', { error: error instanceof Error ? error.message : String(error) });
       }
     },
   },
 
-  debug: process.env.NODE_ENV === 'development',
+  // FAILLE-100 FIX: Use dedicated env var to avoid accidental debug in production
+  debug: process.env.AUTH_DEBUG === 'true',
 };
 
 // Extend types pour TypeScript

@@ -9,10 +9,14 @@
  *
  * We use the `details` field to store a JSON object with:
  *   { previousValue, newValue, metadata }
+ *
+ * TODO: FAILLE-070 - The 'details' column is stored as TEXT (JSON.stringify). Consider migrating to
+ *       PostgreSQL native JSON/JSONB type for indexable, queryable audit data.
  */
 
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
+import { randomBytes } from 'crypto';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -252,7 +256,8 @@ export async function queryAuditLogs(
 
 function generateAuditId(): string {
   const timestamp = Date.now().toString(36);
-  const random = Math.random().toString(36).substring(2, 10);
+  // FAILLE-019 FIX: Use crypto.randomBytes instead of Math.random() for unpredictable IDs
+  const random = randomBytes(8).toString('hex');
   return `audit_${timestamp}_${random}`;
 }
 
@@ -269,11 +274,12 @@ function parseDetails(details: string | null): AuditLogEntry['details'] {
 // Helper to extract IP from Next.js request
 // ---------------------------------------------------------------------------
 
+// FAILLE-055 FIX: Validate IP format to prevent spoofed/malicious values in audit logs
 export function getClientIpFromRequest(request: Request): string {
   const headers = request.headers;
-  return (
+  const raw =
     headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-    headers.get('x-real-ip') ||
-    '127.0.0.1'
-  );
+    headers.get('x-real-ip');
+  if (raw && /^[\d.:a-fA-F]{3,45}$/.test(raw)) return raw;
+  return '127.0.0.1';
 }

@@ -92,6 +92,11 @@ export async function GET(_request: Request, { params }: RouteParams) {
         },
         data: { readAt: new Date() },
       });
+      // F-045 FIX: Reset unreadCount for client side too
+      await prisma.conversation.update({
+        where: { id },
+        data: { unreadCount: 0 },
+      });
     }
 
     return NextResponse.json({ conversation });
@@ -138,40 +143,42 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
           where: { id: data.assignedToId },
           select: { name: true },
         });
+        // FIX: F-065 - Use translated system messages instead of hardcoded French
         systemMessages.push({
           senderId: session.user.id,
           type: 'SYSTEM',
-          content: `Conversation assignée à ${assignee?.name || 'un agent'}`,
+          content: t('admin.chat.assignedTo', { name: assignee?.name || t('admin.chat.anAgent') }),
           isSystem: true,
         });
       } else {
         systemMessages.push({
           senderId: session.user.id,
           type: 'SYSTEM',
-          content: 'Conversation désassignée',
+          content: t('admin.chat.unassigned'),
           isSystem: true,
         });
       }
     }
 
     if (data.status && data.status !== existing.status) {
-      const statusLabels: Record<string, string> = {
-        OPEN: 'Ouverte',
-        PENDING: 'En attente',
-        RESOLVED: 'Résolue',
-        CLOSED: 'Fermée',
+      // FIX: F-065 - Use translated status labels instead of hardcoded French
+      const statusKeys: Record<string, string> = {
+        OPEN: 'admin.chat.statusOpen',
+        PENDING: 'admin.chat.statusPending',
+        RESOLVED: 'admin.chat.statusResolved',
+        CLOSED: 'admin.chat.statusClosed',
       };
+      const statusLabel = t(statusKeys[data.status] || data.status);
       systemMessages.push({
         senderId: session.user.id,
         type: 'SYSTEM',
-        content: `Statut changé: ${statusLabels[data.status]}`,
+        content: t('admin.chat.statusChanged', { status: statusLabel }),
         isSystem: true,
       });
     }
 
-    // Mettre à jour
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const updateData: any = { ...data };
+    // F-079 FIX: Use typed object instead of `any`
+    const updateData: Record<string, unknown> = { ...data };
     if (systemMessages.length > 0) {
       updateData.messages = { create: systemMessages };
       updateData.lastMessageAt = new Date();

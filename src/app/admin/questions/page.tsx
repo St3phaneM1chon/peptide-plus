@@ -1,3 +1,4 @@
+// TODO: F-093 - Add loading spinner on togglePublic badge while PATCH request is in-flight
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -129,8 +130,11 @@ export default function QuestionsPage() {
     }
   };
 
+  // F-030 FIX: State for delete confirmation modal instead of native confirm()
+  const [deleteModalId, setDeleteModalId] = useState<string | null>(null);
+
   const deleteQuestion = async (id: string) => {
-    if (!confirm(t('admin.questions.deleteConfirm'))) return;
+    setDeleteModalId(null); // Close modal
     setDeletingId(id);
     try {
       const response = await fetch(`/api/admin/questions/${id}`, { method: 'DELETE' });
@@ -277,10 +281,12 @@ export default function QuestionsPage() {
                   backLabel: t('admin.questions.title'),
                   actions: (
                     <div className="flex items-center gap-2">
+                      {/* FIX: F-076 - Added title tooltip to explain icon meaning */}
                       <Button
                         size="sm"
                         variant="ghost"
                         icon={selectedQuestion.answer ? Pencil : MessageSquare}
+                        title={selectedQuestion.answer ? t('admin.questions.editAnswer') : t('admin.questions.answer')}
                         onClick={() => {
                           setAnswerText(selectedQuestion.answer || '');
                           setShowAnswerModal(true);

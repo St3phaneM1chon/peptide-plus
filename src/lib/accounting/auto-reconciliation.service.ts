@@ -60,8 +60,13 @@ function daysBetween(a: Date, b: Date): number {
 /**
  * Normalize a reference/description string for comparison.
  */
+// F053 FIX: Proper Unicode normalization to handle French accented characters
 function normalize(s: string): string {
-  return s.toLowerCase().replace(/[^a-z0-9]/g, '');
+  return s
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]/g, '');
 }
 
 // ---------------------------------------------------------------------------
@@ -120,7 +125,8 @@ export async function autoReconcileByReference(
     }
 
     // Amount matching
-    const entryAmount = entry.lines.reduce((sum, l) => sum + Number(l.debit), 0);
+    // F046 FIX: Consider both debits and credits for accurate amount matching
+    const entryAmount = entry.lines.reduce((sum, l) => sum + Number(l.debit) - Number(l.credit), 0);
     const amountDiff = Math.abs(bankAmount - entryAmount);
 
     if (amountDiff < 0.01) {
@@ -197,8 +203,9 @@ export async function autoReconcileByAmount(
   let bestMatch: ReconciliationMatch | null = null;
 
   for (const entry of entries) {
-    const entryAmount = entry.lines.reduce((sum, l) => sum + Number(l.debit), 0);
-    const amountDiff = Math.abs(bankAmount - entryAmount);
+    // F046 FIX: Consider both debits and credits for accurate amount matching
+    const entryAmount = entry.lines.reduce((sum, l) => sum + Number(l.debit) - Number(l.credit), 0);
+    const amountDiff = Math.abs(bankAmount - Math.abs(entryAmount));
 
     // Only consider exact amount matches (within penny)
     if (amountDiff >= 0.01) continue;
@@ -261,6 +268,16 @@ export async function autoReconcileByAmount(
 /**
  * Batch-process all unreconciled bank transactions.
  * First tries matching by reference, then by amount.
+ *
+ * FIX: F014 - Maintains a Set of already-matched journalEntryIds to prevent
+ * the same journal entry from being matched to multiple bank transactions.
+ *
+ * TODO: F031 - N+1 query performance issue. Currently each transaction triggers
+ * 2-4 individual DB queries via autoReconcileByReference() and autoReconcileByAmount().
+ * For 100 pending transactions, this produces ~200-400 DB round-trips.
+ * Optimization: Pre-load all POSTED journal entries (with lines) for the relevant
+ * date range in a single query, then match in-memory. This would reduce DB calls
+ * from O(n) to O(1) regardless of transaction count.
  */
 export async function runAutoReconciliation(): Promise<AutoReconciliationResult> {
   const result: AutoReconciliationResult = {
@@ -270,6 +287,10 @@ export async function runAutoReconciliation(): Promise<AutoReconciliationResult>
     errors: [],
     matches: [],
   };
+
+  // FIX: F014 - Track journal entries already matched in this batch run
+  // to prevent the same entry from being assigned to multiple bank transactions
+  const matchedJournalEntryIds = new Set<string>();
 
   const pendingTxs = await prisma.bankTransaction.findMany({
     where: {
@@ -287,15 +308,24 @@ export async function runAutoReconciliation(): Promise<AutoReconciliationResult>
       // First pass: try by reference
       let match = await autoReconcileByReference(tx.id);
 
+      // FIX: F014 - Skip if this journal entry was already matched in this batch
+      if (match && matchedJournalEntryIds.has(match.journalEntryId)) {
+        match = null;
+      }
+
       // Second pass: try by amount if no confident match
       if (!match || match.confidence < AUTO_APPLY_THRESHOLD) {
         const amountMatch = await autoReconcileByAmount(tx.id);
-        if (amountMatch && (!match || amountMatch.confidence > match.confidence)) {
-          match = amountMatch;
+        if (amountMatch && !matchedJournalEntryIds.has(amountMatch.journalEntryId)) {
+          if (!match || amountMatch.confidence > match.confidence) {
+            match = amountMatch;
+          }
         }
       }
 
       if (match) {
+        // FIX: F014 - Record this journal entry as matched so it won't be reused
+        matchedJournalEntryIds.add(match.journalEntryId);
         result.matches.push(match);
         if (match.autoApplied) {
           result.autoMatched++;

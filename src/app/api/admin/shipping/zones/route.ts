@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/admin/shipping/zones
@@ -66,7 +67,7 @@ export const GET = withAdminGuard(async (_request, { session }) => {
 
     return NextResponse.json({ zones: mapped });
   } catch (error) {
-    console.error('Get shipping zones error:', error);
+    logger.error('Get shipping zones error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Error fetching shipping zones' },
       { status: 500 }
@@ -144,7 +145,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
 
     return NextResponse.json({ success: true, data: zone }, { status: 201 });
   } catch (error) {
-    console.error('Create shipping zone error:', error);
+    logger.error('Create shipping zone error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Error creating shipping zone' },
       { status: 500 }

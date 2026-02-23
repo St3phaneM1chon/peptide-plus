@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -269,12 +269,7 @@ export default function ClientDetailPage() {
   // Expanded conversations
   const [expandedConversations, setExpandedConversations] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
-    if (id) fetchUserDetail();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
-
-  const fetchUserDetail = async () => {
+  const fetchUserDetail = useCallback(async () => {
     try {
       const res = await fetch(`/api/admin/users/${id}`);
       if (!res.ok) {
@@ -295,7 +290,21 @@ export default function ClientDetailPage() {
       toast.error(t('common.errorOccurred'));
     }
     setLoading(false);
-  };
+  }, [id, router, t]);
+
+  useEffect(() => {
+    if (id) fetchUserDetail();
+  }, [id, fetchUserDetail]);
+
+  // Close points modal on Escape key
+  useEffect(() => {
+    if (!showPointsModal) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setShowPointsModal(false);
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [showPointsModal]);
 
   const formatDate = (date: string) =>
     new Date(date).toLocaleDateString(locale, { year: 'numeric', month: 'long', day: 'numeric' });

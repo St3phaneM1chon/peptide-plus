@@ -11,6 +11,7 @@ import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { prisma } from '@/lib/db';
 import { apiSuccess, apiError, apiNoContent } from '@/lib/api-response';
 import { ErrorCode } from '@/lib/error-codes';
+import { logger } from '@/lib/logger';
 
 export const PATCH = withAdminGuard(async (request: NextRequest, { session, params }) => {
   try {
@@ -45,6 +46,7 @@ export const PATCH = withAdminGuard(async (request: NextRequest, { session, para
       data: updateData,
     });
 
+    // FIX F-050: Log audit errors instead of silently ignoring
     logAdminAction({
       adminUserId: session.user.id,
       action: 'UPDATE_REVIEW',
@@ -54,11 +56,11 @@ export const PATCH = withAdminGuard(async (request: NextRequest, { session, para
       newValue: updateData,
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch(() => {});
+    }).catch((err) => logger.error('Audit log failed for UPDATE_REVIEW', { error: err instanceof Error ? err.message : String(err) }));
 
     return apiSuccess({ review: updated }, { request });
   } catch (error) {
-    console.error('Error updating review:', error);
+    logger.error('Error updating review', { error: error instanceof Error ? error.message : String(error) });
     return apiError('Erreur lors de la mise à jour de l\'avis', ErrorCode.INTERNAL_ERROR, { request });
   }
 });
@@ -68,14 +70,26 @@ export const DELETE = withAdminGuard(async (_request: NextRequest, { session, pa
   try {
     const id = params!.id;
 
-    // Check review exists
-    const existing = await prisma.review.findUnique({ where: { id } });
+    // Check review exists (include images for cleanup)
+    const existing = await prisma.review.findUnique({
+      where: { id },
+      include: { images: true },
+    });
     if (!existing) {
       return apiError('Avis introuvable', ErrorCode.NOT_FOUND);
     }
 
+    // F-047 FIX: Delete associated review images from storage
+    if (existing.images?.length) {
+      try {
+        const { storage } = await import('@/lib/storage');
+        await Promise.all(existing.images.map((img) => storage.delete(img.url).catch(() => {})));
+      } catch { /* Storage cleanup is best-effort */ }
+    }
+
     await prisma.review.delete({ where: { id } });
 
+    // FIX F-050: Log audit errors instead of silently ignoring
     logAdminAction({
       adminUserId: session.user.id,
       action: 'DELETE_REVIEW',
@@ -84,12 +98,12 @@ export const DELETE = withAdminGuard(async (_request: NextRequest, { session, pa
       previousValue: { rating: existing.rating, productId: existing.productId },
       ipAddress: getClientIpFromRequest(_request),
       userAgent: _request.headers.get('user-agent') || undefined,
-    }).catch(() => {});
+    }).catch((err) => logger.error('Audit log failed for DELETE_REVIEW', { error: err instanceof Error ? err.message : String(err) }));
 
     // Item 2: HTTP 204 No Content for DELETE operations
     return apiNoContent();
   } catch (error) {
-    console.error('Error deleting review:', error);
+    logger.error('Error deleting review', { error: error instanceof Error ? error.message : String(error) });
     return apiError('Erreur lors de la suppression de l\'avis', ErrorCode.INTERNAL_ERROR);
   }
 });

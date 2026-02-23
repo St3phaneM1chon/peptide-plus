@@ -11,6 +11,7 @@ import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { createPromotionSchema } from '@/lib/validations/promotion';
+import { logger } from '@/lib/logger';
 
 // GET /api/admin/promotions - List all promotions/discounts
 export const GET = withAdminGuard(async (request, { session }) => {
@@ -98,6 +99,7 @@ export const GET = withAdminGuard(async (request, { session }) => {
       startsAt: d.startsAt?.toISOString() || null,
       endsAt: d.endsAt?.toISOString() || null,
       isActive: d.isActive,
+      // TODO: FLAW-046 - priority hardcoded to 0; add priority field to Discount model in schema.prisma
       priority: 0,
       createdAt: d.createdAt.toISOString(),
       updatedAt: d.updatedAt.toISOString(),
@@ -113,7 +115,7 @@ export const GET = withAdminGuard(async (request, { session }) => {
       },
     });
   } catch (error) {
-    console.error('Admin promotions GET error:', error);
+    logger.error('Admin promotions GET error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -247,6 +249,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
           startsAt: discount.startsAt?.toISOString() || null,
           endsAt: discount.endsAt?.toISOString() || null,
           isActive: discount.isActive,
+          // TODO: FLAW-046 - priority hardcoded to 0; add priority field to Discount model in schema.prisma
           priority: 0,
           createdAt: discount.createdAt.toISOString(),
           updatedAt: discount.updatedAt.toISOString(),
@@ -255,7 +258,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       { status: 201 }
     );
   } catch (error) {
-    console.error('Admin promotions POST error:', error);
+    logger.error('Admin promotions POST error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

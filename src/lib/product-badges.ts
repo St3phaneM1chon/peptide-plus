@@ -4,6 +4,7 @@
  */
 
 import type { BadgeType } from '@/components/shop/ProductBadge';
+import { NEW_PRODUCT_DAYS } from '@/lib/constants';
 
 interface ProductBadgeData {
   createdAt?: Date | string;
@@ -35,12 +36,12 @@ export function getProductBadges(product: ProductBadgeData): Badge[] {
     badges.push({ type: 'sale', discountPercent });
   }
 
-  // 2. NEW - created within last 14 days
+  // 2. NEW - created within last NEW_PRODUCT_DAYS (BUG-019 FIX: use centralized constant)
   if (product.createdAt) {
     const createdDate = new Date(product.createdAt);
     const now = new Date();
     const daysDiff = Math.floor((now.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
-    if (daysDiff <= 14) {
+    if (daysDiff <= NEW_PRODUCT_DAYS) {
       badges.push({ type: 'new' });
     }
   }
@@ -54,6 +55,10 @@ export function getProductBadges(product: ProductBadgeData): Badge[] {
       badges.push({ type: 'low-stock' });
     }
   }
+
+  // 4. BACK-IN-STOCK - BUG-020/BUG-021 FIX: Placeholder for back-in-stock badge
+  // TODO: Implement when restockedAt field or stock history tracking is available
+  // Logic: if product was out of stock within last 7 days and now has stock, add 'back-in-stock' badge
 
   // 5. TRENDING - high rating with reviews OR high purchase count recently
   // For now, using simple heuristic: rating >= 4.5 with 10+ reviews

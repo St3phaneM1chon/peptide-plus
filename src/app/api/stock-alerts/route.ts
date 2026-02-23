@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 // Validation schema
 const subscribeSchema = z.object({
@@ -105,7 +106,7 @@ export async function POST(request: NextRequest) {
       { status: 200 }
     );
   } catch (error) {
-    console.error('Stock alert subscription error:', error);
+    logger.error('Stock alert subscription error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to subscribe to stock alerts' },
       { status: 500 }
@@ -145,7 +146,7 @@ export async function GET(request: NextRequest) {
       notified: alert?.notified || false,
     });
   } catch (error) {
-    console.error('Stock alert check error:', error);
+    logger.error('Stock alert check error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to check subscription status' },
       { status: 500 }

@@ -3239,7 +3239,9 @@
       "teamsSetupDesc": "Connect Microsoft Teams for internal order notifications and team alerts. Supports Incoming Webhooks and Graph API.",
       "teamsWebhookLabel": "Incoming Webhook URL",
       "teamsWebhookHint": "Create an Incoming Webhook in your Teams channel and paste the URL here",
-      "teamsOptionalGraphApi": "Optional - only needed for Graph API integration (advanced)"
+      "teamsOptionalGraphApi": "Optional - only needed for Graph API integration (advanced)",
+      "webhookUrl": "Webhook URL",
+      "docs": "Documentation"
     },
     "emailComposer": {
       "send": "Send",
@@ -5257,6 +5259,10 @@
     "subtitle": "अनुसंधानकर्ताओं के साथ जुड़ें, अनुभव साझा करें, प्रश्न पूछें, और समुदाय से सीखें।",
     "support": "समर्थन",
     "tagsPlaceholder": "जैसे, bpc-157, पुनर्संरचना, शुरुआती",
+    "timeDaysAgo": "{count} दिन पहले",
+    "timeHoursAgo": "{count} घंटे पहले",
+    "timeJustNow": "अभी",
+    "timeYesterday": "कल",
     "title": "समुदाय फोरम",
     "tryDifferent": "एक अलग खोज करने की कोशिश करें या एक नई चर्चा शुरू करें!"
   },
@@ -6731,7 +6737,10 @@
       "removeFromWishlist": "Remove from wishlist"
     },
     "youSave": "आप बचाते हैं",
-    "researchDisclaimer": "FOR RESEARCH USE ONLY: This product is intended for laboratory and research purposes only. Not for human or animal consumption. By purchasing, you confirm this product will be used exclusively for legitimate research."
+    "researchDisclaimer": "FOR RESEARCH USE ONLY: This product is intended for laboratory and research purposes only. Not for human or animal consumption. By purchasing, you confirm this product will be used exclusively for legitimate research.",
+    "resetFilters": "Reset filters",
+    "retry": "Retry",
+    "productCount": "product"
   },
   "subscriptions": {
     "availableProducts": "सदस्यता के लिए उपलब्ध",

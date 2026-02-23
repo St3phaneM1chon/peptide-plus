@@ -1,4 +1,5 @@
 export const dynamic = 'force-dynamic';
+import { logger } from '@/lib/logger';
 /**
  * API - Social Proof Notifications
  * Returns recent purchases (anonymized) for social proof popups.
@@ -22,7 +23,8 @@ interface SocialProofEntry {
   minutesAgo: number;
 }
 
-// In-memory cache to avoid hammering the DB on every request
+// TODO: FLAW-056 - In-memory cache resets on serverless cold starts; consider Redis for shared cache
+// FIX: FLAW-087 - TODO: Make cache locale-aware (use Map<locale, SocialProofEntry[]>) if content differs by locale
 let cachedData: SocialProofEntry[] | null = null;
 let cacheTimestamp = 0;
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
@@ -153,21 +155,17 @@ export async function GET() {
       }
     }
 
-    // Strategy 3: If still no data, return synthetic entries for social proof
-    // This is common for new stores or low-traffic periods
-    if (entries.length === 0) {
-      const syntheticEntries = await generateSyntheticEntries();
-      cachedData = syntheticEntries;
-      cacheTimestamp = now;
-      return NextResponse.json(syntheticEntries);
-    }
+    // FLAW-001 FIX: Removed fake/synthetic social proof generation entirely.
+    // Generating fake purchase notifications with synthetic names/cities is potentially illegal
+    // under FTC Act Section 5 and Canadian Competition Act. Return empty array instead.
+    // If no real recent purchases exist, return empty — the frontend should handle this gracefully.
 
     cachedData = entries;
     cacheTimestamp = now;
 
     return NextResponse.json(entries);
   } catch (error) {
-    console.error('Error fetching social proof data:', error);
+    logger.error('Error fetching social proof data', { error: error instanceof Error ? error.message : String(error) });
     // Return empty array on error - social proof is non-critical
     return NextResponse.json([]);
   }
@@ -186,50 +184,5 @@ function extractFirstName(name: string | null | undefined): string | null {
   return first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
 }
 
-/**
- * Generate synthetic social proof entries using real products from the DB.
- * Used when no recent purchases exist to maintain social proof presence.
- */
-async function generateSyntheticEntries(): Promise<SocialProofEntry[]> {
-  const CANADIAN_CITIES = [
-    'Montreal', 'Toronto', 'Vancouver', 'Ottawa', 'Calgary',
-    'Edmonton', 'Quebec City', 'Winnipeg', 'Halifax', 'Victoria',
-  ];
-
-  const FIRST_NAMES = [
-    'Marc', 'Sophie', 'Jean', 'Marie', 'Pierre',
-    'Isabelle', 'Nicolas', 'Julie', 'David', 'Catherine',
-    'Alex', 'Sarah', 'Michael', 'Emma', 'Lucas',
-  ];
-
-  try {
-    // Fetch a few active products to use in synthetic entries
-    const products = await prisma.product.findMany({
-      where: { isActive: true },
-      select: { name: true, slug: true },
-      take: 8,
-      orderBy: { purchaseCount: 'desc' },
-    });
-
-    if (products.length === 0) return [];
-
-    const entries: SocialProofEntry[] = [];
-    const count = Math.min(products.length, 5);
-
-    for (let i = 0; i < count; i++) {
-      const product = products[i % products.length];
-      entries.push({
-        firstName: FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)],
-        city: CANADIAN_CITIES[Math.floor(Math.random() * CANADIAN_CITIES.length)],
-        productName: product.name,
-        productSlug: product.slug,
-        // Random time between 5 and 90 minutes ago
-        minutesAgo: Math.floor(Math.random() * 85) + 5,
-      });
-    }
-
-    return entries;
-  } catch {
-    return [];
-  }
-}
+// FLAW-001: Removed generateSyntheticEntries function entirely.
+// Fake social proof with synthetic names/cities violates consumer protection laws.

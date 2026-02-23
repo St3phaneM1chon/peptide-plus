@@ -16,6 +16,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { roundCurrency } from '@/lib/financial';
+import { logger } from '@/lib/logger';
 
 // ---------------------------------------------------------------------------
 // GET /api/admin/accounting/general-ledger
@@ -193,7 +194,7 @@ export const GET = withAdminGuard(async (request) => {
       },
     });
   } catch (error) {
-    console.error('General ledger error:', error);
+    logger.error('General ledger error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la recuperation du grand livre' },
       { status: 500 }

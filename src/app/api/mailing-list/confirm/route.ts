@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { logger } from '@/lib/logger';
 
 export async function GET(request: Request) {
   try {
@@ -38,6 +39,13 @@ export async function GET(request: Request) {
       },
     });
 
+    // Faille #34: Also activate the legacy NewsletterSubscriber record
+    // (created as isActive:false by /api/newsletter pending double opt-in)
+    await prisma.newsletterSubscriber.updateMany({
+      where: { email: subscriber.email.toLowerCase(), isActive: false },
+      data: { isActive: true },
+    }).catch(() => {});
+
     // RGPD Art. 6/7 + CASL: Create definitive ConsentRecord after double opt-in
     await prisma.consentRecord.create({
       data: {
@@ -53,7 +61,8 @@ export async function GET(request: Request) {
     // CASL audit: persist to AuditLog (not just console.log)
     await prisma.auditLog.create({
       data: {
-        id: `consent-confirm-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        // AMELIORATION: Use crypto.randomUUID instead of Math.random for audit IDs
+        id: `consent-confirm-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`,
         action: 'CONSENT_CONFIRMED',
         entityType: 'MailingListSubscriber',
         entityId: subscriber.id,
@@ -71,7 +80,7 @@ export async function GET(request: Request) {
 
     return NextResponse.redirect(new URL('/?subscription=confirmed', request.url));
   } catch (error) {
-    console.error('Mailing list confirm error:', error);
+    logger.error('Mailing list confirm error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.redirect(new URL('/?subscription=error', request.url));
   }
 }

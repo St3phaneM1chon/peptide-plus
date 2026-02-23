@@ -27,6 +27,9 @@ import { enqueue } from '@/lib/translation';
 import { UserRole } from '@/types';
 import { apiSuccess, apiError, apiNoContent, validateContentType } from '@/lib/api-response';
 import { ErrorCode } from '@/lib/error-codes';
+// BUG-017 FIX: Import cache invalidation
+import { cacheInvalidateTag, CacheTags } from '@/lib/cache';
+import { logger } from '@/lib/logger';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -65,7 +68,7 @@ export async function GET(_request: Request, { params }: RouteParams) {
 
     return apiSuccess({ category });
   } catch (error) {
-    console.error('Error fetching category:', error);
+    logger.error('Error fetching category', { error: error instanceof Error ? error.message : String(error) });
     return apiError('Erreur lors de la récupération de la catégorie', ErrorCode.INTERNAL_ERROR);
   }
 }
@@ -124,6 +127,9 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       data: updateData,
     });
 
+    // BUG-017 FIX: Invalidate category cache after update
+    cacheInvalidateTag(CacheTags.CATEGORIES);
+
     // Auto-enqueue translation (force re-translate on update)
     enqueue.category(category.id, true);
 
@@ -140,7 +146,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
     return apiSuccess({ category }, { request });
   } catch (error) {
-    console.error('Error updating category:', error);
+    logger.error('Error updating category', { error: error instanceof Error ? error.message : String(error) });
     return apiError('Erreur lors de la mise à jour de la catégorie', ErrorCode.INTERNAL_ERROR, { request });
   }
 }
@@ -198,10 +204,13 @@ export async function DELETE(_request: Request, { params }: RouteParams) {
       },
     });
 
+    // BUG-017 FIX: Invalidate category cache after deletion
+    cacheInvalidateTag(CacheTags.CATEGORIES);
+
     // Item 2: HTTP 204 No Content for DELETE operations
     return apiNoContent();
   } catch (error) {
-    console.error('Error deleting category:', error);
+    logger.error('Error deleting category', { error: error instanceof Error ? error.message : String(error) });
     return apiError('Erreur lors de la suppression de la catégorie', ErrorCode.INTERNAL_ERROR);
   }
 }

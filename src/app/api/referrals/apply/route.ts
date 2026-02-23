@@ -101,15 +101,34 @@ export async function POST(request: NextRequest) {
       where: { referrerId: referrer.id },
     });
 
-    if (referralCount >= 50) {
+    // FLAW-066 FIX: Lower max referrals from 50 to 20 for anti-fraud
+    if (referralCount >= 20) {
       return NextResponse.json(
         { error: 'This referral code has reached its maximum usage limit' },
         { status: 400 }
       );
     }
 
-    // Create referral and update user in a transaction
+    // FLAW-042 FIX: Use transaction with re-check to prevent race condition
+    // Two concurrent requests could both pass the existingReferral check above,
+    // so we re-verify inside the transaction before creating.
     const referral = await prisma.$transaction(async (tx) => {
+      // Re-check inside transaction to prevent race condition
+      const existingInTx = await tx.referral.findFirst({
+        where: { referredId: userId },
+      });
+      if (existingInTx) {
+        throw new Error('REFERRAL_ALREADY_EXISTS');
+      }
+
+      const userInTx = await tx.user.findUnique({
+        where: { id: userId },
+        select: { referredById: true },
+      });
+      if (userInTx?.referredById) {
+        throw new Error('REFERRAL_ALREADY_EXISTS');
+      }
+
       // Create the referral record
       const newReferral = await tx.referral.create({
         data: {
@@ -136,6 +155,13 @@ export async function POST(request: NextRequest) {
       message: 'Referral applied successfully! You will receive $10 off your first order.',
     });
   } catch (error) {
+    // FLAW-042: Handle the race condition error gracefully
+    if (error instanceof Error && error.message === 'REFERRAL_ALREADY_EXISTS') {
+      return NextResponse.json(
+        { error: 'A referral has already been applied to your account' },
+        { status: 400 }
+      );
+    }
     console.error('Error applying referral:', error);
     return NextResponse.json(
       { error: 'Failed to apply referral' },

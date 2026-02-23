@@ -41,6 +41,8 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { sendEmail, abandonedCartEmail, generateUnsubscribeUrl } from '@/lib/email';
+// FLAW-064 FIX: Import bounce suppression to skip hard-bounced addresses
+import { shouldSuppressEmail } from '@/lib/email/bounce-handler';
 import { logger } from '@/lib/logger';
 import { withJobLock } from '@/lib/cron-lock';
 
@@ -133,6 +135,38 @@ export async function GET(request: NextRequest) {
       : [];
     const userMap = new Map(users.map((u) => [u.id, u]));
 
+    // FIX: FLAW-014 - Batch-fetch recent orders for all cart user IDs in a single query
+    // instead of N+1 per-cart queries inside the for-loop.
+    const cartUserIds = abandonedCarts
+      .map((c) => c.userId)
+      .filter((id): id is string => !!id);
+
+    // Find the earliest cart updatedAt to use as lower bound for order search
+    const earliestCartUpdate = abandonedCarts.reduce(
+      (min, c) => (c.updatedAt < min ? c.updatedAt : min),
+      abandonedCarts[0]?.updatedAt || new Date()
+    );
+
+    const recentPaidOrders = cartUserIds.length > 0
+      ? await db.order.findMany({
+          where: {
+            userId: { in: cartUserIds },
+            paymentStatus: 'PAID',
+            createdAt: { gte: earliestCartUpdate },
+          },
+          select: { userId: true, createdAt: true },
+        })
+      : [];
+
+    // Build a map: userId -> latest paid order date
+    const userLatestOrderMap = new Map<string, Date>();
+    for (const order of recentPaidOrders) {
+      const existing = userLatestOrderMap.get(order.userId);
+      if (!existing || order.createdAt > existing) {
+        userLatestOrderMap.set(order.userId, order.createdAt);
+      }
+    }
+
     for (const cart of abandonedCarts) {
       if (!cart.userId) continue;
 
@@ -144,18 +178,10 @@ export async function GET(request: NextRequest) {
         continue;
       }
 
-      // Check if user completed an order after the cart was last updated
-      const orderAfterCart = await db.order.findFirst({
-        where: {
-          userId: user.id,
-          createdAt: { gte: cart.updatedAt },
-          paymentStatus: 'PAID',
-        },
-        select: { id: true },
-      });
-
-      if (orderAfterCart) {
-        // User already ordered, skip
+      // Check if user completed an order after the cart was last updated (using batch data)
+      const latestOrder = userLatestOrderMap.get(user.id);
+      if (latestOrder && latestOrder >= cart.updatedAt) {
+        // User already ordered after cart update, skip
         continue;
       }
 
@@ -199,6 +225,12 @@ export async function GET(request: NextRequest) {
 
       const batchPromises = batch.map(async ({ cart, user }) => {
         try {
+          // FLAW-064 FIX: Check bounce suppression before sending
+          const { suppressed } = await shouldSuppressEmail(user.email);
+          if (suppressed) {
+            return { userId: user.id, email: user.email, cartId: cart.id, itemCount: cart.items.length, success: false, error: 'bounce_suppressed' };
+          }
+
           // Build cart items for the email
           const emailItems = cart.items.map((item) => {
             const product = productMap.get(item.productId);
@@ -333,50 +365,59 @@ export async function GET(request: NextRequest) {
       });
       const alreadySmsSet = new Set(smsSentLogs.map((l) => l.to));
 
-      for (const log of emailSentLogs) {
-        if (alreadySmsSet.has(log.to)) continue;
+      // FIX: FLAW-074 - Batch-fetch users with phones and recent orders instead of N+1 queries
+      const eligibleEmails = emailSentLogs
+        .filter((log) => !alreadySmsSet.has(log.to))
+        .map((log) => log.to);
 
-        // Look up user phone
-        const user = await db.user.findFirst({
-          where: { email: log.to, phone: { not: null } },
-          select: { id: true, phone: true, locale: true },
-        });
+      // Batch fetch all users with phones for these emails
+      const usersWithPhones = eligibleEmails.length > 0
+        ? await db.user.findMany({
+            where: { email: { in: eligibleEmails }, phone: { not: null } },
+            select: { id: true, email: true, phone: true, locale: true },
+          })
+        : [];
+
+      // Batch fetch recent orders for all these users
+      const userIdsWithPhones = usersWithPhones.map((u) => u.id);
+      const recentOrderUsers = userIdsWithPhones.length > 0
+        ? await db.order.findMany({
+            where: { userId: { in: userIdsWithPhones }, paymentStatus: 'PAID', createdAt: { gte: smsDelayAgo } },
+            select: { userId: true },
+          })
+        : [];
+      const usersWithRecentOrders = new Set(recentOrderUsers.map((o) => o.userId));
+
+      for (const user of usersWithPhones) {
+        if (usersWithRecentOrders.has(user.id)) continue;
 
         if (user?.phone) {
-          // Check if user completed an order since the email
-          const recentOrder = await db.order.findFirst({
-            where: { userId: user.id, paymentStatus: 'PAID', createdAt: { gte: smsDelayAgo } },
-            select: { id: true },
-          });
+          try {
+            // Dynamic import to avoid breaking if sms module isn't available
+            const { sendSms } = await import('@/lib/sms');
+            const isFr = (user.locale || 'fr') !== 'en';
+            await sendSms({
+              to: user.phone,
+              body: isFr
+                ? 'BioCycle: Votre panier vous attend! Finalisez votre commande sur biocyclepeptides.com/checkout'
+                : 'BioCycle: Your cart is waiting! Complete your order at biocyclepeptides.com/checkout',
+            });
 
-          if (!recentOrder) {
-            try {
-              // Dynamic import to avoid breaking if sms module isn't available
-              const { sendSms } = await import('@/lib/sms');
-              const isFr = (user.locale || 'fr') !== 'en';
-              await sendSms({
-                to: user.phone,
-                body: isFr
-                  ? 'BioCycle: Votre panier vous attend! Finalisez votre commande sur biocyclepeptides.com/checkout'
-                  : 'BioCycle: Your cart is waiting! Complete your order at biocyclepeptides.com/checkout',
-              });
+            await db.emailLog.create({
+              data: {
+                templateId: 'abandoned-cart-sms',
+                to: user.email,
+                subject: 'SMS: abandoned cart recovery',
+                status: 'sent',
+              },
+            }).catch(() => {});
 
-              await db.emailLog.create({
-                data: {
-                  templateId: 'abandoned-cart-sms',
-                  to: log.to,
-                  subject: 'SMS: abandoned cart recovery',
-                  status: 'sent',
-                },
-              }).catch(() => {});
-
-              smsSent++;
-            } catch (smsError) {
-              logger.error('Abandoned cart SMS failed', {
-                email: log.to,
-                error: smsError instanceof Error ? smsError.message : String(smsError),
-              });
-            }
+            smsSent++;
+          } catch (smsError) {
+            logger.error('Abandoned cart SMS failed', {
+              email: user.email,
+              error: smsError instanceof Error ? smsError.message : String(smsError),
+            });
           }
         }
       }

@@ -17,6 +17,7 @@ import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { ACCOUNT_CODES } from '@/lib/accounting/types';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { logger } from '@/lib/logger';
 
 // ─── POST /api/admin/purchase-orders/[id]/receive ───────────────────────────────
 export const POST = withAdminGuard(async (request, { session, params }) => {
@@ -384,9 +385,7 @@ export const POST = withAdminGuard(async (request, { session, params }) => {
               }
             }
           } else {
-            console.warn(
-              `Accounting accounts not found: Inventory(${ACCOUNT_CODES.INVENTORY})=${!!inventoryAccount}, AP(${ACCOUNT_CODES.ACCOUNTS_PAYABLE})=${!!apAccount}`
-            );
+            logger.warn(`Accounting accounts not found: Inventory(${ACCOUNT_CODES.INVENTORY})=${!!inventoryAccount}, AP(${ACCOUNT_CODES.ACCOUNTS_PAYABLE})=${!!apAccount}`);
           }
         }
       }
@@ -457,7 +456,7 @@ export const POST = withAdminGuard(async (request, { session, params }) => {
       },
     });
   } catch (error) {
-    console.error('Admin purchase order receive error:', error);
+    logger.error('Admin purchase order receive error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

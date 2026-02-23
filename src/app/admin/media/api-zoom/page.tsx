@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Video } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
 import { IntegrationCard } from '@/components/admin/IntegrationCard';
+import { toast } from 'sonner';
 
 export default function MediaZoomPage() {
   const { t } = useI18n();
@@ -28,13 +29,19 @@ export default function MediaZoomPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  // FIX: F20 - Add try/catch with toast.error() for network/save failures
   const handleSave = async () => {
-    const res = await fetch('/api/admin/integrations/zoom', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ enabled, accountId, clientId }),
-    });
-    if (!res.ok) throw new Error('Save failed');
+    try {
+      const res = await fetch('/api/admin/integrations/zoom', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled, accountId, clientId }),
+      });
+      if (!res.ok) throw new Error('Save failed');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Save failed');
+      throw err;
+    }
   };
 
   const handleTest = async () => {

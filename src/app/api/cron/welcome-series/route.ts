@@ -205,7 +205,8 @@ export async function GET(request: NextRequest) {
             // Generate a referral code if user doesn't have one
             let referralCode = user.referralCode;
             if (!referralCode) {
-              referralCode = `REF${user.id.slice(0, 6).toUpperCase()}`;
+              // FLAW-082 FIX: Use crypto random instead of predictable user ID prefix
+              referralCode = `REF${crypto.randomBytes(6).toString('hex').toUpperCase()}`;
               try {
                 await db.user.update({
                   where: { id: user.id },
@@ -225,7 +226,14 @@ export async function GET(request: NextRequest) {
             // Generate unsubscribe URL (CAN-SPAM / RGPD / LCAP compliance)
             const unsubscribeUrl = await generateUnsubscribeUrl(user.email, 'marketing', user.id).catch(() => undefined);
 
-            // Use the marketing welcome template
+            // FIX: FLAW-033 - All 4 drip steps use the same welcomeEmail() template.
+            // The subject changes per step but the body is always the generic welcome email.
+            // TODO: Create step-specific email templates:
+            //   - Step 1 (followup): Product discovery + referral highlight
+            //   - Step 2 (bestsellers): Top products showcase + loyalty program
+            //   - Step 3 (education): Blog articles + peptide research guides
+            //   - Step 4 (incentive): Discount code CTA + urgency messaging
+            // For now, using welcomeEmail as the base with step-specific subjects.
             const emailContent = welcomeEmail({
               customerName: user.name || 'Client',
               customerEmail: user.email,

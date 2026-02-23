@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   DollarSign,
   AlertTriangle,
@@ -64,12 +64,7 @@ export default function AgingPage() {
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
 
-  useEffect(() => {
-    fetchAgingReport();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reportType]);
-
-  const fetchAgingReport = async () => {
+  const fetchAgingReport = useCallback(async () => {
     setLoading(true);
     try {
       const response = await fetch(`/api/accounting/aging?type=${reportType}`);
@@ -84,7 +79,11 @@ export default function AgingPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [reportType, t]);
+
+  useEffect(() => {
+    fetchAgingReport();
+  }, [fetchAgingReport]);
 
   const exportCSV = async () => {
     setExporting(true);

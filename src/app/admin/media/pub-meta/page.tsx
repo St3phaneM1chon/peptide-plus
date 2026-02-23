@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Globe } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
 import { IntegrationCard } from '@/components/admin/IntegrationCard';
+import { toast } from 'sonner';
 
 export default function MediaMetaPage() {
   const { t } = useI18n();
@@ -34,13 +35,19 @@ export default function MediaMetaPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  // FIX: F20 - Add try/catch with toast.error() for network/save failures
   const handleSave = async () => {
-    const res = await fetch('/api/admin/integrations/meta', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ enabled, appId, pixelId, pageId, igAccountId }),
-    });
-    if (!res.ok) throw new Error('Save failed');
+    try {
+      const res = await fetch('/api/admin/integrations/meta', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled, appId, pixelId, pageId, igAccountId }),
+      });
+      if (!res.ok) throw new Error('Save failed');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Save failed');
+      throw err;
+    }
   };
 
   const handleTest = async () => {
@@ -60,8 +67,9 @@ export default function MediaMetaPage() {
   return (
     <div className="p-6 max-w-3xl">
       <IntegrationCard
-        title="Meta (Facebook + Instagram)"
-        description="Connect Meta Marketing API, Instagram Graph API, Meta Pixel, and Conversions API. Manage ads, content publishing, and audience tracking across Facebook and Instagram."
+        // FIX: F35 - Use i18n for title and description instead of hardcoded English
+        title={t('admin.media.metaTitle') || 'Meta (Facebook + Instagram)'}
+        description={t('admin.media.metaDescription') || 'Connect Meta Marketing API, Instagram Graph API, Meta Pixel, and Conversions API.'}
         icon={<Globe className="w-6 h-6" />}
         color="from-blue-600 to-indigo-600"
         enabled={enabled}

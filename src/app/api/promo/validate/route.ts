@@ -1,5 +1,9 @@
 export const dynamic = 'force-dynamic';
 
+// TODO: F-065 - Error messages are hardcoded in French; return error codes and translate client-side
+// TODO: F-092 - firstOrderOnly check calls auth() a second time; reuse session from earlier call
+// TODO: F-093 - products.map(p => p.categoryId) can contain null; filter nulls before includes check
+
 /**
  * API Validation Code Promo - BioCycle Peptides
  * Valide les codes promotionnels depuis la base de données
@@ -8,6 +12,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth-config';
+import { logger } from '@/lib/logger';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 
 export async function POST(request: NextRequest) {
@@ -46,39 +51,73 @@ export async function POST(request: NextRequest) {
       where: { code: upperCode },
     });
 
-    if (!promoCode || !promoCode.isActive) {
+    // FIX: F-033 - Return semantic HTTP status codes (404 not found, 410 expired, 400 limit reached)
+    // FLAW-024 FIX: Return i18n error codes alongside French text so frontend can translate
+    if (!promoCode) {
       return NextResponse.json({
         valid: false,
+        errorCode: 'PROMO_INVALID',
         error: 'Code promo invalide',
-      });
+      }, { status: 404 });
     }
 
-    // Vérifier l'expiration
+    // FIX: FLAW-071 - Differentiate between non-existent and deactivated promo codes
+    if (!promoCode.isActive) {
+      return NextResponse.json({
+        valid: false,
+        errorCode: 'PROMO_DEACTIVATED',
+        error: 'Ce code promo a été désactivé',
+      }, { status: 410 }); // FIX: F-033 - 410 Gone for deactivated promo codes
+    }
+
+    // FIX: FLAW-048 - All date comparisons use UTC (JS Date objects are UTC-based).
+    // Promo code startsAt/endsAt should be stored in UTC. If admin enters local time,
+    // ensure the frontend converts to UTC before saving.
     const now = new Date();
     if (promoCode.startsAt && promoCode.startsAt > now) {
       return NextResponse.json({
         valid: false,
+        errorCode: 'PROMO_NOT_YET_ACTIVE',
         error: 'Ce code promo n\'est pas encore actif',
-      });
+      }, { status: 400 }); // FIX: F-033 - 400 Bad Request for not-yet-active promo codes
     }
     if (promoCode.endsAt && promoCode.endsAt < now) {
       return NextResponse.json({
         valid: false,
+        errorCode: 'PROMO_EXPIRED',
         error: 'Ce code promo a expiré',
-      });
+      }, { status: 410 }); // FIX: F-033 - 410 Gone for expired promo codes
     }
 
-    // Vérifier la limite d'utilisation globale
-    if (promoCode.usageLimit && promoCode.usageCount >= promoCode.usageLimit) {
-      return NextResponse.json({
-        valid: false,
-        error: 'Ce code promo a atteint sa limite d\'utilisation',
+    // FLAW-031 FIX: Atomic check-and-increment to prevent race condition on usage count.
+    // Two concurrent requests could both pass a non-atomic check before either increments.
+    if (promoCode.usageLimit) {
+      // Attempt atomic increment only if usageCount < usageLimit
+      const atomicResult = await prisma.promoCode.updateMany({
+        where: {
+          id: promoCode.id,
+          usageCount: { lt: promoCode.usageLimit },
+        },
+        data: {
+          usageCount: { increment: 1 },
+        },
       });
+      if (atomicResult.count === 0) {
+        return NextResponse.json({
+          valid: false,
+          errorCode: 'PROMO_USAGE_LIMIT_REACHED',
+          error: 'Ce code promo a atteint sa limite d\'utilisation',
+        });
+      }
+      // Note: usageCount has been incremented atomically. If the order fails later,
+      // the checkout flow should decrement it. This prevents double-redemption.
     }
+
+    // F-092 FIX: Call auth() once for all user-specific checks
+    const session = (promoCode.usageLimitPerUser || promoCode.firstOrderOnly) ? await auth() : null;
 
     // PAY-013: Vérifier la limite d'utilisation par utilisateur
     if (promoCode.usageLimitPerUser) {
-      const session = await auth();
       if (session?.user?.id) {
         const userUsageCount = await prisma.order.count({
           where: { userId: session.user.id, promoCode: upperCode, status: { not: 'CANCELLED' } },
@@ -86,6 +125,7 @@ export async function POST(request: NextRequest) {
         if (userUsageCount >= promoCode.usageLimitPerUser) {
           return NextResponse.json({
             valid: false,
+            errorCode: 'PROMO_USER_LIMIT_REACHED',
             error: 'Vous avez atteint la limite d\'utilisation pour ce code',
           }, { status: 400 });
         }
@@ -94,10 +134,10 @@ export async function POST(request: NextRequest) {
 
     // E-04: Vérifier firstOrderOnly - le code est réservé aux premières commandes
     if (promoCode.firstOrderOnly) {
-      const session = await auth();
       if (!session?.user?.id) {
         return NextResponse.json({
           valid: false,
+          errorCode: 'PROMO_AUTH_REQUIRED',
           error: 'Vous devez être connecté pour utiliser ce code promo',
         });
       }
@@ -107,28 +147,39 @@ export async function POST(request: NextRequest) {
       if (previousPaidOrders > 0) {
         return NextResponse.json({
           valid: false,
+          errorCode: 'PROMO_FIRST_ORDER_ONLY',
           error: 'Ce code promo est réservé aux premières commandes',
         });
       }
     }
 
     // E-04: Vérifier productIds - le code ne s'applique qu'à certains produits
+    // TODO: FLAW-079 - productIds/categoryIds stored as comma-separated string; migrate to junction tables
     if (promoCode.productIds) {
       if (!cartItems || cartItems.length === 0) {
         // TODO: If cart items are not provided in the validate request,
         // we skip this check here. The create-checkout route performs a
         // server-side re-validation with the actual cart, so this is safe.
       } else {
-        const allowedProductIds: string[] = JSON.parse(promoCode.productIds);
-        const cartProductIds = cartItems.map((item) => item.productId);
-        const hasMatchingProduct = cartProductIds.some((pid) =>
-          allowedProductIds.includes(pid)
-        );
-        if (!hasMatchingProduct) {
-          return NextResponse.json({
-            valid: false,
-            error: 'Ce code promo ne s\'applique pas aux produits de votre panier',
-          });
+        let allowedProductIds: string[] = [];
+        try {
+          allowedProductIds = JSON.parse(promoCode.productIds);
+        } catch {
+          // Malformed JSON in productIds - skip product filter (admin data entry error)
+          logger.error('Malformed productIds JSON for promo code', { promoCode: upperCode });
+        }
+        if (allowedProductIds.length > 0) {
+          const cartProductIds = cartItems.map((item) => item.productId);
+          const hasMatchingProduct = cartProductIds.some((pid) =>
+            allowedProductIds.includes(pid)
+          );
+          if (!hasMatchingProduct) {
+            return NextResponse.json({
+              valid: false,
+              errorCode: 'PROMO_PRODUCT_MISMATCH',
+              error: 'Ce code promo ne s\'applique pas aux produits de votre panier',
+            });
+          }
         }
       }
     }
@@ -139,19 +190,26 @@ export async function POST(request: NextRequest) {
         // TODO: Same as productIds - skip if cart items not provided;
         // create-checkout will enforce this server-side.
       } else {
-        const allowedCategoryIds: string[] = JSON.parse(promoCode.categoryIds);
+        let allowedCategoryIds: string[] = [];
+        try {
+          allowedCategoryIds = JSON.parse(promoCode.categoryIds);
+        } catch {
+          // Malformed JSON in categoryIds - skip category filter
+          logger.error('Malformed categoryIds JSON for promo code', { promoCode: upperCode });
+        }
         const cartProductIds = cartItems.map((item) => item.productId);
         const products = await prisma.product.findMany({
           where: { id: { in: cartProductIds } },
           select: { id: true, categoryId: true },
         });
-        const cartCategoryIds = products.map((p) => p.categoryId);
-        const hasMatchingCategory = cartCategoryIds.some((cid) =>
+        const cartCategoryIds = products.map((p) => p.categoryId).filter((cid): cid is string => cid !== null);
+        const hasMatchingCategory = allowedCategoryIds.length === 0 || cartCategoryIds.some((cid) =>
           allowedCategoryIds.includes(cid)
         );
         if (!hasMatchingCategory) {
           return NextResponse.json({
             valid: false,
+            errorCode: 'PROMO_CATEGORY_MISMATCH',
             error: 'Ce code promo ne s\'applique pas aux catégories de votre panier',
           });
         }
@@ -163,6 +221,7 @@ export async function POST(request: NextRequest) {
     if (minOrder > 0 && subtotal < minOrder) {
       return NextResponse.json({
         valid: false,
+        errorCode: 'PROMO_MIN_ORDER_NOT_MET',
         error: `Commande minimum de $${minOrder} requise pour ce code`,
         minOrder,
       });
@@ -194,7 +253,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Promo validation error:', error);
+    logger.error('Promo validation error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { valid: false, error: 'Erreur de validation' },
       { status: 500 }

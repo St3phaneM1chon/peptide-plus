@@ -6,6 +6,10 @@ import {
   Image as ImageIcon, Upload, Search, Trash2, Copy, Check,
   Loader2, ChevronLeft, ChevronRight, X,
 } from 'lucide-react';
+import NextImage from 'next/image';
+import { toast } from 'sonner';
+// FIX: F59 - Use shared formatFileSize utility instead of local duplicate
+import { formatFileSize } from '@/lib/format-utils';
 
 interface MediaItem {
   id: string;
@@ -26,11 +30,8 @@ interface Pagination {
   totalPages: number;
 }
 
-function formatSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1048576) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / 1048576).toFixed(1)} MB`;
-}
+// FIX: F59 - formatSize replaced by shared formatFileSize from @/lib/format-utils
+const formatSize = formatFileSize;
 
 export default function MediaImagesPage() {
   const { t } = useI18n();
@@ -38,6 +39,7 @@ export default function MediaImagesPage() {
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -62,6 +64,20 @@ export default function MediaImagesPage() {
 
   useEffect(() => { loadImages(); }, [loadImages]);
 
+  // F72 FIX: Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => { setSearch(searchInput); setPage(1); }, 300);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
+  // F63 FIX: Close preview modal with Escape key
+  useEffect(() => {
+    if (!preview) return;
+    const handleEscape = (e: KeyboardEvent) => { if (e.key === 'Escape') setPreview(null); };
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [preview]);
+
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -75,9 +91,15 @@ export default function MediaImagesPage() {
       const res = await fetch('/api/admin/medias', { method: 'POST', body: formData });
       if (res.ok) {
         loadImages();
+        toast.success(t('admin.media.uploadSuccess') || 'Upload successful');
+      } else {
+        const data = await res.json().catch(() => ({}));
+        toast.error(data.error || t('admin.media.uploadFailed') || 'Upload failed');
       }
     } catch (err) {
+      // FIX: F28 - Show toast error on upload failure instead of just console.error
       console.error('Upload failed:', err);
+      toast.error(t('admin.media.uploadFailed') || 'Upload failed');
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -102,7 +124,8 @@ export default function MediaImagesPage() {
             className="flex items-center gap-2 px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors text-sm disabled:opacity-50"
           >
             {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-            Upload
+            {/* FIX: F37 - Use i18n instead of hardcoded "Upload" */}
+            {t('admin.media.upload') || 'Upload'}
           </button>
         </div>
       </div>
@@ -113,8 +136,8 @@ export default function MediaImagesPage() {
         <input
           className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-sm"
           placeholder={t('common.search')}
-          value={search}
-          onChange={e => { setSearch(e.target.value); setPage(1); }}
+          value={searchInput}
+          onChange={e => setSearchInput(e.target.value)}
         />
       </div>
 
@@ -130,8 +153,9 @@ export default function MediaImagesPage() {
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
           {images.map(img => (
             <div key={img.id} className="group relative bg-white rounded-lg border border-slate-200 overflow-hidden hover:border-sky-300 transition-colors">
-              <div className="aspect-square cursor-pointer" onClick={() => setPreview(img)}>
-                <img src={img.url} alt={img.alt || img.originalName} className="w-full h-full object-cover" />
+              {/* FIX: F3 - Use NextImage instead of native <img> */}
+              <div className="aspect-square cursor-pointer relative" onClick={() => setPreview(img)}>
+                <NextImage src={img.url} alt={img.alt || img.originalName} fill className="object-cover" sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 16vw" unoptimized />
               </div>
               <div className="p-2">
                 <p className="text-xs text-slate-700 truncate" title={img.originalName}>{img.originalName}</p>
@@ -169,7 +193,8 @@ export default function MediaImagesPage() {
             <button onClick={() => setPreview(null)} className="absolute top-3 right-3 p-1.5 bg-white/80 rounded-full hover:bg-white z-10">
               <X className="w-5 h-5" />
             </button>
-            <img src={preview.url} alt={preview.alt || preview.originalName} className="max-w-full max-h-[70vh] object-contain" />
+            {/* FIX: F3 - Use NextImage instead of native <img> */}
+            <NextImage src={preview.url} alt={preview.alt || preview.originalName} width={800} height={600} className="max-w-full max-h-[70vh] object-contain" style={{ width: '100%', height: 'auto' }} unoptimized />
             <div className="p-4 border-t">
               <p className="font-medium text-slate-900">{preview.originalName}</p>
               <div className="flex items-center gap-4 text-sm text-slate-500 mt-1">

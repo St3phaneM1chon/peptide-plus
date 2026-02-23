@@ -3,7 +3,8 @@
  * Automatic TPS/TVQ calculations and form generation for Quebec/Canada
  */
 
-import { db as prisma } from '@/lib/db';
+// FIX (F043): Standardize import to use 'prisma' directly (not 'db as prisma')
+import { prisma } from '@/lib/db';
 import { TaxReport } from './types';
 import { roundCurrency, calculateTax } from '@/lib/financial';
 
@@ -142,6 +143,8 @@ export async function generateTaxSummary(
   }
 
   // Fetch sales from orders
+  // FIX: F062 - Uses take:10000 as a safety limit. For businesses with >10K orders/period,
+  // TODO: implement cursor-based pagination or use aggregate queries for tax totals.
   const orders = await prisma.order.findMany({
     where: {
       createdAt: {
@@ -150,6 +153,7 @@ export async function generateTaxSummary(
       },
       paymentStatus: 'PAID',
     },
+    take: 10000,
   });
 
   // Fetch purchases from supplier invoices
@@ -161,6 +165,7 @@ export async function generateTaxSummary(
       },
       status: { in: ['PAID', 'PARTIAL'] },
     },
+    take: 10000,
   });
 
   // Calculate totals
@@ -196,13 +201,18 @@ export async function generateTaxSummary(
   // Calculate ITCs from purchases
   let gstPaid = 0;
   let qstPaid = 0;
-  const hstPaid = 0;
+  let hstPaid = 0;
 
+  // FIX: F050 - Separate HST from TPS for supplier invoices based on supplier province
+  // SupplierInvoice stores HST in taxOther field; taxTps is strictly federal GST.
+  // This prevents double-counting HST as both GST-paid and HST-paid.
+  let hstPaidFromPurchases = 0;
   for (const purchase of purchases) {
     gstPaid += Number(purchase.taxTps);
     qstPaid += Number(purchase.taxTvq);
-    // HST would be included in taxTps for simplicity
+    hstPaidFromPurchases += Number((purchase as Record<string, unknown>).taxOther ?? 0);
   }
+  hstPaid = hstPaidFromPurchases;
 
   return {
     period,

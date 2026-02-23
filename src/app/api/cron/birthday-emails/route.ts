@@ -1,5 +1,8 @@
 export const dynamic = 'force-dynamic';
 
+// TODO: F-071 - No audit log entry when birthday points are added; add logAdminAction for each attribution
+// TODO: F-076 - Birthday check uses new Date() in UTC; users in different timezones may get email a day early/late
+
 /**
  * CRON Job - Emails d'anniversaire
  * Envoie un rabais d'anniversaire aux utilisateurs le jour de leur anniversaire
@@ -22,8 +25,11 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { sendEmail, birthdayEmail, generateUnsubscribeUrl } from '@/lib/email';
+// FLAW-062 FIX: Import bounce suppression to skip hard-bounced addresses
+import { shouldSuppressEmail } from '@/lib/email/bounce-handler';
 import { logger } from '@/lib/logger';
 import { withJobLock } from '@/lib/cron-lock';
+import { randomUUID } from 'crypto';
 
 const BATCH_SIZE = 10;
 
@@ -125,11 +131,19 @@ export async function GET(request: NextRequest) {
     });
 
     // Filter for today's birthdays (month/day match)
+    // FIX F-029: Wrap date parsing in try/catch to handle invalid birthDate values
     const birthdayUsersRaw = usersWithBirthday.filter((user) => {
       if (!user.birthDate) return false;
-      const birthMonth = user.birthDate.getMonth() + 1;
-      const birthDay = user.birthDate.getDate();
-      return birthMonth === currentMonth && birthDay === currentDay;
+      try {
+        const bd = user.birthDate instanceof Date ? user.birthDate : new Date(user.birthDate);
+        if (isNaN(bd.getTime())) return false;
+        const birthMonth = bd.getMonth() + 1;
+        const birthDay = bd.getDate();
+        return birthMonth === currentMonth && birthDay === currentDay;
+      } catch {
+        logger.warn('Birthday cron: invalid birthDate for user', { userId: user.id });
+        return false;
+      }
     });
 
     logger.info('Birthday cron: found users with birthday today', {
@@ -188,8 +202,16 @@ export async function GET(request: NextRequest) {
 
       const batchPromises = batch.map(async (user) => {
         try {
-          // Generate unique promo code
-          const discountCode = `BDAY${user.id.slice(0, 8).toUpperCase()}${today.getFullYear()}`;
+          // FLAW-062 FIX: Check bounce suppression before sending
+          const { suppressed } = await shouldSuppressEmail(user.email);
+          if (suppressed) {
+            return { userId: user.id, email: user.email, success: false, error: 'bounce_suppressed' };
+          }
+
+          // FIX: FLAW-012 - Include crypto-random suffix instead of predictable userId-based code
+          // TODO: FLAW-060 - Promo code has no user-specific restriction; any user guessing the code could use it.
+          // Consider adding a userId field to PromoCode model for user-locked promo codes.
+          const discountCode = `BDAY${randomUUID().slice(0, 8).toUpperCase()}`;
           const expiresAt = new Date();
           expiresAt.setDate(expiresAt.getDate() + PROMO_VALIDITY_DAYS);
 
@@ -333,6 +355,7 @@ export async function GET(request: NextRequest) {
       durationMs: duration,
     });
 
+    // FIX: Return only aggregate stats, not per-user details (privacy)
     return NextResponse.json({
       success: true,
       date: today.toISOString(),
@@ -340,7 +363,6 @@ export async function GET(request: NextRequest) {
       sent: successCount,
       failed: failCount,
       durationMs: duration,
-      results,
     });
     } catch (error) {
       logger.error('Birthday cron: job error', {

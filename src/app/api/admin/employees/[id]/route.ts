@@ -11,6 +11,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { logger } from '@/lib/logger';
 
 // GET /api/admin/employees/[id] - Get employee detail
 export const GET = withAdminGuard(async (_request, { session, params }) => {
@@ -118,7 +119,7 @@ export const GET = withAdminGuard(async (_request, { session, params }) => {
       },
     });
   } catch (error) {
-    console.error('Admin employee GET error:', error);
+    logger.error('Admin employee GET error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -254,7 +255,7 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
       },
     });
   } catch (error) {
-    console.error('Admin employee PATCH error:', error);
+    logger.error('Admin employee PATCH error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -341,7 +342,7 @@ export const DELETE = withAdminGuard(async (_request, { session, params }) => {
       },
     });
   } catch (error) {
-    console.error('Admin employee DELETE error:', error);
+    logger.error('Admin employee DELETE error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -60,7 +60,8 @@ ${sourceLanguage ? '' : '- First line of your response should be the detected so
         },
       ],
       temperature: 0.2,
-      max_tokens: 1000,
+      // F-078 FIX: Increase token limit for detailed translations
+      max_tokens: 1500,
     });
 
     const result = response.choices[0]?.message?.content || text;
@@ -253,19 +254,34 @@ export async function getChatbotResponse(
       model: 'gpt-4o-mini',
       messages,
       temperature: 0.7,
-      max_tokens: 1000,
+      // F-078 FIX: Increase token limit to avoid truncated responses
+      max_tokens: 1500,
     });
 
     const botMessage = response.choices[0]?.message?.content || '';
     
-    // Déterminer si on doit escalader à un humain
-    const shouldEscalate = 
-      botMessage.toLowerCase().includes('transmettre') ||
-      botMessage.toLowerCase().includes('équipe') ||
-      botMessage.toLowerCase().includes('email pour') ||
-      userMessage.toLowerCase().includes('parler à quelqu') ||
-      userMessage.toLowerCase().includes('humain') ||
-      userMessage.toLowerCase().includes('agent');
+    // F-057 FIX: Multilingual escalation detection (not French-only)
+    const botLower = botMessage.toLowerCase();
+    const userLower = userMessage.toLowerCase();
+    const shouldEscalate =
+      // Bot response signals (FR + EN + ES)
+      botLower.includes('transmettre') ||
+      botLower.includes('équipe') ||
+      botLower.includes('email pour') ||
+      botLower.includes('transfer to') ||
+      botLower.includes('connect you with') ||
+      botLower.includes('human agent') ||
+      botLower.includes('transferir') ||
+      // User request signals (multilingual)
+      userLower.includes('parler à quelqu') ||
+      userLower.includes('humain') ||
+      userLower.includes('agent') ||
+      userLower.includes('speak to') ||
+      userLower.includes('talk to a') ||
+      userLower.includes('real person') ||
+      userLower.includes('human') ||
+      userLower.includes('hablar con') ||
+      userLower.includes('persona real');
 
     // Extraire les produits suggérés
     const productMatches = botMessage.match(/BPC-157|TB-500|Semaglutide|Tirzepatide|CJC-1295|Ipamorelin|GHRP-6|Epitalon|NAD\+|PT-141/gi);

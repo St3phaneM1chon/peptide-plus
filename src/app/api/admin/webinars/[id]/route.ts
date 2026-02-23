@@ -12,6 +12,7 @@ import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { enqueue } from '@/lib/translation';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { logger } from '@/lib/logger';
 
 // GET /api/admin/webinars/[id] - Get single webinar
 export const GET = withAdminGuard(async (_request: NextRequest, { session, params }) => {
@@ -66,7 +67,7 @@ export const GET = withAdminGuard(async (_request: NextRequest, { session, param
       },
     });
   } catch (error) {
-    console.error('Admin webinar GET error:', error);
+    logger.error('Admin webinar GET error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -221,7 +222,7 @@ export const PATCH = withAdminGuard(async (request: NextRequest, { session, para
 
     return NextResponse.json({ webinar });
   } catch (error) {
-    console.error('Admin webinar PATCH error:', error);
+    logger.error('Admin webinar PATCH error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -262,7 +263,7 @@ export const DELETE = withAdminGuard(async (_request: NextRequest, { session, pa
       message: `Webinar "${existing.title}" deleted successfully`,
     });
   } catch (error) {
-    console.error('Admin webinar DELETE error:', error);
+    logger.error('Admin webinar DELETE error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

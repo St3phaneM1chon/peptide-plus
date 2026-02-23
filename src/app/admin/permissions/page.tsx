@@ -1,6 +1,10 @@
+// TODO: FAILLE-051 - This page is fully client-side ('use client') without server-side permission check before render.
+//       Add a server layout or middleware check that verifies admin.permissions access before serving this component.
+// TODO: FAILLE-052 - Checkbox mutations fire immediately per click; add debounce (300ms) or batch modifications to reduce race conditions.
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useSession } from 'next-auth/react';
 import { Shield, Users, UserCog, Settings, Plus, Trash2, Check, X, Search, ChevronDown, ChevronRight } from 'lucide-react';
 import { PageHeader } from '@/components/admin/PageHeader';
 import { Button } from '@/components/admin/Button';
@@ -10,6 +14,7 @@ import { EmptyState } from '@/components/admin/EmptyState';
 import { Input } from '@/components/admin/FormField';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
+import { addCSRFHeader } from '@/lib/csrf';
 
 type Tab = 'defaults' | 'groups' | 'overrides';
 
@@ -54,6 +59,8 @@ interface Override {
 
 export default function PermissionsPage() {
   const { t } = useI18n();
+  const { data: session } = useSession();
+  const isOwner = session?.user?.role === 'OWNER';
   const [activeTab, setActiveTab] = useState<Tab>('defaults');
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [modules, setModules] = useState<Record<string, { label: string; permissions: string[] }>>({});
@@ -137,16 +144,17 @@ export default function PermissionsPage() {
     fetchGroups();
   }, [fetchPermissions, fetchGroups]);
 
-  // Seed permissions on first load if empty
+  // FAILLE-010: Seed permissions on first load if empty - OWNER only with confirmation
   useEffect(() => {
-    if (!loading && permissions.length === 0) {
+    if (!loading && permissions.length === 0 && isOwner) {
+      // Auto-seed only if there are truly no permissions (first setup)
       fetch('/api/admin/permissions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ action: 'seed' }),
       }).then(() => fetchPermissions()).catch(() => toast.error(t('common.errorOccurred')));
     }
-  }, [loading, permissions.length, fetchPermissions]);
+  }, [loading, permissions.length, fetchPermissions, isOwner]);
 
   const toggleModule = (mod: string) => {
     setExpandedModules(prev => {
@@ -161,7 +169,7 @@ export default function PermissionsPage() {
     try {
       const res = await fetch('/api/admin/permissions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ action: 'updateDefaults', code, [field]: value }),
       });
       if (!res.ok) toast.error(t('common.errorOccurred'));
@@ -176,7 +184,7 @@ export default function PermissionsPage() {
     try {
       const res = await fetch('/api/admin/permissions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           action,
           groupId: editingGroup?.id,
@@ -202,7 +210,7 @@ export default function PermissionsPage() {
     try {
       const res = await fetch('/api/admin/permissions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ action: 'deleteGroup', groupId }),
       });
       if (!res.ok) { toast.error(t('common.errorOccurred')); return; }
@@ -222,7 +230,7 @@ export default function PermissionsPage() {
     try {
       const res = await fetch('/api/admin/permissions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           action: 'setOverride',
           userId: selectedUser.id,
@@ -246,7 +254,7 @@ export default function PermissionsPage() {
     try {
       const res = await fetch('/api/admin/permissions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           action: 'removeOverride',
           userId: selectedUser.id,

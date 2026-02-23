@@ -10,6 +10,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { logger } from '@/lib/logger';
 
 // ─── GET /api/admin/purchase-orders ─────────────────────────────────────────────
 export const GET = withAdminGuard(async (request, { session }) => {
@@ -119,7 +120,7 @@ export const GET = withAdminGuard(async (request, { session }) => {
       },
     });
   } catch (error) {
-    console.error('Error fetching purchase orders:', error);
+    logger.error('Error fetching purchase orders', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to fetch purchase orders' },
       { status: 500 }
@@ -257,7 +258,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       { status: 201 }
     );
   } catch (error) {
-    console.error('Error creating purchase order:', error);
+    logger.error('Error creating purchase order', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to create purchase order' },
       { status: 500 }

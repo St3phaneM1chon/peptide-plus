@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { logger } from '@/lib/logger';
 
 // GET all bundles (including inactive for admin)
 export const GET = withAdminGuard(async (request, { session }) => {
@@ -82,7 +83,7 @@ export const GET = withAdminGuard(async (request, { session }) => {
       },
     });
   } catch (error) {
-    console.error('Error fetching bundles:', error);
+    logger.error('Error fetching bundles', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to fetch bundles' },
       { status: 500 }
@@ -159,7 +160,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
 
     return NextResponse.json({ data: bundle }, { status: 201 });
   } catch (error) {
-    console.error('Error creating bundle:', error);
+    logger.error('Error creating bundle', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to create bundle' },
       { status: 500 }

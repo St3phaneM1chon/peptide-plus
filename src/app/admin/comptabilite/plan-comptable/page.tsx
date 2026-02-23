@@ -90,6 +90,20 @@ export default function PlanComptablePage() {
   const [gifiSuggestions, setGifiSuggestions] = useState<GifiSuggestion[]>([]);
   const [suggestingGifi, setSuggestingGifi] = useState(false);
 
+  const getCategoryFromType = useCallback((type: string, code: string): string => {
+    const codeNum = parseInt(code);
+    if (type === 'ASSET') return codeNum < 1500 ? t('admin.chartOfAccounts.currentAssets') : t('admin.chartOfAccounts.nonCurrentAssets');
+    if (type === 'LIABILITY') return t('admin.chartOfAccounts.currentLiabilities');
+    if (type === 'EQUITY') return t('admin.chartOfAccounts.typeEquity');
+    if (type === 'REVENUE') return t('admin.chartOfAccounts.typeRevenue');
+    if (type === 'EXPENSE') {
+      if (codeNum < 6000) return t('admin.chartOfAccounts.cogs');
+      if (codeNum < 7000) return t('admin.chartOfAccounts.operations');
+      return t('admin.chartOfAccounts.other');
+    }
+    return '';
+  }, [t]);
+
   const fetchAccounts = useCallback(async () => {
     try {
       const res = await fetch('/api/accounting/chart-of-accounts');
@@ -118,26 +132,11 @@ export default function PlanComptablePage() {
     } finally {
       setLoading(false);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [getCategoryFromType]);
 
   useEffect(() => {
     fetchAccounts();
   }, [fetchAccounts]);
-
-  const getCategoryFromType = (type: string, code: string): string => {
-    const codeNum = parseInt(code);
-    if (type === 'ASSET') return codeNum < 1500 ? t('admin.chartOfAccounts.currentAssets') : t('admin.chartOfAccounts.nonCurrentAssets');
-    if (type === 'LIABILITY') return t('admin.chartOfAccounts.currentLiabilities');
-    if (type === 'EQUITY') return t('admin.chartOfAccounts.typeEquity');
-    if (type === 'REVENUE') return t('admin.chartOfAccounts.typeRevenue');
-    if (type === 'EXPENSE') {
-      if (codeNum < 6000) return t('admin.chartOfAccounts.cogs');
-      if (codeNum < 7000) return t('admin.chartOfAccounts.operations');
-      return t('admin.chartOfAccounts.other');
-    }
-    return '';
-  };
 
   // Reset modal GIFI fields when editing account changes
   const openModal = (account: Account | null) => {

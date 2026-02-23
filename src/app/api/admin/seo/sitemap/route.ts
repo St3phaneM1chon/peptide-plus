@@ -12,8 +12,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
-import { writeFile } from 'fs/promises';
-import { join } from 'path';
+import { logger } from '@/lib/logger';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -113,7 +112,7 @@ export const POST = withAdminGuard(async (_request: NextRequest, { session }) =>
         });
       }
     } catch (error) {
-      console.error('Sitemap: Error fetching categories:', error);
+      logger.error('Sitemap: Error fetching categories', { error: error instanceof Error ? error.message : String(error) });
     }
 
     // 3. Products
@@ -131,7 +130,7 @@ export const POST = withAdminGuard(async (_request: NextRequest, { session }) =>
         });
       }
     } catch (error) {
-      console.error('Sitemap: Error fetching products:', error);
+      logger.error('Sitemap: Error fetching products', { error: error instanceof Error ? error.message : String(error) });
     }
 
     // 4. Blog posts
@@ -149,7 +148,7 @@ export const POST = withAdminGuard(async (_request: NextRequest, { session }) =>
         });
       }
     } catch (error) {
-      console.error('Sitemap: Error fetching blog posts:', error);
+      logger.error('Sitemap: Error fetching blog posts', { error: error instanceof Error ? error.message : String(error) });
     }
 
     // 5. Learn/Article pages
@@ -168,20 +167,32 @@ export const POST = withAdminGuard(async (_request: NextRequest, { session }) =>
       }
     } catch (error) {
       // Article model may not exist yet - silently skip
-      console.warn('Sitemap: Article model not available, skipping');
+      logger.warn('Sitemap: Article model not available, skipping');
     }
 
     // Generate XML
     const xml = buildSitemapXml(entries);
 
-    // Try to write to public/sitemap.xml (best-effort)
-    let writtenToFile = false;
+    // FIX: FLAW-005 - Removed filesystem write (fs.writeFileSync) which fails on Azure
+    // and other read-only hosting environments. Instead, store in SiteSetting for
+    // dynamic serving via GET /sitemap.xml, and return XML in response.
     try {
-      const publicDir = join(process.cwd(), 'public');
-      await writeFile(join(publicDir, 'sitemap.xml'), xml, 'utf-8');
-      writtenToFile = true;
-    } catch (writeError) {
-      console.warn('Sitemap: Could not write to public/sitemap.xml:', writeError);
+      await prisma.siteSetting.upsert({
+        where: { key: 'generated_sitemap_xml' },
+        update: {
+          value: xml,
+          updatedBy: session.user.id,
+        },
+        create: {
+          key: 'generated_sitemap_xml',
+          value: xml,
+          type: 'text',
+          module: 'seo',
+          updatedBy: session.user.id,
+        },
+      });
+    } catch (dbError) {
+      logger.warn('Sitemap: Could not store in SiteSetting', { error: dbError instanceof Error ? dbError.message : String(dbError) });
     }
 
     // Audit log (fire-and-forget)
@@ -190,7 +201,7 @@ export const POST = withAdminGuard(async (_request: NextRequest, { session }) =>
       action: 'GENERATE_SITEMAP',
       targetType: 'Sitemap',
       targetId: 'sitemap.xml',
-      newValue: { totalUrls: entries.length, writtenToFile },
+      newValue: { totalUrls: entries.length },
       ipAddress: getClientIpFromRequest(_request),
       userAgent: _request.headers.get('user-agent') || undefined,
     }).catch(() => {});
@@ -198,11 +209,10 @@ export const POST = withAdminGuard(async (_request: NextRequest, { session }) =>
     return NextResponse.json({
       success: true,
       totalUrls: entries.length,
-      writtenToFile,
       xml,
     });
   } catch (error) {
-    console.error('Admin sitemap generation error:', error);
+    logger.error('Admin sitemap generation error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Error generating sitemap' },
       { status: 500 }

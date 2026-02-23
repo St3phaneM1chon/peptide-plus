@@ -2,6 +2,9 @@
  * Données produits partagées
  * Utilisées par la page d'accueil et la page produit
  * Structure alignée avec le schéma Prisma
+ *
+ * TODO: BUG-088 - All product descriptions in this file are in English only.
+ * Consider adding descriptionKey fields for i18n translation or marking as seed data.
  */
 
 // Types de format disponibles

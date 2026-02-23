@@ -11,6 +11,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { cacheGetOrSet } from '@/lib/cache';
+import { logger } from '@/lib/logger';
 
 const CACHE_TTL = 60 * 1000; // 1 minute
 
@@ -86,7 +87,7 @@ export async function GET(request: NextRequest) {
       }
     );
   } catch (error) {
-    console.error('Search suggest error:', error);
+    logger.error('Search suggest error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ suggestions: [] });
   }
 }

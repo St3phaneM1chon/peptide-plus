@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { logger } from '@/lib/logger';
 
 export const POST = withAdminGuard(async (request: NextRequest, { session, params }) => {
   try {
@@ -63,7 +64,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session, param
       newBalance: newPoints,
     });
   } catch (error) {
-    console.error('Admin points adjustment error:', error);
+    logger.error('Admin points adjustment error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
   }
 });

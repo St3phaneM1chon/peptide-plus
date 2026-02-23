@@ -3,7 +3,8 @@
 import { useEffect } from 'react';
 import { useI18n } from '@/i18n/client';
 
-export default function OrdersError({
+// F-032 FIX: Correct function name for loyalty section error boundary
+export default function LoyaltyError({
   error,
   reset,
 }: {
@@ -13,7 +14,7 @@ export default function OrdersError({
   const { t } = useI18n();
 
   useEffect(() => {
-    console.error('Orders section error:', error);
+    console.error('Loyalty section error:', error);
   }, [error]);
 
   return (

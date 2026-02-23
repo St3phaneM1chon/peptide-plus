@@ -4,6 +4,8 @@
 
 import { baseTemplate, emailComponents, escapeHtml } from './base-template';
 
+const SHOP_URL = process.env.NEXT_PUBLIC_SHOP_URL || 'https://biocyclepeptides.com';
+
 // Types
 export interface OrderItem {
   name: string;
@@ -74,8 +76,9 @@ export function orderConfirmationEmail(data: OrderData): { subject: string; html
     ? `✅ Commande confirmée #${data.orderNumber}`
     : `✅ Order confirmed #${data.orderNumber}`;
 
-  const itemsHtml = data.items.map(item => 
-    emailComponents.orderItem(item.name, item.quantity, formatPrice(item.price, currency), item.imageUrl)
+  // #26 Security fix: escape user-supplied item names to prevent HTML injection
+  const itemsHtml = data.items.map(item =>
+    emailComponents.orderItem(escapeHtml(item.name), item.quantity, formatPrice(item.price, currency), item.imageUrl)
   ).join('');
 
   const content = `
@@ -93,7 +96,7 @@ export function orderConfirmationEmail(data: OrderData): { subject: string; html
         <tr>
           <td>
             <p style="margin: 0; font-size: 14px; color: #6b7280;">${isFr ? 'Numéro de commande' : 'Order number'}</p>
-            <p style="margin: 4px 0 0 0; font-size: 20px; font-weight: bold; color: #1f2937;">${data.orderNumber}</p>
+            <p style="margin: 4px 0 0 0; font-size: 20px; font-weight: bold; color: #1f2937;">${escapeHtml(data.orderNumber)}</p>
           </td>
           <td align="right">
             <p style="margin: 0; font-size: 14px; color: #6b7280;">${isFr ? 'Date' : 'Date'}</p>
@@ -156,18 +159,18 @@ export function orderConfirmationEmail(data: OrderData): { subject: string; html
     <h2 style="font-size: 18px; margin-top: 32px;">${isFr ? 'Adresse de livraison' : 'Shipping address'}</h2>
     <div style="background-color: #f9fafb; border-radius: 8px; padding: 16px;">
       <p style="margin: 0; color: #1f2937;">
-        <strong>${data.shippingAddress.name}</strong><br>
-        ${data.shippingAddress.address1}<br>
-        ${data.shippingAddress.address2 ? data.shippingAddress.address2 + '<br>' : ''}
-        ${data.shippingAddress.city}, ${data.shippingAddress.state} ${data.shippingAddress.postalCode}<br>
-        ${data.shippingAddress.country}
+        <strong>${escapeHtml(data.shippingAddress.name)}</strong><br>
+        ${escapeHtml(data.shippingAddress.address1)}<br>
+        ${data.shippingAddress.address2 ? escapeHtml(data.shippingAddress.address2) + '<br>' : ''}
+        ${escapeHtml(data.shippingAddress.city)}, ${escapeHtml(data.shippingAddress.state)} ${escapeHtml(data.shippingAddress.postalCode)}<br>
+        ${escapeHtml(data.shippingAddress.country)}
       </p>
     </div>
 
     ${emailComponents.infoBox(`
       <p style="margin: 0; color: #166534;">
         <strong>📦 ${isFr ? 'Prochaine étape' : 'Next step'}:</strong><br>
-        ${isFr 
+        ${isFr
           ? 'Vous recevrez un email avec votre numéro de suivi dès que votre commande sera expédiée.'
           : 'You will receive an email with your tracking number as soon as your order ships.'}
       </p>
@@ -175,7 +178,7 @@ export function orderConfirmationEmail(data: OrderData): { subject: string; html
 
     ${emailComponents.button(
       isFr ? 'Voir ma commande' : 'View my order',
-      `https://biocyclepeptides.com/account/orders`
+      `${SHOP_URL}/account/orders`
     )}
 
     <p style="font-size: 14px; color: #6b7280; text-align: center;">
@@ -220,7 +223,7 @@ export function orderProcessingEmail(data: OrderData): { subject: string; html: 
 
     <div style="background-color: #eff6ff; border-radius: 8px; padding: 24px; margin: 24px 0; text-align: center;">
       <p style="margin: 0 0 8px 0; font-size: 14px; color: #3b82f6;">${isFr ? 'Numéro de commande' : 'Order number'}</p>
-      <p style="margin: 0; font-size: 24px; font-weight: bold; color: #1e40af;">${data.orderNumber}</p>
+      <p style="margin: 0; font-size: 24px; font-weight: bold; color: #1e40af;">${escapeHtml(data.orderNumber)}</p>
     </div>
 
     <h2 style="font-size: 18px;">${isFr ? 'Que se passe-t-il maintenant?' : 'What happens now?'}</h2>
@@ -284,7 +287,7 @@ export function orderProcessingEmail(data: OrderData): { subject: string; html: 
 
     ${emailComponents.button(
       isFr ? 'Voir le statut de ma commande' : 'View order status',
-      `https://biocyclepeptides.com/account/orders`
+      `${SHOP_URL}/account/orders`
     )}
   `;
 
@@ -321,25 +324,25 @@ export function orderShippedEmail(data: OrderData): { subject: string; html: str
         : `Hello ${escapeHtml(data.customerName)}, excellent news! Your order has been shipped and is on its way to you.`}
     </p>
 
-    ${data.trackingNumber && data.trackingUrl && data.carrier 
-      ? emailComponents.trackingInfo(data.carrier, data.trackingNumber, data.trackingUrl, isFr)
+    ${data.trackingNumber && data.trackingUrl && data.carrier
+      ? emailComponents.trackingInfo(escapeHtml(data.carrier), escapeHtml(data.trackingNumber), data.trackingUrl, isFr)
       : ''}
 
     ${data.estimatedDelivery ? `
-    <div style="text-align: center; margin: 24px 0;">
-      <p style="margin: 0; font-size: 14px; color: #6b7280;">${isFr ? 'Livraison estimée' : 'Estimated delivery'}</p>
-      <p style="margin: 8px 0 0 0; font-size: 20px; font-weight: bold; color: #1f2937;">${data.estimatedDelivery}</p>
+    <div style="background-color: #f0fdf4; border: 1px solid #86efac; border-radius: 12px; padding: 24px; margin: 24px 0; text-align: center;">
+      <p style="margin: 0 0 4px 0; font-size: 14px; color: #166534; text-transform: uppercase; letter-spacing: 1px;">${isFr ? 'Livraison estimee' : 'Estimated delivery'}</p>
+      <p style="margin: 0; font-size: 22px; font-weight: bold; color: #166534;">${formatDate(data.estimatedDelivery, data.locale)}</p>
     </div>
     ` : ''}
 
     <h2 style="font-size: 18px; margin-top: 32px;">${isFr ? 'Adresse de livraison' : 'Delivery address'}</h2>
     <div style="background-color: #f9fafb; border-radius: 8px; padding: 16px;">
       <p style="margin: 0; color: #1f2937;">
-        <strong>${data.shippingAddress.name}</strong><br>
-        ${data.shippingAddress.address1}<br>
-        ${data.shippingAddress.address2 ? data.shippingAddress.address2 + '<br>' : ''}
-        ${data.shippingAddress.city}, ${data.shippingAddress.state} ${data.shippingAddress.postalCode}<br>
-        ${data.shippingAddress.country}
+        <strong>${escapeHtml(data.shippingAddress.name)}</strong><br>
+        ${escapeHtml(data.shippingAddress.address1)}<br>
+        ${data.shippingAddress.address2 ? escapeHtml(data.shippingAddress.address2) + '<br>' : ''}
+        ${escapeHtml(data.shippingAddress.city)}, ${escapeHtml(data.shippingAddress.state)} ${escapeHtml(data.shippingAddress.postalCode)}<br>
+        ${escapeHtml(data.shippingAddress.country)}
       </p>
     </div>
 
@@ -354,9 +357,9 @@ export function orderShippedEmail(data: OrderData): { subject: string; html: str
 
     <h2 style="font-size: 18px; margin-top: 32px;">${isFr ? 'Liens de suivi par transporteur' : 'Carrier tracking links'}</h2>
     <div style="display: flex; flex-wrap: wrap; gap: 12px; justify-content: center;">
-      <a href="https://www.canadapost-postescanada.ca/track-reperage/fr#/search?searchFor=${data.trackingNumber || ''}" style="display: inline-block; padding: 10px 20px; background-color: #dc2626; color: white; text-decoration: none; border-radius: 6px; font-size: 14px;">📮 Postes Canada</a>
-      <a href="https://www.fedex.com/fedextrack/?trknbr=${data.trackingNumber || ''}" style="display: inline-block; padding: 10px 20px; background-color: #4f46e5; color: white; text-decoration: none; border-radius: 6px; font-size: 14px;">📦 FedEx</a>
-      <a href="https://www.ups.com/track?tracknum=${data.trackingNumber || ''}" style="display: inline-block; padding: 10px 20px; background-color: #78350f; color: white; text-decoration: none; border-radius: 6px; font-size: 14px;">📦 UPS</a>
+      <a href="https://www.canadapost-postescanada.ca/track-reperage/fr#/search?searchFor=${encodeURIComponent(data.trackingNumber || '')}" style="display: inline-block; padding: 10px 20px; background-color: #dc2626; color: white; text-decoration: none; border-radius: 6px; font-size: 14px;">📮 Postes Canada</a>
+      <a href="https://www.fedex.com/fedextrack/?trknbr=${encodeURIComponent(data.trackingNumber || '')}" style="display: inline-block; padding: 10px 20px; background-color: #4f46e5; color: white; text-decoration: none; border-radius: 6px; font-size: 14px;">📦 FedEx</a>
+      <a href="https://www.ups.com/track?tracknum=${encodeURIComponent(data.trackingNumber || '')}" style="display: inline-block; padding: 10px 20px; background-color: #78350f; color: white; text-decoration: none; border-radius: 6px; font-size: 14px;">📦 UPS</a>
     </div>
 
     <p style="font-size: 14px; color: #6b7280; text-align: center; margin-top: 32px;">
@@ -426,7 +429,7 @@ export function orderDeliveredEmail(data: OrderData): { subject: string; html: s
 
     ${emailComponents.button(
       isFr ? '⭐ Donner mon avis (+50 points)' : '⭐ Leave a review (+50 points)',
-      `https://biocyclepeptides.com/account/orders?review=${data.orderNumber}`
+      `${SHOP_URL}/account/orders?review=${data.orderNumber}`
     )}
 
     <div style="background-color: #fef3c7; border-radius: 8px; padding: 16px; margin: 24px 0; text-align: center;">
@@ -451,7 +454,7 @@ export function orderDeliveredEmail(data: OrderData): { subject: string; html: s
 
     ${emailComponents.button(
       isFr ? 'Commander à nouveau' : 'Reorder',
-      `https://biocyclepeptides.com/account/orders`
+      `${SHOP_URL}/account/orders`
     )}
 
     <p style="font-size: 14px; color: #6b7280; text-align: center; margin-top: 32px;">
@@ -496,25 +499,26 @@ export function satisfactionSurveyEmail(data: OrderData): { subject: string; htm
 
     <div style="text-align: center; margin: 32px 0;">
       <p style="margin: 0 0 16px 0; font-size: 18px; color: #1f2937;">
-        ${isFr ? 'Comment évaluez-vous votre expérience?' : 'How would you rate your experience?'}
+        ${isFr ? 'Comment evaluez-vous votre experience?' : 'How would you rate your experience?'}
       </p>
       <table role="presentation" cellspacing="0" cellpadding="0" align="center">
         <tr>
+          ${[1, 2, 3, 4, 5].map(star => `
           <td style="padding: 0 4px;">
-            <a href="https://biocyclepeptides.com/feedback?order=${data.orderNumber}&rating=1" style="text-decoration: none; font-size: 32px;">😞</a>
+            <a href="${SHOP_URL}/feedback?order=${data.orderNumber}&rating=${star}" style="text-decoration: none; font-size: 36px; color: #f59e0b;">
+              ${Array.from({ length: 5 }, (_, i) => i < star ? '&#9733;' : '&#9734;').join('')}
+            </a>
           </td>
-          <td style="padding: 0 4px;">
-            <a href="https://biocyclepeptides.com/feedback?order=${data.orderNumber}&rating=2" style="text-decoration: none; font-size: 32px;">😐</a>
+          `).join('')}
+        </tr>
+        <tr>
+          ${[1, 2, 3, 4, 5].map(star => `
+          <td style="padding: 4px 4px 0; text-align: center;">
+            <a href="${SHOP_URL}/feedback?order=${data.orderNumber}&rating=${star}" style="text-decoration: none; font-size: 24px;">
+              ${star === 1 ? '😞' : star === 2 ? '😐' : star === 3 ? '🙂' : star === 4 ? '😊' : '🤩'}
+            </a>
           </td>
-          <td style="padding: 0 4px;">
-            <a href="https://biocyclepeptides.com/feedback?order=${data.orderNumber}&rating=3" style="text-decoration: none; font-size: 32px;">🙂</a>
-          </td>
-          <td style="padding: 0 4px;">
-            <a href="https://biocyclepeptides.com/feedback?order=${data.orderNumber}&rating=4" style="text-decoration: none; font-size: 32px;">😊</a>
-          </td>
-          <td style="padding: 0 4px;">
-            <a href="https://biocyclepeptides.com/feedback?order=${data.orderNumber}&rating=5" style="text-decoration: none; font-size: 32px;">🤩</a>
-          </td>
+          `).join('')}
         </tr>
       </table>
     </div>
@@ -530,7 +534,7 @@ export function satisfactionSurveyEmail(data: OrderData): { subject: string; htm
 
     ${emailComponents.button(
       isFr ? 'Laisser un avis détaillé' : 'Leave a detailed review',
-      `https://biocyclepeptides.com/account/orders?review=${data.orderNumber}`
+      `${SHOP_URL}/account/orders?review=${data.orderNumber}`
     )}
 
     <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 32px 0;">
@@ -566,8 +570,9 @@ export function orderCancelledEmail(data: OrderData): { subject: string; html: s
     ? `❌ Commande #${data.orderNumber} annulée`
     : `❌ Order #${data.orderNumber} cancelled`;
 
+  // #26 Security fix: escape user-supplied item names to prevent HTML injection
   const itemsHtml = data.items.map(item =>
-    emailComponents.orderItem(item.name, item.quantity, formatPrice(item.price, currency), item.imageUrl)
+    emailComponents.orderItem(escapeHtml(item.name), item.quantity, formatPrice(item.price, currency), item.imageUrl)
   ).join('');
 
   const content = `
@@ -584,7 +589,7 @@ export function orderCancelledEmail(data: OrderData): { subject: string; html: s
     <div style="background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 16px; margin: 20px 0;">
       <p style="margin: 0; color: #991b1b;">
         <strong>${isFr ? 'Raison de l\'annulation' : 'Cancellation reason'}:</strong><br>
-        ${data.cancellationReason}
+        ${escapeHtml(data.cancellationReason)}
       </p>
     </div>
     ` : ''}
@@ -594,7 +599,7 @@ export function orderCancelledEmail(data: OrderData): { subject: string; html: s
         <tr>
           <td>
             <p style="margin: 0; font-size: 14px; color: #6b7280;">${isFr ? 'Numéro de commande' : 'Order number'}</p>
-            <p style="margin: 4px 0 0 0; font-size: 20px; font-weight: bold; color: #1f2937;">${data.orderNumber}</p>
+            <p style="margin: 4px 0 0 0; font-size: 20px; font-weight: bold; color: #1f2937;">${escapeHtml(data.orderNumber)}</p>
           </td>
           <td align="right">
             <p style="margin: 0; font-size: 14px; color: #6b7280;">${isFr ? 'Statut' : 'Status'}</p>
@@ -631,7 +636,7 @@ export function orderCancelledEmail(data: OrderData): { subject: string; html: s
 
     ${emailComponents.button(
       isFr ? 'Parcourir nos produits' : 'Browse our products',
-      'https://biocyclepeptides.com/shop'
+      `${SHOP_URL}/shop`
     )}
 
     <p style="font-size: 14px; color: #6b7280; text-align: center;">
@@ -741,7 +746,7 @@ export function orderRefundEmail(data: OrderData): { subject: string; html: stri
 
     ${emailComponents.button(
       isFr ? 'Voir mes commandes' : 'View my orders',
-      'https://biocyclepeptides.com/account/orders'
+      `${SHOP_URL}/account/orders`
     )}
 
     <p style="font-size: 14px; color: #6b7280; text-align: center;">

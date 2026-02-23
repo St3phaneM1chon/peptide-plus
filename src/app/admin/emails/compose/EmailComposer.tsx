@@ -70,6 +70,12 @@ export default function EmailComposer({ onClose, replyTo }: EmailComposerProps) 
     }
   };
 
+  // SECURITY WARNING (#23): Email drafts are stored in plaintext localStorage.
+  // localStorage is accessible to any JS running on the same origin (XSS risk).
+  // Mitigation: drafts auto-expire after 24h on load, and are cleared on logout.
+  // For higher-sensitivity environments, consider encrypting draft content or
+  // storing drafts server-side behind authentication.
+
   const handleSaveDraft = () => {
     const draft = {
       to, cc, subject,
@@ -85,6 +91,44 @@ export default function EmailComposer({ onClose, replyTo }: EmailComposerProps) 
     localStorage.setItem('emailDrafts', JSON.stringify(drafts));
     toast.success(t('admin.emailComposer.draftSaved'));
   };
+
+  /**
+   * Load drafts from localStorage with 24h expiry check.
+   * Drafts older than 24 hours are automatically purged to limit
+   * the window of exposure for plaintext email content in storage.
+   */
+  const loadDrafts = (): unknown[] => {
+    let drafts: unknown[];
+    try { drafts = JSON.parse(localStorage.getItem('emailDrafts') || '[]'); } catch { drafts = []; }
+    if (!Array.isArray(drafts)) return [];
+    const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
+    const now = Date.now();
+    const validDrafts = drafts.filter((d) => {
+      if (typeof d !== 'object' || d === null) return false;
+      const savedAt = (d as Record<string, unknown>).savedAt;
+      if (typeof savedAt !== 'string') return false;
+      return now - new Date(savedAt).getTime() < TWENTY_FOUR_HOURS;
+    });
+    // Persist the pruned list back to remove expired entries
+    if (validDrafts.length !== drafts.length) {
+      localStorage.setItem('emailDrafts', JSON.stringify(validDrafts));
+    }
+    return validDrafts;
+  };
+
+  /**
+   * Clear all email drafts from localStorage.
+   * Call this on logout to prevent drafts from persisting after session ends.
+   */
+  const clearDraftsOnLogout = () => {
+    localStorage.removeItem('emailDrafts');
+  };
+
+  // Expose clearDraftsOnLogout on window for the auth/logout flow to call.
+  // Usage in logout handler: window.__clearEmailDrafts?.()
+  if (typeof window !== 'undefined') {
+    (window as unknown as Record<string, unknown>).__clearEmailDrafts = clearDraftsOnLogout;
+  }
 
   return (
     <div className="flex flex-col h-full bg-white">

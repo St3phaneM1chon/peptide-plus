@@ -9,6 +9,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withTranslations, DB_SOURCE_LOCALE } from '@/lib/translation';
 import { defaultLocale } from '@/i18n/config';
+// FLAW-068 FIX: Use structured logger instead of console.error
+import { logger } from '@/lib/logger';
 
 // GET - List published webinars
 export async function GET(request: NextRequest) {
@@ -16,6 +18,8 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const locale = searchParams.get('locale') || defaultLocale;
 
+    // FLAW-068 FIX: Add take limit to prevent unbounded query
+    // TODO: FLAW-080 - Webinar.tags stored as single string; migrate to JSON array or WebinarTag model
     let webinars = await prisma.webinar.findMany({
       where: {
         isPublished: true,
@@ -23,6 +27,7 @@ export async function GET(request: NextRequest) {
       orderBy: {
         scheduledAt: 'desc',
       },
+      take: 50,
     });
 
     // Apply translations
@@ -34,7 +39,7 @@ export async function GET(request: NextRequest) {
       headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600' },
     });
   } catch (error) {
-    console.error('Error fetching webinars:', error);
+    logger.error('Error fetching webinars:', error);
     return NextResponse.json(
       { error: 'Error fetching webinars' },
       { status: 500 }

@@ -9,11 +9,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { logger } from '@/lib/logger';
 
 // PATCH /api/admin/inventory/[id] - Update stock for a product format
 export const PATCH = withAdminGuard(async (request, { session, params }) => {
   try {
-    const formatId = params!.id;
+    // BUG-038 FIX: Safe params access without non-null assertion
+    if (!params?.id) {
+      return NextResponse.json({ error: 'Missing format ID' }, { status: 400 });
+    }
+    const formatId = params.id;
     const body = await request.json();
     const { stockQuantity, reason } = body;
 
@@ -114,7 +119,7 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
       },
     });
   } catch (error) {
-    console.error('Admin inventory PATCH error:', error);
+    logger.error('Admin inventory PATCH error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

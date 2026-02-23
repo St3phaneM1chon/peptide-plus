@@ -1,3 +1,4 @@
+// TODO: BUG-063 - Decompose this 1000+ line monolith into sub-components (ProductHeader, ProductFormats, ProductQuantity, ProductActions, etc.)
 'use client';
 
 import { useState, useRef, useEffect, useMemo } from 'react';
@@ -122,9 +123,9 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
   // Track this product as recently viewed
   useEffect(() => {
     addViewed(product.slug);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [product.slug]);
+  }, [product.slug, addViewed]);
 
+  // TODO: BUG-089 - Show out-of-stock formats as greyed out with "Notify me" instead of hiding them
   // Filter out formats with stockQuantity <= 0
   const availableFormats = product.formats.filter(f => f.stockQuantity > 0);
 
@@ -135,8 +136,9 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
     type: 'vial_2ml',
     price: product.price,
     sku: '',
-    inStock: true,
-    stockQuantity: 99,
+    // BUG-042 FIX: Don't hardcode stockQuantity to 99; use 0 and inStock: false for safety
+    inStock: false,
+    stockQuantity: 0,
   };
 
   const [selectedFormat, setSelectedFormat] = useState<ProductFormat>(
@@ -222,9 +224,12 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
   };
 
   // Get the effective price per unit
+  // FIX: BUG-064 - Use JSON-serialized quantityDiscounts to avoid unstable object reference in deps
+  const quantityDiscountsKey = JSON.stringify(product.quantityDiscounts);
   const effectivePrice = useMemo(
     () => getEffectivePrice(selectedFormat.price, quantity),
-    [selectedFormat.price, quantity, product.quantityDiscounts]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [selectedFormat.price, quantity, quantityDiscountsKey]
   );
 
   const handleFormatSelect = (format: ProductFormat) => {
@@ -372,7 +377,7 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
                   {formatPrice(selectedFormat.price)}
                 </span>
               )}
-              {!effectivePrice && selectedFormat.comparePrice && selectedFormat.comparePrice > selectedFormat.price && (
+              {effectivePrice == null && selectedFormat.comparePrice && selectedFormat.comparePrice > selectedFormat.price && (
                 <span className="text-xl text-neutral-400 line-through">
                   {formatPrice(selectedFormat.comparePrice)}
                 </span>

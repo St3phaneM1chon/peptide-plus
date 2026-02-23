@@ -7,6 +7,7 @@ import {
   applyPaymentMatch,
   suggestUnmatchedPayments,
 } from '@/lib/accounting/payment-matching.service';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/accounting/payment-matching
@@ -45,7 +46,7 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Erreur inconnue';
-    console.error('[Payment Matching API] GET Error:', error);
+    logger.error('[Payment Matching API] GET Error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: `Erreur lors de la recherche de correspondances: ${message}` },
       { status: 500 },
@@ -84,7 +85,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
     return NextResponse.json(result, { status: 201 });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Erreur inconnue';
-    console.error('[Payment Matching API] POST Error:', error);
+    logger.error('[Payment Matching API] POST Error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: `Erreur lors de l'application du rapprochement: ${message}` },
       { status: 500 },

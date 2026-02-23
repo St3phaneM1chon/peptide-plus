@@ -8,7 +8,9 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
-import { stripHtml } from '@/lib/validation';
+import { logger } from '@/lib/logger';
+// F-066 FIX: Use @/lib/sanitize for consistency with admin reviews and other review routes
+import { stripHtml } from '@/lib/sanitize';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { validateCsrf } from '@/lib/csrf-middleware';
 import { apiSuccess, apiError, apiPaginated, validateContentType } from '@/lib/api-response';
@@ -46,7 +48,8 @@ export async function GET(request: NextRequest) {
         where,
         include: {
           user: {
-            select: { id: true, name: true, email: true },
+            // F-059 FIX: Include image so userAvatar is populated
+            select: { id: true, name: true, email: true, image: true },
           },
           images: {
             orderBy: { order: 'asc' },
@@ -63,7 +66,7 @@ export async function GET(request: NextRequest) {
       id: r.id,
       userId: r.userId,
       userName: r.user.name || r.user.email.split('@')[0],
-      userAvatar: undefined,
+      userAvatar: r.user.image || undefined,
       rating: r.rating,
       title: r.title || '',
       content: r.comment || '',
@@ -81,7 +84,7 @@ export async function GET(request: NextRequest) {
 
     return apiPaginated(reviews, page, limit, total, { request });
   } catch (error) {
-    console.error('Error fetching reviews:', error);
+    logger.error('Error fetching reviews', { error: error instanceof Error ? error.message : String(error) });
     return apiError('Failed to fetch reviews', ErrorCode.INTERNAL_ERROR, { request });
   }
 }
@@ -126,7 +129,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { productId, rating, title: rawTitle, comment: rawComment, imageUrls: rawImageUrls } = body;
+    // FIX: F-077 - Use validated data instead of raw body to ensure integer rating and validated fields
+    const { productId, rating, title: rawTitle, comment: rawComment, imageUrls: rawImageUrls } = validation.data;
 
     // SECURITY FIX (BE-SEC-03): Sanitize review text fields to prevent stored XSS
     // Strip ALL HTML tags from title and comment - reviews should be plain text only
@@ -261,13 +265,25 @@ export async function POST(request: NextRequest) {
       return { review, pointsAwarded: shouldAwardPoints ? pointsToAward : 0 };
     });
 
+    // F-042 FIX: Notify admin about new review (fire-and-forget)
+    const supportEmail = process.env.NEXT_PUBLIC_SUPPORT_EMAIL;
+    if (supportEmail) {
+      import('@/lib/email').then(({ sendEmail }) =>
+        sendEmail({
+          to: supportEmail,
+          subject: `New Review: ${rating}★ for product ${productId}`,
+          html: `<p>A new review has been submitted and needs approval.</p><p><strong>Rating:</strong> ${rating}/5</p><p><strong>Title:</strong> ${title}</p><p><a href="${process.env.NEXT_PUBLIC_APP_URL || ''}/admin/avis">Review in Admin</a></p>`,
+        }).catch((e: unknown) => logger.error('[review-notification]', { error: e instanceof Error ? e.message : String(e) }))
+      ).catch(() => {});
+    }
+
     return apiSuccess({
       message: 'Review submitted successfully. It will be published after admin approval.',
       reviewId: result.review.id,
       pointsAwarded: result.pointsAwarded,
     }, { status: 201, request });
   } catch (error) {
-    console.error('Error submitting review:', error);
+    logger.error('Error submitting review', { error: error instanceof Error ? error.message : String(error) });
     return apiError('Failed to submit review', ErrorCode.INTERNAL_ERROR, { request });
   }
 }

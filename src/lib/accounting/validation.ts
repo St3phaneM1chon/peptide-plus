@@ -1,6 +1,9 @@
 import { z } from 'zod';
 import { roundCurrency } from '@/lib/financial';
 
+// FIX: F090 - Note: API routes accept accountCode (string), services resolve to accountId (UUID).
+// Schemas use accountId for validated objects. Document convention clearly.
+
 // ---- Journal Entries ----
 export const journalLineSchema = z.object({
   accountId: z.string().min(1, 'accountId requis'),
@@ -63,14 +66,48 @@ export const createCustomerInvoiceSchema = z.object({
 });
 
 // ---- Expenses ----
+// FIX: F017 - Consolidated expense validation schema. This is the single source of truth
+// for expense creation validation. The route at /api/accounting/expenses/route.ts imports
+// this schema. The previous version here was outdated and inconsistent with the route.
 export const createExpenseSchema = z.object({
-  description: z.string().min(1, 'Description requise').max(500),
-  amount: z.number().positive('Montant doit être positif'),
-  category: z.string().min(1, 'Catégorie requise'),
   date: z.string().refine((d) => !isNaN(Date.parse(d)), 'Date invalide'),
-  vendor: z.string().optional(),
-  receiptUrl: z.string().url().optional(),
-  taxDeductible: z.boolean().default(false),
+  description: z.string().min(1, 'Description requise').max(500),
+  subtotal: z.number().min(0, 'Le sous-total doit être positif'),
+  taxGst: z.number().min(0).default(0),
+  taxQst: z.number().min(0).default(0),
+  taxOther: z.number().min(0).default(0),
+  total: z.number().min(0, 'Le total doit être positif'),
+  category: z.string().min(1, 'Catégorie requise'),
+  accountId: z.string().optional().nullable(),
+  vendorName: z.string().max(200).optional().nullable(),
+  vendorTaxNumber: z.string().max(50).optional().nullable(),
+  receiptUrl: z.string().optional().nullable(),
+  paymentMethod: z.string().optional().nullable(),
+  mileageKm: z.number().min(0).optional().nullable(),
+  mileageRate: z.number().min(0).optional().nullable(),
+  notes: z.string().max(2000).optional().nullable(),
+});
+
+export const updateExpenseSchema = z.object({
+  id: z.string().min(1, 'ID requis'),
+  date: z.string().refine((d) => !isNaN(Date.parse(d)), 'Date invalide').optional(),
+  description: z.string().min(1).max(500).optional(),
+  subtotal: z.number().min(0).optional(),
+  taxGst: z.number().min(0).optional(),
+  taxQst: z.number().min(0).optional(),
+  taxOther: z.number().min(0).optional(),
+  total: z.number().min(0).optional(),
+  category: z.string().min(1).optional(),
+  accountId: z.string().optional().nullable(),
+  vendorName: z.string().max(200).optional().nullable(),
+  vendorTaxNumber: z.string().max(50).optional().nullable(),
+  receiptUrl: z.string().optional().nullable(),
+  paymentMethod: z.string().optional().nullable(),
+  mileageKm: z.number().min(0).optional().nullable(),
+  mileageRate: z.number().min(0).optional().nullable(),
+  notes: z.string().max(2000).optional().nullable(),
+  status: z.enum(['DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED', 'REIMBURSED']).optional(),
+  rejectionReason: z.string().max(500).optional().nullable(),
 });
 
 // ---- Budgets ----

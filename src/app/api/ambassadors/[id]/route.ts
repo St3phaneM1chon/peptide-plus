@@ -1,8 +1,11 @@
 export const dynamic = 'force-dynamic';
 
+// TODO: F-084 - DELETE requires OWNER but PATCH allows EMPLOYEE (can soft-delete via INACTIVE); document or align permissions
+
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth-config';
+import { logger } from '@/lib/logger';
 
 const VALID_STATUSES = ['ACTIVE', 'SUSPENDED', 'PENDING', 'INACTIVE'];
 
@@ -35,7 +38,7 @@ export async function GET(
 
     return NextResponse.json({ ambassador });
   } catch (error) {
-    console.error('Get ambassador error:', error);
+    logger.error('Get ambassador error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
   }
 }
@@ -103,7 +106,7 @@ export async function PATCH(
 
     return NextResponse.json({ ambassador });
   } catch (error) {
-    console.error('Update ambassador error:', error);
+    logger.error('Update ambassador error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
   }
 }
@@ -143,7 +146,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Delete ambassador error:', error);
+    logger.error('Delete ambassador error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
   }
 }

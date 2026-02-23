@@ -11,6 +11,7 @@ import {
   getActiveAlerts,
   evaluateAlertRules,
 } from '@/lib/accounting';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/accounting/alerts
@@ -231,7 +232,7 @@ export const GET = withAdminGuard(async (request) => {
       nextTaxDeadline: taxDeadline,
     });
   } catch (error) {
-    console.error('Get alerts error:', error);
+    logger.error('Get alerts error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la r\u00e9cup\u00e9ration des alertes' },
       { status: 500 }
@@ -293,7 +294,7 @@ export const POST = withAdminGuard(async (request) => {
 
     return NextResponse.json({ success: true, alert }, { status: 201 });
   } catch (error) {
-    console.error('Create alert error:', error);
+    logger.error('Create alert error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la cr\u00e9ation de l\'alerte' },
       { status: 500 }
@@ -356,7 +357,7 @@ export const PATCH = withAdminGuard(async (request, { session }) => {
       },
     });
   } catch (error) {
-    console.error('Update alert error:', error);
+    logger.error('Update alert error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la mise \u00e0 jour de l\'alerte' },
       { status: 500 }

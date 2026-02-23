@@ -1,7 +1,8 @@
 import { Metadata } from 'next';
 import { prisma } from '@/lib/db';
 
-export const revalidate = 3600;
+// BUG-060 FIX: Reduce ISR cache to 5 min for fresher data
+export const revalidate = 300;
 
 export async function generateStaticParams() {
   try {

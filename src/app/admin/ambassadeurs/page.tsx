@@ -1,3 +1,11 @@
+// TODO: F-055 - INACTIVE ambassador status is accepted by PATCH API but has no UI filter/badge
+// TODO: F-056 - t('admin.ambassadors.joinedAt') has French fallback "Membre depuis"; ensure key exists in all 22 locales
+// TODO: F-057 - locale in listItems dependency array is redundant since formatCurrency already depends on it
+// TODO: F-072 - Ambassador detail pane does not show individual commission history
+// TODO: F-075 - "Process Payout" button has no loading state; risk of duplicate payouts on double-click
+// TODO: F-078 - Ambassador config modal loads hardcoded defaults instead of values from DB
+// TODO: F-097 - ambassadors.filter(a => a.status === 'PENDING') computed 3 times; extract to useMemo
+// TODO: F-098 - editCommissionRate stored as string but compared as float; store as number
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -44,6 +52,9 @@ interface Ambassador {
 
 // ── Helpers ───────────────────────────────────────────────────
 
+// TODO: F-050 - Ambassador tiers are hardcoded here instead of loaded from DB (SiteSettings.ambassadorTiers)
+// TODO: F-040 - Use formatCurrency for minSales display in the UI
+// TODO: F-046 - Add Zod validation schema for ambassador config JSON structure
 const tierConfig: Record<string, { color: string; commission: number; minSales: number }> = {
   BRONZE: { color: 'bg-amber-100 text-amber-800', commission: 5, minSales: 0 },
   SILVER: { color: 'bg-slate-200 text-slate-700', commission: 8, minSales: 1000 },
@@ -100,11 +111,8 @@ export default function AmbassadeursPage() {
 
   // ─── Data fetching ──────────────────────────────────────────
 
-  useEffect(() => {
-    fetchAmbassadors();
-  }, []);
-
-  const fetchAmbassadors = async () => {
+  // FIX: FLAW-055 - Wrap fetchAmbassadors in useCallback for stable reference
+  const fetchAmbassadors = useCallback(async () => {
     try {
       setLoading(true);
       const res = await fetchWithRetry('/api/ambassadors');
@@ -120,7 +128,12 @@ export default function AmbassadeursPage() {
     } finally {
       setLoading(false);
     }
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [t]);
+
+  useEffect(() => {
+    fetchAmbassadors();
+  }, [fetchAmbassadors]);
 
   const updateStatus = async (id: string, status: 'ACTIVE' | 'SUSPENDED') => {
     const previous = ambassadors.find(a => a.id === id);
@@ -222,6 +235,27 @@ export default function AmbassadeursPage() {
       toast.error(t('admin.ambassadors.commissionError'));
     } finally {
       setSavingCommission(false);
+    }
+  };
+
+  // FIX: FLAW-053 - Load existing ambassador config when opening the config modal
+  const openConfigModal = async () => {
+    setShowConfigModal(true);
+    try {
+      const res = await fetch('/api/admin/settings?key=ambassador_program_config');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.value) {
+          const config = typeof data.value === 'string' ? JSON.parse(data.value) : data.value;
+          setConfigDefaultCommission(String(config.defaultCommission ?? 5));
+          setConfigMinPayout(String(config.minPayoutAmount ?? 50));
+          setConfigCookieDays(String(config.cookieDays ?? 30));
+          setConfigAutoApprove(config.autoApprove ?? false);
+          setConfigProgramActive(config.programActive ?? true);
+        }
+      }
+    } catch {
+      // Use defaults if fetch fails
     }
   };
 
@@ -350,7 +384,7 @@ export default function AmbassadeursPage() {
                 <span className="ml-1.5 px-1.5 py-0.5 bg-amber-500 text-white rounded-full text-[10px] font-bold leading-none">{stats.pending}</span>
               )}
             </Button>
-            <Button variant="primary" icon={Settings} onClick={() => setShowConfigModal(true)}>
+            <Button variant="primary" icon={Settings} onClick={openConfigModal}>
               {t('admin.ambassadors.configureProgram')}
             </Button>
           </div>

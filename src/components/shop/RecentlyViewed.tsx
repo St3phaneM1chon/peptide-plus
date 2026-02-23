@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
@@ -31,10 +31,11 @@ export default function RecentlyViewed({ excludeSlug }: RecentlyViewedProps) {
   const [products, setProducts] = useState<RecentProduct[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // Filter out the excluded slug and limit to MAX_SHOWN
-  const slugsToFetch = recentSlugs
-    .filter((s) => s !== excludeSlug)
-    .slice(0, MAX_SHOWN);
+  // BUG-045 FIX: Stabilize slugsToFetch with useMemo to avoid unnecessary re-renders
+  const slugsToFetch = useMemo(
+    () => recentSlugs.filter((s) => s !== excludeSlug).slice(0, MAX_SHOWN),
+    [recentSlugs, excludeSlug]
+  );
 
   useEffect(() => {
     if (slugsToFetch.length === 0) {
@@ -52,6 +53,7 @@ export default function RecentlyViewed({ excludeSlug }: RecentlyViewedProps) {
         const res = await fetch(`/api/products?slugs=${encodeURIComponent(slugsParam)}&locale=${locale}`);
         if (!res.ok) throw new Error('Failed to fetch products');
         const data = await res.json();
+        // TODO: BUG-056 - Standardize API response shape and simplify these fallbacks
         const fetchedProducts = Array.isArray(data) ? data : data.products || data.data?.products || data.data || [];
 
         // Build a map for quick lookup
@@ -103,8 +105,7 @@ export default function RecentlyViewed({ excludeSlug }: RecentlyViewedProps) {
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [slugsToFetch.join(',')]);
+  }, [slugsToFetch, locale]);
 
   // Don't render anything if no products to show
   if (!loading && products.length === 0) {

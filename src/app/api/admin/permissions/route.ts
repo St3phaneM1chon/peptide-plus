@@ -1,5 +1,9 @@
 export const dynamic = 'force-dynamic';
 
+// TODO: FAILLE-088 - POST action uses if-cascade instead of switch/case on discriminated union type
+// TODO: FAILLE-096 - User search (tab=users) uses general admin rate limit; add stricter limit (10/min) to prevent enumeration
+// TODO: FAILLE-097 - include: { users: true } fetches all users per group; use _count: { select: { users: true } } instead
+
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { PERMISSION_MODULES, seedPermissions } from '@/lib/permissions';
@@ -13,6 +17,8 @@ export const GET = withAdminGuard(async (request, { session }) => {
   const tab = searchParams.get('tab') || 'permissions';
 
   if (tab === 'permissions') {
+    // TODO: FAILLE-076 - Auto-seeding permissions in a GET handler violates REST (GET should be read-only).
+    //       Move seeding to a dedicated POST endpoint or CLI script. Keep this as temporary bootstrap only.
     const count = await prisma.permission.count();
     if (count === 0) {
       await seedPermissions();
@@ -30,7 +36,7 @@ export const GET = withAdminGuard(async (request, { session }) => {
     const groups = await prisma.permissionGroup.findMany({
       include: {
         permissions: { include: { permission: true } },
-        users: true,
+        // FAILLE-097 FIX: Remove unused users include, keep only _count for performance
         _count: { select: { users: true } },
       },
       orderBy: { name: 'asc' },
@@ -54,7 +60,8 @@ export const GET = withAdminGuard(async (request, { session }) => {
   }
 
   if (tab === 'users') {
-    const search = searchParams.get('search') || '';
+    // FAILLE-057 FIX: Limit search param length to prevent oversized queries
+    const search = (searchParams.get('search') || '').substring(0, 100);
     const users = await prisma.user.findMany({
       where: search
         ? {
@@ -96,6 +103,13 @@ export const POST = withAdminGuard(async (request, { session }) => {
   const { action } = parsed.data;
 
   if (action === 'seed') {
+    // SECURITY (FAILLE-010): Only OWNER can seed permissions
+    if (session.user.role !== 'OWNER') {
+      return NextResponse.json(
+        { error: 'Seul le propriétaire peut initialiser les permissions' },
+        { status: 403 }
+      );
+    }
     await seedPermissions();
     logAdminAction({
       adminUserId: session.user.id,
@@ -104,7 +118,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       targetId: 'all',
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch(() => {});
+    }).catch((e) => logger.error('[audit]', { error: e instanceof Error ? e.message : String(e) }));
     return NextResponse.json({ success: true });
   }
 
@@ -139,7 +153,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       newValue: { name, description, color, permissionCodes },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch(() => {});
+    }).catch((e) => logger.error('[audit]', { error: e instanceof Error ? e.message : String(e) }));
 
     return NextResponse.json({ group });
   }
@@ -147,25 +161,28 @@ export const POST = withAdminGuard(async (request, { session }) => {
   if (action === 'updateGroup') {
     const { groupId, name, description, color, permissionCodes } = validatedData as Extract<typeof validatedData, { action: 'updateGroup' }>;
 
-    await prisma.permissionGroup.update({
-      where: { id: groupId },
-      data: { name, description, color },
+    // AMELIORATION A-014: Wrap updateGroup in a transaction for atomicity
+    await prisma.$transaction(async (tx) => {
+      await tx.permissionGroup.update({
+        where: { id: groupId },
+        data: { name, description, color },
+      });
+
+      await tx.permissionGroupPermission.deleteMany({ where: { groupId } });
+
+      if (permissionCodes?.length) {
+        const permissions = await tx.permission.findMany({
+          where: { code: { in: permissionCodes } },
+        });
+
+        await tx.permissionGroupPermission.createMany({
+          data: permissions.map((p: { id: string }) => ({
+            groupId,
+            permissionId: p.id,
+          })),
+        });
+      }
     });
-
-    await prisma.permissionGroupPermission.deleteMany({ where: { groupId } });
-
-    if (permissionCodes?.length) {
-      const permissions = await prisma.permission.findMany({
-        where: { code: { in: permissionCodes } },
-      });
-
-      await prisma.permissionGroupPermission.createMany({
-        data: permissions.map((p: { id: string }) => ({
-          groupId,
-          permissionId: p.id,
-        })),
-      });
-    }
 
     logAdminAction({
       adminUserId: session.user.id,
@@ -175,13 +192,23 @@ export const POST = withAdminGuard(async (request, { session }) => {
       newValue: { name, description, color, permissionCodes },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch(() => {});
+    }).catch((e) => logger.error('[audit]', { error: e instanceof Error ? e.message : String(e) }));
 
     return NextResponse.json({ success: true });
   }
 
   if (action === 'deleteGroup') {
     const { groupId } = validatedData as Extract<typeof validatedData, { action: 'deleteGroup' }>;
+
+    // FAILLE-025 FIX: Check for assigned users before deleting group
+    const assignedUsersCount = await prisma.userPermissionGroup.count({ where: { groupId } });
+    if (assignedUsersCount > 0) {
+      return NextResponse.json(
+        { error: `Cannot delete group: ${assignedUsersCount} user(s) still assigned. Remove them first.` },
+        { status: 409 }
+      );
+    }
+
     await prisma.permissionGroup.delete({ where: { id: groupId } });
     logAdminAction({
       adminUserId: session.user.id,
@@ -190,7 +217,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       targetId: groupId,
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch(() => {});
+    }).catch((e) => logger.error('[audit]', { error: e instanceof Error ? e.message : String(e) }));
     return NextResponse.json({ success: true });
   }
 
@@ -211,7 +238,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       newValue: { userId, groupId },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch(() => {});
+    }).catch((e) => logger.error('[audit]', { error: e instanceof Error ? e.message : String(e) }));
 
     return NextResponse.json({ success: true });
   }
@@ -231,13 +258,19 @@ export const POST = withAdminGuard(async (request, { session }) => {
       previousValue: { userId, groupId },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch(() => {});
+    }).catch((e) => logger.error('[audit]', { error: e instanceof Error ? e.message : String(e) }));
 
     return NextResponse.json({ success: true });
   }
 
   if (action === 'setOverride') {
     const { userId, permissionCode, granted, reason, expiresAt } = validatedData as Extract<typeof validatedData, { action: 'setOverride' }>;
+
+    // FAILLE-024 FIX: Verify user exists before creating override
+    const targetUser = await prisma.user.findUnique({ where: { id: userId }, select: { id: true } });
+    if (!targetUser) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
 
     await prisma.userPermissionOverride.upsert({
       where: { userId_permissionCode: { userId, permissionCode } },
@@ -265,7 +298,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       newValue: { userId, permissionCode, granted, reason, expiresAt },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch(() => {});
+    }).catch((e) => logger.error('[audit]', { error: e instanceof Error ? e.message : String(e) }));
 
     return NextResponse.json({ success: true });
   }
@@ -285,7 +318,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       previousValue: { userId, permissionCode },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch(() => {});
+    }).catch((e) => logger.error('[audit]', { error: e instanceof Error ? e.message : String(e) }));
 
     return NextResponse.json({ success: true });
   }
@@ -306,7 +339,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       newValue: { defaultOwner, defaultEmployee, defaultClient, defaultCustomer },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch(() => {});
+    }).catch((e) => logger.error('[audit]', { error: e instanceof Error ? e.message : String(e) }));
 
     return NextResponse.json({ success: true });
   }

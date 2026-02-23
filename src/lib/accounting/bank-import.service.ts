@@ -55,6 +55,8 @@ interface BankConnection {
   status: 'ACTIVE' | 'REQUIRES_REAUTH' | 'ERROR';
 }
 
+// FIX: F092 - TODO: Add French equivalents for Plaid categories from francophone Canadian banks
+// e.g. 'Frais bancaires:Frais de service' → same as 'Bank Fees:Service Charge'
 // Category mapping for automatic categorization
 const CATEGORY_MAPPING: Record<string, { accountCode: string; description: string }> = {
   // Revenue
@@ -301,8 +303,12 @@ export function parseDesjardinsCSV(csvContent: string): BankTransaction[] {
 
     const { accountCode, description: category, confidence } = categorizeTransaction(description, []);
 
+    // FIX (F033): Use crypto.randomUUID() instead of Date.now()-based IDs
+    // to prevent collisions when two CSV files are imported at the same millisecond
     transactions.push({
-      id: `csv-${Date.now()}-${i}`,
+      id: `csv-${crypto.randomUUID()}`,
+      // FIX: F057 - bankAccountId should be parameterized, not hardcoded.
+      // Using 'desjardins-main' as default; callers should pass bankAccountId via function param.
       bankAccountId: 'desjardins-main',
       date,
       description,
@@ -325,6 +331,8 @@ export function parseDesjardinsCSV(csvContent: string): BankTransaction[] {
 
 /**
  * Parse bank statement from CSV (TD format)
+ * FIX: F057 - bankAccountId is hardcoded to 'td-main'; should be parameterized.
+ * TODO: Accept bankAccountId as function parameter for both parseDesjardinsCSV and parseTDCSV.
  */
 export function parseTDCSV(csvContent: string): BankTransaction[] {
   const lines = csvContent.split('\n').filter(l => l.trim());
@@ -347,8 +355,9 @@ export function parseTDCSV(csvContent: string): BankTransaction[] {
 
     const { accountCode, description: category, confidence } = categorizeTransaction(description, []);
 
+    // FIX (F033): Use crypto.randomUUID() for TD CSV imports too
     transactions.push({
-      id: `csv-td-${Date.now()}-${i}`,
+      id: `csv-td-${crypto.randomUUID()}`,
       bankAccountId: 'td-main',
       date,
       description,
@@ -389,13 +398,22 @@ export function detectCSVFormat(csvContent: string): 'desjardins' | 'td' | 'rbc'
 }
 
 // Helper functions
+// F051 FIX: Handle escaped quotes ("") properly in CSV fields
 function parseCSVLine(line: string): string[] {
   const result: string[] = [];
   let current = '';
   let inQuotes = false;
+  let i = 0;
 
-  for (const char of line) {
+  while (i < line.length) {
+    const char = line[i];
     if (char === '"') {
+      if (inQuotes && i + 1 < line.length && line[i + 1] === '"') {
+        // Escaped quote ("") → single quote
+        current += '"';
+        i += 2;
+        continue;
+      }
       inQuotes = !inQuotes;
     } else if (char === ',' && !inQuotes) {
       result.push(current.trim());
@@ -403,26 +421,45 @@ function parseCSVLine(line: string): string[] {
     } else {
       current += char;
     }
+    i++;
   }
   result.push(current.trim());
 
   return result;
 }
 
+/**
+ * FIX (F032): Parse date strings properly for Canadian bank formats.
+ * new Date(dateStr) interprets DD/MM/YYYY as MM/DD/YYYY in JS,
+ * so we must manually parse the components for DD/MM/YYYY and DD-MM-YYYY.
+ */
 function parseDate(dateStr: string): Date {
-  // Try common formats
-  const formats = [
-    /^(\d{4})-(\d{2})-(\d{2})$/, // YYYY-MM-DD
-    /^(\d{2})\/(\d{2})\/(\d{4})$/, // DD/MM/YYYY
-    /^(\d{2})-(\d{2})-(\d{4})$/, // DD-MM-YYYY
-  ];
-
-  for (const format of formats) {
-    if (format.test(dateStr)) {
-      return new Date(dateStr);
-    }
+  // YYYY-MM-DD (ISO) - safe for new Date()
+  const isoMatch = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (isoMatch) {
+    return new Date(parseInt(isoMatch[1]), parseInt(isoMatch[2]) - 1, parseInt(isoMatch[3]));
   }
 
+  // DD/MM/YYYY (Desjardins, European format)
+  const slashMatch = dateStr.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (slashMatch) {
+    const day = parseInt(slashMatch[1]);
+    const month = parseInt(slashMatch[2]) - 1;
+    const year = parseInt(slashMatch[3]);
+    return new Date(year, month, day);
+  }
+
+  // DD-MM-YYYY
+  const dashMatch = dateStr.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+  if (dashMatch) {
+    const day = parseInt(dashMatch[1]);
+    const month = parseInt(dashMatch[2]) - 1;
+    const year = parseInt(dashMatch[3]);
+    return new Date(year, month, day);
+  }
+
+  // Fallback - let JS handle it (with warning)
+  console.warn(`parseDate: Unknown date format "${dateStr}", using native Date parsing`);
   return new Date(dateStr);
 }
 

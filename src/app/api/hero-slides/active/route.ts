@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { logger } from '@/lib/logger';
 
 // GET - Slides actives (public, cache 60s)
 export async function GET() {
@@ -18,6 +19,7 @@ export async function GET() {
           { startDate: { lte: now }, endDate: { gte: now } },
         ],
       },
+      // FIX: FLAW-091 - TODO: Accept locale param and filter translations: where: { locale: { in: [locale, 'en'] } }
       include: { translations: true },
       orderBy: { sortOrder: 'asc' },
     });
@@ -31,7 +33,7 @@ export async function GET() {
       }
     );
   } catch (error) {
-    console.error('Error fetching active hero slides:', error);
+    logger.error('Error fetching active hero slides', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
   }
 }

@@ -17,6 +17,7 @@ import { createPaymentIntent, getOrCreateStripeCustomer } from '@/lib/stripe';
 import { calculateTaxAmount } from '@/lib/tax-rates';
 import { validateCsrf } from '@/lib/csrf-middleware';
 import { add, toCents } from '@/lib/decimal-calculator';
+import { logger } from '@/lib/logger';
 
 const expressCheckoutSchema = z.object({
   productId: z.string().min(1, 'Product ID is required'),
@@ -156,7 +157,7 @@ export async function POST(request: NextRequest) {
       amount: total,
     });
   } catch (error) {
-    console.error('Error creating express checkout intent:', error);
+    logger.error('Error creating express checkout intent', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Error creating express checkout payment' },
       { status: 500 }

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Search } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
 import { IntegrationCard } from '@/components/admin/IntegrationCard';
+import { toast } from 'sonner';
 
 export default function MediaGoogleAdsPage() {
   const { t } = useI18n();
@@ -32,13 +33,19 @@ export default function MediaGoogleAdsPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  // FIX: F20 - Add try/catch with toast.error() for network/save failures
   const handleSave = async () => {
-    const res = await fetch('/api/admin/integrations/google', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ enabled, customerId, merchantId }),
-    });
-    if (!res.ok) throw new Error('Save failed');
+    try {
+      const res = await fetch('/api/admin/integrations/google', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled, customerId, merchantId }),
+      });
+      if (!res.ok) throw new Error('Save failed');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Save failed');
+      throw err;
+    }
   };
 
   const handleTest = async () => {
@@ -59,7 +66,8 @@ export default function MediaGoogleAdsPage() {
     <div className="p-6 max-w-3xl">
       <IntegrationCard
         title={t('admin.media.googleTitle')}
-        description="Connect Google Ads API + Merchant Center for Shopping campaigns, conversion tracking, and product feed sync. Free API access."
+        // FIX: F35 - Use i18n for description instead of hardcoded English
+        description={t('admin.media.googleDescription') || 'Connect Google Ads API + Merchant Center for Shopping campaigns, conversion tracking, and product feed sync.'}
         icon={<Search className="w-6 h-6" />}
         color="from-blue-600 to-green-500"
         enabled={enabled}

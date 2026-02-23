@@ -22,6 +22,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { logger } from '@/lib/logger';
 
 // ---------------------------------------------------------------------------
 // CSV Parser (simple, handles quoted fields)
@@ -182,7 +183,8 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
       const oldQuantity = format.stockQuantity;
       const adjustment = quantity - oldQuantity;
 
-      // Get current WAC
+      // FIX: BUG-065 - Properly accumulate WAC across import rows
+      // Get current WAC from last transaction
       const lastTx = await prisma.inventoryTransaction.findFirst({
         where: {
           productId: format.productId,
@@ -191,10 +193,20 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
         orderBy: { createdAt: 'desc' },
         select: { runningWAC: true },
       });
-      const wac = lastTx ? Number(lastTx.runningWAC) : 0;
+      const previousWAC = lastTx ? Number(lastTx.runningWAC) : 0;
 
       const cost = costStr ? parseFloat(costStr) : undefined;
-      const unitCost = cost !== undefined && !isNaN(cost) ? cost : wac;
+      const unitCost = cost !== undefined && !isNaN(cost) ? cost : previousWAC;
+
+      // Calculate new WAC: weighted average of existing stock at old WAC + incoming at new unit cost
+      let newWAC = unitCost;
+      if (adjustment > 0 && oldQuantity > 0 && previousWAC > 0) {
+        // Only recalculate WAC for positive adjustments (receiving stock)
+        newWAC = ((oldQuantity * previousWAC) + (adjustment * unitCost)) / quantity;
+      } else if (adjustment <= 0) {
+        // For reductions, WAC stays the same
+        newWAC = previousWAC || unitCost;
+      }
 
       // Update stock
       await prisma.productFormat.update({
@@ -215,7 +227,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
             type: 'ADJUSTMENT',
             quantity: adjustment,
             unitCost: unitCost,
-            runningWAC: unitCost,
+            runningWAC: newWAC, // FIX: BUG-065 - Use properly calculated WAC
             reason: 'CSV Import',
             createdBy: session.user.id,
           },
@@ -243,7 +255,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
       errors: errors.length > 0 ? errors.slice(0, 20) : undefined, // Cap at 20 error messages
     });
   } catch (error) {
-    console.error('Admin inventory import POST error:', error);
+    logger.error('Admin inventory import POST error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error during import' },
       { status: 500 },

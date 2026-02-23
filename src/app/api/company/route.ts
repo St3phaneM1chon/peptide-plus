@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { UserRole } from '@/types';
+import { logger } from '@/lib/logger';
 
 // GET - Liste des compagnies (Employee/Owner) ou ma compagnie (Client)
 export async function GET(request: NextRequest) {
@@ -67,8 +68,9 @@ export async function GET(request: NextRequest) {
 
     // Liste de toutes les compagnies
     const search = searchParams.get('search');
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '20');
+    // FIX: Bound pagination params to prevent abuse
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
+    const limit = Math.min(Math.max(1, parseInt(searchParams.get('limit') || '20', 10)), 100);
     const skip = (page - 1) * limit;
 
     const where: Record<string, unknown> = {};
@@ -101,7 +103,7 @@ export async function GET(request: NextRequest) {
       totalPages: Math.ceil(total / limit),
     });
   } catch (error) {
-    console.error('Error fetching companies:', error);
+    logger.error('Error fetching companies', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la récupération des compagnies' },
       { status: 500 }
@@ -217,7 +219,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ company }, { status: 201 });
   } catch (error) {
-    console.error('Error creating company:', error);
+    logger.error('Error creating company', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la création de la compagnie' },
       { status: 500 }
@@ -312,7 +314,7 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json({ company: updatedCompany });
   } catch (error) {
-    console.error('Error updating company:', error);
+    logger.error('Error updating company', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la mise à jour de la compagnie' },
       { status: 500 }

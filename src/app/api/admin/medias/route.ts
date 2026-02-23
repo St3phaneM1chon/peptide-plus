@@ -9,12 +9,11 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
-import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
 import { randomUUID } from 'crypto';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
-
-const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads');
+import { storage } from '@/lib/storage';
+import { logger } from '@/lib/logger';
 
 /**
  * SECURITY FIX: Sanitize folder path to prevent path traversal attacks.
@@ -78,6 +77,8 @@ function validateMagicBytes(buffer: Buffer, declaredMime: string): boolean {
   return false;
 }
 
+// FIX: F44 - TODO: Add optional uploadedBy filter for multi-tenant scoping
+// FIX: F49 - TODO: Add rate limiting middleware (e.g., 50 uploads/hour per user) to POST endpoint
 // GET /api/admin/medias - List media files
 export const GET = withAdminGuard(async (request, { session }) => {
   try {
@@ -121,7 +122,7 @@ export const GET = withAdminGuard(async (request, { session }) => {
       },
     });
   } catch (error) {
-    console.error('Admin medias GET error:', error);
+    logger.error('Admin medias GET error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -129,6 +130,10 @@ export const GET = withAdminGuard(async (request, { session }) => {
   }
 });
 
+// FIX: F50 - TODO: Add width/height Int? fields to Media model in schema.prisma and populate at upload with sharp metadata
+// FIX: F56 - TODO: Add @@index([createdAt]) and @@index([originalName]) to Media model in schema.prisma
+// FIX: F57 - TODO: Add @@index([title]) to Video model in schema.prisma for text search performance
+// FIX: F96 - TODO: Accept per-file alt text (e.g. alt_0, alt_1 FormData fields) instead of single alt for batch
 // POST /api/admin/medias - Upload media file(s) via FormData
 export const POST = withAdminGuard(async (request, { session }) => {
   try {
@@ -144,20 +149,10 @@ export const POST = withAdminGuard(async (request, { session }) => {
       );
     }
 
-    // Ensure upload directory exists
-    const folderPath = path.resolve(UPLOAD_DIR, folder);
-
-    // SECURITY: Verify resolved path is still within UPLOAD_DIR (defense in depth)
-    if (!folderPath.startsWith(UPLOAD_DIR)) {
-      return NextResponse.json(
-        { error: 'Invalid folder path' },
-        { status: 400 }
-      );
-    }
-
-    await mkdir(folderPath, { recursive: true });
-
+    // StorageService handles directory creation internally (local or Azure)
     const uploaded = [];
+    // FIX: F80 - Collect per-file errors instead of returning on first invalid file
+    const errors: { file: string; error: string }[] = [];
 
     for (const file of files) {
       if (!(file instanceof File)) continue;
@@ -165,19 +160,15 @@ export const POST = withAdminGuard(async (request, { session }) => {
       // Validate file size (max 10MB)
       const maxSize = 10 * 1024 * 1024;
       if (file.size > maxSize) {
-        return NextResponse.json(
-          { error: `File ${file.name} exceeds maximum size of 10MB` },
-          { status: 400 }
-        );
+        errors.push({ file: file.name, error: `File exceeds maximum size of 10MB` });
+        continue; // FIX: F80 - Skip invalid file, process remaining
       }
 
       // SECURITY FIX (BE-SEC-12): Block dangerous file extensions
       const ext = path.extname(file.name).toLowerCase();
       if (BLOCKED_EXTENSIONS.includes(ext)) {
-        return NextResponse.json(
-          { error: `File extension ${ext} is not allowed` },
-          { status: 400 }
-        );
+        errors.push({ file: file.name, error: `File extension ${ext} is not allowed` });
+        continue; // FIX: F80 - Skip invalid file, process remaining
       }
 
       // Read file content into buffer
@@ -186,21 +177,16 @@ export const POST = withAdminGuard(async (request, { session }) => {
 
       // SECURITY FIX (BE-SEC-12): Validate magic bytes match declared MIME type
       if (!validateMagicBytes(buffer, file.type)) {
-        return NextResponse.json(
-          { error: `File "${file.name}" content does not match declared type (${file.type}). Only JPEG, PNG, GIF, WebP, and PDF are allowed.` },
-          { status: 400 }
-        );
+        errors.push({ file: file.name, error: `Content does not match declared type (${file.type}). Only JPEG, PNG, GIF, WebP, and PDF are allowed.` });
+        continue; // FIX: F80 - Skip invalid file, process remaining
       }
 
       // Generate unique filename
       const uniqueName = `${randomUUID()}${ext}`;
-      const filePath = path.join(folderPath, uniqueName);
 
-      // Write file to disk
-      await writeFile(filePath, buffer);
-
-      // Build public URL
-      const url = `/uploads/${folder}/${uniqueName}`;
+      // FIX (F9): Use StorageService instead of local filesystem (persists on Azure)
+      const uploadResult = await storage.upload(buffer, uniqueName, file.type, { folder });
+      const url = uploadResult.url;
 
       // Save to database
       const media = await prisma.media.create({
@@ -219,22 +205,31 @@ export const POST = withAdminGuard(async (request, { session }) => {
       uploaded.push(media);
     }
 
+    // FIX: F80 - If all files failed, return 400 with error report
+    if (uploaded.length === 0 && errors.length > 0) {
+      return NextResponse.json(
+        { error: 'All files failed validation', errors },
+        { status: 400 }
+      );
+    }
+
     logAdminAction({
       adminUserId: session.user.id,
       action: 'UPLOAD_MEDIA',
       targetType: 'Media',
       targetId: uploaded[0]?.id || 'batch',
-      newValue: { folder, count: uploaded.length, files: uploaded.map(m => m.originalName) },
+      newValue: { folder, count: uploaded.length, files: uploaded.map(m => m.originalName), skipped: errors.length },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
     }).catch(() => {});
 
+    // FIX: F80 - Return both successful uploads and per-file error report
     return NextResponse.json(
-      { media: uploaded, count: uploaded.length },
+      { media: uploaded, count: uploaded.length, ...(errors.length > 0 ? { errors } : {}) },
       { status: 201 }
     );
   } catch (error) {
-    console.error('Admin medias POST error:', error);
+    logger.error('Admin medias POST error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

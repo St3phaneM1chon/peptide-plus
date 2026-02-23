@@ -5,17 +5,60 @@ export const dynamic = 'force-dynamic';
  * POST /api/chat/upload - Upload an image for chat messages
  */
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { storage } from '@/lib/storage';
+import { auth } from '@/lib/auth-config';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { db } from '@/lib/db';
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
+    // SECURITY FIX (F-002 + F-007): Auth + rate limiting for chat upload
+    const session = await auth();
+
+    // Rate limit: 5 uploads per minute per IP
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip')
+      || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/chat/upload', session?.user?.id);
+    if (!rl.success) {
+      const res = NextResponse.json(
+        { error: rl.error!.message },
+        { status: 429 }
+      );
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+
     const formData = await request.formData();
     const file = formData.get('image') as File | null;
     const conversationId = formData.get('conversationId') as string | null;
+    const visitorId = formData.get('visitorId') as string | null;
 
     if (!file || !conversationId) {
       return NextResponse.json({ error: 'File and conversationId required' }, { status: 400 });
+    }
+
+    // Require either an authenticated session or a valid visitorId
+    if (!session?.user && !visitorId) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+
+    // Verify conversation access
+    const conversation = await db.chatConversation.findUnique({
+      where: { id: conversationId },
+      select: { id: true, visitorId: true, userId: true },
+    });
+    if (!conversation) {
+      return NextResponse.json({ error: 'Conversation not found' }, { status: 404 });
+    }
+    const isAdmin = session?.user && ['OWNER', 'EMPLOYEE'].includes(session.user.role as string);
+    if (!isAdmin) {
+      const matchesVisitor = visitorId && conversation.visitorId === visitorId;
+      const matchesUser = session?.user?.id && conversation.userId === session.user.id;
+      if (!matchesVisitor && !matchesUser) {
+        return NextResponse.json({ error: 'Unauthorized access to conversation' }, { status: 403 });
+      }
     }
 
     // Validate file type
@@ -42,7 +85,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid image file' }, { status: 400 });
     }
 
-    const ext = file.name.split('.').pop() || 'jpg';
+    // FIX F-028: Derive extension from magic bytes, not client-supplied filename
+    const ext = isJpeg ? 'jpg' : isPng ? 'png' : isWebp ? 'webp' : 'gif';
     const filename = `chat-${conversationId}-${Date.now()}.${ext}`;
     const result = await storage.upload(buffer, filename, file.type, { folder: 'chat' });
 

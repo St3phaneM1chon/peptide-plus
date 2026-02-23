@@ -10,11 +10,8 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
-
-function safeParseJson<T>(str: string | null | undefined, fallback: T): T {
-  if (!str) return fallback;
-  try { return JSON.parse(str); } catch { return fallback; }
-}
+import { safeParseJson } from '@/lib/email/utils';
+import { logger } from '@/lib/logger';
 
 export const GET = withAdminGuard(async (request, { session: _session }) => {
   try {
@@ -36,11 +33,21 @@ export const GET = withAdminGuard(async (request, { session: _session }) => {
       prisma.emailCampaign.count({ where }),
     ]);
 
+    const STATUS_COLORS: Record<string, string> = {
+      DRAFT: 'gray',
+      SCHEDULED: 'blue',
+      SENDING: 'yellow',
+      SENT: 'green',
+      FAILED: 'red',
+      PAUSED: 'orange',
+    };
+
     const campaignsWithStats = campaigns.map(c => ({
       ...c,
       stats: safeParseJson(c.stats, { sent: 0, delivered: 0, opened: 0, clicked: 0, bounced: 0, revenue: 0 }),
       segmentQuery: safeParseJson(c.segmentQuery, null),
       abTestConfig: safeParseJson(c.abTestConfig, null),
+      statusColor: STATUS_COLORS[c.status] || 'gray',
     }));
 
     return NextResponse.json({
@@ -48,7 +55,7 @@ export const GET = withAdminGuard(async (request, { session: _session }) => {
       pagination: { total, page, limit, totalPages: Math.ceil(total / limit) },
     });
   } catch (error) {
-    console.error('[Campaigns] Error:', error);
+    logger.error('[Campaigns] Error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 });
@@ -56,8 +63,52 @@ export const GET = withAdminGuard(async (request, { session: _session }) => {
 export const POST = withAdminGuard(async (request, { session }) => {
   try {
     const body = await request.json();
-    const { name, subject, htmlContent, textContent, segmentQuery, scheduledAt, abTestConfig } = body;
+    const { name, subject, htmlContent, textContent, segmentQuery, scheduledAt, abTestConfig, sourceId } = body;
 
+    // Clone mode: duplicate an existing campaign
+    if (sourceId) {
+      const source = await prisma.emailCampaign.findUnique({ where: { id: sourceId } });
+      if (!source) {
+        return NextResponse.json({ error: 'Source campaign not found' }, { status: 404 });
+      }
+
+      const cloned = await prisma.emailCampaign.create({
+        data: {
+          name: name || `${source.name} (Copy)`,
+          subject: source.subject,
+          htmlContent: source.htmlContent,
+          textContent: source.textContent,
+          segmentQuery: source.segmentQuery,
+          status: 'DRAFT',
+          scheduledAt: null,
+          sentAt: null,
+          stats: null,
+          abTestConfig: source.abTestConfig,
+          createdBy: session.user.id,
+        },
+      });
+
+      logAdminAction({
+        adminUserId: session.user.id,
+        action: 'CLONE_EMAIL_CAMPAIGN',
+        targetType: 'EmailCampaign',
+        targetId: cloned.id,
+        newValue: { name: cloned.name, sourceId, status: 'DRAFT' },
+        ipAddress: getClientIpFromRequest(request),
+        userAgent: request.headers.get('user-agent') || undefined,
+      }).catch(() => {});
+
+      return NextResponse.json({
+        campaign: {
+          ...cloned,
+          stats: safeParseJson(cloned.stats, { sent: 0, delivered: 0, opened: 0, clicked: 0, bounced: 0, revenue: 0 }),
+          segmentQuery: safeParseJson(cloned.segmentQuery, null),
+          abTestConfig: safeParseJson(cloned.abTestConfig, null),
+        },
+      });
+    }
+
+    // Normal creation mode
     if (!name || !subject || !htmlContent) {
       return NextResponse.json({ error: 'Name, subject, and htmlContent are required' }, { status: 400 });
     }
@@ -88,7 +139,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
 
     return NextResponse.json({ campaign });
   } catch (error) {
-    console.error('[Campaigns] Create error:', error);
+    logger.error('[Campaigns] Create error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 });

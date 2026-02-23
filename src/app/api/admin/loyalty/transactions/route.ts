@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { logger } from '@/lib/logger';
 
 // GET /api/admin/loyalty/transactions - List loyalty transactions
 export const GET = withAdminGuard(async (request: NextRequest, { session }) => {
@@ -139,7 +140,7 @@ export const GET = withAdminGuard(async (request: NextRequest, { session }) => {
       },
     });
   } catch (error) {
-    console.error('Admin loyalty transactions GET error:', error);
+    logger.error('Admin loyalty transactions GET error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

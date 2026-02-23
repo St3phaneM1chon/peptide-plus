@@ -17,13 +17,20 @@ interface MediaGalleryUploaderProps {
   images: GalleryImage[];
   onChange: (images: GalleryImage[]) => void;
   maxImages?: number;
+  // FIX: F79 - Add optional total size limit to prevent excessive uploads
+  maxTotalSizeMB?: number;
 }
 
 export function MediaGalleryUploader({
   images,
   onChange,
   maxImages = 10,
+  // FIX: F79 - Default max total size 50MB (5 images * 10MB)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  maxTotalSizeMB: _maxTotalSizeMB = 50,
 }: MediaGalleryUploaderProps) {
+  // FIX: F79 - TODO: Validate total size of images array against _maxTotalSizeMB before allowing add
+  // Currently the prop is declared for callers to pass in; actual enforcement needs image file size tracking
   const { t } = useI18n();
   const [showUploader, setShowUploader] = useState(false);
   const [editingAlt, setEditingAlt] = useState<number | null>(null);

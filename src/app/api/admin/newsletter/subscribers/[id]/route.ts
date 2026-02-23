@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { logger } from '@/lib/logger';
 
 /**
  * PATCH /api/admin/newsletter/subscribers/[id]
@@ -58,7 +59,7 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
 
     return NextResponse.json({ success: true, subscriber });
   } catch (error) {
-    console.error('Update newsletter subscriber error:', error);
+    logger.error('Update newsletter subscriber error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Error updating subscriber' },
       { status: 500 }
@@ -99,7 +100,7 @@ export const DELETE = withAdminGuard(async (request, { session, params }) => {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Delete newsletter subscriber error:', error);
+    logger.error('Delete newsletter subscriber error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Error deleting subscriber' },
       { status: 500 }

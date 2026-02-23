@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef, Suspense } from 'react';
+import { useEffect, useState, useRef, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Breadcrumbs from '@/components/ui/Breadcrumbs';
@@ -15,7 +15,7 @@ function CheckoutSuccessContent() {
   const [orderId, setOrderId] = useState<string>('');
   const hasCleared = useRef(false);
 
-  useEffect(() => {
+  const fetchOrderInfo = useCallback(async () => {
     // Clear cart only once, silently (no toast)
     if (!hasCleared.current) {
       hasCleared.current = true;
@@ -25,25 +25,27 @@ function CheckoutSuccessContent() {
     // Fetch real order info from session_id
     const sessionId = searchParams.get('session_id');
     if (sessionId) {
-      fetch(`/api/orders/by-session?session_id=${sessionId}`)
-        .then((res) => res.ok ? res.json() : null)
-        .then((data) => {
-          if (data?.orderNumber) {
-            setOrderNumber(data.orderNumber);
-            setOrderId(data.orderId || '');
-          } else {
-            // Fallback: use session_id suffix
-            setOrderNumber(`PP-${new Date().getFullYear()}-${sessionId.slice(-6).toUpperCase()}`);
-          }
-        })
-        .catch(() => {
+      try {
+        const res = await fetch(`/api/orders/by-session?session_id=${sessionId}`);
+        const data = res.ok ? await res.json() : null;
+        if (data?.orderNumber) {
+          setOrderNumber(data.orderNumber);
+          setOrderId(data.orderId || '');
+        } else {
+          // Fallback: use session_id suffix
           setOrderNumber(`PP-${new Date().getFullYear()}-${sessionId.slice(-6).toUpperCase()}`);
-        });
+        }
+      } catch {
+        setOrderNumber(`PP-${new Date().getFullYear()}-${sessionId.slice(-6).toUpperCase()}`);
+      }
     } else {
       setOrderNumber(`PP-${new Date().getFullYear()}-${Date.now().toString(36).toUpperCase().slice(-6)}`);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams]);
+  }, [searchParams, clearCart]);
+
+  useEffect(() => {
+    fetchOrderInfo();
+  }, [fetchOrderInfo]);
 
   return (
     <div className="min-h-screen bg-gray-50">

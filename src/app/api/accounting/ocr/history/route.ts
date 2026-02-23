@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/accounting/ocr/history
@@ -33,7 +34,7 @@ export const GET = withAdminGuard(async () => {
 
     return NextResponse.json({ scans });
   } catch (error) {
-    console.error('OCR history error:', error);
+    logger.error('OCR history error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la récupération de l\'historique OCR' },
       { status: 500 }

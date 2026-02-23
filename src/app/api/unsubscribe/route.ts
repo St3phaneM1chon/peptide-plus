@@ -220,7 +220,8 @@ async function processUnsubscribe(
   // 4. Log the unsubscribe action
   await prisma.auditLog.create({
     data: {
-      id: `unsub-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      // AMELIORATION: Use crypto.randomUUID instead of Math.random for audit IDs
+      id: `unsub-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`,
       userId: userId || null,
       action: 'UNSUBSCRIBE',
       entityType: 'Email',
@@ -235,9 +236,15 @@ async function processUnsubscribe(
   });
 }
 
+// Security #14: Improved email masking - show only first + last char before @
 function maskEmail(email: string): string {
   const [local, domain] = email.split('@');
   if (!local || !domain) return '***@***';
-  const masked = local.slice(0, 2) + '***';
+  if (local.length <= 2) {
+    return `${local[0]}${'*'.repeat(Math.max(local.length - 1, 1))}@${domain}`;
+  }
+  const firstChar = local[0];
+  const lastChar = local[local.length - 1];
+  const masked = firstChar + '*'.repeat(local.length - 2) + lastChar;
   return `${masked}@${domain}`;
 }

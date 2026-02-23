@@ -10,7 +10,9 @@
 
 import { prisma } from '@/lib/db';
 
-export type UserRole = 'PUBLIC' | 'CUSTOMER' | 'CLIENT' | 'EMPLOYEE' | 'OWNER';
+// FAILLE-050 FIX: Use UserRole from @/types instead of duplicating the type definition
+// Re-export the type so existing consumers don't break
+export type { UserRole } from '@/types';
 
 // All permission codes, organized by module
 export const PERMISSIONS = {
@@ -154,8 +156,9 @@ export const PERMISSION_MODULES: Record<string, { label: string; permissions: Pe
   },
 };
 
-// Default permissions per role
-const ROLE_DEFAULTS: Record<UserRole, PermissionCode[]> = {
+// Default permissions per role (exported for single source of truth - FAILLE-009)
+// SYNC NOTE: EMPLOYEE defaults MUST match EMPLOYEE_DEFAULT_PERMISSIONS in permission-constants.ts
+export const ROLE_DEFAULTS: Record<UserRole, PermissionCode[]> = {
   OWNER: Object.keys(PERMISSIONS) as PermissionCode[], // All permissions
   EMPLOYEE: [
     'products.view', 'products.create', 'products.edit', 'products.manage_formats', 'products.manage_images', 'products.manage_inventory',
@@ -247,6 +250,28 @@ export async function resolveUserPermissions(userId: string, role: UserRole): Pr
  */
 const permissionCache = new Map<string, { permissions: Set<PermissionCode>; timestamp: number }>();
 const CACHE_TTL = 60_000; // 1 minute
+const CACHE_MAX_SIZE = 1_000; // FAILLE-008: Max entries in permission cache
+
+/**
+ * FAILLE-008: Enforce cache size limit with TTL-based eviction.
+ * Evicts expired entries first, then oldest if still over limit.
+ */
+function enforcePermissionCacheLimit(): void {
+  if (permissionCache.size <= CACHE_MAX_SIZE) return;
+
+  const now = Date.now();
+  // First pass: evict expired entries
+  for (const [key, entry] of permissionCache.entries()) {
+    if (now - entry.timestamp >= CACHE_TTL) {
+      permissionCache.delete(key);
+    }
+  }
+
+  // If still over limit, clear all and let it rebuild
+  if (permissionCache.size > CACHE_MAX_SIZE) {
+    permissionCache.clear();
+  }
+}
 
 export async function hasPermission(userId: string, role: UserRole, permission: PermissionCode): Promise<boolean> {
   if (role === 'OWNER') return true;
@@ -259,7 +284,13 @@ export async function hasPermission(userId: string, role: UserRole, permission: 
     return cached.permissions.has(permission);
   }
 
+  // Evict expired entry if present
+  if (cached) {
+    permissionCache.delete(cacheKey);
+  }
+
   const permissions = await resolveUserPermissions(userId, role);
+  enforcePermissionCacheLimit();
   permissionCache.set(cacheKey, { permissions, timestamp: now });
 
   return permissions.has(permission);
@@ -307,22 +338,25 @@ export function clearPermissionCache(userId?: string) {
 export async function seedPermissions(): Promise<void> {
   const allCodes = Object.keys(PERMISSIONS) as PermissionCode[];
 
-  for (const code of allCodes) {
-    const name = PERMISSIONS[code];
-    const permissionModule = code.split('.')[0];
+  // FAILLE-039 FIX: Wrap all upserts in a transaction for atomicity
+  await prisma.$transaction(async (tx) => {
+    for (const code of allCodes) {
+      const name = PERMISSIONS[code];
+      const permissionModule = code.split('.')[0];
 
-    await prisma.permission.upsert({
-      where: { code },
-      update: { name, module: permissionModule },
-      create: {
-        code,
-        name,
-        module: permissionModule,
-        defaultOwner: true,
-        defaultEmployee: ROLE_DEFAULTS.EMPLOYEE.includes(code),
-        defaultClient: ROLE_DEFAULTS.CLIENT.includes(code),
-        defaultCustomer: ROLE_DEFAULTS.CUSTOMER.includes(code),
-      },
-    });
-  }
+      await tx.permission.upsert({
+        where: { code },
+        update: { name, module: permissionModule },
+        create: {
+          code,
+          name,
+          module: permissionModule,
+          defaultOwner: true,
+          defaultEmployee: ROLE_DEFAULTS.EMPLOYEE.includes(code),
+          defaultClient: ROLE_DEFAULTS.CLIENT.includes(code),
+          defaultCustomer: ROLE_DEFAULTS.CUSTOMER.includes(code),
+        },
+      });
+    }
+  });
 }

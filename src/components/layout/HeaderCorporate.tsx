@@ -455,7 +455,7 @@ function MobileMenu({
     >
       <div style={{ padding: '16px 24px', borderBottom: '1px solid var(--gray-200)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span style={{ fontSize: '20px', fontWeight: 700 }}>Menu</span>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+        <button onClick={onClose} aria-label="Close menu" style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
           <CloseIcon />
         </button>
       </div>

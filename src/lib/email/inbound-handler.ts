@@ -11,6 +11,22 @@
  */
 
 import { prisma } from '@/lib/db';
+import { logger } from '@/lib/logger';
+import DOMPurify from 'isomorphic-dompurify';
+
+// ---------------------------------------------------------------------------
+// Security constants
+// ---------------------------------------------------------------------------
+
+/** Maximum attachment size in bytes (25 MB) */
+const MAX_ATTACHMENT_SIZE = 25_000_000;
+
+/** DOMPurify config: preserve email formatting, strip scripts/event handlers */
+const DOMPURIFY_EMAIL_CONFIG = {
+  ALLOWED_TAGS: ['p', 'br', 'div', 'span', 'a', 'img', 'table', 'tr', 'td', 'th', 'thead', 'tbody', 'ul', 'ol', 'li', 'b', 'i', 'u', 'strong', 'em', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'pre', 'code', 'hr', 'font', 'center'],
+  ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'style', 'class', 'id', 'width', 'height', 'align', 'valign', 'bgcolor', 'color', 'size', 'face', 'border', 'cellpadding', 'cellspacing', 'colspan', 'rowspan', 'target', 'rel'],
+  ALLOW_DATA_ATTR: false,
+};
 
 // ---------------------------------------------------------------------------
 // Types
@@ -52,7 +68,8 @@ interface TimelineItem {
 // Spam threshold: emails above this score are flagged as spam
 // ---------------------------------------------------------------------------
 
-const SPAM_THRESHOLD = 5.0;
+let SPAM_THRESHOLD = parseFloat(process.env.SPAM_THRESHOLD || '5.0');
+if (isNaN(SPAM_THRESHOLD)) SPAM_THRESHOLD = 5.0;
 
 // ---------------------------------------------------------------------------
 // Main processing function
@@ -94,7 +111,7 @@ export async function processInboundEmail(
   }
 
   // 2. Try to find an existing conversation by threading headers
-  const existingConversationId = await findConversationByThreading(
+  const existingConversationId = await findConversationByThread(
     payload.inReplyTo,
     payload.references,
   );
@@ -126,6 +143,11 @@ export async function processInboundEmail(
       conversationId = conversation.id;
     }
 
+    // Sanitize HTML body to prevent stored XSS (Faille MEDIUM)
+    const sanitizedHtml = payload.html
+      ? DOMPurify.sanitize(payload.html, DOMPURIFY_EMAIL_CONFIG)
+      : null;
+
     // Create the InboundEmail record
     const inboundEmail = await tx.inboundEmail.create({
       data: {
@@ -134,7 +156,7 @@ export async function processInboundEmail(
         fromName: payload.fromName ?? null,
         to: payload.to,
         subject: payload.subject || '(No Subject)',
-        htmlBody: payload.html ?? null,
+        htmlBody: sanitizedHtml,
         textBody: payload.text ?? null,
         messageId: payload.messageId,
         inReplyTo: payload.inReplyTo ?? null,
@@ -145,51 +167,36 @@ export async function processInboundEmail(
       },
     });
 
-    // Store attachments if any
+    // Store attachments if any (filter out oversized attachments - Faille MEDIUM)
     if (payload.attachments && payload.attachments.length > 0) {
-      await tx.inboundEmailAttachment.createMany({
-        data: payload.attachments.map((att) => ({
-          inboundEmailId: inboundEmail.id,
-          filename: att.filename,
-          mimeType: att.mimeType,
-          size: att.size,
-          // Placeholder storageUrl -- real implementation would upload to blob storage
-          // and return the URL. For now we store a reference path.
-          storageUrl: `attachments/${inboundEmail.id}/${att.filename}`,
-        })),
+      const validAttachments = payload.attachments.filter((att) => {
+        if (att.size > MAX_ATTACHMENT_SIZE) {
+          console.warn(
+            `[InboundHandler] Skipping oversized attachment "${att.filename}" (${att.size} bytes, max ${MAX_ATTACHMENT_SIZE})`,
+          );
+          return false;
+        }
+        return true;
       });
+
+      if (validAttachments.length > 0) {
+        await tx.inboundEmailAttachment.createMany({
+          data: validAttachments.map((att) => ({
+            inboundEmailId: inboundEmail.id,
+            filename: att.filename,
+            mimeType: att.mimeType,
+            size: att.size,
+            // Placeholder storageUrl -- real implementation would upload to blob storage
+            // and return the URL. For now we store a reference path.
+            storageUrl: `attachments/${inboundEmail.id}/${att.filename}`,
+          })),
+        });
+      }
     }
 
     // If conversation already existed and was RESOLVED or CLOSED, reopen it
     if (!isNewConversation && conversationId) {
-      const conversation = await tx.emailConversation.findUnique({
-        where: { id: conversationId },
-      });
-
-      if (
-        conversation &&
-        (conversation.status === 'RESOLVED' || conversation.status === 'CLOSED')
-      ) {
-        await tx.emailConversation.update({
-          where: { id: conversationId },
-          data: { status: 'OPEN' },
-        });
-
-        // Log the automatic reopen
-        await tx.conversationActivity.create({
-          data: {
-            conversationId,
-            actorId: null,
-            action: 'status_changed',
-            details: JSON.stringify({
-              from: conversation.status,
-              to: 'OPEN',
-              reason: 'New inbound email received',
-              triggeredBy: 'system',
-            }),
-          },
-        });
-      }
+      await reopenConversationIfNeeded(conversationId, tx as unknown as typeof prisma);
     }
 
     // Update conversation's lastMessageAt and optionally link customer
@@ -260,8 +267,11 @@ export async function processInboundEmail(
  *  2. If not found, parse References header (space-separated message IDs)
  *     and check each one against InboundEmail.messageId
  *  3. Return the conversationId of the first match, or null
+ *
+ * Exported so it can be reused by other modules that need to resolve
+ * email threading without running the full inbound processing pipeline.
  */
-async function findConversationByThreading(
+export async function findConversationByThread(
   inReplyTo?: string,
   references?: string,
 ): Promise<string | null> {
@@ -296,6 +306,57 @@ async function findConversationByThreading(
   }
 
   return null;
+}
+
+// ---------------------------------------------------------------------------
+// Conversation reopen
+// ---------------------------------------------------------------------------
+
+/**
+ * Reopen a conversation if it is currently RESOLVED or CLOSED.
+ * Returns true if the conversation was reopened, false if it was already open
+ * or in another non-terminal state.
+ *
+ * Accepts an optional Prisma transaction client so it can be used inside
+ * existing transactions. Falls back to the default prisma client.
+ */
+export async function reopenConversationIfNeeded(
+  conversationId: string,
+  txClient?: typeof prisma,
+): Promise<boolean> {
+  const db = txClient ?? prisma;
+  const conversation = await db.emailConversation.findUnique({
+    where: { id: conversationId },
+  });
+
+  if (
+    !conversation ||
+    (conversation.status !== 'RESOLVED' && conversation.status !== 'CLOSED')
+  ) {
+    return false;
+  }
+
+  await db.emailConversation.update({
+    where: { id: conversationId },
+    data: { status: 'OPEN' },
+  });
+
+  // Log the automatic reopen
+  await db.conversationActivity.create({
+    data: {
+      conversationId,
+      actorId: null,
+      action: 'status_changed',
+      details: JSON.stringify({
+        from: conversation.status,
+        to: 'OPEN',
+        reason: 'New inbound email received',
+        triggeredBy: 'system',
+      }),
+    },
+  });
+
+  return true;
 }
 
 // ---------------------------------------------------------------------------

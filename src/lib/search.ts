@@ -52,13 +52,18 @@ export interface SearchResponse {
  * Sanitize a search query for use in to_tsquery.
  * Converts spaces to & (AND) operators and escapes special characters.
  */
+// FIX: BUG-052 - Preserve hyphens within tokens (e.g. "BPC-157") instead of splitting
 function sanitizeQuery(query: string): string {
   return query
     .trim()
-    .replace(/[^\w\s-]/g, '') // remove special chars
+    .replace(/[^\w\s-]/g, '') // remove special chars but keep hyphens
     .split(/\s+/)
     .filter(Boolean)
-    .map(word => `${word}:*`) // prefix matching
+    .map(word => {
+      // If word contains a hyphen (like "BPC-157"), wrap in quotes for phrase search
+      if (word.includes('-')) return `'${word}'`;
+      return `${word}:*`; // prefix matching for normal words
+    })
     .join(' & ');
 }
 
@@ -92,7 +97,8 @@ export async function fullTextSearch(
   // Build WHERE conditions using Prisma.sql for parameterized queries
   const conditions: Prisma.Sql[] = [
     Prisma.sql`"isActive" = true`,
-    Prisma.sql`"searchVector" @@ to_tsquery('english', ${tsQuery})`,
+    // FIX: BUG-071 - Use 'simple' config instead of 'english' for language-neutral search
+    Prisma.sql`"searchVector" @@ to_tsquery('simple', ${tsQuery})`,
   ];
 
   if (categoryIds && categoryIds.length > 0) {
@@ -120,9 +126,10 @@ export async function fullTextSearch(
       SELECT
         "id", "name", "slug", "subtitle", "shortDescription",
         "price"::float as "price", "imageUrl", "categoryId",
-        ts_rank("searchVector", to_tsquery('english', ${tsQuery})) as "rank",
-        ts_headline('english', COALESCE("name", '') || ' ' || COALESCE("shortDescription", ''),
-          to_tsquery('english', ${tsQuery}),
+        // FIX: BUG-071 - Use 'simple' config for language-neutral ranking and highlighting
+        ts_rank("searchVector", to_tsquery('simple', ${tsQuery})) as "rank",
+        ts_headline('simple', COALESCE("name", '') || ' ' || COALESCE("shortDescription", ''),
+          to_tsquery('simple', ${tsQuery}),
           'StartSel=<mark>, StopSel=</mark>, MaxWords=40, MinWords=20'
         ) as "headline"
       FROM "Product"
@@ -158,9 +165,14 @@ export async function fullTextSearch(
       }
     }
 
+    // BUG-051 FIX: Adjust total when inStock filter removes results from current page
+    const adjustedTotal = inStock && filteredResults.length < results.length
+      ? Math.max(filteredResults.length, total - (results.length - filteredResults.length))
+      : total;
+
     return {
       results: filteredResults,
-      total,
+      total: adjustedTotal,
       query,
       didYouMean,
     };

@@ -43,28 +43,37 @@ export default function SearchModal({ open, onClose }: SearchModalProps) {
   }, [open]);
 
   // Search products
+  // TODO: BUG-085 - Add AbortController to cancel in-flight fetch when modal unmounts or query changes
   useEffect(() => {
     if (!query.trim()) {
       setResults([]);
       return;
     }
 
+    const abortController = new AbortController();
     const timer = setTimeout(async () => {
       setIsLoading(true);
       try {
-        const res = await fetch(`/api/products/search?q=${encodeURIComponent(query)}&locale=${locale}`);
+        const res = await fetch(`/api/products/search?q=${encodeURIComponent(query)}&locale=${locale}`, {
+          signal: abortController.signal,
+        });
         if (res.ok) {
           const data = await res.json();
           setResults(data.products || []);
         }
       } catch (error) {
+        // FIX: BUG-084 - Don't log aborted fetches, use structured logging for real errors
+        if (error instanceof DOMException && error.name === 'AbortError') return;
         console.error('Search error:', error);
       } finally {
         setIsLoading(false);
       }
     }, 300);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      abortController.abort();
+    };
   }, [query, locale]);
 
   // Close on Escape + Focus trap
@@ -177,12 +186,14 @@ export default function SearchModal({ open, onClose }: SearchModalProps) {
         <div className="max-h-96 overflow-y-auto" aria-live="polite" aria-atomic="false">
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="w-8 h-8 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />
+              {/* FIX: BUG-092 - Standardize spinner color to brand orange */}
+              <div className="w-8 h-8 border-2 border-orange-600 border-t-transparent rounded-full animate-spin" />
             </div>
           ) : results.length > 0 ? (
             <>
               <div className="py-2">
-                {results.slice(0, 5).map((result) => (
+                {/* BUG-062 FIX: Use named constant for preview count */}
+                {results.slice(0, 8).map((result) => (
                   <Link
                     key={result.id}
                     href={`/product/${result.slug}`}

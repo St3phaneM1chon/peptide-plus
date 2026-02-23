@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { randomUUID } from 'crypto';
+import { logger } from '@/lib/logger';
 
 /**
  * POST /api/accounting/ocr/save
@@ -51,7 +52,7 @@ export const POST = withAdminGuard(async (request) => {
 
     return NextResponse.json({ success: true, invoice });
   } catch (error) {
-    console.error('OCR save error:', error);
+    logger.error('OCR save error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la sauvegarde de la facture' },
       { status: 500 }

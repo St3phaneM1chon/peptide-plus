@@ -3239,7 +3239,9 @@
       "teamsSetupDesc": "Connect Microsoft Teams for internal order notifications and team alerts. Supports Incoming Webhooks and Graph API.",
       "teamsWebhookLabel": "Incoming Webhook URL",
       "teamsWebhookHint": "Create an Incoming Webhook in your Teams channel and paste the URL here",
-      "teamsOptionalGraphApi": "Optional - only needed for Graph API integration (advanced)"
+      "teamsOptionalGraphApi": "Optional - only needed for Graph API integration (advanced)",
+      "webhookUrl": "Webhook URL",
+      "docs": "التوثيق"
     },
     "emailComposer": {
       "send": "Send",
@@ -5265,6 +5267,10 @@
     "subtitle": "تواصل مع باحثين آخرين، شارك التجارب، اطرح الأسئلة، وتعلم من المجتمع.",
     "support": "الدعم",
     "tagsPlaceholder": "مثال: bpc-157, إعادة التكوين, مبتدئ",
+    "timeDaysAgo": "قبل {count} يوم",
+    "timeHoursAgo": "قبل {count} ساعة",
+    "timeJustNow": "الآن",
+    "timeYesterday": "أمس",
     "title": "منتدى المجتمع",
     "tryDifferent": "جرب بحثًا مختلفًا أو ابدأ نقاشًا جديدًا!"
   },
@@ -6739,7 +6745,10 @@
       "removeFromWishlist": "Remove from wishlist"
     },
     "youSave": "أنت توفر",
-    "researchDisclaimer": "FOR RESEARCH USE ONLY: This product is intended for laboratory and research purposes only. Not for human or animal consumption. By purchasing, you confirm this product will be used exclusively for legitimate research."
+    "researchDisclaimer": "FOR RESEARCH USE ONLY: This product is intended for laboratory and research purposes only. Not for human or animal consumption. By purchasing, you confirm this product will be used exclusively for legitimate research.",
+    "resetFilters": "Reset filters",
+    "retry": "Retry",
+    "productCount": "product"
   },
   "subscriptions": {
     "availableProducts": "متاحة للاشتراك",

@@ -10,6 +10,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { logger } from '@/lib/logger';
 import { cacheGetOrSet, CacheTTL } from '@/lib/cache';
 
 interface RouteParams {
@@ -100,7 +101,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       }
     );
   } catch (error) {
-    console.error('Related products error:', error);
+    logger.error('Related products error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to fetch related products' },
       { status: 500 }

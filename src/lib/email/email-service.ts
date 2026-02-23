@@ -3,6 +3,8 @@
  * Compatible avec Resend, SendGrid, ou SMTP
  */
 
+import { logger } from '@/lib/logger';
+
 // Types pour les emails
 export interface EmailRecipient {
   email: string;
@@ -46,16 +48,144 @@ const DEFAULT_FROM: EmailRecipient = {
 
 const SUPPORT_EMAIL = process.env.NEXT_PUBLIC_SUPPORT_EMAIL || 'support@biocyclepeptides.com';
 
+// ---------------------------------------------------------------------------
+// Plain text fallback: strip HTML to generate text/plain MIME part
+// ---------------------------------------------------------------------------
+
+/**
+ * Convert HTML to plain text for multipart/alternative fallback.
+ * Ensures deliverability for clients that don't render HTML.
+ */
+function htmlToText(html: string): string {
+  let text = html;
+  // Line breaks
+  text = text.replace(/<br\s*\/?>/gi, '\n');
+  // Paragraphs
+  text = text.replace(/<\/p>/gi, '\n\n');
+  text = text.replace(/<p[^>]*>/gi, '');
+  // Links: <a href="url">text</a> → text (url)
+  text = text.replace(/<a[^>]+href="([^"]*)"[^>]*>([\s\S]*?)<\/a>/gi, '$2 ($1)');
+  // List items
+  text = text.replace(/<li[^>]*>/gi, '- ');
+  text = text.replace(/<\/li>/gi, '\n');
+  // Strip all remaining tags
+  text = text.replace(/<[^>]+>/g, '');
+  // Decode common HTML entities
+  text = text
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#x27;/g, "'")
+    .replace(/&#39;/g, "'")
+    .replace(/&nbsp;/g, ' ');
+  // Collapse excessive whitespace (but preserve intentional newlines)
+  text = text.replace(/[ \t]+/g, ' ');
+  text = text.replace(/\n{3,}/g, '\n\n');
+  return text.trim();
+}
+
+// ---------------------------------------------------------------------------
+// Rate limiting (Faille #3): prevent email flooding
+// ---------------------------------------------------------------------------
+const EMAIL_RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+const EMAIL_RATE_LIMIT_MAX = 20; // Max emails per address per hour
+const emailRateMap = new Map<string, { count: number; resetAt: number }>();
+let rateLimitCheckCount = 0;
+
+function checkEmailRateLimit(toEmail: string): boolean {
+  const key = toEmail.toLowerCase().trim();
+  const now = Date.now();
+  const entry = emailRateMap.get(key);
+  if (!entry || entry.resetAt < now) {
+    emailRateMap.set(key, { count: 1, resetAt: now + EMAIL_RATE_LIMIT_WINDOW_MS });
+  } else if (entry.count >= EMAIL_RATE_LIMIT_MAX) {
+    return false;
+  } else {
+    entry.count++;
+  }
+
+  // Auto-cleanup: every 1000 calls, scan and evict expired entries
+  rateLimitCheckCount++;
+  if (rateLimitCheckCount % 1000 === 0) {
+    evictRateLimitCache();
+  }
+
+  return true;
+}
+
+// Evict expired entries from the rate limit cache
+function evictRateLimitCache(): void {
+  const now = Date.now();
+  for (const [key, entry] of emailRateMap) {
+    if (entry.resetAt < now) emailRateMap.delete(key);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// replyTo validation (Faille MEDIUM): reject invalid or CRLF-injected replyTo
+// ---------------------------------------------------------------------------
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function sanitizeReplyTo(replyTo: string | undefined): string | undefined {
+  if (!replyTo) return undefined;
+  // Strip CRLF to prevent header injection (same treatment as sanitizeName)
+  const cleaned = replyTo.replace(/[\r\n]/g, '').trim();
+  if (!EMAIL_REGEX.test(cleaned)) {
+    logger.warn(`[EmailService] Invalid replyTo address rejected: ${cleaned}`);
+    return undefined;
+  }
+  return cleaned;
+}
+
+// ---------------------------------------------------------------------------
+// Safety limits
+// ---------------------------------------------------------------------------
+const MAX_SUBJECT_LENGTH = 998; // SMTP RFC 2822 line length limit
+const MAX_HTML_SIZE = 20_000_000; // 20 MB – SendGrid payload limit
+
 /**
  * Envoie un email via le provider configuré
  */
 export async function sendEmail(options: SendEmailOptions): Promise<EmailResult> {
+  // AMELIORATION: Use crypto.randomUUID instead of Math.random for request IDs
+  const requestId = crypto.randomUUID().replace(/-/g, '');
   const provider = process.env.EMAIL_PROVIDER || 'log'; // 'resend', 'sendgrid', 'smtp', 'log'
-  
+
+  // Subject length validation (SMTP limit)
+  options.subject = options.subject.slice(0, MAX_SUBJECT_LENGTH);
+
+  // Tags array type guard
+  const safeTags = Array.isArray(options.tags) ? options.tags.slice(0, 5) : [];
+  options.tags = safeTags;
+
+  // HTML content size check
+  if (options.html && options.html.length > MAX_HTML_SIZE) {
+    logger.warn('HTML content exceeds maximum size', { requestId, size: options.html.length, maxSize: MAX_HTML_SIZE });
+    return { success: false, error: 'HTML content exceeds maximum allowed size' };
+  }
+
   const emailData = {
     ...options,
     from: options.from || DEFAULT_FROM,
+    replyTo: sanitizeReplyTo(options.replyTo),
   };
+
+  // Rate limit check (Faille #3)
+  const recipients = Array.isArray(emailData.to) ? emailData.to : [emailData.to];
+  for (const r of recipients) {
+    if (!checkEmailRateLimit(r.email)) {
+      logger.warn('Email rate limit exceeded', { requestId, recipient: r.email });
+      return { success: false, error: 'Rate limit exceeded for this recipient' };
+    }
+  }
+
+  // Auto-generate plain text fallback from HTML when not provided
+  if (!emailData.text && emailData.html) {
+    emailData.text = htmlToText(emailData.html);
+  }
+
+  logger.info('Sending email', { requestId, provider, to: recipients.map(r => r.email), subject: emailData.subject.slice(0, 80) });
 
   try {
     switch (provider) {
@@ -70,10 +200,13 @@ export async function sendEmail(options: SendEmailOptions): Promise<EmailResult>
         return await logEmail(emailData);
     }
   } catch (error) {
-    console.error('Email send error:', error);
+    // Faille #29: don't leak error details (may contain API keys/PII)
+    const isDevMode = process.env.NODE_ENV !== 'production';
+    if (isDevMode) logger.error('Email send error', { error: error instanceof Error ? error.message : String(error) });
+    logger.error('Email send failed', { requestId, provider, error: error instanceof Error ? error.message : 'Unknown error' });
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: 'Failed to send email',
     };
   }
 }
@@ -84,7 +217,7 @@ export async function sendEmail(options: SendEmailOptions): Promise<EmailResult>
 async function sendViaResend(options: SendEmailOptions): Promise<EmailResult> {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
-    console.warn('RESEND_API_KEY not configured, falling back to log');
+    logger.warn('RESEND_API_KEY not configured, falling back to log');
     return logEmail(options);
   }
 
@@ -98,40 +231,52 @@ async function sendViaResend(options: SendEmailOptions): Promise<EmailResult> {
   if (options.inReplyTo) headers['In-Reply-To'] = options.inReplyTo;
   if (options.references) headers['References'] = options.references;
 
-  const response = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      from: `${options.from?.name} <${options.from?.email}>`,
-      to: Array.isArray(options.to)
-        ? options.to.map(r => r.email)
-        : [options.to.email],
-      subject: options.subject,
-      html: options.html,
-      text: options.text,
-      reply_to: options.replyTo,
-      tags: options.tags?.slice(0, 5).map(t => ({ name: t.slice(0, 256), value: 'true' })),
-      ...(Object.keys(headers).length > 0 ? { headers } : {}),
-      ...(options.attachments?.length ? {
-        attachments: options.attachments.map(a => ({
-          filename: a.filename,
-          content: a.content,
-          content_type: a.contentType,
-        })),
-      } : {}),
-    }),
-  });
+  // Sanitize names to prevent CRLF header injection (Faille #1)
+  const sanitizeName = (name: string) => name.replace(/[\r\n]/g, '');
 
-  const data = await response.json();
+  const safeTags = Array.isArray(options.tags) ? options.tags.slice(0, 5) : [];
 
-  if (!response.ok) {
-    return { success: false, error: data.message || 'Resend API error' };
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 30000);
+  try {
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      signal: controller.signal,
+      body: JSON.stringify({
+        from: `${sanitizeName(options.from?.name || 'BioCycle Peptides')} <${options.from?.email}>`,
+        to: Array.isArray(options.to)
+          ? options.to.map(r => r.email)
+          : [options.to.email],
+        subject: options.subject,
+        html: options.html,
+        text: options.text,
+        reply_to: options.replyTo,
+        tags: safeTags.map(t => ({ name: t.slice(0, 256), value: 'true' })),
+        ...(Object.keys(headers).length > 0 ? { headers } : {}),
+        ...(options.attachments?.length ? {
+          attachments: options.attachments.map(a => ({
+            filename: a.filename,
+            content: a.content,
+            content_type: a.contentType,
+          })),
+        } : {}),
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return { success: false, error: data.message || 'Resend API error' };
+    }
+
+    return { success: true, messageId: data.id };
+  } finally {
+    clearTimeout(timeout);
   }
-
-  return { success: true, messageId: data.id };
 }
 
 /**
@@ -140,13 +285,16 @@ async function sendViaResend(options: SendEmailOptions): Promise<EmailResult> {
 async function sendViaSendGrid(options: SendEmailOptions): Promise<EmailResult> {
   const apiKey = process.env.SENDGRID_API_KEY;
   if (!apiKey) {
-    console.warn('SENDGRID_API_KEY not configured, falling back to log');
+    logger.warn('SENDGRID_API_KEY not configured, falling back to log');
     return logEmail(options);
   }
 
   const recipients = Array.isArray(options.to) ? options.to : [options.to];
+  // Sanitize names to prevent CRLF header injection (Faille #1)
+  const sanitizeSgName = (name: string) => name.replace(/[\r\n]/g, '');
 
-  // Build SendGrid headers for compliance and threading (top-level, not in personalizations)
+  // Build headers for compliance and threading
+  // Faille #7: List-Unsubscribe MUST be in personalizations.headers for SendGrid v3
   const sgHeaders: Record<string, string> = {};
   if (options.unsubscribeUrl) {
     sgHeaders['List-Unsubscribe'] = `<mailto:unsubscribe@biocyclepeptides.com>, <${options.unsubscribeUrl}>`;
@@ -155,41 +303,48 @@ async function sendViaSendGrid(options: SendEmailOptions): Promise<EmailResult> 
   if (options.inReplyTo) sgHeaders['In-Reply-To'] = options.inReplyTo;
   if (options.references) sgHeaders['References'] = options.references;
 
-  const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      personalizations: [{
-        to: recipients.map(r => ({ email: r.email, name: r.name })),
-      }],
-      from: { email: options.from?.email, name: options.from?.name },
-      reply_to: options.replyTo ? { email: options.replyTo } : undefined,
-      subject: options.subject,
-      content: [
-        { type: 'text/plain', value: options.text || '' },
-        { type: 'text/html', value: options.html },
-      ],
-      ...(Object.keys(sgHeaders).length > 0 ? { headers: sgHeaders } : {}),
-      ...(options.attachments?.length ? {
-        attachments: options.attachments.map(a => ({
-          filename: a.filename,
-          content: a.content,
-          type: a.contentType,
-          disposition: 'attachment' as const,
-        })),
-      } : {}),
-    }),
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 30000);
+  try {
+    const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      signal: controller.signal,
+      body: JSON.stringify({
+        personalizations: [{
+          to: recipients.map(r => ({ email: r.email, name: r.name ? sanitizeSgName(r.name) : undefined })),
+          ...(Object.keys(sgHeaders).length > 0 ? { headers: sgHeaders } : {}),
+        }],
+        from: { email: options.from?.email, name: options.from?.name ? sanitizeSgName(options.from.name) : undefined },
+        reply_to: options.replyTo ? { email: options.replyTo } : undefined,
+        subject: options.subject,
+        content: [
+          { type: 'text/plain', value: options.text || '' },
+          { type: 'text/html', value: options.html },
+        ],
+        ...(options.attachments?.length ? {
+          attachments: options.attachments.map(a => ({
+            filename: a.filename,
+            content: a.content,
+            type: a.contentType,
+            disposition: 'attachment' as const,
+          })),
+        } : {}),
+      }),
+    });
 
-  if (!response.ok) {
-    const text = await response.text();
-    return { success: false, error: text || 'SendGrid API error' };
+    if (!response.ok) {
+      const text = await response.text();
+      return { success: false, error: 'SendGrid API error' }; // Faille #20: don't leak API response details
+    }
+
+    return { success: true, messageId: response.headers.get('x-message-id') || undefined };
+  } finally {
+    clearTimeout(timeout);
   }
-
-  return { success: true, messageId: response.headers.get('x-message-id') || undefined };
 }
 
 /**
@@ -206,7 +361,7 @@ async function sendViaSMTP(options: SendEmailOptions): Promise<EmailResult> {
   const pass = process.env.SMTP_PASSWORD || process.env.SMTP_PASS;
 
   if (!host || !user || !pass) {
-    console.warn('SMTP not configured (SMTP_HOST, SMTP_USER, SMTP_PASSWORD), falling back to log');
+    logger.warn('SMTP not configured (SMTP_HOST, SMTP_USER, SMTP_PASSWORD), falling back to log');
     return logEmail(options);
   }
 
@@ -268,19 +423,15 @@ async function sendViaSMTP(options: SendEmailOptions): Promise<EmailResult> {
 async function logEmail(options: SendEmailOptions): Promise<EmailResult> {
   const recipients = Array.isArray(options.to) ? options.to : [options.to];
   
-  console.log('\n' + '='.repeat(60));
-  console.log('📧 EMAIL (DEV MODE - NOT SENT)');
-  console.log('='.repeat(60));
-  console.log(`From: ${options.from?.name} <${options.from?.email}>`);
-  console.log(`To: ${recipients.map(r => r.name ? `${r.name} <${r.email}>` : r.email).join(', ')}`);
-  console.log(`Subject: ${options.subject}`);
-  if (options.replyTo) console.log(`Reply-To: ${options.replyTo}`);
-  if (options.unsubscribeUrl) console.log(`List-Unsubscribe: <${options.unsubscribeUrl}>`);
-  console.log('-'.repeat(60));
-  // Log une version simplifiée du HTML
   const textPreview = options.text || options.html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').substring(0, 500);
-  console.log(`Preview: ${textPreview}...`);
-  console.log('='.repeat(60) + '\n');
+  logger.info('EMAIL (DEV MODE - NOT SENT)', {
+    from: `${options.from?.name} <${options.from?.email}>`,
+    to: recipients.map(r => r.name ? `${r.name} <${r.email}>` : r.email).join(', '),
+    subject: options.subject,
+    replyTo: options.replyTo || undefined,
+    unsubscribeUrl: options.unsubscribeUrl || undefined,
+    preview: `${textPreview}...`,
+  });
 
   return { 
     success: true, 

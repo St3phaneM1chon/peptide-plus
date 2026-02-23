@@ -12,6 +12,7 @@ import { withAdminGuard } from '@/lib/admin-api-guard';
 import { launchUatRun } from '@/lib/uat/runner';
 import { getScenarios } from '@/lib/uat/scenarios';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { logger } from '@/lib/logger';
 
 // POST — Launch a new UAT run
 export const POST = withAdminGuard(async (request: NextRequest, { session }) => {
@@ -49,7 +50,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
       canadaOnly,
     });
   } catch (error) {
-    console.error('[UAT API] POST error:', error);
+    logger.error('[UAT API] POST error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Une erreur est survenue' }, { status: 500 });
   }
 });
@@ -64,7 +65,7 @@ export const GET = withAdminGuard(async (_request: NextRequest, { session }) => 
 
     return NextResponse.json({ runs });
   } catch (error) {
-    console.error('[UAT API] GET error:', error);
+    logger.error('[UAT API] GET error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Une erreur est survenue' }, { status: 500 });
   }
 });

@@ -11,6 +11,7 @@ import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { enqueue } from '@/lib/translation';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { logger } from '@/lib/logger';
 
 // GET /api/admin/webinars - List all webinars
 export const GET = withAdminGuard(async (request: NextRequest, { session }) => {
@@ -131,7 +132,7 @@ export const GET = withAdminGuard(async (request: NextRequest, { session }) => {
       },
     });
   } catch (error) {
-    console.error('Admin webinars GET error:', error);
+    logger.error('Admin webinars GET error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -253,7 +254,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
 
     return NextResponse.json({ webinar }, { status: 201 });
   } catch (error) {
-    console.error('Admin webinars POST error:', error);
+    logger.error('Admin webinars POST error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

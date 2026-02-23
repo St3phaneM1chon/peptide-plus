@@ -6,6 +6,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
+import { logger } from '@/lib/logger';
 import { UserRole } from '@/types';
 import { enqueue, withTranslation, getTranslatedFields, DB_SOURCE_LOCALE } from '@/lib/translation';
 import { defaultLocale } from '@/i18n/config';
@@ -42,6 +43,14 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       return apiError('Produit non trouvé', ErrorCode.NOT_FOUND, { request });
     }
 
+    // BUG-011 FIX: Non-admin users should not see inactive products
+    if (!product.isActive) {
+      const session = await auth();
+      if (!session?.user || (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER)) {
+        return apiError('Produit non trouvé', ErrorCode.NOT_FOUND, { request });
+      }
+    }
+
     // Apply translations
     let translated = locale !== DB_SOURCE_LOCALE
       ? await withTranslation(product, 'Product', locale)
@@ -58,7 +67,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     // Item 3: ETag support for caching
     return withETag({ product: translated }, request);
   } catch (error) {
-    console.error('Error fetching product:', error);
+    logger.error('Error fetching product', { error: error instanceof Error ? error.message : String(error) });
     return apiError('Erreur lors de la récupération du produit', ErrorCode.INTERNAL_ERROR, { request });
   }
 }
@@ -83,6 +92,12 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     }
 
     const body = await request.json();
+
+    // BUG-016 FIX: Basic body type validation before processing
+    if (!body || typeof body !== 'object' || Array.isArray(body)) {
+      return apiError('Invalid request body', ErrorCode.BAD_REQUEST, { request });
+    }
+
     const { images, formats } = body;
 
     // Whitelist: only allow safe fields to be updated (H13 - mass assignment fix)
@@ -245,7 +260,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
     return apiSuccess({ product }, { request });
   } catch (error) {
-    console.error('Error updating product:', error);
+    logger.error('Error updating product', { error: error instanceof Error ? error.message : String(error) });
     return apiError('Erreur lors de la mise à jour du produit', ErrorCode.INTERNAL_ERROR, { request });
   }
 }
@@ -283,7 +298,7 @@ export async function DELETE(_request: Request, { params }: RouteParams) {
     // Item 2: HTTP 204 No Content for DELETE operations
     return apiNoContent();
   } catch (error) {
-    console.error('Error deleting product:', error);
+    logger.error('Error deleting product', { error: error instanceof Error ? error.message : String(error) });
     return apiError('Erreur lors de la suppression du produit', ErrorCode.INTERNAL_ERROR);
   }
 }

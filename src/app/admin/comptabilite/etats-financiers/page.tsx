@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Download, Loader2 } from 'lucide-react';
 import { PageHeader, Button, SectionCard } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
@@ -51,7 +51,7 @@ export default function EtatsFinanciersPage() {
 
   // Fetch financial data by generating report HTML and parsing from API
   // We use the GET /api/accounting/reports/pdf?type=income and type=balance endpoints
-  const fetchFinancialData = async () => {
+  const fetchFinancialData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -139,7 +139,7 @@ export default function EtatsFinanciersPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedPeriod, t]);
 
   // Export PDF via the reports API
   const handleExportPdf = async () => {
@@ -176,8 +176,7 @@ export default function EtatsFinanciersPage() {
 
   useEffect(() => {
     fetchFinancialData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedPeriod]);
+  }, [fetchFinancialData]);
 
   if (loading) return (
     <div aria-live="polite" aria-busy="true" className="p-8 space-y-4 animate-pulse">

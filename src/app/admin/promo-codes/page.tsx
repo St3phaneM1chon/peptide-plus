@@ -1,3 +1,6 @@
+// TODO: F-053 - formatCurrency is constant; remove from useMemo dependency array or memoize at higher level
+// TODO: F-067 - Replace native confirm() for delete with custom Modal component
+// TODO: F-070 - updatePromoCodeSchema is alias of createPromoCodeSchema; make fields optional with .partial()
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -90,11 +93,8 @@ export default function PromoCodesPage() {
 
   // ─── Data fetching ──────────────────────────────────────────
 
-  useEffect(() => {
-    fetchPromoCodes();
-  }, []);
-
-  const fetchPromoCodes = async () => {
+  // FIX: FLAW-055 - Wrap fetchPromoCodes in useCallback for stable reference
+  const fetchPromoCodes = useCallback(async () => {
     try {
       const res = await fetch('/api/admin/promo-codes');
       const data = await res.json();
@@ -105,7 +105,11 @@ export default function PromoCodesPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchPromoCodes();
+  }, [fetchPromoCodes]);
 
   // ─── CRUD ─────────────────────────────────────────────────
 
@@ -157,7 +161,10 @@ export default function PromoCodesPage() {
     }
   };
 
+  // FLAW-052 FIX: Optimistic update for toggleActive
   const toggleActive = async (id: string, isActive: boolean) => {
+    // Optimistic: update immediately
+    setPromoCodes(prev => prev.map((p) => (p.id === id ? { ...p, isActive: !isActive } : p)));
     try {
       const res = await fetch(`/api/admin/promo-codes/${id}`, {
         method: 'PATCH',
@@ -167,12 +174,14 @@ export default function PromoCodesPage() {
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         toast.error(data.error || t('common.updateFailed'));
-        return;
+        // Revert on failure
+        setPromoCodes(prev => prev.map((p) => (p.id === id ? { ...p, isActive } : p)));
       }
-      setPromoCodes(prev => prev.map((p) => (p.id === id ? { ...p, isActive: !isActive } : p)));
     } catch (err) {
       console.error('Error toggling status:', err);
       toast.error(t('common.networkError'));
+      // Revert on failure
+      setPromoCodes(prev => prev.map((p) => (p.id === id ? { ...p, isActive } : p)));
     }
   };
 

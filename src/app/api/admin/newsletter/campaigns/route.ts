@@ -5,6 +5,7 @@ import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { createCampaignSchema } from '@/lib/validations/newsletter';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { logger } from '@/lib/logger';
 
 const CAMPAIGNS_KEY = 'newsletter_campaigns';
 
@@ -74,7 +75,7 @@ export const GET = withAdminGuard(async (_request, { session: _session }) => {
       },
     });
   } catch (error) {
-    console.error('Get newsletter campaigns error:', error);
+    logger.error('Get newsletter campaigns error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Error fetching campaigns' },
       { status: 500 }
@@ -108,7 +109,8 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
 
     const now = new Date().toISOString();
     const newCampaign: Campaign = {
-      id: `campaign-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      // AMELIORATION: Use crypto.randomUUID instead of Math.random for campaign IDs
+      id: `campaign-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`,
       subject,
       content,
       status: campaignStatus,
@@ -137,7 +139,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
       { status: 201 }
     );
   } catch (error) {
-    console.error('Create newsletter campaign error:', error);
+    logger.error('Create newsletter campaign error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Error creating campaign' },
       { status: 500 }

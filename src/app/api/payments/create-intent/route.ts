@@ -127,7 +127,7 @@ export async function POST(request: NextRequest) {
       amount: total,
     });
   } catch (error) {
-    console.error('Error creating payment intent:', error);
+    logger.error('Error creating payment intent', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la création du paiement' },
       { status: 500 }

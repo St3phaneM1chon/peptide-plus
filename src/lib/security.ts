@@ -1,6 +1,12 @@
 /**
  * UTILITAIRES DE SÉCURITÉ
  * Conforme OWASP Top 10 & Chubb Requirements
+ *
+ * TODO: FAILLE-083 - createSecurityLog returns JSON string; return object to avoid double-stringify
+ * TODO: FAILLE-084 - decrypt() does not validate minimum buffer length before slicing; add length check
+ * TODO: FAILLE-087 - setInterval timers in this file are not tracked; create a central timer registry
+ * TODO: FAILLE-090 - Email masking logic differs between maskSensitiveData and admin-audit; unify into maskPII()
+ * TODO: FAILLE-093 - phoneSchema only accepts E.164 format; consider libphonenumber-js for local format support
  */
 
 import { createCipheriv, createDecipheriv, randomBytes, scrypt } from 'crypto';
@@ -94,10 +100,11 @@ export async function decrypt(encryptedData: string): Promise<string> {
 /**
  * Schéma de validation email
  */
+// FAILLE-042 FIX: Use English error codes (frontend translates via i18n)
 export const emailSchema = z
   .string()
-  .email('Email invalide')
-  .max(255, 'Email trop long')
+  .email('invalid_email')
+  .max(255, 'email_too_long')
   .transform((val) => val.toLowerCase().trim());
 
 /**
@@ -105,21 +112,22 @@ export const emailSchema = z
  */
 export const passwordSchema = z
   .string()
-  .min(PASSWORD_MIN_LENGTH, `Minimum ${PASSWORD_MIN_LENGTH} caractères requis`)
-  .max(128, 'Maximum 128 caractères')
-  .regex(/[A-Z]/, 'Au moins une majuscule requise')
-  .regex(/[a-z]/, 'Au moins une minuscule requise')
-  .regex(/[0-9]/, 'Au moins un chiffre requis')
-  .regex(/[!@#$%^&*(),.?":{}|<>]/, 'Au moins un caractère spécial requis');
+  .min(PASSWORD_MIN_LENGTH, 'password_min_length')
+  .max(128, 'password_max_length')
+  .regex(/[A-Z]/, 'password_uppercase_required')
+  .regex(/[a-z]/, 'password_lowercase_required')
+  .regex(/[0-9]/, 'password_digit_required')
+  .regex(/[!@#$%^&*(),.?":{}|<>]/, 'password_special_required');
 
 /**
  * Schéma de validation nom
  */
 export const nameSchema = z
   .string()
-  .min(2, 'Minimum 2 caractères')
-  .max(100, 'Maximum 100 caractères')
-  .regex(/^[a-zA-ZÀ-ÿ\s'-]+$/, 'Caractères invalides')
+  .min(2, 'name_min_length')
+  .max(100, 'name_max_length')
+  // F-055 FIX: Use Unicode letter class to support all scripts and exclude math symbols (×÷) from À-ÿ range
+  .regex(/^[\p{L}\s'-]+$/u, 'name_invalid_chars')
   .transform((val) => val.trim());
 
 /**
@@ -127,14 +135,14 @@ export const nameSchema = z
  */
 export const phoneSchema = z
   .string()
-  .regex(/^\+?[1-9]\d{1,14}$/, 'Format téléphone invalide');
+  .regex(/^\+?[1-9]\d{1,14}$/, 'phone_invalid_format');
 
 /**
  * Schéma de validation UUID
  */
 export const uuidSchema = z
   .string()
-  .uuid('UUID invalide');
+  .uuid('uuid_invalid');
 
 // ============================================
 // SANITIZATION
@@ -151,9 +159,11 @@ export function escapeHtml(text: string): string {
     '"': '&quot;',
     "'": '&#x27;',
     '/': '&#x2F;',
+    // FAILLE-037 FIX: Escape backtick to prevent template literal injection
+    '`': '&#x60;',
   };
 
-  return text.replace(/[&<>"'/]/g, (char) => htmlEntities[char]);
+  return text.replace(/[&<>"'/`]/g, (char) => htmlEntities[char]);
 }
 
 /**
@@ -182,11 +192,16 @@ export function sanitizeUrl(url: string): string | null {
       return null;
     }
     
-    // Bloquer les IPs privées
+    // Bloquer les IPs privées + link-local + Azure IMDS (FAILLE-016 FIX)
     const privateIPPatterns = [
       /^10\./,
       /^172\.(1[6-9]|2[0-9]|3[0-1])\./,
       /^192\.168\./,
+      /^169\.254\./,                         // Link-local / Azure IMDS
+      /^100\.(6[4-9]|[7-9]\d|1[0-2]\d|127)\./, // Carrier-grade NAT
+      /^198\.51\.100\./,                     // TEST-NET-2
+      /^203\.0\.113\./,                      // TEST-NET-3
+      /^0\./,                                // This network
     ];
     
     for (const pattern of privateIPPatterns) {
@@ -208,7 +223,11 @@ export function sanitizeUrl(url: string): string | null {
 /**
  * Masque les données sensibles dans les logs
  */
-export function maskSensitiveData(data: Record<string, unknown>): Record<string, unknown> {
+// FIX: FAILLE-073 - Made maskSensitiveData recursive to handle nested objects
+export function maskSensitiveData(data: Record<string, unknown>, depth = 0): Record<string, unknown> {
+  // Prevent infinite recursion on deeply nested or circular structures
+  if (depth > 5) return data;
+
   const sensitiveFields = [
     'password',
     'token',
@@ -236,6 +255,13 @@ export function maskSensitiveData(data: Record<string, unknown>): Record<string,
   if (typeof masked.email === 'string') {
     const [local, domain] = masked.email.split('@');
     masked.email = `${local.substring(0, 2)}***@${domain}`;
+  }
+
+  // FIX: FAILLE-073 - Recurse into nested objects to mask sensitive fields at all levels
+  for (const key of Object.keys(masked)) {
+    if (masked[key] && typeof masked[key] === 'object' && !Array.isArray(masked[key])) {
+      masked[key] = maskSensitiveData(masked[key] as Record<string, unknown>, depth + 1);
+    }
   }
 
   return masked;
@@ -272,8 +298,11 @@ interface RateLimitEntry {
 
 const rateLimitStore = new Map<string, RateLimitEntry>();
 
+// FAILLE-038 FIX: Store interval IDs for proper cleanup
+let rateLimitCleanupInterval: ReturnType<typeof setInterval> | null = null;
+
 // Periodic cleanup of expired rate limit entries (every 5 minutes)
-setInterval(() => {
+rateLimitCleanupInterval = setInterval(() => {
   const now = Date.now();
   for (const [key, entry] of rateLimitStore.entries()) {
     // Remove entries older than 10 minutes (generous window)
@@ -322,57 +351,13 @@ export function checkRateLimit(
   };
 }
 
-// ============================================
-// TOKENS CSRF
-// Prefer csrf-middleware.ts for CSRF protection in API routes.
-// This is a basic in-memory implementation kept for simple utility use.
-// ============================================
+// AMELIORATION A-005: Removed duplicate in-memory CSRF implementation.
+// All CSRF protection is handled by csrf.ts + csrf-middleware.ts (HMAC-signed, cookie-based).
 
-const csrfTokens = new Map<string, number>();
-
-// Periodic cleanup of expired CSRF tokens (every 10 minutes)
-setInterval(() => {
-  const oneHourAgo = Date.now() - 3600_000;
-  for (const [token, timestamp] of csrfTokens.entries()) {
-    if (timestamp < oneHourAgo) {
-      csrfTokens.delete(token);
-    }
-  }
-}, 600_000);
-
-/**
- * Génère un token CSRF
- */
-export function generateCsrfToken(): string {
-  const token = randomBytes(32).toString('hex');
-  csrfTokens.set(token, Date.now());
-  
-  // Nettoyer les tokens expirés (> 1 heure)
-  const oneHourAgo = Date.now() - 3600000;
-  for (const [t, timestamp] of csrfTokens.entries()) {
-    if (timestamp < oneHourAgo) {
-      csrfTokens.delete(t);
-    }
-  }
-  
-  return token;
+// FAILLE-038 FIX: Expose cleanup function for graceful shutdown
+export function cleanupSecurityIntervals(): void {
+  if (rateLimitCleanupInterval) { clearInterval(rateLimitCleanupInterval); rateLimitCleanupInterval = null; }
 }
-
-/**
- * Valide un token CSRF
- */
-export function validateCsrfToken(token: string): boolean {
-  const timestamp = csrfTokens.get(token);
-  
-  if (!timestamp) {
-    return false;
-  }
-  
-  // Token valide pendant 1 heure
-  const isValid = Date.now() - timestamp < 3600000;
-  
-  // Token à usage unique
-  csrfTokens.delete(token);
-  
-  return isValid;
+if (typeof process !== 'undefined') {
+  process.on('SIGTERM', cleanupSecurityIntervals);
 }

@@ -2,6 +2,11 @@
  * DATABASE CLIENT - Prisma
  * Singleton pattern pour éviter les connexions multiples
  * Connection pool configured for production performance
+ *
+ * TODO: FAILLE-067 - Add retry mechanism for transient Prisma errors (connection pool exhausted, timeout).
+ *       Consider using Prisma middleware or wrapping critical queries in a retry loop with exponential backoff.
+ * TODO: FAILLE-072 - Add explicit query timeout configuration. Consider $queryRawUnsafe with statement_timeout
+ *       or use Promise.race([query, timeout]) for critical admin routes.
  */
 
 import { PrismaClient } from '@prisma/client';

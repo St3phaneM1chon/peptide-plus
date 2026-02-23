@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth-config';
 import crypto from 'crypto';
+import { logger } from '@/lib/logger';
 
 // SEC-20: Generate unique gift card code using cryptographically secure random bytes
 function generateGiftCardCode(): string {
@@ -108,7 +109,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Gift card creation error:', error);
+    logger.error('Gift card creation error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to create gift card' },
       { status: 500 }
@@ -156,7 +157,7 @@ export async function GET(request: NextRequest) {
       })),
     });
   } catch (error) {
-    console.error('Gift cards fetch error:', error);
+    logger.error('Gift cards fetch error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to fetch gift cards' },
       { status: 500 }

@@ -3,17 +3,49 @@ export const dynamic = 'force-dynamic';
 /**
  * Referral Qualification API
  * POST - Called internally when a referred user's first order is PAID
- * Awards 1000 points to the referrer via LoyaltyTransaction
+ * Awards points to the referrer via LoyaltyTransaction
+ *
+ * SECURITY: This endpoint is protected by CRON_SECRET or admin auth
+ * to prevent unauthenticated access (F-004 fix).
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/lib/auth-config';
 import { qualifyReferral } from '@/lib/referral-qualify';
 
 /**
  * POST endpoint for internal use / admin qualification
+ * Requires either:
+ *  - Authorization: Bearer <CRON_SECRET> header (for cron/webhook calls)
+ *  - Admin session (OWNER or EMPLOYEE role)
  */
 export async function POST(request: NextRequest) {
   try {
+    // FIX F-004: Add authentication - require CRON_SECRET or admin session
+    const authHeader = request.headers.get('authorization');
+    const cronSecret = process.env.CRON_SECRET;
+    let authorized = false;
+
+    // Check CRON_SECRET bearer token
+    if (cronSecret && authHeader === `Bearer ${cronSecret}`) {
+      authorized = true;
+    }
+
+    // Check admin session
+    if (!authorized) {
+      const session = await auth();
+      if (session?.user && ['OWNER', 'EMPLOYEE'].includes(session.user.role as string)) {
+        authorized = true;
+      }
+    }
+
+    if (!authorized) {
+      return NextResponse.json(
+        { error: 'Unauthorized - requires CRON_SECRET or admin session' },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
     const { referredUserId, orderId, orderAmount } = body;
 

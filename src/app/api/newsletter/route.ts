@@ -7,7 +7,9 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { logger } from '@/lib/logger';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { sendEmail } from '@/lib/email/email-service';
 import { z } from 'zod';
 import crypto from 'crypto';
 
@@ -57,10 +59,13 @@ export async function POST(request: NextRequest) {
     }).catch(() => null);
 
     if (!existing) {
+      // Faille #34: Create as inactive (PENDING) until double opt-in confirmation.
+      // The /api/mailing-list/confirm route will activate this record after confirmation.
       await prisma.newsletterSubscriber.create({
         data: {
           id: crypto.randomUUID(),
           email: email.toLowerCase(),
+          isActive: false,
           subscribedAt: new Date(),
           source: source || 'footer',
           locale: locale || 'fr',
@@ -80,33 +85,91 @@ export async function POST(request: NextRequest) {
       }).catch(() => {}); // Best-effort: don't fail subscribe if consent record fails
     }
 
-    // Forward to CASL-compliant double opt-in endpoint
-    const baseUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://biocyclepeptides.com';
+    // FIX: FLAW-030 - Call mailing-list subscribe logic directly instead of self-calling via fetch.
+    // The previous approach created a circular server-to-server HTTP call that adds latency,
+    // creates a dependency on URL resolution, and can fail in serverless environments.
+    const lowerEmail = email.toLowerCase();
+    const defaultPreferences = ['promotions', 'promo_codes', 'specials', 'new_products'];
     try {
-      await fetch(`${baseUrl}/api/mailing-list/subscribe`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-forwarded-for': ip,
-        },
-        body: JSON.stringify({
-          email: email.toLowerCase(),
-          consentMethod: source || 'footer',
-          preferences: ['promotions', 'promo_codes', 'specials', 'new_products'],
-        }),
-      });
-    } catch (fwdError) {
-      console.error('Forward to mailing-list/subscribe failed:', fwdError);
+      const existingMailing = await prisma.mailingListSubscriber.findUnique({ where: { email: lowerEmail } });
+      const confirmToken = crypto.randomBytes(32).toString('hex');
+      const unsubscribeToken = crypto.randomBytes(32).toString('hex');
+
+      if (existingMailing && existingMailing.status === 'ACTIVE') {
+        // Already subscribed via mailing list - no action needed
+      } else if (existingMailing) {
+        // Re-subscribe: update existing record
+        await prisma.mailingListSubscriber.update({
+          where: { id: existingMailing.id },
+          data: {
+            status: 'PENDING',
+            confirmToken,
+            unsubscribeToken,
+            consentDate: new Date(),
+            consentIp: ip,
+            consentMethod: source || 'footer',
+            unsubscribedAt: null,
+            confirmedAt: null,
+          },
+        });
+      } else {
+        await prisma.mailingListSubscriber.create({
+          data: {
+            email: lowerEmail,
+            name: null,
+            status: 'PENDING',
+            consentType: 'EXPRESS',
+            consentIp: ip,
+            consentMethod: source || 'footer',
+            confirmToken,
+            unsubscribeToken,
+            preferences: {
+              create: defaultPreferences.map((cat) => ({
+                category: cat,
+                isEnabled: true,
+              })),
+            },
+          },
+        });
+      }
+
+      // Send double opt-in confirmation email (CASL requirement)
+      if (!existingMailing || existingMailing.status !== 'ACTIVE') {
+        const baseUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://biocyclepeptides.com';
+        const confirmUrl = `${baseUrl}/api/mailing-list/confirm?token=${confirmToken}`;
+        const unsubscribeUrl = `${baseUrl}/api/mailing-list/unsubscribe?token=${unsubscribeToken}`;
+
+        await sendEmail({
+          to: { email: lowerEmail },
+          subject: 'Confirmez votre inscription - BioCycle Peptides',
+          html: `<div style="max-width:600px;margin:0 auto;font-family:Arial,sans-serif;">
+            <h2>Confirmez votre inscription</h2>
+            <p>Merci de votre int\u00e9r\u00eat pour BioCycle Peptides !</p>
+            <p>Pour confirmer votre inscription, veuillez cliquer sur le bouton ci-dessous :</p>
+            <p style="text-align:center;margin:30px 0;">
+              <a href="${confirmUrl}" style="background:#0284c7;color:white;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:bold;">Confirmer mon inscription</a>
+            </p>
+            <p style="font-size:12px;color:#666;">
+              <strong>Droit de retrait :</strong> <a href="${unsubscribeUrl}">Se d\u00e9sabonner</a>
+            </p>
+          </div>`,
+          text: `Confirmez votre inscription: ${confirmUrl}`,
+          tags: ['mailing-list-confirm'],
+          unsubscribeUrl,
+        }).catch((sendErr) => {
+          logger.error('Mailing list confirmation email failed', { error: sendErr instanceof Error ? sendErr.message : String(sendErr) });
+        });
+      }
+    } catch (mailingErr) {
+      logger.error('Direct mailing-list subscribe failed', { error: mailingErr instanceof Error ? mailingErr.message : String(mailingErr) });
     }
 
     // Log pour suivi (email masked for privacy)
     const [localPart, domain] = email.split('@');
     const maskedEmail = localPart.slice(0, 2) + '***@' + domain;
-    console.log(JSON.stringify({
-      event: 'newsletter_subscription_with_double_optin',
-      timestamp: new Date().toISOString(),
+    logger.info('newsletter_subscription_with_double_optin', {
       email: maskedEmail,
-    }));
+    });
 
     return NextResponse.json({
       success: true,
@@ -114,7 +177,7 @@ export async function POST(request: NextRequest) {
     }, { status: 201 });
 
   } catch (error) {
-    console.error('Newsletter subscription error:', error);
+    logger.error('Newsletter subscription error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Une erreur est survenue' },
       { status: 500 }
