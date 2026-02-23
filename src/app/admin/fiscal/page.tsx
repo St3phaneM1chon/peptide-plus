@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   FileBarChart,
   Download,
@@ -24,6 +24,7 @@ import {
 } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 
 interface TaxRegion {
   id: string;
@@ -533,6 +534,43 @@ export default function FiscalPage() {
     { key: 'regions', label: t('admin.fiscal.tabs.regions') },
     { key: 'tasks', label: t('admin.fiscal.tabs.tasks') },
   ];
+
+  // ─── Ribbon action handlers ───────────────────────────────
+  const handleRibbonVerifyBalances = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleRibbonAuditTrail = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleRibbonClosePeriod = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleRibbonReopen = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleRibbonFiscalCalendar = useCallback(() => {
+    setActiveTab('tasks');
+  }, []);
+
+  const handleRibbonTaxReturn = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleRibbonExport = useCallback(() => {
+    toast.info(t('admin.fiscal.exportPdf'));
+  }, [t]);
+
+  useRibbonAction('verifyBalances', handleRibbonVerifyBalances);
+  useRibbonAction('auditTrail', handleRibbonAuditTrail);
+  useRibbonAction('closePeriod', handleRibbonClosePeriod);
+  useRibbonAction('reopen', handleRibbonReopen);
+  useRibbonAction('fiscalCalendar', handleRibbonFiscalCalendar);
+  useRibbonAction('taxReturn', handleRibbonTaxReturn);
+  useRibbonAction('export', handleRibbonExport);
 
   if (loading) return <div className="p-8 text-center">{t('admin.fiscal.loading')}</div>;
   if (error) return <div className="p-8 text-center text-red-600">{t('admin.fiscal.errorPrefix')} {error}</div>;

@@ -18,6 +18,7 @@ import { useI18n } from '@/i18n/client';
 import { sectionThemes } from '@/lib/admin/section-themes';
 import { toast } from 'sonner';
 import { GST_RATE, QST_RATE } from '@/lib/tax-constants';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -641,6 +642,29 @@ export default function FacturesClientsPage() {
   // ---------------------------------------------------------------------------
   // Loading state
   // ---------------------------------------------------------------------------
+
+  // -- Ribbon actions --
+  const handleNewInvoice = useCallback(() => { openCreateModal(); }, []);
+  const handleDeleteAction = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleSendByEmail = useCallback(() => {
+    if (selectedInvoice) handleSendInvoice(selectedInvoice);
+  }, [selectedInvoice]);
+  const handleMarkPaid = useCallback(() => {
+    if (selectedInvoice) openPaymentModal(selectedInvoice);
+  }, [selectedInvoice]);
+  const handleCreditNote = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleExportPdf = useCallback(() => {
+    if (selectedInvoice) handleDownloadPdf(selectedInvoice.id);
+  }, [selectedInvoice]);
+  const handlePrint = useCallback(() => { window.print(); }, []);
+
+  useRibbonAction('newInvoice', handleNewInvoice);
+  useRibbonAction('delete', handleDeleteAction);
+  useRibbonAction('sendByEmail', handleSendByEmail);
+  useRibbonAction('markPaid', handleMarkPaid);
+  useRibbonAction('creditNote', handleCreditNote);
+  useRibbonAction('exportPdf', handleExportPdf);
+  useRibbonAction('print', handlePrint);
 
   if (loading) return (
     <div aria-live="polite" aria-busy="true" className="p-8 space-y-4 animate-pulse">

@@ -23,6 +23,7 @@ import {
 import type { ContentListItem } from '@/components/admin/outlook';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 
 // ── Types ─────────────────────────────────────────────────────
 
@@ -217,6 +218,40 @@ export default function QuestionsPage() {
   const handleSelectQuestion = useCallback((id: string) => {
     setSelectedQuestionId(id);
   }, []);
+
+  // ─── Ribbon action handlers ────────────────────────────────
+  const handleRibbonRespond = useCallback(() => {
+    if (!selectedQuestion) { toast.info(t('common.comingSoon')); return; }
+    setAnswerText(selectedQuestion.answer || '');
+    setShowAnswerModal(true);
+  }, [selectedQuestion, t]);
+
+  const handleRibbonMarkResolved = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleRibbonArchive = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleRibbonReportContent = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleRibbonConvertFaq = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleRibbonExport = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  useRibbonAction('respond', handleRibbonRespond);
+  useRibbonAction('markResolved', handleRibbonMarkResolved);
+  useRibbonAction('archive', handleRibbonArchive);
+  useRibbonAction('reportContent', handleRibbonReportContent);
+  useRibbonAction('convertFaq', handleRibbonConvertFaq);
+  useRibbonAction('export', handleRibbonExport);
 
   // ─── Loading state ──────────────────────────────────────────
 

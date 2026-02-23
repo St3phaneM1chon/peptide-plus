@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { RefreshCw, ArrowRightLeft } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
 import { sectionThemes } from '@/lib/admin/section-themes';
 import { PageHeader, Button, SectionCard } from '@/components/admin';
 import { toast } from 'sonner';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 
 interface Currency {
   id?: string;
@@ -185,6 +186,19 @@ export default function CurrencyPage() {
   // Calculate totals
   const totalForeignCAD = foreignAccounts.reduce((sum, a) => sum + a.cadEquivalent, 0);
   const totalUnrealizedGainLoss = foreignAccounts.reduce((sum, a) => sum + a.unrealizedGainLoss, 0);
+
+  // Ribbon actions
+  const handleRibbonSave = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonResetDefaults = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonImportConfig = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonExportConfig = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonTest = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+
+  useRibbonAction('save', handleRibbonSave);
+  useRibbonAction('resetDefaults', handleRibbonResetDefaults);
+  useRibbonAction('importConfig', handleRibbonImportConfig);
+  useRibbonAction('exportConfig', handleRibbonExportConfig);
+  useRibbonAction('test', handleRibbonTest);
 
   const theme = sectionThemes.bank;
 

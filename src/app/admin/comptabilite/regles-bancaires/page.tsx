@@ -20,6 +20,7 @@ import { PageHeader, SectionCard, StatCard, Button, Modal, FormField, Input, Fil
 import { useI18n } from '@/i18n/client';
 import { sectionThemes } from '@/lib/admin/section-themes';
 import { toast } from 'sonner';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -404,6 +405,24 @@ export default function ReglesBancairesPage() {
     if (rule.transactionType) badges.push({ label: rule.transactionType, color: rule.transactionType === 'DEBIT' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700' });
     return badges;
   };
+
+  // ---------------------------------------------------------------------------
+  // Ribbon actions
+  // ---------------------------------------------------------------------------
+
+  const handleRibbonSynchronize = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonImportStatement = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonReconcile = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonAutoMatch = useCallback(() => { handleApplyRules(); }, [handleApplyRules]);
+  const handleRibbonBankRules = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonExport = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+
+  useRibbonAction('synchronize', handleRibbonSynchronize);
+  useRibbonAction('importStatement', handleRibbonImportStatement);
+  useRibbonAction('reconcile', handleRibbonReconcile);
+  useRibbonAction('autoMatch', handleRibbonAutoMatch);
+  useRibbonAction('bankRules', handleRibbonBankRules);
+  useRibbonAction('export', handleRibbonExport);
 
   // ---------------------------------------------------------------------------
   // Render

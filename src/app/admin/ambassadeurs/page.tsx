@@ -30,6 +30,7 @@ import {
 import type { ContentListItem } from '@/components/admin/outlook';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 import { fetchWithRetry } from '@/lib/fetch-with-retry';
 
 // ── Types ─────────────────────────────────────────────────────
@@ -354,6 +355,40 @@ export default function AmbassadeursPage() {
   const handleSelectAmbassador = useCallback((id: string) => {
     setSelectedAmbassadorId(id);
   }, []);
+
+  // ─── Ribbon action handlers ────────────────────────────────
+  const handleRibbonNewAmbassador = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleRibbonApproveCandidacy = useCallback(() => {
+    if (!selectedAmbassador) { toast.info(t('common.comingSoon')); return; }
+    updateStatus(selectedAmbassador.id, 'ACTIVE');
+  }, [selectedAmbassador, t]);
+
+  const handleRibbonDelete = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleRibbonManageCommission = useCallback(() => {
+    if (!selectedAmbassador) { toast.info(t('common.comingSoon')); return; }
+    openEditCommission(selectedAmbassador);
+  }, [selectedAmbassador, t]);
+
+  const handleRibbonSalesStats = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleRibbonExport = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  useRibbonAction('newAmbassador', handleRibbonNewAmbassador);
+  useRibbonAction('approveCandidacy', handleRibbonApproveCandidacy);
+  useRibbonAction('delete', handleRibbonDelete);
+  useRibbonAction('manageCommission', handleRibbonManageCommission);
+  useRibbonAction('salesStats', handleRibbonSalesStats);
+  useRibbonAction('export', handleRibbonExport);
 
   // ─── Loading state ──────────────────────────────────────────
 

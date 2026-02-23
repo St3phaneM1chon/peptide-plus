@@ -6,6 +6,7 @@ import { PageHeader, Button, Modal, StatusBadge, SectionCard } from '@/component
 import { useI18n } from '@/i18n/client';
 import { sectionThemes } from '@/lib/admin/section-themes';
 import { toast } from 'sonner';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 
 interface BankTransaction {
   id: string;
@@ -171,6 +172,21 @@ export default function RapprochementPage() {
   };
 
   const theme = sectionThemes.bank;
+
+  // Ribbon actions
+  const handleRibbonSynchronize = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonImportStatement = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonReconcile = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonAutoMatch = useCallback(() => { handleAutoReconcile(); }, [handleAutoReconcile]);
+  const handleRibbonBankRules = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonExport = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+
+  useRibbonAction('synchronize', handleRibbonSynchronize);
+  useRibbonAction('importStatement', handleRibbonImportStatement);
+  useRibbonAction('reconcile', handleRibbonReconcile);
+  useRibbonAction('autoMatch', handleRibbonAutoMatch);
+  useRibbonAction('bankRules', handleRibbonBankRules);
+  useRibbonAction('export', handleRibbonExport);
 
   if (loading) return (
     <div aria-live="polite" aria-busy="true" className="p-8 space-y-4 animate-pulse">

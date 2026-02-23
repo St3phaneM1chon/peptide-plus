@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { MessageCircle } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
 import { IntegrationCard } from '@/components/admin/IntegrationCard';
 import { toast } from 'sonner';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 
 export default function MediaWhatsAppPage() {
   const { t } = useI18n();
@@ -12,6 +13,7 @@ export default function MediaWhatsAppPage() {
   const [phoneNumberId, setPhoneNumberId] = useState('');
   const [businessAccountId, setBusinessAccountId] = useState('');
   const [hasAccessToken, setHasAccessToken] = useState(false);
+  const [publicLink, setPublicLink] = useState('');
   const [webhookUrl, setWebhookUrl] = useState('');
   const [loading, setLoading] = useState(true);
 
@@ -23,6 +25,7 @@ export default function MediaWhatsAppPage() {
         setPhoneNumberId(data.phoneNumberId || '');
         setBusinessAccountId(data.businessAccountId || '');
         setHasAccessToken(data.hasAccessToken || false);
+        setPublicLink(data.publicLink || '');
         setWebhookUrl(data.webhookUrl || '');
       })
       .catch(console.error)
@@ -35,7 +38,7 @@ export default function MediaWhatsAppPage() {
       const res = await fetch('/api/admin/integrations/whatsapp', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ enabled, phoneNumberId, businessAccountId }),
+        body: JSON.stringify({ enabled, phoneNumberId, businessAccountId, publicLink }),
       });
       if (!res.ok) throw new Error('Save failed');
     } catch (err) {
@@ -53,6 +56,26 @@ export default function MediaWhatsAppPage() {
     const data = await res.json();
     return { success: data.success, detail: data.phone, error: data.error };
   };
+
+  const onConfigure = useCallback(() => {
+    const el = document.querySelector<HTMLInputElement>('input[placeholder]');
+    if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.focus(); }
+  }, []);
+  const onTestConnection = useCallback(() => { handleTest().then(r => { if (r.success) toast.success('Connection OK'); else toast.error(r.error || 'Test failed'); }); }, []);
+  const onRefreshToken = useCallback(() => {
+    setLoading(true);
+    fetch('/api/admin/integrations/whatsapp').then(res => res.json()).then(data => {
+      setEnabled(data.enabled || false); setPhoneNumberId(data.phoneNumberId || ''); setBusinessAccountId(data.businessAccountId || ''); setHasAccessToken(data.hasAccessToken || false); setPublicLink(data.publicLink || ''); setWebhookUrl(data.webhookUrl || '');
+    }).catch(console.error).finally(() => setLoading(false));
+  }, []);
+  const onViewLogs = useCallback(() => { window.open('/admin/logs?filter=whatsapp', '_self'); }, []);
+  const onDocumentation = useCallback(() => { window.open('https://developers.facebook.com/docs/whatsapp/cloud-api', '_blank'); }, []);
+
+  useRibbonAction('configure', onConfigure);
+  useRibbonAction('testConnection', onTestConnection);
+  useRibbonAction('refreshToken', onRefreshToken);
+  useRibbonAction('viewLogs', onViewLogs);
+  useRibbonAction('documentation', onDocumentation);
 
   if (loading) {
     return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500" /></div>;
@@ -92,6 +115,15 @@ export default function MediaWhatsAppPage() {
             readOnly: true,
             type: 'password',
             hint: t('admin.integrations.secretEnvHint'),
+          },
+          {
+            key: 'publicLink',
+            label: t('admin.integrations.publicLinkLabel'),
+            value: publicLink,
+            onChange: setPublicLink,
+            placeholder: 'https://wa.me/15145551234',
+            type: 'url',
+            hint: t('admin.integrations.publicLinkWhatsAppHint'),
           },
         ]}
         onSave={handleSave}

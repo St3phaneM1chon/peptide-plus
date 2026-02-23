@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useI18n } from '@/i18n/client';
 import { PageHeader, SectionCard, Button } from '@/components/admin';
 import { sectionThemes } from '@/lib/admin/section-themes';
 import { toast } from 'sonner';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 
 interface ExportJob {
   id: string;
@@ -159,6 +160,21 @@ export default function ExportsPage() {
       setExporting(false);
     }
   };
+
+  // Ribbon actions
+  const handleRibbonGenerateReport = useCallback(() => { handleExport(); }, [handleExport]);
+  const handleRibbonSchedule = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonComparePeriods = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonExportPdf = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonExportExcel = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonPrint = useCallback(() => { window.print(); }, []);
+
+  useRibbonAction('generateReport', handleRibbonGenerateReport);
+  useRibbonAction('schedule', handleRibbonSchedule);
+  useRibbonAction('comparePeriods', handleRibbonComparePeriods);
+  useRibbonAction('exportPdf', handleRibbonExportPdf);
+  useRibbonAction('exportExcel', handleRibbonExportExcel);
+  useRibbonAction('print', handleRibbonPrint);
 
   const theme = sectionThemes.reports;
 

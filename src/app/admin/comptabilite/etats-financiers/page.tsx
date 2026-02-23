@@ -6,6 +6,7 @@ import { PageHeader, Button, SectionCard } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
 import { sectionThemes } from '@/lib/admin/section-themes';
 import { toast } from 'sonner';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 
 interface FinancialData {
   incomeStatement: {
@@ -177,6 +178,21 @@ export default function EtatsFinanciersPage() {
   useEffect(() => {
     fetchFinancialData();
   }, [fetchFinancialData]);
+
+  // Ribbon actions
+  const handleRibbonGenerateReport = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonSchedule = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonComparePeriods = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonExportPdf = useCallback(() => { handleExportPdf(); }, [handleExportPdf]);
+  const handleRibbonExportExcel = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonPrint = useCallback(() => { window.print(); }, []);
+
+  useRibbonAction('generateReport', handleRibbonGenerateReport);
+  useRibbonAction('schedule', handleRibbonSchedule);
+  useRibbonAction('comparePeriods', handleRibbonComparePeriods);
+  useRibbonAction('exportPdf', handleRibbonExportPdf);
+  useRibbonAction('exportExcel', handleRibbonExportExcel);
+  useRibbonAction('print', handleRibbonPrint);
 
   if (loading) return (
     <div aria-live="polite" aria-busy="true" className="p-8 space-y-4 animate-pulse">

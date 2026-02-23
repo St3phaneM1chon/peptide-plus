@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { RefreshCw, DollarSign, Calendar, BarChart3 } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import { sectionThemes } from '@/lib/admin/section-themes';
 import { SectionCard, StatCard } from '@/components/admin';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 
 interface RecurringEntry {
   id: string;
@@ -183,6 +184,23 @@ export default function RecurringEntriesPage() {
   const nextDue = entries.filter(e => e.isActive).sort((a, b) =>
     new Date(a.nextRunDate).getTime() - new Date(b.nextRunDate).getTime()
   )[0];
+
+  // Ribbon actions
+  const handleRibbonNewEntry = useCallback(() => { handleSave(); }, [handleSave]);
+  const handleRibbonDelete = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonValidate = useCallback(() => { handleProcessDue(); }, [handleProcessDue]);
+  const handleRibbonCancel = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonDuplicate = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonPrint = useCallback(() => { window.print(); }, []);
+  const handleRibbonExport = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+
+  useRibbonAction('newEntry', handleRibbonNewEntry);
+  useRibbonAction('delete', handleRibbonDelete);
+  useRibbonAction('validate', handleRibbonValidate);
+  useRibbonAction('cancel', handleRibbonCancel);
+  useRibbonAction('duplicate', handleRibbonDuplicate);
+  useRibbonAction('print', handleRibbonPrint);
+  useRibbonAction('export', handleRibbonExport);
 
   if (loading) {
     return (

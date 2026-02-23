@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   DollarSign,
   ShoppingCart,
@@ -16,6 +16,7 @@ import {
 } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 
 interface SalesData {
   date: string;
@@ -197,6 +198,38 @@ export default function RapportsPage() {
 
   // Calculate real payment method distribution from region data
   const totalRegionRevenue = regionData.reduce((s, r) => s + r.revenue, 0);
+
+  // ─── Ribbon action handlers ───────────────────────────────
+  const handleRibbonGenerateReport = useCallback(() => {
+    fetchData();
+  }, []);
+
+  const handleRibbonSchedule = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleRibbonComparePeriods = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleRibbonExportPdf = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleRibbonExportExcel = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleRibbonPrint = useCallback(() => {
+    window.print();
+  }, []);
+
+  useRibbonAction('generateReport', handleRibbonGenerateReport);
+  useRibbonAction('schedule', handleRibbonSchedule);
+  useRibbonAction('comparePeriods', handleRibbonComparePeriods);
+  useRibbonAction('exportPdf', handleRibbonExportPdf);
+  useRibbonAction('exportExcel', handleRibbonExportExcel);
+  useRibbonAction('print', handleRibbonPrint);
 
   if (loading) {
     return (

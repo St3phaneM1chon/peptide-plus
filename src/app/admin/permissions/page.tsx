@@ -15,6 +15,7 @@ import { Input } from '@/components/admin/FormField';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import { addCSRFHeader } from '@/lib/csrf';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 
 type Tab = 'defaults' | 'groups' | 'overrides';
 
@@ -277,6 +278,40 @@ export default function PermissionsPage() {
     label: mod.label,
     permissions: permissions.filter(p => p.module === key),
   }));
+
+  // ─── Ribbon action handlers ───────────────────────────────
+  const handleRibbonNewRole = useCallback(() => {
+    setEditingGroup(null);
+    setGroupForm({ name: '', description: '', color: '#0ea5e9', permissionCodes: [] });
+    setGroupModal(true);
+  }, []);
+
+  const handleRibbonDelete = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleRibbonModifyPermissions = useCallback(() => {
+    setActiveTab('defaults');
+  }, []);
+
+  const handleRibbonDuplicateRole = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleRibbonAccessAudit = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleRibbonExport = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  useRibbonAction('newRole', handleRibbonNewRole);
+  useRibbonAction('delete', handleRibbonDelete);
+  useRibbonAction('modifyPermissions', handleRibbonModifyPermissions);
+  useRibbonAction('duplicateRole', handleRibbonDuplicateRole);
+  useRibbonAction('accessAudit', handleRibbonAccessAudit);
+  useRibbonAction('export', handleRibbonExport);
 
   return (
     <div>

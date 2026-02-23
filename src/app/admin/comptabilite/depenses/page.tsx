@@ -37,6 +37,7 @@ import { useI18n } from '@/i18n/client';
 import { sectionThemes } from '@/lib/admin/section-themes';
 import { toast } from 'sonner';
 import { GST_RATE, QST_RATE } from '@/lib/tax-constants';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -397,6 +398,21 @@ export default function DepensesPage() {
   // ---------------------------------------------------------------------------
   // Loading state
   // ---------------------------------------------------------------------------
+
+  // -- Ribbon actions --
+  const handleNewExpense = useCallback(() => { openCreateForm(); }, []);
+  const handleDeleteAction = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleCategorize = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleApprove = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleExport = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handlePrint = useCallback(() => { window.print(); }, []);
+
+  useRibbonAction('newExpense', handleNewExpense);
+  useRibbonAction('delete', handleDeleteAction);
+  useRibbonAction('categorize', handleCategorize);
+  useRibbonAction('approve', handleApprove);
+  useRibbonAction('export', handleExport);
+  useRibbonAction('print', handlePrint);
 
   if (loading && expenses.length === 0) {
     return (

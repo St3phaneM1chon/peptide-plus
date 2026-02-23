@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useI18n } from '@/i18n/client';
 import { PageHeader, SectionCard, Button } from '@/components/admin';
 import { sectionThemes } from '@/lib/admin/section-themes';
 import { toast } from 'sonner';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 
 interface CashFlowProjection {
   period: string;
@@ -164,6 +165,21 @@ export default function ForecastingPage() {
   // formatCurrency is now provided by useI18n()
 
   const theme = sectionThemes.reports;
+
+  // Ribbon actions
+  const handleRibbonGenerateReport = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonSchedule = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonComparePeriods = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonExportPdf = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonExportExcel = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonPrint = useCallback(() => { window.print(); }, []);
+
+  useRibbonAction('generateReport', handleRibbonGenerateReport);
+  useRibbonAction('schedule', handleRibbonSchedule);
+  useRibbonAction('comparePeriods', handleRibbonComparePeriods);
+  useRibbonAction('exportPdf', handleRibbonExportPdf);
+  useRibbonAction('exportExcel', handleRibbonExportExcel);
+  useRibbonAction('print', handleRibbonPrint);
 
   if (loading) return (
     <div aria-live="polite" aria-busy="true" className="p-8 space-y-4 animate-pulse">

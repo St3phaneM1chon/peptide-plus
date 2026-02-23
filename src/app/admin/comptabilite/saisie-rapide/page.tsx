@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { CANADIAN_PROVINCES } from '@/lib/canadianTaxes';
 import { sectionThemes } from '@/lib/admin/section-themes';
 import { SectionCard } from '@/components/admin';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 
 /**
  * SECURITY: Safe formula evaluator using a recursive descent parser.
@@ -387,6 +388,23 @@ export default function QuickEntryPage() {
   };
 
   const sortedTemplates = [...templates].sort((a, b) => b.frequency - a.frequency);
+
+  // -- Ribbon actions --
+  const handleNewEntry = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleDeleteAction = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleValidate = useCallback(() => { if (selectedTemplate) handleSave(true); }, [selectedTemplate]);
+  const handleCancel = useCallback(() => { setSelectedTemplate(null); }, []);
+  const handleDuplicate = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handlePrint = useCallback(() => { window.print(); }, []);
+  const handleExport = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+
+  useRibbonAction('newEntry', handleNewEntry);
+  useRibbonAction('delete', handleDeleteAction);
+  useRibbonAction('validate', handleValidate);
+  useRibbonAction('cancel', handleCancel);
+  useRibbonAction('duplicate', handleDuplicate);
+  useRibbonAction('print', handlePrint);
+  useRibbonAction('export', handleExport);
 
   if (loading) return (
     <div aria-live="polite" aria-busy="true" className="p-8 space-y-4 animate-pulse">

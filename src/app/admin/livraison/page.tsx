@@ -4,7 +4,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Plus,
   MapPin,
@@ -22,6 +22,7 @@ import {
 } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 
 interface ShippingZone {
   id: string;
@@ -294,6 +295,33 @@ export default function LivraisonPage() {
   const getCountryName = (code: string): string => {
     return t(`admin.shipping.countries.${code}`) || code;
   };
+
+  // Ribbon action handlers
+  const handleRibbonSave = useCallback(() => {
+    handleSaveZone();
+  }, []);
+
+  const handleRibbonResetDefaults = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleRibbonImportConfig = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleRibbonExportConfig = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleRibbonTest = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  useRibbonAction('save', handleRibbonSave);
+  useRibbonAction('resetDefaults', handleRibbonResetDefaults);
+  useRibbonAction('importConfig', handleRibbonImportConfig);
+  useRibbonAction('exportConfig', handleRibbonExportConfig);
+  useRibbonAction('test', handleRibbonTest);
 
   if (loading) {
     return (

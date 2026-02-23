@@ -9,6 +9,7 @@ import {
   Loader2, ChevronLeft, ChevronRight, ExternalLink,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 
 interface VideoItem {
   id: string;
@@ -129,6 +130,21 @@ export default function MediaVideosPage() {
       setSaving(false);
     }
   };
+
+  // ---- Ribbon action handlers (media.management) ----
+  const handleUploadRibbon = useCallback(() => { setShowForm(true); }, []);
+  const handleDeleteRibbon = useCallback(() => toast.info(t('common.comingSoon')), [t]);
+  const handleRenameRibbon = useCallback(() => toast.info(t('common.comingSoon')), [t]);
+  const handleOrganizeRibbon = useCallback(() => toast.info(t('common.comingSoon')), [t]);
+  const handleOptimizeRibbon = useCallback(() => toast.info(t('common.comingSoon')), [t]);
+  const handleExportRibbon = useCallback(() => toast.info(t('common.comingSoon')), [t]);
+
+  useRibbonAction('upload', handleUploadRibbon);
+  useRibbonAction('delete', handleDeleteRibbon);
+  useRibbonAction('rename', handleRenameRibbon);
+  useRibbonAction('organize', handleOrganizeRibbon);
+  useRibbonAction('optimize', handleOptimizeRibbon);
+  useRibbonAction('export', handleExportRibbon);
 
   return (
     <div className="p-6 max-w-5xl space-y-4">

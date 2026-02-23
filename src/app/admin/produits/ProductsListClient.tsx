@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useRef, useMemo } from 'react';
+import { useState, useRef, useMemo, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
@@ -26,6 +27,7 @@ import {
 import type { ContentListItem } from '@/components/admin/outlook';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 
 interface Product {
   id: string;
@@ -107,6 +109,7 @@ export default function ProductsListClient({
   isOwner,
 }: Props) {
   const { t } = useI18n();
+  const router = useRouter();
   const [products, setProducts] = useState<Product[]>(initialProducts);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -207,6 +210,63 @@ export default function ProductsListClient({
       setDeleting(null);
     }
   };
+
+  // ─── Ribbon Actions ────────────────────────────────────────
+
+  const handleNewProduct = useCallback(() => {
+    router.push('/admin/produits/nouveau');
+  }, [router]);
+
+  const handleRibbonDelete = useCallback(() => {
+    if (selectedProductId) {
+      handleDelete(selectedProductId);
+    } else {
+      toast.info(t('admin.products.selectFirst') || 'Select a product first');
+    }
+  }, [selectedProductId, handleDelete, t]);
+
+  const handleDuplicate = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handlePublish = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleUnpublish = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleCategoriesFilter = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handlePopularPages = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handlePdfCatalog = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleImportCsv = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
+
+  const handleRibbonExport = useCallback(() => {
+    handleExport();
+  }, [handleExport]);
+
+  useRibbonAction('newProduct', handleNewProduct);
+  useRibbonAction('delete', handleRibbonDelete);
+  useRibbonAction('duplicate', handleDuplicate);
+  useRibbonAction('publish', handlePublish);
+  useRibbonAction('unpublish', handleUnpublish);
+  useRibbonAction('categoriesFilter', handleCategoriesFilter);
+  useRibbonAction('popularPages', handlePopularPages);
+  useRibbonAction('pdfCatalog', handlePdfCatalog);
+  useRibbonAction('importCsv', handleImportCsv);
+  useRibbonAction('export', handleRibbonExport);
 
   // ─── Filtering ──────────────────────────────────────────────
 

@@ -5,6 +5,7 @@ import { useI18n } from '@/i18n/client';
 import { PageHeader, SectionCard, Button } from '@/components/admin';
 import { sectionThemes } from '@/lib/admin/section-themes';
 import { toast } from 'sonner';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 
 interface AuditEntry {
   id: string;
@@ -152,8 +153,25 @@ export default function AuditTrailPage() {
     setExporting(false);
   };
 
+  // Ribbon actions
+  const handleRibbonVerifyBalances = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonAuditTrail = useCallback(() => { loadEntries(); }, [loadEntries]);
+  const handleRibbonClosePeriod = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonReopen = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonFiscalCalendar = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonTaxReturn = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonExport = useCallback(() => { handleExport(); }, [handleExport]);
+
+  useRibbonAction('verifyBalances', handleRibbonVerifyBalances);
+  useRibbonAction('auditTrail', handleRibbonAuditTrail);
+  useRibbonAction('closePeriod', handleRibbonClosePeriod);
+  useRibbonAction('reopen', handleRibbonReopen);
+  useRibbonAction('fiscalCalendar', handleRibbonFiscalCalendar);
+  useRibbonAction('taxReturn', handleRibbonTaxReturn);
+  useRibbonAction('export', handleRibbonExport);
+
   // Stats
-  const todayCount = entries.filter(e => 
+  const todayCount = entries.filter(e =>
     new Date(e.timestamp).toDateString() === new Date().toDateString()
   ).length;
   const uniqueUsers = new Set(entries.map(e => e.userName)).size;

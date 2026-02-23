@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { FileText, Calculator, DollarSign, TrendingUp, TrendingDown, Download, Send, AlertCircle, CheckCircle } from 'lucide-react';
 import { PageHeader, SectionCard, StatCard, Button, StatusBadge } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
 import { sectionThemes } from '@/lib/admin/section-themes';
 import { toast } from 'sonner';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 import { PROVINCIAL_TAX_RATES } from '@/lib/accounting/canadian-tax-config';
 
 // ---------------------------------------------------------------------------
@@ -159,6 +160,23 @@ export default function DeclarationTpsTvqPage() {
     const a = document.createElement('a'); a.href = url; a.download = `declaration-tps-tvq-${startDate}-${endDate}.csv`; a.click();
     URL.revokeObjectURL(url);
   };
+
+  // Ribbon actions
+  const handleRibbonVerifyBalances = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonAuditTrail = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonClosePeriod = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonReopen = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonFiscalCalendar = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonTaxReturn = useCallback(() => { fetchDeclaration(); }, [fetchDeclaration]);
+  const handleRibbonExport = useCallback(() => { handleExportCsv(); }, [handleExportCsv]);
+
+  useRibbonAction('verifyBalances', handleRibbonVerifyBalances);
+  useRibbonAction('auditTrail', handleRibbonAuditTrail);
+  useRibbonAction('closePeriod', handleRibbonClosePeriod);
+  useRibbonAction('reopen', handleRibbonReopen);
+  useRibbonAction('fiscalCalendar', handleRibbonFiscalCalendar);
+  useRibbonAction('taxReturn', handleRibbonTaxReturn);
+  useRibbonAction('export', handleRibbonExport);
 
   const Row = ({ label, value, negative, bold }: { label: string; value: string; negative?: boolean; bold?: boolean }) => (
     <div className={`flex justify-between text-sm ${bold ? 'border-t pt-2 font-semibold' : ''}`}>

@@ -11,6 +11,7 @@ import { FilterBar } from '@/components/admin/FilterBar';
 import { FormField, Input, Textarea } from '@/components/admin/FormField';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 
 interface Page {
   id: string;
@@ -265,6 +266,37 @@ export default function ContenuPage() {
       toast.error(t('common.networkError'));
     }
   };
+
+  // Ribbon action handlers
+  const handleRibbonSave = useCallback(() => {
+    if (activeTab === 'pages') {
+      savePage();
+    } else {
+      saveFaq();
+    }
+  }, [activeTab]);
+
+  const handleRibbonResetDefaults = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleRibbonImportConfig = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleRibbonExportConfig = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleRibbonTest = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  useRibbonAction('save', handleRibbonSave);
+  useRibbonAction('resetDefaults', handleRibbonResetDefaults);
+  useRibbonAction('importConfig', handleRibbonImportConfig);
+  useRibbonAction('exportConfig', handleRibbonExportConfig);
+  useRibbonAction('test', handleRibbonTest);
 
   // Filtered data
   const filteredPages = pages.filter(p =>

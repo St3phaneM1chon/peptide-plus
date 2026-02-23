@@ -6,6 +6,7 @@ import { PageHeader, Button, SectionCard } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
 import { sectionThemes } from '@/lib/admin/section-themes';
 import { toast } from 'sonner';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 
 interface BudgetLine {
   id: string;
@@ -156,6 +157,23 @@ export default function BudgetPage() {
   ];
 
   const theme = sectionThemes.reports;
+
+  // Ribbon actions
+  const handleRibbonNewEntry = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonDelete = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonValidate = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonCancel = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonDuplicate = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonPrint = useCallback(() => { window.print(); }, []);
+  const handleRibbonExport = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+
+  useRibbonAction('newEntry', handleRibbonNewEntry);
+  useRibbonAction('delete', handleRibbonDelete);
+  useRibbonAction('validate', handleRibbonValidate);
+  useRibbonAction('cancel', handleRibbonCancel);
+  useRibbonAction('duplicate', handleRibbonDuplicate);
+  useRibbonAction('print', handleRibbonPrint);
+  useRibbonAction('export', handleRibbonExport);
 
   if (loading) return (
     <div aria-live="polite" aria-busy="true" className="p-8 space-y-4 animate-pulse">

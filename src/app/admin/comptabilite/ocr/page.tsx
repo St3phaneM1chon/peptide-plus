@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { ScanLine, CheckCircle2, AlertTriangle, Clock } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import { sectionThemes } from '@/lib/admin/section-themes';
 import { SectionCard, StatCard } from '@/components/admin';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 
 interface ExtractedInvoice {
   invoiceNumber?: string;
@@ -151,6 +152,19 @@ export default function OCRPage() {
 
   // formatCurrency is now provided by useI18n()
   const fmtCurrency = (amount?: number) => formatCurrency(amount || 0);
+
+  // -- Ribbon actions --
+  const handleScanDocument = useCallback(() => { fileInputRef.current?.click(); }, []);
+  const handleUpload = useCallback(() => { fileInputRef.current?.click(); }, []);
+  const handleValidateReading = useCallback(() => { handleSaveInvoice(); }, [extractedData]);
+  const handleCorrect = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleScanHistory = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+
+  useRibbonAction('scanDocument', handleScanDocument);
+  useRibbonAction('upload', handleUpload);
+  useRibbonAction('validateReading', handleValidateReading);
+  useRibbonAction('correct', handleCorrect);
+  useRibbonAction('scanHistory', handleScanHistory);
 
   return (
     <div className="space-y-6">

@@ -16,6 +16,7 @@ import {
 import { useI18n } from '@/i18n/client';
 import { sectionThemes } from '@/lib/admin/section-themes';
 import { toast } from 'sonner';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -283,6 +284,26 @@ export default function CalendrierFiscalPage() {
     due.setHours(0, 0, 0, 0);
     return Math.ceil((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
   };
+
+  // ---------------------------------------------------------------------------
+  // Ribbon actions
+  // ---------------------------------------------------------------------------
+
+  const handleRibbonVerifyBalances = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonAuditTrail = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonClosePeriod = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonReopen = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonFiscalCalendar = useCallback(() => { fetchEvents(); }, [fetchEvents]);
+  const handleRibbonTaxReturn = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonExport = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+
+  useRibbonAction('verifyBalances', handleRibbonVerifyBalances);
+  useRibbonAction('auditTrail', handleRibbonAuditTrail);
+  useRibbonAction('closePeriod', handleRibbonClosePeriod);
+  useRibbonAction('reopen', handleRibbonReopen);
+  useRibbonAction('fiscalCalendar', handleRibbonFiscalCalendar);
+  useRibbonAction('taxReturn', handleRibbonTaxReturn);
+  useRibbonAction('export', handleRibbonExport);
 
   // Group events by month
   const eventsByMonth: Record<string, FiscalEvent[]> = {};

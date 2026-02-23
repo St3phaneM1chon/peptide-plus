@@ -7,6 +7,7 @@ import { useI18n } from '@/i18n/client';
 import { useAdminLayout } from '@/lib/admin/admin-layout-context';
 import { getRibbonConfig } from '@/lib/admin/ribbon-config';
 import { folderSections } from '@/lib/admin/outlook-nav';
+import { dispatchRibbonAction } from '@/hooks/useRibbonAction';
 import type { RibbonAction, RibbonTab } from '@/lib/admin/ribbon-config';
 
 // ── NavDropdown for dashboard mega-nav ────────────────────────
@@ -121,7 +122,7 @@ function ActionDropdown({ action }: { action: RibbonAction }) {
                 key={item.key}
                 type="button"
                 className="block w-full text-left px-3 py-1.5 text-xs text-slate-700 hover:bg-sky-50 hover:text-sky-700 transition-colors"
-                onClick={() => setOpen(false)}
+                onClick={() => { dispatchRibbonAction(item.key); setOpen(false); }}
               >
                 {t(item.labelKey)}
               </button>
@@ -202,6 +203,7 @@ export default function OutlookRibbon() {
               <div key={action.key} className="flex items-center">
                 <button
                   type="button"
+                  onClick={() => dispatchRibbonAction(action.key)}
                   className={`
                     flex items-center gap-1.5 px-2.5 py-1.5 rounded text-xs font-medium transition-colors whitespace-nowrap
                     ${isP

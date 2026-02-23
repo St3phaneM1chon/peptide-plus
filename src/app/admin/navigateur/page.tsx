@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Plus, Pencil, Trash2, Globe, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 import { useI18n } from '@/i18n/client';
 import { PageHeader, Button, Modal, FormField, Input, EmptyState } from '@/components/admin';
 import { availableIcons } from '@/lib/admin/icon-resolver';
@@ -118,6 +119,33 @@ export default function NavigateurPage() {
       }
     }
   }, [sections, selectedSection, selectedSubSection]);
+
+  // Ribbon action handlers
+  const handleRibbonLaunch = useCallback(() => {
+    openCreateModal('section');
+  }, []);
+
+  const handleRibbonRefresh = useCallback(() => {
+    fetchSections();
+  }, [fetchSections]);
+
+  const handleRibbonExport = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleRibbonPurge = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleRibbonSettings = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  useRibbonAction('launch', handleRibbonLaunch);
+  useRibbonAction('refresh', handleRibbonRefresh);
+  useRibbonAction('export', handleRibbonExport);
+  useRibbonAction('purge', handleRibbonPurge);
+  useRibbonAction('settings', handleRibbonSettings);
 
   if (loading) {
     return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500" /></div>;

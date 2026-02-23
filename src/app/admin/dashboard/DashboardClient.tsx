@@ -5,9 +5,13 @@
  * Renders the dashboard UI with i18n support
  */
 
+import { useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useI18n } from '@/i18n/client';
+import { toast } from 'sonner';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 import {
   ShoppingCart,
   DollarSign,
@@ -81,6 +85,20 @@ function formatCurrency(amount: number, locale: string): string {
 
 export default function DashboardClient({ stats, recentOrders, recentUsers }: DashboardClientProps) {
   const { t, locale } = useI18n();
+  const router = useRouter();
+
+  // ─── Ribbon Actions ────────────────────────────────────────
+
+  const handleRefresh = useCallback(() => {
+    router.refresh();
+  }, [router]);
+
+  const handleExportDashboard = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  useRibbonAction('refresh', handleRefresh);
+  useRibbonAction('exportDashboard', handleExportDashboard);
 
   function getOrderStatusLabel(status: string): { label: string; classes: string } {
     switch (status) {

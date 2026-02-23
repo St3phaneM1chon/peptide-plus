@@ -5,6 +5,7 @@ import { useI18n } from '@/i18n/client';
 import { sectionThemes } from '@/lib/admin/section-themes';
 import { PageHeader, SectionCard } from '@/components/admin';
 import { toast } from 'sonner';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 
 interface BankConnection {
   id: string;
@@ -234,6 +235,23 @@ export default function BankImportPage() {
   };
 
   const theme = sectionThemes.bank;
+
+  // Ribbon actions
+  const handleRibbonSynchronize = useCallback(() => {
+    if (connections.length > 0) { handleSync(connections[0].id); } else { toast.info(t('common.comingSoon')); }
+  }, [connections, handleSync, t]);
+  const handleRibbonImportStatement = useCallback(() => { handleImportSelected(); }, [handleImportSelected]);
+  const handleRibbonReconcile = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonAutoMatch = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonBankRules = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonExport = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+
+  useRibbonAction('synchronize', handleRibbonSynchronize);
+  useRibbonAction('importStatement', handleRibbonImportStatement);
+  useRibbonAction('reconcile', handleRibbonReconcile);
+  useRibbonAction('autoMatch', handleRibbonAutoMatch);
+  useRibbonAction('bankRules', handleRibbonBankRules);
+  useRibbonAction('export', handleRibbonExport);
 
   if (loading) return (
     <div aria-live="polite" aria-busy="true" className="p-8 space-y-4 animate-pulse">

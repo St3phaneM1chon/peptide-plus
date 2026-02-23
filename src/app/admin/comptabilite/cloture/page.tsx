@@ -6,6 +6,7 @@ import { PageHeader, StatusBadge, Button, SectionCard, type BadgeVariant } from 
 import { useI18n } from '@/i18n/client';
 import { sectionThemes } from '@/lib/admin/section-themes';
 import { toast } from 'sonner';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 
 interface ChecklistItem {
   id: string;
@@ -123,6 +124,23 @@ export default function CloturePage() {
       fetchChecklist(selectedPeriod);
     }
   }, [selectedPeriod, fetchChecklist]);
+
+  // Ribbon actions
+  const handleRibbonVerifyBalances = useCallback(() => { fetchChecklist(selectedPeriod); }, [fetchChecklist, selectedPeriod]);
+  const handleRibbonAuditTrail = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonClosePeriod = useCallback(() => { handleLockPeriod(); }, [handleLockPeriod]);
+  const handleRibbonReopen = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonFiscalCalendar = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonTaxReturn = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonExport = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+
+  useRibbonAction('verifyBalances', handleRibbonVerifyBalances);
+  useRibbonAction('auditTrail', handleRibbonAuditTrail);
+  useRibbonAction('closePeriod', handleRibbonClosePeriod);
+  useRibbonAction('reopen', handleRibbonReopen);
+  useRibbonAction('fiscalCalendar', handleRibbonFiscalCalendar);
+  useRibbonAction('taxReturn', handleRibbonTaxReturn);
+  useRibbonAction('export', handleRibbonExport);
 
   const theme = sectionThemes.compliance;
 

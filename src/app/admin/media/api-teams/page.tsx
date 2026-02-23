@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Users } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
 import { IntegrationCard } from '@/components/admin/IntegrationCard';
 import { toast } from 'sonner';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 
 export default function MediaTeamsPage() {
   const { t } = useI18n();
@@ -13,7 +14,7 @@ export default function MediaTeamsPage() {
   const [clientId, setClientId] = useState('');
   const [webhookUrl, setWebhookUrl] = useState('');
   const [hasSecret, setHasSecret] = useState(false);
-  // F68 FIX: Removed unused hasWebhookUrl state
+  const [publicLink, setPublicLink] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -25,7 +26,7 @@ export default function MediaTeamsPage() {
         setClientId(data.clientId || '');
         setWebhookUrl(data.webhookUrl || '');
         setHasSecret(data.hasSecret || false);
-        // hasWebhookUrl removed (unused)
+        setPublicLink(data.publicLink || '');
       })
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -37,7 +38,7 @@ export default function MediaTeamsPage() {
       const res = await fetch('/api/admin/integrations/teams', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ enabled, tenantId, clientId, webhookUrl }),
+        body: JSON.stringify({ enabled, tenantId, clientId, webhookUrl, publicLink }),
       });
       if (!res.ok) throw new Error('Save failed');
     } catch (err) {
@@ -55,6 +56,26 @@ export default function MediaTeamsPage() {
     const data = await res.json();
     return { success: data.success, detail: data.org, error: data.error };
   };
+
+  const onConfigure = useCallback(() => {
+    const el = document.querySelector<HTMLInputElement>('input[placeholder]');
+    if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.focus(); }
+  }, []);
+  const onTestConnection = useCallback(() => { handleTest().then(r => { if (r.success) toast.success('Connection OK'); else toast.error(r.error || 'Test failed'); }); }, []);
+  const onRefreshToken = useCallback(() => {
+    setLoading(true);
+    fetch('/api/admin/integrations/teams').then(res => res.json()).then(data => {
+      setEnabled(data.enabled || false); setTenantId(data.tenantId || ''); setClientId(data.clientId || ''); setWebhookUrl(data.webhookUrl || ''); setHasSecret(data.hasSecret || false); setPublicLink(data.publicLink || '');
+    }).catch(console.error).finally(() => setLoading(false));
+  }, []);
+  const onViewLogs = useCallback(() => { window.open('/admin/logs?filter=teams', '_self'); }, []);
+  const onDocumentation = useCallback(() => { window.open('https://learn.microsoft.com/en-us/microsoftteams/platform/webhooks-and-connectors/how-to/add-incoming-webhook', '_blank'); }, []);
+
+  useRibbonAction('configure', onConfigure);
+  useRibbonAction('testConnection', onTestConnection);
+  useRibbonAction('refreshToken', onRefreshToken);
+  useRibbonAction('viewLogs', onViewLogs);
+  useRibbonAction('documentation', onDocumentation);
 
   if (loading) {
     return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500" /></div>;
@@ -103,6 +124,15 @@ export default function MediaTeamsPage() {
             readOnly: true,
             type: 'password',
             hint: t('admin.integrations.secretEnvHint'),
+          },
+          {
+            key: 'publicLink',
+            label: t('admin.integrations.publicLinkLabel'),
+            value: publicLink,
+            onChange: setPublicLink,
+            placeholder: 'https://teams.microsoft.com/l/meetup-join/...',
+            type: 'url',
+            hint: t('admin.integrations.publicLinkTeamsHint'),
           },
         ]}
         onSave={handleSave}

@@ -25,6 +25,7 @@ import {
 import type { ContentListItem } from '@/components/admin/outlook';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 
 // ── Types ─────────────────────────────────────────────────────
 
@@ -288,6 +289,49 @@ export default function WebinairesPage() {
   const selectedWebinar = useMemo(() => {
     return webinars.find((w) => w.id === selectedWebinarId) || null;
   }, [webinars, selectedWebinarId]);
+
+  // ─── Ribbon action handlers ────────────────────────────────
+  const handleRibbonNewWebinar = useCallback(() => {
+    openCreateForm();
+  }, []);
+
+  const handleRibbonDelete = useCallback(() => {
+    if (!selectedWebinar) { toast.info(t('common.comingSoon')); return; }
+    handleCancelWebinar(selectedWebinar);
+  }, [selectedWebinar, t]);
+
+  const handleRibbonSchedule = useCallback(() => {
+    if (!selectedWebinar) { toast.info(t('common.comingSoon')); return; }
+    openEditForm(selectedWebinar);
+  }, [selectedWebinar, t]);
+
+  const handleRibbonLaunchNow = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleRibbonRecording = useCallback(() => {
+    if (selectedWebinar?.recordingUrl) {
+      window.open(selectedWebinar.recordingUrl, '_blank');
+    } else {
+      toast.info(t('common.comingSoon'));
+    }
+  }, [selectedWebinar, t]);
+
+  const handleRibbonParticipantStats = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleRibbonExport = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  useRibbonAction('newWebinar', handleRibbonNewWebinar);
+  useRibbonAction('delete', handleRibbonDelete);
+  useRibbonAction('schedule', handleRibbonSchedule);
+  useRibbonAction('launchNow', handleRibbonLaunchNow);
+  useRibbonAction('recording', handleRibbonRecording);
+  useRibbonAction('participantStats', handleRibbonParticipantStats);
+  useRibbonAction('export', handleRibbonExport);
 
   // ─── Render ─────────────────────────────────────────────────
 

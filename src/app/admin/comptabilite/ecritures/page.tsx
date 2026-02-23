@@ -34,6 +34,7 @@ import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import { fetchWithRetry } from '@/lib/fetch-with-retry';
 import { sectionThemes } from '@/lib/admin/section-themes';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 
 interface JournalEntry {
   id: string;
@@ -446,6 +447,25 @@ export default function EcrituresPage() {
   );
 
   const theme = sectionThemes.entry;
+
+  // -- Ribbon actions --
+  const handleNewEntry = useCallback(() => { setShowNewEntryModal(true); }, []);
+  const handleDelete = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleValidate = useCallback(() => {
+    if (selectedEntry && selectedEntry.status === 'DRAFT') handlePostEntry(selectedEntry.id);
+  }, [selectedEntry]);
+  const handleCancel = useCallback(() => { setShowNewEntryModal(false); setShowDetailModal(false); }, []);
+  const handleDuplicate = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handlePrint = useCallback(() => { window.print(); }, []);
+  const handleExport = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+
+  useRibbonAction('newEntry', handleNewEntry);
+  useRibbonAction('delete', handleDelete);
+  useRibbonAction('validate', handleValidate);
+  useRibbonAction('cancel', handleCancel);
+  useRibbonAction('duplicate', handleDuplicate);
+  useRibbonAction('print', handlePrint);
+  useRibbonAction('export', handleExport);
 
   if (loading) return (
     <div aria-live="polite" aria-busy="true" className="p-8 space-y-4 animate-pulse">

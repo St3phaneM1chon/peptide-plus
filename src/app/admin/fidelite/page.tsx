@@ -7,6 +7,7 @@ import { Plus, Loader2, Trash2 } from 'lucide-react';
 import { PageHeader, Button, Modal, FormField, Input } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 
 interface LoyaltyTier {
   name: string;
@@ -200,6 +201,43 @@ export default function FidelitePage() {
     blue: 'bg-blue-100 text-blue-800 border-blue-400',
     purple: 'bg-purple-100 text-purple-800 border-purple-400',
   };
+
+  // ─── Ribbon action handlers ────────────────────────────────
+  const handleRibbonNewTier = useCallback(() => {
+    addNewTier();
+  }, [config]);
+
+  const handleRibbonDelete = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleRibbonAdjustPoints = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleRibbonEarningRules = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleRibbonExchangeHistory = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleRibbonMemberStats = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleRibbonExport = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  useRibbonAction('newTier', handleRibbonNewTier);
+  useRibbonAction('delete', handleRibbonDelete);
+  useRibbonAction('adjustPoints', handleRibbonAdjustPoints);
+  useRibbonAction('earningRules', handleRibbonEarningRules);
+  useRibbonAction('exchangeHistory', handleRibbonExchangeHistory);
+  useRibbonAction('memberStats', handleRibbonMemberStats);
+  useRibbonAction('export', handleRibbonExport);
 
   if (loading || !config) {
     return (

@@ -20,6 +20,7 @@ import {
 import type { ContentListItem, ContentListGroup } from '@/components/admin/outlook';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 
 // ── Types ─────────────────────────────────────────────────────
 
@@ -279,6 +280,33 @@ export default function LogsPage() {
   const selectedLog = useMemo(() => {
     return logs.find((l) => l.id === selectedLogId) || null;
   }, [logs, selectedLogId]);
+
+  // ─── Ribbon action handlers ───────────────────────────────
+  const handleRibbonLaunch = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleRibbonRefresh = useCallback(() => {
+    fetchLogs();
+  }, [fetchLogs]);
+
+  const handleRibbonExport = useCallback(() => {
+    handleExportCSV();
+  }, [handleExportCSV]);
+
+  const handleRibbonPurge = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleRibbonSettings = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  useRibbonAction('launch', handleRibbonLaunch);
+  useRibbonAction('refresh', handleRibbonRefresh);
+  useRibbonAction('export', handleRibbonExport);
+  useRibbonAction('purge', handleRibbonPurge);
+  useRibbonAction('settings', handleRibbonSettings);
 
   // ─── Render ─────────────────────────────────────────────────
 

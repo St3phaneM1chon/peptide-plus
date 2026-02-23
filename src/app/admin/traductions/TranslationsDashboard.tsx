@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 
 interface ModelCoverage {
   totalEntities: number;
@@ -663,6 +664,33 @@ export default function TranslationsDashboard() {
   const totalEntities = Object.values(overview).reduce((sum, m) => sum + (m.totalEntities || 0), 0);
   const totalFullyTranslated = Object.values(overview).reduce((sum, m) => sum + (m.fullyTranslated || 0), 0);
   const globalCoverage = totalEntities > 0 ? Math.round((totalFullyTranslated / totalEntities) * 100) : 0;
+
+  // Ribbon action handlers
+  const handleRibbonSave = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleRibbonResetDefaults = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleRibbonImportConfig = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleRibbonExportConfig = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleRibbonTest = useCallback(() => {
+    setShowWizard(true);
+  }, []);
+
+  useRibbonAction('save', handleRibbonSave);
+  useRibbonAction('resetDefaults', handleRibbonResetDefaults);
+  useRibbonAction('importConfig', handleRibbonImportConfig);
+  useRibbonAction('exportConfig', handleRibbonExportConfig);
+  useRibbonAction('test', handleRibbonTest);
 
   if (loading) {
     return (

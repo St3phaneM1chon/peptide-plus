@@ -18,6 +18,7 @@ import {
 import { useI18n } from '@/i18n/client';
 import { sectionThemes } from '@/lib/admin/section-themes';
 import { toast } from 'sonner';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 
 interface SupplierInvoice {
   id: string;
@@ -119,6 +120,27 @@ export default function FacturesFournisseursPage() {
   };
 
   const theme = sectionThemes.accounts;
+
+  // -- Ribbon actions --
+  const handleEnterInvoice = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleDeleteAction = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleApproveAction = useCallback(() => {
+    if (selectedInvoice) { handleApprove(selectedInvoice.id); setSelectedInvoice(null); }
+  }, [selectedInvoice]);
+  const handleMarkPaidAction = useCallback(() => {
+    if (selectedInvoice) { handleMarkAsPaid(selectedInvoice.id); setSelectedInvoice(null); }
+  }, [selectedInvoice]);
+  const handleSchedulePay = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleExport = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handlePrint = useCallback(() => { window.print(); }, []);
+
+  useRibbonAction('enterInvoice', handleEnterInvoice);
+  useRibbonAction('delete', handleDeleteAction);
+  useRibbonAction('approve', handleApproveAction);
+  useRibbonAction('markPaid', handleMarkPaidAction);
+  useRibbonAction('schedulePay', handleSchedulePay);
+  useRibbonAction('export', handleExport);
+  useRibbonAction('print', handlePrint);
 
   if (loading) return (
     <div aria-live="polite" aria-busy="true" className="p-8 space-y-4 animate-pulse">

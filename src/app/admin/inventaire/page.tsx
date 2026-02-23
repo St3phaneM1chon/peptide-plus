@@ -27,6 +27,7 @@ import {
 } from '@/components/admin/outlook';
 import type { ContentListItem } from '@/components/admin/outlook';
 import { useI18n } from '@/i18n/client';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 import { toast } from 'sonner';
 import { fetchWithRetry } from '@/lib/fetch-with-retry';
 
@@ -202,6 +203,54 @@ export default function InventairePage() {
     setEditingId(null);
     setAdjustmentReason('');
   };
+
+  // ─── Ribbon Actions ─────────────────────────────────────────
+
+  const ribbonAddStock = useCallback(() => {
+    if (selectedItem) {
+      setEditingId(selectedItem.id);
+      setEditValue(selectedItem.stockQuantity);
+    } else {
+      toast.info(t('common.comingSoon'));
+    }
+  }, [selectedItem, t]);
+
+  const ribbonAdjust = useCallback(() => {
+    if (selectedItem) {
+      setEditingId(selectedItem.id);
+      setEditValue(selectedItem.stockQuantity);
+    } else {
+      toast.info(t('common.comingSoon'));
+    }
+  }, [selectedItem, t]);
+
+  const ribbonMonthlyStats = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const ribbonRenewalList = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const ribbonSubmissions = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const ribbonOrderOnline = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const ribbonExport = useCallback(() => {
+    handleExportInventory();
+  }, []);
+
+  useRibbonAction('addStock', ribbonAddStock);
+  useRibbonAction('adjust', ribbonAdjust);
+  useRibbonAction('monthlyStats', ribbonMonthlyStats);
+  useRibbonAction('renewalList', ribbonRenewalList);
+  useRibbonAction('submissions', ribbonSubmissions);
+  useRibbonAction('orderOnline', ribbonOrderOnline);
+  useRibbonAction('export', ribbonExport);
 
   // ─── Filtering ──────────────────────────────────────────────
 

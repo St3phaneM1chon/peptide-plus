@@ -5,6 +5,7 @@ import DOMPurify from 'isomorphic-dompurify';
 import { useI18n } from '@/i18n/client';
 import { sectionThemes } from '@/lib/admin/section-themes';
 import { toast } from 'sonner';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 
 interface SearchResult {
   id: string;
@@ -152,6 +153,19 @@ export default function SearchPage() {
     byStatus: {} as Record<string, number>,
     byMonth: {} as Record<string, number>,
   };
+
+  // Ribbon actions
+  const handleRibbonSearch = useCallback(() => { handleSearch(); }, [handleSearch]);
+  const handleRibbonFilterPeriod = useCallback(() => { setShowFilters(prev => !prev); }, []);
+  const handleRibbonExportPdf = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonPrint = useCallback(() => { window.print(); }, []);
+  const handleRibbonNewAccount = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+
+  useRibbonAction('search', handleRibbonSearch);
+  useRibbonAction('filterPeriod', handleRibbonFilterPeriod);
+  useRibbonAction('exportPdf', handleRibbonExportPdf);
+  useRibbonAction('print', handleRibbonPrint);
+  useRibbonAction('newAccount', handleRibbonNewAccount);
 
   const theme = sectionThemes.overview;
 

@@ -1,13 +1,16 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { Globe } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
 import { IntegrationCard } from '@/components/admin/IntegrationCard';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 import { toast } from 'sonner';
 
 export default function MediaMetaPage() {
   const { t } = useI18n();
+  const router = useRouter();
   const [enabled, setEnabled] = useState(false);
   const [appId, setAppId] = useState('');
   const [pixelId, setPixelId] = useState('');
@@ -15,6 +18,7 @@ export default function MediaMetaPage() {
   const [igAccountId, setIgAccountId] = useState('');
   const [hasAccessToken, setHasAccessToken] = useState(false);
   const [hasAppSecret, setHasAppSecret] = useState(false);
+  const [publicLink, setPublicLink] = useState('');
   const [webhookUrl, setWebhookUrl] = useState('');
   const [loading, setLoading] = useState(true);
 
@@ -29,6 +33,7 @@ export default function MediaMetaPage() {
         setIgAccountId(data.igAccountId || '');
         setHasAccessToken(data.hasAccessToken || false);
         setHasAppSecret(data.hasAppSecret || false);
+        setPublicLink(data.publicLink || '');
         setWebhookUrl(data.webhookUrl || '');
       })
       .catch(console.error)
@@ -41,7 +46,7 @@ export default function MediaMetaPage() {
       const res = await fetch('/api/admin/integrations/meta', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ enabled, appId, pixelId, pageId, igAccountId }),
+        body: JSON.stringify({ enabled, appId, pixelId, pageId, igAccountId, publicLink }),
       });
       if (!res.ok) throw new Error('Save failed');
     } catch (err) {
@@ -59,6 +64,57 @@ export default function MediaMetaPage() {
     const data = await res.json();
     return { success: data.success, detail: data.detail, error: data.error };
   };
+
+  // --- Ribbon actions ---
+  const onConfigure = useCallback(() => {
+    const firstInput = document.querySelector<HTMLInputElement>('input:not([readonly])');
+    if (firstInput) { firstInput.scrollIntoView({ behavior: 'smooth', block: 'center' }); firstInput.focus(); }
+  }, []);
+
+  const onTestConnection = useCallback(async () => {
+    try {
+      const result = await handleTest();
+      if (result.success) toast.success(t('admin.integrations.testSuccess'));
+      else toast.error(result.error || t('admin.integrations.testFailed'));
+    } catch { toast.error(t('admin.integrations.testFailed')); }
+  }, [t]);
+
+  const onSyncData = useCallback(() => {
+    fetch('/api/admin/integrations/meta')
+      .then(res => res.json())
+      .then(data => {
+        setEnabled(data.enabled || false);
+        setAppId(data.appId || '');
+        setPixelId(data.pixelId || '');
+        setPageId(data.pageId || '');
+        setIgAccountId(data.igAccountId || '');
+        setHasAccessToken(data.hasAccessToken || false);
+        setHasAppSecret(data.hasAppSecret || false);
+        setPublicLink(data.publicLink || '');
+        setWebhookUrl(data.webhookUrl || '');
+        toast.success(t('common.refreshed'));
+      })
+      .catch(() => toast.error(t('common.error')));
+  }, [t]);
+
+  const onViewLogs = useCallback(() => { router.push('/admin/logs?filter=meta'); }, [router]);
+  const onDocumentation = useCallback(() => { window.open('https://developers.facebook.com/docs/marketing-apis', '_blank'); }, []);
+  const onExport = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+
+  useRibbonAction('configure', onConfigure);
+  useRibbonAction('testConnection', onTestConnection);
+  useRibbonAction('syncData', onSyncData);
+  useRibbonAction('viewLogs', onViewLogs);
+  useRibbonAction('documentation', onDocumentation);
+  useRibbonAction('export', onExport);
+
+  // --- media.ads ribbon actions ---
+  useRibbonAction('newAdCampaign', useCallback(() => { toast.info(t('common.comingSoon')); }, [t]));
+  useRibbonAction('delete', useCallback(() => { toast.info(t('common.comingSoon')); }, [t]));
+  useRibbonAction('pause', useCallback(() => { toast.info(t('common.comingSoon')); }, [t]));
+  useRibbonAction('resume', useCallback(() => { toast.info(t('common.comingSoon')); }, [t]));
+  useRibbonAction('modifyBudget', useCallback(() => { toast.info(t('common.comingSoon')); }, [t]));
+  useRibbonAction('performanceStats', useCallback(() => { toast.info(t('common.comingSoon')); }, [t]));
 
   if (loading) {
     return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500" /></div>;
@@ -124,6 +180,15 @@ export default function MediaMetaPage() {
             readOnly: true,
             type: 'password',
             hint: t('admin.integrations.secretEnvHint'),
+          },
+          {
+            key: 'publicLink',
+            label: t('admin.integrations.publicLinkLabel'),
+            value: publicLink,
+            onChange: setPublicLink,
+            placeholder: 'https://facebook.com/biocyclepeptides',
+            type: 'url',
+            hint: t('admin.integrations.publicLinkHint'),
           },
         ]}
         onSave={handleSave}

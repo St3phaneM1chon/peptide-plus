@@ -15,6 +15,7 @@ import {
 import type { ContentListItem } from '@/components/admin/outlook';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 import { fetchWithRetry } from '@/lib/fetch-with-retry';
 
 // ── Types ─────────────────────────────────────────────────────
@@ -327,6 +328,64 @@ export default function PromotionsPage() {
     if (!selectedId) return null;
     return promotions.find(p => p.id === selectedId) || null;
   }, [promotions, selectedId]);
+
+  // ─── Ribbon Actions ─────────────────────────────────────────
+
+  const onNewPromotion = useCallback(() => {
+    openCreateForm();
+  }, []);
+
+  const onDeleteRibbon = useCallback(() => {
+    if (!selectedId) return;
+    deletePromotion(selectedId);
+  }, [selectedId]);
+
+  const onSchedule = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const onActivate = useCallback(() => {
+    if (!selectedId || !selectedPromo || selectedPromo.isActive) return;
+    toggleActive(selectedId, false);
+  }, [selectedId, selectedPromo]);
+
+  const onDeactivate = useCallback(() => {
+    if (!selectedId || !selectedPromo || !selectedPromo.isActive) return;
+    toggleActive(selectedId, true);
+  }, [selectedId, selectedPromo]);
+
+  const onDuplicate = useCallback(() => {
+    if (!selectedPromo) return;
+    setEditingPromo(null);
+    setFormName(selectedPromo.name + ' (copy)');
+    setFormPromoKind(selectedPromo.type);
+    setFormType(selectedPromo.discountType);
+    setFormValue(selectedPromo.discountValue);
+    setFormStartDate('');
+    setFormEndDate('');
+    setFormAppliesToAll(selectedPromo.type === 'FLASH_SALE');
+    setFormBuyQty(selectedPromo.buyQuantity ?? 2);
+    setFormGetQty(selectedPromo.getQuantity ?? 1);
+    setFormMinQuantity(selectedPromo.minQuantity ?? 1);
+    setShowForm(true);
+  }, [selectedPromo]);
+
+  const onPerformanceStats = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const onExport = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  useRibbonAction('newPromotion', onNewPromotion);
+  useRibbonAction('delete', onDeleteRibbon);
+  useRibbonAction('schedule', onSchedule);
+  useRibbonAction('activate', onActivate);
+  useRibbonAction('deactivate', onDeactivate);
+  useRibbonAction('duplicate', onDuplicate);
+  useRibbonAction('performanceStats', onPerformanceStats);
+  useRibbonAction('export', onExport);
 
   // ─── Render ──────────────────────────────────────────────────
 

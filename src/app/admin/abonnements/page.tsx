@@ -24,6 +24,7 @@ import {
 import type { ContentListItem } from '@/components/admin/outlook';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 
 // ── Types ─────────────────────────────────────────────────────
 
@@ -299,6 +300,46 @@ export default function AbonnementsPage() {
   const handleSelectSub = useCallback((id: string) => {
     setSelectedSubId(id);
   }, []);
+
+  // ─── Ribbon action handlers ────────────────────────────────
+  const handleRibbonNewSubscription = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleRibbonDelete = useCallback(() => {
+    if (!selectedSub) { toast.info(t('common.comingSoon')); return; }
+    updateStatus(selectedSub.id, 'CANCELLED');
+  }, [selectedSub, t]);
+
+  const handleRibbonSuspend = useCallback(() => {
+    if (!selectedSub) { toast.info(t('common.comingSoon')); return; }
+    updateStatus(selectedSub.id, 'PAUSED');
+  }, [selectedSub, t]);
+
+  const handleRibbonReactivate = useCallback(() => {
+    if (!selectedSub) { toast.info(t('common.comingSoon')); return; }
+    updateStatus(selectedSub.id, 'ACTIVE');
+  }, [selectedSub, t]);
+
+  const handleRibbonRefund = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleRibbonMrrStats = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleRibbonExport = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  useRibbonAction('newSubscription', handleRibbonNewSubscription);
+  useRibbonAction('delete', handleRibbonDelete);
+  useRibbonAction('suspend', handleRibbonSuspend);
+  useRibbonAction('reactivate', handleRibbonReactivate);
+  useRibbonAction('refund', handleRibbonRefund);
+  useRibbonAction('mrrStats', handleRibbonMrrStats);
+  useRibbonAction('export', handleRibbonExport);
 
   // ─── Loading state ──────────────────────────────────────────
 

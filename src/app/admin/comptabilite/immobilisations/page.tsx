@@ -27,6 +27,7 @@ import {
 import { useI18n } from '@/i18n/client';
 import { sectionThemes } from '@/lib/admin/section-themes';
 import { toast } from 'sonner';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 import { CCA_CLASSES } from '@/lib/accounting/canadian-tax-config';
 
 // ---------------------------------------------------------------------------
@@ -293,6 +294,26 @@ export default function ImmobilisationsPage() {
       return { ...f, ccaClass: val, ccaRate: cls ? String(cls.rate) : '' };
     });
   };
+
+  // ---------------------------------------------------------------------------
+  // Ribbon actions
+  // ---------------------------------------------------------------------------
+
+  const handleRibbonNewEntry = useCallback(() => { openCreate(); }, []);
+  const handleRibbonDelete = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonValidate = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonCancel = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonDuplicate = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonPrint = useCallback(() => { window.print(); }, []);
+  const handleRibbonExport = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+
+  useRibbonAction('newEntry', handleRibbonNewEntry);
+  useRibbonAction('delete', handleRibbonDelete);
+  useRibbonAction('validate', handleRibbonValidate);
+  useRibbonAction('cancel', handleRibbonCancel);
+  useRibbonAction('duplicate', handleRibbonDuplicate);
+  useRibbonAction('print', handleRibbonPrint);
+  useRibbonAction('export', handleRibbonExport);
 
   // ---------------------------------------------------------------------------
   // Derived

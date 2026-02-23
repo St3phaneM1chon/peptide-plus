@@ -17,6 +17,7 @@ import {
 import type { ContentListItem } from '@/components/admin/outlook';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 
 // ── Types ─────────────────────────────────────────────────────
 
@@ -322,6 +323,63 @@ export default function PromoCodesPage() {
     if (!selectedId) return null;
     return promoCodes.find(p => p.id === selectedId) || null;
   }, [promoCodes, selectedId]);
+
+  // ─── Ribbon Actions ─────────────────────────────────────────
+
+  const onNewPromo = useCallback(() => {
+    resetForm();
+    setShowForm(true);
+  }, []);
+
+  const onDelete = useCallback(() => {
+    if (!selectedId) return;
+    deletePromoCode(selectedId);
+  }, [selectedId]);
+
+  const onDuplicate = useCallback(() => {
+    if (!selectedPromo) return;
+    setFormData({
+      code: '',
+      description: selectedPromo.description || '',
+      type: selectedPromo.type,
+      value: selectedPromo.value,
+      minOrderAmount: selectedPromo.minOrderAmount?.toString() || '',
+      maxDiscount: selectedPromo.maxDiscount?.toString() || '',
+      usageLimit: selectedPromo.usageLimit?.toString() || '',
+      usageLimitPerUser: selectedPromo.usageLimitPerUser?.toString() || '',
+      startsAt: selectedPromo.startsAt ? selectedPromo.startsAt.slice(0, 16) : '',
+      endsAt: selectedPromo.endsAt ? selectedPromo.endsAt.slice(0, 16) : '',
+      firstOrderOnly: selectedPromo.firstOrderOnly,
+    });
+    setEditingCode(null);
+    setShowForm(true);
+  }, [selectedPromo]);
+
+  const onActivate = useCallback(() => {
+    if (!selectedId || !selectedPromo || selectedPromo.isActive) return;
+    toggleActive(selectedId, false);
+  }, [selectedId, selectedPromo]);
+
+  const onDeactivate = useCallback(() => {
+    if (!selectedId || !selectedPromo || !selectedPromo.isActive) return;
+    toggleActive(selectedId, true);
+  }, [selectedId, selectedPromo]);
+
+  const onUsageStats = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const onExport = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  useRibbonAction('newPromo', onNewPromo);
+  useRibbonAction('delete', onDelete);
+  useRibbonAction('duplicate', onDuplicate);
+  useRibbonAction('activate', onActivate);
+  useRibbonAction('deactivate', onDeactivate);
+  useRibbonAction('usageStats', onUsageStats);
+  useRibbonAction('export', onExport);
 
   // ─── Render ──────────────────────────────────────────────────
 

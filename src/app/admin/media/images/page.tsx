@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import NextImage from 'next/image';
 import { toast } from 'sonner';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 // FIX: F59 - Use shared formatFileSize utility instead of local duplicate
 import { formatFileSize } from '@/lib/format-utils';
 
@@ -111,6 +112,21 @@ export default function MediaImagesPage() {
     setCopiedId(item.id);
     setTimeout(() => setCopiedId(null), 2000);
   };
+
+  // ---- Ribbon action handlers (media.management) ----
+  const handleUploadRibbon = useCallback(() => { fileInputRef.current?.click(); }, []);
+  const handleDeleteRibbon = useCallback(() => toast.info(t('common.comingSoon')), [t]);
+  const handleRenameRibbon = useCallback(() => toast.info(t('common.comingSoon')), [t]);
+  const handleOrganizeRibbon = useCallback(() => toast.info(t('common.comingSoon')), [t]);
+  const handleOptimizeRibbon = useCallback(() => toast.info(t('common.comingSoon')), [t]);
+  const handleExportRibbon = useCallback(() => toast.info(t('common.comingSoon')), [t]);
+
+  useRibbonAction('upload', handleUploadRibbon);
+  useRibbonAction('delete', handleDeleteRibbon);
+  useRibbonAction('rename', handleRenameRibbon);
+  useRibbonAction('organize', handleOrganizeRibbon);
+  useRibbonAction('optimize', handleOptimizeRibbon);
+  useRibbonAction('export', handleExportRibbon);
 
   return (
     <div className="p-6 max-w-5xl space-y-4">

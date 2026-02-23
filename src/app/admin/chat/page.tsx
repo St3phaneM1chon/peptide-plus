@@ -30,6 +30,7 @@ import {
 } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 
 interface Message {
   id: string;
@@ -284,6 +285,38 @@ export default function AdminChatPage() {
   const activeChats = conversations.filter(c => c.status === 'ACTIVE').length;
   const waitingChats = conversations.filter(c => c.status === 'WAITING_ADMIN').length;
   const unreadCount = conversations.reduce((sum, c) => sum + (c._count?.messages || 0), 0);
+
+  // ─── Ribbon action handlers ────────────────────────────────
+  const handleRibbonNewMessage = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleRibbonCloseConversation = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleRibbonTransfer = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleRibbonMarkResolved = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleRibbonArchive = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleRibbonExportHistory = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  useRibbonAction('newMessage', handleRibbonNewMessage);
+  useRibbonAction('closeConversation', handleRibbonCloseConversation);
+  useRibbonAction('transfer', handleRibbonTransfer);
+  useRibbonAction('markResolved', handleRibbonMarkResolved);
+  useRibbonAction('archive', handleRibbonArchive);
+  useRibbonAction('exportHistory', handleRibbonExportHistory);
 
   return (
     <>

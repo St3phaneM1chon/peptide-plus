@@ -17,6 +17,7 @@ import { useI18n } from '@/i18n/client';
 import { sectionThemes } from '@/lib/admin/section-themes';
 import { toast } from 'sonner';
 import { CCA_CLASSES } from '@/lib/accounting/canadian-tax-config';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -355,6 +356,19 @@ export default function PlanComptablePage() {
   };
 
   const theme = sectionThemes.accounts;
+
+  // -- Ribbon actions --
+  const handleSearch = useCallback(() => { /* search is already live via searchTerm state */ }, []);
+  const handleFilterPeriod = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleExportPdfAction = useCallback(() => { handleExportGifi(); }, []);
+  const handlePrint = useCallback(() => { window.print(); }, []);
+  const handleNewAccount = useCallback(() => { openModal(null); }, []);
+
+  useRibbonAction('search', handleSearch);
+  useRibbonAction('filterPeriod', handleFilterPeriod);
+  useRibbonAction('exportPdf', handleExportPdfAction);
+  useRibbonAction('print', handlePrint);
+  useRibbonAction('newAccount', handleNewAccount);
 
   // ---------------------------------------------------------------------------
   // Render helpers

@@ -23,6 +23,7 @@ import {
 } from '@/components/admin/outlook';
 import type { ContentListItem } from '@/components/admin/outlook';
 import { useI18n } from '@/i18n/client';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 import { toast } from 'sonner';
 import { fetchWithRetry } from '@/lib/fetch-with-retry';
 import SupplierForm from './SupplierForm';
@@ -222,6 +223,42 @@ export default function FournisseursPage() {
     setEditingSupplier(null);
     setShowForm(true);
   };
+
+  // ─── Ribbon Actions ─────────────────────────────────────────
+
+  const ribbonAddSupplier = useCallback(() => {
+    openCreate();
+  }, []);
+
+  const ribbonOpenWebsite = useCallback(() => {
+    if (selectedSupplier?.website) {
+      window.open(selectedSupplier.website, '_blank', 'noopener,noreferrer');
+    } else {
+      toast.info(t('common.comingSoon'));
+    }
+  }, [selectedSupplier, t]);
+
+  const ribbonEdit = useCallback(() => {
+    if (selectedSupplier) {
+      openEdit(selectedSupplier);
+    }
+  }, [selectedSupplier]);
+
+  const ribbonDelete = useCallback(() => {
+    if (selectedSupplier) {
+      setShowDeleteConfirm(selectedSupplier.id);
+    }
+  }, [selectedSupplier]);
+
+  const ribbonExport = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  useRibbonAction('addSupplier', ribbonAddSupplier);
+  useRibbonAction('openWebsite', ribbonOpenWebsite);
+  useRibbonAction('edit', ribbonEdit);
+  useRibbonAction('delete', ribbonDelete);
+  useRibbonAction('export', ribbonExport);
 
   // ─── ContentList data ─────────────────────────────────────
 

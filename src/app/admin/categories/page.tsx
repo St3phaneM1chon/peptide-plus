@@ -28,6 +28,7 @@ import {
 } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 
 interface Category {
   id: string;
@@ -238,6 +239,40 @@ export default function CategoriesPage() {
     }
     setDeleteConfirm(null);
   };
+
+  // ─── Ribbon Actions ────────────────────────────────────────
+
+  const handleNewCategory = useCallback(() => {
+    resetForm();
+    setShowForm(true);
+  }, [resetForm]);
+
+  const handleNewSubcategory = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleRibbonDelete = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleVisitStats = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleReorganize = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleExport = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  useRibbonAction('newCategory', handleNewCategory);
+  useRibbonAction('newSubcategory', handleNewSubcategory);
+  useRibbonAction('delete', handleRibbonDelete);
+  useRibbonAction('visitStats', handleVisitStats);
+  useRibbonAction('reorganize', handleReorganize);
+  useRibbonAction('export', handleExport);
 
   // Table columns
   const columns: Column<(typeof treeCategories)[number]>[] = useMemo(() => [

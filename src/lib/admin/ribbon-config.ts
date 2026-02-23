@@ -1032,7 +1032,8 @@ export function getSubSectionId(
   if (
     pathname.startsWith('/admin/comptabilite/grand-livre') ||
     pathname.startsWith('/admin/comptabilite/plan-comptable') ||
-    pathname.startsWith('/admin/comptabilite/immobilisations')
+    pathname.startsWith('/admin/comptabilite/immobilisations') ||
+    pathname.startsWith('/admin/comptabilite/recherche')
   ) return 'accounting.accounts';
   if (pathname.startsWith('/admin/comptabilite/factures-clients')) return 'accounting.customerInvoices';
   if (pathname.startsWith('/admin/comptabilite/factures-fournisseurs')) return 'accounting.supplierInvoices';

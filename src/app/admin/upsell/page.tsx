@@ -15,6 +15,7 @@ import {
 import type { ContentListItem } from '@/components/admin/outlook';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 
 // ── Types ─────────────────────────────────────────────────────
 
@@ -294,6 +295,62 @@ export default function UpsellAdminPage() {
     if (!selectedId) return null;
     return configs.find(c => c.id === selectedId) || null;
   }, [configs, selectedId]);
+
+  // ─── Ribbon Actions ─────────────────────────────────────────
+
+  const onNewRule = useCallback(() => {
+    openForm();
+  }, []);
+
+  const onDeleteRibbon = useCallback(() => {
+    if (!selectedId) return;
+    handleDelete(selectedId);
+  }, [selectedId]);
+
+  const onActivate = useCallback(() => {
+    if (!selectedConfig || selectedConfig.isEnabled) return;
+    // Open form pre-filled with enabled toggled
+    openForm({ ...selectedConfig, isEnabled: true });
+  }, [selectedConfig]);
+
+  const onDeactivate = useCallback(() => {
+    if (!selectedConfig || !selectedConfig.isEnabled) return;
+    openForm({ ...selectedConfig, isEnabled: false });
+  }, [selectedConfig]);
+
+  const onDuplicate = useCallback(() => {
+    if (!selectedConfig) return;
+    resetForm();
+    setFormProductId('');
+    setFormEnabled(selectedConfig.isEnabled);
+    setFormShowQty(selectedConfig.showQuantityDiscount);
+    setFormShowSub(selectedConfig.showSubscription);
+    setFormDisplayRule(selectedConfig.displayRule);
+    setFormQtyTitle(selectedConfig.quantityTitle || '');
+    setFormQtySubtitle(selectedConfig.quantitySubtitle || '');
+    setFormSubTitle(selectedConfig.subscriptionTitle || '');
+    setFormSubSubtitle(selectedConfig.subscriptionSubtitle || '');
+    setFormSuggestedQty(selectedConfig.suggestedQuantity?.toString() || '');
+    setFormSuggestedFreq(selectedConfig.suggestedFrequency || '');
+    setEditingConfig(null);
+    setShowForm(true);
+  }, [selectedConfig]);
+
+  const onConversionStats = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const onExport = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  useRibbonAction('newRule', onNewRule);
+  useRibbonAction('delete', onDeleteRibbon);
+  useRibbonAction('activate', onActivate);
+  useRibbonAction('deactivate', onDeactivate);
+  useRibbonAction('duplicate', onDuplicate);
+  useRibbonAction('conversionStats', onConversionStats);
+  useRibbonAction('export', onExport);
 
   // ─── Render ──────────────────────────────────────────────────
 

@@ -24,6 +24,7 @@ import { PageHeader, StatCard, SectionCard, StatusBadge, Button, SelectFilter } 
 import { useI18n } from '@/i18n/client';
 import { sectionThemes } from '@/lib/admin/section-themes';
 import { toast } from 'sonner';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 
 interface DashboardStats {
   tresorerie: number;
@@ -494,6 +495,17 @@ export default function ComptabiliteDashboard() {
   ];
 
   const theme = sectionThemes.overview;
+
+  // -- Ribbon actions --
+  const handleRefresh = useCallback(() => { setLoading(true); fetchDashboard(); }, [fetchDashboard]);
+  const handleExportReport = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleClosePeriod = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handlePrint = useCallback(() => { window.print(); }, []);
+
+  useRibbonAction('refresh', handleRefresh);
+  useRibbonAction('exportReport', handleExportReport);
+  useRibbonAction('closePeriod', handleClosePeriod);
+  useRibbonAction('print', handlePrint);
 
   if (loading) return (
     <div aria-live="polite" aria-busy="true" className="p-8 space-y-4 animate-pulse">

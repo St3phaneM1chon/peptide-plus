@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import {
   BarChart3,
@@ -17,6 +17,7 @@ import { PageHeader, StatusBadge, Button, SectionCard, type Column, DataTable, t
 import { useI18n } from '@/i18n/client';
 import { sectionThemes } from '@/lib/admin/section-themes';
 import { toast } from 'sonner';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 
 interface TaxReport {
   id: string;
@@ -149,6 +150,21 @@ export default function RapportsComptablesPage() {
   }, [selectedYear]);
 
   const theme = sectionThemes.reports;
+
+  // Ribbon actions
+  const handleRibbonGenerateReport = useCallback(() => { handleGeneratePdf('income'); }, [handleGeneratePdf]);
+  const handleRibbonSchedule = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonComparePeriods = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonExportPdf = useCallback(() => { handleGeneratePdf('income'); }, [handleGeneratePdf]);
+  const handleRibbonExportExcel = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonPrint = useCallback(() => { window.print(); }, []);
+
+  useRibbonAction('generateReport', handleRibbonGenerateReport);
+  useRibbonAction('schedule', handleRibbonSchedule);
+  useRibbonAction('comparePeriods', handleRibbonComparePeriods);
+  useRibbonAction('exportPdf', handleRibbonExportPdf);
+  useRibbonAction('exportExcel', handleRibbonExportExcel);
+  useRibbonAction('print', handleRibbonPrint);
 
   if (loading) return (
     <div aria-live="polite" aria-busy="true" className="p-8 space-y-4 animate-pulse">

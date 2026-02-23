@@ -19,6 +19,7 @@ import {
   SectionCard,
 } from '@/components/admin';
 import { toast } from 'sonner';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 
 interface AgingBucket {
   label: string;
@@ -120,6 +121,17 @@ export default function AgingPage() {
     ];
     return colors[index] || colors[0];
   };
+
+  // Ribbon actions
+  const handleRibbonRefresh = useCallback(() => { fetchAgingReport(); }, [fetchAgingReport]);
+  const handleRibbonSendReminders = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonExport = useCallback(() => { exportCSV(); }, [exportCSV]);
+  const handleRibbonPrint = useCallback(() => { window.print(); }, []);
+
+  useRibbonAction('refresh', handleRibbonRefresh);
+  useRibbonAction('sendReminders', handleRibbonSendReminders);
+  useRibbonAction('export', handleRibbonExport);
+  useRibbonAction('print', handleRibbonPrint);
 
   const theme = sectionThemes.accounts;
 

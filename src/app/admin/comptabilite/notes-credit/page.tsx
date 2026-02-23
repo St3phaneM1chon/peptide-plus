@@ -12,6 +12,7 @@ import { DataTable, type Column } from '@/components/admin/DataTable';
 import { useI18n } from '@/i18n/client';
 import { sectionThemes } from '@/lib/admin/section-themes';
 import { toast } from 'sonner';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 
 interface CreditNote {
   id: string;
@@ -98,6 +99,21 @@ export default function NotesCreditPage() {
   }, [fetchCreditNotes]);
 
   const theme = sectionThemes.accounts;
+
+  // -- Ribbon actions --
+  const handleNewCreditNote = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleDeleteAction = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleApply = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleCancel = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleExportPdf = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handlePrint = useCallback(() => { window.print(); }, []);
+
+  useRibbonAction('newCreditNote', handleNewCreditNote);
+  useRibbonAction('delete', handleDeleteAction);
+  useRibbonAction('apply', handleApply);
+  useRibbonAction('cancel', handleCancel);
+  useRibbonAction('exportPdf', handleExportPdf);
+  useRibbonAction('print', handlePrint);
 
   if (loading) return (
     <div aria-live="polite" aria-busy="true" className="p-8 space-y-4 animate-pulse">

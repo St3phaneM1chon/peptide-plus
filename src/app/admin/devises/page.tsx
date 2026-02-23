@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Plus, RefreshCw, Pencil, Coins, CheckCircle, Star } from 'lucide-react';
 import { PageHeader, Button, Modal } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 
 interface Currency {
   id: string;
@@ -224,6 +225,33 @@ export default function DevisesPage() {
       setRefreshing(false);
     }
   };
+
+  // Ribbon action handlers
+  const handleRibbonSave = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleRibbonResetDefaults = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleRibbonImportConfig = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleRibbonExportConfig = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleRibbonTest = useCallback(() => {
+    updateExchangeRates();
+  }, []);
+
+  useRibbonAction('save', handleRibbonSave);
+  useRibbonAction('resetDefaults', handleRibbonResetDefaults);
+  useRibbonAction('importConfig', handleRibbonImportConfig);
+  useRibbonAction('exportConfig', handleRibbonExportConfig);
+  useRibbonAction('test', handleRibbonTest);
 
   if (loading) {
     return (

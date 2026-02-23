@@ -1,17 +1,21 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { Video } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
 import { IntegrationCard } from '@/components/admin/IntegrationCard';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 import { toast } from 'sonner';
 
 export default function MediaYouTubePage() {
   const { t } = useI18n();
+  const router = useRouter();
   const [enabled, setEnabled] = useState(false);
   const [channelId, setChannelId] = useState('');
   const [apiKey, setApiKey] = useState('');
   const [hasClientSecret, setHasClientSecret] = useState(false);
+  const [publicLink, setPublicLink] = useState('');
   const [webhookUrl, setWebhookUrl] = useState('');
   const [loading, setLoading] = useState(true);
 
@@ -23,6 +27,7 @@ export default function MediaYouTubePage() {
         setChannelId(data.channelId || '');
         setApiKey(data.apiKey || '');
         setHasClientSecret(data.hasClientSecret || false);
+        setPublicLink(data.publicLink || '');
         setWebhookUrl(data.webhookUrl || '');
       })
       .catch(console.error)
@@ -35,7 +40,7 @@ export default function MediaYouTubePage() {
       const res = await fetch('/api/admin/integrations/youtube', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ enabled, channelId, apiKey }),
+        body: JSON.stringify({ enabled, channelId, apiKey, publicLink }),
       });
       if (!res.ok) throw new Error('Save failed');
     } catch (err) {
@@ -53,6 +58,54 @@ export default function MediaYouTubePage() {
     const data = await res.json();
     return { success: data.success, detail: data.detail, error: data.error };
   };
+
+  // --- Ribbon actions ---
+  const onConfigure = useCallback(() => {
+    const firstInput = document.querySelector<HTMLInputElement>('input:not([readonly])');
+    if (firstInput) { firstInput.scrollIntoView({ behavior: 'smooth', block: 'center' }); firstInput.focus(); }
+  }, []);
+
+  const onTestConnection = useCallback(async () => {
+    try {
+      const result = await handleTest();
+      if (result.success) toast.success(t('admin.integrations.testSuccess'));
+      else toast.error(result.error || t('admin.integrations.testFailed'));
+    } catch { toast.error(t('admin.integrations.testFailed')); }
+  }, [t]);
+
+  const onSyncData = useCallback(() => {
+    fetch('/api/admin/integrations/youtube')
+      .then(res => res.json())
+      .then(data => {
+        setEnabled(data.enabled || false);
+        setChannelId(data.channelId || '');
+        setApiKey(data.apiKey || '');
+        setHasClientSecret(data.hasClientSecret || false);
+        setPublicLink(data.publicLink || '');
+        setWebhookUrl(data.webhookUrl || '');
+        toast.success(t('common.refreshed'));
+      })
+      .catch(() => toast.error(t('common.error')));
+  }, [t]);
+
+  const onViewLogs = useCallback(() => { router.push('/admin/logs?filter=youtube'); }, [router]);
+  const onDocumentation = useCallback(() => { window.open('https://developers.google.com/youtube/v3', '_blank'); }, []);
+  const onExport = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+
+  useRibbonAction('configure', onConfigure);
+  useRibbonAction('testConnection', onTestConnection);
+  useRibbonAction('syncData', onSyncData);
+  useRibbonAction('viewLogs', onViewLogs);
+  useRibbonAction('documentation', onDocumentation);
+  useRibbonAction('export', onExport);
+
+  // --- media.ads ribbon actions ---
+  useRibbonAction('newAdCampaign', useCallback(() => { toast.info(t('common.comingSoon')); }, [t]));
+  useRibbonAction('delete', useCallback(() => { toast.info(t('common.comingSoon')); }, [t]));
+  useRibbonAction('pause', useCallback(() => { toast.info(t('common.comingSoon')); }, [t]));
+  useRibbonAction('resume', useCallback(() => { toast.info(t('common.comingSoon')); }, [t]));
+  useRibbonAction('modifyBudget', useCallback(() => { toast.info(t('common.comingSoon')); }, [t]));
+  useRibbonAction('performanceStats', useCallback(() => { toast.info(t('common.comingSoon')); }, [t]));
 
   if (loading) {
     return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500" /></div>;
@@ -93,6 +146,15 @@ export default function MediaYouTubePage() {
             readOnly: true,
             type: 'password',
             hint: t('admin.integrations.secretEnvHint'),
+          },
+          {
+            key: 'publicLink',
+            label: t('admin.integrations.publicLinkLabel'),
+            value: publicLink,
+            onChange: setPublicLink,
+            placeholder: 'https://youtube.com/@biocyclepeptides',
+            type: 'url',
+            hint: t('admin.integrations.publicLinkHint'),
           },
         ]}
         onSave={handleSave}

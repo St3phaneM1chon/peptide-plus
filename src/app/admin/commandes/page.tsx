@@ -29,6 +29,7 @@ import {
 } from '@/components/admin/outlook';
 import type { ContentListItem, ContentListGroup } from '@/components/admin/outlook';
 import { useI18n } from '@/i18n/client';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 import { toast } from 'sonner';
 import { fetchWithRetry } from '@/lib/fetch-with-retry';
 
@@ -566,6 +567,47 @@ ${selectedOrder.adminNotes ? `<div class="notes"><strong>${t('admin.commandes.pr
       };
     }
   }, [selectedOrder, t, locale]);
+
+  // ─── Ribbon Actions ─────────────────────────────────────────
+
+  const ribbonNewOrder = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const ribbonDelete = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const ribbonPrint = useCallback(() => {
+    if (selectedOrder) {
+      handlePrintDeliverySlip();
+    } else {
+      toast.info(t('common.comingSoon'));
+    }
+  }, [selectedOrder, handlePrintDeliverySlip, t]);
+
+  const ribbonMarkShipped = useCallback(() => {
+    if (selectedOrder) {
+      updateOrderStatus(selectedOrder.id, 'SHIPPED');
+    }
+  }, [selectedOrder]);
+
+  const ribbonRefund = useCallback(() => {
+    if (selectedOrder) {
+      openRefundModal();
+    }
+  }, [selectedOrder]);
+
+  const ribbonExport = useCallback(() => {
+    handleExportCsv();
+  }, [handleExportCsv]);
+
+  useRibbonAction('newOrder', ribbonNewOrder);
+  useRibbonAction('delete', ribbonDelete);
+  useRibbonAction('print', ribbonPrint);
+  useRibbonAction('markShipped', ribbonMarkShipped);
+  useRibbonAction('refund', ribbonRefund);
+  useRibbonAction('export', ribbonExport);
 
   // ─── Filtering ──────────────────────────────────────────────
 

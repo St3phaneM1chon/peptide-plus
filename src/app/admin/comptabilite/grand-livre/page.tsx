@@ -6,6 +6,7 @@ import { PageHeader, Button, SectionCard } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
 import { sectionThemes } from '@/lib/admin/section-themes';
 import { toast } from 'sonner';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 
 interface Transaction {
   id: string;
@@ -151,6 +152,19 @@ export default function GrandLivrePage() {
   const currentAccount = accounts.find(a => a.code === selectedAccount);
 
   const theme = sectionThemes.accounts;
+
+  // -- Ribbon actions --
+  const handleSearch = useCallback(() => { /* search is already live via searchTerm state */ }, []);
+  const handleFilterPeriod = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleExportPdf = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handlePrint = useCallback(() => { window.print(); }, []);
+  const handleNewAccount = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+
+  useRibbonAction('search', handleSearch);
+  useRibbonAction('filterPeriod', handleFilterPeriod);
+  useRibbonAction('exportPdf', handleExportPdf);
+  useRibbonAction('print', handlePrint);
+  useRibbonAction('newAccount', handleNewAccount);
 
   if (loading && accounts.length === 0) return (
     <div aria-live="polite" aria-busy="true" className="p-8 space-y-4 animate-pulse">

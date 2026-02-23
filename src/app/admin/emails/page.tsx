@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Component, type ReactNode, type ErrorInfo } from 'react';
+import { useState, useEffect, useCallback, Component, type ReactNode, type ErrorInfo } from 'react';
 import {
   Mail, SendHorizontal, CheckCircle2, XCircle, BarChart3,
   LayoutTemplate, Save, Eye, Inbox, Megaphone, GitBranch,
@@ -21,6 +21,7 @@ import CampaignList from './campaigns/CampaignList';
 import CampaignEditor from './campaigns/CampaignEditor';
 import SegmentBuilder from './segments/SegmentBuilder';
 import { toast } from 'sonner';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 
 // ---- Error Boundary ----
 
@@ -312,6 +313,102 @@ export default function EmailsPage() {
       toast.error(t('common.errorOccurred'));
     }
   };
+
+  // ---- Ribbon action handlers ----
+
+  // Mail tab actions
+  const handleNewMessage = useCallback(() => toast.info(t('common.comingSoon')), [t]);
+  const handleDelete = useCallback(() => toast.info(t('common.comingSoon')), [t]);
+  const handleArchive = useCallback(() => toast.info(t('common.comingSoon')), [t]);
+  const handleReply = useCallback(() => toast.info(t('common.comingSoon')), [t]);
+  const handleReplyAll = useCallback(() => toast.info(t('common.comingSoon')), [t]);
+  const handleForward = useCallback(() => toast.info(t('common.comingSoon')), [t]);
+  const handleFlag = useCallback(() => toast.info(t('common.comingSoon')), [t]);
+  const handleMarkRead = useCallback(() => toast.info(t('common.comingSoon')), [t]);
+  const handleMoveTo = useCallback(() => toast.info(t('common.comingSoon')), [t]);
+
+  // Templates tab actions
+  const handleNewTemplate = useCallback(() => toast.info(t('common.comingSoon')), [t]);
+  const handleDuplicate = useCallback(() => toast.info(t('common.comingSoon')), [t]);
+  const handlePreview = useCallback(() => toast.info(t('common.comingSoon')), [t]);
+  const handleTestSend = useCallback(() => { sendTestEmail(); }, []);
+  const handleVariables = useCallback(() => toast.info(t('common.comingSoon')), [t]);
+  const handleExport = useCallback(() => toast.info(t('common.comingSoon')), [t]);
+
+  // Campaigns tab actions
+  const handleNewEmailCampaign = useCallback(() => toast.info(t('common.comingSoon')), [t]);
+  const handleSchedule = useCallback(() => toast.info(t('common.comingSoon')), [t]);
+  const handleSendNow = useCallback(() => toast.info(t('common.comingSoon')), [t]);
+  const handleAbTest = useCallback(() => toast.info(t('common.comingSoon')), [t]);
+  const handleStats = useCallback(() => toast.info(t('common.comingSoon')), [t]);
+
+  // Flows tab actions
+  const handleNewFlow = useCallback(() => { setCreatingFlow(true); }, []);
+  const handleActivate = useCallback(() => toast.info(t('common.comingSoon')), [t]);
+  const handleDeactivate = useCallback(() => toast.info(t('common.comingSoon')), [t]);
+  const handleTriggerStats = useCallback(() => toast.info(t('common.comingSoon')), [t]);
+
+  // Analytics tab actions
+  const handleRefresh = useCallback(() => { fetchData(); }, []);
+  const handle7d = useCallback(() => toast.info(t('common.comingSoon')), [t]);
+  const handle30d = useCallback(() => toast.info(t('common.comingSoon')), [t]);
+  const handle90d = useCallback(() => toast.info(t('common.comingSoon')), [t]);
+  const handle1y = useCallback(() => toast.info(t('common.comingSoon')), [t]);
+  const handleComparePeriods = useCallback(() => toast.info(t('common.comingSoon')), [t]);
+  const handleExportReport = useCallback(() => toast.info(t('common.comingSoon')), [t]);
+  const handlePrint = useCallback(() => toast.info(t('common.comingSoon')), [t]);
+
+  // Segments tab actions
+  const handleNewSegment = useCallback(() => toast.info(t('common.comingSoon')), [t]);
+  const handleRefreshCount = useCallback(() => toast.info(t('common.comingSoon')), [t]);
+  const handleExportContacts = useCallback(() => toast.info(t('common.comingSoon')), [t]);
+
+  // Mailing list tab actions
+  const handleAddContact = useCallback(() => toast.info(t('common.comingSoon')), [t]);
+  const handleImportCsv = useCallback(() => toast.info(t('common.comingSoon')), [t]);
+  const handleCleanBounces = useCallback(() => toast.info(t('common.comingSoon')), [t]);
+  const handleUnsubscribe = useCallback(() => toast.info(t('common.comingSoon')), [t]);
+
+  // Register all ribbon actions
+  useRibbonAction('newMessage', handleNewMessage);
+  useRibbonAction('delete', handleDelete);
+  useRibbonAction('archive', handleArchive);
+  useRibbonAction('reply', handleReply);
+  useRibbonAction('replyAll', handleReplyAll);
+  useRibbonAction('forward', handleForward);
+  useRibbonAction('flag', handleFlag);
+  useRibbonAction('markRead', handleMarkRead);
+  useRibbonAction('moveTo', handleMoveTo);
+  useRibbonAction('newTemplate', handleNewTemplate);
+  useRibbonAction('duplicate', handleDuplicate);
+  useRibbonAction('preview', handlePreview);
+  useRibbonAction('testSend', handleTestSend);
+  useRibbonAction('variables', handleVariables);
+  useRibbonAction('export', handleExport);
+  useRibbonAction('newEmailCampaign', handleNewEmailCampaign);
+  useRibbonAction('schedule', handleSchedule);
+  useRibbonAction('sendNow', handleSendNow);
+  useRibbonAction('abTest', handleAbTest);
+  useRibbonAction('stats', handleStats);
+  useRibbonAction('newFlow', handleNewFlow);
+  useRibbonAction('activate', handleActivate);
+  useRibbonAction('deactivate', handleDeactivate);
+  useRibbonAction('triggerStats', handleTriggerStats);
+  useRibbonAction('refresh', handleRefresh);
+  useRibbonAction('7d', handle7d);
+  useRibbonAction('30d', handle30d);
+  useRibbonAction('90d', handle90d);
+  useRibbonAction('1y', handle1y);
+  useRibbonAction('comparePeriods', handleComparePeriods);
+  useRibbonAction('exportReport', handleExportReport);
+  useRibbonAction('print', handlePrint);
+  useRibbonAction('newSegment', handleNewSegment);
+  useRibbonAction('refreshCount', handleRefreshCount);
+  useRibbonAction('exportContacts', handleExportContacts);
+  useRibbonAction('addContact', handleAddContact);
+  useRibbonAction('importCsv', handleImportCsv);
+  useRibbonAction('cleanBounces', handleCleanBounces);
+  useRibbonAction('unsubscribe', handleUnsubscribe);
 
   const stats = {
     total: logs.length,

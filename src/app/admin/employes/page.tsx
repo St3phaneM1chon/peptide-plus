@@ -14,6 +14,7 @@ import {
 import type { ContentListItem } from '@/components/admin/outlook';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 
 // ── Types ─────────────────────────────────────────────────────
 
@@ -274,6 +275,29 @@ export default function EmployesPage() {
   const selectedEmployee = useMemo(() => {
     return employees.find((e) => e.id === selectedEmployeeId) || null;
   }, [employees, selectedEmployeeId]);
+
+  // ─── Ribbon action handlers ───────────────────────────────
+  const handleRibbonNewRole = useCallback(() => {
+    resetForm();
+    setShowForm(true);
+  }, []);
+
+  const handleRibbonSave = useCallback(() => {
+    handleSubmit();
+  }, []);
+
+  const handleRibbonDelete = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleRibbonExport = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  useRibbonAction('newRole', handleRibbonNewRole);
+  useRibbonAction('save', handleRibbonSave);
+  useRibbonAction('delete', handleRibbonDelete);
+  useRibbonAction('export', handleRibbonExport);
 
   // ─── Render ─────────────────────────────────────────────────
 

@@ -9,6 +9,7 @@ import {
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import { addCSRFHeader } from '@/lib/csrf';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 
 // =====================================================
 // TYPES
@@ -208,6 +209,33 @@ export default function UatPage() {
       setCleaningUp(null);
     }
   };
+
+  // ─── Ribbon action handlers ───────────────────────────────
+  const handleRibbonLaunch = useCallback(() => {
+    setShowModal(true);
+  }, []);
+
+  const handleRibbonRefresh = useCallback(() => {
+    fetchRuns();
+  }, [fetchRuns]);
+
+  const handleRibbonExport = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleRibbonPurge = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleRibbonSettings = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  useRibbonAction('launch', handleRibbonLaunch);
+  useRibbonAction('refresh', handleRibbonRefresh);
+  useRibbonAction('export', handleRibbonExport);
+  useRibbonAction('purge', handleRibbonPurge);
+  useRibbonAction('settings', handleRibbonSettings);
 
   return (
     <div className="space-y-6">

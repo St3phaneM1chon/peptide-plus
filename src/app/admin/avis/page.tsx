@@ -27,6 +27,7 @@ import {
 import type { ContentListItem } from '@/components/admin/outlook';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 
 // ── Types ─────────────────────────────────────────────────────
 
@@ -230,6 +231,42 @@ export default function AvisPage() {
   const handleSelectReview = useCallback((id: string) => {
     setSelectedReviewId(id);
   }, []);
+
+  // ─── Ribbon action handlers ────────────────────────────────
+  const handleRibbonRespond = useCallback(() => {
+    if (!selectedReview) { toast.info(t('common.comingSoon')); return; }
+    setAdminResponse(selectedReview.adminResponse || '');
+    setShowResponseModal(true);
+  }, [selectedReview, t]);
+
+  const handleRibbonApprove = useCallback(() => {
+    if (!selectedReview) { toast.info(t('common.comingSoon')); return; }
+    updateReviewStatus(selectedReview.id, 'APPROVED');
+  }, [selectedReview, t]);
+
+  const handleRibbonReject = useCallback(() => {
+    if (!selectedReview) { toast.info(t('common.comingSoon')); return; }
+    updateReviewStatus(selectedReview.id, 'REJECTED');
+  }, [selectedReview, t]);
+
+  const handleRibbonReportContent = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleRibbonConvertTestimonial = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleRibbonExport = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  useRibbonAction('respond', handleRibbonRespond);
+  useRibbonAction('approve', handleRibbonApprove);
+  useRibbonAction('reject', handleRibbonReject);
+  useRibbonAction('reportContent', handleRibbonReportContent);
+  useRibbonAction('convertTestimonial', handleRibbonConvertTestimonial);
+  useRibbonAction('export', handleRibbonExport);
 
   const renderStars = (rating: number) => (
     <div className="flex gap-0.5">

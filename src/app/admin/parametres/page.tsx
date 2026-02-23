@@ -9,6 +9,7 @@ import { Button, FormField, Input, MediaUploader } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import { addCSRFHeader } from '@/lib/csrf';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 
 export default function ParametresPage() {
   const { t } = useI18n();
@@ -143,6 +144,33 @@ export default function ParametresPage() {
     }
     setSaving(false);
   };
+
+  // ─── Ribbon action handlers ───────────────────────────────
+  const handleRibbonSave = useCallback(() => {
+    handleSave();
+  }, [handleSave]);
+
+  const handleRibbonResetDefaults = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleRibbonImportConfig = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleRibbonExportConfig = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const handleRibbonTest = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  useRibbonAction('save', handleRibbonSave);
+  useRibbonAction('resetDefaults', handleRibbonResetDefaults);
+  useRibbonAction('importConfig', handleRibbonImportConfig);
+  useRibbonAction('exportConfig', handleRibbonExportConfig);
+  useRibbonAction('test', handleRibbonTest);
 
   if (loading) {
     return (

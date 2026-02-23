@@ -31,6 +31,7 @@ import {
 import { useI18n } from '@/i18n/client';
 import { locales as LOCALES } from '@/i18n/config';
 import { toast } from 'sonner';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 
 const LOCALE_LABELS: Record<string, string> = {
   en: 'English', fr: 'Fran\u00e7ais', es: 'Espa\u00f1ol', de: 'Deutsch',
@@ -254,6 +255,44 @@ export default function BannieresPage() {
       [locale]: { ...(prev[locale] || { locale, title: '' }), locale, [field]: value },
     }));
   };
+
+  // ─── Ribbon Actions ─────────────────────────────────────────
+
+  const onNewBanner = useCallback(() => {
+    openCreate();
+  }, []);
+
+  const onDeleteRibbon = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const onUploadImage = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const onActivate = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const onDeactivate = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const onReorganize = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const onPreview = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  useRibbonAction('newBanner', onNewBanner);
+  useRibbonAction('delete', onDeleteRibbon);
+  useRibbonAction('uploadImage', onUploadImage);
+  useRibbonAction('activate', onActivate);
+  useRibbonAction('deactivate', onDeactivate);
+  useRibbonAction('reorganize', onReorganize);
+  useRibbonAction('preview', onPreview);
 
   if (loading) {
     return (

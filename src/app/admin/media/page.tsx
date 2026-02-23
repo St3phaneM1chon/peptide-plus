@@ -1,12 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useI18n } from '@/i18n/client';
 import {
   Video, MessageCircle, Users, Search, Activity, Globe, Briefcase,
   Image as ImageIcon, FolderOpen, CheckCircle2, XCircle, Loader2, Monitor, ExternalLink,
 } from 'lucide-react';
 import Link from 'next/link';
+import { toast } from 'sonner';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 import { TeamsIcon, ZoomIcon, WebexIcon, GoogleMeetIcon } from '@/components/admin/icons/platform-icons';
 import { platforms } from '@/lib/admin/platform-config';
 
@@ -96,6 +98,17 @@ export default function MediaDashboardPage() {
 
     loadAll();
   }, []);
+
+  // ---- Ribbon action handlers (media section-level: upload, delete, play, export) ----
+  const handleUploadRibbon = useCallback(() => toast.info(t('common.comingSoon')), [t]);
+  const handleDeleteRibbon = useCallback(() => toast.info(t('common.comingSoon')), [t]);
+  const handlePlayRibbon = useCallback(() => toast.info(t('common.comingSoon')), [t]);
+  const handleExportRibbon = useCallback(() => toast.info(t('common.comingSoon')), [t]);
+
+  useRibbonAction('upload', handleUploadRibbon);
+  useRibbonAction('delete', handleDeleteRibbon);
+  useRibbonAction('play', handlePlayRibbon);
+  useRibbonAction('export', handleExportRibbon);
 
   if (loading) {
     return (

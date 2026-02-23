@@ -25,6 +25,7 @@ import {
 import type { ContentListItem } from '@/components/admin/outlook';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
+import { useRibbonAction } from '@/hooks/useRibbonAction';
 
 // ── Types ─────────────────────────────────────────────────────
 
@@ -300,6 +301,98 @@ export default function NewsletterPage() {
     if (!selectedId || activeTab !== 'campaigns') return null;
     return campaigns.find(c => c.id === selectedId) || null;
   }, [campaigns, selectedId, activeTab]);
+
+  // ─── Ribbon Actions ─────────────────────────────────────────
+
+  const onNewNewsletter = useCallback(() => {
+    setNewCampaign({ subject: '', content: '' });
+    setShowComposer(true);
+  }, []);
+
+  const onDeleteRibbon = useCallback(() => {
+    if (!selectedId) return;
+    if (activeTab === 'subscribers' && selectedSubscriber) {
+      // Trigger subscriber deletion
+      if (!confirm(t('admin.newsletter.deleteSubscriberConfirm') || `Remove ${selectedSubscriber.email}?`)) return;
+      setDeletingId(selectedSubscriber.id);
+      fetch(`/api/admin/newsletter/subscribers/${selectedSubscriber.id}`, { method: 'DELETE' })
+        .then(res => {
+          if (!res.ok) {
+            toast.error(t('common.deleteFailed'));
+            return;
+          }
+          setSubscribers(prev => prev.filter(s => s.id !== selectedSubscriber.id));
+          setSelectedId(null);
+          toast.success(t('admin.newsletter.subscriberDeleted') || 'Subscriber removed');
+        })
+        .catch(() => toast.error(t('common.networkError')))
+        .finally(() => setDeletingId(null));
+    }
+  }, [selectedId, activeTab, selectedSubscriber, t]);
+
+  const onScheduleDelivery = useCallback(() => {
+    setNewCampaign({ subject: '', content: '' });
+    setShowComposer(true);
+  }, []);
+
+  const onSendNow = useCallback(() => {
+    if (!selectedCampaign || selectedCampaign.status !== 'DRAFT') {
+      toast.info(t('common.comingSoon'));
+      return;
+    }
+    if (!confirm(t('admin.newsletter.sendConfirm') || `Send "${selectedCampaign.subject}" to all active subscribers?`)) return;
+    fetch(`/api/admin/newsletter/campaigns/${selectedCampaign.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'SENT' }),
+    })
+      .then(res => {
+        if (!res.ok) {
+          toast.error(t('common.saveFailed'));
+          return;
+        }
+        toast.success(t('admin.newsletter.campaignSent') || 'Campaign sent');
+        fetchData();
+      })
+      .catch(() => toast.error(t('common.networkError')));
+  }, [selectedCampaign, t, fetchData]);
+
+  const onPreview = useCallback(() => {
+    toast.info(t('common.comingSoon'));
+  }, [t]);
+
+  const onOpenClickStats = useCallback(() => {
+    if (!selectedCampaign || selectedCampaign.status !== 'SENT') {
+      toast.info(t('common.comingSoon'));
+      return;
+    }
+    setStatsLoading(true);
+    setShowStatsModal(true);
+    fetch(`/api/admin/newsletter/campaigns/${selectedCampaign.id}/stats`)
+      .then(res => {
+        if (!res.ok) {
+          toast.error(t('common.error'));
+          setShowStatsModal(false);
+          return;
+        }
+        return res.json();
+      })
+      .then(data => { if (data) setStatsData(data); })
+      .catch(() => { toast.error(t('common.networkError')); setShowStatsModal(false); })
+      .finally(() => setStatsLoading(false));
+  }, [selectedCampaign, t]);
+
+  const onManageSubscribers = useCallback(() => {
+    setActiveTab('subscribers');
+  }, []);
+
+  useRibbonAction('newNewsletter', onNewNewsletter);
+  useRibbonAction('delete', onDeleteRibbon);
+  useRibbonAction('scheduleDelivery', onScheduleDelivery);
+  useRibbonAction('sendNow', onSendNow);
+  useRibbonAction('preview', onPreview);
+  useRibbonAction('openClickStats', onOpenClickStats);
+  useRibbonAction('manageSubscribers', onManageSubscribers);
 
   // ─── Render ──────────────────────────────────────────────────
 
