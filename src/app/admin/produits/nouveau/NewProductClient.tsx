@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Plus, Trash2, GripVertical, ExternalLink, FileText, ImageIcon, Video, Link2 } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, ExternalLink, FileText, ImageIcon, Video, Link2, ClipboardList, FileEdit, Package } from 'lucide-react';
 import { getFormatTypes, getProductTypes, getAvailabilityOptions, VOLUME_OPTIONS, getStockDisplay } from '../product-constants';
 import { MediaUploader } from '@/components/admin/MediaUploader';
 import { useI18n } from '@/i18n/client';
@@ -261,10 +261,16 @@ export default function NewProductClient({ categories }: Props) {
     }
   };
 
+  // BUG-086 FIX: Replaced emoji icons with Lucide icons for consistent cross-platform rendering
+  const tabIcons = {
+    header: <ClipboardList className="w-4 h-4" />,
+    texts: <FileEdit className="w-4 h-4" />,
+    formats: <Package className="w-4 h-4" />,
+  };
   const tabs = [
-    { id: 'header' as const, label: t('admin.productForm.tabHeader'), icon: '📋', count: null },
-    { id: 'texts' as const, label: t('admin.productForm.tabTexts'), icon: '📝', count: productTexts.length },
-    { id: 'formats' as const, label: t('admin.productForm.tabFormats'), icon: '📦', count: formats.length },
+    { id: 'header' as const, label: t('admin.productForm.tabHeader'), icon: tabIcons.header, count: null },
+    { id: 'texts' as const, label: t('admin.productForm.tabTexts'), icon: tabIcons.texts, count: productTexts.length },
+    { id: 'formats' as const, label: t('admin.productForm.tabFormats'), icon: tabIcons.formats, count: formats.length },
   ];
 
   return (
@@ -302,7 +308,7 @@ export default function NewProductClient({ categories }: Props) {
                   : 'text-neutral-600 hover:text-neutral-900'
               }`}
             >
-              <span>{tab.icon}</span>
+              {tab.icon}
               {tab.label}
               {tab.count !== null && tab.count > 0 && (
                 <span className="px-1.5 py-0.5 text-xs bg-sky-100 text-sky-700 rounded-full">{tab.count}</span>
@@ -598,7 +604,7 @@ export default function NewProductClient({ categories }: Props) {
                     className="flex items-center justify-between p-4 cursor-pointer hover:bg-neutral-50 transition-colors"
                   >
                     <div className="flex items-center gap-3">
-                      <GripVertical className="w-4 h-4 text-neutral-300" />
+                      {/* BUG-099 FIX: Removed GripVertical icon since drag-and-drop is not implemented */}
                       <div>
                         <p className="font-medium text-neutral-900">{pt.name || t('admin.productForm.untitledText')}</p>
                         <p className="text-sm text-neutral-500 truncate max-w-md">

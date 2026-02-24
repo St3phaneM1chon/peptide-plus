@@ -14,6 +14,7 @@ import {
   Check,
   ChevronRight,
   Trash2,
+  AlertTriangle, // BUG-057: Icon for orphan warning / fix button
 } from 'lucide-react';
 import {
   PageHeader,
@@ -90,7 +91,7 @@ export default function CategoriesPage() {
   // Build flat list ordered as tree: parent, then children indented
   const treeCategories = useMemo(() => {
     const parents = categories.filter(c => !c.parentId).sort((a, b) => a.sortOrder - b.sortOrder);
-    const result: (Category & { isChild: boolean; childCount: number })[] = [];
+    const result: (Category & { isChild: boolean; childCount: number; isOrphan: boolean })[] = [];
 
     for (const parent of parents) {
       const children = categories
@@ -101,19 +102,20 @@ export default function CategoriesPage() {
         ...parent,
         isChild: false,
         childCount: children.length,
+        isOrphan: false,
         _count: { products: parent._count.products + childProductCount },
       });
       for (const child of children) {
-        result.push({ ...child, isChild: true, childCount: 0 });
+        result.push({ ...child, isChild: true, childCount: 0, isOrphan: false });
       }
     }
 
     // Also include orphans (categories with parentId pointing to missing parent)
-    // TODO: BUG-057 - Add "Fix orphans" action button to re-parent or remove orphan categories
+    // BUG-057 FIX: Flag orphans so the UI can render a corrective action button
     const allIds = new Set(categories.map(c => c.id));
     const orphans = categories.filter(c => c.parentId && !allIds.has(c.parentId));
     for (const orphan of orphans) {
-      result.push({ ...orphan, isChild: false, childCount: 0 });
+      result.push({ ...orphan, isChild: false, childCount: 0, isOrphan: true });
     }
 
     return result;
@@ -198,6 +200,27 @@ export default function CategoriesPage() {
     setFormData(prev => ({ ...prev, parentId }));
     setShowForm(true);
   }, [resetForm]);
+
+  // BUG-057 FIX: Set orphan category as root by clearing its parentId
+  const fixOrphan = useCallback(async (catId: string) => {
+    try {
+      const res = await fetch(`/api/categories/${catId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ parentId: null }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        toast.error(data.error || t('common.updateFailed'));
+        return;
+      }
+      await fetchCategories();
+      toast.success(t('admin.categories.orphanFixed') || 'Category set as root category');
+    } catch (err) {
+      console.error('Error fixing orphan:', err);
+      toast.error(t('common.networkError'));
+    }
+  }, [t]);
 
   const toggleActive = useCallback(async (catId: string, currentStatus: boolean) => {
     try {
@@ -302,6 +325,13 @@ export default function CategoriesPage() {
             </p>
             <p className="text-xs text-slate-500">/{cat.slug}</p>
           </div>
+          {/* BUG-057 FIX: Show orphan warning badge */}
+          {cat.isOrphan && (
+            <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full flex items-center gap-1">
+              <AlertTriangle className="w-3 h-3" />
+              {t('admin.categories.orphan') || 'Orphan'}
+            </span>
+          )}
           {!cat.isChild && cat.childCount > 0 && (
             <span className="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full">
               {cat.childCount} sub
@@ -354,8 +384,20 @@ export default function CategoriesPage() {
       width: '180px',
       render: (cat) => (
         <div className="flex items-center gap-1 justify-center">
+          {/* BUG-057 FIX: Show "Fix: Set as root" button for orphan categories */}
+          {cat.isOrphan && (
+            <Button
+              variant="ghost"
+              size="sm"
+              icon={AlertTriangle}
+              onClick={(e) => { e.stopPropagation(); fixOrphan(cat.id); }}
+              className="text-amber-600 hover:text-amber-700"
+            >
+              {t('admin.categories.fixOrphan') || 'Set as root'}
+            </Button>
+          )}
           {/* Add subcategory (only for parent categories) */}
-          {!cat.isChild && (
+          {!cat.isChild && !cat.isOrphan && (
             <Button
               variant="ghost"
               size="sm"
@@ -386,7 +428,7 @@ export default function CategoriesPage() {
         </div>
       ),
     },
-  ], [locale, treeCategories, t, toggleActive, startEdit, startCreateChild]);
+  ], [locale, treeCategories, t, toggleActive, startEdit, startCreateChild, fixOrphan]);
 
   return (
     <>

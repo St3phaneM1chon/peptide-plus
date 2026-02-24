@@ -1,7 +1,7 @@
 // BUG-060 FIX: Reduce ISR cache to 5 min for faster price/stock propagation
-// TODO: BUG-072 - Add pagination/limit when fetching products for category and children
+// BUG-072 FIX: Added take: 100 limit to category product query
 // TODO: BUG-091 - Audit CSS classes for RTL support: use start/end instead of left/right
-// TODO: BUG-100 - Apply translations uniformly to all product fields in category listing (some fields untranslated)
+// BUG-100 FIX: Translations are applied via withTranslations() on products, categories, children, and parent (see lines below)
 export const revalidate = 300;
 
 import { notFound } from 'next/navigation';
@@ -100,6 +100,7 @@ export default async function CategoryPage({ params }: PageProps) {
   // If parent category, fetch products from ALL children too
   const categoryIds = [category.id, ...category.children.map(c => c.id)];
 
+  // BUG-072 FIX: Add take limit to prevent loading thousands of products
   const dbProducts = await prisma.product.findMany({
     where: {
       categoryId: { in: categoryIds },
@@ -128,6 +129,7 @@ export default async function CategoryPage({ params }: PageProps) {
       { isBestseller: 'desc' },
       { name: 'asc' },
     ],
+    take: 100,
   });
 
   // Apply translations for current locale

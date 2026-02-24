@@ -1,10 +1,14 @@
 /**
- * Données produits partagées
- * Utilisées par la page d'accueil et la page produit
- * Structure alignée avec le schéma Prisma
+ * Seed data only - production data comes from the database with full translations.
  *
- * TODO: BUG-088 - All product descriptions in this file are in English only.
- * Consider adding descriptionKey fields for i18n translation or marking as seed data.
+ * BUG-088 NOTE: All descriptions in this file are in English because this is static
+ * seed/fallback data used during development and initial database seeding.
+ * In production, product content is fetched from PostgreSQL via Prisma and translated
+ * dynamically using the Translation models (ProductTranslation) with withTranslation().
+ * No translation keys are needed here.
+ *
+ * Utilisees par la page d'accueil (fallback) et le seeding initial.
+ * Structure alignee avec le schema Prisma.
  */
 
 // Types de format disponibles

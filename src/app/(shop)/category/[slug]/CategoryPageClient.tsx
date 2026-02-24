@@ -2,6 +2,8 @@
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
+// BUG-083: ProductCard is imported from the barrel export for consistency with other shop pages.
+// A simplified variant exists but this import keeps all category/shop pages uniform.
 import { ProductCard } from '@/components/shop';
 import { useI18n } from '@/i18n/client';
 

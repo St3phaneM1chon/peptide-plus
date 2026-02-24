@@ -3,7 +3,6 @@ export const dynamic = 'force-dynamic';
  * API - Product Search
  * Supports: ?q=query&category=slug&minPrice=0&maxPrice=500&inStock=true&purity=99&sort=relevance&limit=50
  */
-// TODO: BUG-077 - Integrate multiLanguageSearch() from @/lib/search.ts when locale !== 'en'
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
@@ -15,6 +14,9 @@ import { cacheGetOrSet } from '@/lib/cache';
 import { createHash } from 'crypto';
 import { logSearch } from '@/lib/search-analytics';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
+// BUG-035 FIX: Import fullTextSearch for real ts_rank relevance scoring
+// BUG-077 FIX: Import multiLanguageSearch for non-English locales
+import { fullTextSearch, multiLanguageSearch } from '@/lib/search';
 
 export async function GET(request: NextRequest) {
   try {
@@ -46,6 +48,117 @@ export async function GET(request: NextRequest) {
     const cacheKeyData = JSON.stringify({ q, category, minPrice, maxPrice, inStock, purity, sort, page, limit, locale });
     const cacheHash = createHash('md5').update(cacheKeyData).digest('hex');
     const cacheKey = `search:${cacheHash}`;
+
+    // BUG-035 FIX: When sort=relevance AND a search query is provided, use fullTextSearch()
+    // for real ts_rank-based scoring instead of the Prisma ILIKE proxy.
+    // BUG-077 FIX: When locale !== 'en' AND a search query is provided, use multiLanguageSearch()
+    // to search across ProductTranslation table in all languages.
+    const useFullTextSearch = q && (sort === 'relevance' || sort === undefined);
+    const useMultiLanguageSearch = q && locale !== defaultLocale && !useFullTextSearch;
+
+    if (useFullTextSearch || useMultiLanguageSearch) {
+      const responseData = await cacheGetOrSet(cacheKey, async () => {
+        // Resolve categoryIds for the filter
+        let categoryIds: string[] | undefined;
+        if (category) {
+          const cat = await prisma.category.findUnique({
+            where: { slug: category },
+            include: { children: { select: { id: true } } },
+          });
+          if (cat) {
+            categoryIds = cat.children.length > 0
+              ? [cat.id, ...cat.children.map(c => c.id)]
+              : [cat.id];
+          }
+        }
+
+        let searchResults;
+        let searchTotal: number;
+
+        if (useMultiLanguageSearch) {
+          // BUG-077 FIX: Use multiLanguageSearch for non-English locales
+          const mlResult = await multiLanguageSearch(q, {
+            limit,
+            offset: (page - 1) * limit,
+          });
+          searchResults = mlResult.results;
+          searchTotal = mlResult.total;
+        } else {
+          // BUG-035 FIX: Use fullTextSearch for real relevance ranking
+          const ftsResult = await fullTextSearch(q, {
+            locale,
+            limit,
+            offset: (page - 1) * limit,
+            categoryIds,
+            minPrice: minPrice ? parseFloat(minPrice) : undefined,
+            maxPrice: maxPrice ? parseFloat(maxPrice) : undefined,
+            inStock: inStock === 'true',
+          });
+          searchResults = ftsResult.results;
+          searchTotal = ftsResult.total;
+        }
+
+        // Get categories with product counts for facets
+        const categoriesFacets = await prisma.category.findMany({
+          where: { isActive: true },
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            _count: {
+              select: { products: { where: { isActive: true } } },
+            },
+          },
+          orderBy: { sortOrder: 'asc' },
+        });
+
+        let translatedCategories = categoriesFacets.map((c) => ({
+          id: c.id,
+          name: c.name,
+          slug: c.slug,
+          count: c._count.products,
+        }));
+        if (locale !== DB_SOURCE_LOCALE) {
+          const facetCatIds = translatedCategories.map(c => c.id);
+          if (facetCatIds.length > 0) {
+            const facetTransMap = await getTranslatedFieldsBatch('Category', facetCatIds, locale);
+            translatedCategories = translatedCategories.map(c => {
+              const trans = facetTransMap.get(c.id);
+              return { ...c, name: trans?.name || c.name };
+            });
+          }
+        }
+
+        return {
+          products: searchResults,
+          categories: translatedCategories,
+          total: searchTotal,
+          query: q,
+          pagination: {
+            page,
+            limit,
+            total: searchTotal,
+            totalPages: Math.ceil(searchTotal / limit),
+          },
+        };
+      }, { ttl: 300, tags: ['products-search'] });
+
+      // Log search analytics (fire-and-forget)
+      const duration = Date.now() - searchStart;
+      logSearch({
+        query: q,
+        resultCount: responseData.total,
+        filters: { category, minPrice, maxPrice, inStock, purity, sort },
+        locale,
+        duration,
+      }).catch(() => {});
+
+      return NextResponse.json(responseData, {
+        headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120' },
+      });
+    }
+
+    // ── Standard Prisma search path (no query, or non-relevance sort with query) ──
 
     // Build where clause
     const where: Prisma.ProductWhereInput = {
@@ -116,10 +229,7 @@ export async function GET(request: NextRequest) {
         break;
       case 'relevance':
       default:
-        // BUG-035 NOTE: Currently uses isFeatured as proxy for relevance.
-        // TODO: Implement ts_rank-based scoring via fullTextSearch() from lib/search.ts
-        // for true relevance ranking when a search query is provided.
-        orderBy = q ? { createdAt: 'desc' } : { isFeatured: 'desc' };
+        orderBy = { isFeatured: 'desc' };
         break;
     }
 

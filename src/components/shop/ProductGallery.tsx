@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import { useI18n } from '@/i18n/client';
 
@@ -23,6 +23,24 @@ export default function ProductGallery({ images, productName }: ProductGalleryPr
   const { t } = useI18n();
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isZoomed, setIsZoomed] = useState(false);
+  // BUG-087 FIX: Track mouse position for cursor-following zoom
+  const [transformOrigin, setTransformOrigin] = useState('center center');
+  const imageContainerRef = useRef<HTMLDivElement>(null);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isZoomed || !imageContainerRef.current) return;
+    const rect = imageContainerRef.current.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    setTransformOrigin(`${x}% ${y}%`);
+  }, [isZoomed]);
+
+  const handleZoomToggle = useCallback(() => {
+    setIsZoomed(prev => !prev);
+    if (isZoomed) {
+      setTransformOrigin('center center');
+    }
+  }, [isZoomed]);
 
   // If no images, use default
   const displayImages = images.length > 0 ? images : [
@@ -42,17 +60,23 @@ export default function ProductGallery({ images, productName }: ProductGalleryPr
   return (
     <div className="space-y-4">
       {/* Main Image */}
-      {/* TODO: BUG-087 - Enhance zoom to follow mouse cursor position instead of simple scale toggle */}
-      <div className="relative aspect-square bg-neutral-100 rounded-2xl overflow-hidden group">
+      {/* BUG-087 FIX: Cursor-following zoom using transform-origin based on mouse position */}
+      <div
+        ref={imageContainerRef}
+        className="relative aspect-square bg-neutral-100 rounded-2xl overflow-hidden group"
+        onMouseMove={handleMouseMove}
+        onMouseLeave={() => { if (isZoomed) { setIsZoomed(false); setTransformOrigin('center center'); } }}
+      >
         <Image
           src={selectedImage.url}
           alt={selectedImage.alt}
           fill
           sizes="(max-width: 768px) 100vw, 50vw"
           className={`object-cover transition-transform duration-300 ${
-            isZoomed ? 'scale-150 cursor-zoom-out' : 'cursor-zoom-in'
+            isZoomed ? 'scale-[2] cursor-zoom-out' : 'cursor-zoom-in'
           }`}
-          onClick={() => setIsZoomed(!isZoomed)}
+          style={{ transformOrigin }}
+          onClick={handleZoomToggle}
           priority
         />
 

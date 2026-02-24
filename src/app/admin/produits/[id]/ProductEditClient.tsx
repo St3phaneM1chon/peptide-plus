@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowLeft, Plus, Trash2, GripVertical, ExternalLink, FileText, ImageIcon, Video, Link2, Globe, Check, AlertTriangle, Pencil } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, ExternalLink, FileText, ImageIcon, Video, Link2, Globe, Check, AlertTriangle, Pencil, ClipboardList, FileEdit, Package } from 'lucide-react';
 import { getFormatTypes, getProductTypes, getAvailabilityOptions, VOLUME_OPTIONS, getStockDisplay } from '../product-constants';
 import { MediaUploader } from '@/components/admin/MediaUploader';
 import { useI18n } from '@/i18n/client';
@@ -34,6 +34,8 @@ interface ProductFormat {
   sortOrder: number;
   isDefault: boolean;
   isActive: boolean;
+  // BUG-049 FIX: Track updatedAt for concurrent edit detection
+  updatedAt?: string;
 }
 
 interface ProductText {
@@ -241,14 +243,36 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
     }
   };
 
-  // TODO: BUG-049 - Send only changed fields (diff with initial) to avoid overwriting parallel edits
+  // BUG-049 FIX: Detect concurrent edits via updatedAt check before saving format.
+  // Sends only fields that differ from the original to minimize overwrite risk.
   // TODO: BUG-075 - Add optimistic update: update local state immediately, rollback on error
-  const handleSaveFormat = async (format: ProductFormat) => {
+  const handleSaveFormat = async (format: ProductFormat, initialFormat: ProductFormat) => {
     try {
+      // BUG-049: Fetch the current server state to check for concurrent modifications
+      const checkRes = await fetch(`/api/products/${product.id}/formats/${format.id}`);
+      if (checkRes.ok) {
+        const serverFormat = await checkRes.json();
+        if (serverFormat.updatedAt && initialFormat.updatedAt && serverFormat.updatedAt !== initialFormat.updatedAt) {
+          const proceed = window.confirm(
+            t('admin.productForm.concurrentEditWarning') ||
+            'This format was modified by another user since you started editing. Save anyway and overwrite their changes?'
+          );
+          if (!proceed) return;
+        }
+      }
+
+      // BUG-049: Build a partial payload with only changed fields to reduce overwrite surface
+      const changedFields: Record<string, unknown> = {};
+      for (const key of Object.keys(format) as (keyof ProductFormat)[]) {
+        if (format[key] !== initialFormat[key]) {
+          changedFields[key] = format[key];
+        }
+      }
+
       const res = await fetch(`/api/products/${product.id}/formats/${format.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(format),
+        body: JSON.stringify(Object.keys(changedFields).length > 0 ? changedFields : format),
       });
       if (res.ok) {
         const updatedFormat = await res.json();
@@ -325,11 +349,16 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
   const translatedCount = translationStatuses.length;
   const approvedCount = translationStatuses.filter(ts => ts.isApproved).length;
 
-  // TODO: BUG-086 - Replace emoji icons (📋📝📦) with Lucide icons for cross-platform consistency
+  // BUG-086 FIX: Replaced emoji icons with Lucide icons for consistent cross-platform rendering
+  const tabIcons = {
+    header: <ClipboardList className="w-4 h-4" />,
+    texts: <FileEdit className="w-4 h-4" />,
+    formats: <Package className="w-4 h-4" />,
+  };
   const tabs = [
-    { id: 'header' as const, label: t('admin.productForm.tabHeader'), icon: '📋', count: null },
-    { id: 'texts' as const, label: t('admin.productForm.tabTexts'), icon: '📝', count: productTexts.length },
-    { id: 'formats' as const, label: t('admin.productForm.tabFormats'), icon: '📦', count: formats.length },
+    { id: 'header' as const, label: t('admin.productForm.tabHeader'), icon: tabIcons.header, count: null },
+    { id: 'texts' as const, label: t('admin.productForm.tabTexts'), icon: tabIcons.texts, count: productTexts.length },
+    { id: 'formats' as const, label: t('admin.productForm.tabFormats'), icon: tabIcons.formats, count: formats.length },
   ];
 
   return (
@@ -419,7 +448,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
                   : 'text-neutral-600 hover:text-neutral-900'
               }`}
             >
-              <span>{tab.icon}</span>
+              {tab.icon}
               {tab.label}
               {tab.count !== null && tab.count > 0 && (
                 <span className="px-1.5 py-0.5 text-xs bg-sky-100 text-sky-700 rounded-full">{tab.count}</span>
@@ -665,8 +694,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
                     className="flex items-center justify-between p-4 cursor-pointer hover:bg-neutral-50 transition-colors"
                   >
                     <div className="flex items-center gap-3">
-                      {/* TODO: BUG-099 - GripVertical icon implies drag-and-drop but it is not implemented; either add dnd-kit or remove icon */}
-                      <GripVertical className="w-4 h-4 text-neutral-300" />
+                      {/* BUG-099 FIX: Removed GripVertical icon since drag-and-drop is not implemented */}
                       <div>
                         <p className="font-medium text-neutral-900">{pt.name || t('admin.productForm.untitledText')}</p>
                         <p className="text-sm text-neutral-500 truncate max-w-md">{pt.title || pt.summary || t('admin.productForm.clickToEdit')}</p>
@@ -902,7 +930,9 @@ function EditFormatForm({
   onCancel,
 }: {
   format: ProductFormat;
-  onSave: (format: ProductFormat) => void;
+  // BUG-049 FIX: onSave now receives both the edited format and the initial format
+  // so the parent can diff them and detect concurrent edits via updatedAt
+  onSave: (format: ProductFormat, initialFormat: ProductFormat) => void;
   onCancel: () => void;
 }) {
   const { t } = useI18n();
@@ -1019,11 +1049,8 @@ function EditFormatForm({
         <button onClick={onCancel} className="px-4 py-2 text-neutral-600 border border-neutral-200 rounded-lg hover:bg-neutral-50">
           {t('admin.productForm.cancel')}
         </button>
-        {/* TODO: BUG-049 - onSave sends entire local format state, including unchanged fields.
-            If another admin modifies this format concurrently, their changes will be overwritten.
-            Future improvement: implement optimistic locking (e.g. version field or updatedAt check)
-            to detect and handle concurrent edit conflicts. Low priority — concurrent admin edits are rare. */}
-        <button onClick={() => onSave(format)} className="px-4 py-2 bg-sky-500 text-white rounded-lg hover:bg-sky-600">
+        {/* BUG-049 FIX: Pass both edited and initial format for concurrent edit detection */}
+        <button onClick={() => onSave(format, initialFormat)} className="px-4 py-2 bg-sky-500 text-white rounded-lg hover:bg-sky-600">
           {t('admin.productForm.save')}
         </button>
       </div>
