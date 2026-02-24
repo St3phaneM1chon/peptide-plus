@@ -3825,7 +3825,13 @@
       "searchPlaceholder": "Tìm kiếm sản phẩm...",
       "subtitle": "{total} sản phẩm · {active} đang hoạt động · {featured} nổi bật",
       "supplements": "Thực phẩm bổ sung",
-      "title": "Quản lý sản phẩm"
+      "title": "Quản lý sản phẩm",
+      "colFormat": "Format",
+      "formatCount_one": "{count} format",
+      "formatCount_other": "{count} formats",
+      "importSummary": "Import: {created} created, {updated} updated",
+      "importSummaryWithErrors": "Import: {created} created, {updated} updated, {errors} errors",
+      "selectFirst": "Select a product first"
     },
     "promoCodes": {
       "active": "Đang hoạt động",
@@ -7443,7 +7449,8 @@
       "moveToList": "Move to another list",
       "removeFromWishlist": "Remove from wishlist"
     },
-    "youSave": "Bạn tiết kiệm"
+    "youSave": "Bạn tiết kiệm",
+    "loadError": "Unable to load products"
   },
   "subscriptions": {
     "availableProducts": "Có Sẵn Để Đăng Ký",

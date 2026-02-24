@@ -3825,7 +3825,13 @@
       "searchPlaceholder": "Rechèch yon pwodwi...",
       "subtitle": "{total} pwodwi · {active} aktif · {featured} vedèt",
       "supplements": "Sipleman",
-      "title": "Jesyon Pwodwi"
+      "title": "Jesyon Pwodwi",
+      "colFormat": "Format",
+      "formatCount_one": "{count} format",
+      "formatCount_other": "{count} formats",
+      "importSummary": "Import: {created} created, {updated} updated",
+      "importSummaryWithErrors": "Import: {created} created, {updated} updated, {errors} errors",
+      "selectFirst": "Select a product first"
     },
     "promoCodes": {
       "active": "Aktif",
@@ -7443,7 +7449,8 @@
       "moveToList": "Move to another list",
       "removeFromWishlist": "Remove from wishlist"
     },
-    "youSave": "Ou ekonomize"
+    "youSave": "Ou ekonomize",
+    "loadError": "Unable to load products"
   },
   "subscriptions": {
     "availableProducts": "Disponib pou Abònman",

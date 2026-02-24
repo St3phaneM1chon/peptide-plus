@@ -3825,7 +3825,13 @@
       "searchPlaceholder": "Buscar um produto...",
       "subtitle": "{total} produtos · {active} ativos · {featured} em destaque",
       "supplements": "Suplementos",
-      "title": "Gerenciamento de Produtos"
+      "title": "Gerenciamento de Produtos",
+      "colFormat": "Format",
+      "formatCount_one": "{count} format",
+      "formatCount_other": "{count} formats",
+      "importSummary": "Import: {created} created, {updated} updated",
+      "importSummaryWithErrors": "Import: {created} created, {updated} updated, {errors} errors",
+      "selectFirst": "Select a product first"
     },
     "promoCodes": {
       "active": "Ativo",
@@ -7443,7 +7449,8 @@
       "moveToList": "Move to another list",
       "removeFromWishlist": "Remove from wishlist"
     },
-    "youSave": "Você economiza"
+    "youSave": "Você economiza",
+    "loadError": "Unable to load products"
   },
   "subscriptions": {
     "availableProducts": "Disponível para Assinatura",

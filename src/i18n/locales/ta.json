@@ -3825,7 +3825,13 @@
       "searchPlaceholder": "ஒரு தயாரிப்பை தேடு...",
       "subtitle": "{total} தயாரிப்புகள் · {active} செயலில் · {featured} சிறப்பு",
       "supplements": "சூப்பிள்மெண்ட்கள்",
-      "title": "தயாரிப்பு மேலாண்மை"
+      "title": "தயாரிப்பு மேலாண்மை",
+      "colFormat": "Format",
+      "formatCount_one": "{count} format",
+      "formatCount_other": "{count} formats",
+      "importSummary": "Import: {created} created, {updated} updated",
+      "importSummaryWithErrors": "Import: {created} created, {updated} updated, {errors} errors",
+      "selectFirst": "Select a product first"
     },
     "promoCodes": {
       "active": "செயலில் உள்ள",
@@ -7443,7 +7449,8 @@
       "moveToList": "Move to another list",
       "removeFromWishlist": "Remove from wishlist"
     },
-    "youSave": "நீங்கள் சேமிக்கிறீர்கள்"
+    "youSave": "நீங்கள் சேமிக்கிறீர்கள்",
+    "loadError": "Unable to load products"
   },
   "subscriptions": {
     "availableProducts": "சந்தாவிற்காக கிடைக்கிறது",

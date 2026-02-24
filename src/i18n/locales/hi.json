@@ -3825,7 +3825,13 @@
       "searchPlaceholder": "एक उत्पाद खोजें...",
       "subtitle": "{total} उत्पाद · {active} सक्रिय · {featured} विशेष",
       "supplements": "सप्लीमेंट्स",
-      "title": "उत्पाद प्रबंधन"
+      "title": "उत्पाद प्रबंधन",
+      "colFormat": "Format",
+      "formatCount_one": "{count} format",
+      "formatCount_other": "{count} formats",
+      "importSummary": "Import: {created} created, {updated} updated",
+      "importSummaryWithErrors": "Import: {created} created, {updated} updated, {errors} errors",
+      "selectFirst": "Select a product first"
     },
     "promoCodes": {
       "active": "सक्रिय",
@@ -7443,7 +7449,8 @@
       "moveToList": "Move to another list",
       "removeFromWishlist": "Remove from wishlist"
     },
-    "youSave": "आप बचाते हैं"
+    "youSave": "आप बचाते हैं",
+    "loadError": "Unable to load products"
   },
   "subscriptions": {
     "availableProducts": "सदस्यता के लिए उपलब्ध",

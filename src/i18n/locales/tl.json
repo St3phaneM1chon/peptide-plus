@@ -3825,7 +3825,13 @@
       "searchPlaceholder": "Maghanap ng produkto...",
       "subtitle": "{total} mga produkto · {active} aktibo · {featured} itinampok",
       "supplements": "Mga suplemento",
-      "title": "Pamamahala ng Produkto"
+      "title": "Pamamahala ng Produkto",
+      "colFormat": "Format",
+      "formatCount_one": "{count} format",
+      "formatCount_other": "{count} formats",
+      "importSummary": "Import: {created} created, {updated} updated",
+      "importSummaryWithErrors": "Import: {created} created, {updated} updated, {errors} errors",
+      "selectFirst": "Select a product first"
     },
     "promoCodes": {
       "active": "Aktibo",
@@ -7443,7 +7449,8 @@
       "moveToList": "Move to another list",
       "removeFromWishlist": "Remove from wishlist"
     },
-    "youSave": "Ikaw ay nakakatipid ng"
+    "youSave": "Ikaw ay nakakatipid ng",
+    "loadError": "Unable to load products"
   },
   "subscriptions": {
     "availableProducts": "Available para sa Subscription",

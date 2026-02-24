@@ -3825,7 +3825,13 @@
       "searchPlaceholder": "Cerca un prodotto...",
       "subtitle": "{total} prodotti · {active} attivi · {featured} in evidenza",
       "supplements": "Integratori",
-      "title": "Gestione Prodotti"
+      "title": "Gestione Prodotti",
+      "colFormat": "Format",
+      "formatCount_one": "{count} format",
+      "formatCount_other": "{count} formats",
+      "importSummary": "Import: {created} created, {updated} updated",
+      "importSummaryWithErrors": "Import: {created} created, {updated} updated, {errors} errors",
+      "selectFirst": "Select a product first"
     },
     "promoCodes": {
       "active": "Attivo",
@@ -7443,7 +7449,8 @@
       "moveToList": "Move to another list",
       "removeFromWishlist": "Remove from wishlist"
     },
-    "youSave": "Risparmi"
+    "youSave": "Risparmi",
+    "loadError": "Unable to load products"
   },
   "subscriptions": {
     "availableProducts": "Disponibili per abbonamento",

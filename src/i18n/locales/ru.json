@@ -3825,7 +3825,13 @@
       "searchPlaceholder": "Поиск продукта...",
       "subtitle": "{total} продуктов · {active} активных · {featured} рекомендуемых",
       "supplements": "Добавки",
-      "title": "Управление продуктами"
+      "title": "Управление продуктами",
+      "colFormat": "Format",
+      "formatCount_one": "{count} format",
+      "formatCount_other": "{count} formats",
+      "importSummary": "Import: {created} created, {updated} updated",
+      "importSummaryWithErrors": "Import: {created} created, {updated} updated, {errors} errors",
+      "selectFirst": "Select a product first"
     },
     "promoCodes": {
       "active": "Активный",
@@ -7443,7 +7449,8 @@
       "moveToList": "Move to another list",
       "removeFromWishlist": "Remove from wishlist"
     },
-    "youSave": "Вы экономите"
+    "youSave": "Вы экономите",
+    "loadError": "Unable to load products"
   },
   "subscriptions": {
     "availableProducts": "Доступно для подписки",

@@ -3825,7 +3825,13 @@
       "searchPlaceholder": "ਇੱਕ ਉਤਪਾਦ ਖੋਜੋ...",
       "subtitle": "{total} ਉਤਪਾਦ · {active} ਸਰਗਰਮ · {featured} ਫੀਚਰਡ",
       "supplements": "Supplements",
-      "title": "ਉਤਪਾਦ ਪ੍ਰਬੰਧਨ"
+      "title": "ਉਤਪਾਦ ਪ੍ਰਬੰਧਨ",
+      "colFormat": "Format",
+      "formatCount_one": "{count} format",
+      "formatCount_other": "{count} formats",
+      "importSummary": "Import: {created} created, {updated} updated",
+      "importSummaryWithErrors": "Import: {created} created, {updated} updated, {errors} errors",
+      "selectFirst": "Select a product first"
     },
     "promoCodes": {
       "active": "ਸਰਗਰਮ",
@@ -7443,7 +7449,8 @@
       "moveToList": "Move to another list",
       "removeFromWishlist": "Remove from wishlist"
     },
-    "youSave": "ਤੁਸੀਂ ਬਚਾਉਂਦੇ ਹੋ"
+    "youSave": "ਤੁਸੀਂ ਬਚਾਉਂਦੇ ਹੋ",
+    "loadError": "Unable to load products"
   },
   "subscriptions": {
     "availableProducts": "ਸਬਸਕ੍ਰਿਪਸ਼ਨ ਲਈ ਉਪਲਬਧ",

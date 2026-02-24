@@ -3825,7 +3825,13 @@
       "searchPlaceholder": "Sök en produkt...",
       "subtitle": "{total} produkter · {active} aktiva · {featured} utvalda",
       "supplements": "Kosttillskott",
-      "title": "Produktledning"
+      "title": "Produktledning",
+      "colFormat": "Format",
+      "formatCount_one": "{count} format",
+      "formatCount_other": "{count} formats",
+      "importSummary": "Import: {created} created, {updated} updated",
+      "importSummaryWithErrors": "Import: {created} created, {updated} updated, {errors} errors",
+      "selectFirst": "Select a product first"
     },
     "promoCodes": {
       "active": "Aktiv",
@@ -7443,7 +7449,8 @@
       "moveToList": "Move to another list",
       "removeFromWishlist": "Remove from wishlist"
     },
-    "youSave": "Du sparar"
+    "youSave": "Du sparar",
+    "loadError": "Unable to load products"
   },
   "subscriptions": {
     "availableProducts": "Tillgängliga för Prenumeration",

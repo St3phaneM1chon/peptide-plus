@@ -3825,7 +3825,13 @@
       "searchPlaceholder": "제품 검색...",
       "subtitle": "{total} 제품 · {active} 활성 · {featured} 추천",
       "supplements": "보충제",
-      "title": "제품 관리"
+      "title": "제품 관리",
+      "colFormat": "Format",
+      "formatCount_one": "{count} format",
+      "formatCount_other": "{count} formats",
+      "importSummary": "Import: {created} created, {updated} updated",
+      "importSummaryWithErrors": "Import: {created} created, {updated} updated, {errors} errors",
+      "selectFirst": "Select a product first"
     },
     "promoCodes": {
       "active": "활성",
@@ -7443,7 +7449,8 @@
       "moveToList": "Move to another list",
       "removeFromWishlist": "Remove from wishlist"
     },
-    "youSave": "절약한 금액"
+    "youSave": "절약한 금액",
+    "loadError": "Unable to load products"
   },
   "subscriptions": {
     "availableProducts": "구독 가능 제품",
