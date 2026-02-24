@@ -4203,7 +4203,9 @@
       "tpsCollected": "जीएसटी एकत्रित",
       "trafficSources": "ट्रैफ़िक स्रोत",
       "tvqCollected": "क्यूएसटी एकत्रित",
-      "vsPreviousPeriod": "पिछले अवधि के मुकाबले"
+      "vsPreviousPeriod": "पिछले अवधि के मुकाबले",
+      "allRegions": "All Regions",
+      "filterRegion": "Region"
     },
     "reviews": {
       "allRatings": "सभी रेटिंग",

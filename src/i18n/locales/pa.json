@@ -4203,7 +4203,9 @@
       "tpsCollected": "GST ਇਕੱਠਾ ਕੀਤਾ",
       "trafficSources": "ਟ੍ਰੈਫਿਕ ਸਰੋਤ",
       "tvqCollected": "QST ਇਕੱਠਾ ਕੀਤਾ",
-      "vsPreviousPeriod": "ਪਿਛਲੇ ਅਵਧੀ ਦੇ ਮੁਕਾਬਲੇ"
+      "vsPreviousPeriod": "ਪਿਛਲੇ ਅਵਧੀ ਦੇ ਮੁਕਾਬਲੇ",
+      "allRegions": "All Regions",
+      "filterRegion": "Region"
     },
     "reviews": {
       "allRatings": "ਸਭ ਰੇਟਿੰਗ",

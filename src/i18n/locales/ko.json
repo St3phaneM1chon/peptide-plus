@@ -4203,7 +4203,9 @@
       "tpsCollected": "수집된 GST",
       "trafficSources": "트래픽 소스",
       "tvqCollected": "수집된 QST",
-      "vsPreviousPeriod": "이전 기간 대비"
+      "vsPreviousPeriod": "이전 기간 대비",
+      "allRegions": "All Regions",
+      "filterRegion": "Region"
     },
     "reviews": {
       "allRatings": "모든 평점",

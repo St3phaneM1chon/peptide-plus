@@ -4203,7 +4203,9 @@
       "tpsCollected": "GST சேகரிக்கப்பட்டது",
       "trafficSources": "பாதை மூலங்கள்",
       "tvqCollected": "QST சேகரிக்கப்பட்டது",
-      "vsPreviousPeriod": "முந்தைய காலத்துடன் ஒப்பிடுக"
+      "vsPreviousPeriod": "முந்தைய காலத்துடன் ஒப்பிடுக",
+      "allRegions": "All Regions",
+      "filterRegion": "Region"
     },
     "reviews": {
       "allRatings": "அனைத்து மதிப்பீடுகள்",

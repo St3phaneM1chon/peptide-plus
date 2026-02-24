@@ -4203,7 +4203,9 @@
       "tpsCollected": "GST thu được",
       "trafficSources": "Nguồn lưu lượng",
       "tvqCollected": "QST thu được",
-      "vsPreviousPeriod": "so với thời gian trước"
+      "vsPreviousPeriod": "so với thời gian trước",
+      "allRegions": "All Regions",
+      "filterRegion": "Region"
     },
     "reviews": {
       "allRatings": "Tất cả đánh giá",

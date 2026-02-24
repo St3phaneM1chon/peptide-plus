@@ -4203,7 +4203,9 @@
       "tpsCollected": "GST na Nakolekta",
       "trafficSources": "Mga pinagkukunan ng trapiko",
       "tvqCollected": "QST na Nakolekta",
-      "vsPreviousPeriod": "kumpara sa nakaraang panahon"
+      "vsPreviousPeriod": "kumpara sa nakaraang panahon",
+      "allRegions": "All Regions",
+      "filterRegion": "Region"
     },
     "reviews": {
       "allRatings": "Lahat ng rating",

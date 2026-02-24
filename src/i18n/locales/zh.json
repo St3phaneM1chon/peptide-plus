@@ -4203,7 +4203,9 @@
       "tpsCollected": "收取的GST",
       "trafficSources": "流量来源",
       "tvqCollected": "收取的QST",
-      "vsPreviousPeriod": "与上个期间相比"
+      "vsPreviousPeriod": "与上个期间相比",
+      "allRegions": "All Regions",
+      "filterRegion": "Region"
     },
     "reviews": {
       "allRatings": "所有评分",

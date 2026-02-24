@@ -4203,7 +4203,9 @@
       "tpsCollected": "GST Collected",
       "trafficSources": "Traffic sources",
       "tvqCollected": "QST Collected",
-      "vsPreviousPeriod": "vs previous period"
+      "vsPreviousPeriod": "vs previous period",
+      "allRegions": "All Regions",
+      "filterRegion": "Region"
     },
     "reviews": {
       "allRatings": "All ratings",

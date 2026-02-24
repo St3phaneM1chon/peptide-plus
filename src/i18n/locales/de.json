@@ -4203,7 +4203,9 @@
       "tpsCollected": "Erhobene GST",
       "trafficSources": "Verkehrsquellen",
       "tvqCollected": "Erhobene QST",
-      "vsPreviousPeriod": "im Vergleich zum vorherigen Zeitraum"
+      "vsPreviousPeriod": "im Vergleich zum vorherigen Zeitraum",
+      "allRegions": "All Regions",
+      "filterRegion": "Region"
     },
     "reviews": {
       "allRatings": "Alle Bewertungen",

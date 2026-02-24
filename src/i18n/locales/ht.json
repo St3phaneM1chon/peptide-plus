@@ -4203,7 +4203,9 @@
       "tpsCollected": "GST Rasanble",
       "trafficSources": "Sous trafik",
       "tvqCollected": "QST Rasanble",
-      "vsPreviousPeriod": "vs peryòd anvan an"
+      "vsPreviousPeriod": "vs peryòd anvan an",
+      "allRegions": "All Regions",
+      "filterRegion": "Region"
     },
     "reviews": {
       "allRatings": "Tout evalyasyon",

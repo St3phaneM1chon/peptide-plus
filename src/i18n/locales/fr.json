@@ -5033,7 +5033,9 @@
       "errorFiling": "Erreur lors de la déclaration",
       "exportPdfSuccess": "PDF exporté",
       "exportPdfError": "Erreur lors de l'exportation PDF",
-      "noDataToExport": "Aucune donnée à exporter"
+      "noDataToExport": "Aucune donnée à exporter",
+      "allRegions": "Toutes les régions",
+      "filterRegion": "Région"
     },
     "logs": {
       "title": "Logs & Audit",

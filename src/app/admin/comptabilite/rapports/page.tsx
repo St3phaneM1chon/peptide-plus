@@ -56,11 +56,30 @@ interface TaxSummary {
 export default function RapportsComptablesPage() {
   const { t, formatCurrency, formatDate } = useI18n();
   const [selectedYear, setSelectedYear] = useState('2026');
+  const [selectedRegion, setSelectedRegion] = useState('');
   const [taxReports, setTaxReports] = useState<TaxReport[]>([]);
   const [taxSummary, setTaxSummary] = useState<TaxSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [generatingPdf, setGeneratingPdf] = useState<string | null>(null);
+
+  // Canadian provinces and territories
+  const REGION_OPTIONS = [
+    { code: '', label: t('admin.reports.allRegions') },
+    { code: 'QC', label: t('provinces.QC') },
+    { code: 'ON', label: t('provinces.ON') },
+    { code: 'BC', label: t('provinces.BC') },
+    { code: 'AB', label: t('provinces.AB') },
+    { code: 'SK', label: t('provinces.SK') },
+    { code: 'MB', label: t('provinces.MB') },
+    { code: 'NS', label: t('provinces.NS') },
+    { code: 'NB', label: t('provinces.NB') },
+    { code: 'PE', label: t('provinces.PE') },
+    { code: 'NL', label: t('provinces.NL') },
+    { code: 'NT', label: t('provinces.NT') },
+    { code: 'YT', label: t('provinces.YT') },
+    { code: 'NU', label: t('provinces.NU') },
+  ];
 
   const managementReports = [
     { id: '1', name: t('admin.reports.salesByProduct'), icon: BarChart3, description: t('admin.reports.salesByProductDesc') },
@@ -72,9 +91,11 @@ export default function RapportsComptablesPage() {
   ];
 
   // Fetch tax reports
-  const fetchTaxReports = async (year: string) => {
+  const fetchTaxReports = async (year: string, regionCode?: string) => {
     try {
-      const res = await fetch(`/api/accounting/tax-reports?year=${year}`);
+      const params = new URLSearchParams({ year });
+      if (regionCode) params.set('regionCode', regionCode);
+      const res = await fetch(`/api/accounting/tax-reports?${params.toString()}`);
       if (!res.ok) throw new Error(t('admin.reports.errorLoadReports'));
       const data = await res.json();
       setTaxReports(data.reports || []);
@@ -131,7 +152,7 @@ export default function RapportsComptablesPage() {
         body: JSON.stringify({ id: reportId, status: 'FILED' }),
       });
       if (!res.ok) throw new Error(t('admin.reports.errorFiling'));
-      await fetchTaxReports(selectedYear);
+      await fetchTaxReports(selectedYear, selectedRegion);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t('admin.reports.errorUnknown'));
     }
@@ -141,13 +162,13 @@ export default function RapportsComptablesPage() {
     const loadData = async () => {
       setLoading(true);
       await Promise.all([
-        fetchTaxReports(selectedYear),
+        fetchTaxReports(selectedYear, selectedRegion),
         fetchTaxSummary(selectedYear),
       ]);
       setLoading(false);
     };
     loadData();
-  }, [selectedYear]);
+  }, [selectedYear, selectedRegion]);
 
   const theme = sectionThemes.reports;
 
@@ -280,15 +301,29 @@ export default function RapportsComptablesPage() {
         subtitle={t('admin.reports.subtitle')}
         theme={theme}
         actions={
-          <select
-            value={selectedYear}
-            onChange={(e) => setSelectedYear(e.target.value)}
-            className="h-9 px-3 rounded-lg border border-slate-300 bg-white text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
-          >
-            <option value="2026">2026</option>
-            <option value="2025">2025</option>
-            <option value="2024">2024</option>
-          </select>
+          <div className="flex items-center gap-2">
+            <select
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(e.target.value)}
+              className="h-9 px-3 rounded-lg border border-slate-300 bg-white text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+            >
+              <option value="2026">2026</option>
+              <option value="2025">2025</option>
+              <option value="2024">2024</option>
+            </select>
+            <select
+              value={selectedRegion}
+              onChange={(e) => setSelectedRegion(e.target.value)}
+              className="h-9 px-3 rounded-lg border border-slate-300 bg-white text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+              aria-label={t('admin.reports.filterRegion')}
+            >
+              {REGION_OPTIONS.map((opt) => (
+                <option key={opt.code} value={opt.code}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
         }
       />
 

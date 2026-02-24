@@ -4203,7 +4203,9 @@
       "tpsCollected": "GST insamlad",
       "trafficSources": "Trafikkällor",
       "tvqCollected": "QST insamlad",
-      "vsPreviousPeriod": "jämfört med föregående period"
+      "vsPreviousPeriod": "jämfört med föregående period",
+      "allRegions": "All Regions",
+      "filterRegion": "Region"
     },
     "reviews": {
       "allRatings": "Alla betyg",

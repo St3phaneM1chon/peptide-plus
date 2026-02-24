@@ -4203,7 +4203,9 @@
       "tpsCollected": "GST المحصلة",
       "trafficSources": "مصادر الحركة",
       "tvqCollected": "QST المحصلة",
-      "vsPreviousPeriod": "مقارنة بالفترة السابقة"
+      "vsPreviousPeriod": "مقارنة بالفترة السابقة",
+      "allRegions": "All Regions",
+      "filterRegion": "Region"
     },
     "reviews": {
       "allRatings": "جميع التقييمات",
