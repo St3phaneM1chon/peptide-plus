@@ -19,6 +19,6 @@ export async function GET() {
     });
   } catch (error) {
     logger.error('Guides API error', { error: error instanceof Error ? error.message : String(error) });
-    return NextResponse.json({ guides: [] });
+    return NextResponse.json({ error: 'Failed to fetch guides', guides: [] }, { status: 500 });
   }
 }

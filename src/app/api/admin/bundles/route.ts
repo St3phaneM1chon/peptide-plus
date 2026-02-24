@@ -37,12 +37,32 @@ export const GET = withAdminGuard(async (request, _ctx) => {
 
     const [bundles, total] = await Promise.all([
       prisma.bundle.findMany({
-        include: {
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          description: true,
+          image: true,
+          discount: true,
+          isActive: true,
+          createdAt: true,
+          updatedAt: true,
           items: {
-            include: {
+            select: {
+              id: true,
+              productId: true,
+              formatId: true,
+              quantity: true,
               product: {
-                include: {
-                  formats: true,
+                select: {
+                  id: true,
+                  name: true,
+                  slug: true,
+                  price: true,
+                  imageUrl: true,
+                  formats: {
+                    select: { id: true, name: true, price: true },
+                  },
                 },
               },
             },
@@ -145,6 +165,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
     // Check if slug already exists
     const existingBundle = await prisma.bundle.findUnique({
       where: { slug: data.slug },
+      select: { id: true },
     });
 
     if (existingBundle) {

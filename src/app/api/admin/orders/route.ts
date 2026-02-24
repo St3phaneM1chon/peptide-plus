@@ -196,6 +196,16 @@ export const PUT = withAdminGuard(async (request, { session }) => {
 
     const existingOrder = await prisma.order.findUnique({
       where: { id: orderId },
+      select: {
+        id: true,
+        orderNumber: true,
+        userId: true,
+        status: true,
+        trackingNumber: true,
+        carrier: true,
+        shippedAt: true,
+        deliveredAt: true,
+      },
     });
 
     if (!existingOrder) {
@@ -270,8 +280,33 @@ export const PUT = withAdminGuard(async (request, { session }) => {
     const order = await prisma.order.update({
       where: { id: orderId },
       data: updateData,
-      include: {
-        items: true,
+      select: {
+        id: true,
+        orderNumber: true,
+        userId: true,
+        status: true,
+        paymentStatus: true,
+        subtotal: true,
+        shippingCost: true,
+        discount: true,
+        tax: true,
+        total: true,
+        trackingNumber: true,
+        carrier: true,
+        adminNotes: true,
+        createdAt: true,
+        items: {
+          select: {
+            id: true,
+            productName: true,
+            formatName: true,
+            sku: true,
+            quantity: true,
+            unitPrice: true,
+            discount: true,
+            total: true,
+          },
+        },
         currency: { select: { code: true, symbol: true } },
       },
     });
@@ -378,7 +413,8 @@ export const POST = withAdminGuard(async (request, { session }) => {
     });
     const orderMap = new Map(existingOrders.map((o) => [o.id, o]));
 
-    // Process each order update
+    // Process each order update inside a transaction for atomicity
+    await prisma.$transaction(async (tx) => {
     for (const entry of orders) {
       const { orderId, status, trackingNumber, carrier, adminNotes } = entry;
 
@@ -417,7 +453,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
           updateData.deliveredAt = new Date();
         }
 
-        await prisma.order.update({
+        await tx.order.update({
           where: { id: orderId },
           data: updateData,
         });
@@ -477,6 +513,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
         });
       }
     }
+    }); // end $transaction
 
     const successCount = results.filter((r) => r.success).length;
     const failCount = results.filter((r) => !r.success).length;

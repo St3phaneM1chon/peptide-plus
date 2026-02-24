@@ -50,7 +50,7 @@ export default function IconRail() {
   return (
     <nav
       className="w-12 h-full bg-sky-950 flex flex-col flex-shrink-0"
-      aria-label="Main navigation rail"
+      aria-label={t('admin.outlook.mainNavigationRail') || 'Main navigation rail'}
     >
       {/* Rail items */}
       <div className="flex-1 flex flex-col items-center pt-1">

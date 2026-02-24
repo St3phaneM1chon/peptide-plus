@@ -16,6 +16,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { timingSafeEqual } from 'crypto';
 import { prisma } from '@/lib/db';
 import { sendEmail, priceDropEmail, generateUnsubscribeUrl } from '@/lib/email';
 // FLAW-061 FIX: Import bounce suppression to skip hard-bounced addresses
@@ -26,11 +27,23 @@ import { withJobLock } from '@/lib/cron-lock';
 const BATCH_SIZE = 10;
 
 export async function GET(request: NextRequest) {
-  // Verify cron secret (fail-closed)
+  // Verify cron secret (fail-closed, timing-safe comparison)
   const authHeader = request.headers.get('authorization');
   const cronSecret = process.env.CRON_SECRET;
 
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+  if (!cronSecret) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const providedSecret = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : '';
+  let secretsMatch = false;
+  try {
+    const a = Buffer.from(cronSecret, 'utf8');
+    const b = Buffer.from(providedSecret, 'utf8');
+    secretsMatch = a.length === b.length && timingSafeEqual(a, b);
+  } catch { secretsMatch = false; }
+
+  if (!secretsMatch) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

@@ -397,13 +397,14 @@ export default function CurrencyPage() {
               <select
                 value={historyCurrency}
                 onChange={(e) => setHistoryCurrency(e.target.value)}
+                aria-label="Select currency for history"
                 className="px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
               >
                 {currencies.map(c => (
                   <option key={c.code} value={c.code}>{c.code} / CAD</option>
                 ))}
               </select>
-              <select className="px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
+              <select aria-label="Select time range for history" className="px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
                 <option value="7">{t('admin.multiCurrency.last7Days')}</option>
                 <option value="30">{t('admin.multiCurrency.last30Days')}</option>
                 <option value="90">{t('admin.multiCurrency.last90Days')}</option>
@@ -464,12 +465,14 @@ export default function CurrencyPage() {
               type="number"
               value={converterAmount}
               onChange={(e) => setConverterAmount(Number(e.target.value) || 0)}
+              aria-label="Amount to convert"
               className="w-full px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 text-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
             />
           </div>
           <select
             value={selectedConverterCurrency}
             onChange={(e) => setConverterCurrency(e.target.value)}
+            aria-label="Select currency to convert"
             className="px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
           >
             {currencies.map(c => (

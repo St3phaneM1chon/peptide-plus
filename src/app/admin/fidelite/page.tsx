@@ -5,6 +5,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Plus, Loader2, Trash2 } from 'lucide-react';
 import { PageHeader, Button, Modal, FormField, Input } from '@/components/admin';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
@@ -47,6 +48,14 @@ export default function FidelitePage() {
   // Simulation state
   const [simAmount, setSimAmount] = useState(100);
   const [simTier, setSimTier] = useState('');
+  const [tierFormErrors, setTierFormErrors] = useState<Record<string, string>>({});
+
+  // UX FIX: ConfirmDialog for tier delete action
+  const [confirmDeleteTier, setConfirmDeleteTier] = useState<{
+    isOpen: boolean;
+    tierName: string;
+    userCount: number;
+  }>({ isOpen: false, tierName: '', userCount: 0 });
 
   // FIX: FLAW-055 - Wrap fetchConfig in useCallback for stable reference
   const fetchConfig = useCallback(async () => {
@@ -108,11 +117,22 @@ export default function FidelitePage() {
 
   const saveTier = () => {
     if (!config || !editingTier) return;
+    // UX FIX: Validate tier form fields with inline error messages
+    const errors: Record<string, string> = {};
+    if (!tierFormName.trim()) {
+      errors.name = t('admin.loyalty.tierNameRequired') || 'Tier name is required';
+    }
+    if (tierFormMultiplier < 0.1 || tierFormMultiplier > 10) {
+      errors.multiplier = t('admin.loyalty.multiplierRange') || 'Multiplier must be between 0.1 and 10';
+    }
+    setTierFormErrors(errors);
+    if (Object.keys(errors).length > 0) return;
+
     const newName = tierFormName.trim() || editingTier;
     // FIX F-014: Prevent tier name collisions by checking uniqueness
     const nameConflict = config.tiers.some((tier) => tier.name !== editingTier && tier.name === newName);
     if (nameConflict) {
-      toast.error(t('admin.loyalty.tierNameExists') || 'A tier with this name already exists');
+      setTierFormErrors({ name: t('admin.loyalty.tierNameExists') || 'A tier with this name already exists' });
       return;
     }
     const updatedTiers = config.tiers.map((tier) => {
@@ -153,33 +173,37 @@ export default function FidelitePage() {
     setEditingTier(newTier.name);
   };
 
-  // FIX F-027: Check if users exist in the tier before allowing deletion
-  const deleteTier = async (tierName: string) => {
+  // UX FIX: Actual tier delete execution (called after confirmation)
+  const executeDeleteTier = (tierName: string) => {
     if (!config) return;
-    // Check server-side if users are in this tier
-    try {
-      const res = await fetch(`/api/admin/users?loyaltyTier=${encodeURIComponent(tierName)}&limit=1`);
-      if (res.ok) {
-        const data = await res.json();
-        const userCount = data.total || data.users?.length || 0;
-        if (userCount > 0) {
-          const proceed = confirm(
-            (t('admin.loyalty.tierHasUsers') || `This tier has ${userCount} user(s). They will be moved to the default tier. Continue?`)
-              .replace('{count}', String(userCount))
-          );
-          if (!proceed) return;
-        }
-      }
-    } catch {
-      // If check fails, still allow with standard confirmation
-    }
-    if (!confirm(t('admin.loyalty.confirmDeleteTier'))) return;
     setConfig({
       ...config,
       tiers: config.tiers.filter((t) => t.name !== tierName),
     });
     if (editingTier === tierName) setEditingTier(null);
     toast.success(t('admin.loyalty.tierDeleted'));
+  };
+
+  // FIX F-027: Check if users exist in the tier before allowing deletion
+  // UX FIX: Replaced native confirm() with ConfirmDialog
+  const deleteTier = async (tierName: string) => {
+    if (!config) return;
+    let userCount = 0;
+    // Check server-side if users are in this tier
+    try {
+      const res = await fetch(`/api/admin/users?loyaltyTier=${encodeURIComponent(tierName)}&limit=1`);
+      if (res.ok) {
+        const data = await res.json();
+        userCount = data.total || data.users?.length || 0;
+      }
+    } catch {
+      // If check fails, still allow with standard confirmation
+    }
+    setConfirmDeleteTier({
+      isOpen: true,
+      tierName,
+      userCount,
+    });
   };
 
   // ─── Simulation computed values ────────────────────────────
@@ -415,6 +439,24 @@ export default function FidelitePage() {
         </div>
       </div>
 
+      {/* UX FIX: ConfirmDialog for tier delete action */}
+      <ConfirmDialog
+        isOpen={confirmDeleteTier.isOpen}
+        title={t('admin.loyalty.confirmDeleteTierTitle') || 'Delete tier?'}
+        message={
+          confirmDeleteTier.userCount > 0
+            ? (t('admin.loyalty.tierHasUsersMessage') || `This tier has ${confirmDeleteTier.userCount} user(s). They will be moved to the default tier. Are you sure you want to delete "${confirmDeleteTier.tierName}"?`)
+            : (t('admin.loyalty.confirmDeleteTierMessage') || `Are you sure you want to delete the "${confirmDeleteTier.tierName}" tier? Remember to save the configuration after.`)
+        }
+        variant={confirmDeleteTier.userCount > 0 ? 'warning' : 'danger'}
+        confirmLabel={t('admin.loyalty.deleteTier') || 'Delete Tier'}
+        onConfirm={() => {
+          executeDeleteTier(confirmDeleteTier.tierName);
+          setConfirmDeleteTier({ isOpen: false, tierName: '', userCount: 0 });
+        }}
+        onCancel={() => setConfirmDeleteTier({ isOpen: false, tierName: '', userCount: 0 })}
+      />
+
       {/* Edit Tier Modal */}
       <Modal
         isOpen={!!editingTier}
@@ -446,8 +488,11 @@ export default function FidelitePage() {
             <Input
               type="text"
               value={tierFormName}
-              onChange={(e) => setTierFormName(e.target.value)}
+              onChange={(e) => { setTierFormName(e.target.value); setTierFormErrors(prev => { const n = { ...prev }; delete n.name; return n; }); }}
             />
+            {tierFormErrors.name && (
+              <p className="mt-1 text-sm text-red-600" role="alert">{tierFormErrors.name}</p>
+            )}
           </FormField>
           <div className="grid grid-cols-2 gap-4">
             <FormField label={t('admin.loyalty.tierMinPoints')} required>
@@ -465,8 +510,11 @@ export default function FidelitePage() {
                 max={10}
                 step={0.25}
                 value={tierFormMultiplier}
-                onChange={(e) => setTierFormMultiplier(Math.min(10, parseFloat(e.target.value) || 1))}
+                onChange={(e) => { setTierFormMultiplier(Math.min(10, parseFloat(e.target.value) || 1)); setTierFormErrors(prev => { const n = { ...prev }; delete n.multiplier; return n; }); }}
               />
+              {tierFormErrors.multiplier && (
+                <p className="mt-1 text-sm text-red-600" role="alert">{tierFormErrors.multiplier}</p>
+              )}
             </FormField>
           </div>
           <FormField label={t('admin.loyalty.tierPerks')} hint={t('admin.loyalty.tierPerksHint')}>

@@ -40,7 +40,12 @@ export async function POST(request: NextRequest) {
       return apiError('Invalid CSRF token', ErrorCode.VALIDATION_ERROR, { status: 403, request });
     }
 
-    const rawBody = await request.json();
+    let rawBody: unknown;
+    try {
+      rawBody = await request.json();
+    } catch {
+      return apiError('Invalid JSON body', ErrorCode.VALIDATION_ERROR, { request });
+    }
 
     // Item 17: Validate with new Zod schema (includes sanitization transforms)
     const validation = contactFormSchema.safeParse(rawBody);

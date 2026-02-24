@@ -326,13 +326,17 @@ export async function updateDeliveryStatus(event: DeliveryEvent): Promise<void> 
       // Propagate stats to campaign if applicable
       if (existing.templateId?.startsWith('campaign:')) {
         const campaignId = existing.templateId.replace('campaign:', '');
-        await propagateCampaignStat(campaignId, event.status).catch(() => {});
+        await propagateCampaignStat(campaignId, event.status).catch((err) => {
+          logger.warn('[bounce-handler] Failed to propagate campaign stat (non-blocking)', { campaignId, status: event.status, error: err instanceof Error ? err.message : String(err) });
+        });
       }
 
       // Propagate stats to flow if applicable
       if (existing.templateId?.startsWith('flow:')) {
         const flowId = existing.templateId.replace('flow:', '');
-        await propagateFlowStat(flowId, event.status).catch(() => {});
+        await propagateFlowStat(flowId, event.status).catch((err) => {
+          logger.warn('[bounce-handler] Failed to propagate flow stat (non-blocking)', { flowId, status: event.status, error: err instanceof Error ? err.message : String(err) });
+        });
       }
     }
 

@@ -18,6 +18,6 @@ export async function GET() {
     });
   } catch (error) {
     logger.error('News API error', { error: error instanceof Error ? error.message : String(error) });
-    return NextResponse.json({ articles: [] });
+    return NextResponse.json({ error: 'Failed to fetch articles', articles: [] }, { status: 500 });
   }
 }

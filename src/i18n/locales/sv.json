@@ -4793,7 +4793,11 @@
     "viewDashboard": "Visa Instrumentpanel",
     "websiteUrl": "Webbplats- eller blogg-URL",
     "whyJoin": "Varför vill du gå med i vårt program?",
-    "yourReferralLink": "Din hänvisningslänk"
+    "yourReferralLink": "Din hänvisningslänk",
+    "overview": "Overview",
+    "dashboard": "Dashboard",
+    "ambassadorLabel": "Ambassador",
+    "submitting": "Submitting..."
   },
   "auth": {
     "acceptTerms": "Jag accepterar {link}",
@@ -5247,7 +5251,9 @@
     "viewAll": "Visa Alla",
     "views": "visningar",
     "yes": "Ja",
-    "yesterday": "Igår"
+    "yesterday": "Igår",
+    "note": "Note",
+    "opensInNewTab": "opens in new tab"
   },
   "community": {
     "allDiscussions": "Alla Diskussioner",
@@ -5836,7 +5842,8 @@
     "testDate": "Testdatum",
     "thirdParty": "Tredjepartsverifierad",
     "thirdPartyDesc": "Oberoende laboratorietestning säkerställer kvalitet",
-    "title": "Laboratorieresultat & Certifikat"
+    "title": "Laboratorieresultat & Certifikat",
+    "downloadCoa": "Download COA"
   },
   "learn": {
     "allArticles": "Alla artiklar",
@@ -6513,7 +6520,8 @@
     "tierBenefits": "Medlemsnivåer",
     "title": "Belöningsprogram",
     "yourReferralLink": "Din Rekommendationslänk",
-    "yourStatus": "Din Status"
+    "yourStatus": "Din Status",
+    "navigation": "Rewards navigation"
   },
   "search": {
     "noResultsFor": "No results for \"{query}\"",
@@ -7104,7 +7112,12 @@
     "title": "Webbinarier & Evenemang",
     "tutorial": "Handledningar",
     "upcoming": "Kommande",
-    "withWebinarLink": "med webinarlänken."
+    "withWebinarLink": "med webinarlänken.",
+    "loading": "Loading webinars...",
+    "free": "Free",
+    "all": "All",
+    "recordedFilter": "Recorded",
+    "subscribe": "Subscribe"
   },
   "legal": {
     "lastUpdated": "Last updated: {date}",

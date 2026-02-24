@@ -70,9 +70,39 @@ export const GET = withAdminGuard(async (request) => {
     const [suppliers, total] = await Promise.all([
       prisma.supplier.findMany({
         where,
-        include: {
-          contacts: { orderBy: { isPrimary: 'desc' } },
-          links: { orderBy: { sortOrder: 'asc' } },
+        select: {
+          id: true,
+          name: true,
+          code: true,
+          email: true,
+          phone: true,
+          website: true,
+          address: true,
+          city: true,
+          province: true,
+          postalCode: true,
+          country: true,
+          notes: true,
+          isActive: true,
+          createdAt: true,
+          updatedAt: true,
+          contacts: {
+            orderBy: { isPrimary: 'desc' },
+            select: {
+              id: true,
+              department: true,
+              name: true,
+              email: true,
+              phone: true,
+              extension: true,
+              title: true,
+              isPrimary: true,
+            },
+          },
+          links: {
+            orderBy: { sortOrder: 'asc' },
+            select: { id: true, label: true, url: true, type: true, sortOrder: true },
+          },
           _count: { select: { contacts: true, links: true } },
         },
         orderBy: { name: 'asc' },

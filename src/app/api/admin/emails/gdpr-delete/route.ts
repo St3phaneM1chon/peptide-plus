@@ -111,7 +111,9 @@ export const POST = withAdminGuard(
         newValue: results,
         ipAddress: getClientIpFromRequest(request),
         userAgent: request.headers.get('user-agent') || undefined,
-      }).catch(() => {});
+      }).catch((auditErr) => {
+        logger.warn('[GDPR] Non-blocking audit log failure on GDPR_EMAIL_DELETE', { email: normalizedEmail, error: auditErr instanceof Error ? auditErr.message : String(auditErr) });
+      });
 
       logger.info(`[GDPR] Email data deleted for ${normalizedEmail} by admin ${session.user.id}: ${JSON.stringify(results)}`);
 

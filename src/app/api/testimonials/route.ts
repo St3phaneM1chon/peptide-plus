@@ -14,6 +14,6 @@ export async function GET() {
     });
   } catch (error) {
     logger.error('Testimonials API error', { error: error instanceof Error ? error.message : String(error) });
-    return NextResponse.json({ testimonials: [] });
+    return NextResponse.json({ error: 'Failed to fetch testimonials', testimonials: [] }, { status: 500 });
   }
 }

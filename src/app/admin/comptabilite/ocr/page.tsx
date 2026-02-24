@@ -209,6 +209,7 @@ export default function OCRPage() {
               accept="image/png,image/jpeg,image/jpg,image/webp,application/pdf"
               onChange={(e) => e.target.files?.[0] && handleFileSelect(e.target.files[0])}
               className="hidden"
+              aria-label="Upload invoice file"
             />
 
             {scanning ? (
@@ -391,7 +392,7 @@ export default function OCRPage() {
                 {/* Category */}
                 <div>
                   <label className="block text-xs font-medium text-slate-500 mb-1">{t('admin.ocrScan.expenseCategory')}</label>
-                  <select className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                  <select aria-label="Expense category" className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
                     <option value="6310">{t('admin.ocrScan.opt6310')}</option>
                     <option value="6330">{t('admin.ocrScan.opt6330')}</option>
                     <option value="6210">{t('admin.ocrScan.opt6210')}</option>

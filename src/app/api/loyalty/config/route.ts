@@ -40,7 +40,7 @@ export async function GET() {
           reviewBonus: parsed.reviewBonus ?? config.reviewBonus,
         };
       } catch (error) {
-        console.error('[LoyaltyConfig] JSON parse of loyalty config failed, using defaults:', error);
+        logger.error('[LoyaltyConfig] JSON parse of loyalty config failed, using defaults', { error: error instanceof Error ? error.message : String(error) });
       }
     } else {
       // Fallback: try SiteSettings.rewardTiers
@@ -60,7 +60,7 @@ export async function GET() {
           };
         }
       } catch (error) {
-        console.error('[LoyaltyConfig] SiteSettings rewardTiers parse failed, using defaults:', error);
+        logger.error('[LoyaltyConfig] SiteSettings rewardTiers parse failed, using defaults', { error: error instanceof Error ? error.message : String(error) });
       }
     }
 

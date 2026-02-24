@@ -111,7 +111,7 @@ export default function FAQPage({ initialByCategory }: FaqPageClientProps) {
                     <button
                       key={index}
                       onClick={() => setActiveCategory(index)}
-                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-start transition-colors ${
+                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-start transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 ${
                         activeCategory === index
                           ? 'bg-orange-50 text-orange-600 font-medium'
                           : 'text-gray-600 hover:bg-gray-50'
@@ -144,7 +144,9 @@ export default function FAQPage({ initialByCategory }: FaqPageClientProps) {
                       <div key={qIndex} className="border-b border-gray-100 last:border-0">
                         <button
                           onClick={() => toggleQuestion(key)}
-                          className="w-full flex items-start justify-between gap-4 p-6 text-start hover:bg-gray-50 transition-colors"
+                          className="w-full flex items-start justify-between gap-4 p-6 text-start hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-inset"
+                          aria-expanded={isOpen}
+                          aria-controls={`faq-answer-${key}`}
                         >
                           <span className="font-medium text-gray-900">
                             {item.question}
@@ -154,13 +156,14 @@ export default function FAQPage({ initialByCategory }: FaqPageClientProps) {
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
+                            aria-hidden="true"
                           >
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                           </svg>
                         </button>
 
                         {isOpen && (
-                          <div className="px-6 pb-6">
+                          <div id={`faq-answer-${key}`} className="px-6 pb-6" role="region">
                             <div className="ps-0 text-gray-600 whitespace-pre-line leading-relaxed">
                               {item.answer}
                             </div>

@@ -44,7 +44,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       const b = Buffer.from(providedSecret, 'utf8');
       secretsMatch = a.length === b.length && timingSafeEqual(a, b);
     } catch (error) {
-      console.error('[Cron] Secret comparison failed:', error);
+      logger.error('[AccountingCron] Secret comparison failed', { error: error instanceof Error ? error.message : String(error) });
       secretsMatch = false;
     }
   }

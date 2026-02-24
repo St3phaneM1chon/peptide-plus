@@ -91,36 +91,41 @@ const templateMap: Record<string, (locale: Locale) => { subject: string; html: s
 };
 
 export const GET = withAdminGuard(async (request: NextRequest) => {
-  const template = request.nextUrl.searchParams.get('template');
-  const locale = (request.nextUrl.searchParams.get('locale') || 'fr') as Locale;
-  const format = request.nextUrl.searchParams.get('format') || 'html'; // html or json
+  try {
+    const template = request.nextUrl.searchParams.get('template');
+    const locale = (request.nextUrl.searchParams.get('locale') || 'fr') as Locale;
+    const format = request.nextUrl.searchParams.get('format') || 'html'; // html or json
 
-  if (!template) {
-    return NextResponse.json({
-      availableTemplates: Object.keys(templateMap),
-      usage: 'GET /api/admin/email-preview?template=welcome&locale=fr',
+    if (!template) {
+      return NextResponse.json({
+        availableTemplates: Object.keys(templateMap),
+        usage: 'GET /api/admin/email-preview?template=welcome&locale=fr',
+      });
+    }
+
+    const generator = templateMap[template];
+    if (!generator) {
+      return NextResponse.json(
+        { error: `Template "${template}" not found`, availableTemplates: Object.keys(templateMap) },
+        { status: 404 }
+      );
+    }
+
+    const { subject, html } = generator(locale);
+
+    if (format === 'json') {
+      return NextResponse.json({ template, locale, subject, html });
+    }
+
+    // Return raw HTML for browser preview
+    return new NextResponse(html, {
+      headers: {
+        'Content-Type': 'text/html; charset=utf-8',
+        'Cache-Control': 'no-store',
+      },
     });
+  } catch (error) {
+    const errMsg = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ error: 'Failed to generate email preview', details: errMsg }, { status: 500 });
   }
-
-  const generator = templateMap[template];
-  if (!generator) {
-    return NextResponse.json(
-      { error: `Template "${template}" not found`, availableTemplates: Object.keys(templateMap) },
-      { status: 404 }
-    );
-  }
-
-  const { subject, html } = generator(locale);
-
-  if (format === 'json') {
-    return NextResponse.json({ template, locale, subject, html });
-  }
-
-  // Return raw HTML for browser preview
-  return new NextResponse(html, {
-    headers: {
-      'Content-Type': 'text/html; charset=utf-8',
-      'Cache-Control': 'no-store',
-    },
-  });
 });

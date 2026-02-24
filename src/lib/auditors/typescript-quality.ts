@@ -121,8 +121,34 @@ export default class TypescriptQualityAuditor extends BaseAuditor {
       return results;
     }
 
-    // Parse removing comments (// and /* */)
-    const stripped = content.replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '');
+    // Parse removing comments while respecting string literals
+    // Simple approach: strip line-by-line, skipping content inside quotes
+    const stripped = content
+      .split('\n')
+      .map(line => {
+        let inString = false;
+        let stringChar = '';
+        let result = '';
+        for (let i = 0; i < line.length; i++) {
+          const ch = line[i];
+          if (inString) {
+            result += ch;
+            if (ch === '\\') { result += line[++i] || ''; continue; }
+            if (ch === stringChar) inString = false;
+          } else {
+            if (ch === '"' || ch === "'") { inString = true; stringChar = ch; result += ch; }
+            else if (ch === '/' && line[i + 1] === '/') break; // line comment
+            else if (ch === '/' && line[i + 1] === '*') {
+              // Block comment - skip until */
+              const end = line.indexOf('*/', i + 2);
+              if (end >= 0) { i = end + 1; } else { break; }
+            }
+            else { result += ch; }
+          }
+        }
+        return result;
+      })
+      .join('\n');
 
     try {
       const tsconfig = JSON.parse(stripped);

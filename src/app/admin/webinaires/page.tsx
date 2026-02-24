@@ -23,6 +23,7 @@ import {
   MobileSplitLayout,
 } from '@/components/admin/outlook';
 import type { ContentListItem } from '@/components/admin/outlook';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
@@ -78,6 +79,13 @@ export default function WebinairesPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingWebinar, setEditingWebinar] = useState<Webinar | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+
+  // UX FIX: ConfirmDialog for cancel action
+  const [confirmCancel, setConfirmCancel] = useState<{
+    isOpen: boolean;
+    webinar: Webinar | null;
+  }>({ isOpen: false, webinar: null });
 
   // Form fields
   const [formTitle, setFormTitle] = useState('');
@@ -168,7 +176,26 @@ export default function WebinairesPage() {
   };
 
   const handleSubmitWebinar = async () => {
-    if (!formTitle.trim()) return;
+    // UX FIX: Validate form fields with inline error messages
+    const errors: Record<string, string> = {};
+    if (!formTitle.trim()) {
+      errors.title = t('admin.webinars.titleRequired') || 'Title is required';
+    }
+    if (!formDescription.trim()) {
+      errors.description = t('admin.webinars.descriptionRequired') || 'Description is required';
+    }
+    if (!formHost.trim()) {
+      errors.host = t('admin.webinars.hostRequired') || 'Host name is required';
+    }
+    if (!formDateTime) {
+      errors.dateTime = t('admin.webinars.dateTimeRequired') || 'Date and time are required';
+    }
+    if (formDuration <= 0) {
+      errors.duration = t('admin.webinars.durationRequired') || 'Duration must be greater than 0';
+    }
+    setFormErrors(errors);
+    if (Object.keys(errors).length > 0) return;
+
     setSubmitting(true);
     try {
       const isEdit = !!editingWebinar;
@@ -210,9 +237,8 @@ export default function WebinairesPage() {
     }
   };
 
-  // FLAW-023 FIX: Send status CANCELLED instead of just isPublished:false
-  const handleCancelWebinar = async (webinar: Webinar) => {
-    if (!confirm(t('admin.webinars.confirmCancel'))) return;
+  // UX FIX: Actual cancel execution (called after confirmation)
+  const executeCancelWebinar = async (webinar: Webinar) => {
     try {
       const res = await fetch(`/api/admin/webinars/${webinar.id}`, {
         method: 'PATCH',
@@ -228,6 +254,14 @@ export default function WebinairesPage() {
     } catch {
       toast.error(t('admin.webinars.cancelError'));
     }
+  };
+
+  // UX FIX: Replaced native confirm() with ConfirmDialog
+  const handleCancelWebinar = (webinar: Webinar) => {
+    setConfirmCancel({
+      isOpen: true,
+      webinar,
+    });
   };
 
   // ─── Filtering ──────────────────────────────────────────────
@@ -564,6 +598,20 @@ export default function WebinairesPage() {
         />
       </div>
 
+      {/* UX FIX: ConfirmDialog for cancel webinar action */}
+      <ConfirmDialog
+        isOpen={confirmCancel.isOpen}
+        title={t('admin.webinars.confirmCancelTitle') || 'Cancel webinar?'}
+        message={t('admin.webinars.confirmCancelMessage') || `Are you sure you want to cancel "${confirmCancel.webinar?.title || ''}"? ${confirmCancel.webinar?.registeredCount ? `${confirmCancel.webinar.registeredCount} registered attendees will be affected.` : ''}`}
+        variant="danger"
+        confirmLabel={t('admin.webinars.cancelWebinar') || 'Cancel Webinar'}
+        onConfirm={() => {
+          if (confirmCancel.webinar) executeCancelWebinar(confirmCancel.webinar);
+          setConfirmCancel({ isOpen: false, webinar: null });
+        }}
+        onCancel={() => setConfirmCancel({ isOpen: false, webinar: null })}
+      />
+
       {/* ─── CREATE/EDIT FORM MODAL ─────────────────────────────── */}
       <Modal
         isOpen={showForm}
@@ -594,30 +642,42 @@ export default function WebinairesPage() {
             <Input
               type="text"
               value={formTitle}
-              onChange={(e) => setFormTitle(e.target.value)}
+              onChange={(e) => { setFormTitle(e.target.value); setFormErrors(prev => { const n = { ...prev }; delete n.title; return n; }); }}
             />
+            {formErrors.title && (
+              <p className="mt-1 text-sm text-red-600" role="alert">{formErrors.title}</p>
+            )}
           </FormField>
           <FormField label={t('admin.webinars.formDescription')} required>
             <Textarea
               rows={3}
               value={formDescription}
-              onChange={(e) => setFormDescription(e.target.value)}
+              onChange={(e) => { setFormDescription(e.target.value); setFormErrors(prev => { const n = { ...prev }; delete n.description; return n; }); }}
             />
+            {formErrors.description && (
+              <p className="mt-1 text-sm text-red-600" role="alert">{formErrors.description}</p>
+            )}
           </FormField>
           <div className="grid grid-cols-2 gap-4">
             <FormField label={t('admin.webinars.formDateTime')} required>
               <Input
                 type="datetime-local"
                 value={formDateTime}
-                onChange={(e) => setFormDateTime(e.target.value)}
+                onChange={(e) => { setFormDateTime(e.target.value); setFormErrors(prev => { const n = { ...prev }; delete n.dateTime; return n; }); }}
               />
+              {formErrors.dateTime && (
+                <p className="mt-1 text-sm text-red-600" role="alert">{formErrors.dateTime}</p>
+              )}
             </FormField>
             <FormField label={t('admin.webinars.formDuration')} required>
               <Input
                 type="number"
                 value={formDuration}
-                onChange={(e) => setFormDuration(parseInt(e.target.value) || 0)}
+                onChange={(e) => { setFormDuration(parseInt(e.target.value) || 0); setFormErrors(prev => { const n = { ...prev }; delete n.duration; return n; }); }}
               />
+              {formErrors.duration && (
+                <p className="mt-1 text-sm text-red-600" role="alert">{formErrors.duration}</p>
+              )}
             </FormField>
           </div>
           <div className="grid grid-cols-2 gap-4">
@@ -625,8 +685,11 @@ export default function WebinairesPage() {
               <Input
                 type="text"
                 value={formHost}
-                onChange={(e) => setFormHost(e.target.value)}
+                onChange={(e) => { setFormHost(e.target.value); setFormErrors(prev => { const n = { ...prev }; delete n.host; return n; }); }}
               />
+              {formErrors.host && (
+                <p className="mt-1 text-sm text-red-600" role="alert">{formErrors.host}</p>
+              )}
             </FormField>
             <FormField label={t('admin.webinars.formMaxSeats')}>
               <Input

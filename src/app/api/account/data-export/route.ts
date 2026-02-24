@@ -50,7 +50,7 @@ async function checkExportRateLimit(userId: string): Promise<boolean> {
         return true;
       }
     } catch (error) {
-      console.error('[DataExport] Redis rate-limit check failed:', error);
+      logger.error('[DataExport] Redis rate-limit check failed', { error: error instanceof Error ? error.message : String(error) });
       // Fall through to memory
     }
   }

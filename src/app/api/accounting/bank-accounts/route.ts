@@ -41,7 +41,7 @@ async function safeDecrypt(value: string | null): Promise<string | null> {
   try {
     return await decrypt(value);
   } catch (error) {
-    console.error('[BankAccounts] Decryption failed, returning plaintext:', error);
+    logger.error('[BankAccounts] Decryption failed, returning plaintext', { error: error instanceof Error ? error.message : String(error) });
     // Legacy plaintext value - return as-is
     return value;
   }

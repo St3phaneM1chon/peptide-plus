@@ -28,6 +28,7 @@ import {
   Textarea,
   MediaUploader,
 } from '@/components/admin';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useI18n } from '@/i18n/client';
 import { locales as LOCALES } from '@/i18n/config';
 import { toast } from 'sonner';
@@ -98,6 +99,14 @@ export default function BannieresPage() {
   const [activeTab, setActiveTab] = useState('general');
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+
+  // UX FIX: ConfirmDialog for delete action
+  const [confirmDelete, setConfirmDelete] = useState<{
+    isOpen: boolean;
+    slideId: string;
+    slideTitle: string;
+  }>({ isOpen: false, slideId: '', slideTitle: '' });
 
   // F61 FIX: Wrap fetchSlides in useCallback for stable reference
   const fetchSlides = useCallback(async () => {
@@ -146,15 +155,28 @@ export default function BannieresPage() {
   };
 
   const handleSave = async () => {
+    // UX FIX: Validate required fields with inline error messages
+    const errors: Record<string, string> = {};
+    if (!form.slug.trim()) {
+      errors.slug = t('admin.banners.slugRequired') || 'Slug is required';
+    }
+    if (!form.title.trim()) {
+      errors.title = t('admin.banners.titleRequired') || 'Title is required';
+    }
+    if (!form.backgroundUrl.trim()) {
+      errors.backgroundUrl = t('admin.banners.backgroundRequired') || 'Background image is required';
+    }
     // F53 FIX: Validate statsJson is valid JSON before saving
     if (form.statsJson && form.statsJson.trim()) {
       try {
         JSON.parse(form.statsJson);
       } catch {
-        toast.error(t('admin.banners.invalidStatsJson') || 'Stats JSON is not valid JSON. Please check the format.');
-        return;
+        errors.statsJson = t('admin.banners.invalidStatsJson') || 'Stats JSON is not valid JSON. Please check the format.';
       }
     }
+    setFormErrors(errors);
+    if (Object.keys(errors).length > 0) return;
+
     setSaving(true);
     try {
       const trArray = Object.values(translations).filter((tr) => tr.title);
@@ -205,10 +227,8 @@ export default function BannieresPage() {
     }
   };
 
-  // F46 FIX: Move fetchSlides inside try block so it only runs on success
-  // F58 FIX: confirm() is acceptable here for destructive delete action
-  const deleteSlide = async (id: string) => {
-    if (!confirm(t('admin.banners.confirmDelete'))) return;
+  // UX FIX: Replaced native confirm() with ConfirmDialog
+  const executeDeleteSlide = async (id: string) => {
     setDeletingId(id);
     try {
       const res = await fetch(`/api/hero-slides/${id}`, { method: 'DELETE' });
@@ -218,6 +238,15 @@ export default function BannieresPage() {
     } catch (error) { console.error('[BannieresPage] Failed to delete slide:', error); toast.error(t('common.networkError')); } finally {
       setDeletingId(null);
     }
+  };
+
+  const deleteSlide = (id: string) => {
+    const slide = slides.find(s => s.id === id);
+    setConfirmDelete({
+      isOpen: true,
+      slideId: id,
+      slideTitle: slide?.title || '',
+    });
   };
 
   // F45 FIX: Add error handling to parallel PUT requests for move
@@ -460,6 +489,20 @@ export default function BannieresPage() {
         )}
       </div>
 
+      {/* UX FIX: ConfirmDialog for delete action */}
+      <ConfirmDialog
+        isOpen={confirmDelete.isOpen}
+        title={t('admin.banners.confirmDeleteTitle') || 'Delete banner?'}
+        message={t('admin.banners.confirmDeleteMessage') || `Are you sure you want to delete "${confirmDelete.slideTitle}"? This action cannot be undone.`}
+        variant="danger"
+        confirmLabel={t('admin.banners.deleteSlide') || 'Delete'}
+        onConfirm={() => {
+          executeDeleteSlide(confirmDelete.slideId);
+          setConfirmDelete({ isOpen: false, slideId: '', slideTitle: '' });
+        }}
+        onCancel={() => setConfirmDelete({ isOpen: false, slideId: '', slideTitle: '' })}
+      />
+
       {/* Form Modal */}
       {/* FIX: F77 - TODO: Add a "Preview" tab that renders the banner with current form data for WYSIWYG editing */}
       <Modal
@@ -503,9 +546,12 @@ export default function BannieresPage() {
               <FormField label={t('admin.banners.slug')} required>
                 <Input
                   value={form.slug}
-                  onChange={(e) => setForm({ ...form, slug: e.target.value })}
+                  onChange={(e) => { setForm({ ...form, slug: e.target.value }); setFormErrors(prev => { const n = { ...prev }; delete n.slug; return n; }); }}
                   placeholder="research-peptides"
                 />
+                {formErrors.slug && (
+                  <p className="mt-1 text-sm text-red-600" role="alert">{formErrors.slug}</p>
+                )}
               </FormField>
               <FormField label={t('admin.banners.sortOrder')}>
                 <Input
@@ -518,8 +564,11 @@ export default function BannieresPage() {
             <FormField label={t('admin.banners.defaultTitle')} required>
               <Input
                 value={form.title}
-                onChange={(e) => setForm({ ...form, title: e.target.value })}
+                onChange={(e) => { setForm({ ...form, title: e.target.value }); setFormErrors(prev => { const n = { ...prev }; delete n.title; return n; }); }}
               />
+              {formErrors.title && (
+                <p className="mt-1 text-sm text-red-600" role="alert">{formErrors.title}</p>
+              )}
             </FormField>
             <FormField label={t('admin.banners.defaultSubtitle')}>
               <Textarea

@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { timingSafeEqual } from 'crypto';
 import { prisma } from '@/lib/db';
 import { withJobLock } from '@/lib/cron-lock';
 import { logger } from '@/lib/logger';
@@ -18,9 +19,23 @@ import { escapeHtml } from '@/lib/email/templates/base-template';
 export async function GET(request: NextRequest) {
   // FLAW-006 FIX: Only accept cron secret via Authorization header, not query string.
   // Query string secrets appear in server logs, browser history, CDN logs, and Referer headers.
+  // Timing-safe comparison to prevent timing attacks on the secret.
   const cronSecret = process.env.CRON_SECRET;
   const authHeader = request.headers.get('authorization');
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+
+  if (!cronSecret) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const providedSecret = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : '';
+  let secretsMatch = false;
+  try {
+    const a = Buffer.from(cronSecret, 'utf8');
+    const b = Buffer.from(providedSecret, 'utf8');
+    secretsMatch = a.length === b.length && timingSafeEqual(a, b);
+  } catch { secretsMatch = false; }
+
+  if (!secretsMatch) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -110,7 +125,9 @@ export async function GET(request: NextRequest) {
           await prisma.emailFlowExecution.update({
             where: { id: execution.id },
             data: { status: 'FAILED' },
-          }).catch(() => {});
+          }).catch((updateErr) => {
+            logger.error('[CronEmailFlows] Failed to mark execution as FAILED', { executionId: execution.id, error: updateErr instanceof Error ? updateErr.message : String(updateErr) });
+          });
         }
       }
     }
@@ -186,7 +203,9 @@ async function processNode(
             messageId: result.messageId || undefined,
             error: result.success ? null : 'Send failed',
           },
-        }).catch(() => {});
+        }).catch((logErr) => {
+          logger.error('[CronEmailFlows] Failed to create EmailLog entry', { error: logErr instanceof Error ? logErr.message : String(logErr) });
+        });
 
         if (result.success) {
           // Atomically increment 'sent' stat
@@ -201,7 +220,10 @@ async function processNode(
               WHERE id = ${flowId}
             `;
           } catch (error) {
-            console.error('[EmailFlows] Stat increment for flow failed (best-effort):', flowId, error);
+            logger.error('[CronEmailFlows] Stat increment for flow failed (best-effort)', {
+              flowId,
+              error: error instanceof Error ? error.message : String(error),
+            });
           }
         }
       }

@@ -449,7 +449,7 @@ export function AttachmentPanel({ entityType, entityId, readOnly = false }: Atta
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm"
           role="dialog"
           aria-modal="true"
-          aria-label="Image preview"
+          aria-label={t('admin.attachments.imagePreview') || 'Image preview'}
           onClick={() => setPreviewUrl(null)}
         >
           <div className="relative max-w-3xl max-h-[85vh]" onClick={(e) => e.stopPropagation()}>
@@ -462,7 +462,7 @@ export function AttachmentPanel({ entityType, entityId, readOnly = false }: Atta
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={previewUrl}
-              alt="Preview"
+              alt={t('admin.attachments.preview') || 'Preview'}
               className="max-w-full max-h-[85vh] rounded-lg shadow-2xl"
             />
           </div>

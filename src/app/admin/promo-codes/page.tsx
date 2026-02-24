@@ -15,6 +15,7 @@ import {
   MobileSplitLayout,
 } from '@/components/admin/outlook';
 import type { ContentListItem } from '@/components/admin/outlook';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
@@ -72,6 +73,14 @@ export default function PromoCodesPage() {
   const [editingCode, setEditingCode] = useState<PromoCode | null>(null);
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+
+  // UX FIX: ConfirmDialog for delete action
+  const [confirmDelete, setConfirmDelete] = useState<{
+    isOpen: boolean;
+    id: string;
+    code: string;
+  }>({ isOpen: false, id: '', code: '' });
 
   // Filter state
   const [searchValue, setSearchValue] = useState('');
@@ -123,6 +132,24 @@ export default function PromoCodesPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // UX FIX: Validate form fields with inline error messages
+    const errors: Record<string, string> = {};
+    if (!formData.code.trim()) {
+      errors.code = t('admin.promoCodes.codeRequired') || 'Promo code is required';
+    }
+    if (formData.value <= 0) {
+      errors.value = t('admin.promoCodes.valueRequired') || 'Discount value must be greater than 0';
+    }
+    if (formData.type === 'PERCENTAGE' && formData.value > 100) {
+      errors.value = t('admin.promoCodes.percentageMax') || 'Percentage discount cannot exceed 100%';
+    }
+    if (formData.endsAt && formData.startsAt && new Date(formData.endsAt) <= new Date(formData.startsAt)) {
+      errors.endsAt = t('admin.promoCodes.endDateAfterStart') || 'End date must be after start date';
+    }
+    setFormErrors(errors);
+    if (Object.keys(errors).length > 0) return;
+
     setSaving(true);
 
     try {
@@ -186,8 +213,8 @@ export default function PromoCodesPage() {
     }
   };
 
-  const deletePromoCode = async (id: string) => {
-    if (!confirm(t('admin.promoCodes.confirmDelete'))) return;
+  // UX FIX: Actual delete execution (called after confirmation)
+  const executeDeletePromoCode = async (id: string) => {
     setDeletingId(id);
     try {
       const res = await fetch(`/api/admin/promo-codes/${id}`, { method: 'DELETE' });
@@ -207,6 +234,16 @@ export default function PromoCodesPage() {
     } finally {
       setDeletingId(null);
     }
+  };
+
+  // UX FIX: Replaced native confirm() with ConfirmDialog
+  const deletePromoCode = (id: string) => {
+    const promo = promoCodes.find(p => p.id === id);
+    setConfirmDelete({
+      isOpen: true,
+      id,
+      code: promo?.code || '',
+    });
   };
 
   const resetForm = () => {
@@ -601,6 +638,20 @@ export default function PromoCodesPage() {
         />
       </div>
 
+      {/* UX FIX: ConfirmDialog for delete action */}
+      <ConfirmDialog
+        isOpen={confirmDelete.isOpen}
+        title={t('admin.promoCodes.confirmDeleteTitle') || 'Delete promo code?'}
+        message={t('admin.promoCodes.confirmDeleteMessage') || `Are you sure you want to delete "${confirmDelete.code}"? This action cannot be undone.`}
+        variant="danger"
+        confirmLabel={t('common.delete') || 'Delete'}
+        onConfirm={() => {
+          executeDeletePromoCode(confirmDelete.id);
+          setConfirmDelete({ isOpen: false, id: '', code: '' });
+        }}
+        onCancel={() => setConfirmDelete({ isOpen: false, id: '', code: '' })}
+      />
+
       {/* ─── CREATE/EDIT FORM MODAL ─────────────────────────────── */}
       <Modal
         isOpen={showForm}
@@ -616,7 +667,7 @@ export default function PromoCodesPage() {
                   type="text"
                   required
                   value={formData.code}
-                  onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
+                  onChange={(e) => { setFormData({ ...formData, code: e.target.value.toUpperCase() }); setFormErrors(prev => { const n = { ...prev }; delete n.code; return n; }); }}
                   placeholder={t('admin.promoCodes.codePlaceholder')}
                   className="uppercase"
                 />
@@ -624,6 +675,9 @@ export default function PromoCodesPage() {
                   {t('admin.promoCodes.generate')}
                 </Button>
               </div>
+              {formErrors.code && (
+                <p className="mt-1 text-sm text-red-600" role="alert">{formErrors.code}</p>
+              )}
             </FormField>
           </div>
 
@@ -653,8 +707,11 @@ export default function PromoCodesPage() {
                 required
                 min={1}
                 value={formData.value}
-                onChange={(e) => setFormData({ ...formData, value: parseInt(e.target.value) || 0 })}
+                onChange={(e) => { setFormData({ ...formData, value: parseInt(e.target.value) || 0 }); setFormErrors(prev => { const n = { ...prev }; delete n.value; return n; }); }}
               />
+              {formErrors.value && (
+                <p className="mt-1 text-sm text-red-600" role="alert">{formErrors.value}</p>
+              )}
             </FormField>
           </div>
 
@@ -713,8 +770,11 @@ export default function PromoCodesPage() {
               <Input
                 type="datetime-local"
                 value={formData.endsAt}
-                onChange={(e) => setFormData({ ...formData, endsAt: e.target.value })}
+                onChange={(e) => { setFormData({ ...formData, endsAt: e.target.value }); setFormErrors(prev => { const n = { ...prev }; delete n.endsAt; return n; }); }}
               />
+              {formErrors.endsAt && (
+                <p className="mt-1 text-sm text-red-600" role="alert">{formErrors.endsAt}</p>
+              )}
             </FormField>
           </div>
 

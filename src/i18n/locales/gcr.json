@@ -4793,7 +4793,11 @@
     "viewDashboard": "Voir le Tableau de Bord",
     "websiteUrl": "URL du Site Web ou du Blog",
     "whyJoin": "Pourquoi voulez-vous rejoindre notre programme ?",
-    "yourReferralLink": "Votre Lien de Référence"
+    "yourReferralLink": "Votre Lien de Référence",
+    "overview": "Overview",
+    "dashboard": "Dashboard",
+    "ambassadorLabel": "Ambassador",
+    "submitting": "Submitting..."
   },
   "auth": {
     "acceptTerms": "Mwen aksepte {link}",
@@ -5247,7 +5251,9 @@
     "viewAll": "Voir Tout",
     "views": "vues",
     "yes": "Wi",
-    "yesterday": "Yè"
+    "yesterday": "Yè",
+    "note": "Note",
+    "opensInNewTab": "opens in new tab"
   },
   "community": {
     "allDiscussions": "Tout Diskisyon",
@@ -5836,7 +5842,8 @@
     "testDate": "Date de Test",
     "thirdParty": "Vérifié par des Tiers",
     "thirdPartyDesc": "Test labora independent asire kalite",
-    "title": "Rezilta Lab & Sètenfikasyon"
+    "title": "Rezilta Lab & Sètenfikasyon",
+    "downloadCoa": "Download COA"
   },
   "learn": {
     "allArticles": "Tous les Articles",
@@ -6513,7 +6520,8 @@
     "tierBenefits": "Nivo Manm",
     "title": "Pwogram Rekonpans",
     "yourReferralLink": "Lyen Rekomandasyon Ou",
-    "yourStatus": "Estati Ou"
+    "yourStatus": "Estati Ou",
+    "navigation": "Rewards navigation"
   },
   "search": {
     "noResultsFor": "No results for \"{query}\"",
@@ -7104,7 +7112,12 @@
     "title": "Webinè & Evènman",
     "tutorial": "Tutoriel",
     "upcoming": "Kap vini",
-    "withWebinarLink": "ak lyen webinè a."
+    "withWebinarLink": "ak lyen webinè a.",
+    "loading": "Loading webinars...",
+    "free": "Free",
+    "all": "All",
+    "recordedFilter": "Recorded",
+    "subscribe": "Subscribe"
   },
   "legal": {
     "lastUpdated": "Last updated: {date}",

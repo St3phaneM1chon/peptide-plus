@@ -171,13 +171,13 @@ async function processUnsubscribe(
     await prisma.newsletterSubscriber.updateMany({
       where: { email: normalizedEmail },
       data: { isActive: false, unsubscribedAt: new Date() },
-    }).catch(() => {});
+    }).catch((err) => logger.error('Unsubscribe cross-sync failed', { error: err instanceof Error ? err.message : String(err) }));
 
     // Cross-sync: also unsubscribe from MailingListSubscriber
     await prisma.mailingListSubscriber.updateMany({
       where: { email: normalizedEmail, status: { not: 'UNSUBSCRIBED' } },
       data: { status: 'UNSUBSCRIBED', unsubscribedAt: new Date() },
-    }).catch(() => {});
+    }).catch((err) => logger.error('Unsubscribe cross-sync failed', { error: err instanceof Error ? err.message : String(err) }));
   }
 
   // 2. Update NotificationPreference if userId is known
@@ -256,7 +256,7 @@ async function processUnsubscribe(
       entityType: 'Email',
       details: JSON.stringify({ email: normalizedEmail, category }),
     },
-  }).catch(() => {});
+  }).catch((err) => logger.error('Unsubscribe cross-sync failed', { error: err instanceof Error ? err.message : String(err) }));
 
   logger.info('[unsubscribe] Processed unsubscribe', {
     email: normalizedEmail,

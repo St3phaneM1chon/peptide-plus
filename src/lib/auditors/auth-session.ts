@@ -268,6 +268,9 @@ export default class AuthSessionAuditor extends BaseAuditor {
       'signup',
       'forgot-password',
       'reset-password',
+      // accept-terms: session-based but called immediately after first login;
+      // CSRF protection is handled by the auth session itself
+      'accept-terms',
     ];
 
     let customRoutesWithoutCsrf = 0;
@@ -277,6 +280,10 @@ export default class AuthSessionAuditor extends BaseAuditor {
 
       // Skip NextAuth catch-all route
       if (file.includes('[...nextauth]')) continue;
+
+      // Skip WebAuthn routes - WebAuthn protocol has built-in challenge-response
+      // which serves as CSRF protection (origin verification + challenge nonce)
+      if (file.includes('webauthn')) continue;
 
       // Skip pre-authentication routes (no session = CSRF tokens impractical)
       const isPreAuth = preAuthExemptPaths.some((p) => file.includes(path.sep + p + path.sep) || file.includes('/' + p + '/'));

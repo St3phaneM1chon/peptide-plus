@@ -71,7 +71,7 @@ export async function GET(request: NextRequest) {
           const parsed = JSON.parse(v.tags);
           parsedTags = Array.isArray(parsed) ? parsed.map(String) : [String(parsed)];
         } catch (error) {
-          console.error('[Videos] Failed to parse video tags as JSON:', error);
+          logger.error('[Videos] Failed to parse video tags as JSON', { error: error instanceof Error ? error.message : String(error) });
           parsedTags = v.tags.split(',').map(t => t.trim());
         }
         parsedTags = parsedTags.filter(Boolean);

@@ -53,7 +53,17 @@ export const GET = withAdminGuard(async (request) => {
     const [deliveries, total] = await Promise.all([
       prisma.webhookDelivery.findMany({
         where,
-        include: {
+        select: {
+          id: true,
+          endpointId: true,
+          event: true,
+          payload: true,
+          status: true,
+          responseBody: true,
+          duration: true,
+          attempts: true,
+          nextRetryAt: true,
+          createdAt: true,
           endpoint: {
             select: { id: true, url: true, name: true, active: true },
           },

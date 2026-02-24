@@ -1,5 +1,7 @@
 'use client';
 
+import { useI18n } from '@/i18n/client';
+
 export type BadgeVariant = 'success' | 'warning' | 'error' | 'info' | 'neutral' | 'primary';
 
 interface StatusBadgeProps {
@@ -38,28 +40,34 @@ export function StatusBadge({ children, variant = 'neutral', dot = false, classN
 
 // Pre-defined status mappings for common use cases
 export function OrderStatusBadge({ status }: { status: string }) {
-  const map: Record<string, { label: string; variant: BadgeVariant }> = {
-    PENDING: { label: 'Pending', variant: 'warning' },
-    CONFIRMED: { label: 'Confirmed', variant: 'info' },
-    PROCESSING: { label: 'Processing', variant: 'info' },
-    SHIPPED: { label: 'Shipped', variant: 'primary' },
-    DELIVERED: { label: 'Delivered', variant: 'success' },
-    CANCELLED: { label: 'Cancelled', variant: 'error' },
-    REFUNDED: { label: 'Refunded', variant: 'neutral' },
+  const { t } = useI18n();
+  const map: Record<string, { labelKey: string; variant: BadgeVariant }> = {
+    PENDING: { labelKey: 'admin.orderStatus.pending', variant: 'warning' },
+    CONFIRMED: { labelKey: 'admin.orderStatus.confirmed', variant: 'info' },
+    PROCESSING: { labelKey: 'admin.orderStatus.processing', variant: 'info' },
+    SHIPPED: { labelKey: 'admin.orderStatus.shipped', variant: 'primary' },
+    DELIVERED: { labelKey: 'admin.orderStatus.delivered', variant: 'success' },
+    CANCELLED: { labelKey: 'admin.orderStatus.cancelled', variant: 'error' },
+    REFUNDED: { labelKey: 'admin.orderStatus.refunded', variant: 'neutral' },
   };
 
-  const config = map[status] || { label: status, variant: 'neutral' as BadgeVariant };
-  return <StatusBadge variant={config.variant} dot>{config.label}</StatusBadge>;
+  const config = map[status];
+  const label = config ? t(config.labelKey) : status;
+  const variant = config?.variant ?? ('neutral' as BadgeVariant);
+  return <StatusBadge variant={variant} dot>{label}</StatusBadge>;
 }
 
 export function PaymentStatusBadge({ status }: { status: string }) {
-  const map: Record<string, { label: string; variant: BadgeVariant }> = {
-    PENDING: { label: 'Pending', variant: 'warning' },
-    PAID: { label: 'Paid', variant: 'success' },
-    FAILED: { label: 'Failed', variant: 'error' },
-    REFUNDED: { label: 'Refunded', variant: 'neutral' },
+  const { t } = useI18n();
+  const map: Record<string, { labelKey: string; variant: BadgeVariant }> = {
+    PENDING: { labelKey: 'admin.paymentStatus.pending', variant: 'warning' },
+    PAID: { labelKey: 'admin.paymentStatus.paid', variant: 'success' },
+    FAILED: { labelKey: 'admin.paymentStatus.failed', variant: 'error' },
+    REFUNDED: { labelKey: 'admin.paymentStatus.refunded', variant: 'neutral' },
   };
 
-  const config = map[status] || { label: status, variant: 'neutral' as BadgeVariant };
-  return <StatusBadge variant={config.variant} dot>{config.label}</StatusBadge>;
+  const config = map[status];
+  const label = config ? t(config.labelKey) : status;
+  const variant = config?.variant ?? ('neutral' as BadgeVariant);
+  return <StatusBadge variant={variant} dot>{label}</StatusBadge>;
 }

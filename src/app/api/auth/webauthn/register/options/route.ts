@@ -9,6 +9,11 @@ import { cookies } from 'next/headers';
 import { logger } from '@/lib/logger';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 
+// CSRF EXCEPTION (audited 2026-02-24): WebAuthn routes do not require separate CSRF
+// protection. The WebAuthn protocol provides built-in challenge-response authentication:
+// a unique challenge is generated server-side, stored in an httpOnly/secure/sameSite=strict
+// cookie, and must be cryptographically signed by the authenticator device during
+// verification. This route also requires an active auth session.
 export async function POST(request: NextRequest) {
   try {
     // SECURITY: Rate limit WebAuthn registration options requests

@@ -13,6 +13,7 @@ import {
   MobileSplitLayout,
 } from '@/components/admin/outlook';
 import type { ContentListItem } from '@/components/admin/outlook';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
@@ -77,6 +78,14 @@ export default function PromotionsPage() {
   const [editingPromo, setEditingPromo] = useState<Promotion | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+
+  // UX FIX: ConfirmDialog for delete action
+  const [confirmDelete, setConfirmDelete] = useState<{
+    isOpen: boolean;
+    id: string;
+    name: string;
+  }>({ isOpen: false, id: '', name: '' });
 
   // Form state
   const [formName, setFormName] = useState('');
@@ -166,7 +175,23 @@ export default function PromotionsPage() {
   };
 
   const handleSubmitPromotion = async () => {
-    if (!formName.trim()) return;
+    // UX FIX: Validate form fields with inline error messages
+    const errors: Record<string, string> = {};
+    if (!formName.trim()) {
+      errors.name = t('admin.promotions.nameRequired') || 'Promotion name is required';
+    }
+    if (formValue <= 0) {
+      errors.value = t('admin.promotions.valueRequired') || 'Discount value must be greater than 0';
+    }
+    if (formType === 'PERCENTAGE' && formValue > 100) {
+      errors.value = t('admin.promotions.percentageMax') || 'Percentage discount cannot exceed 100%';
+    }
+    if (formEndDate && formStartDate && new Date(formEndDate) <= new Date(formStartDate)) {
+      errors.endDate = t('admin.promotions.endDateAfterStart') || 'End date must be after start date';
+    }
+    setFormErrors(errors);
+    if (Object.keys(errors).length > 0) return;
+
     setSubmitting(true);
     try {
       const isEdit = !!editingPromo;
@@ -247,8 +272,8 @@ export default function PromotionsPage() {
     }
   };
 
-  const deletePromotion = async (id: string) => {
-    if (!confirm(t('admin.promotions.confirmDelete'))) return;
+  // UX FIX: Actual delete execution (called after confirmation)
+  const executeDeletePromotion = async (id: string) => {
     setDeletingId(id);
     const prev = promotions;
     setPromotions(promotions.filter((p) => p.id !== id));
@@ -268,6 +293,16 @@ export default function PromotionsPage() {
     } finally {
       setDeletingId(null);
     }
+  };
+
+  // UX FIX: Replaced native confirm() with ConfirmDialog
+  const deletePromotion = (id: string) => {
+    const promo = promotions.find(p => p.id === id);
+    setConfirmDelete({
+      isOpen: true,
+      id,
+      name: promo?.name || '',
+    });
   };
 
   const handleSelectPromo = useCallback((id: string) => {
@@ -608,6 +643,20 @@ export default function PromotionsPage() {
         />
       </div>
 
+      {/* UX FIX: ConfirmDialog for delete action */}
+      <ConfirmDialog
+        isOpen={confirmDelete.isOpen}
+        title={t('admin.promotions.confirmDeleteTitle') || 'Delete promotion?'}
+        message={t('admin.promotions.confirmDeleteMessage') || `Are you sure you want to delete "${confirmDelete.name}"? This action cannot be undone.`}
+        variant="danger"
+        confirmLabel={t('common.delete') || 'Delete'}
+        onConfirm={() => {
+          executeDeletePromotion(confirmDelete.id);
+          setConfirmDelete({ isOpen: false, id: '', name: '' });
+        }}
+        onCancel={() => setConfirmDelete({ isOpen: false, id: '', name: '' })}
+      />
+
       {/* ─── FORM MODAL ─────────────────────────────────────────── */}
       <Modal
         isOpen={showForm}
@@ -638,9 +687,12 @@ export default function PromotionsPage() {
             <Input
               type="text"
               value={formName}
-              onChange={(e) => setFormName(e.target.value)}
+              onChange={(e) => { setFormName(e.target.value); setFormErrors(prev => { const n = { ...prev }; delete n.name; return n; }); }}
               placeholder={t('admin.promotions.formNamePlaceholder')}
             />
+            {formErrors.name && (
+              <p className="mt-1 text-sm text-red-600" role="alert">{formErrors.name}</p>
+            )}
           </FormField>
 
           {/* FIX F-019: Promotion kind selector - supports all 5 types */}
@@ -676,8 +728,11 @@ export default function PromotionsPage() {
                 max={formType === 'PERCENTAGE' ? 100 : 99999}
                 step={formType === 'PERCENTAGE' ? 1 : 0.01}
                 value={formValue}
-                onChange={(e) => setFormValue(parseFloat(e.target.value) || 0)}
+                onChange={(e) => { setFormValue(parseFloat(e.target.value) || 0); setFormErrors(prev => { const n = { ...prev }; delete n.value; return n; }); }}
               />
+              {formErrors.value && (
+                <p className="mt-1 text-sm text-red-600" role="alert">{formErrors.value}</p>
+              )}
             </FormField>
           </div>
 
@@ -730,8 +785,11 @@ export default function PromotionsPage() {
               <Input
                 type="datetime-local"
                 value={formEndDate}
-                onChange={(e) => setFormEndDate(e.target.value)}
+                onChange={(e) => { setFormEndDate(e.target.value); setFormErrors(prev => { const n = { ...prev }; delete n.endDate; return n; }); }}
               />
+              {formErrors.endDate && (
+                <p className="mt-1 text-sm text-red-600" role="alert">{formErrors.endDate}</p>
+              )}
             </FormField>
           </div>
           <label className="flex items-center gap-2 cursor-pointer">

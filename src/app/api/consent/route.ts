@@ -102,7 +102,7 @@ async function loadConsent(key: string): Promise<ConsentRecord | null> {
         if (raw) return JSON.parse(raw);
       }
     } catch (error) {
-      console.error('[Consent] Redis load consent failed, falling through to memory:', error);
+      logger.error('[Consent] Redis load consent failed, falling through to memory', { error: error instanceof Error ? error.message : String(error) });
     }
   }
 
@@ -122,7 +122,7 @@ async function saveConsent(key: string, record: ConsentRecord): Promise<void> {
         return;
       }
     } catch (error) {
-      console.error('[Consent] Redis save consent failed, falling through to memory:', error);
+      logger.error('[Consent] Redis save consent failed, falling through to memory', { error: error instanceof Error ? error.message : String(error) });
     }
   }
 
@@ -207,7 +207,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
     }
 
-    const body = await request.json();
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
 
     // Validate preferences with Zod
     const parsed = consentSchema.safeParse(body);

@@ -35,6 +35,6 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     logger.error('Blog API error', { error: error instanceof Error ? error.message : String(error) });
-    return NextResponse.json({ posts: [] });
+    return NextResponse.json({ error: 'Failed to fetch blog posts', posts: [] }, { status: 500 });
   }
 }

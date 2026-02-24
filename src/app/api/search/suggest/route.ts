@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
             LIMIT 5`;
           return results;
         } catch (error) {
-          console.error('[SearchSuggest] pg_trgm query failed, falling back to ILIKE:', error);
+          logger.error('[SearchSuggest] pg_trgm query failed, falling back to ILIKE', { error: error instanceof Error ? error.message : String(error) });
           const results = await prisma.product.findMany({
             where: {
               isActive: true,
@@ -94,6 +94,6 @@ export async function GET(request: NextRequest) {
     );
   } catch (error) {
     logger.error('Search suggest error', { error: error instanceof Error ? error.message : String(error) });
-    return NextResponse.json({ suggestions: [] });
+    return NextResponse.json({ error: 'Failed to fetch suggestions', suggestions: [] }, { status: 500 });
   }
 }

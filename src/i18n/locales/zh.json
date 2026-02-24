@@ -4793,7 +4793,11 @@
     "viewDashboard": "查看仪表板",
     "websiteUrl": "网站或博客链接",
     "whyJoin": "您为什么想加入我们的计划？",
-    "yourReferralLink": "您的推荐链接"
+    "yourReferralLink": "您的推荐链接",
+    "overview": "Overview",
+    "dashboard": "Dashboard",
+    "ambassadorLabel": "Ambassador",
+    "submitting": "Submitting..."
   },
   "auth": {
     "acceptTerms": "我接受{link}",
@@ -5247,7 +5251,9 @@
     "viewAll": "查看全部",
     "views": "浏览",
     "yes": "是",
-    "yesterday": "昨天"
+    "yesterday": "昨天",
+    "note": "Note",
+    "opensInNewTab": "opens in new tab"
   },
   "community": {
     "allDiscussions": "所有讨论",
@@ -5836,7 +5842,8 @@
     "testDate": "测试日期",
     "thirdParty": "第三方验证",
     "thirdPartyDesc": "独立实验室测试确保质量",
-    "title": "实验室结果与证书"
+    "title": "实验室结果与证书",
+    "downloadCoa": "Download COA"
   },
   "learn": {
     "allArticles": "所有文章",
@@ -6513,7 +6520,8 @@
     "tierBenefits": "会员等级",
     "title": "奖励计划",
     "yourReferralLink": "您的推荐链接",
-    "yourStatus": "您的状态"
+    "yourStatus": "您的状态",
+    "navigation": "Rewards navigation"
   },
   "search": {
     "noResultsFor": "No results for \"{query}\"",
@@ -7104,7 +7112,12 @@
     "title": "网络研讨会与活动",
     "tutorial": "教程",
     "upcoming": "即将到来",
-    "withWebinarLink": "包含网络研讨会链接。"
+    "withWebinarLink": "包含网络研讨会链接。",
+    "loading": "Loading webinars...",
+    "free": "Free",
+    "all": "All",
+    "recordedFilter": "Recorded",
+    "subscribe": "Subscribe"
   },
   "legal": {
     "lastUpdated": "Last updated: {date}",

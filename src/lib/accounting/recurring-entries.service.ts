@@ -373,8 +373,9 @@ export async function processDueRecurringEntries(): Promise<{
         userId: 'system',
         userName: 'Syst\u00e8me (r\u00e9current)',
         metadata: { source: 'processRecurringEntries', templateId: template.id },
-      }).catch(() => {
+      }).catch((auditErr) => {
         // Audit logging must never break recurring processing
+        console.error('[RecurringEntries] Non-blocking audit log failure:', auditErr instanceof Error ? auditErr.message : String(auditErr));
       });
 
       // Persist nextRunDate and lastRunDate to database

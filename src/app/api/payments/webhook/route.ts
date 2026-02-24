@@ -87,7 +87,7 @@ async function isDuplicateInRedis(eventId: string): Promise<boolean> {
     const exists = await redis.get(key);
     return exists !== null;
   } catch (error) {
-    console.error('[Webhook] Redis duplicate check failed, falling through:', error);
+    logger.error('[Webhook] Redis duplicate check failed, falling through', { error: error instanceof Error ? error.message : String(error) });
     return false;
   }
 }
@@ -101,7 +101,7 @@ async function markEventInRedis(eventId: string): Promise<void> {
     // Store with 1-hour TTL
     await redis.set(key, '1', 'EX', 3600);
   } catch (error) {
-    console.error('[Webhook] Redis mark event failed (in-memory dedup is primary):', error);
+    logger.error('[Webhook] Redis mark event failed (in-memory dedup is primary)', { error: error instanceof Error ? error.message : String(error) });
   }
 }
 
@@ -120,7 +120,7 @@ async function storeRawPayload(eventId: string, rawBody: string): Promise<void> 
       data: { payload: rawBody.slice(0, 50000) }, // Truncate for safety
     });
   } catch (error) {
-    console.error('[Webhook] Raw payload storage failed (non-critical):', eventId, error);
+    logger.error('[Webhook] Raw payload storage failed (non-critical)', { eventId, error: error instanceof Error ? error.message : String(error) });
   }
 }
 
@@ -251,7 +251,7 @@ export async function POST(request: NextRequest) {
     await recordWebhookEvent(event.id, event.type, JSON.stringify(sanitizedPayload).slice(0, 5000));
 
     // Store raw payload for potential replay (non-blocking)
-    storeRawPayload(event.id, body).catch(() => {});
+    storeRawPayload(event.id, body).catch((err) => logger.error('Webhook payload storage failed', { error: err instanceof Error ? err.message : String(err) }));
 
     try {
       // Process the event
@@ -626,6 +626,7 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
     try {
       const ambassador = await prisma.ambassador.findUnique({
         where: { referralCode: promoCode },
+        select: { id: true, name: true, commissionRate: true, status: true },
       });
 
       if (ambassador && ambassador.status === 'ACTIVE') {
@@ -773,7 +774,7 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
         });
       }
     } catch (error) {
-      console.error('[Webhook] Automation engine trigger failed (non-blocking):', error);
+      logger.error('[Webhook] Automation engine trigger failed (non-blocking)', { error: error instanceof Error ? error.message : String(error) });
     }
   }
 
@@ -789,6 +790,18 @@ async function handleRefund(charge: Stripe.Charge, eventId: string) {
   // Find the order
   const order = await prisma.order.findFirst({
     where: { stripePaymentId: charge.payment_intent as string },
+    select: {
+      id: true,
+      orderNumber: true,
+      userId: true,
+      status: true,
+      total: true,
+      taxTps: true,
+      taxTvq: true,
+      taxTvh: true,
+      taxPst: true,
+      stripePaymentId: true,
+    },
   });
 
   if (!order) {
@@ -905,7 +918,31 @@ async function sendOrderConfirmationEmailAsync(orderId: string, userId: string) 
   try {
     const order = await prisma.order.findUnique({
       where: { id: orderId },
-      include: { items: true, currency: true },
+      select: {
+        id: true,
+        orderNumber: true,
+        subtotal: true,
+        shippingCost: true,
+        tax: true,
+        discount: true,
+        total: true,
+        shippingName: true,
+        shippingAddress1: true,
+        shippingAddress2: true,
+        shippingCity: true,
+        shippingState: true,
+        shippingPostal: true,
+        shippingCountry: true,
+        items: {
+          select: {
+            productName: true,
+            quantity: true,
+            unitPrice: true,
+            sku: true,
+          },
+        },
+        currency: { select: { code: true } },
+      },
     });
 
     if (!order) return;
@@ -1026,6 +1063,7 @@ async function handlePaymentFailure(paymentIntent: Stripe.PaymentIntent) {
   // Release any inventory reservations
   const order = await prisma.order.findFirst({
     where: { stripePaymentId: paymentIntent.id },
+    select: { id: true },
   });
   if (order) {
     await prisma.inventoryReservation.updateMany({

@@ -59,7 +59,7 @@ export function PlatformLauncher({ platformId }: PlatformLauncherProps) {
   if (!platform) {
     return (
       <div className="flex items-center justify-center h-64 text-slate-500">
-        Platform not found
+        {t('admin.platform.notFound') || 'Platform not found'}
       </div>
     );
   }

@@ -334,7 +334,10 @@ async function executeNode(
         email,
         'marketing',
         (context.userId as string) || undefined,
-      ).catch(() => undefined);
+      ).catch((unsErr) => {
+        logger.warn('[automation] Failed to generate unsubscribe URL (non-blocking):', { email, error: unsErr instanceof Error ? unsErr.message : String(unsErr) });
+        return undefined;
+      });
 
       const result = await sendEmail({
         to: { email, name: (context.name as string) || undefined },
@@ -345,7 +348,9 @@ async function executeNode(
 
       // Increment 'sent' stat on successful send
       if (result.success && context._flowId) {
-        await incrementFlowStat(context._flowId as string, 'sent').catch(() => {});
+        await incrementFlowStat(context._flowId as string, 'sent').catch((statErr) => {
+          logger.warn('[automation] Failed to increment sent stat (non-blocking):', { flowId: context._flowId, error: statErr instanceof Error ? statErr.message : String(statErr) });
+        });
       }
       return true;
     }

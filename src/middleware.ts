@@ -90,6 +90,11 @@ export async function middleware(request: NextRequest) {
   if (pathname.startsWith('/auth')) {
     const res = NextResponse.next();
     res.headers.set('x-request-id', requestId);
+    // SECURITY: Apply security headers to auth pages
+    res.headers.set('X-Content-Type-Options', 'nosniff');
+    res.headers.set('X-Frame-Options', 'DENY');
+    res.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+    res.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
     return res;
   }
 
@@ -145,6 +150,10 @@ export async function middleware(request: NextRequest) {
     res.headers.set('Access-Control-Allow-Origin', process.env.NEXT_PUBLIC_APP_URL || 'https://biocyclepeptides.com');
     res.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
     res.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-idempotency-key, x-request-id, x-csrf-token');
+    // SECURITY: Apply security headers to API responses (mitigate XSS, clickjacking, MIME sniffing)
+    res.headers.set('X-Content-Type-Options', 'nosniff');
+    res.headers.set('X-Frame-Options', 'DENY');
+    res.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
     return res;
   }
 
@@ -171,6 +180,11 @@ export async function middleware(request: NextRequest) {
     const res = NextResponse.next();
     res.headers.set('x-request-id', requestId);
     res.headers.set('x-locale', locale);
+    // SECURITY: Apply security headers to public pages (mitigate XSS, clickjacking, MIME sniffing)
+    res.headers.set('X-Content-Type-Options', 'nosniff');
+    res.headers.set('X-Frame-Options', 'DENY');
+    res.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+    res.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
     return res;
   }
 

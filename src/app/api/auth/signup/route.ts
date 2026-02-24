@@ -14,6 +14,7 @@ import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { z } from 'zod';
 import { PASSWORD_MIN_LENGTH } from '@/lib/constants';
 import { logger } from '@/lib/logger';
+import { stripHtml, stripControlChars } from '@/lib/sanitize';
 
 // Schéma de validation NYDFS-compliant
 const signupSchema = z.object({
@@ -43,7 +44,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
 
     // Validation
     const result = signupSchema.safeParse(body);
@@ -54,7 +60,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { name, email, password, acceptTerms } = result.data;
+    const { name: rawName, email, password, acceptTerms } = result.data;
+
+    // BE-SEC-03: Sanitize user-supplied name to prevent stored XSS
+    const name = stripControlChars(stripHtml(rawName)).trim();
+    if (!name || name.length < 2) {
+      return NextResponse.json(
+        { error: 'Le nom doit contenir au moins 2 caractères' },
+        { status: 400 }
+      );
+    }
 
     // Vérifier si l'email existe déjà
     const existingUser = await prisma.user.findUnique({

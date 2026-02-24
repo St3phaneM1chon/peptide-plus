@@ -131,7 +131,10 @@ export default class SecurityHeadersAuditor extends BaseAuditor {
       );
       if (cspSource) {
         const hasUnsafeEval = /unsafe-eval/.test(cspSource.content);
-        if (hasUnsafeEval) {
+        // Check if unsafe-eval is conditionally applied only in development
+        const isConditionalDev = /NODE_ENV.*production[\s\S]{0,300}unsafe-eval/s.test(cspSource.content)
+          || /development[\s\S]{0,100}unsafe-eval/s.test(cspSource.content);
+        if (hasUnsafeEval && !isConditionalDev) {
           const lineNum = this.findLineNumber(cspSource.content, 'unsafe-eval');
           results.push(
             this.fail('headers-01', 'MEDIUM', 'CSP allows unsafe-eval', 'Content-Security-Policy includes unsafe-eval which weakens XSS protection.', {
@@ -142,6 +145,8 @@ export default class SecurityHeadersAuditor extends BaseAuditor {
                 'Remove unsafe-eval from CSP if possible. If required by a library, document the reason and restrict it to specific domains.',
             })
           );
+        } else if (hasUnsafeEval && isConditionalDev) {
+          results.push(this.pass('headers-01', 'CSP uses unsafe-eval only in development mode (acceptable for Next.js HMR)'));
         } else {
           results.push(this.pass('headers-01', 'Content-Security-Policy header configured'));
         }

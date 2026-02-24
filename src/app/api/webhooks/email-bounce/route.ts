@@ -71,7 +71,7 @@ function verifyResendSignature(
         return true;
       }
     } catch (error) {
-      console.error('[EmailBounceWebhook] Signature comparison failed for variant:', error);
+      logger.error('[EmailBounceWebhook] Signature comparison failed for variant', { error: error instanceof Error ? error.message : String(error) });
       continue;
     }
   }

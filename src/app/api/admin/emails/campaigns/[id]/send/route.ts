@@ -192,7 +192,7 @@ export const POST = withAdminGuard(
         try {
           existingStats = JSON.parse(campaign.stats);
         } catch (error) {
-          console.error('[EmailCampaignSend] Failed to parse campaign stats JSON:', error);
+          logger.warn('[EmailCampaignSend] Failed to parse campaign stats JSON', { campaignId: params.id, error: error instanceof Error ? error.message : String(error) });
         }
       }
       const resumeOffset = typeof existingStats.sentCount === 'number' ? existingStats.sentCount : 0;
@@ -279,7 +279,10 @@ export const POST = withAdminGuard(
             .replace(/\{\{prenom\}\}/g, recipient.name || 'Client');
 
           // Generate unsubscribe URL (CAN-SPAM / RGPD / LCAP compliance)
-          const unsubscribeUrl = await generateUnsubscribeUrl(recipient.email, 'marketing', recipient.id).catch(() => undefined);
+          const unsubscribeUrl = await generateUnsubscribeUrl(recipient.email, 'marketing', recipient.id).catch((err) => {
+            logger.warn('[EmailCampaignSend] Failed to generate unsubscribe URL', { email: recipient.email, campaignId: params.id, error: err instanceof Error ? err.message : String(err) });
+            return undefined;
+          });
 
           const result = await sendEmail({
             to: { email: recipient.email, name: recipient.name || undefined },
@@ -308,7 +311,7 @@ export const POST = withAdminGuard(
 
           sent++;
         } catch (error) {
-          console.error('[EmailCampaignSend] Failed to send email to recipient:', error);
+          logger.error('[EmailCampaignSend] Failed to send email to recipient', { email: recipient.email, campaignId: params.id, error: error instanceof Error ? error.message : String(error) });
           failed++;
         }
       }
@@ -323,7 +326,9 @@ export const POST = withAdminGuard(
           newValue: { sent, failed, paused: true, sentCount: resumeOffset + sent + failed, totalCount },
           ipAddress: getClientIpFromRequest(_request),
           userAgent: _request.headers.get('user-agent') || undefined,
-        }).catch(() => {});
+        }).catch((auditErr) => {
+          logger.warn('[EmailCampaignSend] Non-blocking audit log failure on PAUSE', { campaignId: params.id, error: auditErr instanceof Error ? auditErr.message : String(auditErr) });
+        });
 
         return NextResponse.json({
           success: true,
@@ -364,7 +369,9 @@ export const POST = withAdminGuard(
         newValue: { sent: totalSent, failed: totalFailed, totalRecipients: totalCount },
         ipAddress: getClientIpFromRequest(_request),
         userAgent: _request.headers.get('user-agent') || undefined,
-      }).catch(() => {});
+      }).catch((auditErr) => {
+        logger.warn('[EmailCampaignSend] Non-blocking audit log failure on SEND', { campaignId: params.id, error: auditErr instanceof Error ? auditErr.message : String(auditErr) });
+      });
 
       return NextResponse.json({
         success: true,
@@ -376,7 +383,9 @@ export const POST = withAdminGuard(
       await prisma.emailCampaign.update({
         where: { id: params.id },
         data: { status: 'FAILED' },
-      }).catch(() => {});
+      }).catch((updateErr) => {
+        logger.error('[EmailCampaignSend] Failed to mark campaign as FAILED after error', { campaignId: params.id, error: updateErr instanceof Error ? updateErr.message : String(updateErr) });
+      });
       return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
   }

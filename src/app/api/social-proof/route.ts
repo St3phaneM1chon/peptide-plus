@@ -166,8 +166,8 @@ export async function GET() {
     return NextResponse.json(entries);
   } catch (error) {
     logger.error('Error fetching social proof data', { error: error instanceof Error ? error.message : String(error) });
-    // Return empty array on error - social proof is non-critical
-    return NextResponse.json([]);
+    // Return empty array on error - social proof is non-critical, but include error field
+    return NextResponse.json({ error: 'Failed to fetch social proof data', data: [] }, { status: 500 });
   }
 }
 

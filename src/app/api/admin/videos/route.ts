@@ -61,9 +61,26 @@ export const GET = withAdminGuard(async (request, _ctx) => {
         ],
         take: limit,
         skip: offset,
-        include: {
+        select: {
+          id: true,
+          title: true,
+          slug: true,
+          description: true,
+          thumbnailUrl: true,
+          videoUrl: true,
+          duration: true,
+          category: true,
+          tags: true,
+          instructor: true,
+          isFeatured: true,
+          isPublished: true,
+          locale: true,
+          sortOrder: true,
+          createdAt: true,
+          updatedAt: true,
           translations: {
             orderBy: { locale: 'asc' },
+            select: { id: true, locale: true, title: true, description: true },
           },
         },
       }),
@@ -148,7 +165,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
 
     // FIX: F24 - Use single-query check + UUID suffix instead of while loop
     let slug = baseSlug;
-    const existingSlug = await prisma.video.findUnique({ where: { slug } });
+    const existingSlug = await prisma.video.findUnique({ where: { slug }, select: { id: true } });
     if (existingSlug) {
       const { randomUUID } = await import('crypto');
       slug = `${baseSlug}-${randomUUID().slice(0, 8)}`;

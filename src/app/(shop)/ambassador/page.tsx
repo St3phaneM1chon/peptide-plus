@@ -152,7 +152,7 @@ export default function AmbassadorPage() {
       {/* Hero */}
       <section className="bg-gradient-to-br from-orange-500 via-orange-600 to-red-500 text-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <span className="text-6xl mb-4 block">🤝</span>
+          <span className="text-6xl mb-4 block" aria-hidden="true">🤝</span>
           <h1 className="text-3xl md:text-5xl font-bold mb-4">
             {t('ambassador.title') || 'Become an Ambassador'}
           </h1>
@@ -163,13 +163,13 @@ export default function AmbassadorPage() {
           {/* Key Benefits */}
           <div className="flex flex-wrap justify-center gap-4 mb-8">
             {[
-              { icon: '💰', text: 'Up to 20% Commission' },
-              { icon: '🎁', text: 'Free Products' },
-              { icon: '📈', text: 'Passive Income' },
-              { icon: '🌟', text: 'Exclusive Perks' },
+              { icon: '💰', text: t('ambassador.upTo20Commission') || 'Up to 20% Commission' },
+              { icon: '🎁', text: t('ambassador.freeProducts') || 'Free Products' },
+              { icon: '📈', text: t('ambassador.passiveIncome') || 'Passive Income' },
+              { icon: '🌟', text: t('ambassador.exclusivePerks') || 'Exclusive Perks' },
             ].map((benefit, i) => (
               <div key={i} className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full">
-                <span>{benefit.icon}</span>
+                <span aria-hidden="true">{benefit.icon}</span>
                 <span className="font-medium">{benefit.text}</span>
               </div>
             ))}
@@ -180,21 +180,21 @@ export default function AmbassadorPage() {
               href="/auth/signin?callbackUrl=/ambassador"
               className="inline-block px-8 py-4 bg-white text-orange-600 rounded-xl font-bold text-lg hover:bg-orange-50 transition-colors"
             >
-              Sign In to Apply
+              {t('ambassador.signInToApply') || 'Sign In to Apply'}
             </Link>
           ) : isAmbassador ? (
             <button
               onClick={() => setActiveTab('dashboard')}
               className="inline-block px-8 py-4 bg-white text-orange-600 rounded-xl font-bold text-lg hover:bg-orange-50 transition-colors"
             >
-              View Dashboard
+              {t('ambassador.viewDashboard') || 'View Dashboard'}
             </button>
           ) : (
             <button
               onClick={() => setActiveTab('apply')}
               className="inline-block px-8 py-4 bg-white text-orange-600 rounded-xl font-bold text-lg hover:bg-orange-50 transition-colors"
             >
-              Apply Now
+              {t('ambassador.applyNow') || 'Apply Now'}
             </button>
           )}
         </div>
@@ -204,17 +204,20 @@ export default function AmbassadorPage() {
         {/* Tabs (for ambassadors) */}
         {isAmbassador && (
           <div className="flex gap-4 mb-8">
-            {['overview', 'dashboard'].map((tab) => (
+            {[
+              { id: 'overview', label: t('ambassador.overview') || 'Overview' },
+              { id: 'dashboard', label: t('ambassador.dashboard') || 'Dashboard' },
+            ].map((tab) => (
               <button
-                key={tab}
-                onClick={() => setActiveTab(tab as typeof activeTab)}
-                className={`px-6 py-3 rounded-lg font-medium transition-colors ${
-                  activeTab === tab
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as typeof activeTab)}
+                className={`px-6 py-3 rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 ${
+                  activeTab === tab.id
                     ? 'bg-orange-500 text-white'
                     : 'bg-white text-neutral-600 hover:bg-neutral-100 border border-neutral-200'
                 }`}
               >
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                {tab.label}
               </button>
             ))}
           </div>
@@ -228,16 +231,16 @@ export default function AmbassadorPage() {
               <h2 className="text-2xl font-bold text-center mb-8">{t('ambassador.howItWorks') || 'How It Works'}</h2>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 {[
-                  { step: 1, icon: '📝', title: 'Apply', desc: 'Fill out our simple application form' },
-                  { step: 2, icon: '✅', title: 'Get Approved', desc: 'We review applications within 48 hours' },
-                  { step: 3, icon: '📤', title: 'Share', desc: 'Use your unique link to promote products' },
-                  { step: 4, icon: '💵', title: 'Earn', desc: 'Get paid monthly for every sale' },
+                  { step: 1, icon: '📝', title: t('ambassador.apply') || 'Apply', desc: t('ambassador.applyDesc') || 'Fill out our simple application form' },
+                  { step: 2, icon: '✅', title: t('ambassador.getApproved') || 'Get Approved', desc: t('ambassador.approveDesc') || 'We review applications within 48 hours' },
+                  { step: 3, icon: '📤', title: t('ambassador.share') || 'Share', desc: t('ambassador.shareDesc') || 'Use your unique link to promote products' },
+                  { step: 4, icon: '💵', title: t('ambassador.earn') || 'Earn', desc: t('ambassador.earnDesc') || 'Get paid monthly for every sale' },
                 ].map((item) => (
                   <div key={item.step} className="bg-white rounded-xl p-6 text-center shadow-sm border border-neutral-200">
                     <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <span className="text-2xl">{item.icon}</span>
+                      <span className="text-2xl" aria-hidden="true">{item.icon}</span>
                     </div>
-                    <div className="text-xs text-orange-500 font-bold mb-1">STEP {item.step}</div>
+                    <div className="text-xs text-orange-500 font-bold mb-1">{t('common.step') || 'STEP'} {item.step}</div>
                     <h3 className="font-bold mb-1">{item.title}</h3>
                     <p className="text-sm text-neutral-500">{item.desc}</p>
                   </div>
@@ -260,10 +263,10 @@ export default function AmbassadorPage() {
                       <span className="text-4xl">{tier.icon}</span>
                       <h3 className="font-bold mt-2">{tier.name}</h3>
                       <p className="text-3xl font-bold text-orange-500 mt-1">{tier.commission}%</p>
-                      <p className="text-xs text-neutral-500">commission</p>
+                      <p className="text-xs text-neutral-500">{t('ambassador.commission') || 'commission'}</p>
                     </div>
                     <p className="text-sm text-neutral-500 text-center mb-3">
-                      {tier.minReferrals}+ referrals
+                      {tier.minReferrals}+ {t('ambassador.referrals') || 'referrals'}
                     </p>
                     <ul className="space-y-2">
                       {tier.benefits.map((benefit, i) => (
@@ -278,7 +281,7 @@ export default function AmbassadorPage() {
                     {tier.id === 'gold' && (
                       <div className="mt-3 text-center">
                         <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full font-medium">
-                          Most Popular
+                          {t('ambassador.mostPopular') || 'Most Popular'}
                         </span>
                       </div>
                     )}
@@ -319,12 +322,12 @@ export default function AmbassadorPage() {
               <h2 className="text-xl font-bold mb-6">{t('ambassador.faq') || 'Frequently Asked Questions'}</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {[
-                  { q: 'How do I get paid?', a: 'Payments are made monthly via PayPal or bank transfer for earnings over $50.' },
-                  { q: 'Is there a minimum audience size?', a: 'No minimum required! We welcome ambassadors of all sizes who are passionate about peptide research.' },
-                  { q: 'Can I promote on any platform?', a: 'Yes! Blog, YouTube, Instagram, TikTok, email lists - wherever your audience is.' },
-                  { q: 'How long does the cookie last?', a: 'Our tracking cookie lasts 30 days, so you get credit for sales within that window.' },
-                  { q: 'Do I need to be a customer first?', a: 'While not required, it helps! Authentic recommendations from users perform best.' },
-                  { q: 'What marketing materials do you provide?', a: 'We provide banners, product images, email templates, and social media content.' },
+                  { q: t('ambassador.faq1Q') || 'How do I get paid?', a: t('ambassador.faq1A') || 'Payments are made monthly via PayPal or bank transfer for earnings over $50.' },
+                  { q: t('ambassador.faq2Q') || 'Is there a minimum audience size?', a: t('ambassador.faq2A') || 'No minimum required! We welcome ambassadors of all sizes who are passionate about peptide research.' },
+                  { q: t('ambassador.faq3Q') || 'Can I promote on any platform?', a: t('ambassador.faq3A') || 'Yes! Blog, YouTube, Instagram, TikTok, email lists - wherever your audience is.' },
+                  { q: t('ambassador.faq4Q') || 'How long does the cookie last?', a: t('ambassador.faq4A') || 'Our tracking cookie lasts 30 days, so you get credit for sales within that window.' },
+                  { q: t('ambassador.faq5Q') || 'Do I need to be a customer first?', a: t('ambassador.faq5A') || 'While not required, it helps! Authentic recommendations from users perform best.' },
+                  { q: t('ambassador.faq6Q') || 'What marketing materials do you provide?', a: t('ambassador.faq6A') || 'We provide banners, product images, email templates, and social media content.' },
                 ].map((faq, i) => (
                   <div key={i}>
                     <h4 className="font-medium mb-1">{faq.q}</h4>
@@ -342,19 +345,19 @@ export default function AmbassadorPage() {
             {/* Stats */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="bg-white rounded-xl p-6 shadow-sm border border-neutral-200">
-                <p className="text-sm text-neutral-500 mb-1">Total Earnings</p>
+                <p className="text-sm text-neutral-500 mb-1">{t('ambassador.totalEarnings') || 'Total Earnings'}</p>
                 <p className="text-3xl font-bold text-green-600">${ambassadorStats.earnings.toFixed(2)}</p>
               </div>
               <div className="bg-white rounded-xl p-6 shadow-sm border border-neutral-200">
-                <p className="text-sm text-neutral-500 mb-1">Total Referrals</p>
+                <p className="text-sm text-neutral-500 mb-1">{t('ambassador.totalReferrals') || 'Total Referrals'}</p>
                 <p className="text-3xl font-bold">{ambassadorStats.referrals}</p>
               </div>
               <div className="bg-white rounded-xl p-6 shadow-sm border border-neutral-200">
-                <p className="text-sm text-neutral-500 mb-1">Link Clicks</p>
+                <p className="text-sm text-neutral-500 mb-1">{t('ambassador.linkClicks') || 'Link Clicks'}</p>
                 <p className="text-3xl font-bold">{ambassadorStats.clicks}</p>
               </div>
               <div className="bg-white rounded-xl p-6 shadow-sm border border-neutral-200">
-                <p className="text-sm text-neutral-500 mb-1">Conversion Rate</p>
+                <p className="text-sm text-neutral-500 mb-1">{t('ambassador.conversionRate') || 'Conversion Rate'}</p>
                 <p className="text-3xl font-bold">{ambassadorStats.conversionRate}%</p>
               </div>
             </div>
@@ -365,14 +368,14 @@ export default function AmbassadorPage() {
                 <div className="flex items-center gap-3">
                   <span className="text-4xl">{getCurrentTier().icon}</span>
                   <div>
-                    <h3 className="font-bold text-lg">{getCurrentTier().name} Ambassador</h3>
-                    <p className="text-orange-500 font-bold">{getCurrentTier().commission}% Commission</p>
+                    <h3 className="font-bold text-lg">{getCurrentTier().name} {t('ambassador.ambassadorLabel') || 'Ambassador'}</h3>
+                    <p className="text-orange-500 font-bold">{getCurrentTier().commission}% {t('ambassador.commission') || 'Commission'}</p>
                   </div>
                 </div>
                 {getNextTier() && (
                   <div className="text-end">
-                    <p className="text-sm text-neutral-500">Next tier: {getNextTier().name}</p>
-                    <p className="text-sm">{getNextTier().minReferrals - ambassadorStats.referrals} more referrals needed</p>
+                    <p className="text-sm text-neutral-500">{t('ambassador.nextTier') || 'Next tier'}: {getNextTier().name}</p>
+                    <p className="text-sm">{getNextTier().minReferrals - ambassadorStats.referrals} {t('ambassador.moreReferralsNeeded') || 'more referrals needed'}</p>
                   </div>
                 )}
               </div>
@@ -388,7 +391,7 @@ export default function AmbassadorPage() {
 
             {/* Referral Link */}
             <div className="bg-white rounded-xl p-6 shadow-sm border border-neutral-200">
-              <h3 className="font-bold mb-4">Your Referral Link</h3>
+              <h3 className="font-bold mb-4">{t('ambassador.yourReferralLink') || 'Your Referral Link'}</h3>
               <div className="flex items-center gap-2">
                 <input
                   type="text"
@@ -396,8 +399,8 @@ export default function AmbassadorPage() {
                   value={`${process.env.NEXT_PUBLIC_APP_URL || ''}/ref/${session?.user?.name?.replace(/\s+/g, '') || 'unknown'}`}
                   className="flex-1 px-4 py-3 bg-neutral-50 border border-neutral-300 rounded-lg"
                 />
-                <button className="px-6 py-3 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600">
-                  Copy
+                <button className="px-6 py-3 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600" aria-label={t('common.copy') || 'Copy referral link'}>
+                  {t('common.copy') || 'Copy'}
                 </button>
               </div>
             </div>
@@ -409,25 +412,25 @@ export default function AmbassadorPage() {
           <div className="max-w-2xl mx-auto">
             {applicationSubmitted ? (
               <div className="bg-white rounded-xl p-8 text-center shadow-sm border border-neutral-200">
-                <span className="text-6xl mb-4 block">🎉</span>
-                <h2 className="text-2xl font-bold mb-2">Application Submitted!</h2>
+                <span className="text-6xl mb-4 block" aria-hidden="true">🎉</span>
+                <h2 className="text-2xl font-bold mb-2">{t('ambassador.applicationSubmitted') || 'Application Submitted!'}</h2>
                 <p className="text-neutral-600 mb-6">
-                  Thank you for applying to our ambassador program! We will review your application and get back to you within 48 hours.
+                  {t('ambassador.applicationThankYou') || 'Thank you for applying to our ambassador program! We will review your application and get back to you within 48 hours.'}
                 </p>
                 <button
                   onClick={() => setActiveTab('overview')}
                   className="px-6 py-3 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600"
                 >
-                  Back to Overview
+                  {t('ambassador.backToOverview') || 'Back to Overview'}
                 </button>
               </div>
             ) : (
               <div className="bg-white rounded-xl p-8 shadow-sm border border-neutral-200">
-                <h2 className="text-2xl font-bold mb-6">Apply to Become an Ambassador</h2>
+                <h2 className="text-2xl font-bold mb-6">{t('ambassador.applyToBecome') || 'Apply to Become an Ambassador'}</h2>
                 
                 <form onSubmit={handleApply} className="space-y-6">
                   <div>
-                    <label className="block text-sm font-medium mb-2">Website or Blog URL</label>
+                    <label className="block text-sm font-medium mb-2">{t('ambassador.websiteUrl') || 'Website or Blog URL'}</label>
                     <input
                       type="url"
                       value={applicationData.website}
@@ -438,7 +441,7 @@ export default function AmbassadorPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">Social Media Profiles</label>
+                    <label className="block text-sm font-medium mb-2">{t('ambassador.socialProfiles') || 'Social Media Profiles'}</label>
                     <input
                       type="text"
                       value={applicationData.socialMedia}
@@ -449,7 +452,7 @@ export default function AmbassadorPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">Estimated Total Followers/Audience</label>
+                    <label className="block text-sm font-medium mb-2">{t('ambassador.estimatedFollowers') || 'Estimated Total Followers/Audience'}</label>
                     <select
                       value={applicationData.followers}
                       onChange={(e) => setApplicationData(prev => ({ ...prev, followers: e.target.value }))}
@@ -466,7 +469,7 @@ export default function AmbassadorPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">Why do you want to join our program?</label>
+                    <label className="block text-sm font-medium mb-2">{t('ambassador.whyJoin') || 'Why do you want to join our program?'}</label>
                     <textarea
                       value={applicationData.whyJoin}
                       onChange={(e) => setApplicationData(prev => ({ ...prev, whyJoin: e.target.value }))}
@@ -478,7 +481,7 @@ export default function AmbassadorPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">How do you plan to promote our products?</label>
+                    <label className="block text-sm font-medium mb-2">{t('ambassador.promotionPlan') || 'How do you plan to promote our products?'}</label>
                     <textarea
                       value={applicationData.promotionPlan}
                       onChange={(e) => setApplicationData(prev => ({ ...prev, promotionPlan: e.target.value }))}
@@ -491,7 +494,7 @@ export default function AmbassadorPage() {
 
                   <div className="bg-orange-50 rounded-lg p-4">
                     <p className="text-sm text-orange-800">
-                      <strong>Note:</strong> By applying, you agree to our Ambassador Terms and Conditions. We review all applications manually and will respond within 48 hours.
+                      <strong>{t('common.note') || 'Note'}:</strong> {t('ambassador.termsNote') || 'By applying, you agree to our Ambassador Terms and Conditions. We review all applications manually and will respond within 48 hours.'}
                     </p>
                   </div>
 
@@ -502,11 +505,11 @@ export default function AmbassadorPage() {
                   >
                     {isApplying ? (
                       <>
-                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                        Submitting...
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" aria-hidden="true"></div>
+                        {t('ambassador.submitting') || 'Submitting...'}
                       </>
                     ) : (
-                      'Submit Application'
+                      t('ambassador.submitApplication') || 'Submit Application'
                     )}
                   </button>
                 </form>

@@ -8,6 +8,7 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { Camera } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
 import { profileSchema, validateForm } from '@/lib/form-validation';
@@ -216,7 +217,7 @@ export default function ProfilePage() {
                     onClick={() => fileInputRef.current?.click()}
                   >
                     {profile?.image ? (
-                      <img src={profile.image} alt={profile.name || ''} className="w-full h-full object-cover" />
+                      <Image src={profile.image} alt={profile.name || ''} className="w-full h-full object-cover" width={128} height={128} unoptimized />
                     ) : (
                       <div className="w-full h-full bg-orange-100 flex items-center justify-center">
                         <span className="text-2xl font-bold text-orange-600">

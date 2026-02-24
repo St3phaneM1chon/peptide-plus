@@ -136,19 +136,19 @@ export default function WebinarsPage() {
         return (
           <span className="flex items-center gap-1 px-3 py-1 bg-red-500 text-white text-sm font-medium rounded-full animate-pulse">
             <span className="w-2 h-2 bg-white rounded-full"></span>
-            LIVE NOW
+            {t('webinars.liveNow') || 'LIVE NOW'}
           </span>
         );
       case 'upcoming':
         return (
           <span className="px-3 py-1 bg-green-100 text-green-700 text-sm font-medium rounded-full">
-            Upcoming
+            {t('webinars.upcoming') || 'Upcoming'}
           </span>
         );
       case 'recorded':
         return (
           <span className="px-3 py-1 bg-blue-100 text-blue-700 text-sm font-medium rounded-full">
-            Watch Recording
+            {t('webinars.recorded') || 'Watch Recording'}
           </span>
         );
     }
@@ -169,7 +169,7 @@ export default function WebinarsPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-neutral-500">Loading webinars...</p>
+          <p className="text-neutral-500">{t('webinars.loading') || 'Loading webinars...'}</p>
         </div>
       </div>
     );
@@ -182,7 +182,7 @@ export default function WebinarsPage() {
         <section className="bg-gradient-to-br from-blue-600 to-blue-700 text-white py-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center gap-3 mb-4">
-              <span className="text-4xl">🎓</span>
+              <span className="text-4xl" aria-hidden="true">🎓</span>
               <h1 className="text-3xl md:text-4xl font-bold">
                 {t('webinars.title') || 'Webinars & Events'}
               </h1>
@@ -195,7 +195,7 @@ export default function WebinarsPage() {
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="text-center">
-            <span className="text-6xl mb-4 block">🎓</span>
+            <span className="text-6xl mb-4 block" aria-hidden="true">🎓</span>
             <h3 className="text-lg font-bold mb-2">{t('webinars.noWebinars') || 'No webinars available yet'}</h3>
             <p className="text-neutral-500">{t('webinars.checkBack') || 'Check back soon for new educational content!'}</p>
           </div>
@@ -210,7 +210,7 @@ export default function WebinarsPage() {
       <section className="bg-gradient-to-br from-blue-600 to-blue-700 text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3 mb-4">
-            <span className="text-4xl">🎓</span>
+            <span className="text-4xl" aria-hidden="true">🎓</span>
             <h1 className="text-3xl md:text-4xl font-bold">
               {t('webinars.title') || 'Webinars & Events'}
             </h1>
@@ -223,15 +223,15 @@ export default function WebinarsPage() {
           <div className="flex flex-wrap gap-6 mt-8">
             <div className="bg-white/10 px-6 py-3 rounded-lg">
               <p className="text-2xl font-bold">{upcomingWebinars.length}</p>
-              <p className="text-sm text-blue-200">Upcoming</p>
+              <p className="text-sm text-blue-200">{t('webinars.upcoming') || 'Upcoming'}</p>
             </div>
             <div className="bg-white/10 px-6 py-3 rounded-lg">
               <p className="text-2xl font-bold">{recordedWebinars.length}</p>
-              <p className="text-sm text-blue-200">Recordings</p>
+              <p className="text-sm text-blue-200">{t('webinars.recordings') || 'Recordings'}</p>
             </div>
             <div className="bg-white/10 px-6 py-3 rounded-lg">
-              <p className="text-2xl font-bold">Free</p>
-              <p className="text-sm text-blue-200">Always</p>
+              <p className="text-2xl font-bold">{t('webinars.free') || 'Free'}</p>
+              <p className="text-sm text-blue-200">{t('webinars.always') || 'Always'}</p>
             </div>
           </div>
         </div>
@@ -249,7 +249,7 @@ export default function WebinarsPage() {
               <span className="font-medium">{webinars.find(w => w.status === 'live')?.title}</span>
             </div>
             <button aria-label={`Join live webinar: ${webinars.find(w => w.status === 'live')?.title}`} className="px-4 py-2 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600">
-              Join Now →
+              {t('webinars.joinNow') || 'Join Now'} →
             </button>
           </div>
         )}
@@ -257,17 +257,21 @@ export default function WebinarsPage() {
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-4 mb-8">
           <div className="flex gap-2">
-            {['all', 'upcoming', 'recorded'].map((filter) => (
+            {[
+              { id: 'all', label: t('webinars.all') || 'All' },
+              { id: 'upcoming', label: t('webinars.upcoming') || 'Upcoming' },
+              { id: 'recorded', label: t('webinars.recordedFilter') || 'Recorded' },
+            ].map((filter) => (
               <button
-                key={filter}
-                onClick={() => setActiveFilter(filter as typeof activeFilter)}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                  activeFilter === filter
+                key={filter.id}
+                onClick={() => setActiveFilter(filter.id as typeof activeFilter)}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  activeFilter === filter.id
                     ? 'bg-blue-600 text-white'
                     : 'bg-white text-neutral-600 hover:bg-neutral-100 border border-neutral-200'
                 }`}
               >
-                {filter.charAt(0).toUpperCase() + filter.slice(1)}
+                {filter.label}
               </button>
             ))}
           </div>
@@ -276,7 +280,7 @@ export default function WebinarsPage() {
               <button
                 key={cat}
                 onClick={() => setActiveCategory(cat)}
-                className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
+                className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                   activeCategory === cat
                     ? 'bg-neutral-800 text-white'
                     : 'bg-white text-neutral-600 hover:bg-neutral-100 border border-neutral-200'
@@ -346,7 +350,7 @@ export default function WebinarsPage() {
                   {webinar.maxAttendees && (
                     <>
                       <span>•</span>
-                      <span>{webinar.registrations}/{webinar.maxAttendees} registered</span>
+                      <span>{webinar.registrations}/{webinar.maxAttendees} {t('webinars.registered') || 'registered'}</span>
                     </>
                   )}
                 </div>
@@ -366,26 +370,26 @@ export default function WebinarsPage() {
                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path d="M8 5v14l11-7z" />
                     </svg>
-                    Watch Recording
+                    {t('webinars.recorded') || 'Watch Recording'}
                   </button>
                 ) : webinar.status === 'live' ? (
                   <button aria-label={`Join live webinar: ${webinar.title}`} className="w-full py-3 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-colors flex items-center justify-center gap-2 animate-pulse">
                     <span className="w-2 h-2 bg-white rounded-full" aria-hidden="true"></span>
-                    Join Live Now
+                    {t('webinars.joinLive') || 'Join Live Now'}
                   </button>
                 ) : registeredWebinars.includes(webinar.id) ? (
                   <button disabled className="w-full py-3 bg-green-100 text-green-700 rounded-lg font-medium flex items-center justify-center gap-2">
                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                     </svg>
-                    Registered
+                    {t('webinars.registered') || 'Registered'}
                   </button>
                 ) : (
                   <button
                     onClick={() => setShowRegistrationModal(webinar)}
                     className="w-full py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
                   >
-                    Register Free
+                    {t('webinars.registerFree') || 'Register Free'}
                   </button>
                 )}
               </div>
@@ -395,7 +399,7 @@ export default function WebinarsPage() {
 
         {filteredWebinars.length === 0 && (
           <div className="text-center py-12">
-            <span className="text-6xl mb-4 block">🎓</span>
+            <span className="text-6xl mb-4 block" aria-hidden="true">🎓</span>
             <h3 className="text-lg font-bold mb-2">{t('webinars.noWebinars') || 'No webinars found'}</h3>
             <p className="text-neutral-500">{t('webinars.checkBack') || 'Check back soon for new educational content!'}</p>
           </div>
@@ -403,7 +407,7 @@ export default function WebinarsPage() {
 
         {/* Newsletter CTA */}
         <div className="mt-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl p-8 text-white text-center">
-          <span className="text-5xl mb-4 block">📬</span>
+          <span className="text-5xl mb-4 block" aria-hidden="true">📬</span>
           <h2 className="text-2xl font-bold mb-2">{t('webinars.stayUpdated') || 'Never Miss a Webinar'}</h2>
           <p className="text-blue-100 mb-6 max-w-md mx-auto">
             {t('webinars.stayUpdatedDesc') || 'Subscribe to get notified about upcoming webinars, new recordings, and exclusive educational content.'}
@@ -412,10 +416,11 @@ export default function WebinarsPage() {
             <input
               type="email"
               placeholder={t('webinars.placeholderEmail')}
+              aria-label="Email address for webinar notifications"
               className="flex-1 px-4 py-3 rounded-lg text-neutral-900 focus:outline-none focus:ring-2 focus:ring-white"
             />
-            <button className="px-6 py-3 bg-white text-blue-600 rounded-lg font-medium hover:bg-blue-50 transition-colors">
-              Subscribe
+            <button className="px-6 py-3 bg-white text-blue-600 rounded-lg font-medium hover:bg-blue-50 transition-colors" aria-label={t('webinars.subscribe') || 'Subscribe to webinar notifications'}>
+              {t('webinars.subscribe') || 'Subscribe'}
             </button>
           </div>
         </div>
@@ -427,7 +432,7 @@ export default function WebinarsPage() {
           <div className="bg-white rounded-2xl max-w-md w-full">
             <div className="p-6 border-b">
               <div className="flex items-center justify-between">
-                <h3 id="webinar-registration-modal-title" className="text-xl font-bold">Register for Webinar</h3>
+                <h3 id="webinar-registration-modal-title" className="text-xl font-bold">{t('webinars.registerWebinar') || 'Register for Webinar'}</h3>
                 <button onClick={() => setShowRegistrationModal(null)} aria-label="Close" className="p-2 hover:bg-neutral-100 rounded-lg">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -448,24 +453,24 @@ export default function WebinarsPage() {
                 <>
                   <div className="bg-green-50 rounded-lg p-4 mb-6">
                     <p className="text-green-700">
-                      You will receive a confirmation email at <strong>{session.user?.email}</strong> with the webinar link.
+                      {t('webinars.receiveConfirmation') || 'You will receive a confirmation email at'} <strong>{session.user?.email}</strong> {t('webinars.withWebinarLink') || 'with the webinar link.'}
                     </p>
                   </div>
                   <button
                     onClick={() => handleRegister(showRegistrationModal.id)}
                     className="w-full py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
                   >
-                    Confirm Registration
+                    {t('webinars.confirmRegistration') || 'Confirm Registration'}
                   </button>
                 </>
               ) : (
                 <>
-                  <p className="text-neutral-600 mb-6">Please sign in to register for this webinar.</p>
+                  <p className="text-neutral-600 mb-6">{t('webinars.signInRequired') || 'Please sign in to register for this webinar.'}</p>
                   <Link
                     href={`/auth/signin?callbackUrl=/webinars`}
                     className="block w-full py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors text-center"
                   >
-                    Sign In to Register
+                    {t('webinars.signInToRegister') || 'Sign In to Register'}
                   </Link>
                 </>
               )}

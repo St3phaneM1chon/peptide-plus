@@ -34,7 +34,18 @@ export const GET = withAdminGuard(async (request: NextRequest, _ctx) => {
     const [dbReviews, total] = await Promise.all([
       prisma.review.findMany({
         where,
-        include: {
+        select: {
+          id: true,
+          rating: true,
+          title: true,
+          comment: true,
+          isVerified: true,
+          isApproved: true,
+          isPublished: true,
+          reply: true,
+          repliedAt: true,
+          createdAt: true,
+          updatedAt: true,
           user: {
             select: { id: true, name: true, email: true },
           },
@@ -43,6 +54,7 @@ export const GET = withAdminGuard(async (request: NextRequest, _ctx) => {
           },
           images: {
             orderBy: { order: 'asc' },
+            select: { id: true, url: true, order: true },
           },
         },
         orderBy: { createdAt: 'desc' },

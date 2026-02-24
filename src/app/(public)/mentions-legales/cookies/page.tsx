@@ -119,7 +119,7 @@ export default function CookiesPage() {
                 <div style={{ marginTop: '20px', padding: '16px', backgroundColor: 'white', borderRadius: '8px' }}>
                   <div style={{ marginBottom: '16px' }}>
                     <label style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'not-allowed' }}>
-                      <input type="checkbox" checked disabled style={{ width: '18px', height: '18px' }} />
+                      <input type="checkbox" checked disabled style={{ width: '18px', height: '18px' }} aria-label="Essential cookies (always enabled)" />
                       <span><strong>{t('legal.cookies.essential')}</strong> - {t('legal.cookies.essentialNote')}</span>
                     </label>
                   </div>
@@ -130,6 +130,7 @@ export default function CookiesPage() {
                         checked={preferences.analytics}
                         onChange={(e) => setPreferences({...preferences, analytics: e.target.checked})}
                         style={{ width: '18px', height: '18px' }}
+                        aria-label="Analytics cookies"
                       />
                       <span><strong>{t('legal.cookies.analytics')}</strong> - {t('legal.cookies.analyticsNote')}</span>
                     </label>
@@ -141,6 +142,7 @@ export default function CookiesPage() {
                         checked={preferences.functional}
                         onChange={(e) => setPreferences({...preferences, functional: e.target.checked})}
                         style={{ width: '18px', height: '18px' }}
+                        aria-label="Functional cookies"
                       />
                       <span><strong>{t('legal.cookies.functional')}</strong> - {t('legal.cookies.functionalNote')}</span>
                     </label>
@@ -152,6 +154,7 @@ export default function CookiesPage() {
                         checked={preferences.marketing}
                         onChange={(e) => setPreferences({...preferences, marketing: e.target.checked})}
                         style={{ width: '18px', height: '18px' }}
+                        aria-label="Marketing cookies"
                       />
                       <span><strong>{t('legal.cookies.marketing')}</strong> - {t('legal.cookies.marketingNote')}</span>
                     </label>

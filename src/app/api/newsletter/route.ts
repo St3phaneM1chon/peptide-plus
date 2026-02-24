@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
           grantedAt: new Date(),
           ipAddress: ip,
         },
-      }).catch(() => {}); // Best-effort: don't fail subscribe if consent record fails
+      }).catch((err) => logger.error('ConsentRecord creation failed (best-effort)', { error: err instanceof Error ? err.message : String(err) }));
     }
 
     // FIX: FLAW-030 - Call mailing-list subscribe logic directly instead of self-calling via fetch.

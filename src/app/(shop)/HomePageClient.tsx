@@ -258,6 +258,7 @@ export default function HomePage({ initialHeroSlides, initialTestimonials = [] }
           <button
             onClick={() => window.location.reload()}
             className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm font-medium"
+            aria-label={t('common.retry') || 'Retry loading'}
           >
             {t('common.retry')}
           </button>
@@ -278,7 +279,7 @@ export default function HomePage({ initialHeroSlides, initialTestimonials = [] }
                 className="text-orange-600 hover:text-orange-700 font-semibold flex items-center gap-1"
               >
                 {t('shop.viewAll')}
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </Link>
@@ -342,7 +343,7 @@ export default function HomePage({ initialHeroSlides, initialTestimonials = [] }
                 className="text-orange-600 hover:text-orange-700 font-semibold flex items-center gap-1"
               >
                 {t('shop.viewAll')}
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </Link>
@@ -377,7 +378,7 @@ export default function HomePage({ initialHeroSlides, initialTestimonials = [] }
                 className="text-orange-600 hover:text-orange-700 font-semibold flex items-center gap-1"
               >
                 {t('shop.viewAll')}
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </Link>
@@ -412,7 +413,7 @@ export default function HomePage({ initialHeroSlides, initialTestimonials = [] }
                 className="text-orange-600 hover:text-orange-700 font-semibold flex items-center gap-1"
               >
                 {t('shop.viewAll')}
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </Link>

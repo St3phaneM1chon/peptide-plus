@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { auth } from '@/lib/auth-config';
 import { db } from '@/lib/db';
 import { checkPasswordHistory, addToPasswordHistory } from '@/lib/password-history';
@@ -9,6 +10,11 @@ import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { passwordSchema } from '@/lib/security';
 import bcrypt from 'bcryptjs';
 import { logger } from '@/lib/logger';
+
+const changePasswordBodySchema = z.object({
+  currentPassword: z.string().min(1, 'Current password is required').max(256),
+  newPassword: z.string().min(1, 'New password is required').max(256),
+});
 
 export async function PUT(request: NextRequest) {
   try {
@@ -38,7 +44,21 @@ export async function PUT(request: NextRequest) {
       return res;
     }
 
-    const { currentPassword, newPassword } = await request.json();
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
+
+    const bodyParsed = changePasswordBodySchema.safeParse(body);
+    if (!bodyParsed.success) {
+      return NextResponse.json(
+        { error: bodyParsed.error.errors[0]?.message || 'Invalid input' },
+        { status: 400 }
+      );
+    }
+    const { currentPassword, newPassword } = bodyParsed.data;
 
     // SECURITY: Validate new password meets complexity requirements
     // (min 8 chars, uppercase, lowercase, digit, special character)

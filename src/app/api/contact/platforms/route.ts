@@ -7,6 +7,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { logger } from '@/lib/logger';
 
 const PLATFORMS = ['zoom', 'whatsapp', 'teams'] as const;
 
@@ -35,7 +36,8 @@ export async function GET() {
       }));
 
     return NextResponse.json({ platforms });
-  } catch {
-    return NextResponse.json({ platforms: [] });
+  } catch (error) {
+    logger.error('[Contact Platforms] Error', { error: error instanceof Error ? error.message : String(error) });
+    return NextResponse.json({ error: 'Failed to fetch platforms', platforms: [] }, { status: 500 });
   }
 }

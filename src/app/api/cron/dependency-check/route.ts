@@ -18,6 +18,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { timingSafeEqual } from 'crypto';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { getRedisClient, isRedisAvailable } from '@/lib/redis';
@@ -55,7 +56,7 @@ async function storeResult(result: DependencyCheckResult): Promise<void> {
         await redis.set(REDIS_KEY, JSON.stringify(result), 'EX', REDIS_TTL);
       }
     } catch (error) {
-      console.error('[DependencyCheck] Redis store result failed (non-critical):', error);
+      logger.error('[DependencyCheck] Redis store result failed (non-critical)', { error: error instanceof Error ? error.message : String(error) });
     }
   }
 }
@@ -69,7 +70,7 @@ async function loadLastResult(): Promise<DependencyCheckResult | null> {
         if (raw) return JSON.parse(raw);
       }
     } catch (error) {
-      console.error('[DependencyCheck] Redis load last result failed, falling through:', error);
+      logger.error('[DependencyCheck] Redis load last result failed, falling through', { error: error instanceof Error ? error.message : String(error) });
     }
   }
   return null;
@@ -115,7 +116,7 @@ async function checkStripe(): Promise<DependencyStatus> {
       lastChecked: now,
     };
   } catch (err) {
-    console.error('[DependencyCheck] Stripe health check failed:', err);
+    logger.error('[DependencyCheck] Stripe health check failed', { error: err instanceof Error ? err.message : String(err) });
     const responseTimeMs = Date.now() - start;
     return {
       name,
@@ -162,7 +163,7 @@ async function checkExchangeRateApi(): Promise<DependencyStatus> {
       lastChecked: now,
     };
   } catch (err) {
-    console.error('[DependencyCheck] Exchange Rate API health check failed:', err);
+    logger.error('[DependencyCheck] Exchange Rate API health check failed', { error: err instanceof Error ? err.message : String(err) });
     const responseTimeMs = Date.now() - start;
     return {
       name,
@@ -207,7 +208,7 @@ async function checkEmailProvider(): Promise<DependencyStatus> {
         lastChecked: now,
       };
     } catch (err) {
-      console.error('[DependencyCheck] Email provider (Resend) health check failed:', err);
+      logger.error('[DependencyCheck] Email provider (Resend) health check failed', { error: err instanceof Error ? err.message : String(err) });
       const responseTimeMs = Date.now() - start;
       return {
         name,
@@ -260,7 +261,7 @@ async function checkRedis(): Promise<DependencyStatus> {
 
     return { name, status: 'degraded', responseTimeMs, message: 'Ping failed', lastChecked: now };
   } catch (err) {
-    console.error('[DependencyCheck] Redis health check failed:', err);
+    logger.error('[DependencyCheck] Redis health check failed', { error: err instanceof Error ? err.message : String(err) });
     const responseTimeMs = Date.now() - start;
     return {
       name,
@@ -284,7 +285,7 @@ async function checkDatabase(): Promise<DependencyStatus> {
 
     return { name, status: 'ok', responseTimeMs, lastChecked: now };
   } catch (err) {
-    console.error('[DependencyCheck] Database health check failed:', err);
+    logger.error('[DependencyCheck] Database health check failed', { error: err instanceof Error ? err.message : String(err) });
     const responseTimeMs = Date.now() - start;
     return {
       name,
@@ -356,7 +357,7 @@ export async function GET() {
 // ---------------------------------------------------------------------------
 
 export async function POST(request: NextRequest) {
-  // Verify cron secret
+  // Verify cron secret (timing-safe comparison)
   const authHeader = request.headers.get('authorization');
   const cronSecret = process.env.CRON_SECRET;
 
@@ -367,7 +368,15 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (authHeader !== `Bearer ${cronSecret}`) {
+  const providedSecret = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : '';
+  let secretsMatch = false;
+  try {
+    const a = Buffer.from(cronSecret, 'utf8');
+    const b = Buffer.from(providedSecret, 'utf8');
+    secretsMatch = a.length === b.length && timingSafeEqual(a, b);
+  } catch { secretsMatch = false; }
+
+  if (!secretsMatch) {
     return NextResponse.json(
       { error: 'Unauthorized' },
       { status: 401 }
@@ -394,7 +403,7 @@ export async function POST(request: NextRequest) {
           });
         }
       } catch (error) {
-        console.error('[DependencyCheck] Alerting for down dependencies failed (best-effort):', error);
+        logger.error('[DependencyCheck] Alerting for down dependencies failed (best-effort)', { error: error instanceof Error ? error.message : String(error) });
       }
     }
 

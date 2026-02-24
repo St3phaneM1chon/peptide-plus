@@ -4793,7 +4793,11 @@
     "viewDashboard": "डैशबोर्ड देखें",
     "websiteUrl": "वेबसाइट या ब्लॉग URL",
     "whyJoin": "आप हमारे कार्यक्रम में शामिल क्यों होना चाहते हैं?",
-    "yourReferralLink": "आपका संदर्भ लिंक"
+    "yourReferralLink": "आपका संदर्भ लिंक",
+    "overview": "Overview",
+    "dashboard": "Dashboard",
+    "ambassadorLabel": "Ambassador",
+    "submitting": "Submitting..."
   },
   "auth": {
     "acceptTerms": "मैं {link} को स्वीकार करता हूँ",
@@ -5247,7 +5251,9 @@
     "viewAll": "सभी देखें",
     "views": "दृश्य",
     "yes": "हाँ",
-    "yesterday": "कल"
+    "yesterday": "कल",
+    "note": "Note",
+    "opensInNewTab": "opens in new tab"
   },
   "community": {
     "allDiscussions": "सभी चर्चाएँ",
@@ -5836,7 +5842,8 @@
     "testDate": "परीक्षण तिथि",
     "thirdParty": "तृतीय-पक्ष द्वारा सत्यापित",
     "thirdPartyDesc": "स्वतंत्र प्रयोगशाला परीक्षण गुणवत्ता सुनिश्चित करता है",
-    "title": "प्रयोगशाला परिणाम और प्रमाणपत्र"
+    "title": "प्रयोगशाला परिणाम और प्रमाणपत्र",
+    "downloadCoa": "Download COA"
   },
   "learn": {
     "allArticles": "सभी लेख",
@@ -6513,7 +6520,8 @@
     "tierBenefits": "सदस्यता स्तर",
     "title": "इनाम कार्यक्रम",
     "yourReferralLink": "आपका संदर्भ लिंक",
-    "yourStatus": "आपकी स्थिति"
+    "yourStatus": "आपकी स्थिति",
+    "navigation": "Rewards navigation"
   },
   "search": {
     "noResultsFor": "No results for \"{query}\"",
@@ -7104,7 +7112,12 @@
     "title": "वेबिनार और कार्यक्रम",
     "tutorial": "ट्यूटोरियल",
     "upcoming": "आगामी",
-    "withWebinarLink": "वेबिनार लिंक के साथ।"
+    "withWebinarLink": "वेबिनार लिंक के साथ।",
+    "loading": "Loading webinars...",
+    "free": "Free",
+    "all": "All",
+    "recordedFilter": "Recorded",
+    "subscribe": "Subscribe"
   },
   "legal": {
     "lastUpdated": "Last updated: {date}",

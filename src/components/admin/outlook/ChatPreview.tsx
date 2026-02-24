@@ -6,7 +6,7 @@ import { useI18n } from '@/i18n/client';
 import { useRecentChats } from '@/hooks/useRecentChats';
 
 export default function ChatPreview() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { chats, loading } = useRecentChats();
 
   return (
@@ -69,7 +69,7 @@ export default function ChatPreview() {
 
               {/* Time */}
               <span className="text-[10px] text-slate-400 flex-shrink-0 mt-0.5">
-                {formatRelativeTime(chat.lastMessageAt)}
+                {formatRelativeTime(chat.lastMessageAt, t, locale)}
               </span>
             </Link>
           ))
@@ -79,17 +79,16 @@ export default function ChatPreview() {
   );
 }
 
-// TODO: F-083 - Hardcoded English time labels ('now', 'm', 'h'). Use i18n translation keys.
 // TODO: F-098 - Uses new Date(dateStr) which depends on browser timezone; consider UTC normalization.
-function formatRelativeTime(dateStr: string): string {
+function formatRelativeTime(dateStr: string, t: (key: string) => string, locale: string): string {
   const date = new Date(dateStr);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffMin = Math.floor(diffMs / 60000);
   const diffHrs = Math.floor(diffMs / 3600000);
 
-  if (diffMin < 1) return 'now';
-  if (diffMin < 60) return `${diffMin}m`;
-  if (diffHrs < 24) return `${diffHrs}h`;
-  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  if (diffMin < 1) return t('admin.chat.timeNow') || 'now';
+  if (diffMin < 60) return `${diffMin}${t('admin.chat.timeMinute') || 'm'}`;
+  if (diffHrs < 24) return `${diffHrs}${t('admin.chat.timeHour') || 'h'}`;
+  return date.toLocaleDateString(locale, { month: 'short', day: 'numeric' });
 }

@@ -16,6 +16,11 @@ const webauthnAuthOptionsSchema = z.object({
   email: z.string().email().max(320).optional(),
 }).strict();
 
+// CSRF EXCEPTION (audited 2026-02-24): WebAuthn routes do not require separate CSRF
+// protection. The WebAuthn protocol provides built-in challenge-response authentication:
+// a unique challenge is generated server-side, stored in an httpOnly/secure/sameSite=strict
+// cookie, and must be cryptographically signed by the authenticator device during
+// verification. This makes cross-site request forgery infeasible.
 export async function POST(request: NextRequest) {
   try {
     // SECURITY: Rate limit WebAuthn authentication options requests

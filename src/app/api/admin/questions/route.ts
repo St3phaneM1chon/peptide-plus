@@ -42,7 +42,16 @@ export const GET = withAdminGuard(async (request) => {
       orderBy: { createdAt: 'desc' },
       skip,
       take: limit,
-      include: {
+      select: {
+        id: true,
+        productId: true,
+        userId: true,
+        question: true,
+        answer: true,
+        answeredBy: true,
+        isPublished: true,
+        createdAt: true,
+        updatedAt: true,
         user: { select: { id: true, name: true, email: true } },
         product: { select: { id: true, name: true } },
       },

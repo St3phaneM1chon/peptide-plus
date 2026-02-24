@@ -116,7 +116,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ ambassadors: formatted });
   } catch (error) {
     logger.error('Ambassadors API error', { error: error instanceof Error ? error.message : String(error) });
-    return NextResponse.json({ ambassadors: [] });
+    return NextResponse.json({ error: 'Failed to fetch ambassadors', ambassadors: [] }, { status: 500 });
   }
 }
 

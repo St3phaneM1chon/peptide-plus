@@ -39,6 +39,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { timingSafeEqual } from 'crypto';
 import { db } from '@/lib/db';
 import { sendEmail, abandonedCartEmail, generateUnsubscribeUrl } from '@/lib/email';
 // FLAW-064 FIX: Import bounce suppression to skip hard-bounced addresses
@@ -56,11 +57,23 @@ const ENABLE_SMS_RECOVERY = process.env.ABANDONED_CART_SMS_ENABLED === 'true';
 const SMS_DELAY_HOURS = 4; // Send SMS 4 hours after email if no conversion
 
 export async function GET(request: NextRequest) {
-  // Verify cron secret (fail-closed)
+  // Verify cron secret (fail-closed, timing-safe comparison)
   const authHeader = request.headers.get('authorization');
   const cronSecret = process.env.CRON_SECRET;
 
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+  if (!cronSecret) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const providedSecret = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : '';
+  let secretsMatch = false;
+  try {
+    const a = Buffer.from(cronSecret, 'utf8');
+    const b = Buffer.from(providedSecret, 'utf8');
+    secretsMatch = a.length === b.length && timingSafeEqual(a, b);
+  } catch { secretsMatch = false; }
+
+  if (!secretsMatch) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -410,7 +423,12 @@ export async function GET(request: NextRequest) {
                 subject: 'SMS: abandoned cart recovery',
                 status: 'sent',
               },
-            }).catch(() => {});
+            }).catch((logErr) => {
+              logger.error('[AbandonedCart] Failed to create SMS EmailLog entry:', {
+                email: user.email,
+                error: logErr instanceof Error ? logErr.message : String(logErr),
+              });
+            });
 
             smsSent++;
           } catch (smsError) {

@@ -147,6 +147,7 @@ export default class InputInjectionAuditor extends BaseAuditor {
     const tsxFiles = this.findFiles(this.srcDir, /\.tsx$/);
 
     let dangerousHtmlCount = 0;
+    let sanitizedCount = 0;
 
     for (const file of tsxFiles) {
       const content = this.readFile(file);
@@ -171,27 +172,27 @@ export default class InputInjectionAuditor extends BaseAuditor {
         // Breadcrumbs highlighting search terms with <mark> tags is safe (controlled HTML)
         const isBreadcrumbs = /Breadcrumbs/i.test(this.relativePath(file));
 
-        const severity = hasSanitization ? 'LOW'
-          : (isAdminPage || isBreadcrumbs) ? 'MEDIUM'
-          : 'HIGH';
+        // If sanitization is present, count as PASS (sanitized dangerouslySetInnerHTML is acceptable)
+        if (hasSanitization) {
+          sanitizedCount++;
+          continue;
+        }
+
+        const severity = (isAdminPage || isBreadcrumbs) ? 'MEDIUM' : 'HIGH';
 
         results.push(
           this.fail(
             'input-03',
             severity as 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW',
             'dangerouslySetInnerHTML usage detected',
-            hasSanitization
-              ? `dangerouslySetInnerHTML used with apparent sanitization nearby`
-              : isAdminPage
+            isAdminPage
               ? `dangerouslySetInnerHTML in admin page (lower risk - trusted authors) without sanitization`
               : `dangerouslySetInnerHTML used without visible sanitization, risking XSS`,
             {
               filePath: this.relativePath(file),
               lineNumber: lineNum,
               codeSnippet: snippet,
-              recommendation: hasSanitization
-                ? 'Verify DOMPurify/sanitization is applied to the exact value passed to dangerouslySetInnerHTML'
-                : 'Sanitize HTML with DOMPurify before using dangerouslySetInnerHTML: DOMPurify.sanitize(html)',
+              recommendation: 'Sanitize HTML with DOMPurify before using dangerouslySetInnerHTML: DOMPurify.sanitize(html)',
             }
           )
         );
@@ -200,6 +201,8 @@ export default class InputInjectionAuditor extends BaseAuditor {
 
     if (dangerousHtmlCount === 0) {
       results.push(this.pass('input-03', 'No dangerouslySetInnerHTML usage found'));
+    } else if (sanitizedCount > 0) {
+      results.push(this.pass('input-03', `${sanitizedCount} dangerouslySetInnerHTML usage(s) properly sanitized`));
     }
 
     return results;

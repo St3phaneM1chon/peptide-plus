@@ -26,7 +26,27 @@ export const GET = withAdminGuard(async (request) => {
     const [subscribers, total, statusCounts] = await Promise.all([
       prisma.mailingListSubscriber.findMany({
         where,
-        include: { preferences: true },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          status: true,
+          source: true,
+          locale: true,
+          tags: true,
+          createdAt: true,
+          updatedAt: true,
+          confirmedAt: true,
+          unsubscribedAt: true,
+          preferences: {
+            select: {
+              id: true,
+              newsletter: true,
+              promotions: true,
+              productUpdates: true,
+            },
+          },
+        },
         orderBy: { createdAt: 'desc' },
         skip: (page - 1) * limit,
         take: limit,

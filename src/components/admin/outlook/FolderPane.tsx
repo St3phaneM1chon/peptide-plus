@@ -150,7 +150,7 @@ function FolderItem({
               setChildrenOpen((prev) => !prev);
             }}
             className="p-0.5 hover:bg-slate-200 rounded transition-colors flex-shrink-0"
-            aria-label="Toggle sub-items"
+            aria-label={t('admin.outlook.toggleSubItems') || 'Toggle sub-items'}
           >
             {childrenOpen
               ? <ChevronDown className="w-3 h-3 text-slate-400" />
@@ -194,7 +194,7 @@ export default function FolderPane() {
   return (
     <aside
       className="w-[260px] h-full bg-white border-e border-slate-200 flex flex-col flex-shrink-0"
-      aria-label="Section navigation"
+      aria-label={t('admin.outlook.sectionNavigation') || 'Section navigation'}
     >
       {/* Header */}
       <div className="flex items-center justify-between px-3 py-3 border-b border-slate-200">

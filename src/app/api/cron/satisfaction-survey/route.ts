@@ -36,6 +36,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { timingSafeEqual } from 'crypto';
 import { db } from '@/lib/db';
 import { sendEmail, satisfactionSurveyEmail, generateUnsubscribeUrl, type OrderData } from '@/lib/email';
 import { withJobLock } from '@/lib/cron-lock';
@@ -46,11 +47,23 @@ const DEFAULT_DELAY_DAYS = 5;
 const DEFAULT_BONUS_POINTS = 50;
 
 export async function GET(request: NextRequest) {
-  // Vérifier la clé de sécurité
+  // Vérifier la clé de sécurité (timing-safe comparison)
   const authHeader = request.headers.get('authorization');
   const cronSecret = process.env.CRON_SECRET;
 
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+  if (!cronSecret) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const providedSecret = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : '';
+  let secretsMatch = false;
+  try {
+    const a = Buffer.from(cronSecret, 'utf8');
+    const b = Buffer.from(providedSecret, 'utf8');
+    secretsMatch = a.length === b.length && timingSafeEqual(a, b);
+  } catch { secretsMatch = false; }
+
+  if (!secretsMatch) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

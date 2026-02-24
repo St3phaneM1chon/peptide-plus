@@ -7,6 +7,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { validateCsrf } from '@/lib/csrf-middleware';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { storage } from '@/lib/storage';
 import { logger } from '@/lib/logger';
 
@@ -26,6 +27,18 @@ export async function POST(request: NextRequest) {
 
     if (!session?.user) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+
+    // SECURITY: Rate limit image uploads - 10 per minute per user
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip')
+      || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/reviews/upload', session.user.id);
+    if (!rl.success) {
+      return NextResponse.json(
+        { error: rl.error!.message },
+        { status: 429, headers: rl.headers }
+      );
     }
 
     const formData = await request.formData();

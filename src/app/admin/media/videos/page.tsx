@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import { useI18n } from '@/i18n/client';
 // FIX: F32 - TODO: Implement edit modal and delete button using Edit2/Trash2 icons
 //   connected to PATCH/DELETE /api/admin/videos/[id]
@@ -220,7 +221,7 @@ export default function MediaVideosPage() {
           {videos.map(v => (
             <div key={v.id} className="flex items-center gap-3 p-3 bg-white rounded-lg border border-slate-200 hover:border-slate-300 transition-colors">
               {v.thumbnailUrl ? (
-                <img src={v.thumbnailUrl} alt={v.title} className="w-20 h-14 rounded object-cover bg-slate-100" />
+                <Image src={v.thumbnailUrl} alt={v.title} className="w-20 h-14 rounded object-cover bg-slate-100" width={80} height={56} unoptimized />
               ) : (
                 <div className="w-20 h-14 rounded bg-slate-100 flex items-center justify-center"><Video className="w-6 h-6 text-slate-300" /></div>
               )}

@@ -105,9 +105,36 @@ export const GET = withAdminGuard(async (request, _ctx) => {
     const [orders, total] = await Promise.all([
       prisma.purchaseOrder.findMany({
         where,
-        include: {
+        select: {
+          id: true,
+          poNumber: true,
+          supplierId: true,
+          supplierName: true,
+          supplierEmail: true,
+          department: true,
+          status: true,
+          requestedBy: true,
+          subtotal: true,
+          taxTps: true,
+          taxTvq: true,
+          total: true,
+          currency: true,
+          notes: true,
+          createdAt: true,
+          updatedAt: true,
           items: {
             orderBy: { createdAt: 'asc' },
+            select: {
+              id: true,
+              description: true,
+              productId: true,
+              formatId: true,
+              sku: true,
+              quantity: true,
+              unitCost: true,
+              total: true,
+              createdAt: true,
+            },
           },
         },
         orderBy,

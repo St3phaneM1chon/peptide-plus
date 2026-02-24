@@ -4,6 +4,7 @@ import {
   User, Mail, Phone, Globe, Calendar, ShoppingBag,
   DollarSign, Star, MessageSquare, Crown,
 } from 'lucide-react';
+import Image from 'next/image';
 import { useI18n } from '@/i18n/client';
 
 interface CustomerSidebarProps {
@@ -31,7 +32,7 @@ export default function CustomerSidebar({ customer, stats }: CustomerSidebarProp
         <div className="flex items-center gap-3 mb-3">
           <div className="w-12 h-12 rounded-full bg-slate-200 flex items-center justify-center">
             {customer.image ? (
-              <img src={customer.image as string} alt="" className="w-12 h-12 rounded-full" />
+              <Image src={customer.image as string} alt="" className="w-12 h-12 rounded-full" width={48} height={48} unoptimized />
             ) : (
               <User className="h-6 w-6 text-slate-400" />
             )}

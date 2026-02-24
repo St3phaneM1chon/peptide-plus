@@ -37,19 +37,28 @@ export async function GET(request: NextRequest) {
   const session = await auth();
 
   if (!session?.user) {
-    return new Response('Unauthorized', { status: 401 });
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 
   const role = session.user.role as string;
   if (role !== UserRole.EMPLOYEE && role !== UserRole.OWNER) {
-    return new Response('Forbidden', { status: 403 });
+    return new Response(JSON.stringify({ error: 'Forbidden' }), {
+      status: 403,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 
   // Rate limit: max concurrent SSE connections per IP
   const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
   const currentCount = activeConnections.get(ip) || 0;
   if (currentCount >= MAX_CONCURRENT_SSE) {
-    return new Response('Too Many Connections', { status: 429 });
+    return new Response(JSON.stringify({ error: 'Too many concurrent SSE connections' }), {
+      status: 429,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
   activeConnections.set(ip, currentCount + 1);
 

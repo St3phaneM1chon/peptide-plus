@@ -4793,7 +4793,11 @@
     "viewDashboard": "대시보드 보기",
     "websiteUrl": "웹사이트 또는 블로그 URL",
     "whyJoin": "왜 우리 프로그램에 참여하고 싶으신가요?",
-    "yourReferralLink": "귀하의 추천 링크"
+    "yourReferralLink": "귀하의 추천 링크",
+    "overview": "Overview",
+    "dashboard": "Dashboard",
+    "ambassadorLabel": "Ambassador",
+    "submitting": "Submitting..."
   },
   "auth": {
     "acceptTerms": "{link}에 동의합니다",
@@ -5247,7 +5251,9 @@
     "viewAll": "모두 보기",
     "views": "조회수",
     "yes": "예",
-    "yesterday": "어제"
+    "yesterday": "어제",
+    "note": "Note",
+    "opensInNewTab": "opens in new tab"
   },
   "community": {
     "allDiscussions": "모든 토론",
@@ -5836,7 +5842,8 @@
     "testDate": "테스트 날짜",
     "thirdParty": "제3자 검증",
     "thirdPartyDesc": "독립적인 실험실 테스트가 품질을 보장합니다",
-    "title": "실험실 결과 및 인증서"
+    "title": "실험실 결과 및 인증서",
+    "downloadCoa": "Download COA"
   },
   "learn": {
     "allArticles": "모든 기사",
@@ -6513,7 +6520,8 @@
     "tierBenefits": "회원 등급 혜택",
     "title": "리워드 프로그램",
     "yourReferralLink": "당신의 추천 링크",
-    "yourStatus": "당신의 상태"
+    "yourStatus": "당신의 상태",
+    "navigation": "Rewards navigation"
   },
   "search": {
     "noResultsFor": "No results for \"{query}\"",
@@ -7104,7 +7112,12 @@
     "title": "웨비나 및 이벤트",
     "tutorial": "튜토리얼",
     "upcoming": "다가오는",
-    "withWebinarLink": "웨비나 링크와 함께."
+    "withWebinarLink": "웨비나 링크와 함께.",
+    "loading": "Loading webinars...",
+    "free": "Free",
+    "all": "All",
+    "recordedFilter": "Recorded",
+    "subscribe": "Subscribe"
   },
   "legal": {
     "lastUpdated": "Last updated: {date}",

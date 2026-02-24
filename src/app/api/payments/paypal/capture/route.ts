@@ -455,7 +455,7 @@ export async function POST(request: NextRequest) {
           });
         }
       } catch (error) {
-        console.error('[PaypalCapture] Legacy purchase update failed (non-critical):', paypalOrderId, error);
+        logger.error('[PaypalCapture] Legacy purchase update failed (non-critical)', { paypalOrderId, error: error instanceof Error ? error.message : String(error) });
       }
 
       // Audit log

@@ -4793,7 +4793,11 @@
     "viewDashboard": "ਡੈਸ਼ਬੋਰਡ ਵੇਖੋ",
     "websiteUrl": "ਵੈਬਸਾਈਟ ਜਾਂ ਬਲੌਗ URL",
     "whyJoin": "ਤੁਸੀਂ ਸਾਡੇ ਪ੍ਰੋਗਰਾਮ ਵਿੱਚ ਸ਼ਾਮਲ ਹੋਣ ਦੀ ਕਿਉਂ ਇੱਛਾ ਰੱਖਦੇ ਹੋ?",
-    "yourReferralLink": "ਤੁਹਾਡਾ ਰੈਫਰਲ ਲਿੰਕ"
+    "yourReferralLink": "ਤੁਹਾਡਾ ਰੈਫਰਲ ਲਿੰਕ",
+    "overview": "Overview",
+    "dashboard": "Dashboard",
+    "ambassadorLabel": "Ambassador",
+    "submitting": "Submitting..."
   },
   "auth": {
     "acceptTerms": "ਮੈਂ {link} ਨੂੰ ਮਨਜ਼ੂਰ ਕਰਦਾ ਹਾਂ",
@@ -5247,7 +5251,9 @@
     "viewAll": "ਸਭ ਵੇਖੋ",
     "views": "ਦ੍ਰਿਸ਼",
     "yes": "ਹਾਂ",
-    "yesterday": "ਕੱਲ੍ਹ"
+    "yesterday": "ਕੱਲ੍ਹ",
+    "note": "Note",
+    "opensInNewTab": "opens in new tab"
   },
   "community": {
     "allDiscussions": "ਸਾਰੀਆਂ ਚਰਚਾਵਾਂ",
@@ -5836,7 +5842,8 @@
     "testDate": "ਟੈਸਟ ਦੀ ਤਾਰੀਖ",
     "thirdParty": "ਤੀਜੀ ਪਾਰਟੀ ਦੁਆਰਾ ਪ੍ਰਮਾਣਿਤ",
     "thirdPartyDesc": "ਸਵਤੰਤਰ ਲੈਬ ਟੈਸਟਿੰਗ ਗੁਣਵੱਤਾ ਨੂੰ ਯਕੀਨੀ ਬਣਾਉਂਦੀ ਹੈ",
-    "title": "ਲੈਬ ਨਤੀਜੇ & ਸਰਟੀਫਿਕੇਟ"
+    "title": "ਲੈਬ ਨਤੀਜੇ & ਸਰਟੀਫਿਕੇਟ",
+    "downloadCoa": "Download COA"
   },
   "learn": {
     "allArticles": "ਸਾਰੇ ਲੇਖ",
@@ -6513,7 +6520,8 @@
     "tierBenefits": "ਸਦੱਸਤਾ ਪਦਵੀ",
     "title": "ਇਨਾਮ ਪ੍ਰੋਗਰਾਮ",
     "yourReferralLink": "ਤੁਹਾਡੀ ਰਿਫਰਲ ਲਿੰਕ",
-    "yourStatus": "ਤੁਹਾਡਾ ਦਰਜਾ"
+    "yourStatus": "ਤੁਹਾਡਾ ਦਰਜਾ",
+    "navigation": "Rewards navigation"
   },
   "search": {
     "noResultsFor": "No results for \"{query}\"",
@@ -7104,7 +7112,12 @@
     "title": "ਵੈਬਿਨਾਰ ਅਤੇ ਇਵੈਂਟ",
     "tutorial": "ਟਿਊਟੋਰਿਯਲ",
     "upcoming": "ਆਉਣ ਵਾਲੇ",
-    "withWebinarLink": "ਵੈਬਿਨਾਰ ਲਿੰਕ ਨਾਲ।"
+    "withWebinarLink": "ਵੈਬਿਨਾਰ ਲਿੰਕ ਨਾਲ।",
+    "loading": "Loading webinars...",
+    "free": "Free",
+    "all": "All",
+    "recordedFilter": "Recorded",
+    "subscribe": "Subscribe"
   },
   "legal": {
     "lastUpdated": "Last updated: {date}",

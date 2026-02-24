@@ -183,6 +183,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
       where: { email },
+      select: { id: true, name: true, role: true },
     });
 
     let employee;

@@ -46,13 +46,24 @@ export async function GET(request: NextRequest) {
     const [dbReviews, total] = await Promise.all([
       prisma.review.findMany({
         where,
-        include: {
+        select: {
+          id: true,
+          userId: true,
+          rating: true,
+          title: true,
+          comment: true,
+          isVerified: true,
+          helpfulCount: true,
+          reply: true,
+          repliedAt: true,
+          createdAt: true,
+          updatedAt: true,
           user: {
-            // F-059 FIX: Include image so userAvatar is populated
             select: { id: true, name: true, email: true, image: true },
           },
           images: {
             orderBy: { order: 'asc' },
+            select: { id: true, url: true, order: true },
           },
         },
         orderBy: { createdAt: 'desc' },
@@ -174,6 +185,7 @@ export async function POST(request: NextRequest) {
     // Check if product exists
     const product = await prisma.product.findUnique({
       where: { id: productId },
+      select: { id: true },
     });
 
     if (!product) {
@@ -186,6 +198,7 @@ export async function POST(request: NextRequest) {
         userId: session.user.id,
         productId,
       },
+      select: { id: true },
     });
 
     if (existingReview) {
@@ -201,6 +214,7 @@ export async function POST(request: NextRequest) {
           status: 'DELIVERED',
         },
       },
+      select: { id: true },
     });
 
     // Check if user has already been rewarded for reviewing this product
@@ -211,6 +225,7 @@ export async function POST(request: NextRequest) {
           contains: `Review for product ${productId}`,
         },
       },
+      select: { id: true },
     });
 
     // Calculate points: 50 for text review, 100 if includes photos
@@ -286,15 +301,20 @@ export async function POST(request: NextRequest) {
     });
 
     // F-042 FIX: Notify admin about new review (fire-and-forget)
+    // BE-SEC-03: Escape user-supplied values for HTML email context
     const supportEmail = process.env.NEXT_PUBLIC_SUPPORT_EMAIL;
     if (supportEmail) {
+      const escapeHtmlEmail = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const safeTitle = escapeHtmlEmail(title || '');
+      const safeProductId = escapeHtmlEmail(productId);
+      const appUrl = escapeHtmlEmail(process.env.NEXT_PUBLIC_APP_URL || '');
       import('@/lib/email').then(({ sendEmail }) =>
         sendEmail({
           to: { email: supportEmail },
-          subject: `New Review: ${rating}★ for product ${productId}`,
-          html: `<p>A new review has been submitted and needs approval.</p><p><strong>Rating:</strong> ${rating}/5</p><p><strong>Title:</strong> ${title}</p><p><a href="${process.env.NEXT_PUBLIC_APP_URL || ''}/admin/avis">Review in Admin</a></p>`,
+          subject: `New Review: ${rating}★ for product ${safeProductId}`,
+          html: `<p>A new review has been submitted and needs approval.</p><p><strong>Rating:</strong> ${rating}/5</p><p><strong>Title:</strong> ${safeTitle}</p><p><a href="${appUrl}/admin/avis">Review in Admin</a></p>`,
         }).catch((e: unknown) => logger.error('[review-notification]', { error: e instanceof Error ? e.message : String(e) }))
-      ).catch(() => {});
+      ).catch((err) => logger.error('Review notification email import failed', { error: err instanceof Error ? err.message : String(err) }));
     }
 
     return apiSuccess({

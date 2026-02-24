@@ -656,7 +656,9 @@
     "noReviews": "No reviews yet",
     "comingSoon": "Coming soon",
     "errorOccurred": "An error occurred",
-    "saved": "Saved successfully"
+    "saved": "Saved successfully",
+    "note": "Note",
+    "opensInNewTab": "opens in new tab"
   },
   "cart": {
     "title": "Your Cart",
@@ -917,7 +919,8 @@
     "redeeming": "Redeeming...",
     "morePointsNeeded": "more pts needed",
     "pointsPerDollar": "points per $1 spent",
-    "rewards": "Rewards"
+    "rewards": "Rewards",
+    "navigation": "Rewards navigation"
   },
   "subscriptions": {
     "title": "Subscribe & Save",
@@ -1060,7 +1063,12 @@
     "education": "Education",
     "tutorial": "Tutorial",
     "bestPractices": "Best Practices",
-    "placeholderEmail": "Enter your email"
+    "placeholderEmail": "Enter your email",
+    "loading": "Loading webinars...",
+    "free": "Free",
+    "all": "All",
+    "recordedFilter": "Recorded",
+    "subscribe": "Subscribe"
   },
   "ambassador": {
     "title": "Become an Ambassador",
@@ -1142,7 +1150,11 @@
     "benefitCommission20": "20% commission",
     "benefitVipEvents": "VIP events access",
     "benefitDedicatedManager": "Dedicated account manager",
-    "benefitRevenueShare": "Revenue share opportunities"
+    "benefitRevenueShare": "Revenue share opportunities",
+    "overview": "Overview",
+    "dashboard": "Dashboard",
+    "ambassadorLabel": "Ambassador",
+    "submitting": "Submitting..."
   },
   "account": {
     "dashboard": "My Portal",
@@ -7163,7 +7175,8 @@
     "testDate": "Test Date",
     "thirdParty": "Third-Party Verified",
     "thirdPartyDesc": "Independent laboratory testing ensures quality",
-    "title": "Lab Results & Certificates"
+    "title": "Lab Results & Certificates",
+    "downloadCoa": "Download COA"
   },
   "navigation": {
     "requestDemo": "Request Demo"

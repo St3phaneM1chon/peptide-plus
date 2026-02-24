@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createHmac, timingSafeEqual } from 'crypto';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
+import { stripControlChars } from '@/lib/sanitize';
 
 /**
  * POST /api/webhooks/inbound-email
@@ -29,7 +30,7 @@ function verifyResendSignature(
         return true;
       }
     } catch (error) {
-      console.error('[InboundEmailWebhook] Signature comparison failed for variant:', error);
+      logger.error('[InboundEmailWebhook] Signature comparison failed for variant', { error: error instanceof Error ? error.message : String(error) });
       continue;
     }
   }
@@ -158,7 +159,7 @@ export async function POST(request: NextRequest) {
     if (!conversationId) {
       const conversation = await prisma.emailConversation.create({
         data: {
-          subject: payload.subject || '(No Subject)',
+          subject: safeSubject,
           customerId: customer?.id || null,
           status: 'NEW',
           priority: 'NORMAL',
@@ -186,14 +187,20 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // BE-SEC-03: Sanitize control chars from inbound email fields before storage
+    const safeFrom = stripControlChars(payload.from);
+    const safeFromName = payload.fromName ? stripControlChars(payload.fromName) : null;
+    const safeTo = stripControlChars(payload.to || '');
+    const safeSubject = stripControlChars(payload.subject || '(No Subject)');
+
     // Create inbound email
     const inboundEmail = await prisma.inboundEmail.create({
       data: {
         conversationId,
-        from: payload.from,
-        fromName: payload.fromName || null,
-        to: payload.to || '',
-        subject: payload.subject || '(No Subject)',
+        from: safeFrom,
+        fromName: safeFromName,
+        to: safeTo,
+        subject: safeSubject,
         htmlBody: payload.html || null,
         textBody: payload.text || null,
         messageId: payload.messageId,
@@ -232,13 +239,15 @@ export async function POST(request: NextRequest) {
           logger.warn(`[Webhook] Rejected attachment with disallowed MIME type: ${mimeType}`, { filename: att.filename || 'unknown' });
           continue;
         }
+        // BE-SEC-03: Strip control chars from attachment filename
+        const safeFilename = stripControlChars(att.filename || 'attachment').replace(/[<>"']/g, '_');
         await prisma.inboundEmailAttachment.create({
           data: {
             inboundEmailId: inboundEmail.id,
-            filename: att.filename || 'attachment',
+            filename: safeFilename,
             mimeType,
             size: att.size || 0,
-            storageUrl: `pending://${inboundEmail.id}/${att.filename}`,
+            storageUrl: `pending://${inboundEmail.id}/${safeFilename}`,
           },
         });
       }

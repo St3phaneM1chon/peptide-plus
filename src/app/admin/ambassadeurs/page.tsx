@@ -28,6 +28,7 @@ import {
   MobileSplitLayout,
 } from '@/components/admin/outlook';
 import type { ContentListItem } from '@/components/admin/outlook';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
@@ -101,6 +102,7 @@ export default function AmbassadeursPage() {
   const [editCommissionAmbassadorId, setEditCommissionAmbassadorId] = useState<string | null>(null);
   const [editCommissionRate, setEditCommissionRate] = useState('');
   const [savingCommission, setSavingCommission] = useState(false);
+  const [commissionError, setCommissionError] = useState('');
 
   // Config form state
   const [configDefaultCommission, setConfigDefaultCommission] = useState('5');
@@ -109,6 +111,19 @@ export default function AmbassadeursPage() {
   const [configAutoApprove, setConfigAutoApprove] = useState(false);
   const [configProgramActive, setConfigProgramActive] = useState(true);
   const [savingConfig, setSavingConfig] = useState(false);
+  const [configErrors, setConfigErrors] = useState<Record<string, string>>({});
+
+  // FIX: F-075 - Loading state for payout button to prevent duplicate clicks
+  const [processingPayoutId, setProcessingPayoutId] = useState<string | null>(null);
+
+  // UX FIX: ConfirmDialog state for destructive actions (suspend/activate)
+  const [confirmAction, setConfirmAction] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    variant: 'danger' | 'warning' | 'info';
+    onConfirm: () => void;
+  }>({ isOpen: false, title: '', message: '', variant: 'danger', onConfirm: () => {} });
 
   // ─── Data fetching ──────────────────────────────────────────
 
@@ -166,7 +181,10 @@ export default function AmbassadeursPage() {
     }
   };
 
+  // FIX: F-075 - Payout button loading state to prevent duplicate clicks
   const processPayout = async (id: string) => {
+    if (processingPayoutId) return; // Prevent double-click
+    setProcessingPayoutId(id);
     try {
       const res = await fetch('/api/ambassadors/payouts', {
         method: 'POST',
@@ -193,6 +211,8 @@ export default function AmbassadeursPage() {
     } catch (error) {
       console.error('Payout error:', error);
       toast.error(t('admin.ambassadors.payoutError'));
+    } finally {
+      setProcessingPayoutId(null);
     }
   };
 
@@ -206,9 +226,10 @@ export default function AmbassadeursPage() {
 
   const handleSaveCommission = async () => {
     if (!editCommissionAmbassadorId) return;
+    setCommissionError('');
     const rate = parseFloat(editCommissionRate);
     if (isNaN(rate) || rate < 0 || rate > 100) {
-      toast.error(t('admin.ambassadors.commissionError'));
+      setCommissionError(t('admin.ambassadors.commissionError') || 'Commission must be between 0 and 100');
       return;
     }
 
@@ -264,6 +285,23 @@ export default function AmbassadeursPage() {
   // ─── Save Config ──────────────────────────────────────
 
   const handleSaveConfig = async () => {
+    // UX FIX: Validate config fields before saving
+    const errors: Record<string, string> = {};
+    const commission = parseFloat(configDefaultCommission);
+    const minPayout = parseFloat(configMinPayout);
+    const cookieDays = parseInt(configCookieDays);
+    if (isNaN(commission) || commission < 0 || commission > 100) {
+      errors.commission = t('admin.ambassadors.commissionError') || 'Commission must be between 0 and 100';
+    }
+    if (isNaN(minPayout) || minPayout < 0) {
+      errors.minPayout = t('admin.ambassadors.minPayoutError') || 'Minimum payout must be 0 or greater';
+    }
+    if (isNaN(cookieDays) || cookieDays < 1 || cookieDays > 365) {
+      errors.cookieDays = t('admin.ambassadors.cookieDaysError') || 'Cookie duration must be between 1 and 365 days';
+    }
+    setConfigErrors(errors);
+    if (Object.keys(errors).length > 0) return;
+
     setSavingConfig(true);
     try {
       const res = await fetch('/api/admin/settings', {
@@ -524,7 +562,16 @@ export default function AmbassadeursPage() {
                         <Button
                           size="sm"
                           variant="danger"
-                          onClick={() => updateStatus(selectedAmbassador.id, 'SUSPENDED')}
+                          onClick={() => setConfirmAction({
+                            isOpen: true,
+                            title: t('admin.ambassadors.confirmSuspendTitle') || 'Suspend ambassador?',
+                            message: t('admin.ambassadors.confirmSuspendMessage') || `Are you sure you want to suspend ${selectedAmbassador.userName}? They will no longer earn commissions.`,
+                            variant: 'danger',
+                            onConfirm: () => {
+                              updateStatus(selectedAmbassador.id, 'SUSPENDED');
+                              setConfirmAction(prev => ({ ...prev, isOpen: false }));
+                            },
+                          })}
                         >
                           {t('admin.ambassadors.suspend')}
                         </Button>
@@ -533,7 +580,16 @@ export default function AmbassadeursPage() {
                         <Button
                           size="sm"
                           variant="primary"
-                          onClick={() => updateStatus(selectedAmbassador.id, 'ACTIVE')}
+                          onClick={() => setConfirmAction({
+                            isOpen: true,
+                            title: t('admin.ambassadors.confirmActivateTitle') || 'Reactivate ambassador?',
+                            message: t('admin.ambassadors.confirmActivateMessage') || `Are you sure you want to reactivate ${selectedAmbassador.userName}?`,
+                            variant: 'info',
+                            onConfirm: () => {
+                              updateStatus(selectedAmbassador.id, 'ACTIVE');
+                              setConfirmAction(prev => ({ ...prev, isOpen: false }));
+                            },
+                          })}
                         >
                           {t('admin.ambassadors.activate')}
                         </Button>
@@ -597,9 +653,12 @@ export default function AmbassadeursPage() {
                             <p className="font-bold text-lg text-purple-600">{formatCurrency(selectedAmbassador.pendingPayout)}</p>
                             <button
                               onClick={() => processPayout(selectedAmbassador.id)}
-                              className="px-3 py-1.5 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors"
+                              disabled={processingPayoutId === selectedAmbassador.id}
+                              className="px-3 py-1.5 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                              {t('admin.ambassadors.processPayoutNow')}
+                              {processingPayoutId === selectedAmbassador.id
+                                ? (t('admin.ambassadors.processingPayout') || 'Processing...')
+                                : t('admin.ambassadors.processPayoutNow')}
                             </button>
                           </div>
                         ) : (
@@ -721,8 +780,11 @@ export default function AmbassadeursPage() {
               max="100"
               step="0.5"
               value={configDefaultCommission}
-              onChange={(e) => setConfigDefaultCommission(e.target.value)}
+              onChange={(e) => { setConfigDefaultCommission(e.target.value); setConfigErrors(prev => { const n = { ...prev }; delete n.commission; return n; }); }}
             />
+            {configErrors.commission && (
+              <p className="mt-1 text-sm text-red-600" role="alert">{configErrors.commission}</p>
+            )}
           </FormField>
           <FormField label={t('admin.ambassadors.minPayoutAmount')}>
             <Input
@@ -730,8 +792,11 @@ export default function AmbassadeursPage() {
               min="0"
               step="1"
               value={configMinPayout}
-              onChange={(e) => setConfigMinPayout(e.target.value)}
+              onChange={(e) => { setConfigMinPayout(e.target.value); setConfigErrors(prev => { const n = { ...prev }; delete n.minPayout; return n; }); }}
             />
+            {configErrors.minPayout && (
+              <p className="mt-1 text-sm text-red-600" role="alert">{configErrors.minPayout}</p>
+            )}
           </FormField>
           <FormField label={t('admin.ambassadors.cookieDuration')}>
             <Input
@@ -739,8 +804,11 @@ export default function AmbassadeursPage() {
               min="1"
               max="365"
               value={configCookieDays}
-              onChange={(e) => setConfigCookieDays(e.target.value)}
+              onChange={(e) => { setConfigCookieDays(e.target.value); setConfigErrors(prev => { const n = { ...prev }; delete n.cookieDays; return n; }); }}
             />
+            {configErrors.cookieDays && (
+              <p className="mt-1 text-sm text-red-600" role="alert">{configErrors.cookieDays}</p>
+            )}
           </FormField>
           <div className="flex items-center justify-between py-2">
             <span className="text-sm text-slate-700">{t('admin.ambassadors.autoApprove')}</span>
@@ -762,6 +830,16 @@ export default function AmbassadeursPage() {
           </div>
         </div>
       </Modal>
+
+      {/* UX FIX: ConfirmDialog for destructive actions */}
+      <ConfirmDialog
+        isOpen={confirmAction.isOpen}
+        title={confirmAction.title}
+        message={confirmAction.message}
+        variant={confirmAction.variant}
+        onConfirm={confirmAction.onConfirm}
+        onCancel={() => setConfirmAction(prev => ({ ...prev, isOpen: false }))}
+      />
 
       {/* ─── EDIT COMMISSION MODAL ──────────────────────────────── */}
       <Modal
@@ -795,8 +873,11 @@ export default function AmbassadeursPage() {
               max="100"
               step="0.5"
               value={editCommissionRate}
-              onChange={(e) => setEditCommissionRate(e.target.value)}
+              onChange={(e) => { setEditCommissionRate(e.target.value); setCommissionError(''); }}
             />
+            {commissionError && (
+              <p className="mt-1 text-sm text-red-600" role="alert">{commissionError}</p>
+            )}
           </FormField>
           {/* Tier reference */}
           <div className="bg-sky-50 rounded-lg p-3">

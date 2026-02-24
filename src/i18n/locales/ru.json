@@ -4793,7 +4793,11 @@
     "viewDashboard": "Просмотр панели",
     "websiteUrl": "URL сайта или блога",
     "whyJoin": "Почему вы хотите присоединиться к нашей программе?",
-    "yourReferralLink": "Ваша реферальная ссылка"
+    "yourReferralLink": "Ваша реферальная ссылка",
+    "overview": "Overview",
+    "dashboard": "Dashboard",
+    "ambassadorLabel": "Ambassador",
+    "submitting": "Submitting..."
   },
   "auth": {
     "acceptTerms": "Я принимаю {link}",
@@ -5251,7 +5255,9 @@
     "viewAll": "Смотреть все",
     "views": "просмотров",
     "yes": "Да",
-    "yesterday": "Вчера"
+    "yesterday": "Вчера",
+    "note": "Note",
+    "opensInNewTab": "opens in new tab"
   },
   "community": {
     "allDiscussions": "Все обсуждения",
@@ -5840,7 +5846,8 @@
     "testDate": "Дата тестирования",
     "thirdParty": "Подтверждено третьей стороной",
     "thirdPartyDesc": "Независимые лабораторные испытания обеспечивают качество",
-    "title": "Результаты лабораторных испытаний и сертификаты"
+    "title": "Результаты лабораторных испытаний и сертификаты",
+    "downloadCoa": "Download COA"
   },
   "learn": {
     "allArticles": "Все статьи",
@@ -6517,7 +6524,8 @@
     "tierBenefits": "Уровни участия",
     "title": "Программа лояльности",
     "yourReferralLink": "Ваша реферальная ссылка",
-    "yourStatus": "Ваш статус"
+    "yourStatus": "Ваш статус",
+    "navigation": "Rewards navigation"
   },
   "search": {
     "noResultsFor": "No results for \"{query}\"",
@@ -7108,7 +7116,12 @@
     "title": "Вебинары и мероприятия",
     "tutorial": "Руководство",
     "upcoming": "Скоро",
-    "withWebinarLink": "со ссылкой на вебинар."
+    "withWebinarLink": "со ссылкой на вебинар.",
+    "loading": "Loading webinars...",
+    "free": "Free",
+    "all": "All",
+    "recordedFilter": "Recorded",
+    "subscribe": "Subscribe"
   },
   "legal": {
     "lastUpdated": "Last updated: {date}",

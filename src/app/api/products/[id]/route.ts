@@ -87,12 +87,15 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const product = await prisma.product.findUnique({
       where: { id },
       include: {
-        category: true,
+        category: {
+          select: { id: true, name: true, slug: true, parentId: true, imageUrl: true },
+        },
         modules: {
           orderBy: { sortOrder: 'asc' },
         },
         images: {
           orderBy: { sortOrder: 'asc' },
+          select: { id: true, url: true, alt: true, caption: true, sortOrder: true, isPrimary: true },
         },
         formats: {
           where: { isActive: true },

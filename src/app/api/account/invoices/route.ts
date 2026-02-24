@@ -56,7 +56,20 @@ export async function GET(request: NextRequest) {
     // Fetch paginated orders with items
     const orders = await prisma.order.findMany({
       where,
-      include: {
+      select: {
+        id: true,
+        orderNumber: true,
+        subtotal: true,
+        shippingCost: true,
+        discount: true,
+        taxTps: true,
+        taxTvq: true,
+        taxTvh: true,
+        taxPst: true,
+        total: true,
+        paymentStatus: true,
+        paymentMethod: true,
+        createdAt: true,
         items: {
           select: {
             id: true,

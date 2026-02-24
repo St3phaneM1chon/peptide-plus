@@ -119,7 +119,7 @@ export async function DELETE(request: NextRequest) {
       try {
         await storage.delete(currentUser.image);
       } catch (error) {
-        console.error('[UserAvatar] Failed to delete old avatar from storage (non-critical):', error);
+        logger.error('[UserAvatar] Failed to delete old avatar from storage (non-critical)', { error: error instanceof Error ? error.message : String(error) });
       }
     }
 

@@ -144,7 +144,7 @@ export function WebNavigator({ url, title, subtitle }: WebNavigatorProps) {
             referrerPolicy="no-referrer"
             onLoad={() => setLoading(false)}
             onError={() => { setLoading(false); setError(true); }}
-            title={title || 'Web Navigator'}
+            title={title || t('admin.webNavigator.title') || 'Web Navigator'}
           />
         )}
       </div>

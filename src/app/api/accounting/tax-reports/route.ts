@@ -363,7 +363,7 @@ export const PUT = withAdminGuard(async (request) => {
           integrityValid = currentHash === notesData.integrityHash;
         }
       } catch (error) {
-        console.error('[TaxReports] Integrity hash verification failed:', error);
+        logger.error('[TaxReports] Integrity hash verification failed', { error: error instanceof Error ? error.message : String(error) });
         integrityValid = null;
       }
     }

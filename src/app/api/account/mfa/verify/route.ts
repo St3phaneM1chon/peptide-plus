@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
       try {
         backupCodes = JSON.parse(await decrypt(user.mfaBackupCodes));
       } catch (error) {
-        console.error('[MfaVerify] Failed to decrypt backup codes:', error);
+        logger.error('[MfaVerify] Failed to decrypt backup codes', { error: error instanceof Error ? error.message : String(error) });
         // Backup codes may already be hashed
       }
     }
@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
         entityId: session.user.id,
         details: JSON.stringify({ timestamp: new Date().toISOString() }),
       },
-    }).catch(() => {});
+    }).catch((err) => logger.error('MFA audit log failed', { error: err instanceof Error ? err.message : String(err) }));
 
     return NextResponse.json({
       success: true,

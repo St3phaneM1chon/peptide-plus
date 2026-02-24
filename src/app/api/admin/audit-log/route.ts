@@ -20,44 +20,50 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { queryAuditLogs, type AuditLogFilter } from '@/lib/admin-audit';
+import { logger } from '@/lib/logger';
 
 export const GET = withAdminGuard(async (request: NextRequest) => {
-  const { searchParams } = new URL(request.url);
+  try {
+    const { searchParams } = new URL(request.url);
 
-  // Parse filters
-  const filters: AuditLogFilter = {};
+    // Parse filters
+    const filters: AuditLogFilter = {};
 
-  const action = searchParams.get('action');
-  if (action) filters.action = action;
+    const action = searchParams.get('action');
+    if (action) filters.action = action;
 
-  const targetType = searchParams.get('targetType');
-  if (targetType) filters.targetType = targetType;
+    const targetType = searchParams.get('targetType');
+    if (targetType) filters.targetType = targetType;
 
-  const adminUserId = searchParams.get('adminUserId');
-  if (adminUserId) filters.adminUserId = adminUserId;
+    const adminUserId = searchParams.get('adminUserId');
+    if (adminUserId) filters.adminUserId = adminUserId;
 
-  const from = searchParams.get('from');
-  if (from) {
-    const fromDate = new Date(from);
-    if (!isNaN(fromDate.getTime())) {
-      filters.dateFrom = fromDate;
+    const from = searchParams.get('from');
+    if (from) {
+      const fromDate = new Date(from);
+      if (!isNaN(fromDate.getTime())) {
+        filters.dateFrom = fromDate;
+      }
     }
-  }
 
-  const to = searchParams.get('to');
-  if (to) {
-    const toDate = new Date(to);
-    if (!isNaN(toDate.getTime())) {
-      toDate.setHours(23, 59, 59, 999);
-      filters.dateTo = toDate;
+    const to = searchParams.get('to');
+    if (to) {
+      const toDate = new Date(to);
+      if (!isNaN(toDate.getTime())) {
+        toDate.setHours(23, 59, 59, 999);
+        filters.dateTo = toDate;
+      }
     }
+
+    // Parse pagination
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
+    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '20', 10)));
+
+    const result = await queryAuditLogs(filters, page, limit);
+
+    return NextResponse.json({ data: result });
+  } catch (error) {
+    logger.error('[admin/audit-log] GET error', { error: error instanceof Error ? error.message : String(error) });
+    return NextResponse.json({ error: 'Failed to fetch audit logs' }, { status: 500 });
   }
-
-  // Parse pagination
-  const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
-  const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '20', 10)));
-
-  const result = await queryAuditLogs(filters, page, limit);
-
-  return NextResponse.json({ data: result });
 });

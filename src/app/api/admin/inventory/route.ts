@@ -58,7 +58,16 @@ export const GET = withAdminGuard(async (request, _ctx) => {
         trackInventory: true,
         ...(lowStockIds !== null ? { id: { in: lowStockIds } } : {}),
       },
-      include: {
+      select: {
+        id: true,
+        productId: true,
+        name: true,
+        formatType: true,
+        sku: true,
+        price: true,
+        stockQuantity: true,
+        lowStockThreshold: true,
+        availability: true,
         product: {
           select: {
             id: true,
@@ -71,6 +80,7 @@ export const GET = withAdminGuard(async (request, _ctx) => {
         },
       },
       orderBy: { stockQuantity: 'asc' },
+      take: 500, // Safety net: limit inventory list to prevent unbounded queries
     });
 
     // Batch query: fetch the latest WAC for ALL formats at once

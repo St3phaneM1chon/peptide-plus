@@ -146,7 +146,34 @@ export async function GET(request: NextRequest) {
 
     let products = await prisma.product.findMany({
       where,
-      include: {
+      select: {
+        id: true,
+        name: true,
+        subtitle: true,
+        slug: true,
+        shortDescription: true,
+        description: true,
+        productType: true,
+        price: true,
+        compareAtPrice: true,
+        imageUrl: true,
+        videoUrl: true,
+        categoryId: true,
+        isFeatured: true,
+        isActive: true,
+        isNew: true,
+        isBestseller: true,
+        sku: true,
+        manufacturer: true,
+        origin: true,
+        purity: true,
+        tags: true,
+        averageRating: true,
+        reviewCount: true,
+        metaTitle: true,
+        metaDescription: true,
+        createdAt: true,
+        updatedAt: true,
         category: {
           select: { id: true, name: true, slug: true, parentId: true, parent: { select: { id: true, name: true, slug: true } } },
         },
@@ -154,10 +181,28 @@ export async function GET(request: NextRequest) {
         images: {
           orderBy: { sortOrder: 'asc' },
           take: 1,
+          select: { id: true, url: true, alt: true, sortOrder: true, isPrimary: true },
         },
         formats: {
           where: { isActive: true },
           orderBy: { sortOrder: 'asc' },
+          select: {
+            id: true,
+            name: true,
+            formatType: true,
+            price: true,
+            comparePrice: true,
+            sku: true,
+            inStock: true,
+            stockQuantity: true,
+            availability: true,
+            dosageMg: true,
+            volumeMl: true,
+            unitCount: true,
+            sortOrder: true,
+            isDefault: true,
+            isActive: true,
+          },
         },
       },
       orderBy: { createdAt: 'desc' },
@@ -363,6 +408,7 @@ export async function POST(request: NextRequest) {
     // Vérifier l'unicité du slug
     const existingProduct = await prisma.product.findUnique({
       where: { slug },
+      select: { id: true },
     });
 
     if (existingProduct) {

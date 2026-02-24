@@ -3,6 +3,7 @@
 import type { ReactNode } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+import { useI18n } from '@/i18n/client';
 import type { SectionTheme } from '@/lib/admin/section-themes';
 
 interface PageHeaderProps {
@@ -17,6 +18,7 @@ interface PageHeaderProps {
 }
 
 export function PageHeader({ title, subtitle, backHref, backLabel, actions, badge, theme }: PageHeaderProps) {
+  const { t } = useI18n();
   return (
     <div className={`mb-6 ${theme ? `border-l-4 ${theme.accentBar} pl-4` : ''}`}>
       {backHref && (
@@ -25,7 +27,7 @@ export function PageHeader({ title, subtitle, backHref, backLabel, actions, badg
           className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 mb-3 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          {backLabel || 'Back'}
+          {backLabel || t('common.back') || 'Back'}
         </Link>
       )}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

@@ -9,6 +9,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useSession } from 'next-auth/react';
 import { useI18n } from '@/i18n/client';
+import { sanitizeText } from '@/lib/sanitize';
 
 interface Post {
   id: string;
@@ -59,6 +60,8 @@ export default function CommunityPage() {
   const categories = getCategories(t);
   const [activeCategory, setActiveCategory] = useState('all');
   const [posts, setPosts] = useState<Post[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   // F-064 FIX: Persist sort preference in localStorage
   const [sortBy, setSortBy] = useState<'recent' | 'popular' | 'replies'>(() => {
     if (typeof window !== 'undefined') {
@@ -116,16 +119,15 @@ export default function CommunityPage() {
     e.preventDefault();
     if (!session) return;
 
-    // F-024 FIX: Sanitize HTML in user-generated content
-    const sanitize = (str: string) => str.replace(/[<>&"'`]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&#x27;', '`': '&#x60;' }[c] || c));
+    // F-024 FIX: Sanitize HTML in user-generated content using centralized sanitizeText
     const post: Post = {
       id: crypto.randomUUID(),
       userId: session.user?.id || 'anonymous',  // FIX F-023: Never expose email as public identifier
       userName: session.user?.name || 'Anonymous',
-      title: sanitize(newPost.title),
-      content: sanitize(newPost.content),
+      title: sanitizeText(newPost.title),
+      content: sanitizeText(newPost.content),
       category: newPost.category,
-      tags: newPost.tags.split(',').map(t => t.trim().toLowerCase()).filter(Boolean),
+      tags: newPost.tags.split(',').map(tag => sanitizeText(tag.trim().toLowerCase())).filter(Boolean),
       likes: 0,
       replies: 0,
       views: 0,
@@ -329,7 +331,29 @@ export default function CommunityPage() {
 
             {/* Posts List */}
             <div className="space-y-4">
-              {filteredPosts.length === 0 && posts.length === 0 && !searchQuery ? (
+              {/* Error state for future API integration */}
+              {fetchError && (
+                <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
+                  <p className="text-red-700 font-medium">{t('community.fetchError') || 'Failed to load discussions'}</p>
+                  <p className="text-red-500 text-sm mt-1">{fetchError}</p>
+                  <button
+                    onClick={() => { setFetchError(null); setIsLoading(false); }}
+                    className="mt-3 px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-sm"
+                  >
+                    {t('common.retry') || 'Retry'}
+                  </button>
+                </div>
+              )}
+
+              {/* Loading state for future API integration */}
+              {isLoading && !fetchError && (
+                <div className="bg-white rounded-xl p-12 text-center border border-neutral-200">
+                  <div className="animate-spin w-8 h-8 border-4 border-purple-200 border-t-purple-600 rounded-full mx-auto mb-4" />
+                  <p className="text-neutral-500">{t('community.loading') || 'Loading discussions...'}</p>
+                </div>
+              )}
+
+              {!isLoading && !fetchError && filteredPosts.length === 0 && posts.length === 0 && !searchQuery ? (
                 /* Empty state: no posts at all */
                 <div className="bg-white rounded-xl p-12 text-center border border-neutral-200">
                   <div className="w-20 h-20 mx-auto mb-6 bg-purple-100 rounded-full flex items-center justify-center">
@@ -362,7 +386,7 @@ export default function CommunityPage() {
                     </Link>
                   )}
                 </div>
-              ) : filteredPosts.length === 0 ? (
+              ) : !isLoading && !fetchError && filteredPosts.length === 0 ? (
                 <div className="bg-white rounded-xl p-12 text-center">
                   <span className="text-6xl mb-4 block">🔍</span>
                   <h3 className="text-lg font-bold mb-2">{t('community.noResults') || 'No discussions found'}</h3>

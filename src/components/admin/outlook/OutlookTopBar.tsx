@@ -51,12 +51,12 @@ const TYPE_ICONS: Record<string, typeof Package> = {
   category: FolderOpen,
 };
 
-const TYPE_LABELS: Record<string, string> = {
-  product: 'Product',
-  order: 'Order',
-  user: 'User',
-  journal_entry: 'Entry',
-  category: 'Category',
+const TYPE_LABEL_KEYS: Record<string, string> = {
+  product: 'admin.search.typeProduct',
+  order: 'admin.search.typeOrder',
+  user: 'admin.search.typeUser',
+  journal_entry: 'admin.search.typeEntry',
+  category: 'admin.search.typeCategory',
 };
 
 interface SearchResult {
@@ -141,7 +141,7 @@ export default function OutlookTopBar({ onMobileMenuToggle }: { onMobileMenuTogg
               toggleFolderPane();
             }
           }}
-          aria-label="Toggle navigation"
+          aria-label={t('admin.outlook.toggleNavigation') || 'Toggle navigation'}
           className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors"
         >
           <Menu className="w-5 h-5 text-slate-600" />
@@ -203,7 +203,7 @@ export default function OutlookTopBar({ onMobileMenuToggle }: { onMobileMenuTogg
                         )}
                       </div>
                       <span className="text-[10px] px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded flex-shrink-0">
-                        {TYPE_LABELS[result.type] || result.type}
+                        {TYPE_LABEL_KEYS[result.type] ? t(TYPE_LABEL_KEYS[result.type]) : result.type}
                       </span>
                     </button>
                   );

@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
+import { timingSafeEqual } from 'crypto';
 import { prisma } from '@/lib/db';
 import { sendEmail } from '@/lib/email/email-service';
 import { backInStockEmail } from '@/lib/email-templates';
@@ -20,7 +21,7 @@ import { logger } from '@/lib/logger';
  * Authentication: Requires CRON_SECRET in Authorization header
  */
 export async function POST(request: NextRequest) {
-  // Verify cron secret
+  // Verify cron secret (timing-safe comparison)
   const authHeader = request.headers.get('authorization');
   const cronSecret = process.env.CRON_SECRET;
 
@@ -32,7 +33,15 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (authHeader !== `Bearer ${cronSecret}`) {
+  const providedSecret = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : '';
+  let secretsMatch = false;
+  try {
+    const a = Buffer.from(cronSecret, 'utf8');
+    const b = Buffer.from(providedSecret, 'utf8');
+    secretsMatch = a.length === b.length && timingSafeEqual(a, b);
+  } catch { secretsMatch = false; }
+
+  if (!secretsMatch) {
     return NextResponse.json(
       { error: 'Unauthorized' },
       { status: 401 }
@@ -214,11 +223,21 @@ export async function POST(request: NextRequest) {
  * to business data (pending/total alert counts).
  */
 export async function GET(request: NextRequest) {
-  // FIX: FLAW-011 - Add Authorization: Bearer CRON_SECRET check on GET too
+  // FIX: FLAW-011 - Add Authorization: Bearer CRON_SECRET check on GET too (timing-safe)
   const authHeader = request.headers.get('authorization');
   const cronSecret = process.env.CRON_SECRET;
 
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+  let getSecretsMatch = false;
+  if (cronSecret) {
+    const providedSecret = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : '';
+    try {
+      const a = Buffer.from(cronSecret, 'utf8');
+      const b = Buffer.from(providedSecret, 'utf8');
+      getSecretsMatch = a.length === b.length && timingSafeEqual(a, b);
+    } catch { getSecretsMatch = false; }
+  }
+
+  if (!getSecretsMatch) {
     // Return minimal health status without sensitive counts for unauthenticated requests
     return NextResponse.json({
       status: 'healthy',
@@ -239,7 +258,8 @@ export async function GET(request: NextRequest) {
       totalAlerts: totalCount,
       timestamp: new Date().toISOString(),
     });
-  } catch (error) {
+  } catch (error: unknown) {
+    logger.error('Stock alerts GET health check error:', { error: error instanceof Error ? error.message : String(error) });
     // BE-SEC-04: Don't leak error details in production
     return NextResponse.json(
       {

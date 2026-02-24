@@ -44,7 +44,7 @@ export async function GET(request: Request) {
     await prisma.newsletterSubscriber.updateMany({
       where: { email: subscriber.email.toLowerCase(), isActive: false },
       data: { isActive: true },
-    }).catch(() => {});
+    }).catch((err) => logger.error('Mailing list confirm cross-sync failed', { error: err instanceof Error ? err.message : String(err) }));
 
     // RGPD Art. 6/7 + CASL: Create definitive ConsentRecord after double opt-in
     await prisma.consentRecord.create({
@@ -56,7 +56,7 @@ export async function GET(request: Request) {
         grantedAt: confirmedAt,
         ipAddress: ip,
       },
-    }).catch(() => {});
+    }).catch((err) => logger.error('Mailing list confirm cross-sync failed', { error: err instanceof Error ? err.message : String(err) }));
 
     // CASL audit: persist to AuditLog (not just console.log)
     await prisma.auditLog.create({
@@ -76,7 +76,7 @@ export async function GET(request: Request) {
         }),
         ipAddress: ip,
       },
-    }).catch(() => {});
+    }).catch((err) => logger.error('Mailing list confirm cross-sync failed', { error: err instanceof Error ? err.message : String(err) }));
 
     return NextResponse.redirect(new URL('/?subscription=confirmed', request.url));
   } catch (error) {

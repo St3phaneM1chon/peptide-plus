@@ -26,7 +26,25 @@ export const GET = withAdminGuard(async (request, _ctx) => {
     const [promoCodes, total] = await Promise.all([
       prisma.promoCode.findMany({
         orderBy: { createdAt: 'desc' },
-        include: {
+        select: {
+          id: true,
+          code: true,
+          description: true,
+          type: true,
+          value: true,
+          minOrderAmount: true,
+          maxDiscount: true,
+          usageLimit: true,
+          usageLimitPerUser: true,
+          usageCount: true,
+          startsAt: true,
+          endsAt: true,
+          firstOrderOnly: true,
+          productIds: true,
+          categoryIds: true,
+          isActive: true,
+          createdAt: true,
+          updatedAt: true,
           _count: {
             select: { usages: true },
           },
@@ -110,6 +128,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
     // Check for duplicate code
     const existing = await prisma.promoCode.findUnique({
       where: { code: code.toUpperCase() },
+      select: { id: true },
     });
 
     if (existing) {

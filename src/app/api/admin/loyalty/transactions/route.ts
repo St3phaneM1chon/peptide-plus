@@ -63,7 +63,18 @@ export const GET = withAdminGuard(async (request: NextRequest, _ctx) => {
     const [transactions, total] = await Promise.all([
       prisma.loyaltyTransaction.findMany({
         where,
-        include: {
+        select: {
+          id: true,
+          userId: true,
+          type: true,
+          points: true,
+          description: true,
+          orderId: true,
+          referralId: true,
+          balanceAfter: true,
+          metadata: true,
+          createdAt: true,
+          expiresAt: true,
           user: {
             select: {
               id: true,

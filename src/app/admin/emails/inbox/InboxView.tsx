@@ -5,6 +5,7 @@ import {
   Inbox, Search, User,
   ChevronRight, Circle, AlertCircle, CheckCircle2, Pause, XCircle,
 } from 'lucide-react';
+import Image from 'next/image';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 
@@ -180,7 +181,7 @@ export default function InboxView({ onSelectConversation, selectedId }: InboxVie
                   {/* Avatar */}
                   <div className="flex-shrink-0 w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center">
                     {conv.customer?.image ? (
-                      <img src={conv.customer.image} alt="" className="w-8 h-8 rounded-full" />
+                      <Image src={conv.customer.image} alt="" className="w-8 h-8 rounded-full" width={32} height={32} unoptimized />
                     ) : (
                       <User className="h-4 w-4 text-slate-400" />
                     )}

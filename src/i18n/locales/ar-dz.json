@@ -4793,7 +4793,11 @@
     "viewDashboard": "عرض لوحة التحكم",
     "websiteUrl": "رابط الموقع أو المدونة",
     "whyJoin": "لماذا تريد الانضمام لبرنامجنا؟",
-    "yourReferralLink": "رابط الإحالة الخاص بك"
+    "yourReferralLink": "رابط الإحالة الخاص بك",
+    "overview": "Overview",
+    "dashboard": "Dashboard",
+    "ambassadorLabel": "Ambassador",
+    "submitting": "Submitting..."
   },
   "auth": {
     "acceptTerms": "أوافق على {link}",
@@ -5255,7 +5259,9 @@
     "viewAll": "عرض الكل",
     "views": "مشاهدات",
     "yes": "ايه",
-    "yesterday": "أمس"
+    "yesterday": "أمس",
+    "note": "Note",
+    "opensInNewTab": "opens in new tab"
   },
   "community": {
     "allDiscussions": "جميع النقاشات",
@@ -5845,7 +5851,8 @@
     "testDate": "تاريخ الاختبار",
     "thirdParty": "موثق من طرف ثالث",
     "thirdPartyDesc": "اختبارات مختبرية مستقلة تضمن الجودة",
-    "title": "نتائج المختبر والشهادات"
+    "title": "نتائج المختبر والشهادات",
+    "downloadCoa": "Download COA"
   },
   "learn": {
     "allArticles": "جميع المقالات",
@@ -6522,7 +6529,8 @@
     "tierBenefits": "مستويات العضوية",
     "title": "برنامج المكافآت",
     "yourReferralLink": "رابط الدعوة الخاص بك",
-    "yourStatus": "حالتك"
+    "yourStatus": "حالتك",
+    "navigation": "Rewards navigation"
   },
   "search": {
     "noResultsFor": "No results for \"{query}\"",
@@ -7113,7 +7121,12 @@
     "title": "الندوات الإلكترونية والفعاليات",
     "tutorial": "دروس",
     "upcoming": "القادمة",
-    "withWebinarLink": "مع رابط الندوة."
+    "withWebinarLink": "مع رابط الندوة.",
+    "loading": "Loading webinars...",
+    "free": "Free",
+    "all": "All",
+    "recordedFilter": "Recorded",
+    "subscribe": "Subscribe"
   },
   "legal": {
     "lastUpdated": "Last updated: {date}",

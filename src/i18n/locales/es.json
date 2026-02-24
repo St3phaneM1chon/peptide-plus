@@ -4793,7 +4793,11 @@
     "viewDashboard": "Ver tablero",
     "websiteUrl": "URL de sitio web o blog",
     "whyJoin": "¿Por qué quieres unirte a nuestro programa?",
-    "yourReferralLink": "Tu enlace de referido"
+    "yourReferralLink": "Tu enlace de referido",
+    "overview": "Overview",
+    "dashboard": "Dashboard",
+    "ambassadorLabel": "Ambassador",
+    "submitting": "Submitting..."
   },
   "auth": {
     "acceptTerms": "Acepto los {link}",
@@ -5247,7 +5251,9 @@
     "viewAll": "Ver todo",
     "views": "vistas",
     "yes": "Sí",
-    "yesterday": "Ayer"
+    "yesterday": "Ayer",
+    "note": "Note",
+    "opensInNewTab": "opens in new tab"
   },
   "community": {
     "allDiscussions": "Todas las discusiones",
@@ -5836,7 +5842,8 @@
     "testDate": "Fecha de Prueba",
     "thirdParty": "Verificado por Terceros",
     "thirdPartyDesc": "Las pruebas en laboratorios independientes garantizan calidad",
-    "title": "Resultados de Laboratorio & Certificados"
+    "title": "Resultados de Laboratorio & Certificados",
+    "downloadCoa": "Download COA"
   },
   "learn": {
     "allArticles": "Todos los artículos",
@@ -6513,7 +6520,8 @@
     "tierBenefits": "Niveles de membresía",
     "title": "Programa de recompensas",
     "yourReferralLink": "Tu enlace de referido",
-    "yourStatus": "Tu estado"
+    "yourStatus": "Tu estado",
+    "navigation": "Rewards navigation"
   },
   "search": {
     "noResultsFor": "No results for \"{query}\"",
@@ -7104,7 +7112,12 @@
     "title": "Webinarios y eventos",
     "tutorial": "Tutorial",
     "upcoming": "Próximo",
-    "withWebinarLink": "con el enlace del webinario."
+    "withWebinarLink": "con el enlace del webinario.",
+    "loading": "Loading webinars...",
+    "free": "Free",
+    "all": "All",
+    "recordedFilter": "Recorded",
+    "subscribe": "Subscribe"
   },
   "legal": {
     "lastUpdated": "Last updated: {date}",

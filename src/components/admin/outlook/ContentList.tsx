@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { Search, ChevronDown, ChevronRight, Inbox } from 'lucide-react';
+import { useI18n } from '@/i18n/client';
 import { AvatarCircle } from './AvatarCircle';
 
 // ── Types ──────────────────────────────────────────────────────
@@ -55,7 +56,7 @@ const badgeVariants: Record<string, string> = {
 
 // ── Timestamp formatting ───────────────────────────────────────
 
-function formatTimestamp(value: string | Date): string {
+function formatTimestamp(value: string | Date, t: (key: string) => string, locale: string): string {
   const date = typeof value === 'string' ? new Date(value) : value;
   const now = new Date();
 
@@ -68,7 +69,7 @@ function formatTimestamp(value: string | Date): string {
     date.getFullYear() === now.getFullYear();
 
   if (isToday) {
-    return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    return date.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
   }
 
   const yesterday = new Date(now);
@@ -79,20 +80,19 @@ function formatTimestamp(value: string | Date): string {
     date.getFullYear() === yesterday.getFullYear();
 
   if (isYesterday) {
-    return `Hier ${date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`;
+    const yesterdayLabel = t('admin.contentList.yesterday') || 'Yesterday';
+    return `${yesterdayLabel} ${date.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}`;
   }
 
   // This week (within last 7 days)
   const diffMs = now.getTime() - date.getTime();
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
   if (diffDays < 7) {
-    const dayNames = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
-    return dayNames[date.getDay()];
+    return date.toLocaleDateString(locale, { weekday: 'short' });
   }
 
   // Older
-  const monthNames = ['jan', 'fev', 'mar', 'avr', 'mai', 'jun', 'jul', 'aou', 'sep', 'oct', 'nov', 'dec'];
-  return `${date.getDate()} ${monthNames[date.getMonth()]}`;
+  return date.toLocaleDateString(locale, { day: 'numeric', month: 'short' });
 }
 
 // ── Skeleton loader ────────────────────────────────────────────
@@ -122,6 +122,7 @@ function ListItem({
   selected: boolean;
   onSelect: (id: string) => void;
 }) {
+  const { t, locale } = useI18n();
   const isUrgent = item.priority === 'urgent';
 
   return (
@@ -189,7 +190,7 @@ function ListItem({
       {/* Timestamp */}
       {item.timestamp && (
         <span className="text-[11px] text-slate-400 flex-shrink-0 whitespace-nowrap pt-0.5">
-          {formatTimestamp(item.timestamp)}
+          {formatTimestamp(item.timestamp, t, locale)}
         </span>
       )}
     </button>
@@ -250,14 +251,18 @@ export function ContentList({
   onFilterChange,
   searchValue,
   onSearchChange,
-  searchPlaceholder = 'Rechercher...',
+  searchPlaceholder: searchPlaceholderProp,
   loading = false,
   emptyIcon: EmptyIcon = Inbox,
-  emptyTitle = 'Aucun element',
-  emptyDescription = 'Aucun element a afficher.',
+  emptyTitle: emptyTitleProp,
+  emptyDescription: emptyDescriptionProp,
   headerActions,
   className = '',
 }: ContentListProps) {
+  const { t } = useI18n();
+  const searchPlaceholder = searchPlaceholderProp || t('common.search') || 'Search...';
+  const emptyTitle = emptyTitleProp || t('admin.contentList.emptyTitle') || 'No items';
+  const emptyDescription = emptyDescriptionProp || t('admin.contentList.emptyDescription') || 'No items to display.';
   const allItems = items ?? [];
   const allGroups = groups ?? [];
   const hasContent = allItems.length > 0 || allGroups.some((g) => g.items.length > 0);
@@ -324,7 +329,7 @@ export function ContentList({
 
       {/* Screen reader announcement for result count */}
       <div aria-live="polite" aria-atomic="true" className="sr-only">
-        {allItems.length + allGroups.reduce((sum, g) => sum + g.items.length, 0)} {allItems.length + allGroups.reduce((sum, g) => sum + g.items.length, 0) === 1 ? 'result' : 'results'}
+        {allItems.length + allGroups.reduce((sum, g) => sum + g.items.length, 0)} {allItems.length + allGroups.reduce((sum, g) => sum + g.items.length, 0) === 1 ? (t('admin.contentList.result') || 'result') : (t('admin.contentList.results') || 'results')}
       </div>
 
       {/* Scrollable list area */}

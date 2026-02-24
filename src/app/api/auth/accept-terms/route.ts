@@ -33,10 +33,13 @@ export async function POST(request: NextRequest) {
       return res;
     }
 
-    // NOTE: No CSRF check here — this route is called right after OAuth login
-    // from the (auth) layout which has no CsrfInit. The session cookie provides
-    // sufficient protection since the route only modifies the authenticated user's
-    // own record.
+    // CSRF EXCEPTION (audited 2026-02-24): No CSRF check here.
+    // Reason: This route is called right after OAuth login from the (auth) layout
+    // which has no CsrfInit. The session cookie provides sufficient protection
+    // since the route only modifies the authenticated user's own record.
+    // Mitigations: (1) Authentication required (session check below),
+    // (2) Rate limiting applied above, (3) SameSite cookie policy,
+    // (4) Only modifies the calling user's own termsAcceptedAt field.
 
     const session = await auth();
 

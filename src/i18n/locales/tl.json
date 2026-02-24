@@ -4793,7 +4793,11 @@
     "viewDashboard": "Tingnan ang Dashboard",
     "websiteUrl": "Website o Blog URL",
     "whyJoin": "Bakit mo gustong sumali sa aming programa?",
-    "yourReferralLink": "Iyong Referral Link"
+    "yourReferralLink": "Iyong Referral Link",
+    "overview": "Overview",
+    "dashboard": "Dashboard",
+    "ambassadorLabel": "Ambassador",
+    "submitting": "Submitting..."
   },
   "auth": {
     "acceptTerms": "Tinatanggap ko ang {link}",
@@ -5247,7 +5251,9 @@
     "viewAll": "Tingnan Lahat",
     "views": "mga tanaw",
     "yes": "Oo",
-    "yesterday": "Kahapon"
+    "yesterday": "Kahapon",
+    "note": "Note",
+    "opensInNewTab": "opens in new tab"
   },
   "community": {
     "allDiscussions": "Lahat ng Talakayan",
@@ -5836,7 +5842,8 @@
     "testDate": "Petsa ng Pagsusuri",
     "thirdParty": "Napatunayan ng Ika-3 Partido",
     "thirdPartyDesc": "Ang independiyenteng pagsusuri ng laboratoryo ay nagsisiguro ng kalidad",
-    "title": "Mga Resulta ng Laboratoryo at Sertipiko"
+    "title": "Mga Resulta ng Laboratoryo at Sertipiko",
+    "downloadCoa": "Download COA"
   },
   "learn": {
     "allArticles": "Lahat ng Artikulo",
@@ -6513,7 +6520,8 @@
     "tierBenefits": "Mga Benepisyo ng Miyembro",
     "title": "Programa ng Gantimpala",
     "yourReferralLink": "Iyong Referral Link",
-    "yourStatus": "Iyong Katayuan"
+    "yourStatus": "Iyong Katayuan",
+    "navigation": "Rewards navigation"
   },
   "search": {
     "noResultsFor": "No results for \"{query}\"",
@@ -7104,7 +7112,12 @@
     "title": "Mga Webinar at Kaganapan",
     "tutorial": "Tutorial",
     "upcoming": "Mga Paparating",
-    "withWebinarLink": "na may link sa webinar."
+    "withWebinarLink": "na may link sa webinar.",
+    "loading": "Loading webinars...",
+    "free": "Free",
+    "all": "All",
+    "recordedFilter": "Recorded",
+    "subscribe": "Subscribe"
   },
   "legal": {
     "lastUpdated": "Last updated: {date}",

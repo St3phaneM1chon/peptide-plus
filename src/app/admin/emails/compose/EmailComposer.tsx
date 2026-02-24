@@ -142,7 +142,7 @@ export default function EmailComposer({ onClose, replyTo }: EmailComposerProps) 
           {t('admin.emailComposer.saveDraft')}
         </Button>
         <div className="flex-1" />
-        <button type="button" onClick={onClose} className="p-1.5 rounded hover:bg-slate-200 text-slate-500">
+        <button type="button" onClick={onClose} aria-label="Close email composer" className="p-1.5 rounded hover:bg-slate-200 text-slate-500">
           <X className="w-4 h-4" />
         </button>
       </div>
@@ -157,6 +157,7 @@ export default function EmailComposer({ onClose, replyTo }: EmailComposerProps) 
             onChange={(e) => setTo(e.target.value)}
             className="flex-1 text-sm border-0 focus:ring-0 px-0 py-1 text-slate-900 placeholder:text-slate-400"
             placeholder={t('admin.emailComposer.toPlaceholder')}
+            aria-label="Recipient email address"
             required
           />
           {!showCc && (
@@ -174,6 +175,7 @@ export default function EmailComposer({ onClose, replyTo }: EmailComposerProps) 
               onChange={(e) => setCc(e.target.value)}
               className="flex-1 text-sm border-0 focus:ring-0 px-0 py-1 text-slate-900 placeholder:text-slate-400"
               placeholder={t('admin.emailComposer.ccPlaceholder')}
+              aria-label="CC email address"
             />
           </div>
         )}
@@ -185,6 +187,7 @@ export default function EmailComposer({ onClose, replyTo }: EmailComposerProps) 
             onChange={(e) => setSubject(e.target.value)}
             className="flex-1 text-sm border-0 focus:ring-0 px-0 py-1 text-slate-900 placeholder:text-slate-400"
             placeholder={t('admin.emailComposer.subjectPlaceholder')}
+            aria-label="Email subject"
             required
           />
         </div>
@@ -192,19 +195,19 @@ export default function EmailComposer({ onClose, replyTo }: EmailComposerProps) 
 
       {/* Formatting toolbar */}
       <div className="flex items-center gap-1 px-4 py-1.5 border-b border-slate-100 flex-shrink-0">
-        <button type="button" onClick={() => execCommand('bold')} className="p-1.5 rounded hover:bg-slate-100" title="Bold">
+        <button type="button" onClick={() => execCommand('bold')} className="p-1.5 rounded hover:bg-slate-100" title="Bold" aria-label="Bold">
           <Bold className="w-3.5 h-3.5 text-slate-600" />
         </button>
-        <button type="button" onClick={() => execCommand('italic')} className="p-1.5 rounded hover:bg-slate-100" title="Italic">
+        <button type="button" onClick={() => execCommand('italic')} className="p-1.5 rounded hover:bg-slate-100" title="Italic" aria-label="Italic">
           <Italic className="w-3.5 h-3.5 text-slate-600" />
         </button>
-        <button type="button" onClick={() => execCommand('underline')} className="p-1.5 rounded hover:bg-slate-100" title="Underline">
+        <button type="button" onClick={() => execCommand('underline')} className="p-1.5 rounded hover:bg-slate-100" title="Underline" aria-label="Underline">
           <Underline className="w-3.5 h-3.5 text-slate-600" />
         </button>
         <div className="w-px h-4 bg-slate-200 mx-1" />
         <label className="p-1.5 rounded hover:bg-slate-100 cursor-pointer" title={t('admin.emailComposer.attachment')}>
           <Paperclip className="w-3.5 h-3.5 text-slate-600" />
-          <input type="file" className="hidden" onChange={() => toast.info(t('admin.emailComposer.attachmentNote'))} />
+          <input type="file" className="hidden" aria-label="Attach file" onChange={() => toast.info(t('admin.emailComposer.attachmentNote'))} />
         </label>
       </div>
 
@@ -213,6 +216,9 @@ export default function EmailComposer({ onClose, replyTo }: EmailComposerProps) 
         ref={bodyRef}
         contentEditable
         suppressContentEditableWarning
+        role="textbox"
+        aria-label="Email body"
+        aria-multiline="true"
         className="flex-1 px-4 py-3 text-sm text-slate-900 overflow-y-auto focus:outline-none"
         data-placeholder={t('admin.emailComposer.bodyPlaceholder')}
         dangerouslySetInnerHTML={sanitizedReplyHtml ? { __html: sanitizedReplyHtml } : undefined}

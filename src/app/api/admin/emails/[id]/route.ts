@@ -200,7 +200,9 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
       newValue: data,
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch(() => {});
+    }).catch((auditErr) => {
+      logger.warn('[AdminEmails] Non-blocking audit log failure on PATCH', { templateId: id, error: auditErr instanceof Error ? auditErr.message : String(auditErr) });
+    });
 
     return NextResponse.json({
       template,
@@ -253,7 +255,9 @@ export const DELETE = withAdminGuard(async (request, { session, params }) => {
       previousValue: { name: existing.name, subject: existing.subject },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch(() => {});
+    }).catch((auditErr) => {
+      logger.warn('[AdminEmails] Non-blocking audit log failure on DELETE', { templateId: id, error: auditErr instanceof Error ? auditErr.message : String(auditErr) });
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {
@@ -269,7 +273,10 @@ export const DELETE = withAdminGuard(async (request, { session, params }) => {
 export const POST = withAdminGuard(async (request: NextRequest, { session: _session, params }) => {
   try {
     const id = params!.id;
-    const body = await request.json().catch(() => ({}));
+    const body = await request.json().catch((parseErr) => {
+      logger.warn('[AdminEmails] Failed to parse POST body for template preview', { templateId: id, error: parseErr instanceof Error ? parseErr.message : String(parseErr) });
+      return {};
+    });
     const userVariables: Record<string, string> = body.variables || {};
 
     const template = await prisma.emailTemplate.findUnique({

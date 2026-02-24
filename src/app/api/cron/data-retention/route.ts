@@ -19,6 +19,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { timingSafeEqual } from 'crypto';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { withJobLock } from '@/lib/cron-lock';
@@ -47,7 +48,7 @@ const RETENTION_POLICIES: RetentionPolicy[] = [
 // ---------------------------------------------------------------------------
 
 export async function POST(request: NextRequest) {
-  // Verify cron secret
+  // Verify cron secret (timing-safe comparison)
   const authHeader = request.headers.get('authorization');
   const cronSecret = process.env.CRON_SECRET;
 
@@ -58,7 +59,15 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (authHeader !== `Bearer ${cronSecret}`) {
+  const providedSecret = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : '';
+  let secretsMatch = false;
+  try {
+    const a = Buffer.from(cronSecret, 'utf8');
+    const b = Buffer.from(providedSecret, 'utf8');
+    secretsMatch = a.length === b.length && timingSafeEqual(a, b);
+  } catch { secretsMatch = false; }
+
+  if (!secretsMatch) {
     return NextResponse.json(
       { error: 'Unauthorized' },
       { status: 401 }
@@ -287,6 +296,9 @@ export async function GET() {
       totalPending: expiredSessions + oldCarts + oldChatMessages + oldEmailLogs + oldPasswordHistory + oldAuditLogs,
     });
   } catch (error) {
+    logger.error('[data-retention] Health check failed', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json(
       {
         status: 'error',

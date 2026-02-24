@@ -186,6 +186,7 @@ export default function SearchPage() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={t('admin.search.searchPlaceholder')}
+              aria-label="Search accounting records"
               className="w-full px-4 py-3 ps-12 bg-white border border-slate-200 rounded-xl text-slate-900 text-lg focus:border-sky-500 focus:outline-none"
               autoFocus
             />
@@ -366,7 +367,7 @@ export default function SearchPage() {
               {t('admin.search.resultCount', { count: results.length, query })}
             </p>
             <div className="flex gap-2">
-              <select className="px-3 py-1 bg-white border border-slate-200 rounded text-sm text-slate-900">
+              <select aria-label="Sort results by" className="px-3 py-1 bg-white border border-slate-200 rounded text-sm text-slate-900">
                 <option value="relevance">{t('admin.search.relevance')}</option>
                 <option value="date">{t('admin.search.sortDate')}</option>
                 <option value="amount">{t('admin.search.sortAmount')}</option>

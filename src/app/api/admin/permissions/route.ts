@@ -14,6 +14,7 @@ import { logger } from '@/lib/logger';
 
 // GET /api/admin/permissions - List all permissions, groups, and overrides
 export const GET = withAdminGuard(async (request, _ctx) => {
+  try {
   const { searchParams } = new URL(request.url);
   const tab = searchParams.get('tab') || 'permissions';
 
@@ -87,10 +88,15 @@ export const GET = withAdminGuard(async (request, _ctx) => {
   }
 
   return NextResponse.json({ error: 'Invalid tab' }, { status: 400 });
+  } catch (error) {
+    logger.error('[admin/permissions] GET error', { error: error instanceof Error ? error.message : String(error) });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
 });
 
 // POST /api/admin/permissions - Create group or override
 export const POST = withAdminGuard(async (request, { session }) => {
+  try {
   const body = await request.json();
 
   // Validate with Zod discriminated union
@@ -346,4 +352,8 @@ export const POST = withAdminGuard(async (request, { session }) => {
   }
 
   return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
+  } catch (error) {
+    logger.error('[admin/permissions] POST error', { error: error instanceof Error ? error.message : String(error) });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
 });

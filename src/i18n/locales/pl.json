@@ -4793,7 +4793,11 @@
     "viewDashboard": "Zobacz pulpit",
     "websiteUrl": "URL strony lub bloga",
     "whyJoin": "Dlaczego chcesz dołączyć do naszego programu?",
-    "yourReferralLink": "Twój link polecający"
+    "yourReferralLink": "Twój link polecający",
+    "overview": "Overview",
+    "dashboard": "Dashboard",
+    "ambassadorLabel": "Ambassador",
+    "submitting": "Submitting..."
   },
   "auth": {
     "acceptTerms": "Akceptuję {link}",
@@ -5251,7 +5255,9 @@
     "viewAll": "Zobacz wszystko",
     "views": "wyświetlenia",
     "yes": "Tak",
-    "yesterday": "Wczoraj"
+    "yesterday": "Wczoraj",
+    "note": "Note",
+    "opensInNewTab": "opens in new tab"
   },
   "community": {
     "allDiscussions": "Wszystkie dyskusje",
@@ -5840,7 +5846,8 @@
     "testDate": "Data testu",
     "thirdParty": "Weryfikowane przez stronę trzecią",
     "thirdPartyDesc": "Niezależne testy laboratoryjne zapewniają jakość",
-    "title": "Wyniki Laboratorium i Certyfikaty"
+    "title": "Wyniki Laboratorium i Certyfikaty",
+    "downloadCoa": "Download COA"
   },
   "learn": {
     "allArticles": "Wszystkie artykuły",
@@ -6517,7 +6524,8 @@
     "tierBenefits": "Poziomy Członkostwa",
     "title": "Program Lojalnościowy",
     "yourReferralLink": "Twój Link Polecający",
-    "yourStatus": "Twój Status"
+    "yourStatus": "Twój Status",
+    "navigation": "Rewards navigation"
   },
   "search": {
     "noResultsFor": "No results for \"{query}\"",
@@ -7108,7 +7116,12 @@
     "title": "Webinaria i Wydarzenia",
     "tutorial": "Samouczek",
     "upcoming": "Nadchodzące",
-    "withWebinarLink": "z linkiem do webinaru."
+    "withWebinarLink": "z linkiem do webinaru.",
+    "loading": "Loading webinars...",
+    "free": "Free",
+    "all": "All",
+    "recordedFilter": "Recorded",
+    "subscribe": "Subscribe"
   },
   "legal": {
     "lastUpdated": "Last updated: {date}",

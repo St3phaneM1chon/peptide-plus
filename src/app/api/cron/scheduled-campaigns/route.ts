@@ -17,6 +17,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { timingSafeEqual } from 'crypto';
 import { prisma } from '@/lib/db';
 import { sendEmail } from '@/lib/email/email-service';
 import { generateUnsubscribeUrl } from '@/lib/email/unsubscribe';
@@ -28,9 +29,23 @@ import { logger } from '@/lib/logger';
 export async function GET(request: NextRequest) {
   // FLAW-007 FIX: Only accept cron secret via Authorization header, not query string.
   // Query string secrets appear in server logs, browser history, CDN logs, and Referer headers.
+  // Timing-safe comparison to prevent timing attacks on the secret.
   const cronSecret = process.env.CRON_SECRET;
   const authHeader = request.headers.get('authorization');
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+
+  if (!cronSecret) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const providedSecret = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : '';
+  let secretsMatch = false;
+  try {
+    const a = Buffer.from(cronSecret, 'utf8');
+    const b = Buffer.from(providedSecret, 'utf8');
+    secretsMatch = a.length === b.length && timingSafeEqual(a, b);
+  } catch { secretsMatch = false; }
+
+  if (!secretsMatch) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -73,7 +88,10 @@ export async function GET(request: NextRequest) {
           try {
             query = JSON.parse(campaign.segmentQuery);
           } catch (error) {
-            console.error('[ScheduledCampaigns] Failed to parse segmentQuery JSON for campaign:', campaign.id, error);
+            logger.error('[ScheduledCampaigns] Failed to parse segmentQuery JSON', {
+              campaignId: campaign.id,
+              error: error instanceof Error ? error.message : String(error),
+            });
             await prisma.emailCampaign.update({ where: { id: campaign.id }, data: { status: 'FAILED' } });
             results.push({ id: campaign.id, name: campaign.name, success: false, error: 'Invalid segmentQuery' });
             continue;
@@ -212,7 +230,11 @@ export async function GET(request: NextRequest) {
             });
             sent++;
           } catch (error) {
-            console.error('[ScheduledCampaigns] Failed to send email for campaign:', campaign.id, error);
+            logger.error('[ScheduledCampaigns] Failed to send email', {
+              campaignId: campaign.id,
+              recipientEmail: recipient.email,
+              error: error instanceof Error ? error.message : String(error),
+            });
             failed++;
           }
         }
@@ -238,7 +260,11 @@ export async function GET(request: NextRequest) {
 
         results.push({ id: campaign.id, name: campaign.name, success: true, sent, failed });
       } catch (err) {
-        console.error('[ScheduledCampaigns] Campaign processing failed:', campaign.id, err);
+        logger.error('[ScheduledCampaigns] Campaign processing failed', {
+          campaignId: campaign.id,
+          campaignName: campaign.name,
+          error: err instanceof Error ? err.message : String(err),
+        });
         results.push({
           id: campaign.id,
           name: campaign.name,
@@ -248,7 +274,12 @@ export async function GET(request: NextRequest) {
         await prisma.emailCampaign.update({
           where: { id: campaign.id },
           data: { status: 'FAILED' },
-        }).catch((error: unknown) => { console.error('[ScheduledCampaigns] Non-blocking campaign status update to FAILED failed:', error); });
+        }).catch((updateErr: unknown) => {
+          logger.error('[ScheduledCampaigns] Non-blocking status update to FAILED failed', {
+            campaignId: campaign.id,
+            error: updateErr instanceof Error ? (updateErr as Error).message : String(updateErr),
+          });
+        });
       }
     }
 

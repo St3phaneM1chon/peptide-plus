@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useCallback, useId, type ReactNode } from 'react';
 import { X } from 'lucide-react';
+import { useI18n } from '@/i18n/client';
 
 interface ModalProps {
   isOpen: boolean;
@@ -21,6 +22,7 @@ const sizes = {
 };
 
 export function Modal({ isOpen, onClose, title, subtitle, children, footer, size = 'md' }: ModalProps) {
+  const { t } = useI18n();
   const overlayRef = useRef<HTMLDivElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
@@ -103,7 +105,7 @@ export function Modal({ isOpen, onClose, title, subtitle, children, footer, size
           </div>
           <button
             onClick={onClose}
-            aria-label="Close"
+            aria-label={t('common.close') || 'Close'}
             className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
           >
             <X className="w-5 h-5" />

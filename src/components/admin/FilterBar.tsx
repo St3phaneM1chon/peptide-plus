@@ -2,6 +2,7 @@
 
 import { Search, X } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { useI18n } from '@/i18n/client';
 
 interface FilterBarProps {
   searchValue?: string;
@@ -11,7 +12,9 @@ interface FilterBarProps {
   actions?: ReactNode;  // Right-side actions
 }
 
-export function FilterBar({ searchValue, onSearchChange, searchPlaceholder = 'Search...', children, actions }: FilterBarProps) {
+export function FilterBar({ searchValue, onSearchChange, searchPlaceholder: searchPlaceholderProp, children, actions }: FilterBarProps) {
+  const { t } = useI18n();
+  const searchPlaceholder = searchPlaceholderProp || t('common.search') || 'Search...';
   return (
     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-4">
       {onSearchChange && (

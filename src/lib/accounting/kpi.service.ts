@@ -76,24 +76,33 @@ async function sumByAccountType(
     ...(codePrefix ? { code: { startsWith: codePrefix } } : {}),
   };
 
-  const result = await prisma.journalLine.aggregate({
-    where: {
-      entry: dateFilter,
-      account: accountFilter,
-    },
-    _sum: {
-      debit: true,
-      credit: true,
-    },
-  });
+  try {
+    const result = await prisma.journalLine.aggregate({
+      where: {
+        entry: dateFilter,
+        account: accountFilter,
+      },
+      _sum: {
+        debit: true,
+        credit: true,
+      },
+    });
 
-  const totalDebit = Number(result._sum.debit ?? 0);
-  const totalCredit = Number(result._sum.credit ?? 0);
+    const totalDebit = Number(result._sum.debit ?? 0);
+    const totalCredit = Number(result._sum.credit ?? 0);
 
-  if (accountType === 'ASSET' || accountType === 'EXPENSE') {
-    return totalDebit - totalCredit;
+    if (accountType === 'ASSET' || accountType === 'EXPENSE') {
+      return totalDebit - totalCredit;
+    }
+    return totalCredit - totalDebit;
+  } catch (error) {
+    console.error('[KPIService] sumByAccountType query failed:', {
+      accountType,
+      codePrefix,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return 0;
   }
-  return totalCredit - totalDebit;
 }
 
 function round2(value: number): number {
@@ -118,6 +127,7 @@ function round2(value: number): number {
 // Then compute all KPIs from the aggregated result in-memory.
 // This would reduce 15 queries to 1-2 queries per period.
 export async function calculateKPIs(startDate: Date, endDate: Date): Promise<FinancialKPIs> {
+  try {
   const periodDays = Math.max(
     1,
     Math.round((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)),
@@ -180,6 +190,10 @@ export async function calculateKPIs(startDate: Date, endDate: Date): Promise<Fin
     monthlyBurnRate: round2(monthlyBurnRate),
     runwayMonths: round2(runwayMonths),
   };
+  } catch (error) {
+    console.error('[KPIService] Failed to calculate KPIs:', error instanceof Error ? error.message : String(error));
+    throw error;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -200,11 +214,24 @@ export async function getKPITrend(
     const periodStart = new Date(periodEnd);
     periodStart.setDate(periodStart.getDate() - periodLengthDays);
 
-    const kpis = await calculateKPIs(periodStart, periodEnd);
-    trend.push({
-      date: periodEnd.toISOString().split('T')[0],
-      value: kpis[kpiName],
-    });
+    try {
+      const kpis = await calculateKPIs(periodStart, periodEnd);
+      trend.push({
+        date: periodEnd.toISOString().split('T')[0],
+        value: kpis[kpiName],
+      });
+    } catch (error) {
+      console.error('[KPIService] Failed to calculate trend for period:', {
+        periodStart: periodStart.toISOString(),
+        periodEnd: periodEnd.toISOString(),
+        error: error instanceof Error ? error.message : String(error),
+      });
+      // Push zero for failed period instead of crashing the entire trend
+      trend.push({
+        date: periodEnd.toISOString().split('T')[0],
+        value: 0,
+      });
+    }
   }
 
   return trend;

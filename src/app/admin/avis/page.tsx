@@ -25,6 +25,7 @@ import {
   MobileSplitLayout,
 } from '@/components/admin/outlook';
 import type { ContentListItem } from '@/components/admin/outlook';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
@@ -84,6 +85,15 @@ export default function AvisPage() {
   const [adminResponse, setAdminResponse] = useState('');
   // FIX F-026: Add submitting state to prevent double-click
   const [submittingResponse, setSubmittingResponse] = useState(false);
+
+  // FIX F-070: ConfirmDialog state for approve/reject actions
+  const [confirmAction, setConfirmAction] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    variant: 'danger' | 'warning' | 'info';
+    onConfirm: () => void;
+  }>({ isOpen: false, title: '', message: '', variant: 'info', onConfirm: () => {} });
 
   const statusLabel: Record<string, string> = useMemo(() => ({
     PENDING: t('admin.reviews.statusPending'),
@@ -362,7 +372,16 @@ export default function AvisPage() {
                             size="sm"
                             variant="ghost"
                             icon={ThumbsUp}
-                            onClick={() => updateReviewStatus(selectedReview.id, 'APPROVED')}
+                            onClick={() => setConfirmAction({
+                              isOpen: true,
+                              title: t('admin.reviews.confirmApproveTitle') || 'Approve this review?',
+                              message: t('admin.reviews.confirmApproveMessage') || 'This review will be visible to all customers on the product page.',
+                              variant: 'info',
+                              onConfirm: () => {
+                                updateReviewStatus(selectedReview.id, 'APPROVED');
+                                setConfirmAction(prev => ({ ...prev, isOpen: false }));
+                              },
+                            })}
                             className="text-green-700 hover:bg-green-100"
                             disabled={updatingIds.has(selectedReview.id)}
                           >
@@ -372,7 +391,16 @@ export default function AvisPage() {
                             size="sm"
                             variant="ghost"
                             icon={ThumbsDown}
-                            onClick={() => updateReviewStatus(selectedReview.id, 'REJECTED')}
+                            onClick={() => setConfirmAction({
+                              isOpen: true,
+                              title: t('admin.reviews.confirmRejectTitle') || 'Reject this review?',
+                              message: t('admin.reviews.confirmRejectMessage') || 'This review will be hidden from customers. The author will not be notified.',
+                              variant: 'danger',
+                              onConfirm: () => {
+                                updateReviewStatus(selectedReview.id, 'REJECTED');
+                                setConfirmAction(prev => ({ ...prev, isOpen: false }));
+                              },
+                            })}
                             className="text-red-700 hover:bg-red-100"
                             disabled={updatingIds.has(selectedReview.id)}
                           >
@@ -485,6 +513,16 @@ export default function AvisPage() {
         />
       </div>
 
+      {/* FIX F-070: ConfirmDialog for approve/reject actions */}
+      <ConfirmDialog
+        isOpen={confirmAction.isOpen}
+        title={confirmAction.title}
+        message={confirmAction.message}
+        variant={confirmAction.variant}
+        onConfirm={confirmAction.onConfirm}
+        onCancel={() => setConfirmAction(prev => ({ ...prev, isOpen: false }))}
+      />
+
       {/* ─── RESPONSE MODAL ────────────────────────────────────── */}
       <Modal
         isOpen={showResponseModal}
@@ -498,7 +536,8 @@ export default function AvisPage() {
             <Button
               variant="primary"
               onClick={() => selectedReview && submitAdminResponse(selectedReview.id)}
-              disabled={!adminResponse.trim()}
+              disabled={!adminResponse.trim() || submittingResponse}
+              loading={submittingResponse}
             >
               {t('admin.reviews.publishResponse')}
             </Button>

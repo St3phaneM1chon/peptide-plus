@@ -27,6 +27,7 @@ export async function GET() {
     const wishlistItems = await db.wishlist.findMany({
       where: { userId: session.user.id },
       orderBy: { createdAt: 'desc' },
+      select: { id: true, productId: true, createdAt: true },
     });
 
     if (wishlistItems.length === 0) {
@@ -37,15 +38,24 @@ export async function GET() {
     const productIds = wishlistItems.map((item) => item.productId);
     const products = await db.product.findMany({
       where: { id: { in: productIds } },
-      include: {
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        imageUrl: true,
+        price: true,
+        purity: true,
+        isActive: true,
         images: {
           where: { isPrimary: true },
           take: 1,
+          select: { url: true },
         },
         formats: {
           where: { isActive: true },
           orderBy: { price: 'asc' },
           take: 1,
+          select: { price: true, comparePrice: true, inStock: true },
         },
         category: {
           select: { name: true, slug: true },
@@ -147,6 +157,7 @@ export async function POST(request: NextRequest) {
           productId,
         },
       },
+      select: { id: true },
     });
 
     if (existing) {

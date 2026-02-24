@@ -61,6 +61,22 @@ export async function GET() {
     const subscriptions = await db.subscription.findMany({
       where: { userId: user.id },
       orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        productId: true,
+        formatId: true,
+        productName: true,
+        formatName: true,
+        quantity: true,
+        frequency: true,
+        discountPercent: true,
+        unitPrice: true,
+        status: true,
+        nextDelivery: true,
+        lastDelivery: true,
+        createdAt: true,
+        cancelledAt: true,
+      },
     });
 
     return NextResponse.json({
@@ -237,6 +253,7 @@ export async function PATCH(request: NextRequest) {
     // Verify ownership
     const subscription = await db.subscription.findFirst({
       where: { id, userId: user.id },
+      select: { id: true, status: true, frequency: true },
     });
 
     if (!subscription) {

@@ -36,6 +36,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
+import { timingSafeEqual } from 'crypto';
 import { db } from '@/lib/db';
 import { sendEmail, welcomeEmail, generateUnsubscribeUrl } from '@/lib/email';
 import { withJobLock } from '@/lib/cron-lock';
@@ -94,11 +95,23 @@ const DRIP_STEPS: DripStep[] = [
 ];
 
 export async function GET(request: NextRequest) {
-  // Verify cron secret (fail-closed)
+  // Verify cron secret (fail-closed, timing-safe comparison)
   const authHeader = request.headers.get('authorization');
   const cronSecret = process.env.CRON_SECRET;
 
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+  if (!cronSecret) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const providedSecret = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : '';
+  let secretsMatch = false;
+  try {
+    const a = Buffer.from(cronSecret, 'utf8');
+    const b = Buffer.from(providedSecret, 'utf8');
+    secretsMatch = a.length === b.length && timingSafeEqual(a, b);
+  } catch { secretsMatch = false; }
+
+  if (!secretsMatch) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -214,13 +227,19 @@ export async function GET(request: NextRequest) {
                   data: { referralCode },
                 });
               } catch (error) {
-                console.error('[WelcomeSeries] Failed to update referral code for user, retrying:', user.id, error);
+                logger.error('[WelcomeSeries] Failed to update referral code, retrying', {
+                  userId: user.id,
+                  error: error instanceof Error ? error.message : String(error),
+                });
                 referralCode = `REF${crypto.randomBytes(6).toString('hex').toUpperCase()}`;
                 await db.user.update({
                   where: { id: user.id },
                   data: { referralCode },
                 }).catch((retryError: unknown) => {
-                  console.error('[WelcomeSeries] Retry referral code update also failed:', user.id, retryError);
+                  logger.error('[WelcomeSeries] Retry referral code update also failed', {
+                    userId: user.id,
+                    error: retryError instanceof Error ? (retryError as Error).message : String(retryError),
+                  });
                   referralCode = '';
                 });
               }

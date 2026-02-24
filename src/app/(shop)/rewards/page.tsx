@@ -94,7 +94,7 @@ export default function RewardsPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500" role="status" aria-label={t('common.loading') || 'Loading'}></div>
       </div>
     );
   }
@@ -163,7 +163,7 @@ export default function RewardsPage() {
 
       {/* Tabs */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex gap-2 overflow-x-auto pb-4 mb-6">
+        <div className="flex gap-2 overflow-x-auto pb-4 mb-6" role="tablist" aria-label={t('rewards.navigation') || 'Rewards navigation'}>
           {[
             { id: 'overview', label: t('rewards.overview') || 'Overview', icon: '📊' },
             { id: 'rewards', label: t('rewards.redeem') || 'Redeem Rewards', icon: '🎁' },
@@ -172,8 +172,10 @@ export default function RewardsPage() {
           ].map((tab) => (
             <button
               key={tab.id}
+              role="tab"
+              aria-selected={activeTab === tab.id}
               onClick={() => setActiveTab(tab.id as typeof activeTab)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 ${
                 activeTab === tab.id
                   ? 'bg-orange-500 text-white'
                   : 'bg-white text-neutral-600 hover:bg-neutral-100'
@@ -203,7 +205,7 @@ export default function RewardsPage() {
                     key={i}
                     className={`p-4 rounded-lg ${item.highlight ? 'bg-orange-50 border-2 border-orange-200' : 'bg-neutral-50'}`}
                   >
-                    <span className="text-3xl">{item.icon}</span>
+                    <span className="text-3xl" aria-hidden="true">{item.icon}</span>
                     <h3 className="font-semibold mt-2">{item.title}</h3>
                     <p className="text-sm text-neutral-600">{item.desc}</p>
                   </div>
@@ -326,7 +328,7 @@ export default function RewardsPage() {
             </div>
             {transactions.length === 0 ? (
               <div className="p-12 text-center">
-                <span className="text-6xl mb-4 block">📊</span>
+                <span className="text-6xl mb-4 block" aria-hidden="true">📊</span>
                 <h3 className="text-lg font-bold mb-2">{t('rewards.noHistory') || 'No transactions yet'}</h3>
                 <p className="text-neutral-500 mb-4">
                   {t('rewards.noHistoryDesc') || 'Start shopping to earn your first points!'}
@@ -378,7 +380,7 @@ export default function RewardsPage() {
         {activeTab === 'referral' && (
           <div className="space-y-6">
             <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl p-8 text-white text-center">
-              <span className="text-6xl mb-4 block">👥</span>
+              <span className="text-6xl mb-4 block" aria-hidden="true">👥</span>
               <h2 className="text-2xl font-bold mb-2">{t('rewards.referTitle') || 'Give $10, Get $10'}</h2>
               <p className="text-white/80 mb-6 max-w-md mx-auto">
                 {t('rewards.referDesc') || 'Share your referral link with friends. They get $10 off their first order, and you earn 1,000 bonus points!'}

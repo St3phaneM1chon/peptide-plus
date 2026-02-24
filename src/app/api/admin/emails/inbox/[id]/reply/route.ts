@@ -93,7 +93,10 @@ export const POST = withAdminGuard(
       if (!scheduledFor) {
         try {
           // Generate unsubscribe URL (CAN-SPAM / RGPD / LCAP compliance)
-          const unsubscribeUrl = await generateUnsubscribeUrl(sanitizedTo, 'transactional').catch(() => undefined);
+          const unsubscribeUrl = await generateUnsubscribeUrl(sanitizedTo, 'transactional').catch((err) => {
+            logger.warn('[Reply] Failed to generate unsubscribe URL', { to: sanitizedTo, error: err instanceof Error ? err.message : String(err) });
+            return undefined;
+          });
 
           const result = await sendEmail({
             to: { email: sanitizedTo },
@@ -167,7 +170,9 @@ export const POST = withAdminGuard(
         newValue: { conversationId, to: sanitizedTo, subject },
         ipAddress: getClientIpFromRequest(request),
         userAgent: request.headers.get('user-agent') || undefined,
-      }).catch(() => {});
+      }).catch((auditErr) => {
+        logger.warn('[Reply] Non-blocking audit log failure', { conversationId, replyId: reply.id, error: auditErr instanceof Error ? auditErr.message : String(auditErr) });
+      });
 
       return NextResponse.json({ success: true, data: reply });
     } catch (error) {

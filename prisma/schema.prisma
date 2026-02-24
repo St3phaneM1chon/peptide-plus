@@ -1314,6 +1314,8 @@ model NewsletterSubscriber {
   birthDate      DateTime?
 
   @@index([isActive])
+  @@index([subscribedAt])
+  @@index([locale])
 }
 
 model NotificationPreference {
@@ -1703,6 +1705,8 @@ model ProductFormat {
   @@index([formatType])
   @@index([productId])
   @@index([sku])
+  @@index([isActive])
+  @@index([productId, isActive])
 }
 
 model ProductFormatTranslation {
@@ -2032,6 +2036,7 @@ model Review {
   @@index([productId])
   @@index([userId])
   @@index([productId, isApproved, isPublished])
+  @@index([createdAt])
 }
 
 model ReviewImage {
@@ -2472,6 +2477,9 @@ model User {
   privacyAcceptedAt DateTime?
 
   @@index([role])
+  @@index([createdAt])
+  @@index([loyaltyTier])
+  @@index([referredById])
 }
 
 model Authenticator {
@@ -3626,6 +3634,7 @@ model MailingListSubscriber {
   @@index([status])
   @@index([confirmToken])
   @@index([unsubscribeToken])
+  @@index([createdAt])
 }
 
 model MailingListPreference {

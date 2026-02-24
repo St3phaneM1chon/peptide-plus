@@ -169,7 +169,9 @@ export const POST = withAdminGuard(async (request, { session }) => {
         newValue: { name: clonedName, sourceId, status: 'cloned' },
         ipAddress: getClientIpFromRequest(request),
         userAgent: request.headers.get('user-agent') || undefined,
-      }).catch(() => {});
+      }).catch((auditErr) => {
+        logger.warn('[AdminEmails] Non-blocking audit log failure on CLONE_EMAIL_TEMPLATE', { templateId: cloned.id, error: auditErr instanceof Error ? auditErr.message : String(auditErr) });
+      });
 
       return NextResponse.json({ template: cloned }, { status: 201 });
     }
@@ -257,7 +259,9 @@ export const POST = withAdminGuard(async (request, { session }) => {
       newValue: { name, subject, locale: locale || 'fr', isActive: isActive ?? true },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch(() => {});
+    }).catch((auditErr) => {
+      logger.warn('[AdminEmails] Non-blocking audit log failure on CREATE_EMAIL_TEMPLATE', { templateId: template.id, error: auditErr instanceof Error ? auditErr.message : String(auditErr) });
+    });
 
     // UX hints for subject/preheader optimization
     const hints: Record<string, unknown> = {};

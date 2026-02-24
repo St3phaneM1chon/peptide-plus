@@ -57,13 +57,13 @@ export async function GET(request: Request) {
         revokedAt: null,
       },
       data: { revokedAt: new Date() },
-    }).catch(() => {});
+    }).catch((err) => logger.error('Unsubscribe cross-sync failed', { error: err instanceof Error ? err.message : String(err) }));
 
     // Cross-sync: also unsubscribe from NewsletterSubscriber
     await prisma.newsletterSubscriber.updateMany({
       where: { email: subscriber.email.toLowerCase() },
       data: { unsubscribedAt: new Date() },
-    }).catch(() => {});
+    }).catch((err) => logger.error('Unsubscribe cross-sync failed', { error: err instanceof Error ? err.message : String(err) }));
 
     logUnsubscribe(subscriber.id, subscriber.email, ip, 'one-click-link');
     return NextResponse.redirect(new URL('/?unsubscribe=success', request.url));
@@ -137,13 +137,13 @@ export async function POST(request: NextRequest) {
         revokedAt: null,
       },
       data: { revokedAt: new Date() },
-    }).catch(() => {});
+    }).catch((err) => logger.error('Unsubscribe cross-sync failed', { error: err instanceof Error ? err.message : String(err) }));
 
     // Cross-sync: also unsubscribe from NewsletterSubscriber if present
     await prisma.newsletterSubscriber.updateMany({
       where: { email: subscriber.email.toLowerCase() },
       data: { unsubscribedAt: new Date() },
-    }).catch(() => {});
+    }).catch((err) => logger.error('Unsubscribe cross-sync failed', { error: err instanceof Error ? err.message : String(err) }));
 
     logUnsubscribe(subscriber.id, subscriber.email, ip, 'api-post');
     return NextResponse.json({ success: true });

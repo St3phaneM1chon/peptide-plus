@@ -295,6 +295,8 @@ export default function DevisesPage() {
           </div>
           <button
             onClick={handleAutoUpdateToggle}
+            aria-label="Toggle automatic exchange rate updates"
+            aria-pressed={autoUpdate}
             className={`w-12 h-6 rounded-full transition-colors relative ${autoUpdate ? 'bg-emerald-500' : 'bg-slate-300'}`}
           >
             <span className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${autoUpdate ? 'right-1' : 'left-1'}`} />
@@ -368,6 +370,7 @@ export default function DevisesPage() {
                     name="defaultCurrency"
                     checked={currency.isDefault}
                     onChange={() => setDefault(currency.id)}
+                    aria-label={`Set ${currency.code} as default currency`}
                     className="w-4 h-4 text-sky-500 focus:ring-sky-500"
                   />
                 </td>
@@ -375,6 +378,8 @@ export default function DevisesPage() {
                   <button
                     onClick={() => toggleActive(currency.id)}
                     disabled={currency.isDefault}
+                    aria-label={`Toggle ${currency.code} active status`}
+                    aria-pressed={currency.isActive}
                     className={`w-10 h-5 rounded-full transition-colors relative ${
                       currency.isActive ? 'bg-emerald-500' : 'bg-slate-300'
                     } ${currency.isDefault ? 'opacity-50 cursor-not-allowed' : ''}`}

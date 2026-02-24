@@ -2,6 +2,7 @@
 
 import { useState, type ReactNode } from 'react';
 import { ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
+import { useI18n } from '@/i18n/client';
 import { EmptyState } from './EmptyState';
 
 export interface Column<T> {
@@ -37,13 +38,15 @@ export function DataTable<T>({
   sortKey,
   sortDirection,
   loading,
-  emptyTitle = 'No data',
+  emptyTitle: emptyTitleProp,
   emptyDescription,
   emptyAction,
   onRowClick,
   selectedIds,
   onSelectChange,
 }: DataTableProps<T>) {
+  const { t } = useI18n();
+  const emptyTitle = emptyTitleProp || t('admin.dataTable.noData') || 'No data';
   const [internalSort, setInternalSort] = useState<{ key: string; dir: 'asc' | 'desc' } | null>(null);
 
   const currentSort = sortKey ? { key: sortKey, dir: sortDirection || 'asc' } : internalSort;
@@ -112,7 +115,7 @@ export function DataTable<T>({
   return (
     <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
       <div aria-live="polite" aria-atomic="true" className="sr-only">
-        {data.length} {data.length === 1 ? 'row' : 'rows'}
+        {data.length} {data.length === 1 ? (t('admin.dataTable.row') || 'row') : (t('admin.dataTable.rows') || 'rows')}
       </div>
       <div className="overflow-x-auto">
         <table className="w-full">

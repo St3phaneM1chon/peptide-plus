@@ -23,6 +23,7 @@ import {
   MobileSplitLayout,
 } from '@/components/admin/outlook';
 import type { ContentListItem } from '@/components/admin/outlook';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
@@ -93,7 +94,17 @@ export default function NewsletterPage() {
   const [newCampaign, setNewCampaign] = useState({ subject: '', content: '' });
   const [savingCampaign, setSavingCampaign] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [composerErrors, setComposerErrors] = useState<Record<string, string>>({});
   const [showStatsModal, setShowStatsModal] = useState(false);
+
+  // UX FIX: ConfirmDialog state for send/delete actions
+  const [confirmAction, setConfirmAction] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    variant: 'danger' | 'warning' | 'info';
+    onConfirm: () => void;
+  }>({ isOpen: false, title: '', message: '', variant: 'danger', onConfirm: () => {} });
   const [statsLoading, setStatsLoading] = useState(false);
   const [statsData, setStatsData] = useState<{
     campaignId: string;
@@ -127,10 +138,16 @@ export default function NewsletterPage() {
   }, [activeTab]);
 
   const createCampaign = async (status: 'DRAFT' | 'SCHEDULED' | 'SENT') => {
-    if (!newCampaign.subject.trim() || !newCampaign.content.trim()) {
-      toast.error(t('admin.newsletter.subjectAndContentRequired') || 'Subject and content are required');
-      return;
+    // UX FIX: Validate with inline error messages instead of just toast
+    const errors: Record<string, string> = {};
+    if (!newCampaign.subject.trim()) {
+      errors.subject = t('admin.newsletter.subjectRequired') || 'Subject is required';
     }
+    if (!newCampaign.content.trim()) {
+      errors.content = t('admin.newsletter.contentRequired') || 'Content is required';
+    }
+    setComposerErrors(errors);
+    if (Object.keys(errors).length > 0) return;
 
     setSavingCampaign(true);
     try {
@@ -312,21 +329,29 @@ export default function NewsletterPage() {
   const onDeleteRibbon = useCallback(() => {
     if (!selectedId) return;
     if (activeTab === 'subscribers' && selectedSubscriber) {
-      // Trigger subscriber deletion
-      if (!confirm(t('admin.newsletter.deleteSubscriberConfirm') || `Remove ${selectedSubscriber.email}?`)) return;
-      setDeletingId(selectedSubscriber.id);
-      fetch(`/api/admin/newsletter/subscribers/${selectedSubscriber.id}`, { method: 'DELETE' })
-        .then(res => {
-          if (!res.ok) {
-            toast.error(t('common.deleteFailed'));
-            return;
-          }
-          setSubscribers(prev => prev.filter(s => s.id !== selectedSubscriber.id));
-          setSelectedId(null);
-          toast.success(t('admin.newsletter.subscriberDeleted') || 'Subscriber removed');
-        })
-        .catch(() => toast.error(t('common.networkError')))
-        .finally(() => setDeletingId(null));
+      // UX FIX: Replaced native confirm() with ConfirmDialog
+      setConfirmAction({
+        isOpen: true,
+        title: t('admin.newsletter.deleteSubscriberTitle') || 'Remove subscriber?',
+        message: t('admin.newsletter.deleteSubscriberConfirm') || `Are you sure you want to remove ${selectedSubscriber.email}?`,
+        variant: 'danger',
+        onConfirm: () => {
+          setConfirmAction(prev => ({ ...prev, isOpen: false }));
+          setDeletingId(selectedSubscriber.id);
+          fetch(`/api/admin/newsletter/subscribers/${selectedSubscriber.id}`, { method: 'DELETE' })
+            .then(res => {
+              if (!res.ok) {
+                toast.error(t('common.deleteFailed'));
+                return;
+              }
+              setSubscribers(prev => prev.filter(s => s.id !== selectedSubscriber.id));
+              setSelectedId(null);
+              toast.success(t('admin.newsletter.subscriberDeleted') || 'Subscriber removed');
+            })
+            .catch(() => toast.error(t('common.networkError')))
+            .finally(() => setDeletingId(null));
+        },
+      });
     }
   }, [selectedId, activeTab, selectedSubscriber, t]);
 
@@ -340,21 +365,30 @@ export default function NewsletterPage() {
       toast.info(t('common.comingSoon'));
       return;
     }
-    if (!confirm(t('admin.newsletter.sendConfirm') || `Send "${selectedCampaign.subject}" to all active subscribers?`)) return;
-    fetch(`/api/admin/newsletter/campaigns/${selectedCampaign.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: 'SENT' }),
-    })
-      .then(res => {
-        if (!res.ok) {
-          toast.error(t('common.saveFailed'));
-          return;
-        }
-        toast.success(t('admin.newsletter.campaignSent') || 'Campaign sent');
-        fetchData();
-      })
-      .catch(() => toast.error(t('common.networkError')));
+    // UX FIX: Replaced native confirm() with ConfirmDialog
+    setConfirmAction({
+      isOpen: true,
+      title: t('admin.newsletter.sendConfirmTitle') || 'Send campaign?',
+      message: t('admin.newsletter.sendConfirm') || `Send "${selectedCampaign.subject}" to all active subscribers? This action cannot be undone.`,
+      variant: 'warning',
+      onConfirm: () => {
+        setConfirmAction(prev => ({ ...prev, isOpen: false }));
+        fetch(`/api/admin/newsletter/campaigns/${selectedCampaign.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'SENT' }),
+        })
+          .then(res => {
+            if (!res.ok) {
+              toast.error(t('common.saveFailed'));
+              return;
+            }
+            toast.success(t('admin.newsletter.campaignSent') || 'Campaign sent');
+            fetchData();
+          })
+          .catch(() => toast.error(t('common.networkError')));
+      },
+    });
   }, [selectedCampaign, t, fetchData]);
 
   const onPreview = useCallback(() => {
@@ -541,26 +575,35 @@ export default function NewsletterPage() {
                         icon={Trash2}
                         className="text-red-600 hover:text-red-700"
                         disabled={deletingId === selectedSubscriber.id}
-                        onClick={async () => {
-                          if (!confirm(t('admin.newsletter.deleteSubscriberConfirm') || `Remove ${selectedSubscriber.email}?`)) return;
-                          setDeletingId(selectedSubscriber.id);
-                          try {
-                            const res = await fetch(`/api/admin/newsletter/subscribers/${selectedSubscriber.id}`, {
-                              method: 'DELETE',
-                            });
-                            if (!res.ok) {
-                              const data = await res.json().catch(() => ({}));
-                              toast.error(data.error || t('common.deleteFailed'));
-                              return;
-                            }
-                            setSubscribers(prev => prev.filter(s => s.id !== selectedSubscriber.id));
-                            setSelectedId(null);
-                            toast.success(t('admin.newsletter.subscriberDeleted') || 'Subscriber removed');
-                          } catch {
-                            toast.error(t('common.networkError'));
-                          } finally {
-                            setDeletingId(null);
-                          }
+                        onClick={() => {
+                          // UX FIX: Replaced native confirm() with ConfirmDialog
+                          setConfirmAction({
+                            isOpen: true,
+                            title: t('admin.newsletter.deleteSubscriberTitle') || 'Remove subscriber?',
+                            message: t('admin.newsletter.deleteSubscriberConfirm') || `Are you sure you want to remove ${selectedSubscriber.email}?`,
+                            variant: 'danger',
+                            onConfirm: async () => {
+                              setConfirmAction(prev => ({ ...prev, isOpen: false }));
+                              setDeletingId(selectedSubscriber.id);
+                              try {
+                                const res = await fetch(`/api/admin/newsletter/subscribers/${selectedSubscriber.id}`, {
+                                  method: 'DELETE',
+                                });
+                                if (!res.ok) {
+                                  const data = await res.json().catch(() => ({}));
+                                  toast.error(data.error || t('common.deleteFailed'));
+                                  return;
+                                }
+                                setSubscribers(prev => prev.filter(s => s.id !== selectedSubscriber.id));
+                                setSelectedId(null);
+                                toast.success(t('admin.newsletter.subscriberDeleted') || 'Subscriber removed');
+                              } catch {
+                                toast.error(t('common.networkError'));
+                              } finally {
+                                setDeletingId(null);
+                              }
+                            },
+                          });
                         }}
                       />
                     ),
@@ -675,48 +718,66 @@ export default function NewsletterPage() {
                             }}>
                               {t('admin.newsletter.edit')}
                             </Button>
-                            <Button variant="primary" size="sm" icon={Send} onClick={async () => {
-                              if (!confirm(t('admin.newsletter.sendConfirm') || `Send "${selectedCampaign.subject}" to all active subscribers?`)) return;
-                              try {
-                                const res = await fetch(`/api/admin/newsletter/campaigns/${selectedCampaign.id}`, {
-                                  method: 'PATCH',
-                                  headers: { 'Content-Type': 'application/json' },
-                                  body: JSON.stringify({ status: 'SENT' }),
-                                });
-                                if (!res.ok) {
-                                  const data = await res.json().catch(() => ({}));
-                                  toast.error(data.error || t('common.saveFailed'));
-                                  return;
-                                }
-                                toast.success(t('admin.newsletter.campaignSent') || 'Campaign sent');
-                                await fetchData();
-                              } catch {
-                                toast.error(t('common.networkError'));
-                              }
+                            <Button variant="primary" size="sm" icon={Send} onClick={() => {
+                              // UX FIX: Replaced native confirm() with ConfirmDialog
+                              setConfirmAction({
+                                isOpen: true,
+                                title: t('admin.newsletter.sendConfirmTitle') || 'Send campaign?',
+                                message: t('admin.newsletter.sendConfirm') || `Send "${selectedCampaign.subject}" to all active subscribers? This action cannot be undone.`,
+                                variant: 'warning',
+                                onConfirm: async () => {
+                                  setConfirmAction(prev => ({ ...prev, isOpen: false }));
+                                  try {
+                                    const res = await fetch(`/api/admin/newsletter/campaigns/${selectedCampaign.id}`, {
+                                      method: 'PATCH',
+                                      headers: { 'Content-Type': 'application/json' },
+                                      body: JSON.stringify({ status: 'SENT' }),
+                                    });
+                                    if (!res.ok) {
+                                      const data = await res.json().catch(() => ({}));
+                                      toast.error(data.error || t('common.saveFailed'));
+                                      return;
+                                    }
+                                    toast.success(t('admin.newsletter.campaignSent') || 'Campaign sent');
+                                    await fetchData();
+                                  } catch {
+                                    toast.error(t('common.networkError'));
+                                  }
+                                },
+                              });
                             }}>
                               {t('admin.newsletter.send')}
                             </Button>
                           </>
                         )}
                         {selectedCampaign.status === 'SCHEDULED' && (
-                          <Button variant="ghost" size="sm" icon={XCircle} className="text-red-600" onClick={async () => {
-                            if (!confirm(t('admin.newsletter.cancelConfirm') || 'Cancel this scheduled campaign?')) return;
-                            try {
-                              const res = await fetch(`/api/admin/newsletter/campaigns/${selectedCampaign.id}`, {
-                                method: 'PATCH',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ status: 'DRAFT' }),
-                              });
-                              if (!res.ok) {
-                                const data = await res.json().catch(() => ({}));
-                                toast.error(data.error || t('common.updateFailed'));
-                                return;
-                              }
-                              toast.success(t('admin.newsletter.campaignCancelled') || 'Campaign cancelled');
-                              await fetchData();
-                            } catch {
-                              toast.error(t('common.networkError'));
-                            }
+                          <Button variant="ghost" size="sm" icon={XCircle} className="text-red-600" onClick={() => {
+                            // UX FIX: Replaced native confirm() with ConfirmDialog
+                            setConfirmAction({
+                              isOpen: true,
+                              title: t('admin.newsletter.cancelConfirmTitle') || 'Cancel campaign?',
+                              message: t('admin.newsletter.cancelConfirm') || 'Cancel this scheduled campaign? It will be reverted to draft.',
+                              variant: 'danger',
+                              onConfirm: async () => {
+                                setConfirmAction(prev => ({ ...prev, isOpen: false }));
+                                try {
+                                  const res = await fetch(`/api/admin/newsletter/campaigns/${selectedCampaign.id}`, {
+                                    method: 'PATCH',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ status: 'DRAFT' }),
+                                  });
+                                  if (!res.ok) {
+                                    const data = await res.json().catch(() => ({}));
+                                    toast.error(data.error || t('common.updateFailed'));
+                                    return;
+                                  }
+                                  toast.success(t('admin.newsletter.campaignCancelled') || 'Campaign cancelled');
+                                  await fetchData();
+                                } catch {
+                                  toast.error(t('common.networkError'));
+                                }
+                              },
+                            });
                           }}>
                             {t('admin.newsletter.cancel')}
                           </Button>
@@ -833,6 +894,16 @@ export default function NewsletterPage() {
         )}
       </div>
 
+      {/* UX FIX: ConfirmDialog for send/delete actions */}
+      <ConfirmDialog
+        isOpen={confirmAction.isOpen}
+        title={confirmAction.title}
+        message={confirmAction.message}
+        variant={confirmAction.variant}
+        onConfirm={confirmAction.onConfirm}
+        onCancel={() => setConfirmAction(prev => ({ ...prev, isOpen: false }))}
+      />
+
       {/* ─── COMPOSER MODAL ─────────────────────────────────────── */}
       <Modal isOpen={showComposer} onClose={() => setShowComposer(false)} title={t('admin.newsletter.modalTitle')} size="lg">
         <div className="space-y-4">
@@ -840,18 +911,24 @@ export default function NewsletterPage() {
             <Input
               type="text"
               value={newCampaign.subject}
-              onChange={(e) => setNewCampaign({ ...newCampaign, subject: e.target.value })}
+              onChange={(e) => { setNewCampaign({ ...newCampaign, subject: e.target.value }); setComposerErrors(prev => { const n = { ...prev }; delete n.subject; return n; }); }}
               placeholder={t('admin.newsletter.subjectPlaceholder')}
             />
+            {composerErrors.subject && (
+              <p className="mt-1 text-sm text-red-600" role="alert">{composerErrors.subject}</p>
+            )}
           </FormField>
           <FormField label={t('admin.newsletter.content')} required>
             <Textarea
               rows={10}
               value={newCampaign.content}
-              onChange={(e) => setNewCampaign({ ...newCampaign, content: e.target.value })}
+              onChange={(e) => { setNewCampaign({ ...newCampaign, content: e.target.value }); setComposerErrors(prev => { const n = { ...prev }; delete n.content; return n; }); }}
               placeholder={t('admin.newsletter.contentPlaceholder')}
               className="font-mono text-sm"
             />
+            {composerErrors.content && (
+              <p className="mt-1 text-sm text-red-600" role="alert">{composerErrors.content}</p>
+            )}
           </FormField>
           <div className="flex gap-3 pt-4 border-t border-slate-200">
             <Button variant="secondary" className="flex-1" onClick={() => createCampaign('DRAFT')} disabled={savingCampaign}>

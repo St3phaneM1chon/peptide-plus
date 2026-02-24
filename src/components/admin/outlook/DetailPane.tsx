@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Mail, ArrowLeft } from 'lucide-react';
+import { useI18n } from '@/i18n/client';
 import { AvatarCircle } from './AvatarCircle';
 
 interface DetailPaneProps {
@@ -26,10 +27,13 @@ export function DetailPane({
   header,
   isEmpty = false,
   emptyIcon: EmptyIcon = Mail,
-  emptyTitle = 'Selectionnez un element',
-  emptyDescription = 'Aucun element selectionne',
+  emptyTitle: emptyTitleProp,
+  emptyDescription: emptyDescriptionProp,
   className = '',
 }: DetailPaneProps) {
+  const { t } = useI18n();
+  const emptyTitle = emptyTitleProp || t('admin.detailPane.selectItem') || 'Select an item';
+  const emptyDescription = emptyDescriptionProp || t('admin.detailPane.noItemSelected') || 'No item selected';
   // Empty state
   if (isEmpty || (!children && !header)) {
     return (

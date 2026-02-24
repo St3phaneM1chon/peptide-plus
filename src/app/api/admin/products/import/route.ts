@@ -218,6 +218,20 @@ export const POST = withAdminGuard(async (request, { session }) => {
     let updated = 0;
     const errors: ImportError[] = [];
 
+    // N+1 FIX: Batch-fetch all existing products by slug upfront
+    const allSlugs = rows
+      .map((row, i) => {
+        const name = row.name?.trim();
+        if (!name) return null;
+        return row.slug?.trim() || slugify(name);
+      })
+      .filter(Boolean) as string[];
+    const existingProducts = await prisma.product.findMany({
+      where: { slug: { in: allSlugs } },
+      select: { id: true, slug: true },
+    });
+    const existingProductMap = new Map(existingProducts.map((p) => [p.slug, p.id]));
+
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i];
       const rowNum = i + 2; // +2 because row 1 is header, data starts at row 2
@@ -316,13 +330,10 @@ export const POST = withAdminGuard(async (request, { session }) => {
           isBestseller,
         };
 
-        // Check if product exists by slug
-        const existing = await prisma.product.findUnique({
-          where: { slug },
-          select: { id: true },
-        });
+        // N+1 FIX: Use pre-fetched map instead of individual DB query per row
+        const existingId = existingProductMap.get(slug);
 
-        if (existing) {
+        if (existingId) {
           // Update existing product
           await prisma.product.update({
             where: { slug },
@@ -337,6 +348,8 @@ export const POST = withAdminGuard(async (request, { session }) => {
               slug,
             },
           });
+          // Track newly created products in the map to handle duplicate slugs within the same import
+          existingProductMap.set(slug, 'new');
           created++;
         }
       } catch (err) {

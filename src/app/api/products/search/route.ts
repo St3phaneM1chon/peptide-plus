@@ -151,7 +151,7 @@ export async function GET(request: NextRequest) {
         filters: { category, minPrice, maxPrice, inStock, purity, sort },
         locale,
         duration,
-      }).catch(() => {});
+      }).catch((err) => logger.error('Search logging failed', { error: err instanceof Error ? err.message : String(err) }));
 
       return NextResponse.json(responseData, {
         headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120' },
@@ -337,7 +337,7 @@ export async function GET(request: NextRequest) {
         filters: { category, minPrice, maxPrice, inStock, purity, sort },
         locale,
         duration,
-      }).catch(() => {}); // silent
+      }).catch((err) => logger.error('Search logging failed', { error: err instanceof Error ? err.message : String(err) })); // silent
     }
 
     return NextResponse.json(

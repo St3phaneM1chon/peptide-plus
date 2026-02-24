@@ -152,7 +152,7 @@ export function IntegrationCard({
                 type="button"
                 onClick={copyWebhook}
                 className="p-2 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
-                title="Copy"
+                title={t('admin.integrations.copy') || 'Copy'}
               >
                 {copied ? <CheckCircle2 className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4 text-slate-400" />}
               </button>
