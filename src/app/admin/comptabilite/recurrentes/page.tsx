@@ -129,9 +129,10 @@ export default function RecurringEntriesPage() {
         frequency: formData.frequency,
         dayOfMonth: formData.dayOfMonth,
         amount: formData.amount,
+        // G3-FLAW-01: Backend expects debitAmount/creditAmount, not debit/credit
         lines: [
-          { accountCode: formData.debitAccount, accountName: t('admin.recurringEntries.debitAccountName'), debit: formData.amount, credit: 0 },
-          { accountCode: formData.creditAccount, accountName: t('admin.recurringEntries.creditAccountName'), debit: 0, credit: formData.amount },
+          { accountCode: formData.debitAccount, accountName: t('admin.recurringEntries.debitAccountName'), debitAmount: formData.amount, creditAmount: 0 },
+          { accountCode: formData.creditAccount, accountName: t('admin.recurringEntries.creditAccountName'), debitAmount: 0, creditAmount: formData.amount },
         ],
         startDate: formData.startDate,
         autoPost: formData.autoPost,
