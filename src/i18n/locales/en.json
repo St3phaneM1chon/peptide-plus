@@ -5788,6 +5788,7 @@
       "formatUpdateError": "Error updating format",
       "deletionError": "Error during deletion",
       "deleteFormatConfirm": "Delete this format?",
+      "deleteFormatDescription": "This action cannot be undone. The format and its associated data will be permanently removed.",
       "dangerZone": "Danger zone",
       "dangerZoneDescription": "Deletion deactivates the product and removes it from the catalog.",
       "deleteProduct": "Delete product",

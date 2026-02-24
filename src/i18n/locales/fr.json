@@ -5788,6 +5788,7 @@
       "formatUpdateError": "Erreur lors de la mise à jour du format",
       "deletionError": "Erreur lors de la suppression",
       "deleteFormatConfirm": "Supprimer ce format?",
+      "deleteFormatDescription": "Cette action est irréversible. Le format et ses données associées seront définitivement supprimés.",
       "dangerZone": "Zone dangereuse",
       "dangerZoneDescription": "La suppression désactive le produit et le retire du catalogue.",
       "deleteProduct": "Supprimer le produit",

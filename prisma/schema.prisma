@@ -1586,6 +1586,12 @@ model Product {
   specifications      String?
   productType         ProductType          @default(PEPTIDE)
   price               Decimal              @db.Decimal(10, 2)
+  // BUG-058 NOTE: This field is named "compareAtPrice" (Shopify convention) for the
+  // product-level strike-through price. The ProductFormat model uses "comparePrice"
+  // (without "At") for the format-level strike-through price. Both represent the
+  // original price before discount, but the naming differs for historical reasons.
+  // Do NOT rename — that would require a DB migration. Frontend code maps both to
+  // "comparePrice" when passing data to UI components.
   compareAtPrice      Decimal?             @db.Decimal(10, 2)
   imageUrl            String?
   videoUrl            String?
@@ -1674,6 +1680,11 @@ model ProductFormat {
   availability      StockStatus                @default(IN_STOCK)
   availableDate     DateTime?
   barcode           String?
+  // BUG-058 NOTE: This field is named "comparePrice" for the format-level
+  // strike-through price. The Product model uses "compareAtPrice" (with "At",
+  // Shopify convention) for the product-level equivalent. Both represent the
+  // original price before discount. Do NOT rename — that would require a DB
+  // migration. Frontend code normalizes both to "comparePrice" in UI components.
   comparePrice      Decimal?                   @db.Decimal(10, 2)
   discontinuedAt    DateTime?
   dosageMg          Decimal?                   @db.Decimal(10, 2)

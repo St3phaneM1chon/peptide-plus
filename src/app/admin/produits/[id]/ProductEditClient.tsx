@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { ArrowLeft, Plus, Trash2, ExternalLink, FileText, ImageIcon, Video, Link2, Globe, Check, AlertTriangle, Pencil, ClipboardList, FileEdit, Package } from 'lucide-react';
 import { getFormatTypes, getProductTypes, getAvailabilityOptions, VOLUME_OPTIONS, getStockDisplay } from '../product-constants';
 import { MediaUploader } from '@/components/admin/MediaUploader';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 
@@ -110,6 +111,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [formatToDelete, setFormatToDelete] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'header' | 'texts' | 'formats'>('header');
   const [translationStatuses, setTranslationStatuses] = useState<TranslationStatus[]>([]);
   const [isDirty, setIsDirty] = useState(false);
@@ -245,10 +247,10 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
 
   // BUG-049 FIX: Detect concurrent edits via updatedAt check before saving format.
   // Sends only fields that differ from the original to minimize overwrite risk.
-  // TODO: BUG-075 - Add optimistic update: update local state immediately, rollback on error
+  // BUG-075 FIX: Optimistic update - update local state immediately, revert on error.
   const handleSaveFormat = async (format: ProductFormat, initialFormat: ProductFormat) => {
+    // BUG-049: Fetch the current server state to check for concurrent modifications
     try {
-      // BUG-049: Fetch the current server state to check for concurrent modifications
       const checkRes = await fetch(`/api/products/${product.id}/formats/${format.id}`);
       if (checkRes.ok) {
         const serverFormat = await checkRes.json();
@@ -260,7 +262,16 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
           if (!proceed) return;
         }
       }
+    } catch {
+      // If the check fails, proceed anyway - the save itself will fail if there's a real issue
+    }
 
+    // BUG-075: Optimistic update - apply changes to local state immediately
+    const previousFormats = formats;
+    setFormats(formats.map(f => f.id === format.id ? format : f));
+    setEditingFormatId(null);
+
+    try {
       // BUG-049: Build a partial payload with only changed fields to reduce overwrite surface
       const changedFields: Record<string, unknown> = {};
       for (const key of Object.keys(format) as (keyof ProductFormat)[]) {
@@ -275,25 +286,39 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
         body: JSON.stringify(Object.keys(changedFields).length > 0 ? changedFields : format),
       });
       if (res.ok) {
+        // Replace optimistic data with confirmed server data (includes updatedAt, etc.)
         const updatedFormat = await res.json();
-        setFormats(formats.map(f => f.id === format.id ? updatedFormat : f));
-        setEditingFormatId(null);
+        setFormats(prev => prev.map(f => f.id === format.id ? updatedFormat : f));
+      } else {
+        // BUG-075: Revert optimistic update on server error
+        setFormats(previousFormats);
+        setEditingFormatId(format.id);
+        toast.error(t('admin.productForm.formatUpdateError'));
       }
     } catch {
+      // BUG-075: Revert optimistic update on network error
+      setFormats(previousFormats);
+      setEditingFormatId(format.id);
       toast.error(t('admin.productForm.formatUpdateError'));
     }
   };
 
-  // BUG-094: Uses window.confirm() with translated message. A custom modal would be a feature enhancement.
-  const handleDeleteFormat = async (formatId: string) => {
-    if (!window.confirm(t('admin.productForm.deleteFormatConfirm'))) return;
+  // BUG-093/094 FIX: Use ConfirmDialog instead of window.confirm() for format deletion
+  const handleDeleteFormat = (formatId: string) => {
+    setFormatToDelete(formatId);
+  };
+
+  const confirmDeleteFormat = async () => {
+    if (!formatToDelete) return;
     try {
-      const res = await fetch(`/api/products/${product.id}/formats/${formatId}`, { method: 'DELETE' });
+      const res = await fetch(`/api/products/${product.id}/formats/${formatToDelete}`, { method: 'DELETE' });
       if (res.ok) {
-        setFormats(formats.filter(f => f.id !== formatId));
+        setFormats(formats.filter(f => f.id !== formatToDelete));
       }
     } catch {
       toast.error(t('admin.productForm.deletionError'));
+    } finally {
+      setFormatToDelete(null);
     }
   };
 
@@ -918,6 +943,18 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
           </div>
         </div>
       )}
+
+      {/* BUG-093 FIX: Custom ConfirmDialog for format deletion instead of window.confirm() */}
+      <ConfirmDialog
+        isOpen={formatToDelete !== null}
+        title={t('admin.productForm.deleteFormatConfirm')}
+        message={t('admin.productForm.deleteFormatDescription') || 'This action cannot be undone. The format and its associated data will be permanently removed.'}
+        confirmLabel={t('admin.productForm.delete')}
+        cancelLabel={t('admin.productForm.cancel')}
+        onConfirm={confirmDeleteFormat}
+        onCancel={() => setFormatToDelete(null)}
+        variant="danger"
+      />
     </div>
   );
 }
