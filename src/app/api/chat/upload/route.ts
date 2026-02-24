@@ -9,12 +9,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import { storage } from '@/lib/storage';
 import { auth } from '@/lib/auth-config';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
 import { db } from '@/lib/db';
 import { logger } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
   try {
-    // SECURITY FIX (F-002 + F-007): Auth + rate limiting for chat upload
+    // SECURITY FIX (F-002 + F-007): Auth + rate limiting + CSRF for chat upload
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const session = await auth();
 
     // Rate limit: 5 uploads per minute per IP

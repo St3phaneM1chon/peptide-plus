@@ -11,6 +11,8 @@ import { prisma } from '@/lib/db';
 import { getApiTranslator } from '@/i18n/server';
 import { UserRole } from '@/types';
 import { stripHtml, stripControlChars } from '@/lib/sanitize';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 
@@ -107,6 +109,20 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 // POST - Envoyer un message
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
+    // SECURITY: Rate limiting + CSRF
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/chat/conversations/messages');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const { id } = await params;
     const session = await auth();
     const { t } = await getApiTranslator();

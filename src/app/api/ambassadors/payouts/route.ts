@@ -1,9 +1,19 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth-config';
 import { logger } from '@/lib/logger';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
+
+const createPayoutSchema = z.object({
+  ambassadorId: z.string().min(1, 'ambassadorId is required'),
+  method: z.string().max(100).optional().nullable(),
+  reference: z.string().max(200).optional().nullable(),
+  notes: z.string().max(1000).optional().nullable(),
+});
 
 /**
  * GET /api/ambassadors/payouts
@@ -73,17 +83,35 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/ambassadors/payouts');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+    // CSRF validation
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const session = await auth();
     if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role || '')) {
       return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
     }
 
     const body = await request.json();
-    const { ambassadorId, method, reference, notes } = body;
-
-    if (!ambassadorId) {
-      return NextResponse.json({ error: 'ambassadorId requis' }, { status: 400 });
+    const parsed = createPayoutSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Validation error', details: parsed.error.flatten().fieldErrors },
+        { status: 400 }
+      );
     }
+
+    const { ambassadorId, method, reference, notes } = parsed.data;
 
     // Verify ambassador exists
     const ambassador = await prisma.ambassador.findUnique({

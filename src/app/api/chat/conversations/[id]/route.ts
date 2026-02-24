@@ -9,6 +9,8 @@ import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { getApiTranslator } from '@/i18n/server';
 import { UserRole } from '@/types';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 
@@ -110,6 +112,20 @@ export async function GET(_request: Request, { params }: RouteParams) {
 // PUT - Modifier une conversation (admin uniquement)
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
+    // SECURITY: CSRF + rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/chat/conversations/update');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const { id } = await params;
     const session = await auth();
     const { t } = await getApiTranslator();
@@ -208,8 +224,14 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 }
 
 // DELETE - Supprimer une conversation (owner uniquement)
-export async function DELETE(_request: Request, { params }: RouteParams) {
+export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
+    // SECURITY: CSRF validation
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const { id } = await params;
     const session = await auth();
     const { t } = await getApiTranslator();

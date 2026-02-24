@@ -5,9 +5,19 @@ export const dynamic = 'force-dynamic';
 // TODO: F-096 - Error messages mix French and English; return error codes and translate client-side
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth-config';
 import { logger } from '@/lib/logger';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
+
+const createAmbassadorSchema = z.object({
+  userId: z.string().min(1).optional(),
+  name: z.string().min(1, 'Name is required').max(200).trim(),
+  email: z.string().email('Invalid email format').optional().nullable(),
+  commissionRate: z.number().min(0).max(100).optional().default(10),
+});
 
 export async function GET(request: NextRequest) {
   try {
@@ -208,18 +218,35 @@ export async function syncCommissionsForCodes(
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/ambassadors');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+    // CSRF validation
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const session = await auth();
     if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role || '')) {
       return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
     }
 
     const body = await request.json();
-    const { userId, name, email, commissionRate } = body;
-
-    // F-034 FIX: Validate ambassador name is non-empty
-    if (!name || typeof name !== 'string' || !name.trim()) {
-      return NextResponse.json({ error: 'Name is required' }, { status: 400 });
+    const parsed = createAmbassadorSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Validation error', details: parsed.error.flatten().fieldErrors },
+        { status: 400 }
+      );
     }
+
+    const { userId, name, email, commissionRate } = parsed.data;
 
     // Generate unique referral code
     // F-068 FIX: Use crypto random instead of predictable Date.now()
@@ -230,10 +257,10 @@ export async function POST(request: NextRequest) {
     const ambassador = await prisma.ambassador.create({
       data: {
         userId: userId || null,
-        name: name.trim(),
+        name,
         email: email || null,
         referralCode: code,
-        commissionRate: commissionRate || 10,
+        commissionRate,
         status: 'ACTIVE',
         tier: 'BRONZE',
       },

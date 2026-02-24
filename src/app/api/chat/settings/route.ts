@@ -13,6 +13,8 @@ import { auth } from '@/lib/auth-config';
 import { db } from '@/lib/db';
 import { z } from 'zod';
 import { stripHtml, stripControlChars } from '@/lib/sanitize';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
 import { logger } from '@/lib/logger';
 
 // FIX F-016: Zod schema for chat settings validation
@@ -78,8 +80,22 @@ export async function GET(_request: Request) {
 // PUT - Mettre à jour les settings (admin only)
 export async function PUT(request: NextRequest) {
   try {
+    // SECURITY: Rate limiting + CSRF
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/chat/settings');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const session = await auth();
-    
+
     if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role as string)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

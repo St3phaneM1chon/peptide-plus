@@ -3,11 +3,24 @@ export const dynamic = 'force-dynamic';
 // TODO: F-084 - DELETE requires OWNER but PATCH allows EMPLOYEE (can soft-delete via INACTIVE); document or align permissions
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth-config';
 import { logger } from '@/lib/logger';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
 
-const VALID_STATUSES = ['ACTIVE', 'SUSPENDED', 'PENDING', 'INACTIVE'];
+const VALID_STATUSES = ['ACTIVE', 'SUSPENDED', 'PENDING', 'INACTIVE'] as const;
+const VALID_TIERS = ['BRONZE', 'SILVER', 'GOLD', 'PLATINUM'] as const;
+
+const updateAmbassadorSchema = z.object({
+  status: z.enum(VALID_STATUSES).optional(),
+  tier: z.enum(VALID_TIERS).optional(),
+  commissionRate: z.number().min(0).max(100).optional(),
+}).refine(
+  (data) => Object.keys(data).length > 0,
+  { message: 'At least one field must be provided for update' }
+);
 
 export async function GET(
   _request: NextRequest,
@@ -48,6 +61,20 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/ambassadors');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+    // CSRF validation
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const session = await auth();
     if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role || '')) {
       return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
@@ -56,37 +83,27 @@ export async function PATCH(
     const { id } = await params;
     const body = await request.json();
 
+    const parsed = updateAmbassadorSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Validation error', details: parsed.error.flatten().fieldErrors },
+        { status: 400 }
+      );
+    }
+
     // Check ambassador exists
     const existing = await prisma.ambassador.findUnique({ where: { id } });
     if (!existing) {
       return NextResponse.json({ error: 'Ambassadeur non trouvé' }, { status: 404 });
     }
 
-    // Build update data from allowed fields
+    // Build update data from validated fields
     const updateData: Record<string, unknown> = {};
+    const { status, tier, commissionRate } = parsed.data;
 
-    if (body.status !== undefined) {
-      if (!VALID_STATUSES.includes(body.status)) {
-        return NextResponse.json({ error: `Statut invalide. Valeurs acceptées: ${VALID_STATUSES.join(', ')}` }, { status: 400 });
-      }
-      updateData.status = body.status;
-    }
-
-    if (body.tier !== undefined) {
-      updateData.tier = body.tier;
-    }
-
-    if (body.commissionRate !== undefined) {
-      const rate = Number(body.commissionRate);
-      if (isNaN(rate) || rate < 0 || rate > 100) {
-        return NextResponse.json({ error: 'Taux de commission invalide (0-100)' }, { status: 400 });
-      }
-      updateData.commissionRate = rate;
-    }
-
-    if (Object.keys(updateData).length === 0) {
-      return NextResponse.json({ error: 'Aucune donnée à mettre à jour' }, { status: 400 });
-    }
+    if (status !== undefined) updateData.status = status;
+    if (tier !== undefined) updateData.tier = tier;
+    if (commissionRate !== undefined) updateData.commissionRate = commissionRate;
 
     const ambassador = await prisma.ambassador.update({
       where: { id },
@@ -112,10 +129,24 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/ambassadors');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+    // CSRF validation
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const session = await auth();
     if (!session?.user || !['OWNER'].includes(session.user.role || '')) {
       return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });

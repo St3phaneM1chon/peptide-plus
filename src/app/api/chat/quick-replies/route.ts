@@ -10,6 +10,8 @@ import { prisma } from '@/lib/db';
 import { UserRole } from '@/types';
 import { z } from 'zod';
 import { stripHtml, stripControlChars } from '@/lib/sanitize';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
 import { logger } from '@/lib/logger';
 
 const quickReplySchema = z.object({
@@ -47,6 +49,20 @@ export async function GET() {
 // POST - Créer une réponse rapide
 export async function POST(request: NextRequest) {
   try {
+    // SECURITY: Rate limiting + CSRF
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/chat/quick-replies');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const session = await auth();
 
     if (!session?.user) {
