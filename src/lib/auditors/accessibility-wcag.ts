@@ -140,11 +140,18 @@ export default class AccessibilityWcagAuditor extends BaseAuditor {
 
         // Check <input> elements for associated labels
         if (/<input\s/.test(line)) {
-          // Gather multi-line tag
+          // Gather multi-line tag (handle JSX with arrow functions and expressions containing >)
           let tagContent = '';
-          for (let j = i; j < Math.min(i + 5, lines.length); j++) {
-            tagContent += lines[j];
-            if (/\/>|>/.test(lines[j])) break;
+          let braceDepth = 0;
+          for (let j = i; j < Math.min(i + 8, lines.length); j++) {
+            const ln = lines[j];
+            for (let c = 0; c < ln.length; c++) {
+              if (ln[c] === '{') braceDepth++;
+              if (ln[c] === '}') braceDepth--;
+            }
+            tagContent += ln + ' ';
+            // Only consider tag closed when braces are balanced and we find /> or >
+            if (braceDepth <= 0 && (/\/>\s*$/.test(ln.trim()) || />\s*$/.test(ln.trim()))) break;
           }
 
           const hasLabel =
@@ -153,9 +160,17 @@ export default class AccessibilityWcagAuditor extends BaseAuditor {
             /id\s*=/.test(tagContent) || // May be linked via <label htmlFor>
             /placeholder\s*=/.test(tagContent); // Placeholder is not ideal but provides some context
 
+          // Check if a <label> element exists in the 1-3 lines before the input (visual association)
+          const prevLines = lines.slice(Math.max(0, i - 3), i).join(' ');
+          const hasAdjacentLabel = /<label[\s>]/.test(prevLines);
+
+          // Check if input is inside a wrapping <label> element
+          const hasWrappingLabel = /<label[\s>]/.test(lines.slice(Math.max(0, i - 5), i).join(' ')) &&
+            !/<\/label>/.test(lines.slice(Math.max(0, i - 5), i).join(' '));
+
           const hasType = /type\s*=\s*["']hidden["']/.test(tagContent);
 
-          if (!hasLabel && !hasType) {
+          if (!hasLabel && !hasType && !hasAdjacentLabel && !hasWrappingLabel) {
             issues.push({
               file,
               line: i + 1,
@@ -187,9 +202,15 @@ export default class AccessibilityWcagAuditor extends BaseAuditor {
         // Check <select> elements have associated labels
         if (/<select\s/.test(line)) {
           let tagContent = '';
-          for (let j = i; j < Math.min(i + 5, lines.length); j++) {
-            tagContent += lines[j];
-            if (/>/.test(lines[j])) break;
+          let braceDepth2 = 0;
+          for (let j = i; j < Math.min(i + 8, lines.length); j++) {
+            const ln = lines[j];
+            for (let c = 0; c < ln.length; c++) {
+              if (ln[c] === '{') braceDepth2++;
+              if (ln[c] === '}') braceDepth2--;
+            }
+            tagContent += ln + ' ';
+            if (braceDepth2 <= 0 && />\s*$/.test(ln.trim())) break;
           }
 
           const hasLabel =

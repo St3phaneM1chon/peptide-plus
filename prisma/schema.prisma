@@ -181,6 +181,7 @@ model AmbassadorPayout {
   ambassador    Ambassador             @relation(fields: [ambassadorId], references: [id], onDelete: Cascade)
 
   @@index([ambassadorId])
+  @@index([processedById])
 }
 
 model Article {
@@ -267,6 +268,7 @@ model BankAccount {
   updatedAt      DateTime          @updatedAt
   transactions   BankTransaction[]
 
+  @@index([chartAccountId])
   @@index([type])
 }
 
@@ -296,6 +298,7 @@ model BankTransaction {
   @@index([deletedAt])
   @@index([reconciliationStatus, date]) // Phase 9: Composite for unreconciled transaction queries
   @@index([bankAccountId, date]) // Phase 9: Composite for bank statement queries
+  @@index([matchedEntryId])
 }
 
 model BlogPost {
@@ -410,6 +413,8 @@ model BundleItem {
   product   Product @relation(fields: [productId], references: [id])
 
   @@index([bundleId])
+  @@index([formatId])
+  @@index([productId])
 }
 
 model Cart {
@@ -423,6 +428,7 @@ model Cart {
   updatedAt    DateTime   @updatedAt
   items        CartItem[]
 
+  @@index([promoCodeId])
   @@index([sessionId])
   @@index([userId])
 }
@@ -705,6 +711,7 @@ model CreditNote {
 
   @@index([createdAt])
   @@index([invoiceId])
+  @@index([journalEntryId])
   @@index([orderId])
   @@index([status])
   @@index([deletedAt])
@@ -762,6 +769,7 @@ model CustomerInvoice {
 
   @@index([customerId])
   @@index([dueDate])
+  @@index([journalEntryId])
   @@index([orderId])
   @@index([status])
   @@index([deletedAt])
@@ -783,6 +791,7 @@ model CustomerInvoiceItem {
   invoice     CustomerInvoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
 
   @@index([invoiceId])
+  @@index([productId])
 }
 
 model Discount {
@@ -818,6 +827,7 @@ model EmailLog {
   sentAt     DateTime @default(now())
 
   @@index([sentAt])
+  @@index([templateId])
   @@index([to])
   @@index([to, status])
   @@index([messageId])
@@ -838,6 +848,7 @@ model EmailBounce {
 
   @@index([email])
   @@index([email, bounceType])
+  @@index([messageId])
 }
 
 // Faille #12: Persistent suppression list for hard-bounced/complained emails
@@ -916,6 +927,8 @@ model Expense {
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
+  @@index([accountId])
+  @@index([journalEntryId])
   @@index([status])
   @@index([category])
   @@index([date])
@@ -976,6 +989,7 @@ model GiftCard {
 
   @@index([code])
   @@index([purchaserId])
+  @@index([redeemedBy])
 }
 
 model Grade {
@@ -1105,7 +1119,9 @@ model InventoryReservation {
 
   @@index([cartId])
   @@index([expiresAt])
+  @@index([formatId])
   @@index([orderId])
+  @@index([productId])
   @@index([status])
 }
 
@@ -1126,6 +1142,7 @@ model InventoryTransaction {
   @@index([createdAt])
   @@index([orderId])
   @@index([productId, formatId])
+  @@index([supplierInvoiceId])
   @@index([type])
 }
 
@@ -1199,6 +1216,8 @@ model LoyaltyTransaction {
 
   @@index([createdAt])
   @@index([expiresAt])
+  @@index([orderId])
+  @@index([referralId])
   @@index([type])
   @@index([userId])
 }
@@ -1397,6 +1416,7 @@ model Order {
   returnRequests        ReturnRequest[]
 
   @@index([createdAt])
+  @@index([currencyId])
   @@index([orderNumber])
   @@index([parentOrderId])
   @@index([paymentStatus])
@@ -1825,6 +1845,7 @@ model PromoCodeUsage {
   usedAt      DateTime  @default(now())
   promoCode   PromoCode @relation(fields: [promoCodeId], references: [id], onDelete: Cascade)
 
+  @@index([orderId])
   @@index([promoCodeId])
   @@index([usedAt])
   @@index([userId])
@@ -1883,8 +1904,11 @@ model PurchaseOrder {
   updatedAt         DateTime            @updatedAt
   items             PurchaseOrderItem[]
 
+  @@index([approvedBy])
   @@index([department])
+  @@index([requestedBy])
   @@index([status])
+  @@index([supplierInvoiceId])
   @@index([supplierId])
 }
 
@@ -1902,6 +1926,8 @@ model PurchaseOrderItem {
   createdAt       DateTime      @default(now())
   purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
 
+  @@index([formatId])
+  @@index([productId])
   @@index([purchaseOrderId])
 }
 
@@ -1988,6 +2014,7 @@ model ReturnRequest {
   order       Order    @relation(fields: [orderId], references: [id])
   user        User     @relation(fields: [userId], references: [id])
 
+  @@index([orderItemId])
   @@index([orderId])
   @@index([status])
   @@index([userId])
@@ -2262,6 +2289,7 @@ model SupplierInvoice {
 
   @@index([dueDate])
   @@index([invoiceDate])
+  @@index([journalEntryId])
   @@index([status])
   @@index([supplierId])
   @@index([deletedAt])
@@ -2372,6 +2400,7 @@ model UatTestCase {
 
   @@index([runId])
   @@index([scenarioCode])
+  @@index([orderId])
 }
 
 model UatTestError {
@@ -2616,6 +2645,8 @@ model WebhookEvent {
   createdAt      DateTime           @default(now())
 
   @@index([eventId])
+  @@index([journalEntryId])
+  @@index([orderId])
   @@index([provider])
   @@index([status])
 }
@@ -3150,6 +3181,8 @@ model FixedAsset {
   depreciationEntries     FixedAssetDepreciation[]
 
   @@index([ccaClass])
+  @@index([depreciationAccountId])
+  @@index([expenseAccountId])
   @@index([status])
   @@index([assetAccountId])
   @@index([acquisitionDate])
@@ -3175,6 +3208,7 @@ model FixedAssetDepreciation {
 
   @@unique([fixedAssetId, fiscalYear])
   @@index([fiscalYear])
+  @@index([journalEntryId])
 }
 
 // =============================================
@@ -3214,6 +3248,7 @@ model FiscalCalendarEvent {
   @@index([status])
   @@index([category])
   @@index([authority])
+  @@index([templateId])
 }
 
 // =============================================
@@ -3275,6 +3310,7 @@ model BankRule {
   updatedAt DateTime @updatedAt
 
   @@index([isActive, priority])
+  @@index([accountId])
 }
 
 // =============================================
@@ -3375,6 +3411,7 @@ model ConversationNote {
   conversation   EmailConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   author         User              @relation(fields: [authorId], references: [id])
 
+  @@index([authorId])
   @@index([conversationId])
 }
 
@@ -3387,6 +3424,7 @@ model ConversationActivity {
   createdAt      DateTime          @default(now())
   conversation   EmailConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 
+  @@index([actorId])
   @@index([conversationId])
   @@index([createdAt])
 }
@@ -3634,6 +3672,7 @@ model MailingListSubscriber {
   @@index([status])
   @@index([confirmToken])
   @@index([unsubscribeToken])
+  @@index([userId])
   @@index([createdAt])
 }
 

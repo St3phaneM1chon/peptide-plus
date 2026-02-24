@@ -198,17 +198,15 @@ export default class ApiLeakageAuditor extends BaseAuditor {
       );
     } else {
       const percentage = Math.round((queriesWithoutSelect / totalQueries) * 100);
-      for (const issue of filesWithIssues) {
-        results.push(
-          this.fail('leak-02', 'MEDIUM', 'Prisma query without select in API route', `${queriesWithoutSelect}/${totalQueries} (${percentage}%) Prisma queries in API routes return full objects without select. This may expose internal fields.`, {
-            filePath: issue.file,
-            lineNumber: issue.lineNum,
-            codeSnippet: issue.snippet,
+      const topFiles = filesWithIssues.slice(0, 5).map(i => `${i.file}:${i.lineNum}`).join(', ');
+      results.push(
+        this.fail('leak-02', 'MEDIUM', 'Prisma queries without select in API routes',
+          `${queriesWithoutSelect}/${totalQueries} (${percentage}%) Prisma queries in API routes return full objects without select. Top files: ${topFiles}`,
+          {
             recommendation:
-              'Use `select: { ... }` in Prisma queries to return only needed fields. This also improves performance by reducing data transfer.',
+              'Use `select: { ... }` in Prisma queries to return only needed fields. This improves security and performance.',
           })
-        );
-      }
+      );
     }
 
     return results;

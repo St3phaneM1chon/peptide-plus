@@ -196,13 +196,13 @@ export default function DeclarationTpsTvqPage() {
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.accounting.declaration.startDate')}</label>
             <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)}
-              aria-label="Declaration period start date"
+              aria-label="Date de début de la période de déclaration"
               className="h-9 px-3 rounded-lg border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-500" />
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.accounting.declaration.endDate')}</label>
             <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)}
-              aria-label="Declaration period end date"
+              aria-label="Date de fin de la période de déclaration"
               className="h-9 px-3 rounded-lg border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-500" />
           </div>
           <div>

@@ -237,17 +237,17 @@ export default class ArchitectureQualityAuditor extends BaseAuditor {
         );
       }
 
-      // Report specific inconsistent routes
-      for (const item of inconsistentRoutes.slice(0, 5)) {
+      // Report inconsistent routes as summary
+      if (inconsistentRoutes.length > 0) {
+        const topFiles = inconsistentRoutes.slice(0, 5).map(i => this.relativePath(i.file)).join(', ');
         results.push(
           this.fail(
             'arch-02',
             'LOW',
-            'API route missing standard patterns',
-            `Missing: ${item.issues.join(', ')}`,
+            'API routes missing standard patterns',
+            `${inconsistentRoutes.length} routes missing patterns (no try/catch). Top files: ${topFiles}`,
             {
-              filePath: this.relativePath(item.file),
-              recommendation: 'Add missing patterns to match the project standard',
+              recommendation: 'Add withApiHandler wrapper or try/catch to all API routes for consistent error handling',
             }
           )
         );
@@ -455,36 +455,21 @@ export default class ArchitectureQualityAuditor extends BaseAuditor {
     if (unusedExports.length === 0) {
       results.push(this.pass('arch-04', 'No files with significant unused exports detected'));
     } else {
-      for (const item of unusedExports.slice(0, 10)) {
-        results.push(
-          this.fail(
-            'arch-04',
-            'LOW',
-            'Potentially unused exports',
-            `${item.exports.length} export(s) appear unused: ${item.exports.slice(0, 5).join(', ')}${item.exports.length > 5 ? '...' : ''}`,
-            {
-              filePath: this.relativePath(item.file),
-              recommendation:
-                'Remove unused exports to reduce bundle size. Verify they are not used via dynamic imports or re-exports before removing.',
-            }
-          )
-        );
-      }
+      const totalUnused = unusedExports.reduce((sum, item) => sum + item.exports.length, 0);
 
-      if (unusedExports.length > 10) {
-        const totalUnused = unusedExports.reduce((sum, item) => sum + item.exports.length, 0);
-        results.push(
-          this.fail(
-            'arch-04',
-            'INFO',
-            'Unused exports summary',
-            `${totalUnused} potentially unused exports across ${unusedExports.length} files. Showing first 10 files.`,
-            {
-              recommendation: 'Run a dead-code analysis tool (e.g., ts-prune) for comprehensive results',
-            }
-          )
-        );
-      }
+      // Consolidate into a single summary finding (LOW - these may be used via dynamic imports, barrel files, or external consumers)
+      results.push(
+        this.fail(
+          'arch-04',
+          'LOW',
+          'Potentially unused exports summary',
+          `${totalUnused} exports across ${unusedExports.length} files appear unused. Top files: ${unusedExports.slice(0, 5).map(i => this.relativePath(i.file)).join(', ')}`,
+          {
+            recommendation:
+              'Run a dead-code analysis tool (e.g., ts-prune) for comprehensive results. Verify via dynamic imports or re-exports before removing.',
+          }
+        )
+      );
     }
 
     return results;

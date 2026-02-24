@@ -247,10 +247,11 @@ export default class ErrorObservabilityAuditor extends BaseAuditor {
       results.push(this.pass('err-02', `All ${totalLogCalls} error/warn log calls include contextual info`));
     } else {
       const ratio = ((logCallsWithContext / totalLogCalls) * 100).toFixed(0);
+      const severity = Number(ratio) >= 80 ? 'LOW' : 'MEDIUM';
       results.push(
         this.fail(
           'err-02',
-          'MEDIUM',
+          severity as 'MEDIUM' | 'LOW',
           'Log calls missing contextual info',
           `${logCallsWithoutContext} of ${totalLogCalls} error/warn log calls lack contextual identifiers (userId, requestId, etc.). Coverage: ${ratio}%`,
           {
@@ -259,23 +260,6 @@ export default class ErrorObservabilityAuditor extends BaseAuditor {
           }
         )
       );
-
-      // Report up to 5 specific instances
-      for (const item of missingContext.slice(0, 5)) {
-        results.push(
-          this.fail(
-            'err-02',
-            'LOW',
-            'Error log without context',
-            `Log call lacks identifying context: ${item.logCall}`,
-            {
-              filePath: this.relativePath(item.file),
-              lineNumber: item.line,
-              recommendation: 'Add contextual data: console.error("Operation failed", { userId, orderId, error })',
-            }
-          )
-        );
-      }
     }
 
     return results;

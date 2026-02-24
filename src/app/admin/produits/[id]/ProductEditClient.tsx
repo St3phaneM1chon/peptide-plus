@@ -655,15 +655,15 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
                     </div>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={formData.isFeatured} onChange={(e) => setFormData({ ...formData, isFeatured: e.target.checked })} className="w-4 h-4 text-sky-500 border-neutral-300 rounded" />
+                    <input type="checkbox" aria-label="Produit en vedette" checked={formData.isFeatured} onChange={(e) => setFormData({ ...formData, isFeatured: e.target.checked })} className="w-4 h-4 text-sky-500 border-neutral-300 rounded" />
                     <span className="text-sm text-neutral-700">{t('admin.productForm.featured')}</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={formData.isNew} onChange={(e) => setFormData({ ...formData, isNew: e.target.checked })} className="w-4 h-4 text-sky-500 border-neutral-300 rounded" />
+                    <input type="checkbox" aria-label="Nouveau produit" checked={formData.isNew} onChange={(e) => setFormData({ ...formData, isNew: e.target.checked })} className="w-4 h-4 text-sky-500 border-neutral-300 rounded" />
                     <span className="text-sm text-neutral-700">{t('admin.productForm.new')}</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={formData.isBestseller} onChange={(e) => setFormData({ ...formData, isBestseller: e.target.checked })} className="w-4 h-4 text-sky-500 border-neutral-300 rounded" />
+                    <input type="checkbox" aria-label="Meilleure vente" checked={formData.isBestseller} onChange={(e) => setFormData({ ...formData, isBestseller: e.target.checked })} className="w-4 h-4 text-sky-500 border-neutral-300 rounded" />
                     <span className="text-sm text-neutral-700">{t('admin.productForm.bestseller')}</span>
                   </label>
                 </div>

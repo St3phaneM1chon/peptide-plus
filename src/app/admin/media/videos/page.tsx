@@ -179,8 +179,8 @@ export default function MediaVideosPage() {
           </div>
           <textarea className="w-full border border-slate-300 rounded px-3 py-2 text-sm" placeholder={t('admin.media.descriptionPlaceholder') || 'Description'} rows={2} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
           <div className="flex items-center gap-4">
-            <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.isPublished} onChange={e => setForm({ ...form, isPublished: e.target.checked })} /> {t('admin.media.published') || 'Published'}</label>
-            <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.isFeatured} onChange={e => setForm({ ...form, isFeatured: e.target.checked })} /> {t('admin.media.featured') || 'Featured'}</label>
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" aria-label="Publié" checked={form.isPublished} onChange={e => setForm({ ...form, isPublished: e.target.checked })} /> {t('admin.media.published') || 'Published'}</label>
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" aria-label="En vedette" checked={form.isFeatured} onChange={e => setForm({ ...form, isFeatured: e.target.checked })} /> {t('admin.media.featured') || 'Featured'}</label>
             <button type="submit" disabled={saving} className="ml-auto px-4 py-2 bg-sky-600 text-white rounded text-sm hover:bg-sky-700 disabled:opacity-50">
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : t('common.save')}
             </button>

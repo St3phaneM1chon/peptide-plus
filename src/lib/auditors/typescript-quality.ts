@@ -245,17 +245,14 @@ export default class TypescriptQualityAuditor extends BaseAuditor {
       const anyIssues = issues.filter((i) => i.type === 'any');
       const untypedIssues = issues.filter((i) => i.type === 'untyped');
 
-      // Report up to 10 worst offenders
-      const reportItems = issues.slice(0, 10);
-      for (const item of reportItems) {
+      // Report `catch(e: any)` individually (MEDIUM - actively bypasses type safety)
+      for (const item of anyIssues.slice(0, 5)) {
         results.push(
           this.fail(
             'ts-03',
-            item.type === 'any' ? 'MEDIUM' : 'LOW',
-            item.type === 'any' ? 'Catch block uses `any` error type' : 'Catch block has untyped error parameter',
-            item.type === 'any'
-              ? 'Using `catch(e: any)` bypasses type safety. Use `catch(e: unknown)` and narrow the type.'
-              : 'Catch parameter has no explicit type. Use `catch(e: unknown)` for type safety.',
+            'MEDIUM',
+            'Catch block uses `any` error type',
+            'Using `catch(e: any)` bypasses type safety. Use `catch(e: unknown)` and narrow the type.',
             {
               filePath: this.relativePath(item.file),
               lineNumber: item.line,
@@ -267,15 +264,30 @@ export default class TypescriptQualityAuditor extends BaseAuditor {
         );
       }
 
-      if (issues.length > 10) {
+      // Consolidate untyped catches into a single summary (LOW - TypeScript default, not dangerous)
+      if (untypedIssues.length > 0) {
+        results.push(
+          this.fail(
+            'ts-03',
+            'LOW',
+            'Untyped catch blocks summary',
+            `${untypedIssues.length} catch blocks use implicit \`any\` typing (catch(e) without explicit type). This is TypeScript's default behavior.`,
+            {
+              recommendation: 'Run a codemod to replace all catch(e) with catch(e: unknown). Low priority since TypeScript treats these as implicit unknown in strict mode.',
+            }
+          )
+        );
+      }
+
+      if (anyIssues.length > 5) {
         results.push(
           this.fail(
             'ts-03',
             'INFO',
-            'Catch typing summary',
-            `Total: ${issues.length} catch blocks need fixing (${anyIssues.length} with \`any\`, ${untypedIssues.length} untyped). Showing first 10.`,
+            'Explicit any in catch summary',
+            `${anyIssues.length} catch blocks explicitly use \`: any\`. Showing first 5.`,
             {
-              recommendation: 'Run a codemod to replace all catch(e) with catch(e: unknown)',
+              recommendation: 'Replace `catch(e: any)` with `catch(e: unknown)` across the codebase',
             }
           )
         );
@@ -340,40 +352,20 @@ export default class TypescriptQualityAuditor extends BaseAuditor {
         this.pass('ts-04', `All ${totalAssertions} type assertions are documented with comments`)
       );
     } else {
-      // Report summary
+      // Report a single summary finding (LOW severity - documentation concern, not a bug)
+      const uniqueFiles = new Set(undocumentedAssertions.map(a => this.relativePath(a.file)));
       results.push(
         this.fail(
           'ts-04',
           'LOW',
-          'Undocumented type assertions found',
-          `${undocumentedAssertions.length} of ${totalAssertions} type assertions lack explanatory comments`,
+          'Undocumented type assertions summary',
+          `${undocumentedAssertions.length} of ${totalAssertions} type assertions across ${uniqueFiles.size} files lack explanatory comments.`,
           {
             recommendation:
-              'Add a comment explaining why the type assertion is needed (e.g., // Safe: validated by zod schema above)',
+              'Add comments explaining why type assertions are safe (e.g., // Safe: validated by zod schema above). Prioritize assertions in critical paths.',
           }
         )
       );
-
-      // Report up to 8 specific instances
-      const reportItems = undocumentedAssertions.slice(0, 8);
-      for (const item of reportItems) {
-        const content = this.readFile(item.file);
-        results.push(
-          this.fail(
-            'ts-04',
-            'LOW',
-            'Type assertion without comment',
-            `\`${item.assertion}\` used without explanatory comment`,
-            {
-              filePath: this.relativePath(item.file),
-              lineNumber: item.line,
-              codeSnippet: content ? this.getSnippet(content, item.line) : undefined,
-              recommendation:
-                'Add a comment on the same line or line above explaining why this assertion is safe',
-            }
-          )
-        );
-      }
     }
 
     return results;

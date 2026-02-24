@@ -150,6 +150,23 @@ export default class DbPerformanceAuditor extends BaseAuditor {
 
     if (!foundIssue) {
       results.push(this.pass('perf-01', 'No N+1 query patterns detected'));
+    } else {
+      // Consolidate: separate HIGH (user-facing) from MEDIUM (batch/cron/import)
+      const highFindings = results.filter(r => !r.passed && r.checkId === 'perf-01' && r.severity === 'HIGH');
+      const mediumFindings = results.filter(r => !r.passed && r.checkId === 'perf-01' && r.severity === 'MEDIUM');
+
+      // Keep individual HIGH findings (user-facing latency) but consolidate MEDIUM into summary
+      if (mediumFindings.length > 3) {
+        // Remove individual MEDIUM findings, replace with summary
+        const filtered = results.filter(r => !(r.checkId === 'perf-01' && !r.passed && r.severity === 'MEDIUM'));
+        results.length = 0;
+        results.push(...filtered);
+        results.push(
+          this.fail('perf-01', 'LOW', 'N+1 patterns in batch/cron/import routes (summary)',
+            `${mediumFindings.length} N+1 patterns in batch processing routes (imports, cron jobs, sync, campaigns). These are inherently sequential and not user-facing latency.`,
+            { recommendation: 'Consider batch optimization for high-volume routes. Low priority since these are background/admin operations.' })
+        );
+      }
     }
 
     return results;
@@ -186,6 +203,12 @@ export default class DbPerformanceAuditor extends BaseAuditor {
 
       while ((fkMatch = fkFieldPattern.exec(block)) !== null) {
         const fieldName = fkMatch[1];
+
+        // Skip polymorphic entityId fields (not true FKs - used with entityType discriminator)
+        if (fieldName === 'entityId') continue;
+
+        // Skip external service IDs (Stripe, PayPal, etc) - not DB foreign keys
+        if (/^(stripe|paypal|square|shopify)\w+Id$/i.test(fieldName)) continue;
 
         // Check if there is an @@index that covers this field
         const indexPatterns = [

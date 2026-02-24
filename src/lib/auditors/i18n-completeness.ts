@@ -181,25 +181,28 @@ export default class I18nCompletenessAuditor extends BaseAuditor {
     if (issues.length === 0) {
       results.push(this.pass('i18n-02', 'No obvious hardcoded strings found in components'));
     } else {
-      // Report up to 10 findings
-      const reported = issues.slice(0, 10);
-      for (const issue of reported) {
+      // Group by file and report as summary
+      const uniqueFiles = new Set(issues.map(i => i.file));
+
+      // Report a consolidated summary
+      const topFiles = [...uniqueFiles].slice(0, 5).join(', ');
+      results.push(
+        this.fail('i18n-02', 'MEDIUM', 'Hardcoded strings in components',
+          `${issues.length} potential hardcoded strings across ${uniqueFiles.size} files. Top files: ${topFiles}`,
+          {
+            recommendation:
+              'Replace hardcoded text with t() calls. Add keys to all 22 locale files. Run: grep -rn \'>[A-Z][a-z]\\+ [a-z]\\+<\' src/app/ to find more.',
+          })
+      );
+
+      // Report up to 3 specific high-impact examples
+      for (const issue of issues.slice(0, 3)) {
         results.push(
-          this.fail('i18n-02', 'MEDIUM', 'Hardcoded string in component', `Possible hardcoded text "${issue.text}" in ${issue.file}:${issue.lineNum}. User-facing text should use t() for translation.`, {
+          this.fail('i18n-02', 'LOW', 'Hardcoded string example', `"${issue.text}" in ${issue.file}:${issue.lineNum}`, {
             filePath: issue.file,
             lineNumber: issue.lineNum,
             codeSnippet: issue.snippet,
-            recommendation:
-              'Replace hardcoded text with t() calls. Add the key to all 22 locale files. Example: replace "Submit" with {t(\'common.submit\')}.',
-          })
-        );
-      }
-
-      if (issues.length > 10) {
-        results.push(
-          this.fail('i18n-02', 'MEDIUM', `${issues.length - 10} more hardcoded strings found`, `Total ${issues.length} potential hardcoded strings across components. Only the first 10 are shown above.`, {
-            recommendation:
-              'Run a thorough i18n audit to replace all hardcoded strings with t() calls.',
+            recommendation: 'Replace with t() call and add key to locale files.',
           })
         );
       }
@@ -282,17 +285,15 @@ export default class I18nCompletenessAuditor extends BaseAuditor {
         this.pass('i18n-03', 'No date formatting code found')
       );
     } else if (issues.length > 0) {
-      for (const issue of issues) {
-        results.push(
-          this.fail('i18n-03', 'MEDIUM', 'Date formatted without locale', `Date formatting at ${issue.file}:${issue.lineNum} does not pass locale parameter. Dates will display in the browser's default locale, not the user's selected language.`, {
-            filePath: issue.file,
-            lineNumber: issue.lineNum,
-            codeSnippet: issue.snippet,
+      const uniqueFiles = new Set(issues.map(i => i.file));
+      results.push(
+        this.fail('i18n-03', 'MEDIUM', 'Date formatting without locale',
+          `${issues.length} date formatting calls across ${uniqueFiles.size} files don't pass locale parameter. Dates display in browser's default locale instead of user's language.`,
+          {
             recommendation:
-              'Pass the current locale to date formatting functions: `.toLocaleDateString(locale)` or `new Intl.DateTimeFormat(locale).format(date)`. Get locale from useI18n() or useTranslations().',
+              'Pass locale to date formatting: `.toLocaleDateString(locale)` or `new Intl.DateTimeFormat(locale).format(date)`. Get locale from useI18n().',
           })
-        );
-      }
+      );
     } else if (hasLocaleDate) {
       results.push(
         this.pass('i18n-03', 'Date formatting uses locale parameter')
@@ -372,17 +373,15 @@ export default class I18nCompletenessAuditor extends BaseAuditor {
         })
       );
     } else if (issues.length > 0) {
-      for (const issue of issues) {
-        results.push(
-          this.fail('i18n-04', 'MEDIUM', 'Currency formatted without locale', `Currency formatting at ${issue.file}:${issue.lineNum} does not use the user's locale. Prices will display in a fixed format regardless of the user's language.`, {
-            filePath: issue.file,
-            lineNumber: issue.lineNum,
-            codeSnippet: issue.snippet,
+      const uniqueFiles = new Set(issues.map(i => i.file));
+      results.push(
+        this.fail('i18n-04', 'MEDIUM', 'Currency formatting without locale',
+          `${issues.length} currency formatting calls across ${uniqueFiles.size} files don't use user's locale. Prices display in fixed format regardless of language.`,
+          {
             recommendation:
-              'Use `new Intl.NumberFormat(locale, { style: "currency", currency: "CAD" }).format(amount)` with the current locale from useI18n() or useTranslations().',
+              'Use `new Intl.NumberFormat(locale, { style: "currency", currency: "CAD" }).format(amount)` with locale from useI18n().',
           })
-        );
-      }
+      );
     } else if (hasLocaleCurrency) {
       results.push(
         this.pass('i18n-04', 'Currency formatting uses locale parameter')

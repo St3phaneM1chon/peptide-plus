@@ -283,14 +283,14 @@ export default function NavigateurPage() {
             <Input name="subtitle" defaultValue={(editingItem as { subtitle?: string | null })?.subtitle ?? ''} />
           </FormField>
           <FormField label={t('admin.webNavigator.fieldIcon')}>
-            <select name="icon" defaultValue={(editingItem as { icon?: string | null })?.icon ?? ''} className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm">
+            <select name="icon" aria-label="Icône" defaultValue={(editingItem as { icon?: string | null })?.icon ?? ''} className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm">
               <option value="">—</option>
               {availableIcons.map(ic => <option key={ic} value={ic}>{ic}</option>)}
             </select>
           </FormField>
           {modalMode === 'section' && (
             <FormField label="Rail ID">
-              <select name="railId" defaultValue={(editingItem as NavSection)?.railId ?? 'system'} className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm">
+              <select name="railId" aria-label="Rail ID" defaultValue={(editingItem as NavSection)?.railId ?? 'system'} className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm">
                 {['dashboard','commerce','catalog','marketing','community','loyalty','emails','accounting','system'].map(r => (
                   <option key={r} value={r}>{r}</option>
                 ))}
@@ -303,7 +303,7 @@ export default function NavigateurPage() {
                 <Input name="url" type="url" required defaultValue={(editingItem as NavPage)?.url ?? ''} placeholder="https://..." />
               </FormField>
               <label className="flex items-center gap-2 text-sm text-slate-700">
-                <input type="checkbox" name="openInNewTab" defaultChecked={(editingItem as NavPage)?.openInNewTab ?? false} className="rounded border-slate-300" />
+                <input type="checkbox" name="openInNewTab" aria-label="Ouvrir dans un nouvel onglet" defaultChecked={(editingItem as NavPage)?.openInNewTab ?? false} className="rounded border-slate-300" />
                 {t('admin.webNavigator.openInNewTabLabel')}
               </label>
             </>
