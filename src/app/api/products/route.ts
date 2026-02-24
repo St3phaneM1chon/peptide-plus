@@ -144,71 +144,76 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    let products = await prisma.product.findMany({
-      where,
-      select: {
-        id: true,
-        name: true,
-        subtitle: true,
-        slug: true,
-        shortDescription: true,
-        description: true,
-        productType: true,
-        price: true,
-        compareAtPrice: true,
-        imageUrl: true,
-        videoUrl: true,
-        categoryId: true,
-        isFeatured: true,
-        isActive: true,
-        isNew: true,
-        isBestseller: true,
-        sku: true,
-        manufacturer: true,
-        origin: true,
-        purity: true,
-        tags: true,
-        averageRating: true,
-        reviewCount: true,
-        metaTitle: true,
-        metaDescription: true,
-        createdAt: true,
-        updatedAt: true,
-        category: {
-          select: { id: true, name: true, slug: true, parentId: true, parent: { select: { id: true, name: true, slug: true } } },
-        },
-        // PERF 89: For list view, only fetch the primary image to reduce payload for large catalogs
-        images: {
-          orderBy: { sortOrder: 'asc' },
-          take: 1,
-          select: { id: true, url: true, alt: true, sortOrder: true, isPrimary: true },
-        },
-        formats: {
-          where: { isActive: true },
-          orderBy: { sortOrder: 'asc' },
-          select: {
-            id: true,
-            name: true,
-            formatType: true,
-            price: true,
-            comparePrice: true,
-            sku: true,
-            inStock: true,
-            stockQuantity: true,
-            availability: true,
-            dosageMg: true,
-            volumeMl: true,
-            unitCount: true,
-            sortOrder: true,
-            isDefault: true,
-            isActive: true,
+    // CATALOGUE-ITEM-1: Run count in parallel with findMany for proper server-side pagination
+    const [productsRaw, totalCount] = await Promise.all([
+      prisma.product.findMany({
+        where,
+        select: {
+          id: true,
+          name: true,
+          subtitle: true,
+          slug: true,
+          shortDescription: true,
+          description: true,
+          productType: true,
+          price: true,
+          compareAtPrice: true,
+          imageUrl: true,
+          videoUrl: true,
+          categoryId: true,
+          isFeatured: true,
+          isActive: true,
+          isNew: true,
+          isBestseller: true,
+          sku: true,
+          manufacturer: true,
+          origin: true,
+          purity: true,
+          tags: true,
+          averageRating: true,
+          reviewCount: true,
+          metaTitle: true,
+          metaDescription: true,
+          createdAt: true,
+          updatedAt: true,
+          category: {
+            select: { id: true, name: true, slug: true, parentId: true, parent: { select: { id: true, name: true, slug: true } } },
+          },
+          // PERF 89: For list view, only fetch the primary image to reduce payload for large catalogs
+          images: {
+            orderBy: { sortOrder: 'asc' },
+            take: 1,
+            select: { id: true, url: true, alt: true, sortOrder: true, isPrimary: true },
+          },
+          formats: {
+            where: { isActive: true },
+            orderBy: { sortOrder: 'asc' },
+            select: {
+              id: true,
+              name: true,
+              formatType: true,
+              price: true,
+              comparePrice: true,
+              sku: true,
+              inStock: true,
+              stockQuantity: true,
+              availability: true,
+              dosageMg: true,
+              volumeMl: true,
+              unitCount: true,
+              sortOrder: true,
+              isDefault: true,
+              isActive: true,
+            },
           },
         },
-      },
-      orderBy: { createdAt: 'desc' },
-      skip: (page - 1) * limit,
-      take: limit,
-    });
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      prisma.product.count({ where }),
+    ]);
+    let products = productsRaw;
 
     // Apply translations if locale is not default
     if (isValidLocale(locale) && locale !== DB_SOURCE_LOCALE) {
@@ -292,8 +297,21 @@ export async function GET(request: NextRequest) {
       };
     }
 
+    // CATALOGUE-ITEM-1: Include pagination metadata so the client can render page controls
+    const totalPages = Math.ceil(totalCount / limit);
+    const pagination = {
+      page,
+      pageSize: limit,
+      total: totalCount,
+      totalPages,
+      hasNext: page < totalPages,
+      hasPrev: page > 1,
+    };
+
     // Item 3: ETag support for caching
-    const responseBody = facets ? { products, facets } : { products };
+    const responseBody = facets
+      ? { products, facets, pagination }
+      : { products, pagination };
     return withETag(responseBody, request, {
       cacheControl: 'public, s-maxage=300, stale-while-revalidate=600',
     });

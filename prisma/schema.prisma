@@ -501,6 +501,9 @@ model Category {
   products     Product[]
 
   @@index([parentId])
+  @@index([isActive])
+  @@index([name])
+  @@index([isActive, sortOrder])
   @@index([createdAt])
   @@index([updatedAt])
 }
