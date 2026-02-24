@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
  * Supporte: ?locale=fr pour contenu traduit
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
@@ -15,9 +15,8 @@ import { withTranslations, getTranslatedFieldsBatch, enqueue, DB_SOURCE_LOCALE }
 import { isValidLocale, defaultLocale } from '@/i18n/config';
 import { z } from 'zod';
 import { stripHtml, stripControlChars } from '@/lib/sanitize';
-import { apiSuccess, apiError, apiPaginated, withETag, validateContentType, parseFieldSelection } from '@/lib/api-response';
+import { apiSuccess, apiError, withETag, validateContentType } from '@/lib/api-response';
 import { ErrorCode } from '@/lib/error-codes';
-import { createProductSchema as validatedCreateProductSchema } from '@/lib/validations/product';
 
 // BE-SEC-03: Zod validation schema for product creation (admin)
 const productImageSchema = z.object({
@@ -119,13 +118,14 @@ export async function GET(request: NextRequest) {
     }
 
     // Item 11: Optional field selection via ?fields=name,price,slug
-    const fieldSelect = parseFieldSelection(request, [
-      'id', 'name', 'subtitle', 'slug', 'shortDescription', 'description',
-      'productType', 'price', 'compareAtPrice', 'imageUrl', 'videoUrl',
-      'categoryId', 'isFeatured', 'isActive', 'createdAt', 'updatedAt',
-      'sku', 'barcode', 'weight', 'manufacturer', 'origin', 'purity',
-      'metaTitle', 'metaDescription',
-    ]);
+    // TODO: Use fieldSelect to filter response fields
+    // parseFieldSelection(request, [
+    //   'id', 'name', 'subtitle', 'slug', 'shortDescription', 'description',
+    //   'productType', 'price', 'compareAtPrice', 'imageUrl', 'videoUrl',
+    //   'categoryId', 'isFeatured', 'isActive', 'createdAt', 'updatedAt',
+    //   'sku', 'barcode', 'weight', 'manufacturer', 'origin', 'purity',
+    //   'metaTitle', 'metaDescription',
+    // ]);
 
     const where: Record<string, unknown> = {};
 

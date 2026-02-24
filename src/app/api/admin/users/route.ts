@@ -50,7 +50,7 @@ import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logger } from '@/lib/logger';
 
-export const GET = withAdminGuard(async (request: NextRequest, { session }) => {
+export const GET = withAdminGuard(async (request: NextRequest, _ctx) => {
   try {
     const { searchParams } = new URL(request.url);
     const role = searchParams.get('role');

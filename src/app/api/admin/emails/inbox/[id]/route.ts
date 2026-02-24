@@ -25,7 +25,7 @@ const updateConversationSchema = z.object({
 });
 
 export const GET = withAdminGuard(
-  async (request: NextRequest, { session: _session, params }: { session: unknown; params: { id: string } }) => {
+  async (_request: NextRequest, { session: _session, params }: { session: unknown; params: { id: string } }) => {
     try {
       const { id } = params;
 

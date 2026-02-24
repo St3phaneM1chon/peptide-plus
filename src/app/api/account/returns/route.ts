@@ -197,7 +197,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    const item = returnRequest.order.items.find((i) => i.id === orderItemId);
+    const item = returnRequest.order.items.find((i: { id: string }) => i.id === orderItemId);
 
     return NextResponse.json({
       id: returnRequest.id,

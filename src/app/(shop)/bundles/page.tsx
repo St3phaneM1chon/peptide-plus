@@ -23,7 +23,7 @@ interface Bundle {
 }
 
 export default function BundlesPage() {
-  const { t } = useI18n();
+  const { t: _t } = useI18n();
   const [bundles, setBundles] = useState<Bundle[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

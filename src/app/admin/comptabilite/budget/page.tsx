@@ -47,7 +47,7 @@ interface ApiBudget {
 }
 
 export default function BudgetPage() {
-  const { t, locale, formatCurrency } = useI18n();
+  const { t, locale: _locale, formatCurrency } = useI18n();
   const [selectedYear, setSelectedYear] = useState('2026');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

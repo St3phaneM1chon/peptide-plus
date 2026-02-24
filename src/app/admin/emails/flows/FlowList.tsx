@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import {
   GitBranch, Plus, Play, Pause, Trash2, Edit, Zap,
-  Mail, Clock, GitMerge, BarChart3,
+  Mail, Clock, GitMerge,
 } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';

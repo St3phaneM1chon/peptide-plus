@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
             // Determine if product/format is back in stock
             let isBackInStock = false;
             let formatName: string | undefined;
-            let price: number;
+            let price: number = 0;
             let imageUrl: string | undefined;
 
             if (alert.formatId) {

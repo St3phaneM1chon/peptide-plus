@@ -280,7 +280,7 @@ export const PUT = withAdminGuard(
 
       // Store timezone in stats JSON alongside scheduledAt
       if (timezone !== undefined) {
-        const existingStats = safeParseJson<Record<string, unknown>>(existing.stats, {});
+        const existingStats = safeParseJson<Record<string, unknown>>(existing.stats, {}) ?? {};
         if (timezone === null || timezone === '') {
           delete existingStats.timezone;
         } else {

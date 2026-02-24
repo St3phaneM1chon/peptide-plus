@@ -48,12 +48,9 @@ const MAX_RETRIES_DEFAULT = 3;
 const BACKOFF_BASE_MS = 1000; // 1 second
 
 // Priority multipliers (higher = processed first via separate queues)
-const PRIORITY_QUEUES: Record<string, string> = {
-  critical: 'critical',
-  high: 'high',
-  normal: 'normal',
-  low: 'low',
-};
+// const PRIORITY_QUEUES: Record<string, string> = {
+//   critical: 'critical', high: 'high', normal: 'normal', low: 'low',
+// };
 
 // In-memory fallback queue
 const memoryQueues = new Map<string, Job[]>();

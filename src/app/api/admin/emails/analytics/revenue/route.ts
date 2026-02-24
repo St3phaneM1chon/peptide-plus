@@ -40,7 +40,7 @@ export const GET = withAdminGuard(async (request, { session: _session }) => {
 
     // Parse stats and calculate revenue
     const campaignRevenue = campaigns.map(c => {
-      const stats = safeParseJson<Record<string, number>>(c.stats, {});
+      const stats = safeParseJson<Record<string, number>>(c.stats, {}) ?? {};
       return {
         id: c.id,
         name: c.name,
@@ -57,7 +57,7 @@ export const GET = withAdminGuard(async (request, { session: _session }) => {
     });
 
     const flowRevenue = flows.map(f => {
-      const stats = safeParseJson<Record<string, number>>(f.stats, {});
+      const stats = safeParseJson<Record<string, number>>(f.stats, {}) ?? {};
       return {
         id: f.id,
         name: f.name,

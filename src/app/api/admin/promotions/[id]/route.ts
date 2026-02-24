@@ -91,7 +91,7 @@ async function mapDiscountToPromotion(discount: {
 }
 
 // GET /api/admin/promotions/[id] - Get single promotion detail
-export const GET = withAdminGuard(async (_request, { session, params }) => {
+export const GET = withAdminGuard(async (_request, { params }) => {
   try {
     const id = params!.id;
 

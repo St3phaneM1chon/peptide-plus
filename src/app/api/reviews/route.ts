@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
  * POST: Submit a new review with optional images
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';

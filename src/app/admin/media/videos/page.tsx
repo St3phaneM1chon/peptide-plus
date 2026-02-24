@@ -5,7 +5,7 @@ import { useI18n } from '@/i18n/client';
 // FIX: F32 - TODO: Implement edit modal and delete button using Edit2/Trash2 icons
 //   connected to PATCH/DELETE /api/admin/videos/[id]
 import {
-  Video, Plus, Search, Eye, EyeOff, Star, Trash2, Edit2,
+  Video, Plus, Search, Eye, EyeOff, Star,
   Loader2, ChevronLeft, ChevronRight, ExternalLink,
 } from 'lucide-react';
 import { toast } from 'sonner';

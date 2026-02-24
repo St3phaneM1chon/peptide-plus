@@ -29,10 +29,8 @@ import {
   Play,
   StarIcon,
   FileText,
-  DollarSign,
   CalendarDays,
   Hash,
-  Download,
   ExternalLink,
 } from 'lucide-react';
 import { PageHeader } from '@/components/admin/PageHeader';

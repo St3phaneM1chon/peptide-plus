@@ -246,8 +246,6 @@ export const GET = withAdminGuard(async (request) => {
 
     if (method === 'quick') {
       const qmRates = QUICK_METHOD_RATES[province] || QUICK_METHOD_RATES['QC'];
-      const provinceTax = PROVINCIAL_TAX_RATES.find(p => p.provinceCode === province);
-
       // Total revenue including taxes
       const totalRevenueWithTax = round2(
         customerInvoices.reduce((s, inv) => s + Number(inv.total), 0)

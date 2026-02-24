@@ -38,18 +38,21 @@ async function getClientData(userId: string) {
 
   if (!company) return null;
 
+  type CompanyCustomer = (typeof company.customers)[number];
+  type CourseAccess = CompanyCustomer['customer']['courseAccess'][number];
+
   // Calculer les stats
   const totalStudents = company.customers.length;
   const activeStudents = company.customers.filter(
-    (c) => c.customer.courseAccess.some((a) => !a.completedAt)
+    (c: CompanyCustomer) => c.customer.courseAccess.some((a: CourseAccess) => !a.completedAt)
   ).length;
 
   const completedCourses = company.customers.reduce(
-    (acc, c) => acc + c.customer.courseAccess.filter((a) => a.completedAt).length,
+    (acc: number, c: CompanyCustomer) => acc + c.customer.courseAccess.filter((a: CourseAccess) => a.completedAt).length,
     0
   );
   const totalCourses = company.customers.reduce(
-    (acc, c) => acc + c.customer.courseAccess.length,
+    (acc: number, c: CompanyCustomer) => acc + c.customer.courseAccess.length,
     0
   );
 
@@ -215,7 +218,7 @@ export default async function ClientDashboard() {
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
-                      {cc.customer.courseAccess.some((a) => a.completedAt) && (
+                      {cc.customer.courseAccess.some((a: { completedAt: Date | null }) => a.completedAt) && (
                         <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">
                           Certifié
                         </span>

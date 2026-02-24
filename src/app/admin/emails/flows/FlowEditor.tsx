@@ -10,13 +10,11 @@ import ReactFlow, {
   useEdgesState,
   type Connection,
   type Node,
-  type Edge,
-  Panel,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import {
-  ArrowLeft, Save, Play, Pause, Plus,
-  Mail, Clock, GitMerge, Zap, MessageSquare, Bell,
+  ArrowLeft, Save, Play, Pause,
+  Mail, Clock, GitMerge, Zap, MessageSquare,
 } from 'lucide-react';
 import TriggerNode from './nodes/TriggerNode';
 import EmailNode from './nodes/EmailNode';
@@ -40,7 +38,7 @@ interface FlowEditorProps {
 }
 
 export default function FlowEditor({ flowId, onBack }: FlowEditorProps) {
-  const { t, locale } = useI18n();
+  const { t, locale: _locale } = useI18n();
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [flowName, setFlowName] = useState(t('admin.emails.flows.newWorkflow'));

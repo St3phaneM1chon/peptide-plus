@@ -9,7 +9,7 @@ import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { UserRole } from '@/types';
 import { logger } from '@/lib/logger';
-import { withTranslations, enqueue, DB_SOURCE_LOCALE } from '@/lib/translation';
+import { enqueue, DB_SOURCE_LOCALE } from '@/lib/translation';
 import { isValidLocale, defaultLocale } from '@/i18n/config';
 import { cacheGetOrSet, cacheInvalidateTag, CacheTags, CacheTTL } from '@/lib/cache';
 import { z } from 'zod';

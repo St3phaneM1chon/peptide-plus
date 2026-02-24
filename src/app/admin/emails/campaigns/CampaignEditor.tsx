@@ -15,7 +15,7 @@ interface CampaignEditorProps {
 }
 
 export default function CampaignEditor({ campaignId, onBack }: CampaignEditorProps) {
-  const { t, locale } = useI18n();
+  const { t, locale: _locale } = useI18n();
   const [name, setName] = useState('');
   const [subject, setSubject] = useState('');
   const [htmlContent, setHtmlContent] = useState('');

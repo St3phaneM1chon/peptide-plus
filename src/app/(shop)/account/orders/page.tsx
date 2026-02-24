@@ -1039,6 +1039,7 @@ export default function OrdersPage() {
             onDownload={() => generateInvoicePDF(viewingInvoice)}
             onPrint={printInvoice}
             t={t}
+            locale={locale}
           />
         )}
       </div>
@@ -1286,6 +1287,7 @@ function InvoiceModal({
   onDownload,
   onPrint,
   t,
+  locale,
 }: {
   order: Order;
   userEmail: string;
@@ -1294,6 +1296,7 @@ function InvoiceModal({
   onDownload: () => void;
   onPrint: () => void;
   t: (key: string) => string;
+  locale: string;
 }) {
   const currency = order.currency?.code || 'CAD';
   const formatMoney = (amount: number) => `$${Number(amount).toFixed(2)} ${currency}`;

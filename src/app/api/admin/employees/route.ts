@@ -14,7 +14,7 @@ import { inviteEmployeeSchema } from '@/lib/validations/employee';
 import { logger } from '@/lib/logger';
 
 // GET /api/admin/employees - List employees and owners
-export const GET = withAdminGuard(async (request: NextRequest, { session }) => {
+export const GET = withAdminGuard(async (request: NextRequest, _ctx) => {
   try {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get('search');

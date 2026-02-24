@@ -13,7 +13,6 @@ import { withTranslations, getTranslatedFieldsBatch, DB_SOURCE_LOCALE } from '@/
 import { defaultLocale } from '@/i18n/config';
 import { cacheGetOrSet, cacheInvalidateTag, CacheKeys } from '@/lib/cache';
 import { logSearch } from '@/lib/search-analytics';
-import { createHash } from 'crypto';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 
 export async function GET(request: NextRequest) {
@@ -43,9 +42,10 @@ export async function GET(request: NextRequest) {
     const locale = searchParams.get('locale') || defaultLocale;
 
     // #61: Generate cache key from all search params
-    const cacheKeyData = JSON.stringify({ q, category, minPrice, maxPrice, inStock, purity, sort, page, limit, locale });
-    const cacheHash = createHash('md5').update(cacheKeyData).digest('hex');
-    const cacheKey = `search:${cacheHash}`;
+    // #61: Cache key for future Redis cache implementation
+    // const cacheKeyData = JSON.stringify({ q, category, minPrice, maxPrice, inStock, purity, sort, page, limit, locale });
+    // const cacheHash = createHash('md5').update(cacheKeyData).digest('hex');
+    // const cacheKey = `search:${cacheHash}`;
 
     // Build where clause
     const where: Prisma.ProductWhereInput = {

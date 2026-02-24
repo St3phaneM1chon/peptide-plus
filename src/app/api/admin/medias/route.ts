@@ -80,7 +80,7 @@ function validateMagicBytes(buffer: Buffer, declaredMime: string): boolean {
 // FIX: F44 - TODO: Add optional uploadedBy filter for multi-tenant scoping
 // FIX: F49 - TODO: Add rate limiting middleware (e.g., 50 uploads/hour per user) to POST endpoint
 // GET /api/admin/medias - List media files
-export const GET = withAdminGuard(async (request, { session }) => {
+export const GET = withAdminGuard(async (request, _ctx) => {
   try {
     const { searchParams } = new URL(request.url);
     const rawFolder = searchParams.get('folder');

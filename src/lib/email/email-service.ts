@@ -337,7 +337,7 @@ async function sendViaSendGrid(options: SendEmailOptions): Promise<EmailResult> 
     });
 
     if (!response.ok) {
-      const text = await response.text();
+      await response.text(); // consume response body
       return { success: false, error: 'SendGrid API error' }; // Faille #20: don't leak API response details
     }
 

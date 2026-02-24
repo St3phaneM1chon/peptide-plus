@@ -9,15 +9,11 @@
 import Link from 'next/link';
 import { useI18n } from '@/i18n/client';
 import {
-  DollarSign,
-  TrendingUp,
   Users,
-  Package,
   Building2,
   GraduationCap,
   Receipt,
   UsersRound,
-  BarChart3,
   ArrowUpRight,
 } from 'lucide-react';
 

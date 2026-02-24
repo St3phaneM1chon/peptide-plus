@@ -9,7 +9,7 @@ import { hasPermission, type PermissionCode } from '@/lib/permissions';
 import { UserRole } from '@/types';
 import { logger } from '@/lib/logger';
 
-export const GET = withAdminGuard(async (_request, { session, params }) => {
+export const GET = withAdminGuard(async (_request, { params }) => {
   try {
     const id = params!.id;
 

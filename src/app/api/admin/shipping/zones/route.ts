@@ -11,7 +11,7 @@ import { logger } from '@/lib/logger';
  * GET /api/admin/shipping/zones
  * List all shipping zones
  */
-export const GET = withAdminGuard(async (_request, { session }) => {
+export const GET = withAdminGuard(async (_request, _ctx) => {
   try {
     const zones = await prisma.shippingZone.findMany({
       orderBy: { sortOrder: 'asc' },

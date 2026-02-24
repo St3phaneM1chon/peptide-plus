@@ -11,7 +11,7 @@ import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logger } from '@/lib/logger';
 
 // GET /api/admin/inventory/history - Inventory transaction history
-export const GET = withAdminGuard(async (request, { session }) => {
+export const GET = withAdminGuard(async (request, _ctx) => {
   try {
     const { searchParams } = new URL(request.url);
     const productId = searchParams.get('productId');

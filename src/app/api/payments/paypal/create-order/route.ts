@@ -190,7 +190,7 @@ export async function POST(request: NextRequest) {
     let serverGiftCardDiscount = 0;
     let validatedGiftCardCode = '';
 
-    if (giftCardCode && clientGiftCardDiscount > 0) {
+    if (giftCardCode && (clientGiftCardDiscount ?? 0) > 0) {
       const giftCard = await prisma.giftCard.findUnique({
         where: { code: giftCardCode.toUpperCase().trim() },
       });

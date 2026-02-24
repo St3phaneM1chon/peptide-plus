@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
 
       // SECURITY: Verify cart item prices from database and recalculate subtotal
       let serverSubtotal = 0;
-      if (cartItems?.length > 0) {
+      if (cartItems && cartItems.length > 0) {
         for (const item of cartItems) {
           if (item.formatId) {
             const format = await prisma.productFormat.findUnique({
@@ -139,7 +139,7 @@ export async function POST(request: NextRequest) {
 
       // SECURITY: Validate promo code server-side
       let serverPromoDiscount = 0;
-      if (promoCode && promoDiscount > 0) {
+      if (promoCode && (promoDiscount ?? 0) > 0) {
         const promo = await prisma.promoCode.findUnique({ where: { code: promoCode } });
         if (promo && promo.isActive) {
           const now = new Date();
@@ -255,7 +255,7 @@ export async function POST(request: NextRequest) {
             shippingPostal: shippingInfo?.postalCode || '',
             shippingCountry: shippingInfo?.country || 'CA',
             shippingPhone: shippingInfo?.phone || null,
-            items: cartItems?.length > 0 ? {
+            items: cartItems && cartItems.length > 0 ? {
               create: cartItems.map((item: Record<string, unknown>) => ({
                 productId: item.productId,
                 formatId: item.formatId || null,
@@ -361,7 +361,7 @@ export async function POST(request: NextRequest) {
 
       // BE-PAY-04: Decrement gift card balance after successful PayPal payment
       // BUG 5: Re-validate gift card code and balance server-side (never trust client-sent discount)
-      if (giftCardCode && clientGiftCardDiscount > 0) {
+      if (giftCardCode && (clientGiftCardDiscount ?? 0) > 0) {
         try {
           await prisma.$transaction(async (tx) => {
             // Lock the gift card row to prevent concurrent balance modifications
@@ -387,7 +387,7 @@ export async function POST(request: NextRequest) {
 
             if (giftCard && giftCard.is_active && giftCard.balance > 0) {
               // Server-side validation: cap the deduction to actual balance (never trust client value)
-              const amountToDeduct = Math.min(clientGiftCardDiscount, giftCard.balance);
+              const amountToDeduct = Math.min(clientGiftCardDiscount ?? 0, giftCard.balance);
               const newBalance = Math.round((giftCard.balance - amountToDeduct) * 100) / 100;
 
               await tx.giftCard.update({

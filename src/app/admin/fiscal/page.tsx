@@ -463,7 +463,7 @@ export default function FiscalPage() {
       key: 'actions',
       header: t('admin.fiscal.columns.actions'),
       align: 'center',
-      render: (r) => (
+      render: (_r) => (
         <Button size="sm" variant="primary">
           {t('admin.fiscal.columns.details')}
         </Button>

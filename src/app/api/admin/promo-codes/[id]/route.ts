@@ -16,7 +16,7 @@ import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { logger } from '@/lib/logger';
 
 // GET /api/admin/promo-codes/[id] - Get single promo code with usages
-export const GET = withAdminGuard(async (_request, { session, params }) => {
+export const GET = withAdminGuard(async (_request, { params }) => {
   try {
     const id = params!.id;
 

@@ -92,29 +92,30 @@ export default function EmailComposer({ onClose, replyTo }: EmailComposerProps) 
     toast.success(t('admin.emailComposer.draftSaved'));
   };
 
-  /**
-   * Load drafts from localStorage with 24h expiry check.
-   * Drafts older than 24 hours are automatically purged to limit
-   * the window of exposure for plaintext email content in storage.
-   */
-  const loadDrafts = (): unknown[] => {
-    let drafts: unknown[];
-    try { drafts = JSON.parse(localStorage.getItem('emailDrafts') || '[]'); } catch { drafts = []; }
-    if (!Array.isArray(drafts)) return [];
-    const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
-    const now = Date.now();
-    const validDrafts = drafts.filter((d) => {
-      if (typeof d !== 'object' || d === null) return false;
-      const savedAt = (d as Record<string, unknown>).savedAt;
-      if (typeof savedAt !== 'string') return false;
-      return now - new Date(savedAt).getTime() < TWENTY_FOUR_HOURS;
-    });
-    // Persist the pruned list back to remove expired entries
-    if (validDrafts.length !== drafts.length) {
-      localStorage.setItem('emailDrafts', JSON.stringify(validDrafts));
-    }
-    return validDrafts;
-  };
+  // TODO: Wire up loadDrafts to populate a draft list in the UI
+  // /**
+  //  * Load drafts from localStorage with 24h expiry check.
+  //  * Drafts older than 24 hours are automatically purged to limit
+  //  * the window of exposure for plaintext email content in storage.
+  //  */
+  // const loadDrafts = (): unknown[] => {
+  //   let drafts: unknown[];
+  //   try { drafts = JSON.parse(localStorage.getItem('emailDrafts') || '[]'); } catch { drafts = []; }
+  //   if (!Array.isArray(drafts)) return [];
+  //   const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
+  //   const now = Date.now();
+  //   const validDrafts = drafts.filter((d) => {
+  //     if (typeof d !== 'object' || d === null) return false;
+  //     const savedAt = (d as Record<string, unknown>).savedAt;
+  //     if (typeof savedAt !== 'string') return false;
+  //     return now - new Date(savedAt).getTime() < TWENTY_FOUR_HOURS;
+  //   });
+  //   // Persist the pruned list back to remove expired entries
+  //   if (validDrafts.length !== drafts.length) {
+  //     localStorage.setItem('emailDrafts', JSON.stringify(validDrafts));
+  //   }
+  //   return validDrafts;
+  // };
 
   /**
    * Clear all email drafts from localStorage.

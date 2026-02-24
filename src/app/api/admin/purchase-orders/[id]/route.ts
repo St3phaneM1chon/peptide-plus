@@ -69,7 +69,7 @@ function serializePO(po: Record<string, unknown>) {
 }
 
 // ─── GET /api/admin/purchase-orders/[id] ────────────────────────────────────────
-export const GET = withAdminGuard(async (_request, { session, params }) => {
+export const GET = withAdminGuard(async (_request, { params }) => {
   try {
     const id = params!.id;
 

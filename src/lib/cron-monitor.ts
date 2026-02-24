@@ -9,7 +9,6 @@
  *   cron:stats:{jobName} -> { runs, errors, avgDuration, lastDuration }
  */
 
-import { logger } from '@/lib/logger';
 import { getRedisClient, isRedisAvailable } from '@/lib/redis';
 
 // ---------------------------------------------------------------------------

@@ -6,12 +6,10 @@ import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
 
 // #65 Audit: Valid status transitions for credit notes
-const VALID_CREDIT_NOTE_TRANSITIONS: Record<string, string[]> = {
-  DRAFT: ['ISSUED', 'VOID'],
-  ISSUED: ['APPLIED', 'VOID'],
-  APPLIED: ['VOID'], // Only void after applied, not back to DRAFT
-  VOID: [], // Terminal state
-};
+// DRAFT -> ISSUED, VOID
+// ISSUED -> APPLIED, VOID
+// APPLIED -> VOID (Only void after applied, not back to DRAFT)
+// VOID -> (Terminal state)
 
 /**
  * GET /api/accounting/credit-notes

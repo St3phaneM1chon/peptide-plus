@@ -224,6 +224,11 @@ export default function FournisseursPage() {
     setShowForm(true);
   };
 
+  // ─── Selected supplier (must be before ribbon actions that reference it) ──
+  const selectedSupplier = useMemo(() => {
+    return suppliers.find(s => s.id === selectedId) || null;
+  }, [suppliers, selectedId]);
+
   // ─── Ribbon Actions ─────────────────────────────────────────
 
   const ribbonAddSupplier = useCallback(() => {
@@ -289,10 +294,6 @@ export default function FournisseursPage() {
       };
     });
   }, [suppliers, t]);
-
-  const selectedSupplier = useMemo(() => {
-    return suppliers.find(s => s.id === selectedId) || null;
-  }, [suppliers, selectedId]);
 
   // ─── Auto-select first item ────────────────────────────────
 

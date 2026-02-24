@@ -242,7 +242,7 @@ function TranslationWizard({ overview, onClose, onComplete, getModelLabel, t, lo
               <p className="text-sm text-gray-500">{t('admin.translationsDashboard.wizardStep1Desc')}</p>
 
               <div className="space-y-2">
-                {analysisData.map(({ model, entities, missing, estimate }) => {
+                {analysisData.map(({ model, entities, missing, estimate: _estimate }) => {
                   const cov = overview[model];
                   if (!cov || entities === 0) return null;
                   return (
@@ -306,7 +306,7 @@ function TranslationWizard({ overview, onClose, onComplete, getModelLabel, t, lo
 
               {/* Model checkboxes */}
               <div className="space-y-2">
-                {analysisData.map(({ model, entities, missing, estimate }) => {
+                {analysisData.map(({ model, entities, missing, estimate: _estimate }) => {
                   if (entities === 0) return null;
                   const selected = selectedModels.has(model);
                   return (

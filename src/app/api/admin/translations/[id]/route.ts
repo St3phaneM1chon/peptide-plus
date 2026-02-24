@@ -56,7 +56,7 @@ const FK_FIELD_MAP: Record<TranslatableModel, string> = {
 };
 
 // GET - Lire une traduction
-export const GET = withAdminGuard(async (request: NextRequest, { session, params }) => {
+export const GET = withAdminGuard(async (request: NextRequest, { params }) => {
   try {
     const entityId = params!.id;
     const { searchParams } = new URL(request.url);

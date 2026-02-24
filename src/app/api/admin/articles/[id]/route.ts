@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
  * DELETE - Delete article
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
@@ -49,7 +49,7 @@ const updateArticleSchema = z.object({
 });
 
 // GET /api/admin/articles/[id] - Get single article
-export const GET = withAdminGuard(async (_request, { session, params }) => {
+export const GET = withAdminGuard(async (_request, { params }) => {
   try {
     const id = params!.id;
 

@@ -82,7 +82,7 @@ export default function QuantityTiers({
           </div>
         )}
 
-        {sortedTiers.map((tier, index) => {
+        {sortedTiers.map((tier, _index) => {
           const isActive = isTierActive(tier);
           const isBestValue = tier.id === bestTier.id;
           const discountedPrice = calculatePrice(tier.discount);

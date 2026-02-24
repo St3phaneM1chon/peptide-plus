@@ -55,7 +55,7 @@ const FREQUENCY_LABELS: Record<string, string> = {
 
 export default function UpsellInterstitialModal({
   isOpen,
-  onClose,
+  onClose: _onClose,
   item,
   onAcceptQuantity,
   onAcceptSubscription,
@@ -193,7 +193,6 @@ export default function UpsellInterstitialModal({
     (o) => o.frequency === selectedFrequency
   );
   const subDiscountPercent = selectedSubOption?.discountPercent || 10;
-  const subPrice = basePrice * (1 - subDiscountPercent / 100);
 
   // Find the best quantity tier
   const bestTier = upsellData?.quantityDiscounts?.length

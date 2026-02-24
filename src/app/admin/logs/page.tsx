@@ -192,6 +192,27 @@ export default function LogsPage() {
     return val;
   }, []);
 
+  // ─── Filtering (must be before handleExportCSV that references filteredLogs) ──
+
+  // TODO: FAILLE-068 - JSON.stringify(log.details) on every search keystroke is O(n*m).
+  //       Pre-compute a searchable string per log entry during fetch for better performance.
+  const filteredLogs = useMemo(() => {
+    return logs.filter(log => {
+      if (levelFilter !== 'all' && log.level !== levelFilter) return false;
+      if (searchValue) {
+        const search = searchValue.toLowerCase();
+        if (
+          !log.action.toLowerCase().includes(search) &&
+          !log.userName?.toLowerCase().includes(search) &&
+          !JSON.stringify(log.details).toLowerCase().includes(search)
+        ) {
+          return false;
+        }
+      }
+      return true;
+    });
+  }, [logs, levelFilter, searchValue]);
+
   const handleExportCSV = useCallback(() => {
     if (filteredLogs.length === 0) return;
     // FIX: FAILLE-071 - Limit CSV export to 5000 entries to prevent browser memory issues
@@ -230,27 +251,6 @@ export default function LogsPage() {
     LOW_STOCK_ALERT: t('admin.logs.actionLowStock'),
     CRON_JOB_RUN: t('admin.logs.actionCronJob'),
   }), [t]);
-
-  // ─── Filtering ──────────────────────────────────────────────
-
-  // TODO: FAILLE-068 - JSON.stringify(log.details) on every search keystroke is O(n*m).
-  //       Pre-compute a searchable string per log entry during fetch for better performance.
-  const filteredLogs = useMemo(() => {
-    return logs.filter(log => {
-      if (levelFilter !== 'all' && log.level !== levelFilter) return false;
-      if (searchValue) {
-        const search = searchValue.toLowerCase();
-        if (
-          !log.action.toLowerCase().includes(search) &&
-          !log.userName?.toLowerCase().includes(search) &&
-          !JSON.stringify(log.details).toLowerCase().includes(search)
-        ) {
-          return false;
-        }
-      }
-      return true;
-    });
-  }, [logs, levelFilter, searchValue]);
 
   const stats = useMemo(() => ({
     total: logs.length,

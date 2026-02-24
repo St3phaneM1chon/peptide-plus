@@ -204,6 +204,11 @@ export default function InventairePage() {
     setAdjustmentReason('');
   };
 
+  // ─── Selected item (must be before ribbon actions that reference it) ──
+  const selectedItem = useMemo(() => {
+    return inventory.find((i) => i.id === selectedItemId) || null;
+  }, [inventory, selectedItemId]);
+
   // ─── Ribbon Actions ─────────────────────────────────────────
 
   const ribbonAddStock = useCallback(() => {
@@ -308,10 +313,6 @@ export default function InventairePage() {
       ],
     }));
   }, [filteredInventory, t, formatCurrency]);
-
-  const selectedItem = useMemo(() => {
-    return inventory.find((i) => i.id === selectedItemId) || null;
-  }, [inventory, selectedItemId]);
 
   // ─── Render ─────────────────────────────────────────────────
 

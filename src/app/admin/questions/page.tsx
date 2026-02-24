@@ -132,7 +132,7 @@ export default function QuestionsPage() {
   };
 
   // F-030 FIX: State for delete confirmation modal instead of native confirm()
-  const [deleteModalId, setDeleteModalId] = useState<string | null>(null);
+  const [_deleteModalId, setDeleteModalId] = useState<string | null>(null);
 
   const deleteQuestion = async (id: string) => {
     setDeleteModalId(null); // Close modal

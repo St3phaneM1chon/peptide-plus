@@ -172,7 +172,11 @@ export async function POST(request: NextRequest) {
       });
 
       // Attach greeting message to conversation without extra DB query
-      conversation = { ...conversation, messages: [greetingMsg] } as typeof conversation;
+      conversation = { ...conversation, messages: [greetingMsg] } as NonNullable<typeof conversation>;
+    }
+
+    if (!conversation) {
+      return NextResponse.json({ error: 'Failed to create conversation' }, { status: 500 });
     }
 
     return NextResponse.json({

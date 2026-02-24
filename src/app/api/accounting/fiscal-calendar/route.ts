@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
-import { getUpcomingDeadlines, FISCAL_DEADLINES } from '@/lib/accounting/canadian-tax-config';
+import { getUpcomingDeadlines } from '@/lib/accounting/canadian-tax-config';
 import { logger } from '@/lib/logger';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { validateCsrf } from '@/lib/csrf-middleware';

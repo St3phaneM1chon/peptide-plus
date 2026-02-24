@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
  * PATCH - Bulk update conversation statuses
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';

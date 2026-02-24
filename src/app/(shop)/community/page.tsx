@@ -4,7 +4,7 @@
 // TODO: F-086 - Add dynamic SEO meta (Open Graph, Twitter Card) via a parent layout.tsx
 'use client';
 
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useSession } from 'next-auth/react';

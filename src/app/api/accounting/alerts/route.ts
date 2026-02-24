@@ -10,7 +10,6 @@ import {
   getNextTaxDeadline,
   detectExpenseAnomalies,
   getActiveAlerts,
-  evaluateAlertRules,
 } from '@/lib/accounting';
 import { logger } from '@/lib/logger';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';

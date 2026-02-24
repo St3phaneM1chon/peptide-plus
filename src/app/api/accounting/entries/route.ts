@@ -1,11 +1,11 @@
 export const dynamic = 'force-dynamic';
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { Prisma } from '@prisma/client';
 import { roundCurrency } from '@/lib/financial';
-import { formatZodErrors, logAuditTrail } from '@/lib/accounting';
+import { logAuditTrail } from '@/lib/accounting';
 import { updateJournalEntrySchema } from '@/lib/accounting/validation';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
@@ -13,7 +13,7 @@ import { logger } from '@/lib/logger';
  * GET /api/accounting/entries
  * List journal entries with filters
  */
-export const GET = withAdminGuard(async (request, { session }) => {
+export const GET = withAdminGuard(async (request, _ctx) => {
   try {
     const { searchParams } = new URL(request.url);
     const page = Math.max(1, parseInt(searchParams.get('page') || '1'));

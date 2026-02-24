@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import {
-  Inbox, Search, Filter, User, Clock, Tag,
+  Inbox, Search, User,
   ChevronRight, Circle, AlertCircle, CheckCircle2, Pause, XCircle,
 } from 'lucide-react';
 import { useI18n } from '@/i18n/client';

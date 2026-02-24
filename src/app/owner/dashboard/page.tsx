@@ -119,7 +119,11 @@ export default async function OwnerDashboard() {
     redirect('/dashboard');
   }
 
-  let stats, recentPurchases, topProducts, revenueByMonth;
+  type OwnerData = Awaited<ReturnType<typeof getOwnerData>>;
+  let stats: OwnerData['stats'];
+  let recentPurchases: OwnerData['recentPurchases'];
+  let topProducts: OwnerData['topProducts'];
+  let revenueByMonth: OwnerData['revenueByMonth'];
   try {
     ({ stats, recentPurchases, topProducts, revenueByMonth } = await getOwnerData());
   } catch (error) {

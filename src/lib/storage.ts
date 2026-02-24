@@ -252,7 +252,7 @@ export class StorageService {
   private async uploadToLocal(
     file: Buffer,
     blobPath: string,
-    contentType: string,
+    _contentType: string,
     contentHash: string
   ): Promise<UploadResult> {
     const filePath = path.join(this.localUploadDir, blobPath);

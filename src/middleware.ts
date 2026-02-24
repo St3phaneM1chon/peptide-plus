@@ -103,7 +103,8 @@ export async function middleware(request: NextRequest) {
     const shouldLog = !isProduction || Math.random() < 0.1;
 
     if (shouldLog) {
-      const startTime = Date.now();
+      // startTime used for x-request-start header
+      const startTime = Date.now(); void startTime;
       // Log is appended via x-request-start header for downstream duration calculation
       // Edge runtime cannot use Winston, so we use structured console.log with JSON
       const logEntry = {

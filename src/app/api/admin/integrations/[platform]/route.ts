@@ -95,7 +95,7 @@ function getWebhookUrl(platform: string): string {
 }
 
 // GET /api/admin/integrations/[platform]
-export const GET = withAdminGuard(async (request, { session }) => {
+export const GET = withAdminGuard(async (request, _ctx) => {
   const url = new URL(request.url);
   const platform = url.pathname.split('/').pop() as string;
 
@@ -194,7 +194,7 @@ export const PUT = withAdminGuard(async (request: NextRequest, { session }) => {
 });
 
 // POST /api/admin/integrations/[platform] - Test connection / actions
-export const POST = withAdminGuard(async (request: NextRequest, { session }) => {
+export const POST = withAdminGuard(async (request: NextRequest, _ctx) => {
   const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
     || request.headers.get('x-real-ip') || '127.0.0.1';
   const rl = await rateLimitMiddleware(ip, '/api/admin/integrations/[platform]');

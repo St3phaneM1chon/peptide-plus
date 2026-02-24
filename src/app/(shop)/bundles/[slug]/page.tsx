@@ -46,7 +46,7 @@ interface Bundle {
 export default function BundleDetailPage() {
   const params = useParams();
   const slug = params.slug as string;
-  const { t } = useI18n();
+  const { t: _t } = useI18n();
   const { addItem } = useCart();
 
   const [bundle, setBundle] = useState<Bundle | null>(null);

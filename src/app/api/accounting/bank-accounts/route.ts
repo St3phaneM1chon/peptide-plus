@@ -1,6 +1,6 @@
 export const dynamic = 'force-dynamic';
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { encrypt, decrypt } from '@/lib/security';
@@ -56,7 +56,7 @@ function maskAccountNumber(accountNumber: string | null): string | null {
 // ---------------------------------------------------------------------------
 // GET /api/accounting/bank-accounts - List all bank accounts (masked)
 // ---------------------------------------------------------------------------
-export const GET = withAdminGuard(async (_request, { session }) => {
+export const GET = withAdminGuard(async (_request, _ctx) => {
   try {
     const accounts = await prisma.bankAccount.findMany({
       orderBy: { createdAt: 'desc' },
@@ -90,7 +90,7 @@ export const GET = withAdminGuard(async (_request, { session }) => {
 // ---------------------------------------------------------------------------
 // POST /api/accounting/bank-accounts - Create a new bank account
 // ---------------------------------------------------------------------------
-export const POST = withAdminGuard(async (request, { session }) => {
+export const POST = withAdminGuard(async (request, _ctx) => {
   try {
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
       || request.headers.get('x-real-ip') || '127.0.0.1';
@@ -149,7 +149,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
 // ---------------------------------------------------------------------------
 // PUT /api/accounting/bank-accounts - Update a bank account
 // ---------------------------------------------------------------------------
-export const PUT = withAdminGuard(async (request, { session }) => {
+export const PUT = withAdminGuard(async (request, _ctx) => {
   try {
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
       || request.headers.get('x-real-ip') || '127.0.0.1';
@@ -218,7 +218,7 @@ export const PUT = withAdminGuard(async (request, { session }) => {
 // ---------------------------------------------------------------------------
 // DELETE /api/accounting/bank-accounts - Soft-delete a bank account
 // ---------------------------------------------------------------------------
-export const DELETE = withAdminGuard(async (request, { session }) => {
+export const DELETE = withAdminGuard(async (request, _ctx) => {
   try {
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
       || request.headers.get('x-real-ip') || '127.0.0.1';

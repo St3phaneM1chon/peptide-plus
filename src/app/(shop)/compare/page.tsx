@@ -52,7 +52,7 @@ function ComparePageContent() {
   const { productSlugs, removeFromCompare, clearCompare } = useCompare();
   const { t } = useI18n();
   const { formatPrice } = useCurrency();
-  const { addItem } = useCart();
+  const { addItem: _addItem } = useCart();
   const { addItemWithUpsell } = useUpsell();
 
   const [products, setProducts] = useState<CompareProduct[]>([]);
@@ -155,32 +155,28 @@ function ComparePageContent() {
     return bestProductSlug;
   };
 
-  // Find highest purity (from specifications if available)
-  const getHighestPurity = () => {
-    if (products.length === 0) return null;
-
-    let highestPurity = 0;
-    let bestProductSlug = '';
-
-    products.forEach(product => {
-      const specs = product.specifications;
-      if (specs) {
-        const purityMatch = specs.match(/purity[:\s]+(\d+(?:\.\d+)?)/i);
-        if (purityMatch) {
-          const purity = parseFloat(purityMatch[1]);
-          if (purity > highestPurity) {
-            highestPurity = purity;
-            bestProductSlug = product.slug;
-          }
-        }
-      }
-    });
-
-    return bestProductSlug || null;
-  };
+  // TODO: Re-enable highestPurity comparison highlight when UI is wired up
+  // const getHighestPurity = () => {
+  //   if (products.length === 0) return null;
+  //   let highestPurity = 0;
+  //   let bestProductSlug = '';
+  //   products.forEach(product => {
+  //     const specs = product.specifications;
+  //     if (specs) {
+  //       const purityMatch = specs.match(/purity[:\s]+(\d+(?:\.\d+)?)/i);
+  //       if (purityMatch) {
+  //         const purity = parseFloat(purityMatch[1]);
+  //         if (purity > highestPurity) {
+  //           highestPurity = purity;
+  //           bestProductSlug = product.slug;
+  //         }
+  //       }
+  //     }
+  //   });
+  //   return bestProductSlug || null;
+  // };
 
   const bestValue = getBestValue();
-  const highestPurity = getHighestPurity();
 
   // Empty state
   if (!isLoading && products.length === 0) {

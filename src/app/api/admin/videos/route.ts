@@ -15,7 +15,7 @@ import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { logger } from '@/lib/logger';
 
 // GET /api/admin/videos - List all videos
-export const GET = withAdminGuard(async (request, { session }) => {
+export const GET = withAdminGuard(async (request, _ctx) => {
   try {
     const { searchParams } = new URL(request.url);
     const category = searchParams.get('category');

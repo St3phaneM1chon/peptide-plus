@@ -31,7 +31,7 @@ const ALL_MODELS: TranslatableModel[] = [
   'BlogPost', 'Video', 'Webinar', 'QuickReply',
 ];
 
-export const GET = withAdminGuard(async (request: NextRequest, { session }) => {
+export const GET = withAdminGuard(async (request: NextRequest, _ctx) => {
   try {
     const { searchParams } = new URL(request.url);
     const model = searchParams.get('model') as TranslatableModel | null;

@@ -23,7 +23,7 @@ const updateSubscriptionSchema = z.object({
 });
 
 // GET /api/admin/subscriptions/[id] - Get subscription detail
-export const GET = withAdminGuard(async (_request, { session, params }) => {
+export const GET = withAdminGuard(async (_request, { params }) => {
   try {
     const id = params!.id;
 

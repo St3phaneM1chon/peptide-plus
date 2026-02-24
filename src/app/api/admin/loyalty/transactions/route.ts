@@ -11,7 +11,7 @@ import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logger } from '@/lib/logger';
 
 // GET /api/admin/loyalty/transactions - List loyalty transactions
-export const GET = withAdminGuard(async (request: NextRequest, { session }) => {
+export const GET = withAdminGuard(async (request: NextRequest, _ctx) => {
   try {
     const { searchParams } = new URL(request.url);
     const type = searchParams.get('type');

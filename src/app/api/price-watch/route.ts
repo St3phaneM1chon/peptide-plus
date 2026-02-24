@@ -29,7 +29,7 @@ const priceWatchDeleteSchema = z.object({
 /**
  * GET - List user's active price watches with current prices
  */
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const session = await auth();
 

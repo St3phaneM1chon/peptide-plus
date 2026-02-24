@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useI18n } from '@/i18n/client';
 import {
-  Image as ImageIcon, Upload, Search, Trash2, Copy, Check,
+  Image as ImageIcon, Upload, Search, Copy, Check,
   Loader2, ChevronLeft, ChevronRight, X,
 } from 'lucide-react';
 import NextImage from 'next/image';

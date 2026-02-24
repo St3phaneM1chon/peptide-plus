@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { useI18n } from '@/i18n/client';
 
 interface StickyAddToCartProps {
@@ -17,7 +17,7 @@ interface StickyAddToCartProps {
 
 export default function StickyAddToCart({
   productName,
-  price,
+  price: _price,
   formattedPrice,
   selectedFormat,
   onAddToCart,

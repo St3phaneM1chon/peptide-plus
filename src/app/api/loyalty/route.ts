@@ -29,7 +29,6 @@ export async function GET() {
     }
 
     // FIX: F-036 - Support pagination parameters for transaction history
-    const url = new URL('http://localhost' + '/api/loyalty'); // placeholder for param parsing
     // Note: In GET() without request param, we can't read searchParams.
     // TODO: F-036 - Add NextRequest parameter and implement page/limit params for full pagination support
 

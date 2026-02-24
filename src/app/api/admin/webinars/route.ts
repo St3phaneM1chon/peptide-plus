@@ -44,7 +44,7 @@ const createWebinarSchema = z.object({
 });
 
 // GET /api/admin/webinars - List all webinars
-export const GET = withAdminGuard(async (request: NextRequest, { session }) => {
+export const GET = withAdminGuard(async (request: NextRequest, _ctx) => {
   try {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status'); // DRAFT, SCHEDULED, LIVE, COMPLETED, CANCELLED

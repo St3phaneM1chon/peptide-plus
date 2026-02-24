@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useI18n } from '@/i18n/client';
 import {
   Video, MessageCircle, Users, Search, Activity, Globe, Briefcase,
-  Image as ImageIcon, FolderOpen, CheckCircle2, XCircle, Loader2, Monitor, ExternalLink,
+  Image as ImageIcon, FolderOpen, CheckCircle2, XCircle, Loader2, Monitor,
 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';

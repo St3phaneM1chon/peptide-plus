@@ -47,7 +47,7 @@ export async function register() {
         ].filter(Boolean) as ReturnType<typeof Sentry.prismaIntegration>[],
 
         // Before sending hook - strip PII if needed
-        beforeSend(event) {
+        beforeSend(event: { request?: { headers?: Record<string, string> } }) {
           // Remove cookie values from headers
           if (event.request?.headers) {
             delete event.request.headers['cookie'];

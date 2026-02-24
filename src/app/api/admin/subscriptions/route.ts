@@ -23,7 +23,7 @@ const createSubscriptionSchema = z.object({
 });
 
 // GET /api/admin/subscriptions - List all subscriptions with filtering
-export const GET = withAdminGuard(async (request, { session }) => {
+export const GET = withAdminGuard(async (request, _ctx) => {
   try {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');

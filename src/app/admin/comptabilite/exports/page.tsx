@@ -19,7 +19,7 @@ interface ExportJob {
 }
 
 export default function ExportsPage() {
-  const { t, formatDate, locale } = useI18n();
+  const { t, formatDate: _formatDate, locale } = useI18n();
   const [exporting, setExporting] = useState(false);
   const [exportConfig, setExportConfig] = useState({
     format: 'quickbooks',

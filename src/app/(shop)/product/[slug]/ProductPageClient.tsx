@@ -114,7 +114,7 @@ interface ProductPageClientProps {
 // Format icons imported from shared utility: @/lib/format-icons
 
 export default function ProductPageClient({ product }: ProductPageClientProps) {
-  const { addItem } = useCart();
+  const { addItem: _addItem } = useCart();
   const { addItemWithUpsell } = useUpsell();
   const { formatPrice } = useCurrency();
   const { t } = useI18n();

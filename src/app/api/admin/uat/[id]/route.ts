@@ -13,7 +13,7 @@ import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { logger } from '@/lib/logger';
 
 // GET — Run detail
-export const GET = withAdminGuard(async (request: NextRequest, { session, params }) => {
+export const GET = withAdminGuard(async (request: NextRequest, { params }) => {
   try {
     const id = params!.id;
     const { searchParams } = new URL(request.url);

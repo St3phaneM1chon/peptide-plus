@@ -658,7 +658,6 @@ async function runDaemon() {
     }
 
     // Pass 2: Run at 2 AM
-    const today = now.toISOString().slice(0, 10);
     if (hour === 2 && lastPass2Run !== now.getDate()) {
       lastPass2Run = now.getDate();
       log('INFO', `🌙 2:00 AM - Starting Pass 2 (Claude Haiku)...`);

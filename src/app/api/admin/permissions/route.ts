@@ -10,9 +10,10 @@ import { PERMISSION_MODULES, seedPermissions } from '@/lib/permissions';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { permissionPostSchema } from '@/lib/validations/permission';
+import { logger } from '@/lib/logger';
 
 // GET /api/admin/permissions - List all permissions, groups, and overrides
-export const GET = withAdminGuard(async (request, { session }) => {
+export const GET = withAdminGuard(async (request, _ctx) => {
   const { searchParams } = new URL(request.url);
   const tab = searchParams.get('tab') || 'permissions';
 

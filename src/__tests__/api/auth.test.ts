@@ -19,7 +19,7 @@
  * the auth configuration logic.
  */
 
-import { createMockPrisma, createMockSession } from '../helpers/mocks';
+import { createMockPrisma } from '../helpers/mocks';
 import { validatePassword, isValidEmail } from '@/lib/validation';
 
 // =====================================================

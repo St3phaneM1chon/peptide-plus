@@ -35,7 +35,7 @@ const adjustStockSchema = z.object({
 }).strict();
 
 // GET /api/admin/inventory - List products with inventory info
-export const GET = withAdminGuard(async (request, { session }) => {
+export const GET = withAdminGuard(async (request, _ctx) => {
   try {
     const { searchParams } = new URL(request.url);
     const lowStockOnly = searchParams.get('lowStock') === 'true';

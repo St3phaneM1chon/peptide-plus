@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Users, Crown, Mail, Globe, TrendingUp, TrendingDown, UserPlus, Zap } from 'lucide-react';
+import { Users, Crown, Mail, Globe, TrendingUp, Zap } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 

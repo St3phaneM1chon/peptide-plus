@@ -76,7 +76,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
 });
 
 // GET — List all runs
-export const GET = withAdminGuard(async (_request: NextRequest, { session }) => {
+export const GET = withAdminGuard(async (_request: NextRequest, _ctx) => {
   try {
     const runs = await prisma.uatTestRun.findMany({
       orderBy: { createdAt: 'desc' },

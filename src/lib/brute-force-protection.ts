@@ -4,7 +4,6 @@
  */
 
 import { prisma } from './db';
-import { createSecurityLog } from './security';
 import { getRedisClient, isRedisAvailable } from './redis';
 import { logger } from '@/lib/logger';
 
@@ -214,7 +213,7 @@ export async function checkLoginAttempt(
   _ipAddress: string,
   _userAgent: string
 ): Promise<{ allowed: boolean; message?: string }> {
-  const { locked, remainingTime } = await isAccountLocked(email);
+  const { locked, remainingTime: _remainingTime } = await isAccountLocked(email);
 
   if (locked) {
     // FAILLE-041 FIX: Use generic message that doesn't reveal account existence

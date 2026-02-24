@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import {
-  BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend,
 } from 'recharts';
 import {
-  Mail, Send, CheckCircle2, XCircle, TrendingUp, DollarSign,
-  GitBranch, Users, ArrowUpRight, ArrowDownRight,
+  Mail, Send, XCircle,
+  GitBranch, ArrowUpRight, ArrowDownRight,
 } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';

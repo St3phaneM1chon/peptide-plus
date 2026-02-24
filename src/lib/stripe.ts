@@ -110,7 +110,7 @@ export async function createPaymentIntent({
   customerId,
   productId,
   metadata = {},
-  paymentMethodTypes = ['card', 'link'], // link = Click to Pay
+  paymentMethodTypes: _paymentMethodTypes = ['card', 'link'], // link = Click to Pay
 }: CreatePaymentIntentParams): Promise<Stripe.PaymentIntent> {
   return stripe.paymentIntents.create({
     amount,

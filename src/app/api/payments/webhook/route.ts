@@ -805,15 +805,17 @@ async function handleRefund(charge: Stripe.Charge, eventId: string) {
     },
   });
 
+  // Compute refund values outside try block so they're available for commission clawback
+  const refundAmount = (charge.amount_refunded || 0) / 100;
+  const orderTotal = Number(order.total);
+
   // Create refund accounting entries
   try {
     const { createRefundAccountingEntries } = await import('@/lib/accounting/webhook-accounting.service');
-    const refundAmount = (charge.amount_refunded || 0) / 100;
     const tps = Number(order.taxTps);
     const tvq = Number(order.taxTvq);
     const tvh = Number(order.taxTvh);
     const pst = Number(order.taxPst);
-    const orderTotal = Number(order.total);
     const refundRatio = orderTotal > 0 ? refundAmount / orderTotal : 0;
 
     await createRefundAccountingEntries(

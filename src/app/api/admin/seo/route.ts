@@ -22,7 +22,7 @@ const seoSettingsSchema = z.object({
 }).strict();
 
 // GET /api/admin/seo - Get all SEO settings
-export const GET = withAdminGuard(async (_request: NextRequest, { session }) => {
+export const GET = withAdminGuard(async (_request: NextRequest, _ctx) => {
   try {
     const settings = await prisma.siteSetting.findMany({
       where: { module: 'seo' },

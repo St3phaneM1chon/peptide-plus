@@ -455,7 +455,7 @@ export function receiptEmail(
  * Email de retour en stock
  */
 export function backInStockEmail(data: BackInStockData, locale: Locale = 'fr', unsubscribeUrl?: string): { subject: string; html: string } {
-  const t = createServerTranslator(locale);
+  // const t = createServerTranslator(locale); // TODO: Use t() for email i18n
   const formattedPrice = formatCurrencyServer(data.price, locale, data.currency);
   const productUrl = `${emailConfig.baseUrl}/product/${data.productSlug}`;
 

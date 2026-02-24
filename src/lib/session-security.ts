@@ -4,7 +4,6 @@
  */
 
 import { prisma } from './db';
-import { createSecurityLog } from './security';
 import { logger } from '@/lib/logger';
 
 // Configuration conforme NYDFS

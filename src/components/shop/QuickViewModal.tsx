@@ -54,7 +54,7 @@ export default function QuickViewModal({ slug, isOpen, onClose }: QuickViewModal
   const [isAdding, setIsAdding] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
-  const { addItem } = useCart();
+  const { addItem: _addItem } = useCart();
   const { addItemWithUpsell } = useUpsell();
   const { formatPrice } = useCurrency();
   const { t, locale } = useI18n();

@@ -376,7 +376,7 @@ export default function InventoryPage() {
           <StatCard
             icon="📅"
             label={t('account.inventory.statFirstOrder')}
-            value={stats.firstOrderDate ? formatRelativeDate(stats.firstOrderDate, t) : '-'}
+            value={stats.firstOrderDate ? formatRelativeDate(stats.firstOrderDate, t, locale) : '-'}
           />
           <StatCard
             icon="⏱️"
@@ -520,6 +520,7 @@ export default function InventoryPage() {
                 onUpdateStock={updateStockStatus}
                 onViewDetails={() => setSelectedProduct(product)}
                 t={t}
+                locale={locale}
               />
             ))}
           </div>
@@ -566,7 +567,7 @@ export default function InventoryPage() {
                         ${product.totalSpent.toFixed(2)}
                       </td>
                       <td className="py-3 px-4 text-center text-sm text-gray-500">
-                        {formatDate(product.lastOrderDate)}
+                        {formatDate(product.lastOrderDate, locale)}
                       </td>
                       <td className="py-3 px-4 text-center">
                         <StockBadge status={product.stockStatus} t={t} />
@@ -595,6 +596,7 @@ export default function InventoryPage() {
             onUpdateStock={updateStockStatus}
             onUpdateNotes={updateNotes}
             t={t}
+            locale={locale}
           />
         )}
       </div>
@@ -652,11 +654,13 @@ function ProductCard({
   onUpdateStock,
   onViewDetails,
   t,
+  locale,
 }: {
   product: ProductInventory;
   onUpdateStock: (id: string, status: 'full' | 'low' | 'empty' | 'unknown') => void;
   onViewDetails: () => void;
   t: (key: string, params?: Record<string, string | number>) => string;
+  locale: string;
 }) {
   const [showStockMenu, setShowStockMenu] = useState(false);
 
@@ -751,7 +755,7 @@ function ProductCard({
       {/* Last order */}
       <div className="px-4 pb-4 text-center">
         <p className="text-xs text-gray-400">
-          {t('account.inventory.lastOrderLabel')}: {formatRelativeDate(product.lastOrderDate, t)}
+          {t('account.inventory.lastOrderLabel')}: {formatRelativeDate(product.lastOrderDate, t, locale)}
         </p>
       </div>
     </div>
@@ -764,12 +768,14 @@ function ProductDetailModal({
   onUpdateStock,
   onUpdateNotes,
   t,
+  locale,
 }: {
   product: ProductInventory;
   onClose: () => void;
   onUpdateStock: (id: string, status: 'full' | 'low' | 'empty' | 'unknown') => void;
   onUpdateNotes: (id: string, notes: string) => void;
   t: (key: string, params?: Record<string, string | number>) => string;
+  locale: string;
 }) {
   const [notes, setNotes] = useState(product.notes);
   const [activeTab, setActiveTab] = useState<'overview' | 'history'>('overview');
@@ -901,8 +907,8 @@ function ProductDetailModal({
 
               {/* Timeline info */}
               <div className="flex items-center justify-between text-sm text-gray-500 pt-4 border-t border-gray-200">
-                <span>{t('account.inventory.firstOrderLabel')}: {formatDate(product.firstOrderDate)}</span>
-                <span>{t('account.inventory.lastOrderLabel')}: {formatDate(product.lastOrderDate)}</span>
+                <span>{t('account.inventory.firstOrderLabel')}: {formatDate(product.firstOrderDate, locale)}</span>
+                <span>{t('account.inventory.lastOrderLabel')}: {formatDate(product.lastOrderDate, locale)}</span>
               </div>
             </div>
           )}
@@ -917,7 +923,7 @@ function ProductDetailModal({
                       <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                         <div>
                           <p className="font-medium text-gray-900">{order.orderNumber}</p>
-                          <p className="text-sm text-gray-500">{formatDate(order.date)}</p>
+                          <p className="text-sm text-gray-500">{formatDate(order.date, locale)}</p>
                         </div>
                         <div className="text-end">
                           <p className="font-semibold text-gray-900">×{order.quantity}</p>
@@ -967,7 +973,7 @@ function detectCategory(productName: string): string {
   return 'Peptides';
 }
 
-function formatDate(dateString: string): string {
+function formatDate(dateString: string, locale: string = 'en'): string {
   return new Date(dateString).toLocaleDateString(locale, {
     day: 'numeric',
     month: 'short',
@@ -975,7 +981,7 @@ function formatDate(dateString: string): string {
   });
 }
 
-function formatRelativeDate(dateString: string, t?: (key: string) => string): string {
+function formatRelativeDate(dateString: string, t?: (key: string) => string, locale: string = 'en'): string {
   const date = new Date(dateString);
   const now = new Date();
   const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
@@ -993,5 +999,5 @@ function formatRelativeDate(dateString: string, t?: (key: string) => string): st
     if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
     if (diffDays < 365) return `${Math.floor(diffDays / 30)} months ago`;
   }
-  return formatDate(dateString);
+  return formatDate(dateString, locale);
 }

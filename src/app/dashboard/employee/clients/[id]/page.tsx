@@ -59,11 +59,13 @@ async function getClientDetails(clientId: string) {
     _sum: { amount: true },
   });
 
-  const completedCourses = company.customers.reduce((acc, cc) => {
-    return acc + cc.customer.courseAccess.filter((a) => a.completedAt).length;
+  type CompanyCustomer = (typeof company.customers)[number];
+
+  const completedCourses = company.customers.reduce((acc: number, cc: CompanyCustomer) => {
+    return acc + cc.customer.courseAccess.filter((a: { completedAt: Date | null }) => a.completedAt).length;
   }, 0);
 
-  const totalCourses = company.customers.reduce((acc, cc) => {
+  const totalCourses = company.customers.reduce((acc: number, cc: CompanyCustomer) => {
     return acc + cc.customer.courseAccess.length;
   }, 0);
 
@@ -204,10 +206,10 @@ export default async function ClientDetailPage({ params, searchParams }: PagePro
                     </td>
                   </tr>
                 ) : (
-                  company.customers.map((cc) => {
-                    const completed = cc.customer.courseAccess.filter((a) => a.completedAt).length;
+                  company.customers.map((cc: { id: string; customerId: string; addedAt: Date; customer: { name: string | null; email: string; courseAccess: Array<{ completedAt: Date | null }> } }) => {
+                    const completed = cc.customer.courseAccess.filter((a: { completedAt: Date | null }) => a.completedAt).length;
                     const total = cc.customer.courseAccess.length;
-                    const hasActive = cc.customer.courseAccess.some((a) => !a.completedAt);
+                    const hasActive = cc.customer.courseAccess.some((a: { completedAt: Date | null }) => !a.completedAt);
 
                     return (
                       <tr key={cc.id} className="hover:bg-gray-50">
@@ -290,7 +292,7 @@ export default async function ClientDetailPage({ params, searchParams }: PagePro
                     </td>
                   </tr>
                 ) : (
-                  company.purchases.map((purchase) => (
+                  company.purchases.map((purchase: { id: string; amount: unknown; createdAt: Date; status: string; product: { name: string }; user: { name: string | null; email: string } }) => (
                     <tr key={purchase.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4">
                         <p className="font-medium text-gray-900">{purchase.product.name}</p>

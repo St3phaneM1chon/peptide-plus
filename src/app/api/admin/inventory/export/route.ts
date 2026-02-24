@@ -25,7 +25,7 @@ function csvRow(values: (string | number | boolean | null | undefined)[]): strin
 }
 
 // GET /api/admin/inventory/export - Export inventory as CSV
-export const GET = withAdminGuard(async (_request, { session }) => {
+export const GET = withAdminGuard(async (_request, _ctx) => {
   try {
     // FIX: BUG-068 - Include all formats (not just active+tracked) with flags for full audit
     const formats = await prisma.productFormat.findMany({

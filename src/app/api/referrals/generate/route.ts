@@ -33,7 +33,7 @@ function generateCode(name: string | null | undefined): string {
   return `${prefix}${suffix}`;
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {

@@ -15,8 +15,8 @@ interface StockAlertButtonProps {
 export default function StockAlertButton({
   productId,
   formatId,
-  productName,
-  formatName,
+  productName: _productName,
+  formatName: _formatName,
 }: StockAlertButtonProps) {
   const { data: session } = useSession();
   const { t } = useI18n();

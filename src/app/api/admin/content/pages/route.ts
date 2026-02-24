@@ -33,7 +33,7 @@ const updatePageSchema = z.object({
 });
 
 // GET /api/admin/content/pages - List all pages
-export const GET = withAdminGuard(async (_request, { session }) => {
+export const GET = withAdminGuard(async (_request, _ctx) => {
   const pages = await prisma.page.findMany({
     orderBy: { updatedAt: 'desc' },
     include: {

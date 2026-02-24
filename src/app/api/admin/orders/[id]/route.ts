@@ -42,7 +42,7 @@ function getStripe(): Stripe {
 }
 
 // GET /api/admin/orders/[id] - Full order detail
-export const GET = withAdminGuard(async (_request, { session, params }) => {
+export const GET = withAdminGuard(async (_request, { params }) => {
   try {
     const id = params!.id;
 

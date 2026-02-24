@@ -292,8 +292,8 @@ export const POST = withAdminGuard(
         return NextResponse.json({ error: 'Flow not found' }, { status: 404 });
       }
 
-      const nodes = safeParseJson<Array<{ id: string; type: string; data: Record<string, unknown> }>>(flow.nodes, []);
-      const edges = safeParseJson<Array<{ source: string; target: string; sourceHandle?: string }>>(flow.edges, []);
+      const nodes = safeParseJson<Array<{ id: string; type: string; data: Record<string, unknown> }>>(flow.nodes, []) ?? [];
+      const edges = safeParseJson<Array<{ source: string; target: string; sourceHandle?: string }>>(flow.edges, []) ?? [];
 
       const errors: string[] = [];
       const warnings: string[] = [];

@@ -47,7 +47,7 @@ const updateWebinarSchema = z.object({
 });
 
 // GET /api/admin/webinars/[id] - Get single webinar
-export const GET = withAdminGuard(async (_request: NextRequest, { session, params }) => {
+export const GET = withAdminGuard(async (_request: NextRequest, { params }) => {
   try {
     const id = params!.id;
 

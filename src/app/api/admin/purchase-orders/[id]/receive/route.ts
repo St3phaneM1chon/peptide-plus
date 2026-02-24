@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic';
  * 5. Create JournalEntry: Debit Inventory (1210), Credit Accounts Payable (2000)
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { ACCOUNT_CODES } from '@/lib/accounting/types';

@@ -143,7 +143,9 @@ export default async function AdminDashboard() {
     redirect('/dashboard');
   }
 
-  let stats, recentOrders, recentUsers;
+  let stats: Awaited<ReturnType<typeof fetchAdminData>>['stats'];
+  let recentOrders: Awaited<ReturnType<typeof fetchAdminData>>['recentOrders'];
+  let recentUsers: Awaited<ReturnType<typeof fetchAdminData>>['recentUsers'];
   try {
     ({ stats, recentOrders, recentUsers } = await getAdminData());
   } catch (error) {

@@ -26,7 +26,7 @@ export default function AddToWishlistButton({
   variant = 'icon',
   size = 'md',
 }: AddToWishlistButtonProps) {
-  const { data: session, status } = useSession();
+  const { data: _session, status } = useSession();
   const router = useRouter();
   const { t } = useI18n();
   const [collections, setCollections] = useState<WishlistCollection[]>([]);

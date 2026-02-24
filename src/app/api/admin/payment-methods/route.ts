@@ -21,7 +21,7 @@ const createPaymentMethodSchema = z.object({
  * GET /api/admin/payment-methods
  * List all payment method configurations
  */
-export const GET = withAdminGuard(async (_request, { session }) => {
+export const GET = withAdminGuard(async (_request, _ctx) => {
   try {
     const configs = await prisma.paymentMethodConfig.findMany({
       orderBy: [

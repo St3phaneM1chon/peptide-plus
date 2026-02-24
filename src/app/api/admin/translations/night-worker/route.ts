@@ -63,7 +63,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
  * GET /api/admin/translations/night-worker
  * Returns queue stats for monitoring
  */
-export const GET = withAdminGuard(async (_request: NextRequest, { session }) => {
+export const GET = withAdminGuard(async (_request: NextRequest, _ctx) => {
   try {
     const stats = await getQueueStats();
     return NextResponse.json({ stats, timestamp: new Date().toISOString() });

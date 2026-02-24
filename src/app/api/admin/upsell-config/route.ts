@@ -35,7 +35,7 @@ const upsellConfigUpdateSchema = z.object({
 });
 
 // GET — List all upsell configs
-export const GET = withAdminGuard(async (_request, { session }) => {
+export const GET = withAdminGuard(async (_request, _ctx) => {
   try {
     const configs = await db.upsellConfig.findMany({
       include: {

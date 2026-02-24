@@ -19,7 +19,6 @@
 
 import {
   isValidEmail,
-  validatePassword,
   isValidPostalCode,
   formatPostalCode,
   isValidPhone,

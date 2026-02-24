@@ -1,6 +1,6 @@
 export const dynamic = 'force-dynamic';
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { runMonthEndChecklist, lockPeriod } from '@/lib/accounting/period-close.service';
 import { logger } from '@/lib/logger';
@@ -35,7 +35,7 @@ export const GET = withAdminGuard(async (_request, { session, params }) => {
   }
 });
 
-export const POST = withAdminGuard(async (request, { session, params }) => {
+export const POST = withAdminGuard(async (_request, { session, params }) => {
   try {
     const code = params?.code;
 

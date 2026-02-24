@@ -3,9 +3,9 @@
 import { useState, useEffect, useRef } from 'react';
 import DOMPurify from 'dompurify';
 import {
-  ArrowLeft, User, Send, StickyNote, Tag, UserPlus,
-  Clock, ChevronDown, AlertTriangle, CheckCircle2,
-  MoreHorizontal, Paperclip,
+  ArrowLeft, User, Send, StickyNote, UserPlus,
+  AlertTriangle,
+  Paperclip,
 } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
 import CustomerSidebar from './CustomerSidebar';

@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
  * DELETE - Deactivate employee (set role to PUBLIC)
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
@@ -24,7 +24,7 @@ const updateEmployeeSchema = z.object({
 }).strict();
 
 // GET /api/admin/employees/[id] - Get employee detail
-export const GET = withAdminGuard(async (_request, { session, params }) => {
+export const GET = withAdminGuard(async (_request, { params }) => {
   try {
     const id = params!.id;
 

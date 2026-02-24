@@ -34,7 +34,7 @@ interface ScanHistory {
 }
 
 export default function OCRPage() {
-  const { t, locale, formatCurrency } = useI18n();
+  const { t, locale: _locale, formatCurrency } = useI18n();
   const theme = sectionThemes.entry;
   const [scanning, setScanning] = useState(false);
   const [extractedData, setExtractedData] = useState<ExtractedInvoice | null>(null);

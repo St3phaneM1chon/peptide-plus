@@ -33,7 +33,7 @@ const createPurchaseOrderSchema = z.object({
 });
 
 // ─── GET /api/admin/purchase-orders ─────────────────────────────────────────────
-export const GET = withAdminGuard(async (request, { session }) => {
+export const GET = withAdminGuard(async (request, _ctx) => {
   try {
     const { searchParams } = new URL(request.url);
 
@@ -239,7 +239,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
         taxTps: Number(po.taxTps),
         taxTvq: Number(po.taxTvq),
         total: Number(po.total),
-        items: po.items.map((item) => ({
+        items: po.items.map((item: { unitCost: unknown; total: unknown }) => ({
           ...item,
           unitCost: Number(item.unitCost),
           total: Number(item.total),

@@ -150,7 +150,7 @@ export function useAddressAutocomplete() {
         types: ['address'],
         componentRestrictions: { country: ['ca', 'us'] }, // Focus on Canada and US
       },
-      (predictions, status) => {
+      (predictions: Prediction[] | null, status: string) => {
         setLoading(false);
 
         if (status === window.google!.maps.places.PlacesServiceStatus.OK && predictions) {
@@ -229,7 +229,7 @@ export function useAddressAutocomplete() {
         placeId,
         fields: ['address_components', 'formatted_address'],
       },
-      (place, status) => {
+      (place: GoogleMapsPlaceResult | null, status: string) => {
         if (status === window.google!.maps.places.PlacesServiceStatus.OK && place) {
           const parsedAddress = parseAddressComponents(place.address_components);
           onSelect(parsedAddress);

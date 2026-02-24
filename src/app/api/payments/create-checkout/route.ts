@@ -182,7 +182,7 @@ export async function POST(request: NextRequest) {
       cartId,
       paymentMethod: clientPaymentMethod,
       giftCardCode,
-      giftCardDiscount: clientGiftCardDiscount,
+      giftCardDiscount: _clientGiftCardDiscount,
     } = body;
 
     if (!items || !Array.isArray(items) || items.length === 0) {

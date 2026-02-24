@@ -14,7 +14,7 @@ import { createPromotionSchema } from '@/lib/validations/promotion';
 import { logger } from '@/lib/logger';
 
 // GET /api/admin/promotions - List all promotions/discounts
-export const GET = withAdminGuard(async (request, { session }) => {
+export const GET = withAdminGuard(async (request, _ctx) => {
   try {
     const { searchParams } = new URL(request.url);
     const isActive = searchParams.get('isActive');

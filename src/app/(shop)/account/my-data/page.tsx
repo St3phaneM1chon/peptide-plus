@@ -128,7 +128,7 @@ function DataSection({
 export default function MyDataPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const { t, locale, formatDate, formatCurrency } = useI18n();
+  const { t, locale: _locale, formatDate, formatCurrency } = useI18n();
   const [data, setData] = useState<MyDataResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);

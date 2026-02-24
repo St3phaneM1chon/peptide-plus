@@ -9,6 +9,7 @@
  */
 
 import { prisma } from '@/lib/db';
+import { UserRole } from '@/types';
 
 // FAILLE-050 FIX: Use UserRole from @/types instead of duplicating the type definition
 // Re-export the type so existing consumers don't break

@@ -23,7 +23,6 @@ import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { sendOrderLifecycleEmail } from '@/lib/email';
 import { handleEvent } from '@/lib/email/automation-engine';
 import { apiSuccess, apiError, apiPaginated } from '@/lib/api-response';
-import { ErrorCode } from '@/lib/error-codes';
 import { updateOrderStatusSchema, batchOrderUpdateSchema } from '@/lib/validations/order';
 import { logger } from '@/lib/logger';
 
@@ -36,7 +35,7 @@ function validationError(parsed: { error: { flatten: () => unknown } }) {
 }
 
 // GET /api/admin/orders - List orders with filtering
-export const GET = withAdminGuard(async (request, { session }) => {
+export const GET = withAdminGuard(async (request, _ctx) => {
   try {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');

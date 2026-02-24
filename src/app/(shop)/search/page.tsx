@@ -74,7 +74,7 @@ function SearchPageInner() {
   const [categories, setCategories] = useState<CategoryFacet[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [page, setPage] = useState(1);
+  const [page, _setPage] = useState(1);
   const pageSize = 20;
 
   // Filter state

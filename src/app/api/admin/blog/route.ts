@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
  * POST - Create a new blog post
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
@@ -47,7 +47,7 @@ const createBlogPostSchema = z.object({
 });
 
 // GET /api/admin/blog - List all blog posts
-export const GET = withAdminGuard(async (request, { session }) => {
+export const GET = withAdminGuard(async (request, _ctx) => {
   try {
     const { searchParams } = new URL(request.url);
     const category = searchParams.get('category');

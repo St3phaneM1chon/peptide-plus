@@ -45,13 +45,14 @@ function markProductShown(productId: string) {
   }
 }
 
-function hasSessionBeenShown(): boolean {
-  try {
-    return sessionStorage.getItem(UPSELL_SESSION_KEY + '-session') === 'true';
-  } catch {
-    return false;
-  }
-}
+// TODO: Wire up hasSessionBeenShown for display rule checks
+// function hasSessionBeenShown(): boolean {
+//   try {
+//     return sessionStorage.getItem(UPSELL_SESSION_KEY + '-session') === 'true';
+//   } catch {
+//     return false;
+//   }
+// }
 
 function markSessionShown() {
   try {

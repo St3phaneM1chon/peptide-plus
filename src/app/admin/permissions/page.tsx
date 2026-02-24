@@ -60,13 +60,15 @@ interface Override {
 
 export default function PermissionsPage() {
   const { t } = useI18n();
-  const { data: session } = useSession();
-  const isOwner = session?.user?.role === 'OWNER';
+  // TODO: use session for owner-only UI permissions
+  // const { data: session } = useSession();
+  // const isOwner = session?.user?.role === 'OWNER';
+  useSession(); // keep auth hook active
   const [activeTab, setActiveTab] = useState<Tab>('defaults');
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [modules, setModules] = useState<Record<string, { label: string; permissions: string[] }>>({});
   const [groups, setGroups] = useState<PermissionGroup[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [_loading, setLoading] = useState(true);
   const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set());
 
   // Group modal state

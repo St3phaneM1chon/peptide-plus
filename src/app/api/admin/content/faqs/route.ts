@@ -28,7 +28,7 @@ const updateFaqSchema = z.object({
 });
 
 // GET /api/admin/content/faqs - List all FAQs
-export const GET = withAdminGuard(async (_request, { session }) => {
+export const GET = withAdminGuard(async (_request, _ctx) => {
   const faqs = await prisma.faq.findMany({
     orderBy: [{ category: 'asc' }, { sortOrder: 'asc' }],
     include: {

@@ -76,7 +76,7 @@ export default function ProductCard({
   reviewCount,
 }: ProductCardProps) {
   const { formatPrice } = useCurrency();
-  const { addItem } = useCart();
+  const { addItem: _addItem } = useCart();
   const { addItemWithUpsell } = useUpsell();
   const { t } = useI18n();
   

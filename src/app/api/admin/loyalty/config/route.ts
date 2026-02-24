@@ -50,7 +50,7 @@ const DEFAULT_CONFIG: LoyaltyConfig = {
 const LOYALTY_CONFIG_KEY = 'loyalty_config';
 
 // GET /api/admin/loyalty/config
-export const GET = withAdminGuard(async (_request, { session }) => {
+export const GET = withAdminGuard(async (_request, _ctx) => {
   try {
     // Try to load from SiteSetting key-value store
     const setting = await prisma.siteSetting.findUnique({
