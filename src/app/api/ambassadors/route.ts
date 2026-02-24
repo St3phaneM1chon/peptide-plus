@@ -40,6 +40,7 @@ export async function GET(request: NextRequest) {
         user: { select: { name: true, email: true } },
       },
       orderBy: { totalEarnings: 'desc' },
+      take: 200,
     });
 
     // FIX: FLAW-004 - Removed syncCommissionsForCodes from GET handler.

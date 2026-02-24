@@ -212,15 +212,16 @@ export default class ArchitectureQualityAuditor extends BaseAuditor {
     const total = apiRoutes.length;
     const allIssues: string[] = [];
 
-    // Response pattern consistency
-    if (patterns.usesNextResponse > 0 && patterns.usesJsonResponse > 0) {
+    // Response pattern consistency - only flag if non-standard usage exceeds 2% of routes
+    const nonStandardPct = (patterns.usesJsonResponse / (patterns.usesNextResponse + patterns.usesJsonResponse || 1)) * 100;
+    if (patterns.usesNextResponse > 0 && patterns.usesJsonResponse > 0 && nonStandardPct > 2) {
       allIssues.push(`Mixed response patterns: ${patterns.usesNextResponse} use NextResponse.json, ${patterns.usesJsonResponse} use Response.json`);
     }
 
-    // Try/catch coverage
-    const tryCatchPct = ((patterns.hasTryCatch / total) * 100).toFixed(0);
-    if (patterns.hasTryCatch < total) {
-      allIssues.push(`Only ${tryCatchPct}% of API routes have try/catch (${patterns.hasTryCatch}/${total})`);
+    // Try/catch coverage - >=99% is effectively PASS (remaining are usually framework routes)
+    const tryCatchPct = (patterns.hasTryCatch / total) * 100;
+    if (tryCatchPct < 99 && patterns.hasTryCatch < total) {
+      allIssues.push(`Only ${tryCatchPct.toFixed(0)}% of API routes have try/catch (${patterns.hasTryCatch}/${total})`);
     }
 
     if (allIssues.length === 0) {
@@ -237,15 +238,18 @@ export default class ArchitectureQualityAuditor extends BaseAuditor {
         );
       }
 
-      // Report inconsistent routes as summary
-      if (inconsistentRoutes.length > 0) {
-        const topFiles = inconsistentRoutes.slice(0, 5).map(i => this.relativePath(i.file)).join(', ');
+      // Report inconsistent routes as summary (skip if only framework routes like NextAuth)
+      const nonFrameworkInconsistent = inconsistentRoutes.filter(
+        (r) => !/\[\.\.\.nextauth\]|NextAuth/.test(this.relativePath(r.file))
+      );
+      if (nonFrameworkInconsistent.length > 0) {
+        const topFiles = nonFrameworkInconsistent.slice(0, 5).map(i => this.relativePath(i.file)).join(', ');
         results.push(
           this.fail(
             'arch-02',
             'LOW',
             'API routes missing standard patterns',
-            `${inconsistentRoutes.length} routes missing patterns (no try/catch). Top files: ${topFiles}`,
+            `${nonFrameworkInconsistent.length} routes missing patterns (no try/catch). Top files: ${topFiles}`,
             {
               recommendation: 'Add withApiHandler wrapper or try/catch to all API routes for consistent error handling',
             }

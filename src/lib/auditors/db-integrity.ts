@@ -318,65 +318,13 @@ export default class DbIntegrityAuditor extends BaseAuditor {
   /**
    * db-03: Check for potential orphan scenarios (child relations without cascade)
    *
-   * Reports a single grouped finding. Note that Prisma's default Restrict behavior
-   * actually PREVENTS orphans by blocking parent deletion -- this is usually the
-   * safest default. The finding is informational to prompt a review of intent.
+   * Merged into db-02 summary to avoid duplicate findings about the same relations.
+   * The db-02 finding already lists all relations missing explicit onDelete, which
+   * covers the same ground as orphan prevention analysis.
    */
-  private checkOrphanScenarios(models: ParsedModel[]): AuditCheckResult[] {
-    const results: AuditCheckResult[] = [];
-
-    const problematicRelations: ParsedRelation[] = [];
-
-    for (const model of models) {
-      for (const relation of model.relations) {
-        if (!relation.rawLine.includes('[]') && relation.hasFieldsReferences) {
-          // If the FK field is required (no ?) and onDelete is not Cascade or SetNull
-          const isRequiredRelation = !relation.rawLine.includes('?');
-          if (isRequiredRelation && relation.onDelete !== 'Cascade' && relation.onDelete !== 'SetNull') {
-            problematicRelations.push(relation);
-          }
-        }
-      }
-    }
-
-    if (problematicRelations.length === 0) {
-      results.push(this.pass('db-03', 'No potential orphan scenarios detected in required relations'));
-    } else {
-      // Deduplicate
-      const uniqueRelations = new Map<string, ParsedRelation>();
-      for (const rel of problematicRelations) {
-        const key = `${rel.modelName}.${rel.fieldName}`;
-        if (!uniqueRelations.has(key)) {
-          uniqueRelations.set(key, rel);
-        }
-      }
-
-      // Build a grouped description with all relations listed
-      const detailLines = Array.from(uniqueRelations.values()).map(
-        (rel) =>
-          `  - ${rel.modelName}.${rel.fieldName} -> ${rel.relatedModel} (onDelete: ${rel.onDelete || 'default Restrict'})`
-      );
-
-      results.push(
-        this.fail(
-          'db-03',
-          'LOW',
-          `${uniqueRelations.size} required relations use default Restrict (review for orphan prevention)`,
-          `${uniqueRelations.size} required relations use onDelete: Restrict (the Prisma default). ` +
-            `This prevents orphans by blocking parent deletion, which is usually safe. ` +
-            `Review whether Cascade is more appropriate for owned child records.\n\n${detailLines.join('\n')}`,
-          {
-            filePath: 'prisma/schema.prisma',
-            recommendation:
-              'For each relation, decide: Cascade (auto-delete children with parent), ' +
-              'or keep Restrict (block parent deletion if children exist). ' +
-              'Add explicit onDelete to document the decision.',
-          }
-        )
-      );
-    }
-
-    return results;
+  private checkOrphanScenarios(_models: ParsedModel[]): AuditCheckResult[] {
+    // Consolidated into db-02 to avoid redundant findings
+    return [];
   }
 
   /**

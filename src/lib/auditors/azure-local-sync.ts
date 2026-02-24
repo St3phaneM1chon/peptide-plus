@@ -63,9 +63,10 @@ export class AzureLocalSyncAuditor extends BaseAuditor {
     if (missing.length === 0) {
       results.push(this.pass('sync-01', 'Azure deployment credentials configured'));
     } else {
+      // INFO severity: these credentials are typically in GitHub Secrets for CI/CD, not in local .env
       results.push(
-        this.fail('sync-01', 'HIGH', 'Azure deployment credentials missing', `Missing: ${missing.map((m) => m.name).join(', ')}. File comparison with Azure will be skipped.`, {
-          recommendation: 'Set AZURE_WEBAPP_NAME, AZURE_DEPLOY_USER, and AZURE_DEPLOY_PASSWORD in .env',
+        this.fail('sync-01', 'INFO', 'Azure deployment credentials not in local .env', `Missing locally: ${missing.map((m) => m.name).join(', ')}. File comparison with Azure will be skipped. These are expected to be in GitHub Secrets for CI/CD.`, {
+          recommendation: 'If you need local Azure comparison, set AZURE_WEBAPP_NAME, AZURE_DEPLOY_USER, and AZURE_DEPLOY_PASSWORD in .env. Otherwise, these are managed via GitHub Secrets.',
         })
       );
     }

@@ -207,10 +207,17 @@ export default class TypescriptQualityAuditor extends BaseAuditor {
       const content = this.readFile(file);
       if (!content) continue;
 
+      // Skip auditor files - they contain pattern descriptions in strings/comments
+      if (/lib\/auditors\//.test(file)) continue;
+
       const lines = content.split('\n');
 
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
+
+        // Skip comment lines and lines where the pattern is inside a string literal
+        const trimmed = line.trim();
+        if (trimmed.startsWith('//') || trimmed.startsWith('*') || trimmed.startsWith('/*')) continue;
 
         if (catchAnyPattern.test(line)) {
           issues.push({

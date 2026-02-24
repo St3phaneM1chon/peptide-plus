@@ -114,18 +114,17 @@ export default class ApiContractsAuditor extends BaseAuditor {
       );
     }
 
-    // Report files with mixed patterns
-    for (const item of mixedFiles.slice(0, 5)) {
+    // Report files with mixed patterns as single summary
+    if (mixedFiles.length > 0) {
+      const topFiles = mixedFiles.slice(0, 3).map((f) => f.file).join(', ');
       results.push(
         this.fail(
           'api-01',
           'LOW',
-          'Mixed response patterns in single file',
-          'This API route uses both wrapped and unwrapped response patterns',
+          'Files with mixed response patterns',
+          `${mixedFiles.length} API routes use both wrapped and unwrapped response patterns. Top files: ${topFiles}`,
           {
-            filePath: item.file,
-            lineNumber: item.line,
-            recommendation: 'Use the same response shape for all responses in this route',
+            recommendation: 'Use the same response shape for all responses in each route',
           }
         )
       );

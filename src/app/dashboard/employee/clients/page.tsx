@@ -110,7 +110,7 @@ export default async function ClientsListPage({ searchParams }: PageProps) {
               />
             </div>
             <div>
-              <select name="status" defaultValue={resolvedSearchParams.status || ''} className="form-input form-select">
+              <select name="status" aria-label="Filtrer par statut" defaultValue={resolvedSearchParams.status || ''} className="form-input form-select">
                 <option value="">Tous les statuts</option>
                 <option value="active">Actifs</option>
                 <option value="inactive">Inactifs</option>

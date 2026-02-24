@@ -993,7 +993,7 @@ function EditFormatForm({
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div>
           <label className="block text-xs font-medium text-neutral-600 mb-1">{t('admin.productForm.type')} *</label>
-          <select value={format.formatType} onChange={(e) => setFormat({ ...format, formatType: e.target.value })} className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
+          <select aria-label="Type de format" value={format.formatType} onChange={(e) => setFormat({ ...format, formatType: e.target.value })} className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
             {FORMAT_TYPES.map(type => (<option key={type.value} value={type.value}>{type.icon} {type.label}</option>))}
           </select>
         </div>
@@ -1003,7 +1003,7 @@ function EditFormatForm({
         </div>
         <div>
           <label className="block text-xs font-medium text-neutral-600 mb-1">{t('admin.productForm.volumeMl')}</label>
-          <select value={format.volumeMl || ''} onChange={(e) => setFormat({ ...format, volumeMl: e.target.value ? parseFloat(e.target.value) : null })} className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
+          <select aria-label="Volume en ml" value={format.volumeMl || ''} onChange={(e) => setFormat({ ...format, volumeMl: e.target.value ? parseFloat(e.target.value) : null })} className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
             <option value="">--</option>
             {VOLUME_OPTIONS.map(v => (<option key={v} value={v}>{v} ml</option>))}
           </select>
@@ -1054,7 +1054,7 @@ function EditFormatForm({
         </div>
         <div>
           <label className="block text-xs font-medium text-neutral-600 mb-1">{t('admin.productForm.availability')}</label>
-          <select value={format.availability} onChange={(e) => setFormat({ ...format, availability: e.target.value })} className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
+          <select aria-label="Disponibilité" value={format.availability} onChange={(e) => setFormat({ ...format, availability: e.target.value })} className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
             {AVAILABILITY_OPTIONS.map(opt => (<option key={opt.value} value={opt.value}>{opt.label}</option>))}
           </select>
         </div>

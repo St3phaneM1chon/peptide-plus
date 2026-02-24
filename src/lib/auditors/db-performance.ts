@@ -401,8 +401,9 @@ export default class DbPerformanceAuditor extends BaseAuditor {
 
         if (hasPagination) continue;
 
-        // Check if query is bounded by parent FK in WHERE clause
+        // Check if query is bounded by parent FK in WHERE clause or by { in: [...] } constraint
         const hasWhereFK = /where\s*:\s*\{[\s\S]{0,300}\w+Id\s*[:,}]/.test(queryBlock);
+        const hasInClause = /where\s*:\s*\{[\s\S]{0,300}\{\s*in\s*:/.test(queryBlock);
 
         // Check if querying a small/bounded model
         const isBoundedModel = boundedModels.test(match[0]);
@@ -418,7 +419,7 @@ export default class DbPerformanceAuditor extends BaseAuditor {
 
         const lineNum = this.findLineNumber(content, match[0]);
 
-        if (hasWhereFK || isBoundedModel || hasStatusFilter || isAdminExport || isServiceInternal) {
+        if (hasWhereFK || hasInClause || isBoundedModel || hasStatusFilter || isAdminExport || isServiceInternal) {
           bounded.push({ file: this.relativePath(file), line: lineNum });
         } else {
           unbounded.push({
