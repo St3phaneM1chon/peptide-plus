@@ -3641,3 +3641,51 @@ enum ConsentType {
   EXPRESS // Active opt-in (CASL required)
   IMPLIED // Existing business relationship (limited to 2 years)
 }
+
+// =============================================
+// ACCOUNTING EXPORT
+// =============================================
+
+model AccountingExport {
+  id          String   @id @default(cuid())
+  name        String
+  format      String   @default("CSV") // CSV, PDF, QBO, SAGE
+  periodStart DateTime
+  periodEnd   DateTime
+  filters     String?  // JSON: { accountIds, types, statuses }
+  fileUrl     String?
+  fileSize    Int?
+  status      String   @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED
+  errorMsg    String?
+  createdBy   String
+  createdAt   DateTime @default(now())
+  completedAt DateTime?
+
+  @@index([status])
+  @@index([createdBy])
+  @@index([createdAt])
+}
+
+// =============================================
+// OCR SCAN / DOCUMENT SCANNING
+// =============================================
+
+model OcrScan {
+  id             String   @id @default(cuid())
+  originalUrl    String
+  originalName   String
+  mimeType       String
+  status         String   @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED
+  extractedText  String?
+  extractedData  String?  // JSON: { vendor, date, total, taxAmount, currency, lineItems }
+  confidence     Float?
+  journalEntryId String?
+  errorMsg       String?
+  createdBy      String
+  createdAt      DateTime @default(now())
+  processedAt    DateTime?
+
+  @@index([status])
+  @@index([createdBy])
+  @@index([journalEntryId])
+}

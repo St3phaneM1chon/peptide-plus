@@ -4,9 +4,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { shouldSuppressEmail } from '@/lib/email/bounce-handler';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { logger } from '@/lib/logger';
 
-export const POST = withAdminGuard(async (request: NextRequest) => {
+export const POST = withAdminGuard(async (request: NextRequest, { session }) => {
   try {
     const body = await request.json();
     const { contacts, action } = body;
@@ -30,6 +31,16 @@ export const POST = withAdminGuard(async (request: NextRequest) => {
           cleaned++;
         }
       }
+
+      logAdminAction({
+        adminUserId: session.user.id,
+        action: 'CLEAN_MAILING_LIST',
+        targetType: 'NewsletterSubscriber',
+        targetId: 'bulk',
+        newValue: { checked: subscribers.length, cleaned },
+        ipAddress: getClientIpFromRequest(request),
+        userAgent: request.headers.get('user-agent') || undefined,
+      }).catch(() => {});
 
       return NextResponse.json({ success: true, cleaned, checked: subscribers.length });
     }
@@ -132,6 +143,16 @@ export const POST = withAdminGuard(async (request: NextRequest) => {
         errors.push({ row: i + 1, email, reason: 'db_error' });
       }
     }
+
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'IMPORT_MAILING_LIST',
+      targetType: 'NewsletterSubscriber',
+      targetId: 'bulk',
+      newValue: { total: contacts.length, created: imported, updated, skipped, failed, duplicatesInCsv, preservedUnsubscribed },
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json({
       success: true,
