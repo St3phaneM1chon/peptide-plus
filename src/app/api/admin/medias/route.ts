@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
  * POST - Upload media (handle file upload via FormData)
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import path from 'path';

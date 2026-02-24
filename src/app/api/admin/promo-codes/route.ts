@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
  * POST - Create a new promo code
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { createPromoCodeSchema } from '@/lib/validations/promo-code';

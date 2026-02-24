@@ -41,7 +41,7 @@ export const GET = withAdminGuard(async (request: NextRequest, _ctx) => {
     // Queue status
     if (showQueue) {
       const stats = getQueueStats();
-      const recentJobs = getJobs().slice(0, 50); // Last 50 jobs
+      const recentJobs = (await getJobs()).slice(0, 50); // Last 50 jobs
       return NextResponse.json({ queue: stats, recentJobs });
     }
 

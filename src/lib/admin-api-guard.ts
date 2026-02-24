@@ -101,7 +101,9 @@ export function withAdminGuard(
   handler: AdminHandler,
   options?: AdminGuardOptions
 ) {
-  return async (request: NextRequest, routeContext?: { params?: Promise<Record<string, string>> }): Promise<NextResponse> => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Second param typed as `any` so Next.js 15
+  // .next/types ParamCheck accepts this handler for both dynamic ([id]) and non-dynamic routes.
+  return async (request: NextRequest, routeContext?: any): Promise<NextResponse> => {
     try {
       // ---------------------------------------------------------------
       // 1. Authentication

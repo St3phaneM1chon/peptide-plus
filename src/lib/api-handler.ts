@@ -108,7 +108,9 @@ export function withApiHandler(
   handler: (ctx: ApiContext) => Promise<NextResponse>,
   options: HandlerOptions = {}
 ) {
-  return async (request: NextRequest, routeContext?: { params?: Promise<Record<string, string>> }) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- typed as `any` so Next.js 15
+  // .next/types ParamCheck accepts this handler for both dynamic and non-dynamic routes.
+  return async (request: NextRequest, routeContext?: any) => {
     // Generate or propagate a correlation ID for request tracing
     const requestId =
       request.headers.get('x-request-id') || crypto.randomUUID();

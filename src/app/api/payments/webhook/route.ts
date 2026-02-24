@@ -911,7 +911,7 @@ async function sendOrderConfirmationEmailAsync(orderId: string, userId: string) 
 
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { name: true, email: true, locale: true },
+      select: { id: true, name: true, email: true, locale: true },
     });
 
     if (!user) return;

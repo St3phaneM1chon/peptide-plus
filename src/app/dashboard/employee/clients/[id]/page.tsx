@@ -25,9 +25,9 @@ async function getClientDetails(clientId: string) {
       },
       customers: {
         include: {
-          customer: {
+          user: {
             include: {
-              courseAccess: {
+              courseAccesses: {
                 include: { product: { select: { id: true, name: true } } },
               },
               purchases: {
@@ -62,11 +62,11 @@ async function getClientDetails(clientId: string) {
   type CompanyCustomer = (typeof company.customers)[number];
 
   const completedCourses = company.customers.reduce((acc: number, cc: CompanyCustomer) => {
-    return acc + cc.customer.courseAccess.filter((a: { completedAt: Date | null }) => a.completedAt).length;
+    return acc + cc.user.courseAccesses.filter((a: { completedAt: Date | null }) => a.completedAt).length;
   }, 0);
 
   const totalCourses = company.customers.reduce((acc: number, cc: CompanyCustomer) => {
-    return acc + cc.customer.courseAccess.length;
+    return acc + cc.user.courseAccesses.length;
   }, 0);
 
   return {
@@ -206,10 +206,10 @@ export default async function ClientDetailPage({ params, searchParams }: PagePro
                     </td>
                   </tr>
                 ) : (
-                  company.customers.map((cc: { id: string; customerId: string; addedAt: Date; customer: { name: string | null; email: string; courseAccess: Array<{ completedAt: Date | null }> } }) => {
-                    const completed = cc.customer.courseAccess.filter((a: { completedAt: Date | null }) => a.completedAt).length;
-                    const total = cc.customer.courseAccess.length;
-                    const hasActive = cc.customer.courseAccess.some((a: { completedAt: Date | null }) => !a.completedAt);
+                  company.customers.map((cc: { id: string; customerId: string; addedAt: Date; user: { name: string | null; email: string; courseAccesses: Array<{ completedAt: Date | null }> } }) => {
+                    const completed = cc.user.courseAccesses.filter((a: { completedAt: Date | null }) => a.completedAt).length;
+                    const total = cc.user.courseAccesses.length;
+                    const hasActive = cc.user.courseAccesses.some((a: { completedAt: Date | null }) => !a.completedAt);
 
                     return (
                       <tr key={cc.id} className="hover:bg-gray-50">
@@ -217,14 +217,14 @@ export default async function ClientDetailPage({ params, searchParams }: PagePro
                           <div className="flex items-center">
                             <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
                               <span className="text-purple-600 font-semibold">
-                                {cc.customer.name?.charAt(0) || cc.customer.email.charAt(0)}
+                                {cc.user.name?.charAt(0) || cc.user.email.charAt(0)}
                               </span>
                             </div>
                             <div className="ms-3">
                               <p className="font-medium text-gray-900">
-                                {cc.customer.name || 'Sans nom'}
+                                {cc.user.name || 'Sans nom'}
                               </p>
-                              <p className="text-sm text-gray-500">{cc.customer.email}</p>
+                              <p className="text-sm text-gray-500">{cc.user.email}</p>
                             </div>
                           </div>
                         </td>

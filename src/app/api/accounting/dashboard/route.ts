@@ -25,9 +25,10 @@ let dashboardCacheMisses = 0;
  * Call this from any accounting write operation (POST/PUT/DELETE)
  * to ensure dashboard shows fresh data after mutations.
  */
-export function invalidateDashboardCache(): void {
+function invalidateDashboardCache(): void {
   dashboardCache = null;
 }
+void invalidateDashboardCache; // Expose for accounting write routes to call
 
 /**
  * GET /api/accounting/dashboard

@@ -181,6 +181,7 @@ export async function POST(request: NextRequest) {
     // Create return request
     const returnRequest = await prisma.returnRequest.create({
       data: {
+        id: crypto.randomUUID(),
         orderId,
         orderItemId,
         userId: user.id,

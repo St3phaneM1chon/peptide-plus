@@ -5,6 +5,9 @@
 
 import { z } from 'zod';
 
+// Re-export loyalty schemas
+export { earnPointsSchema, redeemRewardSchema } from '@/lib/validations/loyalty';
+
 // ============================================================
 // Products
 // ============================================================

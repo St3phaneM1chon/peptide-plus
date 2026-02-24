@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
 
     // Générer un code de récompense unique
     // SECURITY: Use crypto.randomUUID for non-guessable reward codes
-    const rewardCode = `BC${Date.now().toString(36).toUpperCase()}${crypto.randomUUID().replace(/-/g, '').substring(0, 4).toUpperCase()}`;
+    let rewardCode = `BC${Date.now().toString(36).toUpperCase()}${crypto.randomUUID().replace(/-/g, '').substring(0, 4).toUpperCase()}`;
 
     // BUG 10: Use row-level locking (FOR UPDATE) to prevent race conditions on point deduction
     const transaction = await db.$transaction(async (tx) => {

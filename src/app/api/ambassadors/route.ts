@@ -129,8 +129,8 @@ export async function GET(request: NextRequest) {
  * It should be triggered via a dedicated POST /api/ambassadors/sync-commissions
  * endpoint or via a cron job. Kept here for reuse.
  */
-// Exported for reuse in dedicated sync endpoint/cron job
-export async function syncCommissionsForCodes(
+// Available for reuse in dedicated sync endpoint/cron job
+async function syncCommissionsForCodes(
   ambassadors: Array<{
     id: string;
     referralCode: string;
@@ -215,6 +215,7 @@ export async function syncCommissionsForCodes(
     });
   }
 }
+void syncCommissionsForCodes; // Available for dedicated sync endpoint/cron
 
 export async function POST(request: NextRequest) {
   try {

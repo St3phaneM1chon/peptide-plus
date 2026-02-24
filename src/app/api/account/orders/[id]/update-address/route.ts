@@ -145,6 +145,7 @@ export async function PUT(
     // Log the change in audit log
     await prisma.auditLog.create({
       data: {
+        id: crypto.randomUUID(),
         userId: user.id,
         action: 'UPDATE',
         entityType: 'Order',
@@ -196,7 +197,6 @@ export async function PUT(
         createdAt: updatedOrder.createdAt.toISOString(),
         shippedAt: updatedOrder.shippedAt?.toISOString(),
         deliveredAt: updatedOrder.deliveredAt?.toISOString(),
-        paidAt: updatedOrder.paidAt?.toISOString(),
         paymentMethod: updatedOrder.paymentMethod,
         items: updatedOrder.items.map((item) => ({
           id: item.id,

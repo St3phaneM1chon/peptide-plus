@@ -76,6 +76,7 @@ export function SocialProofNotification() {
 
       return () => clearTimeout(hideTimer);
     }
+    return undefined;
   }, [purchase, dismissed]);
 
   const handleDismiss = () => {

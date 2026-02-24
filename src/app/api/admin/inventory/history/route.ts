@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
  * GET - List inventory transactions with filtering
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logger } from '@/lib/logger';

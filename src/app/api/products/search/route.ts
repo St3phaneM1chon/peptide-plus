@@ -11,7 +11,8 @@ import { logger } from '@/lib/logger';
 import { Prisma } from '@prisma/client';
 import { withTranslations, getTranslatedFieldsBatch, DB_SOURCE_LOCALE } from '@/lib/translation';
 import { defaultLocale } from '@/i18n/config';
-import { cacheGetOrSet, cacheInvalidateTag, CacheKeys } from '@/lib/cache';
+// Cache imports removed — search results not currently cached
+// import { cacheGetOrSet, cacheInvalidateTag, CacheKeys } from '@/lib/cache';
 import { logSearch } from '@/lib/search-analytics';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 

@@ -251,12 +251,12 @@ export const PUT = withAdminGuard(async (request, { session }) => {
     const monthFields = [
       'january', 'february', 'march', 'april', 'may', 'june',
       'july', 'august', 'september', 'october', 'november', 'december',
-    ];
+    ] as const;
 
     const updateData: Record<string, unknown> = {};
     for (const m of monthFields) {
-      if (months[m] !== undefined) {
-        const val = Number(months[m]);
+      if ((months as Record<string, number | undefined>)[m] !== undefined) {
+        const val = Number((months as Record<string, number | undefined>)[m]);
         if (isNaN(val) || val < 0) {
           return NextResponse.json(
             { error: `Valeur invalide pour ${m}: doit être un nombre positif ou zéro` },

@@ -161,7 +161,7 @@ export async function POST(request: NextRequest) {
       // F-036 FIX: Create greeting message and include it directly without re-fetching
       const greetingMsg = await db.chatMessage.create({
         data: {
-          conversationId: conversation.id,
+          conversationId: conversation!.id,
           content: greeting,
           sender: 'BOT',
           senderName: 'BioCycle Assistant',

@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
  * DELETE - Delete promo code
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { updatePromoCodeSchema, patchPromoCodeSchema } from '@/lib/validations/promo-code';

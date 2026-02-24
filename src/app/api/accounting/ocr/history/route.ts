@@ -27,7 +27,7 @@ export const GET = withAdminGuard(async () => {
       id: inv.id,
       fileName: `scan-${inv.invoiceNumber}`,
       supplierName: inv.supplierName,
-      total: Number(inv.totalAmount),
+      total: Number(inv.total),
       status: inv.status === 'DRAFT' ? 'NEEDS_REVIEW' : 'SUCCESS',
       createdAt: inv.createdAt,
     }));

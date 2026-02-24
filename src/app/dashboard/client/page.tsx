@@ -18,9 +18,9 @@ async function getClientData(userId: string) {
     include: {
       customers: {
         include: {
-          customer: {
+          user: {
             include: {
-              courseAccess: {
+              courseAccesses: {
                 include: { product: true },
               },
             },
@@ -39,20 +39,20 @@ async function getClientData(userId: string) {
   if (!company) return null;
 
   type CompanyCustomer = (typeof company.customers)[number];
-  type CourseAccess = CompanyCustomer['customer']['courseAccess'][number];
+  type CourseAccess = CompanyCustomer['user']['courseAccesses'][number];
 
   // Calculer les stats
   const totalStudents = company.customers.length;
   const activeStudents = company.customers.filter(
-    (c: CompanyCustomer) => c.customer.courseAccess.some((a: CourseAccess) => !a.completedAt)
+    (c: CompanyCustomer) => c.user.courseAccesses.some((a: CourseAccess) => !a.completedAt)
   ).length;
 
   const completedCourses = company.customers.reduce(
-    (acc: number, c: CompanyCustomer) => acc + c.customer.courseAccess.filter((a: CourseAccess) => a.completedAt).length,
+    (acc: number, c: CompanyCustomer) => acc + c.user.courseAccesses.filter((a: CourseAccess) => a.completedAt).length,
     0
   );
   const totalCourses = company.customers.reduce(
-    (acc: number, c: CompanyCustomer) => acc + c.customer.courseAccess.length,
+    (acc: number, c: CompanyCustomer) => acc + c.user.courseAccesses.length,
     0
   );
 
@@ -205,20 +205,20 @@ export default async function ClientDashboard() {
                     <div className="flex items-center">
                       <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
                         <span className="text-blue-600 font-semibold">
-                          {cc.customer.name?.charAt(0) || cc.customer.email.charAt(0)}
+                          {cc.user.name?.charAt(0) || cc.user.email.charAt(0)}
                         </span>
                       </div>
                       <div className="ms-3">
                         <p className="font-medium text-gray-900">
-                          {cc.customer.name || cc.customer.email}
+                          {cc.user.name || cc.user.email}
                         </p>
                         <p className="text-sm text-gray-500">
-                          {cc.customer.courseAccess.length} formation(s)
+                          {cc.user.courseAccesses.length} formation(s)
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
-                      {cc.customer.courseAccess.some((a: { completedAt: Date | null }) => a.completedAt) && (
+                      {cc.user.courseAccesses.some((a: { completedAt: Date | null }) => a.completedAt) && (
                         <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">
                           Certifié
                         </span>

@@ -76,7 +76,7 @@ export default function RewardsPage() {
 
   const handleRedeem = async (rewardId: string) => {
     setRedeemingId(rewardId);
-    const success = redeemReward(rewardId);
+    const success = await redeemReward(rewardId);
     await new Promise(resolve => setTimeout(resolve, 800));
     setRedeemingId(null);
     if (success) {

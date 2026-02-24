@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
  * POST - Create a new purchase order
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
@@ -184,6 +184,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       const lineTotal = Math.round(qty * cost * 100) / 100;
       subtotal += lineTotal;
       return {
+        id: crypto.randomUUID(),
         description: item.description as string,
         productId: (item.productId as string) || null,
         formatId: (item.formatId as string) || null,
@@ -201,6 +202,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
 
     const po = await prisma.purchaseOrder.create({
       data: {
+        id: crypto.randomUUID(),
         poNumber,
         supplierId: supplierId || null,
         supplierName,

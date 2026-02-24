@@ -20,7 +20,7 @@ import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import * as jose from 'jose';
 
 // Re-export from the shared module for backwards compatibility
-export { generateUnsubscribeUrl, generateUnsubscribeToken, type UnsubscribeCategory } from '@/lib/email/unsubscribe';
+// Re-exports moved: import directly from '@/lib/email/unsubscribe' instead
 
 // Import the type for local use
 import type { UnsubscribeCategory } from '@/lib/email/unsubscribe';

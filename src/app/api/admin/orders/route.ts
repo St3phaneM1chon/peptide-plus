@@ -16,13 +16,13 @@ export const dynamic = 'force-dynamic';
  *     merging items, recalculating shipping costs, and updating accounting entries.
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { sendOrderLifecycleEmail } from '@/lib/email';
 import { handleEvent } from '@/lib/email/automation-engine';
-import { apiSuccess, apiError, apiPaginated } from '@/lib/api-response';
+
 import { updateOrderStatusSchema, batchOrderUpdateSchema } from '@/lib/validations/order';
 import { logger } from '@/lib/logger';
 
