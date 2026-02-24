@@ -150,9 +150,18 @@ export default function ProductsListClient({
     }
   };
 
+  const MAX_IMPORT_FILE_SIZE = 5 * 1024 * 1024; // 5MB - must match server limit in /api/admin/products/import
+
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    // Client-side file size validation (matches server-side 5MB limit)
+    if (file.size > MAX_IMPORT_FILE_SIZE) {
+      toast.error(t('admin.products.fileTooLarge') || 'File too large. Maximum size: 5MB');
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
 
     setImporting(true);
     try {
