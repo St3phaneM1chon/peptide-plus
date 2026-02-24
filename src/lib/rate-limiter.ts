@@ -153,8 +153,8 @@ const RATE_LIMIT_CONFIGS: Record<string, { windowMs: number; maxRequests: number
   'accounting': { windowMs: 60000, maxRequests: 50 },
   'accounting/write': { windowMs: 60000, maxRequests: 20 },
 
-  // Chat - permissif (general)
-  'chat': { windowMs: 60000, maxRequests: 120 },
+  // G4-FLAW-07: Chat rate limit tightened from 120 to 30/min to prevent spam
+  'chat': { windowMs: 60000, maxRequests: 30 },
 
   // BE-SEC-01: Contact form - 3 per IP per hour (anti-spam)
   'contact': { windowMs: 3600000, maxRequests: 3 },

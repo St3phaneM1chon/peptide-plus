@@ -15,9 +15,22 @@ import DashboardClient from './DashboardClient';
 // Data fetching
 // --------------------------------------------------
 
+// G1-FLAW-04: Simple in-memory cache (5 min TTL)
+let _dashCache: { data: unknown; ts: number } | null = null;
+const CACHE_TTL = 5 * 60 * 1000;
+
 async function getAdminData() {
+  const now = Date.now();
+  if (_dashCache && (now - _dashCache.ts) < CACHE_TTL) return _dashCache.data as Awaited<ReturnType<typeof fetchAdminData>>;
+  const data = await fetchAdminData();
+  _dashCache = { data, ts: now };
+  return data;
+}
+
+async function fetchAdminData() {
   const now = new Date();
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  // G5-FLAW-08: Use UTC to avoid server timezone drift
+  const startOfMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
 
   const [
     totalOrders,
@@ -97,7 +110,8 @@ async function getAdminData() {
     }),
   ]);
 
-  const monthlyRevenue = Number(monthlyRevenueAgg._sum.total ?? 0);
+  // G1-FLAW-09: Preserve Decimal precision
+  const monthlyRevenue = parseFloat(parseFloat(String(monthlyRevenueAgg._sum.total ?? 0)).toFixed(2));
 
   return {
     stats: {

@@ -218,6 +218,18 @@ async function handleOrderUpdate(
     return NextResponse.json({ error: 'Order not found' }, { status: 404 });
   }
 
+  // G1-FLAW-06: Optimistic locking - reject if order was modified since client loaded it
+  if (body.updatedAt) {
+    const clientUpdatedAt = new Date(body.updatedAt).getTime();
+    const serverUpdatedAt = existingOrder.updatedAt.getTime();
+    if (clientUpdatedAt !== serverUpdatedAt) {
+      return NextResponse.json(
+        { error: 'Order was modified by another user. Please refresh and try again.', code: 'CONFLICT' },
+        { status: 409 }
+      );
+    }
+  }
+
   // BE-PAY-09 + PAY-005: Order state machine - validate transitions
   // Note: CONFIRMED is set by payment webhooks (Stripe/PayPal), not by admin manual action.
   // Admin uses this map to advance orders through fulfillment (CONFIRMED -> PROCESSING -> SHIPPED -> etc.)

@@ -399,7 +399,15 @@ export default function ComptabiliteDashboard() {
   const fetchDashboard = useCallback(async () => {
     setError(null);
     try {
-      const response = await fetch(`/api/accounting/dashboard?period=${selectedPeriod}`);
+      // G3-FLAW-10: Parse period into month/year params that the API expects
+      let dashUrl = '/api/accounting/dashboard';
+      const periodMatch = selectedPeriod.match(/^(\d{4})-(\d{2})$/);
+      if (periodMatch) {
+        dashUrl += `?year=${periodMatch[1]}&month=${periodMatch[2]}`;
+      } else if (/^\d{4}$/.test(selectedPeriod)) {
+        dashUrl += `?year=${selectedPeriod}`;
+      }
+      const response = await fetch(dashUrl);
       if (!response.ok) {
         throw new Error(t('admin.accounting.serverError').replace('{status}', String(response.status)));
       }

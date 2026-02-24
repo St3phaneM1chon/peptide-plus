@@ -151,6 +151,26 @@ export async function POST(request: NextRequest) {
       imageUrls = rawImageUrls as string[];
     }
 
+    // G4-FLAW-08: Basic content moderation - reject obvious spam/low-quality reviews
+    const commentLower = comment.toLowerCase();
+    const titleLower = (title || '').toLowerCase();
+    const combinedText = `${titleLower} ${commentLower}`;
+
+    // Reject if comment is too short to be meaningful
+    if (comment.length < 10) {
+      return apiError('Review comment must be at least 10 characters', ErrorCode.VALIDATION_ERROR, { request });
+    }
+
+    // Reject repetitive character spam (e.g., "aaaaaaaaaa" or "!!!!!!!!")
+    if (/(.)\1{9,}/.test(comment)) {
+      return apiError('Review contains repetitive content', ErrorCode.VALIDATION_ERROR, { request });
+    }
+
+    // Reject if the text contains URLs (common spam pattern)
+    if (/https?:\/\/[^\s]+/i.test(combinedText)) {
+      return apiError('Reviews cannot contain URLs', ErrorCode.VALIDATION_ERROR, { request });
+    }
+
     // Check if product exists
     const product = await prisma.product.findUnique({
       where: { id: productId },

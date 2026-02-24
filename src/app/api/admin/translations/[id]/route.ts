@@ -20,6 +20,10 @@ import { TRANSLATABLE_FIELDS, type TranslatableModel } from '@/lib/translation';
 import { cacheDelete } from '@/lib/cache';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { logger } from '@/lib/logger';
+import { stripControlChars } from '@/lib/sanitize';
+
+// G4-FLAW-10: Maximum allowed length for translation field values
+const MAX_TRANSLATION_LENGTH = 10_000;
 
 const TRANSLATION_TABLE_MAP: Record<TranslatableModel, string> = {
   Product: 'productTranslation',
@@ -104,7 +108,18 @@ export const PUT = withAdminGuard(async (request: NextRequest, { session, params
     if (fields) {
       for (const [key, value] of Object.entries(fields)) {
         if (validFields.includes(key)) {
-          updateData[key] = value;
+          // G4-FLAW-10: Validate length and strip control characters
+          if (typeof value === 'string') {
+            if (value.length > MAX_TRANSLATION_LENGTH) {
+              return NextResponse.json(
+                { error: `Field "${key}" exceeds maximum length of ${MAX_TRANSLATION_LENGTH} characters` },
+                { status: 400 }
+              );
+            }
+            updateData[key] = stripControlChars(value);
+          } else {
+            updateData[key] = value;
+          }
         }
       }
     }

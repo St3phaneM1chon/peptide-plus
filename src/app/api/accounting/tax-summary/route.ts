@@ -15,6 +15,8 @@ export const GET = withAdminGuard(async (request) => {
     const { searchParams } = new URL(request.url);
     const from = searchParams.get('from');
     const to = searchParams.get('to');
+    // G3-FLAW-07: Support region filtering
+    const regionCode = searchParams.get('regionCode');
 
     if (!from || !to) {
       return NextResponse.json(
@@ -35,6 +37,8 @@ export const GET = withAdminGuard(async (request) => {
       where: {
         paymentStatus: 'PAID',
         createdAt: { gte: startDate, lte: endDate },
+        // G3-FLAW-07: Filter by region if provided
+        ...(regionCode && regionCode !== 'ALL' ? { shippingState: regionCode } : {}),
       },
       select: { taxTps: true, taxTvq: true, taxTvh: true, taxPst: true, total: true },
       take: 10000,

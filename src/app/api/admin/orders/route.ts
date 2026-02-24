@@ -328,6 +328,9 @@ export const PUT = withAdminGuard(async (request, { session }) => {
 
 // POST /api/admin/orders - Batch update order statuses (item 71)
 // Allows admin to update multiple orders at once (e.g., mark batch as SHIPPED)
+// G1-FLAW-01: PATCH alias for PUT (frontend compatibility)
+export const PATCH = PUT;
+
 export const POST = withAdminGuard(async (request, { session }) => {
   try {
     const body = await request.json();

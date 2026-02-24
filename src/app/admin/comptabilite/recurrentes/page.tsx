@@ -74,7 +74,8 @@ export default function RecurringEntriesPage() {
       const response = await fetch('/api/accounting/recurring');
       if (!response.ok) throw new Error(t('admin.recurringEntries.apiError', { status: response.status }));
       const data = await response.json();
-      setEntries(data.entries || data.data || []);
+      // G3-FLAW-01: Backend returns 'templates' key
+      setEntries(data.templates || data.entries || data.data || []);
     } catch (err) {
       console.error('Error loading recurring entries:', err);
       setError(t('admin.recurringEntries.loadError'));
@@ -87,7 +88,8 @@ export default function RecurringEntriesPage() {
   const handleProcessDue = async () => {
     setProcessing(true);
     try {
-      const response = await fetch('/api/accounting/recurring?action=process');
+      // G3-FLAW-01: Use PUT method (API expects PUT for processing)
+      const response = await fetch('/api/accounting/recurring', { method: 'PUT' });
       if (!response.ok) throw new Error(t('admin.recurringEntries.apiError', { status: response.status }));
       toast.success(t('admin.recurringEntries.processSuccess'));
       await loadEntries();

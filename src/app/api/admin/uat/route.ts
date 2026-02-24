@@ -17,6 +17,14 @@ import { logger } from '@/lib/logger';
 // POST — Launch a new UAT run
 export const POST = withAdminGuard(async (request: NextRequest, { session }) => {
   try {
+    // G5-FLAW-07: Block UAT test data creation in production
+    if (process.env.NODE_ENV === 'production' && !process.env.ALLOW_UAT_IN_PRODUCTION) {
+      return NextResponse.json(
+        { error: 'UAT test runs are disabled in production. Set ALLOW_UAT_IN_PRODUCTION=true to override.' },
+        { status: 403 }
+      );
+    }
+
     const body = await request.json();
     const canadaOnly = body.canadaOnly !== false; // default true
 

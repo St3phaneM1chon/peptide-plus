@@ -145,17 +145,8 @@ export default function PermissionsPage() {
     fetchGroups();
   }, [fetchPermissions, fetchGroups]);
 
-  // FAILLE-010: Seed permissions on first load if empty - OWNER only with confirmation
-  useEffect(() => {
-    if (!loading && permissions.length === 0 && isOwner) {
-      // Auto-seed only if there are truly no permissions (first setup)
-      fetch('/api/admin/permissions', {
-        method: 'POST',
-        headers: addCSRFHeader({ 'Content-Type': 'application/json' }),
-        body: JSON.stringify({ action: 'seed' }),
-      }).then(() => fetchPermissions()).catch(() => toast.error(t('common.errorOccurred')));
-    }
-  }, [loading, permissions.length, fetchPermissions, isOwner]);
+  // G5-FLAW-09: Removed client-side auto-seed. Server-side GET handler
+  // already auto-seeds when count === 0, so this is handled server-side.
 
   const toggleModule = (mod: string) => {
     setExpandedModules(prev => {

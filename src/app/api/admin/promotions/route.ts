@@ -126,7 +126,15 @@ export const GET = withAdminGuard(async (request, { session }) => {
 // POST /api/admin/promotions - Create a new promotion/discount
 export const POST = withAdminGuard(async (request, { session }) => {
   try {
-    const body = await request.json();
+    const rawBody = await request.json();
+
+    // G2-FLAW-06: Normalize frontend field names to match Zod schema
+    const body = {
+      ...rawBody,
+      type: rawBody.type === 'PRODUCT_DISCOUNT' || rawBody.type === 'CATEGORY_DISCOUNT'
+        ? (rawBody.discountType || rawBody.type) : rawBody.type,
+      value: rawBody.discountValue ?? rawBody.value,
+    };
 
     // Validate with Zod
     const parsed = createPromotionSchema.safeParse(body);

@@ -212,9 +212,11 @@ export default function RapportsPage() {
     toast.info(t('common.comingSoon'));
   }, [t]);
 
+  // G5-FLAW-06: Implement PDF export via accounting reports endpoint
   const handleRibbonExportPdf = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    const { from, to } = getPeriodDates(period);
+    window.open(`/api/accounting/reports/pdf?type=income&from=${from}&to=${to}`, '_blank');
+  }, [period]);
 
   const handleRibbonExportExcel = useCallback(() => {
     toast.info(t('common.comingSoon'));

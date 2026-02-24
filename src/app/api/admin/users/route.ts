@@ -111,8 +111,10 @@ export const GET = withAdminGuard(async (request: NextRequest, { session }) => {
       orderTotals.map((row) => [row.userId, Number(row._sum.total || 0)])
     );
 
+    // G1-FLAW-08: Mask phone numbers in list view
     const usersWithSpent = users.map((user) => ({
       ...user,
+      phone: user.phone ? '*'.repeat(Math.max(0, user.phone.length - 4)) + user.phone.slice(-4) : null,
       totalSpent: spentMap.get(user.id) || 0,
     }));
 

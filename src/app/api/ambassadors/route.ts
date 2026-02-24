@@ -94,9 +94,9 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    // Batch sync earnings in the background (fire-and-forget, non-blocking)
+    // G2-FLAW-05: Batch sync earnings with $transaction instead of N+1 individual updates
     if (earningsUpdates.length > 0) {
-      Promise.all(
+      prisma.$transaction(
         earningsUpdates.map(({ id, totalEarnings }) =>
           prisma.ambassador.update({ where: { id }, data: { totalEarnings } })
         )

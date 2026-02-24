@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { detectExpenseAnomalies } from '@/lib/accounting';
 import { logger } from '@/lib/logger';
 
 // #99 In-memory cache for expensive dashboard aggregate queries.
@@ -369,6 +370,42 @@ export const GET = withAdminGuard(async (request) => {
       };
     });
 
+    // G3-FLAW-08: Compute expense anomalies (compare current month to prior 3-month average)
+    const threeMonthsAgo = new Date(viewYear, viewMonth - 3, 1);
+    const lastMonthEnd = new Date(viewYear, viewMonth, 0, 23, 59, 59);
+
+    const historicalExpenseLines = await prisma.journalLine.findMany({
+      where: {
+        debit: { gt: 0 },
+        account: { type: 'EXPENSE' },
+        entry: {
+          status: 'POSTED',
+          deletedAt: null,
+          date: { gte: threeMonthsAgo, lte: lastMonthEnd },
+        },
+      },
+      select: { debit: true, account: { select: { code: true, name: true } } },
+    });
+
+    // Build current month expenses by account code (from expensesByCategory)
+    const currentExpensesByCode: Record<string, number> = {};
+    for (const cat of expensesByCategory) {
+      currentExpensesByCode[cat.accountCode] = cat.total;
+    }
+
+    // Build historical averages
+    const historicalTotals: Record<string, number> = {};
+    for (const line of historicalExpenseLines) {
+      const code = line.account.code;
+      historicalTotals[code] = (historicalTotals[code] || 0) + Number(line.debit);
+    }
+    const historicalAverages: Record<string, number> = {};
+    for (const [code, total] of Object.entries(historicalTotals)) {
+      historicalAverages[code] = Math.round((total / 3) * 100) / 100;
+    }
+
+    const expenseAnomalies = detectExpenseAnomalies(currentExpensesByCode, historicalAverages);
+
     // #99 Build the response payload and cache it
     const responseData = {
       totalRevenue,
@@ -396,6 +433,7 @@ export const GET = withAdminGuard(async (request) => {
       alerts,
       monthlyTrends: monthlyTrendsData,
       expensesByCategory,
+      expenseAnomalies,
     };
 
     // #99 Store in cache for subsequent requests

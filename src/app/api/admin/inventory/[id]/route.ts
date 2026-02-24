@@ -110,6 +110,10 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
       userAgent: request.headers.get('user-agent') || undefined,
     }).catch(() => {});
 
+    // G1-FLAW-10: Check for low stock after update
+    const isLowStock = updatedFormat.stockQuantity <= (format.lowStockThreshold ?? 5);
+    const isOutOfStock = updatedFormat.stockQuantity === 0;
+
     return NextResponse.json({
       success: true,
       format: {
@@ -117,6 +121,14 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
         stockQuantity: updatedFormat.stockQuantity,
         availability: updatedFormat.availability,
       },
+      ...(isLowStock && {
+        lowStockAlert: {
+          formatId: updatedFormat.id,
+          currentStock: updatedFormat.stockQuantity,
+          threshold: format.lowStockThreshold ?? 5,
+          isOutOfStock,
+        },
+      }),
     });
   } catch (error) {
     logger.error('Admin inventory PATCH error', { error: error instanceof Error ? error.message : String(error) });
