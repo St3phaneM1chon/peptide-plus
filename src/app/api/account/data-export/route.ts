@@ -50,7 +50,7 @@ async function checkExportRateLimit(userId: string): Promise<boolean> {
         return true;
       }
     } catch (error) {
-      logger.error('[DataExport] Redis rate-limit check failed', { error: error instanceof Error ? error.message : String(error) });
+      logger.error('[DataExport] Redis rate-limit check failed', { error: error instanceof Error ? error.message : String(error), userId });
       // Fall through to memory
     }
   }
@@ -543,6 +543,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     logger.error('[data-export] Failed to generate export', {
       error: error instanceof Error ? error.message : String(error),
+      userId: session?.user?.id,
     });
     return NextResponse.json(
       { error: 'Failed to generate data export' },

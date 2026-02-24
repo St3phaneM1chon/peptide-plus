@@ -31,7 +31,7 @@ interface ChatSettings {
 }
 
 export default function ChatWidget() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -406,7 +406,7 @@ export default function ChatWidget() {
                     <p className="text-sm whitespace-pre-wrap">{message.content}</p>
                   )}
                   <p className={`text-xs mt-1 ${message.sender === 'VISITOR' ? 'text-white/70' : 'text-gray-400'}`}>
-                    {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    {new Date(message.createdAt).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}
                   </p>
                 </div>
               </div>
@@ -431,7 +431,7 @@ export default function ChatWidget() {
           <div className="p-4 border-t bg-white">
             <div className="flex items-center gap-1">
               {/* Image upload button */}
-              <label className="p-2 hover:bg-slate-100 rounded-full cursor-pointer transition-colors flex-shrink-0" title="Upload image">
+              <label className="p-2 hover:bg-slate-100 rounded-full cursor-pointer transition-colors flex-shrink-0" title={t('chat.uploadImage')}>
                 <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <rect x="3" y="3" width="18" height="18" rx="2" ry="2" strokeWidth={2} />
                   <circle cx="8.5" cy="8.5" r="1.5" strokeWidth={2} />
@@ -453,7 +453,7 @@ export default function ChatWidget() {
                   type="button"
                   onClick={() => setShowEmojiPicker(!showEmojiPicker)}
                   className="p-2 hover:bg-slate-100 rounded-full transition-colors"
-                  title="Emoji"
+                  title={t('chat.emoji')}
                 >
                   <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <circle cx="12" cy="12" r="10" strokeWidth={2} />

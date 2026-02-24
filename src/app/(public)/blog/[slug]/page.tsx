@@ -32,7 +32,7 @@ export async function generateStaticParams() {
       select: { slug: true },
     });
     return posts.map((p) => ({ slug: p.slug }));
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Failed to generate static params for blog posts:', error instanceof Error ? error.message : error);
     return [];
   }

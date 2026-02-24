@@ -137,7 +137,7 @@ export default async function BlogPage() {
   let locale: string;
   try {
     locale = await getServerLocale();
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Failed to get server locale, falling back to "en":', error instanceof Error ? error.message : error);
     locale = 'en';
   }
@@ -145,7 +145,7 @@ export default async function BlogPage() {
   let posts: BlogPostRow[] = [];
   try {
     posts = await getBlogPosts(locale);
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Failed to fetch blog posts:', error);
   }
 

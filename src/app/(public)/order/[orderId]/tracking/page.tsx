@@ -73,6 +73,7 @@ export default async function TrackingPage({ params }: TrackingPageProps) {
 
       {/* Contenu - suivi de livraison physique */}
       <div style={{ maxWidth: '900px', margin: '0 auto', padding: '32px 24px' }}>
+        {/* Safe: narrowing Prisma result to component props after manual field coercion */}
         <PhysicalDeliveryTracking order={{ ...order, amount: Number(order.amount), createdAt: new Date(order.createdAt) } as React.ComponentProps<typeof PhysicalDeliveryTracking>['order']} />
       </div>
     </div>

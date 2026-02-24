@@ -300,6 +300,10 @@ export default class TypescriptQualityAuditor extends BaseAuditor {
     let totalAssertions = 0;
 
     for (const file of tsFiles) {
+      const rel = this.relativePath(file);
+      // Skip test files - type assertions in tests are expected (mocks, fixtures, test data)
+      if (/__tests__|\.test\.|\.spec\.|test\/|tests\//i.test(rel)) continue;
+
       const content = this.readFile(file);
       if (!content) continue;
 

@@ -192,7 +192,7 @@ export default function PeptideCalculator({ className = '', onClose, isModal = f
               {onClose && (
                 <button
                   onClick={onClose}
-                  aria-label="Close calculator"
+                  aria-label={t('calculator.ariaClose')}
                   className="w-10 h-10 rounded-full bg-neutral-800 hover:bg-neutral-700 flex items-center justify-center text-neutral-400 hover:text-white transition-colors border border-neutral-700"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -430,10 +430,11 @@ export default function PeptideCalculator({ className = '', onClose, isModal = f
 
 // Version Modal de la calculatrice
 export function PeptideCalculatorModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+  const { t } = useI18n();
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Peptide calculator">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label={t('calculator.ariaLabel')}>
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/70 backdrop-blur-sm"

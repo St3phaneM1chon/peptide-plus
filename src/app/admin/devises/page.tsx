@@ -432,7 +432,7 @@ export default function DevisesPage() {
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.currencies.exchangeRateLabel') || 'Exchange Rate (vs CAD)'}</label>
-            <input type="number" step="0.000001" min="0" value={form.exchangeRate} onChange={e => setForm({ ...form, exchangeRate: e.target.value })} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-sky-500 focus:border-sky-500" />
+            <input type="number" step="0.000001" min="0" value={form.exchangeRate} onChange={e => setForm({ ...form, exchangeRate: e.target.value })} aria-label="Exchange rate versus CAD" className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-sky-500 focus:border-sky-500" />
           </div>
           <div className="flex gap-3 justify-end pt-2">
             <Button variant="secondary" onClick={() => { setShowAddCurrency(false); setForm(emptyCurrencyForm); }}>
@@ -450,19 +450,19 @@ export default function DevisesPage() {
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.currencies.codeLabel') || 'Code'}</label>
-            <input type="text" value={form.code} disabled className="w-full border border-slate-200 bg-slate-50 rounded-lg px-3 py-2 text-sm text-slate-500" />
+            <input type="text" value={form.code} disabled aria-label="Currency code" className="w-full border border-slate-200 bg-slate-50 rounded-lg px-3 py-2 text-sm text-slate-500" />
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.currencies.nameLabel') || 'Name'}</label>
-            <input type="text" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-sky-500 focus:border-sky-500" />
+            <input type="text" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} aria-label="Currency name" className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-sky-500 focus:border-sky-500" />
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.currencies.symbolLabel') || 'Symbol'}</label>
-            <input type="text" maxLength={5} value={form.symbol} onChange={e => setForm({ ...form, symbol: e.target.value })} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-sky-500 focus:border-sky-500" />
+            <input type="text" maxLength={5} value={form.symbol} onChange={e => setForm({ ...form, symbol: e.target.value })} aria-label="Currency symbol" className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-sky-500 focus:border-sky-500" />
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.currencies.exchangeRateLabel') || 'Exchange Rate (vs CAD)'}</label>
-            <input type="number" step="0.000001" min="0" value={form.exchangeRate} onChange={e => setForm({ ...form, exchangeRate: e.target.value })} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-sky-500 focus:border-sky-500" />
+            <input type="number" step="0.000001" min="0" value={form.exchangeRate} onChange={e => setForm({ ...form, exchangeRate: e.target.value })} aria-label="Edit exchange rate versus CAD" className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-sky-500 focus:border-sky-500" />
           </div>
           <div className="flex gap-3 justify-end pt-2">
             <Button variant="secondary" onClick={() => { setEditingCurrency(null); setForm(emptyCurrencyForm); }}>

@@ -667,7 +667,7 @@ export default function EmailsPage() {
             <h3 className="font-semibold text-slate-900 mb-4">{t('admin.emailConfig.smtpConfig')}</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField label={t('admin.emailConfig.provider')}>
-                <select data-field="provider" defaultValue={emailSettings['email.provider'] || 'Resend'} className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
+                <select data-field="provider" defaultValue={emailSettings['email.provider'] || 'Resend'} aria-label="Email service provider" className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
                   <option value="Resend">Resend</option>
                   <option value="SendGrid">SendGrid</option>
                   <option value="SMTP">{t('admin.emailConfig.customSmtp')}</option>
@@ -707,19 +707,19 @@ export default function EmailsPage() {
             <div className="space-y-3">
               <label className="flex items-center justify-between">
                 <span className="text-slate-700">{t('admin.emailConfig.abandonedCartEmail')}</span>
-                <input type="checkbox" className="w-4 h-4 rounded border-slate-300 text-sky-500 focus:ring-sky-500" />
+                <input type="checkbox" aria-label="Enable abandoned cart email automation" className="w-4 h-4 rounded border-slate-300 text-sky-500 focus:ring-sky-500" />
               </label>
               <label className="flex items-center justify-between">
                 <span className="text-slate-700">{t('admin.emailConfig.reviewRequest')}</span>
-                <input type="checkbox" defaultChecked className="w-4 h-4 rounded border-slate-300 text-sky-500 focus:ring-sky-500" />
+                <input type="checkbox" defaultChecked aria-label="Enable review request email automation" className="w-4 h-4 rounded border-slate-300 text-sky-500 focus:ring-sky-500" />
               </label>
               <label className="flex items-center justify-between">
                 <span className="text-slate-700">{t('admin.emailConfig.birthdayEmail')}</span>
-                <input type="checkbox" defaultChecked className="w-4 h-4 rounded border-slate-300 text-sky-500 focus:ring-sky-500" />
+                <input type="checkbox" defaultChecked aria-label="Enable birthday email automation" className="w-4 h-4 rounded border-slate-300 text-sky-500 focus:ring-sky-500" />
               </label>
               <label className="flex items-center justify-between">
                 <span className="text-slate-700">{t('admin.emailConfig.autoResponder')}</span>
-                <input type="checkbox" className="w-4 h-4 rounded border-slate-300 text-sky-500 focus:ring-sky-500" />
+                <input type="checkbox" aria-label="Enable auto-responder email automation" className="w-4 h-4 rounded border-slate-300 text-sky-500 focus:ring-sky-500" />
               </label>
             </div>
           </div>

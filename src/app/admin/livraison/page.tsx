@@ -514,11 +514,11 @@ export default function LivraisonPage() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.shipping.baseFee') || 'Base Fee ($)'}</label>
-              <input type="number" step="0.01" min="0" value={formBaseFee} onChange={e => setFormBaseFee(e.target.value)} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-sky-500 focus:border-sky-500" />
+              <input type="number" step="0.01" min="0" value={formBaseFee} onChange={e => setFormBaseFee(e.target.value)} aria-label={t('admin.shipping.baseFee') || 'Base Fee'} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-sky-500 focus:border-sky-500" />
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.shipping.perItemFee') || 'Per Item Fee ($)'}</label>
-              <input type="number" step="0.01" min="0" value={formPerItemFee} onChange={e => setFormPerItemFee(e.target.value)} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-sky-500 focus:border-sky-500" />
+              <input type="number" step="0.01" min="0" value={formPerItemFee} onChange={e => setFormPerItemFee(e.target.value)} aria-label={t('admin.shipping.perItemFee') || 'Per Item Fee'} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-sky-500 focus:border-sky-500" />
             </div>
           </div>
           <div>
@@ -528,11 +528,11 @@ export default function LivraisonPage() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.shipping.minDays') || 'Min Delivery Days'}</label>
-              <input type="number" min="1" value={formMinDays} onChange={e => setFormMinDays(e.target.value)} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-sky-500 focus:border-sky-500" />
+              <input type="number" min="1" value={formMinDays} onChange={e => setFormMinDays(e.target.value)} aria-label={t('admin.shipping.minDays') || 'Min Delivery Days'} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-sky-500 focus:border-sky-500" />
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">{t('admin.shipping.maxDays') || 'Max Delivery Days'}</label>
-              <input type="number" min="1" value={formMaxDays} onChange={e => setFormMaxDays(e.target.value)} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-sky-500 focus:border-sky-500" />
+              <input type="number" min="1" value={formMaxDays} onChange={e => setFormMaxDays(e.target.value)} aria-label={t('admin.shipping.maxDays') || 'Max Delivery Days'} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-sky-500 focus:border-sky-500" />
             </div>
           </div>
           <div className="flex gap-3 justify-end pt-2">

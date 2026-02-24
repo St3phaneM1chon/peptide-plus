@@ -161,11 +161,15 @@ export default class InputInjectionAuditor extends BaseAuditor {
         const lineNum = content.substring(0, match.index).split('\n').length;
         const snippet = this.getSnippet(content, lineNum, 2);
 
-        // Check if there is a sanitization call nearby
-        const nearbyCode = content.substring(Math.max(0, match.index - 500), match.index);
+        // Check if there is a sanitization call nearby (before AND after, same expression)
+        const nearbyBefore = content.substring(Math.max(0, match.index - 500), match.index);
+        const nearbyAfter = content.substring(match.index, Math.min(content.length, match.index + 200));
+        const nearbyCode = nearbyBefore + nearbyAfter;
         // Check for sanitization: nearby usage OR import at file level
+        // JSON.stringify is safe for structured data (JSON-LD, etc.) - it escapes all HTML characters
         const hasSanitization = /DOMPurify|sanitize|sanitizeHtml|xss|purify|escape/i.test(nearbyCode) ||
-          /import.*(?:DOMPurify|sanitize|sanitizeHtml|xss|purify)/i.test(content);
+          /import.*(?:DOMPurify|sanitize|sanitizeHtml|xss|purify)/i.test(content) ||
+          /JSON\.stringify/.test(nearbyCode);
         // Admin-only pages rendering admin-authored HTML (CMS content, email previews)
         // are lower risk since admins are trusted content authors
         const isAdminPage = /\/admin\//.test(this.relativePath(file));

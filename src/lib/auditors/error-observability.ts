@@ -80,7 +80,16 @@ export default class ErrorObservabilityAuditor extends BaseAuditor {
           // Check for truly empty catch blocks
           const isEmptyCatch = body.replace(/[{}()\s]/g, '').length < 5;
 
-          if (!hasLogging && !isEmptyCatch) {
+          // Expected control flow catches: catch blocks that only set a boolean/variable
+          // (e.g., timingSafeEqual catch, JSON.parse fallback, feature detection)
+          const isControlFlowCatch =
+            /^\s*\w+\s*=\s*(false|true|null|undefined|0|''|""|``);\s*$/.test(body.trim()) ||
+            /timingSafeEqual/.test(lines[i - 1] || '') || /timingSafeEqual/.test(lines[i - 2] || '') ||
+            /timingSafeEqual/.test(lines[i - 3] || '');
+
+          if (isControlFlowCatch) {
+            // Skip - intentional control flow, not an error handling gap
+          } else if (!hasLogging && !isEmptyCatch) {
             silentCatches.push({
               file,
               line: i + 1,

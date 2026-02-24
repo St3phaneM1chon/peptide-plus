@@ -197,6 +197,21 @@ export const POST = withAdminGuard(
       }
       const resumeOffset = typeof existingStats.sentCount === 'number' ? existingStats.sentCount : 0;
 
+      // N+1 FIX: Batch pre-fetch frequency cap data for all valid recipients
+      let frequencyCapEmails = new Set<string>();
+      if (CAMPAIGN_FREQUENCY_CAP_HOURS > 0 && validRecipients.length > 0) {
+        const cutoff = new Date(Date.now() - CAMPAIGN_FREQUENCY_CAP_HOURS * 60 * 60 * 1000);
+        const recentCampaignLogs = await prisma.emailLog.findMany({
+          where: {
+            to: { in: validRecipients.map(r => r.email) },
+            templateId: { startsWith: 'campaign:' },
+            sentAt: { gt: cutoff },
+          },
+          select: { to: true },
+        });
+        frequencyCapEmails = new Set(recentCampaignLogs.map(l => l.to));
+      }
+
       // Send to each recipient with basic throttle to avoid provider rate limits
       let sent = 0;
       let failed = 0;
@@ -247,25 +262,14 @@ export const POST = withAdminGuard(
         }
         const recipient = validRecipients[i];
         try {
-          // Frequency cap: skip if recipient received a campaign email recently
-          if (CAMPAIGN_FREQUENCY_CAP_HOURS > 0) {
-            const cutoff = new Date(Date.now() - CAMPAIGN_FREQUENCY_CAP_HOURS * 60 * 60 * 1000);
-            const recentCampaign = await prisma.emailLog.findFirst({
-              where: {
-                to: recipient.email,
-                templateId: { startsWith: 'campaign:' },
-                sentAt: { gt: cutoff },
-              },
-              select: { id: true },
+          // Frequency cap: skip if recipient received a campaign email recently (pre-fetched)
+          if (CAMPAIGN_FREQUENCY_CAP_HOURS > 0 && frequencyCapEmails.has(recipient.email)) {
+            logger.info('[Campaign Send] Frequency cap: skipping recipient', {
+              email: recipient.email,
+              campaignId: params.id,
+              capHours: CAMPAIGN_FREQUENCY_CAP_HOURS,
             });
-            if (recentCampaign) {
-              logger.info('[Campaign Send] Frequency cap: skipping recipient', {
-                email: recipient.email,
-                campaignId: params.id,
-                capHours: CAMPAIGN_FREQUENCY_CAP_HOURS,
-              });
-              continue;
-            }
+            continue;
           }
 
           // Personalize content - HTML-escape user data to prevent XSS

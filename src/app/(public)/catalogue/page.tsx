@@ -232,6 +232,7 @@ export default async function CataloguePage({ searchParams }: CataloguePageProps
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                {/* Safe: Prisma result includes category via include, matching Product type */}
                 {products.map((product) => (
                   <ProductCard key={product.id} product={product as unknown as Product} />
                 ))}

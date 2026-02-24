@@ -76,18 +76,34 @@ export async function GET(request: NextRequest) {
         },
       });
 
+      // N+1 FIX: Batch-fetch all existing EXPIRE transactions to check idempotency
+      const expiredTxIds = expiredTransactions.map(tx => tx.id);
+      const existingExpires = expiredTxIds.length > 0
+        ? await db.loyaltyTransaction.findMany({
+            where: {
+              type: 'EXPIRE',
+              description: { not: null },
+            },
+            select: { description: true },
+          })
+        : [];
+      // Build a set of transaction IDs that already have EXPIRE records
+      const alreadyExpiredTxIds = new Set<string>();
+      for (const expire of existingExpires) {
+        if (expire.description) {
+          for (const txId of expiredTxIds) {
+            if (expire.description.includes(txId)) {
+              alreadyExpiredTxIds.add(txId);
+            }
+          }
+        }
+      }
+
       // Group expired points by user
       const expiredByUser: Record<string, { userId: string; totalExpired: number; transactionIds: string[] }> = {};
       for (const tx of expiredTransactions) {
         // Check if an EXPIRE transaction already exists for this transaction (idempotency)
-        const existingExpire = await db.loyaltyTransaction.findFirst({
-          where: {
-            userId: tx.userId,
-            type: 'EXPIRE',
-            description: { contains: tx.id },
-          },
-        });
-        if (existingExpire) continue;
+        if (alreadyExpiredTxIds.has(tx.id)) continue;
 
         if (!expiredByUser[tx.userId]) {
           expiredByUser[tx.userId] = { userId: tx.userId, totalExpired: 0, transactionIds: [] };

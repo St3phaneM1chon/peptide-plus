@@ -27,7 +27,10 @@ const COMPANY_STATIC = {
 };
 
 async function getCompanyInfo() {
-  const settings = await prisma.accountingSettings.findUnique({ where: { id: 'default' } });
+  const settings = await prisma.accountingSettings.findUnique({
+    where: { id: 'default' },
+    select: { tpsNumber: true, tvqNumber: true },
+  });
   return {
     ...COMPANY_STATIC,
     tpsNumber: settings?.tpsNumber || process.env.BUSINESS_TPS || '',
@@ -70,11 +73,44 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    // Fetch order with items and currency
+    // Fetch order with items and currency (select only needed fields)
     const order = await prisma.order.findUnique({
       where: { id },
-      include: {
-        items: true,
+      select: {
+        id: true,
+        orderNumber: true,
+        userId: true,
+        paymentStatus: true,
+        paymentMethod: true,
+        createdAt: true,
+        subtotal: true,
+        shippingCost: true,
+        discount: true,
+        total: true,
+        promoCode: true,
+        taxTps: true,
+        taxTvq: true,
+        taxTvh: true,
+        taxPst: true,
+        shippingName: true,
+        shippingAddress1: true,
+        shippingAddress2: true,
+        shippingCity: true,
+        shippingState: true,
+        shippingPostal: true,
+        shippingCountry: true,
+        shippingPhone: true,
+        items: {
+          select: {
+            id: true,
+            productName: true,
+            formatName: true,
+            sku: true,
+            quantity: true,
+            unitPrice: true,
+            total: true,
+          },
+        },
         currency: {
           select: {
             code: true,

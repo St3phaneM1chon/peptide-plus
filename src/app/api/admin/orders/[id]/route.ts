@@ -75,74 +75,73 @@ export const GET = withAdminGuard(async (_request, { params }) => {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });
     }
 
-    // Fetch customer info
-    const user = await prisma.user.findUnique({
-      where: { id: order.userId },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        phone: true,
-        loyaltyTier: true,
-      },
-    });
-
-    // Fetch related accounting entries
-    const journalEntries = await prisma.journalEntry.findMany({
-      where: { orderId: order.id },
-      select: {
-        id: true,
-        entryNumber: true,
-        type: true,
-        description: true,
-        status: true,
-        date: true,
-      },
-      orderBy: { createdAt: 'desc' },
-    });
-
-    // Fetch inventory transactions for this order
-    const inventoryTransactions = await prisma.inventoryTransaction.findMany({
-      where: { orderId: order.id },
-      select: {
-        id: true,
-        type: true,
-        quantity: true,
-        unitCost: true,
-        createdAt: true,
-      },
-    });
-
-    // Fetch credit notes for this order
-    const creditNotes = await prisma.creditNote.findMany({
-      where: { orderId: order.id },
-      select: {
-        id: true,
-        creditNoteNumber: true,
-        total: true,
-        reason: true,
-        status: true,
-        issuedAt: true,
-      },
-      orderBy: { createdAt: 'desc' },
-    });
-
-    // Fetch payment errors for this order
-    const paymentErrors = await prisma.paymentError.findMany({
-      where: { orderId: order.id },
-      select: {
-        id: true,
-        stripePaymentId: true,
-        errorType: true,
-        errorMessage: true,
-        amount: true,
-        currency: true,
-        customerEmail: true,
-        metadata: true,
-        createdAt: true,
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+    // N+1 FIX: Fetch all related data in parallel instead of sequentially
+    const [user, journalEntries, inventoryTransactions, creditNotes, paymentErrors] = await Promise.all([
+      // Fetch customer info
+      prisma.user.findUnique({
+        where: { id: order.userId },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true,
+          loyaltyTier: true,
+        },
+      }),
+      // Fetch related accounting entries
+      prisma.journalEntry.findMany({
+        where: { orderId: order.id },
+        select: {
+          id: true,
+          entryNumber: true,
+          type: true,
+          description: true,
+          status: true,
+          date: true,
+        },
+        orderBy: { createdAt: 'desc' },
+      }),
+      // Fetch inventory transactions for this order
+      prisma.inventoryTransaction.findMany({
+        where: { orderId: order.id },
+        select: {
+          id: true,
+          type: true,
+          quantity: true,
+          unitCost: true,
+          createdAt: true,
+        },
+      }),
+      // Fetch credit notes for this order
+      prisma.creditNote.findMany({
+        where: { orderId: order.id },
+        select: {
+          id: true,
+          creditNoteNumber: true,
+          total: true,
+          reason: true,
+          status: true,
+          issuedAt: true,
+        },
+        orderBy: { createdAt: 'desc' },
+      }),
+      // Fetch payment errors for this order
+      prisma.paymentError.findMany({
+        where: { orderId: order.id },
+        select: {
+          id: true,
+          stripePaymentId: true,
+          errorType: true,
+          errorMessage: true,
+          amount: true,
+          currency: true,
+          customerEmail: true,
+          metadata: true,
+          createdAt: true,
+        },
+        orderBy: { createdAt: 'desc' },
+      }),
+    ]);
 
     // Serialize Decimal fields to numbers
     const serializedOrder = {
@@ -559,6 +558,20 @@ async function handleRefund(
 
     // Restore stock for full refunds
     if (isFullRefund) {
+      // N+1 FIX: Batch-fetch WAC for all items upfront
+      const wacResults = await tx.inventoryTransaction.findMany({
+        where: {
+          OR: order.items.map(item => ({
+            productId: item.productId,
+            formatId: item.formatId,
+          })),
+        },
+        orderBy: { createdAt: 'desc' },
+        distinct: ['productId', 'formatId'],
+        select: { productId: true, formatId: true, runningWAC: true },
+      });
+      const wacMap = new Map(wacResults.map(w => [`${w.productId}-${w.formatId}`, Number(w.runningWAC)]));
+
       for (const item of order.items) {
         if (item.formatId) {
           await tx.productFormat.update({
@@ -567,16 +580,7 @@ async function handleRefund(
           });
         }
 
-        // Get current WAC
-        const lastTransaction = await tx.inventoryTransaction.findFirst({
-          where: {
-            productId: item.productId,
-            formatId: item.formatId,
-          },
-          orderBy: { createdAt: 'desc' },
-          select: { runningWAC: true },
-        });
-        const wac = lastTransaction ? Number(lastTransaction.runningWAC) : 0;
+        const wac = wacMap.get(`${item.productId}-${item.formatId}`) ?? 0;
 
         // Create RETURN inventory transaction
         await tx.inventoryTransaction.create({
@@ -596,18 +600,18 @@ async function handleRefund(
     }
   });
 
-  // Find linked invoice & create CreditNote
+  // N+1 FIX: Fetch invoice and customer in parallel
   let creditNoteId: string | null = null;
-  const invoice = await prisma.customerInvoice.findFirst({
-    where: { orderId: order.id },
-    select: { id: true },
-  });
-
-  // Get customer info for credit note
-  const customer = await prisma.user.findUnique({
-    where: { id: order.userId },
-    select: { name: true, email: true },
-  });
+  const [invoice, customer] = await Promise.all([
+    prisma.customerInvoice.findFirst({
+      where: { orderId: order.id },
+      select: { id: true },
+    }),
+    prisma.user.findUnique({
+      where: { id: order.userId },
+      select: { name: true, email: true },
+    }),
+  ]);
 
   const netRefund = amount - refundTps - refundTvq - refundTvh - refundPst;
   creditNoteId = await createCreditNote({
@@ -801,17 +805,33 @@ async function handleReship(
   const totalLossAmount = await prisma.$transaction(async (tx) => {
     let lossAccumulator = 0;
 
-    for (const item of order.items) {
-      // Get current WAC
-      const lastTransaction = await tx.inventoryTransaction.findFirst({
-        where: {
+    // N+1 FIX: Batch-fetch WAC for all items upfront
+    const wacResults = await tx.inventoryTransaction.findMany({
+      where: {
+        OR: order.items.map(item => ({
           productId: item.productId,
           formatId: item.formatId,
-        },
-        orderBy: { createdAt: 'desc' },
-        select: { runningWAC: true },
-      });
-      const wac = lastTransaction ? Number(lastTransaction.runningWAC) : 0;
+        })),
+      },
+      orderBy: { createdAt: 'desc' },
+      distinct: ['productId', 'formatId'],
+      select: { productId: true, formatId: true, runningWAC: true },
+    });
+    const wacMap = new Map(wacResults.map(w => [`${w.productId}-${w.formatId}`, Number(w.runningWAC)]));
+
+    // N+1 FIX: Batch-fetch all format stock quantities
+    const formatIds = order.items.map(i => i.formatId).filter((id): id is string => !!id);
+    const uniqueFormatIds = [...new Set(formatIds)];
+    const formats = uniqueFormatIds.length > 0
+      ? await tx.productFormat.findMany({
+          where: { id: { in: uniqueFormatIds } },
+          select: { id: true, stockQuantity: true },
+        })
+      : [];
+    const formatStockMap = new Map(formats.map(f => [f.id, f.stockQuantity]));
+
+    for (const item of order.items) {
+      const wac = wacMap.get(`${item.productId}-${item.formatId}`) ?? 0;
       lossAccumulator += wac * item.quantity;
 
       // LOSS transaction on the original order (colis perdu)
@@ -846,16 +866,15 @@ async function handleReship(
 
       // Decrement stock (floor at 0 to prevent negative inventory)
       if (item.formatId) {
-        const currentFormat = await tx.productFormat.findUnique({
-          where: { id: item.formatId },
-          select: { stockQuantity: true },
-        });
-        const safeDecrement = Math.min(item.quantity, currentFormat?.stockQuantity ?? 0);
+        const currentStock = formatStockMap.get(item.formatId) ?? 0;
+        const safeDecrement = Math.min(item.quantity, currentStock);
         if (safeDecrement > 0) {
           await tx.productFormat.update({
             where: { id: item.formatId },
             data: { stockQuantity: { decrement: safeDecrement } },
           });
+          // Update local map for subsequent items with the same format
+          formatStockMap.set(item.formatId, currentStock - safeDecrement);
         }
         if (safeDecrement < item.quantity) {
           logger.warn(`[Admin reship] Stock floor hit for format ${item.formatId}: wanted to decrement ${item.quantity}, only decremented ${safeDecrement}`);

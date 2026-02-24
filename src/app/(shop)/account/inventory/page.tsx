@@ -115,7 +115,7 @@ export default function InventoryPage() {
         const data = await res.json();
         setOrders(data.orders || []);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Failed to fetch orders:', error);
     } finally {
       setLoading(false);
@@ -445,7 +445,7 @@ export default function InventoryPage() {
             {/* Stock Filter */}
             <select
               value={stockFilter}
-              onChange={(e) => setStockFilter(e.target.value as StockFilter)}
+              onChange={(e) => setStockFilter(e.target.value as StockFilter)} // Safe: select options constrained to StockFilter values
               className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
             >
               <option value="all">{t('account.inventory.allStatuses')}</option>

@@ -127,7 +127,7 @@ export async function PUT(request: NextRequest) {
       address,
     });
   } catch (error) {
-    logger.error('Error updating address', { error: error instanceof Error ? error.message : String(error) });
+    logger.error('Error updating address', { error: error instanceof Error ? error.message : String(error), userId: session?.user?.id });
     return NextResponse.json(
       { error: 'Failed to update address' },
       { status: 500 }
@@ -172,7 +172,7 @@ export async function GET() {
       addresses,
     });
   } catch (error) {
-    logger.error('Error fetching address', { error: error instanceof Error ? error.message : String(error) });
+    logger.error('Error fetching address', { error: error instanceof Error ? error.message : String(error), userId: session?.user?.id });
     // SEC-29: Return 500 status on error instead of 200
     return NextResponse.json(
       { error: 'Failed to fetch address' },

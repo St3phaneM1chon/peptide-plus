@@ -111,7 +111,7 @@ export default function OrdersPage() {
         const data = await res.json();
         setOrders(data.orders || []);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Failed to fetch orders:', error);
     } finally {
       setLoading(false);

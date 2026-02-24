@@ -53,16 +53,33 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
         select: { id: true, email: true },
       });
 
+      // N+1 FIX: Check bounce suppression in parallel batches of 50
+      const CLEAN_BATCH_SIZE = 50;
       let cleaned = 0;
-      for (const sub of subscribers) {
-        const result = await shouldSuppressEmail(sub.email);
-        if (result.suppressed) {
-          await prisma.newsletterSubscriber.update({
-            where: { id: sub.id },
-            data: { isActive: false, unsubscribedAt: new Date() },
-          });
-          cleaned++;
+      const idsToDeactivate: string[] = [];
+
+      for (let i = 0; i < subscribers.length; i += CLEAN_BATCH_SIZE) {
+        const batch = subscribers.slice(i, i + CLEAN_BATCH_SIZE);
+        const results = await Promise.all(
+          batch.map(async (sub) => {
+            const result = await shouldSuppressEmail(sub.email);
+            return { id: sub.id, suppressed: result.suppressed };
+          })
+        );
+        for (const r of results) {
+          if (r.suppressed) {
+            idsToDeactivate.push(r.id);
+          }
         }
+      }
+
+      // Batch-update all suppressed subscribers at once
+      if (idsToDeactivate.length > 0) {
+        await prisma.newsletterSubscriber.updateMany({
+          where: { id: { in: idsToDeactivate } },
+          data: { isActive: false, unsubscribedAt: new Date() },
+        });
+        cleaned = idsToDeactivate.length;
       }
 
       logAdminAction({
@@ -106,6 +123,15 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
     // Track emails seen in this import batch to reject intra-CSV duplicates
     const seenEmails = new Set<string>();
 
+    // Pre-validate and collect unique emails
+    interface ValidContact {
+      row: number;
+      email: string;
+      name: string | null;
+      locale: string;
+    }
+    const validContacts: ValidContact[] = [];
+
     for (let i = 0; i < contacts.length; i++) {
       const contact = contacts[i];
       const email = (contact.email || '').toLowerCase().trim();
@@ -131,16 +157,26 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
       const localeValid = contact.locale ? validLocales.includes(contact.locale) : false;
       if (contact.locale && !localeValid) {
         invalidLocales++;
-        // Don't reject — use default, but track it
       }
-      const locale = localeValid ? contact.locale : 'fr';
+      const locale = localeValid ? contact.locale! : 'fr';
 
+      validContacts.push({ row: i + 1, email, name: safeName, locale });
+    }
+
+    // N+1 FIX: Batch-fetch all existing subscribers by email in one query
+    const allEmails = validContacts.map(c => c.email);
+    const existingSubscribers = allEmails.length > 0
+      ? await prisma.newsletterSubscriber.findMany({
+          where: { email: { in: allEmails } },
+          select: { id: true, email: true, isActive: true, unsubscribedAt: true },
+        })
+      : [];
+    const existingSubMap = new Map(existingSubscribers.map(s => [s.email, s]));
+
+    for (const contact of validContacts) {
       try {
         // RGPD compliance: check if subscriber previously unsubscribed
-        const existing = await prisma.newsletterSubscriber.findUnique({
-          where: { email },
-          select: { id: true, isActive: true, unsubscribedAt: true },
-        });
+        const existing = existingSubMap.get(contact.email);
 
         if (existing && !existing.isActive && existing.unsubscribedAt) {
           // User actively unsubscribed — do NOT re-subscribe (RGPD violation)
@@ -151,9 +187,9 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
         if (existing) {
           // Update existing subscriber
           await prisma.newsletterSubscriber.update({
-            where: { email },
+            where: { email: contact.email },
             data: {
-              name: safeName || undefined,
+              name: contact.name || undefined,
             },
           });
           updated++;
@@ -162,9 +198,9 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
           await prisma.newsletterSubscriber.create({
             data: {
               id: crypto.randomUUID(),
-              email,
-              name: safeName,
-              locale,
+              email: contact.email,
+              name: contact.name,
+              locale: contact.locale,
               source: 'csv-import',
               isActive: true,
             },
@@ -172,9 +208,9 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
           imported++;
         }
       } catch (error) {
-        console.error('[MailingListImport] Database error importing contact:', email, error);
+        console.error('[MailingListImport] Database error importing contact:', contact.email, error);
         failed++;
-        errors.push({ row: i + 1, email, reason: 'db_error' });
+        errors.push({ row: contact.row, email: contact.email, reason: 'db_error' });
       }
     }
 

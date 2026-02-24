@@ -452,54 +452,72 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
       },
     });
 
-    for (const reservation of reservations) {
-      // Update reservation status
-      await tx.inventoryReservation.update({
-        where: { id: reservation.id },
+    if (reservations.length > 0) {
+      // N+1 FIX: Batch-update all reservation statuses
+      await tx.inventoryReservation.updateMany({
+        where: { id: { in: reservations.map(r => r.id) } },
         data: { status: 'CONSUMED', orderId: newOrder.id, consumedAt: new Date() },
       });
 
-      // Decrement stock (floor at 0 to prevent negative inventory)
-      if (reservation.formatId) {
-        const currentFormat = await tx.productFormat.findUnique({
-          where: { id: reservation.formatId },
-          select: { stockQuantity: true },
-        });
-        const safeDecrement = Math.min(reservation.quantity, currentFormat?.stockQuantity ?? 0);
-        if (safeDecrement > 0) {
-          await tx.productFormat.update({
-            where: { id: reservation.formatId },
-            data: { stockQuantity: { decrement: safeDecrement } },
+      // N+1 FIX: Batch-fetch all format stock quantities
+      const formatIds = reservations.map(r => r.formatId).filter((id): id is string => !!id);
+      const uniqueFormatIds = [...new Set(formatIds)];
+      const formats = uniqueFormatIds.length > 0
+        ? await tx.productFormat.findMany({
+            where: { id: { in: uniqueFormatIds } },
+            select: { id: true, stockQuantity: true },
+          })
+        : [];
+      const formatStockMap = new Map(formats.map(f => [f.id, f.stockQuantity]));
+
+      // N+1 FIX: Batch-fetch latest WAC for all unique (productId, formatId) combos
+      const wacKeys = reservations.map(r => ({ productId: r.productId, formatId: r.formatId }));
+      const uniqueWacKeys = [...new Map(wacKeys.map(k => [`${k.productId}-${k.formatId}`, k])).values()];
+      const wacMap = new Map<string, number>();
+      if (uniqueWacKeys.length > 0) {
+        for (const key of uniqueWacKeys) {
+          const lastTx = await tx.inventoryTransaction.findFirst({
+            where: { productId: key.productId, formatId: key.formatId },
+            orderBy: { createdAt: 'desc' },
+            select: { runningWAC: true },
           });
-        }
-        if (safeDecrement < reservation.quantity) {
-          logger.warn(`[Stripe webhook] Stock floor hit for format ${reservation.formatId}: wanted to decrement ${reservation.quantity}, only decremented ${safeDecrement}`);
+          wacMap.set(`${key.productId}-${key.formatId}`, lastTx ? Number(lastTx.runningWAC) : 0);
         }
       }
 
-      // Look up current WAC for accurate COGS
-      const lastTx = await tx.inventoryTransaction.findFirst({
-        where: {
-          productId: reservation.productId,
-          formatId: reservation.formatId,
-        },
-        orderBy: { createdAt: 'desc' },
-        select: { runningWAC: true },
-      });
-      const wac = lastTx ? Number(lastTx.runningWAC) : 0;
+      for (const reservation of reservations) {
+        // Decrement stock (floor at 0 to prevent negative inventory)
+        if (reservation.formatId) {
+          const currentStock = formatStockMap.get(reservation.formatId) ?? 0;
+          const safeDecrement = Math.min(reservation.quantity, currentStock);
+          if (safeDecrement > 0) {
+            await tx.productFormat.update({
+              where: { id: reservation.formatId },
+              data: { stockQuantity: { decrement: safeDecrement } },
+            });
+            // Update local map for subsequent reservations on the same format
+            formatStockMap.set(reservation.formatId, currentStock - safeDecrement);
+          }
+          if (safeDecrement < reservation.quantity) {
+            logger.warn(`[Stripe webhook] Stock floor hit for format ${reservation.formatId}: wanted to decrement ${reservation.quantity}, only decremented ${safeDecrement}`);
+          }
+        }
 
-      // Create inventory transaction
-      await tx.inventoryTransaction.create({
-        data: {
-          productId: reservation.productId,
-          formatId: reservation.formatId,
-          type: 'SALE',
-          quantity: -reservation.quantity,
-          unitCost: wac,
-          runningWAC: wac,
-          orderId: newOrder.id,
-        },
-      });
+        const wac = wacMap.get(`${reservation.productId}-${reservation.formatId}`) ?? 0;
+
+        // Create inventory transaction
+        await tx.inventoryTransaction.create({
+          data: {
+            productId: reservation.productId,
+            formatId: reservation.formatId,
+            type: 'SALE',
+            quantity: -reservation.quantity,
+            unitCost: wac,
+            runningWAC: wac,
+            orderId: newOrder.id,
+          },
+        });
+      }
     }
 
     return newOrder;
@@ -702,15 +720,17 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
     }
   }
 
-  // G2-FLAW-10: Award loyalty points for purchase (non-blocking)
+  // N+1 FIX: Fetch user once for both loyalty points and automation engine
   if (userId && userId !== 'guest') {
-    try {
-      const user = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { loyaltyPoints: true, lifetimePoints: true, loyaltyTier: true },
-      });
+    // Single user fetch with all needed fields
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { email: true, name: true, loyaltyPoints: true, lifetimePoints: true, loyaltyTier: true },
+    });
 
-      if (user) {
+    // G2-FLAW-10: Award loyalty points for purchase (non-blocking)
+    if (user) {
+      try {
         const tierMultiplier = user.loyaltyTier === 'VIP' ? 2 : user.loyaltyTier === 'GOLD' ? 1.5 : 1;
         const pointsToAward = calculatePurchasePoints(Number(cadTotal), tierMultiplier);
 
@@ -735,33 +755,25 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
           });
           logger.info('Loyalty points awarded', { userId, pointsToAward, newBalance, orderNumber });
         }
+      } catch (loyaltyError) {
+        logger.error('Failed to award loyalty points', {
+          orderNumber,
+          error: loyaltyError instanceof Error ? loyaltyError.message : String(loyaltyError),
+        });
+        // Don't fail the webhook for loyalty errors
       }
-    } catch (loyaltyError) {
-      logger.error('Failed to award loyalty points', {
-        orderNumber,
-        error: loyaltyError instanceof Error ? loyaltyError.message : String(loyaltyError),
-      });
-      // Don't fail the webhook for loyalty errors
     }
-  }
 
-  // Mark webhook as completed
-  await completeWebhookEvent(eventId, order.id, journalEntryId);
+    // Mark webhook as completed
+    await completeWebhookEvent(eventId, order.id, journalEntryId);
 
-  // Send confirmation email (non-blocking)
-  if (userId && userId !== 'guest') {
+    // Send confirmation email (non-blocking)
     await sendOrderConfirmationEmailAsync(order.id, userId);
-  }
 
-  // Trigger automation engine for order.created (fire-and-forget)
-  if (userId && userId !== 'guest') {
-    try {
-      const { handleEvent } = await import('@/lib/email/automation-engine');
-      const user = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { email: true, name: true },
-      });
-      if (user) {
+    // Trigger automation engine for order.created (fire-and-forget) - reuse fetched user
+    if (user) {
+      try {
+        const { handleEvent } = await import('@/lib/email/automation-engine');
         handleEvent('order.created', {
           email: user.email,
           name: user.name || undefined,
@@ -772,10 +784,13 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
         }).catch((err) => {
           logger.error('[AutomationEngine] Failed to handle order.created', { error: String(err) });
         });
+      } catch (error) {
+        logger.error('[Webhook] Automation engine trigger failed (non-blocking)', { error: error instanceof Error ? error.message : String(error) });
       }
-    } catch (error) {
-      logger.error('[Webhook] Automation engine trigger failed (non-blocking)', { error: error instanceof Error ? error.message : String(error) });
     }
+  } else {
+    // Guest user - just mark webhook as completed
+    await completeWebhookEvent(eventId, order.id, journalEntryId);
   }
 
   // Send SMS notification to admin (non-blocking)
@@ -855,6 +870,9 @@ async function handleRefund(charge: Stripe.Charge, eventId: string) {
         const saleTxs = await tx.inventoryTransaction.findMany({
           where: { orderId: order.id, type: 'SALE' },
         });
+
+        // N+1 FIX: Batch-create all RETURN transactions using individual creates
+        // (stock increments must still be per-format for atomicity)
         for (const saleTx of saleTxs) {
           if (saleTx.formatId) {
             await tx.productFormat.update({
@@ -862,17 +880,20 @@ async function handleRefund(charge: Stripe.Charge, eventId: string) {
               data: { stockQuantity: { increment: Math.abs(saleTx.quantity) } },
             });
           }
-          await tx.inventoryTransaction.create({
-            data: {
+        }
+        // Batch-create all return inventory transactions
+        if (saleTxs.length > 0) {
+          await tx.inventoryTransaction.createMany({
+            data: saleTxs.map(saleTx => ({
               productId: saleTx.productId,
               formatId: saleTx.formatId,
-              type: 'RETURN',
+              type: 'RETURN' as const,
               quantity: Math.abs(saleTx.quantity),
               unitCost: saleTx.unitCost,
               runningWAC: saleTx.runningWAC,
               orderId: order.id,
               reason: 'Remboursement complet',
-            },
+            })),
           });
         }
       });

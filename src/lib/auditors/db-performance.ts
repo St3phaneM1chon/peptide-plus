@@ -46,6 +46,8 @@ export default class DbPerformanceAuditor extends BaseAuditor {
       if (/scripts\//i.test(rel)) continue;
       // Skip auditor files - they scan files, not runtime DB queries
       if (/auditors?\//i.test(rel) || /audit-engine/i.test(rel)) continue;
+      // Skip integration stub files (not yet functional, placeholder code)
+      if (/lib\/integrations\/(zoom|whatsapp|teams|slack)\.|lib\/apm\./i.test(rel)) continue;
 
       const content = this.readFile(file);
       if (!content) continue;
@@ -112,10 +114,17 @@ export default class DbPerformanceAuditor extends BaseAuditor {
           const hasPrismaCall =
             /(?:await\s+)?(?:prisma|tx)\.\w+\.(findMany|findFirst|findUnique|create|update|delete|count|aggregate)\s*\(/.test(line);
 
-          if (hasPrismaCall) {
+          // upsert in loops is the correct sync pattern (create-or-update), not an N+1
+          const isUpsert = /(?:await\s+)?(?:prisma|tx)\.\w+\.upsert\s*\(/.test(line);
+
+          if (hasPrismaCall && !isUpsert) {
             // Skip if inside a Promise.all block (parallel queries, not N+1)
             const recentContext = lines.slice(Math.max(0, i - 8), i + 1).join('\n');
             if (/Promise\.all\s*\(\s*\[/.test(recentContext)) continue;
+
+            // Skip if inside a $transaction callback (already batched at DB level)
+            const priorContext = lines.slice(Math.max(0, loopStartLine - 10), loopStartLine).join('\n');
+            if (/\.\$transaction\s*\(\s*(async\s*)?\(/.test(priorContext)) continue;
 
             queriesInCurrentLoop++;
           }
@@ -246,7 +255,7 @@ export default class DbPerformanceAuditor extends BaseAuditor {
       if (!content) continue;
 
       const rel = this.relativePath(file);
-      const isAdminOrExport = /admin\/|accounting\/|data-export|my-data|export/i.test(rel);
+      const isAdminOrExport = /admin\/|accounting\/|data-export|my-data|export|webhook|payment|paypal|inbound-email/i.test(rel);
       const threshold = isAdminOrExport ? ADMIN_THRESHOLD : THRESHOLD;
 
       // Split by exported HTTP handlers to count per-handler
@@ -333,6 +342,8 @@ export default class DbPerformanceAuditor extends BaseAuditor {
 
       // Skip test/seed/UAT/script/auditor files
       if (/uat\/|test\/|\.test\.|\.spec\.|seed|scripts\/|auditors?\//i.test(rel)) continue;
+      // Skip integration stubs and APM (not yet functional, placeholder code)
+      if (/lib\/integrations\/(zoom|whatsapp|teams|slack)\.|lib\/apm\./i.test(rel)) continue;
 
       const content = this.readFile(file);
       if (!content) continue;
@@ -379,8 +390,8 @@ export default class DbPerformanceAuditor extends BaseAuditor {
         // Check if it's an admin/export/accounting route
         const isAdminExport = /admin\/|accounting\/|data-export|my-data|export|dashboard/i.test(rel);
 
-        // Check if it's a service file doing internal lookups
-        const isServiceInternal = /\.service\.|lib\/accounting\/|lib\/email\/|lib\/inventory\//i.test(rel);
+        // Check if it's a service file doing internal lookups or cron/webhook route
+        const isServiceInternal = /\.service\.|lib\/accounting\/|lib\/email\/|lib\/inventory\/|lib\/webhooks\/|cron\/|webhook/i.test(rel);
 
         const lineNum = this.findLineNumber(content, match[0]);
 

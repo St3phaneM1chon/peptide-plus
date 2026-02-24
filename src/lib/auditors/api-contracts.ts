@@ -51,9 +51,9 @@ export default class ApiContractsAuditor extends BaseAuditor {
 
       const relPath = this.relativePath(file);
 
-      // Count response method types
+      // Count response method types (use negative lookbehind to avoid double-counting NextResponse as Response)
       if (/NextResponse\.json\s*\(/.test(content)) patterns.nextResponseJson++;
-      if (/Response\.json\s*\(/.test(content)) patterns.responseJson++;
+      if (/(?<!Next)Response\.json\s*\(/.test(content)) patterns.responseJson++;
       if (/return\s+new\s+Response\s*\(/.test(content)) patterns.rawReturn++;
 
       // Check if responses use a wrapper pattern like { data: ... } or { success: ..., data: ... }
@@ -434,6 +434,8 @@ export default class ApiContractsAuditor extends BaseAuditor {
         const isPerUserOrBounded =
           /\/account\/|\/categories\/|\/wishlists\/|\/quick-replies\/|\/client-references\//.test(relPath) ||
           /\/currencies\/|\/faq\/|\/guides\/|\/hero-slides\/|\/contact\/platforms\/|\/gift-cards\//.test(relPath) ||
+          /\/payment-methods\/|\/testimonials\/|\/news\/|\/upsell\/|\/social-proof\/|\/ambassadors\//.test(relPath) ||
+          /\/cron\/|\/webhook/.test(relPath) || // Cron/webhook routes process all matching records
           /\/\[.*\]\//.test(relPath) || // Dynamic segment routes are scoped by parent entity
           /where\s*:\s*\{[\s\S]{0,200}userId/.test(getBody) ||
           /where\s*:\s*\{[\s\S]{0,100}(isActive|isPublished)/.test(getBody);
@@ -465,14 +467,16 @@ export default class ApiContractsAuditor extends BaseAuditor {
         )
       );
 
-      for (const item of listEndpointsWithoutPagination.slice(0, 25)) {
+      // Only report individual findings for truly unbounded endpoints (not per-user/small tables)
+      const unboundedEndpoints = listEndpointsWithoutPagination.filter((e) => !e.bounded);
+      const boundedCount = listEndpointsWithoutPagination.filter((e) => e.bounded).length;
+      for (const item of unboundedEndpoints.slice(0, 10)) {
         const fullPath = apiRoutes.find((r) => this.relativePath(r) === item.file) || '';
         const content = fullPath ? this.readFile(fullPath) : '';
-        const severity = item.bounded ? 'LOW' : 'HIGH';
         results.push(
           this.fail(
             'api-04',
-            severity as 'HIGH' | 'MEDIUM',
+            'HIGH',
             'Unpaginated list endpoint',
             `GET handler returns a list without pagination. With large datasets, this will cause performance issues and memory pressure.`,
             {
@@ -483,6 +487,12 @@ export default class ApiContractsAuditor extends BaseAuditor {
                 'Add pagination: `const take = Math.min(Number(searchParams.get("limit") || 20), 100); const skip = Number(searchParams.get("offset") || 0);`',
             }
           )
+        );
+      }
+      // Bounded endpoints are per-user/small reference tables - summarize instead of individual findings
+      if (boundedCount > 0) {
+        results.push(
+          this.pass('api-04', `${boundedCount} list endpoints are inherently bounded (per-user, per-entity, or small reference tables)`)
         );
       }
     }

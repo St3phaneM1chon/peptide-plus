@@ -40,6 +40,16 @@ async function getOpenAI(): Promise<OpenAI> {
   return openaiInstance;
 }
 
+/**
+ * Get a Prisma model delegate by runtime name.
+ * Single cast point for dynamic model access (avoids repeated `any` casts throughout the file).
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic Prisma model access requires runtime key indexing
+function getPrismaDelegate(modelName: string): any {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (prisma as Record<string, any>)[modelName];
+}
+
 // ============================================
 // TYPES
 // ============================================
@@ -251,8 +261,7 @@ export async function translateEntity(
 
   // 1. Fetch source entity
   const sourceModel = model === 'ProductFormat' ? 'productFormat' : model.charAt(0).toLowerCase() + model.slice(1);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic Prisma model access requires runtime key indexing
-  const prismaModel = (prisma as Record<string, any>)[sourceModel];
+  const prismaModel = getPrismaDelegate(sourceModel);
   const entity = await prismaModel.findUnique({
     where: { id: entityId },
   });
@@ -270,8 +279,7 @@ export async function translateEntity(
   const hash = contentHash(sourceFields);
 
   // 3. Check if translation already exists and is up to date
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic Prisma model access requires runtime key indexing
-  const prismaTranslation = (prisma as Record<string, any>)[tableName];
+  const prismaTranslation = getPrismaDelegate(tableName);
   if (!options.force) {
     const existing = await prismaTranslation.findUnique({
       where: { [`${fkField}_locale`]: { [fkField]: entityId, locale: targetLocale } },
@@ -417,8 +425,7 @@ export async function getTranslatedFields(
   if (cached) return cached;
 
   // 2. Check DB
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic Prisma model access requires runtime key indexing
-  const translation = await ((prisma as Record<string, any>)[tableName]).findUnique({
+  const translation = await getPrismaDelegate(tableName).findUnique({
     where: { [`${fkField}_locale`]: { [fkField]: entityId, locale } },
   });
 
@@ -473,8 +480,7 @@ export async function getTranslatedFieldsBatch(
 
   // 2. Batch DB query for all uncached entities (single findMany instead of N findUnique calls)
   if (uncachedIds.length > 0) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic Prisma model access requires runtime key indexing
-    const translations = await ((prisma as Record<string, any>)[tableName]).findMany({
+    const translations = await getPrismaDelegate(tableName).findMany({
       where: { [fkField]: { in: uncachedIds }, locale },
     });
 
@@ -569,8 +575,7 @@ export async function getTranslationStatus(
   const fkField = FK_FIELD_MAP[model];
   const allLocales = locales.filter(l => l !== DB_SOURCE_LOCALE);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic Prisma model access requires runtime key indexing
-  const translations: { locale: string; isApproved: boolean }[] = await ((prisma as Record<string, any>)[tableName]).findMany({
+  const translations: { locale: string; isApproved: boolean }[] = await getPrismaDelegate(tableName).findMany({
     where: { [fkField]: entityId },
     select: { locale: true, isApproved: true },
   });
@@ -605,15 +610,13 @@ export async function getModelTranslationCoverage(model: TranslatableModel): Pro
   const targetLocaleCount = locales.length - 1; // Exclude default
 
   // Count total entities
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic Prisma model access requires runtime key indexing
-  const totalEntities = await ((prisma as Record<string, any>)[sourceModel]).count();
+  const totalEntities = await getPrismaDelegate(sourceModel).count();
   if (totalEntities === 0) {
     return { totalEntities: 0, fullyTranslated: 0, partiallyTranslated: 0, untranslated: 0, coveragePercent: 100 };
   }
 
   // Count translations per entity
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic Prisma model access requires runtime key indexing
-  const translationCounts = await ((prisma as Record<string, any>)[tableName]).groupBy({
+  const translationCounts = await getPrismaDelegate(tableName).groupBy({
     by: [fkField],
     _count: { locale: true },
   });
@@ -659,8 +662,7 @@ export async function batchTranslateModel(
   const sourceModel = model === 'ProductFormat' ? 'productFormat' : model.charAt(0).toLowerCase() + model.slice(1);
 
   // Get all entity IDs
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic Prisma model access requires runtime key indexing
-  const entities = await ((prisma as Record<string, any>)[sourceModel]).findMany({
+  const entities = await getPrismaDelegate(sourceModel).findMany({
     select: { id: true },
   });
 

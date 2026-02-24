@@ -20,7 +20,7 @@ export default function SubscriptionOfferModal({
   onAccept,
   onDecline,
 }: SubscriptionOfferModalProps) {
-  const { t } = useI18n();
+  const { t, formatCurrency } = useI18n();
   const [selectedFrequency, setSelectedFrequency] = useState('EVERY_2_MONTHS');
   const dialogRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
@@ -102,7 +102,7 @@ export default function SubscriptionOfferModal({
           {/* Current price */}
           <div className="mb-5">
             <p className="text-sm text-gray-500">{t('subscriptions.currentPrice')}</p>
-            <p className="text-2xl font-bold text-gray-900">${currentPrice.toFixed(2)}</p>
+            <p className="text-2xl font-bold text-gray-900">{formatCurrency(currentPrice)}</p>
           </div>
 
           {/* Frequency options */}
@@ -134,7 +134,7 @@ export default function SubscriptionOfferModal({
                       </span>
                     </div>
                   </div>
-                  <span className="font-bold text-gray-900">${price.toFixed(2)}</span>
+                  <span className="font-bold text-gray-900">{formatCurrency(price)}</span>
                 </label>
               );
             })}
@@ -145,7 +145,7 @@ export default function SubscriptionOfferModal({
             <p className="text-sm text-green-700">
               {t('subscriptions.youSave')}{' '}
               <span className="font-bold text-green-800">
-                ${(currentPrice - discountedPrice).toFixed(2)}
+                {formatCurrency(currentPrice - discountedPrice)}
               </span>{' '}
               {t('subscriptions.perDelivery')} ({selected.discount}%)
             </p>

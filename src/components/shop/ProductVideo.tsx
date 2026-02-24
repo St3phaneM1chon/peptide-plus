@@ -82,7 +82,7 @@ export default function ProductVideo({ videoUrl }: ProductVideoProps) {
           {thumbnailUrl ? (
             <img
               src={thumbnailUrl}
-              alt="Video thumbnail"
+              alt={t('video.thumbnail')}
               className="w-full h-full object-cover"
             />
           ) : (

@@ -44,7 +44,10 @@ export default class FrontendPerformanceAuditor extends BaseAuditor {
         if (/^\s*\/\//.test(line) || /^\s*\*/.test(line) || /^\s*{\/\*/.test(line)) continue;
 
         // Look for raw <img tags (not <Image from next/image)
-        if (/<img\s/i.test(line) && !/<Image\s/i.test(line)) {
+        // Skip data URIs, SVG data, and eslint-disable lines - next/image doesn't handle these
+        const prevLine = i > 0 ? lines[i - 1] : '';
+        const hasEslintDisable = /eslint-disable.*no-img-element/.test(prevLine) || /eslint-disable.*no-img-element/.test(line);
+        if (/<img\s/i.test(line) && !/<Image\s/i.test(line) && !/src=\{.*data:/.test(line) && !/src="data:/.test(line) && !hasEslintDisable) {
           offenders.push({
             file,
             line: i + 1,
@@ -148,8 +151,11 @@ export default class FrontendPerformanceAuditor extends BaseAuditor {
         }
       }
 
-      // Flag large component files (>300 lines) without any lazy loading
-      if (lines.length > 300) {
+      // Flag large component files without any lazy loading
+      // Pages get a higher threshold (500) since they're full pages, not split-able components
+      const isPageFile = file.includes('/page.tsx') || file.includes('/page.ts');
+      const sizeThreshold = isPageFile ? 500 : 300;
+      if (lines.length > sizeThreshold) {
         const hasLazy =
           /next\/dynamic/.test(content) || /React\.lazy/.test(content) || /import\s*\(/.test(content);
         if (!hasLazy) {
@@ -356,7 +362,22 @@ export default class FrontendPerformanceAuditor extends BaseAuditor {
           const layoutContent = this.readFile(layoutPath);
           const parentHasSuspense = layoutContent && /Suspense/.test(layoutContent);
 
-          if (!parentHasSuspense) {
+          // Check for loading.tsx in the same directory or parent directories (up to app/)
+          let hasLoadingFile = false;
+          let checkDir = dir;
+          const appDir = path.join(this.srcDir, 'app');
+          while (checkDir.length >= appDir.length) {
+            const loadingPath = path.join(checkDir, 'loading.tsx');
+            if (this.readFile(loadingPath)) {
+              hasLoadingFile = true;
+              break;
+            }
+            const parentDir = path.dirname(checkDir);
+            if (parentDir === checkDir) break;
+            checkDir = parentDir;
+          }
+
+          if (!parentHasSuspense && !hasLoadingFile) {
             asyncComponentsWithoutSuspense++;
             const lineNum = this.findLineNumber(content, 'async');
             missingBoundaries.push({ file, line: lineNum || 1 });

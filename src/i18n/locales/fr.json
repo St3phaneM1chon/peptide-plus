@@ -441,6 +441,8 @@
     "kg": "kg"
   },
   "calculator": {
+    "ariaClose": "Fermer le calculateur",
+    "ariaLabel": "Calculateur de peptides",
     "title": "Calculatrice de Peptides",
     "subtitle": "Calculez votre dosage précis",
     "step1Title": "Quantité de peptide",
@@ -709,9 +711,11 @@
     "aria": {
       "openChat": "Ouvrir le clavardage"
     },
+    "emoji": "Emoji",
     "placeholder": {
       "typeMessage": "Tapez votre message..."
-    }
+    },
+    "uploadImage": "Téléverser une image"
   },
   "checkout": {
     "emptyCart": "Votre panier est vide",
@@ -1614,6 +1618,8 @@
     }
   },
   "reviews": {
+    "ariaCloseImageLightbox": "Fermer la visionneuse d'images",
+    "ariaImageLightbox": "Visionneuse d'images",
     "customerReviews": "Avis clients",
     "reviews": "avis",
     "writeReview": "Écrire un avis",

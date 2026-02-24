@@ -361,11 +361,11 @@ export function ContactListPage({ config }: { config: ContactListPageConfig }) {
                         </div>
                         <div>
                           <p className="text-sm text-sky-700">{t(`${prefix}.currentPoints`)}</p>
-                          <p className="text-2xl font-bold text-sky-900">{displayItem.loyaltyPoints.toLocaleString()}</p>
+                          <p className="text-2xl font-bold text-sky-900">{displayItem.loyaltyPoints.toLocaleString(locale)}</p>
                         </div>
                         <div>
                           <p className="text-sm text-sky-700">{t(`${prefix}.lifetimePoints`)}</p>
-                          <p className="text-2xl font-bold text-sky-900">{displayItem.lifetimePoints.toLocaleString()}</p>
+                          <p className="text-2xl font-bold text-sky-900">{displayItem.lifetimePoints.toLocaleString(locale)}</p>
                         </div>
                       </div>
                       {config.showReferralCode !== false && displayItem.referralCode && (

@@ -133,7 +133,7 @@ export default function MediaImagesPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-slate-900">{t('admin.media.imagesTitle')}</h1>
         <div>
-          <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={handleUpload} className="hidden" />
+          <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={handleUpload} aria-label={t('admin.media.upload') || 'Upload images'} className="hidden" />
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}

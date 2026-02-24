@@ -156,7 +156,7 @@ export default function InvoicesPage() {
         console.error('Failed to fetch invoices:', res.status);
         setInvoices([]);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Failed to fetch invoices:', error);
       setInvoices([]);
     } finally {
@@ -191,7 +191,7 @@ export default function InvoicesPage() {
         setInvoices(data.invoices || []);
         setPagination(data.pagination || null);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Failed to fetch invoices:', error);
     } finally {
       setLoading(false);
@@ -209,7 +209,7 @@ export default function InvoicesPage() {
       } else {
         alert(t('account.invoices.errorLoadDetail') || 'Failed to load invoice details');
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error fetching invoice detail:', error);
       alert(t('account.invoices.errorLoadDetail') || 'Failed to load invoice details');
     } finally {
@@ -235,7 +235,7 @@ export default function InvoicesPage() {
       } else {
         alert(t('account.invoices.errorPdf') || 'Failed to generate PDF');
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error downloading PDF:', error);
       alert(t('account.invoices.errorPdf') || 'Failed to generate PDF');
     } finally {
@@ -785,7 +785,7 @@ export default function InvoicesPage() {
                 <p style={{ fontSize: '12px', color: '#666' }}>1234 Boulevard des Sciences</p>
                 <p style={{ fontSize: '12px', color: '#666' }}>Montreal, QC H3C 1K3, Canada</p>
                 <p style={{ fontSize: '12px', color: '#666' }}>(514) 555-0199 | support@biocyclepeptides.com</p>
-                <p style={{ fontSize: '10px', color: '#999', marginTop: '4px' }}>
+                <p style={{ fontSize: '10px', color: '#737373', marginTop: '4px' }}>
                   GST/TPS: {process.env.NEXT_PUBLIC_BUSINESS_TPS || '123456789 RT0001'} | QST/TVQ: {process.env.NEXT_PUBLIC_BUSINESS_TVQ || '1234567890 TQ0001'}
                 </p>
               </div>
@@ -894,8 +894,8 @@ export default function InvoicesPage() {
 
             {/* Print footer */}
             <div style={{ marginTop: '40px', textAlign: 'center', borderTop: '1px solid #ddd', paddingTop: '12px' }}>
-              <p style={{ fontSize: '11px', color: '#999' }}>Thank you for your purchase!</p>
-              <p style={{ fontSize: '10px', color: '#bbb' }}>BioCycle Peptides Inc. | support@biocyclepeptides.com | www.biocyclepeptides.com</p>
+              <p style={{ fontSize: '11px', color: '#737373' }}>Thank you for your purchase!</p>
+              <p style={{ fontSize: '10px', color: '#737373' }}>BioCycle Peptides Inc. | support@biocyclepeptides.com | www.biocyclepeptides.com</p>
             </div>
           </div>
         </div>

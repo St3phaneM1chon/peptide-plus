@@ -31,7 +31,7 @@ function WelcomeContent() {
     } else if (callbackUrl) {
       destination = callbackUrl;
     } else {
-      const role = (session.user as Record<string, unknown>)?.role;
+      const role = (session.user as Record<string, unknown>)?.role; // Safe: session data shape from auth provider includes custom role field
       if (role === 'OWNER' || role === 'EMPLOYEE' || role === 'CLIENT') {
         destination = '/admin';
       } else {

@@ -29,9 +29,22 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get or create notification preferences
+    // Get or create notification preferences (select only preference fields)
     let prefs = await prisma.notificationPreference.findUnique({
       where: { userId: session.user.id },
+      select: {
+        id: true,
+        userId: true,
+        orderUpdates: true,
+        promotions: true,
+        newsletter: true,
+        weeklyDigest: true,
+        priceDrops: true,
+        stockAlerts: true,
+        productReviews: true,
+        birthdayOffers: true,
+        loyaltyUpdates: true,
+      },
     });
 
     // Create default preferences if none exist
@@ -46,6 +59,19 @@ export async function GET() {
           priceDrops: false,
           stockAlerts: true,
           productReviews: false,
+          birthdayOffers: true,
+          loyaltyUpdates: true,
+        },
+        select: {
+          id: true,
+          userId: true,
+          orderUpdates: true,
+          promotions: true,
+          newsletter: true,
+          weeklyDigest: true,
+          priceDrops: true,
+          stockAlerts: true,
+          productReviews: true,
           birthdayOffers: true,
           loyaltyUpdates: true,
         },
@@ -113,6 +139,19 @@ export async function PUT(request: NextRequest) {
       create: {
         userId: session.user.id,
         ...updateData,
+      },
+      select: {
+        id: true,
+        userId: true,
+        orderUpdates: true,
+        promotions: true,
+        newsletter: true,
+        weeklyDigest: true,
+        priceDrops: true,
+        stockAlerts: true,
+        productReviews: true,
+        birthdayOffers: true,
+        loyaltyUpdates: true,
       },
     });
 

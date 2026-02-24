@@ -66,7 +66,7 @@ function AcceptTermsContent() {
 
       // Redirect to intended destination
       router.replace(callbackUrl);
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('Accept terms error:', err);
       setError(t('auth.acceptTermsError'));
     } finally {

@@ -26,10 +26,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
     }
 
-    // Check if MFA is already enabled
+    // Check if MFA is already enabled (select only MFA-related fields)
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
-      select: { mfaEnabled: true, email: true },
+      select: { id: true, mfaEnabled: true, email: true },
     });
 
     if (!user) {

@@ -154,7 +154,7 @@ export default function MediaLibraryPage() {
             <button onClick={() => setViewMode('grid')} aria-label="Grid view" className={`p-2 ${viewMode === 'grid' ? 'bg-sky-50 text-sky-600' : 'text-slate-400 hover:text-slate-600'}`}><Grid className="w-4 h-4" /></button>
             <button onClick={() => setViewMode('list')} aria-label="List view" className={`p-2 ${viewMode === 'list' ? 'bg-sky-50 text-sky-600' : 'text-slate-400 hover:text-slate-600'}`}><List className="w-4 h-4" /></button>
           </div>
-          <input ref={fileInputRef} type="file" multiple onChange={handleUpload} className="hidden" />
+          <input ref={fileInputRef} type="file" multiple onChange={handleUpload} aria-label={t('admin.media.upload') || 'Upload files'} className="hidden" />
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
@@ -179,14 +179,14 @@ export default function MediaLibraryPage() {
           />
         </div>
         {/* FIX: F38 - Use i18n for filter labels instead of hardcoded English */}
-        <select className="border border-slate-300 rounded-lg px-3 py-2 text-sm" value={mimeFilter} onChange={e => { setMimeFilter(e.target.value); setPage(1); }}>
+        <select className="border border-slate-300 rounded-lg px-3 py-2 text-sm" value={mimeFilter} onChange={e => { setMimeFilter(e.target.value); setPage(1); }} aria-label={t('admin.media.allTypes') || 'Filter by file type'}>
           <option value="">{t('admin.media.allTypes') || 'All types'}</option>
           <option value="image">{t('admin.media.imagesTitle') || 'Images'}</option>
           <option value="video">{t('admin.media.videosTitle') || 'Videos'}</option>
           <option value="application/pdf">PDF</option>
         </select>
         {/* FIX: F81 - TODO: Load folders dynamically from DB (SELECT DISTINCT folder FROM Media) instead of hardcoding */}
-        <select className="border border-slate-300 rounded-lg px-3 py-2 text-sm" value={folderFilter} onChange={e => { setFolderFilter(e.target.value); setPage(1); }}>
+        <select className="border border-slate-300 rounded-lg px-3 py-2 text-sm" value={folderFilter} onChange={e => { setFolderFilter(e.target.value); setPage(1); }} aria-label={t('admin.media.allFolders') || 'Filter by folder'}>
           <option value="">{t('admin.media.allFolders') || 'All folders'}</option>
           <option value="general">{t('admin.media.folderGeneral') || 'General'}</option>
           <option value="images">{t('admin.media.imagesTitle') || 'Images'}</option>

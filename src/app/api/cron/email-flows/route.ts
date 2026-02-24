@@ -58,6 +58,19 @@ export async function GET(request: NextRequest) {
     let processed = 0;
     let failed = 0;
 
+    // N+1 FIX: Batch-fetch all flows needed by executions upfront
+    const flowIds = [...new Set(readyExecutions.map(e => e.flowId))];
+    const allFlows = await prisma.emailAutomationFlow.findMany({
+      where: { id: { in: flowIds } },
+    });
+    const flowMap = new Map(allFlows.map(f => [f.id, f]));
+
+    // N+1 FIX: Batch-mark all executions as RUNNING in one query
+    await prisma.emailFlowExecution.updateMany({
+      where: { id: { in: readyExecutions.map(e => e.id) } },
+      data: { status: 'RUNNING' },
+    });
+
     // FIX: FLAW-032 - Process executions in parallel batches of 10 instead of sequentially.
     // With 50 executions and network latency per email, sequential processing can timeout on serverless.
     const BATCH_SIZE = 10;
@@ -65,16 +78,8 @@ export async function GET(request: NextRequest) {
       const batch = readyExecutions.slice(batchStart, batchStart + BATCH_SIZE);
 
       const results = await Promise.allSettled(batch.map(async (execution) => {
-        // Mark as running (prevents re-processing on concurrent cron calls)
-        await prisma.emailFlowExecution.update({
-          where: { id: execution.id },
-          data: { status: 'RUNNING' },
-        });
-
-        // Load the flow
-        const flow = await prisma.emailAutomationFlow.findUnique({
-          where: { id: execution.flowId },
-        });
+        // Load the flow from pre-fetched map
+        const flow = flowMap.get(execution.flowId);
 
         if (!flow || !flow.isActive) {
           await prisma.emailFlowExecution.update({

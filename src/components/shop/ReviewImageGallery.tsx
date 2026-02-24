@@ -2,12 +2,14 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
+import { useI18n } from '@/i18n/client';
 
 interface ReviewImageGalleryProps {
   images: string[];
 }
 
 export default function ReviewImageGallery({ images }: ReviewImageGalleryProps) {
+  const { t } = useI18n();
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -83,7 +85,7 @@ export default function ReviewImageGallery({ images }: ReviewImageGalleryProps) 
           className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
           role="dialog"
           aria-modal="true"
-          aria-label="Image lightbox"
+          aria-label={t('reviews.ariaImageLightbox')}
           onClick={closeLightbox}
           onKeyDown={handleKeyDown}
           tabIndex={0}
@@ -91,7 +93,7 @@ export default function ReviewImageGallery({ images }: ReviewImageGalleryProps) 
           {/* Close button */}
           <button
             onClick={closeLightbox}
-            aria-label="Close image lightbox"
+            aria-label={t('reviews.ariaCloseImageLightbox')}
             className="absolute top-4 end-4 text-white hover:text-neutral-300 transition-colors z-10"
           >
             <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">

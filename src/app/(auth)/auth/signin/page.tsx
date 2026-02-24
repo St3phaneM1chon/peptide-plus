@@ -94,7 +94,7 @@ function SignInContent() {
             router.push('/admin');
             return;
           }
-        } catch (error) {
+        } catch (error: unknown) {
           console.error('Session check after sign-in failed:', error instanceof Error ? error.message : error);
           // Fall through to default redirect
         }
@@ -102,7 +102,7 @@ function SignInContent() {
       } else {
         router.push(callbackUrl);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Credentials sign-in failed:', error instanceof Error ? error.message : error);
       setFormError(t('auth.errorGeneric'));
       setIsLoading(false);

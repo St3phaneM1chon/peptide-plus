@@ -86,6 +86,16 @@ export async function POST(request: NextRequest) {
     let sentCount = 0;
     let errorCount = 0;
 
+    // N+1 FIX: Batch-fetch user locales for all alert emails upfront
+    const alertEmails = [...new Set(pendingAlerts.map(a => a.email))];
+    const alertUsers = alertEmails.length > 0
+      ? await prisma.user.findMany({
+          where: { email: { in: alertEmails } },
+          select: { email: true, locale: true },
+        })
+      : [];
+    const userLocaleMap = new Map(alertUsers.map(u => [u.email, u.locale]));
+
     // Process alerts in batches of 10 to avoid overwhelming email service
     const batchSize = 10;
     for (let i = 0; i < pendingAlerts.length; i += batchSize) {
@@ -128,15 +138,12 @@ export async function POST(request: NextRequest) {
               return;
             }
 
-            // FIX: FLAW-057 - Look up user locale instead of hardcoding 'en'
+            // FIX: FLAW-057 - Look up user locale from pre-fetched map
             // TODO: FLAW-058 - Add optional userId field to StockAlert model for direct user relation
             let locale: Locale = 'en';
-            const alertUser = await prisma.user.findFirst({
-              where: { email: alert.email },
-              select: { locale: true },
-            }).catch(() => null);
-            if (alertUser?.locale && (alertUser.locale === 'fr' || alertUser.locale === 'en')) {
-              locale = alertUser.locale as Locale;
+            const userLocale = userLocaleMap.get(alert.email);
+            if (userLocale && (userLocale === 'fr' || userLocale === 'en')) {
+              locale = userLocale as Locale;
             }
 
             // Generate unsubscribe URL (CAN-SPAM / RGPD / LCAP compliance)

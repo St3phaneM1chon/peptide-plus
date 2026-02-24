@@ -304,6 +304,10 @@ export default class AccessibilityWcagAuditor extends BaseAuditor {
         const hasIcon = iconPatterns.some((p) => p.test(buttonContent));
 
         // Check if button has text content (not just icons)
+        // t() calls and string literals inside JSX expressions are visible text
+        const hasTranslationText = /\{.*?\bt\s*\(/.test(buttonContent);
+        const hasStringLiteral = /\{.*?['"][A-Za-z]/.test(buttonContent);
+
         // Remove all JSX tags and check if there's remaining text
         const textContent = buttonContent
           .replace(/<[^>]*>/g, '') // Remove tags
@@ -311,7 +315,7 @@ export default class AccessibilityWcagAuditor extends BaseAuditor {
           .replace(/\s+/g, '')
           .trim();
 
-        const isIconOnly = hasIcon && textContent.length < 3;
+        const isIconOnly = hasIcon && textContent.length < 3 && !hasTranslationText && !hasStringLiteral;
 
         if (isIconOnly) {
           // Check for accessible labels

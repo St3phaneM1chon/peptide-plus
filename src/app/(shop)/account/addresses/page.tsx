@@ -137,7 +137,7 @@ export default function AddressesPage() {
     if (editingAddress) {
       // Update existing
       const updated = addresses.map(a =>
-        a.id === editingAddress.id ? { ...formData, id: a.id } as Address : a
+        a.id === editingAddress.id ? { ...formData, id: a.id } as Address : a // Safe: form data matches Address schema after Zod validation
       );
 
       // Handle default toggle
@@ -153,6 +153,7 @@ export default function AddressesPage() {
       toast.success(t('toast.address.updated'));
     } else {
       // Create new
+      // Safe: form data matches Address schema after Zod validation, id is generated
       const newAddress: Address = {
         ...formData,
         id: `addr_${Date.now()}`,

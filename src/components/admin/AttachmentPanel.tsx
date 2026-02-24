@@ -109,7 +109,7 @@ function FileTypeIcon({ fileType, className }: { fileType: string; className?: s
 // ---------------------------------------------------------------------------
 
 export function AttachmentPanel({ entityType, entityId, readOnly = false }: AttachmentPanelProps) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { csrfHeaders } = useCsrf();
 
   // State
@@ -403,7 +403,7 @@ export function AttachmentPanel({ entityType, entityId, readOnly = false }: Atta
                 <div className="flex items-center gap-2 text-xs text-slate-400">
                   <span>{formatFileSize(attachment.fileSize)}</span>
                   <span>&middot;</span>
-                  <span>{new Date(attachment.createdAt).toLocaleDateString()}</span>
+                  <span>{new Date(attachment.createdAt).toLocaleDateString(locale)}</span>
                   {attachment.uploadedBy && (
                     <>
                       <span>&middot;</span>

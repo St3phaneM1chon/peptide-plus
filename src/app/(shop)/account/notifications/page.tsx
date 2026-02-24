@@ -66,7 +66,7 @@ export default function NotificationPreferencesPage() {
           loyaltyUpdates: data.loyaltyUpdates,
         });
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error fetching preferences:', error);
       toast.error(t('toast.notifications.loadFailed'));
     } finally {
@@ -95,7 +95,7 @@ export default function NotificationPreferencesPage() {
       } else {
         toast.error(t('toast.notifications.saveFailed'));
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error saving preferences:', error);
       toast.error(t('toast.error.generic'));
     } finally {
@@ -127,7 +127,7 @@ export default function NotificationPreferencesPage() {
       } else {
         toast.error(t('toast.notifications.unsubscribeFailed'));
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error unsubscribing:', error);
       toast.error(t('toast.error.generic'));
     } finally {

@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
         reason = stripControlChars(stripHtml(parsed.data.reason));
       }
     } catch (error) {
-      logger.error('[DeleteRequest] Failed to parse request body', { error: error instanceof Error ? error.message : String(error) });
+      logger.error('[DeleteRequest] Failed to parse request body', { error: error instanceof Error ? error.message : String(error), userId });
       // No body or invalid JSON is fine - reason stays as default
     }
 

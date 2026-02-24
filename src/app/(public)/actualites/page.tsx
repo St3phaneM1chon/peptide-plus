@@ -55,7 +55,7 @@ export default function NewsPage() {
         const res = await fetch('/api/news');
         const data = await res.json();
         setArticles(data.articles || []);
-      } catch (error) {
+      } catch (error: unknown) {
         console.error('Failed to fetch news:', error);
         setArticles([]);
       } finally {

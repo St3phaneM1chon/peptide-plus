@@ -175,7 +175,7 @@ export default function MyDataPage() {
       URL.revokeObjectURL(url);
 
       toast.success(t('account.myData.exportSuccess'));
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Export failed:', error);
       toast.error(
         error instanceof Error ? error.message : t('account.myData.fetchError')
