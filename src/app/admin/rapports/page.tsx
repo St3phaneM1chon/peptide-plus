@@ -97,12 +97,12 @@ export default function RapportsPage() {
         const data = await invoicesRes.json();
         const invoices = data.invoices || [];
 
-        // Group invoices by date
-        const dailyMap = new Map<string, { revenue: number; orders: number }>();
+        // G5-FLAW-05: Use integer cents during accumulation to avoid float imprecision
+        const dailyMap = new Map<string, { revenueCents: number; orders: number }>();
         for (const inv of invoices) {
           const date = new Date(inv.invoiceDate || inv.createdAt).toISOString().split('T')[0];
-          const existing = dailyMap.get(date) || { revenue: 0, orders: 0 };
-          existing.revenue += inv.total || 0;
+          const existing = dailyMap.get(date) || { revenueCents: 0, orders: 0 };
+          existing.revenueCents += Math.round((inv.total || 0) * 100);
           existing.orders += 1;
           dailyMap.set(date, existing);
         }
@@ -111,26 +111,27 @@ export default function RapportsPage() {
           .sort(([a], [b]) => a.localeCompare(b))
           .map(([date, d]) => ({
             date,
-            revenue: Math.round(d.revenue * 100) / 100,
+            revenue: d.revenueCents / 100,
             orders: d.orders,
-            avgOrderValue: d.orders > 0 ? Math.round(d.revenue / d.orders * 100) / 100 : 0,
+            avgOrderValue: d.orders > 0 ? Math.round(d.revenueCents / d.orders) / 100 : 0,
           }));
         setSalesData(daily);
 
         // Build top products from invoice items
-        const productMap = new Map<string, { sales: number; revenue: number }>();
+        // G5-FLAW-05: Use integer cents to avoid float accumulation errors
+        const productMap = new Map<string, { sales: number; revenueCents: number }>();
         for (const inv of invoices) {
           for (const item of (inv.items || [])) {
             const name = item.description || item.productName || 'Unknown';
-            const existing = productMap.get(name) || { sales: 0, revenue: 0 };
+            const existing = productMap.get(name) || { sales: 0, revenueCents: 0 };
             existing.sales += item.quantity || 1;
-            existing.revenue += item.total || 0;
+            existing.revenueCents += Math.round((item.total || 0) * 100);
             productMap.set(name, existing);
           }
         }
 
         const products: TopProduct[] = Array.from(productMap.entries())
-          .map(([name, d]) => ({ name, sales: d.sales, revenue: Math.round(d.revenue * 100) / 100 }))
+          .map(([name, d]) => ({ name, sales: d.sales, revenue: d.revenueCents / 100 }))
           .sort((a, b) => b.revenue - a.revenue)
           .slice(0, 10);
         setTopProducts(products);
@@ -143,7 +144,8 @@ export default function RapportsPage() {
           if (prevRes.ok) {
             const prevData = await prevRes.json();
             const prevInvoices = prevData.invoices || [];
-            setPreviousPeriodRevenue(prevInvoices.reduce((s: number, i: { total: number }) => s + (i.total || 0), 0));
+            // G5-FLAW-05: Use cents to avoid float accumulation errors
+            setPreviousPeriodRevenue(prevInvoices.reduce((s: number, i: { total: number }) => s + Math.round((i.total || 0) * 100), 0) / 100);
             setPreviousPeriodOrders(prevInvoices.length);
           }
         } catch {
@@ -156,17 +158,18 @@ export default function RapportsPage() {
         const data = await taxRes.json();
         const reports = data.reports || [];
 
-        const regionMap = new Map<string, { orders: number; revenue: number }>();
+        // G5-FLAW-05: Use integer cents for region revenue accumulation
+        const regionMap = new Map<string, { orders: number; revenueCents: number }>();
         for (const r of reports) {
           if (r.periodType === 'ANNUAL') continue; // Skip annual aggregates
-          const existing = regionMap.get(r.region) || { orders: 0, revenue: 0 };
+          const existing = regionMap.get(r.region) || { orders: 0, revenueCents: 0 };
           existing.orders += r.salesCount || 0;
-          existing.revenue += r.totalSales || 0;
+          existing.revenueCents += Math.round((r.totalSales || 0) * 100);
           regionMap.set(r.region, existing);
         }
 
         const regions: RegionData[] = Array.from(regionMap.entries())
-          .map(([region, d]) => ({ region, orders: d.orders, revenue: Math.round(d.revenue) }))
+          .map(([region, d]) => ({ region, orders: d.orders, revenue: d.revenueCents / 100 }))
           .sort((a, b) => b.revenue - a.revenue);
         setRegionData(regions);
       }
@@ -178,9 +181,10 @@ export default function RapportsPage() {
     }
   };
 
-  const totalRevenue = salesData.reduce((sum, d) => sum + d.revenue, 0);
+  // G5-FLAW-05: Use cents for totals to avoid float accumulation
+  const totalRevenue = salesData.reduce((sum, d) => sum + Math.round(d.revenue * 100), 0) / 100;
   const totalOrders = salesData.reduce((sum, d) => sum + d.orders, 0);
-  const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+  const avgOrderValue = totalOrders > 0 ? Math.round(totalRevenue / totalOrders * 100) / 100 : 0;
 
   // Calculate real trends (% change vs previous period)
   const revenueTrend = previousPeriodRevenue > 0
