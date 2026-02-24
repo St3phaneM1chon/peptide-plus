@@ -306,7 +306,11 @@ export default function FacturesClientsPage() {
             quantity: item.quantity,
             unitPrice: item.unitPrice,
             discount: 0,
+            applyGst: item.applyGst,
+            applyQst: item.applyQst,
           })),
+        // S10-03: Taxes are now computed server-side from item-level flags.
+        // These values are kept for backward compat but the server ignores them.
         taxTps: totals.gst,
         taxTvq: totals.qst,
         taxTvh: 0,

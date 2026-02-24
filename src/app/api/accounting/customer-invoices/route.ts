@@ -9,6 +9,8 @@ import { createCustomerInvoiceSchema, logAuditTrail } from '@/lib/accounting';
 import { logger } from '@/lib/logger';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { validateCsrf } from '@/lib/csrf-middleware';
+import { GST_RATE, QST_RATE } from '@/lib/tax-constants';
+import { calculateTax, roundCurrency } from '@/lib/financial';
 
 // ---------------------------------------------------------------------------
 // Zod Schemas (for PUT - update invoice status)
@@ -144,7 +146,7 @@ export const POST = withAdminGuard(async (request) => {
         { status: 400 }
       );
     }
-    const { customerName, customerEmail, customerAddress, items, taxTps, taxTvq, taxTvh, dueDate, notes, status: requestedStatus } = parsed.data;
+    const { customerName, customerEmail, customerAddress, items, dueDate, notes, status: requestedStatus } = parsed.data;
 
     // Validation handled by Zod schema above
 
@@ -175,10 +177,19 @@ export const POST = withAdminGuard(async (request) => {
       0
     );
 
-    const tps = taxTps || 0;
-    const tvq = taxTvq || 0;
-    const tvh = taxTvh || 0;
-    const total = subtotal + tps + tvq + tvh;
+    // S10-03: Server-side tax computation. Client-sent taxTps/taxTvq are IGNORED.
+    // Taxes are computed from item-level applyGst/applyQst flags and the canonical tax rates.
+    let tpsBase = 0;
+    let tvqBase = 0;
+    for (const item of items) {
+      const lineAmount = roundCurrency(item.quantity * item.unitPrice - (item.discount || 0));
+      if (item.applyGst !== false) tpsBase += lineAmount;
+      if (item.applyQst !== false) tvqBase += lineAmount;
+    }
+    const tps = calculateTax(tpsBase, GST_RATE);
+    const tvq = calculateTax(tvqBase, QST_RATE);
+    const tvh = 0; // HST computed separately when applicable (not QC)
+    const total = roundCurrency(subtotal + tps + tvq + tvh);
 
     // Generate invoice number inside a transaction to prevent race conditions
     const year = new Date().getFullYear();

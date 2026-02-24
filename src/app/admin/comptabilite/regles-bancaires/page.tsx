@@ -17,6 +17,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { PageHeader, SectionCard, StatCard, Button, Modal, FormField, Input, FilterBar } from '@/components/admin';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useI18n } from '@/i18n/client';
 import { sectionThemes } from '@/lib/admin/section-themes';
 import { toast } from 'sonner';
@@ -119,6 +120,7 @@ export default function ReglesBancairesPage() {
   const [applying, setApplying] = useState(false);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [confirmDeleteRule, setConfirmDeleteRule] = useState<BankRule | null>(null);
 
   // ---------------------------------------------------------------------------
   // Data fetching
@@ -323,7 +325,7 @@ export default function ReglesBancairesPage() {
   // ---------------------------------------------------------------------------
 
   const handleDelete = async (rule: BankRule) => {
-    if (!confirm(t('admin.bankRules.confirmDelete') || `Delete rule "${rule.name}"?`)) return;
+    setConfirmDeleteRule(null);
     setDeletingId(rule.id);
     try {
       const res = await fetch(`/api/accounting/bank-rules?id=${rule.id}`, { method: 'DELETE' });
@@ -608,7 +610,7 @@ export default function ReglesBancairesPage() {
                           <Pencil className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => handleDelete(rule)}
+                          onClick={() => setConfirmDeleteRule(rule)}
                           disabled={deletingId === rule.id}
                           className="p-1.5 rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-600 transition-colors disabled:opacity-50"
                           title={t('admin.bankRules.delete') || 'Delete'}
@@ -795,6 +797,17 @@ export default function ReglesBancairesPage() {
           </div>
         </div>
       </Modal>
+
+      {/* ─── DELETE RULE CONFIRM DIALOG ─────────────────────────── */}
+      <ConfirmDialog
+        isOpen={!!confirmDeleteRule}
+        title={t('admin.bankRules.deleteTitle') || 'Delete Bank Rule'}
+        message={t('admin.bankRules.confirmDelete') || `Are you sure you want to delete the rule "${confirmDeleteRule?.name}"?`}
+        variant="danger"
+        confirmLabel={t('common.delete') || 'Delete'}
+        onConfirm={() => confirmDeleteRule && handleDelete(confirmDeleteRule)}
+        onCancel={() => setConfirmDeleteRule(null)}
+      />
     </div>
   );
 }

@@ -21,6 +21,7 @@ import {
   MobileSplitLayout,
 } from '@/components/admin/outlook';
 import type { ContentListItem } from '@/components/admin/outlook';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
@@ -131,11 +132,11 @@ export default function QuestionsPage() {
     }
   };
 
-  // F-030 FIX: State for delete confirmation modal instead of native confirm()
-  const [_deleteModalId, setDeleteModalId] = useState<string | null>(null);
+  // F-030 FIX: ConfirmDialog state for delete confirmation
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   const deleteQuestion = async (id: string) => {
-    setDeleteModalId(null); // Close modal
+    setDeleteConfirmId(null); // Close dialog
     setDeletingId(id);
     try {
       const response = await fetch(`/api/admin/questions/${id}`, { method: 'DELETE' });
@@ -346,7 +347,7 @@ export default function QuestionsPage() {
                         variant="danger"
                         icon={Trash2}
                         disabled={deletingId === selectedQuestion.id}
-                        onClick={() => deleteQuestion(selectedQuestion.id)}
+                        onClick={() => setDeleteConfirmId(selectedQuestion.id)}
                       >
                         {t('admin.questions.delete')}
                       </Button>
@@ -470,6 +471,17 @@ export default function QuestionsPage() {
           </FormField>
         </div>
       </Modal>
+
+      {/* ─── DELETE CONFIRM DIALOG ─────────────────────────────── */}
+      <ConfirmDialog
+        isOpen={!!deleteConfirmId}
+        title={t('admin.questions.deleteTitle') || 'Delete Question'}
+        message={t('admin.questions.deleteMessage') || 'Are you sure you want to delete this question? This action cannot be undone.'}
+        variant="danger"
+        confirmLabel={t('admin.questions.delete') || 'Delete'}
+        onConfirm={() => deleteConfirmId && deleteQuestion(deleteConfirmId)}
+        onCancel={() => setDeleteConfirmId(null)}
+      />
     </div>
   );
 }

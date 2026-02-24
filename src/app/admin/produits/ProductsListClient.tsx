@@ -25,6 +25,7 @@ import {
   MobileSplitLayout,
 } from '@/components/admin/outlook';
 import type { ContentListItem } from '@/components/admin/outlook';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
@@ -116,6 +117,7 @@ export default function ProductsListClient({
   const [categoryFilter, setCategoryFilter] = useState('');
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
   const [importing, setImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -200,8 +202,7 @@ export default function ProductsListClient({
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm(t('admin.products.confirmDelete'))) return;
-
+    setConfirmDeleteId(null);
     setDeleting(id);
     try {
       // NOTE: DELETE handler at /api/products/[id] requires OWNER role + CSRF + rate-limit (secured)
@@ -230,11 +231,11 @@ export default function ProductsListClient({
 
   const handleRibbonDelete = useCallback(() => {
     if (selectedProductId) {
-      handleDelete(selectedProductId);
+      setConfirmDeleteId(selectedProductId);
     } else {
       toast.info(t('admin.products.selectFirst'));
     }
-  }, [selectedProductId, handleDelete, t]);
+  }, [selectedProductId, t]);
 
   const handleDuplicate = useCallback(() => {
     toast.info(t('common.comingSoon'));
@@ -478,7 +479,7 @@ export default function ProductsListClient({
                           variant="danger"
                           size="sm"
                           icon={deleting === selectedProduct.id ? Loader2 : Trash2}
-                          onClick={() => handleDelete(selectedProduct.id)}
+                          onClick={() => setConfirmDeleteId(selectedProduct.id)}
                           disabled={deleting === selectedProduct.id}
                         />
                       )}
@@ -629,6 +630,17 @@ export default function ProductsListClient({
           }
         />
       </div>
+
+      {/* ─── DELETE CONFIRM DIALOG ─────────────────────────────── */}
+      <ConfirmDialog
+        isOpen={!!confirmDeleteId}
+        title={t('admin.products.deleteTitle') || 'Delete Product'}
+        message={t('admin.products.confirmDelete') || 'Are you sure you want to delete this product? This action cannot be undone.'}
+        variant="danger"
+        confirmLabel={t('common.delete') || 'Delete'}
+        onConfirm={() => confirmDeleteId && handleDelete(confirmDeleteId)}
+        onCancel={() => setConfirmDeleteId(null)}
+      />
     </div>
   );
 }

@@ -28,6 +28,7 @@ import {
   MobileSplitLayout,
 } from '@/components/admin/outlook';
 import type { ContentListItem, ContentListGroup } from '@/components/admin/outlook';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useI18n } from '@/i18n/client';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
 import { toast } from 'sonner';
@@ -210,6 +211,9 @@ export default function OrdersPage() {
   const [reshipReason, setReshipReason] = useState('');
   const [reshipping, setReshipping] = useState(false);
   const [reshipError, setReshipError] = useState('');
+
+  // UX FIX: ConfirmDialog for cancel order action
+  const [confirmCancelOrderId, setConfirmCancelOrderId] = useState<string | null>(null);
 
   // Enriched detail data
   const [creditNotes, setCreditNotes] = useState<CreditNoteRef[]>([]);
@@ -774,10 +778,9 @@ ${selectedOrder.adminNotes ? `<div class="notes"><strong>${t('admin.commandes.pr
                         onChange={(e) => {
                           const newStatus = e.target.value;
                           if (newStatus === 'CANCELLED') {
-                            if (!confirm(t('admin.commandes.confirmCancel'))) {
-                              e.target.value = selectedOrder.status;
-                              return;
-                            }
+                            e.target.value = selectedOrder.status;
+                            setConfirmCancelOrderId(selectedOrder.id);
+                            return;
                           }
                           updateOrderStatus(selectedOrder.id, newStatus);
                         }}
@@ -1159,6 +1162,22 @@ ${selectedOrder.adminNotes ? `<div class="notes"><strong>${t('admin.commandes.pr
           )}
         </div>
       </Modal>
+
+      {/* ─── CANCEL ORDER CONFIRM DIALOG ───────────────────────── */}
+      <ConfirmDialog
+        isOpen={!!confirmCancelOrderId}
+        title={t('admin.commandes.cancelOrderTitle') || 'Cancel Order'}
+        message={t('admin.commandes.confirmCancel') || 'Are you sure you want to cancel this order? This action cannot be undone.'}
+        variant="danger"
+        confirmLabel={t('admin.commandes.confirmCancelBtn') || 'Cancel Order'}
+        onConfirm={() => {
+          if (confirmCancelOrderId) {
+            updateOrderStatus(confirmCancelOrderId, 'CANCELLED');
+          }
+          setConfirmCancelOrderId(null);
+        }}
+        onCancel={() => setConfirmCancelOrderId(null)}
+      />
     </div>
   );
 }

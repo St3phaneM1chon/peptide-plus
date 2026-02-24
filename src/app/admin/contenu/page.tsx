@@ -9,6 +9,7 @@ import { EmptyState } from '@/components/admin/EmptyState';
 import { StatusBadge } from '@/components/admin/StatusBadge';
 import { FilterBar } from '@/components/admin/FilterBar';
 import { FormField, Input, Textarea } from '@/components/admin/FormField';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
@@ -68,6 +69,8 @@ export default function ContenuPage() {
   });
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  // UX FIX: ConfirmDialog state for delete actions
+  const [confirmDelete, setConfirmDelete] = useState<{ id: string; type: 'page' | 'faq' } | null>(null);
 
   // FAQ modal
   const [faqModal, setFaqModal] = useState(false);
@@ -149,7 +152,7 @@ export default function ContenuPage() {
   };
 
   const deletePage = async (id: string) => {
-    if (!confirm(t('admin.content.deletePageConfirm'))) return;
+    setConfirmDelete(null);
     setDeletingId(id);
     try {
       const res = await fetch(`/api/admin/content/pages?id=${id}`, { method: 'DELETE' });
@@ -228,7 +231,7 @@ export default function ContenuPage() {
   };
 
   const deleteFaq = async (id: string) => {
-    if (!confirm(t('admin.content.deleteFaqConfirm'))) return;
+    setConfirmDelete(null);
     setDeletingId(id);
     try {
       const res = await fetch(`/api/admin/content/faqs?id=${id}`, { method: 'DELETE' });
@@ -418,7 +421,7 @@ export default function ContenuPage() {
                         <a href={`/${page.slug}`} target="_blank" rel="noopener noreferrer">
                           <Button size="sm" variant="ghost" icon={ExternalLink} />
                         </a>
-                        <Button size="sm" variant="ghost" icon={Trash2} disabled={deletingId === page.id} onClick={() => deletePage(page.id)} />
+                        <Button size="sm" variant="ghost" icon={Trash2} disabled={deletingId === page.id} onClick={() => setConfirmDelete({ id: page.id, type: 'page' })} />
                       </div>
                     </td>
                   </tr>
@@ -460,7 +463,7 @@ export default function ContenuPage() {
                             )}
                           </button>
                           <Button size="sm" variant="ghost" icon={Pencil} onClick={() => openFaqModal(faq)} />
-                          <Button size="sm" variant="ghost" icon={Trash2} disabled={deletingId === faq.id} onClick={() => deleteFaq(faq.id)} />
+                          <Button size="sm" variant="ghost" icon={Trash2} disabled={deletingId === faq.id} onClick={() => setConfirmDelete({ id: faq.id, type: 'faq' })} />
                         </div>
                       </div>
                     </div>
@@ -627,6 +630,26 @@ export default function ContenuPage() {
           </label>
         </div>
       </Modal>
+
+      {/* ─── DELETE CONFIRM DIALOG ─────────────────────────────── */}
+      <ConfirmDialog
+        isOpen={!!confirmDelete}
+        title={confirmDelete?.type === 'faq'
+          ? (t('admin.content.deleteFaqTitle') || 'Delete FAQ')
+          : (t('admin.content.deletePageTitle') || 'Delete Page')}
+        message={confirmDelete?.type === 'faq'
+          ? (t('admin.content.deleteFaqConfirm') || 'Are you sure you want to delete this FAQ entry? This action cannot be undone.')
+          : (t('admin.content.deletePageConfirm') || 'Are you sure you want to delete this page? This action cannot be undone.')}
+        variant="danger"
+        confirmLabel={t('common.delete') || 'Delete'}
+        onConfirm={() => {
+          if (confirmDelete) {
+            if (confirmDelete.type === 'page') deletePage(confirmDelete.id);
+            else deleteFaq(confirmDelete.id);
+          }
+        }}
+        onCancel={() => setConfirmDelete(null)}
+      />
     </div>
   );
 }

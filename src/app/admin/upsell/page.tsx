@@ -13,6 +13,7 @@ import {
   MobileSplitLayout,
 } from '@/components/admin/outlook';
 import type { ContentListItem } from '@/components/admin/outlook';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
@@ -87,6 +88,7 @@ export default function UpsellAdminPage() {
   const [formSuggestedFreq, setFormSuggestedFreq] = useState('');
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   // ─── Data fetching ──────────────────────────────────────────
 
@@ -209,7 +211,7 @@ export default function UpsellAdminPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm(t('admin.upsell.confirmDelete'))) return;
+    setConfirmDeleteId(null);
     setDeletingId(id);
     try {
       const res = await fetch(`/api/admin/upsell-config?id=${id}`, { method: 'DELETE' });
@@ -304,7 +306,7 @@ export default function UpsellAdminPage() {
 
   const onDeleteRibbon = useCallback(() => {
     if (!selectedId) return;
-    handleDelete(selectedId);
+    setConfirmDeleteId(selectedId);
   }, [selectedId]);
 
   const onActivate = useCallback(() => {
@@ -431,7 +433,7 @@ export default function UpsellAdminPage() {
                           size="sm"
                           icon={Trash2}
                           disabled={deletingId === selectedConfig.id}
-                          onClick={() => handleDelete(selectedConfig.id)}
+                          onClick={() => setConfirmDeleteId(selectedConfig.id)}
                           className="text-red-600 hover:text-red-700"
                         />
                       )}
@@ -723,6 +725,17 @@ export default function UpsellAdminPage() {
           </Button>
         </div>
       </Modal>
+
+      {/* ─── DELETE CONFIRM DIALOG ─────────────────────────────── */}
+      <ConfirmDialog
+        isOpen={!!confirmDeleteId}
+        title={t('admin.upsell.deleteTitle') || 'Delete Configuration'}
+        message={t('admin.upsell.confirmDelete') || 'Are you sure you want to delete this upsell configuration?'}
+        variant="danger"
+        confirmLabel={t('common.delete') || 'Delete'}
+        onConfirm={() => confirmDeleteId && handleDelete(confirmDeleteId)}
+        onCancel={() => setConfirmDeleteId(null)}
+      />
     </div>
   );
 }

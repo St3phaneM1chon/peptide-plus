@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { RefreshCw, DollarSign, Calendar, BarChart3 } from 'lucide-react';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import { sectionThemes } from '@/lib/admin/section-themes';
@@ -31,6 +32,7 @@ export default function RecurringEntriesPage() {
   const [showModal, setShowModal] = useState(false);
   const [showPreview, setShowPreview] = useState<RecurringEntry | null>(null);
   const [processing, setProcessing] = useState(false);
+  const [confirmDeactivateId, setConfirmDeactivateId] = useState<string | null>(null);
 
   const frequencyLabels: Record<string, string> = {
     DAILY: t('admin.recurringEntries.freqDaily'),
@@ -159,6 +161,22 @@ export default function RecurringEntriesPage() {
     } catch (err) {
       console.error('Error saving recurring entry:', err);
       toast.error(t('admin.recurringEntries.saveError'));
+    }
+  };
+
+  const deactivateEntry = async (id: string) => {
+    try {
+      const response = await fetch('/api/accounting/recurring', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, active: false }),
+      });
+      if (!response.ok) throw new Error(t('admin.recurringEntries.apiError', { status: response.status }));
+      toast.success(t('admin.recurringEntries.deactivateSuccess'));
+      await loadEntries();
+    } catch (err) {
+      console.error('Error deactivating recurring entry:', err);
+      toast.error(t('admin.recurringEntries.deactivateError'));
     }
   };
 
@@ -344,21 +362,7 @@ export default function RecurringEntriesPage() {
                       &#9999;&#65039;
                     </button>
                     <button
-                      onClick={async () => {
-                        if (!confirm(t('admin.recurringEntries.deactivateConfirm'))) return;
-                        try {
-                          const response = await fetch('/api/accounting/recurring', {
-                            method: 'PUT',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ id: entry.id, active: false }),
-                          });
-                          if (!response.ok) throw new Error(t('admin.recurringEntries.apiError', { status: response.status }));
-                          await loadEntries();
-                        } catch (err) {
-                          console.error('Error deactivating entry:', err);
-                          toast.error(t('admin.recurringEntries.deactivateError'));
-                        }
-                      }}
+                      onClick={() => setConfirmDeactivateId(entry.id)}
                       className="p-1.5 hover:bg-red-50 rounded text-slate-400 hover:text-red-500"
                       title={t('admin.recurringEntries.delete')}
                       aria-label={t('admin.recurringEntries.delete')}
@@ -526,6 +530,21 @@ export default function RecurringEntriesPage() {
           </div>
         </div>
       )}
+
+      {/* Confirm Deactivate Dialog */}
+      <ConfirmDialog
+        isOpen={!!confirmDeactivateId}
+        title={t('admin.recurringEntries.deactivateTitle')}
+        message={t('admin.recurringEntries.deactivateConfirm')}
+        variant="danger"
+        confirmLabel={t('admin.recurringEntries.deactivateAction')}
+        cancelLabel={t('common.cancel')}
+        onConfirm={() => {
+          if (confirmDeactivateId) deactivateEntry(confirmDeactivateId);
+          setConfirmDeactivateId(null);
+        }}
+        onCancel={() => setConfirmDeactivateId(null)}
+      />
 
       {/* Preview Modal */}
       {showPreview && (

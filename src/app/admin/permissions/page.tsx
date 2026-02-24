@@ -12,6 +12,7 @@ import { StatusBadge } from '@/components/admin/StatusBadge';
 import { Modal } from '@/components/admin/Modal';
 import { EmptyState } from '@/components/admin/EmptyState';
 import { Input } from '@/components/admin/FormField';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import { addCSRFHeader } from '@/lib/csrf';
@@ -77,6 +78,7 @@ export default function PermissionsPage() {
   const [groupForm, setGroupForm] = useState({ name: '', description: '', color: '#0ea5e9', permissionCodes: [] as string[] });
 
   const [deletingGroupId, setDeletingGroupId] = useState<string | null>(null);
+  const [confirmDeleteGroupId, setConfirmDeleteGroupId] = useState<string | null>(null);
   const [removingOverrideCode, setRemovingOverrideCode] = useState<string | null>(null);
 
   // Override state
@@ -199,7 +201,7 @@ export default function PermissionsPage() {
   };
 
   const deleteGroup = async (groupId: string) => {
-    if (!confirm(t('admin.permissions.deleteGroupConfirm'))) return;
+    setConfirmDeleteGroupId(null);
     setDeletingGroupId(groupId);
     try {
       const res = await fetch('/api/admin/permissions', {
@@ -460,7 +462,7 @@ export default function PermissionsPage() {
                       >
                         {t('admin.permissions.edit')}
                       </Button>
-                      <Button size="sm" variant="ghost" icon={Trash2} disabled={deletingGroupId === group.id} onClick={() => deleteGroup(group.id)} />
+                      <Button size="sm" variant="ghost" icon={Trash2} disabled={deletingGroupId === group.id} onClick={() => setConfirmDeleteGroupId(group.id)} />
                     </div>
                   </div>
                   <div className="mt-3 flex flex-wrap gap-1.5">
@@ -692,6 +694,17 @@ export default function PermissionsPage() {
           )}
         </div>
       )}
+
+      {/* ─── DELETE GROUP CONFIRM DIALOG ────────────────────────── */}
+      <ConfirmDialog
+        isOpen={!!confirmDeleteGroupId}
+        title={t('admin.permissions.deleteGroupTitle') || 'Delete Permission Group'}
+        message={t('admin.permissions.deleteGroupConfirm') || 'Are you sure you want to delete this permission group? Users assigned to this group will lose these permissions.'}
+        variant="danger"
+        confirmLabel={t('common.delete') || 'Delete'}
+        onConfirm={() => confirmDeleteGroupId && deleteGroup(confirmDeleteGroupId)}
+        onCancel={() => setConfirmDeleteGroupId(null)}
+      />
     </div>
   );
 }

@@ -33,6 +33,7 @@ import {
   Textarea,
   type BadgeVariant,
 } from '@/components/admin';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useI18n } from '@/i18n/client';
 import { sectionThemes } from '@/lib/admin/section-themes';
 import { toast } from 'sonner';
@@ -152,6 +153,7 @@ export default function DepensesPage() {
   const [formSaving, setFormSaving] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [confirmDeleteExpenseId, setConfirmDeleteExpenseId] = useState<string | null>(null);
 
   const formatCAD = formatCurrency;
 
@@ -381,7 +383,7 @@ export default function DepensesPage() {
   // ---------------------------------------------------------------------------
 
   const handleDelete = async (expenseId: string) => {
-    if (!confirm(t('admin.expenses.confirmDelete'))) return;
+    setConfirmDeleteExpenseId(null);
     setDeletingId(expenseId);
     try {
       const response = await fetch(`/api/accounting/expenses?id=${expenseId}`, { method: 'DELETE' });
@@ -537,7 +539,7 @@ export default function DepensesPage() {
                 <Pencil className="w-4 h-4" />
               </button>
               <button
-                onClick={(e) => { e.stopPropagation(); handleDelete(exp.id); }}
+                onClick={(e) => { e.stopPropagation(); setConfirmDeleteExpenseId(exp.id); }}
                 disabled={deletingId === exp.id}
                 className="p-1.5 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50 disabled:opacity-50"
                 title={t('common.delete')}
@@ -1089,6 +1091,17 @@ export default function DepensesPage() {
           </div>
         </div>
       </Modal>
+
+      {/* ─── DELETE EXPENSE CONFIRM DIALOG ──────────────────────── */}
+      <ConfirmDialog
+        isOpen={!!confirmDeleteExpenseId}
+        title={t('admin.expenses.deleteTitle') || 'Delete Expense'}
+        message={t('admin.expenses.confirmDelete') || 'Are you sure you want to delete this expense? This action cannot be undone.'}
+        variant="danger"
+        confirmLabel={t('common.delete') || 'Delete'}
+        onConfirm={() => confirmDeleteExpenseId && handleDelete(confirmDeleteExpenseId)}
+        onCancel={() => setConfirmDeleteExpenseId(null)}
+      />
     </div>
   );
 }

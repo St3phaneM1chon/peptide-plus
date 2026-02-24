@@ -22,6 +22,7 @@ import {
   MobileSplitLayout,
 } from '@/components/admin/outlook';
 import type { ContentListItem } from '@/components/admin/outlook';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
@@ -79,6 +80,9 @@ export default function AbonnementsPage() {
   const [cfgFreeShipping, setCfgFreeShipping] = useState(true);
   const [cfgReminderDays, setCfgReminderDays] = useState('3');
   const [cfgMaxPauses, setCfgMaxPauses] = useState('1');
+
+  // Cancel confirmation state
+  const [confirmCancelId, setConfirmCancelId] = useState<string | null>(null);
 
   // Modify form state
   const [modFrequency, setModFrequency] = useState('');
@@ -484,7 +488,7 @@ export default function AbonnementsPage() {
                         <Button
                           size="sm"
                           variant="danger"
-                          onClick={() => updateStatus(selectedSub.id, 'CANCELLED')}
+                          onClick={() => setConfirmCancelId(selectedSub.id)}
                         >
                           {t('admin.subscriptions.cancel')}
                         </Button>
@@ -694,6 +698,22 @@ export default function AbonnementsPage() {
           </FormField>
         </div>
       </Modal>
+
+      {/* ─── CANCEL CONFIRM DIALOG ─────────────────────────────── */}
+      <ConfirmDialog
+        isOpen={!!confirmCancelId}
+        title={t('admin.subscriptions.cancelConfirmTitle') || 'Cancel Subscription'}
+        message={t('admin.subscriptions.cancelConfirmMessage') || 'Are you sure you want to cancel this subscription? The customer will no longer receive deliveries.'}
+        variant="danger"
+        confirmLabel={t('admin.subscriptions.cancel') || 'Cancel Subscription'}
+        onConfirm={() => {
+          if (confirmCancelId) {
+            updateStatus(confirmCancelId, 'CANCELLED');
+          }
+          setConfirmCancelId(null);
+        }}
+        onCancel={() => setConfirmCancelId(null)}
+      />
     </div>
   );
 }

@@ -91,6 +91,8 @@ export const invoiceItemSchema = z.object({
   quantity: z.number().min(1, 'Quantité >= 1'),
   unitPrice: z.number().min(0, 'Prix >= 0'),
   discount: z.number().min(0).default(0),
+  applyGst: z.boolean().default(true),
+  applyQst: z.boolean().default(true),
 });
 
 export const createCustomerInvoiceSchema = z.object({
@@ -98,6 +100,9 @@ export const createCustomerInvoiceSchema = z.object({
   customerEmail: z.string().email('Email invalide').optional(),
   customerAddress: z.string().max(500).optional(),
   items: z.array(invoiceItemSchema).min(1, 'Au moins un article requis'),
+  // S10-03: taxTps/taxTvq/taxTvh are now IGNORED by the server.
+  // Taxes are recomputed server-side from items + per-item applyGst/applyQst flags.
+  // These fields are kept in the schema for backward compatibility but are not used.
   taxTps: z.number().min(0).default(0),
   taxTvq: z.number().min(0).default(0),
   taxTvh: z.number().min(0).default(0),

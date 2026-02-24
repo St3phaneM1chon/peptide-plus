@@ -6,6 +6,7 @@ import {
   CheckCircle2, XCircle, Clock, Loader2, AlertTriangle, Info,
   RefreshCw, MapPin
 } from 'lucide-react';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import { addCSRFHeader } from '@/lib/csrf';
@@ -100,6 +101,7 @@ export default function UatPage() {
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [pollingRunId, setPollingRunId] = useState<string | null>(null);
   const [cleaningUp, setCleaningUp] = useState<string | null>(null);
+  const [confirmCleanupId, setConfirmCleanupId] = useState<string | null>(null);
 
   // Fetch runs list
   const fetchRuns = useCallback(async () => {
@@ -189,7 +191,7 @@ export default function UatPage() {
 
   // Cleanup
   const handleCleanup = async (runId: string) => {
-    if (!confirm(t('admin.uat.cleanupConfirm'))) return;
+    setConfirmCleanupId(null);
     setCleaningUp(runId);
     try {
       const res = await fetch(`/api/admin/uat/${runId}`, { method: 'DELETE', headers: addCSRFHeader() });
@@ -383,7 +385,7 @@ export default function UatPage() {
                         </button>
                         {!run.cleanedUp && run.status !== 'RUNNING' && (
                           <button
-                            onClick={() => handleCleanup(run.id)}
+                            onClick={() => setConfirmCleanupId(run.id)}
                             disabled={cleaningUp === run.id}
                             className="p-1.5 hover:bg-red-50 rounded-md text-slate-400 hover:text-red-600 disabled:opacity-50"
                             title={t('admin.uat.cleanData')}
@@ -410,10 +412,21 @@ export default function UatPage() {
           runDetail={runDetail}
           loading={loadingDetail}
           onClose={() => { setSelectedRunId(null); setRunDetail(null); }}
-          onCleanup={() => handleCleanup(selectedRunId)}
+          onCleanup={() => setConfirmCleanupId(selectedRunId)}
           cleaningUp={cleaningUp === selectedRunId}
         />
       )}
+
+      {/* ─── CLEANUP CONFIRM DIALOG ────────────────────────────── */}
+      <ConfirmDialog
+        isOpen={!!confirmCleanupId}
+        title={t('admin.uat.cleanupTitle') || 'Clean Up Test Data'}
+        message={t('admin.uat.cleanupConfirm') || 'Are you sure you want to clean up all test data for this run? This will delete test orders, payments, and related records.'}
+        variant="warning"
+        confirmLabel={t('admin.uat.cleanData') || 'Clean Up'}
+        onConfirm={() => confirmCleanupId && handleCleanup(confirmCleanupId)}
+        onCancel={() => setConfirmCleanupId(null)}
+      />
     </div>
   );
 }
