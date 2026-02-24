@@ -69,6 +69,8 @@ export default function InventoryPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const { t, locale } = useI18n();
+  const fmtPrice = (amount: number) =>
+    new Intl.NumberFormat(locale, { style: 'currency', currency: 'CAD' }).format(amount);
 
   // State
   const [orders, setOrders] = useState<Order[]>([]);
@@ -308,7 +310,7 @@ export default function InventoryPage() {
         p.category,
         f.formatName,
         f.totalQuantity,
-        f.totalSpent.toFixed(2),
+        fmtPrice(f.totalSpent),
         new Date(f.lastOrderDate).toLocaleDateString(locale),
         p.stockStatus,
         p.notes.replace(/,/g, ';'),
@@ -564,7 +566,7 @@ export default function InventoryPage() {
                       </td>
                       <td className="py-3 px-4 text-center font-semibold">{product.totalQuantity}</td>
                       <td className="py-3 px-4 text-center text-orange-600 font-semibold">
-                        ${product.totalSpent.toFixed(2)}
+                        {fmtPrice(product.totalSpent)}
                       </td>
                       <td className="py-3 px-4 text-center text-sm text-gray-500">
                         {formatDate(product.lastOrderDate, locale)}
@@ -723,7 +725,7 @@ function ProductCard({
         </div>
         <div>
           <p className="text-xs text-gray-500">{t('account.inventory.totalSpent')}</p>
-          <p className="text-xl font-bold text-orange-600">${product.totalSpent.toFixed(2)}</p>
+          <p className="text-xl font-bold text-orange-600">{fmtPrice(product.totalSpent)}</p>
         </div>
       </div>
 
@@ -840,7 +842,7 @@ function ProductDetailModal({
                   <p className="text-xs text-gray-500">{t('account.inventory.statTotalUnits')}</p>
                 </div>
                 <div className="bg-gray-50 rounded-lg p-4 text-center">
-                  <p className="text-2xl font-bold text-orange-600">${product.totalSpent.toFixed(2)}</p>
+                  <p className="text-2xl font-bold text-orange-600">{fmtPrice(product.totalSpent)}</p>
                   <p className="text-xs text-gray-500">{t('account.inventory.totalSpent')}</p>
                 </div>
                 <div className="bg-gray-50 rounded-lg p-4 text-center">
@@ -865,7 +867,7 @@ function ProductDetailModal({
                       </div>
                       <div className="text-end">
                         <p className="font-semibold text-gray-900">{f.totalQuantity} {t('account.inventory.units')}</p>
-                        <p className="text-sm text-orange-600">${f.totalSpent.toFixed(2)}</p>
+                        <p className="text-sm text-orange-600">{fmtPrice(f.totalSpent)}</p>
                       </div>
                     </div>
                   ))}
@@ -927,7 +929,7 @@ function ProductDetailModal({
                         </div>
                         <div className="text-end">
                           <p className="font-semibold text-gray-900">×{order.quantity}</p>
-                          <p className="text-sm text-orange-600">${(order.quantity * order.price).toFixed(2)}</p>
+                          <p className="text-sm text-orange-600">{fmtPrice(order.quantity * order.price)}</p>
                         </div>
                       </div>
                     ))}

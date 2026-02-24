@@ -28,7 +28,9 @@ interface ProductCardShopifyProps {
 
 export function ProductCardShopify({ product }: ProductCardShopifyProps) {
   const { addItem } = useCart();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const fmtPrice = (amount: number) =>
+    new Intl.NumberFormat(locale, { style: 'currency', currency: 'CAD' }).format(amount);
 
   const hasDiscount = product.compareAtPrice && product.compareAtPrice > product.price;
   const discountPercent = hasDiscount
@@ -119,11 +121,11 @@ export function ProductCardShopify({ product }: ProductCardShopifyProps) {
         {/* Price */}
         <div className="product-card__price">
           <span className="product-card__price-current">
-            {product.price.toFixed(2)} $
+            {fmtPrice(product.price)}
           </span>
           {hasDiscount && (
             <span className="product-card__price-compare">
-              {product.compareAtPrice!.toFixed(2)} $
+              {fmtPrice(product.compareAtPrice!)}
             </span>
           )}
         </div>

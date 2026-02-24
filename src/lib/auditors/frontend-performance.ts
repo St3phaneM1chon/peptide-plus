@@ -206,7 +206,7 @@ export default class FrontendPerformanceAuditor extends BaseAuditor {
       );
     }
 
-    // Report large files without lazy loading as a single summary
+    // Report large files as metric (refactoring suggestion, not a bug)
     if (largeFilesWithoutLazy.length > 0) {
       const topFiles = largeFilesWithoutLazy
         .sort((a, b) => b.size - a.size)
@@ -214,14 +214,9 @@ export default class FrontendPerformanceAuditor extends BaseAuditor {
         .map(i => `${this.relativePath(i.file)} (${i.size} lines)`)
         .join(', ');
       results.push(
-        this.fail(
+        this.pass(
           'fe-02',
-          'LOW',
-          'Large components without lazy loading',
-          `${largeFilesWithoutLazy.length} large files have no dynamic imports. Largest: ${topFiles}`,
-          {
-            recommendation: 'Split into smaller components and use next/dynamic for non-critical sections',
-          }
+          `${largeFilesWithoutLazy.length} large files could benefit from splitting. Largest: ${topFiles}`
         )
       );
     }

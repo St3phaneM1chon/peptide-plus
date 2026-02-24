@@ -115,7 +115,7 @@ const PAYMENT_METHOD_LABELS: Record<string, string> = {
 export default function InvoicesPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const printRef = useRef<HTMLDivElement>(null);
 
   // State
@@ -249,8 +249,8 @@ export default function InvoicesPage() {
   };
 
   // Format helpers
-  const formatMoney = (amount: number, symbol: string = '$') => {
-    return `${symbol}${amount.toFixed(2)}`;
+  const formatMoney = (amount: number, _symbol?: string, currencyCode: string = 'CAD') => {
+    return new Intl.NumberFormat(locale, { style: 'currency', currency: currencyCode }).format(amount);
   };
 
   const formatDate = (dateStr: string) => {

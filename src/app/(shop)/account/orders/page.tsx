@@ -69,6 +69,8 @@ export default function OrdersPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const { t, locale } = useI18n();
+  const fmtPrice = (amount: number, currency: string = 'CAD') =>
+    new Intl.NumberFormat(locale, { style: 'currency', currency }).format(Number(amount));
   const { addItem } = useCart();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -205,7 +207,7 @@ export default function OrdersPage() {
       // Show success message
       if (data.refund && data.refund.amount > 0) {
         toast.success(
-          t('toast.orders.cancelledWithRefund', { orderNumber: order.orderNumber, amount: data.refund.amount.toFixed(2) }),
+          t('toast.orders.cancelledWithRefund', { orderNumber: order.orderNumber, amount: new Intl.NumberFormat(locale, { style: 'currency', currency: order.currency?.code || 'CAD' }).format(data.refund.amount) }),
           { duration: 6000 }
         );
       } else {
@@ -281,7 +283,7 @@ export default function OrdersPage() {
       const doc = new jsPDF();
       
       const currency = order.currency?.code || 'CAD';
-      const formatMoney = (amount: number) => `$${Number(amount).toFixed(2)} ${currency}`;
+      const formatMoney = (amount: number) => new Intl.NumberFormat(locale, { style: 'currency', currency }).format(Number(amount));
       
       // Header
       doc.setFontSize(24);
@@ -810,7 +812,7 @@ export default function OrdersPage() {
                       <div>
                         <p className="text-sm text-gray-500">{t('account.orders.totalLabel')}</p>
                         <p className="font-semibold text-orange-600">
-                          ${Number(order.total).toFixed(2)} {order.currency?.code || 'CAD'}
+                          {fmtPrice(order.total, order.currency?.code || 'CAD')}
                         </p>
                       </div>
                     </div>
@@ -835,12 +837,12 @@ export default function OrdersPage() {
                               {item.formatName ? ` — ${item.formatName}` : ''}
                             </p>
                             <p className="text-sm text-gray-500">
-                              {t('account.orders.qty')}: {item.quantity} × ${Number(item.unitPrice).toFixed(2)}
+                              {t('account.orders.qty')}: {item.quantity} × {fmtPrice(item.unitPrice)}
                             </p>
                           </div>
                         </div>
                         <p className="font-medium text-gray-900">
-                          ${(Number(item.unitPrice) * item.quantity).toFixed(2)}
+                          {fmtPrice(Number(item.unitPrice) * item.quantity)}
                         </p>
                       </div>
                     ))}
@@ -983,7 +985,7 @@ export default function OrdersPage() {
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-sm text-gray-600">{t('cart.total')}</span>
                   <span className="font-semibold text-gray-900">
-                    ${Number(cancelConfirmOrder.total).toFixed(2)} {cancelConfirmOrder.currency?.code || 'CAD'}
+                    {fmtPrice(cancelConfirmOrder.total, cancelConfirmOrder.currency?.code || 'CAD')}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
@@ -1299,8 +1301,8 @@ function InvoiceModal({
   locale: string;
 }) {
   const currency = order.currency?.code || 'CAD';
-  const formatMoney = (amount: number) => `$${Number(amount).toFixed(2)} ${currency}`;
-  
+  const formatMoney = (amount: number) => new Intl.NumberFormat(locale, { style: 'currency', currency }).format(Number(amount));
+
   const billing = order.billingAddress || order.shippingAddress;
   const shipping = order.shippingAddress;
 

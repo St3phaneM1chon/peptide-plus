@@ -21,7 +21,9 @@ export default function PriceDropButton({
 }: PriceDropButtonProps) {
   const { data: session } = useSession();
   const router = useRouter();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const fmtPrice = (amount: number) =>
+    new Intl.NumberFormat(locale, { style: 'currency', currency: 'CAD' }).format(amount);
   const [isWatching, setIsWatching] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [showPopover, setShowPopover] = useState(false);
@@ -136,7 +138,7 @@ export default function PriceDropButton({
         setTargetPrice('');
 
         if (target) {
-          toast.success(t('toast.priceAlert.notifyBelow', { amount: target.toFixed(2) }));
+          toast.success(t('toast.priceAlert.notifyBelow', { amount: fmtPrice(target) }));
         } else {
           toast.success(t('toast.priceAlert.notifyAnyDrop'));
         }
@@ -208,12 +210,12 @@ export default function PriceDropButton({
                     max={currentPrice}
                     value={targetPrice}
                     onChange={(e) => setTargetPrice(e.target.value)}
-                    placeholder={(currentPrice * 0.9).toFixed(2)}
+                    placeholder={fmtPrice(currentPrice * 0.9)}
                     className="w-full ps-7 pe-3 py-2 border border-neutral-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   />
                 </div>
                 <p className="text-xs text-neutral-400 mt-1">
-                  Current: ${currentPrice.toFixed(2)}
+                  Current: {fmtPrice(currentPrice)}
                 </p>
               </div>
               <div className="flex gap-2">
@@ -287,12 +289,12 @@ export default function PriceDropButton({
                   max={currentPrice}
                   value={targetPrice}
                   onChange={(e) => setTargetPrice(e.target.value)}
-                  placeholder={(currentPrice * 0.9).toFixed(2)}
+                  placeholder={fmtPrice(currentPrice * 0.9)}
                   className="w-full ps-7 pe-3 py-2 border border-neutral-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 />
               </div>
               <p className="text-xs text-neutral-400 mt-1">
-                Current: ${currentPrice.toFixed(2)}
+                Current: {fmtPrice(currentPrice)}
               </p>
             </div>
             <div className="flex gap-2">
