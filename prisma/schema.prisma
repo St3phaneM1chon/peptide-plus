@@ -831,7 +831,10 @@ model CustomerInvoice {
   @@index([orderId])
   @@index([status])
   @@index([deletedAt])
+  @@index([invoiceDate]) // S10: Index for date range filtering (gst-qst-declaration, tax reports)
+  @@index([paidAt]) // S10: Index for payment reconciliation queries
   @@index([status, dueDate]) // Phase 9: Composite for overdue invoice queries
+  @@index([status, deletedAt]) // S10: Composite for active invoice queries (aging, alerts)
   @@index([customerId, status]) // Phase 9: Composite for customer invoice listing
   @@index([createdAt])
   @@index([updatedAt])
@@ -1263,6 +1266,9 @@ model JournalEntry {
   @@index([status, date])
   @@index([deletedAt])
   @@index([reference]) // #56 - Index for reference lookups (reconciliation, Stripe sync)
+  @@index([createdBy]) // S10: Index for audit trail lookups by creator
+  @@index([type, deletedAt]) // S10: Composite for stripe-sync queries (find by type, exclude deleted)
+  @@index([status, deletedAt]) // S10: Composite for active entry queries by status
   @@index([createdAt])
   @@index([updatedAt])
 }
@@ -1524,6 +1530,8 @@ model Order {
   @@index([userId, status])
   @@index([userId, createdAt])
   @@index([status, createdAt])
+  @@index([paymentStatus, createdAt]) // S10: Composite for social-proof & abandoned-cart queries filtering by paymentStatus + date range
+  @@index([status, paymentStatus]) // S10: Composite for queries filtering orders by both status and payment status
   @@index([updatedAt])
 }
 
@@ -1790,6 +1798,7 @@ model Product {
   @@index([sku])
   @@index([slug])
   @@index([name])
+  @@index([isActive]) // S10: Standalone index for active product filter (search, suggest, catalog queries)
   @@index([categoryId, isActive])
   @@index([isActive, createdAt])
   @@index([createdAt])
@@ -1838,6 +1847,7 @@ model ProductFormat {
   @@index([sku])
   @@index([isActive])
   @@index([productId, isActive])
+  @@index([productId, availability]) // S10: Composite for finding in-stock formats per product
   @@index([createdAt])
   @@index([updatedAt])
 }
@@ -2446,6 +2456,9 @@ model SupplierInvoice {
   @@index([status])
   @@index([supplierId])
   @@index([deletedAt])
+  @@index([status, invoiceDate]) // S10: Composite for tax-summary & gst-qst-declaration queries
+  @@index([status, deletedAt]) // S10: Composite for active invoice queries (aging, filtering)
+  @@index([supplierId, status]) // S10: Composite for supplier invoice listing with status filter
   @@index([createdAt])
   @@index([updatedAt])
 }

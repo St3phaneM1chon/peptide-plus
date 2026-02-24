@@ -1,10 +1,11 @@
 # PROJECT MAP - peptide-plus (BioCycle Peptides)
-# LAST UPDATED: 2026-02-24
+# LAST UPDATED: 2026-02-24 (Session 2 - S10/S11/S12 complete)
 # RULE: This file MUST be updated after every feature addition/modification
 # SEE: .claude/rules/project-map-mandatory.md for enforcement rules
 
 ## QUICK STATS
-- **Pages**: 180+ | **API Routes**: 316 | **Prisma Models**: 104 | **Enums**: 30 | **Components**: 109 | **Hooks**: 12
+- **Pages**: 189 | **API Routes**: 333 | **Prisma Models**: 104 | **Enums**: 30 | **Components**: 110 | **Hooks**: 16 | **Lib files**: 184
+- **Loading skeletons**: 119 loading.tsx files (all admin pages covered)
 - **Stack**: Next.js 15 (App Router), TypeScript strict, Prisma 5.22, PostgreSQL 15, Redis
 - **i18n**: 22 languages (fr reference) | **Auth**: NextAuth v5 + MFA + WebAuthn
 - **Hosting**: Azure App Service | **Payments**: Stripe + PayPal
@@ -16,7 +17,7 @@
 1. [Feature Domains & Cross-References](#1-feature-domains--cross-references)
 2. [Dependency Chains](#2-dependency-chains)
 3. [Impact Analysis (Change X -> Check Y)](#3-impact-analysis)
-4. [Admin Pages (84)](#4-admin-pages-84)
+4. [Admin Pages (87+)](#4-admin-pages-87)
 5. [Shop Pages (42+)](#5-shop-pages-42)
 6. [Public Pages (36)](#6-public-pages-36)
 7. [Auth & Dashboard Pages](#7-auth--dashboard-pages)
@@ -91,7 +92,7 @@ Each domain lists ALL pages, API routes, models, and components involved.
 | Layer | Elements |
 |-------|----------|
 | **Pages** | `/admin/comptabilite` + 27 sub-pages (ecritures, factures-clients, factures-fournisseurs, notes-credit, grand-livre, plan-comptable, rapprochement, banques, devises, saisie-rapide, recurrentes, previsions, recherche, rapports, exports, ocr, audit, calendrier-fiscal, declaration-tps-tvq, etats-financiers, immobilisations, import-bancaire, parametres, budget, cloture, aging, depenses) |
-| **API Routes** | 46+ routes under `/api/accounting/*`: dashboard, entries, chart-of-accounts, general-ledger, tax-summary, reconciliation, bank-accounts, bank-transactions, budgets, forecasting, aging, expenses, recurring, quick-entry, ocr, search, settings, stripe-sync, export, pdf-reports, alerts, kpis, payment-matching, payroll (stub) |
+| **API Routes** | 46+ routes under `/api/accounting/*`: dashboard, entries, chart-of-accounts, general-ledger, tax-summary, reconciliation, bank-accounts, bank-transactions, budgets, forecasting, aging, expenses, recurring, quick-entry, ocr, search, settings, stripe-sync, export, pdf-reports, alerts, kpis, payment-matching, **payroll** (GET/POST -- stub with in-memory data, no Prisma model yet) |
 | **Models** | `ChartOfAccount` (self-ref parent/children), `JournalEntry`, `JournalLine`, `CustomerInvoice`, `CustomerInvoiceItem`, `SupplierInvoice` (orphan), `CreditNote`, `BankAccount`, `BankTransaction`, `BankRule`, `Budget`, `BudgetLine`, `Expense`, `TaxReport` (orphan), `FixedAsset`, `FixedAssetDepreciation`, `AuditTrail`, `RecurringEntryTemplate` (orphan), `AccountingPeriod` (orphan), `FiscalYear` (orphan), `AccountingSettings` (orphan), `AccountingAlert` (orphan), `DocumentAttachment` (orphan), `FiscalCalendarEvent` (orphan) |
 | **Lib** | 33 files in `@/lib/accounting/`: auto-entries, stripe-sync, reconciliation, pdf-reports, alerts, aging, recurring-entries, bank-import, ml-reconciliation, forecasting, audit-trail, tax-compliance, currency, integrations (QuickBooks/Sage), quick-entry, ocr, search, alert-rules, auto-reconciliation, scheduler, kpi, payment-matching, report-templates |
 | **Affects** | Orders (auto journal entries on sale/refund), Payments (stripe-sync), Tax (TPS/TVQ declarations), Fixed Assets (depreciation) |
@@ -133,7 +134,7 @@ Each domain lists ALL pages, API routes, models, and components involved.
 | Layer | Elements |
 |-------|----------|
 | **Pages** | `/admin/inventaire`, `/account/inventory` |
-| **API Routes** | `/api/admin/inventory`, `/api/cron/stock-alerts`, `/api/cron/price-drop-alerts`, `/api/cron/release-reservations` |
+| **API Routes** | `/api/admin/inventory`, `PATCH /api/admin/inventory/[id]`, `/api/admin/inventory/history`, `/api/admin/inventory/import`, `/api/admin/inventory/export`, `/api/cron/stock-alerts`, `/api/cron/price-drop-alerts`, `/api/cron/release-reservations` |
 | **Models** | `InventoryReservation` (orphan!), `InventoryTransaction` (orphan!), `StockAlert`, `PriceWatch` |
 | **Hooks** | `useAdminNotifications` (stock badge count) |
 | **NOTE** | `InventoryReservation` and `InventoryTransaction` have NO FK to Product -- all soft references. |
@@ -378,7 +379,7 @@ User
 
 ---
 
-## 4. ADMIN PAGES (84)
+## 4. ADMIN PAGES (87+)
 
 ### Dashboard & Navigation
 | Page | Path | Status | Components | API | Models |
@@ -468,11 +469,14 @@ All pages use Outlook UI pattern (SplitLayout, ContentList, DetailPane). Key bac
 | Rapports | `/admin/rapports` | COMPLETE | `/api/admin/reports` |
 | Chat | `/admin/chat` | COMPLETE | `/api/chat/*` |
 | Webinaires | `/admin/webinaires` | COMPLETE | `/api/admin/webinars` |
-| Inventaire | `/admin/inventaire` | COMPLETE | `/api/admin/inventory` |
+| Inventaire | `/admin/inventaire` | COMPLETE | `/api/admin/inventory`, `/api/admin/inventory/[id]` |
 | Livraison | `/admin/livraison` | COMPLETE | `/api/admin/shipping/*` |
 | Devises | `/admin/devises` | COMPLETE | `/api/admin/currencies` |
 | Emails Hub | `/admin/emails` | COMPLETE | `/api/admin/emails/*` |
 | UAT | `/admin/uat` | COMPLETE | `/api/admin/uat` |
+| Audits Dashboard | `/admin/audits` | COMPLETE | `/api/admin/audits` |
+| Audit by Type | `/admin/audits/[type]` | COMPLETE | `/api/admin/audits` |
+| Audit Catalog | `/admin/audits/catalog` | COMPLETE | `/api/admin/audits` |
 
 ### Fiscal (4 pages)
 | Page | Path | Status |
@@ -670,7 +674,7 @@ All use `useI18n` only: `/mentions-legales/confidentialite`, `/mentions-legales/
 abandoned-cart, birthday-emails, data-retention, dependency-check, email-flows, points-expiring, price-drop-alerts, release-reservations, satisfaction-survey, stock-alerts, update-exchange-rates, welcome-series
 
 ### Admin Core (100+ routes)
-orders, users/[id], users/[id]/points, employees, inventory, currencies, settings, seo, emails/send, emails/settings, emails/mailing-list, emails/mailing-list/import, promotions, promo-codes, reviews, suppliers, subscriptions, loyalty/*, translations, nav-sections, nav-subsections, nav-pages, medias, webinars, videos, logs, audit-log, metrics, cache-stats, permissions, shipping/*, uat, reports
+orders, users/[id], users/[id]/points, employees, inventory, **inventory/[id]** (PATCH - stock update), **inventory/history**, **inventory/import**, **inventory/export**, currencies, settings, seo, emails/send, emails/settings, emails/mailing-list, emails/mailing-list/import, promotions, promo-codes, reviews, suppliers, subscriptions, loyalty/*, translations, nav-sections, nav-subsections, nav-pages, medias, webinars, videos, logs, audit-log, **audits** (GET - audit dashboard), metrics, cache-stats, permissions, shipping/*, uat, reports
 
 ### Public Utility (30+ routes)
 products, categories, blog, articles, reviews, ambassadors, referrals, loyalty, gift-cards, currencies, contact, consent, csrf, health, hero-slides, testimonials, videos, webinars, search/suggest, social-proof, stock-alerts, price-watch, promo/validate, upsell, bundles
@@ -693,8 +697,8 @@ products, categories, blog, articles, reviews, ambassadors, referrals, loyalty, 
 | `ContactListPage` | admin/clients, admin/customers (2) |
 | `OutlookUI` suite | 20+ admin pages (ContentList, DetailPane, MobileSplitLayout, etc.) |
 
-### Admin-Specific Components (25)
-PageHeader, StatCard, Modal, Button, DataTable, FilterBar, FormField, MediaUploader, MediaGalleryUploader, WebNavigator, CsrfInit, ContactListPage, StatusBadge, EmptyState, SectionCard, OutlookRibbon, SplitLayout, ContentList, DetailPane, FolderPane, IconRail, ChatPreview, AvatarCircle, OutlookTopBar, MobileSplitLayout
+### Admin-Specific Components (28)
+PageHeader, StatCard, Modal, Button, DataTable, FilterBar, FormField, MediaUploader, MediaGalleryUploader, WebNavigator, CsrfInit, ContactListPage, StatusBadge, EmptyState, SectionCard, OutlookRibbon, SplitLayout, ContentList, DetailPane, FolderPane, IconRail, ChatPreview, AvatarCircle, OutlookTopBar, MobileSplitLayout, IntegrationCard, **AdminCommandPalette** (NEW - Cmd+K global search/navigation), **KeyboardShortcutsDialog** (NEW - ?-key shortcut reference)
 
 ### Shop-Specific Components (57)
 Header, Footer, HeroBanner, ProductCard, ProductGallery, ProductReviews, ProductQA, CartDrawer, CartCrossSell, SearchModal, QuickViewModal, WishlistButton, FormatSelector, PeptideCalculator, CompareButton, CompareBar, NewsletterPopup, MailingListSignup, CookieConsent, FreeShippingBanner, FlashSaleBanner, TrustBadges, ShareButtons, UpsellInterstitialModal, StickyAddToCart, BundleCard, StockAlertButton, PriceDropButton, GiftCardRedeem, RecentlyViewed, TextToSpeechButton, DisclaimerModal, QuantityTiers, CategoryScroller, ProductBadges, HeroSlider, ProductVideo, SubscriptionOfferModal...
@@ -717,6 +721,10 @@ Header, Footer, HeroBanner, ProductCard, ProductGallery, ProductReviews, Product
 | `useDiscountCode` | Promo/gift validation | API | Checkout |
 | `useCsrf` | CSRF token | API | Forms |
 | `useTextToSpeech` | TTS Chatterbox + Web Speech | Audio | Product pages |
+| `useAdminShortcuts` | Keyboard shortcuts + command palette | Memory | Admin layout |
+| `useUpsell` | Upsell modal trigger | Context | Product, compare, account/products |
+| `useCurrency` | Currency conversion | Context | Shop, product, checkout, compare |
+| `useI18n` | Translations | Context | 35+ client pages |
 
 ---
 
@@ -772,7 +780,7 @@ ALL follow pattern: `1:N Cascade`, `@@unique([parentId, locale])`, `translatedBy
 
 ## 13. LIB SERVICES
 
-### Root `/src/lib/` (58 files)
+### Root `/src/lib/` (184 files total)
 | Category | Files | Used By |
 |----------|-------|---------|
 | **Auth** | auth-config, mfa, brute-force-protection, csrf, session-security, webauthn, password-history | Auth pages, middleware, API guards |
@@ -785,6 +793,8 @@ ALL follow pattern: `1:N Cascade`, `@@unique([parentId, locale])`, `translatedBy
 | **Security** | token-encryption, azure-keyvault, sanitize, rate-limiter | Auth, API |
 | **Tax** | tax-rates, canadianTaxes, countryObligations, financial | Checkout, accounting |
 | **Validation** | 13 Zod schemas in `/validations/` | API routes |
+| **Audit** | admin-audit.ts (logAdminAction, getClientIpFromRequest), audit-engine.ts (getAuditDashboard) | Admin API routes, audit pages |
+| **Inventory** | inventory.ts (adjustStock) | Inventory API routes |
 
 ### `/src/lib/accounting/` (33 files)
 auto-entries, stripe-sync, reconciliation, pdf-reports, alerts, aging, recurring-entries, bank-import, ml-reconciliation, forecasting, audit-trail, tax-compliance, currency, integrations (QuickBooks/Sage), quick-entry, ocr, search, alert-rules, auto-reconciliation, scheduler, kpi, payment-matching, report-templates
@@ -831,12 +841,15 @@ manifest.json, sw.js, offline.html, icons
 1. ~~**CASL Mailing**~~ -- FIXED 2026-02-21: Double opt-in, audit logging, rate limiting, CASL language, i18n
 2. ~~**Navigator Security**~~ -- FIXED 2026-02-21: Sandbox hardened, HTTPS-only validation, schema protection
 3. ~~**Media APIs (Zoom/WhatsApp/Teams)**~~ -- FIXED 2026-02-21: Config dashboards, services, API routes, IntegrationCard
-4. **Media Section** -- 6 remaining STUB pages (4 ad platforms: YouTube/X/TikTok/Google, Videos, Library)
-5. **Community Forum** -- MOCKUP only, needs DB + API
-6. **About Section** -- 6 STUB pages
-7. **Checkout Payment** -- Stripe integration incomplete
-8. **35 Orphan Models** -- Many should have proper FK constraints (InventoryReservation, Subscription, Refund, etc.)
-9. **UserPermissionGroup** -- Has userId but NO @relation to User (broken permission chain)
+4. ~~**Audit Logging Coverage**~~ -- FIXED 2026-02-24 (S10-06): 100% admin API audit logging with `logAdminAction()`
+5. ~~**Skeleton Loading**~~ -- FIXED 2026-02-24 (S11): 119 loading.tsx files across all admin pages
+6. **Media Section** -- 6 remaining STUB pages (4 ad platforms: YouTube/X/TikTok/Google, Videos, Library)
+7. **Community Forum** -- MOCKUP only, needs DB + API
+8. **About Section** -- 6 STUB pages
+9. **Checkout Payment** -- Stripe integration incomplete
+10. **35 Orphan Models** -- Many should have proper FK constraints (InventoryReservation, Subscription, Refund, etc.)
+11. **UserPermissionGroup** -- Has userId but NO @relation to User (broken permission chain)
+12. **Payroll** -- Stub API route with in-memory data, no Prisma model yet
 
 ### New Files (2026-02-21 Session)
 - `src/lib/integrations/zoom.ts` -- Zoom S2S OAuth, meetings, connection test
@@ -845,3 +858,31 @@ manifest.json, sw.js, offline.html, icons
 - `src/app/api/admin/integrations/{zoom,whatsapp,teams}/route.ts` -- Config CRUD + test
 - `src/components/admin/IntegrationCard.tsx` -- Reusable config card with toggle, test, webhook copy
 - `.claude/rules/project-map-mandatory.md` -- Enforcement rule for keeping this file updated
+
+### New Files (2026-02-24 Session - S10/S11/S12)
+
+#### S10-06: Audit Logging (100% coverage)
+- `src/lib/admin-audit.ts` -- `logAdminAction()` utility, `getClientIpFromRequest()` helper
+- `src/lib/audit-engine.ts` -- `getAuditDashboard()` for audit pages
+- `src/app/api/admin/audits/route.ts` -- GET audit dashboard
+- `src/app/admin/audits/page.tsx` -- Audit dashboard page
+- `src/app/admin/audits/[type]/page.tsx` -- Audit detail by type
+- `src/app/admin/audits/catalog/page.tsx` -- Audit catalog page
+- All admin API routes now call `logAdminAction()` for CREATE/UPDATE/DELETE operations
+
+#### S11: Skeleton Loading (100% coverage)
+- 119 `loading.tsx` files added across all admin pages
+- Every admin route now has a skeleton loading state with consistent Outlook-style layout
+- Covers: dashboard, comptabilite (28 pages), commerce, catalog, marketing, media, content, business, fiscal, other admin
+
+#### S12: Keyboard Shortcuts + Command Palette
+- `src/hooks/useAdminShortcuts.ts` -- Global keyboard shortcut handler for admin
+- `src/components/admin/AdminCommandPalette.tsx` -- Cmd+K command palette (search, navigation, actions)
+- `src/components/admin/KeyboardShortcutsDialog.tsx` -- ?-key shortcut reference dialog
+
+#### New API Routes
+- `PATCH /api/admin/inventory/[id]/route.ts` -- Update stock quantity for a specific ProductFormat
+- `GET /api/admin/inventory/history/route.ts` -- Inventory history log
+- `POST /api/admin/inventory/import/route.ts` -- Bulk inventory import
+- `GET /api/admin/inventory/export/route.ts` -- Inventory data export
+- `GET/POST /api/accounting/payroll/route.ts` -- Payroll stub (in-memory, no Prisma model)
