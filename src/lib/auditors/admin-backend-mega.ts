@@ -73,22 +73,16 @@ export class AdminBackendMegaAuditor extends BaseAuditor {
       }
     }
 
-    if (stubs.length === 0) {
-      results.push(this.pass('admin-01', 'No stub/placeholder admin pages detected'));
+    if (stubs.length === 0 && tinyPages.length === 0) {
+      results.push(this.pass('admin-01', 'No stub/placeholder or suspiciously small admin pages'));
     } else {
+      const parts: string[] = [];
+      if (stubs.length > 0) parts.push(`${stubs.length} stub pages`);
+      if (tinyPages.length > 0) parts.push(`${tinyPages.length} very small pages (<15 lines)`);
       results.push(
-        this.fail('admin-01', 'MEDIUM', 'Admin pages with stub/placeholder content', `${stubs.length} pages appear to be stubs:\n${stubs.slice(0, 10).join('\n')}${stubs.length > 10 ? `\n... and ${stubs.length - 10} more` : ''}`, {
-          recommendation: 'Implement real functionality for these admin pages',
-        })
-      );
-    }
-
-    if (tinyPages.length === 0) {
-      results.push(this.pass('admin-01b', 'No suspiciously small admin pages'));
-    } else {
-      results.push(
-        this.fail('admin-01b', 'LOW', 'Very small admin pages (potentially incomplete)', `${tinyPages.length} pages have fewer than 15 lines:\n${tinyPages.slice(0, 10).join('\n')}`, {
-          recommendation: 'Review small pages for completeness',
+        this.fail('admin-01', 'MEDIUM', 'Admin page completeness summary',
+          `${parts.join(', ')}. Top stubs: ${stubs.slice(0, 5).join(', ') || 'none'}. Small: ${tinyPages.slice(0, 3).join(', ') || 'none'}.`, {
+          recommendation: 'Implement real functionality for stub admin pages and review small pages for completeness',
         })
       );
     }

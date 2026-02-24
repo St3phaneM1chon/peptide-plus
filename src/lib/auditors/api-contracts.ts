@@ -81,50 +81,24 @@ export default class ApiContractsAuditor extends BaseAuditor {
         this.pass('api-01', `Consistent response method: ${usedMethods[0] || 'none detected'}`)
       );
     } else {
-      results.push(
-        this.fail(
-          'api-01',
-          'LOW',
-          'Mixed response methods across API routes',
-          `Multiple response methods used: ${usedMethods.join(', ')}. API should use one consistent method.`,
-          {
-            recommendation: 'Standardize on NextResponse.json() for all API responses in Next.js App Router',
-          }
-        )
-      );
-    }
+      // Consolidate all api-01 issues into a single summary finding
+      const issues: string[] = [];
+      issues.push(`Response methods: ${usedMethods.join(', ')}`);
+      if (wrappedResponses.length > 0 && unwrappedResponses.length > 0) {
+        issues.push(`Wrapper pattern: ${wrappedResponses.length} wrapped vs ${unwrappedResponses.length} unwrapped`);
+      }
+      if (mixedFiles.length > 0) {
+        issues.push(`${mixedFiles.length} files use both patterns internally`);
+      }
 
-    // Check for consistent wrapper pattern
-    if (wrappedResponses.length > 0 && unwrappedResponses.length > 0) {
       results.push(
         this.fail(
           'api-01',
           'LOW',
-          'Inconsistent response wrapper pattern',
-          `${wrappedResponses.length} routes use { data: ... } wrapper, ${unwrappedResponses.length} return unwrapped objects. Pick one pattern.`,
+          'API response consistency summary',
+          issues.join('. ') + '.',
           {
-            recommendation:
-              'Standardize on a response wrapper: { data: ..., meta?: { ... } } for success, { error: ..., status: ... } for errors',
-          }
-        )
-      );
-    } else if (wrappedResponses.length > 0 || unwrappedResponses.length > 0) {
-      results.push(
-        this.pass('api-01', 'Consistent response wrapper pattern across API routes')
-      );
-    }
-
-    // Report files with mixed patterns as single summary
-    if (mixedFiles.length > 0) {
-      const topFiles = mixedFiles.slice(0, 3).map((f) => f.file).join(', ');
-      results.push(
-        this.fail(
-          'api-01',
-          'LOW',
-          'Files with mixed response patterns',
-          `${mixedFiles.length} API routes use both wrapped and unwrapped response patterns. Top files: ${topFiles}`,
-          {
-            recommendation: 'Use the same response shape for all responses in each route',
+            recommendation: 'Standardize on NextResponse.json() with a consistent wrapper: { data: ... } for success, { error: ... } for errors',
           }
         )
       );

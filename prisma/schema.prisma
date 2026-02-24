@@ -26,6 +26,7 @@ model Account {
 
   @@unique([provider, providerAccountId])
   @@index([userId])
+  @@index([updatedAt])
 }
 
 model AccountingAlert {
@@ -48,6 +49,7 @@ model AccountingAlert {
   @@index([readAt])
   @@index([severity])
   @@index([type])
+  @@index([updatedAt])
 }
 
 // TODO #51: Create AuditTrail model to store structured audit entries instead of console.info logs.
@@ -75,6 +77,8 @@ model AccountingPeriod {
 
   @@index([startDate])
   @@index([status])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model FiscalYear {
@@ -90,6 +94,8 @@ model FiscalYear {
 
   @@index([startDate])
   @@index([isClosed])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model AccountingSettings {
@@ -119,6 +125,7 @@ model AccountingSettings {
   blockDeletionDuringRetention Boolean @default(true)
 
   updatedAt DateTime @updatedAt
+  @@index([updatedAt])
 }
 
 model Ambassador {
@@ -143,6 +150,8 @@ model Ambassador {
   @@index([referralCode])
   @@index([status])
   @@index([userId])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model AmbassadorCommission {
@@ -165,6 +174,8 @@ model AmbassadorCommission {
   @@index([ambassadorId])
   @@index([paidOut])
   @@index([payoutId])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model AmbassadorPayout {
@@ -182,6 +193,8 @@ model AmbassadorPayout {
 
   @@index([ambassadorId])
   @@index([processedById])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model Article {
@@ -208,6 +221,8 @@ model Article {
 
   @@index([category])
   @@index([isPublished])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model ArticleTranslation {
@@ -230,6 +245,8 @@ model ArticleTranslation {
   @@unique([articleId, locale])
   @@index([articleId])
   @@index([locale])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model AuditLog {
@@ -249,6 +266,7 @@ model AuditLog {
   @@index([createdAt])
   @@index([entityType])
   @@index([userId])
+  @@index([updatedAt])
 }
 
 model BankAccount {
@@ -270,6 +288,8 @@ model BankAccount {
 
   @@index([chartAccountId])
   @@index([type])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model BankTransaction {
@@ -299,6 +319,7 @@ model BankTransaction {
   @@index([reconciliationStatus, date]) // Phase 9: Composite for unreconciled transaction queries
   @@index([bankAccountId, date]) // Phase 9: Composite for bank statement queries
   @@index([matchedEntryId])
+  @@index([createdAt])
 }
 
 model BlogPost {
@@ -325,6 +346,8 @@ model BlogPost {
   @@index([category])
   @@index([isPublished])
   @@index([slug])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model BlogPostTranslation {
@@ -347,6 +370,8 @@ model BlogPostTranslation {
   @@unique([blogPostId, locale])
   @@index([blogPostId])
   @@index([locale])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model Budget {
@@ -359,6 +384,8 @@ model Budget {
   lines     BudgetLine[]
 
   @@index([year])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model BudgetLine {
@@ -386,6 +413,8 @@ model BudgetLine {
 
   @@index([accountCode])
   @@index([budgetId])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model Bundle {
@@ -401,6 +430,8 @@ model Bundle {
   items       BundleItem[]
 
   @@index([isActive])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model BundleItem {
@@ -410,7 +441,7 @@ model BundleItem {
   formatId  String?
   quantity  Int     @default(1)
   bundle    Bundle  @relation(fields: [bundleId], references: [id], onDelete: Cascade)
-  product   Product @relation(fields: [productId], references: [id])
+  product   Product @relation(fields: [productId], references: [id], onDelete: Restrict)
 
   @@index([bundleId])
   @@index([formatId])
@@ -431,6 +462,8 @@ model Cart {
   @@index([promoCodeId])
   @@index([sessionId])
   @@index([userId])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model CartItem {
@@ -447,6 +480,8 @@ model CartItem {
   @@unique([cartId, productId, formatId])
   @@index([cartId])
   @@index([productId])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model Category {
@@ -466,6 +501,8 @@ model Category {
   products     Product[]
 
   @@index([parentId])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model CategoryTranslation {
@@ -485,6 +522,8 @@ model CategoryTranslation {
   @@unique([categoryId, locale])
   @@index([categoryId])
   @@index([locale])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model ChartOfAccount {
@@ -521,6 +560,8 @@ model ChartOfAccount {
   @@index([parentId])
   @@index([type])
   @@index([gifiCode])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model ChatConversation {
@@ -547,6 +588,8 @@ model ChatConversation {
   @@index([visitorId])
   // FIX F-037: Composite index for the common query pattern: findFirst where visitorId + status
   @@index([visitorId, status])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model ChatMessage {
@@ -585,6 +628,7 @@ model ChatSettings {
   widgetColor        String   @default("#f97316")
   widgetPosition     String   @default("bottom-right")
   updatedAt          DateTime @updatedAt
+  @@index([updatedAt])
 }
 
 model ClientReference {
@@ -601,6 +645,8 @@ model ClientReference {
 
   @@index([industry])
   @@index([isPublished])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model Company {
@@ -618,11 +664,13 @@ model Company {
   isActive       Boolean           @default(true)
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
-  owner          User              @relation(fields: [ownerId], references: [id])
+  owner          User              @relation(fields: [ownerId], references: [id], onDelete: Restrict)
   customers      CompanyCustomer[]
   purchases      Purchase[]
 
   @@index([slug])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model CompanyCustomer {
@@ -659,6 +707,8 @@ model Conversation {
   @@index([lastMessageAt])
   @@index([status])
   @@index([userId])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model CourseAccess {
@@ -681,6 +731,8 @@ model CourseAccess {
   @@unique([userId, productId])
   @@index([productId])
   @@index([userId])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model CreditNote {
@@ -715,6 +767,7 @@ model CreditNote {
   @@index([orderId])
   @@index([status])
   @@index([deletedAt])
+  @@index([updatedAt])
 }
 
 model Currency {
@@ -731,6 +784,8 @@ model Currency {
   orders        Order[]
 
   @@index([code])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model CustomerInvoice {
@@ -775,6 +830,8 @@ model CustomerInvoice {
   @@index([deletedAt])
   @@index([status, dueDate]) // Phase 9: Composite for overdue invoice queries
   @@index([customerId, status]) // Phase 9: Composite for customer invoice listing
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model CustomerInvoiceItem {
@@ -792,6 +849,7 @@ model CustomerInvoiceItem {
 
   @@index([invoiceId])
   @@index([productId])
+  @@index([createdAt])
 }
 
 model Discount {
@@ -814,6 +872,8 @@ model Discount {
   @@index([isActive])
   @@index([productId])
   @@index([startsAt, endsAt])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model EmailLog {
@@ -849,6 +909,7 @@ model EmailBounce {
   @@index([email])
   @@index([email, bounceType])
   @@index([messageId])
+  @@index([createdAt])
 }
 
 // Faille #12: Persistent suppression list for hard-bounced/complained emails
@@ -861,6 +922,7 @@ model EmailSuppression {
   expiresAt DateTime? // null = permanent suppression
 
   @@index([email])
+  @@index([createdAt])
 }
 
 model EmailTemplate {
@@ -874,6 +936,8 @@ model EmailTemplate {
   locale      String   @default("fr")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model Expense {
@@ -933,6 +997,8 @@ model Expense {
   @@index([category])
   @@index([date])
   @@index([deletedAt])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model Faq {
@@ -949,6 +1015,8 @@ model Faq {
 
   @@index([category])
   @@index([isPublished])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model FaqTranslation {
@@ -968,6 +1036,8 @@ model FaqTranslation {
   @@unique([faqId, locale])
   @@index([faqId])
   @@index([locale])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model GiftCard {
@@ -990,6 +1060,7 @@ model GiftCard {
   @@index([code])
   @@index([purchaserId])
   @@index([redeemedBy])
+  @@index([createdAt])
 }
 
 model Grade {
@@ -1031,6 +1102,8 @@ model Guide {
   @@index([category])
   @@index([isPublished])
   @@index([slug])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model GuideTranslation {
@@ -1050,6 +1123,8 @@ model GuideTranslation {
   @@unique([guideId, locale])
   @@index([guideId])
   @@index([locale])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model HeroSlide {
@@ -1079,6 +1154,8 @@ model HeroSlide {
   translations     HeroSlideTranslation[]
 
   @@index([isActive, sortOrder])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model HeroSlideTranslation {
@@ -1102,6 +1179,8 @@ model HeroSlideTranslation {
   @@unique([slideId, locale])
   @@index([locale])
   @@index([slideId])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model InventoryReservation {
@@ -1123,6 +1202,7 @@ model InventoryReservation {
   @@index([orderId])
   @@index([productId])
   @@index([status])
+  @@index([createdAt])
 }
 
 model InventoryTransaction {
@@ -1180,6 +1260,8 @@ model JournalEntry {
   @@index([status, date])
   @@index([deletedAt])
   @@index([reference]) // #56 - Index for reference lookups (reconciliation, Stripe sync)
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model JournalLine {
@@ -1192,12 +1274,13 @@ model JournalLine {
   costCenter  String?
   projectCode String?
   createdAt   DateTime       @default(now())
-  account     ChartOfAccount @relation(fields: [accountId], references: [id])
+  account     ChartOfAccount @relation(fields: [accountId], references: [id], onDelete: Restrict)
   entry       JournalEntry   @relation(fields: [entryId], references: [id], onDelete: Cascade)
 
   @@index([accountId])
   @@index([entryId])
   @@index([accountId, entryId])
+  @@index([createdAt])
 }
 
 model LoyaltyTransaction {
@@ -1241,6 +1324,8 @@ model Media {
   @@index([folder])
   @@index([mimeType])
   @@index([uploadedBy])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model Message {
@@ -1277,6 +1362,8 @@ model Module {
   product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@index([productId])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model NewsArticle {
@@ -1299,6 +1386,8 @@ model NewsArticle {
   @@index([isPublished])
   @@index([slug])
   @@index([type])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model NewsArticleTranslation {
@@ -1319,6 +1408,8 @@ model NewsArticleTranslation {
   @@unique([newsArticleId, locale])
   @@index([newsArticleId])
   @@index([locale])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model NewsletterSubscriber {
@@ -1354,6 +1445,8 @@ model NotificationPreference {
   user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model Order {
@@ -1399,8 +1492,8 @@ model Order {
   replacementReason     String?
   taxPst                Decimal         @default(0) @db.Decimal(10, 2)
   idempotencyKey        String?         @unique
-  user                  User            @relation(fields: [userId], references: [id])
-  currency              Currency        @relation(fields: [currencyId], references: [id])
+  user                  User            @relation(fields: [userId], references: [id], onDelete: Restrict)
+  currency              Currency        @relation(fields: [currencyId], references: [id], onDelete: Restrict)
   parentOrder           Order?          @relation("OrderToOrder", fields: [parentOrderId], references: [id])
   replacementOrders     Order[]         @relation("OrderToOrder")
   billingName           String?
@@ -1428,6 +1521,7 @@ model Order {
   @@index([userId, status])
   @@index([userId, createdAt])
   @@index([status, createdAt])
+  @@index([updatedAt])
 }
 
 model PaymentError {
@@ -1469,6 +1563,7 @@ model OrderItem {
   @@index([orderId])
   @@index([productId])
   @@index([orderId, productId])
+  @@index([createdAt])
 }
 
 model Page {
@@ -1490,6 +1585,8 @@ model Page {
 
   @@index([isPublished])
   @@index([slug])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model PageTranslation {
@@ -1511,6 +1608,8 @@ model PageTranslation {
   @@unique([pageId, locale])
   @@index([locale])
   @@index([pageId])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model PasswordHistory {
@@ -1538,6 +1637,8 @@ model PaymentMethodConfig {
 
   @@unique([countryCode, methodType])
   @@index([countryCode, isActive])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model Permission {
@@ -1554,6 +1655,7 @@ model Permission {
   groupPermissions PermissionGroupPermission[]
 
   @@index([module])
+  @@index([createdAt])
 }
 
 model PermissionGroup {
@@ -1566,6 +1668,8 @@ model PermissionGroup {
   updatedAt   DateTime                    @updatedAt
   permissions PermissionGroupPermission[]
   users       UserPermissionGroup[]
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model PermissionGroupPermission {
@@ -1579,6 +1683,7 @@ model PermissionGroupPermission {
   @@unique([groupId, permissionId])
   @@index([groupId])
   @@index([permissionId])
+  @@index([createdAt])
 }
 
 model PriceWatch {
@@ -1595,6 +1700,7 @@ model PriceWatch {
 
   @@unique([userId, productId])
   @@index([productId, notified])
+  @@index([createdAt])
 }
 
 model Product {
@@ -1662,7 +1768,7 @@ model Product {
   grades              Grade[]
   modules             Module[]
   priceWatches        PriceWatch[]
-  category            Category             @relation(fields: [categoryId], references: [id])
+  category            Category             @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   formats             ProductFormat[]
   images              ProductImage[]
   questions           ProductQuestion[]
@@ -1683,6 +1789,8 @@ model Product {
   @@index([name])
   @@index([categoryId, isActive])
   @@index([isActive, createdAt])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model ProductFormat {
@@ -1727,6 +1835,8 @@ model ProductFormat {
   @@index([sku])
   @@index([isActive])
   @@index([productId, isActive])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model ProductFormatTranslation {
@@ -1746,6 +1856,8 @@ model ProductFormatTranslation {
   @@unique([formatId, locale])
   @@index([formatId])
   @@index([locale])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model ProductImage {
@@ -1762,6 +1874,7 @@ model ProductImage {
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@index([productId])
+  @@index([createdAt])
 }
 
 model ProductQuestion {
@@ -1774,12 +1887,14 @@ model ProductQuestion {
   isPublished Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  product     Product  @relation(fields: [productId], references: [id])
-  user        User     @relation(fields: [userId], references: [id])
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Restrict)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Restrict)
 
   @@index([isPublished])
   @@index([productId])
   @@index([userId])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model ProductTranslation {
@@ -1809,6 +1924,8 @@ model ProductTranslation {
   @@unique([productId, locale])
   @@index([locale])
   @@index([productId])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model PromoCode {
@@ -1834,6 +1951,8 @@ model PromoCode {
 
   @@index([code])
   @@index([isActive])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model PromoCodeUsage {
@@ -1870,14 +1989,16 @@ model Purchase {
   updatedAt       DateTime       @updatedAt
   courseAccess    CourseAccess?
   company         Company?       @relation(fields: [companyId], references: [id])
-  product         Product        @relation(fields: [productId], references: [id])
-  user            User           @relation(fields: [userId], references: [id])
+  product         Product        @relation(fields: [productId], references: [id], onDelete: Restrict)
+  user            User           @relation(fields: [userId], references: [id], onDelete: Restrict)
   shipping        Shipping?
 
   @@index([companyId])
   @@index([productId])
   @@index([status])
   @@index([userId])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model PurchaseOrder {
@@ -1910,6 +2031,8 @@ model PurchaseOrder {
   @@index([status])
   @@index([supplierInvoiceId])
   @@index([supplierId])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model PurchaseOrderItem {
@@ -1929,6 +2052,7 @@ model PurchaseOrderItem {
   @@index([formatId])
   @@index([productId])
   @@index([purchaseOrderId])
+  @@index([createdAt])
 }
 
 model QuantityDiscount {
@@ -1943,6 +2067,8 @@ model QuantityDiscount {
 
   @@unique([productId, minQty])
   @@index([productId])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model QuickReply {
@@ -1957,6 +2083,8 @@ model QuickReply {
   translations QuickReplyTranslation[]
 
   @@index([category])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model QuickReplyTranslation {
@@ -1976,6 +2104,8 @@ model QuickReplyTranslation {
   @@unique([quickReplyId, locale])
   @@index([locale])
   @@index([quickReplyId])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model Referral {
@@ -1991,12 +2121,14 @@ model Referral {
   rewardedAt    DateTime?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-  referred      User      @relation("Referral_referredIdToUser", fields: [referredId], references: [id])
-  referrer      User      @relation("Referral_referrerIdToUser", fields: [referrerId], references: [id])
+  referred      User      @relation("Referral_referredIdToUser", fields: [referredId], references: [id], onDelete: Restrict)
+  referrer      User      @relation("Referral_referrerIdToUser", fields: [referrerId], references: [id], onDelete: Restrict)
 
   @@index([referralCode])
   @@index([referredId])
   @@index([referrerId])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model ReturnRequest {
@@ -2011,13 +2143,15 @@ model ReturnRequest {
   adminNotes  String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  order       Order    @relation(fields: [orderId], references: [id])
-  user        User     @relation(fields: [userId], references: [id])
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Restrict)
 
   @@index([orderItemId])
   @@index([orderId])
   @@index([status])
   @@index([userId])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model Refund {
@@ -2038,6 +2172,8 @@ model Refund {
   @@index([orderId])
   @@index([returnRequestId])
   @@index([status])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model Review {
@@ -2055,8 +2191,8 @@ model Review {
   helpfulCount Int           @default(0)
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
-  product      Product       @relation(fields: [productId], references: [id])
-  user         User          @relation(fields: [userId], references: [id])
+  product      Product       @relation(fields: [productId], references: [id], onDelete: Restrict)
+  user         User          @relation(fields: [userId], references: [id], onDelete: Restrict)
   images       ReviewImage[]
 
   @@index([isApproved])
@@ -2064,6 +2200,7 @@ model Review {
   @@index([userId])
   @@index([productId, isApproved, isPublished])
   @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model ReviewImage {
@@ -2076,6 +2213,7 @@ model ReviewImage {
   review    Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
 
   @@index([reviewId])
+  @@index([createdAt])
 }
 
 model SavedCard {
@@ -2091,6 +2229,7 @@ model SavedCard {
   user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+  @@index([createdAt])
 }
 
 model Session {
@@ -2125,11 +2264,13 @@ model Shipping {
   signature         Boolean                 @default(false)
   createdAt         DateTime                @default(now())
   updatedAt         DateTime                @updatedAt
-  purchase          Purchase                @relation(fields: [purchaseId], references: [id])
+  purchase          Purchase                @relation(fields: [purchaseId], references: [id], onDelete: Restrict)
   statusHistory     ShippingStatusHistory[]
 
   @@index([status])
   @@index([trackingNumber])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model ShippingStatusHistory {
@@ -2142,6 +2283,7 @@ model ShippingStatusHistory {
   shipping    Shipping       @relation(fields: [shippingId], references: [id], onDelete: Cascade)
 
   @@index([shippingId])
+  @@index([createdAt])
 }
 
 model ShippingZone {
@@ -2161,6 +2303,8 @@ model ShippingZone {
   updatedAt             DateTime @updatedAt
 
   @@index([isActive])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model SiteSetting {
@@ -2175,6 +2319,8 @@ model SiteSetting {
   updatedAt   DateTime @updatedAt
 
   @@index([module])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model SiteSettings {
@@ -2219,6 +2365,7 @@ model SiteSettings {
   testimonials          String?
   statsJson             String?
   updatedAt             DateTime @updatedAt
+  @@index([updatedAt])
 }
 
 model StockAlert {
@@ -2234,6 +2381,7 @@ model StockAlert {
   @@unique([email, productId, formatId])
   @@index([email])
   @@index([productId, notified])
+  @@index([createdAt])
 }
 
 model Subscription {
@@ -2259,6 +2407,8 @@ model Subscription {
   @@index([productId])
   @@index([status])
   @@index([userId])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model SupplierInvoice {
@@ -2293,6 +2443,8 @@ model SupplierInvoice {
   @@index([status])
   @@index([supplierId])
   @@index([deletedAt])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model TaxReport {
@@ -2334,6 +2486,8 @@ model TaxReport {
   @@index([status])
   @@index([year])
   @@index([year, regionCode]) // #58 - Composite index for tax report queries filtered by year+region
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model Testimonial {
@@ -2356,6 +2510,8 @@ model Testimonial {
 
   @@index([isPublished])
   @@index([locale])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model TestimonialTranslation {
@@ -2375,6 +2531,8 @@ model TestimonialTranslation {
   @@unique([testimonialId, locale])
   @@index([testimonialId])
   @@index([locale])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model UatTestCase {
@@ -2401,6 +2559,7 @@ model UatTestCase {
   @@index([runId])
   @@index([scenarioCode])
   @@index([orderId])
+  @@index([createdAt])
 }
 
 model UatTestError {
@@ -2418,6 +2577,7 @@ model UatTestError {
 
   @@index([category])
   @@index([testCaseId])
+  @@index([createdAt])
 }
 
 model UatTestRun {
@@ -2436,6 +2596,8 @@ model UatTestRun {
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
   testCases      UatTestCase[]
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model User {
@@ -2509,6 +2671,7 @@ model User {
   @@index([createdAt])
   @@index([loyaltyTier])
   @@index([referredById])
+  @@index([updatedAt])
 }
 
 model Authenticator {
@@ -2528,6 +2691,7 @@ model Authenticator {
 
   @@id([userId, credentialID])
   @@index([userId])
+  @@index([createdAt])
 }
 
 model UserAddress {
@@ -2548,6 +2712,8 @@ model UserAddress {
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model UserPermissionGroup {
@@ -2577,6 +2743,8 @@ model UserPermissionOverride {
   @@unique([userId, permissionCode])
   @@index([permissionCode])
   @@index([userId])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model VerificationToken {
@@ -2610,6 +2778,8 @@ model Video {
   @@index([category])
   @@index([isPublished])
   @@index([slug])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model VideoTranslation {
@@ -2629,6 +2799,8 @@ model VideoTranslation {
   @@unique([videoId, locale])
   @@index([locale])
   @@index([videoId])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model WebhookEvent {
@@ -2649,6 +2821,7 @@ model WebhookEvent {
   @@index([orderId])
   @@index([provider])
   @@index([status])
+  @@index([createdAt])
 }
 
 model Webinar {
@@ -2680,6 +2853,8 @@ model Webinar {
   @@index([isPublished])
   @@index([scheduledAt])
   @@index([slug])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model WebinarTranslation {
@@ -2700,6 +2875,8 @@ model WebinarTranslation {
   @@unique([webinarId, locale])
   @@index([locale])
   @@index([webinarId])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model Wishlist {
@@ -2711,6 +2888,7 @@ model Wishlist {
   @@unique([userId, productId])
   @@index([productId])
   @@index([userId])
+  @@index([createdAt])
 }
 
 model WishlistCollection {
@@ -2724,6 +2902,8 @@ model WishlistCollection {
   items     WishlistItem[]
 
   @@index([userId])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model WishlistItem {
@@ -2736,6 +2916,7 @@ model WishlistItem {
   @@unique([collectionId, productId])
   @@index([collectionId])
   @@index([productId])
+  @@index([createdAt])
 }
 
 model TranslationJob {
@@ -2757,6 +2938,8 @@ model TranslationJob {
   @@unique([model, entityId, pass, status])
   @@index([status, priority, scheduledAt])
   @@index([model, entityId])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 enum TranslationQuality {
@@ -2805,6 +2988,8 @@ model UpsellConfig {
 
   @@index([productId])
   @@index([isEnabled])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 enum AccountType {
@@ -3061,6 +3246,8 @@ model WebhookEndpoint {
   deliveries WebhookDelivery[]
 
   @@index([active])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model WebhookDelivery {
@@ -3132,6 +3319,8 @@ model RecurringEntryTemplate {
 
   @@index([isActive, nextRunDate])
   @@index([frequency])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 // =============================================
@@ -3170,9 +3359,9 @@ model FixedAsset {
   assetAccountId          String // Balance sheet asset account
   depreciationAccountId   String // Accumulated depreciation contra account
   expenseAccountId        String // Depreciation expense account
-  assetAccount            ChartOfAccount           @relation("AssetAccount", fields: [assetAccountId], references: [id])
-  depreciationAccount     ChartOfAccount           @relation("DepreciationAccount", fields: [depreciationAccountId], references: [id])
-  expenseAccount          ChartOfAccount           @relation("ExpenseAccount", fields: [expenseAccountId], references: [id])
+  assetAccount            ChartOfAccount           @relation("AssetAccount", fields: [assetAccountId], references: [id], onDelete: Restrict)
+  depreciationAccount     ChartOfAccount           @relation("DepreciationAccount", fields: [depreciationAccountId], references: [id], onDelete: Restrict)
+  expenseAccount          ChartOfAccount           @relation("ExpenseAccount", fields: [expenseAccountId], references: [id], onDelete: Restrict)
   // Metadata
   notes                   String?
   attachments             Json? // Array of file references
@@ -3186,6 +3375,8 @@ model FixedAsset {
   @@index([status])
   @@index([assetAccountId])
   @@index([acquisitionDate])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model FixedAssetDepreciation {
@@ -3209,6 +3400,7 @@ model FixedAssetDepreciation {
   @@unique([fixedAssetId, fiscalYear])
   @@index([fiscalYear])
   @@index([journalEntryId])
+  @@index([createdAt])
 }
 
 // =============================================
@@ -3249,6 +3441,8 @@ model FiscalCalendarEvent {
   @@index([category])
   @@index([authority])
   @@index([templateId])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 // =============================================
@@ -3311,6 +3505,8 @@ model BankRule {
 
   @@index([isActive, priority])
   @@index([accountId])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 // =============================================
@@ -3378,6 +3574,8 @@ model EmailConversation {
   @@index([status])
   @@index([lastMessageAt])
   @@index([snoozedUntil])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model OutboundReply {
@@ -3394,11 +3592,12 @@ model OutboundReply {
   sentAt         DateTime?
   createdAt      DateTime          @default(now())
   conversation   EmailConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  sender         User              @relation(fields: [senderId], references: [id])
+  sender         User              @relation(fields: [senderId], references: [id], onDelete: Restrict)
 
   @@index([conversationId])
   @@index([senderId])
   @@index([messageId])
+  @@index([createdAt])
 }
 
 model ConversationNote {
@@ -3409,10 +3608,11 @@ model ConversationNote {
   mentions       String?
   createdAt      DateTime          @default(now())
   conversation   EmailConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  author         User              @relation(fields: [authorId], references: [id])
+  author         User              @relation(fields: [authorId], references: [id], onDelete: Restrict)
 
   @@index([authorId])
   @@index([conversationId])
+  @@index([createdAt])
 }
 
 model ConversationActivity {
@@ -3443,6 +3643,8 @@ model CannedResponse {
 
   @@index([category])
   @@index([locale])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model EmailAutomationFlow {
@@ -3460,6 +3662,8 @@ model EmailAutomationFlow {
 
   @@index([trigger])
   @@index([isActive])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model EmailCampaign {
@@ -3480,6 +3684,8 @@ model EmailCampaign {
 
   @@index([status])
   @@index([scheduledAt])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model ConsentRecord {
@@ -3507,6 +3713,7 @@ model EmailSettings {
   key       String   @id
   value     String
   updatedAt DateTime @updatedAt
+  @@index([updatedAt])
 }
 
 model EmailSegment {
@@ -3521,6 +3728,8 @@ model EmailSegment {
   updatedAt   DateTime @updatedAt
 
   @@index([createdBy])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model EmailFlowExecution {
@@ -3538,6 +3747,8 @@ model EmailFlowExecution {
   @@index([status, executeAt])
   @@index([flowId])
   @@index([email])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 // ── Admin Navigation (Web Navigator) ────────────────────────────
@@ -3556,6 +3767,8 @@ model AdminNavSection {
 
   @@index([railId])
   @@index([sortOrder])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model AdminNavSubSection {
@@ -3573,6 +3786,8 @@ model AdminNavSubSection {
 
   @@index([sectionId])
   @@index([sortOrder])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model AdminNavPage {
@@ -3591,6 +3806,8 @@ model AdminNavPage {
 
   @@index([subSectionId])
   @@index([sortOrder])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model Supplier {
@@ -3614,6 +3831,8 @@ model Supplier {
 
   @@index([name])
   @@index([isActive])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model SupplierContact {
@@ -3631,6 +3850,8 @@ model SupplierContact {
   updatedAt  DateTime @updatedAt
 
   @@index([supplierId])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model SupplierLink {
@@ -3645,6 +3866,8 @@ model SupplierLink {
   updatedAt  DateTime @updatedAt
 
   @@index([supplierId])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 // ── CASL-Compliant Mailing List ─────────────────────────────────
@@ -3674,6 +3897,7 @@ model MailingListSubscriber {
   @@index([unsubscribeToken])
   @@index([userId])
   @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model MailingListPreference {
@@ -3687,6 +3911,8 @@ model MailingListPreference {
 
   @@unique([subscriberId, category])
   @@index([subscriberId])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 enum MailingListStatus {
@@ -3747,6 +3973,7 @@ model OcrScan {
   @@index([status])
   @@index([createdBy])
   @@index([journalEntryId])
+  @@index([createdAt])
 }
 
 // =============================================
@@ -3772,6 +3999,8 @@ model AuditFunction {
   @@index([type])
   @@index([status])
   @@index([filePath])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model AuditType {
@@ -3793,6 +4022,8 @@ model AuditType {
   @@index([severity])
   @@index([category])
   @@index([sortOrder])
+  @@index([createdAt])
+  @@index([updatedAt])
 }
 
 model AuditRun {
@@ -3815,6 +4046,7 @@ model AuditRun {
   @@index([auditTypeId])
   @@index([status])
   @@index([startedAt])
+  @@index([createdAt])
 }
 
 model AuditFinding {
@@ -3844,4 +4076,6 @@ model AuditFinding {
   @@index([severity])
   @@index([fixed])
   @@index([checkId])
+  @@index([createdAt])
+  @@index([updatedAt])
 }

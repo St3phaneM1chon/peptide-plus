@@ -195,17 +195,7 @@ export default class I18nCompletenessAuditor extends BaseAuditor {
           })
       );
 
-      // Report up to 3 specific high-impact examples
-      for (const issue of issues.slice(0, 3)) {
-        results.push(
-          this.fail('i18n-02', 'LOW', 'Hardcoded string example', `"${issue.text}" in ${issue.file}:${issue.lineNum}`, {
-            filePath: issue.file,
-            lineNumber: issue.lineNum,
-            codeSnippet: issue.snippet,
-            recommendation: 'Replace with t() call and add key to locale files.',
-          })
-        );
-      }
+      // Examples included in summary description above (no separate findings)
     }
 
     return results;
