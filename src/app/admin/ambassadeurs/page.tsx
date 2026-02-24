@@ -356,6 +356,18 @@ export default function AmbassadeursPage() {
     setSelectedAmbassadorId(id);
   }, []);
 
+  // ─── Auto-select first item ────────────────────────────────
+
+  useEffect(() => {
+    if (!loading && filteredAmbassadors.length > 0) {
+      const currentStillVisible = selectedAmbassadorId &&
+        filteredAmbassadors.some(a => a.id === selectedAmbassadorId);
+      if (!currentStillVisible) {
+        handleSelectAmbassador(filteredAmbassadors[0].id);
+      }
+    }
+  }, [filteredAmbassadors, loading, selectedAmbassadorId, handleSelectAmbassador]);
+
   // ─── Ribbon action handlers ────────────────────────────────
   const handleRibbonNewAmbassador = useCallback(() => {
     toast.info(t('common.comingSoon'));

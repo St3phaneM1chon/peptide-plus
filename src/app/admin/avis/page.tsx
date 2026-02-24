@@ -232,6 +232,18 @@ export default function AvisPage() {
     setSelectedReviewId(id);
   }, []);
 
+  // ─── Auto-select first item ────────────────────────────────
+
+  useEffect(() => {
+    if (!loading && filteredReviews.length > 0) {
+      const currentStillVisible = selectedReviewId &&
+        filteredReviews.some(r => r.id === selectedReviewId);
+      if (!currentStillVisible) {
+        handleSelectReview(filteredReviews[0].id);
+      }
+    }
+  }, [filteredReviews, loading, selectedReviewId, handleSelectReview]);
+
   // ─── Ribbon action handlers ────────────────────────────────
   const handleRibbonRespond = useCallback(() => {
     if (!selectedReview) { toast.info(t('common.comingSoon')); return; }

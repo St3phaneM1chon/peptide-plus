@@ -276,6 +276,18 @@ export default function EmployesPage() {
     return employees.find((e) => e.id === selectedEmployeeId) || null;
   }, [employees, selectedEmployeeId]);
 
+  // ─── Auto-select first item ────────────────────────────────
+
+  useEffect(() => {
+    if (!loading && filteredEmployees.length > 0) {
+      const currentStillVisible = selectedEmployeeId &&
+        filteredEmployees.some(e => e.id === selectedEmployeeId);
+      if (!currentStillVisible) {
+        handleSelectEmployee(filteredEmployees[0].id);
+      }
+    }
+  }, [filteredEmployees, loading, selectedEmployeeId, handleSelectEmployee]);
+
   // ─── Ribbon action handlers ───────────────────────────────
   const handleRibbonNewRole = useCallback(() => {
     resetForm();

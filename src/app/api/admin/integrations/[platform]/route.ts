@@ -24,15 +24,15 @@ type Platform = typeof VALID_PLATFORMS[number];
 
 // Platform-specific field definitions (non-secret fields storable in DB)
 const PLATFORM_FIELDS: Record<Platform, string[]> = {
-  zoom: ['enabled', 'accountId', 'clientId'],
-  whatsapp: ['enabled', 'phoneNumberId', 'businessAccountId'],
-  teams: ['enabled', 'tenantId', 'clientId', 'webhookUrl'],
-  youtube: ['enabled', 'channelId', 'apiKey'],
-  x: ['enabled', 'username', 'apiKeyId'],
-  tiktok: ['enabled', 'advertiserId', 'appId'],
-  google: ['enabled', 'customerId', 'merchantId'],
-  meta: ['enabled', 'appId', 'pixelId', 'pageId', 'igAccountId'],
-  linkedin: ['enabled', 'companyId', 'appId'],
+  zoom: ['enabled', 'accountId', 'clientId', 'publicLink'],
+  whatsapp: ['enabled', 'phoneNumberId', 'businessAccountId', 'publicLink'],
+  teams: ['enabled', 'tenantId', 'clientId', 'webhookUrl', 'publicLink'],
+  youtube: ['enabled', 'channelId', 'apiKey', 'publicLink'],
+  x: ['enabled', 'username', 'apiKeyId', 'publicLink'],
+  tiktok: ['enabled', 'advertiserId', 'appId', 'publicLink'],
+  google: ['enabled', 'customerId', 'merchantId', 'publicLink'],
+  meta: ['enabled', 'appId', 'pixelId', 'pageId', 'igAccountId', 'publicLink'],
+  linkedin: ['enabled', 'companyId', 'appId', 'publicLink'],
 };
 
 // Secret field names (stored in env vars, not DB — only indicate presence)

@@ -294,6 +294,18 @@ export default function FournisseursPage() {
     return suppliers.find(s => s.id === selectedId) || null;
   }, [suppliers, selectedId]);
 
+  // ─── Auto-select first item ────────────────────────────────
+
+  useEffect(() => {
+    if (!loading && suppliers.length > 0) {
+      const currentStillVisible = selectedId &&
+        suppliers.some(s => s.id === selectedId);
+      if (!currentStillVisible) {
+        handleSelectItem(suppliers[0].id);
+      }
+    }
+  }, [suppliers, loading, selectedId, handleSelectItem]);
+
   // ─── Render ───────────────────────────────────────────────
 
   if (loading) {

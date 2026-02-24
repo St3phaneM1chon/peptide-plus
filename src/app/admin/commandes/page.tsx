@@ -657,6 +657,18 @@ ${selectedOrder.adminNotes ? `<div class="notes"><strong>${t('admin.commandes.pr
   }), [t]);
   const orderGroups = useMemo(() => groupOrdersByDate(filteredOrders, dateLabels, formatCurrency), [filteredOrders, dateLabels, formatCurrency]);
 
+  // ─── Auto-select first item ────────────────────────────────
+
+  useEffect(() => {
+    if (!loading && filteredOrders.length > 0) {
+      const currentStillVisible = selectedOrderId &&
+        filteredOrders.some(order => order.id === selectedOrderId);
+      if (!currentStillVisible) {
+        handleSelectOrder(filteredOrders[0].id);
+      }
+    }
+  }, [filteredOrders, loading, selectedOrderId, handleSelectOrder]);
+
   // ─── Detail pane helpers ────────────────────────────────────
 
   const canRefund = selectedOrder &&

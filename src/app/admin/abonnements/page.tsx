@@ -301,6 +301,18 @@ export default function AbonnementsPage() {
     setSelectedSubId(id);
   }, []);
 
+  // ─── Auto-select first item ────────────────────────────────
+
+  useEffect(() => {
+    if (!loading && filteredSubscriptions.length > 0) {
+      const currentStillVisible = selectedSubId &&
+        filteredSubscriptions.some(s => s.id === selectedSubId);
+      if (!currentStillVisible) {
+        handleSelectSub(filteredSubscriptions[0].id);
+      }
+    }
+  }, [filteredSubscriptions, loading, selectedSubId, handleSelectSub]);
+
   // ─── Ribbon action handlers ────────────────────────────────
   const handleRibbonNewSubscription = useCallback(() => {
     toast.info(t('common.comingSoon'));

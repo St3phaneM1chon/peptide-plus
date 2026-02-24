@@ -219,6 +219,18 @@ export default function QuestionsPage() {
     setSelectedQuestionId(id);
   }, []);
 
+  // ─── Auto-select first item ────────────────────────────────
+
+  useEffect(() => {
+    if (!loading && filteredQuestions.length > 0) {
+      const currentStillVisible = selectedQuestionId &&
+        filteredQuestions.some(q => q.id === selectedQuestionId);
+      if (!currentStillVisible) {
+        handleSelectQuestion(filteredQuestions[0].id);
+      }
+    }
+  }, [filteredQuestions, loading, selectedQuestionId, handleSelectQuestion]);
+
   // ─── Ribbon action handlers ────────────────────────────────
   const handleRibbonRespond = useCallback(() => {
     if (!selectedQuestion) { toast.info(t('common.comingSoon')); return; }
