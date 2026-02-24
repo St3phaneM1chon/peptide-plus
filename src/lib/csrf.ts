@@ -80,7 +80,8 @@ export function encodeCSRFToken(csrfToken: CSRFToken): string {
 export function decodeCSRFToken(encoded: string): CSRFToken | null {
   try {
     return JSON.parse(Buffer.from(encoded, 'base64').toString());
-  } catch {
+  } catch (error) {
+    console.error('[CSRF] Failed to decode CSRF token:', error);
     return null;
   }
 }

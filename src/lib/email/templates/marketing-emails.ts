@@ -25,7 +25,8 @@ function isSafeUrl(url: string): boolean {
   try {
     const parsed = new URL(url);
     return parsed.protocol === 'http:' || parsed.protocol === 'https:';
-  } catch {
+  } catch (error) {
+    console.error('[MarketingEmails] Invalid URL validation:', error);
     return false;
   }
 }

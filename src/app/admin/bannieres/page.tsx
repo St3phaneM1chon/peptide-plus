@@ -215,7 +215,7 @@ export default function BannieresPage() {
       if (!res.ok) { toast.error(t('admin.banners.deleteError')); return; }
       toast.success(t('admin.banners.slideDeleted'));
       fetchSlides();
-    } catch { toast.error(t('common.networkError')); } finally {
+    } catch (error) { console.error('[BannieresPage] Failed to delete slide:', error); toast.error(t('common.networkError')); } finally {
       setDeletingId(null);
     }
   };

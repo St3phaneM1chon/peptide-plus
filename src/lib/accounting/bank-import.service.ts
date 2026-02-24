@@ -12,7 +12,8 @@ async function safeDecryptField(value: string | null): Promise<string | null> {
   if (!value) return null;
   try {
     return await decrypt(value);
-  } catch {
+  } catch (error) {
+    console.error('[BankImport] Decryption failed for field (returning raw value):', error);
     return value;
   }
 }
@@ -272,6 +273,7 @@ export async function syncBankAccount(
     }
 
   } catch (error) {
+    console.error('[BankImport] Sync error during bank import:', error);
     result.success = false;
     result.errors.push(`Sync error: ${error}`);
   }

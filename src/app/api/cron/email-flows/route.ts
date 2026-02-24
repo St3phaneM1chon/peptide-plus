@@ -200,7 +200,9 @@ async function processNode(
               )
               WHERE id = ${flowId}
             `;
-          } catch { /* stat increment is best-effort */ }
+          } catch (error) {
+            console.error('[EmailFlows] Stat increment for flow failed (best-effort):', flowId, error);
+          }
         }
       }
     }

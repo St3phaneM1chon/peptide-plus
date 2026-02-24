@@ -201,8 +201,8 @@ function checkLearnedPatterns(bankTx: BankTransaction, entry: JournalEntry): num
           score += 0.4;
           matchCount++;
         }
-      } catch {
-        // Skip invalid regex patterns gracefully
+      } catch (error) {
+        console.error('[MLReconciliation] Invalid regex pattern in rule, skipping:', rule.pattern.bankDescriptionRegex, error);
       }
     }
 

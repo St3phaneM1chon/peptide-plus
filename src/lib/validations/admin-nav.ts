@@ -34,7 +34,8 @@ const safeUrlSchema = z.string().url().max(2000).refine(
     try {
       const parsed = new URL(val);
       return parsed.protocol === 'https:';
-    } catch {
+    } catch (error) {
+      console.error('[AdminNav] URL validation failed:', error);
       return false;
     }
   },

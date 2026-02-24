@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { roundCurrency } from '@/lib/financial';
+import { prisma } from '@/lib/db';
 
 // FIX: F090 - Note: API routes accept accountCode (string), services resolve to accountId (UUID).
 // Schemas use accountId for validated objects. Document convention clearly.
@@ -43,6 +44,46 @@ export const updateJournalEntrySchema = z.object({
   },
   { message: 'Les débits et crédits doivent être équilibrés' }
 );
+
+/**
+ * Assert that journal entry lines are balanced (sum(debit) === sum(credit)).
+ * Use this as a runtime guard before any journal entry insertion.
+ * Throws an error if lines are unbalanced.
+ */
+export function assertJournalBalance(
+  lines: Array<{ debit: number; credit: number }>,
+  context?: string
+): void {
+  const totalDebit = lines.reduce((s, l) => s + (l.debit || 0), 0);
+  const totalCredit = lines.reduce((s, l) => s + (l.credit || 0), 0);
+  if (roundCurrency(totalDebit - totalCredit) !== 0) {
+    const ctx = context ? ` (${context})` : '';
+    throw new Error(
+      `Journal entry unbalanced${ctx}: debit=${roundCurrency(totalDebit)}, credit=${roundCurrency(totalCredit)}, diff=${roundCurrency(totalDebit - totalCredit)}`
+    );
+  }
+}
+
+/**
+ * Assert that the accounting period covering `transactionDate` is open.
+ * Throws an error if the period is CLOSED or LOCKED, preventing writes
+ * to locked accounting periods.
+ */
+export async function assertPeriodOpen(transactionDate: Date): Promise<void> {
+  const period = await prisma.accountingPeriod.findFirst({
+    where: {
+      startDate: { lte: transactionDate },
+      endDate: { gte: transactionDate },
+    },
+    select: { id: true, code: true, status: true },
+  });
+
+  if (period && (period.status === 'CLOSED' || period.status === 'LOCKED')) {
+    throw new Error(
+      `Accounting period ${period.code} is ${period.status}. Cannot write to a locked/closed period.`
+    );
+  }
+}
 
 // ---- Customer Invoices ----
 export const invoiceItemSchema = z.object({

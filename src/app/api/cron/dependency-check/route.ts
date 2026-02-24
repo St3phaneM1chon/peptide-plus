@@ -54,8 +54,8 @@ async function storeResult(result: DependencyCheckResult): Promise<void> {
       if (redis) {
         await redis.set(REDIS_KEY, JSON.stringify(result), 'EX', REDIS_TTL);
       }
-    } catch {
-      // Non-critical
+    } catch (error) {
+      console.error('[DependencyCheck] Redis store result failed (non-critical):', error);
     }
   }
 }
@@ -68,8 +68,8 @@ async function loadLastResult(): Promise<DependencyCheckResult | null> {
         const raw = await redis.get(REDIS_KEY);
         if (raw) return JSON.parse(raw);
       }
-    } catch {
-      // Fall through
+    } catch (error) {
+      console.error('[DependencyCheck] Redis load last result failed, falling through:', error);
     }
   }
   return null;
@@ -115,6 +115,7 @@ async function checkStripe(): Promise<DependencyStatus> {
       lastChecked: now,
     };
   } catch (err) {
+    console.error('[DependencyCheck] Stripe health check failed:', err);
     const responseTimeMs = Date.now() - start;
     return {
       name,
@@ -161,6 +162,7 @@ async function checkExchangeRateApi(): Promise<DependencyStatus> {
       lastChecked: now,
     };
   } catch (err) {
+    console.error('[DependencyCheck] Exchange Rate API health check failed:', err);
     const responseTimeMs = Date.now() - start;
     return {
       name,
@@ -205,6 +207,7 @@ async function checkEmailProvider(): Promise<DependencyStatus> {
         lastChecked: now,
       };
     } catch (err) {
+      console.error('[DependencyCheck] Email provider (Resend) health check failed:', err);
       const responseTimeMs = Date.now() - start;
       return {
         name,
@@ -257,6 +260,7 @@ async function checkRedis(): Promise<DependencyStatus> {
 
     return { name, status: 'degraded', responseTimeMs, message: 'Ping failed', lastChecked: now };
   } catch (err) {
+    console.error('[DependencyCheck] Redis health check failed:', err);
     const responseTimeMs = Date.now() - start;
     return {
       name,
@@ -280,6 +284,7 @@ async function checkDatabase(): Promise<DependencyStatus> {
 
     return { name, status: 'ok', responseTimeMs, lastChecked: now };
   } catch (err) {
+    console.error('[DependencyCheck] Database health check failed:', err);
     const responseTimeMs = Date.now() - start;
     return {
       name,
@@ -388,8 +393,8 @@ export async function POST(request: NextRequest) {
             context: { dependency: dep.name, message: dep.message },
           });
         }
-      } catch {
-        // Alerting is best-effort
+      } catch (error) {
+        console.error('[DependencyCheck] Alerting for down dependencies failed (best-effort):', error);
       }
     }
 

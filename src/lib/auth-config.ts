@@ -345,7 +345,8 @@ export const authConfig: NextAuthConfig = {
               // Use DB values for name/image if available (most up-to-date)
               if (dbUser?.name) token.name = dbUser.name;
               if (dbUser?.image) token.picture = dbUser.image;
-            } catch {
+            } catch (error) {
+              console.error('[AuthConfig] Failed to fetch user data for JWT token:', error);
               token.role = UserRole.CUSTOMER;
               token.mfaEnabled = false;
               token.needsTerms = true;
@@ -400,8 +401,8 @@ export const authConfig: NextAuthConfig = {
         try {
           const { recordUserActivity } = await import('./session-security');
           recordUserActivity(token.id as string);
-        } catch {
-          // Non-blocking: session security module failure should not break auth
+        } catch (error) {
+          console.error('[AuthConfig] Session security activity recording failed (non-blocking):', error);
         }
       }
       return session;
@@ -449,8 +450,8 @@ export const authConfig: NextAuthConfig = {
           try {
             const { recordSessionCreation } = await import('./session-security');
             recordSessionCreation(user.id);
-          } catch {
-            // Non-blocking
+          } catch (error) {
+            console.error('[AuthConfig] Session creation recording failed (non-blocking):', error);
           }
         }
       } catch (error) {

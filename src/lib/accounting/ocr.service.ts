@@ -130,6 +130,7 @@ Retourne UNIQUEMENT le JSON, sans markdown ni explication.`,
         processingTime: Date.now() - startTime,
       };
     } catch (parseError) {
+      console.error('[OCR] Failed to parse OCR result:', parseError);
       return {
         success: false,
         error: 'Failed to parse OCR result',
@@ -137,6 +138,7 @@ Retourne UNIQUEMENT le JSON, sans markdown ni explication.`,
       };
     }
   } catch (error: unknown) {
+    console.error('[OCR] OCR invoice processing failed:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
@@ -314,6 +316,7 @@ export async function processInvoiceFromText(
       processingTime: Date.now() - startTime,
     };
   } catch (error: unknown) {
+    console.error('[OCR] OCR receipt processing failed:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',

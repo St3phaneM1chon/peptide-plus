@@ -4,6 +4,7 @@
  */
 
 import { prisma } from '@/lib/db';
+import { assertJournalBalance, assertPeriodOpen } from '@/lib/accounting/validation';
 
 export const DEPARTMENTS = {
   OPS: 'Opérations',
@@ -28,6 +29,9 @@ export async function createExpenseEntry(data: {
   reference?: string;
   createdBy: string;
 }): Promise<string> {
+  // Ensure the accounting period for this expense date is open
+  await assertPeriodOpen(data.date);
+
   // Find the expense account
   const expenseAccount = await prisma.chartOfAccount.findUnique({
     where: { code: data.accountCode },
@@ -63,6 +67,23 @@ export async function createExpenseEntry(data: {
     // F-063 FIX: Use 5-digit padding for consistency with other entry generators
     const entryNumber = `${prefix}${String(nextNum).padStart(5, '0')}`;
 
+    const linesToCreate = [
+      {
+        accountId: expenseAccount.id,
+        description: data.description,
+        debit: data.amount,
+        credit: 0,
+        costCenter: data.department,
+      },
+      {
+        accountId: bankAccount.id,
+        description: data.description,
+        debit: 0,
+        credit: data.amount,
+      },
+    ];
+    assertJournalBalance(linesToCreate, `expense ${data.accountCode}`);
+
     return tx.journalEntry.create({
       data: {
         entryNumber,
@@ -74,23 +95,7 @@ export async function createExpenseEntry(data: {
         createdBy: data.createdBy,
         postedBy: data.createdBy,
         postedAt: new Date(),
-        lines: {
-          create: [
-            {
-              accountId: expenseAccount.id,
-              description: data.description,
-              debit: data.amount,
-              credit: 0,
-              costCenter: data.department,
-            },
-            {
-              accountId: bankAccount.id,
-              description: data.description,
-              debit: 0,
-              credit: data.amount,
-            },
-          ],
-        },
+        lines: { create: linesToCreate },
       },
     });
   });

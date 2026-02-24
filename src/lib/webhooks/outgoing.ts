@@ -144,7 +144,8 @@ export function verifySignature(
       Buffer.from(signature, 'hex'),
       Buffer.from(expected, 'hex')
     );
-  } catch {
+  } catch (error) {
+    console.error('[Webhooks] Signature verification failed:', error);
     return false;
   }
 }
@@ -354,6 +355,7 @@ async function scheduleRetry(
       responseBody = await response.text().catch(() => '');
       success = httpStatus >= 200 && httpStatus < 300;
     } catch (fetchErr) {
+      console.error('[Webhooks] Fetch failed during webhook delivery retry:', fetchErr);
       responseBody = fetchErr instanceof Error ? fetchErr.message : String(fetchErr);
     }
 
@@ -371,8 +373,8 @@ async function scheduleRetry(
           lastAttempt: new Date(),
         },
       });
-    } catch {
-      // Silently fail -- the delivery still happened
+    } catch (error) {
+      console.error('[Webhooks] Failed to update delivery record after retry:', error);
     }
 
     logger.info('[webhooks/outgoing] Retry completed', {

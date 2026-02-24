@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth-config';
+import { validateCsrf } from '@/lib/csrf-middleware';
 import { enqueue } from '@/lib/translation';
 import { logger } from '@/lib/logger';
 import { z } from 'zod';
@@ -69,6 +70,12 @@ export async function PUT(
     const session = await auth();
     if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // CSRF validation
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
     }
 
     const body = await request.json();
@@ -182,7 +189,7 @@ export async function PUT(
 
 // DELETE format
 export async function DELETE(
-  _request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string; formatId: string }> }
 ) {
   try {
@@ -190,6 +197,12 @@ export async function DELETE(
     const session = await auth();
     if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // CSRF validation
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
     }
 
     // Check if format exists

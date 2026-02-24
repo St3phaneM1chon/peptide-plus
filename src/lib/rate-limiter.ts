@@ -460,8 +460,8 @@ export async function resetRateLimit(
   if (redisAvailable && redisClient) {
     try {
       await redisClient.del(key);
-    } catch {
-      // Non-critical -- the key will expire via TTL anyway
+    } catch (error) {
+      console.error('[RateLimiter] Redis rate limit key deletion failed (will expire via TTL):', error);
     }
   }
 }
@@ -504,8 +504,8 @@ export async function getRateLimitStats(): Promise<{
         entriesByEndpoint: stats,
         backend: 'redis',
       };
-    } catch {
-      // Fall through to memory stats
+    } catch (error) {
+      console.error('[RateLimiter] Redis rate limit stats retrieval failed, falling through:', error);
     }
   }
 

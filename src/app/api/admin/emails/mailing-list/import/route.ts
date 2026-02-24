@@ -73,7 +73,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
         newValue: { checked: subscribers.length, cleaned },
         ipAddress: getClientIpFromRequest(request),
         userAgent: request.headers.get('user-agent') || undefined,
-      }).catch(() => {});
+      }).catch((error: unknown) => { console.error('[MailingListImport] Non-blocking clean list admin action log failed:', error); });
 
       return NextResponse.json({ success: true, cleaned, checked: subscribers.length });
     }
@@ -171,7 +171,8 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
           });
           imported++;
         }
-      } catch {
+      } catch (error) {
+        console.error('[MailingListImport] Database error importing contact:', email, error);
         failed++;
         errors.push({ row: i + 1, email, reason: 'db_error' });
       }
@@ -185,7 +186,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
       newValue: { total: contacts.length, created: imported, updated, skipped, failed, duplicatesInCsv, preservedUnsubscribed },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch(() => {});
+    }).catch((error: unknown) => { console.error('[MailingListImport] Non-blocking import admin action log failed:', error); });
 
     return NextResponse.json({
       success: true,

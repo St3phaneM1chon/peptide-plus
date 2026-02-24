@@ -11,8 +11,9 @@ export async function generateStaticParams() {
       select: { slug: true },
     });
     return bundles.map((b) => ({ slug: b.slug }));
-  } catch {
+  } catch (error) {
     // DB unavailable during build - pages will be generated on first request via ISR
+    console.warn('ISR build fallback: DB unavailable for generateStaticParams (bundles):', error);
     return [];
   }
 }

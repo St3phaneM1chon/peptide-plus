@@ -12,6 +12,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { auth } from '@/lib/auth-config';
+import { validateCsrf } from '@/lib/csrf-middleware';
 import { qualifyReferral } from '@/lib/referral-qualify';
 import { logger } from '@/lib/logger';
 
@@ -56,6 +57,12 @@ export async function POST(request: NextRequest) {
         { error: 'Unauthorized - requires CRON_SECRET or admin session' },
         { status: 401 }
       );
+    }
+
+    // CSRF validation
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
     }
 
     const body = await request.json();

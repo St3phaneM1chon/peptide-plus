@@ -6,7 +6,7 @@ import { prisma } from '@/lib/db';
 import { Prisma } from '@prisma/client';
 import { roundCurrency } from '@/lib/financial';
 import { logAuditTrail } from '@/lib/accounting';
-import { updateJournalEntrySchema } from '@/lib/accounting/validation';
+import { updateJournalEntrySchema, assertJournalBalance } from '@/lib/accounting/validation';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 /**
@@ -232,6 +232,14 @@ export const POST = withAdminGuard(async (request, { session }) => {
       }
       const entryNumber = `${prefix}${String(nextNum).padStart(4, '0')}`;
 
+      const linesToCreate = lines.map((l: { accountCode: string; debit?: number; credit?: number; description?: string }) => ({
+        accountId: accountMap.get(l.accountCode)!.id,
+        debit: Number(l.debit) || 0,
+        credit: Number(l.credit) || 0,
+        description: l.description || null,
+      }));
+      assertJournalBalance(linesToCreate, `manual entry ${entryNumber}`);
+
       return tx.journalEntry.create({
         data: {
           entryNumber,
@@ -243,14 +251,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
           createdBy: session.user.id!,
           postedBy: postImmediately ? session.user.id! : undefined,
           postedAt: postImmediately ? new Date() : undefined,
-          lines: {
-            create: lines.map((l: { accountCode: string; debit?: number; credit?: number; description?: string }) => ({
-              accountId: accountMap.get(l.accountCode)!.id,
-              debit: Number(l.debit) || 0,
-              credit: Number(l.credit) || 0,
-              description: l.description || null,
-            })),
-          },
+          lines: { create: linesToCreate },
         },
         include: {
           lines: { include: { account: { select: { code: true, name: true } } } },
@@ -618,6 +619,14 @@ export const DELETE = withAdminGuard(async (request, { session }) => {
         const reversingEntryNumber = `${prefix}${String(nextNum).padStart(4, '0')}`;
 
         // 3. Create reversing entry with swapped debits/credits
+        const reversingLines = originalEntry.lines.map((line) => ({
+          accountId: line.accountId,
+          description: `Contrepassation: ${line.description || ''}`,
+          debit: Number(line.credit),   // Swap: original credit becomes debit
+          credit: Number(line.debit),   // Swap: original debit becomes credit
+        }));
+        assertJournalBalance(reversingLines, `void ${originalEntry.entryNumber}`);
+
         const reversing = await tx.journalEntry.create({
           data: {
             entryNumber: reversingEntryNumber,
@@ -632,14 +641,7 @@ export const DELETE = withAdminGuard(async (request, { session }) => {
             postedAt: new Date(),
             currency: originalEntry.currency,
             exchangeRate: originalEntry.exchangeRate,
-            lines: {
-              create: originalEntry.lines.map((line) => ({
-                accountId: line.accountId,
-                description: `Contrepassation: ${line.description || ''}`,
-                debit: line.credit,   // Swap: original credit becomes debit
-                credit: line.debit,   // Swap: original debit becomes credit
-              })),
-            },
+            lines: { create: reversingLines },
           },
         });
 

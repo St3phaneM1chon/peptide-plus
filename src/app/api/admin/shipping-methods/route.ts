@@ -43,7 +43,8 @@ const createShippingMethodSchema = z.object({
 function parseCountries(raw: string): string[] {
   try {
     return JSON.parse(raw) as string[];
-  } catch {
+  } catch (error) {
+    console.error('[ShippingMethods] Failed to parse countries JSON:', error);
     return raw ? [raw] : [];
   }
 }

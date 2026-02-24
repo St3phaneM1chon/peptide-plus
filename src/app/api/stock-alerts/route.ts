@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 
@@ -30,6 +31,12 @@ export async function POST(request: NextRequest) {
       );
       Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
       return res;
+    }
+
+    // CSRF validation
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
     }
 
     const body = await request.json();

@@ -62,7 +62,8 @@ export const GET = withAdminGuard(async (_request, _ctx) => {
     if (setting) {
       try {
         config = JSON.parse(setting.value) as LoyaltyConfig;
-      } catch {
+      } catch (error) {
+        console.error('[LoyaltyConfig] Failed to parse loyalty config JSON from SiteSetting:', error);
         config = DEFAULT_CONFIG;
       }
     } else {
@@ -83,7 +84,8 @@ export const GET = withAdminGuard(async (_request, _ctx) => {
             birthdayBonus: parsed.birthdayBonus ?? DEFAULT_CONFIG.birthdayBonus,
             tiers: parsed.tiers ?? DEFAULT_CONFIG.tiers,
           };
-        } catch {
+        } catch (error) {
+          console.error('[LoyaltyConfig] Failed to parse rewardTiers JSON from SiteSettings:', error);
           config = DEFAULT_CONFIG;
         }
       } else {

@@ -41,7 +41,8 @@ export const GET = withAdminGuard(async (_request, { params }) => {
     if (video.tags) {
       try {
         parsedTags = JSON.parse(video.tags);
-      } catch {
+      } catch (error) {
+        console.error('[AdminVideoById] Failed to parse video tags as JSON:', error);
         parsedTags = video.tags.split(',').map(t => t.trim());
       }
     }

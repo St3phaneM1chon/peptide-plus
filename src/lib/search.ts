@@ -283,8 +283,8 @@ export async function suggestCorrection(query: string): Promise<string | null> {
       return result[0].name;
     }
     return null;
-  } catch {
-    // pg_trgm not installed or other error
+  } catch (error) {
+    console.error('[Search] pg_trgm did-you-mean query failed:', error);
     return null;
   }
 }
@@ -309,7 +309,8 @@ export async function fuzzySearch(
       ORDER BY "rank" DESC
       LIMIT ${limit}`;
     return results;
-  } catch {
+  } catch (error) {
+    console.error('[Search] Fuzzy search query failed:', error);
     return [];
   }
 }

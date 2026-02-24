@@ -277,7 +277,11 @@ export const PUT = withAdminGuard(async (request, { session }) => {
     });
 
     // Revalidate cached order pages after status update
-    try { revalidatePath('/account/orders', 'layout'); } catch { /* revalidation is best-effort */ }
+    try {
+      revalidatePath('/account/orders', 'layout');
+    } catch (error) {
+      console.error('[AdminOrders] Revalidation of order pages failed (best-effort):', error);
+    }
 
     // Audit log for order update (fire-and-forget)
     logAdminAction({
@@ -289,7 +293,7 @@ export const PUT = withAdminGuard(async (request, { session }) => {
       newValue: { status: status || existingOrder.status, trackingNumber: trackingNumber || null, carrier: carrier || null, adminNotes: adminNotes || null },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch(() => {});
+    }).catch((error: unknown) => { console.error('[AdminOrders] Non-blocking audit log for order update failed:', error); });
 
     // Trigger automation engine for order lifecycle events (fire-and-forget)
     if (status && status !== existingOrder.status) {
@@ -451,9 +455,9 @@ export const POST = withAdminGuard(async (request, { session }) => {
                   orderNumber: o.orderNumber,
                   trackingNumber: o.trackingNumber || '',
                   carrier: o.carrier || '',
-                }).catch(() => {});
+                }).catch((error: unknown) => { console.error('[AdminOrders] Non-blocking batch automation event handling failed:', error); });
               }
-            }).catch(() => {});
+            }).catch((error: unknown) => { console.error('[AdminOrders] Non-blocking batch order refetch failed:', error); });
           }
         }
 
@@ -465,6 +469,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
           newStatus: status || existingOrder.status,
         });
       } catch (error) {
+        console.error('[AdminOrders] Failed to update order in batch:', orderId, error);
         results.push({
           orderId,
           success: false,
@@ -478,7 +483,11 @@ export const POST = withAdminGuard(async (request, { session }) => {
 
     // Revalidate cached order pages after batch status update
     if (successCount > 0) {
-      try { revalidatePath('/account/orders', 'layout'); } catch { /* revalidation is best-effort */ }
+      try {
+        revalidatePath('/account/orders', 'layout');
+      } catch (error) {
+        console.error('[AdminOrders] Revalidation of order pages after batch update failed (best-effort):', error);
+      }
     }
 
     // Audit log for batch order update (fire-and-forget, one entry for the whole batch)
@@ -491,7 +500,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
       metadata: { results: results.map((r) => ({ orderId: r.orderId, orderNumber: r.orderNumber, success: r.success, previousStatus: r.previousStatus, newStatus: r.newStatus, error: r.error })) },
-    }).catch(() => {});
+    }).catch((error: unknown) => { console.error('[AdminOrders] Non-blocking batch update audit log failed:', error); });
 
     return NextResponse.json({
       success: failCount === 0,

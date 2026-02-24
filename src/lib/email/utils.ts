@@ -16,7 +16,8 @@ export function safeParseJson<T = unknown>(input: unknown, fallback?: T): T | nu
     if (!input) return fallback ?? null;
     try {
       return JSON.parse(input) as T;
-    } catch {
+    } catch (error) {
+      console.error('[EmailUtils] JSON parse failed in safeParseJson:', error);
       return fallback ?? null;
     }
   }

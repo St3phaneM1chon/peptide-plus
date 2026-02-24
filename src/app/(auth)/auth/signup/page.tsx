@@ -111,7 +111,8 @@ function SignUpContent() {
       setTimeout(() => {
         router.push('/auth/signin?registered=true');
       }, 2000);
-    } catch {
+    } catch (error) {
+      console.error('Sign-up request failed:', error instanceof Error ? error.message : error);
       setFormError(t('auth.errorNetworkGeneric'));
       setIsLoading(false);
     }

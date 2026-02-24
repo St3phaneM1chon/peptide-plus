@@ -125,7 +125,7 @@ model Ambassador {
   id             String                 @id @default(cuid())
   userId         String?
   name           String
-  email          String?
+  email          String?                @unique
   phone          String?
   referralCode   String                 @unique
   commissionRate Decimal                @default(10) @db.Decimal(5, 2)
@@ -1603,7 +1603,7 @@ model Product {
   weight              Decimal?             @db.Decimal(10, 3)
   dimensions          String?
   requiresShipping    Boolean              @default(true)
-  sku                 String?
+  sku                 String?              @unique
   barcode             String?
   manufacturer        String?
   origin              String?
@@ -3551,7 +3551,7 @@ model Supplier {
   id         String            @id @default(cuid())
   name       String
   code       String?           @unique
-  email      String?
+  email      String?           @unique
   phone      String?
   website    String?
   address    String?
@@ -3699,4 +3699,101 @@ model OcrScan {
   @@index([status])
   @@index([createdBy])
   @@index([journalEntryId])
+}
+
+// =============================================
+// CODE AUDIT SYSTEM (25 audit types)
+// =============================================
+
+model AuditFunction {
+  id            String         @id @default(cuid())
+  name          String
+  filePath      String
+  type          String // api_handler, page, component, hook, lib, middleware
+  description   String?
+  exportType    String? // default, named, GET, POST, PUT, DELETE, PATCH
+  relatedModels String? // JSON array of Prisma model names used
+  relatedAPIs   String? // JSON array of API routes called
+  linesOfCode   Int?
+  status        String         @default("ACTIVE") // ACTIVE, DEPRECATED, REMOVED
+  findings      AuditFinding[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@unique([filePath, name])
+  @@index([type])
+  @@index([status])
+  @@index([filePath])
+}
+
+model AuditType {
+  id          String     @id @default(cuid())
+  code        String     @unique // e.g. AUTH-SESSION, AUTHZ-RBAC
+  name        String
+  nameFr      String?
+  description String
+  descriptionFr String?
+  severity    String // CRITICAL, HIGH, MEDIUM, LOW
+  category    String // security, integrity, performance, quality, compliance
+  checklist   String // JSON array of check items
+  sortOrder   Int        @default(0)
+  isActive    Boolean    @default(true)
+  runs        AuditRun[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([severity])
+  @@index([category])
+  @@index([sortOrder])
+}
+
+model AuditRun {
+  id             String         @id @default(cuid())
+  auditTypeId    String
+  auditType      AuditType      @relation(fields: [auditTypeId], references: [id], onDelete: Cascade)
+  status         String         @default("RUNNING") // RUNNING, COMPLETED, FAILED, CANCELLED
+  startedAt      DateTime       @default(now())
+  completedAt    DateTime?
+  totalChecks    Int            @default(0)
+  passedChecks   Int            @default(0)
+  failedChecks   Int            @default(0)
+  findingsCount  Int            @default(0)
+  summary        String? // JSON summary of results
+  runBy          String?
+  durationMs     Int?
+  findings       AuditFinding[]
+  createdAt      DateTime       @default(now())
+
+  @@index([auditTypeId])
+  @@index([status])
+  @@index([startedAt])
+}
+
+model AuditFinding {
+  id              String        @id @default(cuid())
+  auditRunId      String
+  auditRun        AuditRun      @relation(fields: [auditRunId], references: [id], onDelete: Cascade)
+  functionId      String?
+  function        AuditFunction? @relation(fields: [functionId], references: [id], onDelete: SetNull)
+  checkId         String // which checklist item found this
+  severity        String // CRITICAL, HIGH, MEDIUM, LOW, INFO
+  title           String
+  description     String
+  filePath        String?
+  lineNumber      Int?
+  codeSnippet     String?
+  recommendation  String?
+  fixed           Boolean       @default(false)
+  fixedAt         DateTime?
+  fixedBy         String?
+  fixCommit       String?
+  falsePositive   Boolean       @default(false)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([auditRunId])
+  @@index([functionId])
+  @@index([severity])
+  @@index([fixed])
+  @@index([checkId])
 }

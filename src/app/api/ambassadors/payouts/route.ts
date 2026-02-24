@@ -32,6 +32,9 @@ export async function GET(request: NextRequest) {
     const where: Record<string, unknown> = {};
     if (ambassadorId) where.ambassadorId = ambassadorId;
 
+    const take = Math.min(Number(searchParams.get('limit') || 100), 200);
+    const skip = Number(searchParams.get('offset') || 0);
+
     const payouts = await prisma.ambassadorPayout.findMany({
       where,
       include: {
@@ -48,6 +51,8 @@ export async function GET(request: NextRequest) {
         },
       },
       orderBy: { createdAt: 'desc' },
+      take,
+      skip,
     });
 
     const formatted = payouts.map((p) => ({

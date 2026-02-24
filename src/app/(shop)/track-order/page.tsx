@@ -31,7 +31,8 @@ export default function TrackOrderPage() {
       } else {
         setTrackingResult({ found: false });
       }
-    } catch {
+    } catch (error) {
+      console.error('[TrackOrderPage] Failed to track order:', error);
       setTrackingResult({ found: false });
     }
 

@@ -454,8 +454,8 @@ export async function POST(request: NextRequest) {
             data: { status: 'COMPLETED' },
           });
         }
-      } catch {
-        // Legacy purchase not found, that's OK
+      } catch (error) {
+        console.error('[PaypalCapture] Legacy purchase update failed (non-critical):', paypalOrderId, error);
       }
 
       // Audit log

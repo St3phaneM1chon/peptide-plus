@@ -94,7 +94,8 @@ export async function POST(request: NextRequest) {
     if (user.mfaBackupCodes) {
       try {
         backupCodes = JSON.parse(await decrypt(user.mfaBackupCodes));
-      } catch {
+      } catch (error) {
+        console.error('[MfaVerify] Failed to decrypt backup codes:', error);
         // Backup codes may already be hashed
       }
     }

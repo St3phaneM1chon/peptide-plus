@@ -6,18 +6,25 @@ export const dynamic = 'force-dynamic';
  * DELETE /api/user/avatar - Remove avatar
  */
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
+import { validateCsrf } from '@/lib/csrf-middleware';
 import { db } from '@/lib/db';
 import { storage } from '@/lib/storage';
 import { logger } from '@/lib/logger';
 
 // POST - Upload avatar
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // CSRF validation
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
     }
 
     const formData = await request.formData();
@@ -90,11 +97,17 @@ export async function POST(request: Request) {
 }
 
 // DELETE - Remove avatar
-export async function DELETE() {
+export async function DELETE(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // CSRF validation
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
     }
 
     // Delete old avatar from storage if it exists
@@ -105,8 +118,8 @@ export async function DELETE() {
     if (currentUser?.image) {
       try {
         await storage.delete(currentUser.image);
-      } catch {
-        // Old file might not exist or be external, ignore
+      } catch (error) {
+        console.error('[UserAvatar] Failed to delete old avatar from storage (non-critical):', error);
       }
     }
 

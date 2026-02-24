@@ -49,7 +49,8 @@ function isValidTimezone(tz: string): boolean {
   try {
     Intl.DateTimeFormat(undefined, { timeZone: tz });
     return true;
-  } catch {
+  } catch (error) {
+    console.error('[EmailCampaigns] Invalid timezone validation:', error);
     return false;
   }
 }

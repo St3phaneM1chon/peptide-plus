@@ -8,6 +8,7 @@ import { logger } from '@/lib/logger';
 import { z } from 'zod';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { validateCsrf } from '@/lib/csrf-middleware';
+import { assertJournalBalance, assertPeriodOpen } from '@/lib/accounting/validation';
 
 // ---------------------------------------------------------------------------
 // Zod schema
@@ -87,6 +88,10 @@ export const POST = withAdminGuard(async (request, { session }) => {
       });
     }
 
+    // Ensure accounting periods covering the sync range are open
+    await assertPeriodOpen(parsedStart);
+    await assertPeriodOpen(parsedEnd);
+
     // Perform sync with structured logging (only after idempotency check passes)
     const syncId = `sync-${Date.now()}`;
     const syncStartTime = Date.now();
@@ -149,6 +154,15 @@ export const POST = withAdminGuard(async (request, { session }) => {
           }
           const entryNumber = `${prefix}${String(nextNum).padStart(4, '0')}`;
 
+          // Validate debit/credit balance before insertion
+          const linesToCreate = entry.lines.map((l: { accountCode: string; description?: string; debit: number; credit: number }) => ({
+            accountId: accountMap.get(l.accountCode) || (() => { throw new Error(`Account code ${l.accountCode} not found in chart of accounts`); })(),
+            description: l.description || null,
+            debit: l.debit,
+            credit: l.credit,
+          }));
+          assertJournalBalance(linesToCreate, `stripe-sync ${entry.reference || ''}`);
+
           await tx.journalEntry.create({
             data: {
               entryNumber,
@@ -160,15 +174,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
               createdBy: 'Stripe Sync',
               postedBy: 'Stripe Sync',
               postedAt: new Date(),
-              lines: {
-                create: entry.lines.map((l: { accountCode: string; description?: string; debit: number; credit: number }) => ({
-                  // #94 Integration: Throw error when account code not found instead of using empty string
-                  accountId: accountMap.get(l.accountCode) || (() => { throw new Error(`Account code ${l.accountCode} not found in chart of accounts`); })(),
-                  description: l.description || null,
-                  debit: l.debit,
-                  credit: l.credit,
-                })),
-              },
+              lines: { create: linesToCreate },
             },
           });
         }

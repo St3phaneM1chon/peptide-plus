@@ -6,13 +6,37 @@ import { prisma } from '@/lib/db';
 import { rpID } from '@/lib/webauthn';
 import { cookies } from 'next/headers';
 import { logger } from '@/lib/logger';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { z } from 'zod';
 
 type AuthenticatorTransport = 'ble' | 'cable' | 'hybrid' | 'internal' | 'nfc' | 'smart-card' | 'usb';
 
+// Zod schema for request body validation
+const webauthnAuthOptionsSchema = z.object({
+  email: z.string().email().max(320).optional(),
+}).strict();
+
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json().catch(() => ({}));
-    const { email } = body;
+    // SECURITY: Rate limit WebAuthn authentication options requests
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/auth/login');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+
+    const rawBody = await request.json().catch(() => ({}));
+    const parsed = webauthnAuthOptionsSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid request body', details: parsed.error.flatten().fieldErrors },
+        { status: 400 }
+      );
+    }
+    const { email } = parsed.data;
 
     let allowCredentials: { id: Uint8Array; type: 'public-key'; transports?: AuthenticatorTransport[] }[] | undefined;
 

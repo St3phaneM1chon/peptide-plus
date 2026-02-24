@@ -15,10 +15,11 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
-import { ACCOUNT_CODES } from '@/lib/accounting/types';
+import { ACCOUNT_CODES, TAX_RATES } from '@/lib/accounting/types';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { logger } from '@/lib/logger';
 import { z } from 'zod';
+import { assertJournalBalance, assertPeriodOpen } from '@/lib/accounting/validation';
 
 const receiveItemSchema = z.object({
   itemId: z.string().min(1, 'itemId is required'),
@@ -134,6 +135,9 @@ export const POST = withAdminGuard(async (request, { session, params }) => {
         { status: 400 }
       );
     }
+
+    // Ensure the current accounting period is open before writing entries
+    await assertPeriodOpen(new Date());
 
     // ─── Process receiving in a transaction ──────────────────────────────
     const result = await prisma.$transaction(async (tx) => {
@@ -304,6 +308,72 @@ export const POST = withAdminGuard(async (request, { session, params }) => {
               .map((u) => `${u.description} x${u.quantity} @ $${u.unitCost.toFixed(2)}`)
               .join(', ');
 
+            // Build ALL journal lines (inventory + taxes) before creation
+            const allLines: Array<{ accountId: string; description: string; debit: number; credit: number }> = [
+              {
+                accountId: inventoryAccount.id,
+                description: `Stock entrant: ${itemDescriptions}`,
+                debit: totalInventoryValue,
+                credit: 0,
+              },
+              {
+                accountId: apAccount.id,
+                description: `Fournisseur: ${po.supplierName} - ${po.poNumber}`,
+                debit: 0,
+                credit: totalInventoryValue,
+              },
+            ];
+
+            // Add tax input credit lines if applicable
+            const taxableAmount = totalInventoryValue;
+            const tpsCredit = Math.round(taxableAmount * TAX_RATES.QC.TPS * 100) / 100;
+            const tvqCredit = Math.round(taxableAmount * TAX_RATES.QC.TVQ * 100) / 100;
+
+            if (tpsCredit > 0) {
+              const tpsAccount = await tx.chartOfAccount.findUnique({
+                where: { code: ACCOUNT_CODES.TPS_PAYABLE },
+                select: { id: true },
+              });
+              if (tpsAccount) {
+                allLines.push({
+                  accountId: tpsAccount.id,
+                  description: `Crédit de taxe sur intrants TPS - ${po.poNumber}`,
+                  debit: tpsCredit,
+                  credit: 0,
+                });
+                allLines.push({
+                  accountId: apAccount.id,
+                  description: `TPS fournisseur - ${po.supplierName}`,
+                  debit: 0,
+                  credit: tpsCredit,
+                });
+              }
+            }
+
+            if (tvqCredit > 0) {
+              const tvqAccount = await tx.chartOfAccount.findUnique({
+                where: { code: ACCOUNT_CODES.TVQ_PAYABLE },
+                select: { id: true },
+              });
+              if (tvqAccount) {
+                allLines.push({
+                  accountId: tvqAccount.id,
+                  description: `Crédit de taxe sur intrants TVQ - ${po.poNumber}`,
+                  debit: tvqCredit,
+                  credit: 0,
+                });
+                allLines.push({
+                  accountId: apAccount.id,
+                  description: `TVQ fournisseur - ${po.supplierName}`,
+                  debit: 0,
+                  credit: tvqCredit,
+                });
+              }
+            }
+
+            // Validate balance before insertion
+            assertJournalBalance(allLines, `PO receive ${po.poNumber}`);
+
             const journalEntry = await tx.journalEntry.create({
               data: {
                 entryNumber,
@@ -315,93 +385,11 @@ export const POST = withAdminGuard(async (request, { session, params }) => {
                 createdBy: session!.user.id,
                 postedBy: session!.user.id,
                 postedAt: new Date(),
-                lines: {
-                  create: [
-                    {
-                      accountId: inventoryAccount.id,
-                      description: `Stock entrant: ${itemDescriptions}`,
-                      debit: totalInventoryValue,
-                      credit: 0,
-                    },
-                    {
-                      accountId: apAccount.id,
-                      description: `Fournisseur: ${po.supplierName} - ${po.poNumber}`,
-                      debit: 0,
-                      credit: totalInventoryValue,
-                    },
-                  ],
-                },
+                lines: { create: allLines },
               },
             });
 
             journalEntryId = journalEntry.id;
-
-            // If there are taxes, create additional journal lines for input tax credits
-            const taxableAmount = totalInventoryValue;
-            const tpsCredit = Math.round(taxableAmount * 0.05 * 100) / 100;
-            const tvqCredit = Math.round(taxableAmount * 0.09975 * 100) / 100;
-
-            if (tpsCredit > 0) {
-              const tpsAccount = await tx.chartOfAccount.findUnique({
-                where: { code: ACCOUNT_CODES.TPS_PAYABLE },
-                select: { id: true },
-              });
-
-              if (tpsAccount) {
-                // Debit TPS Payable (reduces liability = input tax credit)
-                await tx.journalLine.create({
-                  data: {
-                    entryId: journalEntry.id,
-                    accountId: tpsAccount.id,
-                    description: `Crédit de taxe sur intrants TPS - ${po.poNumber}`,
-                    debit: tpsCredit,
-                    credit: 0,
-                  },
-                });
-
-                // Credit AP for the tax portion
-                await tx.journalLine.create({
-                  data: {
-                    entryId: journalEntry.id,
-                    accountId: apAccount.id,
-                    description: `TPS fournisseur - ${po.supplierName}`,
-                    debit: 0,
-                    credit: tpsCredit,
-                  },
-                });
-              }
-            }
-
-            if (tvqCredit > 0) {
-              const tvqAccount = await tx.chartOfAccount.findUnique({
-                where: { code: ACCOUNT_CODES.TVQ_PAYABLE },
-                select: { id: true },
-              });
-
-              if (tvqAccount) {
-                // Debit TVQ Payable (reduces liability = input tax credit)
-                await tx.journalLine.create({
-                  data: {
-                    entryId: journalEntry.id,
-                    accountId: tvqAccount.id,
-                    description: `Crédit de taxe sur intrants TVQ - ${po.poNumber}`,
-                    debit: tvqCredit,
-                    credit: 0,
-                  },
-                });
-
-                // Credit AP for the tax portion
-                await tx.journalLine.create({
-                  data: {
-                    entryId: journalEntry.id,
-                    accountId: apAccount.id,
-                    description: `TVQ fournisseur - ${po.supplierName}`,
-                    debit: 0,
-                    credit: tvqCredit,
-                  },
-                });
-              }
-            }
           } else {
             logger.warn(`Accounting accounts not found: Inventory(${ACCOUNT_CODES.INVENTORY})=${!!inventoryAccount}, AP(${ACCOUNT_CODES.ACCOUNTS_PAYABLE})=${!!apAccount}`);
           }

@@ -98,7 +98,8 @@ function ResetPasswordContent() {
         router.push('/auth/signin?reset=success');
       }, 3000);
 
-    } catch {
+    } catch (error) {
+      console.error('Reset password request failed:', error instanceof Error ? error.message : error);
       setError(t('auth.errorNetworkGeneric'));
     } finally {
       setIsLoading(false);

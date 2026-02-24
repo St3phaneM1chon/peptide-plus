@@ -52,7 +52,8 @@ export async function safeJsonParse(
   try {
     const data = await request.json();
     return { data, error: null };
-  } catch {
+  } catch (error) {
+    console.error('[AccountingErrorHandler] Failed to parse JSON request body:', error);
     return {
       data: null,
       error: NextResponse.json(

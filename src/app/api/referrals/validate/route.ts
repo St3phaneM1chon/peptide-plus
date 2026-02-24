@@ -10,6 +10,7 @@ import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
 import { stripHtml, stripControlChars } from '@/lib/sanitize';
 
 // ---------------------------------------------------------------------------
@@ -31,6 +32,12 @@ export async function POST(request: NextRequest) {
       const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
       Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
       return res;
+    }
+
+    // CSRF validation
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
     }
 
     const body = await request.json();

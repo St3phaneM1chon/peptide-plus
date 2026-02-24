@@ -126,6 +126,7 @@ async function executeRun(
         });
       }
     } catch (error: unknown) {
+      console.error('[UatRunner] Test case execution error:', error);
       failed++;
       // Collect error -- don't stop
       const err = error instanceof Error ? error : new Error('Erreur inconnue');

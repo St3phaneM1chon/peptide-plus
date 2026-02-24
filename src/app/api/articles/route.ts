@@ -85,7 +85,8 @@ export async function GET(request: NextRequest) {
       if (a.tags) {
         try {
           parsedTags = JSON.parse(a.tags);
-        } catch {
+        } catch (error) {
+          console.error('[Articles] Failed to parse article tags as JSON:', error);
           parsedTags = a.tags.split(',').map(t => t.trim());
         }
       }

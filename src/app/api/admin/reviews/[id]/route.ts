@@ -123,8 +123,10 @@ export const DELETE = withAdminGuard(async (request: NextRequest, { session, par
     if (existing.images?.length) {
       try {
         const { storage } = await import('@/lib/storage');
-        await Promise.all(existing.images.map((img) => storage.delete(img.url).catch(() => {})));
-      } catch { /* Storage cleanup is best-effort */ }
+        await Promise.all(existing.images.map((img) => storage.delete(img.url).catch((error: unknown) => { console.error('[AdminReviews] Non-blocking review image deletion failed:', img.url, error); })));
+      } catch (error) {
+        console.error('[AdminReviews] Storage cleanup for review images failed (best-effort):', error);
+      }
     }
 
     await prisma.review.delete({ where: { id } });

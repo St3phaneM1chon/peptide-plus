@@ -43,7 +43,8 @@ async function getRedisRecord(key: string): Promise<{ attempts: number; firstAtt
     const data = await redis.get(`${REDIS_KEY_PREFIX}${key}`);
     if (!data) return null;
     return JSON.parse(data);
-  } catch {
+  } catch (error) {
+    console.error('[BruteForceProtection] Redis get record failed:', error);
     return null;
   }
 }
@@ -54,7 +55,8 @@ async function setRedisRecord(key: string, record: { attempts: number; firstAtte
     if (!redis) return false;
     await redis.set(`${REDIS_KEY_PREFIX}${key}`, JSON.stringify(record), 'EX', REDIS_TTL_SECONDS);
     return true;
-  } catch {
+  } catch (error) {
+    console.error('[BruteForceProtection] Redis set record failed:', error);
     return false;
   }
 }
@@ -63,7 +65,9 @@ async function deleteRedisRecord(key: string): Promise<void> {
   try {
     const redis = await getRedisClient();
     if (redis) await redis.del(`${REDIS_KEY_PREFIX}${key}`);
-  } catch { /* ignore */ }
+  } catch (error) {
+    console.error('[BruteForceProtection] Redis delete record failed:', error);
+  }
 }
 
 /**

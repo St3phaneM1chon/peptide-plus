@@ -645,7 +645,12 @@ export async function POST(request: NextRequest) {
             },
           },
     };
-    const checkoutSession = await getStripe().checkout.sessions.create(checkoutParams);
+    // BE-PAY-05 / payment-06: Pass idempotencyKey to Stripe to prevent duplicate charges
+    const stripeOptions: Stripe.RequestOptions = {};
+    if (idempotencyKey) {
+      stripeOptions.idempotencyKey = idempotencyKey;
+    }
+    const checkoutSession = await getStripe().checkout.sessions.create(checkoutParams, stripeOptions);
 
     return NextResponse.json({
       sessionId: checkoutSession.id,

@@ -45,7 +45,8 @@ export function sanitizeUrl(url: string): string | null {
     }
 
     return parsed.toString();
-  } catch {
+  } catch (error) {
+    console.error('[Sanitize] URL validation/parsing failed:', error);
     return null;
   }
 }

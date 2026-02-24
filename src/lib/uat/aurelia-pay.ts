@@ -369,6 +369,7 @@ export async function simulateAureliaPay(params: {
 
     return { orderId: order.id, orderNumber: order.orderNumber, success: true };
   } catch (error: unknown) {
+    console.error('[AureliaPay] Simulation error:', error);
     // Log the error to the test case
     const err = error instanceof Error ? error : new Error('Erreur inconnue');
     await prisma.uatTestError.create({
@@ -409,6 +410,7 @@ export async function executePostActions(params: {
         await executeReship(orderId, testCaseId);
       }
     } catch (error: unknown) {
+      console.error(`[AureliaPay] Post-action '${action}' failed for order ${orderId}:`, error);
       const err = error instanceof Error ? error : new Error(`Post-action ${action} echouee`);
       await prisma.uatTestError.create({
         data: {
@@ -644,8 +646,9 @@ async function executeReship(orderId: string, _testCaseId: string): Promise<void
   // Generate COGS for replacement
   try {
     await generateCOGSEntry(replacementOrder.id);
-  } catch (_) {
+  } catch (error) {
     // Non-blocking — COGS may be 0 if WAC is 0
+    console.error('[AureliaPay] COGS generation for replacement order failed:', error);
   }
 
   // Update original order

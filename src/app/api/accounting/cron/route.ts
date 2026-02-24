@@ -43,7 +43,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       const a = Buffer.from(cronSecret, 'utf8');
       const b = Buffer.from(providedSecret, 'utf8');
       secretsMatch = a.length === b.length && timingSafeEqual(a, b);
-    } catch {
+    } catch (error) {
+      console.error('[Cron] Secret comparison failed:', error);
       secretsMatch = false;
     }
   }

@@ -313,7 +313,8 @@ export function isValidUrl(url: string, allowedProtocols: string[] = ['http', 'h
   try {
     const parsed = new URL(url);
     return allowedProtocols.includes(parsed.protocol.replace(':', ''));
-  } catch {
+  } catch (error) {
+    console.error('[Validation] Invalid URL format:', error);
     return false;
   }
 }

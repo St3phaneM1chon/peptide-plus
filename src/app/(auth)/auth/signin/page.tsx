@@ -94,14 +94,16 @@ function SignInContent() {
             router.push('/admin');
             return;
           }
-        } catch {
-          // Session check failed - fall through to default redirect
+        } catch (error) {
+          console.error('Session check after sign-in failed:', error instanceof Error ? error.message : error);
+          // Fall through to default redirect
         }
         router.push('/');
       } else {
         router.push(callbackUrl);
       }
-    } catch {
+    } catch (error) {
+      console.error('Credentials sign-in failed:', error instanceof Error ? error.message : error);
       setFormError(t('auth.errorGeneric'));
       setIsLoading(false);
     }

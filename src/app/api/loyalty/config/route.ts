@@ -39,8 +39,8 @@ export async function GET() {
           birthdayBonus: parsed.birthdayBonus ?? config.birthdayBonus,
           reviewBonus: parsed.reviewBonus ?? config.reviewBonus,
         };
-      } catch {
-        // JSON parse failed, use defaults
+      } catch (error) {
+        console.error('[LoyaltyConfig] JSON parse of loyalty config failed, using defaults:', error);
       }
     } else {
       // Fallback: try SiteSettings.rewardTiers
@@ -59,8 +59,8 @@ export async function GET() {
             reviewBonus: parsed.reviewBonus ?? config.reviewBonus,
           };
         }
-      } catch {
-        // Non-critical fallback, use defaults
+      } catch (error) {
+        console.error('[LoyaltyConfig] SiteSettings rewardTiers parse failed, using defaults:', error);
       }
     }
 

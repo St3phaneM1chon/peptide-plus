@@ -10,6 +10,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { TAX_RATES } from '@/lib/accounting/types';
 import { logger } from '@/lib/logger';
 import { z } from 'zod';
 
@@ -169,14 +170,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       currency,
     } = parsed.data;
 
-    // Generate PO number: PO-YYYY-NNNN
-    const year = new Date().getFullYear();
-    const count = await prisma.purchaseOrder.count({
-      where: { poNumber: { startsWith: `PO-${year}-` } },
-    });
-    const poNumber = `PO-${year}-${String(count + 1).padStart(4, '0')}`;
-
-    // Calculate totals
+    // Calculate totals (pure computation, no DB needed)
     let subtotal = 0;
     const processedItems = items.map((item: Record<string, unknown>) => {
       const qty = Number(item.quantity);
@@ -196,31 +190,42 @@ export const POST = withAdminGuard(async (request, { session }) => {
     });
 
     subtotal = Math.round(subtotal * 100) / 100;
-    const taxTps = Math.round(subtotal * 0.05 * 100) / 100;
-    const taxTvq = Math.round(subtotal * 0.09975 * 100) / 100;
+    const taxTps = Math.round(subtotal * TAX_RATES.QC.TPS * 100) / 100;
+    const taxTvq = Math.round(subtotal * TAX_RATES.QC.TVQ * 100) / 100;
     const total = Math.round((subtotal + taxTps + taxTvq) * 100) / 100;
 
-    const po = await prisma.purchaseOrder.create({
-      data: {
-        id: crypto.randomUUID(),
-        poNumber,
-        supplierId: supplierId || null,
-        supplierName,
-        supplierEmail: supplierEmail || null,
-        department,
-        status: 'DRAFT',
-        requestedBy: session!.user.id,
-        subtotal,
-        taxTps,
-        taxTvq,
-        total,
-        currency,
-        notes: notes || null,
-        items: {
-          create: processedItems,
+    // Wrap PO number generation + creation in a transaction to prevent
+    // race conditions (duplicate PO numbers from concurrent requests)
+    const po = await prisma.$transaction(async (tx) => {
+      // Generate PO number: PO-YYYY-NNNN (inside transaction for atomicity)
+      const year = new Date().getFullYear();
+      const count = await tx.purchaseOrder.count({
+        where: { poNumber: { startsWith: `PO-${year}-` } },
+      });
+      const poNumber = `PO-${year}-${String(count + 1).padStart(4, '0')}`;
+
+      return tx.purchaseOrder.create({
+        data: {
+          id: crypto.randomUUID(),
+          poNumber,
+          supplierId: supplierId || null,
+          supplierName,
+          supplierEmail: supplierEmail || null,
+          department,
+          status: 'DRAFT',
+          requestedBy: session!.user.id,
+          subtotal,
+          taxTps,
+          taxTvq,
+          total,
+          currency,
+          notes: notes || null,
+          items: {
+            create: processedItems,
+          },
         },
-      },
-      include: { items: true },
+        include: { items: true },
+      });
     });
 
     logAdminAction({
@@ -228,7 +233,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       action: 'CREATE_PURCHASE_ORDER',
       targetType: 'PurchaseOrder',
       targetId: po.id,
-      newValue: { poNumber, supplierName, department, itemCount: processedItems.length, total },
+      newValue: { poNumber: po.poNumber, supplierName, department, itemCount: processedItems.length, total },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
     }).catch(() => {});

@@ -324,8 +324,8 @@ export async function translateEntity(
           translatedFields.customSections = JSON.stringify(result);
         }
       }
-    } catch {
-      // Skip customSections translation on parse error
+    } catch (error) {
+      console.error('[AutoTranslate] Failed to parse/translate customSections:', error);
     }
   }
 

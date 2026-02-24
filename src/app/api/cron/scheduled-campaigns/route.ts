@@ -72,7 +72,8 @@ export async function GET(request: NextRequest) {
           let query: Record<string, unknown>;
           try {
             query = JSON.parse(campaign.segmentQuery);
-          } catch {
+          } catch (error) {
+            console.error('[ScheduledCampaigns] Failed to parse segmentQuery JSON for campaign:', campaign.id, error);
             await prisma.emailCampaign.update({ where: { id: campaign.id }, data: { status: 'FAILED' } });
             results.push({ id: campaign.id, name: campaign.name, success: false, error: 'Invalid segmentQuery' });
             continue;
@@ -210,7 +211,8 @@ export async function GET(request: NextRequest) {
               },
             });
             sent++;
-          } catch {
+          } catch (error) {
+            console.error('[ScheduledCampaigns] Failed to send email for campaign:', campaign.id, error);
             failed++;
           }
         }
@@ -236,6 +238,7 @@ export async function GET(request: NextRequest) {
 
         results.push({ id: campaign.id, name: campaign.name, success: true, sent, failed });
       } catch (err) {
+        console.error('[ScheduledCampaigns] Campaign processing failed:', campaign.id, err);
         results.push({
           id: campaign.id,
           name: campaign.name,
@@ -245,7 +248,7 @@ export async function GET(request: NextRequest) {
         await prisma.emailCampaign.update({
           where: { id: campaign.id },
           data: { status: 'FAILED' },
-        }).catch(() => {});
+        }).catch((error: unknown) => { console.error('[ScheduledCampaigns] Non-blocking campaign status update to FAILED failed:', error); });
       }
     }
 

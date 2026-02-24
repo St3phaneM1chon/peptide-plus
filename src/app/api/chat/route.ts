@@ -16,6 +16,7 @@ import { validateCsrf } from '@/lib/csrf-middleware';
 import { stripHtml, stripControlChars } from '@/lib/sanitize';
 import { v4 as uuidv4 } from 'uuid';
 import { logger } from '@/lib/logger';
+import { z } from 'zod';
 
 // GET - Liste des conversations (admin only)
 export async function GET(request: NextRequest) {
@@ -90,7 +91,34 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const body = await request.json();
+    // INPUT-01 FIX: Zod validation for chat conversation creation body
+    const chatConversationSchema = z.object({
+      visitorId: z.string().max(100).optional(),
+      visitorName: z.string().max(200).optional().nullable(),
+      visitorEmail: z.string().email().max(255).optional().nullable(),
+      visitorLanguage: z.string().max(10).optional(),
+      currentPage: z.string().max(500).optional().nullable(),
+      userAgent: z.string().max(500).optional().nullable(),
+    });
+
+    let body: z.infer<typeof chatConversationSchema>;
+    try {
+      const rawBody = await request.json();
+      const parsed = chatConversationSchema.safeParse(rawBody);
+      if (!parsed.success) {
+        return NextResponse.json(
+          { error: 'Invalid conversation data', details: parsed.error.errors },
+          { status: 400 }
+        );
+      }
+      body = parsed.data;
+    } catch {
+      return NextResponse.json(
+        { error: 'Invalid JSON body' },
+        { status: 400 }
+      );
+    }
+
     const { visitorId, visitorName, visitorEmail, visitorLanguage, currentPage, userAgent } = body;
 
     // Vérifier si l'utilisateur est connecté

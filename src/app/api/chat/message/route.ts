@@ -15,6 +15,7 @@ import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { validateCsrf } from '@/lib/csrf-middleware';
 import { stripHtml, stripControlChars } from '@/lib/sanitize';
 import { logger } from '@/lib/logger';
+import { z } from 'zod';
 
 export async function POST(request: NextRequest) {
   try {
@@ -44,23 +45,45 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const body = await request.json();
+    // INPUT-01 FIX: Zod validation for chat message body
+    const chatMessageSchema = z.object({
+      conversationId: z.string().min(1, 'conversationId is required'),
+      content: z.string().min(1, 'content is required').max(5000, 'Message too long (max 5000 characters)'),
+      sender: z.enum(['VISITOR', 'ADMIN']),
+      visitorId: z.string().optional(),
+      type: z.enum(['TEXT', 'IMAGE', 'FILE']).optional().default('TEXT'),
+      attachmentUrl: z.string().url().optional().nullable(),
+      attachmentName: z.string().max(500).optional().nullable(),
+      attachmentSize: z.union([z.number(), z.string()]).optional().nullable(),
+    });
+
+    let body: z.infer<typeof chatMessageSchema>;
+    try {
+      const rawBody = await request.json();
+      const parsed = chatMessageSchema.safeParse(rawBody);
+      if (!parsed.success) {
+        return NextResponse.json(
+          { error: 'Invalid message data', details: parsed.error.errors },
+          { status: 400 }
+        );
+      }
+      body = parsed.data;
+    } catch {
+      return NextResponse.json(
+        { error: 'Invalid JSON body' },
+        { status: 400 }
+      );
+    }
+
     const { conversationId, content: rawContent, sender, visitorId } = body;
 
     // Image/file attachment fields
-    // FIX F-068: Validate messageType against allowed enum
-    const validMessageTypes = ['TEXT', 'IMAGE', 'FILE'];
-    const rawMessageType = body.type || 'TEXT';
-    const messageType = validMessageTypes.includes(rawMessageType) ? rawMessageType : 'TEXT';
-    // FIX F-020: Validate attachmentUrl
-    const rawAttachmentUrl = body.attachmentUrl || null;
-    const attachmentUrl = rawAttachmentUrl && typeof rawAttachmentUrl === 'string' && (rawAttachmentUrl.startsWith('http://') || rawAttachmentUrl.startsWith('https://')) ? rawAttachmentUrl : null;
+    // FIX F-068: messageType validated by Zod schema above
+    const messageType = body.type || 'TEXT';
+    // FIX F-020: attachmentUrl validated by Zod .url() above
+    const attachmentUrl = body.attachmentUrl || null;
     const attachmentName = body.attachmentName || null;
     const attachmentSize = body.attachmentSize ? parseInt(String(body.attachmentSize)) : null;
-
-    if (!conversationId || !rawContent) {
-      return NextResponse.json({ error: 'conversationId and content required' }, { status: 400 });
-    }
 
     // BE-SEC-03: Strip HTML from chat messages to prevent stored XSS
     // BE-SEC-05: Enforce max length on chat messages (5000 chars)

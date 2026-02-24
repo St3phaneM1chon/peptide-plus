@@ -135,7 +135,8 @@ export const imageUrlSchema = z
         return ALLOWED_IMAGE_DOMAINS.some(
           (d) => hostname === d || hostname.endsWith(`.${d}`)
         );
-      } catch {
+      } catch (error) {
+        console.error('[SharedValidation] Image URL validation failed:', error);
         return false;
       }
     },

@@ -70,7 +70,8 @@ export async function validateBodySize(
     }
     const data = JSON.parse(text);
     return { data };
-  } catch {
+  } catch (error) {
+    console.error('[ApiHandler] Failed to parse JSON request body:', error);
     return {
       error: NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 }),
     };

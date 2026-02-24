@@ -86,7 +86,8 @@ export const GET = withAdminGuard(async (_request: NextRequest, { params }) => {
     if (webinar.tags) {
       try {
         parsedTags = JSON.parse(webinar.tags);
-      } catch {
+      } catch (error) {
+        console.error('[AdminWebinarById] Failed to parse webinar tags as JSON:', error);
         parsedTags = webinar.tags.split(',').map(t => t.trim());
       }
     }

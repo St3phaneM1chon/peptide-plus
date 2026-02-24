@@ -211,7 +211,8 @@ export function sanitizeUrl(url: string): string | null {
     }
     
     return parsed.href;
-  } catch {
+  } catch (error) {
+    console.error('[Security] URL validation failed:', error);
     return null;
   }
 }

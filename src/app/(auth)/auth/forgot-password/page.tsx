@@ -37,7 +37,8 @@ export default function ForgotPasswordPage() {
       }
 
       setIsSubmitted(true);
-    } catch {
+    } catch (error) {
+      console.error('Forgot password request failed:', error instanceof Error ? error.message : error);
       setError(t('auth.errorNetworkGeneric'));
     } finally {
       setIsLoading(false);

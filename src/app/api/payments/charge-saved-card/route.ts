@@ -23,6 +23,7 @@ import { getOrCreateStripeCustomer } from '@/lib/stripe';
 import { calculateTaxAmount } from '@/lib/tax-rates';
 import { STRIPE_API_VERSION } from '@/lib/stripe';
 import { validateCsrf } from '@/lib/csrf-middleware';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
 
 const chargeSavedCardSchema = z.object({
   cardId: z.string().min(1, 'Card ID is required'),
@@ -48,6 +49,17 @@ function getStripeClient(): Stripe {
 
 export async function POST(request: NextRequest) {
   try {
+    // SECURITY: Rate limiting on saved card payment
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip')
+      || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/payments/charge-saved-card');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+
     // SECURITY: CSRF protection for payment mutation endpoint
     const csrfValid = await validateCsrf(request);
     if (!csrfValid) {
@@ -140,23 +152,31 @@ export async function POST(request: NextRequest) {
     const stripe = getStripeClient();
 
     // Create and confirm PaymentIntent in one call using the saved payment method
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: total,
-      currency: 'cad',
-      customer: stripeCustomerId,
-      payment_method: savedCard.stripePaymentMethodId,
-      confirm: true,
-      automatic_payment_methods: {
-        enabled: true,
-        allow_redirects: 'never',
+    // payment-06: Pass idempotencyKey to Stripe to prevent duplicate charges on retries
+    const stripeCreateOptions: Stripe.RequestOptions = {};
+    if (idempotencyKey) {
+      stripeCreateOptions.idempotencyKey = idempotencyKey;
+    }
+    const paymentIntent = await stripe.paymentIntents.create(
+      {
+        amount: total,
+        currency: 'cad',
+        customer: stripeCustomerId,
+        payment_method: savedCard.stripePaymentMethodId,
+        confirm: true,
+        automatic_payment_methods: {
+          enabled: true,
+          allow_redirects: 'never',
+        },
+        metadata: {
+          userId: session.user.id,
+          productId,
+          companyId: companyId || '',
+          savedCardId: cardId,
+        },
       },
-      metadata: {
-        userId: session.user.id,
-        productId,
-        companyId: companyId || '',
-        savedCardId: cardId,
-      },
-    });
+      stripeCreateOptions
+    );
 
     const isSucceeded = paymentIntent.status === 'succeeded';
 

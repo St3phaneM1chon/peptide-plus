@@ -137,7 +137,8 @@ export default async function BlogPage() {
   let locale: string;
   try {
     locale = await getServerLocale();
-  } catch {
+  } catch (error) {
+    console.error('Failed to get server locale, falling back to "en":', error instanceof Error ? error.message : error);
     locale = 'en';
   }
 

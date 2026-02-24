@@ -65,6 +65,7 @@ async function runTask(
       details,
     };
   } catch (error) {
+    console.error('[Scheduler] Task execution failed:', name, error);
     return {
       task: name,
       success: false,

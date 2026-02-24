@@ -86,7 +86,8 @@ async function isDuplicateInRedis(eventId: string): Promise<boolean> {
     const key = `webhook:dedup:${eventId}`;
     const exists = await redis.get(key);
     return exists !== null;
-  } catch {
+  } catch (error) {
+    console.error('[Webhook] Redis duplicate check failed, falling through:', error);
     return false;
   }
 }
@@ -99,8 +100,8 @@ async function markEventInRedis(eventId: string): Promise<void> {
     const key = `webhook:dedup:${eventId}`;
     // Store with 1-hour TTL
     await redis.set(key, '1', 'EX', 3600);
-  } catch {
-    // Silently fail -- in-memory dedup is the primary layer
+  } catch (error) {
+    console.error('[Webhook] Redis mark event failed (in-memory dedup is primary):', error);
   }
 }
 
@@ -118,8 +119,8 @@ async function storeRawPayload(eventId: string, rawBody: string): Promise<void> 
       where: { eventId },
       data: { payload: rawBody.slice(0, 50000) }, // Truncate for safety
     });
-  } catch {
-    // Non-critical -- don't fail the webhook
+  } catch (error) {
+    console.error('[Webhook] Raw payload storage failed (non-critical):', eventId, error);
   }
 }
 
@@ -771,8 +772,8 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
           logger.error('[AutomationEngine] Failed to handle order.created', { error: String(err) });
         });
       }
-    } catch {
-      // Don't fail the webhook for automation errors
+    } catch (error) {
+      console.error('[Webhook] Automation engine trigger failed (non-blocking):', error);
     }
   }
 

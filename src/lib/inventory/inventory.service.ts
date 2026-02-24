@@ -5,6 +5,7 @@
 
 import { prisma } from '@/lib/db';
 import { ACCOUNT_CODES } from '@/lib/accounting/types';
+import { assertJournalBalance, assertPeriodOpen } from '@/lib/accounting/validation';
 import { logger } from '@/lib/logger';
 
 /**
@@ -321,6 +322,9 @@ export async function generateCOGSEntry(orderId: string): Promise<string | null>
 
   if (!order) return null;
 
+  // Ensure the accounting period for the order date is open
+  await assertPeriodOpen(order.createdAt);
+
   // Get account IDs
   const cogsAccount = await prisma.chartOfAccount.findUnique({
     where: { code: ACCOUNT_CODES.PURCHASES },
@@ -343,6 +347,22 @@ export async function generateCOGSEntry(orderId: string): Promise<string | null>
   });
   const entryNumber = `JV-${year}-${String(count + 1).padStart(4, '0')}`;
 
+  const cogsLines = [
+    {
+      accountId: cogsAccount.id,
+      description: `Coût des marchandises vendues ${order.orderNumber}`,
+      debit: totalCOGS,
+      credit: 0,
+    },
+    {
+      accountId: stockAccount.id,
+      description: `Sortie de stock ${order.orderNumber}`,
+      debit: 0,
+      credit: totalCOGS,
+    },
+  ];
+  assertJournalBalance(cogsLines, `COGS ${order.orderNumber}`);
+
   const entry = await prisma.journalEntry.create({
     data: {
       entryNumber,
@@ -355,22 +375,7 @@ export async function generateCOGSEntry(orderId: string): Promise<string | null>
       createdBy: 'system',
       postedBy: 'system',
       postedAt: new Date(),
-      lines: {
-        create: [
-          {
-            accountId: cogsAccount.id,
-            description: `Coût des marchandises vendues ${order.orderNumber}`,
-            debit: totalCOGS,
-            credit: 0,
-          },
-          {
-            accountId: stockAccount.id,
-            description: `Sortie de stock ${order.orderNumber}`,
-            debit: 0,
-            credit: totalCOGS,
-          },
-        ],
-      },
+      lines: { create: cogsLines },
     },
   });
 

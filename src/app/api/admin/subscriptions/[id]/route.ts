@@ -48,8 +48,8 @@ export const GET = withAdminGuard(async (_request, { params }) => {
         where: { id: subscription.productId },
         select: { id: true, name: true, slug: true, imageUrl: true },
       });
-    } catch {
-      // Product may have been deleted
+    } catch (error) {
+      console.error('[AdminSubscriptions] Failed to fetch product (may have been deleted):', subscription.productId, error);
     }
 
     // Get format info if format still exists
@@ -60,8 +60,8 @@ export const GET = withAdminGuard(async (_request, { params }) => {
           where: { id: subscription.formatId },
           select: { id: true, name: true, formatType: true, price: true },
         });
-      } catch {
-        // Format may have been deleted
+      } catch (error) {
+        console.error('[AdminSubscriptions] Failed to fetch format (may have been deleted):', subscription.formatId, error);
       }
     }
 

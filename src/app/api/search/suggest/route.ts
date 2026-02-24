@@ -50,8 +50,8 @@ export async function GET(request: NextRequest) {
               "purchaseCount" DESC
             LIMIT 5`;
           return results;
-        } catch {
-          // Fallback to ILIKE if pg_trgm is not available
+        } catch (error) {
+          console.error('[SearchSuggest] pg_trgm query failed, falling back to ILIKE:', error);
           const results = await prisma.product.findMany({
             where: {
               isActive: true,

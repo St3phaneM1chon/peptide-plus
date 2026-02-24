@@ -365,10 +365,10 @@ async function sendViaSMTP(options: SendEmailOptions): Promise<EmailResult> {
     return logEmail(options);
   }
 
-  // Use eval('require') to prevent webpack from bundling nodemailer at build time.
+  // SECURITY FIX: Use dynamic import instead of eval('require') to prevent
+  // webpack from bundling nodemailer at build time while avoiding eval().
   // nodemailer is only needed at runtime when SMTP provider is selected.
-  // eslint-disable-next-line no-eval
-  const nodemailer = eval('require')('nodemailer') as typeof import('nodemailer');
+  const nodemailer = await import('nodemailer');
 
   // Reuse transporter if config hasn't changed
   const configKey = `${host}:${port}:${user}`;

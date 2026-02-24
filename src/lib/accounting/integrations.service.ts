@@ -167,6 +167,7 @@ export async function exportToQuickBooks(
 
       result.exported++;
     } catch (error: unknown) {
+      console.error('[Integrations] QBO export failed for entry:', entry.entryNumber, error);
       result.failed++;
       result.errors.push({
         entryNumber: entry.entryNumber,

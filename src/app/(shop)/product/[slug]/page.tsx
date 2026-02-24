@@ -21,8 +21,9 @@ export async function generateStaticParams() {
       select: { slug: true },
     });
     return products.map((p) => ({ slug: p.slug }));
-  } catch {
+  } catch (error) {
     // DB unavailable during build - pages will be generated on first request via ISR
+    console.warn('[generateStaticParams] DB unavailable during build for product pages, will use ISR:', error);
     return [];
   }
 }

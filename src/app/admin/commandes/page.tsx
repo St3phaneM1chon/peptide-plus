@@ -380,7 +380,8 @@ export default function OrdersPage() {
       setShowRefundModal(false);
       await fetchOrders();
       await fetchOrderDetail(selectedOrder.id);
-    } catch {
+    } catch (error) {
+      console.error('[OrdersPage] Refund request failed:', error);
       setRefundError(t('admin.commandes.networkError'));
     } finally {
       setRefunding(false);
@@ -1029,7 +1030,7 @@ ${selectedOrder.adminNotes ? `<div class="notes"><strong>${t('admin.commandes.pr
                             setSelectedOrder({ ...selectedOrder, adminNotes: val });
                             toast.success(t('admin.commandes.notesSaved'));
                           }
-                        } catch { /* silent - notes are non-critical */ }
+                        } catch (error) { console.warn('[OrdersPage] Failed to save admin notes:', error); }
                       }}
                     />
                   </FormField>

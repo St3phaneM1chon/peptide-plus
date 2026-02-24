@@ -221,8 +221,8 @@ async function dequeueOne(queueKey: string): Promise<Job | null> {
         if (raw) return JSON.parse(raw) as Job;
         return null;
       }
-    } catch {
-      // Fall through to memory
+    } catch (error) {
+      console.error('[JobQueue] Redis dequeue failed, falling through to memory:', error);
     }
   }
 
@@ -240,8 +240,8 @@ async function requeueJob(queueKey: string, job: Job): Promise<void> {
         await redis.lpush(queueKey, JSON.stringify(job));
         return;
       }
-    } catch {
-      // Fall through
+    } catch (error) {
+      console.error('[JobQueue] Redis requeue failed, falling through to memory:', error);
     }
   }
 
@@ -259,11 +259,11 @@ async function moveToDLQ(jobType: string, job: Job): Promise<void> {
       const redis = await getRedisClient();
       if (redis) {
         await redis.lpush(dlqKey, JSON.stringify(job));
-        await redis.hincrby(STATS_KEY, `dlq:${jobType}`, 1).catch(() => {});
+        await redis.hincrby(STATS_KEY, `dlq:${jobType}`, 1).catch((error: unknown) => { console.error('[JobQueue] DLQ stats increment failed:', error); });
         return;
       }
-    } catch {
-      // Fall through
+    } catch (error) {
+      console.error('[JobQueue] Redis DLQ push failed, falling through to memory:', error);
     }
   }
 
@@ -291,8 +291,8 @@ export async function getQueueStats(): Promise<Record<string, unknown>> {
           backend: 'redis',
         };
       }
-    } catch {
-      // Fall through
+    } catch (error) {
+      console.error('[JobQueue] Redis stats retrieval failed, falling through to memory:', error);
     }
   }
 
@@ -335,8 +335,8 @@ export async function getQueueLength(jobType: string): Promise<number> {
           total += await redis.llen(queueKey);
           continue;
         }
-      } catch {
-        // Fall through
+      } catch (error) {
+        console.error('[JobQueue] Redis queue length check failed, falling through:', error);
       }
     }
 

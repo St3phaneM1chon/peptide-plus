@@ -12,6 +12,7 @@ import { sendEmail } from '@/lib/email/email-service';
 import { escapeHtml } from '@/lib/security';
 import { logger } from '@/lib/logger';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
 import { stripHtml, stripControlChars } from '@/lib/sanitize';
 import { apiSuccess, apiError, validateContentType } from '@/lib/api-response';
 import { ErrorCode } from '@/lib/error-codes';
@@ -31,6 +32,12 @@ export async function POST(request: NextRequest) {
     const rl = await rateLimitMiddleware(ip, '/api/contact');
     if (!rl.success) {
       return apiError(rl.error!.message, ErrorCode.RATE_LIMITED, { status: 429, request, headers: rl.headers });
+    }
+
+    // CSRF validation
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return apiError('Invalid CSRF token', ErrorCode.VALIDATION_ERROR, { status: 403, request });
     }
 
     const rawBody = await request.json();

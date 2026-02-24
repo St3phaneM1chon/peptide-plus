@@ -12,6 +12,7 @@ import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { TAX_RATES } from '@/lib/accounting/types';
 import { logger } from '@/lib/logger';
 
 const purchaseOrderItemSchema = z.object({
@@ -338,8 +339,8 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
 
       // Recalculate totals
       subtotal = Math.round(subtotal * 100) / 100;
-      const taxTps = Math.round(subtotal * 0.05 * 100) / 100;
-      const taxTvq = Math.round(subtotal * 0.09975 * 100) / 100;
+      const taxTps = Math.round(subtotal * TAX_RATES.QC.TPS * 100) / 100;
+      const taxTvq = Math.round(subtotal * TAX_RATES.QC.TVQ * 100) / 100;
       const total = Math.round((subtotal + taxTps + taxTvq) * 100) / 100;
 
       updateData.subtotal = subtotal;

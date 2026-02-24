@@ -46,7 +46,8 @@ async function getFaqs() {
       select: { id: true, question: true, answer: true, category: true, sortOrder: true },
     });
     return faqs;
-  } catch {
+  } catch (error) {
+    console.warn('ISR build fallback: DB unavailable for getFaqs:', error);
     return [];
   }
 }

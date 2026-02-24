@@ -7,10 +7,56 @@ import { rpID, origin } from '@/lib/webauthn';
 import { cookies } from 'next/headers';
 import jwt from 'jsonwebtoken';
 import { logger } from '@/lib/logger';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { z } from 'zod';
 
 export async function POST(request: NextRequest) {
   try {
-    const credential = await request.json();
+    // SECURITY: Rate limit WebAuthn authentication verification attempts
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/auth/login');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+
+    // INPUT-01 FIX: Zod validation for WebAuthn authentication credential
+    // Note: We use passthrough() because the WebAuthn library expects its own
+    // AuthenticationResponseJSON type with specific union fields like
+    // authenticatorAttachment. We validate the required structure but let
+    // additional/typed fields pass through to the library for deep validation.
+    const webAuthnAuthSchema = z.object({
+      id: z.string().min(1),
+      rawId: z.string().min(1),
+      type: z.literal('public-key'),
+      response: z.object({
+        authenticatorData: z.string().min(1),
+        clientDataJSON: z.string().min(1),
+        signature: z.string().min(1),
+        userHandle: z.string().optional(),
+      }).passthrough(),
+    }).passthrough();
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- WebAuthn library needs its own AuthenticationResponseJSON type
+    let credential: any;
+    try {
+      const body = await request.json();
+      const parsed = webAuthnAuthSchema.safeParse(body);
+      if (!parsed.success) {
+        return NextResponse.json(
+          { error: 'Invalid credential data', details: parsed.error.errors },
+          { status: 400 }
+        );
+      }
+      credential = body; // Pass original body to preserve library-compatible types
+    } catch {
+      return NextResponse.json(
+        { error: 'Invalid JSON body' },
+        { status: 400 }
+      );
+    }
 
     // Get challenge from cookie
     const cookieStore = await cookies();

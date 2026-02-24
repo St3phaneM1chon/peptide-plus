@@ -60,38 +60,44 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
       });
     }
 
-    // Get current WAC for the inventory transaction
-    const lastTransaction = await prisma.inventoryTransaction.findFirst({
-      where: {
-        productId: format.productId,
-        formatId: format.id,
-      },
-      orderBy: { createdAt: 'desc' },
-      select: { runningWAC: true },
-    });
-    const wac = lastTransaction ? Number(lastTransaction.runningWAC) : 0;
+    // Wrap stock update + inventory transaction in a single DB transaction
+    // to prevent race conditions (concurrent stock adjustments)
+    const { updatedFormat } = await prisma.$transaction(async (tx) => {
+      // Get current WAC for the inventory transaction
+      const lastTransaction = await tx.inventoryTransaction.findFirst({
+        where: {
+          productId: format.productId,
+          formatId: format.id,
+        },
+        orderBy: { createdAt: 'desc' },
+        select: { runningWAC: true },
+      });
+      const wac = lastTransaction ? Number(lastTransaction.runningWAC) : 0;
 
-    // Update the stock quantity
-    const updatedFormat = await prisma.productFormat.update({
-      where: { id: formatId },
-      data: {
-        stockQuantity,
-        availability: stockQuantity === 0 ? 'OUT_OF_STOCK' : 'IN_STOCK',
-      },
-    });
+      // Update the stock quantity
+      const updatedFmt = await tx.productFormat.update({
+        where: { id: formatId },
+        data: {
+          stockQuantity,
+          availability: stockQuantity === 0 ? 'OUT_OF_STOCK' : 'IN_STOCK',
+        },
+      });
 
-    // Create inventory transaction record
-    await prisma.inventoryTransaction.create({
-      data: {
-        productId: format.productId,
-        formatId: format.id,
-        type: 'ADJUSTMENT',
-        quantity: adjustment,
-        unitCost: wac,
-        runningWAC: wac,
-        reason: reason,
-        createdBy: session.user.id,
-      },
+      // Create inventory transaction record
+      await tx.inventoryTransaction.create({
+        data: {
+          productId: format.productId,
+          formatId: format.id,
+          type: 'ADJUSTMENT',
+          quantity: adjustment,
+          unitCost: wac,
+          runningWAC: wac,
+          reason: reason,
+          createdBy: session.user.id,
+        },
+      });
+
+      return { updatedFormat: updatedFmt };
     });
 
     logAdminAction({

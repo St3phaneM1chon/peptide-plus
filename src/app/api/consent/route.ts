@@ -101,8 +101,8 @@ async function loadConsent(key: string): Promise<ConsentRecord | null> {
         const raw = await redis.get(`${REDIS_PREFIX}${key}`);
         if (raw) return JSON.parse(raw);
       }
-    } catch {
-      // Fall through
+    } catch (error) {
+      console.error('[Consent] Redis load consent failed, falling through to memory:', error);
     }
   }
 
@@ -121,8 +121,8 @@ async function saveConsent(key: string, record: ConsentRecord): Promise<void> {
         await redis.set(`${REDIS_PREFIX}${key}`, serialized, 'EX', CONSENT_TTL_SECONDS);
         return;
       }
-    } catch {
-      // Fall through
+    } catch (error) {
+      console.error('[Consent] Redis save consent failed, falling through to memory:', error);
     }
   }
 

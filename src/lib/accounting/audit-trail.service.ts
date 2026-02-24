@@ -255,8 +255,8 @@ export async function getAuditHistory(
       for (const user of users) {
         userMap.set(user.id, user.name || user.email || 'Utilisateur');
       }
-    } catch {
-      // If user table query fails, fall back to generic name
+    } catch (error) {
+      console.error('[AuditTrail] Failed to fetch user names for audit log enrichment:', error);
     }
   }
 
@@ -344,8 +344,8 @@ export async function generateAuditReport(
       for (const user of users) {
         reportUserMap.set(user.id, user.name || user.email || 'Utilisateur');
       }
-    } catch {
-      // Fallback silently
+    } catch (error) {
+      console.error('[AuditTrail] Failed to fetch user names for report enrichment:', error);
     }
   }
 

@@ -213,12 +213,14 @@ export async function GET(request: NextRequest) {
                   where: { id: user.id },
                   data: { referralCode },
                 });
-              } catch {
+              } catch (error) {
+                console.error('[WelcomeSeries] Failed to update referral code for user, retrying:', user.id, error);
                 referralCode = `REF${crypto.randomBytes(6).toString('hex').toUpperCase()}`;
                 await db.user.update({
                   where: { id: user.id },
                   data: { referralCode },
-                }).catch(() => {
+                }).catch((retryError: unknown) => {
+                  console.error('[WelcomeSeries] Retry referral code update also failed:', user.id, retryError);
                   referralCode = '';
                 });
               }

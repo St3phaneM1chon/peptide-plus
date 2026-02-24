@@ -90,8 +90,8 @@ export function trackCronExecution(jobName: string): {
             await redis.expire(statsKey, 7 * 24 * 60 * 60); // 7 days
             return;
           }
-        } catch {
-          // Fall through to memory
+        } catch (error) {
+          console.error('[CronMonitor] Redis stats recording failed, falling through to memory:', error);
         }
       }
 
@@ -151,8 +151,8 @@ export async function getCronJobStats(jobName: string): Promise<CronJobStats> {
           };
         }
       }
-    } catch {
-      // Fall through
+    } catch (error) {
+      console.error('[CronMonitor] Redis stats retrieval failed, falling through to memory:', error);
     }
   }
 

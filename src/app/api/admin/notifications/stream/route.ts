@@ -73,8 +73,8 @@ export async function GET(request: NextRequest) {
           const counts = await getNotificationCounts();
           const data = `data: ${JSON.stringify(counts)}\n\n`;
           controller.enqueue(encoder.encode(data));
-        } catch {
-          // Connection might be closed
+        } catch (error) {
+          console.error('[NotificationStream] Failed to send SSE event (connection may be closed):', error);
         }
       };
 
@@ -87,7 +87,9 @@ export async function GET(request: NextRequest) {
       // Clean up when client disconnects
       request.signal.addEventListener('abort', () => {
         cleanup();
-        try { controller.close(); } catch { /* already closed */ }
+        try { controller.close(); } catch (error) {
+          console.error('[NotificationStream] Controller close failed (already closed):', error);
+        }
       });
     },
     cancel() {

@@ -22,8 +22,9 @@ export async function generateStaticParams() {
       select: { slug: true },
     });
     return categories.map((c) => ({ slug: c.slug }));
-  } catch {
+  } catch (error) {
     // DB unavailable during build - pages will be generated on first request via ISR
+    console.warn('ISR build fallback: DB unavailable for generateStaticParams (category):', error);
     return [];
   }
 }

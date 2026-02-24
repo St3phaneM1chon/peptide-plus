@@ -5,6 +5,7 @@
 
 import { db as prisma } from '@/lib/db';
 import { logAuditTrail } from './audit-trail.service';
+import { assertJournalBalance, assertPeriodOpen } from '@/lib/accounting/validation';
 import { logger } from '@/lib/logger';
 
 // #95 Retry configuration for failed recurring entries
@@ -290,6 +291,9 @@ export async function processDueRecurringEntries(): Promise<{
     if (template.nextRunDate > now) continue;
 
     try {
+      // Ensure the accounting period for the current date is open
+      await assertPeriodOpen(now);
+
       // #95 Wrap the entire entry creation in retry logic
       const entry = await withRetry(async () => {
         const year = now.getFullYear();
@@ -328,6 +332,8 @@ export async function processDueRecurringEntries(): Promise<{
           }
           // F063 FIX: Use padStart(5) for consistent entry number format
           const entryNumber = `${prefix}${String(nextNum).padStart(5, '0')}`;
+
+          assertJournalBalance(resolvedLines, `recurring ${template.name}`);
 
           return tx.journalEntry.create({
             data: {
@@ -407,7 +413,7 @@ export async function processDueRecurringEntries(): Promise<{
       template.totalRuns++;
 
     } catch (error) {
-      // #95 All retries exhausted - log final failure
+      console.error('[RecurringEntries] All retries exhausted for template:', template.name, error);
       result.errors.push(
         `Erreur pour ${template.name} (après ${RETRY_CONFIG.MAX_RETRIES} tentatives): ${error}`
       );

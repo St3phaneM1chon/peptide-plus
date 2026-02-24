@@ -243,8 +243,8 @@ export class StorageService {
       const pathParts = parsed.pathname.split('/').filter(Boolean);
       // Skip the container name (first segment) to get the blob path
       blobName = pathParts.length > 1 ? pathParts.slice(1).join('/') : pathParts.join('/');
-    } catch {
-      // Fallback for relative URLs: extract last 2 segments
+    } catch (error) {
+      console.error('[Storage] URL parsing failed for blob deletion, using fallback:', error);
       blobName = url.split('/').slice(-2).join('/');
     }
     const blobClient = container!.getBlobClient(blobName);
@@ -284,8 +284,11 @@ export class StorageService {
 
     try {
       await unlink(filePath);
-    } catch {
-      // File might not exist
+    } catch (error) {
+      // File might not exist - only log unexpected errors
+      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
+        console.error('[Storage] Failed to delete local file:', error);
+      }
     }
   }
 
@@ -310,7 +313,8 @@ export class StorageService {
         select: { url: true },
       });
       return existing?.url || null;
-    } catch {
+    } catch (error) {
+      console.error('[Storage] Failed to find duplicate media:', error);
       return null;
     }
   }

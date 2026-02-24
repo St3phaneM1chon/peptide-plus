@@ -10,6 +10,8 @@ import {
 } from '@/lib/accounting/gifi-codes';
 import { logger } from '@/lib/logger';
 
+// Period lock check: N/A - this operation is not date-specific (GIFI code suggestions/assignments are metadata operations on chart of accounts, not accounting period transactions)
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------

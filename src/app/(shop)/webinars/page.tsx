@@ -47,7 +47,8 @@ function mapDbWebinar(w: Record<string, unknown>): Webinar {
   if (w.tags) {
     try {
       parsedTags = JSON.parse(w.tags as string);
-    } catch {
+    } catch (error) {
+      console.warn('[mapDbWebinar] Failed to parse tags JSON, falling back to comma-split:', error);
       parsedTags = (w.tags as string).split(',').map((t: string) => t.trim()).filter(Boolean);
     }
   }
@@ -247,7 +248,7 @@ export default function WebinarsPage() {
               </span>
               <span className="font-medium">{webinars.find(w => w.status === 'live')?.title}</span>
             </div>
-            <button className="px-4 py-2 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600">
+            <button aria-label={`Join live webinar: ${webinars.find(w => w.status === 'live')?.title}`} className="px-4 py-2 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600">
               Join Now →
             </button>
           </div>
@@ -326,7 +327,7 @@ export default function WebinarsPage() {
                 {/* Date & Time */}
                 <div className="flex items-center gap-4 text-sm text-neutral-500 mb-4">
                   <span className="flex items-center gap-1">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                     {formatDate(webinar.date)}
@@ -335,7 +336,7 @@ export default function WebinarsPage() {
 
                 <div className="flex items-center gap-4 text-sm text-neutral-500 mb-4">
                   <span className="flex items-center gap-1">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     {webinar.time}
@@ -361,20 +362,20 @@ export default function WebinarsPage() {
 
                 {/* CTA */}
                 {webinar.status === 'recorded' ? (
-                  <button className="w-full py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center justify-center gap-2">
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <button aria-label={`Watch recording: ${webinar.title}`} className="w-full py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center justify-center gap-2">
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path d="M8 5v14l11-7z" />
                     </svg>
                     Watch Recording
                   </button>
                 ) : webinar.status === 'live' ? (
-                  <button className="w-full py-3 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-colors flex items-center justify-center gap-2 animate-pulse">
-                    <span className="w-2 h-2 bg-white rounded-full"></span>
+                  <button aria-label={`Join live webinar: ${webinar.title}`} className="w-full py-3 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-colors flex items-center justify-center gap-2 animate-pulse">
+                    <span className="w-2 h-2 bg-white rounded-full" aria-hidden="true"></span>
                     Join Live Now
                   </button>
                 ) : registeredWebinars.includes(webinar.id) ? (
                   <button disabled className="w-full py-3 bg-green-100 text-green-700 rounded-lg font-medium flex items-center justify-center gap-2">
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                     </svg>
                     Registered
@@ -428,7 +429,7 @@ export default function WebinarsPage() {
               <div className="flex items-center justify-between">
                 <h3 id="webinar-registration-modal-title" className="text-xl font-bold">Register for Webinar</h3>
                 <button onClick={() => setShowRegistrationModal(null)} aria-label="Close" className="p-2 hover:bg-neutral-100 rounded-lg">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>

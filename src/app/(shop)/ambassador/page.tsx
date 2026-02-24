@@ -133,8 +133,9 @@ export default function AmbassadorPage() {
       if (res.ok) {
         setApplicationSubmitted(true);
       }
-    } catch {
-      // Silently handle error - form stays open for retry
+    } catch (error) {
+      console.error('Ambassador application submission failed:', error);
+      // Form stays open for retry
     } finally {
       setIsApplying(false);
     }

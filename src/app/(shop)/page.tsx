@@ -56,7 +56,8 @@ async function getHeroSlides() {
     });
     // Serialize to plain objects to avoid Date serialization issues across the server/client boundary
     return JSON.parse(JSON.stringify(slides));
-  } catch {
+  } catch (error) {
+    console.warn('[getHeroSlides] Failed to fetch hero slides, returning empty array:', error);
     return [];
   }
 }
@@ -71,7 +72,8 @@ async function getTestimonials(): Promise<TestimonialData[]> {
       take: 6,
     });
     return JSON.parse(JSON.stringify(testimonials));
-  } catch {
+  } catch (error) {
+    console.warn('[getTestimonials] Failed to fetch testimonials, returning empty array:', error);
     return [];
   }
 }

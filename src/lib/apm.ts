@@ -45,7 +45,8 @@ function getSentry(): typeof import('@sentry/nextjs') | null {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     Sentry = require('@sentry/nextjs');
     return Sentry;
-  } catch {
+  } catch (error) {
+    console.error('[APM] Failed to load @sentry/nextjs:', error);
     return null;
   }
 }

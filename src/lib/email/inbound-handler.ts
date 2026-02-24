@@ -610,7 +610,8 @@ export async function updateConversationTags(
     if (current.tags) {
       try {
         previousTags = JSON.parse(current.tags);
-      } catch {
+      } catch (error) {
+        console.error('[InboundEmail] Failed to parse conversation tags JSON:', error);
         previousTags = [];
       }
     }

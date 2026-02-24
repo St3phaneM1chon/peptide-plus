@@ -73,7 +73,8 @@ export async function POST(request: NextRequest) {
       if (parsed.success && parsed.data.reason) {
         reason = stripControlChars(stripHtml(parsed.data.reason));
       }
-    } catch {
+    } catch (error) {
+      console.error('[DeleteRequest] Failed to parse request body:', error);
       // No body or invalid JSON is fine - reason stays as default
     }
 

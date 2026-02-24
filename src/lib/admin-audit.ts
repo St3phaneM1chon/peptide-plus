@@ -265,7 +265,8 @@ function parseDetails(details: string | null): AuditLogEntry['details'] {
   if (!details) return null;
   try {
     return JSON.parse(details);
-  } catch {
+  } catch (error) {
+    console.error('[AdminAudit] Failed to parse audit log details JSON:', error);
     return null;
   }
 }

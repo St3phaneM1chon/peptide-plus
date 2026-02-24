@@ -54,7 +54,10 @@ function AcceptTermsContent() {
       });
 
       if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
+        const data = await response.json().catch((parseErr) => {
+          console.error('Failed to parse accept-terms response:', parseErr instanceof Error ? parseErr.message : parseErr);
+          return {};
+        });
         throw new Error(data.error || 'Failed to accept terms');
       }
 

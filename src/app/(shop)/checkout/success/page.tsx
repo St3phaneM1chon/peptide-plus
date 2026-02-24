@@ -35,7 +35,8 @@ function CheckoutSuccessContent() {
           // Fallback: use session_id suffix
           setOrderNumber(`PP-${new Date().getFullYear()}-${sessionId.slice(-6).toUpperCase()}`);
         }
-      } catch {
+      } catch (error) {
+        console.warn('ISR build fallback: DB unavailable for order lookup (checkout/success):', error);
         setOrderNumber(`PP-${new Date().getFullYear()}-${sessionId.slice(-6).toUpperCase()}`);
       }
     } else {

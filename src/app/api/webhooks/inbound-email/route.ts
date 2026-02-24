@@ -28,7 +28,8 @@ function verifyResendSignature(
       if (timingSafeEqual(Buffer.from(expectedSig), Buffer.from(sigValue))) {
         return true;
       }
-    } catch {
+    } catch (error) {
+      console.error('[InboundEmailWebhook] Signature comparison failed for variant:', error);
       continue;
     }
   }

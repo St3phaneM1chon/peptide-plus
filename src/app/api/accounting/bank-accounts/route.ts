@@ -40,7 +40,8 @@ async function safeDecrypt(value: string | null): Promise<string | null> {
   if (!value) return null;
   try {
     return await decrypt(value);
-  } catch {
+  } catch (error) {
+    console.error('[BankAccounts] Decryption failed, returning plaintext:', error);
     // Legacy plaintext value - return as-is
     return value;
   }

@@ -5,6 +5,7 @@
 
 import { prisma } from '@/lib/db';
 import { ACCOUNT_CODES } from './types';
+import { assertJournalBalance, assertPeriodOpen } from '@/lib/accounting/validation';
 // FIX: F093 - TODO: Replace with 'import { Decimal } from "decimal.js"' to avoid Prisma internal import
 import { Decimal } from '@prisma/client/runtime/library';
 import { convertCurrency, subtract } from '@/lib/decimal-calculator';
@@ -173,6 +174,9 @@ export async function createAccountingEntriesForOrder(orderId: string): Promise<
     throw new Error(`Order not found: ${orderId}`);
   }
 
+  // Ensure the accounting period for the order date is open
+  await assertPeriodOpen(order.createdAt);
+
   return prisma.$transaction(async (tx) => {
     // 1. Generate sale journal entry
     const saleEntryId = await generateSaleEntry(order, tx);
@@ -303,6 +307,7 @@ async function generateSaleEntry(order: OrderWithItems, tx?: Parameters<Paramete
   }
 
   // Create the journal entry with lines
+  assertJournalBalance(lines, `sale ${order.orderNumber}`);
   const fxSuffix = isCAD ? '' : ` (${currencyCode} @${xRate})`;
   const entry = await client.journalEntry.create({
     data: {
@@ -362,6 +367,22 @@ async function generateFeeEntry(order: OrderWithItems, tx?: Parameters<Parameter
   // #89 Batch: fetch both account IDs in one query
   const feeAccountMap = await batchGetAccountIds([feeAccountCode, bankAccountCode]);
 
+  const feeLines = [
+    {
+      accountId: feeAccountMap.get(feeAccountCode)!,
+      description: `Frais ${isPaypal ? 'PayPal' : 'Stripe'} sur ${order.orderNumber}`,
+      debit: estimatedFee,
+      credit: 0,
+    },
+    {
+      accountId: feeAccountMap.get(bankAccountCode)!,
+      description: `Frais ${isPaypal ? 'PayPal' : 'Stripe'} sur ${order.orderNumber}`,
+      debit: 0,
+      credit: estimatedFee,
+    },
+  ];
+  assertJournalBalance(feeLines, `fee ${order.orderNumber}`);
+
   const entry = await client.journalEntry.create({
     data: {
       entryNumber,
@@ -377,22 +398,7 @@ async function generateFeeEntry(order: OrderWithItems, tx?: Parameters<Parameter
       createdBy: 'system',
       postedBy: 'system',
       postedAt: new Date(),
-      lines: {
-        create: [
-          {
-            accountId: feeAccountMap.get(feeAccountCode)!,
-            description: `Frais ${isPaypal ? 'PayPal' : 'Stripe'} sur ${order.orderNumber}`,
-            debit: estimatedFee,
-            credit: 0,
-          },
-          {
-            accountId: feeAccountMap.get(bankAccountCode)!,
-            description: `Frais ${isPaypal ? 'PayPal' : 'Stripe'} sur ${order.orderNumber}`,
-            debit: 0,
-            credit: estimatedFee,
-          },
-        ],
-      },
+      lines: { create: feeLines },
     },
   });
 
@@ -477,6 +483,9 @@ export async function createRefundAccountingEntries(
 
   if (!order) throw new Error(`Order not found: ${orderId}`);
 
+  // Ensure the current accounting period is open for the refund entry
+  await assertPeriodOpen(new Date());
+
   const isPaypal = order.paymentMethod === 'PAYPAL' || order.paypalOrderId;
   const bankAccountCode = isPaypal ? ACCOUNT_CODES.CASH_PAYPAL : ACCOUNT_CODES.CASH_STRIPE;
 
@@ -541,6 +550,8 @@ export async function createRefundAccountingEntries(
     debit: 0,
     credit: refundAmount,
   });
+
+  assertJournalBalance(lines, `refund ${order.orderNumber}`);
 
   const entry = await prisma.$transaction(async (tx) => {
     const entryNumber = await getNextEntryNumber(tx);
@@ -669,6 +680,9 @@ export async function createInventoryLossEntry(
   lossAmount: number,
   reason: string
 ): Promise<string> {
+  // Ensure the current accounting period is open for the loss entry
+  await assertPeriodOpen(new Date());
+
   const lossRounded = Math.round(lossAmount * 100) / 100;
 
   // #89 Batch: fetch both account IDs in one query
@@ -676,6 +690,22 @@ export async function createInventoryLossEntry(
     ACCOUNT_CODES.INVENTORY_LOSS,
     ACCOUNT_CODES.INVENTORY,
   ]);
+
+  const lossLines = [
+    {
+      accountId: lossAccountMap.get(ACCOUNT_CODES.INVENTORY_LOSS)!,
+      description: `Perte stock ${orderNumber}`,
+      debit: lossRounded,
+      credit: 0,
+    },
+    {
+      accountId: lossAccountMap.get(ACCOUNT_CODES.INVENTORY)!,
+      description: `Reduction stock ${orderNumber}`,
+      debit: 0,
+      credit: lossRounded,
+    },
+  ];
+  assertJournalBalance(lossLines, `inventory-loss ${orderNumber}`);
 
   const entry = await prisma.$transaction(async (tx) => {
     const entryNumber = await getNextEntryNumber(tx);
@@ -691,22 +721,7 @@ export async function createInventoryLossEntry(
         createdBy: 'system',
         postedBy: 'system',
         postedAt: new Date(),
-        lines: {
-          create: [
-            {
-              accountId: lossAccountMap.get(ACCOUNT_CODES.INVENTORY_LOSS)!,
-              description: `Perte stock ${orderNumber}`,
-              debit: lossRounded,
-              credit: 0,
-            },
-            {
-              accountId: lossAccountMap.get(ACCOUNT_CODES.INVENTORY)!,
-              description: `Reduction stock ${orderNumber}`,
-              debit: 0,
-              credit: lossRounded,
-            },
-          ],
-        },
+        lines: { create: lossLines },
       },
     });
   });

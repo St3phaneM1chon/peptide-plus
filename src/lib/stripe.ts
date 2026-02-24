@@ -99,6 +99,7 @@ interface CreatePaymentIntentParams {
   productId: string;
   metadata?: Record<string, string>;
   paymentMethodTypes?: string[];
+  idempotencyKey?: string;
 }
 
 /**
@@ -111,22 +112,26 @@ export async function createPaymentIntent({
   productId,
   metadata = {},
   paymentMethodTypes: _paymentMethodTypes = ['card', 'link'], // link = Click to Pay
+  idempotencyKey,
 }: CreatePaymentIntentParams): Promise<Stripe.PaymentIntent> {
-  return stripe.paymentIntents.create({
-    amount,
-    currency,
-    customer: customerId,
-    // Use automatic_payment_methods for broad payment method support (card, Apple Pay, Google Pay)
-    // NOTE: payment_method_types and automatic_payment_methods are mutually exclusive in Stripe API
-    automatic_payment_methods: {
-      enabled: true,
-      allow_redirects: 'never',
+  return stripe.paymentIntents.create(
+    {
+      amount,
+      currency,
+      customer: customerId,
+      // Use automatic_payment_methods for broad payment method support (card, Apple Pay, Google Pay)
+      // NOTE: payment_method_types and automatic_payment_methods are mutually exclusive in Stripe API
+      automatic_payment_methods: {
+        enabled: true,
+        allow_redirects: 'never',
+      },
+      metadata: {
+        productId,
+        ...metadata,
+      },
     },
-    metadata: {
-      productId,
-      ...metadata,
-    },
-  });
+    idempotencyKey ? { idempotencyKey } : undefined,
+  );
 }
 
 /**
@@ -229,6 +234,11 @@ export async function createCheckoutSession({
   metadata = {},
   currency = 'cad',
 }: CreateCheckoutSessionParams & { currency?: string }): Promise<Stripe.Checkout.Session> {
+  // Generate idempotency key from order metadata to prevent duplicate charges on retries
+  const idempotencyKey = metadata?.orderId
+    ? `checkout_${metadata.orderId}`
+    : `checkout_${customerId}_${productId}_${Date.now()}`;
+
   return stripe.checkout.sessions.create({
     mode: 'payment',
     customer: customerId,
@@ -259,6 +269,8 @@ export async function createCheckoutSession({
     payment_intent_data: {
       setup_future_usage: 'on_session',
     },
+  }, {
+    idempotencyKey,
   });
 }
 

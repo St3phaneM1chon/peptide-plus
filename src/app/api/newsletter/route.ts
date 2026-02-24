@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
 import { sendEmail } from '@/lib/email/email-service';
 import { z } from 'zod';
 import crypto from 'crypto';
@@ -34,6 +35,12 @@ export async function POST(request: NextRequest) {
       );
       Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
       return res;
+    }
+
+    // CSRF validation
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
     }
 
     const rawBody = await request.json();

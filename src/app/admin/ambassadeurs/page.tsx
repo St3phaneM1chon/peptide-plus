@@ -255,8 +255,9 @@ export default function AmbassadeursPage() {
           setConfigProgramActive(config.programActive ?? true);
         }
       }
-    } catch {
+    } catch (error) {
       // Use defaults if fetch fails
+      console.warn('[AmbassadeursPage] Failed to load ambassador config, using defaults:', error);
     }
   };
 

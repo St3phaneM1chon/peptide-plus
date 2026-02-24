@@ -49,7 +49,8 @@ export async function generateQRCode(secret: string, email: string): Promise<str
 export function verifyTOTP(secret: string, token: string): boolean {
   try {
     return authenticator.verify({ token, secret });
-  } catch {
+  } catch (error) {
+    console.error('[MFA] TOTP verification failed:', error);
     return false;
   }
 }

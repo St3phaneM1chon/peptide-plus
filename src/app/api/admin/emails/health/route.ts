@@ -60,7 +60,8 @@ export const GET = withAdminGuard(async (_request, { session: _session }) => {
     databaseConnected = dbCheck;
     lastEmailSentAt = lastEmail?.sentAt?.toISOString() ?? null;
     recentErrors = errorCount;
-  } catch {
+  } catch (error) {
+    console.error('[EmailHealth] Database health check failed:', error);
     databaseConnected = false;
   }
 

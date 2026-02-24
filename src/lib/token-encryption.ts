@@ -36,8 +36,9 @@ export async function decryptToken(token: string | null | undefined): Promise<st
   if (!token) return null;
   try {
     return await decrypt(token);
-  } catch {
+  } catch (error) {
     // If decryption fails, the token might be stored unencrypted (migration period)
+    console.error('[TokenEncryption] Decryption failed, returning raw token (migration period):', error);
     return token;
   }
 }

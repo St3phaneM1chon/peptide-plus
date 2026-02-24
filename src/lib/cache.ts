@@ -118,8 +118,8 @@ export async function cacheGet<T>(key: string): Promise<T | null> {
         return parsed.data as T;
       }
       return null;
-    } catch {
-      // Fall through to memory
+    } catch (error) {
+      console.error('[Cache] Redis get failed, falling through to memory:', error);
     }
   }
 
@@ -158,8 +158,8 @@ export async function cacheSet<T>(
     try {
       const payload = JSON.stringify({ data, tags });
       await _redisClient.set(REDIS_PREFIX + key, payload, 'EX', ttlSeconds);
-    } catch {
-      // Non-critical
+    } catch (error) {
+      console.error('[Cache] Redis set failed (non-critical):', error);
     }
   }
 
@@ -191,8 +191,8 @@ export async function cacheDelete(key: string): Promise<boolean> {
   if (_redisAvailable && _redisClient) {
     try {
       await _redisClient.del(REDIS_PREFIX + key);
-    } catch {
-      // Non-critical
+    } catch (error) {
+      console.error('[Cache] Redis delete failed (non-critical):', error);
     }
   }
 
@@ -227,8 +227,8 @@ export async function cacheDeletePattern(pattern: string): Promise<number> {
           count += keys.length;
         }
       } while (cursor !== '0');
-    } catch {
-      // Non-critical
+    } catch (error) {
+      console.error('[Cache] Redis delete pattern scan failed (non-critical):', error);
     }
   }
 
@@ -361,8 +361,8 @@ export async function cacheClear(): Promise<void> {
           await _redisClient.del(...keys);
         }
       } while (cursor !== '0');
-    } catch {
-      // Non-critical
+    } catch (error) {
+      console.error('[Cache] Redis clear failed (non-critical):', error);
     }
   }
 }
@@ -391,7 +391,9 @@ export async function cacheStats(): Promise<{
     try {
       const keys = await _redisClient.keys(REDIS_PREFIX + '*');
       redisKeyCount = keys.length;
-    } catch { /* ignore */ }
+    } catch (error) {
+      console.error('[Cache] Redis keys count failed:', error);
+    }
   }
 
   return {

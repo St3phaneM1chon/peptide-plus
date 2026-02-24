@@ -9,6 +9,8 @@ import { logger } from '@/lib/logger';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { validateCsrf } from '@/lib/csrf-middleware';
 
+// Period lock check: N/A - this operation is not date-specific (chart of accounts CRUD manages account structure, not accounting period transactions)
+
 // ---------------------------------------------------------------------------
 // Zod Schemas
 // ---------------------------------------------------------------------------

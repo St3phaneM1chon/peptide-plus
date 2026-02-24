@@ -7,6 +7,7 @@
 
 import { prisma } from '@/lib/db';
 import { logAuditTrail } from './audit-trail.service';
+import { assertJournalBalance, assertPeriodOpen } from '@/lib/accounting/validation';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -213,6 +214,9 @@ export async function applyPaymentMatch(
     return { success: false, message: 'Comptes comptables (débiteurs/banque) introuvables' };
   }
 
+  // Ensure the accounting period for the bank transaction date is open
+  await assertPeriodOpen(bankTx.date);
+
   // FIX (F037): Move entry number generation INSIDE the transaction with FOR UPDATE
   // to prevent race conditions where two concurrent requests get the same number
   const year = new Date().getFullYear();
@@ -236,6 +240,24 @@ export async function applyPaymentMatch(
     const entryNumber = `${prefix}${String(nextSeq).padStart(5, '0')}`;
 
     // 1. Create journal entry: Debit Cash, Credit Accounts Receivable
+    const linesToCreate = [
+      {
+        id: crypto.randomUUID(),
+        accountId: cashAccount.id,
+        description: `Dépôt bancaire - ${bankTx.description}`,
+        debit: paymentAmount,
+        credit: 0,
+      },
+      {
+        id: crypto.randomUUID(),
+        accountId: arAccount.id,
+        description: `Paiement facture ${invoice.invoiceNumber}`,
+        debit: 0,
+        credit: paymentAmount,
+      },
+    ];
+    assertJournalBalance(linesToCreate, `payment-match invoice ${invoice.invoiceNumber}`);
+
     const entry = await tx.journalEntry.create({
       data: {
         id: crypto.randomUUID(),
@@ -249,24 +271,7 @@ export async function applyPaymentMatch(
         postedBy: userId,
         createdBy: userId,
         updatedAt: new Date(),
-        lines: {
-          create: [
-            {
-              id: crypto.randomUUID(),
-              accountId: cashAccount.id,
-              description: `Dépôt bancaire - ${bankTx.description}`,
-              debit: paymentAmount,
-              credit: 0,
-            },
-            {
-              id: crypto.randomUUID(),
-              accountId: arAccount.id,
-              description: `Paiement facture ${invoice.invoiceNumber}`,
-              debit: 0,
-              credit: paymentAmount,
-            },
-          ],
-        },
+        lines: { create: linesToCreate },
       },
     });
 
@@ -314,8 +319,8 @@ export async function applyPaymentMatch(
         journalEntryId: result.id,
       },
     });
-  } catch {
-    // Non-critical - do not fail the operation
+  } catch (error) {
+    console.error('[PaymentMatching] Audit log creation failed (non-critical):', error);
   }
 
   return {

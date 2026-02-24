@@ -2410,7 +2410,8 @@ export function validatePostalCode(postalCode: string, countryCode: string): boo
   try {
     const regex = new RegExp(format.postalCodePattern, 'i');
     return regex.test(postalCode.trim());
-  } catch {
+  } catch (error) {
+    console.error('[CanadianTaxes] Invalid postal code regex pattern:', error);
     return false;
   }
 }

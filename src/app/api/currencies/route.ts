@@ -43,6 +43,6 @@ export async function GET() {
     });
   } catch (error) {
     logger.error('Currencies API error', { error: error instanceof Error ? error.message : String(error) });
-    return NextResponse.json({ currencies: [] }, { status: 500 });
+    return NextResponse.json({ currencies: [], error: 'Failed to load currencies' }, { status: 500 });
   }
 }

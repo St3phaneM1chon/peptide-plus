@@ -14,6 +14,7 @@ import {
 import { logger } from '@/lib/logger';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { validateCsrf } from '@/lib/csrf-middleware';
+import { assertJournalBalance, assertPeriodOpen } from '@/lib/accounting/validation';
 
 // ---------------------------------------------------------------------------
 // Zod Schemas
@@ -106,6 +107,9 @@ export const POST = withAdminGuard(async (request, { session }) => {
     // Generate entry from template (in-memory structure with accountCode lines)
     const entry = generateEntryFromTemplate(template, values as Record<string, string | number | Date>, 'TEMP');
 
+    // Ensure the accounting period for this entry date is open
+    await assertPeriodOpen(new Date(entry.date || Date.now()));
+
     // Persist entry to database
     const accountCodes = entry.lines.map((l: { accountCode: string }) => l.accountCode);
     const accounts = await prisma.chartOfAccount.findMany({
@@ -143,6 +147,15 @@ export const POST = withAdminGuard(async (request, { session }) => {
       }
       const dbEntryNumber = `${prefix}${String(nextNum).padStart(4, '0')}`;
 
+      // Validate debit/credit balance before insertion
+      const linesToCreate = entry.lines.map((l: { accountCode: string; debit?: number; credit?: number; description?: string }) => ({
+        accountId: accountMap.get(l.accountCode)!,
+        debit: Number(l.debit) || 0,
+        credit: Number(l.credit) || 0,
+        description: l.description || null,
+      }));
+      assertJournalBalance(linesToCreate, `quick-entry ${templateId}`);
+
       return tx.journalEntry.create({
         data: {
           entryNumber: dbEntryNumber,
@@ -152,14 +165,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
           status: 'DRAFT',
           reference: `QE-${templateId}`,
           createdBy: session.user.id || 'quick-entry',
-          lines: {
-            create: entry.lines.map((l: { accountCode: string; debit?: number; credit?: number; description?: string }) => ({
-              accountId: accountMap.get(l.accountCode)!,
-              debit: Number(l.debit) || 0,
-              credit: Number(l.credit) || 0,
-              description: l.description || null,
-            })),
-          },
+          lines: { create: linesToCreate },
         },
         include: {
           lines: { include: { account: { select: { code: true, name: true } } } },

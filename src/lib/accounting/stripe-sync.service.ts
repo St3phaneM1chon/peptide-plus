@@ -7,7 +7,7 @@ import Stripe from 'stripe';
 import { STRIPE_API_VERSION } from '@/lib/stripe';
 import { logger } from '@/lib/logger';
 import { generateSaleEntry, generateFeeEntry, generateRefundEntry, generateStripePayoutEntry } from './auto-entries.service';
-import { JournalEntry, BankTransaction } from './types';
+import { JournalEntry, BankTransaction, TAX_RATES } from './types';
 
 // Lazy-initialized Stripe client to avoid crashing during Next.js build/SSG
 let _stripe: Stripe | null = null;
@@ -31,26 +31,15 @@ function getStripe(): Stripe {
  * Formula: subtotal = totalAmount / (1 + taxRate)
  */
 function getSubtotalFromTotal(totalAmount: number, province?: string): number {
-  // Province-specific combined tax rates (federal + provincial)
-  const PROVINCE_TAX_RATES: Record<string, number> = {
-    QC: 0.14975,  // TPS 5% + TVQ 9.975%
-    ON: 0.13,     // HST 13%
-    BC: 0.12,     // GST 5% + PST 7%
-    AB: 0.05,     // GST 5% only
-    SK: 0.11,     // GST 5% + PST 6%
-    MB: 0.12,     // GST 5% + RST 7%
-    NS: 0.14,     // HST 14% (effective 2025-04-01 - was 15%)
-    NB: 0.15,     // HST 15%
-    NL: 0.15,     // HST 15%
-    PE: 0.15,     // HST 15%
-    NT: 0.05,     // GST 5%
-    NU: 0.05,     // GST 5%
-    YT: 0.05,     // GST 5%
-  };
+  // Use centralized TAX_RATES from types.ts
+  const PROVINCE_TAX_RATES: Record<string, number> = {};
+  for (const [key, value] of Object.entries(TAX_RATES)) {
+    PROVINCE_TAX_RATES[key] = value.combined;
+  }
 
   const defaultRate = process.env.TAX_DEFAULT_RATE
     ? parseFloat(process.env.TAX_DEFAULT_RATE)
-    : 0.14975; // Default to Quebec rate
+    : TAX_RATES.QC.combined; // Default to Quebec rate
 
   const taxRate = province ? (PROVINCE_TAX_RATES[province.toUpperCase()] ?? defaultRate) : defaultRate;
   return totalAmount / (1 + taxRate);
@@ -176,9 +165,21 @@ export async function syncStripeCharges(
             subtotal,
             shipping: 0,
             discount: 0,
-            tps: subtotal * 0.05,
-            tvq: province?.toUpperCase() === 'QC' ? subtotal * 0.09975 : 0,
-            tvh: ['ON', 'NS', 'NB', 'NL', 'PE'].includes(province?.toUpperCase() || '') ? subtotal * 0.13 : 0,
+            // FIX: TAX-ACCURACY - Use province-specific HST rates and avoid
+            // double-counting GST for HST provinces (HST replaces GST+PST).
+            tps: (() => {
+              const p = province?.toUpperCase() || '';
+              const hstProvinces = ['ON', 'NS', 'NB', 'NL', 'PE'];
+              if (hstProvinces.includes(p)) return 0;
+              return subtotal * TAX_RATES.QC.TPS;
+            })(),
+            tvq: province?.toUpperCase() === 'QC' ? subtotal * TAX_RATES.QC.TVQ : 0,
+            tvh: (() => {
+              const p = province?.toUpperCase() || '';
+              const rates = TAX_RATES as Record<string, { TVH?: number; combined: number }>;
+              const provRate = rates[p];
+              return provRate?.TVH ? subtotal * provRate.TVH : 0;
+            })(),
             otherTax: 0,
             total: chargeTotal,
             paymentMethod: 'STRIPE',
@@ -202,10 +203,12 @@ export async function syncStripeCharges(
           }
         }
       } catch (chargeError) {
+        console.error('[StripeSync] Error processing charge:', charge.id, chargeError);
         result.errors.push(`Error processing charge ${charge.id}: ${chargeError}`);
       }
     }
   } catch (error) {
+    console.error('[StripeSync] Stripe charges API error:', error);
     result.success = false;
     result.errors.push(`Stripe API error: ${error}`);
   }
@@ -290,9 +293,21 @@ export async function syncStripeRefunds(
             orderNumber: charge.metadata.orderNumber || refund.id,
             date: new Date(refund.created * 1000),
             amount: refundAmount,
-            tps: refundSubtotal * 0.05,
-            tvq: refundProvince?.toUpperCase() === 'QC' ? refundSubtotal * 0.09975 : 0,
-            tvh: ['ON', 'NS', 'NB', 'NL', 'PE'].includes(refundProvince?.toUpperCase() || '') ? refundSubtotal * 0.13 : 0,
+            // FIX: TAX-ACCURACY - Use province-specific HST rates and avoid
+            // double-counting GST for HST provinces (HST replaces GST+PST).
+            tps: (() => {
+              const p = refundProvince?.toUpperCase() || '';
+              const hstProvinces = ['ON', 'NS', 'NB', 'NL', 'PE'];
+              if (hstProvinces.includes(p)) return 0;
+              return refundSubtotal * TAX_RATES.QC.TPS;
+            })(),
+            tvq: refundProvince?.toUpperCase() === 'QC' ? refundSubtotal * TAX_RATES.QC.TVQ : 0,
+            tvh: (() => {
+              const p = refundProvince?.toUpperCase() || '';
+              const rates = TAX_RATES as Record<string, { TVH?: number; combined: number }>;
+              const provRate = rates[p];
+              return provRate?.TVH ? refundSubtotal * provRate.TVH : 0;
+            })(),
             reason: refund.reason || 'Remboursement client',
             paymentMethod: 'STRIPE',
           });
@@ -300,10 +315,12 @@ export async function syncStripeRefunds(
           result.entriesCreated++;
         }
       } catch (refundError) {
+        console.error('[StripeSync] Error processing refund:', refund.id, refundError);
         result.errors.push(`Error processing refund ${refund.id}: ${refundError}`);
       }
     }
   } catch (error) {
+    console.error('[StripeSync] Stripe refunds API error:', error);
     result.success = false;
     result.errors.push(`Stripe API error: ${error}`);
   }
@@ -387,10 +404,12 @@ export async function syncStripePayouts(
         result.entries.push(payoutEntry);
         result.entriesCreated++;
       } catch (payoutError) {
+        console.error('[StripeSync] Error processing payout:', payout.id, payoutError);
         result.errors.push(`Error processing payout ${payout.id}: ${payoutError}`);
       }
     }
   } catch (error) {
+    console.error('[StripeSync] Stripe payouts API error:', error);
     result.success = false;
     result.errors.push(`Stripe API error: ${error}`);
   }

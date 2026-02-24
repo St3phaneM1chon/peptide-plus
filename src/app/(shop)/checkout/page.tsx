@@ -14,6 +14,7 @@ import { isValidEmail } from '@/lib/validation';
 import { FormError } from '@/components/ui/FormError';
 import { AddressAutocomplete } from '@/components/ui/AddressAutocomplete';
 import { useDiscountCode } from '@/hooks/useDiscountCode';
+import DOMPurify from 'isomorphic-dompurify';
 // TODO: Consider lazy-loading the tax calculation module (e.g. dynamic import)
 // to reduce the initial bundle size of the checkout page, since tax calculations
 // are only needed after the user enters their shipping address.
@@ -1490,7 +1491,7 @@ export default function CheckoutPage() {
                           const termsLink = `<a href="/mentions-legales/conditions" target="_blank" rel="noopener noreferrer" class="text-orange-600 underline hover:text-orange-700 font-medium">${t('checkout.researchConsentTerms')}</a>`;
                           const privacyLink = `<a href="/mentions-legales/confidentialite" target="_blank" rel="noopener noreferrer" class="text-orange-600 underline hover:text-orange-700 font-medium">${t('checkout.researchConsentPrivacy')}</a>`;
                           const html = raw.replace('{termsLink}', termsLink).replace('{privacyLink}', privacyLink);
-                          return <span dangerouslySetInnerHTML={{ __html: html }} />;
+                          return <span dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(html, { ALLOWED_TAGS: ['a', 'span'], ALLOWED_ATTR: ['href', 'target', 'rel', 'class'] }) }} />;
                         })()}
                       </span>
                     </label>

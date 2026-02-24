@@ -5,6 +5,7 @@
 
 import { prisma } from '@/lib/db';
 import { ACCOUNT_CODES } from './types';
+import { assertJournalBalance } from '@/lib/accounting/validation';
 import { logAuditTrail } from './audit-trail.service';
 import { logger } from '@/lib/logger';
 
@@ -423,6 +424,8 @@ export async function runYearEndClose(year: number, closedBy: string): Promise<{
     }
     // F-063 FIX: Use 5-digit padding for consistency with other entry generators
     const entryNumber = `${prefix}${String(nextNum).padStart(5, '0')}`;
+
+    assertJournalBalance(closingLines, `period-close ${year}`);
 
     const closingEntry = await tx.journalEntry.create({
       data: {

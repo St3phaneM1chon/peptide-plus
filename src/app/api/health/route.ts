@@ -137,7 +137,9 @@ export async function GET(request: NextRequest) {
         duration: Date.now() - redisStart,
       });
     } finally {
-      try { await client?.quit(); } catch { /* ignore cleanup errors */ }
+      try { await client?.quit(); } catch (cleanupError) {
+        console.error('[Health] Redis client cleanup error (ignored):', cleanupError);
+      }
     }
   } else {
     checks.push({

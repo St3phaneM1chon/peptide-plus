@@ -10,9 +10,14 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const locale = searchParams.get('locale') || defaultLocale;
 
+    const take = Math.min(Number(searchParams.get('limit') || 50), 100);
+    const skip = Number(searchParams.get('offset') || 0);
+
     let posts = await prisma.blogPost.findMany({
       where: { isPublished: true },
       orderBy: { publishedAt: 'desc' },
+      take,
+      skip,
       select: {
         id: true, title: true, slug: true, excerpt: true, imageUrl: true,
         author: true, category: true, readTime: true, isFeatured: true,

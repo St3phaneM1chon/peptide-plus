@@ -334,6 +334,7 @@ export async function runAutoReconciliation(): Promise<AutoReconciliationResult>
         }
       }
     } catch (error) {
+      console.error('[AutoReconciliation] Reconciliation failed for transaction:', tx.id, error);
       result.errors.push(
         `Erreur pour tx ${tx.id}: ${error instanceof Error ? error.message : String(error)}`
       );

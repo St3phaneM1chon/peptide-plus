@@ -70,7 +70,8 @@ function verifyResendSignature(
       if (timingSafeEqual(Buffer.from(expectedSig), Buffer.from(sigValue))) {
         return true;
       }
-    } catch {
+    } catch (error) {
+      console.error('[EmailBounceWebhook] Signature comparison failed for variant:', error);
       continue;
     }
   }

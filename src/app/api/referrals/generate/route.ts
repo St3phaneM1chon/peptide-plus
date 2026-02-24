@@ -10,6 +10,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth-config';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
 import { logger } from '@/lib/logger';
 import crypto from 'crypto';
 
@@ -33,7 +34,7 @@ function generateCode(name: string | null | undefined): string {
   return `${prefix}${suffix}`;
 }
 
-export async function POST(_request: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -49,6 +50,12 @@ export async function POST(_request: NextRequest) {
       );
       Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
       return res;
+    }
+
+    // CSRF validation
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
     }
 
     const userId = session.user.id;

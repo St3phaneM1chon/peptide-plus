@@ -41,8 +41,9 @@ export default async function LabResultsPage() {
       pdfUrl: p.coaUrl || '',
       hplcUrl: p.hplcUrl || '',
     }));
-  } catch {
+  } catch (error) {
     // DB unavailable (e.g. CI build without DATABASE_URL) — render empty
+    console.warn('ISR build fallback: DB unavailable for lab-results COA data:', error);
   }
 
   return <LabResultsClient coaData={coaData} />;

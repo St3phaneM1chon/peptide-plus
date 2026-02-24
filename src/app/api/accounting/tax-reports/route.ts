@@ -362,7 +362,8 @@ export const PUT = withAdminGuard(async (request) => {
           const currentHash = createHash('sha256').update(verifyPayload).digest('hex');
           integrityValid = currentHash === notesData.integrityHash;
         }
-      } catch {
+      } catch (error) {
+        console.error('[TaxReports] Integrity hash verification failed:', error);
         integrityValid = null;
       }
     }

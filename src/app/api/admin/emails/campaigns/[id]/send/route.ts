@@ -22,6 +22,27 @@ const CAMPAIGN_FREQUENCY_CAP_HOURS = parseInt(process.env.CAMPAIGN_FREQUENCY_CAP
 export const POST = withAdminGuard(
   async (_request: NextRequest, { session, params }: { session: { user: { id: string } }; params: { id: string } }) => {
     try {
+      // Idempotency check: prevent duplicate sends if campaign is already SENT or SENDING
+      const existing = await prisma.emailCampaign.findUnique({
+        where: { id: params.id },
+        select: { status: true },
+      });
+      if (!existing) {
+        return NextResponse.json({ error: 'Campaign not found' }, { status: 404 });
+      }
+      if (existing.status === 'SENT') {
+        return NextResponse.json(
+          { error: 'Campaign has already been sent', idempotent: true },
+          { status: 409 }
+        );
+      }
+      if (existing.status === 'SENDING') {
+        return NextResponse.json(
+          { error: 'Campaign is currently being sent', idempotent: true },
+          { status: 409 }
+        );
+      }
+
       // Atomic status guard: update only if status is sendable (prevents TOCTOU race)
       // Also allow resuming PAUSED campaigns
       const { count: updated } = await prisma.emailCampaign.updateMany({
@@ -168,7 +189,11 @@ export const POST = withAdminGuard(
       // Determine resume offset: if resuming from PAUSED, skip already-sent recipients
       let existingStats: Record<string, unknown> = {};
       if (campaign.stats) {
-        try { existingStats = JSON.parse(campaign.stats); } catch { /* ignore */ }
+        try {
+          existingStats = JSON.parse(campaign.stats);
+        } catch (error) {
+          console.error('[EmailCampaignSend] Failed to parse campaign stats JSON:', error);
+        }
       }
       const resumeOffset = typeof existingStats.sentCount === 'number' ? existingStats.sentCount : 0;
 
@@ -282,7 +307,8 @@ export const POST = withAdminGuard(
           });
 
           sent++;
-        } catch {
+        } catch (error) {
+          console.error('[EmailCampaignSend] Failed to send email to recipient:', error);
           failed++;
         }
       }

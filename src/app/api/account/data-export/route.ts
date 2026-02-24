@@ -49,7 +49,8 @@ async function checkExportRateLimit(userId: string): Promise<boolean> {
         await redis.set(key, String(Date.now()), 'EX', Math.ceil(EXPORT_COOLDOWN_MS / 1000));
         return true;
       }
-    } catch {
+    } catch (error) {
+      console.error('[DataExport] Redis rate-limit check failed:', error);
       // Fall through to memory
     }
   }

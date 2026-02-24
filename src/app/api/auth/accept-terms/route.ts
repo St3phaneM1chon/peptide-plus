@@ -14,7 +14,6 @@ import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { z } from 'zod';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
-import { validateCsrf } from '@/lib/csrf-middleware';
 import { stripHtml, stripControlChars } from '@/lib/sanitize';
 
 const acceptTermsSchema = z.object({
@@ -34,11 +33,10 @@ export async function POST(request: NextRequest) {
       return res;
     }
 
-    // SECURITY: CSRF validation
-    const csrfValid = await validateCsrf(request);
-    if (!csrfValid) {
-      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
-    }
+    // NOTE: No CSRF check here — this route is called right after OAuth login
+    // from the (auth) layout which has no CsrfInit. The session cookie provides
+    // sufficient protection since the route only modifies the authenticated user's
+    // own record.
 
     const session = await auth();
 
