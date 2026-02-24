@@ -10,11 +10,23 @@ import { prisma } from '@/lib/db';
 import { createPaymentIntent, getOrCreateStripeCustomer } from '@/lib/stripe';
 import { calculateTaxAmount } from '@/lib/tax-rates';
 import { validateCsrf } from '@/lib/csrf-middleware';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { add, toCents } from '@/lib/decimal-calculator';
 import { logger } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
   try {
+    // SECURITY: Rate limiting on payment intent creation
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip')
+      || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/payments/create-intent');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+
     // SECURITY: CSRF protection for payment mutation endpoint
     const csrfValid = await validateCsrf(request);
     if (!csrfValid) {

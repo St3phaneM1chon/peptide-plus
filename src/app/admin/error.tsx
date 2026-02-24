@@ -13,7 +13,8 @@ export default function AdminError({
   const { t } = useI18n();
 
   useEffect(() => {
-    console.error('Admin error:', error);
+    // Client-side error logging (server logger not available in 'use client')
+    console.error('[Admin Error]', error.message, error.digest);
   }, [error]);
 
   return (

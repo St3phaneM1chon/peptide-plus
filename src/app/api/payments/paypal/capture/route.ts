@@ -10,10 +10,22 @@ import { prisma } from '@/lib/db';
 import { createAccountingEntriesForOrder } from '@/lib/accounting/webhook-accounting.service';
 import { getPayPalAccessToken, PAYPAL_API_URL } from '@/lib/paypal';
 import { validateCsrf } from '@/lib/csrf-middleware';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { logger } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
   try {
+    // SECURITY: Rate limiting on payment capture
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip')
+      || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/payments/paypal/capture');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+
     // SECURITY: CSRF protection for payment mutation endpoint
     const csrfValid = await validateCsrf(request);
     if (!csrfValid) {

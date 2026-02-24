@@ -16,6 +16,7 @@ import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { z } from 'zod';
 import { validateCsrf } from '@/lib/csrf-middleware';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { applyRate, add, multiply, subtract, convertCurrency, toCents, proportionalDiscount, clamp } from '@/lib/decimal-calculator';
 import { logger } from '@/lib/logger';
 
@@ -120,6 +121,17 @@ function calculateServerShipping(subtotal: number, country: string, productTypes
 
 export async function POST(request: NextRequest) {
   try {
+    // SECURITY: Rate limiting on checkout session creation
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip')
+      || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/payments/create-checkout');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+
     // SECURITY: CSRF protection for payment mutation endpoint
     const csrfValid = await validateCsrf(request);
     if (!csrfValid) {
