@@ -1,56 +1,136 @@
-import { Skeleton, SkeletonText, SkeletonCard } from '@/components/ui/Skeleton';
-
 /**
- * Shop page loading state.
- * Mirrors the product grid layout with filter sidebar and product card skeletons.
+ * Shop / catalog page loading skeleton.
+ * Renders a grid of 8 product-card skeletons with a subtle pulse animation.
+ * Uses inline styles only -- no external dependencies.
  */
 export default function Loading() {
-  return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Page header */}
-        <div className="mb-8">
-          <SkeletonText className="h-8 w-56 mb-3" />
-          <SkeletonText className="h-4 w-96" />
-        </div>
+  const skeleton = (
+    width: string,
+    height: string,
+    extra?: React.CSSProperties,
+  ): React.CSSProperties => ({
+    width,
+    height,
+    backgroundColor: '#E5E7EB',
+    borderRadius: '8px',
+    animation: 'skeleton-pulse 1.8s ease-in-out infinite',
+    ...extra,
+  });
 
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Sidebar filters */}
-          <aside className="w-full lg:w-60 flex-shrink-0 space-y-6">
-            {/* Category filter */}
-            <div className="bg-white rounded-xl p-4 border border-gray-200">
-              <SkeletonText className="h-5 w-28 mb-4" />
-              <div className="space-y-3">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <SkeletonText key={i} className="h-4 w-full" />
+  const textLine = (width: string, height = '12px'): React.CSSProperties =>
+    skeleton(width, height, { borderRadius: '4px' });
+
+  return (
+    <>
+      <style>{`
+        @keyframes skeleton-pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.4; }
+        }
+      `}</style>
+
+      <div style={{ minHeight: '100vh', backgroundColor: '#F9FAFB', padding: '32px 0' }}>
+        <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 16px' }}>
+          {/* Page header */}
+          <div style={{ marginBottom: '32px' }}>
+            <div style={{ ...textLine('224px', '32px'), marginBottom: '12px' }} />
+            <div style={textLine('384px', '16px')} />
+          </div>
+
+          <div style={{ display: 'flex', gap: '32px' }}>
+            {/* Sidebar filters */}
+            <aside style={{ width: '240px', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '24px' }}>
+              {/* Category filter */}
+              <div
+                style={{
+                  backgroundColor: '#fff',
+                  borderRadius: '12px',
+                  padding: '16px',
+                  border: '1px solid #E5E7EB',
+                }}
+              >
+                <div style={{ ...textLine('112px', '20px'), marginBottom: '16px' }} />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {[0, 1, 2, 3, 4, 5].map((i) => (
+                    <div key={i} style={textLine('100%', '16px')} />
+                  ))}
+                </div>
+              </div>
+
+              {/* Sort / price filter */}
+              <div
+                style={{
+                  backgroundColor: '#fff',
+                  borderRadius: '12px',
+                  padding: '16px',
+                  border: '1px solid #E5E7EB',
+                }}
+              >
+                <div style={{ ...textLine('80px', '20px'), marginBottom: '16px' }} />
+                <div style={skeleton('100%', '40px')} />
+              </div>
+            </aside>
+
+            {/* Product grid */}
+            <div style={{ flex: 1 }}>
+              {/* Sort bar */}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  marginBottom: '24px',
+                }}
+              >
+                <div style={textLine('128px', '16px')} />
+                <div style={skeleton('160px', '40px')} />
+              </div>
+
+              {/* Product cards grid -- 8 cards */}
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, 1fr)',
+                  gap: '24px',
+                }}
+              >
+                {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
+                  <div
+                    key={i}
+                    style={{
+                      borderRadius: '12px',
+                      border: '1px solid #E5E7EB',
+                      overflow: 'hidden',
+                      backgroundColor: '#fff',
+                    }}
+                  >
+                    {/* Card image placeholder */}
+                    <div
+                      style={skeleton('100%', '0', {
+                        paddingBottom: '100%',
+                        borderRadius: '0',
+                      })}
+                    />
+                    {/* Card text */}
+                    <div
+                      style={{
+                        padding: '16px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '8px',
+                      }}
+                    >
+                      <div style={textLine('70%', '16px')} />
+                      <div style={textLine('50%', '14px')} />
+                      <div style={{ ...textLine('30%', '20px'), marginTop: '4px' }} />
+                    </div>
+                  </div>
                 ))}
               </div>
-            </div>
-
-            {/* Sort / price filter */}
-            <div className="bg-white rounded-xl p-4 border border-gray-200">
-              <SkeletonText className="h-5 w-20 mb-4" />
-              <Skeleton className="h-10 w-full rounded-lg" />
-            </div>
-          </aside>
-
-          {/* Product grid */}
-          <div className="flex-1">
-            {/* Sort bar */}
-            <div className="flex items-center justify-between mb-6">
-              <SkeletonText className="h-4 w-32" />
-              <Skeleton className="h-10 w-40 rounded-lg" />
-            </div>
-
-            {/* Product cards grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {Array.from({ length: 9 }).map((_, i) => (
-                <SkeletonCard key={i} />
-              ))}
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

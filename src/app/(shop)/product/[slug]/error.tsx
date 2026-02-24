@@ -1,38 +1,54 @@
 'use client';
 
-import { useEffect } from 'react';
-import Link from 'next/link';
-
-export default function ProductError({
-  error,
+export default function ErrorBoundary({
+  error: _error,
   reset,
 }: {
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  useEffect(() => {
-    console.error('Product page error:', error);
-  }, [error]);
-
   return (
-    <div className="flex flex-col items-center justify-center min-h-[50vh] text-center px-4">
-      <h2 className="text-2xl font-bold mb-4">Something went wrong</h2>
-      <p className="text-gray-600 mb-6">
+    <div style={{ padding: '40px', textAlign: 'center', maxWidth: '600px', margin: '0 auto' }}>
+      <h2 style={{ fontSize: '24px', fontWeight: 600, marginBottom: '16px' }}>
+        Something went wrong
+      </h2>
+      <p style={{ color: '#6B7280', marginBottom: '24px' }}>
         We encountered an error loading this product. Please try again.
       </p>
-      <div className="flex gap-4">
+      <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
         <button
           onClick={reset}
-          className="px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+          style={{
+            padding: '10px 24px',
+            backgroundColor: '#F97316',
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            fontSize: '14px',
+            fontWeight: 500,
+          }}
         >
           Try again
         </button>
-        <Link
-          href="/catalogue"
-          className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+        <a
+          href="/shop"
+          style={{
+            padding: '10px 24px',
+            backgroundColor: 'transparent',
+            color: '#374151',
+            border: '1px solid #D1D5DB',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            fontSize: '14px',
+            fontWeight: 500,
+            textDecoration: 'none',
+            display: 'inline-flex',
+            alignItems: 'center',
+          }}
         >
           Browse Catalog
-        </Link>
+        </a>
       </div>
     </div>
   );

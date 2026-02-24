@@ -87,6 +87,10 @@ export async function POST(
       ? 'Format created but marked as inactive — it will not be visible to customers.'
       : undefined;
 
+    if (isActive === false) {
+      logger.warn('Inactive format created', { productId: id, formatName: name });
+    }
+
     // BUG-044 FIX: Wrap default toggle + create in transaction to prevent race condition
     const format = await prisma.$transaction(async (tx) => {
       // If this is set as default, unset other defaults

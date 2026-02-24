@@ -173,6 +173,18 @@ export default function NewProductClient({ categories }: Props) {
       return;
     }
 
+    // FIX: BUG-047 - Client-side format validation before sending to API
+    if (formats.length > 0) {
+      const invalidFormat = formats.find(f => !f.name.trim() || f.price < 0);
+      if (invalidFormat) {
+        toast.error(
+          t('admin.productForm.formatValidationError') ||
+          'Each format must have a name and a price >= 0.'
+        );
+        return;
+      }
+    }
+
     setSaving(true);
     try {
       const res = await fetch('/api/products', {
@@ -262,15 +274,23 @@ export default function NewProductClient({ categories }: Props) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
                   <label className="block text-sm font-medium text-neutral-700 mb-1">{t('admin.productForm.productCategory')} *</label>
-                  <select
-                    value={formData.categoryId}
-                    onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
-                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
-                  >
-                    {categories.map(cat => (
-                      <option key={cat.id} value={cat.id}>{cat.name}</option>
-                    ))}
-                  </select>
+                  {/* FIX: BUG-048 - Show error if no categories available */}
+                  {categories.length === 0 ? (
+                    <p className="text-sm text-red-600 py-2.5">
+                      {t('admin.productForm.noCategoriesAvailable') || 'No categories available. Please create a category first.'}
+                    </p>
+                  ) : (
+                    <select
+                      value={formData.categoryId}
+                      onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
+                      className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    >
+                      <option value="">{t('admin.productForm.selectCategory') || '-- Select a category --'}</option>
+                      {categories.map(cat => (
+                        <option key={cat.id} value={cat.id}>{cat.name}</option>
+                      ))}
+                    </select>
+                  )}
                 </div>
 
                 <div>

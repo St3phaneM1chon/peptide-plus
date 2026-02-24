@@ -996,6 +996,10 @@ function EditFormatForm({
         <button onClick={onCancel} className="px-4 py-2 text-neutral-600 border border-neutral-200 rounded-lg hover:bg-neutral-50">
           {t('admin.productForm.cancel')}
         </button>
+        {/* TODO: BUG-049 - onSave sends entire local format state, including unchanged fields.
+            If another admin modifies this format concurrently, their changes will be overwritten.
+            Future improvement: implement optimistic locking (e.g. version field or updatedAt check)
+            to detect and handle concurrent edit conflicts. Low priority — concurrent admin edits are rare. */}
         <button onClick={() => onSave(format)} className="px-4 py-2 bg-sky-500 text-white rounded-lg hover:bg-sky-600">
           {t('admin.productForm.save')}
         </button>

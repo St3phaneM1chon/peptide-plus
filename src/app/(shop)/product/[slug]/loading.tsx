@@ -1,99 +1,164 @@
-import { Skeleton, SkeletonText, SkeletonCard } from '@/components/ui/Skeleton';
-
 /**
- * Product detail page loading state.
- * Matches the two-column layout: image gallery on left, product info on right.
+ * Product detail page loading skeleton.
+ * Mimics the two-column layout: image gallery on left, product info on right.
+ * Uses inline styles with a CSS pulse animation -- no external dependencies.
  */
 export default function Loading() {
-  return (
-    <div className="min-h-screen bg-white py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Breadcrumb */}
-        <div className="flex items-center gap-2 mb-6">
-          <SkeletonText className="h-3 w-12" />
-          <SkeletonText className="h-3 w-3" />
-          <SkeletonText className="h-3 w-20" />
-          <SkeletonText className="h-3 w-3" />
-          <SkeletonText className="h-3 w-32" />
-        </div>
+  const skeleton = (
+    width: string,
+    height: string,
+    extra?: React.CSSProperties,
+  ): React.CSSProperties => ({
+    width,
+    height,
+    backgroundColor: '#E5E7EB',
+    borderRadius: '8px',
+    animation: 'skeleton-pulse 1.8s ease-in-out infinite',
+    ...extra,
+  });
 
-        {/* Main product section: image + info */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          {/* Image gallery */}
-          <div className="space-y-4">
-            <Skeleton className="w-full aspect-square rounded-xl" />
-            <div className="flex gap-3">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <Skeleton key={i} className="w-20 h-20 rounded-lg" />
-              ))}
-            </div>
+  const textLine = (width: string, height = '12px'): React.CSSProperties =>
+    skeleton(width, height, { borderRadius: '4px' });
+
+  return (
+    <>
+      <style>{`
+        @keyframes skeleton-pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.4; }
+        }
+      `}</style>
+
+      <div style={{ minHeight: '100vh', backgroundColor: '#fff', padding: '32px 0' }}>
+        <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 16px' }}>
+          {/* Breadcrumb */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '24px' }}>
+            <div style={textLine('48px')} />
+            <div style={textLine('12px')} />
+            <div style={textLine('80px')} />
+            <div style={textLine('12px')} />
+            <div style={textLine('128px')} />
           </div>
 
-          {/* Product info */}
-          <div className="space-y-6">
-            {/* Category badge */}
-            <Skeleton className="h-6 w-24 rounded-full" />
-
-            {/* Title */}
-            <div className="space-y-2">
-              <SkeletonText className="h-8 w-3/4" />
-              <SkeletonText className="h-5 w-1/2" />
-            </div>
-
-            {/* Price */}
-            <SkeletonText className="h-8 w-28" />
-
-            {/* Purity / specs badges */}
-            <div className="flex gap-3">
-              <Skeleton className="h-8 w-24 rounded-lg" />
-              <Skeleton className="h-8 w-32 rounded-lg" />
-            </div>
-
-            {/* Format selector */}
-            <div className="space-y-3">
-              <SkeletonText className="h-4 w-32" />
-              <div className="flex gap-3">
-                {Array.from({ length: 3 }).map((_, i) => (
-                  <Skeleton key={i} className="h-12 w-28 rounded-lg" />
+          {/* Main product section: image + info */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '48px',
+            }}
+          >
+            {/* Image gallery */}
+            <div>
+              <div style={skeleton('100%', '0', { paddingBottom: '100%', borderRadius: '12px' })} />
+              <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
+                {[0, 1, 2, 3].map((i) => (
+                  <div key={i} style={skeleton('80px', '80px')} />
                 ))}
               </div>
             </div>
 
-            {/* Add to cart */}
-            <Skeleton className="h-14 w-full rounded-xl" />
+            {/* Product info */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+              {/* Category badge */}
+              <div style={skeleton('96px', '24px', { borderRadius: '9999px' })} />
 
-            {/* Description lines */}
-            <div className="space-y-2 pt-4 border-t border-gray-200">
-              <SkeletonText className="h-5 w-36 mb-3" />
-              <SkeletonText className="h-3 w-full" />
-              <SkeletonText className="h-3 w-full" />
-              <SkeletonText className="h-3 w-5/6" />
-              <SkeletonText className="h-3 w-4/6" />
+              {/* Title */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={textLine('75%', '32px')} />
+                <div style={textLine('50%', '20px')} />
+              </div>
+
+              {/* Price */}
+              <div style={textLine('112px', '32px')} />
+
+              {/* Purity / spec badges */}
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <div style={skeleton('96px', '32px')} />
+                <div style={skeleton('128px', '32px')} />
+              </div>
+
+              {/* Format selector */}
+              <div>
+                <div style={{ ...textLine('128px', '16px'), marginBottom: '12px' }} />
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  {[0, 1, 2].map((i) => (
+                    <div key={i} style={skeleton('112px', '48px')} />
+                  ))}
+                </div>
+              </div>
+
+              {/* Add to cart */}
+              <div style={skeleton('100%', '56px', { borderRadius: '12px' })} />
+
+              {/* Description */}
+              <div
+                style={{
+                  paddingTop: '16px',
+                  borderTop: '1px solid #E5E7EB',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '8px',
+                }}
+              >
+                <div style={{ ...textLine('144px', '20px'), marginBottom: '4px' }} />
+                <div style={textLine('100%')} />
+                <div style={textLine('100%')} />
+                <div style={textLine('83%')} />
+                <div style={textLine('66%')} />
+              </div>
+
+              {/* Specifications table */}
+              <div
+                style={{
+                  paddingTop: '16px',
+                  borderTop: '1px solid #E5E7EB',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '8px',
+                }}
+              >
+                <div style={{ ...textLine('128px', '20px'), marginBottom: '4px' }} />
+                {[0, 1, 2, 3].map((i) => (
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <div style={textLine('112px')} />
+                    <div style={textLine('80px')} />
+                  </div>
+                ))}
+              </div>
             </div>
+          </div>
 
-            {/* Specifications table */}
-            <div className="space-y-2 pt-4 border-t border-gray-200">
-              <SkeletonText className="h-5 w-32 mb-3" />
-              {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="flex justify-between">
-                  <SkeletonText className="h-3 w-28" />
-                  <SkeletonText className="h-3 w-20" />
+          {/* Related products */}
+          <div style={{ marginTop: '64px' }}>
+            <div style={{ ...textLine('192px', '24px'), marginBottom: '24px' }} />
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(4, 1fr)',
+                gap: '24px',
+              }}
+            >
+              {[0, 1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  style={{
+                    borderRadius: '12px',
+                    border: '1px solid #E5E7EB',
+                    overflow: 'hidden',
+                  }}
+                >
+                  <div style={skeleton('100%', '0', { paddingBottom: '100%', borderRadius: '0' })} />
+                  <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <div style={textLine('80%', '16px')} />
+                    <div style={textLine('40%', '14px')} />
+                  </div>
                 </div>
               ))}
             </div>
           </div>
         </div>
-
-        {/* Related products */}
-        <div className="mt-16">
-          <SkeletonText className="h-6 w-48 mb-6" />
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <SkeletonCard key={i} />
-            ))}
-          </div>
-        </div>
       </div>
-    </div>
+    </>
   );
 }
