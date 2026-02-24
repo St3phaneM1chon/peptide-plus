@@ -149,6 +149,12 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // BE-SEC-03: Sanitize control chars from inbound email fields before storage
+    const safeFrom = stripControlChars(payload.from);
+    const safeFromName = payload.fromName ? stripControlChars(payload.fromName) : null;
+    const safeTo = stripControlChars(payload.to || '');
+    const safeSubject = stripControlChars(payload.subject || '(No Subject)');
+
     // Match customer by email
     const customer = await prisma.user.findFirst({
       where: { email: { equals: payload.from.toLowerCase(), mode: 'insensitive' } },
@@ -186,12 +192,6 @@ export async function POST(request: NextRequest) {
         });
       }
     }
-
-    // BE-SEC-03: Sanitize control chars from inbound email fields before storage
-    const safeFrom = stripControlChars(payload.from);
-    const safeFromName = payload.fromName ? stripControlChars(payload.fromName) : null;
-    const safeTo = stripControlChars(payload.to || '');
-    const safeSubject = stripControlChars(payload.subject || '(No Subject)');
 
     // Create inbound email
     const inboundEmail = await prisma.inboundEmail.create({

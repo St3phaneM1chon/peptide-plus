@@ -82,10 +82,6 @@ export default class ApiContractsAuditor extends BaseAuditor {
       );
     } else {
       // Track as metric; multiple response methods are common in large Next.js codebases
-      const methodSummary = usedMethods.map(m => {
-        if (m.includes('NextResponse')) return `NextResponse.json (${wrappedResponses.length + unwrappedResponses.length - (/* approx */ 4)})`;
-        return m;
-      }).join(', ');
       results.push(
         this.pass('api-01', `API response methods: ${usedMethods.join(', ')} (${wrappedResponses.length} wrapped, ${unwrappedResponses.length} unwrapped)`)
       );
@@ -136,7 +132,6 @@ export default class ApiContractsAuditor extends BaseAuditor {
         // This is an error response - check the shape (error/message field anywhere in object)
         const hasErrorField = /error\s*:/.test(contextBlock);
         const hasMessageField = /message\s*:/.test(contextBlock);
-        const hasStatusField = /status\s*:/.test(contextBlock);
 
         if (hasErrorField || hasMessageField) {
           goodErrorPattern.push(relPath);
@@ -230,8 +225,6 @@ export default class ApiContractsAuditor extends BaseAuditor {
       // Detect HTTP methods exported
       const hasPOST = /export\s+(?:async\s+)?function\s+POST/.test(content);
       const hasDELETE = /export\s+(?:async\s+)?function\s+DELETE/.test(content);
-      const hasPUT = /export\s+(?:async\s+)?function\s+PUT/.test(content);
-      const hasPATCH = /export\s+(?:async\s+)?function\s+PATCH/.test(content);
 
       // Check POST handlers for 201 on creation
       if (hasPOST) {

@@ -373,7 +373,7 @@ async function sendViaSMTP(options: SendEmailOptions): Promise<EmailResult> {
   // Reuse transporter if config hasn't changed
   const configKey = `${host}:${port}:${user}`;
   if (!_smtpTransporter || _smtpConfig !== configKey) {
-    const nm = (nodemailer as { default?: typeof nodemailer }).default || nodemailer;
+    const nm = (nodemailer as unknown as { default?: typeof nodemailer }).default || nodemailer;
     _smtpTransporter = nm.createTransport({
       host,
       port,

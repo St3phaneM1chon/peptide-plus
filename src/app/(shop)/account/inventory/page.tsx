@@ -665,6 +665,8 @@ function ProductCard({
   locale: string;
 }) {
   const [showStockMenu, setShowStockMenu] = useState(false);
+  const fmtPrice = (amount: number) =>
+    new Intl.NumberFormat(locale, { style: 'currency', currency: 'CAD' }).format(amount);
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow">
@@ -781,6 +783,8 @@ function ProductDetailModal({
 }) {
   const [notes, setNotes] = useState(product.notes);
   const [activeTab, setActiveTab] = useState<'overview' | 'history'>('overview');
+  const fmtPrice = (amount: number) =>
+    new Intl.NumberFormat(locale, { style: 'currency', currency: 'CAD' }).format(amount);
 
   const saveNotes = () => {
     onUpdateNotes(product.productId, notes);

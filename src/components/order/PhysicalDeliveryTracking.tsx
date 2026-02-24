@@ -56,7 +56,7 @@ export function PhysicalDeliveryTracking({ order }: PhysicalDeliveryTrackingProp
   const purchaseDate = new Date(order.createdAt);
 
   // Générer les étapes selon le statut d'expédition
-  const steps = generateShippingSteps(shipping, purchaseDate, t);
+  const steps = generateShippingSteps(shipping, purchaseDate, t, locale);
 
   // Calculer la progression
   const completedSteps = steps.filter(s => s.status === 'completed').length;
@@ -497,7 +497,7 @@ export function PhysicalDeliveryTracking({ order }: PhysicalDeliveryTrackingProp
   );
 }
 
-function generateShippingSteps(shipping: ShippingInfo | null | undefined, purchaseDate: Date, t: (key: string) => string) {
+function generateShippingSteps(shipping: ShippingInfo | null | undefined, purchaseDate: Date, t: (key: string) => string, locale: string = 'en') {
   const steps = [
     {
       id: 'confirmed',

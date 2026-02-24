@@ -521,7 +521,6 @@ export default class AccessibilityWcagAuditor extends BaseAuditor {
     const results: AuditCheckResult[] = [];
     const tsxFiles = this.findFiles(this.srcDir, /\.tsx$/);
 
-    let hasPositiveTabIndex = false;
     const positiveTabIndexFiles: { file: string; line: number }[] = [];
     let modalCount = 0;
     let modalsWithFocusTrap = 0;
@@ -541,7 +540,6 @@ export default class AccessibilityWcagAuditor extends BaseAuditor {
         if (tabIndexMatch) {
           const value = parseInt(tabIndexMatch[1], 10);
           if (value > 0) {
-            hasPositiveTabIndex = true;
             positiveTabIndexFiles.push({ file, line: i + 1 });
           }
         }

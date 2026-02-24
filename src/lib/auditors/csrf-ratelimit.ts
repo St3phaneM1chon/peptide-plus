@@ -315,9 +315,6 @@ export default class CsrfRatelimitAuditor extends BaseAuditor {
     const packageJson = this.readFile(path.join(this.rootDir, 'package.json'));
     const hasRateLimitPackage = /@upstash\/ratelimit|express-rate-limit|rate-limiter-flexible|bottleneck|p-throttle/i.test(packageJson);
 
-    // Check for Redis or in-memory store for rate limiting
-    const hasRedis = /redis|ioredis|@upstash\/redis/i.test(packageJson);
-
     if (hasRateLimiterLib) {
       results.push(this.pass('csrf-05', `Rate limiter infrastructure exists (${rateLimiterFile})`));
     } else if (hasRateLimitPackage) {

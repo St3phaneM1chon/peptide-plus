@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useI18n } from '@/i18n/client';
-import PageHeader from '@/components/admin/PageHeader';
+import { PageHeader } from '@/components/admin/PageHeader';
 
 interface Finding {
   id: string;

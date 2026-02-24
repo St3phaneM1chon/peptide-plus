@@ -59,10 +59,10 @@ export const GET = withAdminGuard(async (request) => {
           event: true,
           payload: true,
           status: true,
-          responseBody: true,
+          response: true,
           duration: true,
           attempts: true,
-          nextRetryAt: true,
+          lastAttempt: true,
           createdAt: true,
           endpoint: {
             select: { id: true, url: true, name: true, active: true },

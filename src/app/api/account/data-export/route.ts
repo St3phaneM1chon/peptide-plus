@@ -543,7 +543,6 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     logger.error('[data-export] Failed to generate export', {
       error: error instanceof Error ? error.message : String(error),
-      userId: session?.user?.id,
     });
     return NextResponse.json(
       { error: 'Failed to generate data export' },

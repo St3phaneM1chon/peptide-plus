@@ -31,9 +31,8 @@ export const GET = withAdminGuard(async (request) => {
           email: true,
           name: true,
           status: true,
-          source: true,
-          locale: true,
-          tags: true,
+          consentType: true,
+          consentMethod: true,
           createdAt: true,
           updatedAt: true,
           confirmedAt: true,
@@ -41,9 +40,8 @@ export const GET = withAdminGuard(async (request) => {
           preferences: {
             select: {
               id: true,
-              newsletter: true,
-              promotions: true,
-              productUpdates: true,
+              category: true,
+              isEnabled: true,
             },
           },
         },

@@ -438,6 +438,7 @@ export default function ReturnsPage() {
                         date={request.createdAt}
                         completed={true}
                         icon="📝"
+                        locale={locale}
                       />
 
                       <TimelineStep
@@ -445,6 +446,7 @@ export default function ReturnsPage() {
                         completed={['APPROVED', 'REJECTED', 'RECEIVED', 'REFUNDED'].includes(request.status)}
                         current={request.status === 'PENDING'}
                         icon="🔍"
+                        locale={locale}
                       />
 
                       {request.status !== 'REJECTED' && (
@@ -454,6 +456,7 @@ export default function ReturnsPage() {
                             completed={['RECEIVED', 'REFUNDED'].includes(request.status)}
                             current={request.status === 'APPROVED'}
                             icon="✅"
+                            locale={locale}
                           />
 
                           <TimelineStep
@@ -461,6 +464,7 @@ export default function ReturnsPage() {
                             completed={request.status === 'REFUNDED'}
                             current={request.status === 'RECEIVED'}
                             icon="📦"
+                            locale={locale}
                           />
 
                           <TimelineStep
@@ -468,6 +472,7 @@ export default function ReturnsPage() {
                             completed={request.status === 'REFUNDED'}
                             icon="💰"
                             isLast={true}
+                            locale={locale}
                           />
                         </>
                       )}
@@ -478,6 +483,7 @@ export default function ReturnsPage() {
                           completed={true}
                           icon="❌"
                           isLast={true}
+                          locale={locale}
                         />
                       )}
                     </div>
@@ -520,6 +526,7 @@ function TimelineStep({
   current = false,
   icon,
   isLast = false,
+  locale = 'en',
 }: {
   label: string;
   date?: string;
@@ -527,6 +534,7 @@ function TimelineStep({
   current?: boolean;
   icon: string;
   isLast?: boolean;
+  locale?: string;
 }) {
   return (
     <div className={`relative pb-6 ${isLast ? 'pb-0' : ''}`}>

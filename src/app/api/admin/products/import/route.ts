@@ -220,7 +220,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
 
     // N+1 FIX: Batch-fetch all existing products by slug upfront
     const allSlugs = rows
-      .map((row, i) => {
+      .map((row) => {
         const name = row.name?.trim();
         if (!name) return null;
         return row.slug?.trim() || slugify(name);

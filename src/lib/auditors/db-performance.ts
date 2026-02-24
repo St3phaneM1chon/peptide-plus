@@ -151,8 +151,7 @@ export default class DbPerformanceAuditor extends BaseAuditor {
     if (!foundIssue) {
       results.push(this.pass('perf-01', 'No N+1 query patterns detected'));
     } else {
-      // Consolidate: separate HIGH (user-facing) from MEDIUM (batch/cron/import)
-      const highFindings = results.filter(r => !r.passed && r.checkId === 'perf-01' && r.severity === 'HIGH');
+      // Consolidate: keep individual HIGH findings but consolidate MEDIUM (batch/cron/import)
       const mediumFindings = results.filter(r => !r.passed && r.checkId === 'perf-01' && r.severity === 'MEDIUM');
 
       // Keep individual HIGH findings (user-facing latency) but consolidate MEDIUM into pass note
@@ -373,7 +372,6 @@ export default class DbPerformanceAuditor extends BaseAuditor {
       let match: RegExpExecArray | null;
 
       while ((match = findManyPattern.exec(content)) !== null) {
-        const modelName = match[1];
         const startPos = match.index;
 
         // Extract the arguments block

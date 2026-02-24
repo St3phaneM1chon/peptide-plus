@@ -290,7 +290,7 @@ export default class ApiLeakageAuditor extends BaseAuditor {
         },
       ];
 
-      for (const { pattern, label, check } of internalIdPatterns) {
+      for (const { pattern, label: _label, check } of internalIdPatterns) {
         if (pattern.test(content) && check()) {
           const match = content.match(pattern);
           if (!match) continue;

@@ -4,7 +4,6 @@
  * safe error handling, and event ordering logic.
  */
 
-import * as path from 'path';
 import BaseAuditor from './base-auditor';
 import type { AuditCheckResult } from '@/lib/audit-engine';
 
