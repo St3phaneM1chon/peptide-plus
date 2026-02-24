@@ -1,6 +1,8 @@
 'use client';
 
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import {
   Menu,
@@ -8,6 +10,11 @@ import {
   Bell,
   ShoppingCart,
   MessageCircle,
+  Package,
+  FileText,
+  Users,
+  FolderOpen,
+  BookOpen,
 } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
 import { useAdminLayout } from '@/lib/admin/admin-layout-context';
@@ -36,11 +43,81 @@ function getAvatarColor(name: string): string {
 
 // ── Component ───────────────────────────────────────────────────
 
+const TYPE_ICONS: Record<string, typeof Package> = {
+  product: Package,
+  order: ShoppingCart,
+  user: Users,
+  journal_entry: BookOpen,
+  category: FolderOpen,
+};
+
+const TYPE_LABELS: Record<string, string> = {
+  product: 'Product',
+  order: 'Order',
+  user: 'User',
+  journal_entry: 'Entry',
+  category: 'Category',
+};
+
+interface SearchResult {
+  id: string;
+  type: string;
+  title: string;
+  subtitle?: string;
+  url: string;
+}
+
 export default function OutlookTopBar({ onMobileMenuToggle }: { onMobileMenuToggle?: () => void } = {}) {
   const { data: session } = useSession();
   const { t } = useI18n();
+  const router = useRouter();
   const { toggleFolderPane, searchQuery, setSearchQuery } = useAdminLayout();
   const { pendingOrders, unreadChats } = useAdminNotifications();
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [showResults, setShowResults] = useState(false);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Debounced search
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (!searchQuery || searchQuery.length < 2) {
+      setSearchResults([]);
+      setShowResults(false);
+      return;
+    }
+    setSearchLoading(true);
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/admin/search?q=${encodeURIComponent(searchQuery)}&limit=8`);
+        if (res.ok) {
+          const data = await res.json();
+          setSearchResults(data.results || []);
+          setShowResults(true);
+        }
+      } catch { /* ignore */ }
+      setSearchLoading(false);
+    }, 300);
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, [searchQuery]);
+
+  // Close on click outside
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setShowResults(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
+  const handleResultClick = useCallback((result: SearchResult) => {
+    setShowResults(false);
+    setSearchQuery('');
+    router.push(result.url);
+  }, [router, setSearchQuery]);
 
   const userName = session?.user?.name || 'Admin';
   const userRole = (session?.user as { role?: string } | undefined)?.role ?? 'OWNER';
@@ -83,12 +160,13 @@ export default function OutlookTopBar({ onMobileMenuToggle }: { onMobileMenuTogg
 
       {/* ── Center section: Search ────────────────────────────── */}
       <div className="flex-1 flex justify-center px-4">
-        <div className="relative max-w-md w-full">
+        <div className="relative max-w-md w-full" ref={searchRef}>
           <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            onFocus={() => { if (searchResults.length > 0) setShowResults(true); }}
             placeholder={t('admin.outlook.searchPlaceholder')}
             aria-label={t('admin.outlook.searchPlaceholder')}
             className="w-full ps-9 pe-3 py-1.5 text-sm bg-slate-100 border border-transparent
@@ -96,6 +174,43 @@ export default function OutlookTopBar({ onMobileMenuToggle }: { onMobileMenuTogg
                        focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white focus:border-sky-300
                        transition-colors"
           />
+          {/* Search results dropdown */}
+          {showResults && (
+            <div className="absolute top-full mt-1 w-full bg-white rounded-lg shadow-lg border border-slate-200 max-h-80 overflow-y-auto z-50">
+              {searchLoading ? (
+                <div className="p-3 text-center text-sm text-slate-400">
+                  <div className="animate-spin inline-block w-4 h-4 border-2 border-sky-500 border-t-transparent rounded-full" />
+                </div>
+              ) : searchResults.length === 0 ? (
+                <div className="p-3 text-center text-sm text-slate-400">
+                  {t('common.noResults') || 'No results found'}
+                </div>
+              ) : (
+                searchResults.map((result) => {
+                  const Icon = TYPE_ICONS[result.type] || FileText;
+                  return (
+                    <button
+                      key={`${result.type}-${result.id}`}
+                      type="button"
+                      onClick={() => handleResultClick(result)}
+                      className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-slate-50 text-left transition-colors border-b border-slate-100 last:border-0"
+                    >
+                      <Icon className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-slate-900 truncate">{result.title}</p>
+                        {result.subtitle && (
+                          <p className="text-xs text-slate-500 truncate">{result.subtitle}</p>
+                        )}
+                      </div>
+                      <span className="text-[10px] px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded flex-shrink-0">
+                        {TYPE_LABELS[result.type] || result.type}
+                      </span>
+                    </button>
+                  );
+                })
+              )}
+            </div>
+          )}
         </div>
       </div>
 
