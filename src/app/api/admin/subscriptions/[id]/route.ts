@@ -49,7 +49,7 @@ export const GET = withAdminGuard(async (_request, { params }) => {
         select: { id: true, name: true, slug: true, imageUrl: true },
       });
     } catch (error) {
-      console.error('[AdminSubscriptions] Failed to fetch product (may have been deleted):', subscription.productId, error);
+      logger.error('[AdminSubscriptions] Failed to fetch product (may have been deleted)', { productId: subscription.productId, error: error instanceof Error ? error.message : String(error) });
     }
 
     // Get format info if format still exists
@@ -61,7 +61,7 @@ export const GET = withAdminGuard(async (_request, { params }) => {
           select: { id: true, name: true, formatType: true, price: true },
         });
       } catch (error) {
-        console.error('[AdminSubscriptions] Failed to fetch format (may have been deleted):', subscription.formatId, error);
+        logger.error('[AdminSubscriptions] Failed to fetch format (may have been deleted)', { formatId: subscription.formatId, error: error instanceof Error ? error.message : String(error) });
       }
     }
 

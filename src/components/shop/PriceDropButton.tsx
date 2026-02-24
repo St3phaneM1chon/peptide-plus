@@ -61,7 +61,7 @@ export default function PriceDropButton({
       const res = await fetch('/api/price-watch');
       if (res.ok) {
         const data = await res.json();
-        const watching = data.watches?.some((w: any) => w.productId === productId);
+        const watching = data.watches?.some((w: { productId: string }) => w.productId === productId);
         setIsWatching(watching);
       }
     } catch (error) {

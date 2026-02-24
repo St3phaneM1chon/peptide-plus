@@ -44,7 +44,7 @@ function parseCountries(raw: string): string[] {
   try {
     return JSON.parse(raw) as string[];
   } catch (error) {
-    console.error('[ShippingMethods] Failed to parse countries JSON:', error);
+    logger.error('[ShippingMethods] Failed to parse countries JSON', { error: error instanceof Error ? error.message : String(error) });
     return raw ? [raw] : [];
   }
 }

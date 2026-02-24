@@ -27,7 +27,7 @@ export const GET = withAdminGuard(async (_request, _ctx) => {
       try {
         countries = JSON.parse(z.countries);
       } catch (error) {
-        console.error('[ShippingZones] Failed to parse countries JSON for zone:', z.id, error);
+        logger.error('[ShippingZones] Failed to parse countries JSON for zone', { zoneId: z.id, error: error instanceof Error ? error.message : String(error) });
         countries = z.countries ? [z.countries] : [];
       }
 

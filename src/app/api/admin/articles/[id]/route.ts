@@ -75,7 +75,7 @@ export const GET = withAdminGuard(async (_request, { params }) => {
       try {
         parsedTags = JSON.parse(article.tags);
       } catch (error) {
-        console.error('[AdminArticleById] Failed to parse article tags as JSON:', error);
+        logger.error('[AdminArticleById] Failed to parse article tags as JSON', { error: error instanceof Error ? error.message : String(error) });
         parsedTags = article.tags.split(',').map(t => t.trim());
       }
     }

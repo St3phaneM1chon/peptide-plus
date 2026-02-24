@@ -69,7 +69,7 @@ export default function AddToWishlistButton({
           const itemsRes = await fetch(`/api/account/wishlists/items?collectionId=${collection.id}`);
           if (itemsRes.ok) {
             const itemsData = await itemsRes.json();
-            return (itemsData.items || []).some((item: any) => item.productId === productId);
+            return (itemsData.items || []).some((item: { productId: string }) => item.productId === productId);
           }
           return false;
         });

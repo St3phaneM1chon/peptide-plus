@@ -16,6 +16,7 @@ import { validateCsrf } from '@/lib/csrf-middleware';
 import { stripHtml, stripControlChars } from '@/lib/sanitize';
 import { v4 as uuidv4 } from 'uuid';
 import { logger } from '@/lib/logger';
+import type { ChatStatus } from '@prisma/client';
 import { z } from 'zod';
 
 // GET - Liste des conversations (admin only)
@@ -38,8 +39,7 @@ export async function GET(request: NextRequest) {
     const safeStatus = status && validStatuses.includes(status.toUpperCase()) ? status.toUpperCase() : null;
 
     const conversations = await db.chatConversation.findMany({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Prisma enum type from validated query string
-      where: safeStatus ? { status: safeStatus as any } : undefined,
+      where: safeStatus ? { status: safeStatus as ChatStatus } : undefined,
       orderBy: { lastMessageAt: 'desc' },
       take: limit,
       include: {

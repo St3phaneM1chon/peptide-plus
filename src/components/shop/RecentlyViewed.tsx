@@ -7,6 +7,17 @@ import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
 import { useI18n } from '@/i18n/client';
 import { useCurrency } from '@/contexts/CurrencyContext';
 
+interface FetchedProduct {
+  id: string;
+  name: string;
+  slug: string;
+  price?: number | string;
+  imageUrl?: string;
+  purity?: number | string;
+  formats?: Array<{ isActive: boolean; price: number | string }>;
+  images?: Array<{ url: string; isPrimary?: boolean }>;
+}
+
 interface RecentProduct {
   id: string;
   name: string;
@@ -55,20 +66,19 @@ export default function RecentlyViewed({ excludeSlug }: RecentlyViewedProps) {
         const data = await res.json();
         // BUG-056 FIX: The /api/products endpoint returns { products: [...] } via apiSuccess/withETag.
         // Use that standard shape with a safe fallback to empty array.
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const fetchedProducts: any[] = data.products ?? [];
+        const fetchedProducts: FetchedProduct[] = data.products ?? [];
 
         // Build a map for quick lookup
         const productMap = new Map<string, RecentProduct>();
         for (const p of fetchedProducts) {
           // Compute lowest price from formats
-          const activeFormats = (p.formats || []).filter((f: { isActive: boolean }) => f.isActive);
+          const activeFormats = (p.formats || []).filter((f) => f.isActive);
           const lowestPrice = activeFormats.length > 0
-            ? Math.min(...activeFormats.map((f: { price: number | string }) => Number(f.price)))
+            ? Math.min(...activeFormats.map((f) => Number(f.price)))
             : Number(p.price) || 0;
 
           // Get primary image
-          const primaryImage = p.images?.find((img: { isPrimary?: boolean }) => img.isPrimary) || p.images?.[0];
+          const primaryImage = p.images?.find((img) => img.isPrimary) || p.images?.[0];
           const imageUrl = primaryImage?.url || p.imageUrl || undefined;
 
           productMap.set(p.slug, {

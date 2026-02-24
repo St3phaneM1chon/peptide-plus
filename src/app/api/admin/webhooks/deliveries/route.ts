@@ -16,6 +16,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextResponse } from 'next/server';
+import type { Prisma } from '@prisma/client';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { parsePagination, prismaPagination, paginatedResponse } from '@/lib/pagination';
@@ -37,8 +38,7 @@ export const GET = withAdminGuard(async (request) => {
     const endpointIdFilter = searchParams.get('endpointId');
 
     // Build where clause
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const where: any = {};
+    const where: Prisma.WebhookDeliveryWhereInput = {};
     if (statusFilter !== null && statusFilter !== '') {
       where.status = parseInt(statusFilter, 10);
     }

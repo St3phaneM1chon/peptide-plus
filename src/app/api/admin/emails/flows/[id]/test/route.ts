@@ -138,7 +138,7 @@ export const POST = withAdminGuard(
                   messageId: emailResult.messageId || null,
                   templateId: `flow-test:${flow.id}:${node.id}`,
                 },
-              }).catch((error: unknown) => { console.error('[EmailFlowTest] Non-blocking email log creation failed:', error); }); // non-blocking
+              }).catch((error: unknown) => { logger.error('[EmailFlowTest] Non-blocking email log creation failed', { error: error instanceof Error ? error.message : String(error) }); }); // non-blocking
 
               results.push({
                 nodeId: node.id,
@@ -149,7 +149,7 @@ export const POST = withAdminGuard(
                   : `Failed: ${emailResult.error || 'unknown error'}`,
               });
             } catch (err) {
-              console.error('[EmailFlowTest] Failed to send test email for node:', node.id, err);
+              logger.error('[EmailFlowTest] Failed to send test email for node', { nodeId: node.id, error: err instanceof Error ? err.message : String(err) });
               results.push({
                 nodeId: node.id,
                 type: node.type,

@@ -353,7 +353,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
           created++;
         }
       } catch (err) {
-        console.error('[ProductImport] Failed to import product at row:', rowNum, err);
+        logger.error('[ProductImport] Failed to import product at row', { row: rowNum, error: err instanceof Error ? err.message : String(err) });
         const message = err instanceof Error ? err.message : 'Unknown error';
         errors.push({ row: rowNum, message });
       }

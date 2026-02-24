@@ -15,6 +15,7 @@ import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { validateCsrf } from '@/lib/csrf-middleware';
 import { stripHtml, stripControlChars } from '@/lib/sanitize';
 import { logger } from '@/lib/logger';
+import type { ChatSender, ChatMessageType } from '@prisma/client';
 import { z } from 'zod';
 
 export async function POST(request: NextRequest) {
@@ -246,14 +247,12 @@ export async function POST(request: NextRequest) {
         conversationId,
         content: messageToSave.content,
         contentOriginal: messageToSave.contentOriginal,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Prisma enum type mismatch
-        sender: sender as any,
+        sender: sender as ChatSender,
         senderName: sender === 'ADMIN' ? (session?.user?.name || 'Support') : undefined,
         language: messageToSave.language,
         translatedTo: messageToSave.translatedTo,
         isFromBot: false,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Prisma enum type mismatch
-        type: messageType as any,
+        type: messageType as ChatMessageType,
         attachmentUrl,
         attachmentName,
         attachmentSize,

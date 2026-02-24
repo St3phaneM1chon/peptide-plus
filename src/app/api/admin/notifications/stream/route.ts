@@ -9,6 +9,7 @@ import { NextRequest } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { UserRole } from '@/types';
+import { logger } from '@/lib/logger';
 
 // Simple rate limiter for SSE connections (max 3 concurrent per IP)
 const activeConnections = new Map<string, number>();
@@ -83,7 +84,7 @@ export async function GET(request: NextRequest) {
           const data = `data: ${JSON.stringify(counts)}\n\n`;
           controller.enqueue(encoder.encode(data));
         } catch (error) {
-          console.error('[NotificationStream] Failed to send SSE event (connection may be closed):', error);
+          logger.error('[NotificationStream] Failed to send SSE event (connection may be closed)', { error: error instanceof Error ? error.message : String(error) });
         }
       };
 
@@ -97,7 +98,7 @@ export async function GET(request: NextRequest) {
       request.signal.addEventListener('abort', () => {
         cleanup();
         try { controller.close(); } catch (error) {
-          console.error('[NotificationStream] Controller close failed (already closed):', error);
+          logger.error('[NotificationStream] Controller close failed (already closed)', { error: error instanceof Error ? error.message : String(error) });
         }
       });
     },

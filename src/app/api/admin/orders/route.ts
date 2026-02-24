@@ -315,7 +315,7 @@ export const PUT = withAdminGuard(async (request, { session }) => {
     try {
       revalidatePath('/account/orders', 'layout');
     } catch (error) {
-      console.error('[AdminOrders] Revalidation of order pages failed (best-effort):', error);
+      logger.error('[AdminOrders] Revalidation of order pages failed (best-effort)', { error: error instanceof Error ? error.message : String(error) });
     }
 
     // Audit log for order update (fire-and-forget)
@@ -328,7 +328,7 @@ export const PUT = withAdminGuard(async (request, { session }) => {
       newValue: { status: status || existingOrder.status, trackingNumber: trackingNumber || null, carrier: carrier || null, adminNotes: adminNotes || null },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((error: unknown) => { console.error('[AdminOrders] Non-blocking audit log for order update failed:', error); });
+    }).catch((error: unknown) => { logger.error('[AdminOrders] Non-blocking audit log for order update failed', { error: error instanceof Error ? error.message : String(error) }); });
 
     // Trigger automation engine for order lifecycle events (fire-and-forget)
     if (status && status !== existingOrder.status) {
@@ -491,9 +491,9 @@ export const POST = withAdminGuard(async (request, { session }) => {
                   orderNumber: o.orderNumber,
                   trackingNumber: o.trackingNumber || '',
                   carrier: o.carrier || '',
-                }).catch((error: unknown) => { console.error('[AdminOrders] Non-blocking batch automation event handling failed:', error); });
+                }).catch((error: unknown) => { logger.error('[AdminOrders] Non-blocking batch automation event handling failed', { error: error instanceof Error ? error.message : String(error) }); });
               }
-            }).catch((error: unknown) => { console.error('[AdminOrders] Non-blocking batch order refetch failed:', error); });
+            }).catch((error: unknown) => { logger.error('[AdminOrders] Non-blocking batch order refetch failed', { error: error instanceof Error ? error.message : String(error) }); });
           }
         }
 
@@ -505,7 +505,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
           newStatus: status || existingOrder.status,
         });
       } catch (error) {
-        console.error('[AdminOrders] Failed to update order in batch:', orderId, error);
+        logger.error('[AdminOrders] Failed to update order in batch', { orderId, error: error instanceof Error ? error.message : String(error) });
         results.push({
           orderId,
           success: false,
@@ -523,7 +523,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       try {
         revalidatePath('/account/orders', 'layout');
       } catch (error) {
-        console.error('[AdminOrders] Revalidation of order pages after batch update failed (best-effort):', error);
+        logger.error('[AdminOrders] Revalidation of order pages after batch update failed (best-effort)', { error: error instanceof Error ? error.message : String(error) });
       }
     }
 
@@ -537,7 +537,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
       metadata: { results: results.map((r) => ({ orderId: r.orderId, orderNumber: r.orderNumber, success: r.success, previousStatus: r.previousStatus, newStatus: r.newStatus, error: r.error })) },
-    }).catch((error: unknown) => { console.error('[AdminOrders] Non-blocking batch update audit log failed:', error); });
+    }).catch((error: unknown) => { logger.error('[AdminOrders] Non-blocking batch update audit log failed', { error: error instanceof Error ? error.message : String(error) }); });
 
     return NextResponse.json({
       success: failCount === 0,

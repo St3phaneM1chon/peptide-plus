@@ -8,13 +8,18 @@ import {
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 
+interface FlowNodeSummary {
+  type: string;
+  [key: string]: unknown;
+}
+
 interface Flow {
   id: string;
   name: string;
   description: string | null;
   trigger: string;
   isActive: boolean;
-  nodes: unknown[];
+  nodes: FlowNodeSummary[];
   edges: unknown[];
   stats: { triggered: number; sent: number; opened: number; clicked: number; revenue: number };
   updatedAt: string;
@@ -160,13 +165,13 @@ export default function FlowList({ onEditFlow, onCreateFlow }: FlowListProps) {
                 {/* Flow preview: node count */}
                 <div className="flex items-center gap-4 text-xs text-slate-400 mb-3">
                   <span className="flex items-center gap-1">
-                    <Mail className="h-3 w-3" /> {flow.nodes.filter((n: any) => n.type === 'email').length} {t('admin.emails.flows.emailsLabel')}
+                    <Mail className="h-3 w-3" /> {flow.nodes.filter((n) => n.type === 'email').length} {t('admin.emails.flows.emailsLabel')}
                   </span>
                   <span className="flex items-center gap-1">
-                    <Clock className="h-3 w-3" /> {flow.nodes.filter((n: any) => n.type === 'delay').length} {t('admin.emails.flows.delaysLabel')}
+                    <Clock className="h-3 w-3" /> {flow.nodes.filter((n) => n.type === 'delay').length} {t('admin.emails.flows.delaysLabel')}
                   </span>
                   <span className="flex items-center gap-1">
-                    <GitMerge className="h-3 w-3" /> {flow.nodes.filter((n: any) => n.type === 'condition').length} {t('admin.emails.flows.conditionsLabel')}
+                    <GitMerge className="h-3 w-3" /> {flow.nodes.filter((n) => n.type === 'condition').length} {t('admin.emails.flows.conditionsLabel')}
                   </span>
                 </div>
 

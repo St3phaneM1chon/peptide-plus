@@ -153,7 +153,7 @@ export const GET = withAdminGuard(async (request, { session: _session }) => {
           let queryObj: Record<string, unknown> = {};
           try {
             queryObj = JSON.parse(s.query);
-          } catch (error) { console.error('[EmailSegments] Failed to parse segment query JSON:', error); /* use empty query */ }
+          } catch (error) { logger.error('[EmailSegments] Failed to parse segment query JSON', { error: error instanceof Error ? error.message : String(error) }); /* use empty query */ }
 
           const count = await countSegment(queryObj, now);
 
@@ -161,7 +161,7 @@ export const GET = withAdminGuard(async (request, { session: _session }) => {
           await prisma.emailSegment.update({
             where: { id: s.id },
             data: { contactCount: count },
-          }).catch((error: unknown) => { console.error('[EmailSegments] Non-blocking segment count update failed:', error); }); // non-blocking
+          }).catch((error: unknown) => { logger.error('[EmailSegments] Non-blocking segment count update failed', { error: error instanceof Error ? error.message : String(error) }); }); // non-blocking
 
           return {
             id: s.id,
@@ -253,7 +253,7 @@ async function countSegment(rawQuery: Record<string, unknown>, now: Date): Promi
   try {
     return await prisma.user.count({ where });
   } catch (error) {
-    console.error('[EmailSegments] Failed to count segment users:', error);
+    logger.error('[EmailSegments] Failed to count segment users', { error: error instanceof Error ? error.message : String(error) });
     return 0;
   }
 }

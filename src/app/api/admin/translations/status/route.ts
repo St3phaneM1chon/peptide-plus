@@ -69,7 +69,7 @@ export const GET = withAdminGuard(async (request: NextRequest, _ctx) => {
       try {
         overview[m] = await getModelTranslationCoverage(m);
       } catch (error) {
-        console.error('[TranslationStatus] Failed to get translation coverage for model:', m, error);
+        logger.error('[TranslationStatus] Failed to get translation coverage for model', { model: m, error: error instanceof Error ? error.message : String(error) });
         overview[m] = { error: 'Impossible de calculer la couverture' };
       }
     }

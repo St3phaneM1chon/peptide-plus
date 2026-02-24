@@ -12,6 +12,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { getBounceStats } from '@/lib/email/bounce-handler';
+import { logger } from '@/lib/logger';
 
 type HealthStatus = 'healthy' | 'degraded' | 'down';
 
@@ -61,7 +62,7 @@ export const GET = withAdminGuard(async (_request, { session: _session }) => {
     lastEmailSentAt = lastEmail?.sentAt?.toISOString() ?? null;
     recentErrors = errorCount;
   } catch (error) {
-    console.error('[EmailHealth] Database health check failed:', error);
+    logger.error('[EmailHealth] Database health check failed', { error: error instanceof Error ? error.message : String(error) });
     databaseConnected = false;
   }
 

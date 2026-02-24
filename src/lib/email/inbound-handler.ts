@@ -10,6 +10,7 @@
  *  - Activity logging for full audit trail
  */
 
+import type { InboundEmail, EmailConversation, User } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import DOMPurify from 'isomorphic-dompurify';
@@ -52,15 +53,15 @@ export interface InboundEmailPayload {
 }
 
 export interface ProcessedEmail {
-  inboundEmail: any;
-  conversation: any;
+  inboundEmail: InboundEmail;
+  conversation: EmailConversation | null;
   isNew: boolean;
-  customer: any | null;
+  customer: User | null;
 }
 
 interface TimelineItem {
   type: 'inbound' | 'outbound' | 'note' | 'activity';
-  data: any;
+  data: Record<string, unknown>;
   timestamp: Date;
 }
 

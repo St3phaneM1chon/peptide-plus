@@ -74,7 +74,7 @@ export const GET = withAdminGuard(async (_request, { params }) => {
       try {
         parsedTags = JSON.parse(post.tags);
       } catch (error) {
-        console.error('[AdminBlogPostById] Failed to parse blog post tags as JSON:', error);
+        logger.error('[AdminBlogPostById] Failed to parse blog post tags as JSON', { error: error instanceof Error ? error.message : String(error) });
         parsedTags = post.tags.split(',').map(t => t.trim());
       }
     }

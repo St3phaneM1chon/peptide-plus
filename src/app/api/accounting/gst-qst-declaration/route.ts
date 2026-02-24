@@ -10,6 +10,16 @@ import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { validateCsrf } from '@/lib/csrf-middleware';
 
 // ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+interface GstQstDeclarationData {
+  gst?: { collected?: number; itc?: number; net?: number };
+  qst?: { collected?: number; itr?: number; net?: number };
+  totalRemittance?: number;
+  supplies?: { total?: number };
+}
+
+// ---------------------------------------------------------------------------
 // Zod schema for POST
 // ---------------------------------------------------------------------------
 const gstQstDeclarationSchema = z.object({
@@ -437,8 +447,7 @@ export const POST = withAdminGuard(async (request) => {
     }
 
     // Extract financial data
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const declarationData = data as any;
+    const declarationData = data as GstQstDeclarationData;
     const gstCollected = declarationData?.gst?.collected || 0;
     const qstCollected = declarationData?.qst?.collected || 0;
     const itc = declarationData?.gst?.itc || 0;

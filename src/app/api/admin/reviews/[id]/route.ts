@@ -123,9 +123,9 @@ export const DELETE = withAdminGuard(async (request: NextRequest, { session, par
     if (existing.images?.length) {
       try {
         const { storage } = await import('@/lib/storage');
-        await Promise.all(existing.images.map((img) => storage.delete(img.url).catch((error: unknown) => { console.error('[AdminReviews] Non-blocking review image deletion failed:', img.url, error); })));
+        await Promise.all(existing.images.map((img) => storage.delete(img.url).catch((error: unknown) => { logger.error('[AdminReviews] Non-blocking review image deletion failed', { url: img.url, error: error instanceof Error ? error.message : String(error) }); })));
       } catch (error) {
-        console.error('[AdminReviews] Storage cleanup for review images failed (best-effort):', error);
+        logger.error('[AdminReviews] Storage cleanup for review images failed (best-effort)', { error: error instanceof Error ? error.message : String(error) });
       }
     }
 

@@ -48,7 +48,7 @@ async function loadCampaigns(): Promise<Campaign[]> {
   try {
     return JSON.parse(entry.value) as Campaign[];
   } catch (error) {
-    console.error('[NewsletterCampaignStats] Failed to parse campaigns JSON:', error);
+    logger.error('[NewsletterCampaignStats] Failed to parse campaigns JSON', { error: error instanceof Error ? error.message : String(error) });
     return [];
   }
 }

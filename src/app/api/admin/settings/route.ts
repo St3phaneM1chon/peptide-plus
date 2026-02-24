@@ -122,7 +122,7 @@ export const GET = withAdminGuard(async (_request, { session: _session }) => {
       try {
         return JSON.parse(val);
       } catch (error) {
-        console.error('[AdminSettings] Failed to parse JSON setting value:', error);
+        logger.error('[AdminSettings] Failed to parse JSON setting value', { error: error instanceof Error ? error.message : String(error) });
         return val;
       }
     };

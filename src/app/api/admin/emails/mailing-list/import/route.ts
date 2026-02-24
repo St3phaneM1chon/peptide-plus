@@ -90,7 +90,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
         newValue: { checked: subscribers.length, cleaned },
         ipAddress: getClientIpFromRequest(request),
         userAgent: request.headers.get('user-agent') || undefined,
-      }).catch((error: unknown) => { console.error('[MailingListImport] Non-blocking clean list admin action log failed:', error); });
+      }).catch((error: unknown) => { logger.error('[MailingListImport] Non-blocking clean list admin action log failed', { error: error instanceof Error ? error.message : String(error) }); });
 
       return NextResponse.json({ success: true, cleaned, checked: subscribers.length });
     }
@@ -208,7 +208,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
           imported++;
         }
       } catch (error) {
-        console.error('[MailingListImport] Database error importing contact:', contact.email, error);
+        logger.error('[MailingListImport] Database error importing contact', { email: contact.email, error: error instanceof Error ? error.message : String(error) });
         failed++;
         errors.push({ row: contact.row, email: contact.email, reason: 'db_error' });
       }
@@ -222,7 +222,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
       newValue: { total: contacts.length, created: imported, updated, skipped, failed, duplicatesInCsv, preservedUnsubscribed },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch((error: unknown) => { console.error('[MailingListImport] Non-blocking import admin action log failed:', error); });
+    }).catch((error: unknown) => { logger.error('[MailingListImport] Non-blocking import admin action log failed', { error: error instanceof Error ? error.message : String(error) }); });
 
     return NextResponse.json({
       success: true,
