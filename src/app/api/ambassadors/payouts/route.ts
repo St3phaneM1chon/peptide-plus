@@ -1,12 +1,13 @@
 export const dynamic = 'force-dynamic';
 
+// FIX: F-080 - Migrated to withAdminGuard for consistent auth + CSRF + rate limiting
+
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
-import { auth } from '@/lib/auth-config';
+import { withAdminGuard } from '@/lib/admin-api-guard';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { logger } from '@/lib/logger';
-import { rateLimitMiddleware } from '@/lib/rate-limiter';
-import { validateCsrf } from '@/lib/csrf-middleware';
 
 const createPayoutSchema = z.object({
   ambassadorId: z.string().min(1, 'ambassadorId is required'),
@@ -19,13 +20,8 @@ const createPayoutSchema = z.object({
  * GET /api/ambassadors/payouts
  * List payout history for all ambassadors (or filtered by ambassadorId)
  */
-export async function GET(request: NextRequest) {
+export const GET = withAdminGuard(async (request: NextRequest, { session: _session }) => {
   try {
-    const session = await auth();
-    if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role || '')) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
-    }
-
     const { searchParams } = new URL(request.url);
     const ambassadorId = searchParams.get('ambassadorId');
 
@@ -79,34 +75,15 @@ export async function GET(request: NextRequest) {
     logger.error('Payouts GET error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
   }
-}
+});
 
 /**
  * POST /api/ambassadors/payouts
  * Process a payout for an ambassador - marks all pending commissions as paid
  * Body: { ambassadorId: string, method?: string, reference?: string, notes?: string }
  */
-export async function POST(request: NextRequest) {
+export const POST = withAdminGuard(async (request: NextRequest, { session }) => {
   try {
-    // Rate limiting
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || '127.0.0.1';
-    const rl = await rateLimitMiddleware(ip, '/api/ambassadors/payouts');
-    if (!rl.success) {
-      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
-      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
-      return res;
-    }
-    // CSRF validation
-    const csrfValid = await validateCsrf(request);
-    if (!csrfValid) {
-      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
-    }
-
-    const session = await auth();
-    if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role || '')) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
-    }
-
     const body = await request.json();
     const parsed = createPayoutSchema.safeParse(body);
     if (!parsed.success) {
@@ -182,6 +159,16 @@ export async function POST(request: NextRequest) {
       return newPayout;
     });
 
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'PROCESS_AMBASSADOR_PAYOUT',
+      targetType: 'AmbassadorPayout',
+      targetId: payout.id,
+      newValue: { ambassadorId, amount: Number(payout.amount), commissionsCount: pendingCommissions.length },
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
+
     return NextResponse.json({
       payout: {
         id: payout.id,
@@ -194,4 +181,4 @@ export async function POST(request: NextRequest) {
     logger.error('Payout processing error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Erreur lors du traitement du paiement' }, { status: 500 });
   }
-}
+});

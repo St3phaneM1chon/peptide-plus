@@ -1,16 +1,13 @@
 export const dynamic = 'force-dynamic';
 
-// TODO: F-068 - referralCode generated with Date.now().toString(36) is predictable; use crypto.randomUUID().slice(0,8)
-// TODO: F-080 - Manual role check instead of withAdminGuard; inconsistent with promo-code routes
+// FIX: F-080 - Migrated to withAdminGuard for consistent auth + CSRF + rate limiting
 // TODO: F-096 - Error messages mix French and English; return error codes and translate client-side
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
-import { auth } from '@/lib/auth-config';
+import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logger } from '@/lib/logger';
-import { rateLimitMiddleware } from '@/lib/rate-limiter';
-import { validateCsrf } from '@/lib/csrf-middleware';
 
 const createAmbassadorSchema = z.object({
   userId: z.string().min(1).optional(),
@@ -19,13 +16,8 @@ const createAmbassadorSchema = z.object({
   commissionRate: z.number().min(0).max(100).optional().default(10),
 });
 
-export async function GET(request: NextRequest) {
+export const GET = withAdminGuard(async (request: NextRequest, { session: _session }) => {
   try {
-    const session = await auth();
-    if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role || '')) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
-    }
-
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
     const tier = searchParams.get('tier');
@@ -119,7 +111,7 @@ export async function GET(request: NextRequest) {
     logger.error('Ambassadors API error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Failed to fetch ambassadors', ambassadors: [] }, { status: 500 });
   }
-}
+});
 
 /**
  * Sync commission records for all paid orders that used ambassador referral codes.
@@ -218,27 +210,8 @@ async function syncCommissionsForCodes(
 }
 void syncCommissionsForCodes; // Available for dedicated sync endpoint/cron
 
-export async function POST(request: NextRequest) {
+export const POST = withAdminGuard(async (request: NextRequest, { session: _session }) => {
   try {
-    // Rate limiting
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || '127.0.0.1';
-    const rl = await rateLimitMiddleware(ip, '/api/ambassadors');
-    if (!rl.success) {
-      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
-      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
-      return res;
-    }
-    // CSRF validation
-    const csrfValid = await validateCsrf(request);
-    if (!csrfValid) {
-      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
-    }
-
-    const session = await auth();
-    if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role || '')) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
-    }
-
     const body = await request.json();
     const parsed = createAmbassadorSchema.safeParse(body);
     if (!parsed.success) {
@@ -273,4 +246,4 @@ export async function POST(request: NextRequest) {
     logger.error('Create ambassador error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Erreur lors de la création' }, { status: 500 });
   }
-}
+});

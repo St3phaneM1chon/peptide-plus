@@ -195,6 +195,7 @@ export default function ProductsListClient({
 
     setDeleting(id);
     try {
+      // NOTE: DELETE handler at /api/products/[id] requires OWNER role + CSRF + rate-limit (secured)
       const res = await fetch(`/api/products/${id}`, { method: 'DELETE' });
       if (res.ok) {
         setProducts(products.filter((p) => p.id !== id));

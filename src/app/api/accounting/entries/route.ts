@@ -285,7 +285,15 @@ export const POST = withAdminGuard(async (request, { session }) => {
 
     return NextResponse.json({ success: true, entry });
   } catch (error) {
-    logger.error('Create entry error', { error: error instanceof Error ? error.message : String(error) });
+    // FIX G3-8: Return 400 for balance validation errors (debit != credit)
+    const errMsg = error instanceof Error ? error.message : String(error);
+    if (errMsg.includes('unbalanced')) {
+      return NextResponse.json(
+        { error: errMsg },
+        { status: 400 }
+      );
+    }
+    logger.error('Create entry error', { error: errMsg });
     return NextResponse.json(
       { error: 'Erreur lors de la création de l\'écriture' },
       { status: 500 }
@@ -422,6 +430,13 @@ export const PUT = withAdminGuard(async (request, { session }) => {
         );
       }
 
+      // FIX G3-8: Validate debit == credit before updating lines
+      const linesToValidate = lines.map((l: { debit?: number; credit?: number }) => ({
+        debit: Number(l.debit) || 0,
+        credit: Number(l.credit) || 0,
+      }));
+      assertJournalBalance(linesToValidate, `update entry ${id}`);
+
       // #81 Error Recovery: Wrap deleteMany+createMany+update in $transaction
       // to ensure atomicity - if createMany fails, deleteMany is rolled back
       // FIX (F004): Use RepeatableRead isolation to prevent phantom reads
@@ -488,7 +503,11 @@ export const PUT = withAdminGuard(async (request, { session }) => {
 
     return NextResponse.json({ success: true, entry: updated });
   } catch (error) {
-    logger.error('Update entry error', { error: error instanceof Error ? error.message : String(error) });
+    const errMsg = error instanceof Error ? error.message : String(error);
+    if (errMsg.includes('unbalanced')) {
+      return NextResponse.json({ error: errMsg }, { status: 400 });
+    }
+    logger.error('Update entry error', { error: errMsg });
     return NextResponse.json(
       { error: 'Erreur lors de la mise à jour' },
       { status: 500 }
@@ -659,7 +678,11 @@ export const DELETE = withAdminGuard(async (request, { session }) => {
 
     return NextResponse.json({ error: 'Action invalide' }, { status: 400 });
   } catch (error) {
-    logger.error('Delete/void entry error', { error: error instanceof Error ? error.message : String(error) });
+    const errMsg = error instanceof Error ? error.message : String(error);
+    if (errMsg.includes('unbalanced')) {
+      return NextResponse.json({ error: errMsg }, { status: 400 });
+    }
+    logger.error('Delete/void entry error', { error: errMsg });
     return NextResponse.json(
       { error: 'Erreur lors de l\'opération' },
       { status: 500 }

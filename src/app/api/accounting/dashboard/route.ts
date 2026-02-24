@@ -260,10 +260,8 @@ export const GET = withAdminGuard(async (request) => {
     const dpo = totalExpenses > 0 ? Math.round((apOutstanding / totalExpenses) * 30) : 0;
     // Current Ratio = Current Assets / Current Liabilities
     const currentRatio = currentLiabilities > 0 ? Math.round((currentAssets / currentLiabilities) * 100) / 100 : 0;
-    // Gross margin %
-    const grossMarginPct = totalRevenue > 0 ? Math.round(((totalRevenue - totalExpenses) / totalRevenue) * 1000) / 10 : 0;
-
-    const kpis = { dso, dpo, currentRatio, grossMarginPct, arOutstanding, apOutstanding };
+    // grossMarginPct computed after expensesByCategory is built (see below)
+    const kpis: Record<string, number> = { dso, dpo, currentRatio, grossMarginPct: 0, arOutstanding, apOutstanding };
 
     // Monthly trends: last 6 months of revenue vs expenses for charts
     const monthlyTrendsData: Array<{
@@ -370,6 +368,14 @@ export const GET = withAdminGuard(async (request) => {
           : 0,
       };
     });
+
+    // FIX G3-10: Gross margin uses COGS (account code 5xxx), not total expenses
+    const totalCogs = expensesByCategory
+      .filter((c) => c.accountCode.startsWith('5'))
+      .reduce((s, c) => s + c.total, 0);
+    kpis.grossMarginPct = totalRevenue > 0
+      ? Math.round(((totalRevenue - totalCogs) / totalRevenue) * 1000) / 10
+      : 0;
 
     // G3-FLAW-08: Compute expense anomalies (compare current month to prior 3-month average)
     const threeMonthsAgo = new Date(viewYear, viewMonth - 3, 1);

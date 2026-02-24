@@ -7,9 +7,14 @@ import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { logger } from '@/lib/logger';
 
+// G1-FLAW-10 FIX: Safety cap for admin point adjustments
+const MAX_ADMIN_POINTS_ADJUSTMENT = 1_000_000;
+
 // Zod schema for POST /api/admin/users/[id]/points (adjust loyalty points)
 const adjustPointsSchema = z.object({
-  amount: z.number().int().refine((v) => v !== 0, 'Amount must be non-zero'),
+  amount: z.number().int()
+    .refine((v) => v !== 0, 'Amount must be non-zero')
+    .refine((v) => Math.abs(v) <= MAX_ADMIN_POINTS_ADJUSTMENT, `Amount cannot exceed ${MAX_ADMIN_POINTS_ADJUSTMENT.toLocaleString()} points`),
   reason: z.string().min(1, 'Reason is required'),
 }).strict();
 
@@ -36,6 +41,15 @@ export const POST = withAdminGuard(async (request: NextRequest, { session, param
     const newPoints = user.loyaltyPoints + amount;
     if (newPoints < 0) {
       return NextResponse.json({ error: 'Points insuffisants' }, { status: 400 });
+    }
+
+    // G1-FLAW-10 FIX: Cap maximum balance to prevent unbounded point accumulation
+    const MAX_POINTS_BALANCE = 10_000_000;
+    if (newPoints > MAX_POINTS_BALANCE) {
+      return NextResponse.json(
+        { error: `Resulting balance (${newPoints.toLocaleString()}) would exceed maximum allowed (${MAX_POINTS_BALANCE.toLocaleString()})` },
+        { status: 400 }
+      );
     }
 
     // Update user points and create transaction in a single transaction

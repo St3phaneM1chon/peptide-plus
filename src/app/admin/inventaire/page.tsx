@@ -182,23 +182,37 @@ export default function InventairePage() {
   };
 
   const updateStock = async (id: string, newQuantity: number, reason: string) => {
+    // G1-FLAW-05 FIX: Check response status and revert optimistic update on error
+    const previousInventory = inventory;
+    // Optimistic update
+    setInventory(prev => prev.map(item =>
+      item.id === id
+        ? {
+            ...item,
+            stockQuantity: newQuantity,
+            availability: newQuantity === 0 ? 'OUT_OF_STOCK' : 'IN_STOCK',
+          }
+        : item
+    ));
     try {
-      await fetch(`/api/admin/inventory/${id}`, {
+      const res = await fetch(`/api/admin/inventory/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ stockQuantity: newQuantity, reason }),
       });
-      setInventory(inventory.map(item =>
-        item.id === id
-          ? {
-              ...item,
-              stockQuantity: newQuantity,
-              availability: newQuantity === 0 ? 'OUT_OF_STOCK' : 'IN_STOCK',
-            }
-          : item
-      ));
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        toast.error(data.error || t('common.updateFailed'));
+        // Revert optimistic update
+        setInventory(previousInventory);
+      } else {
+        toast.success(t('admin.inventory.stockUpdated') || 'Stock updated');
+      }
     } catch (err) {
       console.error('Error updating stock:', err);
+      toast.error(t('common.networkError'));
+      // Revert optimistic update on network error
+      setInventory(previousInventory);
     }
     setEditingId(null);
     setAdjustmentReason('');

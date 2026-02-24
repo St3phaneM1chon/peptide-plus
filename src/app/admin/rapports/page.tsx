@@ -264,7 +264,10 @@ export default function RapportsPage() {
                 { value: '1y', label: t('admin.reports.last12months') },
               ]}
             />
-            <Button variant="secondary" icon={FileDown}>
+            <Button variant="secondary" icon={FileDown} onClick={() => {
+              const { from, to } = getPeriodDates(period);
+              window.open(`/api/accounting/reports/pdf?type=income&from=${from}&to=${to}`, '_blank');
+            }}>
               {t('admin.reports.exportPdf')}
             </Button>
           </div>
