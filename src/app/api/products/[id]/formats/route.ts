@@ -1,35 +1,14 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { z } from 'zod';
+import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth-config';
 import { enqueue } from '@/lib/translation';
 import { logger } from '@/lib/logger';
 import { validateCsrf } from '@/lib/csrf-middleware';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
-
-const createFormatSchema = z.object({
-  formatType: z.string().min(1),
-  name: z.string().min(1, 'Name is required').max(200),
-  description: z.string().max(2000).optional(),
-  imageUrl: z.string().url().optional().nullable(),
-  dosageMg: z.number().positive().optional().nullable(),
-  volumeMl: z.number().positive().optional().nullable(),
-  unitCount: z.number().int().positive().optional().nullable(),
-  costPrice: z.number().min(0).optional().nullable(),
-  price: z.number().min(0, 'Price is required'),
-  comparePrice: z.number().min(0).optional().nullable(),
-  sku: z.string().max(100).optional().nullable(),
-  barcode: z.string().max(100).optional().nullable(),
-  stockQuantity: z.number().int().min(0).optional(),
-  lowStockThreshold: z.number().int().min(0).optional(),
-  availability: z.string().optional(),
-  availableDate: z.string().optional().nullable(),
-  weightGrams: z.number().min(0).optional().nullable(),
-  isDefault: z.boolean().optional(),
-  isActive: z.boolean().optional(),
-});
+import { createFormatSchema } from '@/lib/validations/format';
 
 // GET all formats for a product
 export async function GET(
@@ -154,6 +133,10 @@ export async function POST(
 
     // Auto-enqueue translation for all 21 locales
     enqueue.productFormat(format.id);
+
+    // Revalidate cached pages after format creation
+    try { revalidatePath('/shop', 'layout'); } catch { /* revalidation is best-effort */ }
+    try { revalidatePath('/api/products', 'layout'); } catch { /* revalidation is best-effort */ }
 
     // FIX: BUG-043 - Include warning in response if format was created inactive
     return NextResponse.json({ ...format, ...(warningMessage ? { warning: warningMessage } : {}) }, { status: 201 });

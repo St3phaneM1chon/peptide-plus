@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth-config';
 import { enqueue } from '@/lib/translation';
@@ -165,6 +166,10 @@ export async function PUT(
     // Auto-enqueue translation (force re-translate on update)
     enqueue.productFormat(formatId, true);
 
+    // Revalidate cached pages after format update
+    try { revalidatePath('/shop', 'layout'); } catch { /* revalidation is best-effort */ }
+    try { revalidatePath('/api/products', 'layout'); } catch { /* revalidation is best-effort */ }
+
     return NextResponse.json(format);
   } catch (error) {
     logger.error('Error updating format', { error: error instanceof Error ? error.message : String(error) });
@@ -201,6 +206,10 @@ export async function DELETE(
       where: { id: formatId },
       data: { isActive: false, discontinuedAt: new Date() },
     });
+
+    // Revalidate cached pages after format deletion
+    try { revalidatePath('/shop', 'layout'); } catch { /* revalidation is best-effort */ }
+    try { revalidatePath('/api/products', 'layout'); } catch { /* revalidation is best-effort */ }
 
     return NextResponse.json({ success: true });
   } catch (error) {

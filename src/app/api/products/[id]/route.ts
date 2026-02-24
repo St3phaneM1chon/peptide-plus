@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
@@ -330,6 +331,11 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     // Re-translate product in all locales (force overwrite existing translations)
     enqueue.productUrgent(product.id);
 
+    // Revalidate cached pages after product update
+    try { revalidatePath('/shop', 'layout'); } catch { /* revalidation is best-effort */ }
+    try { revalidatePath('/api/products', 'layout'); } catch { /* revalidation is best-effort */ }
+    try { revalidatePath(`/product/${product.slug}`, 'page'); } catch { /* revalidation is best-effort */ }
+
     return apiSuccess({ product }, { request });
   } catch (error) {
     logger.error('Error updating product', { error: error instanceof Error ? error.message : String(error) });
@@ -363,10 +369,16 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       return apiError('Accès refusé', ErrorCode.FORBIDDEN);
     }
 
-    await prisma.product.update({
+    const deletedProduct = await prisma.product.update({
       where: { id },
       data: { isActive: false },
+      select: { slug: true },
     });
+
+    // Revalidate cached pages after product deletion
+    try { revalidatePath('/shop', 'layout'); } catch { /* revalidation is best-effort */ }
+    try { revalidatePath('/api/products', 'layout'); } catch { /* revalidation is best-effort */ }
+    try { revalidatePath(`/product/${deletedProduct.slug}`, 'page'); } catch { /* revalidation is best-effort */ }
 
     // Log d'audit
     await prisma.auditLog.create({

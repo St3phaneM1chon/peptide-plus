@@ -7,89 +7,32 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { UserRole } from '@/types';
 import { withTranslations, getTranslatedFieldsBatch, enqueue, DB_SOURCE_LOCALE } from '@/lib/translation';
 import { isValidLocale, defaultLocale } from '@/i18n/config';
-import { z } from 'zod';
 import { stripHtml, stripControlChars } from '@/lib/sanitize';
 import { apiSuccess, apiError, withETag, validateContentType } from '@/lib/api-response';
 import { ErrorCode } from '@/lib/error-codes';
-
-// BE-SEC-03: Zod validation schema for product creation (admin)
-const productImageSchema = z.object({
-  url: z.string().url(),
-  alt: z.string().max(500).optional(),
-  caption: z.string().max(500).optional(),
-  sortOrder: z.number().int().optional(),
-  isPrimary: z.boolean().optional(),
-});
-
-const productFormatSchema = z.object({
-  formatType: z.string().max(50).optional(),
-  name: z.string().max(200),
-  description: z.string().max(2000).optional(),
-  imageUrl: z.string().url().optional().nullable(),
-  dosageMg: z.number().optional().nullable(),
-  volumeMl: z.number().optional().nullable(),
-  unitCount: z.number().int().optional().nullable(),
-  costPrice: z.number().optional().nullable(),
-  price: z.number().min(0).optional(),
-  comparePrice: z.number().optional().nullable(),
-  sku: z.string().max(100).optional().nullable(),
-  barcode: z.string().max(100).optional().nullable(),
-  inStock: z.boolean().optional(),
-  stockQuantity: z.number().int().min(0).optional(),
-  lowStockThreshold: z.number().int().min(0).optional(),
-  availability: z.string().max(50).optional(),
-  sortOrder: z.number().int().optional(),
-  isDefault: z.boolean().optional(),
-  isActive: z.boolean().optional(),
-});
-
-const createProductSchema = z.object({
-  name: z.string().min(1, 'Product name is required').max(200, 'Product name must not exceed 200 characters'),
-  subtitle: z.string().max(500).optional().nullable(),
-  slug: z.string().min(1, 'Slug is required').max(200).regex(/^[a-z0-9-]+$/, 'Slug must be lowercase alphanumeric with hyphens'),
-  shortDescription: z.string().max(1000).optional().nullable(),
-  description: z.string().max(50000).optional().nullable(),
-  fullDetails: z.string().max(100000).optional().nullable(),
-  specifications: z.string().max(10000).optional().nullable(),
-  productType: z.string().max(50).optional(),
-  price: z.number().min(0, 'Price must be non-negative'),
-  compareAtPrice: z.number().min(0).optional().nullable(),
-  imageUrl: z.string().max(2000).optional().nullable(),
-  videoUrl: z.string().max(2000).optional().nullable(),
-  certificateUrl: z.string().max(2000).optional().nullable(),
-  certificateName: z.string().max(200).optional().nullable(),
-  dataSheetUrl: z.string().max(2000).optional().nullable(),
-  dataSheetName: z.string().max(200).optional().nullable(),
-  categoryId: z.string().min(1, 'Category is required'),
-  weight: z.number().min(0).optional().nullable(),
-  dimensions: z.string().max(100).optional().nullable(),
-  requiresShipping: z.boolean().optional(),
-  sku: z.string().max(100).optional().nullable(),
-  barcode: z.string().max(100).optional().nullable(),
-  manufacturer: z.string().max(200).optional().nullable(),
-  origin: z.string().max(100).optional().nullable(),
-  supplierUrl: z.string().max(2000).optional().nullable(),
-  metaTitle: z.string().max(200).optional().nullable(),
-  metaDescription: z.string().max(500).optional().nullable(),
-  researchSays: z.string().max(50000).optional().nullable(),
-  relatedResearch: z.string().max(50000).optional().nullable(),
-  participateResearch: z.string().max(50000).optional().nullable(),
-  customSections: z.unknown().optional().nullable(),
-  isFeatured: z.boolean().optional(),
-  isActive: z.boolean().optional(),
-  images: z.array(productImageSchema).max(50).optional(),
-  formats: z.array(productFormatSchema).max(50).optional(),
-});
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
+import { createProductSchema } from '@/lib/validations/product';
 
 // GET - Liste des produits
 export async function GET(request: NextRequest) {
   try {
+    // Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/products');
+    if (!rl.success) {
+      const res = apiError(rl.error!.message, ErrorCode.RATE_LIMITED, { request });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+
     const { searchParams } = new URL(request.url);
     const category = searchParams.get('category');
     const featured = searchParams.get('featured');
@@ -319,6 +262,21 @@ export async function GET(request: NextRequest) {
 // Status codes: 201 Created, 400 Bad Request, 401 Unauthorized, 403 Forbidden, 500 Internal Error
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/products');
+    if (!rl.success) {
+      const res = apiError(rl.error!.message, ErrorCode.RATE_LIMITED, { request });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+
+    // CSRF protection
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return apiError('Invalid CSRF token', ErrorCode.FORBIDDEN, { request });
+    }
+
     // Item 12: Content-Type validation
     const ctError = validateContentType(request);
     if (ctError) return ctError;
@@ -511,6 +469,10 @@ export async function POST(request: NextRequest) {
 
     // Enqueue automatic translation to all locales
     enqueue.product(product.id);
+
+    // Revalidate cached pages after product creation
+    try { revalidatePath('/shop', 'layout'); } catch { /* revalidation is best-effort */ }
+    try { revalidatePath('/api/products', 'layout'); } catch { /* revalidation is best-effort */ }
 
     return apiSuccess({ product }, { status: 201, request });
   } catch (error) {

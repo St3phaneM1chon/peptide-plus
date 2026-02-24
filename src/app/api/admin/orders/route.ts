@@ -17,6 +17,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
@@ -275,6 +276,9 @@ export const PUT = withAdminGuard(async (request, { session }) => {
       },
     });
 
+    // Revalidate cached order pages after status update
+    try { revalidatePath('/account/orders', 'layout'); } catch { /* revalidation is best-effort */ }
+
     // Audit log for order update (fire-and-forget)
     logAdminAction({
       adminUserId: session.user.id,
@@ -471,6 +475,11 @@ export const POST = withAdminGuard(async (request, { session }) => {
 
     const successCount = results.filter((r) => r.success).length;
     const failCount = results.filter((r) => !r.success).length;
+
+    // Revalidate cached order pages after batch status update
+    if (successCount > 0) {
+      try { revalidatePath('/account/orders', 'layout'); } catch { /* revalidation is best-effort */ }
+    }
 
     // Audit log for batch order update (fire-and-forget, one entry for the whole batch)
     logAdminAction({

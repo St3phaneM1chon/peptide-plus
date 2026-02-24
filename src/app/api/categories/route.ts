@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { UserRole } from '@/types';
@@ -12,22 +13,22 @@ import { logger } from '@/lib/logger';
 import { enqueue, DB_SOURCE_LOCALE } from '@/lib/translation';
 import { isValidLocale, defaultLocale } from '@/i18n/config';
 import { cacheGetOrSet, cacheInvalidateTag, CacheTags, CacheTTL } from '@/lib/cache';
-import { z } from 'zod';
-import { stripHtml, stripControlChars } from '@/lib/sanitize';
-
-// BUG-004 FIX: Add Zod validation schema for category creation
-const createCategorySchema = z.object({
-  name: z.string().min(1, 'Category name is required').max(200).transform(v => stripControlChars(stripHtml(v)).trim()),
-  slug: z.string().min(1, 'Slug is required').max(200).regex(/^[a-z0-9-]+$/, 'Slug must be lowercase alphanumeric with hyphens'),
-  description: z.string().max(5000).optional().nullable().transform(v => v ? stripControlChars(stripHtml(v)).trim() : v),
-  imageUrl: z.string().url().max(2000).optional().nullable(),
-  sortOrder: z.number().int().min(0).optional(),
-  parentId: z.string().optional().nullable(),
-});
+import { createCategorySchema } from '@/lib/validations/category';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
 
 // GET - Liste des catégories
 export async function GET(request: NextRequest) {
   try {
+    // Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/categories');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+
     const { searchParams } = new URL(request.url);
     const tree = searchParams.get('tree') === 'true';
     const locale = searchParams.get('locale') || defaultLocale;
@@ -142,6 +143,21 @@ export async function GET(request: NextRequest) {
 // POST - Créer une catégorie (Admin/Owner seulement)
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/categories');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+
+    // CSRF protection
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const session = await auth();
 
     if (!session?.user) {
@@ -211,6 +227,10 @@ export async function POST(request: NextRequest) {
 
     // Enqueue automatic translation to all locales
     enqueue.category(category.id);
+
+    // Revalidate cached pages after category creation
+    try { revalidatePath('/shop', 'layout'); } catch { /* revalidation is best-effort */ }
+    try { revalidatePath('/api/categories', 'layout'); } catch { /* revalidation is best-effort */ }
 
     return NextResponse.json({ category }, { status: 201 });
   } catch (error) {

@@ -7,6 +7,8 @@
 
 export * from './shared';
 export * from './product';
+export * from './category';
+export * from './format';
 export * from './order';
 export * from './review';
 export * from './user';

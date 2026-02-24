@@ -21,7 +21,6 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { z } from 'zod';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { enqueue } from '@/lib/translation';
@@ -33,16 +32,7 @@ import { rateLimitMiddleware } from '@/lib/rate-limiter';
 // BUG-017 FIX: Import cache invalidation
 import { cacheInvalidateTag, CacheTags } from '@/lib/cache';
 import { logger } from '@/lib/logger';
-
-const updateCategorySchema = z.object({
-  name: z.string().min(1).max(200).optional(),
-  slug: z.string().min(1).max(200).optional(),
-  description: z.string().max(2000).optional().nullable(),
-  imageUrl: z.string().url().optional().nullable().or(z.literal('')),
-  sortOrder: z.number().int().optional(),
-  isActive: z.boolean().optional(),
-  parentId: z.string().optional().nullable(),
-});
+import { updateCategorySchema } from '@/lib/validations/category';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
