@@ -23,6 +23,7 @@ import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { logger } from '@/lib/logger';
+import type { PrismaPromise } from '@prisma/client';
 
 // ---------------------------------------------------------------------------
 // CSV Parser (simple, handles quoted fields)
@@ -140,10 +141,20 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
       );
     }
 
-    // Process rows
+    // BUG-013 FIX: Batch processing to avoid N+1 query pattern
+    // Phase 1: Parse and validate all rows, collect unique SKUs
     let imported = 0;
     let skipped = 0;
     const errors: string[] = [];
+
+    interface ValidRow {
+      rowNum: number;
+      sku: string;
+      quantity: number;
+      cost: number | undefined;
+    }
+    const validRows: ValidRow[] = [];
+    const allSkus: string[] = [];
 
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i];
@@ -164,77 +175,106 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
         continue;
       }
 
-      // Look up ProductFormat by SKU
-      const format = await prisma.productFormat.findUnique({
-        where: { sku },
-        select: {
-          id: true,
-          productId: true,
-          stockQuantity: true,
-        },
-      });
+      const cost = costStr ? parseFloat(costStr) : undefined;
+      validRows.push({ rowNum, sku, quantity, cost });
+      if (!allSkus.includes(sku)) {
+        allSkus.push(sku);
+      }
+    }
 
+    // Phase 2: Batch lookup all SKUs in one query
+    const formats = allSkus.length > 0
+      ? await prisma.productFormat.findMany({
+          where: { sku: { in: allSkus } },
+          select: { id: true, sku: true, productId: true, stockQuantity: true },
+        })
+      : [];
+    const formatBySku = new Map(formats.map((f) => [f.sku, f]));
+
+    // Phase 3: Batch lookup latest WAC for all matched formats in one query
+    // Use a raw query to get the most recent runningWAC per (productId, formatId)
+    const matchedFormatIds = formats.map((f) => f.id);
+    const latestWacMap = new Map<string, number>();
+    if (matchedFormatIds.length > 0) {
+      const wacResults = await prisma.inventoryTransaction.findMany({
+        where: { formatId: { in: matchedFormatIds } },
+        orderBy: { createdAt: 'desc' },
+        distinct: ['formatId'],
+        select: { formatId: true, runningWAC: true },
+      });
+      for (const w of wacResults) {
+        if (w.formatId) {
+          latestWacMap.set(w.formatId, Number(w.runningWAC));
+        }
+      }
+    }
+
+    // Phase 4: Build update + create operations, execute in a single transaction
+    const transactionOps: PrismaPromise<unknown>[] = [];
+
+    for (const row of validRows) {
+      const format = formatBySku.get(row.sku);
       if (!format) {
-        errors.push(`Row ${rowNum}: SKU "${sku}" not found`);
+        errors.push(`Row ${row.rowNum}: SKU "${row.sku}" not found`);
         skipped++;
         continue;
       }
 
       const oldQuantity = format.stockQuantity;
-      const adjustment = quantity - oldQuantity;
+      const adjustment = row.quantity - oldQuantity;
 
-      // FIX: BUG-065 - Properly accumulate WAC across import rows
-      // Get current WAC from last transaction
-      const lastTx = await prisma.inventoryTransaction.findFirst({
-        where: {
-          productId: format.productId,
-          formatId: format.id,
-        },
-        orderBy: { createdAt: 'desc' },
-        select: { runningWAC: true },
-      });
-      const previousWAC = lastTx ? Number(lastTx.runningWAC) : 0;
+      // BUG-065 preserved: Properly accumulate WAC across import rows
+      const previousWAC = latestWacMap.get(format.id) ?? 0;
 
-      const cost = costStr ? parseFloat(costStr) : undefined;
-      const unitCost = cost !== undefined && !isNaN(cost) ? cost : previousWAC;
+      const unitCost = row.cost !== undefined && !isNaN(row.cost) ? row.cost : previousWAC;
 
-      // Calculate new WAC: weighted average of existing stock at old WAC + incoming at new unit cost
       let newWAC = unitCost;
       if (adjustment > 0 && oldQuantity > 0 && previousWAC > 0) {
-        // Only recalculate WAC for positive adjustments (receiving stock)
-        newWAC = ((oldQuantity * previousWAC) + (adjustment * unitCost)) / quantity;
+        newWAC = ((oldQuantity * previousWAC) + (adjustment * unitCost)) / row.quantity;
       } else if (adjustment <= 0) {
-        // For reductions, WAC stays the same
         newWAC = previousWAC || unitCost;
       }
 
-      // Update stock
-      await prisma.productFormat.update({
-        where: { id: format.id },
-        data: {
-          stockQuantity: quantity,
-          availability: quantity === 0 ? 'OUT_OF_STOCK' : 'IN_STOCK',
-          ...(cost !== undefined && !isNaN(cost) ? { costPrice: cost } : {}),
-        },
-      });
-
-      // Create transaction record (only if there's an actual change)
-      if (adjustment !== 0) {
-        await prisma.inventoryTransaction.create({
+      // Queue stock update
+      transactionOps.push(
+        prisma.productFormat.update({
+          where: { id: format.id },
           data: {
-            productId: format.productId,
-            formatId: format.id,
-            type: 'ADJUSTMENT',
-            quantity: adjustment,
-            unitCost: unitCost,
-            runningWAC: newWAC, // FIX: BUG-065 - Use properly calculated WAC
-            reason: 'CSV Import',
-            createdBy: session.user.id,
+            stockQuantity: row.quantity,
+            availability: row.quantity === 0 ? 'OUT_OF_STOCK' : 'IN_STOCK',
+            ...(row.cost !== undefined && !isNaN(row.cost) ? { costPrice: row.cost } : {}),
           },
-        });
+        })
+      );
+
+      // Queue transaction record (only if there's an actual change)
+      if (adjustment !== 0) {
+        transactionOps.push(
+          prisma.inventoryTransaction.create({
+            data: {
+              productId: format.productId,
+              formatId: format.id,
+              type: 'ADJUSTMENT',
+              quantity: adjustment,
+              unitCost: unitCost,
+              runningWAC: newWAC,
+              reason: 'CSV Import',
+              createdBy: session.user.id,
+            },
+          })
+        );
       }
 
+      // Update local state for subsequent rows with the same SKU
+      format.stockQuantity = row.quantity;
+      latestWacMap.set(format.id, newWAC);
+
       imported++;
+    }
+
+    // Execute all updates in a single transaction
+    if (transactionOps.length > 0) {
+      await prisma.$transaction(transactionOps);
     }
 
     logAdminAction({

@@ -222,15 +222,21 @@ export default function CategoriesPage() {
     setDeletingId(catId);
     try {
       const res = await fetch(`/api/categories/${catId}`, { method: 'DELETE' });
-      const data = await res.json();
-      if (!res.ok) {
+      // BUG-007 FIX: 204 No Content has no body; only parse JSON for non-204 responses
+      if (res.status === 204) {
+        // Success with no body
+        await fetchCategories();
+        toast.success(t('admin.categories.deleted') || 'Category deleted');
+      } else if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
         const msg = data.error || t('common.deleteFailed');
         setError(msg);
         toast.error(msg);
         return;
+      } else {
+        await fetchCategories();
+        toast.success(t('admin.categories.deleted') || 'Category deleted');
       }
-      await fetchCategories();
-      toast.success(t('admin.categories.deleted') || 'Category deleted');
     } catch (err) {
       console.error('Error deleting:', err);
       toast.error(t('common.networkError'));

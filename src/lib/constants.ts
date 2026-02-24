@@ -8,7 +8,7 @@ export const PASSWORD_MIN_LENGTH = 8;
 
 // BUG-019 FIX: Centralized "New" product threshold (single source of truth)
 /** Number of days a product is considered "new" after creation */
-export const NEW_PRODUCT_DAYS = 30;
+export const NEW_PRODUCT_DAYS = 14;
 
 // ============================================================================
 // LOYALTY PROGRAM - SINGLE SOURCE OF TRUTH
