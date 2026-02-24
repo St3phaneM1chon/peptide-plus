@@ -141,7 +141,7 @@ export default function ShopPage() {
         }
       } catch (err) {
         console.error('Error fetching products:', err);
-        setError('Unable to load products');
+        setError(t('shop.loadError'));
       } finally {
         setLoading(false);
       }
@@ -321,8 +321,8 @@ export default function ShopPage() {
       {/* Breadcrumbs */}
       <Breadcrumbs
         items={[
-          { label: t('nav.home') || 'Home', href: '/' },
-          { label: t('shop.shop') || 'Shop' },
+          { label: t('nav.home'), href: '/' },
+          { label: t('shop.shop') },
         ]}
       />
 
@@ -567,7 +567,7 @@ export default function ShopPage() {
                   disabled={currentPage <= 1}
                   className="px-4 py-2 border border-neutral-200 rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neutral-50"
                 >
-                  {t('common.previous') || 'Previous'}
+                  {t('common.previous')}
                 </button>
                 <span className="text-sm text-neutral-600">
                   {currentPage} / {Math.ceil(totalProducts / PRODUCTS_PER_PAGE)}
@@ -577,7 +577,7 @@ export default function ShopPage() {
                   disabled={currentPage >= Math.ceil(totalProducts / PRODUCTS_PER_PAGE)}
                   className="px-4 py-2 border border-neutral-200 rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neutral-50"
                 >
-                  {t('common.next') || 'Next'}
+                  {t('common.next')}
                 </button>
               </div>
             )}

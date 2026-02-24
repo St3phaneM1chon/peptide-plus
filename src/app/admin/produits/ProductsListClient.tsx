@@ -108,7 +108,7 @@ export default function ProductsListClient({
   stats,
   isOwner,
 }: Props) {
-  const { t, formatCurrency } = useI18n();
+  const { t, tp, formatCurrency } = useI18n();
   const router = useRouter();
   const [products, setProducts] = useState<Product[]>(initialProducts);
   const [search, setSearch] = useState('');
@@ -127,7 +127,7 @@ export default function ProductsListClient({
     try {
       const res = await fetch('/api/admin/products/export');
       if (!res.ok) {
-        toast.error(t('admin.products.exportError') || 'Export failed');
+        toast.error(t('admin.products.exportError'));
         return;
       }
       const blob = await res.blob();
@@ -141,10 +141,10 @@ export default function ProductsListClient({
       a.click();
       a.remove();
       window.URL.revokeObjectURL(url);
-      toast.success(t('admin.products.exportSuccess') || 'Products exported successfully');
+      toast.success(t('admin.products.exportSuccess'));
     } catch (error) {
       console.error('Export error:', error);
-      toast.error(t('admin.products.exportError') || 'Export failed');
+      toast.error(t('admin.products.exportError'));
     } finally {
       setExporting(false);
     }
@@ -167,20 +167,21 @@ export default function ProductsListClient({
       const data = await res.json();
 
       if (!res.ok) {
-        toast.error(data.error || 'Import failed');
+        toast.error(data.error || t('admin.products.importError'));
         return;
       }
 
       const { summary } = data;
       toast.success(
-        `Import: ${summary.created} created, ${summary.updated} updated` +
-        (summary.errors.length > 0 ? `, ${summary.errors.length} errors` : '')
+        summary.errors.length > 0
+          ? t('admin.products.importSummaryWithErrors', { created: summary.created, updated: summary.updated, errors: summary.errors.length })
+          : t('admin.products.importSummary', { created: summary.created, updated: summary.updated })
       );
 
       window.location.reload();
     } catch (error) {
       console.error('Import error:', error);
-      toast.error(t('admin.products.importError') || 'Import failed');
+      toast.error(t('admin.products.importError'));
     } finally {
       setImporting(false);
       if (fileInputRef.current) {
@@ -221,7 +222,7 @@ export default function ProductsListClient({
     if (selectedProductId) {
       handleDelete(selectedProductId);
     } else {
-      toast.info(t('admin.products.selectFirst') || 'Select a product first');
+      toast.info(t('admin.products.selectFirst'));
     }
   }, [selectedProductId, handleDelete, t]);
 
@@ -335,7 +336,7 @@ export default function ProductsListClient({
         title: p.name,
         subtitle: `${p.category.name} · ${priceDisplay}`,
         preview: p.formats
-          ? `${p.formats.length} format${p.formats.length > 1 ? 's' : ''}`
+          ? tp('admin.products.formatCount', p.formats.length)
           : t('admin.products.noFormats'),
         timestamp: p.createdAt,
         badges,
@@ -374,7 +375,7 @@ export default function ProductsListClient({
                 disabled={importing}
                 size="sm"
               >
-                {t('admin.products.importCsv') || 'Import CSV'}
+                {t('admin.products.importCsv')}
               </Button>
             )}
             <Button
@@ -384,7 +385,7 @@ export default function ProductsListClient({
               disabled={exporting}
               size="sm"
             >
-              {t('admin.products.export') || 'Export CSV'}
+              {t('admin.products.export')}
             </Button>
             <Link href="/admin/produits/nouveau">
               <Button variant="primary" icon={Plus} size="sm">
@@ -558,7 +559,7 @@ export default function ProductsListClient({
                         <table className="w-full">
                           <thead className="bg-slate-50">
                             <tr>
-                              <th className="px-3 py-2 text-start text-xs font-medium text-slate-500 uppercase">Format</th>
+                              <th className="px-3 py-2 text-start text-xs font-medium text-slate-500 uppercase">{t('admin.products.colFormat')}</th>
                               <th className="px-3 py-2 text-end text-xs font-medium text-slate-500 uppercase">{t('admin.products.colPrice')}</th>
                               <th className="px-3 py-2 text-center text-xs font-medium text-slate-500 uppercase">{t('admin.products.colStock')}</th>
                               <th className="px-3 py-2 text-center text-xs font-medium text-slate-500 uppercase">{t('admin.products.colStatus')}</th>
