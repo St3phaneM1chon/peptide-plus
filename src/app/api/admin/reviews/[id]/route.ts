@@ -12,6 +12,7 @@ import { prisma } from '@/lib/db';
 import { apiSuccess, apiError, apiNoContent } from '@/lib/api-response';
 import { ErrorCode } from '@/lib/error-codes';
 import { logger } from '@/lib/logger';
+import { stripHtml, stripControlChars } from '@/lib/sanitize';
 
 export const PATCH = withAdminGuard(async (request: NextRequest, { session, params }) => {
   try {
@@ -37,7 +38,8 @@ export const PATCH = withAdminGuard(async (request: NextRequest, { session, para
     }
 
     if (reply !== undefined) {
-      updateData.reply = reply;
+      // G4-FLAW-01: Sanitize admin reply to prevent stored XSS
+      updateData.reply = reply ? stripControlChars(stripHtml(String(reply))).substring(0, 5000) : null;
       updateData.repliedAt = new Date();
     }
 

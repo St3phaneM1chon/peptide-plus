@@ -11,6 +11,7 @@ import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { logger } from '@/lib/logger';
+import { stripHtml, stripControlChars } from '@/lib/sanitize';
 
 // DELETE /api/admin/questions/[id] - Delete a question
 export const DELETE = withAdminGuard(async (_request, { session, params }) => {
@@ -75,7 +76,8 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
     }
 
     if (body.answer !== undefined) {
-      updateData.answer = body.answer;
+      // G4-FLAW-01: Sanitize admin answer to prevent stored XSS
+      updateData.answer = body.answer ? stripControlChars(stripHtml(String(body.answer))).substring(0, 5000) : null;
       updateData.answeredBy = session.user.name || session.user.email || 'Admin';
     }
 
