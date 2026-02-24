@@ -5,32 +5,46 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { prisma } from '@/lib/db';
 import { stripHtml, stripControlChars } from '@/lib/sanitize';
 import { logger } from '@/lib/logger';
 
+const answerQuestionSchema = z.object({
+  answer: z.string().min(1, 'La réponse ne peut pas être vide').max(5000, 'La réponse ne doit pas dépasser 5000 caractères'),
+  isPublished: z.boolean().optional(),
+});
+
 export const POST = withAdminGuard(async (request: NextRequest, { session, params }) => {
   try {
     const id = params!.id;
     const body = await request.json();
-    const { answer: rawAnswer } = body;
 
-    if (!rawAnswer || !String(rawAnswer).trim()) {
+    const parsed = answerQuestionSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'La réponse ne peut pas être vide' },
+        { error: 'Invalid data', details: parsed.error.errors },
+        { status: 400 }
+      );
+    }
+    const data = parsed.data;
+
+    // BE-SEC-03: Sanitize answer text - strip HTML and control characters
+    const answer = stripControlChars(stripHtml(data.answer)).trim();
+
+    // BE-SEC-05: Enforce max length on sanitized answer text
+    if (answer.length > 5000) {
+      return NextResponse.json(
+        { error: 'La réponse ne doit pas dépasser 5000 caractères' },
         { status: 400 }
       );
     }
 
-    // BE-SEC-03: Sanitize answer text - strip HTML and control characters
-    const answer = stripControlChars(stripHtml(String(rawAnswer))).trim();
-
-    // BE-SEC-05: Enforce max length on answer text
-    if (answer.length > 5000) {
+    if (!answer) {
       return NextResponse.json(
-        { error: 'La réponse ne doit pas dépasser 5000 caractères' },
+        { error: 'La réponse ne peut pas être vide' },
         { status: 400 }
       );
     }
@@ -47,7 +61,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session, param
         answer: answer.trim(),
         answeredBy: session.user.name || session.user.email || 'Admin',
         // FIX: F-063 - Allow admin to control publication; default to true for backward compat
-        isPublished: body.isPublished !== undefined ? !!body.isPublished : true,
+        isPublished: data.isPublished !== undefined ? !!data.isPublished : true,
       },
     });
 

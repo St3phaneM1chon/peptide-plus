@@ -7,10 +7,19 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { logger } from '@/lib/logger';
+
+// Zod schema for PUT /api/admin/seo (save SEO settings)
+const seoSettingsSchema = z.object({
+  settings: z.record(z.string(), z.string()).refine(
+    (obj) => Object.keys(obj).length > 0,
+    'At least one setting is required'
+  ),
+}).strict();
 
 // GET /api/admin/seo - Get all SEO settings
 export const GET = withAdminGuard(async (_request: NextRequest, { session }) => {
@@ -40,16 +49,16 @@ export const GET = withAdminGuard(async (_request: NextRequest, { session }) => 
 export const PUT = withAdminGuard(async (request: NextRequest, { session }) => {
   try {
     const body = await request.json();
-    const { settings } = body;
 
-    // settings should be an object like:
-    // { "seo_site_name": "BioCycle", "seo_site_url": "https://...", ... }
-    if (!settings || typeof settings !== 'object') {
+    // Validate with Zod
+    const parsed = seoSettingsSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'settings object is required' },
+        { error: 'Invalid data', details: parsed.error.errors },
         { status: 400 }
       );
     }
+    const { settings } = parsed.data;
 
     // FLAW-026 FIX: Validate against allowlist of permitted SEO setting keys
     const ALLOWED_SEO_KEYS = [

@@ -11,10 +11,26 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { logger } from '@/lib/logger';
+
+const updateShippingMethodSchema = z.object({
+  name: z.string().min(1).max(200).optional(),
+  carrier: z.string().max(200).optional(),
+  price: z.number().min(0).optional(),
+  estimatedDaysMin: z.number().int().min(0).optional(),
+  estimatedDaysMax: z.number().int().min(0).optional(),
+  isActive: z.boolean().optional(),
+  countries: z.union([z.array(z.string()), z.string()]).optional(),
+  perItemFee: z.number().min(0).optional(),
+  freeShippingThreshold: z.number().min(0).nullable().optional(),
+  maxWeight: z.number().min(0).nullable().optional(),
+  notes: z.string().max(1000).nullable().optional(),
+  sortOrder: z.number().int().optional(),
+});
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -28,7 +44,7 @@ function parseCountries(raw: string): string[] {
   }
 }
 
-function mapZone(z: {
+function mapZone(zone: {
   id: string;
   name: string;
   countries: string;
@@ -45,24 +61,24 @@ function mapZone(z: {
   updatedAt: Date;
 }) {
   return {
-    id: z.id,
-    name: z.name,
-    carrier: z.notes ?? z.name,
-    price: Number(z.baseFee),
-    estimatedDays: `${z.estimatedDaysMin}-${z.estimatedDaysMax}`,
-    estimatedDaysMin: z.estimatedDaysMin,
-    estimatedDaysMax: z.estimatedDaysMax,
-    isActive: z.isActive,
-    countries: parseCountries(z.countries),
-    perItemFee: Number(z.perItemFee),
-    freeShippingThreshold: z.freeShippingThreshold
-      ? Number(z.freeShippingThreshold)
+    id: zone.id,
+    name: zone.name,
+    carrier: zone.notes ?? zone.name,
+    price: Number(zone.baseFee),
+    estimatedDays: `${zone.estimatedDaysMin}-${zone.estimatedDaysMax}`,
+    estimatedDaysMin: zone.estimatedDaysMin,
+    estimatedDaysMax: zone.estimatedDaysMax,
+    isActive: zone.isActive,
+    countries: parseCountries(zone.countries),
+    perItemFee: Number(zone.perItemFee),
+    freeShippingThreshold: zone.freeShippingThreshold
+      ? Number(zone.freeShippingThreshold)
       : null,
-    maxWeight: z.maxWeight ? Number(z.maxWeight) : null,
-    notes: z.notes,
-    sortOrder: z.sortOrder,
-    createdAt: z.createdAt.toISOString(),
-    updatedAt: z.updatedAt.toISOString(),
+    maxWeight: zone.maxWeight ? Number(zone.maxWeight) : null,
+    notes: zone.notes,
+    sortOrder: zone.sortOrder,
+    createdAt: zone.createdAt.toISOString(),
+    updatedAt: zone.updatedAt.toISOString(),
   };
 }
 
@@ -116,38 +132,44 @@ export const PUT = withAdminGuard(async (request: NextRequest, { session, params
     }
 
     const body = await request.json();
-    const updateData: Record<string, unknown> = {};
 
-    if (body.name !== undefined) updateData.name = body.name;
-    if (body.carrier !== undefined) updateData.notes = body.carrier;
-    if (body.price !== undefined) updateData.baseFee = Number(body.price);
-    if (body.estimatedDaysMin !== undefined) {
-      updateData.estimatedDaysMin = Number(body.estimatedDaysMin);
-    }
-    if (body.estimatedDaysMax !== undefined) {
-      updateData.estimatedDaysMax = Number(body.estimatedDaysMax);
-    }
-    if (body.isActive !== undefined) updateData.isActive = body.isActive;
-    if (body.countries !== undefined) {
-      updateData.countries = JSON.stringify(
-        Array.isArray(body.countries) ? body.countries : [body.countries],
+    const parsed = updateShippingMethodSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid data', details: parsed.error.errors },
+        { status: 400 },
       );
     }
-    if (body.perItemFee !== undefined) {
-      updateData.perItemFee = Number(body.perItemFee);
+    const data = parsed.data;
+
+    const updateData: Record<string, unknown> = {};
+
+    if (data.name !== undefined) updateData.name = data.name;
+    if (data.carrier !== undefined) updateData.notes = data.carrier;
+    if (data.price !== undefined) updateData.baseFee = data.price;
+    if (data.estimatedDaysMin !== undefined) {
+      updateData.estimatedDaysMin = data.estimatedDaysMin;
     }
-    if (body.freeShippingThreshold !== undefined) {
-      updateData.freeShippingThreshold =
-        body.freeShippingThreshold != null
-          ? Number(body.freeShippingThreshold)
-          : null;
+    if (data.estimatedDaysMax !== undefined) {
+      updateData.estimatedDaysMax = data.estimatedDaysMax;
     }
-    if (body.maxWeight !== undefined) {
-      updateData.maxWeight =
-        body.maxWeight != null ? Number(body.maxWeight) : null;
+    if (data.isActive !== undefined) updateData.isActive = data.isActive;
+    if (data.countries !== undefined) {
+      updateData.countries = JSON.stringify(
+        Array.isArray(data.countries) ? data.countries : [data.countries],
+      );
     }
-    if (body.notes !== undefined) updateData.notes = body.notes;
-    if (body.sortOrder !== undefined) updateData.sortOrder = body.sortOrder;
+    if (data.perItemFee !== undefined) {
+      updateData.perItemFee = data.perItemFee;
+    }
+    if (data.freeShippingThreshold !== undefined) {
+      updateData.freeShippingThreshold = data.freeShippingThreshold ?? null;
+    }
+    if (data.maxWeight !== undefined) {
+      updateData.maxWeight = data.maxWeight ?? null;
+    }
+    if (data.notes !== undefined) updateData.notes = data.notes;
+    if (data.sortOrder !== undefined) updateData.sortOrder = data.sortOrder;
 
     const zone = await prisma.shippingZone.update({
       where: { id },

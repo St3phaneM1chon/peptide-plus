@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
+import { patchShippingZoneSchema } from '@/lib/validations/shipping';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { logger } from '@/lib/logger';
 
@@ -14,6 +15,16 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
   try {
     const id = params!.id;
     const body = await request.json();
+
+    // Validate with Zod
+    const parsed = patchShippingZoneSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid data', details: parsed.error.errors },
+        { status: 400 }
+      );
+    }
+    const data = parsed.data;
 
     const existing = await prisma.shippingZone.findUnique({
       where: { id },
@@ -28,27 +39,25 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
 
     const updateData: Record<string, unknown> = {};
 
-    if (body.name !== undefined) updateData.name = body.name;
-    if (body.countries !== undefined) {
-      updateData.countries = Array.isArray(body.countries)
-        ? JSON.stringify(body.countries)
-        : body.countries;
+    if (data.name !== undefined) updateData.name = data.name;
+    if (data.countries !== undefined) {
+      updateData.countries = JSON.stringify(data.countries);
     }
-    if (body.baseFee !== undefined) updateData.baseFee = body.baseFee;
-    if (body.perItemFee !== undefined) updateData.perItemFee = body.perItemFee;
-    if (body.freeShippingThreshold !== undefined) {
-      updateData.freeShippingThreshold = body.freeShippingThreshold;
+    if (data.baseFee !== undefined) updateData.baseFee = data.baseFee;
+    if (data.perItemFee !== undefined) updateData.perItemFee = data.perItemFee;
+    if (data.freeShippingThreshold !== undefined) {
+      updateData.freeShippingThreshold = data.freeShippingThreshold;
     }
-    if (body.estimatedDaysMin !== undefined) {
-      updateData.estimatedDaysMin = body.estimatedDaysMin;
+    if (data.estimatedDaysMin !== undefined) {
+      updateData.estimatedDaysMin = data.estimatedDaysMin;
     }
-    if (body.estimatedDaysMax !== undefined) {
-      updateData.estimatedDaysMax = body.estimatedDaysMax;
+    if (data.estimatedDaysMax !== undefined) {
+      updateData.estimatedDaysMax = data.estimatedDaysMax;
     }
-    if (body.maxWeight !== undefined) updateData.maxWeight = body.maxWeight;
-    if (body.isActive !== undefined) updateData.isActive = body.isActive;
-    if (body.notes !== undefined) updateData.notes = body.notes;
-    if (body.sortOrder !== undefined) updateData.sortOrder = body.sortOrder;
+    if (data.maxWeight !== undefined) updateData.maxWeight = data.maxWeight;
+    if (data.isActive !== undefined) updateData.isActive = data.isActive;
+    if (data.notes !== undefined) updateData.notes = data.notes;
+    if (data.sortOrder !== undefined) updateData.sortOrder = data.sortOrder;
 
     const zone = await prisma.shippingZone.update({
       where: { id },

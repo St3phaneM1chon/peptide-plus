@@ -6,10 +6,24 @@ export const dynamic = 'force-dynamic';
  * POST - Create custom segment
  */
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
 import { logger } from '@/lib/logger';
+
+const createSegmentSchema = z.object({
+  name: z.string().min(1).max(200).optional(),
+  description: z.string().max(1000).optional(),
+  query: z.union([z.string().max(10000), z.record(z.unknown())]).optional(),
+  color: z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional(),
+  sourceId: z.string().uuid().optional(),
+}).refine(
+  (data) => data.sourceId || (data.name && data.query),
+  { message: 'Either sourceId (clone) or name+query (create) are required' }
+);
 
 // Pre-defined RFM segments
 const RFM_SEGMENTS = [
@@ -242,10 +256,29 @@ async function countSegment(rawQuery: Record<string, unknown>, now: Date): Promi
   }
 }
 
-export const POST = withAdminGuard(async (request, { session }) => {
+export const POST = withAdminGuard(async (request: NextRequest, { session }) => {
   try {
+    // Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/admin/emails/segments');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+    // CSRF validation
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const body = await request.json();
-    const { name, description, query, color, sourceId } = body;
+    const parsed = createSegmentSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+    }
+    const { name, description, query, color, sourceId } = parsed.data;
 
     // Clone mode: duplicate an existing custom segment
     if (sourceId) {

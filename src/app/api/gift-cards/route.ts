@@ -9,6 +9,17 @@ import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth-config';
 import crypto from 'crypto';
 import { logger } from '@/lib/logger';
+import { z } from 'zod';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
+import { stripHtml, stripControlChars } from '@/lib/sanitize';
+
+const createGiftCardSchema = z.object({
+  amount: z.number({ coerce: true }).int().min(25).max(1000),
+  recipientEmail: z.string().email().max(255).optional().nullable(),
+  recipientName: z.string().max(100).optional().nullable(),
+  message: z.string().max(500).optional().nullable(),
+});
 
 // SEC-20: Generate unique gift card code using cryptographically secure random bytes
 function generateGiftCardCode(): string {
@@ -19,6 +30,22 @@ function generateGiftCardCode(): string {
 
 export async function POST(request: NextRequest) {
   try {
+    // SECURITY: Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/gift-cards');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+
+    // SECURITY: CSRF validation
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const session = await auth();
 
     // SECURITY: Require authentication to prevent anonymous gift card creation
@@ -29,16 +56,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { amount, recipientEmail, recipientName, message } = await request.json();
-
-    // Validate amount (integer amounts only to prevent rounding exploits)
-    const parsedAmount = Math.floor(Number(amount));
-    if (!parsedAmount || parsedAmount < 25 || parsedAmount > 1000) {
+    const body = await request.json();
+    const parsed = createGiftCardSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Invalid amount. Must be between $25 and $1000.' },
+        { error: 'Invalid data', details: parsed.error.errors },
         { status: 400 }
       );
     }
+
+    const { amount, recipientEmail, recipientName, message } = parsed.data;
+    const parsedAmount = amount;
 
     // Rate limit: max 5 gift cards per user per day
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
@@ -88,9 +116,9 @@ export async function POST(request: NextRequest) {
         balance: 0, // BE-PAY-03: Balance stays 0 until payment confirmed
         currency: 'CAD',
         purchaserId: session.user.id,
-        recipientEmail: recipientEmail || null,
-        recipientName: recipientName || null,
-        message: message || null,
+        recipientEmail: recipientEmail ? stripControlChars(stripHtml(recipientEmail)) : null,
+        recipientName: recipientName ? stripControlChars(stripHtml(recipientName)) : null,
+        message: message ? stripControlChars(stripHtml(message)) : null,
         isActive: false, // BE-PAY-03: Inactive until payment confirmed
         expiresAt,
       },

@@ -6,12 +6,26 @@ export const dynamic = 'force-dynamic';
  * POST - Create campaign
  */
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
 import { safeParseJson } from '@/lib/email/utils';
 import { logger } from '@/lib/logger';
+
+const createCampaignSchema = z.object({
+  name: z.string().min(1).max(200).optional(),
+  subject: z.string().min(1).max(500).optional(),
+  htmlContent: z.string().min(1).optional(),
+  textContent: z.string().nullable().optional(),
+  segmentQuery: z.unknown().optional(),
+  scheduledAt: z.string().nullable().optional(),
+  abTestConfig: z.unknown().optional(),
+  sourceId: z.string().optional(),
+});
 
 export const GET = withAdminGuard(async (request, { session: _session }) => {
   try {
@@ -62,8 +76,25 @@ export const GET = withAdminGuard(async (request, { session: _session }) => {
 
 export const POST = withAdminGuard(async (request, { session }) => {
   try {
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/admin/emails/campaigns');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const body = await request.json();
-    const { name, subject, htmlContent, textContent, segmentQuery, scheduledAt, abTestConfig, sourceId } = body;
+    const parsed = createCampaignSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+    }
+    const { name, subject, htmlContent, textContent, segmentQuery, scheduledAt, abTestConfig, sourceId } = parsed.data;
 
     // Clone mode: duplicate an existing campaign
     if (sourceId) {

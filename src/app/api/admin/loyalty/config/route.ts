@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { updateLoyaltyConfigSchema } from '@/lib/validations/loyalty';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { LOYALTY_POINTS_CONFIG, LOYALTY_TIER_THRESHOLDS } from '@/lib/constants';
 import { logger } from '@/lib/logger';
@@ -105,32 +106,16 @@ export const PUT = withAdminGuard(async (request: NextRequest, { session }) => {
   try {
     const body = await request.json();
 
-    // FIX F-023: Use explicit undefined check instead of || to allow 0 values
-    const config: LoyaltyConfig = {
-      pointsPerDollar: body.pointsPerDollar !== undefined && body.pointsPerDollar !== null ? Number(body.pointsPerDollar) : DEFAULT_CONFIG.pointsPerDollar,
-      pointsValue: body.pointsValue !== undefined && body.pointsValue !== null ? Number(body.pointsValue) : DEFAULT_CONFIG.pointsValue,
-      minRedemption: body.minRedemption !== undefined && body.minRedemption !== null ? Number(body.minRedemption) : DEFAULT_CONFIG.minRedemption,
-      referralBonus: body.referralBonus !== undefined && body.referralBonus !== null ? Number(body.referralBonus) : DEFAULT_CONFIG.referralBonus,
-      birthdayBonus: body.birthdayBonus !== undefined && body.birthdayBonus !== null ? Number(body.birthdayBonus) : DEFAULT_CONFIG.birthdayBonus,
-      tiers: Array.isArray(body.tiers) ? body.tiers : DEFAULT_CONFIG.tiers,
-    };
-
-    // Validate tiers
-    if (config.tiers.length === 0) {
+    // Validate with Zod
+    const parsed = updateLoyaltyConfigSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'At least one tier is required' },
+        { error: 'Invalid data', details: parsed.error.errors },
         { status: 400 }
       );
     }
 
-    for (const tier of config.tiers) {
-      if (!tier.name || tier.minPoints === undefined || tier.multiplier === undefined) {
-        return NextResponse.json(
-          { error: 'Each tier must have name, minPoints, and multiplier' },
-          { status: 400 }
-        );
-      }
-    }
+    const config: LoyaltyConfig = parsed.data;
 
     // Save to SiteSetting (key-value)
     const configJson = JSON.stringify(config);

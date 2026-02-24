@@ -5,32 +5,45 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { prisma } from '@/lib/db';
 import { stripHtml, stripControlChars } from '@/lib/sanitize';
 import { logger } from '@/lib/logger';
 
+const respondToReviewSchema = z.object({
+  response: z.string().min(1, 'La réponse ne peut pas être vide').max(5000, 'La réponse ne doit pas dépasser 5000 caractères'),
+});
+
 export const POST = withAdminGuard(async (request: NextRequest, { session, params }) => {
   try {
     const id = params!.id;
     const body = await request.json();
-    const { response: rawResponse } = body;
 
-    if (!rawResponse || !String(rawResponse).trim()) {
+    const parsed = respondToReviewSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'La réponse ne peut pas être vide' },
+        { error: 'Invalid data', details: parsed.error.errors },
+        { status: 400 }
+      );
+    }
+    const data = parsed.data;
+
+    // BE-SEC-03: Sanitize response text - strip HTML and control characters
+    const response = stripControlChars(stripHtml(data.response)).trim();
+
+    // BE-SEC-05: Enforce max length on sanitized response text
+    if (response.length > 5000) {
+      return NextResponse.json(
+        { error: 'La réponse ne doit pas dépasser 5000 caractères' },
         { status: 400 }
       );
     }
 
-    // BE-SEC-03: Sanitize response text - strip HTML and control characters
-    const response = stripControlChars(stripHtml(String(rawResponse))).trim();
-
-    // BE-SEC-05: Enforce max length on response text
-    if (response.length > 5000) {
+    if (!response) {
       return NextResponse.json(
-        { error: 'La réponse ne doit pas dépasser 5000 caractères' },
+        { error: 'La réponse ne peut pas être vide' },
         { status: 400 }
       );
     }

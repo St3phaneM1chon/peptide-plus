@@ -7,12 +7,17 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { launchUatRun } from '@/lib/uat/runner';
 import { getScenarios } from '@/lib/uat/scenarios';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { logger } from '@/lib/logger';
+
+const launchUatSchema = z.object({
+  canadaOnly: z.boolean().nullish(),
+});
 
 // POST — Launch a new UAT run
 export const POST = withAdminGuard(async (request: NextRequest, { session }) => {
@@ -26,7 +31,14 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
     }
 
     const body = await request.json();
-    const canadaOnly = body.canadaOnly !== false; // default true
+    const parsed = launchUatSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid data', details: parsed.error.errors },
+        { status: 400 }
+      );
+    }
+    const canadaOnly = parsed.data.canadaOnly !== false; // default true
 
     // Check no run is currently active
     const activeRun = await prisma.uatTestRun.findFirst({

@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { createVideoSchema } from '@/lib/validations/video';
 import { enqueue } from '@/lib/translation';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { logger } from '@/lib/logger';
@@ -111,6 +112,15 @@ export const GET = withAdminGuard(async (request, { session }) => {
 export const POST = withAdminGuard(async (request, { session }) => {
   try {
     const body = await request.json();
+
+    // Validate with Zod
+    const parsed = createVideoSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid data', details: parsed.error.errors },
+        { status: 400 }
+      );
+    }
     const {
       title,
       description,
@@ -125,23 +135,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       locale,
       sortOrder,
       translations,
-    } = body;
-
-    // Validate required fields
-    if (!title) {
-      return NextResponse.json(
-        { error: 'Title is required' },
-        { status: 400 }
-      );
-    }
-
-    // FIX: F16 - Validate URL fields (must start with http:// or https:// or /)
-    if (videoUrl && !videoUrl.startsWith('http://') && !videoUrl.startsWith('https://') && !videoUrl.startsWith('/')) {
-      return NextResponse.json({ error: 'videoUrl must be a valid URL' }, { status: 400 });
-    }
-    if (thumbnailUrl && !thumbnailUrl.startsWith('http://') && !thumbnailUrl.startsWith('https://') && !thumbnailUrl.startsWith('/')) {
-      return NextResponse.json({ error: 'thumbnailUrl must be a valid URL' }, { status: 400 });
-    }
+    } = parsed.data;
 
     // Generate slug from title
     const baseSlug = title

@@ -1,10 +1,43 @@
 export const dynamic = 'force-dynamic';
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
+import { z } from 'zod';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
+
+// ---------------------------------------------------------------------------
+// Zod Schemas
+// ---------------------------------------------------------------------------
+
+const VALID_ACCOUNT_TYPES = ['ASSET', 'LIABILITY', 'EQUITY', 'REVENUE', 'EXPENSE'] as const;
+const VALID_NORMAL_BALANCES = ['DEBIT', 'CREDIT'] as const;
+
+const createAccountSchema = z.object({
+  code: z.string().min(1).regex(/^\d{4}$/, 'Le code comptable doit être composé de 4 chiffres'),
+  name: z.string().min(1),
+  type: z.enum(VALID_ACCOUNT_TYPES),
+  normalBalance: z.enum(VALID_NORMAL_BALANCES),
+  description: z.string().optional().nullable(),
+  parentId: z.string().optional().nullable(),
+  isSystem: z.boolean().optional().default(false),
+});
+
+const updateAccountSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().optional(),
+  description: z.string().optional().nullable(),
+  isActive: z.boolean().optional(),
+  gifiCode: z.string().optional().nullable(),
+  gifiName: z.string().optional().nullable(),
+  ccaClass: z.union([z.number(), z.string(), z.null()]).optional(),
+  ccaRate: z.union([z.number(), z.string(), z.null()]).optional(),
+  deductiblePercent: z.union([z.number(), z.string(), z.null()]).optional(),
+  isContra: z.boolean().optional(),
+});
 
 // FIX: F004 - In-memory cache is useless in serverless (each invocation gets a fresh
 // module scope). Kept as a minor optimization for long-lived dev servers / non-serverless
@@ -66,33 +99,26 @@ export const GET = withAdminGuard(async (request) => {
  */
 export const POST = withAdminGuard(async (request, { session }) => {
   try {
+    // CSRF + Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/accounting/chart-of-accounts');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const body = await request.json();
-    const { code, name, type, normalBalance, description, parentId, isSystem } = body;
-
-    if (!code || !name || !type || !normalBalance) {
-      return NextResponse.json(
-        { error: 'Code, nom, type et solde normal sont requis' },
-        { status: 400 }
-      );
+    const parsed = createAccountSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
     }
-
-    // Validate account type
-    const VALID_ACCOUNT_TYPES = ['ASSET', 'LIABILITY', 'EQUITY', 'REVENUE', 'EXPENSE'];
-    if (!VALID_ACCOUNT_TYPES.includes(type)) {
-      return NextResponse.json(
-        { error: `Type de compte invalide: "${type}". Types valides: ${VALID_ACCOUNT_TYPES.join(', ')}` },
-        { status: 400 }
-      );
-    }
-
-    // Validate normal balance
-    const VALID_NORMAL_BALANCES = ['DEBIT', 'CREDIT'];
-    if (!VALID_NORMAL_BALANCES.includes(normalBalance)) {
-      return NextResponse.json(
-        { error: `Solde normal invalide: "${normalBalance}". Valeurs valides: DEBIT, CREDIT` },
-        { status: 400 }
-      );
-    }
+    const { code, name, type, normalBalance, description, parentId, isSystem } = parsed.data;
 
     // Validate account number pattern matches the account type
     // Convention: 1xxx = ASSET, 2xxx = LIABILITY, 3xxx = EQUITY, 4xxx = REVENUE, 5xxx-6xxx = EXPENSE
@@ -108,14 +134,6 @@ export const POST = withAdminGuard(async (request, { session }) => {
     if (validPrefixes && !validPrefixes.includes(accountNumberPrefix)) {
       return NextResponse.json(
         { error: `Le code comptable "${code}" ne correspond pas au type "${type}". Les comptes ${type} doivent commencer par ${validPrefixes.join(' ou ')}` },
-        { status: 400 }
-      );
-    }
-
-    // Validate account code format (numeric, 4 digits)
-    if (!/^\d{4}$/.test(code)) {
-      return NextResponse.json(
-        { error: 'Le code comptable doit être composé de 4 chiffres (ex: 1000, 2100, 4010)' },
         { status: 400 }
       );
     }
@@ -170,12 +188,26 @@ export const POST = withAdminGuard(async (request, { session }) => {
  */
 export const PUT = withAdminGuard(async (request, { session }) => {
   try {
-    const body = await request.json();
-    const { id, name, description, isActive, gifiCode, gifiName, ccaClass, ccaRate, deductiblePercent, isContra } = body;
-
-    if (!id) {
-      return NextResponse.json({ error: 'ID requis' }, { status: 400 });
+    // CSRF + Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/accounting/chart-of-accounts');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
     }
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
+    const body = await request.json();
+    const parsed = updateAccountSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+    }
+    const { id, name, description, isActive, gifiCode, gifiName, ccaClass, ccaRate, deductiblePercent, isContra } = parsed.data;
 
     const existing = await prisma.chartOfAccount.findUnique({ where: { id } });
     if (!existing) {
@@ -257,6 +289,20 @@ export const PUT = withAdminGuard(async (request, { session }) => {
  */
 export const DELETE = withAdminGuard(async (request, { session }) => {
   try {
+    // CSRF + Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/accounting/chart-of-accounts');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 

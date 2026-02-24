@@ -14,6 +14,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { TRANSLATABLE_FIELDS, type TranslatableModel } from '@/lib/translation';
@@ -21,6 +22,13 @@ import { cacheDelete } from '@/lib/cache';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { logger } from '@/lib/logger';
 import { stripControlChars } from '@/lib/sanitize';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
+
+const translationUpdateSchema = z.object({
+  fields: z.record(z.string(), z.unknown()).optional(),
+  approve: z.boolean().optional(),
+});
 
 // G4-FLAW-10: Maximum allowed length for translation field values
 const MAX_TRANSLATION_LENGTH = 10_000;
@@ -87,6 +95,19 @@ export const GET = withAdminGuard(async (request: NextRequest, { session, params
 // PUT - Modifier une traduction manuellement
 export const PUT = withAdminGuard(async (request: NextRequest, { session, params }) => {
   try {
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/admin/translations/[id]');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const entityId = params!.id;
     const { searchParams } = new URL(request.url);
     const model = searchParams.get('model') as TranslatableModel;
@@ -97,7 +118,11 @@ export const PUT = withAdminGuard(async (request: NextRequest, { session, params
     }
 
     const body = await request.json();
-    const { fields, approve } = body;
+    const parsed = translationUpdateSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+    }
+    const { fields, approve } = parsed.data;
 
     const tableName = TRANSLATION_TABLE_MAP[model];
     const fkField = FK_FIELD_MAP[model];
@@ -163,6 +188,19 @@ export const PUT = withAdminGuard(async (request: NextRequest, { session, params
 // DELETE - Supprimer une traduction
 export const DELETE = withAdminGuard(async (request: NextRequest, { session, params }) => {
   try {
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/admin/translations/[id]');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const entityId = params!.id;
     const { searchParams } = new URL(request.url);
     const model = searchParams.get('model') as TranslatableModel;

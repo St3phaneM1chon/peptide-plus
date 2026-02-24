@@ -1,10 +1,31 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
 import { logger } from '@/lib/logger';
+
+// --- Zod Schemas ---
+
+const bundleItemSchema = z.object({
+  productId: z.string().min(1).max(100),
+  formatId: z.string().max(100).optional().nullable(),
+  quantity: z.number().int().min(1).max(9999).default(1),
+});
+
+const createBundleSchema = z.object({
+  name: z.string().min(1, 'Name is required').max(200),
+  slug: z.string().min(1, 'Slug is required').max(200),
+  description: z.string().max(5000).optional().nullable(),
+  image: z.string().url().max(2000).optional().nullable(),
+  discount: z.number().min(0).max(100).optional().default(0),
+  isActive: z.boolean().optional().default(true),
+  items: z.array(bundleItemSchema).optional(),
+});
 
 // GET all bundles (including inactive for admin)
 export const GET = withAdminGuard(async (request, { session }) => {
@@ -94,20 +115,36 @@ export const GET = withAdminGuard(async (request, { session }) => {
 // POST create new bundle
 export const POST = withAdminGuard(async (request, { session }) => {
   try {
-    const body = await request.json();
-    const { name, slug, description, image, discount, isActive, items } = body;
+    // Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/admin/bundles');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
 
-    // Validate required fields
-    if (!name || !slug) {
+    // CSRF validation
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
+    // Parse and validate body with Zod
+    const body = await request.json();
+    const parsed = createBundleSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Name and slug are required' },
+        { error: 'Invalid data', details: parsed.error.errors },
         { status: 400 }
       );
     }
+    const data = parsed.data;
 
     // Check if slug already exists
     const existingBundle = await prisma.bundle.findUnique({
-      where: { slug },
+      where: { slug: data.slug },
     });
 
     if (existingBundle) {
@@ -120,14 +157,14 @@ export const POST = withAdminGuard(async (request, { session }) => {
     // Create bundle with items
     const bundle = await prisma.bundle.create({
       data: {
-        name,
-        slug,
-        description: description || null,
-        image: image || null,
-        discount: discount || 0,
-        isActive: isActive !== undefined ? isActive : true,
+        name: data.name,
+        slug: data.slug,
+        description: data.description || null,
+        image: data.image || null,
+        discount: data.discount || 0,
+        isActive: data.isActive !== undefined ? data.isActive : true,
         items: {
-          create: items?.map((item: { productId: string; formatId?: string; quantity: number }) => ({
+          create: data.items?.map((item) => ({
             productId: item.productId,
             formatId: item.formatId || null,
             quantity: item.quantity || 1,

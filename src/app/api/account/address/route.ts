@@ -6,10 +6,31 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { auth } from '@/lib/auth-config';
 import { db } from '@/lib/db';
 import { validateCsrf } from '@/lib/csrf-middleware';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { stripHtml, stripControlChars } from '@/lib/sanitize';
 import { logger } from '@/lib/logger';
+
+/** Sanitize a string field: strip HTML + control chars */
+const clean = (v: string) => stripControlChars(stripHtml(v));
+
+const addressSchema = z.object({
+  id: z.string().max(100).optional(),
+  recipientName: z.string().max(100).optional(),
+  addressLine1: z.string().max(500).optional(),
+  address: z.string().max(500).optional(),      // alias for addressLine1
+  addressLine2: z.string().max(200).optional().default(''),
+  city: z.string().max(100).optional().default(''),
+  state: z.string().max(100).optional(),
+  province: z.string().max(100).optional(),      // alias for state
+  postalCode: z.string().max(20).optional().default(''),
+  country: z.string().max(2).optional().default('CA'),
+  phone: z.string().max(30).optional().default(''),
+  label: z.string().max(50).optional().default('Principal'),
+});
 
 export async function PUT(request: NextRequest) {
   try {
@@ -17,6 +38,16 @@ export async function PUT(request: NextRequest) {
     const csrfValid = await validateCsrf(request);
     if (!csrfValid) {
       return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
+    // Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/account/address');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
     }
 
     const session = await auth();
@@ -34,21 +65,29 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    const data = await request.json();
+    // Zod schema validation
+    const body = await request.json();
+    const parsed = addressSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid data', details: parsed.error.errors },
+        { status: 400 }
+      );
+    }
+    const data = parsed.data;
 
     // BE-SEC-05: Enforce input length limits on all address fields
-    // BE-SEC-03: Strip HTML from text fields to prevent stored XSS
-    const stripTags = (v: unknown) => typeof v === 'string' ? v.replace(/<[^>]*>/g, '') : '';
+    // BE-SEC-03: Strip HTML + control chars from text fields to prevent stored XSS
     const addressData = {
-      recipientName: stripTags(data.recipientName || session.user.name).slice(0, 100) || '',
-      addressLine1: stripTags(data.addressLine1 || data.address).slice(0, 500) || '',
-      addressLine2: stripTags(data.addressLine2).slice(0, 200) || '',
-      city: stripTags(data.city).slice(0, 100) || '',
-      state: stripTags(data.state || data.province).slice(0, 100) || '',
-      postalCode: stripTags(data.postalCode).slice(0, 20) || '',
-      country: stripTags(data.country).slice(0, 2) || 'CA',
-      phone: stripTags(data.phone).slice(0, 30) || '',
-      label: stripTags(data.label).slice(0, 50) || 'Principal',
+      recipientName: clean(data.recipientName || session.user.name || '').slice(0, 100) || '',
+      addressLine1: clean(data.addressLine1 || data.address || '').slice(0, 500) || '',
+      addressLine2: clean(data.addressLine2 || '').slice(0, 200) || '',
+      city: clean(data.city || '').slice(0, 100) || '',
+      state: clean(data.state || data.province || '').slice(0, 100) || '',
+      postalCode: clean(data.postalCode || '').slice(0, 20) || '',
+      country: clean(data.country || '').slice(0, 2) || 'CA',
+      phone: clean(data.phone || '').slice(0, 30) || '',
+      label: clean(data.label || '').slice(0, 50) || 'Principal',
     };
 
     let address;

@@ -2,10 +2,26 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
+import { z } from 'zod';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { createCustomerInvoiceSchema, formatZodErrors, logAuditTrail } from '@/lib/accounting';
 import { logger } from '@/lib/logger';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
+
+// ---------------------------------------------------------------------------
+// Zod Schemas (for PUT - update invoice status)
+// ---------------------------------------------------------------------------
+
+const updateCustomerInvoiceSchema = z.object({
+  id: z.string().min(1),
+  status: z.string().optional(),
+  paidAt: z.string().optional().nullable(),
+  amountPaid: z.number().min(0).optional(),
+  notes: z.string().optional().nullable(),
+  adminNotes: z.string().optional().nullable(),
+});
 
 /**
  * GET /api/accounting/customer-invoices
@@ -104,6 +120,20 @@ export const GET = withAdminGuard(async (request) => {
  */
 export const POST = withAdminGuard(async (request) => {
   try {
+    // CSRF + Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/accounting/customer-invoices');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const body = await request.json();
 
     // Zod validation
@@ -216,12 +246,26 @@ export const POST = withAdminGuard(async (request) => {
  */
 export const PUT = withAdminGuard(async (request, { session }) => {
   try {
-    const body = await request.json();
-    const { id, status, paidAt, amountPaid } = body;
-
-    if (!id) {
-      return NextResponse.json({ error: 'ID requis' }, { status: 400 });
+    // CSRF + Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/accounting/customer-invoices');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
     }
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
+    const body = await request.json();
+    const parsed = updateCustomerInvoiceSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+    }
+    const { id, status, paidAt, amountPaid } = parsed.data;
 
     const existing = await prisma.customerInvoice.findFirst({ where: { id, deletedAt: null } });
     if (!existing) {
@@ -335,6 +379,20 @@ export const PUT = withAdminGuard(async (request, { session }) => {
  */
 export const DELETE = withAdminGuard(async (request, { session }) => {
   try {
+    // CSRF + Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/accounting/customer-invoices');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 

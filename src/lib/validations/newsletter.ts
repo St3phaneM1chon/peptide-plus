@@ -49,3 +49,16 @@ export const addSubscriberSchema = z.object({
 });
 
 export type AddSubscriberInput = z.infer<typeof addSubscriberSchema>;
+
+// ---------------------------------------------------------------------------
+// Update subscriber (PATCH /api/admin/newsletter/subscribers/[id])
+// ---------------------------------------------------------------------------
+
+export const patchSubscriberSchema = z.object({
+  isActive: z.boolean().optional(),
+  name: z.string().max(200).optional().nullable(),
+  locale: z.string().min(2).max(10).optional().nullable(),
+  source: z.string().max(50).optional().nullable(),
+});
+
+export type PatchSubscriberInput = z.infer<typeof patchSubscriberSchema>;

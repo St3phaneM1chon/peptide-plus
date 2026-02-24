@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import {
@@ -11,6 +12,17 @@ import {
   KEYBOARD_SHORTCUTS,
 } from '@/lib/accounting/quick-entry.service';
 import { logger } from '@/lib/logger';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
+
+// ---------------------------------------------------------------------------
+// Zod Schemas
+// ---------------------------------------------------------------------------
+
+const createQuickEntrySchema = z.object({
+  templateId: z.string().min(1),
+  values: z.record(z.union([z.string(), z.number(), z.boolean(), z.null()])),
+});
 
 /**
  * GET /api/accounting/quick-entry
@@ -52,15 +64,26 @@ export const GET = withAdminGuard(async (request, { session }) => {
  */
 export const POST = withAdminGuard(async (request, { session }) => {
   try {
-    const body = await request.json();
-    const { templateId, values } = body;
-
-    if (!templateId || !values) {
-      return NextResponse.json(
-        { error: 'templateId et values sont requis' },
-        { status: 400 }
-      );
+    // CSRF + Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/accounting/quick-entry');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
     }
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
+    const body = await request.json();
+    const parsed = createQuickEntrySchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+    }
+    const { templateId, values } = parsed.data;
 
     const template = DEFAULT_TEMPLATES.find((t) => t.id === templateId);
     if (!template) {

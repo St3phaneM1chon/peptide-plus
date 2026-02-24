@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
+import { patchSubscriberSchema } from '@/lib/validations/newsletter';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { logger } from '@/lib/logger';
 
@@ -14,6 +15,16 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
   try {
     const id = params!.id;
     const body = await request.json();
+
+    // Validate with Zod
+    const parsed = patchSubscriberSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid data', details: parsed.error.errors },
+        { status: 400 }
+      );
+    }
+    const data = parsed.data;
 
     const existing = await prisma.newsletterSubscriber.findUnique({
       where: { id },
@@ -28,18 +39,18 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
 
     const updateData: Record<string, unknown> = {};
 
-    if (body.isActive !== undefined) {
-      updateData.isActive = body.isActive;
-      if (!body.isActive) {
+    if (data.isActive !== undefined) {
+      updateData.isActive = data.isActive;
+      if (!data.isActive) {
         updateData.unsubscribedAt = new Date();
       } else {
         updateData.unsubscribedAt = null;
       }
     }
 
-    if (body.name !== undefined) updateData.name = body.name;
-    if (body.locale !== undefined) updateData.locale = body.locale;
-    if (body.source !== undefined) updateData.source = body.source;
+    if (data.name !== undefined) updateData.name = data.name;
+    if (data.locale !== undefined) updateData.locale = data.locale;
+    if (data.source !== undefined) updateData.source = data.source;
 
     const subscriber = await prisma.newsletterSubscriber.update({
       where: { id },

@@ -1,9 +1,23 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
+
+// ---------------------------------------------------------------------------
+// Zod Schema
+// ---------------------------------------------------------------------------
+
+const createPeriodSchema = z.object({
+  name: z.string().min(1, 'name est requis'),
+  code: z.string().min(1, 'code est requis'),
+  startDate: z.string().min(1, 'startDate est requis'),
+  endDate: z.string().min(1, 'endDate est requis'),
+});
 
 /**
  * GET /api/accounting/periods
@@ -28,7 +42,7 @@ export const GET = withAdminGuard(async (request) => {
   } catch (error) {
     logger.error('Get periods error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
-      { error: 'Erreur lors de la récupération des périodes comptables' },
+      { error: 'Erreur lors de la r\u00e9cup\u00e9ration des p\u00e9riodes comptables' },
       { status: 500 }
     );
   }
@@ -38,24 +52,36 @@ export const GET = withAdminGuard(async (request) => {
  * POST /api/accounting/periods
  * Create a new accounting period
  */
-export const POST = withAdminGuard(async (request) => {
+export const POST = withAdminGuard(async (request: NextRequest) => {
   try {
-    const body = await request.json();
-    const { name, code, startDate, endDate } = body;
-
-    if (!name || !code || !startDate || !endDate) {
-      return NextResponse.json(
-        { error: 'name, code, startDate et endDate sont requis' },
-        { status: 400 }
-      );
+    // Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/accounting/periods');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
     }
+    // CSRF validation
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
+    const body = await request.json();
+    const parsed = createPeriodSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+    }
+    const { name, code, startDate, endDate } = parsed.data;
 
     const parsedStart = new Date(startDate);
     const parsedEnd = new Date(endDate);
 
     if (parsedStart >= parsedEnd) {
       return NextResponse.json(
-        { error: 'La date de début doit être antérieure à la date de fin' },
+        { error: 'La date de d\u00e9but doit \u00eatre ant\u00e9rieure \u00e0 la date de fin' },
         { status: 400 }
       );
     }
@@ -69,7 +95,7 @@ export const POST = withAdminGuard(async (request) => {
     });
     if (overlapping) {
       return NextResponse.json(
-        { error: `La période chevauche une période existante: ${overlapping.code}` },
+        { error: `La p\u00e9riode chevauche une p\u00e9riode existante: ${overlapping.code}` },
         { status: 409 }
       );
     }
@@ -77,7 +103,7 @@ export const POST = withAdminGuard(async (request) => {
     const existing = await prisma.accountingPeriod.findUnique({ where: { code } });
     if (existing) {
       return NextResponse.json(
-        { error: `La période ${code} existe déjà` },
+        { error: `La p\u00e9riode ${code} existe d\u00e9j\u00e0` },
         { status: 409 }
       );
     }
@@ -96,7 +122,7 @@ export const POST = withAdminGuard(async (request) => {
   } catch (error) {
     logger.error('Create period error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
-      { error: 'Erreur lors de la création de la période comptable' },
+      { error: 'Erreur lors de la cr\u00e9ation de la p\u00e9riode comptable' },
       { status: 500 }
     );
   }
@@ -106,8 +132,23 @@ export const POST = withAdminGuard(async (request) => {
  * DELETE /api/accounting/periods
  * Delete an OPEN accounting period only
  */
-export const DELETE = withAdminGuard(async (request) => {
+export const DELETE = withAdminGuard(async (request: NextRequest) => {
   try {
+    // Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/accounting/periods');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+    // CSRF validation
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
@@ -117,23 +158,23 @@ export const DELETE = withAdminGuard(async (request) => {
 
     const existing = await prisma.accountingPeriod.findUnique({ where: { id } });
     if (!existing) {
-      return NextResponse.json({ error: 'Période non trouvée' }, { status: 404 });
+      return NextResponse.json({ error: 'P\u00e9riode non trouv\u00e9e' }, { status: 404 });
     }
 
     if (existing.status !== 'OPEN') {
       return NextResponse.json(
-        { error: 'Seules les périodes ouvertes (OPEN) peuvent être supprimées' },
+        { error: 'Seules les p\u00e9riodes ouvertes (OPEN) peuvent \u00eatre supprim\u00e9es' },
         { status: 400 }
       );
     }
 
     await prisma.accountingPeriod.delete({ where: { id } });
 
-    return NextResponse.json({ success: true, message: 'Période comptable supprimée' });
+    return NextResponse.json({ success: true, message: 'P\u00e9riode comptable supprim\u00e9e' });
   } catch (error) {
     logger.error('Delete period error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
-      { error: 'Erreur lors de la suppression de la période comptable' },
+      { error: 'Erreur lors de la suppression de la p\u00e9riode comptable' },
       { status: 500 }
     );
   }

@@ -8,11 +8,44 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { enqueue } from '@/lib/translation';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
 import { logger } from '@/lib/logger';
+
+// --- Zod Schemas ---
+
+const blogTranslationSchema = z.object({
+  locale: z.string().min(2).max(10),
+  title: z.string().max(500).optional(),
+  excerpt: z.string().max(2000).optional(),
+  content: z.string().max(200000).optional(),
+  metaTitle: z.string().max(200).optional(),
+  metaDescription: z.string().max(500).optional(),
+  isApproved: z.boolean().optional(),
+});
+
+const updateBlogPostSchema = z.object({
+  title: z.string().min(1).max(500).optional(),
+  excerpt: z.string().max(2000).optional().nullable(),
+  content: z.string().max(200000).optional().nullable(),
+  imageUrl: z.string().url().max(2000).optional().nullable(),
+  author: z.string().max(200).optional().nullable(),
+  category: z.string().max(100).optional().nullable(),
+  tags: z.union([z.array(z.string().max(100)), z.string().max(2000)]).optional().nullable(),
+  readTime: z.union([z.number().int().min(0).max(999), z.string()]).optional().nullable(),
+  isFeatured: z.boolean().optional(),
+  isPublished: z.boolean().optional(),
+  publishedAt: z.string().datetime({ offset: true }).optional().nullable(),
+  locale: z.string().min(2).max(10).optional(),
+  metaTitle: z.string().max(200).optional().nullable(),
+  metaDescription: z.string().max(500).optional().nullable(),
+  translations: z.array(blogTranslationSchema).optional(),
+});
 
 // GET /api/admin/blog/[id] - Get single blog post
 export const GET = withAdminGuard(async (_request, { session, params }) => {
@@ -65,6 +98,22 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
   try {
     const id = params!.id;
 
+    // Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/admin/blog');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+
+    // CSRF validation
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const existing = await prisma.blogPost.findUnique({ where: { id } });
     if (!existing) {
       return NextResponse.json(
@@ -73,33 +122,25 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
       );
     }
 
+    // Parse and validate body with Zod
     const body = await request.json();
-    const {
-      title,
-      excerpt,
-      content,
-      imageUrl,
-      author,
-      category,
-      tags,
-      readTime,
-      isFeatured,
-      isPublished,
-      publishedAt,
-      locale,
-      metaTitle,
-      metaDescription,
-      translations,
-    } = body;
+    const parsed = updateBlogPostSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid data', details: parsed.error.errors },
+        { status: 400 }
+      );
+    }
+    const data = parsed.data;
 
     // Build update data - only include provided fields
     const updateData: Record<string, unknown> = {};
 
-    if (title !== undefined) {
-      updateData.title = title;
+    if (data.title !== undefined) {
+      updateData.title = data.title;
 
       // Regenerate slug if title changes
-      const baseSlug = title
+      const baseSlug = data.title
         .toLowerCase()
         .normalize('NFD')
         .replace(/[\u0300-\u036f]/g, '')
@@ -117,29 +158,29 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
       updateData.slug = slug;
     }
 
-    if (excerpt !== undefined) updateData.excerpt = excerpt;
-    if (content !== undefined) updateData.content = content;
-    if (imageUrl !== undefined) updateData.imageUrl = imageUrl;
-    if (author !== undefined) updateData.author = author;
-    if (category !== undefined) updateData.category = category;
-    if (tags !== undefined) {
-      updateData.tags = tags
-        ? (Array.isArray(tags) ? JSON.stringify(tags) : tags)
+    if (data.excerpt !== undefined) updateData.excerpt = data.excerpt;
+    if (data.content !== undefined) updateData.content = data.content;
+    if (data.imageUrl !== undefined) updateData.imageUrl = data.imageUrl;
+    if (data.author !== undefined) updateData.author = data.author;
+    if (data.category !== undefined) updateData.category = data.category;
+    if (data.tags !== undefined) {
+      updateData.tags = data.tags
+        ? (Array.isArray(data.tags) ? JSON.stringify(data.tags) : data.tags)
         : null;
     }
-    if (readTime !== undefined) updateData.readTime = readTime ? parseInt(String(readTime), 10) : null;
-    if (isFeatured !== undefined) updateData.isFeatured = isFeatured;
-    if (isPublished !== undefined) {
-      updateData.isPublished = isPublished;
+    if (data.readTime !== undefined) updateData.readTime = data.readTime ? parseInt(String(data.readTime), 10) : null;
+    if (data.isFeatured !== undefined) updateData.isFeatured = data.isFeatured;
+    if (data.isPublished !== undefined) {
+      updateData.isPublished = data.isPublished;
       // Auto-set publishedAt when publishing for the first time
-      if (isPublished && !existing.publishedAt && publishedAt === undefined) {
+      if (data.isPublished && !existing.publishedAt && data.publishedAt === undefined) {
         updateData.publishedAt = new Date();
       }
     }
-    if (publishedAt !== undefined) updateData.publishedAt = publishedAt ? new Date(publishedAt) : null;
-    if (locale !== undefined) updateData.locale = locale;
-    if (metaTitle !== undefined) updateData.metaTitle = metaTitle;
-    if (metaDescription !== undefined) updateData.metaDescription = metaDescription;
+    if (data.publishedAt !== undefined) updateData.publishedAt = data.publishedAt ? new Date(data.publishedAt) : null;
+    if (data.locale !== undefined) updateData.locale = data.locale;
+    if (data.metaTitle !== undefined) updateData.metaTitle = data.metaTitle;
+    if (data.metaDescription !== undefined) updateData.metaDescription = data.metaDescription;
 
     // Update blog post
     const post = await prisma.blogPost.update({
@@ -166,8 +207,8 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
     }).catch(() => {});
 
     // Handle translations if provided
-    if (translations && Array.isArray(translations)) {
-      for (const t of translations) {
+    if (data.translations && Array.isArray(data.translations)) {
+      for (const t of data.translations) {
         if (!t.locale) continue;
 
         await prisma.blogPostTranslation.upsert({
@@ -217,9 +258,25 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
 });
 
 // DELETE /api/admin/blog/[id] - Delete blog post
-export const DELETE = withAdminGuard(async (_request, { session, params }) => {
+export const DELETE = withAdminGuard(async (request, { session, params }) => {
   try {
     const id = params!.id;
+
+    // Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/admin/blog');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+
+    // CSRF validation
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
 
     const existing = await prisma.blogPost.findUnique({ where: { id } });
     if (!existing) {
@@ -241,8 +298,8 @@ export const DELETE = withAdminGuard(async (_request, { session, params }) => {
       targetType: 'BlogPost',
       targetId: id,
       previousValue: { title: existing.title },
-      ipAddress: getClientIpFromRequest(_request),
-      userAgent: _request.headers.get('user-agent') || undefined,
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
     }).catch(() => {});
 
     return NextResponse.json({

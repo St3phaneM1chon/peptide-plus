@@ -1,10 +1,31 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
 import { logger } from '@/lib/logger';
+
+// --- Zod Schemas ---
+
+const bundleItemSchema = z.object({
+  productId: z.string().min(1).max(100),
+  formatId: z.string().max(100).optional().nullable(),
+  quantity: z.number().int().min(1).max(9999).default(1),
+});
+
+const updateBundleSchema = z.object({
+  name: z.string().min(1).max(200).optional(),
+  slug: z.string().min(1).max(200).optional(),
+  description: z.string().max(5000).optional().nullable(),
+  image: z.string().url().max(2000).optional().nullable(),
+  discount: z.number().min(0).max(100).optional(),
+  isActive: z.boolean().optional(),
+  items: z.array(bundleItemSchema).optional(),
+});
 
 // GET single bundle by ID
 export const GET = withAdminGuard(async (_request, { session, params }) => {
@@ -47,8 +68,33 @@ export const GET = withAdminGuard(async (_request, { session, params }) => {
 export const PATCH = withAdminGuard(async (request, { session, params }) => {
   try {
     const id = params!.id;
+
+    // Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/admin/bundles');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+
+    // CSRF validation
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
+    // Parse and validate body with Zod
     const body = await request.json();
-    const { name, slug, description, image, discount, isActive, items } = body;
+    const parsed = updateBundleSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid data', details: parsed.error.errors },
+        { status: 400 }
+      );
+    }
+    const data = parsed.data;
 
     // Check if bundle exists
     const existingBundle = await prisma.bundle.findUnique({
@@ -63,9 +109,9 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
     }
 
     // If slug is being changed, check if it's unique
-    if (slug && slug !== existingBundle.slug) {
+    if (data.slug && data.slug !== existingBundle.slug) {
       const slugExists = await prisma.bundle.findUnique({
-        where: { slug },
+        where: { slug: data.slug },
       });
 
       if (slugExists) {
@@ -86,12 +132,12 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
       isActive?: boolean;
     } = {};
 
-    if (name !== undefined) updateData.name = name;
-    if (slug !== undefined) updateData.slug = slug;
-    if (description !== undefined) updateData.description = description;
-    if (image !== undefined) updateData.image = image;
-    if (discount !== undefined) updateData.discount = discount;
-    if (isActive !== undefined) updateData.isActive = isActive;
+    if (data.name !== undefined) updateData.name = data.name;
+    if (data.slug !== undefined) updateData.slug = data.slug;
+    if (data.description !== undefined) updateData.description = data.description;
+    if (data.image !== undefined) updateData.image = data.image;
+    if (data.discount !== undefined) updateData.discount = data.discount;
+    if (data.isActive !== undefined) updateData.isActive = data.isActive;
 
     const bundle = await prisma.bundle.update({
       where: { id },
@@ -110,7 +156,7 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
     });
 
     // If items are provided, update them
-    if (items) {
+    if (data.items) {
       // Delete existing items
       await prisma.bundleItem.deleteMany({
         where: { bundleId: id },
@@ -118,7 +164,7 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
 
       // Create new items
       await prisma.bundleItem.createMany({
-        data: items.map((item: { productId: string; formatId?: string; quantity: number }) => ({
+        data: data.items.map((item) => ({
           bundleId: id,
           productId: item.productId,
           formatId: item.formatId || null,
@@ -150,9 +196,25 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
 });
 
 // DELETE bundle
-export const DELETE = withAdminGuard(async (_request, { session, params }) => {
+export const DELETE = withAdminGuard(async (request, { session, params }) => {
   try {
     const id = params!.id;
+
+    // Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/admin/bundles');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+
+    // CSRF validation
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
 
     const bundle = await prisma.bundle.findUnique({
       where: { id },
@@ -176,8 +238,8 @@ export const DELETE = withAdminGuard(async (_request, { session, params }) => {
       targetType: 'Bundle',
       targetId: id,
       previousValue: { name: bundle.name, slug: bundle.slug },
-      ipAddress: getClientIpFromRequest(_request),
-      userAgent: _request.headers.get('user-agent') || undefined,
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
     }).catch(() => {});
 
     return NextResponse.json({ success: true });

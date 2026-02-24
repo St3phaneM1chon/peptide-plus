@@ -13,6 +13,14 @@ import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { PASSWORD_MIN_LENGTH } from '@/lib/constants';
 import { logger } from '@/lib/logger';
+import { z } from 'zod';
+import { stripHtml, stripControlChars } from '@/lib/sanitize';
+
+const resetPasswordSchema = z.object({
+  token: z.string().min(1, 'Token requis').max(256),
+  email: z.string().email('Email invalide').max(255),
+  password: z.string().min(PASSWORD_MIN_LENGTH, `Le mot de passe doit contenir au moins ${PASSWORD_MIN_LENGTH} caractères`).max(128),
+});
 
 export async function POST(request: NextRequest) {
   try {
@@ -26,23 +34,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { token, email, password } = await request.json();
-
-    // Validation des paramètres
-    if (!token || !email || !password) {
+    const body = await request.json();
+    const parsed = resetPasswordSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Paramètres manquants' },
+        { error: 'Invalid data', details: parsed.error.errors },
         { status: 400 }
       );
     }
 
-    // Validation du mot de passe
-    if (password.length < PASSWORD_MIN_LENGTH) {
-      return NextResponse.json(
-        { error: `Le mot de passe doit contenir au moins ${PASSWORD_MIN_LENGTH} caractères` },
-        { status: 400 }
-      );
-    }
+    const { token, password } = parsed.data;
+    const email = stripControlChars(stripHtml(parsed.data.email));
 
     // Hasher le token reçu pour comparaison
     const tokenHash = crypto

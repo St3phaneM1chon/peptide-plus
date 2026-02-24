@@ -1,10 +1,64 @@
 export const dynamic = 'force-dynamic';
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
 // CCA_CLASSES available if needed for validation: import { CCA_CLASSES } from '@/lib/accounting/canadian-tax-config';
+
+// ---------------------------------------------------------------------------
+// Zod Schemas
+// ---------------------------------------------------------------------------
+
+const createFixedAssetSchema = z.object({
+  name: z.string().min(1),
+  description: z.string().optional().nullable(),
+  assetNumber: z.string().min(1),
+  serialNumber: z.string().optional().nullable(),
+  location: z.string().optional().nullable(),
+  acquisitionDate: z.string().min(1),
+  acquisitionCost: z.union([z.number(), z.string()]).refine((v) => !isNaN(Number(v)), 'Must be a number'),
+  residualValue: z.union([z.number(), z.string()]).optional().nullable(),
+  ccaClass: z.union([z.number(), z.string()]),
+  ccaRate: z.union([z.number(), z.string()]),
+  depreciationMethod: z.string().optional().default('DECLINING_BALANCE'),
+  halfYearRuleApplied: z.boolean().optional().default(true),
+  aiiApplied: z.boolean().optional().default(false),
+  superDeduction: z.boolean().optional().default(false),
+  gifiCode: z.string().optional().nullable(),
+  assetAccountId: z.string().min(1),
+  depreciationAccountId: z.string().min(1),
+  expenseAccountId: z.string().min(1),
+  notes: z.string().optional().nullable(),
+});
+
+const patchFixedAssetSchema = z.object({
+  id: z.string().min(1),
+  action: z.string().optional(),
+  // Depreciation fields (when action === 'depreciate')
+  fiscalYear: z.union([z.number(), z.string()]).optional(),
+  periodStart: z.string().optional(),
+  periodEnd: z.string().optional(),
+  // Update fields
+  name: z.string().optional(),
+  description: z.string().optional().nullable(),
+  serialNumber: z.string().optional().nullable(),
+  location: z.string().optional().nullable(),
+  gifiCode: z.string().optional().nullable(),
+  notes: z.string().optional().nullable(),
+  halfYearRuleApplied: z.boolean().optional(),
+  aiiApplied: z.boolean().optional(),
+  superDeduction: z.boolean().optional(),
+  assetAccountId: z.string().optional(),
+  depreciationAccountId: z.string().optional(),
+  expenseAccountId: z.string().optional(),
+  status: z.string().optional(),
+  disposalDate: z.string().optional().nullable(),
+  disposalProceeds: z.union([z.number(), z.string()]).optional().nullable(),
+}).passthrough();
 
 // =============================================================================
 // GET /api/accounting/fixed-assets
@@ -84,7 +138,25 @@ export const GET = withAdminGuard(async (request) => {
 
 export const POST = withAdminGuard(async (request, { session }) => {
   try {
+    // CSRF + Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/accounting/fixed-assets');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const body = await request.json();
+    const parsed = createFixedAssetSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+    }
 
     const {
       name,
@@ -106,22 +178,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       depreciationAccountId,
       expenseAccountId,
       notes,
-    } = body;
-
-    // --- Validation ---
-    if (!name || !assetNumber || !acquisitionDate || !acquisitionCost || ccaClass === undefined || ccaRate === undefined) {
-      return NextResponse.json(
-        { error: 'Champs requis: name, assetNumber, acquisitionDate, acquisitionCost, ccaClass, ccaRate' },
-        { status: 400 }
-      );
-    }
-
-    if (!assetAccountId || !depreciationAccountId || !expenseAccountId) {
-      return NextResponse.json(
-        { error: 'Les trois comptes (actif, amortissement, charge) sont requis' },
-        { status: 400 }
-      );
-    }
+    } = parsed.data;
 
     // Validate uniqueness of assetNumber
     const existing = await prisma.fixedAsset.findUnique({ where: { assetNumber } });
@@ -191,12 +248,26 @@ export const POST = withAdminGuard(async (request, { session }) => {
 
 export const PATCH = withAdminGuard(async (request, { session }) => {
   try {
-    const body = await request.json();
-    const { id, action, ...updates } = body;
-
-    if (!id) {
-      return NextResponse.json({ error: 'ID requis' }, { status: 400 });
+    // CSRF + Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/accounting/fixed-assets');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
     }
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
+    const body = await request.json();
+    const parsed = patchFixedAssetSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+    }
+    const { id, action, ...updates } = parsed.data;
 
     const asset = await prisma.fixedAsset.findUnique({
       where: { id },

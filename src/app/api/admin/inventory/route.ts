@@ -8,11 +8,31 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { purchaseStock, adjustStock } from '@/lib/inventory';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { logger } from '@/lib/logger';
+
+// Zod schema for POST /api/admin/inventory (receive stock)
+const receiveStockSchema = z.object({
+  items: z.array(z.object({
+    productId: z.string().min(1, 'productId is required'),
+    formatId: z.string().optional(),
+    quantity: z.number().int().positive('Quantity must be positive'),
+    unitCost: z.number().positive('Unit cost must be greater than zero'),
+  })).min(1, 'Items array must not be empty'),
+  supplierInvoiceId: z.string().optional(),
+}).strict();
+
+// Zod schema for PUT /api/admin/inventory (adjust stock)
+const adjustStockSchema = z.object({
+  productId: z.string().min(1, 'productId is required'),
+  formatId: z.string().nullable().optional(),
+  quantity: z.number().int().refine((v) => v !== 0, 'Quantity must be non-zero'),
+  reason: z.string().min(1, 'Reason is required for stock adjustments'),
+}).strict();
 
 // GET /api/admin/inventory - List products with inventory info
 export const GET = withAdminGuard(async (request, { session }) => {
@@ -116,37 +136,16 @@ export const GET = withAdminGuard(async (request, { session }) => {
 export const POST = withAdminGuard(async (request, { session }) => {
   try {
     const body = await request.json();
-    const { items, supplierInvoiceId } = body;
 
-    if (!items || !Array.isArray(items) || items.length === 0) {
+    // Validate with Zod
+    const parsed = receiveStockSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Items array is required and must not be empty' },
+        { error: 'Invalid data', details: parsed.error.errors },
         { status: 400 }
       );
     }
-
-    // Validate each item
-    for (const item of items) {
-      if (!item.productId || !item.quantity || !item.unitCost) {
-        return NextResponse.json(
-          { error: 'Each item must have productId, quantity, and unitCost' },
-          { status: 400 }
-        );
-      }
-      if (item.quantity <= 0) {
-        return NextResponse.json(
-          { error: 'Quantity must be positive' },
-          { status: 400 }
-        );
-      }
-      // BUG-037 FIX: Reject zero unitCost (would corrupt WAC calculation)
-      if (item.unitCost <= 0) {
-        return NextResponse.json(
-          { error: 'Unit cost must be greater than zero' },
-          { status: 400 }
-        );
-      }
-    }
+    const { items, supplierInvoiceId } = parsed.data;
 
     await purchaseStock(
       items.map((item: Record<string, unknown>) => ({
@@ -189,28 +188,16 @@ export const POST = withAdminGuard(async (request, { session }) => {
 export const PUT = withAdminGuard(async (request, { session }) => {
   try {
     const body = await request.json();
-    const { productId, formatId, quantity, reason } = body;
 
-    if (!productId) {
+    // Validate with Zod
+    const parsed = adjustStockSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'productId is required' },
+        { error: 'Invalid data', details: parsed.error.errors },
         { status: 400 }
       );
     }
-
-    if (quantity === undefined || quantity === null || quantity === 0) {
-      return NextResponse.json(
-        { error: 'quantity is required and must be non-zero' },
-        { status: 400 }
-      );
-    }
-
-    if (!reason) {
-      return NextResponse.json(
-        { error: 'reason is required for stock adjustments' },
-        { status: 400 }
-      );
-    }
+    const { productId, formatId, quantity, reason } = parsed.data;
 
     await adjustStock(
       productId,

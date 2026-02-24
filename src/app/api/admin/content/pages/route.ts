@@ -1,10 +1,36 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { sanitizeHtml, stripHtml } from '@/lib/validation';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
+
+const createPageSchema = z.object({
+  title: z.string().min(1).max(500),
+  slug: z.string().min(1).max(200).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
+  content: z.string().min(1).max(100000),
+  excerpt: z.string().max(1000).optional(),
+  metaTitle: z.string().max(200).optional(),
+  metaDescription: z.string().max(500).optional(),
+  template: z.string().max(50).optional(),
+  isPublished: z.boolean().optional(),
+});
+
+const updatePageSchema = z.object({
+  id: z.string().min(1),
+  title: z.string().min(1).max(500).optional(),
+  slug: z.string().min(1).max(200).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).optional(),
+  content: z.string().min(1).max(100000).optional(),
+  excerpt: z.string().max(1000).optional(),
+  metaTitle: z.string().max(200).optional(),
+  metaDescription: z.string().max(500).optional(),
+  template: z.string().max(50).optional(),
+  isPublished: z.boolean().optional(),
+});
 
 // GET /api/admin/content/pages - List all pages
 export const GET = withAdminGuard(async (_request, { session }) => {
@@ -21,13 +47,26 @@ export const GET = withAdminGuard(async (_request, { session }) => {
 });
 
 // POST /api/admin/content/pages - Create a new page
-export const POST = withAdminGuard(async (request, { session }) => {
-  const body = await request.json();
-  const { title, slug, content, excerpt, metaTitle, metaDescription, template, isPublished } = body;
-
-  if (!title || !slug || !content) {
-    return NextResponse.json({ error: 'Title, slug, and content are required' }, { status: 400 });
+export const POST = withAdminGuard(async (request: NextRequest, { session }) => {
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    || request.headers.get('x-real-ip') || '127.0.0.1';
+  const rl = await rateLimitMiddleware(ip, '/api/admin/content/pages');
+  if (!rl.success) {
+    const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+    Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+    return res;
   }
+  const csrfValid = await validateCsrf(request);
+  if (!csrfValid) {
+    return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+  }
+
+  const body = await request.json();
+  const parsed = createPageSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+  }
+  const { title, slug, content, excerpt, metaTitle, metaDescription, template, isPublished } = parsed.data;
 
   // BE-SEC-06: Sanitize content to prevent stored XSS
   const safeTitle = typeof title === 'string' ? stripHtml(title) : title;
@@ -71,13 +110,26 @@ export const POST = withAdminGuard(async (request, { session }) => {
 });
 
 // PUT /api/admin/content/pages - Update a page
-export const PUT = withAdminGuard(async (request, { session }) => {
-  const body = await request.json();
-  const { id, title, slug, content, excerpt, metaTitle, metaDescription, template, isPublished } = body;
-
-  if (!id) {
-    return NextResponse.json({ error: 'Page ID is required' }, { status: 400 });
+export const PUT = withAdminGuard(async (request: NextRequest, { session }) => {
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    || request.headers.get('x-real-ip') || '127.0.0.1';
+  const rl = await rateLimitMiddleware(ip, '/api/admin/content/pages');
+  if (!rl.success) {
+    const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+    Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+    return res;
   }
+  const csrfValid = await validateCsrf(request);
+  if (!csrfValid) {
+    return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+  }
+
+  const body = await request.json();
+  const parsed = updatePageSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+  }
+  const { id, title, slug, content, excerpt, metaTitle, metaDescription, template, isPublished } = parsed.data;
 
   const existing = await prisma.page.findUnique({ where: { id } });
   if (!existing) {
@@ -132,7 +184,20 @@ export const PUT = withAdminGuard(async (request, { session }) => {
 });
 
 // DELETE /api/admin/content/pages - Delete a page
-export const DELETE = withAdminGuard(async (request, { session }) => {
+export const DELETE = withAdminGuard(async (request: NextRequest, { session }) => {
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    || request.headers.get('x-real-ip') || '127.0.0.1';
+  const rl = await rateLimitMiddleware(ip, '/api/admin/content/pages');
+  if (!rl.success) {
+    const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+    Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+    return res;
+  }
+  const csrfValid = await validateCsrf(request);
+  if (!csrfValid) {
+    return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+  }
+
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
 

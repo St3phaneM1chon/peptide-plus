@@ -8,12 +8,15 @@ export const dynamic = 'force-dynamic';
  * DELETE - Remove an attachment by id
  */
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { randomUUID } from 'crypto';
 import { storage } from '@/lib/storage';
 import { logger } from '@/lib/logger';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
 // FIX: F59 - Use shared formatFileSize utility instead of local duplicate
 import { formatFileSize } from '@/lib/format-utils';
 
@@ -45,6 +48,14 @@ const VALID_ENTITY_TYPES = new Set([
   'BankTransaction',
   'Expense',
 ]);
+
+// ---------------------------------------------------------------------------
+// Zod Schemas
+// ---------------------------------------------------------------------------
+
+const deleteAttachmentSchema = z.object({
+  id: z.string().min(1, 'Attachment id is required'),
+});
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -110,8 +121,23 @@ export const GET = withAdminGuard(async (request) => {
 // POST /api/accounting/attachments (multipart/form-data)
 // ---------------------------------------------------------------------------
 
-export const POST = withAdminGuard(async (request, { session }) => {
+export const POST = withAdminGuard(async (request: NextRequest, { session }) => {
   try {
+    // Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/accounting/attachments');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+    // CSRF validation
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const formData = await request.formData();
 
     const file = formData.get('file') as File | null;
@@ -217,17 +243,29 @@ export const POST = withAdminGuard(async (request, { session }) => {
 // DELETE /api/accounting/attachments (body: { id })
 // ---------------------------------------------------------------------------
 
-export const DELETE = withAdminGuard(async (request) => {
+export const DELETE = withAdminGuard(async (request: NextRequest) => {
   try {
-    const body = await request.json();
-    const { id } = body as { id?: string };
-
-    if (!id) {
-      return NextResponse.json(
-        { error: 'Attachment id is required in request body' },
-        { status: 400 }
-      );
+    // Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/accounting/attachments');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
     }
+    // CSRF validation
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
+    const body = await request.json();
+    const parsed = deleteAttachmentSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+    }
+    const { id } = parsed.data;
 
     // ------ Fetch attachment ------
 

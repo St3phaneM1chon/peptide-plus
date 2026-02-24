@@ -1,16 +1,49 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { shouldSuppressEmail } from '@/lib/email/bounce-handler';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
 import { logger } from '@/lib/logger';
+
+const contactSchema = z.object({
+  email: z.string().max(320),
+  name: z.string().max(200).optional(),
+  locale: z.string().max(10).optional(),
+});
+
+const importSchema = z.object({
+  contacts: z.array(contactSchema).max(10000).optional(),
+  action: z.enum(['import', 'clean']).optional(),
+});
 
 export const POST = withAdminGuard(async (request: NextRequest, { session }) => {
   try {
+    // Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/admin/emails/mailing-list/import');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+    // CSRF validation
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const body = await request.json();
-    const { contacts, action } = body;
+    const parsed = importSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+    }
+    const { contacts, action } = parsed.data;
 
     // Action: 'import' (default) or 'clean' (remove bounced)
     if (action === 'clean') {
@@ -95,7 +128,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
       const rawName = contact.name ? String(contact.name).slice(0, 200) : null;
       const safeName = rawName?.replace(/<[^>]*>/g, '') || null;
       // Validate locale against known list
-      const localeValid = validLocales.includes(contact.locale);
+      const localeValid = contact.locale ? validLocales.includes(contact.locale) : false;
       if (contact.locale && !localeValid) {
         invalidLocales++;
         // Don't reject — use default, but track it

@@ -7,11 +7,41 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { enqueue } from '@/lib/translation';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { logger } from '@/lib/logger';
+
+const webinarTranslationSchema = z.object({
+  locale: z.string().min(2).max(10),
+  title: z.string().nullish(),
+  description: z.string().nullish(),
+  speakerTitle: z.string().nullish(),
+});
+
+const createWebinarSchema = z.object({
+  title: z.string().min(1, 'Title is required'),
+  description: z.string().nullish(),
+  speaker: z.string().nullish(),
+  speakerTitle: z.string().nullish(),
+  speakerImage: z.string().url().nullish(),
+  scheduledAt: z.string().nullish(),
+  duration: z.union([z.number(), z.string()]).nullish(),
+  category: z.string().nullish(),
+  tags: z.union([z.array(z.string()), z.string()]).nullish(),
+  registrationUrl: z.string().url().nullish(),
+  recordingUrl: z.string().url().nullish(),
+  thumbnailUrl: z.string().url().nullish(),
+  maxAttendees: z.union([z.number(), z.string()]).nullish(),
+  isFeatured: z.boolean().nullish(),
+  isPublished: z.boolean().nullish(),
+  isLive: z.boolean().nullish(),
+  locale: z.string().min(2).max(10).nullish(),
+  sortOrder: z.number().int().nullish(),
+  translations: z.array(webinarTranslationSchema).nullish(),
+});
 
 // GET /api/admin/webinars - List all webinars
 export const GET = withAdminGuard(async (request: NextRequest, { session }) => {
@@ -144,6 +174,13 @@ export const GET = withAdminGuard(async (request: NextRequest, { session }) => {
 export const POST = withAdminGuard(async (request: NextRequest, { session }) => {
   try {
     const body = await request.json();
+    const parsed = createWebinarSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid data', details: parsed.error.errors },
+        { status: 400 }
+      );
+    }
     const {
       title,
       description,
@@ -164,15 +201,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
       locale,
       sortOrder,
       translations,
-    } = body;
-
-    // Validate required fields
-    if (!title) {
-      return NextResponse.json(
-        { error: 'Title is required' },
-        { status: 400 }
-      );
-    }
+    } = parsed.data;
 
     // Generate slug from title
     const baseSlug = title
@@ -219,12 +248,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
         ...(translations && translations.length > 0
           ? {
               translations: {
-                create: translations.map((t: {
-                  locale: string;
-                  title?: string;
-                  description?: string;
-                  speakerTitle?: string;
-                }) => ({
+                create: translations.map((t) => ({
                   locale: t.locale,
                   title: t.title || null,
                   description: t.description || null,

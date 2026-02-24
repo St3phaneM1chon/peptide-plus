@@ -6,11 +6,20 @@ export const dynamic = 'force-dynamic';
  * PATCH - Bulk update conversation statuses
  */
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
 import { logger } from '@/lib/logger';
+
+const bulkUpdateSchema = z.object({
+  ids: z.array(z.string().min(1)).min(1).max(50),
+  action: z.enum(['close', 'resolve', 'reopen', 'assign']),
+  assigneeId: z.string().optional(),
+});
 
 export const GET = withAdminGuard(async (request, { session: _session }) => {
   try {
@@ -196,30 +205,32 @@ const BULK_ACTIONS: Record<string, string> = {
 
 export const PATCH = withAdminGuard(async (request, { session }) => {
   try {
-    const body = await request.json();
-    const { ids, action, assigneeId } = body;
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/admin/emails/inbox');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
 
-    if (!Array.isArray(ids) || ids.length === 0) {
-      return NextResponse.json({ error: 'ids must be a non-empty array' }, { status: 400 });
+    const body = await request.json();
+    const parsed = bulkUpdateSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
     }
-    if (ids.length > 50) {
-      return NextResponse.json({ error: 'Maximum 50 conversations per request' }, { status: 400 });
-    }
-    if (!action || !BULK_ACTIONS.hasOwnProperty(action)) {
-      return NextResponse.json(
-        { error: `action must be one of: ${Object.keys(BULK_ACTIONS).join(', ')}` },
-        { status: 400 },
-      );
-    }
+    const { ids, action, assigneeId } = parsed.data;
+
     if (action === 'assign' && !assigneeId) {
       return NextResponse.json({ error: 'assigneeId is required for assign action' }, { status: 400 });
     }
 
-    // Validate all IDs are strings
-    const validIds = ids.filter((id): id is string => typeof id === 'string' && id.length > 0);
-    if (validIds.length !== ids.length) {
-      return NextResponse.json({ error: 'All ids must be non-empty strings' }, { status: 400 });
-    }
+    // Validate all IDs are strings (already validated by Zod, but kept for safety)
+    const validIds = ids;
 
     // Build the update data
     const updateData: Record<string, unknown> = {};

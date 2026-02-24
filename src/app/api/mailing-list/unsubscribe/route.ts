@@ -1,8 +1,10 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
 import { logger } from '@/lib/logger';
 
 function getIp(request: Request): string {
@@ -71,6 +73,14 @@ export async function GET(request: Request) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Zod schema
+// ---------------------------------------------------------------------------
+
+const unsubscribePostSchema = z.object({
+  token: z.string().min(1, 'Token required').max(500),
+});
+
 // POST - Unsubscribe via API (from preferences page)
 export async function POST(request: NextRequest) {
   try {
@@ -83,16 +93,27 @@ export async function POST(request: NextRequest) {
       return res;
     }
 
-    const body = await request.json();
-    const { token } = body;
-
-    // SEC: Require token only — accepting raw email enables email enumeration attacks
-    if (!token) {
-      return NextResponse.json({ error: 'Token required' }, { status: 400 });
+    // SECURITY: CSRF protection for mutation endpoint
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
     }
 
+    const body = await request.json();
+
+    // Validate with Zod
+    const parsed = unsubscribePostSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid data', details: parsed.error.errors },
+        { status: 400 }
+      );
+    }
+
+    const { token } = parsed.data;
+
     const subscriber = await prisma.mailingListSubscriber.findFirst({
-      where: { unsubscribeToken: token as string },
+      where: { unsubscribeToken: token },
     });
 
     if (!subscriber) {

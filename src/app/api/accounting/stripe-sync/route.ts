@@ -5,6 +5,17 @@ import { withAdminGuard } from '@/lib/admin-api-guard';
 import { fullStripeSync, getStripeBalance } from '@/lib/accounting';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
+import { z } from 'zod';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
+
+// ---------------------------------------------------------------------------
+// Zod schema
+// ---------------------------------------------------------------------------
+const stripeSyncSchema = z.object({
+  startDate: z.string().min(1, 'startDate is required'),
+  endDate: z.string().min(1, 'endDate is required'),
+});
 
 /**
  * POST /api/accounting/stripe-sync
@@ -12,15 +23,25 @@ import { logger } from '@/lib/logger';
  */
 export const POST = withAdminGuard(async (request, { session }) => {
   try {
-    const body = await request.json();
-    const { startDate, endDate } = body;
-
-    if (!startDate || !endDate) {
-      return NextResponse.json(
-        { error: 'startDate et endDate sont requis' },
-        { status: 400 }
-      );
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/accounting/stripe-sync');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
     }
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
+    const body = await request.json();
+    const parsed = stripeSyncSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+    }
+    const { startDate, endDate } = parsed.data;
 
     // #93 Integration: Validate date range (startDate < endDate, max 1 year)
     const parsedStart = new Date(startDate);

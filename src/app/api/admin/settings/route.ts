@@ -62,6 +62,15 @@ const settingsPutSchema = z.object({
   ]).optional(),
 }).strict();
 
+// Zod schema for PATCH body validation (single key-value update)
+const settingsPatchSchema = z.object({
+  key: z.string().min(1).max(100).regex(/^[a-zA-Z0-9._-]+$/, 'Invalid key format'),
+  value: z.unknown(),
+  type: z.string().optional(),
+  module: z.string().optional(),
+  description: z.string().nullish(),
+}).strict();
+
 // GET /api/admin/settings - Get all settings
 export const GET = withAdminGuard(async (_request, { session: _session }) => {
   try {
@@ -301,16 +310,16 @@ export const PUT = withAdminGuard(async (request, { session }) => {
 export const PATCH = withAdminGuard(async (request, { session }) => {
   try {
     const body = await request.json();
-    const { key, value, type, module, description } = body;
 
-    if (!key || value === undefined) {
-      return NextResponse.json({ error: 'key and value are required' }, { status: 400 });
+    // Validate with Zod
+    const parsed = settingsPatchSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid data', details: parsed.error.errors },
+        { status: 400 }
+      );
     }
-
-    // FAILLE-027 FIX: Validate key format (alphanumeric, dots, underscores, hyphens only, max 100 chars)
-    if (typeof key !== 'string' || key.length > 100 || !/^[a-zA-Z0-9._-]+$/.test(key)) {
-      return NextResponse.json({ error: 'Invalid key format' }, { status: 400 });
-    }
+    const { key, value, type, module, description } = parsed.data;
 
     const result = await prisma.siteSetting.upsert({
       where: { key },

@@ -1,10 +1,38 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { db } from '@/lib/db';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { logger } from '@/lib/logger';
+
+const upsellConfigSchema = z.object({
+  productId: z.string().nullish(),
+  isEnabled: z.boolean().nullish(),
+  showQuantityDiscount: z.boolean().nullish(),
+  showSubscription: z.boolean().nullish(),
+  displayRule: z.string().nullish(),
+  quantityTitle: z.string().nullish(),
+  quantitySubtitle: z.string().nullish(),
+  subscriptionTitle: z.string().nullish(),
+  subscriptionSubtitle: z.string().nullish(),
+  suggestedQuantity: z.union([z.number(), z.string()]).nullish(),
+  suggestedFrequency: z.string().nullish(),
+});
+
+const upsellConfigUpdateSchema = z.object({
+  isEnabled: z.boolean().nullish(),
+  showQuantityDiscount: z.boolean().nullish(),
+  showSubscription: z.boolean().nullish(),
+  displayRule: z.string().nullish(),
+  quantityTitle: z.string().nullish(),
+  quantitySubtitle: z.string().nullish(),
+  subscriptionTitle: z.string().nullish(),
+  subscriptionSubtitle: z.string().nullish(),
+  suggestedQuantity: z.union([z.number(), z.string()]).nullish(),
+  suggestedFrequency: z.string().nullish(),
+});
 
 // GET — List all upsell configs
 export const GET = withAdminGuard(async (_request, { session }) => {
@@ -47,6 +75,13 @@ export const GET = withAdminGuard(async (_request, { session }) => {
 export const POST = withAdminGuard(async (request, { session }) => {
   try {
     const body = await request.json();
+    const parsed = upsellConfigSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid data', details: parsed.error.errors },
+        { status: 400 }
+      );
+    }
     const {
       productId,
       isEnabled,
@@ -59,7 +94,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       subscriptionSubtitle,
       suggestedQuantity,
       suggestedFrequency,
-    } = body;
+    } = parsed.data;
 
     const data = {
       isEnabled: isEnabled ?? true,
@@ -131,6 +166,13 @@ export const PUT = withAdminGuard(async (request, { session }) => {
     }
 
     const body = await request.json();
+    const parsed = upsellConfigUpdateSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid data', details: parsed.error.errors },
+        { status: 400 }
+      );
+    }
     const {
       isEnabled,
       showQuantityDiscount,
@@ -142,7 +184,7 @@ export const PUT = withAdminGuard(async (request, { session }) => {
       subscriptionSubtitle,
       suggestedQuantity,
       suggestedFrequency,
-    } = body;
+    } = parsed.data;
 
     const data = {
       isEnabled: isEnabled ?? true,

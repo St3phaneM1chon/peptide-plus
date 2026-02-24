@@ -6,22 +6,48 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { stripHtml, stripControlChars } from '@/lib/sanitize';
+
+// ---------------------------------------------------------------------------
+// Zod schema
+// ---------------------------------------------------------------------------
+
+const validateReferralSchema = z.object({
+  code: z.string().min(1, 'Referral code is required').max(100),
+  email: z.string().email().max(254).optional(),
+});
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { code, email } = body;
+    // SECURITY: Rate limit referral validation (anti brute-force enumeration)
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/referrals/validate');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
 
-    if (!code || typeof code !== 'string') {
+    const body = await request.json();
+
+    // Validate with Zod
+    const parsed = validateReferralSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { valid: false, error: 'Referral code is required' },
+        { valid: false, error: 'Invalid data', details: parsed.error.errors },
         { status: 400 }
       );
     }
 
-    const trimmedCode = code.trim();
+    const { code, email } = parsed.data;
+
+    // Sanitize referral code
+    const trimmedCode = stripControlChars(stripHtml(code.trim()));
 
     // Find the user who owns this referral code
     const referrer = await prisma.user.findFirst({

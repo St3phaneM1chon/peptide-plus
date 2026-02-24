@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
+import { createShippingZoneSchema } from '@/lib/validations/shipping';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { logger } from '@/lib/logger';
 
@@ -82,54 +83,30 @@ export const GET = withAdminGuard(async (_request, { session }) => {
 export const POST = withAdminGuard(async (request, { session }) => {
   try {
     const body = await request.json();
-    const {
-      name,
-      countries,
-      baseFee,
-      perItemFee,
-      freeShippingThreshold,
-      estimatedDaysMin,
-      estimatedDaysMax,
-      maxWeight,
-      isActive,
-      notes,
-      sortOrder,
-    } = body;
 
-    if (!name) {
+    // Validate with Zod
+    const parsed = createShippingZoneSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Zone name is required' },
+        { error: 'Invalid data', details: parsed.error.errors },
         { status: 400 }
       );
     }
-
-    if (!countries || !Array.isArray(countries) || countries.length === 0) {
-      return NextResponse.json(
-        { error: 'At least one country is required' },
-        { status: 400 }
-      );
-    }
-
-    if (baseFee === undefined || baseFee === null) {
-      return NextResponse.json(
-        { error: 'Base fee is required' },
-        { status: 400 }
-      );
-    }
+    const data = parsed.data;
 
     const zone = await prisma.shippingZone.create({
       data: {
-        name,
-        countries: JSON.stringify(countries),
-        baseFee,
-        perItemFee: perItemFee ?? 0,
-        freeShippingThreshold: freeShippingThreshold ?? null,
-        estimatedDaysMin: estimatedDaysMin ?? 3,
-        estimatedDaysMax: estimatedDaysMax ?? 7,
-        maxWeight: maxWeight ?? null,
-        isActive: isActive ?? true,
-        notes: notes ?? null,
-        sortOrder: sortOrder ?? 0,
+        name: data.name,
+        countries: JSON.stringify(data.countries),
+        baseFee: data.baseFee,
+        perItemFee: data.perItemFee,
+        freeShippingThreshold: data.freeShippingThreshold ?? null,
+        estimatedDaysMin: data.estimatedDaysMin,
+        estimatedDaysMax: data.estimatedDaysMax,
+        maxWeight: data.maxWeight ?? null,
+        isActive: data.isActive,
+        notes: data.notes ?? null,
+        sortOrder: data.sortOrder,
       },
     });
 
@@ -138,7 +115,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       action: 'CREATE_SHIPPING_ZONE',
       targetType: 'ShippingZone',
       targetId: zone.id,
-      newValue: { name, countries, baseFee, isActive: isActive ?? true },
+      newValue: { name: data.name, countries: data.countries, baseFee: data.baseFee, isActive: data.isActive },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
     }).catch(() => {});

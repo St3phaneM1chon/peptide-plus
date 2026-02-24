@@ -10,9 +10,20 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { auth } from '@/lib/auth-config';
 import { qualifyReferral } from '@/lib/referral-qualify';
 import { logger } from '@/lib/logger';
+
+// ---------------------------------------------------------------------------
+// Zod schema
+// ---------------------------------------------------------------------------
+
+const qualifySchema = z.object({
+  referredUserId: z.string().min(1, 'referredUserId is required').max(100),
+  orderId: z.string().min(1, 'orderId is required').max(100),
+  orderAmount: z.number().nonnegative('orderAmount must be non-negative'),
+});
 
 /**
  * POST endpoint for internal use / admin qualification
@@ -48,19 +59,22 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { referredUserId, orderId, orderAmount } = body;
 
-    if (!referredUserId || !orderId || orderAmount === undefined) {
+    // Validate with Zod
+    const parsed = qualifySchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'referredUserId, orderId, and orderAmount are required' },
+        { error: 'Invalid data', details: parsed.error.errors },
         { status: 400 }
       );
     }
 
+    const { referredUserId, orderId, orderAmount } = parsed.data;
+
     const result = await qualifyReferral(
       referredUserId,
       orderId,
-      Number(orderAmount)
+      orderAmount
     );
 
     if (!result.success) {

@@ -8,11 +8,43 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { enqueue } from '@/lib/translation';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { logger } from '@/lib/logger';
+
+const webinarTranslationSchema = z.object({
+  locale: z.string().min(2).max(10),
+  title: z.string().nullish(),
+  description: z.string().nullish(),
+  speakerTitle: z.string().nullish(),
+  isApproved: z.boolean().nullish(),
+});
+
+const updateWebinarSchema = z.object({
+  title: z.string().min(1).nullish(),
+  description: z.string().nullish(),
+  speaker: z.string().nullish(),
+  speakerTitle: z.string().nullish(),
+  speakerImage: z.string().url().nullish(),
+  scheduledAt: z.string().nullish(),
+  duration: z.union([z.number(), z.string()]).nullish(),
+  category: z.string().nullish(),
+  tags: z.union([z.array(z.string()), z.string()]).nullish(),
+  registrationUrl: z.string().url().nullish(),
+  recordingUrl: z.string().url().nullish(),
+  thumbnailUrl: z.string().url().nullish(),
+  maxAttendees: z.union([z.number(), z.string()]).nullish(),
+  registeredCount: z.union([z.number(), z.string()]).nullish(),
+  isFeatured: z.boolean().nullish(),
+  isPublished: z.boolean().nullish(),
+  isLive: z.boolean().nullish(),
+  locale: z.string().min(2).max(10).nullish(),
+  sortOrder: z.number().int().nullish(),
+  translations: z.array(webinarTranslationSchema).nullish(),
+});
 
 // GET /api/admin/webinars/[id] - Get single webinar
 export const GET = withAdminGuard(async (_request: NextRequest, { session, params }) => {
@@ -89,6 +121,13 @@ export const PATCH = withAdminGuard(async (request: NextRequest, { session, para
     }
 
     const body = await request.json();
+    const parsed = updateWebinarSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid data', details: parsed.error.errors },
+        { status: 400 }
+      );
+    }
     const {
       title,
       description,
@@ -110,12 +149,12 @@ export const PATCH = withAdminGuard(async (request: NextRequest, { session, para
       locale,
       sortOrder,
       translations,
-    } = body;
+    } = parsed.data;
 
     // Build update data - only include provided fields
     const updateData: Record<string, unknown> = {};
 
-    if (title !== undefined) {
+    if (title !== undefined && title !== null) {
       updateData.title = title;
 
       // Regenerate slug if title changes
@@ -231,7 +270,7 @@ export const PATCH = withAdminGuard(async (request: NextRequest, { session, para
 });
 
 // DELETE /api/admin/webinars/[id] - Delete webinar
-export const DELETE = withAdminGuard(async (_request: NextRequest, { session, params }) => {
+export const DELETE = withAdminGuard(async (request: NextRequest, { session, params }) => {
   try {
     const id = params!.id;
 
@@ -254,8 +293,8 @@ export const DELETE = withAdminGuard(async (_request: NextRequest, { session, pa
       targetType: 'Webinar',
       targetId: id,
       previousValue: { title: existing.title },
-      ipAddress: getClientIpFromRequest(_request),
-      userAgent: _request.headers.get('user-agent') || undefined,
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
     }).catch(() => {});
 
     return NextResponse.json({

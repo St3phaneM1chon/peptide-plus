@@ -6,6 +6,28 @@ import { prisma } from '@/lib/db';
 import { roundCurrency } from '@/lib/financial';
 import { createHash } from 'crypto';
 import { logger } from '@/lib/logger';
+import { z } from 'zod';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
+
+// ---------------------------------------------------------------------------
+// Zod schemas
+// ---------------------------------------------------------------------------
+const createTaxReportSchema = z.object({
+  period: z.string().min(1, 'period is required'),
+  periodType: z.string().min(1, 'periodType is required'),
+  year: z.number().int().min(2000).max(2100),
+  month: z.number().int().min(1).max(12).nullable().optional(),
+  quarter: z.number().int().min(1).max(4).nullable().optional(),
+  regionCode: z.string().min(1, 'regionCode is required'),
+});
+
+const updateTaxReportSchema = z.object({
+  id: z.string().min(1, 'ID is required'),
+  status: z.enum(['DRAFT', 'GENERATED', 'FILED', 'PAID']).optional(),
+  filingNumber: z.string().optional(),
+  paidAt: z.string().optional(),
+});
 
 /**
  * GET /api/accounting/tax-reports
@@ -71,15 +93,25 @@ export const GET = withAdminGuard(async (request) => {
  */
 export const POST = withAdminGuard(async (request) => {
   try {
-    const body = await request.json();
-    const { period, periodType, year, month, quarter, regionCode } = body;
-
-    if (!period || !periodType || !year || !regionCode) {
-      return NextResponse.json(
-        { error: 'period, periodType, year et regionCode sont requis' },
-        { status: 400 }
-      );
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/accounting/tax-reports');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
     }
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
+    const body = await request.json();
+    const parsed = createTaxReportSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+    }
+    const { period, periodType, year, month, quarter, regionCode } = parsed.data;
 
     // #40 Check for duplicate reports (same period+year+regionCode)
     const duplicateWhere: Record<string, unknown> = {
@@ -225,24 +257,33 @@ export const POST = withAdminGuard(async (request) => {
  */
 export const PUT = withAdminGuard(async (request) => {
   try {
-    const body = await request.json();
-    const { id, status, filingNumber, paidAt } = body;
-
-    if (!id) {
-      return NextResponse.json({ error: 'ID requis' }, { status: 400 });
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/accounting/tax-reports');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
     }
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
+    const body = await request.json();
+    const parsed = updateTaxReportSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+    }
+    const { id, status, filingNumber, paidAt } = parsed.data;
 
     const existing = await prisma.taxReport.findUnique({ where: { id } });
     if (!existing) {
       return NextResponse.json({ error: 'Rapport non trouvé' }, { status: 404 });
     }
 
-    const validStatuses = ['DRAFT', 'GENERATED', 'FILED', 'PAID'];
     const updateData: Record<string, unknown> = {};
     if (status) {
-      if (!validStatuses.includes(status)) {
-        return NextResponse.json({ error: `Statut invalide. Valeurs acceptées: ${validStatuses.join(', ')}` }, { status: 400 });
-      }
       updateData.status = status;
       if (status === 'FILED') {
         updateData.filedAt = new Date();

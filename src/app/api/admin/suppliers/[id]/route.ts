@@ -12,6 +12,40 @@ import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { logger } from '@/lib/logger';
+import { z } from 'zod';
+
+const supplierContactSchema = z.object({
+  department: z.string().min(1),
+  name: z.string().min(1),
+  email: z.string().email().optional().or(z.literal('')),
+  phone: z.string().optional(),
+  extension: z.string().optional(),
+  title: z.string().optional(),
+  isPrimary: z.boolean().optional(),
+});
+
+const supplierLinkSchema = z.object({
+  label: z.string().min(1),
+  url: z.string().url(),
+  type: z.string().optional(),
+});
+
+const updateSupplierSchema = z.object({
+  name: z.string().min(1, 'Supplier name cannot be empty').trim().optional(),
+  code: z.string().optional().nullable(),
+  email: z.string().email().optional().nullable().or(z.literal('')),
+  phone: z.string().optional().nullable(),
+  website: z.string().url().optional().nullable().or(z.literal('')),
+  address: z.string().optional().nullable(),
+  city: z.string().optional().nullable(),
+  province: z.string().optional().nullable(),
+  postalCode: z.string().optional().nullable(),
+  country: z.string().optional().nullable(),
+  notes: z.string().optional().nullable(),
+  isActive: z.boolean().optional(),
+  contacts: z.array(supplierContactSchema).optional(),
+  links: z.array(supplierLinkSchema).optional(),
+});
 
 // GET /api/admin/suppliers/[id] - Get single supplier with all relations
 export const GET = withAdminGuard(async (_request, { params }) => {
@@ -48,6 +82,13 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
   try {
     const id = params!.id;
     const body = await request.json();
+    const parsed = updateSupplierSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid data', details: parsed.error.errors },
+        { status: 400 }
+      );
+    }
     const {
       name,
       code,
@@ -63,7 +104,7 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
       isActive,
       contacts,
       links,
-    } = body;
+    } = parsed.data;
 
     // Check supplier exists
     const existing = await prisma.supplier.findUnique({ where: { id } });
@@ -71,13 +112,6 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
       return NextResponse.json(
         { error: 'Supplier not found' },
         { status: 404 }
-      );
-    }
-
-    if (name !== undefined && !name?.trim()) {
-      return NextResponse.json(
-        { error: 'Supplier name cannot be empty' },
-        { status: 400 }
       );
     }
 

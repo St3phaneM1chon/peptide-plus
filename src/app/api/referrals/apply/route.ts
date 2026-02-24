@@ -7,13 +7,34 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth-config';
 import { validateCsrf } from '@/lib/csrf-middleware';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { logger } from '@/lib/logger';
+import { stripHtml, stripControlChars } from '@/lib/sanitize';
+
+// ---------------------------------------------------------------------------
+// Zod schema
+// ---------------------------------------------------------------------------
+
+const applyReferralSchema = z.object({
+  code: z.string().min(1, 'Referral code is required').max(100),
+});
 
 export async function POST(request: NextRequest) {
   try {
+    // SECURITY: Rate limit referral application
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/referrals/apply');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+
     // SEC-30: CSRF protection for mutation endpoint
     const csrfValid = await validateCsrf(request);
     if (!csrfValid) {
@@ -27,16 +48,18 @@ export async function POST(request: NextRequest) {
 
     const userId = session.user.id;
     const body = await request.json();
-    const { code } = body;
 
-    if (!code || typeof code !== 'string') {
+    // Validate with Zod
+    const parsed = applyReferralSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Referral code is required' },
+        { error: 'Invalid data', details: parsed.error.errors },
         { status: 400 }
       );
     }
 
-    const trimmedCode = code.trim();
+    // Sanitize referral code before use
+    const trimmedCode = stripControlChars(stripHtml(parsed.data.code.trim()));
 
     // Get the current user
     const currentUser = await prisma.user.findUnique({

@@ -7,10 +7,20 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { logger } from '@/lib/logger';
+
+const createSubscriptionSchema = z.object({
+  userId: z.string().min(1, 'userId is required'),
+  productId: z.string().min(1, 'productId is required'),
+  formatId: z.string().nullish(),
+  quantity: z.number().int().min(1).nullish(),
+  frequency: z.string().min(1, 'frequency is required'),
+  discountPercent: z.number().min(0).max(100).nullish(),
+});
 
 // GET /api/admin/subscriptions - List all subscriptions with filtering
 export const GET = withAdminGuard(async (request, { session }) => {
@@ -130,15 +140,14 @@ const FREQUENCY_DISCOUNTS: Record<string, number> = {
 export const POST = withAdminGuard(async (request, { session }) => {
   try {
     const body = await request.json();
-    const { userId, productId, formatId, quantity, frequency, discountPercent } = body;
-
-    // Validate required fields
-    if (!userId || !productId || !frequency) {
+    const parsed = createSubscriptionSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'userId, productId, and frequency are required' },
+        { error: 'Invalid data', details: parsed.error.errors },
         { status: 400 }
       );
     }
+    const { userId, productId, formatId, quantity, frequency, discountPercent } = parsed.data;
 
     const freq = frequency.toUpperCase();
     if (!VALID_FREQUENCIES.includes(freq)) {
@@ -191,7 +200,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
     nextDelivery.setDate(nextDelivery.getDate() + FREQUENCY_DAYS[freq]);
 
     // Use provided discount or default for frequency
-    const discount = discountPercent !== undefined
+    const discount = discountPercent != null
       ? Math.max(0, Math.min(100, discountPercent))
       : FREQUENCY_DISCOUNTS[freq];
 

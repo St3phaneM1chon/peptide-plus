@@ -7,11 +7,26 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
 import DOMPurify from 'isomorphic-dompurify';
 import { logger } from '@/lib/logger';
+
+const createTemplateSchema = z.object({
+  name: z.string().min(1).max(200).optional(),
+  subject: z.string().min(1).max(500).optional(),
+  htmlContent: z.string().min(1).optional(),
+  textContent: z.string().nullable().optional(),
+  variables: z.array(z.string().max(50).regex(/^[a-zA-Z0-9._]+$/)).max(20).optional(),
+  isActive: z.boolean().optional(),
+  locale: z.string().max(10).optional(),
+  sourceId: z.string().optional(),
+  preheader: z.string().max(200).optional(),
+});
 
 // GET /api/admin/emails - List all email templates
 export const GET = withAdminGuard(async (request, { session: _session }) => {
@@ -96,8 +111,25 @@ export const GET = withAdminGuard(async (request, { session: _session }) => {
 // POST /api/admin/emails - Create a new email template (or clone from sourceId)
 export const POST = withAdminGuard(async (request, { session }) => {
   try {
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/admin/emails');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const body = await request.json();
-    const { name, subject, htmlContent, textContent, variables, isActive, locale, sourceId } = body;
+    const parsed = createTemplateSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+    }
+    const { name, subject, htmlContent, textContent, variables, isActive, locale, sourceId } = parsed.data;
 
     // Clone mode: duplicate an existing template
     if (sourceId) {
@@ -207,8 +239,8 @@ export const POST = withAdminGuard(async (request, { session }) => {
 
     const template = await prisma.emailTemplate.create({
       data: {
-        name,
-        subject,
+        name: name!,
+        subject: subject!,
         htmlContent: sanitizedHtml,
         textContent: textContent || null,
         variables: variables || [],
@@ -232,7 +264,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
     if (subject.length > 50) {
       hints.subjectLengthWarning = 'Subject line exceeds recommended 50 characters for optimal mobile display';
     }
-    if (!body.preheader) {
+    if (!parsed.data.preheader) {
       hints.preheaderMissing = true;
     }
 

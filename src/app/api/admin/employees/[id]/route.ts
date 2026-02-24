@@ -8,10 +8,20 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { logger } from '@/lib/logger';
+
+// Zod schema for PATCH /api/admin/employees/[id] (update employee)
+const updateEmployeeSchema = z.object({
+  role: z.enum(['EMPLOYEE', 'OWNER', 'PUBLIC']).optional(),
+  name: z.string().optional(),
+  phone: z.string().nullable().optional(),
+  isActive: z.boolean().optional(),
+  permissions: z.array(z.string()).optional(),
+}).strict();
 
 // GET /api/admin/employees/[id] - Get employee detail
 export const GET = withAdminGuard(async (_request, { session, params }) => {
@@ -141,6 +151,16 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
     const id = params!.id;
     const body = await request.json();
 
+    // Validate with Zod
+    const parsed = updateEmployeeSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid data', details: parsed.error.errors },
+        { status: 400 }
+      );
+    }
+    const data = parsed.data;
+
     const existing = await prisma.user.findUnique({
       where: { id },
     });
@@ -150,7 +170,7 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
     }
 
     // Prevent modifying your own role
-    if (id === session.user.id && body.role && body.role !== existing.role) {
+    if (id === session.user.id && data.role && data.role !== existing.role) {
       return NextResponse.json(
         { error: 'Cannot change your own role' },
         { status: 400 }
@@ -160,31 +180,24 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
     const updateData: Record<string, unknown> = {};
 
     // Role change
-    if (body.role !== undefined) {
-      const validRoles = ['EMPLOYEE', 'OWNER', 'PUBLIC'];
-      if (!validRoles.includes(body.role)) {
-        return NextResponse.json(
-          { error: `Invalid role. Must be one of: ${validRoles.join(', ')}` },
-          { status: 400 }
-        );
-      }
-      updateData.role = body.role;
+    if (data.role !== undefined) {
+      updateData.role = data.role;
     }
 
     // Name change
-    if (body.name !== undefined) {
-      updateData.name = body.name;
+    if (data.name !== undefined) {
+      updateData.name = data.name;
     }
 
     // Phone change
-    if (body.phone !== undefined) {
-      updateData.phone = body.phone;
+    if (data.phone !== undefined) {
+      updateData.phone = data.phone;
     }
 
     // Active status: deactivate by setting role to PUBLIC
-    if (body.isActive === false && existing.role !== 'OWNER') {
+    if (data.isActive === false && existing.role !== 'OWNER') {
       updateData.role = 'PUBLIC';
-    } else if (body.isActive === true && existing.role === 'PUBLIC') {
+    } else if (data.isActive === true && existing.role === 'PUBLIC') {
       updateData.role = 'EMPLOYEE';
     }
 
@@ -196,16 +209,16 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
     }
 
     // Update permissions if provided
-    if (Array.isArray(body.permissions)) {
+    if (Array.isArray(data.permissions)) {
       // Remove all existing overrides for this user
       await prisma.userPermissionOverride.deleteMany({
         where: { userId: id },
       });
 
       // Create new overrides
-      if (body.permissions.length > 0) {
+      if (data.permissions.length > 0) {
         await prisma.userPermissionOverride.createMany({
-          data: body.permissions.map((permCode: string) => ({
+          data: data.permissions.map((permCode: string) => ({
             userId: id,
             permissionCode: permCode,
             granted: true,

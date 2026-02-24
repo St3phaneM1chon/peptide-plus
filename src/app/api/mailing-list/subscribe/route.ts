@@ -1,11 +1,25 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { sendEmail } from '@/lib/email/email-service';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
+import { stripHtml, stripControlChars } from '@/lib/sanitize';
 import crypto from 'crypto';
+
+// ---------------------------------------------------------------------------
+// Zod schema
+// ---------------------------------------------------------------------------
+
+const subscribeSchema = z.object({
+  email: z.string().email('Invalid email address').max(254),
+  name: z.string().max(200).optional(),
+  preferences: z.array(z.string().max(50)).max(20).optional(),
+  consentMethod: z.string().max(50).optional(),
+});
 
 export async function POST(request: NextRequest) {
   try {
@@ -23,17 +37,29 @@ export async function POST(request: NextRequest) {
       return res;
     }
 
+    // SECURITY: CSRF protection for mutation endpoint
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const body = await request.json();
-    const { email, name, preferences, consentMethod } = body;
 
-    if (!email?.trim()) {
-      return NextResponse.json({ error: 'Email is required' }, { status: 400 });
+    // Validate with Zod
+    const parsed = subscribeSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid data', details: parsed.error.errors },
+        { status: 400 }
+      );
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return NextResponse.json({ error: 'Invalid email address' }, { status: 400 });
-    }
+    const { email: rawEmail, name: rawName, preferences, consentMethod: rawConsentMethod } = parsed.data;
+
+    // Sanitize string fields going to DB
+    const email = stripControlChars(stripHtml(rawEmail));
+    const name = rawName ? stripControlChars(stripHtml(rawName)) : undefined;
+    const consentMethod = rawConsentMethod ? stripControlChars(stripHtml(rawConsentMethod)) : undefined;
 
     // Check if already subscribed
     const existing = await prisma.mailingListSubscriber.findUnique({ where: { email: email.toLowerCase() } });

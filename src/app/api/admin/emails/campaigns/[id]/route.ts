@@ -15,11 +15,26 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
 import { safeParseJson } from '@/lib/email/utils';
 import { logger } from '@/lib/logger';
+
+const updateCampaignSchema = z.object({
+  name: z.string().min(1).max(200).optional(),
+  subject: z.string().min(1).max(500).optional(),
+  htmlContent: z.string().min(1).optional(),
+  textContent: z.string().nullable().optional(),
+  segmentQuery: z.unknown().optional(),
+  scheduledAt: z.string().nullable().optional(),
+  status: z.enum(['DRAFT', 'SCHEDULED', 'SENDING', 'PAUSED']).optional(),
+  abTestConfig: z.unknown().optional(),
+  timezone: z.string().max(50).nullable().optional(),
+});
 
 /** Valid status transitions for campaigns */
 const VALID_STATUS_TRANSITIONS: Record<string, string[]> = {
@@ -162,8 +177,25 @@ export const GET = withAdminGuard(
 export const PUT = withAdminGuard(
   async (request: NextRequest, { session, params }: { session: { user: { id: string } }; params: { id: string } }) => {
     try {
+      const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+        || request.headers.get('x-real-ip') || '127.0.0.1';
+      const rl = await rateLimitMiddleware(ip, '/api/admin/emails/campaigns/[id]');
+      if (!rl.success) {
+        const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+        Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+        return res;
+      }
+      const csrfValid = await validateCsrf(request);
+      if (!csrfValid) {
+        return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+      }
+
       const body = await request.json();
-      const { name, subject, htmlContent, textContent, segmentQuery, scheduledAt, status, abTestConfig, timezone } = body;
+      const parsed = updateCampaignSchema.safeParse(body);
+      if (!parsed.success) {
+        return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+      }
+      const { name, subject, htmlContent, textContent, segmentQuery, scheduledAt, status, abTestConfig, timezone } = parsed.data;
 
       const existing = await prisma.emailCampaign.findUnique({ where: { id: params.id } });
       if (!existing) {
@@ -282,8 +314,21 @@ export const PUT = withAdminGuard(
 );
 
 export const DELETE = withAdminGuard(
-  async (_request: NextRequest, { session, params }: { session: { user: { id: string } }; params: { id: string } }) => {
+  async (request: NextRequest, { session, params }: { session: { user: { id: string } }; params: { id: string } }) => {
     try {
+      const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+        || request.headers.get('x-real-ip') || '127.0.0.1';
+      const rl = await rateLimitMiddleware(ip, '/api/admin/emails/campaigns/[id]');
+      if (!rl.success) {
+        const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+        Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+        return res;
+      }
+      const csrfValid = await validateCsrf(request);
+      if (!csrfValid) {
+        return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+      }
+
       const existing = await prisma.emailCampaign.findUnique({ where: { id: params.id } });
       if (!existing) {
         return NextResponse.json({ error: 'Campaign not found' }, { status: 404 });
@@ -299,8 +344,8 @@ export const DELETE = withAdminGuard(
         targetType: 'EmailCampaign',
         targetId: params.id,
         previousValue: { name: existing.name, status: existing.status },
-        ipAddress: getClientIpFromRequest(_request),
-        userAgent: _request.headers.get('user-agent') || undefined,
+        ipAddress: getClientIpFromRequest(request),
+        userAgent: request.headers.get('user-agent') || undefined,
       }).catch(() => {});
 
       return NextResponse.json({ success: true });

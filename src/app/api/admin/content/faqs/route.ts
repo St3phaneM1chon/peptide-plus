@@ -1,11 +1,31 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { enqueue } from '@/lib/translation';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { sanitizeSimpleHtml, stripHtml } from '@/lib/validation';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
+
+const createFaqSchema = z.object({
+  question: z.string().min(1).max(1000),
+  answer: z.string().min(1).max(10000),
+  category: z.string().max(100).optional(),
+  sortOrder: z.number().int().min(0).optional(),
+  isPublished: z.boolean().optional(),
+});
+
+const updateFaqSchema = z.object({
+  id: z.string().min(1),
+  question: z.string().min(1).max(1000).optional(),
+  answer: z.string().min(1).max(10000).optional(),
+  category: z.string().max(100).optional(),
+  sortOrder: z.number().int().min(0).optional(),
+  isPublished: z.boolean().optional(),
+});
 
 // GET /api/admin/content/faqs - List all FAQs
 export const GET = withAdminGuard(async (_request, { session }) => {
@@ -22,13 +42,26 @@ export const GET = withAdminGuard(async (_request, { session }) => {
 });
 
 // POST /api/admin/content/faqs - Create a new FAQ
-export const POST = withAdminGuard(async (request, { session }) => {
-  const body = await request.json();
-  const { question, answer, category, sortOrder, isPublished } = body;
-
-  if (!question || !answer) {
-    return NextResponse.json({ error: 'Question and answer are required' }, { status: 400 });
+export const POST = withAdminGuard(async (request: NextRequest, { session }) => {
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    || request.headers.get('x-real-ip') || '127.0.0.1';
+  const rl = await rateLimitMiddleware(ip, '/api/admin/content/faqs');
+  if (!rl.success) {
+    const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+    Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+    return res;
   }
+  const csrfValid = await validateCsrf(request);
+  if (!csrfValid) {
+    return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+  }
+
+  const body = await request.json();
+  const parsed = createFaqSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+  }
+  const { question, answer, category, sortOrder, isPublished } = parsed.data;
 
   // BE-SEC-06: Sanitize FAQ text content
   const safeQuestion = typeof question === 'string' ? stripHtml(question) : question;
@@ -61,13 +94,26 @@ export const POST = withAdminGuard(async (request, { session }) => {
 });
 
 // PUT /api/admin/content/faqs - Update a FAQ
-export const PUT = withAdminGuard(async (request, { session }) => {
-  const body = await request.json();
-  const { id, question, answer, category, sortOrder, isPublished } = body;
-
-  if (!id) {
-    return NextResponse.json({ error: 'FAQ ID is required' }, { status: 400 });
+export const PUT = withAdminGuard(async (request: NextRequest, { session }) => {
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    || request.headers.get('x-real-ip') || '127.0.0.1';
+  const rl = await rateLimitMiddleware(ip, '/api/admin/content/faqs');
+  if (!rl.success) {
+    const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+    Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+    return res;
   }
+  const csrfValid = await validateCsrf(request);
+  if (!csrfValid) {
+    return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+  }
+
+  const body = await request.json();
+  const parsed = updateFaqSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+  }
+  const { id, question, answer, category, sortOrder, isPublished } = parsed.data;
 
   // BE-SEC-06: Sanitize on update too
   const safeQ = typeof question === 'string' ? stripHtml(question) : question;
@@ -101,7 +147,20 @@ export const PUT = withAdminGuard(async (request, { session }) => {
 });
 
 // DELETE /api/admin/content/faqs - Delete a FAQ
-export const DELETE = withAdminGuard(async (request, { session }) => {
+export const DELETE = withAdminGuard(async (request: NextRequest, { session }) => {
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    || request.headers.get('x-real-ip') || '127.0.0.1';
+  const rl = await rateLimitMiddleware(ip, '/api/admin/content/faqs');
+  if (!rl.success) {
+    const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+    Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+    return res;
+  }
+  const csrfValid = await validateCsrf(request);
+  if (!csrfValid) {
+    return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+  }
+
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
 

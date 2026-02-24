@@ -5,6 +5,31 @@ import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { encrypt, decrypt } from '@/lib/security';
 import { logger } from '@/lib/logger';
+import { z } from 'zod';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
+
+// ---------------------------------------------------------------------------
+// Zod schemas
+// ---------------------------------------------------------------------------
+const createBankAccountSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  accountNumber: z.string().optional(),
+  institution: z.string().min(1, 'Institution is required'),
+  type: z.enum(['CHECKING', 'SAVINGS', 'CREDIT_CARD', 'OTHER']).optional().default('CHECKING'),
+  currency: z.string().optional().default('CAD'),
+  chartAccountId: z.string().nullable().optional(),
+  apiCredentials: z.record(z.unknown()).nullable().optional(),
+});
+
+const updateBankAccountSchema = z.object({
+  id: z.string().min(1, 'ID is required'),
+  name: z.string().optional(),
+  currentBalance: z.number().optional(),
+  isActive: z.boolean().optional(),
+  accountNumber: z.string().nullable().optional(),
+  apiCredentials: z.record(z.unknown()).nullable().optional(),
+});
 
 // ---------------------------------------------------------------------------
 // Helpers for encrypted fields
@@ -67,15 +92,25 @@ export const GET = withAdminGuard(async (_request, { session }) => {
 // ---------------------------------------------------------------------------
 export const POST = withAdminGuard(async (request, { session }) => {
   try {
-    const body = await request.json();
-    const { name, accountNumber, institution, type, currency, chartAccountId, apiCredentials } = body;
-
-    if (!name || !institution) {
-      return NextResponse.json(
-        { error: 'Nom et institution sont requis' },
-        { status: 400 }
-      );
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/accounting/bank-accounts');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
     }
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
+    const body = await request.json();
+    const parsed = createBankAccountSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+    }
+    const { name, accountNumber, institution, type, currency, chartAccountId, apiCredentials } = parsed.data;
 
     // Encrypt sensitive fields before storage
     const encryptedAccountNumber = accountNumber ? await encrypt(accountNumber) : null;
@@ -98,7 +133,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       account: {
         ...account,
         currentBalance: Number(account.currentBalance),
-        accountNumber: maskAccountNumber(accountNumber),
+        accountNumber: maskAccountNumber(accountNumber ?? null),
         apiCredentials: encryptedApiCredentials ? '***CONFIGURED***' : null,
       },
     }, { status: 201 });
@@ -116,12 +151,25 @@ export const POST = withAdminGuard(async (request, { session }) => {
 // ---------------------------------------------------------------------------
 export const PUT = withAdminGuard(async (request, { session }) => {
   try {
-    const body = await request.json();
-    const { id, name, currentBalance, isActive, accountNumber, apiCredentials } = body;
-
-    if (!id) {
-      return NextResponse.json({ error: 'ID requis' }, { status: 400 });
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/accounting/bank-accounts');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
     }
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
+    const body = await request.json();
+    const parsed = updateBankAccountSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+    }
+    const { id, name, currentBalance, isActive, accountNumber, apiCredentials } = parsed.data;
 
     const existing = await prisma.bankAccount.findUnique({ where: { id } });
     if (!existing) {
@@ -172,6 +220,19 @@ export const PUT = withAdminGuard(async (request, { session }) => {
 // ---------------------------------------------------------------------------
 export const DELETE = withAdminGuard(async (request, { session }) => {
   try {
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/accounting/bank-accounts');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 

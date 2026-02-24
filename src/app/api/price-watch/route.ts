@@ -6,10 +6,25 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth-config';
 import { logger } from '@/lib/logger';
 import { validateCsrf } from '@/lib/csrf-middleware';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+
+// ---------------------------------------------------------------------------
+// Zod schemas
+// ---------------------------------------------------------------------------
+
+const priceWatchPostSchema = z.object({
+  productId: z.string().min(1, 'Product ID is required').max(100),
+  targetPrice: z.number().positive().optional(),
+});
+
+const priceWatchDeleteSchema = z.object({
+  productId: z.string().min(1, 'Product ID is required').max(100),
+});
 
 /**
  * GET - List user's active price watches with current prices
@@ -81,6 +96,16 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
+    // SECURITY: Rate limit price watch creation
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/price-watch');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+
     // SEC-31: CSRF protection for mutation endpoint
     const csrfValid = await validateCsrf(request);
     if (!csrfValid) {
@@ -94,14 +119,17 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { productId, targetPrice } = body;
 
-    if (!productId) {
+    // Validate with Zod
+    const parsed = priceWatchPostSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Product ID is required' },
+        { error: 'Invalid data', details: parsed.error.errors },
         { status: 400 }
       );
     }
+
+    const { productId, targetPrice } = parsed.data;
 
     // Verify product exists
     const product = await prisma.product.findUnique({
@@ -187,6 +215,16 @@ export async function POST(request: NextRequest) {
  */
 export async function DELETE(request: NextRequest) {
   try {
+    // SECURITY: Rate limit price watch deletion
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/price-watch');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+
     // SEC-31: CSRF protection for mutation endpoint
     const csrfValid = await validateCsrf(request);
     if (!csrfValid) {
@@ -200,14 +238,17 @@ export async function DELETE(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { productId } = body;
 
-    if (!productId) {
+    // Validate with Zod
+    const parsed = priceWatchDeleteSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Product ID is required' },
+        { error: 'Invalid data', details: parsed.error.errors },
         { status: 400 }
       );
     }
+
+    const { productId } = parsed.data;
 
     // Delete the watch
     await prisma.priceWatch.delete({

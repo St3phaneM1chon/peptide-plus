@@ -10,6 +10,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { patchVideoSchema } from '@/lib/validations/video';
 import { enqueue } from '@/lib/translation';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { logger } from '@/lib/logger';
@@ -74,6 +75,15 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
     }
 
     const body = await request.json();
+
+    // Validate with Zod
+    const parsed = patchVideoSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid data', details: parsed.error.errors },
+        { status: 400 }
+      );
+    }
     const {
       title,
       description,
@@ -89,7 +99,7 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
       locale,
       sortOrder,
       translations,
-    } = body;
+    } = parsed.data;
 
     // Build update data - only include provided fields
     const updateData: Record<string, unknown> = {};
@@ -116,19 +126,8 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
     }
 
     if (description !== undefined) updateData.description = description;
-    // FIX: F16 - Validate URL fields (must start with http:// or https://)
-    if (thumbnailUrl !== undefined) {
-      if (thumbnailUrl && !thumbnailUrl.startsWith('http://') && !thumbnailUrl.startsWith('https://') && !thumbnailUrl.startsWith('/')) {
-        return NextResponse.json({ error: 'thumbnailUrl must be a valid URL' }, { status: 400 });
-      }
-      updateData.thumbnailUrl = thumbnailUrl;
-    }
-    if (videoUrl !== undefined) {
-      if (videoUrl && !videoUrl.startsWith('http://') && !videoUrl.startsWith('https://') && !videoUrl.startsWith('/')) {
-        return NextResponse.json({ error: 'videoUrl must be a valid URL' }, { status: 400 });
-      }
-      updateData.videoUrl = videoUrl;
-    }
+    if (thumbnailUrl !== undefined) updateData.thumbnailUrl = thumbnailUrl;
+    if (videoUrl !== undefined) updateData.videoUrl = videoUrl;
     if (duration !== undefined) updateData.duration = duration;
     if (category !== undefined) updateData.category = category;
     if (tags !== undefined) {
@@ -137,17 +136,7 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
         : null;
     }
     if (instructor !== undefined) updateData.instructor = instructor;
-    // FIX: F15 - Validate views count (must be non-negative finite number)
-    if (views !== undefined) {
-      const parsedViews = parseInt(String(views), 10);
-      if (!Number.isFinite(parsedViews) || parsedViews < 0) {
-        return NextResponse.json(
-          { error: 'views must be a non-negative number' },
-          { status: 400 }
-        );
-      }
-      updateData.views = parsedViews;
-    }
+    if (views !== undefined) updateData.views = views;
     if (isFeatured !== undefined) updateData.isFeatured = isFeatured;
     if (isPublished !== undefined) updateData.isPublished = isPublished;
     if (locale !== undefined) updateData.locale = locale;

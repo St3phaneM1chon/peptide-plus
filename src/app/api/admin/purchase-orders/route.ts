@@ -11,6 +11,26 @@ import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { logger } from '@/lib/logger';
+import { z } from 'zod';
+
+const purchaseOrderItemSchema = z.object({
+  description: z.string().min(1, 'Each item must have a description'),
+  quantity: z.number().positive('Each item must have a positive quantity'),
+  unitCost: z.number().min(0, 'Each item must have a non-negative unitCost'),
+  productId: z.string().optional().nullable(),
+  formatId: z.string().optional().nullable(),
+  sku: z.string().optional().nullable(),
+});
+
+const createPurchaseOrderSchema = z.object({
+  supplierId: z.string().optional().nullable(),
+  supplierName: z.string().min(1, 'supplierName is required'),
+  supplierEmail: z.string().email().optional().nullable().or(z.literal('')),
+  department: z.string().optional().default('OPS'),
+  items: z.array(purchaseOrderItemSchema).min(1, 'items array is required and must not be empty'),
+  notes: z.string().optional().nullable(),
+  currency: z.string().optional().default('CAD'),
+});
 
 // ─── GET /api/admin/purchase-orders ─────────────────────────────────────────────
 export const GET = withAdminGuard(async (request, { session }) => {
@@ -132,52 +152,22 @@ export const GET = withAdminGuard(async (request, { session }) => {
 export const POST = withAdminGuard(async (request, { session }) => {
   try {
     const body = await request.json();
+    const parsed = createPurchaseOrderSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid data', details: parsed.error.errors },
+        { status: 400 }
+      );
+    }
     const {
       supplierId,
       supplierName,
       supplierEmail,
-      department = 'OPS',
+      department,
       items,
       notes,
-      currency = 'CAD',
-    } = body;
-
-    // Validation
-    if (!supplierName) {
-      return NextResponse.json(
-        { error: 'supplierName is required' },
-        { status: 400 }
-      );
-    }
-
-    if (!items || !Array.isArray(items) || items.length === 0) {
-      return NextResponse.json(
-        { error: 'items array is required and must not be empty' },
-        { status: 400 }
-      );
-    }
-
-    // Validate each item
-    for (const item of items) {
-      if (!item.description) {
-        return NextResponse.json(
-          { error: 'Each item must have a description' },
-          { status: 400 }
-        );
-      }
-      if (!item.quantity || item.quantity <= 0) {
-        return NextResponse.json(
-          { error: 'Each item must have a positive quantity' },
-          { status: 400 }
-        );
-      }
-      if (item.unitCost === undefined || item.unitCost < 0) {
-        return NextResponse.json(
-          { error: 'Each item must have a non-negative unitCost' },
-          { status: 400 }
-        );
-      }
-    }
+      currency,
+    } = parsed.data;
 
     // Generate PO number: PO-YYYY-NNNN
     const year = new Date().getFullYear();

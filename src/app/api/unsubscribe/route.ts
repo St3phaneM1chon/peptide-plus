@@ -13,12 +13,17 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import * as jose from 'jose';
 
 // Re-export from the shared module for backwards compatibility
 export { generateUnsubscribeUrl, generateUnsubscribeToken, type UnsubscribeCategory } from '@/lib/email/unsubscribe';
+
+// Import the type for local use
+import type { UnsubscribeCategory } from '@/lib/email/unsubscribe';
 
 // ---------------------------------------------------------------------------
 // Token utilities (verification only - generation moved to @/lib/email/unsubscribe)
@@ -75,23 +80,47 @@ export async function GET(request: NextRequest) {
 }
 
 // ---------------------------------------------------------------------------
+// Zod schema
+// ---------------------------------------------------------------------------
+
+const unsubscribeJsonSchema = z.object({
+  token: z.string().min(1).max(2000),
+});
+
+// ---------------------------------------------------------------------------
 // POST - Process unsubscribe
 // ---------------------------------------------------------------------------
 
 export async function POST(request: NextRequest) {
   try {
+    // SECURITY: Rate limit unsubscribe requests
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/unsubscribe');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+
     // RFC 8058: Gmail/Yahoo send one-click unsubscribe as form-urlencoded
     // with body "List-Unsubscribe=One-Click" and the token in the URL
     const contentType = request.headers.get('content-type') || '';
     let token: string | null = null;
 
     if (contentType.includes('application/x-www-form-urlencoded')) {
-      // RFC 8058 one-click POST: token comes from query string
+      // RFC 8058 one-click POST: token comes from query string (no CSRF for email clients)
       token = request.nextUrl.searchParams.get('token');
     } else {
       // Standard JSON POST from our own UI
       const body = await request.json().catch(() => ({}));
-      token = body.token || request.nextUrl.searchParams.get('token');
+      const parsed = unsubscribeJsonSchema.safeParse(body);
+      if (parsed.success) {
+        token = parsed.data.token;
+      } else {
+        // Fallback to query string token
+        token = request.nextUrl.searchParams.get('token');
+      }
     }
 
     if (!token) {

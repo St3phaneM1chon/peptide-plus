@@ -1,10 +1,24 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { validateCsrf } from '@/lib/csrf-middleware';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { logger } from '@/lib/logger';
+
+const notificationPrefsSchema = z.object({
+  orderUpdates: z.boolean().optional(),
+  promotions: z.boolean().optional(),
+  newsletter: z.boolean().optional(),
+  weeklyDigest: z.boolean().optional(),
+  priceDrops: z.boolean().optional(),
+  stockAlerts: z.boolean().optional(),
+  productReviews: z.boolean().optional(),
+  birthdayOffers: z.boolean().optional(),
+  loyaltyUpdates: z.boolean().optional(),
+}).strict(); // reject unknown fields
 
 // GET - Fetch user's notification preferences
 export async function GET() {
@@ -57,37 +71,38 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
     }
 
+    // Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/account/notifications');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+
     const session = await auth();
 
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Zod schema validation
     const body = await request.json();
+    const parsed = notificationPrefsSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid data', details: parsed.error.errors },
+        { status: 400 }
+      );
+    }
+    const data = parsed.data;
 
-    // Validate that all fields are booleans
-    const validFields = [
-      'orderUpdates',
-      'promotions',
-      'newsletter',
-      'weeklyDigest',
-      'priceDrops',
-      'stockAlerts',
-      'productReviews',
-      'birthdayOffers',
-      'loyaltyUpdates',
-    ];
-
+    // Build update object from validated data (only include provided fields)
     const updateData: Record<string, boolean> = {};
-    for (const field of validFields) {
-      if (field in body) {
-        if (typeof body[field] !== 'boolean') {
-          return NextResponse.json(
-            { error: `Field ${field} must be a boolean` },
-            { status: 400 }
-          );
-        }
-        updateData[field] = body[field];
+    for (const [key, value] of Object.entries(data)) {
+      if (value !== undefined) {
+        updateData[key] = value;
       }
     }
 

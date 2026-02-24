@@ -1,11 +1,25 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { clearBounceCache } from '@/lib/email/bounce-handler';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
 import { logger } from '@/lib/logger';
+
+const addSubscriberSchema = z.object({
+  email: z.string().email().max(320),
+  name: z.string().max(200).optional(),
+  locale: z.string().max(10).optional(),
+  source: z.string().max(100).optional(),
+});
+
+const unsuppressSchema = z.object({
+  email: z.string().email().max(320),
+});
 
 // Escape a CSV field value (handles commas, quotes, newlines)
 function csvEscape(value: string | null | undefined): string {
@@ -162,12 +176,27 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
 
 export const POST = withAdminGuard(async (request: NextRequest) => {
   try {
-    const body = await request.json();
-    const { email, name, locale, source } = body;
-
-    if (!email || typeof email !== 'string') {
-      return NextResponse.json({ error: 'Email is required' }, { status: 400 });
+    // Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/admin/emails/mailing-list');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
     }
+    // CSRF validation
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
+    const body = await request.json();
+    const parsed = addSubscriberSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+    }
+    const { email, name, locale, source } = parsed.data;
 
     const normalizedEmail = email.toLowerCase().trim();
 
@@ -210,12 +239,27 @@ export const POST = withAdminGuard(async (request: NextRequest) => {
 // DELETE /api/admin/emails/mailing-list - Un-suppress a bounced email address
 export const DELETE = withAdminGuard(async (request: NextRequest, { session }) => {
   try {
-    const body = await request.json();
-    const { email } = body;
-
-    if (!email || typeof email !== 'string') {
-      return NextResponse.json({ error: 'email is required' }, { status: 400 });
+    // Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/admin/emails/mailing-list/delete');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
     }
+    // CSRF validation
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
+    const body = await request.json();
+    const parsed = unsuppressSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+    }
+    const { email } = parsed.data;
 
     const normalizedEmail = email.toLowerCase().trim();
 

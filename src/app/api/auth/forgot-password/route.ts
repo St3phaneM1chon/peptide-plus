@@ -11,6 +11,12 @@ import { sendPasswordResetEmail } from '@/lib/email-service';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import crypto from 'crypto';
 import { logger } from '@/lib/logger';
+import { z } from 'zod';
+import { stripHtml, stripControlChars } from '@/lib/sanitize';
+
+const forgotPasswordSchema = z.object({
+  email: z.string().email('Email requis').max(255),
+});
 
 // Durée de validité du token (1 heure)
 const TOKEN_EXPIRY_HOURS = 1;
@@ -27,14 +33,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { email } = await request.json();
-
-    if (!email) {
+    const body = await request.json();
+    const parsed = forgotPasswordSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Email requis' },
+        { error: 'Invalid data', details: parsed.error.errors },
         { status: 400 }
       );
     }
+
+    const email = stripControlChars(stripHtml(parsed.data.email));
 
     // Vérifier si l'utilisateur existe
     const user = await prisma.user.findUnique({

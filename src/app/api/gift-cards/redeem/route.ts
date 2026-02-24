@@ -10,6 +10,12 @@ import { auth } from '@/lib/auth-config';
 import { logger } from '@/lib/logger';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { validateCsrf } from '@/lib/csrf-middleware';
+import { z } from 'zod';
+import { stripHtml, stripControlChars } from '@/lib/sanitize';
+
+const redeemGiftCardSchema = z.object({
+  code: z.string().min(1, 'Gift card code is required').max(50),
+});
 
 export async function POST(request: NextRequest) {
   try {
@@ -39,16 +45,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { code } = await request.json();
-
-    if (!code) {
+    const body = await request.json();
+    const parsed = redeemGiftCardSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Gift card code is required' },
+        { error: 'Invalid data', details: parsed.error.errors },
         { status: 400 }
       );
     }
 
-    const upperCode = code.toUpperCase().trim();
+    const upperCode = stripControlChars(stripHtml(parsed.data.code)).toUpperCase().trim();
 
     // Atomic transaction to prevent double-redeem race condition
     const result = await prisma.$transaction(async (tx) => {

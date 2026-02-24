@@ -6,12 +6,24 @@ export const dynamic = 'force-dynamic';
  * POST - Create a new flow
  */
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
 import { safeParseJson } from '@/lib/email/utils';
 import { logger } from '@/lib/logger';
+
+const createFlowSchema = z.object({
+  name: z.string().min(1).max(200),
+  description: z.string().max(1000).nullable().optional(),
+  trigger: z.string().min(1).max(100),
+  nodes: z.array(z.unknown()).optional(),
+  edges: z.array(z.unknown()).optional(),
+  isActive: z.boolean().optional(),
+});
 
 export const GET = withAdminGuard(async (request, { session: _session }) => {
   try {
@@ -45,12 +57,25 @@ export const GET = withAdminGuard(async (request, { session: _session }) => {
 
 export const POST = withAdminGuard(async (request, { session }) => {
   try {
-    const body = await request.json();
-    const { name, description, trigger, nodes, edges, isActive } = body;
-
-    if (!name || !trigger) {
-      return NextResponse.json({ error: 'Name and trigger are required' }, { status: 400 });
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/admin/emails/flows');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
     }
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
+    const body = await request.json();
+    const parsed = createFlowSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+    }
+    const { name, description, trigger, nodes, edges, isActive } = parsed.data;
 
     const flow = await prisma.emailAutomationFlow.create({
       data: {

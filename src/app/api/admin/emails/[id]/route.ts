@@ -9,11 +9,24 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
 import DOMPurify from 'isomorphic-dompurify';
 import { logger } from '@/lib/logger';
+
+const updateTemplateSchema = z.object({
+  name: z.string().min(1).max(200).optional(),
+  subject: z.string().min(1).max(500).optional(),
+  htmlContent: z.string().min(1).optional(),
+  textContent: z.string().nullable().optional(),
+  variables: z.array(z.string().max(50).regex(/^[a-zA-Z0-9._]+$/)).max(20).optional(),
+  isActive: z.boolean().optional(),
+  locale: z.string().max(10).optional(),
+});
 
 /** Replace {{variable}} placeholders in a string with values from a map */
 function replaceTemplateVariables(
@@ -53,9 +66,26 @@ export const GET = withAdminGuard(async (_request, { session: _session, params }
 // PATCH /api/admin/emails/[id] - Update an email template
 export const PATCH = withAdminGuard(async (request, { session, params }) => {
   try {
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/admin/emails/[id]');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const id = params!.id;
     const body = await request.json();
-    const { name, subject, htmlContent, textContent, variables, isActive, locale } = body;
+    const parsed = updateTemplateSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+    }
+    const { name, subject, htmlContent, textContent, variables, isActive, locale } = parsed.data;
 
     // Check template exists
     const existing = await prisma.emailTemplate.findUnique({
@@ -186,8 +216,21 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
 });
 
 // DELETE /api/admin/emails/[id] - Delete an email template
-export const DELETE = withAdminGuard(async (_request, { session, params }) => {
+export const DELETE = withAdminGuard(async (request, { session, params }) => {
   try {
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/admin/emails/[id]');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const id = params!.id;
 
     const existing = await prisma.emailTemplate.findUnique({
@@ -208,8 +251,8 @@ export const DELETE = withAdminGuard(async (_request, { session, params }) => {
       targetType: 'EmailTemplate',
       targetId: id,
       previousValue: { name: existing.name, subject: existing.subject },
-      ipAddress: getClientIpFromRequest(_request),
-      userAgent: _request.headers.get('user-agent') || undefined,
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
     }).catch(() => {});
 
     return NextResponse.json({ success: true });

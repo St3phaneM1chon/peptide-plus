@@ -11,6 +11,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import {
   translateEntityAllLocales,
@@ -20,23 +21,38 @@ import {
 } from '@/lib/translation';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { logger } from '@/lib/logger';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
 
-const VALID_MODELS: TranslatableModel[] = [
-  'Product', 'ProductFormat', 'Category', 'Article',
-  'BlogPost', 'Video', 'Webinar', 'QuickReply',
-];
+const translationTriggerSchema = z.object({
+  model: z.enum(['Product', 'ProductFormat', 'Category', 'Article', 'BlogPost', 'Video', 'Webinar', 'QuickReply']),
+  entityId: z.string().optional(),
+  force: z.boolean().optional().default(false),
+  locales: z.array(z.string()).optional(),
+  all: z.boolean().optional().default(false),
+});
 
 export const POST = withAdminGuard(async (request: NextRequest, { session }) => {
   try {
-    const body = await request.json();
-    const { model, entityId, force = false, locales: targetLocales, all = false } = body;
-
-    if (!model || !VALID_MODELS.includes(model)) {
-      return NextResponse.json(
-        { error: `Modèle invalide. Valeurs acceptées: ${VALID_MODELS.join(', ')}` },
-        { status: 400 }
-      );
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/admin/translations/trigger');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
     }
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
+    const body = await request.json();
+    const parsed = translationTriggerSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+    }
+    const { model, entityId, force = false, locales: targetLocales, all = false } = parsed.data;
 
     // Batch translate ALL entities of a model
     if (all) {

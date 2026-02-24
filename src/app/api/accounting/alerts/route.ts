@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import {
@@ -12,6 +13,41 @@ import {
   evaluateAlertRules,
 } from '@/lib/accounting';
 import { logger } from '@/lib/logger';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
+
+// ---------------------------------------------------------------------------
+// Zod Schemas
+// ---------------------------------------------------------------------------
+
+const VALID_ALERT_TYPES = [
+  'BUDGET_EXCEEDED',
+  'PAYMENT_OVERDUE',
+  'RECONCILIATION_GAP',
+  'TAX_DEADLINE',
+  'UNUSUAL_AMOUNT',
+  'OVERDUE_INVOICE',
+  'LOW_CASH',
+  'TAX_DUE',
+  'RECONCILIATION_PENDING',
+  'EXPENSE_ANOMALY',
+  'CUSTOM',
+] as const;
+
+const createAlertSchema = z.object({
+  type: z.enum(VALID_ALERT_TYPES),
+  severity: z.enum(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']).optional(),
+  title: z.string().min(1, 'title est requis'),
+  message: z.string().min(1, 'message est requis'),
+  entityType: z.string().optional(),
+  entityId: z.string().optional(),
+  link: z.string().optional(),
+});
+
+const patchAlertSchema = z.object({
+  alertId: z.string().min(1, 'alertId est requis'),
+  action: z.enum(['read', 'resolve']),
+});
 
 /**
  * GET /api/accounting/alerts
@@ -245,37 +281,29 @@ export const GET = withAdminGuard(async (request) => {
  * Create a custom alert rule (manual alert).
  * Body: { type, severity?, title, message, entityType?, entityId?, link? }
  */
-export const POST = withAdminGuard(async (request) => {
+export const POST = withAdminGuard(async (request: NextRequest) => {
   try {
+    // Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/accounting/alerts');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+    // CSRF validation
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const body = await request.json();
-    const { type, severity, title, message, entityType, entityId, link } = body;
-
-    if (!type || !title || !message) {
-      return NextResponse.json(
-        { error: 'type, title et message sont requis' },
-        { status: 400 }
-      );
+    const parsed = createAlertSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
     }
-
-    const validTypes = [
-      'BUDGET_EXCEEDED',
-      'PAYMENT_OVERDUE',
-      'RECONCILIATION_GAP',
-      'TAX_DEADLINE',
-      'UNUSUAL_AMOUNT',
-      'OVERDUE_INVOICE',
-      'LOW_CASH',
-      'TAX_DUE',
-      'RECONCILIATION_PENDING',
-      'EXPENSE_ANOMALY',
-      'CUSTOM',
-    ];
-    if (!validTypes.includes(type)) {
-      return NextResponse.json(
-        { error: `Type invalide. Types accept\u00e9s: ${validTypes.join(', ')}` },
-        { status: 400 }
-      );
-    }
+    const { type, severity, title, message, entityType, entityId, link } = parsed.data;
 
     const alertId = `custom-${Date.now()}-${crypto.randomUUID().replace(/-/g, '').substring(0, 8)}`;
 
@@ -307,24 +335,29 @@ export const POST = withAdminGuard(async (request) => {
  * Acknowledge (read) or dismiss (resolve) an alert.
  * Body: { alertId, action: 'read' | 'resolve' }
  */
-export const PATCH = withAdminGuard(async (request, { session }) => {
+export const PATCH = withAdminGuard(async (request: NextRequest, { session }) => {
   try {
+    // Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/accounting/alerts');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+    // CSRF validation
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const body = await request.json();
-    const { alertId, action } = body;
-
-    if (!alertId || !action) {
-      return NextResponse.json(
-        { error: 'alertId et action sont requis' },
-        { status: 400 }
-      );
+    const parsed = patchAlertSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
     }
-
-    if (!['read', 'resolve'].includes(action)) {
-      return NextResponse.json(
-        { error: 'action doit \u00eatre "read" ou "resolve"' },
-        { status: 400 }
-      );
-    }
+    const { alertId, action } = parsed.data;
 
     const existingAlert = await prisma.accountingAlert.findUnique({
       where: { id: alertId },

@@ -18,12 +18,30 @@ import { withAdminGuard } from '@/lib/admin-api-guard';
 import { ACCOUNT_CODES } from '@/lib/accounting/types';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { logger } from '@/lib/logger';
+import { z } from 'zod';
+
+const receiveItemSchema = z.object({
+  itemId: z.string().min(1, 'itemId is required'),
+  receivedQty: z.number().positive('receivedQty must be positive'),
+});
+
+const receivePurchaseOrderSchema = z.object({
+  items: z.array(receiveItemSchema).optional().default([]),
+  notes: z.string().optional().nullable(),
+});
 
 // ─── POST /api/admin/purchase-orders/[id]/receive ───────────────────────────────
 export const POST = withAdminGuard(async (request, { session, params }) => {
   try {
     const id = params!.id;
     const body = await request.json();
+    const parsed = receivePurchaseOrderSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid data', details: parsed.error.errors },
+        { status: 400 }
+      );
+    }
 
     // ─── Load PO with items ─────────────────────────────────────────────
     const po = await prisma.purchaseOrder.findUnique({
@@ -64,7 +82,7 @@ export const POST = withAdminGuard(async (request, { session, params }) => {
     //
     // If no items provided, receive ALL items at their full quantity
     const receivedItems: Array<{ itemId: string; receivedQty: number }> =
-      body.items || [];
+      parsed.data.items || [];
 
     // If no specific items, receive all remaining quantities
     const receiveAll = receivedItems.length === 0;
@@ -239,11 +257,11 @@ export const POST = withAdminGuard(async (request, { session, params }) => {
         poUpdateData.receivedAt = new Date();
       }
 
-      if (body.notes) {
+      if (parsed.data.notes) {
         const timestamp = new Date().toISOString();
         poUpdateData.notes = po.notes
-          ? `${po.notes}\n[RECEIVED ${timestamp}] ${body.notes}`
-          : `[RECEIVED ${timestamp}] ${body.notes}`;
+          ? `${po.notes}\n[RECEIVED ${timestamp}] ${parsed.data.notes}`
+          : `[RECEIVED ${timestamp}] ${parsed.data.notes}`;
       }
 
       await tx.purchaseOrder.update({

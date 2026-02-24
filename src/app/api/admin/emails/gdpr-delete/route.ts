@@ -9,26 +9,42 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
 import { logger } from '@/lib/logger';
 
-// Simple email format validation
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const gdprDeleteSchema = z.object({
+  email: z.string().email().max(320),
+});
 
 export const POST = withAdminGuard(
   async (request: NextRequest, { session }: { session: { user: { id: string } } }) => {
     try {
-      const body = await request.json();
-      const { email } = body;
-
-      if (!email || typeof email !== 'string' || !EMAIL_RE.test(email)) {
-        return NextResponse.json(
-          { error: 'A valid email address is required' },
-          { status: 400 }
-        );
+      // Rate limiting
+      const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+        || request.headers.get('x-real-ip') || '127.0.0.1';
+      const rl = await rateLimitMiddleware(ip, '/api/admin/emails/gdpr-delete');
+      if (!rl.success) {
+        const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+        Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+        return res;
       }
+      // CSRF validation
+      const csrfValid = await validateCsrf(request);
+      if (!csrfValid) {
+        return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+      }
+
+      const body = await request.json();
+      const parsed = gdprDeleteSchema.safeParse(body);
+      if (!parsed.success) {
+        return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+      }
+      const { email } = parsed.data;
 
       const normalizedEmail = email.trim().toLowerCase();
 

@@ -19,10 +19,13 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { auth } from '@/lib/auth-config';
 import { logger } from '@/lib/logger';
 import { getRedisClient, isRedisAvailable } from '@/lib/redis';
 import { cookies } from 'next/headers';
+import { validateCsrf } from '@/lib/csrf-middleware';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -173,26 +176,49 @@ export async function GET(_request: NextRequest) {
 }
 
 // ---------------------------------------------------------------------------
+// Zod schema
+// ---------------------------------------------------------------------------
+
+const consentSchema = z.object({
+  analytics: z.boolean(),
+  marketing: z.boolean(),
+  personalization: z.boolean(),
+});
+
+// ---------------------------------------------------------------------------
 // POST - Save consent preferences
 // ---------------------------------------------------------------------------
 
 export async function POST(request: NextRequest) {
   try {
+    // SECURITY: Rate limit consent saves
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/consent');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+
+    // SECURITY: CSRF protection for mutation endpoint
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const body = await request.json();
 
-    // Validate preferences
-    const { analytics, marketing, personalization } = body;
-
-    if (
-      typeof analytics !== 'boolean' ||
-      typeof marketing !== 'boolean' ||
-      typeof personalization !== 'boolean'
-    ) {
+    // Validate preferences with Zod
+    const parsed = consentSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Invalid consent preferences. Each category must be a boolean.' },
+        { error: 'Invalid consent preferences. Each category must be a boolean.', details: parsed.error.errors },
         { status: 400 }
       );
     }
+
+    const { analytics, marketing, personalization } = parsed.data;
 
     const session = await auth();
     const userId = session?.user?.id || null;

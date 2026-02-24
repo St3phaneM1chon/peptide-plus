@@ -7,12 +7,20 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { unlink } from 'fs/promises';
 import path from 'path';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { logger } from '@/lib/logger';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
+
+const patchMediaSchema = z.object({
+  alt: z.string().max(500).optional(),
+  folder: z.string().max(200).optional(),
+});
 
 // F21 FIX: Sanitize folder path to prevent path traversal
 function sanitizeFolderPath(rawFolder: string): string {
@@ -24,11 +32,28 @@ function sanitizeFolderPath(rawFolder: string): string {
 }
 
 // PATCH /api/admin/medias/[id] - Update media metadata
-export const PATCH = withAdminGuard(async (request, { session, params }) => {
+export const PATCH = withAdminGuard(async (request: NextRequest, { session, params }) => {
   try {
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/admin/medias/[id]');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const id = params!.id;
     const body = await request.json();
-    const { alt, folder: rawFolder } = body;
+    const parsed = patchMediaSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+    }
+    const { alt, folder: rawFolder } = parsed.data;
 
     const existing = await prisma.media.findUnique({
       where: { id },
@@ -69,8 +94,21 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
 });
 
 // DELETE /api/admin/medias/[id] - Delete a media file
-export const DELETE = withAdminGuard(async (request, { session, params }) => {
+export const DELETE = withAdminGuard(async (request: NextRequest, { session, params }) => {
   try {
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/admin/medias/[id]');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const id = params!.id;
 
     const existing = await prisma.media.findUnique({

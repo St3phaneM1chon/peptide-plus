@@ -5,6 +5,15 @@ import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
+import { z } from 'zod';
+
+const createCurrencySchema = z.object({
+  code: z.string().min(1, 'code is required').max(10),
+  name: z.string().min(1, 'name is required').max(100),
+  symbol: z.string().min(1, 'symbol is required').max(10),
+  exchangeRate: z.number({ required_error: 'exchangeRate is required' }).positive('exchangeRate must be positive'),
+  isDefault: z.boolean().optional().default(false),
+});
 
 /**
  * GET /api/admin/currencies
@@ -49,21 +58,14 @@ export const GET = withAdminGuard(async (_request, { session: _session }) => {
 export const POST = withAdminGuard(async (request, { session }) => {
   try {
     const body = await request.json();
-    const { code, name, symbol, exchangeRate, isDefault } = body;
-
-    if (!code || !name || !symbol) {
+    const parsed = createCurrencySchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'code, name, and symbol are required' },
+        { error: 'Invalid data', details: parsed.error.errors },
         { status: 400 }
       );
     }
-
-    if (exchangeRate === undefined || exchangeRate === null) {
-      return NextResponse.json(
-        { error: 'exchangeRate is required' },
-        { status: 400 }
-      );
-    }
+    const { code, name, symbol, exchangeRate, isDefault } = parsed.data;
 
     // Check for existing currency with the same code
     const existing = await prisma.currency.findUnique({

@@ -14,6 +14,16 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
+import { z } from 'zod';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+
+const activateGiftCardSchema = z.object({
+  giftCardId: z.string().uuid().optional(),
+  giftCardCode: z.string().min(1).max(50).optional(),
+}).refine(
+  (data) => data.giftCardId || data.giftCardCode,
+  { message: 'giftCardId or giftCardCode is required' }
+);
 
 // SEC-21: Only use INTERNAL_WEBHOOK_SECRET - do not fall back to STRIPE_WEBHOOK_SECRET
 const INTERNAL_SECRET = process.env.INTERNAL_WEBHOOK_SECRET;
@@ -29,6 +39,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // SECURITY: Rate limiting (defense-in-depth for internal endpoint)
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/gift-cards/activate');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+
     // SECURITY: Verify internal secret to prevent external calls
     const authHeader = request.headers.get('x-internal-secret');
     if (authHeader !== INTERNAL_SECRET) {
@@ -38,14 +58,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { giftCardId, giftCardCode } = await request.json();
-
-    if (!giftCardId && !giftCardCode) {
+    const body = await request.json();
+    const parsed = activateGiftCardSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'giftCardId or giftCardCode is required' },
+        { error: 'Invalid data', details: parsed.error.errors },
         { status: 400 }
       );
     }
+
+    const { giftCardId, giftCardCode } = parsed.data;
 
     // Find the gift card
     const whereClause = giftCardId

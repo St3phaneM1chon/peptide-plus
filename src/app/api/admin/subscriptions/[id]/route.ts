@@ -8,10 +8,19 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { logger } from '@/lib/logger';
+
+const updateSubscriptionSchema = z.object({
+  status: z.enum(['ACTIVE', 'PAUSED', 'CANCELLED', 'PENDING_PAYMENT']).nullish(),
+  frequency: z.enum(['EVERY_2_MONTHS', 'EVERY_4_MONTHS', 'EVERY_6_MONTHS', 'EVERY_12_MONTHS']).nullish(),
+  quantity: z.number().int().min(1).nullish(),
+  discountPercent: z.number().min(0).max(100).nullish(),
+  nextDelivery: z.string().nullish(),
+});
 
 // GET /api/admin/subscriptions/[id] - Get subscription detail
 export const GET = withAdminGuard(async (_request, { session, params }) => {
@@ -99,6 +108,13 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
   try {
     const id = params!.id;
     const body = await request.json();
+    const parsed = updateSubscriptionSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid data', details: parsed.error.errors },
+        { status: 400 }
+      );
+    }
 
     const existing = await prisma.subscription.findUnique({
       where: { id },
@@ -108,47 +124,32 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
       return NextResponse.json({ error: 'Subscription not found' }, { status: 404 });
     }
 
+    const data = parsed.data;
     const updateData: Record<string, unknown> = {};
 
     // Status changes: pause, resume, cancel
-    if (body.status !== undefined) {
-      // BE-PAY-07: Added PENDING_PAYMENT as valid status
-      const validStatuses = ['ACTIVE', 'PAUSED', 'CANCELLED', 'PENDING_PAYMENT'];
-      if (!validStatuses.includes(body.status)) {
-        return NextResponse.json(
-          { error: `Invalid status. Must be one of: ${validStatuses.join(', ')}` },
-          { status: 400 }
-        );
-      }
-
+    if (data.status !== undefined && data.status !== null) {
       // Validate transitions
-      if (body.status === 'ACTIVE' && existing.status === 'CANCELLED') {
+      if (data.status === 'ACTIVE' && existing.status === 'CANCELLED') {
         return NextResponse.json(
           { error: 'Cannot reactivate a cancelled subscription' },
           { status: 400 }
         );
       }
 
-      updateData.status = body.status;
+      updateData.status = data.status;
 
-      if (body.status === 'CANCELLED') {
+      if (data.status === 'CANCELLED') {
         updateData.cancelledAt = new Date();
       }
     }
 
     // Frequency change
-    if (body.frequency !== undefined) {
-      const validFrequencies = ['EVERY_2_MONTHS', 'EVERY_4_MONTHS', 'EVERY_6_MONTHS', 'EVERY_12_MONTHS'];
-      if (!validFrequencies.includes(body.frequency)) {
-        return NextResponse.json(
-          { error: `Invalid frequency. Must be one of: ${validFrequencies.join(', ')}` },
-          { status: 400 }
-        );
-      }
-      updateData.frequency = body.frequency;
+    if (data.frequency !== undefined && data.frequency !== null) {
+      updateData.frequency = data.frequency;
 
       // Recalculate next delivery based on new frequency
-      if (existing.status === 'ACTIVE' || body.status === 'ACTIVE') {
+      if (existing.status === 'ACTIVE' || data.status === 'ACTIVE') {
         const now = new Date();
         const daysMap: Record<string, number> = {
           EVERY_2_MONTHS: 60,
@@ -156,30 +157,24 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
           EVERY_6_MONTHS: 180,
           EVERY_12_MONTHS: 365,
         };
-        const nextDate = new Date(now.getTime() + daysMap[body.frequency] * 24 * 60 * 60 * 1000);
+        const nextDate = new Date(now.getTime() + daysMap[data.frequency] * 24 * 60 * 60 * 1000);
         updateData.nextDelivery = nextDate;
       }
     }
 
     // Quantity change
-    if (body.quantity !== undefined) {
-      if (body.quantity < 1) {
-        return NextResponse.json({ error: 'Quantity must be at least 1' }, { status: 400 });
-      }
-      updateData.quantity = body.quantity;
+    if (data.quantity !== undefined && data.quantity !== null) {
+      updateData.quantity = data.quantity;
     }
 
     // Discount change
-    if (body.discountPercent !== undefined) {
-      if (body.discountPercent < 0 || body.discountPercent > 100) {
-        return NextResponse.json({ error: 'Discount must be between 0 and 100' }, { status: 400 });
-      }
-      updateData.discountPercent = body.discountPercent;
+    if (data.discountPercent !== undefined && data.discountPercent !== null) {
+      updateData.discountPercent = data.discountPercent;
     }
 
     // Next delivery date change
-    if (body.nextDelivery !== undefined) {
-      updateData.nextDelivery = new Date(body.nextDelivery);
+    if (data.nextDelivery !== undefined && data.nextDelivery !== null) {
+      updateData.nextDelivery = new Date(data.nextDelivery);
     }
 
     if (Object.keys(updateData).length === 0) {
@@ -218,7 +213,7 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
 });
 
 // DELETE /api/admin/subscriptions/[id] - Cancel subscription
-export const DELETE = withAdminGuard(async (_request, { session, params }) => {
+export const DELETE = withAdminGuard(async (request, { session, params }) => {
   try {
     const id = params!.id;
 
@@ -249,8 +244,8 @@ export const DELETE = withAdminGuard(async (_request, { session, params }) => {
       targetId: id,
       previousValue: { status: existing.status, productName: existing.productName },
       newValue: { status: 'CANCELLED' },
-      ipAddress: getClientIpFromRequest(_request),
-      userAgent: _request.headers.get('user-agent') || undefined,
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
     }).catch(() => {});
 
     return NextResponse.json({

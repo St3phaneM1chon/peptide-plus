@@ -5,22 +5,36 @@ export const dynamic = 'force-dynamic';
  * POST /api/user/change-password
  */
 
+import { z } from 'zod';
 import { db } from '@/lib/db';
 import { checkPasswordHistory, addToPasswordHistory } from '@/lib/password-history';
 import bcrypt from 'bcryptjs';
 import { withApiHandler, apiSuccess, apiError, type ApiContext } from '@/lib/api-handler';
+import { validateCsrf } from '@/lib/csrf-middleware';
 import { PASSWORD_MIN_LENGTH } from '@/lib/constants';
 
-export const POST = withApiHandler(async (ctx: ApiContext) => {
-  const { currentPassword, newPassword } = await ctx.request.json();
+const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, 'Current password is required').max(256),
+  newPassword: z.string().min(PASSWORD_MIN_LENGTH, `Au moins ${PASSWORD_MIN_LENGTH} caractères`).max(256),
+});
 
-  if (!currentPassword || !newPassword) {
-    return apiError('Current and new password required', 400);
+export const POST = withApiHandler(async (ctx: ApiContext) => {
+  // SECURITY: CSRF protection for password mutation
+  const csrfValid = await validateCsrf(ctx.request);
+  if (!csrfValid) {
+    return apiError('Invalid CSRF token', 403);
   }
+
+  // Zod schema validation
+  const body = await ctx.request.json();
+  const parsed = changePasswordSchema.safeParse(body);
+  if (!parsed.success) {
+    return apiError('Invalid data', 400, parsed.error.errors);
+  }
+  const { currentPassword, newPassword } = parsed.data;
 
   // Password validation (consistent with signup: min 8 chars)
   const passwordErrors: string[] = [];
-  if (newPassword.length < PASSWORD_MIN_LENGTH) passwordErrors.push(`Au moins ${PASSWORD_MIN_LENGTH} caractères`);
   if (!/[A-Z]/.test(newPassword)) passwordErrors.push('Au moins une majuscule');
   if (!/[a-z]/.test(newPassword)) passwordErrors.push('Au moins une minuscule');
   if (!/[0-9]/.test(newPassword)) passwordErrors.push('Au moins un chiffre');

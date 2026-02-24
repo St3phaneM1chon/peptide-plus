@@ -1,11 +1,23 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { sendEmail } from '@/lib/email/email-service';
 import { getBounceStats } from '@/lib/email/bounce-handler';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
 import { logger } from '@/lib/logger';
+
+const testEmailSchema = z.object({
+  testEmail: z.string().email().optional(),
+});
+
+const updateSettingsSchema = z.record(
+  z.string(),
+  z.union([z.string(), z.number(), z.boolean()])
+);
 
 export const GET = withAdminGuard(async () => {
   try {
@@ -43,8 +55,25 @@ export const GET = withAdminGuard(async () => {
 // POST /api/admin/emails/settings - Test email connection
 export const POST = withAdminGuard(async (request: NextRequest, { session }: { session: { user: { id: string; email?: string | null } } }) => {
   try {
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/admin/emails/settings');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const body = await request.json();
-    const testEmail = body.testEmail || session.user.email;
+    const parsed = testEmailSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+    }
+    const testEmail = parsed.data.testEmail || session.user.email;
 
     if (!testEmail) {
       return NextResponse.json({ error: 'Test email address required' }, { status: 400 });
@@ -113,13 +142,26 @@ function validateSettings(settings: Record<string, string>): Record<string, stri
 
 export const PUT = withAdminGuard(async (request: NextRequest) => {
   try {
-    const body = await request.json();
-
-    if (!body || typeof body !== 'object') {
-      return NextResponse.json({ error: 'Body must be a JSON object' }, { status: 400 });
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/admin/emails/settings');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
     }
 
-    const entries = Object.entries(body).filter(
+    const body = await request.json();
+    const parsed = updateSettingsSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+    }
+
+    const entries = Object.entries(parsed.data).filter(
       ([, v]) => typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean'
     );
 

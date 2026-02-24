@@ -6,10 +6,17 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { logger } from '@/lib/logger';
+
+// Zod schema for PATCH /api/admin/inventory/[id] (update stock)
+const updateStockSchema = z.object({
+  stockQuantity: z.number().int().min(0, 'stockQuantity must be a non-negative number'),
+  reason: z.string().min(1, 'Reason is required for stock adjustments'),
+}).strict();
 
 // PATCH /api/admin/inventory/[id] - Update stock for a product format
 export const PATCH = withAdminGuard(async (request, { session, params }) => {
@@ -20,28 +27,16 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
     }
     const formatId = params.id;
     const body = await request.json();
-    const { stockQuantity, reason } = body;
 
-    if (stockQuantity === undefined || stockQuantity === null) {
+    // Validate with Zod
+    const parsed = updateStockSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'stockQuantity is required' },
+        { error: 'Invalid data', details: parsed.error.errors },
         { status: 400 }
       );
     }
-
-    if (typeof stockQuantity !== 'number' || stockQuantity < 0) {
-      return NextResponse.json(
-        { error: 'stockQuantity must be a non-negative number' },
-        { status: 400 }
-      );
-    }
-
-    if (!reason) {
-      return NextResponse.json(
-        { error: 'reason is required for stock adjustments' },
-        { status: 400 }
-      );
-    }
+    const { stockQuantity, reason } = parsed.data;
 
     // Find the format
     const format = await prisma.productFormat.findUnique({

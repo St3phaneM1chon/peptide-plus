@@ -5,6 +5,18 @@ import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
+import { z } from 'zod';
+
+const updateCurrencySchema = z.object({
+  name: z.string().min(1).max(100).optional(),
+  symbol: z.string().min(1).max(10).optional(),
+  exchangeRate: z.number().positive().optional(),
+  isActive: z.boolean().optional(),
+  isDefault: z.boolean().optional(),
+}).refine(
+  (data) => Object.keys(data).length > 0,
+  { message: 'At least one field must be provided' }
+);
 
 /**
  * PATCH /api/admin/currencies/[id]
@@ -14,6 +26,13 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
   try {
     const id = params!.id;
     const body = await request.json();
+    const parsed = updateCurrencySchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid data', details: parsed.error.errors },
+        { status: 400 }
+      );
+    }
 
     const existing = await prisma.currency.findUnique({
       where: { id },
@@ -26,28 +45,29 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
       );
     }
 
+    const data = parsed.data;
     const updateData: Record<string, unknown> = {};
 
-    if (body.name !== undefined) updateData.name = body.name;
-    if (body.symbol !== undefined) updateData.symbol = body.symbol;
+    if (data.name !== undefined) updateData.name = data.name;
+    if (data.symbol !== undefined) updateData.symbol = data.symbol;
 
-    if (body.exchangeRate !== undefined) {
-      updateData.exchangeRate = body.exchangeRate;
+    if (data.exchangeRate !== undefined) {
+      updateData.exchangeRate = data.exchangeRate;
       updateData.rateUpdatedAt = new Date();
     }
 
-    if (body.isActive !== undefined) {
+    if (data.isActive !== undefined) {
       // Cannot deactivate the default currency
-      if (!body.isActive && existing.isDefault) {
+      if (!data.isActive && existing.isDefault) {
         return NextResponse.json(
           { error: 'Cannot deactivate the default currency' },
           { status: 400 }
         );
       }
-      updateData.isActive = body.isActive;
+      updateData.isActive = data.isActive;
     }
 
-    if (body.isDefault !== undefined && body.isDefault) {
+    if (data.isDefault !== undefined && data.isDefault) {
       // Unset current default
       await prisma.currency.updateMany({
         where: { isDefault: true },

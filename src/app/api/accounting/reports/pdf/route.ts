@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import {
@@ -10,6 +11,19 @@ import {
   generateJournalEntryHTML,
 } from '@/lib/accounting';
 import { logger } from '@/lib/logger';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
+
+// ---------------------------------------------------------------------------
+// Zod Schema
+// ---------------------------------------------------------------------------
+
+const pdfPostSchema = z.object({
+  reportType: z.enum(['tax', 'income', 'balance', 'entry']),
+  data: z.record(z.unknown()),
+  period: z.string().optional(),
+  locale: z.string().optional(),
+});
 
 /**
  * GET /api/accounting/reports/pdf
@@ -31,7 +45,7 @@ export const GET = withAdminGuard(async (request) => {
           orderBy: { createdAt: 'desc' },
         });
         if (!taxReport) {
-          return NextResponse.json({ error: 'Aucun rapport de taxes trouvé' }, { status: 404 });
+          return NextResponse.json({ error: 'Aucun rapport de taxes trouv\u00e9' }, { status: 404 });
         }
         html = generateTaxReportHTML({
           ...taxReport,
@@ -175,7 +189,7 @@ export const GET = withAdminGuard(async (request) => {
         });
 
         if (!entry) {
-          return NextResponse.json({ error: 'Écriture non trouvée' }, { status: 404 });
+          return NextResponse.json({ error: '\u00c9criture non trouv\u00e9e' }, { status: 404 });
         }
 
         html = generateJournalEntryHTML({
@@ -216,7 +230,7 @@ export const GET = withAdminGuard(async (request) => {
   } catch (error) {
     logger.error('Generate PDF error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
-      { error: 'Erreur lors de la génération du rapport' },
+      { error: 'Erreur lors de la g\u00e9n\u00e9ration du rapport' },
       { status: 500 }
     );
   }
@@ -226,18 +240,30 @@ export const GET = withAdminGuard(async (request) => {
  * POST /api/accounting/reports/pdf
  * Generate custom PDF with provided data
  */
-export const POST = withAdminGuard(async (request) => {
+export const POST = withAdminGuard(async (request: NextRequest) => {
   try {
-    const body = await request.json();
-    const { reportType, data, period, locale: bodyLocale } = body;
-    const pdfLocale = bodyLocale || 'fr';
-
-    if (!reportType || !data) {
-      return NextResponse.json(
-        { error: 'reportType et data sont requis' },
-        { status: 400 }
-      );
+    // Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/accounting/reports/pdf');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
     }
+    // CSRF validation
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
+    const body = await request.json();
+    const parsed = pdfPostSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+    }
+    const { reportType, data, period, locale: bodyLocale } = parsed.data;
+    const pdfLocale = bodyLocale || 'fr';
 
     let html = '';
 
@@ -246,7 +272,7 @@ export const POST = withAdminGuard(async (request) => {
         html = generateTaxReportHTML(data, undefined, pdfLocale);
         break;
       case 'income':
-        html = generateIncomeStatementHTML(data, period || 'Période personnalisée', undefined, pdfLocale);
+        html = generateIncomeStatementHTML(data, period || 'P\u00e9riode personnalis\u00e9e', undefined, pdfLocale);
         break;
       case 'balance':
         html = generateBalanceSheetHTML(data, period || new Date().toLocaleDateString('fr-CA'), undefined, pdfLocale);
@@ -270,7 +296,7 @@ export const POST = withAdminGuard(async (request) => {
   } catch (error) {
     logger.error('Generate custom PDF error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
-      { error: 'Erreur lors de la génération du rapport personnalisé' },
+      { error: 'Erreur lors de la g\u00e9n\u00e9ration du rapport personnalis\u00e9' },
       { status: 500 }
     );
   }

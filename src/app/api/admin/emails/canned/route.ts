@@ -6,12 +6,27 @@ export const dynamic = 'force-dynamic';
  * POST - Create canned response
  */
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
 import { safeParseJson } from '@/lib/email/utils';
 import { logger } from '@/lib/logger';
+
+const createCannedSchema = z.object({
+  title: z.string().min(1).max(200),
+  content: z.string().min(1),
+  variables: z.unknown().optional(),
+  category: z.string().max(100).nullable().optional(),
+  locale: z.string().max(10).optional(),
+});
+
+const patchCannedSchema = z.object({
+  id: z.string().min(1),
+});
 
 export const GET = withAdminGuard(async (request, { session: _session }) => {
   try {
@@ -57,12 +72,25 @@ export const GET = withAdminGuard(async (request, { session: _session }) => {
 
 export const POST = withAdminGuard(async (request, { session }) => {
   try {
-    const body = await request.json();
-    const { title, content, variables, category, locale } = body;
-
-    if (!title || !content) {
-      return NextResponse.json({ error: 'Title and content are required' }, { status: 400 });
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/admin/emails/canned');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
     }
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
+    const body = await request.json();
+    const parsed = createCannedSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+    }
+    const { title, content, variables, category, locale } = parsed.data;
 
     const response = await prisma.cannedResponse.create({
       data: {
@@ -98,12 +126,25 @@ export const POST = withAdminGuard(async (request, { session }) => {
  */
 export const PATCH = withAdminGuard(async (request, { session: _session }) => {
   try {
-    const body = await request.json();
-    const { id } = body;
-
-    if (!id) {
-      return NextResponse.json({ error: 'id is required' }, { status: 400 });
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/admin/emails/canned');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
     }
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
+    const body = await request.json();
+    const parsed = patchCannedSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+    }
+    const { id } = parsed.data;
 
     const existing = await prisma.cannedResponse.findUnique({ where: { id } });
     if (!existing) {

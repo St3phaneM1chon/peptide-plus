@@ -11,10 +11,40 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { logger } from '@/lib/logger';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
+
+const integrationConfigSchema = z.object({
+  enabled: z.boolean().optional(),
+  accountId: z.string().max(255).optional(),
+  clientId: z.string().max(255).optional(),
+  publicLink: z.string().url().max(500).optional().or(z.literal('')),
+  phoneNumberId: z.string().max(255).optional(),
+  businessAccountId: z.string().max(255).optional(),
+  tenantId: z.string().max(255).optional(),
+  webhookUrl: z.string().url().max(500).optional().or(z.literal('')),
+  channelId: z.string().max(255).optional(),
+  apiKey: z.string().max(255).optional(),
+  username: z.string().max(255).optional(),
+  apiKeyId: z.string().max(255).optional(),
+  advertiserId: z.string().max(255).optional(),
+  appId: z.string().max(255).optional(),
+  customerId: z.string().max(255).optional(),
+  merchantId: z.string().max(255).optional(),
+  pixelId: z.string().max(255).optional(),
+  pageId: z.string().max(255).optional(),
+  igAccountId: z.string().max(255).optional(),
+  companyId: z.string().max(255).optional(),
+}).passthrough();
+
+const integrationActionSchema = z.object({
+  action: z.string().min(1).max(50),
+});
 
 const VALID_PLATFORMS = [
   'zoom', 'whatsapp', 'teams', 'youtube', 'x', 'tiktok', 'google', 'meta', 'linkedin',
@@ -98,7 +128,20 @@ export const GET = withAdminGuard(async (request, { session }) => {
 });
 
 // PUT /api/admin/integrations/[platform] - Save config
-export const PUT = withAdminGuard(async (request, { session }) => {
+export const PUT = withAdminGuard(async (request: NextRequest, { session }) => {
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    || request.headers.get('x-real-ip') || '127.0.0.1';
+  const rl = await rateLimitMiddleware(ip, '/api/admin/integrations/[platform]');
+  if (!rl.success) {
+    const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+    Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+    return res;
+  }
+  const csrfValid = await validateCsrf(request);
+  if (!csrfValid) {
+    return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+  }
+
   const url = new URL(request.url);
   const platform = url.pathname.split('/').pop() as string;
 
@@ -107,14 +150,19 @@ export const PUT = withAdminGuard(async (request, { session }) => {
   }
 
   const body = await request.json();
+  const parsed = integrationConfigSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+  }
   const allowedFields = PLATFORM_FIELDS[platform as Platform] || [];
   const prefix = `integration.${platform}.`;
 
+  const validatedBody = parsed.data as Record<string, unknown>;
   await prisma.$transaction(async (tx) => {
     for (const field of allowedFields) {
-      if (body[field] !== undefined) {
+      if (validatedBody[field] !== undefined) {
         const key = `${prefix}${field}`;
-        const value = String(body[field]);
+        const value = String(validatedBody[field]);
 
         await tx.siteSetting.upsert({
           where: { key },
@@ -137,7 +185,7 @@ export const PUT = withAdminGuard(async (request, { session }) => {
     action: 'UPDATE_INTEGRATION',
     targetType: 'Integration',
     targetId: platform,
-    newValue: { platform, fields: Object.keys(body).filter(k => allowedFields.includes(k)) },
+    newValue: { platform, fields: Object.keys(validatedBody).filter(k => allowedFields.includes(k)) },
     ipAddress: getClientIpFromRequest(request),
     userAgent: request.headers.get('user-agent') || undefined,
   }).catch(() => {});
@@ -146,7 +194,20 @@ export const PUT = withAdminGuard(async (request, { session }) => {
 });
 
 // POST /api/admin/integrations/[platform] - Test connection / actions
-export const POST = withAdminGuard(async (request, { session }) => {
+export const POST = withAdminGuard(async (request: NextRequest, { session }) => {
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    || request.headers.get('x-real-ip') || '127.0.0.1';
+  const rl = await rateLimitMiddleware(ip, '/api/admin/integrations/[platform]');
+  if (!rl.success) {
+    const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+    Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+    return res;
+  }
+  const csrfValid = await validateCsrf(request);
+  if (!csrfValid) {
+    return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+  }
+
   const url = new URL(request.url);
   const platform = url.pathname.split('/').pop() as string;
 
@@ -155,7 +216,11 @@ export const POST = withAdminGuard(async (request, { session }) => {
   }
 
   const body = await request.json();
-  const { action } = body;
+  const parsed = integrationActionSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+  }
+  const { action } = parsed.data;
 
   if (action === 'test') {
     // Test connection for each platform

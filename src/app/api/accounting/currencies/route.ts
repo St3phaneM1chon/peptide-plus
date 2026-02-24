@@ -1,9 +1,29 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
+
+// ---------------------------------------------------------------------------
+// Zod Schemas
+// ---------------------------------------------------------------------------
+
+const createCurrencySchema = z.object({
+  code: z.string().min(1).max(10),
+  name: z.string().min(1),
+  symbol: z.string().min(1).max(5),
+  exchangeRate: z.number().positive(),
+});
+
+const updateCurrencySchema = z.object({
+  id: z.string().min(1),
+  exchangeRate: z.number().positive().optional(),
+  isActive: z.boolean().optional(),
+});
 
 /**
  * GET /api/accounting/currencies
@@ -45,15 +65,26 @@ export const GET = withAdminGuard(async (request) => {
  */
 export const POST = withAdminGuard(async (request) => {
   try {
-    const body = await request.json();
-    const { code, name, symbol, exchangeRate } = body;
-
-    if (!code || !name || !symbol || exchangeRate === undefined) {
-      return NextResponse.json(
-        { error: 'code, name, symbol et exchangeRate sont requis' },
-        { status: 400 }
-      );
+    // CSRF + Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/accounting/currencies');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
     }
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
+    const body = await request.json();
+    const parsed = createCurrencySchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+    }
+    const { code, name, symbol, exchangeRate } = parsed.data;
 
     const existing = await prisma.currency.findUnique({ where: { code } });
     if (existing) {
@@ -83,12 +114,26 @@ export const POST = withAdminGuard(async (request) => {
  */
 export const PUT = withAdminGuard(async (request) => {
   try {
-    const body = await request.json();
-    const { id, exchangeRate, isActive } = body;
-
-    if (!id) {
-      return NextResponse.json({ error: 'ID requis' }, { status: 400 });
+    // CSRF + Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/accounting/currencies');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
     }
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
+    const body = await request.json();
+    const parsed = updateCurrencySchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+    }
+    const { id, exchangeRate, isActive } = parsed.data;
 
     const existing = await prisma.currency.findUnique({ where: { id } });
     if (!existing) {

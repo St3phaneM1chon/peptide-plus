@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import {
@@ -12,6 +13,34 @@ import {
   getForecastMetrics,
 } from '@/lib/accounting/forecasting.service';
 import { logger } from '@/lib/logger';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
+
+// ---------------------------------------------------------------------------
+// Zod Schema
+// ---------------------------------------------------------------------------
+
+const forecastingPostSchema = z.object({
+  action: z.enum(['cashflow', 'scenarios']).optional(),
+  currentCashBalance: z.number(),
+  historicalData: z.object({
+    revenue: z.number().optional(),
+    purchases: z.number().optional(),
+    operating: z.number().optional(),
+    marketing: z.number().optional(),
+    taxes: z.number().optional(),
+  }).passthrough(),
+  monthsAhead: z.number().int().min(1).max(24).optional(),
+  assumptions: z.object({
+    revenueGrowth: z.number().optional(),
+    expenseGrowth: z.number().optional(),
+    taxRate: z.number().optional(),
+  }).passthrough().optional(),
+  scenarios: z.array(z.object({
+    name: z.string(),
+    assumptions: z.record(z.unknown()),
+  }).passthrough()).optional(),
+});
 
 /**
  * GET /api/accounting/forecasting
@@ -94,9 +123,9 @@ export const GET = withAdminGuard(async (request) => {
       },
     });
   } catch (error) {
-    logger.error('Erreur lors de la génération des prévisions', { error: error instanceof Error ? error.message : String(error) });
+    logger.error('Erreur lors de la g\u00e9n\u00e9ration des pr\u00e9visions', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
-      { error: 'Erreur lors de la génération des prévisions financières' },
+      { error: 'Erreur lors de la g\u00e9n\u00e9ration des pr\u00e9visions financi\u00e8res' },
       { status: 500 }
     );
   }
@@ -113,17 +142,29 @@ export const GET = withAdminGuard(async (request) => {
  *   - assumptions?: { revenueGrowth, expenseGrowth, taxRate }
  *   - scenarios?: Array<{ name, assumptions }>
  */
-export const POST = withAdminGuard(async (request) => {
+export const POST = withAdminGuard(async (request: NextRequest) => {
   try {
-    const body = await request.json();
-    const { action, currentCashBalance, historicalData, monthsAhead, assumptions, scenarios } = body;
-
-    if (currentCashBalance === undefined || !historicalData) {
-      return NextResponse.json(
-        { error: 'currentCashBalance et historicalData sont requis' },
-        { status: 400 }
-      );
+    // Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/accounting/forecasting');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
     }
+    // CSRF validation
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
+    const body = await request.json();
+    const parsed = forecastingPostSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+    }
+    const { action, currentCashBalance, historicalData, monthsAhead, assumptions, scenarios } = parsed.data;
 
     if (action === 'scenarios') {
       const scenarioList = scenarios || STANDARD_SCENARIOS;
@@ -143,9 +184,9 @@ export const POST = withAdminGuard(async (request) => {
 
     return NextResponse.json({ projections, alerts });
   } catch (error) {
-    logger.error('Erreur lors de la projection de trésorerie', { error: error instanceof Error ? error.message : String(error) });
+    logger.error('Erreur lors de la projection de tr\u00e9sorerie', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
-      { error: 'Erreur lors de la projection de trésorerie' },
+      { error: 'Erreur lors de la projection de tr\u00e9sorerie' },
       { status: 500 }
     );
   }

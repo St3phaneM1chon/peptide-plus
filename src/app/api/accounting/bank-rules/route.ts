@@ -1,9 +1,51 @@
 export const dynamic = 'force-dynamic';
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
+import { z } from 'zod';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
+
+// ---------------------------------------------------------------------------
+// Zod schemas
+// ---------------------------------------------------------------------------
+const createBankRuleSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  priority: z.number().optional().default(0),
+  isActive: z.boolean().optional().default(true),
+  descriptionContains: z.string().nullable().optional(),
+  descriptionStartsWith: z.string().nullable().optional(),
+  descriptionExact: z.string().nullable().optional(),
+  amountMin: z.number().nullable().optional(),
+  amountMax: z.number().nullable().optional(),
+  amountExact: z.number().nullable().optional(),
+  transactionType: z.enum(['DEBIT', 'CREDIT']).nullable().optional(),
+  accountId: z.string().nullable().optional(),
+  categoryTag: z.string().nullable().optional(),
+  taxCode: z.enum(['GST', 'QST', 'HST', 'EXEMPT', 'ZERO_RATED']).nullable().optional(),
+  description: z.string().nullable().optional(),
+  createdBy: z.string().nullable().optional(),
+});
+
+const updateBankRuleSchema = z.object({
+  id: z.string().min(1, 'Rule id is required'),
+  name: z.string().optional(),
+  priority: z.number().optional(),
+  isActive: z.boolean().optional(),
+  descriptionContains: z.string().nullable().optional(),
+  descriptionStartsWith: z.string().nullable().optional(),
+  descriptionExact: z.string().nullable().optional(),
+  amountMin: z.union([z.number(), z.null(), z.literal('')]).optional(),
+  amountMax: z.union([z.number(), z.null(), z.literal('')]).optional(),
+  amountExact: z.union([z.number(), z.null(), z.literal('')]).optional(),
+  transactionType: z.enum(['DEBIT', 'CREDIT']).nullable().optional(),
+  accountId: z.string().nullable().optional(),
+  categoryTag: z.string().nullable().optional(),
+  taxCode: z.enum(['GST', 'QST', 'HST', 'EXEMPT', 'ZERO_RATED']).nullable().optional(),
+  description: z.string().nullable().optional(),
+});
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -85,15 +127,27 @@ export const GET = withAdminGuard(async (request) => {
 // ---------------------------------------------------------------------------
 export const POST = withAdminGuard(async (request) => {
   try {
-    const body = await request.json();
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/accounting/bank-rules');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
 
-    // Validate required field
-    if (!body.name?.trim()) {
-      return NextResponse.json({ error: 'Name is required' }, { status: 400 });
+    const body = await request.json();
+    const parsed = createBankRuleSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
     }
 
     // Validate at least one condition
-    if (!hasCondition(body)) {
+    if (!hasCondition(parsed.data as Record<string, unknown>)) {
       return NextResponse.json(
         { error: 'At least one condition must be set (description, amount, or transaction type)' },
         { status: 400 }
@@ -101,7 +155,7 @@ export const POST = withAdminGuard(async (request) => {
     }
 
     // Validate at least one action
-    if (!hasAction(body)) {
+    if (!hasAction(parsed.data as Record<string, unknown>)) {
       return NextResponse.json(
         { error: 'At least one action must be set (account or category tag)' },
         { status: 400 }
@@ -109,47 +163,31 @@ export const POST = withAdminGuard(async (request) => {
     }
 
     // Validate accountId exists if provided
-    if (body.accountId) {
-      const account = await prisma.chartOfAccount.findUnique({ where: { id: body.accountId } });
+    if (parsed.data.accountId) {
+      const account = await prisma.chartOfAccount.findUnique({ where: { id: parsed.data.accountId } });
       if (!account) {
         return NextResponse.json({ error: 'Account not found' }, { status: 400 });
       }
     }
 
-    // Validate transactionType
-    if (body.transactionType && !['DEBIT', 'CREDIT'].includes(body.transactionType)) {
-      return NextResponse.json(
-        { error: 'transactionType must be DEBIT or CREDIT' },
-        { status: 400 }
-      );
-    }
-
-    // Validate taxCode
-    const validTaxCodes = ['GST', 'QST', 'HST', 'EXEMPT', 'ZERO_RATED'];
-    if (body.taxCode && !validTaxCodes.includes(body.taxCode)) {
-      return NextResponse.json(
-        { error: `taxCode must be one of: ${validTaxCodes.join(', ')}` },
-        { status: 400 }
-      );
-    }
-
+    const data = parsed.data;
     const rule = await prisma.bankRule.create({
       data: {
-        name: body.name.trim(),
-        priority: typeof body.priority === 'number' ? body.priority : 0,
-        isActive: body.isActive !== false,
-        descriptionContains: body.descriptionContains?.trim() || null,
-        descriptionStartsWith: body.descriptionStartsWith?.trim() || null,
-        descriptionExact: body.descriptionExact?.trim() || null,
-        amountMin: body.amountMin !== undefined && body.amountMin !== null && body.amountMin !== '' ? body.amountMin : null,
-        amountMax: body.amountMax !== undefined && body.amountMax !== null && body.amountMax !== '' ? body.amountMax : null,
-        amountExact: body.amountExact !== undefined && body.amountExact !== null && body.amountExact !== '' ? body.amountExact : null,
-        transactionType: body.transactionType || null,
-        accountId: body.accountId || null,
-        categoryTag: body.categoryTag?.trim() || null,
-        taxCode: body.taxCode || null,
-        description: body.description?.trim() || null,
-        createdBy: body.createdBy || null,
+        name: data.name.trim(),
+        priority: data.priority,
+        isActive: data.isActive,
+        descriptionContains: data.descriptionContains?.trim() || null,
+        descriptionStartsWith: data.descriptionStartsWith?.trim() || null,
+        descriptionExact: data.descriptionExact?.trim() || null,
+        amountMin: data.amountMin !== undefined && data.amountMin !== null ? data.amountMin : null,
+        amountMax: data.amountMax !== undefined && data.amountMax !== null ? data.amountMax : null,
+        amountExact: data.amountExact !== undefined && data.amountExact !== null ? data.amountExact : null,
+        transactionType: data.transactionType || null,
+        accountId: data.accountId || null,
+        categoryTag: data.categoryTag?.trim() || null,
+        taxCode: data.taxCode || null,
+        description: data.description?.trim() || null,
+        createdBy: data.createdBy || null,
       },
       include: {
         account: { select: { id: true, code: true, name: true } },
@@ -172,14 +210,28 @@ export const POST = withAdminGuard(async (request) => {
 // ---------------------------------------------------------------------------
 export const PUT = withAdminGuard(async (request) => {
   try {
-    const body = await request.json();
-
-    if (!body.id) {
-      return NextResponse.json({ error: 'Rule id is required' }, { status: 400 });
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/accounting/bank-rules');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
     }
 
+    const body = await request.json();
+    const parsed = updateBankRuleSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+    }
+    const validatedBody = parsed.data;
+
     // Check rule exists
-    const existing = await prisma.bankRule.findUnique({ where: { id: body.id } });
+    const existing = await prisma.bankRule.findUnique({ where: { id: validatedBody.id } });
     if (!existing) {
       return NextResponse.json({ error: 'Rule not found' }, { status: 404 });
     }
@@ -187,74 +239,59 @@ export const PUT = withAdminGuard(async (request) => {
     // If toggling isActive only, allow it without full validation
     if (Object.keys(body).length === 2 && 'id' in body && 'isActive' in body) {
       const updated = await prisma.bankRule.update({
-        where: { id: body.id },
-        data: { isActive: body.isActive },
+        where: { id: validatedBody.id },
+        data: { isActive: validatedBody.isActive },
         include: { account: { select: { id: true, code: true, name: true } } },
       });
       return NextResponse.json({ rule: updated });
     }
 
     // Full update - validate
-    const merged = { ...existing, ...body };
+    const merged = { ...existing, ...validatedBody };
 
-    if (body.name !== undefined && !body.name?.trim()) {
+    if (validatedBody.name !== undefined && !validatedBody.name?.trim()) {
       return NextResponse.json({ error: 'Name is required' }, { status: 400 });
     }
 
-    if (!hasCondition(merged)) {
+    if (!hasCondition(merged as Record<string, unknown>)) {
       return NextResponse.json(
         { error: 'At least one condition must be set' },
         { status: 400 }
       );
     }
 
-    if (!hasAction(merged)) {
+    if (!hasAction(merged as Record<string, unknown>)) {
       return NextResponse.json(
         { error: 'At least one action must be set (account or category tag)' },
         { status: 400 }
       );
     }
 
-    if (body.accountId) {
-      const account = await prisma.chartOfAccount.findUnique({ where: { id: body.accountId } });
+    if (validatedBody.accountId) {
+      const account = await prisma.chartOfAccount.findUnique({ where: { id: validatedBody.accountId } });
       if (!account) {
         return NextResponse.json({ error: 'Account not found' }, { status: 400 });
       }
     }
 
-    if (body.transactionType && !['DEBIT', 'CREDIT'].includes(body.transactionType)) {
-      return NextResponse.json(
-        { error: 'transactionType must be DEBIT or CREDIT' },
-        { status: 400 }
-      );
-    }
-
-    const validTaxCodes = ['GST', 'QST', 'HST', 'EXEMPT', 'ZERO_RATED'];
-    if (body.taxCode && !validTaxCodes.includes(body.taxCode)) {
-      return NextResponse.json(
-        { error: `taxCode must be one of: ${validTaxCodes.join(', ')}` },
-        { status: 400 }
-      );
-    }
-
     const updateData: Record<string, unknown> = {};
-    if (body.name !== undefined) updateData.name = body.name.trim();
-    if (body.priority !== undefined) updateData.priority = body.priority;
-    if (body.isActive !== undefined) updateData.isActive = body.isActive;
-    if (body.descriptionContains !== undefined) updateData.descriptionContains = body.descriptionContains?.trim() || null;
-    if (body.descriptionStartsWith !== undefined) updateData.descriptionStartsWith = body.descriptionStartsWith?.trim() || null;
-    if (body.descriptionExact !== undefined) updateData.descriptionExact = body.descriptionExact?.trim() || null;
-    if (body.amountMin !== undefined) updateData.amountMin = body.amountMin !== null && body.amountMin !== '' ? body.amountMin : null;
-    if (body.amountMax !== undefined) updateData.amountMax = body.amountMax !== null && body.amountMax !== '' ? body.amountMax : null;
-    if (body.amountExact !== undefined) updateData.amountExact = body.amountExact !== null && body.amountExact !== '' ? body.amountExact : null;
-    if (body.transactionType !== undefined) updateData.transactionType = body.transactionType || null;
-    if (body.accountId !== undefined) updateData.accountId = body.accountId || null;
-    if (body.categoryTag !== undefined) updateData.categoryTag = body.categoryTag?.trim() || null;
-    if (body.taxCode !== undefined) updateData.taxCode = body.taxCode || null;
-    if (body.description !== undefined) updateData.description = body.description?.trim() || null;
+    if (validatedBody.name !== undefined) updateData.name = validatedBody.name.trim();
+    if (validatedBody.priority !== undefined) updateData.priority = validatedBody.priority;
+    if (validatedBody.isActive !== undefined) updateData.isActive = validatedBody.isActive;
+    if (validatedBody.descriptionContains !== undefined) updateData.descriptionContains = validatedBody.descriptionContains?.trim() || null;
+    if (validatedBody.descriptionStartsWith !== undefined) updateData.descriptionStartsWith = validatedBody.descriptionStartsWith?.trim() || null;
+    if (validatedBody.descriptionExact !== undefined) updateData.descriptionExact = validatedBody.descriptionExact?.trim() || null;
+    if (validatedBody.amountMin !== undefined) updateData.amountMin = validatedBody.amountMin !== null && validatedBody.amountMin !== '' ? validatedBody.amountMin : null;
+    if (validatedBody.amountMax !== undefined) updateData.amountMax = validatedBody.amountMax !== null && validatedBody.amountMax !== '' ? validatedBody.amountMax : null;
+    if (validatedBody.amountExact !== undefined) updateData.amountExact = validatedBody.amountExact !== null && validatedBody.amountExact !== '' ? validatedBody.amountExact : null;
+    if (validatedBody.transactionType !== undefined) updateData.transactionType = validatedBody.transactionType || null;
+    if (validatedBody.accountId !== undefined) updateData.accountId = validatedBody.accountId || null;
+    if (validatedBody.categoryTag !== undefined) updateData.categoryTag = validatedBody.categoryTag?.trim() || null;
+    if (validatedBody.taxCode !== undefined) updateData.taxCode = validatedBody.taxCode || null;
+    if (validatedBody.description !== undefined) updateData.description = validatedBody.description?.trim() || null;
 
     const updated = await prisma.bankRule.update({
-      where: { id: body.id },
+      where: { id: validatedBody.id },
       data: updateData,
       include: { account: { select: { id: true, code: true, name: true } } },
     });
@@ -282,6 +319,19 @@ export const PUT = withAdminGuard(async (request) => {
 // ---------------------------------------------------------------------------
 export const DELETE = withAdminGuard(async (request) => {
   try {
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/accounting/bank-rules');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 

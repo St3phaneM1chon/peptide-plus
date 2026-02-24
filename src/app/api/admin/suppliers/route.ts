@@ -11,6 +11,39 @@ import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { logger } from '@/lib/logger';
+import { z } from 'zod';
+
+const supplierContactSchema = z.object({
+  department: z.string().min(1),
+  name: z.string().min(1),
+  email: z.string().email().optional().or(z.literal('')),
+  phone: z.string().optional(),
+  extension: z.string().optional(),
+  title: z.string().optional(),
+  isPrimary: z.boolean().optional(),
+});
+
+const supplierLinkSchema = z.object({
+  label: z.string().min(1),
+  url: z.string().url(),
+  type: z.string().optional(),
+});
+
+const createSupplierSchema = z.object({
+  name: z.string().min(1, 'Supplier name is required').trim(),
+  code: z.string().optional().nullable(),
+  email: z.string().email().optional().nullable().or(z.literal('')),
+  phone: z.string().optional().nullable(),
+  website: z.string().url().optional().nullable().or(z.literal('')),
+  address: z.string().optional().nullable(),
+  city: z.string().optional().nullable(),
+  province: z.string().optional().nullable(),
+  postalCode: z.string().optional().nullable(),
+  country: z.string().optional().nullable(),
+  notes: z.string().optional().nullable(),
+  contacts: z.array(supplierContactSchema).optional(),
+  links: z.array(supplierLinkSchema).optional(),
+});
 
 // GET /api/admin/suppliers - List suppliers
 export const GET = withAdminGuard(async (request) => {
@@ -63,6 +96,13 @@ export const GET = withAdminGuard(async (request) => {
 export const POST = withAdminGuard(async (request, { session }) => {
   try {
     const body = await request.json();
+    const parsed = createSupplierSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid data', details: parsed.error.errors },
+        { status: 400 }
+      );
+    }
     const {
       name,
       code,
@@ -77,14 +117,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       notes,
       contacts,
       links,
-    } = body;
-
-    if (!name?.trim()) {
-      return NextResponse.json(
-        { error: 'Supplier name is required' },
-        { status: 400 }
-      );
-    }
+    } = parsed.data;
 
     const supplier = await prisma.supplier.create({
       data: {

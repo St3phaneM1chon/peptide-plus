@@ -1,9 +1,29 @@
 export const dynamic = 'force-dynamic';
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
+
+// ---------------------------------------------------------------------------
+// Zod Schemas
+// ---------------------------------------------------------------------------
+
+const createFiscalYearSchema = z.object({
+  name: z.string().min(1),
+  startDate: z.string().min(1),
+  endDate: z.string().min(1),
+});
+
+const updateFiscalYearSchema = z.object({
+  id: z.string().min(1),
+  action: z.enum(['close', 'reopen']).optional(),
+  name: z.string().optional(),
+  reason: z.string().optional(),
+});
 
 // ---------------------------------------------------------------------------
 // GET /api/accounting/fiscal-years - List all fiscal years
@@ -35,15 +55,26 @@ export const GET = withAdminGuard(async (_request) => {
 // ---------------------------------------------------------------------------
 export const POST = withAdminGuard(async (request) => {
   try {
-    const body = await request.json();
-    const { name, startDate, endDate } = body;
-
-    if (!name || !startDate || !endDate) {
-      return NextResponse.json(
-        { error: 'name, startDate et endDate sont requis' },
-        { status: 400 }
-      );
+    // CSRF + Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/accounting/fiscal-years');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
     }
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
+    const body = await request.json();
+    const parsed = createFiscalYearSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+    }
+    const { name, startDate, endDate } = parsed.data;
 
     const start = new Date(startDate);
     const end = new Date(endDate);
@@ -90,12 +121,26 @@ export const POST = withAdminGuard(async (request) => {
 // ---------------------------------------------------------------------------
 export const PUT = withAdminGuard(async (request, { session }) => {
   try {
-    const body = await request.json();
-    const { id, action, name } = body;
-
-    if (!id) {
-      return NextResponse.json({ error: 'ID requis' }, { status: 400 });
+    // CSRF + Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/accounting/fiscal-years');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
     }
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
+    const body = await request.json();
+    const parsed = updateFiscalYearSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+    }
+    const { id, action, name, reason } = parsed.data;
 
     const existing = await prisma.fiscalYear.findUnique({ where: { id } });
     if (!existing) {
@@ -164,7 +209,6 @@ export const PUT = withAdminGuard(async (request, { session }) => {
       }
 
       // #73 Compliance: Require reason parameter for reopen
-      const { reason } = body;
       if (!reason || typeof reason !== 'string' || reason.trim().length < 10) {
         return NextResponse.json(
           { error: 'Un motif détaillé (au moins 10 caractères) est requis pour réouvrir un exercice fiscal' },

@@ -16,19 +16,32 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { sendEmail } from '@/lib/email/email-service';
 import { baseTemplate } from '@/lib/email/templates/base-template';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
+import { stripHtml, stripControlChars } from '@/lib/sanitize';
 import { createHash } from 'crypto';
+
+const deleteRequestSchema = z.object({
+  reason: z.string().max(500).optional(),
+});
 
 // Grace period before permanent deletion (30 days)
 const GRACE_PERIOD_DAYS = 30;
 
 export async function POST(request: NextRequest) {
   try {
+    // SECURITY: CSRF protection for destructive mutation endpoint
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const session = await auth();
 
     if (!session?.user?.id) {
@@ -44,21 +57,24 @@ export async function POST(request: NextRequest) {
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
     const rl = await rateLimitMiddleware(ip, '/api/account/delete-request', userId);
     if (!rl.success) {
-      return NextResponse.json(
+      const res = NextResponse.json(
         { error: rl.error!.message },
-        { status: 429, headers: rl.headers }
+        { status: 429 }
       );
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
     }
 
-    // Parse optional reason from request body
+    // Zod schema validation for optional reason
     let reason = 'Not provided';
     try {
       const body = await request.json();
-      if (body.reason && typeof body.reason === 'string') {
-        reason = body.reason.substring(0, 500); // Cap at 500 chars
+      const parsed = deleteRequestSchema.safeParse(body);
+      if (parsed.success && parsed.data.reason) {
+        reason = stripControlChars(stripHtml(parsed.data.reason));
       }
     } catch {
-      // No body or invalid JSON is fine
+      // No body or invalid JSON is fine - reason stays as default
     }
 
     // Fetch current user data before anonymization

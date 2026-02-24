@@ -1,20 +1,32 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { logger } from '@/lib/logger';
 
+// Zod schema for POST /api/admin/users/[id]/points (adjust loyalty points)
+const adjustPointsSchema = z.object({
+  amount: z.number().int().refine((v) => v !== 0, 'Amount must be non-zero'),
+  reason: z.string().min(1, 'Reason is required'),
+}).strict();
+
 export const POST = withAdminGuard(async (request: NextRequest, { session, params }) => {
   try {
     const id = params!.id;
     const body = await request.json();
-    const { amount, reason } = body;
 
-    if (!amount || !reason) {
-      return NextResponse.json({ error: 'Montant et raison requis' }, { status: 400 });
+    // Validate with Zod
+    const parsed = adjustPointsSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid data', details: parsed.error.errors },
+        { status: 400 }
+      );
     }
+    const { amount, reason } = parsed.data;
 
     const user = await prisma.user.findUnique({ where: { id } });
     if (!user) {

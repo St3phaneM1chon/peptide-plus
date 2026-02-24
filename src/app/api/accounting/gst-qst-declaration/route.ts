@@ -1,10 +1,25 @@
 export const dynamic = 'force-dynamic';
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { PROVINCIAL_TAX_RATES } from '@/lib/accounting/canadian-tax-config';
 import { logger } from '@/lib/logger';
+import { z } from 'zod';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
+
+// ---------------------------------------------------------------------------
+// Zod schema for POST
+// ---------------------------------------------------------------------------
+const gstQstDeclarationSchema = z.object({
+  startDate: z.string().min(1, 'startDate is required'),
+  endDate: z.string().min(1, 'endDate is required'),
+  method: z.enum(['regular', 'quick']).optional().default('regular'),
+  province: z.string().optional().default('QC'),
+  status: z.enum(['DRAFT', 'GENERATED', 'FILED']).optional(),
+  data: z.record(z.unknown()),
+});
 
 // FIX: F006 - Shared due date calculation used by both GET and POST
 // GST/QST filing deadline: last day of the month following the reporting period end
@@ -350,15 +365,25 @@ export const GET = withAdminGuard(async (request) => {
 // ---------------------------------------------------------------------------
 export const POST = withAdminGuard(async (request) => {
   try {
-    const body = await request.json();
-    const { startDate, endDate, method, province, status, data } = body;
-
-    if (!startDate || !endDate || !data) {
-      return NextResponse.json(
-        { error: 'startDate, endDate et data sont requis' },
-        { status: 400 }
-      );
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/accounting/gst-qst-declaration');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
     }
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
+    const body = await request.json();
+    const parsed = gstQstDeclarationSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+    }
+    const { startDate, endDate, method, province, status, data } = parsed.data;
 
     const start = new Date(startDate);
     const end = new Date(endDate);
@@ -414,7 +439,8 @@ export const POST = withAdminGuard(async (request) => {
     }
 
     // Extract financial data
-    const declarationData = data;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const declarationData = data as any;
     const gstCollected = declarationData?.gst?.collected || 0;
     const qstCollected = declarationData?.qst?.collected || 0;
     const itc = declarationData?.gst?.itc || 0;

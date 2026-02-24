@@ -8,12 +8,28 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
 import { safeParseJson } from '@/lib/email/utils';
 import { validateNode } from '@/lib/email/automation-engine';
 import { logger } from '@/lib/logger';
+
+const updateFlowSchema = z.object({
+  name: z.string().min(1).max(200).optional(),
+  description: z.string().max(1000).nullable().optional(),
+  trigger: z.string().min(1).max(100).optional(),
+  nodes: z.array(z.unknown()).optional(),
+  edges: z.array(z.unknown()).optional(),
+  isActive: z.boolean().optional(),
+});
+
+const validateFlowActionSchema = z.object({
+  action: z.literal('validate'),
+});
 
 /** Validate flow graph: check for orphan nodes, invalid edges, missing trigger */
 function validateFlowGraph(
@@ -133,12 +149,32 @@ export const GET = withAdminGuard(
 export const PUT = withAdminGuard(
   async (request: NextRequest, { session, params }: { session: { user: { id: string } }; params: { id: string } }) => {
     try {
+      const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+        || request.headers.get('x-real-ip') || '127.0.0.1';
+      const rl = await rateLimitMiddleware(ip, '/api/admin/emails/flows/[id]');
+      if (!rl.success) {
+        const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+        Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+        return res;
+      }
+      const csrfValid = await validateCsrf(request);
+      if (!csrfValid) {
+        return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+      }
+
       const body = await request.json();
-      const { name, description, trigger, nodes, edges, isActive } = body;
+      const parsed = updateFlowSchema.safeParse(body);
+      if (!parsed.success) {
+        return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+      }
+      const { name, description, trigger, nodes, edges, isActive } = parsed.data;
 
       // Validate flow graph integrity when nodes/edges are updated
       if (nodes && edges) {
-        const validation = validateFlowGraph(nodes, edges);
+        const validation = validateFlowGraph(
+          nodes as Array<{ id: string; type: string }>,
+          edges as Array<{ source: string; target: string }>,
+        );
         if (!validation.valid) {
           return NextResponse.json(
             { error: 'Invalid flow graph', details: validation.errors },
@@ -185,8 +221,21 @@ export const PUT = withAdminGuard(
 );
 
 export const DELETE = withAdminGuard(
-  async (_request: NextRequest, { session, params }: { session: { user: { id: string } }; params: { id: string } }) => {
+  async (request: NextRequest, { session, params }: { session: { user: { id: string } }; params: { id: string } }) => {
     try {
+      const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+        || request.headers.get('x-real-ip') || '127.0.0.1';
+      const rl = await rateLimitMiddleware(ip, '/api/admin/emails/flows/[id]');
+      if (!rl.success) {
+        const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+        Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+        return res;
+      }
+      const csrfValid = await validateCsrf(request);
+      if (!csrfValid) {
+        return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+      }
+
       // Clean up orphaned executions before deleting the flow
       await prisma.emailFlowExecution.updateMany({
         where: { flowId: params.id, status: 'WAITING' },
@@ -200,8 +249,8 @@ export const DELETE = withAdminGuard(
         action: 'DELETE_EMAIL_FLOW',
         targetType: 'EmailAutomationFlow',
         targetId: params.id,
-        ipAddress: getClientIpFromRequest(_request),
-        userAgent: _request.headers.get('user-agent') || undefined,
+        ipAddress: getClientIpFromRequest(request),
+        userAgent: request.headers.get('user-agent') || undefined,
       }).catch(() => {});
 
       return NextResponse.json({ success: true });
@@ -216,12 +265,27 @@ export const DELETE = withAdminGuard(
 export const POST = withAdminGuard(
   async (request: NextRequest, { session: _session, params }: { session: unknown; params: { id: string } }) => {
     try {
-      const body = await request.json().catch(() => ({}));
-      const action = body.action;
-
-      if (action !== 'validate') {
-        return NextResponse.json({ error: 'Unknown action. Use { "action": "validate" }' }, { status: 400 });
+      const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+        || request.headers.get('x-real-ip') || '127.0.0.1';
+      const rl = await rateLimitMiddleware(ip, '/api/admin/emails/flows/[id]');
+      if (!rl.success) {
+        const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+        Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+        return res;
       }
+      const csrfValid = await validateCsrf(request);
+      if (!csrfValid) {
+        return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+      }
+
+      const body = await request.json().catch(() => ({}));
+      const parsed = validateFlowActionSchema.safeParse(body);
+      if (!parsed.success) {
+        return NextResponse.json({ error: 'Unknown action. Use { "action": "validate" }', details: parsed.error.errors }, { status: 400 });
+      }
+      // action is validated as 'validate' by the schema
+      const _action = parsed.data.action;
+      void _action;
 
       const flow = await prisma.emailAutomationFlow.findUnique({ where: { id: params.id } });
       if (!flow) {

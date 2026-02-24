@@ -6,47 +6,56 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { sendEmail } from '@/lib/email/email-service';
 import { generateUnsubscribeUrl } from '@/lib/email/unsubscribe';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
 import { logger } from '@/lib/logger';
+
+const replySchema = z.object({
+  to: z.string().email().max(320),
+  subject: z.string().min(1).max(998),
+  htmlBody: z.string().min(1).max(512000),
+  textBody: z.string().max(512000).optional(),
+  scheduledFor: z.string().datetime().optional(),
+});
 
 export const POST = withAdminGuard(
   async (request: NextRequest, { session, params }: { session: { user: { id: string; name?: string; email?: string } }; params: { id: string } }) => {
     try {
+      // Rate limiting
+      const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+        || request.headers.get('x-real-ip') || '127.0.0.1';
+      const rl = await rateLimitMiddleware(ip, '/api/admin/emails/inbox/reply');
+      if (!rl.success) {
+        const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+        Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+        return res;
+      }
+      // CSRF validation
+      const csrfValid = await validateCsrf(request);
+      if (!csrfValid) {
+        return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+      }
+
       const { id: conversationId } = params;
       const body = await request.json();
-      const { to, subject, htmlBody, textBody, scheduledFor } = body;
-
-      if (!to || !subject || !htmlBody) {
-        return NextResponse.json({ error: 'Missing required fields: to, subject, htmlBody' }, { status: 400 });
+      const parsed = replySchema.safeParse(body);
+      if (!parsed.success) {
+        return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
       }
+      const { to, subject, htmlBody, textBody, scheduledFor } = parsed.data;
 
-      // Security #13: Validate email format and strip header injection characters
-      const emailRegex = /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/;
+      // Security #13: Strip header injection characters from email
       const sanitizedTo = String(to).replace(/[\r\n]/g, '').trim();
-      if (!emailRegex.test(sanitizedTo) || sanitizedTo !== String(to).trim()) {
-        return NextResponse.json({ error: 'Invalid email address format' }, { status: 400 });
-      }
 
-      // Security: validate htmlBody type and size
-      if (htmlBody !== undefined && htmlBody !== null) {
-        if (typeof htmlBody !== 'string') {
-          return NextResponse.json({ error: 'htmlBody must be a string' }, { status: 400 });
-        }
-        if (htmlBody.length > 512000) { // 500KB max
-          return NextResponse.json({ error: 'htmlBody too large (max 500KB)' }, { status: 400 });
-        }
-      }
-
-      // Security: validate scheduledFor date
+      // Security: validate scheduledFor date bounds
       if (scheduledFor) {
         const scheduledDate = new Date(scheduledFor);
-        if (isNaN(scheduledDate.getTime())) {
-          return NextResponse.json({ error: 'Invalid scheduledFor date' }, { status: 400 });
-        }
         const now = new Date();
         if (scheduledDate.getTime() < now.getTime()) {
           return NextResponse.json({ error: 'scheduledFor cannot be in the past' }, { status: 400 });

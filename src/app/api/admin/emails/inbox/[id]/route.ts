@@ -7,10 +7,22 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
 import { logger } from '@/lib/logger';
+
+const updateConversationSchema = z.object({
+  status: z.enum(['OPEN', 'PENDING', 'SNOOZED', 'CLOSED', 'SPAM']).optional(),
+  assignedToId: z.string().uuid().nullable().optional(),
+  priority: z.enum(['LOW', 'NORMAL', 'HIGH', 'URGENT']).optional(),
+  tags: z.array(z.string().max(50)).max(20).optional(),
+  snoozedUntil: z.string().datetime().nullable().optional(),
+  internalNote: z.string().max(5000).optional(),
+});
 
 export const GET = withAdminGuard(
   async (request: NextRequest, { session: _session, params }: { session: unknown; params: { id: string } }) => {
@@ -149,9 +161,28 @@ export const GET = withAdminGuard(
 export const PUT = withAdminGuard(
   async (request: NextRequest, { session, params }: { session: { user: { id: string } }; params: { id: string } }) => {
     try {
+      // Rate limiting
+      const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+        || request.headers.get('x-real-ip') || '127.0.0.1';
+      const rl = await rateLimitMiddleware(ip, '/api/admin/emails/inbox/update');
+      if (!rl.success) {
+        const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+        Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+        return res;
+      }
+      // CSRF validation
+      const csrfValid = await validateCsrf(request);
+      if (!csrfValid) {
+        return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+      }
+
       const { id } = params;
       const body = await request.json();
-      const { status, assignedToId, priority, tags, snoozedUntil, internalNote } = body;
+      const parsed = updateConversationSchema.safeParse(body);
+      if (!parsed.success) {
+        return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+      }
+      const { status, assignedToId, priority, tags, snoozedUntil, internalNote } = parsed.data;
 
       const existing = await prisma.emailConversation.findUnique({
         where: { id },

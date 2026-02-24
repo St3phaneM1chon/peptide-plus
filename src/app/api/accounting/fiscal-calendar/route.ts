@@ -1,8 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { getUpcomingDeadlines, FISCAL_DEADLINES } from '@/lib/accounting/canadian-tax-config';
 import { logger } from '@/lib/logger';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
+
+// ---------------------------------------------------------------------------
+// Zod Schemas
+// ---------------------------------------------------------------------------
+
+const createFiscalEventSchema = z.object({
+  title: z.string().min(1, 'title is required'),
+  titleFr: z.string().optional(),
+  description: z.string().optional(),
+  descriptionFr: z.string().optional(),
+  dueDate: z.string().min(1, 'dueDate is required'),
+  category: z.string().optional(),
+  authority: z.string().optional(),
+  frequency: z.string().optional(),
+  amount: z.union([z.string(), z.number()]).optional(),
+  isRecurring: z.boolean().optional(),
+  templateId: z.string().optional(),
+  reminderDate: z.string().optional(),
+});
+
+const patchFiscalEventSchema = z.object({
+  id: z.string().min(1, 'Event ID required'),
+  status: z.string().optional(),
+  completedBy: z.string().optional(),
+  notes: z.string().optional(),
+  amount: z.union([z.string(), z.number()]).optional(),
+});
 
 export const GET = withAdminGuard(async (request: NextRequest) => {
   try {
@@ -47,8 +77,27 @@ export const GET = withAdminGuard(async (request: NextRequest) => {
 
 export const POST = withAdminGuard(async (request: NextRequest) => {
   try {
+    // Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/accounting/fiscal-calendar');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+    // CSRF validation
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const body = await request.json();
-    const { title, titleFr, description, descriptionFr, dueDate, category, authority, frequency, amount, isRecurring, templateId, reminderDate } = body;
+    const parsed = createFiscalEventSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+    }
+    const { title, titleFr, description, descriptionFr, dueDate, category, authority, frequency, amount, isRecurring, templateId, reminderDate } = parsed.data;
 
     const event = await prisma.fiscalCalendarEvent.create({
       data: {
@@ -61,7 +110,7 @@ export const POST = withAdminGuard(async (request: NextRequest) => {
         category: category || 'other',
         authority: authority || 'CRA',
         frequency: frequency || 'once',
-        amount: amount ? parseFloat(amount) : null,
+        amount: amount ? parseFloat(String(amount)) : null,
         isRecurring: isRecurring || false,
         templateId: templateId || null,
       },
@@ -76,12 +125,27 @@ export const POST = withAdminGuard(async (request: NextRequest) => {
 
 export const PATCH = withAdminGuard(async (request: NextRequest) => {
   try {
-    const body = await request.json();
-    const { id, status, completedBy, notes, amount } = body;
-
-    if (!id) {
-      return NextResponse.json({ error: 'Event ID required' }, { status: 400 });
+    // Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/accounting/fiscal-calendar');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
     }
+    // CSRF validation
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
+    const body = await request.json();
+    const parsed = patchFiscalEventSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+    }
+    const { id, status, completedBy, notes, amount } = parsed.data;
 
     const updateData: Record<string, unknown> = {};
     if (status) {
@@ -92,7 +156,7 @@ export const PATCH = withAdminGuard(async (request: NextRequest) => {
       }
     }
     if (notes !== undefined) updateData.notes = notes;
-    if (amount !== undefined) updateData.amount = parseFloat(amount);
+    if (amount !== undefined) updateData.amount = parseFloat(String(amount));
 
     const event = await prisma.fiscalCalendarEvent.update({
       where: { id },

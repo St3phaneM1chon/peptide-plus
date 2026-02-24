@@ -1,11 +1,22 @@
 export const dynamic = 'force-dynamic';
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import type { BankRule, BankTransaction } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
 import { logger } from '@/lib/logger';
+import { z } from 'zod';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
+
+// ---------------------------------------------------------------------------
+// Zod schema
+// ---------------------------------------------------------------------------
+const applyRulesSchema = z.object({
+  transactionIds: z.array(z.string()).optional(),
+  applyAll: z.boolean().optional(),
+});
 
 // ---------------------------------------------------------------------------
 // Rule matching logic
@@ -77,8 +88,25 @@ function ruleMatchesTransaction(rule: BankRule, tx: BankTransaction): boolean {
 // ---------------------------------------------------------------------------
 export const POST = withAdminGuard(async (request) => {
   try {
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/accounting/bank-rules/apply');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const body = await request.json();
-    const { transactionIds, applyAll } = body;
+    const parsed = applyRulesSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+    }
+    const { transactionIds, applyAll } = parsed.data;
 
     if (!applyAll && (!Array.isArray(transactionIds) || transactionIds.length === 0)) {
       return NextResponse.json(

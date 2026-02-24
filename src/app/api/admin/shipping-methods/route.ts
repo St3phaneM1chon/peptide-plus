@@ -15,10 +15,26 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { logger } from '@/lib/logger';
+
+const createShippingMethodSchema = z.object({
+  name: z.string().min(1, 'name is required').max(200),
+  carrier: z.string().max(200).optional(),
+  price: z.number().min(0, 'price must be >= 0'),
+  estimatedDaysMin: z.number().int().min(0).optional(),
+  estimatedDaysMax: z.number().int().min(0).optional(),
+  isActive: z.boolean().optional(),
+  countries: z.union([z.array(z.string()), z.string()]).optional(),
+  perItemFee: z.number().min(0).optional(),
+  freeShippingThreshold: z.number().min(0).nullable().optional(),
+  maxWeight: z.number().min(0).nullable().optional(),
+  notes: z.string().max(1000).nullable().optional(),
+  sortOrder: z.number().int().optional(),
+});
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -32,7 +48,7 @@ function parseCountries(raw: string): string[] {
   }
 }
 
-function mapZone(z: {
+function mapZone(zone: {
   id: string;
   name: string;
   countries: string;
@@ -49,24 +65,24 @@ function mapZone(z: {
   updatedAt: Date;
 }) {
   return {
-    id: z.id,
-    name: z.name,
-    carrier: z.notes ?? z.name,
-    price: Number(z.baseFee),
-    estimatedDays: `${z.estimatedDaysMin}-${z.estimatedDaysMax}`,
-    estimatedDaysMin: z.estimatedDaysMin,
-    estimatedDaysMax: z.estimatedDaysMax,
-    isActive: z.isActive,
-    countries: parseCountries(z.countries),
-    perItemFee: Number(z.perItemFee),
-    freeShippingThreshold: z.freeShippingThreshold
-      ? Number(z.freeShippingThreshold)
+    id: zone.id,
+    name: zone.name,
+    carrier: zone.notes ?? zone.name,
+    price: Number(zone.baseFee),
+    estimatedDays: `${zone.estimatedDaysMin}-${zone.estimatedDaysMax}`,
+    estimatedDaysMin: zone.estimatedDaysMin,
+    estimatedDaysMax: zone.estimatedDaysMax,
+    isActive: zone.isActive,
+    countries: parseCountries(zone.countries),
+    perItemFee: Number(zone.perItemFee),
+    freeShippingThreshold: zone.freeShippingThreshold
+      ? Number(zone.freeShippingThreshold)
       : null,
-    maxWeight: z.maxWeight ? Number(z.maxWeight) : null,
-    notes: z.notes,
-    sortOrder: z.sortOrder,
-    createdAt: z.createdAt.toISOString(),
-    updatedAt: z.updatedAt.toISOString(),
+    maxWeight: zone.maxWeight ? Number(zone.maxWeight) : null,
+    notes: zone.notes,
+    sortOrder: zone.sortOrder,
+    createdAt: zone.createdAt.toISOString(),
+    updatedAt: zone.updatedAt.toISOString(),
   };
 }
 
@@ -101,6 +117,14 @@ export const GET = withAdminGuard(async () => {
 export const POST = withAdminGuard(async (request: NextRequest, { session }) => {
   try {
     const body = await request.json();
+
+    const parsed = createShippingMethodSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid data', details: parsed.error.errors },
+        { status: 400 },
+      );
+    }
     const {
       name,
       carrier,
@@ -114,21 +138,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
       maxWeight,
       notes,
       sortOrder,
-    } = body;
-
-    if (!name || typeof name !== 'string') {
-      return NextResponse.json(
-        { error: 'name is required' },
-        { status: 400 },
-      );
-    }
-
-    if (price === undefined || price === null || Number(price) < 0) {
-      return NextResponse.json(
-        { error: 'price is required and must be >= 0' },
-        { status: 400 },
-      );
-    }
+    } = parsed.data;
 
     const zone = await prisma.shippingZone.create({
       data: {
@@ -138,17 +148,12 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
               Array.isArray(countries) ? countries : [countries],
             )
           : '[]',
-        baseFee: Number(price),
-        perItemFee: perItemFee != null ? Number(perItemFee) : 0,
-        freeShippingThreshold:
-          freeShippingThreshold != null
-            ? Number(freeShippingThreshold)
-            : null,
-        estimatedDaysMin:
-          estimatedDaysMin != null ? Number(estimatedDaysMin) : 3,
-        estimatedDaysMax:
-          estimatedDaysMax != null ? Number(estimatedDaysMax) : 7,
-        maxWeight: maxWeight != null ? Number(maxWeight) : null,
+        baseFee: price,
+        perItemFee: perItemFee ?? 0,
+        freeShippingThreshold: freeShippingThreshold ?? null,
+        estimatedDaysMin: estimatedDaysMin ?? 3,
+        estimatedDaysMax: estimatedDaysMax ?? 7,
+        maxWeight: maxWeight ?? null,
         isActive: isActive ?? true,
         notes: carrier || notes || null,
         sortOrder: sortOrder ?? 0,

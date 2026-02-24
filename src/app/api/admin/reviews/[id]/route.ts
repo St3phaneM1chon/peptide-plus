@@ -6,6 +6,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { prisma } from '@/lib/db';
@@ -13,12 +14,36 @@ import { apiSuccess, apiError, apiNoContent } from '@/lib/api-response';
 import { ErrorCode } from '@/lib/error-codes';
 import { logger } from '@/lib/logger';
 import { stripHtml, stripControlChars } from '@/lib/sanitize';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
+
+const patchReviewSchema = z.object({
+  status: z.enum(['APPROVED', 'REJECTED']).optional(),
+  reply: z.string().max(5000).nullable().optional(),
+});
 
 export const PATCH = withAdminGuard(async (request: NextRequest, { session, params }) => {
   try {
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/admin/reviews/[id]');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const id = params!.id;
     const body = await request.json();
-    const { status, reply } = body;
+    const parsed = patchReviewSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+    }
+    const { status, reply } = parsed.data;
 
     // Check review exists
     const existing = await prisma.review.findUnique({ where: { id } });
@@ -68,8 +93,21 @@ export const PATCH = withAdminGuard(async (request: NextRequest, { session, para
 });
 
 // Status codes: 204 No Content, 404 Not Found, 500 Internal Error
-export const DELETE = withAdminGuard(async (_request: NextRequest, { session, params }) => {
+export const DELETE = withAdminGuard(async (request: NextRequest, { session, params }) => {
   try {
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/admin/reviews/[id]');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const id = params!.id;
 
     // Check review exists (include images for cleanup)
@@ -98,8 +136,8 @@ export const DELETE = withAdminGuard(async (_request: NextRequest, { session, pa
       targetType: 'Review',
       targetId: id,
       previousValue: { rating: existing.rating, productId: existing.productId },
-      ipAddress: getClientIpFromRequest(_request),
-      userAgent: _request.headers.get('user-agent') || undefined,
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
     }).catch((err) => logger.error('Audit log failed for DELETE_REVIEW', { error: err instanceof Error ? err.message : String(err) }));
 
     // Item 2: HTTP 204 No Content for DELETE operations

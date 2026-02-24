@@ -6,12 +6,19 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { safeParseJson } from '@/lib/email/utils';
 import { sendEmail } from '@/lib/email/email-service';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
 import { logger } from '@/lib/logger';
+
+const flowTestSchema = z.object({
+  testEmail: z.string().email().max(320),
+});
 
 /** Mock context with sample data for test flow execution */
 function buildTestContext(testEmail: string) {
@@ -34,18 +41,27 @@ function buildTestContext(testEmail: string) {
 export const POST = withAdminGuard(
   async (request: NextRequest, { session, params }: { session: { user: { id: string } }; params: { id: string } }) => {
     try {
+      // Rate limiting
+      const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+        || request.headers.get('x-real-ip') || '127.0.0.1';
+      const rl = await rateLimitMiddleware(ip, '/api/admin/emails/flows/test');
+      if (!rl.success) {
+        const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+        Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+        return res;
+      }
+      // CSRF validation
+      const csrfValid = await validateCsrf(request);
+      if (!csrfValid) {
+        return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+      }
+
       const body = await request.json();
-      const { testEmail } = body;
-
-      if (!testEmail || typeof testEmail !== 'string') {
-        return NextResponse.json({ error: 'testEmail is required' }, { status: 400 });
+      const parsed = flowTestSchema.safeParse(body);
+      if (!parsed.success) {
+        return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
       }
-
-      // Basic email format validation
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(testEmail)) {
-        return NextResponse.json({ error: 'Invalid email format' }, { status: 400 });
-      }
+      const { testEmail } = parsed.data;
 
       // Load the flow
       const flow = await prisma.emailAutomationFlow.findUnique({ where: { id: params.id } });

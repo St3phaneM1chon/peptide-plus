@@ -9,6 +9,27 @@ import {
   getReconciliationSummary,
 } from '@/lib/accounting';
 import { logger } from '@/lib/logger';
+import { z } from 'zod';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
+
+// ---------------------------------------------------------------------------
+// Zod schemas
+// ---------------------------------------------------------------------------
+const reconciliationPostSchema = z.object({
+  bankAccountId: z.string().optional(),
+  criteria: z.object({
+    minConfidenceScore: z.number().optional(),
+    dateToleranceDays: z.number().optional(),
+    amountTolerancePercent: z.number().optional(),
+  }).optional(),
+});
+
+const reconciliationPutSchema = z.object({
+  csvContent: z.string().min(1, 'csvContent is required').max(5 * 1024 * 1024, 'CSV too large'),
+  bankAccountId: z.string().min(1, 'bankAccountId is required'),
+  format: z.enum(['generic', 'desjardins', 'td', 'rbc']).optional().default('generic'),
+});
 
 /**
  * POST /api/accounting/reconciliation
@@ -16,10 +37,27 @@ import { logger } from '@/lib/logger';
  */
 export const POST = withAdminGuard(async (request, { session }) => {
   try {
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/accounting/reconciliation');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const reconciliationStartTime = Date.now();
 
     const body = await request.json();
-    const { bankAccountId, criteria } = body;
+    const parsed = reconciliationPostSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+    }
+    const { bankAccountId, criteria } = parsed.data;
 
     // #77 Audit: Paginate pending transactions to avoid loading all at once
     // FIX: F058 - Uses batch size limit (not full pagination). TODO: implement cursor-based
@@ -78,7 +116,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       postedAt: e.postedAt || undefined,
     }));
 
-    const result = autoReconcile(bankTransactions, journalEntries, criteria);
+    const result = autoReconcile(bankTransactions, journalEntries, criteria as Parameters<typeof autoReconcile>[2]);
 
     // #84 Error Recovery: Track matched IDs from result.suggestions directly,
     // don't rely on mutated in-memory state which may be inconsistent after autoReconcile
@@ -260,19 +298,25 @@ export const GET = withAdminGuard(async (request) => {
  */
 export const PUT = withAdminGuard(async (request) => {
   try {
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/accounting/reconciliation');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const body = await request.json();
-    const { csvContent, bankAccountId, format } = body;
-
-    if (csvContent && csvContent.length > 5 * 1024 * 1024) {
-      return NextResponse.json({ error: 'CSV too large' }, { status: 413 });
+    const parsed = reconciliationPutSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
     }
-
-    if (!csvContent || !bankAccountId) {
-      return NextResponse.json(
-        { error: 'csvContent et bankAccountId sont requis' },
-        { status: 400 }
-      );
-    }
+    const { csvContent, bankAccountId, format } = parsed.data;
 
     const transactions = parseBankStatementCSV(
       csvContent,

@@ -47,10 +47,30 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextResponse } from 'next/server';
+import { z } from 'zod';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { logger } from '@/lib/logger';
+
+const quantityDiscountTierSchema = z.object({
+  minQty: z.number().int().min(1, 'Each tier must have a valid minQty (>= 1)'),
+  maxQty: z.number().int().min(1).nullable().optional(),
+  discount: z.number().min(0, 'Discount must be between 0 and 100').max(100, 'Discount must be between 0 and 100'),
+});
+
+const createQuantityDiscountsSchema = z.object({
+  productId: z.string().min(1, 'productId is required'),
+  tiers: z.array(quantityDiscountTierSchema),
+}).refine((data) => {
+  // Validate that maxQty >= minQty for each tier
+  for (const tier of data.tiers) {
+    if (tier.maxQty !== null && tier.maxQty !== undefined && tier.maxQty < tier.minQty) {
+      return false;
+    }
+  }
+  return true;
+}, { message: 'maxQty must be greater than or equal to minQty' });
 
 // GET - List quantity discounts for a product
 export const GET = withAdminGuard(async (request, { session: _session }) => {
@@ -90,21 +110,15 @@ export const GET = withAdminGuard(async (request, { session: _session }) => {
 export const POST = withAdminGuard(async (request, { session }) => {
   try {
     const body = await request.json();
-    const { productId, tiers } = body;
 
-    if (!productId) {
+    const parsed = createQuantityDiscountsSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'productId is required' },
+        { error: 'Invalid data', details: parsed.error.errors },
         { status: 400 }
       );
     }
-
-    if (!Array.isArray(tiers)) {
-      return NextResponse.json(
-        { error: 'tiers must be an array' },
-        { status: 400 }
-      );
-    }
+    const { productId, tiers } = parsed.data;
 
     // Validate product exists
     const product = await prisma.product.findUnique({
@@ -117,28 +131,6 @@ export const POST = withAdminGuard(async (request, { session }) => {
         { error: 'Product not found' },
         { status: 404 }
       );
-    }
-
-    // Validate tiers
-    for (const tier of tiers) {
-      if (typeof tier.minQty !== 'number' || tier.minQty < 1) {
-        return NextResponse.json(
-          { error: 'Each tier must have a valid minQty (>= 1)' },
-          { status: 400 }
-        );
-      }
-      if (tier.maxQty !== null && tier.maxQty !== undefined && tier.maxQty < tier.minQty) {
-        return NextResponse.json(
-          { error: 'maxQty must be greater than or equal to minQty' },
-          { status: 400 }
-        );
-      }
-      if (typeof tier.discount !== 'number' || tier.discount < 0 || tier.discount > 100) {
-        return NextResponse.json(
-          { error: 'Discount must be between 0 and 100' },
-          { status: 400 }
-        );
-      }
     }
 
     // Delete existing tiers and create new ones (replace all)

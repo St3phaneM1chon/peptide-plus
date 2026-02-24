@@ -1,9 +1,56 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
+
+// ---------------------------------------------------------------------------
+// Zod Schemas
+// ---------------------------------------------------------------------------
+
+const budgetLineSchema = z.object({
+  accountCode: z.string().min(1),
+  accountName: z.string().min(1),
+  type: z.string().optional().default('EXPENSE'),
+  january: z.number().min(0).optional().default(0),
+  february: z.number().min(0).optional().default(0),
+  march: z.number().min(0).optional().default(0),
+  april: z.number().min(0).optional().default(0),
+  may: z.number().min(0).optional().default(0),
+  june: z.number().min(0).optional().default(0),
+  july: z.number().min(0).optional().default(0),
+  august: z.number().min(0).optional().default(0),
+  september: z.number().min(0).optional().default(0),
+  october: z.number().min(0).optional().default(0),
+  november: z.number().min(0).optional().default(0),
+  december: z.number().min(0).optional().default(0),
+});
+
+const createBudgetSchema = z.object({
+  name: z.string().min(1),
+  year: z.number().int(),
+  lines: z.array(budgetLineSchema).min(1),
+});
+
+const updateBudgetLineSchema = z.object({
+  lineId: z.string().min(1),
+  january: z.number().min(0).optional(),
+  february: z.number().min(0).optional(),
+  march: z.number().min(0).optional(),
+  april: z.number().min(0).optional(),
+  may: z.number().min(0).optional(),
+  june: z.number().min(0).optional(),
+  july: z.number().min(0).optional(),
+  august: z.number().min(0).optional(),
+  september: z.number().min(0).optional(),
+  october: z.number().min(0).optional(),
+  november: z.number().min(0).optional(),
+  december: z.number().min(0).optional(),
+});
 
 /**
  * GET /api/accounting/budgets
@@ -69,34 +116,26 @@ export const GET = withAdminGuard(async (request) => {
  */
 export const POST = withAdminGuard(async (request) => {
   try {
+    // CSRF + Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/accounting/budgets');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const body = await request.json();
-    const { name, year, lines } = body;
-
-    if (!name || !year || !lines || !Array.isArray(lines)) {
-      return NextResponse.json(
-        { error: 'name, year et lines sont requis' },
-        { status: 400 }
-      );
+    const parsed = createBudgetSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
     }
-
-    // #62 Audit: Validate that budget amounts are positive numbers
-    for (const line of lines) {
-      const monthFields = [
-        'january', 'february', 'march', 'april', 'may', 'june',
-        'july', 'august', 'september', 'october', 'november', 'december',
-      ];
-      for (const m of monthFields) {
-        if (line[m] !== undefined && line[m] !== null) {
-          const val = Number(line[m]);
-          if (isNaN(val) || val < 0) {
-            return NextResponse.json(
-              { error: `Invalid budget amount for ${line.accountCode || 'unknown'}.${m}: must be a positive number or zero` },
-              { status: 400 }
-            );
-          }
-        }
-      }
-    }
+    const { name, year, lines } = parsed.data;
 
     // #63 Audit: Validate year is reasonable
     const currentYear = new Date().getFullYear();
@@ -183,12 +222,26 @@ export const POST = withAdminGuard(async (request) => {
  */
 export const PUT = withAdminGuard(async (request, { session }) => {
   try {
-    const body = await request.json();
-    const { lineId, ...months } = body;
-
-    if (!lineId) {
-      return NextResponse.json({ error: 'lineId requis' }, { status: 400 });
+    // CSRF + Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/accounting/budgets');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
     }
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
+    const body = await request.json();
+    const parsed = updateBudgetLineSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+    }
+    const { lineId, ...months } = parsed.data;
 
     const existing = await prisma.budgetLine.findUnique({ where: { id: lineId } });
     if (!existing) {
@@ -252,6 +305,20 @@ export const PUT = withAdminGuard(async (request, { session }) => {
  */
 export const DELETE = withAdminGuard(async (request, { session }) => {
   try {
+    // CSRF + Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/accounting/budgets');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 

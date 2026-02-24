@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import {
   getRecurringTemplates,
@@ -9,6 +10,34 @@ import {
   previewRecurringSchedule,
 } from '@/lib/accounting';
 import { logger } from '@/lib/logger';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
+
+// ---------------------------------------------------------------------------
+// Zod Schemas
+// ---------------------------------------------------------------------------
+
+const recurringLineSchema = z.object({
+  accountCode: z.string().optional(),
+  accountId: z.string().optional(),
+  description: z.string().optional(),
+  debitAmount: z.number().min(0).optional().default(0),
+  creditAmount: z.number().min(0).optional().default(0),
+}).passthrough();
+
+const createRecurringSchema = z.object({
+  name: z.string().min(1),
+  description: z.string().optional().default(''),
+  frequency: z.string().min(1),
+  dayOfMonth: z.number().int().min(1).max(31).optional().nullable(),
+  dayOfWeek: z.number().int().min(0).max(6).optional().nullable(),
+  monthOfYear: z.number().int().min(1).max(12).optional().nullable(),
+  lines: z.array(recurringLineSchema).min(2, 'Au moins 2 lignes sont requises'),
+  startDate: z.string().optional().nullable(),
+  endDate: z.string().optional().nullable(),
+  autoPost: z.boolean().optional().default(false),
+  notifyOnCreate: z.boolean().optional().default(true),
+});
 
 /**
  * GET /api/accounting/recurring
@@ -43,7 +72,25 @@ export const GET = withAdminGuard(async () => {
  */
 export const POST = withAdminGuard(async (request) => {
   try {
+    // CSRF + Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/accounting/recurring');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const body = await request.json();
+    const parsed = createRecurringSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+    }
     const {
       name,
       description,
@@ -56,14 +103,7 @@ export const POST = withAdminGuard(async (request) => {
       endDate,
       autoPost,
       notifyOnCreate,
-    } = body;
-
-    if (!name || !frequency || !lines || lines.length < 2) {
-      return NextResponse.json(
-        { error: 'name, frequency et au moins 2 lignes sont requis' },
-        { status: 400 }
-      );
-    }
+    } = parsed.data;
 
     // Validate balance
     const totalDebits = lines.reduce(
@@ -113,8 +153,22 @@ export const POST = withAdminGuard(async (request) => {
  * Process due recurring entries (previously was GET ?action=process).
  * Moved to PUT because it's a mutation operation.
  */
-export const PUT = withAdminGuard(async () => {
+export const PUT = withAdminGuard(async (request) => {
   try {
+    // CSRF + Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/accounting/recurring');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const result = await processDueRecurringEntries();
     return NextResponse.json({
       success: true,
