@@ -53,8 +53,10 @@ export default function RecentlyViewed({ excludeSlug }: RecentlyViewedProps) {
         const res = await fetch(`/api/products?slugs=${encodeURIComponent(slugsParam)}&locale=${locale}`);
         if (!res.ok) throw new Error('Failed to fetch products');
         const data = await res.json();
-        // TODO: BUG-056 - Standardize API response shape and simplify these fallbacks
-        const fetchedProducts = Array.isArray(data) ? data : data.products || data.data?.products || data.data || [];
+        // BUG-056 FIX: The /api/products endpoint returns { products: [...] } via apiSuccess/withETag.
+        // Use that standard shape with a safe fallback to empty array.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const fetchedProducts: any[] = data.products ?? [];
 
         // Build a map for quick lookup
         const productMap = new Map<string, RecentProduct>();

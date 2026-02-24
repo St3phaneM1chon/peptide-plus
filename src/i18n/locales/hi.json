@@ -3586,7 +3586,9 @@
       "videoYoutubeVimeo": "वीडियो (YouTube/Vimeo)",
       "viewProduct": "उत्पाद देखें",
       "visibleOnSite": "साइट पर दिखाई दे रहा है",
-      "volumeMl": "वॉल्यूम (मिलीलीटर)"
+      "volumeMl": "वॉल्यूम (मिलीलीटर)",
+      "pdf": "PDF",
+      "image": "Image"
     },
     "products": {
       "accessories": "एक्सेसरीज़",

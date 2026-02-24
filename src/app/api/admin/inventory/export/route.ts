@@ -25,12 +25,16 @@ function csvRow(values: (string | number | boolean | null | undefined)[]): strin
 }
 
 // GET /api/admin/inventory/export - Export inventory as CSV
-export const GET = withAdminGuard(async (_request, _ctx) => {
+export const GET = withAdminGuard(async (request, _ctx) => {
   try {
-    // FIX: BUG-068 - Include all formats (not just active+tracked) with flags for full audit
+    // FIX: BUG-068 - Support includeInactive query param to include inactive formats
+    const { searchParams } = new URL(request.url);
+    const includeInactive = searchParams.get('includeInactive') === 'true';
+
     const formats = await prisma.productFormat.findMany({
       where: {
         trackInventory: true, // Keep trackInventory filter (non-tracked items have no stock to report)
+        ...(includeInactive ? {} : { isActive: true }),
       },
       include: {
         product: {

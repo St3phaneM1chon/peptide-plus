@@ -3586,7 +3586,9 @@
       "videoYoutubeVimeo": "视频 (YouTube/Vimeo)",
       "viewProduct": "查看产品",
       "visibleOnSite": "网站可见",
-      "volumeMl": "体积 (ml)"
+      "volumeMl": "体积 (ml)",
+      "pdf": "PDF",
+      "image": "Image"
     },
     "products": {
       "accessories": "配件",

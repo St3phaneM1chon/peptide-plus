@@ -3586,7 +3586,9 @@
       "videoYoutubeVimeo": "வீடியோ (YouTube/Vimeo)",
       "viewProduct": "தயாரிப்பைப் பார்வையிடு",
       "visibleOnSite": "தளத்தில் காணப்படும்",
-      "volumeMl": "அளவு (மில்லி)"
+      "volumeMl": "அளவு (மில்லி)",
+      "pdf": "PDF",
+      "image": "Image"
     },
     "products": {
       "accessories": "அணிகரங்கள்",

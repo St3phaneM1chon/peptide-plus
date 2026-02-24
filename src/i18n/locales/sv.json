@@ -3586,7 +3586,9 @@
       "videoYoutubeVimeo": "Video (YouTube/Vimeo)",
       "viewProduct": "Visa produkt",
       "visibleOnSite": "Synlig på sidan",
-      "volumeMl": "Volym (ml)"
+      "volumeMl": "Volym (ml)",
+      "pdf": "PDF",
+      "image": "Bild"
     },
     "products": {
       "accessories": "Tillbehör",

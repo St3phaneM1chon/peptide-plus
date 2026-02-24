@@ -722,7 +722,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
                               value={pt.pdfUrl}
                               onChange={(url) => updateProductText(pt.id, 'pdfUrl', url)}
                               context="product-doc"
-                              label="PDF"
+                              label={t('admin.productForm.pdf')}
                               previewSize="sm"
                             />
                           </div>
@@ -731,7 +731,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
                               value={pt.imageUrl}
                               onChange={(url) => updateProductText(pt.id, 'imageUrl', url)}
                               context="product-image"
-                              label="Image"
+                              label={t('admin.productForm.image')}
                               previewSize="sm"
                             />
                           </div>

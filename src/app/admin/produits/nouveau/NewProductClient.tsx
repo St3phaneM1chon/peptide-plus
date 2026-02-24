@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Plus, Trash2, GripVertical, ExternalLink, FileText, ImageIcon, Video, Link2 } from 'lucide-react';
@@ -92,8 +92,47 @@ export default function NewProductClient({ categories }: Props) {
   const [formats, setFormats] = useState<FormatToCreate[]>([]);
   const [editingTextId, setEditingTextId] = useState<string | null>(null);
 
+  // BUG-079 FIX: Debounced slug uniqueness check
+  const [slugStatus, setSlugStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
+  const slugCheckTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    const slug = formData.slug.trim();
+    if (!slug || slug.length < 2) {
+      setSlugStatus('idle');
+      return;
+    }
+
+    setSlugStatus('checking');
+
+    if (slugCheckTimer.current) {
+      clearTimeout(slugCheckTimer.current);
+    }
+
+    slugCheckTimer.current = setTimeout(async () => {
+      try {
+        // Check all products (including inactive) for slug uniqueness
+        const res = await fetch(`/api/products?slugs=${encodeURIComponent(slug)}&includeInactive=true&limit=1`);
+        if (!res.ok) {
+          setSlugStatus('idle');
+          return;
+        }
+        const data = await res.json();
+        const products = data.products ?? [];
+        setSlugStatus(products.length > 0 ? 'taken' : 'available');
+      } catch {
+        setSlugStatus('idle');
+      }
+    }, 500);
+
+    return () => {
+      if (slugCheckTimer.current) {
+        clearTimeout(slugCheckTimer.current);
+      }
+    };
+  }, [formData.slug]);
+
   // Auto-generate slug
-  // TODO: BUG-079 - Add debounced slug uniqueness check via /api/products?slug=xxx
   const handleNameChange = (name: string) => {
     const slug = name
       .toLowerCase()
@@ -138,7 +177,8 @@ export default function NewProductClient({ categories }: Props) {
   // Formats
   const addFormat = () => {
     const newFormat: FormatToCreate = {
-      id: `fmt-${Date.now()}`,
+      // FIX: BUG-095 - Use crypto.randomUUID for unique IDs instead of Date.now()
+      id: `fmt-${crypto.randomUUID().slice(0, 12)}`,
       formatType: 'VIAL_2ML',
       name: '',
       description: '',
@@ -170,6 +210,12 @@ export default function NewProductClient({ categories }: Props) {
   const handleSave = async () => {
     if (!formData.name || !formData.slug || !formData.categoryId) {
       toast.error(t('admin.productForm.requiredFieldsAlert'));
+      return;
+    }
+
+    // BUG-079 FIX: Prevent submission if slug is already taken
+    if (slugStatus === 'taken') {
+      toast.error(t('admin.productForm.slugTaken') || 'This slug is already in use. Please choose a different one.');
       return;
     }
 
@@ -319,13 +365,34 @@ export default function NewProductClient({ categories }: Props) {
 
                 <div>
                   <label className="block text-sm font-medium text-neutral-700 mb-1">{t('admin.productForm.slugUrl')} *</label>
-                  <input
-                    type="text"
-                    value={formData.slug}
-                    onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                    placeholder={t('admin.productForm.placeholderSlug')}
-                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 font-mono text-sm"
-                  />
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={formData.slug}
+                      onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                      placeholder={t('admin.productForm.placeholderSlug')}
+                      className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 font-mono text-sm ${
+                        slugStatus === 'taken' ? 'border-red-400 bg-red-50' :
+                        slugStatus === 'available' ? 'border-green-400 bg-green-50' :
+                        'border-neutral-200'
+                      }`}
+                    />
+                    {/* BUG-079 FIX: Slug uniqueness indicator */}
+                    {slugStatus === 'checking' && (
+                      <span className="absolute end-3 top-1/2 -translate-y-1/2 text-neutral-400 text-xs">...</span>
+                    )}
+                    {slugStatus === 'available' && (
+                      <span className="absolute end-3 top-1/2 -translate-y-1/2 text-green-600 text-sm">&#10003;</span>
+                    )}
+                    {slugStatus === 'taken' && (
+                      <span className="absolute end-3 top-1/2 -translate-y-1/2 text-red-600 text-sm">&#10007;</span>
+                    )}
+                  </div>
+                  {slugStatus === 'taken' && (
+                    <p className="text-xs text-red-600 mt-1">
+                      {t('admin.productForm.slugTaken') || 'This slug is already in use. Please choose a different one.'}
+                    </p>
+                  )}
                 </div>
 
                 <div className="md:col-span-2">
@@ -630,7 +697,7 @@ export default function NewProductClient({ categories }: Props) {
                               value={pt.pdfUrl}
                               onChange={(url) => updateProductText(pt.id, 'pdfUrl', url)}
                               context="product-doc"
-                              label={t('admin.productForm.pdf') || 'PDF'} // FIX: BUG-050 - Use i18n key instead of hardcoded string
+                              label={t('admin.productForm.pdf')}
                               previewSize="sm"
                             />
                           </div>
@@ -639,7 +706,7 @@ export default function NewProductClient({ categories }: Props) {
                               value={pt.imageUrl}
                               onChange={(url) => updateProductText(pt.id, 'imageUrl', url)}
                               context="product-image"
-                              label={t('admin.productForm.image') || 'Image'} // FIX: BUG-050 - Use i18n key instead of hardcoded string
+                              label={t('admin.productForm.image')}
                               previewSize="sm"
                             />
                           </div>

@@ -3586,7 +3586,9 @@
       "videoYoutubeVimeo": "Vidéo (YouTube/Vimeo)",
       "viewProduct": "Voir produit",
       "visibleOnSite": "Visible sur le site",
-      "volumeMl": "Volim (ml)"
+      "volumeMl": "Volim (ml)",
+      "pdf": "PDF",
+      "image": "Image"
     },
     "products": {
       "accessories": "Aksesu",

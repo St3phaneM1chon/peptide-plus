@@ -3586,7 +3586,9 @@
       "videoYoutubeVimeo": "Vídeo (YouTube/Vimeo)",
       "viewProduct": "Ver produto",
       "visibleOnSite": "Visível no site",
-      "volumeMl": "Volume (ml)"
+      "volumeMl": "Volume (ml)",
+      "pdf": "PDF",
+      "image": "Imagem"
     },
     "products": {
       "accessories": "Acessórios",

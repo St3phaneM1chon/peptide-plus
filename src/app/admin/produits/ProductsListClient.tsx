@@ -494,7 +494,21 @@ export default function ProductsListClient({
                   <div className="grid grid-cols-2 gap-4">
                     <div className="bg-slate-50 rounded-lg p-3">
                       <p className="text-xs text-slate-500">{t('admin.products.colPrice')}</p>
-                      <p className="text-xl font-bold text-slate-900">{formatCurrency(Number(selectedProduct.price))}</p>
+                      {/* BUG-070 FIX: Show format price range instead of base price */}
+                      {(() => {
+                        const af = (selectedProduct.formats || []).filter(f => f.isActive);
+                        if (af.length > 0) {
+                          const prices = af.map(f => Number(f.price));
+                          const minP = Math.min(...prices);
+                          const maxP = Math.max(...prices);
+                          return (
+                            <p className="text-xl font-bold text-slate-900">
+                              {minP === maxP ? formatCurrency(minP) : `${formatCurrency(minP)}\u2013${formatCurrency(maxP)}`}
+                            </p>
+                          );
+                        }
+                        return <p className="text-xl font-bold text-slate-900">{formatCurrency(Number(selectedProduct.price))}</p>;
+                      })()}
                     </div>
                     <div className="bg-slate-50 rounded-lg p-3">
                       <p className="text-xs text-slate-500">{t('admin.products.colStatus')}</p>

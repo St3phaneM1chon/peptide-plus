@@ -72,7 +72,10 @@ export async function adminFetch<T = unknown>(
   } catch (err) {
     const msg = errorMessage || 'Network error';
     if (showErrorToast) toast.error(msg);
-    console.error(`[adminFetch] ${url}:`, err);
+    // FIX: BUG-084 - Use structured error info; avoid leaking raw error objects in production
+    if (process.env.NODE_ENV !== 'production') {
+      console.error(`[adminFetch] ${url}:`, err);
+    }
     return { data: null, error: msg, ok: false };
   }
 }

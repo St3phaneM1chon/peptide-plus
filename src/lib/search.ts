@@ -49,6 +49,28 @@ export interface SearchResponse {
 // Helpers
 // ---------------------------------------------------------------------------
 
+// FIX: BUG-071 - Map locale codes to PostgreSQL text search configurations
+const LOCALE_TO_TS_CONFIG: Record<string, string> = {
+  en: 'english',
+  fr: 'french',
+  de: 'german',
+  es: 'spanish',
+  it: 'italian',
+  pt: 'portuguese',
+  ru: 'russian',
+};
+
+/**
+ * Return the PostgreSQL text search config name for a given locale.
+ * Falls back to 'simple' for locales without a dedicated config.
+ */
+function getTsConfig(locale?: string): string {
+  if (!locale) return 'simple';
+  // Handle sub-locales like 'ar-dz' by extracting the base language code
+  const base = locale.split('-')[0].toLowerCase();
+  return LOCALE_TO_TS_CONFIG[base] ?? 'simple';
+}
+
 /**
  * Sanitize a search query for use in to_tsquery.
  * Converts spaces to & (AND) operators and escapes special characters.
@@ -81,6 +103,7 @@ export async function fullTextSearch(
   options: SearchOptions = {}
 ): Promise<SearchResponse> {
   const {
+    locale,
     limit = 20,
     offset = 0,
     categoryIds,
@@ -94,12 +117,13 @@ export async function fullTextSearch(
   }
 
   const tsQuery = sanitizeQuery(query);
+  // FIX: BUG-071 - Use locale-aware ts_config instead of hardcoded 'english' or 'simple'
+  const tsConfig = getTsConfig(locale);
 
   // Build WHERE conditions using Prisma.sql for parameterized queries
   const conditions: Prisma.Sql[] = [
     Prisma.sql`"isActive" = true`,
-    // FIX: BUG-071 - Use 'simple' config instead of 'english' for language-neutral search
-    Prisma.sql`"searchVector" @@ to_tsquery('simple', ${tsQuery})`,
+    Prisma.sql`"searchVector" @@ to_tsquery(${tsConfig}::regconfig, ${tsQuery})`,
   ];
 
   if (categoryIds && categoryIds.length > 0) {
@@ -127,10 +151,9 @@ export async function fullTextSearch(
       SELECT
         "id", "name", "slug", "subtitle", "shortDescription",
         "price"::float as "price", "imageUrl", "categoryId",
-        // FIX: BUG-071 - Use 'simple' config for language-neutral ranking and highlighting
-        ts_rank("searchVector", to_tsquery('simple', ${tsQuery})) as "rank",
-        ts_headline('simple', COALESCE("name", '') || ' ' || COALESCE("shortDescription", ''),
-          to_tsquery('simple', ${tsQuery}),
+        ts_rank("searchVector", to_tsquery(${tsConfig}::regconfig, ${tsQuery})) as "rank",
+        ts_headline(${tsConfig}::regconfig, COALESCE("name", '') || ' ' || COALESCE("shortDescription", ''),
+          to_tsquery(${tsConfig}::regconfig, ${tsQuery}),
           'StartSel=<mark>, StopSel=</mark>, MaxWords=40, MinWords=20'
         ) as "headline"
       FROM "Product"

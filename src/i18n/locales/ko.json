@@ -3586,7 +3586,9 @@
       "videoYoutubeVimeo": "비디오 (YouTube/Vimeo)",
       "viewProduct": "제품 보기",
       "visibleOnSite": "사이트에 표시",
-      "volumeMl": "부피 (ml)"
+      "volumeMl": "부피 (ml)",
+      "pdf": "PDF",
+      "image": "Image"
     },
     "products": {
       "accessories": "액세서리",

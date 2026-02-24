@@ -3586,7 +3586,9 @@
       "videoYoutubeVimeo": "Videyo (YouTube/Vimeo)",
       "viewProduct": "Gade pwodwi",
       "visibleOnSite": "Vizib sou sit la",
-      "volumeMl": "Volim (ml)"
+      "volumeMl": "Volim (ml)",
+      "pdf": "PDF",
+      "image": "Image"
     },
     "products": {
       "accessories": "Aksesuè",

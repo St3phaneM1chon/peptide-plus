@@ -209,6 +209,61 @@ export async function GET(request: NextRequest) {
       recommendations = [...recommendations, ...fallbackRecommendations];
     }
 
+    // Strategy 3: FIX BUG-078 - Fallback to bestseller/featured products for new sites with no order data
+    if (recommendations.length < limit) {
+      const neededCount = limit - recommendations.length;
+      const excludeIds = [
+        ...productIds,
+        ...recommendations.map(r => r.id),
+      ];
+
+      const bestsellerProducts = await prisma.product.findMany({
+        where: {
+          id: { notIn: excludeIds },
+          isActive: true,
+        },
+        include: {
+          category: {
+            select: { id: true, name: true, slug: true },
+          },
+          images: {
+            where: { isPrimary: true },
+            take: 1,
+          },
+          formats: {
+            where: {
+              isActive: true,
+              stockQuantity: { gt: 0 },
+            },
+            orderBy: { sortOrder: 'asc' },
+            take: 1,
+          },
+        },
+        orderBy: [
+          { isBestseller: 'desc' },
+          { isFeatured: 'desc' },
+          { averageRating: 'desc' },
+          { createdAt: 'desc' },
+        ],
+        take: neededCount,
+      });
+
+      const bestsellerRecommendations = bestsellerProducts
+        .filter(product => product.formats.length > 0)
+        .map(product => ({
+          id: product.id,
+          name: product.name,
+          slug: product.slug,
+          price: Number(product.price),
+          comparePrice: product.compareAtPrice ? Number(product.compareAtPrice) : undefined,
+          imageUrl: product.images[0]?.url || product.imageUrl || undefined,
+          category: product.category || undefined,
+          purity: product.purity ? Number(product.purity) : undefined,
+        }));
+
+      recommendations = [...recommendations, ...bestsellerRecommendations];
+    }
+
     // Remove frequency from final output
     const cleanedRecommendations = recommendations.map(({ frequency, ...rest }) => rest);
 

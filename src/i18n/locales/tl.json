@@ -3586,7 +3586,9 @@
       "videoYoutubeVimeo": "Video (YouTube/Vimeo)",
       "viewProduct": "Tingnan ang produkto",
       "visibleOnSite": "Nakikita sa site",
-      "volumeMl": "Dami (ml)"
+      "volumeMl": "Dami (ml)",
+      "pdf": "PDF",
+      "image": "Image"
     },
     "products": {
       "accessories": "Mga aksesorya",

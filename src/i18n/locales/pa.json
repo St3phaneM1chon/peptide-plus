@@ -3586,7 +3586,9 @@
       "videoYoutubeVimeo": "ਵੀਡੀਓ (YouTube/Vimeo)",
       "viewProduct": "ਉਤਪਾਦ ਵੇਖੋ",
       "visibleOnSite": "ਸਾਈਟ 'ਤੇ ਦਿਖਾਈ ਦੇਣ ਵਾਲਾ",
-      "volumeMl": "ਵਾਲਿਊਮ (ml)"
+      "volumeMl": "ਵਾਲਿਊਮ (ml)",
+      "pdf": "PDF",
+      "image": "Image"
     },
     "products": {
       "accessories": "ਐਕਸੈਸਰੀਜ਼",

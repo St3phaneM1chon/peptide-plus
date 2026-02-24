@@ -5774,6 +5774,7 @@
       "name": "Name",
       "requiredFieldsAlert": "Please fill in required fields (name, slug, category)",
       "creationError": "Error during creation",
+      "updateSuccess": "Product updated successfully",
       "updateError": "Error during update",
       "formatCreationError": "Error creating format",
       "formatUpdateError": "Error updating format",
@@ -5793,7 +5794,9 @@
       "notTranslated": "Not translated",
       "newFormat": "New format",
       "placeholderReferences": "DOI, PMID, URLs...",
-      "placeholderSku": "BPC157-5MG-VIAL"
+      "placeholderSku": "BPC157-5MG-VIAL",
+      "pdf": "PDF",
+      "image": "Image"
     },
     "productConstants": {
       "formatVial2ml": "Vial 2ml",

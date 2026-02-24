@@ -3586,7 +3586,9 @@
       "videoYoutubeVimeo": "Видео (YouTube/Vimeo)",
       "viewProduct": "Просмотреть продукт",
       "visibleOnSite": "Видимый на сайте",
-      "volumeMl": "Объем (мл)"
+      "volumeMl": "Объем (мл)",
+      "pdf": "PDF",
+      "image": "Image"
     },
     "products": {
       "accessories": "Аксессуары",

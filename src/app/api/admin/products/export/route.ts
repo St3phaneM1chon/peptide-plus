@@ -36,11 +36,13 @@ export const GET = withAdminGuard(async (request: NextRequest, { session: _sessi
     const { searchParams } = new URL(request.url);
     const exportFormat = searchParams.get('format') || 'csv';
 
+    // BUG-054 FIX: Get total count first so we can report truncation accurately
+    const totalCount = await prisma.product.count();
+
     // P-06 fix: Limit to 5000 records max to prevent OOM on large catalogs.
-    // FIX: BUG-054 - Log warning when export reaches the 5000-row limit (no pagination)
     // Select only fields used in CSV and JSON export generation.
     const products = await prisma.product.findMany({
-      take: 5001, // Fetch one extra to detect if more exist
+      take: 5000,
       select: {
         id: true,
         name: true,
@@ -90,10 +92,14 @@ export const GET = withAdminGuard(async (request: NextRequest, { session: _sessi
       orderBy: { createdAt: 'desc' },
     });
 
-    // FIX: BUG-054 - Detect and warn if export is truncated at 5000 records
-    const isTruncated = products.length > 5000;
+    // BUG-054 FIX: Detect and warn if export is truncated at 5000 records
+    const isTruncated = totalCount > 5000;
     if (isTruncated) {
-      products.length = 5000; // Trim to 5000
+      logger.warn('Product export truncated', {
+        exportedCount: products.length,
+        totalCount,
+        truncatedCount: totalCount - products.length,
+      });
     }
 
     // Item 73: JSON export support
@@ -141,8 +147,16 @@ export const GET = withAdminGuard(async (request: NextRequest, { session: _sessi
       }));
 
       const timestamp = new Date().toISOString().slice(0, 10);
-      // FIX: BUG-054 - Include truncated flag in JSON export when limit reached
-      const jsonString = JSON.stringify({ products: jsonProducts, exportedAt: new Date().toISOString(), count: jsonProducts.length, ...(isTruncated ? { truncated: true, warning: 'Export limited to 5000 products. Use filters to narrow results.' } : {}) }, null, 2);
+      // BUG-054 FIX: Include total count and truncation info in JSON export
+      const jsonString = JSON.stringify({
+        products: jsonProducts,
+        exportedAt: new Date().toISOString(),
+        count: jsonProducts.length,
+        totalCount,
+        ...(isTruncated
+          ? { truncated: true, warning: `Export limited to 5000 of ${totalCount} products. Use filters or the API with pagination to access all records.` }
+          : {}),
+      }, null, 2);
 
       return new NextResponse(jsonString, {
         status: 200,
@@ -231,6 +245,13 @@ export const GET = withAdminGuard(async (request: NextRequest, { session: _sessi
       );
     }
 
+    // BUG-054 FIX: Add footer row indicating export count and truncation status
+    if (isTruncated) {
+      lines.push(csvRow([`# EXPORT TRUNCATED: ${products.length} of ${totalCount} total products exported. Use filters or the API with pagination to access all records.`]));
+    } else {
+      lines.push(csvRow([`# Total exported: ${products.length} products`]));
+    }
+
     const csv = lines.join('\n');
     const timestamp = new Date().toISOString().slice(0, 10);
 
@@ -239,6 +260,10 @@ export const GET = withAdminGuard(async (request: NextRequest, { session: _sessi
       headers: {
         'Content-Type': 'text/csv; charset=utf-8',
         'Content-Disposition': `attachment; filename="products-export-${timestamp}.csv"`,
+        // BUG-054 FIX: Add custom headers so the admin client can detect truncation
+        'X-Export-Count': String(products.length),
+        'X-Export-Total': String(totalCount),
+        ...(isTruncated ? { 'X-Export-Truncated': 'true' } : {}),
       },
     });
   } catch (error) {

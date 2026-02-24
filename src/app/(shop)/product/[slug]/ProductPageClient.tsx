@@ -125,9 +125,8 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
     addViewed(product.slug);
   }, [product.slug, addViewed]);
 
-  // TODO: BUG-089 - Show out-of-stock formats as greyed out with "Notify me" instead of hiding them
-  // Filter out formats with stockQuantity <= 0
-  const availableFormats = product.formats.filter(f => f.stockQuantity > 0);
+  // FIX: BUG-089 - Show ALL formats (including out-of-stock) but mark out-of-stock as disabled/grayed
+  const availableFormats = product.formats;
 
   // Fallback format when product has no formats (e.g. single-price products)
   const fallbackFormat: ProductFormat = {
@@ -466,13 +465,12 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
                       role="option"
                       aria-selected={selectedFormat.id === format.id}
                       onClick={() => handleFormatSelect(format)}
-                      disabled={!format.inStock}
                       className={`w-full flex items-center gap-3 px-4 py-3 text-start transition-colors border-b border-neutral-100 last:border-b-0 ${
                         selectedFormat.id === format.id
                           ? 'bg-orange-50'
                           : format.inStock
                           ? 'hover:bg-neutral-50'
-                          : 'opacity-50 cursor-not-allowed bg-neutral-50'
+                          : 'opacity-50 bg-neutral-50 hover:bg-neutral-100'
                       }`}
                     >
                       {/* Format Icon */}

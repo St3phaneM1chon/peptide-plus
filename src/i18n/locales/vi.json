@@ -3586,7 +3586,9 @@
       "videoYoutubeVimeo": "Video (YouTube/Vimeo)",
       "viewProduct": "Xem sản phẩm",
       "visibleOnSite": "Hiển thị trên trang",
-      "volumeMl": "Thể tích (ml)"
+      "volumeMl": "Thể tích (ml)",
+      "pdf": "PDF",
+      "image": "Image"
     },
     "products": {
       "accessories": "Phụ kiện",

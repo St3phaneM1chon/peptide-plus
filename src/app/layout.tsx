@@ -18,6 +18,7 @@ import { TranslationNotice } from '@/components/ui/TranslationNotice';
 import { TranslationFeedback } from '@/components/ui/TranslationFeedback';
 import { GoogleAnalytics } from '@/components/analytics/GoogleAnalytics';
 import { MetaPixel } from '@/components/analytics/MetaPixel';
+import { logger } from '@/lib/logger';
 
 // Only import en/fr statically (most common); others loaded dynamically
 import en from '@/i18n/locales/en.json';
@@ -165,7 +166,7 @@ export default async function RootLayout({
     }
   } catch (error) {
     // Fallback to default locale if headers/cookies fail
-    console.error('Error reading locale:', error);
+    logger.error('Error reading locale', { error: error instanceof Error ? error.message : String(error) });
     locale = defaultLocale;
   }
   

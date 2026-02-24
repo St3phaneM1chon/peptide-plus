@@ -64,9 +64,11 @@ export default function SearchModal({ open, onClose }: SearchModalProps) {
           setResults(data.products || []);
         }
       } catch (error) {
-        // FIX: BUG-084 - Don't log aborted fetches, use structured logging for real errors
+        // FIX: BUG-084 - Don't log aborted fetches; suppress verbose errors in production
         if (error instanceof DOMException && error.name === 'AbortError') return;
-        console.error('Search error:', error);
+        if (process.env.NODE_ENV !== 'production') {
+          console.error('Search error:', error);
+        }
       } finally {
         setIsLoading(false);
       }
