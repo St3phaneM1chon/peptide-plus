@@ -273,6 +273,34 @@ export enum FormatType {
   CREAM = 'CREAM',
 }
 
+/**
+ * BUG-067 FIX: Canonical lowercase format type for client-side components.
+ * API responses transform DB FormatType to lowercase (e.g. VIAL_2ML -> vial_2ml).
+ * All shop components (ProductCard, QuickViewModal, FormatSelector) should import this type.
+ */
+export type ClientFormatType =
+  | 'vial_2ml'
+  | 'vial_10ml'
+  | 'cartridge_3ml'
+  | 'cartridge_kit_12'
+  | 'capsule'
+  | 'capsules_30'
+  | 'capsules_60'
+  | 'capsules_120'
+  | 'pack_2'
+  | 'pack_5'
+  | 'pack_10'
+  | 'box_50'
+  | 'box_100'
+  | 'syringe'
+  | 'accessory'
+  | 'powder'
+  | 'gummies'
+  | 'kit'
+  | 'bundle'
+  | 'nasal_spray'
+  | 'cream';
+
 export enum StockStatus {
   IN_STOCK = 'IN_STOCK',
   OUT_OF_STOCK = 'OUT_OF_STOCK',

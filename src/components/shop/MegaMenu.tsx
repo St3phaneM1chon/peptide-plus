@@ -128,7 +128,7 @@ export default function MegaMenu({ isOpen, onClose }: MegaMenuProps) {
   return (
     <div
       ref={menuRef}
-      className="absolute left-0 right-0 top-full mt-0 bg-white text-black shadow-2xl border-t border-gray-200 z-40 animate-fadeIn"
+      className="absolute inset-x-0 top-full mt-0 bg-white text-black shadow-2xl border-t border-gray-200 z-40 animate-fadeIn"
       onMouseLeave={handleMouseLeave}
       onMouseEnter={handleMouseEnter}
       role="menu"

@@ -70,7 +70,7 @@ export default function CookieConsent() {
       role="alertdialog"
       aria-describedby="cookie-consent-description"
       aria-label={t('cookies.title')}
-      className="fixed bottom-0 left-0 right-0 z-50 p-4 bg-white border-t border-gray-200 shadow-lg md:p-6"
+      className="fixed bottom-0 inset-x-0 z-50 p-4 bg-white border-t border-gray-200 shadow-lg md:p-6"
     >
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">

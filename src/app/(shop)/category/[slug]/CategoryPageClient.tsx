@@ -70,9 +70,13 @@ const subCategoryIcons: Record<string, string> = {
   'lab-accessories': '💉',
 };
 
+// BUG-041 FIX: Add client-side pagination
+const PRODUCTS_PER_PAGE = 12;
+
 export default function CategoryPageClient({ category, products }: CategoryPageClientProps) {
   const { t, tp } = useI18n();
   const [sortBy, setSortBy] = useState<SortOption>('featured');
+  const [currentPage, setCurrentPage] = useState(1);
 
   const hasChildren = category.children && category.children.length > 0;
   const hasParent = !!category.parent;
@@ -97,6 +101,19 @@ export default function CategoryPageClient({ category, products }: CategoryPageC
 
     return result;
   }, [products, sortBy]);
+
+  // BUG-041 FIX: Paginate sorted products
+  const totalPages = Math.ceil(sortedProducts.length / PRODUCTS_PER_PAGE);
+  const paginatedProducts = useMemo(() => {
+    const start = (currentPage - 1) * PRODUCTS_PER_PAGE;
+    return sortedProducts.slice(start, start + PRODUCTS_PER_PAGE);
+  }, [sortedProducts, currentPage]);
+
+  // Reset to page 1 when sort changes
+  const handleSortChange = (value: SortOption) => {
+    setSortBy(value);
+    setCurrentPage(1);
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -160,7 +177,7 @@ export default function CategoryPageClient({ category, products }: CategoryPageC
           </p>
           <select
             value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as SortOption)}
+            onChange={(e) => handleSortChange(e.target.value as SortOption)}
             className="px-4 py-2 border border-neutral-300 rounded-lg bg-white text-sm focus:ring-2 focus:ring-orange-500 focus:outline-none"
           >
             <option value="featured">{t('shop.popular') || 'Featured'}</option>
@@ -170,10 +187,17 @@ export default function CategoryPageClient({ category, products }: CategoryPageC
           </select>
         </div>
 
+        {/* BUG-041 FIX: Show product count range */}
+        {sortedProducts.length > PRODUCTS_PER_PAGE && (
+          <p className="text-sm text-neutral-500 mb-4">
+            {t('shop.showing') || 'Showing'} {(currentPage - 1) * PRODUCTS_PER_PAGE + 1}-{Math.min(currentPage * PRODUCTS_PER_PAGE, sortedProducts.length)} {t('shop.of') || 'of'} {sortedProducts.length} {t('shop.products') || 'products'}
+          </p>
+        )}
+
         {/* Products Grid */}
-        {sortedProducts.length > 0 ? (
+        {paginatedProducts.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {sortedProducts.map((product) => (
+            {paginatedProducts.map((product) => (
               <ProductCard
                 key={product.id}
                 {...product}
@@ -187,6 +211,29 @@ export default function CategoryPageClient({ category, products }: CategoryPageC
             <Link href="/shop" className="text-orange-600 font-medium hover:underline">
               {t('shop.viewAll')}
             </Link>
+          </div>
+        )}
+
+        {/* BUG-041 FIX: Pagination controls */}
+        {totalPages > 1 && (
+          <div className="flex justify-center items-center gap-2 mt-8">
+            <button
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage <= 1}
+              className="px-4 py-2 border border-neutral-200 rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neutral-50"
+            >
+              {t('common.previous') || 'Previous'}
+            </button>
+            <span className="text-sm text-neutral-600">
+              {currentPage} / {totalPages}
+            </span>
+            <button
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage >= totalPages}
+              className="px-4 py-2 border border-neutral-200 rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neutral-50"
+            >
+              {t('common.next') || 'Next'}
+            </button>
           </div>
         )}
       </div>

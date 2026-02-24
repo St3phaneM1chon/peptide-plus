@@ -458,7 +458,7 @@ export default function ProductPageClient({ product }: ProductPageClientProps) {
 
               {/* Dropdown Menu */}
               {isDropdownOpen && (
-                <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-neutral-200 rounded-lg shadow-2xl max-h-80 overflow-y-auto" role="listbox" aria-label={t('shop.aria.availableFormats')}>
+                <div className="absolute z-50 top-full inset-x-0 mt-1 bg-white border border-neutral-200 rounded-lg shadow-2xl max-h-80 overflow-y-auto" role="listbox" aria-label={t('shop.aria.availableFormats')}>
                   {availableFormats.map((format) => (
                     <button
                       key={format.id}

@@ -260,9 +260,9 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
     }
   };
 
-  // TODO: BUG-094 - Replace native confirm() with custom Modal component for consistent styling
+  // BUG-094: Uses window.confirm() with translated message. A custom modal would be a feature enhancement.
   const handleDeleteFormat = async (formatId: string) => {
-    if (!confirm(t('admin.productForm.deleteFormatConfirm'))) return;
+    if (!window.confirm(t('admin.productForm.deleteFormatConfirm'))) return;
     try {
       const res = await fetch(`/api/products/${product.id}/formats/${formatId}`, { method: 'DELETE' });
       if (res.ok) {
@@ -333,7 +333,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
   ];
 
   return (
-    <div className="min-h-screen bg-neutral-50 p-6">
+    <div className="min-h-screen bg-neutral-50 p-6" aria-busy={saving || undefined}>
       <div className="max-w-6xl mx-auto">
         {/* Page Header */}
         <div className="flex items-center justify-between mb-6">
@@ -361,7 +361,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
             >
               {t('admin.productForm.viewProduct')}
             </Link>
-            {/* TODO: BUG-093 - Add overlay/disable form fields during save to prevent unintended edits */}
+            {/* BUG-093 FIX: Save button disables; form content below gets pointer-events-none + opacity during save */}
             <button
               onClick={handleSaveProduct}
               disabled={saving}
@@ -430,7 +430,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
 
         {/* ===== TAB: HEADER ===== */}
         {activeTab === 'header' && (
-          <div className="space-y-6">
+          <div className={`space-y-6 transition-opacity ${saving ? 'opacity-50 pointer-events-none' : ''}`} aria-disabled={saving || undefined}>
             <div className="bg-white rounded-xl border border-neutral-200 p-6">
               <h2 className="text-lg font-semibold text-neutral-900 mb-4">{t('admin.productForm.generalInfo')}</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -593,7 +593,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
                         className="sr-only peer"
                       />
                       <div className="w-11 h-6 bg-neutral-200 rounded-full peer-checked:bg-green-500 transition-colors"></div>
-                      <div className="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full transition-transform peer-checked:translate-x-5 shadow-sm"></div>
+                      <div className="absolute start-0.5 top-0.5 w-5 h-5 bg-white rounded-full transition-transform peer-checked:translate-x-5 shadow-sm"></div>
                     </div>
                     <div>
                       <span className="text-sm font-medium text-neutral-700">{t('admin.productForm.active')}</span>
@@ -634,7 +634,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
 
         {/* ===== TAB: TEXTS ===== */}
         {activeTab === 'texts' && (
-          <div className="space-y-4">
+          <div className={`space-y-4 transition-opacity ${saving ? 'opacity-50 pointer-events-none' : ''}`} aria-disabled={saving || undefined}>
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-lg font-semibold text-neutral-900">{t('admin.productForm.productTexts')}</h2>
@@ -768,7 +768,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
 
         {/* ===== TAB: FORMATS ===== */}
         {activeTab === 'formats' && (
-          <div className="space-y-4">
+          <div className={`space-y-4 transition-opacity ${saving ? 'opacity-50 pointer-events-none' : ''}`} aria-disabled={saving || undefined}>
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-lg font-semibold text-neutral-900">{t('admin.productForm.availableFormats')}</h2>

@@ -11,7 +11,9 @@ import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import { getFormatIcon } from '@/lib/format-icons';
 
-type FormatType = 'vial_2ml' | 'vial_10ml' | 'cartridge_3ml' | 'cartridge_kit_12' | 'capsule' | 'pack_10' | 'syringe' | 'accessory' | 'powder' | 'gummies' | 'capsules_30' | 'capsules_60' | 'capsules_120' | 'pack_2' | 'pack_5' | 'box_50' | 'box_100' | 'kit';
+// BUG-067 FIX: Import canonical ClientFormatType instead of defining local duplicate
+import type { ClientFormatType } from '@/types';
+type FormatType = ClientFormatType;
 
 interface ProductFormat {
   id: string;

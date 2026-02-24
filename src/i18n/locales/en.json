@@ -192,7 +192,15 @@
       "copyLink": "Copy link"
     },
     "gallery": {
-      "clickToZoom": "Click to zoom"
+      "clickToZoom": "Click to zoom",
+      "imageType": {
+        "main": "Main",
+        "vial": "Vial",
+        "cartridge": "Cartridge",
+        "kit": "Kit",
+        "capsule": "Capsule",
+        "lifestyle": "Lifestyle"
+      }
     },
     "giftCard": {
       "placeholderCode": "XXXX-XXXX-XXXX-XXXX",

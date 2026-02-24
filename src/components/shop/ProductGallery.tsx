@@ -117,9 +117,9 @@ export default function ProductGallery({ images, productName }: ProductGalleryPr
                 className="object-cover"
                 loading="lazy"
               />
-              {/* Type Label */}
+              {/* Type Label - BUG-028 FIX: translate image type labels */}
               <span className="absolute bottom-0 inset-x-0 bg-black/60 text-white text-[10px] text-center py-0.5 capitalize">
-                {image.type}
+                {t('shop.gallery.imageType.' + image.type)}
               </span>
             </button>
           ))}

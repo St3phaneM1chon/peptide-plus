@@ -5,7 +5,7 @@ import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import ProductPageClient from './ProductPageClient';
 import { prisma } from '@/lib/db';
-import { getServerLocale } from '@/i18n/server';
+import { getServerLocale, createServerTranslator } from '@/i18n/server';
 import { withTranslation, getTranslatedFields, DB_SOURCE_LOCALE } from '@/lib/translation';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { productSchema, breadcrumbSchema } from '@/lib/structured-data';
@@ -275,9 +275,12 @@ export default async function ProductPage({ params }: PageProps) {
     categoryName: product.category?.name || undefined,
   });
 
-  // FIX: BUG-061 - Use translated category name for JSON-LD breadcrumbs
+  // FIX: BUG-061 - JSON-LD uses translated product/category names from `translatedProduct`.
+  // `productSchema` receives `translatedProduct.name` and `translatedProduct.shortDescription`,
+  // so structured data reflects the user's locale. Breadcrumb "Home" is also translated below.
+  const t = createServerTranslator(locale);
   const breadcrumbItems = [
-    { name: 'Home', url: '/' },
+    { name: t('nav.home') || 'Home', url: '/' },
   ];
   if (translatedProduct.category) {
     breadcrumbItems.push({

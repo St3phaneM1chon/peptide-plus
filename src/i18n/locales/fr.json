@@ -192,7 +192,15 @@
       "copyLink": "Copier le lien"
     },
     "gallery": {
-      "clickToZoom": "Cliquez pour agrandir"
+      "clickToZoom": "Cliquez pour agrandir",
+      "imageType": {
+        "main": "Principal",
+        "vial": "Flacon",
+        "cartridge": "Cartouche",
+        "kit": "Kit",
+        "capsule": "Capsule",
+        "lifestyle": "Ambiance"
+      }
     },
     "giftCard": {
       "placeholderCode": "XXXX-XXXX-XXXX-XXXX",

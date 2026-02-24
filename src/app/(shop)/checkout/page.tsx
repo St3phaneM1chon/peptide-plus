@@ -1495,7 +1495,7 @@ export default function CheckoutPage() {
                       </span>
                     </label>
                     {researchConsentError && !researchConsent && (
-                      <p className="text-red-600 text-sm mt-2 ml-8">
+                      <p className="text-red-600 text-sm mt-2 ms-8">
                         {t('checkout.researchConsentRequired')}
                       </p>
                     )}

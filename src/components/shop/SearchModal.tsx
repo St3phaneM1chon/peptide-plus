@@ -22,10 +22,24 @@ interface SearchModalProps {
 
 const MAX_SEARCH_RESULTS = 8;
 
+// BUG-027 FIX: Extract hardcoded popular searches to a named constant (fallback)
+// TODO: Replace with a public API endpoint (e.g., GET /api/search/popular) that
+// calls getTopQueries() from '@/lib/search-analytics' so popular searches are
+// driven by real user analytics instead of a static list.
+const FALLBACK_POPULAR_SEARCHES = [
+  'BPC-157',
+  'TB-500',
+  'Semaglutide',
+  'Tirzepatide',
+  'Ipamorelin',
+  'GHK-Cu',
+];
+
 export default function SearchModal({ open, onClose }: SearchModalProps) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [popularSearches, setPopularSearches] = useState<string[]>(FALLBACK_POPULAR_SEARCHES);
   const inputRef = useRef<HTMLInputElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
@@ -133,16 +147,23 @@ export default function SearchModal({ open, onClose }: SearchModalProps) {
     };
   }, [open]);
 
-  if (!open) return null;
+  // BUG-027 FIX: Try to load popular searches from analytics API
+  useEffect(() => {
+    // TODO: Create GET /api/search/popular public endpoint to serve top queries
+    // For now, fetch is attempted but falls back gracefully to FALLBACK_POPULAR_SEARCHES
+    fetch('/api/search/popular')
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data?.queries?.length) {
+          setPopularSearches(data.queries.map((q: { query: string }) => q.query));
+        }
+      })
+      .catch(() => {
+        // Silently keep fallback - analytics endpoint may not exist yet
+      });
+  }, []);
 
-  const popularSearches = [
-    'BPC-157',
-    'TB-500',
-    'Semaglutide',
-    'Tirzepatide',
-    'Ipamorelin',
-    'GHK-Cu',
-  ];
+  if (!open) return null;
 
   return (
     <>

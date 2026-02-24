@@ -241,7 +241,7 @@ export default function FormatDropdown({
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute z-30 top-full left-0 right-0 mt-1 bg-white border border-neutral-200 rounded-xl shadow-xl overflow-hidden max-h-80 overflow-y-auto">
+        <div className="absolute z-30 top-full inset-x-0 mt-1 bg-white border border-neutral-200 rounded-xl shadow-xl overflow-hidden max-h-80 overflow-y-auto">
           {visibleFormats.map((format) => {
             const formatInfo = getFormatInfo(format);
             const availInfo = getAvailabilityInfo(format.availability);

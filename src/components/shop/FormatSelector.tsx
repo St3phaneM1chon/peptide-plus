@@ -1,8 +1,11 @@
 'use client';
 
+import { useCallback } from 'react';
 import { useI18n } from '@/i18n/client';
+// BUG-067 FIX: Import canonical ClientFormatType instead of defining a local subset
+import type { ClientFormatType } from '@/types';
 
-export type FormatType = 'vial_2ml' | 'vial_10ml' | 'cartridge_3ml' | 'cartridge_kit_12' | 'capsule' | 'pack_10' | 'syringe' | 'accessory';
+export type FormatType = ClientFormatType;
 
 interface Format {
   id: string;
@@ -21,36 +24,53 @@ interface FormatSelectorProps {
   formatPrice: (price: number) => string;
 }
 
-// FIX: BUG-067 - Format icons mapping; labels now come from format.name (DB) instead of hardcoded English
-const formatIcons: Record<FormatType, string> = {
-  vial_2ml: '💉',
-  vial_10ml: '🧪',
-  cartridge_3ml: '💊',
-  cartridge_kit_12: '📦',
-  capsule: '💊',
-  pack_10: '📦',
-  syringe: '💉',
-  accessory: '🔧',
-};
+// BUG-067 FIX: Use shared format icon utility instead of incomplete local mapping
+import { getFormatIcon } from '@/lib/format-icons';
 
-export default function FormatSelector({ 
-  formats, 
-  selectedFormat, 
-  onSelect, 
-  formatPrice 
+export default function FormatSelector({
+  formats,
+  selectedFormat,
+  onSelect,
+  formatPrice
 }: FormatSelectorProps) {
   const { t } = useI18n();
+
+  // BUG-097 FIX: Keyboard navigation for radiogroup (ArrowUp/Down/Left/Right cycle through in-stock formats)
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
+    const navigableKeys = ['ArrowDown', 'ArrowUp', 'ArrowRight', 'ArrowLeft'];
+    if (!navigableKeys.includes(e.key)) return;
+
+    e.preventDefault();
+    const availableFormats = formats.filter((f) => f.inStock);
+    if (availableFormats.length === 0) return;
+
+    const currentIndex = availableFormats.findIndex((f) => f.id === selectedFormat.id);
+    let nextIndex: number;
+
+    if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+      nextIndex = currentIndex < availableFormats.length - 1 ? currentIndex + 1 : 0;
+    } else {
+      nextIndex = currentIndex > 0 ? currentIndex - 1 : availableFormats.length - 1;
+    }
+
+    onSelect(availableFormats[nextIndex]);
+
+    // Move focus to the newly selected radio button
+    const radiogroup = e.currentTarget;
+    const buttons = radiogroup.querySelectorAll<HTMLButtonElement>('button[role="radio"]:not(:disabled)');
+    buttons[nextIndex]?.focus();
+  }, [formats, selectedFormat, onSelect]);
+
   return (
     <div className="space-y-3">
       <label id="format-selector-label" className="text-sm text-neutral-500 uppercase tracking-wider block">
         {t('shop.selectFormat')}:
       </label>
 
-      {/* TODO: BUG-097 - Add onKeyDown handler for ArrowUp/ArrowDown keyboard navigation within radiogroup */}
-      <div className="grid grid-cols-2 gap-3" role="radiogroup" aria-labelledby="format-selector-label">
+      <div className="grid grid-cols-2 gap-3" role="radiogroup" aria-labelledby="format-selector-label" onKeyDown={handleKeyDown}>
         {formats.map((format) => {
-          // FIX: BUG-067 - Use format.name from DB as label; only icon from static map
-          const formatIcon = formatIcons[format.type] || '📦';
+          // BUG-067 FIX: Use shared getFormatIcon utility for complete format coverage
+          const formatIcon = getFormatIcon(format.type);
           const isSelected = selectedFormat.id === format.id;
           
           return (
@@ -58,6 +78,7 @@ export default function FormatSelector({
               key={format.id}
               role="radio"
               aria-checked={isSelected}
+              tabIndex={isSelected ? 0 : -1}
               aria-label={`${format.name} - ${formatPrice(format.price)}${!format.inStock ? ` (${t('shop.outOfStock')})` : ''}`}
               onClick={() => onSelect(format)}
               disabled={!format.inStock}
