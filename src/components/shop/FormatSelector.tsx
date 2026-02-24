@@ -43,7 +43,7 @@ export default function FormatSelector({
   return (
     <div className="space-y-3">
       <label id="format-selector-label" className="text-sm text-neutral-500 uppercase tracking-wider block">
-        {t('shop.selectFormat') || 'Select Format'}:
+        {t('shop.selectFormat')}:
       </label>
 
       {/* TODO: BUG-097 - Add onKeyDown handler for ArrowUp/ArrowDown keyboard navigation within radiogroup */}
@@ -107,14 +107,14 @@ export default function FormatSelector({
               {/* Out of Stock Badge */}
               {!format.inStock && (
                 <span className="absolute top-2 end-2 text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full">
-                  {t('shop.outOfStock') || 'Out of stock'}
+                  {t('shop.outOfStock')}
                 </span>
               )}
 
               {/* Low Stock Warning */}
               {format.inStock && format.stockQuantity <= 5 && (
                 <span className="absolute bottom-1 end-2 text-xs text-amber-600">
-                  {format.stockQuantity} {t('shop.left') || 'left'}
+                  {t('shop.stockLeft', { count: format.stockQuantity })}
                 </span>
               )}
             </button>

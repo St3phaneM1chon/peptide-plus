@@ -83,7 +83,7 @@ export default function StickyAddToCart({
           <button
             onClick={onAddToCart}
             disabled={isOutOfStock}
-            aria-label={t('shop.addToCart') + ': ' + productName}
+            aria-label={t('shop.aria.addToCartName', { name: productName })}
             className={`px-6 py-3 rounded-lg font-bold text-sm whitespace-nowrap transition-all ${
               addedToCart
                 ? 'bg-green-600 text-white'

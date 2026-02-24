@@ -180,7 +180,8 @@
       "thumbnailImage": "Miniature {index} de {total} : {type}",
       "freeShippingBanner": "Promotion de livraison gratuite",
       "freeShippingInfo": "Livraison gratuite et informations qualité",
-      "popularSearchFor": "Rechercher {term}"
+      "popularSearchFor": "Rechercher {term}",
+      "addToCartName": "Ajouter {name} au panier"
     },
     "reviews": {
       "removeImage": "Supprimer l'image",
@@ -209,9 +210,24 @@
       "addToWishlist": "Ajouter à la liste de souhaits",
       "moveToList": "Déplacer vers une autre liste"
     },
-    "resetFilters": "Reset filters",
-    "retry": "Retry",
-    "productCount": "product"
+    "resetFilters": "Réinitialiser les filtres",
+    "retry": "Réessayer",
+    "productCount": "produit",
+    "productCount_one": "{count} produit",
+    "productCount_other": "{count} produits",
+    "noProductsFound": "Aucun produit trouvé",
+    "clearAllFilters": "Effacer tous les filtres",
+    "subcategories": "Parcourir par catégorie",
+    "formatLabels": {
+      "vial_2ml": "Fiole 2ml",
+      "vial_10ml": "Fiole 10ml",
+      "cartridge_3ml": "Cartouche 3ml",
+      "cartridge_kit_12": "Kit 12 cartouches",
+      "capsule": "Capsule",
+      "pack_10": "Paquet de 10",
+      "syringe": "Seringue",
+      "accessory": "Accessoire"
+    }
   },
   "home": {
     "heroTitle": "Les meilleurs peptides de recherche au Canada",

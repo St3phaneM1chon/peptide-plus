@@ -58,7 +58,7 @@ interface CategoryCount {
 type SortOption = 'popular' | 'newest' | 'price-asc' | 'price-desc' | 'name-asc';
 
 export default function ShopPage() {
-  const { t, locale } = useI18n();
+  const { t, tp, locale } = useI18n();
   const { formatPrice } = useCurrency();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -456,7 +456,7 @@ export default function ShopPage() {
                 }}
                 className="text-sm text-orange-600 hover:underline"
               >
-                {t('shop.resetFilters') || 'Reset filters'}
+                {t('shop.resetFilters')}
               </button>
             </div>
           </aside>
@@ -466,7 +466,7 @@ export default function ShopPage() {
             {/* Sort & Count */}
             <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
               <p className="text-neutral-500">
-                {loading ? '...' : `${filteredProducts.length} ${t('shop.productCount') || 'product'}${filteredProducts.length !== 1 ? 's' : ''}`}
+                {loading ? '...' : tp('shop.productCount', filteredProducts.length)}
               </p>
 
               <div className="flex items-center gap-2">
@@ -526,7 +526,7 @@ export default function ShopPage() {
                   onClick={() => window.location.reload()}
                   className="text-orange-600 hover:underline"
                 >
-                  {t('shop.retry') || 'Retry'}
+                  {t('shop.retry')}
                 </button>
               </div>
             )}
@@ -543,7 +543,7 @@ export default function ShopPage() {
             {/* Empty State */}
             {!loading && !error && filteredProducts.length === 0 && (
               <div className="text-center py-16">
-                <p className="text-neutral-500 text-lg mb-4">{t('shop.noProducts') || 'No products found'}</p>
+                <p className="text-neutral-500 text-lg mb-4">{t('shop.noProductsFound')}</p>
                 <button
                   onClick={() => {
                     setSelectedCategory('all');
@@ -554,7 +554,7 @@ export default function ShopPage() {
                   }}
                   className="text-orange-600 hover:underline"
                 >
-                  {t('shop.clearFilters') || 'Clear all filters'}
+                  {t('shop.clearAllFilters')}
                 </button>
               </div>
             )}

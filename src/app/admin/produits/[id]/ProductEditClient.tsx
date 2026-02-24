@@ -104,7 +104,7 @@ import { locales as ALL_LOCALES } from '@/i18n/config';
 // TODO: BUG-080 - Add beforeunload event listener and router guard for unsaved changes warning
 export default function ProductEditClient({ product, categories, isOwner }: Props) {
   const router = useRouter();
-  const { t } = useI18n();
+  const { t, formatCurrency } = useI18n();
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -810,9 +810,9 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
                         </div>
                         <div className="flex items-center gap-4">
                           <div className="text-end">
-                            <p className="font-semibold text-neutral-900">${Number(format.price).toFixed(2)}</p>
-                            {format.costPrice && <p className="text-xs text-neutral-400">{t('admin.productForm.cost')}: ${Number(format.costPrice).toFixed(2)}</p>}
-                            {format.comparePrice && <p className="text-xs text-neutral-400 line-through">${Number(format.comparePrice).toFixed(2)}</p>}
+                            <p className="font-semibold text-neutral-900">{formatCurrency(Number(format.price))}</p>
+                            {format.costPrice && <p className="text-xs text-neutral-400">{t('admin.productForm.cost')}: {formatCurrency(Number(format.costPrice))}</p>}
+                            {format.comparePrice && <p className="text-xs text-neutral-400 line-through">{formatCurrency(Number(format.comparePrice))}</p>}
                           </div>
                           <div className={`px-2.5 py-1 rounded-full text-xs font-medium ${stock.color} ${stock.bg}`}>
                             {stock.text}

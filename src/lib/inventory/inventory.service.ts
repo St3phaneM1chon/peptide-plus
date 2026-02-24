@@ -92,6 +92,7 @@ export async function releaseExpiredReservations(): Promise<number> {
 /**
  * Consume reservations after successful payment
  * Decrements stock and creates InventoryTransaction records
+ * BUG-036 FIX: Process all reservations in a single transaction (was one tx per reservation)
  */
 export async function consumeReservation(
   orderId: string,
@@ -103,14 +104,18 @@ export async function consumeReservation(
 
   const reservations = await prisma.inventoryReservation.findMany({ where });
 
-  for (const reservation of reservations) {
-    await prisma.$transaction(async (tx) => {
-      // Mark reservation as consumed
-      await tx.inventoryReservation.update({
-        where: { id: reservation.id },
-        data: { status: 'CONSUMED', orderId, consumedAt: new Date() },
-      });
+  if (reservations.length === 0) return;
 
+  await prisma.$transaction(async (tx) => {
+    // Batch mark all reservations as consumed
+    const reservationIds = reservations.map((r) => r.id);
+    await tx.inventoryReservation.updateMany({
+      where: { id: { in: reservationIds } },
+      data: { status: 'CONSUMED', orderId, consumedAt: new Date() },
+    });
+
+    // Process stock decrements and inventory transactions for each reservation
+    for (const reservation of reservations) {
       // Decrement stock (floor at 0 to prevent negative inventory)
       if (reservation.formatId) {
         const currentFormat = await tx.productFormat.findUnique({
@@ -152,8 +157,8 @@ export async function consumeReservation(
           orderId,
         },
       });
-    });
-  }
+    }
+  });
 }
 
 /**

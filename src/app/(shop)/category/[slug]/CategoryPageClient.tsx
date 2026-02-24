@@ -71,7 +71,7 @@ const subCategoryIcons: Record<string, string> = {
 };
 
 export default function CategoryPageClient({ category, products }: CategoryPageClientProps) {
-  const { t } = useI18n();
+  const { t, tp } = useI18n();
   const [sortBy, setSortBy] = useState<SortOption>('featured');
 
   const hasChildren = category.children && category.children.length > 0;
@@ -129,7 +129,7 @@ export default function CategoryPageClient({ category, products }: CategoryPageC
         {hasChildren && category.children && (
           <div className="mb-10">
             <h2 className="text-xl font-bold mb-4">
-              {t('shop.subcategories') || 'Browse by Category'}
+              {t('shop.subcategories')}
             </h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
               {category.children.map((child) => (
@@ -145,7 +145,7 @@ export default function CategoryPageClient({ category, products }: CategoryPageC
                     {child.name}
                   </span>
                   <span className="text-xs text-neutral-400">
-                    {child.productCount} {t('shop.productCount') || 'product'}{child.productCount !== 1 ? 's' : ''}
+                    {tp('shop.productCount', child.productCount)}
                   </span>
                 </Link>
               ))}
@@ -156,7 +156,7 @@ export default function CategoryPageClient({ category, products }: CategoryPageC
         {/* Toolbar */}
         <div className="flex items-center justify-between mb-8">
           <p className="text-neutral-500">
-            {sortedProducts.length} {t('shop.productCount') || 'product'}{sortedProducts.length !== 1 ? 's' : ''}
+            {tp('shop.productCount', sortedProducts.length)}
           </p>
           <select
             value={sortBy}
@@ -183,9 +183,9 @@ export default function CategoryPageClient({ category, products }: CategoryPageC
           </div>
         ) : (
           <div className="text-center py-16">
-            <p className="text-neutral-500 mb-4">{t('shop.noProducts') || 'No products found in this category'}</p>
+            <p className="text-neutral-500 mb-4">{t('shop.noProductsFound')}</p>
             <Link href="/shop" className="text-orange-600 font-medium hover:underline">
-              {t('shop.viewAll') || 'View all products'}
+              {t('shop.viewAll')}
             </Link>
           </div>
         )}

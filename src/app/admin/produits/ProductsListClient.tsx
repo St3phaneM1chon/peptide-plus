@@ -108,7 +108,7 @@ export default function ProductsListClient({
   stats,
   isOwner,
 }: Props) {
-  const { t } = useI18n();
+  const { t, formatCurrency } = useI18n();
   const router = useRouter();
   const [products, setProducts] = useState<Product[]>(initialProducts);
   const [search, setSearch] = useState('');
@@ -323,10 +323,10 @@ export default function ProductsListClient({
         const minPrice = Math.min(...prices);
         const maxPrice = Math.max(...prices);
         priceDisplay = minPrice === maxPrice
-          ? `CA$${minPrice.toFixed(2)}`
-          : `CA$${minPrice.toFixed(2)}-${maxPrice.toFixed(2)}`;
+          ? formatCurrency(minPrice)
+          : `${formatCurrency(minPrice)}\u2013${formatCurrency(maxPrice)}`;
       } else {
-        priceDisplay = `CA$${Number(p.price).toFixed(2)}`;
+        priceDisplay = formatCurrency(Number(p.price));
       }
 
       return {
@@ -494,7 +494,7 @@ export default function ProductsListClient({
                   <div className="grid grid-cols-2 gap-4">
                     <div className="bg-slate-50 rounded-lg p-3">
                       <p className="text-xs text-slate-500">{t('admin.products.colPrice')}</p>
-                      <p className="text-xl font-bold text-slate-900">CA${Number(selectedProduct.price).toFixed(2)}</p>
+                      <p className="text-xl font-bold text-slate-900">{formatCurrency(Number(selectedProduct.price))}</p>
                     </div>
                     <div className="bg-slate-50 rounded-lg p-3">
                       <p className="text-xs text-slate-500">{t('admin.products.colStatus')}</p>
@@ -554,7 +554,7 @@ export default function ProductsListClient({
                             {selectedProduct.formats.map((fmt) => (
                               <tr key={fmt.id}>
                                 <td className="px-3 py-2 text-sm text-slate-900">{fmt.name}</td>
-                                <td className="px-3 py-2 text-sm text-end text-slate-700">CA${Number(fmt.price).toFixed(2)}</td>
+                                <td className="px-3 py-2 text-sm text-end text-slate-700">{formatCurrency(Number(fmt.price))}</td>
                                 <td className="px-3 py-2 text-sm text-center">
                                   <span className={`font-medium ${
                                     fmt.stockQuantity === 0 ? 'text-red-600' :

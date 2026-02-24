@@ -180,7 +180,8 @@
       "thumbnailImage": "Thumbnail {index} of {total}: {type}",
       "freeShippingBanner": "Free shipping promotion",
       "freeShippingInfo": "Free shipping and quality information",
-      "popularSearchFor": "Search for {term}"
+      "popularSearchFor": "Search for {term}",
+      "addToCartName": "Add {name} to cart"
     },
     "reviews": {
       "removeImage": "Remove image",
@@ -211,7 +212,22 @@
     },
     "resetFilters": "Reset filters",
     "retry": "Retry",
-    "productCount": "product"
+    "productCount": "product",
+    "productCount_one": "{count} product",
+    "productCount_other": "{count} products",
+    "noProductsFound": "No products found",
+    "clearAllFilters": "Clear all filters",
+    "subcategories": "Browse by Category",
+    "formatLabels": {
+      "vial_2ml": "Vial 2ml",
+      "vial_10ml": "Vial 10ml",
+      "cartridge_3ml": "Cartridge 3ml",
+      "cartridge_kit_12": "Kit 12 Cartridges",
+      "capsule": "Capsule",
+      "pack_10": "Pack of 10",
+      "syringe": "Syringe",
+      "accessory": "Accessory"
+    }
   },
   "home": {
     "heroTitle": "The Best Research Peptides in Canada",
