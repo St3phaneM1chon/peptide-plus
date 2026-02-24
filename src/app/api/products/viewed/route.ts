@@ -24,6 +24,12 @@ const COOKIE_NAME = 'recently_viewed';
 const MAX_VIEWED = 20;
 const COOKIE_MAX_AGE = 30 * 24 * 60 * 60; // 30 days
 
+// BUG-073 FIX: Validate cookie values are safe product IDs (alphanumeric, max 50 chars)
+const VALID_ID_PATTERN = /^[a-z0-9]{1,50}$/;
+function isValidProductId(id: string): boolean {
+  return VALID_ID_PATTERN.test(id);
+}
+
 export async function GET(request: NextRequest) {
   try {
     const cookie = request.cookies.get(COOKIE_NAME)?.value;
@@ -32,7 +38,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ products: [] });
     }
 
-    const productIds = cookie.split(',').filter(Boolean).slice(0, MAX_VIEWED);
+    // BUG-073 FIX: Validate that cookie values match safe ID pattern before querying DB
+    const productIds = cookie.split(',').filter(id => id && isValidProductId(id)).slice(0, MAX_VIEWED);
 
     if (productIds.length === 0) {
       return NextResponse.json({ products: [] });

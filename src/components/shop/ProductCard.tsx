@@ -127,6 +127,11 @@ export default function ProductCard({
   const handleFormatSelect = (format: ProductFormat) => {
     setSelectedFormat(format);
     setIsDropdownOpen(false);
+    // BUG-053 FIX: Reset quantity if it exceeds new format's stock
+    const maxQty = format.stockQuantity || 99;
+    if (quantity > maxQty) {
+      setQuantity(Math.max(1, maxQty));
+    }
   };
 
   const handleAddToCart = (e: React.MouseEvent) => {

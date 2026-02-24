@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -101,7 +101,7 @@ interface Props {
 // BUG-032 FIX: Import locales from central config instead of hardcoding a mismatched list
 import { locales as ALL_LOCALES } from '@/i18n/config';
 
-// TODO: BUG-080 - Add beforeunload event listener and router guard for unsaved changes warning
+// BUG-080 FIX: Track unsaved changes and warn before navigating away
 export default function ProductEditClient({ product, categories, isOwner }: Props) {
   const router = useRouter();
   const { t, formatCurrency } = useI18n();
@@ -110,6 +110,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [activeTab, setActiveTab] = useState<'header' | 'texts' | 'formats'>('header');
   const [translationStatuses, setTranslationStatuses] = useState<TranslationStatus[]>([]);
+  const [isDirty, setIsDirty] = useState(false);
 
   const FORMAT_TYPES = getFormatTypes(t);
   const PRODUCT_TYPES = getProductTypes(t);
@@ -171,6 +172,26 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
       .then(data => setTranslationStatuses(data.translations || []))
       .catch(() => {});
   }, [product.id]);
+
+  // BUG-080 FIX: Warn user before navigating away with unsaved changes
+  const isInitialMount = useRef(true);
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+    setIsDirty(true);
+  }, [formData, productTexts]);
+
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault();
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isDirty]);
 
   // Product texts management
   const addProductText = () => {
@@ -269,6 +290,8 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
       if (res.ok) {
         // FIX: BUG-098 - Show success toast after product save
         toast.success(t('admin.productForm.updateSuccess') || 'Product updated successfully');
+        // BUG-080 FIX: Reset dirty flag after successful save
+        setIsDirty(false);
         router.refresh();
       } else {
         const data = await res.json();

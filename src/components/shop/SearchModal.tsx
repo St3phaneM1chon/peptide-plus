@@ -20,6 +20,8 @@ interface SearchModalProps {
   onClose: () => void;
 }
 
+const MAX_SEARCH_RESULTS = 8;
+
 export default function SearchModal({ open, onClose }: SearchModalProps) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -193,7 +195,7 @@ export default function SearchModal({ open, onClose }: SearchModalProps) {
             <>
               <div className="py-2">
                 {/* BUG-062 FIX: Use named constant for preview count */}
-                {results.slice(0, 8).map((result) => (
+                {results.slice(0, MAX_SEARCH_RESULTS).map((result) => (
                   <Link
                     key={result.id}
                     href={`/product/${result.slug}`}

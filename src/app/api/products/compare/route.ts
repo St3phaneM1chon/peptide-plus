@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
     // FIX: BUG-055 - Return explicit error when more than 4 products requested
     if (allSlugs.length > 4) {
       return NextResponse.json(
-        { error: 'Maximum 4 products can be compared at once', requested: allSlugs.length },
+        { error: 'Maximum 4 products for comparison. Please remove some products.', requested: allSlugs.length },
         { status: 400 }
       );
     }

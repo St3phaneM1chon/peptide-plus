@@ -61,8 +61,8 @@ function sanitizeQuery(query: string): string {
     .split(/\s+/)
     .filter(Boolean)
     .map(word => {
-      // If word contains a hyphen (like "BPC-157"), wrap in quotes for phrase search
-      if (word.includes('-')) return `'${word}'`;
+      // If word contains a hyphen (like "BPC-157"), wrap in quotes to treat as single lexeme
+      if (word.includes('-')) return `'${word}':*`;
       return `${word}:*`; // prefix matching for normal words
     })
     .join(' & ');
@@ -149,6 +149,7 @@ export async function fullTextSearch(
 
     // Filter in-stock if needed (post-query filter for simplicity with formats relation)
     let filteredResults = results;
+    let filteredTotal = total;
     if (inStock) {
       const productIds = results.map(r => r.id);
       if (productIds.length > 0) {
@@ -164,16 +165,21 @@ export async function fullTextSearch(
         const inStockSet = new Set(inStockIds.map(f => f.productId));
         filteredResults = results.filter(r => inStockSet.has(r.id));
       }
-    }
 
-    // BUG-051 FIX: Adjust total when inStock filter removes results from current page
-    const adjustedTotal = inStock && filteredResults.length < results.length
-      ? Math.max(filteredResults.length, total - (results.length - filteredResults.length))
-      : total;
+      // BUG-051 FIX: Recount total after inStock filter by querying only products with active in-stock formats
+      const inStockCountResult = await prisma.$queryRaw<[{ count: bigint }]>`
+        SELECT COUNT(DISTINCT p."id") as count
+        FROM "Product" p
+        INNER JOIN "ProductFormat" pf ON pf."productId" = p."id"
+        WHERE ${whereClause}
+          AND pf."isActive" = true
+          AND pf."stockQuantity" > 0`;
+      filteredTotal = Number(inStockCountResult[0]?.count ?? 0);
+    }
 
     return {
       results: filteredResults,
-      total: adjustedTotal,
+      total: filteredTotal,
       query,
       didYouMean,
     };

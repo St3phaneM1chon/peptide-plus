@@ -442,8 +442,8 @@ export default function NewProductClient({ categories }: Props) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
                 <div>
                   <MediaUploader
-                    value={formData.imageUrl === '/images/products/peptide-default.png' ? '' : formData.imageUrl}
-                    onChange={(url) => setFormData({ ...formData, imageUrl: url || '/images/products/peptide-default.png' })}
+                    value={formData.imageUrl}
+                    onChange={(url) => setFormData({ ...formData, imageUrl: url || '' })}
                     context="product-image"
                     label={t('admin.productForm.mainImage')}
                     previewSize="md"
