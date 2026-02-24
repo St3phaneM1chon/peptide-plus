@@ -18,6 +18,7 @@ import { sanitizeWebhookPayload } from '@/lib/sanitize';
 import { getRedisClient, isRedisAvailable } from '@/lib/redis';
 import { clawbackAmbassadorCommission } from '@/lib/ambassador-commission';
 import { STRIPE_API_VERSION } from '@/lib/stripe';
+import { calculatePurchasePoints } from '@/lib/constants';
 
 // Lazy-initialized Stripe client to avoid crashing during Next.js build/SSG
 // when STRIPE_SECRET_KEY is not available in the CI environment.
@@ -696,6 +697,49 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
         error: refError instanceof Error ? refError.message : String(refError),
       });
       // Don't fail the webhook for referral errors
+    }
+  }
+
+  // G2-FLAW-10: Award loyalty points for purchase (non-blocking)
+  if (userId && userId !== 'guest') {
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { loyaltyPoints: true, lifetimePoints: true, loyaltyTier: true },
+      });
+
+      if (user) {
+        const tierMultiplier = user.loyaltyTier === 'VIP' ? 2 : user.loyaltyTier === 'GOLD' ? 1.5 : 1;
+        const pointsToAward = calculatePurchasePoints(Number(cadTotal), tierMultiplier);
+
+        if (pointsToAward > 0) {
+          const newBalance = (user.loyaltyPoints || 0) + pointsToAward;
+          await prisma.loyaltyTransaction.create({
+            data: {
+              userId,
+              type: 'EARN_PURCHASE',
+              points: pointsToAward,
+              description: `Purchase ${orderNumber}`,
+              balanceAfter: newBalance,
+              metadata: JSON.stringify({ orderId: order.id, orderNumber, total: Number(cadTotal) }),
+            },
+          });
+          await prisma.user.update({
+            where: { id: userId },
+            data: {
+              loyaltyPoints: newBalance,
+              lifetimePoints: (user.lifetimePoints || 0) + pointsToAward,
+            },
+          });
+          logger.info('Loyalty points awarded', { userId, pointsToAward, newBalance, orderNumber });
+        }
+      }
+    } catch (loyaltyError) {
+      logger.error('Failed to award loyalty points', {
+        orderNumber,
+        error: loyaltyError instanceof Error ? loyaltyError.message : String(loyaltyError),
+      });
+      // Don't fail the webhook for loyalty errors
     }
   }
 
