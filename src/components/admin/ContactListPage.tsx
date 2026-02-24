@@ -385,7 +385,7 @@ export function ContactListPage({ config }: { config: ContactListPageConfig }) {
                     </div>
                     <div className="bg-white border border-slate-200 rounded-lg p-4">
                       <p className="text-sm text-slate-500">{t(`${prefix}.totalSpent`)}</p>
-                      <p className="text-2xl font-bold text-emerald-700">{(displayItem.totalSpent || 0).toFixed(2)} $</p>
+                      <p className="text-2xl font-bold text-emerald-700">{new Intl.NumberFormat(locale, { style: 'currency', currency: 'CAD' }).format(displayItem.totalSpent || 0)}</p>
                     </div>
                   </div>
 

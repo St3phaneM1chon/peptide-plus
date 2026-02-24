@@ -35,7 +35,7 @@ interface Pagination {
 const formatSize = formatFileSize;
 
 export default function MediaImagesPage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [images, setImages] = useState<MediaItem[]>([]);
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [loading, setLoading] = useState(true);
@@ -216,7 +216,7 @@ export default function MediaImagesPage() {
               <div className="flex items-center gap-4 text-sm text-slate-500 mt-1">
                 <span>{formatSize(preview.size)}</span>
                 <span>{preview.mimeType}</span>
-                <span>{new Date(preview.createdAt).toLocaleDateString()}</span>
+                <span>{new Date(preview.createdAt).toLocaleDateString(locale)}</span>
               </div>
               <div className="flex items-center gap-2 mt-2">
                 <code className="flex-1 text-xs bg-slate-100 px-2 py-1 rounded truncate">{preview.url}</code>

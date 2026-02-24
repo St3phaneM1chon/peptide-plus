@@ -1663,7 +1663,7 @@ export default function CheckoutPage() {
                     <span className="font-medium">{formatPrice(subtotal)}</span>
                     {currency.code !== 'CAD' && (
                       <span className="text-xs text-gray-500 block">
-                        ≈ {new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD' }).format(subtotal)} CAD
+                        ≈ {new Intl.NumberFormat(locale, { style: 'currency', currency: 'CAD' }).format(subtotal)} CAD
                       </span>
                     )}
                   </div>
@@ -1735,7 +1735,7 @@ export default function CheckoutPage() {
                     <span>{formatPrice(totalCAD)}</span>
                     {currency.code !== 'CAD' && (
                       <span className="text-sm text-gray-500 font-normal block">
-                        ≈ {new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD' }).format(totalCAD)} CAD
+                        ≈ {new Intl.NumberFormat(locale, { style: 'currency', currency: 'CAD' }).format(totalCAD)} CAD
                       </span>
                     )}
                   </div>

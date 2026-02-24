@@ -553,7 +553,7 @@ function generateShippingSteps(shipping: ShippingInfo | null | undefined, purcha
       id: 'delivered',
       title: t('order.tracking.delivered'),
       description: shipping?.deliveredAt
-        ? t('order.tracking.deliveredOn').replace('{date}', new Date(shipping.deliveredAt).toLocaleDateString())
+        ? t('order.tracking.deliveredOn').replace('{date}', new Date(shipping.deliveredAt).toLocaleDateString(locale))
         : t('order.tracking.toYourAddress'),
       timestamp: shipping?.deliveredAt ? new Date(shipping.deliveredAt) : null,
       status: shipping?.status === 'DELIVERED' ? 'completed' as const : 'pending' as const,

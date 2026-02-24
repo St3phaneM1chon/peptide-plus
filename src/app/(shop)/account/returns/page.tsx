@@ -45,7 +45,7 @@ interface OrderItem {
 export default function ReturnsPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [returnRequests, setReturnRequests] = useState<ReturnRequest[]>([]);
   const [eligibleOrders, setEligibleOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -240,7 +240,7 @@ export default function ReturnsPage() {
                   <option value="">{t('account.returnsPage.chooseOrder')}</option>
                   {eligibleOrders.map((order) => (
                     <option key={order.id} value={order.id}>
-                      {order.orderNumber} - {new Date(order.createdAt).toLocaleDateString()}
+                      {order.orderNumber} - {new Date(order.createdAt).toLocaleDateString(locale)}
                     </option>
                   ))}
                 </select>
@@ -390,7 +390,7 @@ export default function ReturnsPage() {
                       <div>
                         <p className="text-sm text-gray-500">Submitted</p>
                         <p className="text-gray-900">
-                          {new Date(request.createdAt).toLocaleDateString()}
+                          {new Date(request.createdAt).toLocaleDateString(locale)}
                         </p>
                       </div>
                     </div>
@@ -552,7 +552,7 @@ function TimelineStep({
           </p>
           {date && (
             <p className="text-xs text-gray-500">
-              {new Date(date).toLocaleDateString()} {new Date(date).toLocaleTimeString()}
+              {new Date(date).toLocaleDateString(locale)} {new Date(date).toLocaleTimeString(locale)}
             </p>
           )}
         </div>

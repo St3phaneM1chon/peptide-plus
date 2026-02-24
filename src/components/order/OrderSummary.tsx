@@ -38,6 +38,9 @@ export function OrderSummary({ order }: OrderSummaryProps) {
   const tvq = subtotal * 0.09975;
   const total = subtotal + tps + tvq;
 
+  const fmtCurrency = (amount: number) =>
+    new Intl.NumberFormat(locale, { style: 'currency', currency: order.currency || 'CAD' }).format(amount);
+
   const paymentMethodLabels: Record<string, string> = {
     STRIPE_CARD: t('checkout.creditCard'),
     APPLE_PAY: 'Apple Pay',
@@ -164,7 +167,7 @@ export function OrderSummary({ order }: OrderSummaryProps) {
               color: 'var(--gray-500)',
             }}
           >
-            {subtotal.toFixed(2)} $
+            {fmtCurrency(subtotal)}
           </p>
         </div>
       </div>
@@ -182,7 +185,7 @@ export function OrderSummary({ order }: OrderSummaryProps) {
             {t('order.subtotal')}
           </span>
           <span style={{ fontSize: '14px', color: 'var(--gray-500)' }}>
-            {subtotal.toFixed(2)} $
+            {fmtCurrency(subtotal)}
           </span>
         </div>
         <div
@@ -196,7 +199,7 @@ export function OrderSummary({ order }: OrderSummaryProps) {
             {t('order.gst')}
           </span>
           <span style={{ fontSize: '14px', color: 'var(--gray-500)' }}>
-            {tps.toFixed(2)} $
+            {fmtCurrency(tps)}
           </span>
         </div>
         <div
@@ -210,7 +213,7 @@ export function OrderSummary({ order }: OrderSummaryProps) {
             {t('order.qst')}
           </span>
           <span style={{ fontSize: '14px', color: 'var(--gray-500)' }}>
-            {tvq.toFixed(2)} $
+            {fmtCurrency(tvq)}
           </span>
         </div>
         <div
@@ -237,7 +240,7 @@ export function OrderSummary({ order }: OrderSummaryProps) {
               color: 'var(--gray-500)',
             }}
           >
-            {total.toFixed(2)} $ {order.currency}
+            {fmtCurrency(total)}
           </span>
         </div>
       </div>

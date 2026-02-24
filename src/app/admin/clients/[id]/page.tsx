@@ -316,7 +316,7 @@ export default function ClientDetailPage() {
     });
 
   function formatCurrency(amount: number): string {
-    return new Intl.NumberFormat('fr-CA', { style: 'currency', currency: 'CAD' }).format(amount);
+    return new Intl.NumberFormat(locale, { style: 'currency', currency: 'CAD' }).format(amount);
   }
 
   // Toggle expanded conversation

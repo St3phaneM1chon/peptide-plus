@@ -45,7 +45,7 @@ interface WishlistCollection {
 export default function WishlistPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { formatPrice } = useCurrency();
 
   const [collections, setCollections] = useState<WishlistCollection[]>([]);
@@ -451,7 +451,7 @@ export default function WishlistPage() {
                   )}
 
                   <p className="text-xs text-neutral-400 mt-2">
-                    {t('account.addedOn') || 'Added'} {new Date(item.createdAt).toLocaleDateString()}
+                    {t('account.addedOn') || 'Added'} {new Date(item.createdAt).toLocaleDateString(locale)}
                   </p>
 
                   {/* Actions */}

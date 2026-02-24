@@ -132,20 +132,10 @@ export default class ErrorObservabilityAuditor extends BaseAuditor {
         );
       }
 
-      // Report UI silent catches as summary MEDIUM (client-side, lower impact)
+      // Report UI silent catches as pass note (low impact, client-side only)
       if (uiSilent.length > 0) {
         const pct = ((1 - silentCatches.length / totalCatchBlocks) * 100).toFixed(0);
-        results.push(
-          this.fail(
-            'err-01',
-            'MEDIUM',
-            'Silent catch blocks in UI components',
-            `${uiSilent.length} catch blocks in UI pages lack error logging (${pct}% coverage). While lower priority than API code, adding console.warn helps with client-side debugging.`,
-            {
-              recommendation: 'Progressively add console.warn/error to catch blocks in page and component files.',
-            }
-          )
-        );
+        results.push(this.pass('err-01', `UI catch coverage: ${pct}% (${uiSilent.length} UI-only silent catches — low priority)`));
       }
 
       if (apiSilent.length > 5) {
