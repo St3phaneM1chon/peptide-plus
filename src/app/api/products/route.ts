@@ -250,7 +250,7 @@ export async function GET(request: NextRequest) {
           };
         }
         return p;
-      });
+      }) as typeof products;
     }
 
     // #58: Compute facets if requested
@@ -422,7 +422,7 @@ export async function POST(request: NextRequest) {
         description,
         fullDetails,
         specifications,
-        productType: productType || 'PEPTIDE',
+        productType: (productType || 'PEPTIDE') as import('@prisma/client').ProductType,
         // Prix
         price,
         compareAtPrice,
@@ -452,41 +452,41 @@ export async function POST(request: NextRequest) {
         researchSays,
         relatedResearch,
         participateResearch,
-        customSections,
+        customSections: customSections != null ? JSON.parse(JSON.stringify(customSections)) : undefined,
         // Status
         isFeatured: isFeatured || false,
         isActive: isActive !== undefined ? isActive : true,
         // Images
         images: images && images.length > 0 ? {
           create: images.map((img: Record<string, unknown>, index: number) => ({
-            url: img.url,
-            alt: img.alt || '',
-            caption: img.caption || '',
-            sortOrder: img.sortOrder ?? index,
-            isPrimary: img.isPrimary || false,
+            url: String(img.url),
+            alt: String(img.alt || ''),
+            caption: String(img.caption || ''),
+            sortOrder: Number(img.sortOrder ?? index),
+            isPrimary: Boolean(img.isPrimary),
           })),
         } : undefined,
         // Formats
         formats: formats && formats.length > 0 ? {
           create: formats.map((f: Record<string, unknown>, index: number) => ({
-            formatType: f.formatType || 'VIAL_2ML',
-            name: f.name,
-            description: f.description || '',
-            imageUrl: f.imageUrl || null,
-            dosageMg: f.dosageMg || null,
-            volumeMl: f.volumeMl || null,
-            unitCount: f.unitCount || null,
-            costPrice: f.costPrice || null,
-            price: f.price || 0,
-            comparePrice: f.comparePrice || null,
-            sku: f.sku || null,
-            barcode: f.barcode || null,
+            formatType: (String(f.formatType || 'VIAL_2ML')) as import('@prisma/client').FormatType,
+            name: String(f.name),
+            description: String(f.description || ''),
+            imageUrl: f.imageUrl ? String(f.imageUrl) : null,
+            dosageMg: f.dosageMg ? Number(f.dosageMg) : null,
+            volumeMl: f.volumeMl ? Number(f.volumeMl) : null,
+            unitCount: f.unitCount ? Number(f.unitCount) : null,
+            costPrice: f.costPrice ? Number(f.costPrice) : null,
+            price: Number(f.price || 0),
+            comparePrice: f.comparePrice ? Number(f.comparePrice) : null,
+            sku: f.sku ? String(f.sku) : null,
+            barcode: f.barcode ? String(f.barcode) : null,
             inStock: f.inStock !== false,
-            stockQuantity: f.stockQuantity || 0,
-            lowStockThreshold: f.lowStockThreshold ?? 5,
-            availability: f.availability || 'IN_STOCK',
-            sortOrder: f.sortOrder ?? index,
-            isDefault: f.isDefault || false,
+            stockQuantity: Number(f.stockQuantity || 0),
+            lowStockThreshold: Number(f.lowStockThreshold ?? 5),
+            availability: (String(f.availability || 'IN_STOCK')) as import('@prisma/client').StockStatus,
+            sortOrder: Number(f.sortOrder ?? index),
+            isDefault: Boolean(f.isDefault),
             isActive: f.isActive !== false,
           })),
         } : undefined,

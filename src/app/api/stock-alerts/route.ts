@@ -82,13 +82,13 @@ export async function POST(request: NextRequest) {
         email_productId_formatId: {
           email,
           productId,
-          formatId: formatId || null,
+          formatId: formatId ?? '',
         },
       },
       create: {
         email,
         productId,
-        formatId: formatId || null,
+        formatId: formatId ?? null,
       },
       update: {
         // Reset notified status if user re-subscribes
@@ -136,7 +136,7 @@ export async function GET(request: NextRequest) {
         email_productId_formatId: {
           email,
           productId,
-          formatId: formatId || null,
+          formatId: formatId ?? '',
         },
       },
     });

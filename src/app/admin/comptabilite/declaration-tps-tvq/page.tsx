@@ -224,10 +224,10 @@ export default function DeclarationTpsTvqPage() {
       {declaration && (<>
         {/* Summary Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard title={t('admin.accounting.declaration.taxableSupplies')} value={fmt(declaration.supplies.taxable)} icon={DollarSign} theme={theme} />
-          <StatCard title={t('admin.accounting.declaration.netGstHst')} value={fmt(declaration.gst.net)}
+          <StatCard label={t('admin.accounting.declaration.taxableSupplies')} value={fmt(declaration.supplies.taxable)} icon={DollarSign} theme={theme} />
+          <StatCard label={t('admin.accounting.declaration.netGstHst')} value={fmt(declaration.gst.net)}
             icon={declaration.gst.net >= 0 ? TrendingUp : TrendingDown} theme={theme} />
-          <StatCard title={t('admin.accounting.declaration.netQst')} value={fmt(declaration.qst.net)}
+          <StatCard label={t('admin.accounting.declaration.netQst')} value={fmt(declaration.qst.net)}
             icon={declaration.qst.net >= 0 ? TrendingUp : TrendingDown} theme={theme} />
           <div className={`rounded-xl border p-4 ${declaration.totalRemittance < 0 ? 'bg-emerald-50 border-emerald-200' : declaration.totalRemittance > 0 ? 'bg-red-50 border-red-200' : 'bg-slate-50 border-slate-200'}`}>
             <p className="text-sm text-slate-500">{declaration.totalRemittance < 0 ? t('admin.accounting.declaration.refund') : t('admin.accounting.declaration.amountOwing')}</p>

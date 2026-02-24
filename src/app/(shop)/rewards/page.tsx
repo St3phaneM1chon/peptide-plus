@@ -282,8 +282,8 @@ export default function RewardsPage() {
                       <span className="text-4xl">
                         {reward.type === 'discount' && '💵'}
                         {reward.type === 'shipping' && '📦'}
-                        {reward.type === 'product' && '🎁'}
-                        {reward.type === 'multiplier' && '✨'}
+                        {(reward.type as string) === 'product' && '🎁'}
+                        {(reward.type as string) === 'multiplier' && '✨'}
                       </span>
                     </div>
                     <h3 className="font-bold text-center">{reward.name}</h3>

@@ -48,14 +48,14 @@ export default function CustomerSidebar({ customer, stats }: CustomerSidebarProp
         <div className="space-y-1.5 text-sm">
           <div className="flex items-center gap-2 text-slate-600">
             <Mail className="h-3.5 w-3.5 text-slate-400" />
-            <span className="truncate">{customer.email as string}</span>
+            <span className="truncate">{String(customer.email)}</span>
           </div>
-          {customer.phone && (
+          {customer.phone ? (
             <div className="flex items-center gap-2 text-slate-600">
               <Phone className="h-3.5 w-3.5 text-slate-400" />
-              <span>{customer.phone as string}</span>
+              <span>{String(customer.phone)}</span>
             </div>
-          )}
+          ) : null}
           <div className="flex items-center gap-2 text-slate-600">
             <Globe className="h-3.5 w-3.5 text-slate-400" />
             <span>{(customer.locale as string) === 'fr' ? t('admin.emails.inbox.languageFr') : t('admin.emails.inbox.languageEn')}</span>

@@ -176,11 +176,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
         ...(translations && translations.length > 0
           ? {
               translations: {
-                create: translations.map((t: {
-                  locale: string;
-                  title?: string;
-                  description?: string;
-                }) => ({
+                create: translations.map((t) => ({
                   locale: t.locale,
                   title: t.title || null,
                   description: t.description || null,

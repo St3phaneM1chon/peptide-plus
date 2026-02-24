@@ -130,13 +130,13 @@ export async function PUT(
 
     // BUG-010 FIX: Include LIMITED availability as in-stock (not just IN_STOCK)
     const newStockQuantity = stockQuantity ?? existingFormat.stockQuantity;
-    const newAvailability = availability ?? existingFormat.availability;
+    const newAvailability = (availability as import('@prisma/client').StockStatus | undefined) ?? existingFormat.availability;
     const inStock = newStockQuantity > 0 && ['IN_STOCK', 'LIMITED'].includes(newAvailability);
 
     const format = await prisma.productFormat.update({
       where: { id: formatId },
       data: {
-        formatType: formatType ?? undefined,
+        formatType: formatType ? (formatType as import('@prisma/client').FormatType) : undefined,
         name: name ?? undefined,
         description,
         imageUrl,

@@ -592,25 +592,13 @@ export async function POST(request: NextRequest) {
       cartItemsStr = JSON.stringify({ ref: cartRef, count: cartItemsData.length });
     }
 
-    const checkoutSession = await getStripe().checkout.sessions.create({
+    const checkoutParams: Stripe.Checkout.SessionCreateParams = {
       payment_method_types: paymentMethodTypes,
       line_items: lineItems,
       mode: 'payment',
       success_url: `${process.env.NEXT_PUBLIC_APP_URL}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/checkout`,
       customer_email: session?.user?.email || shippingInfo?.email,
-      ...(clientPaymentMethod === 'interac' ? {
-        payment_intent_data: {
-          payment_method_options: {
-            acss_debit: {
-              mandate_options: {
-                payment_schedule: 'sporadic' as const,
-                transaction_type: 'personal' as const,
-              },
-            },
-          },
-        },
-      } : {}),
       metadata: {
         userId: session?.user?.id || 'guest',
         shippingAddress: JSON.stringify(shippingInfo),
@@ -636,18 +624,28 @@ export async function POST(request: NextRequest) {
         exchangeRate: String(exchangeRate),
         // Legal compliance: research consent
         researchConsentAccepted: String(body.researchConsentAccepted || false),
-        researchConsentTimestamp: body.researchConsentTimestamp || '',
+        researchConsentTimestamp: String(body.researchConsentTimestamp || ''),
       },
       shipping_address_collection: {
         allowed_countries: ['CA', 'US', 'FR', 'DE', 'GB', 'AU', 'JP', 'MX', 'CL', 'PE', 'CO'],
       },
       billing_address_collection: 'required',
-      payment_method_options: {
-        card: {
-          setup_future_usage: session?.user ? 'on_session' : undefined,
-        },
-      },
-    });
+      payment_method_options: clientPaymentMethod === 'interac'
+        ? {
+            acss_debit: {
+              mandate_options: {
+                payment_schedule: 'sporadic' as const,
+                transaction_type: 'personal' as const,
+              },
+            },
+          }
+        : {
+            card: {
+              setup_future_usage: session?.user ? 'on_session' : undefined,
+            },
+          },
+    };
+    const checkoutSession = await getStripe().checkout.sessions.create(checkoutParams);
 
     return NextResponse.json({
       sessionId: checkoutSession.id,

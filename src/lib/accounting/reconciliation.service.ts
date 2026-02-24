@@ -75,7 +75,7 @@ export function autoReconcile(
         // reconciliation/route.ts which reads the mutated status. TODO: Return matched IDs
         // in the result instead and stop mutating inputs.
         bankTx.reconciliationStatus = 'MATCHED';
-        (bankTx as Record<string, unknown>).matchedJournalEntryId = bestMatch.journalEntryId;
+        (bankTx as unknown as Record<string, unknown>).matchedJournalEntryId = bestMatch.journalEntryId;
         result.matched++;
       } else {
         // Suggest for manual review

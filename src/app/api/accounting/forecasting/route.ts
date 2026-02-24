@@ -166,16 +166,26 @@ export const POST = withAdminGuard(async (request: NextRequest) => {
     }
     const { action, currentCashBalance, historicalData, monthsAhead, assumptions, scenarios } = parsed.data;
 
+    // Convert single-value historicalData fields into arrays as expected by service functions
+    const historicalArrays = {
+      revenue: historicalData.revenue != null ? [historicalData.revenue] : [] as number[],
+      purchases: historicalData.purchases != null ? [historicalData.purchases] : [] as number[],
+      operating: historicalData.operating != null ? [historicalData.operating] : [] as number[],
+      marketing: historicalData.marketing != null ? [historicalData.marketing] : [] as number[],
+      taxes: historicalData.taxes != null ? [historicalData.taxes] : [] as number[],
+    };
+
     if (action === 'scenarios') {
-      const scenarioList = scenarios || STANDARD_SCENARIOS;
-      const results = runScenarioAnalysis(currentCashBalance, historicalData, scenarioList);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Zod passthrough gives Record<string, unknown>; runtime validated
+      const scenarioList = (scenarios || STANDARD_SCENARIOS) as any;
+      const results = runScenarioAnalysis(currentCashBalance, historicalArrays, scenarioList);
       return NextResponse.json({ results });
     }
 
     // Default: cash flow projection
     const projections = generateCashFlowProjection(
       currentCashBalance,
-      historicalData,
+      historicalArrays,
       monthsAhead || 3,
       assumptions
     );

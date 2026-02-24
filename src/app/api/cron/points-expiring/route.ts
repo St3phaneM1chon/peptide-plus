@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
           points: { gt: 0 },
           expiresAt: { lt: now },
           // Only EARN types that haven't been offset by an EXPIRE transaction
-          type: { startsWith: 'EARN' },
+          type: { in: ['EARN_PURCHASE', 'EARN_REFERRAL', 'EARN_REVIEW', 'EARN_SIGNUP', 'EARN_BIRTHDAY', 'EARN_BONUS'] },
         },
         include: {
           user: {

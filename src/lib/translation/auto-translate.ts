@@ -463,7 +463,7 @@ export async function getTranslatedFieldsBatch(
   const uncachedIds: string[] = [];
   for (const entityId of entityIds) {
     const cacheKey = translationCacheKey(model, entityId, locale);
-    const cached = cacheGet<Record<string, string>>(cacheKey);
+    const cached = await cacheGet<Record<string, string>>(cacheKey);
     if (cached) {
       result.set(entityId, cached);
     } else {

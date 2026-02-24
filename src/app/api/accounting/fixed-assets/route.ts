@@ -197,9 +197,9 @@ export const POST = withAdminGuard(async (request, { session }) => {
         serialNumber: serialNumber || null,
         location: location || null,
         acquisitionDate: new Date(acquisitionDate),
-        acquisitionCost: parseFloat(acquisitionCost),
-        residualValue: residualValue ? parseFloat(residualValue) : 0,
-        currentBookValue: parseFloat(acquisitionCost),
+        acquisitionCost: parseFloat(String(acquisitionCost)),
+        residualValue: residualValue ? parseFloat(String(residualValue)) : 0,
+        currentBookValue: parseFloat(String(acquisitionCost)),
         accumulatedDepreciation: 0,
         ccaClass: parseInt(String(ccaClass), 10),
         ccaRate: parseFloat(String(ccaRate)),
@@ -459,7 +459,7 @@ export const PATCH = withAdminGuard(async (request, { session }) => {
     if (updates.status === 'DISPOSED') {
       updateData.status = 'DISPOSED';
       updateData.disposalDate = updates.disposalDate ? new Date(updates.disposalDate) : new Date();
-      const proceeds = updates.disposalProceeds ? parseFloat(updates.disposalProceeds) : 0;
+      const proceeds = updates.disposalProceeds ? parseFloat(String(updates.disposalProceeds)) : 0;
       updateData.disposalProceeds = proceeds;
       updateData.disposalGainLoss = Math.round((proceeds - Number(asset.currentBookValue)) * 100) / 100;
 

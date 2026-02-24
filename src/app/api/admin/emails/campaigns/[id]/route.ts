@@ -122,7 +122,7 @@ export const GET = withAdminGuard(
 
       // Recipient preview: return a sample of 10 matching subscribers without sending
       if (preview === 'recipients') {
-        const segmentQuery = safeParseJson<Record<string, unknown>>(campaign.segmentQuery, null);
+        const segmentQuery = safeParseJson<Record<string, unknown>>(campaign.segmentQuery);
         const subscriberWhere: Record<string, unknown> = { isActive: true };
 
         if (segmentQuery) {

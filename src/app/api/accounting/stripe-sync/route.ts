@@ -192,7 +192,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
                 amount: tx_data.amount,
                 type: tx_data.type || 'CREDIT',
                 reconciliationStatus: 'PENDING',
-                rawData: tx_data,
+                rawData: JSON.parse(JSON.stringify(tx_data)),
               },
             });
           }

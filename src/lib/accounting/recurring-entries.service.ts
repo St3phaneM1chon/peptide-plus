@@ -382,8 +382,9 @@ export async function processDueRecurringEntries(): Promise<{
 
       // FIX (F042): Read existing templateData and merge with new values
       // instead of rebuilding a partial object that loses existing fields
-      const existingTemplateData = typeof template.templateData === 'object' && template.templateData !== null
-        ? (template.templateData as Record<string, unknown>)
+      const rawTemplate = template as unknown as Record<string, unknown>;
+      const existingTemplateData = typeof rawTemplate.templateData === 'object' && rawTemplate.templateData !== null
+        ? (rawTemplate.templateData as Record<string, unknown>)
         : {};
 
       await prisma.recurringEntryTemplate.update({

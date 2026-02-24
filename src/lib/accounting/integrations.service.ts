@@ -541,7 +541,7 @@ export async function syncPayPalTransactions(
 
   // Also fetch PayPal settings for payee email
   const settings = await prisma.accountingSettings.findFirst();
-  const payeeEmail = settings?.email || 'business@biocycle.ca';
+  const payeeEmail = settings?.companyEmail || 'business@biocycle.ca';
 
   const transactions: PayPalTransaction[] = paypalOrders.map((order) => {
     const amount = Number(order.total);

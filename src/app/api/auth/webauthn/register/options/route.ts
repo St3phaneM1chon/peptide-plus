@@ -35,7 +35,7 @@ export async function POST() {
     const options = await generateRegistrationOptions({
       rpName,
       rpID,
-      userID: new TextEncoder().encode(user.id),
+      userID: user.id,
       userName: user.email,
       userDisplayName: user.name || user.email,
       attestationType: 'none',

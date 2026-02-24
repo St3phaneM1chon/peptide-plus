@@ -164,7 +164,7 @@ export const GET = withAdminGuard(async (_request, { params }) => {
           ...supplierInvoice,
           subtotal: Number(supplierInvoice.subtotal),
           total: Number(supplierInvoice.total),
-        } as typeof supplierInvoice;
+        } as unknown as typeof supplierInvoice;
       }
     }
 

@@ -280,7 +280,7 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
       // Additionally check granular permission
       const canChangeRole = await hasPermission(
         session.user.id,
-        callerRole as 'OWNER' | 'EMPLOYEE' | 'CLIENT' | 'CUSTOMER' | 'PUBLIC',
+        callerRole as UserRole,
         'users.change_role' as PermissionCode
       );
       if (!canChangeRole) {

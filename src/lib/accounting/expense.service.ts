@@ -175,7 +175,7 @@ export async function getDepartmentBudgetVsActual(
     // FIX (F021): Filter budget lines by department (costCenter) to avoid
     // summing ALL expense lines regardless of department
     for (const line of budget.lines) {
-      if (line.type === 'EXPENSE' && (!line.costCenter || line.costCenter === department)) {
+      if (line.type === 'EXPENSE' && (!(line as Record<string, unknown>).costCenter || (line as Record<string, unknown>).costCenter === department)) {
         if (month) {
           budgeted += Number(line[monthFields[month - 1]]);
         } else {

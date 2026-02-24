@@ -42,6 +42,7 @@ const TRANSLATION_TABLE_MAP: Record<TranslatableModel, string> = {
   Video: 'videoTranslation',
   Webinar: 'webinarTranslation',
   QuickReply: 'quickReplyTranslation',
+  Faq: 'faqTranslation',
 };
 
 const FK_FIELD_MAP: Record<TranslatableModel, string> = {
@@ -53,6 +54,7 @@ const FK_FIELD_MAP: Record<TranslatableModel, string> = {
   Video: 'videoId',
   Webinar: 'webinarId',
   QuickReply: 'quickReplyId',
+  Faq: 'faqId',
 };
 
 // GET - Lire une traduction

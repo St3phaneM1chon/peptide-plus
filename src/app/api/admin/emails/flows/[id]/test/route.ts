@@ -123,7 +123,7 @@ export const POST = withAdminGuard(
             const htmlBody = node.data?.body || `<p>Test email from flow "<strong>${flow.name}</strong>"</p><p>Node: ${node.id}</p>`;
             try {
               const emailResult = await sendEmail({
-                to: testEmail,
+                to: { email: testEmail },
                 subject: `[TEST] ${subject}`,
                 html: htmlBody,
               });

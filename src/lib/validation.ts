@@ -45,7 +45,7 @@ const SIMPLE_TEXT_CONFIG: DOMPurify.Config = {
  */
 export function sanitizeHtml(html: string): string {
   if (!html) return '';
-  return DOMPurify.sanitize(html, RICH_TEXT_CONFIG);
+  return DOMPurify.sanitize(html, RICH_TEXT_CONFIG as Parameters<typeof DOMPurify.sanitize>[1]);
 }
 
 /**
@@ -54,7 +54,7 @@ export function sanitizeHtml(html: string): string {
  */
 export function sanitizeSimpleHtml(html: string): string {
   if (!html) return '';
-  return DOMPurify.sanitize(html, SIMPLE_TEXT_CONFIG);
+  return DOMPurify.sanitize(html, SIMPLE_TEXT_CONFIG as Parameters<typeof DOMPurify.sanitize>[1]);
 }
 
 /**

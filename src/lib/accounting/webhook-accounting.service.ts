@@ -483,7 +483,7 @@ export async function createRefundAccountingEntries(
   const netRefund = refundAmount - refundTps - refundTvq - refundTvh - refundPst;
 
   // #90 Batch: Collect all account codes needed, then fetch in one DB query
-  const refundAccountCodes = [ACCOUNT_CODES.DISCOUNTS_RETURNS, bankAccountCode];
+  const refundAccountCodes: string[] = [ACCOUNT_CODES.DISCOUNTS_RETURNS, bankAccountCode];
   if (refundTps > 0) refundAccountCodes.push(ACCOUNT_CODES.TPS_PAYABLE);
   if (refundTvq > 0) refundAccountCodes.push(ACCOUNT_CODES.TVQ_PAYABLE);
   if (refundTvh > 0) refundAccountCodes.push(ACCOUNT_CODES.TVH_PAYABLE);

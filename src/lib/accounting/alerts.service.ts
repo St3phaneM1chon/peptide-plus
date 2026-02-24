@@ -176,8 +176,8 @@ export function generateClosingAlerts(
     if (lastClosedPeriod !== prevPeriod) {
       alerts.push({
         id: `closing-${prevPeriod}`,
-        // F068 FIX: Use correct alert type for period closing
-        type: 'PERIOD_CLOSE_PENDING',
+        // F068 FIX: Use RECONCILIATION_PENDING as closest match for period closing
+        type: 'RECONCILIATION_PENDING' as const,
         severity: dayOfMonth > 15 ? 'HIGH' : 'MEDIUM',
         title: `Clôture de période en attente`,
         message: `La période ${getMonthName(prevMonth)} ${prevYear} n'est pas encore clôturée.`,

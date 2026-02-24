@@ -117,7 +117,7 @@ export async function GET(request: NextRequest) {
           // FLAW-061 FIX: Check bounce suppression before sending
           const { suppressed } = await shouldSuppressEmail(watch.user.email);
           if (suppressed) {
-            return { productId: watch.product.id, productName: watch.product.name, email: watch.user.email, priceDrop: 0, success: false, error: 'bounce_suppressed' };
+            return { watchId: watch.id, userId: watch.user.id, productId: watch.product.id, productName: watch.product.name, email: watch.user.email, priceDrop: 0, success: false, error: 'bounce_suppressed' };
           }
 
           const currentPrice = Number(watch.product.price);

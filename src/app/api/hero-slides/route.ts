@@ -94,11 +94,11 @@ export const POST = withAdminGuard(async (request) => {
     }
 
     // FIX: F26 - Validate statsJson before save
-    let validatedStatsJson = undefined;
+    let validatedStatsJson: string | null | undefined = undefined;
     if (statsJson) {
       try {
         JSON.parse(typeof statsJson === 'string' ? statsJson : JSON.stringify(statsJson));
-        validatedStatsJson = statsJson;
+        validatedStatsJson = typeof statsJson === 'string' ? statsJson : JSON.stringify(statsJson);
       } catch {
         return NextResponse.json({ error: 'statsJson is not valid JSON' }, { status: 400 });
       }
@@ -107,7 +107,7 @@ export const POST = withAdminGuard(async (request) => {
     const slide = await prisma.heroSlide.create({
       data: {
         slug,
-        mediaType: mediaType || 'IMAGE',
+        mediaType: (mediaType as 'IMAGE' | 'VIDEO' | 'ANIMATION') || 'IMAGE',
         backgroundUrl: safeBackgroundUrl,
         backgroundMobile: safeBackgroundMobile,
         overlayOpacity: overlayOpacity ?? 70,

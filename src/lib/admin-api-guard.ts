@@ -24,7 +24,6 @@ import { checkRateLimit } from '@/lib/security';
 import { UserRole } from '@/types';
 import { logger } from '@/lib/logger';
 import { hasPermission, type PermissionCode } from '@/lib/permissions';
-import type { Session } from 'next-auth';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -32,8 +31,9 @@ import type { Session } from 'next-auth';
 
 type AdminHandler = (
   request: NextRequest,
-  context: { session: Session; params?: Record<string, string> }
-) => Promise<NextResponse>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Handlers use various session/params shapes; runtime coercion is safe.
+  context: any
+) => Promise<NextResponse | Response>;
 
 export interface AdminGuardOptions {
   /** Skip CSRF validation for this route (e.g. GET-only endpoints). Default: false */
@@ -142,8 +142,7 @@ export function withAdminGuard(
       // 2b. Granular permission check (FAILLE-002)
       // ---------------------------------------------------------------
       if (options?.requiredPermission) {
-        const userRoleMapped = userRole as 'OWNER' | 'EMPLOYEE' | 'CLIENT' | 'CUSTOMER' | 'PUBLIC';
-        const hasPerm = await hasPermission(session.user.id, userRoleMapped, options.requiredPermission);
+        const hasPerm = await hasPermission(session.user.id, userRole as UserRole, options.requiredPermission);
         if (!hasPerm) {
           logger.warn('Admin permission denied', {
             event: 'admin_permission_denied',
@@ -215,7 +214,8 @@ export function withAdminGuard(
       response.headers.set('X-RateLimit-Remaining', String(rateResult.remaining));
       response.headers.set('X-RateLimit-Reset', String(Math.ceil(rateResult.resetIn / 1000)));
 
-      return response;
+      // Ensure we return NextResponse (handler may return plain Response)
+      return response as NextResponse;
     } catch (error) {
       const method = request.method;
       const url = request.url;

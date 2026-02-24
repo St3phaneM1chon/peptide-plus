@@ -160,7 +160,7 @@ export async function GET() {
       // 14. Chat conversations
       prisma.chatConversation.findMany({
         where: { userId },
-        select: { id: true, subject: true, status: true, createdAt: true },
+        select: { id: true, visitorName: true, status: true, createdAt: true },
         orderBy: { createdAt: 'desc' },
       }),
     ]);

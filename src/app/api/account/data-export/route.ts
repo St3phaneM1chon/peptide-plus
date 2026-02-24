@@ -323,7 +323,7 @@ export async function GET(request: NextRequest) {
         // COMP-010: 8 additional data categories for GDPR completeness
         prisma.subscription.findMany({
           where: { userId },
-          select: { id: true, productName: true, status: true, interval: true, createdAt: true },
+          select: { id: true, productName: true, status: true, frequency: true, createdAt: true },
           orderBy: { createdAt: 'desc' },
         }),
         prisma.priceWatch.findMany({
@@ -351,7 +351,7 @@ export async function GET(request: NextRequest) {
         }),
         prisma.chatConversation.findMany({
           where: { userId },
-          select: { id: true, subject: true, status: true, createdAt: true },
+          select: { id: true, visitorName: true, status: true, createdAt: true },
           orderBy: { createdAt: 'desc' },
         }),
         prisma.consentRecord.findMany({

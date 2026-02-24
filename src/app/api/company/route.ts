@@ -82,7 +82,7 @@ export async function GET(request: NextRequest) {
           owner: { select: { id: true, name: true, email: true } },
           customers: {
             include: {
-              customer: { select: { id: true, name: true, email: true } },
+              user: { select: { id: true, name: true, email: true } },
             },
           },
           _count: { select: { customers: true, purchases: true } },

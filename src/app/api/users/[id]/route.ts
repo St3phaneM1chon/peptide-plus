@@ -50,14 +50,14 @@ export async function GET(_request: Request, { params }: RouteParams) {
         role: true,
         mfaEnabled: true,
         createdAt: true,
-        companies: {
+        companyCustomers: {
           include: {
             company: {
               select: { id: true, name: true, slug: true },
             },
           },
         },
-        courseAccess: {
+        courseAccesses: {
           include: {
             product: {
               select: { id: true, name: true, slug: true },
@@ -67,7 +67,7 @@ export async function GET(_request: Request, { params }: RouteParams) {
         _count: {
           select: {
             purchases: true,
-            courseAccess: true,
+            courseAccesses: true,
           },
         },
       },
@@ -157,7 +157,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         );
       }
       // Validate that role is a known value
-      const allowedRoles = [UserRole.PUBLIC, UserRole.CUSTOMER, UserRole.CLIENT, UserRole.EMPLOYEE];
+      const allowedRoles: string[] = [UserRole.PUBLIC, UserRole.CUSTOMER, UserRole.CLIENT, UserRole.EMPLOYEE];
       if (!allowedRoles.includes(role)) {
         return NextResponse.json(
           { error: 'Rôle invalide' },

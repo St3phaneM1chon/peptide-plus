@@ -762,7 +762,7 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
       if (user) {
         handleEvent('order.created', {
           email: user.email,
-          name: user.name,
+          name: user.name || undefined,
           userId,
           orderId: order.id,
           orderNumber,

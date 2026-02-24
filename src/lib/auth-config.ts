@@ -80,7 +80,10 @@ const oauthProviders: AuthProvider[] = [
               name: data.name,
               // FAILLE-034 FIX: Use RFC 6761 .invalid TLD instead of a real domain
               email: data.email ?? `twitter_${data.id}@noreply.invalid`,
-              image: data.profile_image_url,
+              image: data.profile_image_url ?? null,
+              // Augmented User fields (role/mfaEnabled set from DB in jwt callback)
+              role: UserRole.CUSTOMER,
+              mfaEnabled: false,
             };
           },
         }),

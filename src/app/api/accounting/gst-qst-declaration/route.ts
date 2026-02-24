@@ -460,8 +460,8 @@ export const POST = withAdminGuard(async (request) => {
       YT: 'Yukon', NT: 'Territoires du Nord-Ouest', NU: 'Nunavut',
     };
 
-    const validStatuses = ['DRAFT', 'GENERATED', 'FILED'];
-    const reportStatus = validStatuses.includes(status) ? status : 'GENERATED';
+    const validStatuses = ['DRAFT', 'GENERATED', 'FILED'] as const;
+    const reportStatus = (status && validStatuses.includes(status)) ? status : 'GENERATED';
 
     const report = await prisma.taxReport.create({
       data: {

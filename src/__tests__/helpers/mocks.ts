@@ -39,8 +39,29 @@ function createMockModel(): MockPrismaModel {
   };
 }
 
-export function createMockPrisma() {
-  return {
+type MockPrismaType = {
+  user: MockPrismaModel;
+  product: MockPrismaModel;
+  productFormat: MockPrismaModel;
+  order: MockPrismaModel;
+  orderItem: MockPrismaModel;
+  promoCode: MockPrismaModel;
+  promoCodeUsage: MockPrismaModel;
+  currency: MockPrismaModel;
+  webhookEvent: MockPrismaModel;
+  inventoryReservation: MockPrismaModel;
+  inventoryTransaction: MockPrismaModel;
+  ambassador: MockPrismaModel;
+  ambassadorCommission: MockPrismaModel;
+  purchase: MockPrismaModel;
+  courseAccess: MockPrismaModel;
+  $transaction: jest.Mock;
+  $connect: jest.Mock;
+  $disconnect: jest.Mock;
+};
+
+export function createMockPrisma(): MockPrismaType {
+  const mock: MockPrismaType = {
     user: createMockModel(),
     product: createMockModel(),
     productFormat: createMockModel(),
@@ -56,14 +77,15 @@ export function createMockPrisma() {
     ambassadorCommission: createMockModel(),
     purchase: createMockModel(),
     courseAccess: createMockModel(),
-    $transaction: jest.fn((fn: (tx: ReturnType<typeof createMockPrisma>) => Promise<unknown>) => {
+    $transaction: jest.fn((fn: (tx: MockPrismaType) => Promise<unknown>) => {
       // Execute the callback with a fresh mock prisma to simulate transaction
-      const txPrisma = createMockPrisma();
+      const txPrisma: MockPrismaType = createMockPrisma();
       return fn(txPrisma);
     }),
     $connect: jest.fn(),
     $disconnect: jest.fn(),
   };
+  return mock;
 }
 
 export type MockPrismaClient = ReturnType<typeof createMockPrisma>;

@@ -123,7 +123,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       title: `${name} - ${subtitle}`,
       description,
       url: `https://biocyclepeptides.com/product/${slug}`,
-      type: 'product',
+      type: 'website',
       images: [
         {
           url: imageUrl,

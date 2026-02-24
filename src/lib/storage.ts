@@ -36,8 +36,10 @@ export interface StorageOptions {
 // Azure Blob Storage Client (lazy-loaded)
 // ---------------------------------------------------------------------------
 
-let blobServiceClient: InstanceType<typeof import('@azure/storage-blob').BlobServiceClient> | null = null;
-let containerClient: InstanceType<typeof import('@azure/storage-blob').ContainerClient> | null = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let blobServiceClient: any = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let containerClient: any = null;
 
 async function getAzureClients() {
   if (containerClient) return { blobServiceClient: blobServiceClient!, containerClient };
@@ -153,7 +155,9 @@ export class StorageService {
     }
 
     try {
-      const { BlobSASPermissions, generateBlobSASQueryParameters, StorageSharedKeyCredential } = await import('@azure/storage-blob');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const azureBlob: any = await import('@azure/storage-blob');
+      const { BlobSASPermissions, generateBlobSASQueryParameters, StorageSharedKeyCredential } = azureBlob;
 
       const blockBlobClient = azure.containerClient.getBlockBlobClient(blobPath);
 
@@ -199,7 +203,8 @@ export class StorageService {
   // -------------------------------------------------------------------------
 
   private async uploadToAzure(
-    container: NonNullable<typeof containerClient>,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    container: any,
     file: Buffer,
     blobPath: string,
     contentType: string,
@@ -224,7 +229,8 @@ export class StorageService {
   }
 
   private async deleteFromAzure(
-    container: NonNullable<typeof containerClient>,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    container: any,
     url: string
   ): Promise<void> {
     // FIX (F18): Parse URL properly instead of fragile split('/')

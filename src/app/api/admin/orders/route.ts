@@ -302,7 +302,7 @@ export const PUT = withAdminGuard(async (request, { session }) => {
         if (user) {
           handleEvent(triggerEvent as Parameters<typeof handleEvent>[0], {
             email: user.email,
-            name: user.name,
+            name: user.name || undefined,
             userId: order.userId,
             orderId: order.id,
             orderNumber: order.orderNumber,
@@ -441,7 +441,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
               if (o?.user) {
                 handleEvent(triggerEvent as Parameters<typeof handleEvent>[0], {
                   email: o.user.email,
-                  name: o.user.name,
+                  name: o.user.name || undefined,
                   userId: o.userId,
                   orderId,
                   orderNumber: o.orderNumber,

@@ -72,15 +72,15 @@ export default function EcrituresPage() {
   const typeConfig: Record<string, { label: string; variant: 'info' | 'success' | 'warning' | 'neutral' | 'primary' | 'error' }> = {
     MANUAL: { label: t('admin.entries.typeManual'), variant: 'info' },
     AUTO_SALE: { label: t('admin.entries.typeAutoSale'), variant: 'success' },
-    AUTO_REFUND: { label: t('admin.entries.typeAutoRefund', 'Remboursement auto'), variant: 'error' },
-    AUTO_STRIPE_FEE: { label: t('admin.entries.typeAutoStripeFee', 'Frais Stripe'), variant: 'warning' },
-    AUTO_PAYPAL_FEE: { label: t('admin.entries.typeAutoPaypalFee', 'Frais PayPal'), variant: 'warning' },
-    AUTO_SHIPPING: { label: t('admin.entries.typeAutoShipping', 'Livraison auto'), variant: 'primary' },
+    AUTO_REFUND: { label: t('admin.entries.typeAutoRefund') || 'Remboursement auto', variant: 'error' },
+    AUTO_STRIPE_FEE: { label: t('admin.entries.typeAutoStripeFee') || 'Frais Stripe', variant: 'warning' },
+    AUTO_PAYPAL_FEE: { label: t('admin.entries.typeAutoPaypalFee') || 'Frais PayPal', variant: 'warning' },
+    AUTO_SHIPPING: { label: t('admin.entries.typeAutoShipping') || 'Livraison auto', variant: 'primary' },
     AUTO_PURCHASE: { label: t('admin.entries.typeAutoPurchase'), variant: 'warning' },
     AUTO_PAYMENT: { label: t('admin.entries.typeAutoPayment'), variant: 'primary' },
     RECURRING: { label: t('admin.entries.typeRecurring'), variant: 'neutral' },
-    ADJUSTMENT: { label: t('admin.entries.typeAdjustment', 'Ajustement'), variant: 'info' },
-    CLOSING: { label: t('admin.entries.typeClosing', 'Clôture'), variant: 'neutral' },
+    ADJUSTMENT: { label: t('admin.entries.typeAdjustment') || 'Ajustement', variant: 'info' },
+    CLOSING: { label: t('admin.entries.typeClosing') || 'Clôture', variant: 'neutral' },
   };
   const defaultTypeConfig = { label: 'Autre', variant: 'neutral' as const };
 

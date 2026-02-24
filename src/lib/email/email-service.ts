@@ -383,7 +383,7 @@ async function sendViaSMTP(options: SendEmailOptions): Promise<EmailResult> {
     _smtpConfig = configKey;
   }
 
-  const transporter = _smtpTransporter as ReturnType<typeof nodemailer.default.createTransport>;
+  const transporter = _smtpTransporter as ReturnType<typeof nodemailer.createTransport>;
   const recipients = Array.isArray(options.to) ? options.to : [options.to];
   // Sanitize names to prevent CRLF header injection
   const sanitizeName = (name: string) => name.replace(/[\r\n]/g, '');

@@ -263,7 +263,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
             const f = formats[index] as Record<string, unknown>;
             const formatData = {
               productId: id,
-              formatType: (f.formatType as string) || 'VIAL_2ML',
+              formatType: ((f.formatType as string) || 'VIAL_2ML') as import('@prisma/client').FormatType,
               name: f.name as string,
               description: (f.description as string) || '',
               imageUrl: (f.imageUrl as string) || null,
@@ -278,7 +278,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
               inStock: f.inStock !== false,
               stockQuantity: Number(f.stockQuantity) || 0,
               lowStockThreshold: f.lowStockThreshold != null ? Number(f.lowStockThreshold) : 5,
-              availability: (f.availability as string) || 'IN_STOCK',
+              availability: ((f.availability as string) || 'IN_STOCK') as import('@prisma/client').StockStatus,
               sortOrder: f.sortOrder != null ? Number(f.sortOrder) : index,
               isDefault: !!f.isDefault,
               isActive: f.isActive !== false,

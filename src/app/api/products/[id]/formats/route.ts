@@ -127,7 +127,7 @@ export async function POST(
       return tx.productFormat.create({
         data: {
           productId: id,
-          formatType,
+          formatType: formatType as import('@prisma/client').FormatType,
           name,
           description,
           imageUrl,
@@ -142,7 +142,7 @@ export async function POST(
           stockQuantity: stockQuantity ?? 0,
           lowStockThreshold: lowStockThreshold ?? 10,
           inStock: (stockQuantity ?? 0) > 0,
-          availability: availability ?? 'IN_STOCK',
+          availability: (availability ?? 'IN_STOCK') as import('@prisma/client').StockStatus,
           availableDate: availableDate ? new Date(availableDate) : null,
           weightGrams,
           isDefault: isDefault ?? false,

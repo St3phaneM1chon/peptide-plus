@@ -8,7 +8,8 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { WebNavigator } from '@/components/admin/WebNavigator';
 import { TeamsIcon, ZoomIcon, WebexIcon, GoogleMeetIcon } from '@/components/admin/icons/platform-icons';
 
-const iconMap: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const iconMap: Record<string, React.ComponentType<any>> = {
   teams: TeamsIcon,
   zoom: ZoomIcon,
   webex: WebexIcon,

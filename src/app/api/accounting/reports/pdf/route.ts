@@ -269,16 +269,20 @@ export const POST = withAdminGuard(async (request: NextRequest) => {
 
     switch (reportType) {
       case 'tax':
-        html = generateTaxReportHTML(data, undefined, pdfLocale);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        html = generateTaxReportHTML(data as any, undefined, pdfLocale);
         break;
       case 'income':
-        html = generateIncomeStatementHTML(data, period || 'P\u00e9riode personnalis\u00e9e', undefined, pdfLocale);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        html = generateIncomeStatementHTML(data as any, period || 'P\u00e9riode personnalis\u00e9e', undefined, pdfLocale);
         break;
       case 'balance':
-        html = generateBalanceSheetHTML(data, period || new Date().toLocaleDateString('fr-CA'), undefined, pdfLocale);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        html = generateBalanceSheetHTML(data as any, period || new Date().toLocaleDateString('fr-CA'), undefined, pdfLocale);
         break;
       case 'entry':
-        html = generateJournalEntryHTML(data, undefined, pdfLocale);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        html = generateJournalEntryHTML(data as any, undefined, pdfLocale);
         break;
       default:
         return NextResponse.json(

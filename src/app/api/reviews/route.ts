@@ -290,7 +290,7 @@ export async function POST(request: NextRequest) {
     if (supportEmail) {
       import('@/lib/email').then(({ sendEmail }) =>
         sendEmail({
-          to: supportEmail,
+          to: { email: supportEmail },
           subject: `New Review: ${rating}★ for product ${productId}`,
           html: `<p>A new review has been submitted and needs approval.</p><p><strong>Rating:</strong> ${rating}/5</p><p><strong>Title:</strong> ${title}</p><p><a href="${process.env.NEXT_PUBLIC_APP_URL || ''}/admin/avis">Review in Admin</a></p>`,
         }).catch((e: unknown) => logger.error('[review-notification]', { error: e instanceof Error ? e.message : String(e) }))

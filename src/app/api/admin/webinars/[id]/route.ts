@@ -224,10 +224,10 @@ export const PATCH = withAdminGuard(async (request: NextRequest, { session, para
             },
           },
           update: {
-            ...(t.title !== undefined && { title: t.title }),
-            ...(t.description !== undefined && { description: t.description }),
-            ...(t.speakerTitle !== undefined && { speakerTitle: t.speakerTitle }),
-            ...(t.isApproved !== undefined && { isApproved: t.isApproved }),
+            ...(t.title !== undefined ? { title: String(t.title) } : {}),
+            ...(t.description !== undefined ? { description: String(t.description) } : {}),
+            ...(t.speakerTitle !== undefined ? { speakerTitle: String(t.speakerTitle) } : {}),
+            ...(t.isApproved !== undefined ? { isApproved: Boolean(t.isApproved) } : {}),
           },
           create: {
             webinarId: id,

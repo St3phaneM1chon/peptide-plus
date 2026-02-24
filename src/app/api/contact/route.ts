@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!result.success) {
-      logger.error('Contact email failed', { error: result.error instanceof Error ? result.error.message : String(result.error) });
+      logger.error('Contact email failed', { error: result.error || 'Unknown error' });
       return apiError('Erreur lors de l\'envoi du message. Veuillez réessayer.', ErrorCode.INTERNAL_ERROR, { request });
     }
 

@@ -220,7 +220,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!result.success) {
-      logger.error('Failed to send marketing email', { error: result.error instanceof Error ? result.error.message : String(result.error) });
+      logger.error('Failed to send marketing email', { error: result.error || 'Unknown error' });
       return NextResponse.json({ error: 'Failed to send email' }, { status: 500 });
     }
 

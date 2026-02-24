@@ -40,12 +40,11 @@ export function ProductCardShopify({ product }: ProductCardShopifyProps) {
     e.stopPropagation();
     
     addItem({
-      id: product.id,
       productId: product.id,
       name: product.name,
       price: product.price,
-      compareAtPrice: product.compareAtPrice,
-      imageUrl: product.imageUrl,
+      comparePrice: product.compareAtPrice,
+      image: product.imageUrl,
     });
   };
 

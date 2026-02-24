@@ -104,7 +104,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
     }
 
     // Generate entry from template (in-memory structure with accountCode lines)
-    const entry = generateEntryFromTemplate(template, values, 'TEMP');
+    const entry = generateEntryFromTemplate(template, values as Record<string, string | number | Date>, 'TEMP');
 
     // Persist entry to database
     const accountCodes = entry.lines.map((l: { accountCode: string }) => l.accountCode);

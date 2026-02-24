@@ -35,7 +35,7 @@ export default function PasskeyButton({ callbackUrl = '/' }: PasskeyButtonProps)
       const options = await optionsRes.json();
 
       // 2. Start WebAuthn authentication (triggers Face ID / Touch ID / fingerprint)
-      const authResponse = await startAuthentication({ optionsJSON: options });
+      const authResponse = await startAuthentication(options);
 
       // 3. Verify with server
       const verifyRes = await fetch('/api/auth/webauthn/authenticate/verify', {
