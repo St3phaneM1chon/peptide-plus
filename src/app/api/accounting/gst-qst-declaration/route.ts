@@ -17,6 +17,8 @@ interface GstQstDeclarationData {
   qst?: { collected?: number; itr?: number; net?: number };
   totalRemittance?: number;
   supplies?: { total?: number };
+  verification?: { customerInvoiceCount?: number };
+  quickMethod?: Record<string, unknown> | null;
 }
 
 // ---------------------------------------------------------------------------
