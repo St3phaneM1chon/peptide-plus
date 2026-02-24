@@ -194,7 +194,7 @@ export async function POST(request: NextRequest) {
         if (amount > 10000) {
           return NextResponse.json({ error: 'Bonus amount cannot exceed 10,000 points per transaction' }, { status: 400 });
         }
-        pointsToEarn = amount;
+        pointsToEarn = Math.floor(amount);
         transactionType = 'EARN_BONUS';
         transactionDescription = description || `Promotional bonus (awarded by admin: ${session.user.id})`;
         break;

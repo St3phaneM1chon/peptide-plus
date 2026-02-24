@@ -96,8 +96,8 @@ export async function GET(request: NextRequest) {
     const featured = searchParams.get('featured');
     const productType = searchParams.get('type');
     const slugs = searchParams.get('slugs');
-    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
-    const limit = Math.min(Math.max(1, parseInt(searchParams.get('limit') || '50', 10)), 200);
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10) || 1);
+    const limit = Math.min(Math.max(1, parseInt(searchParams.get('limit') || '50', 10) || 50), 200);
     const includeInactive = searchParams.get('includeInactive') === 'true';
     const locale = searchParams.get('locale') || defaultLocale;
 
@@ -166,11 +166,13 @@ export async function GET(request: NextRequest) {
       where.productType = productType;
     }
 
-    // #58: Faceted search filters
+    // #58: Faceted search filters (validate NaN)
     if (minPrice || maxPrice) {
       where.price = {};
-      if (minPrice) (where.price as Record<string, unknown>).gte = parseFloat(minPrice);
-      if (maxPrice) (where.price as Record<string, unknown>).lte = parseFloat(maxPrice);
+      const minPriceVal = parseFloat(minPrice || '');
+      const maxPriceVal = parseFloat(maxPrice || '');
+      if (minPrice && !isNaN(minPriceVal) && minPriceVal >= 0) (where.price as Record<string, unknown>).gte = minPriceVal;
+      if (maxPrice && !isNaN(maxPriceVal) && maxPriceVal >= 0) (where.price as Record<string, unknown>).lte = maxPriceVal;
     }
 
     if (minRating) {

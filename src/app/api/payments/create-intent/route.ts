@@ -11,6 +11,7 @@ import { createPaymentIntent, getOrCreateStripeCustomer } from '@/lib/stripe';
 import { calculateTaxAmount } from '@/lib/tax-rates';
 import { validateCsrf } from '@/lib/csrf-middleware';
 import { add, toCents } from '@/lib/decimal-calculator';
+import { logger } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
   try {

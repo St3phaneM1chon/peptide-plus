@@ -82,7 +82,6 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         comparePrice: f.comparePrice ? Number(f.comparePrice) : undefined,
         sku: f.sku || '',
         inStock: f.inStock,
-        stockQuantity: f.stockQuantity,
         image: f.imageUrl || undefined,
       })),
       quantityDiscounts: product.quantityDiscounts.map(qd => ({
