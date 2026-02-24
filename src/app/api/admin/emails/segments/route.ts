@@ -10,6 +10,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { validateCsrf } from '@/lib/csrf-middleware';
 import { logger } from '@/lib/logger';
@@ -304,6 +305,16 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
         },
       });
 
+      logAdminAction({
+        adminUserId: session.user.id,
+        action: 'CLONE_EMAIL_SEGMENT',
+        targetType: 'EmailSegment',
+        targetId: cloned.id,
+        newValue: { name: cloned.name, sourceId, contactCount: count },
+        ipAddress: getClientIpFromRequest(request),
+        userAgent: request.headers.get('user-agent') || undefined,
+      }).catch(() => {});
+
       return NextResponse.json({
         segment: {
           id: cloned.id,
@@ -349,6 +360,16 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
         createdBy: session.user.id,
       },
     });
+
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'CREATE_EMAIL_SEGMENT',
+      targetType: 'EmailSegment',
+      targetId: segment.id,
+      newValue: { name, description, color },
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json({ segment: { ...segment, type: 'custom' } });
   } catch (error) {

@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { runAudit } from '@/lib/audit-engine';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { logger } from '@/lib/logger';
 import { z } from 'zod';
 
@@ -13,7 +14,7 @@ const runAuditSchema = z.object({
   auditTypeCode: z.string().min(1, 'auditTypeCode is required').max(100),
 });
 
-export const POST = withAdminGuard(async (request: NextRequest, context: { session: { user?: { email?: string } } }) => {
+export const POST = withAdminGuard(async (request: NextRequest, context: { session: { user: { id: string; email?: string | null } } }) => {
   let body: unknown;
   try {
     body = await request.json();
@@ -37,6 +38,16 @@ export const POST = withAdminGuard(async (request: NextRequest, context: { sessi
     const result = await runAudit(auditTypeCode, context.session?.user?.email || 'system');
 
     logger.info(`Audit completed: ${auditTypeCode}`, { ...result });
+
+    logAdminAction({
+      adminUserId: context.session.user.id,
+      action: 'RUN_AUDIT',
+      targetType: 'AuditRun',
+      targetId: result.runId,
+      newValue: { auditTypeCode, findingsCount: result.findingsCount, passedChecks: result.passedChecks, failedChecks: result.failedChecks },
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json({ data: result }, { status: 201 });
   } catch (error) {

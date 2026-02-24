@@ -5,6 +5,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { logger } from '@/lib/logger';
 import { z } from 'zod';
 
@@ -19,7 +20,7 @@ const updateFindingSchema = z.object({
 
 export const PUT = withAdminGuard(async (
   request: NextRequest,
-  context: { params: Promise<{ id: string }>; session: { user?: { email?: string } } }
+  context: { params: Promise<{ id: string }>; session: { user: { id: string; email?: string | null } } }
 ) => {
   try {
     const { id } = await context.params;
@@ -67,6 +68,17 @@ export const PUT = withAdminGuard(async (
       where: { id },
       data: updateData,
     });
+
+    logAdminAction({
+      adminUserId: context.session.user.id,
+      action: 'UPDATE_AUDIT_FINDING',
+      targetType: 'AuditFinding',
+      targetId: id,
+      previousValue: { fixed: finding.fixed, falsePositive: finding.falsePositive },
+      newValue: updateData,
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json({ data: updated });
   } catch (error) {

@@ -8,6 +8,9 @@ import { IconRail, FolderPane, OutlookTopBar, OutlookRibbon } from '@/components
 import { AdminLayoutProvider, useAdminLayout } from '@/lib/admin/admin-layout-context';
 import { getActiveRailId } from '@/lib/admin/outlook-nav';
 import { useI18n } from '@/i18n/client';
+import { useAdminShortcuts } from '@/hooks/useAdminShortcuts';
+import { KeyboardShortcutsDialog } from '@/components/admin/KeyboardShortcutsDialog';
+import AdminCommandPalette from '@/components/admin/AdminCommandPalette';
 
 export default function AdminLayoutClient({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -25,6 +28,9 @@ function AdminLayoutShell({ children }: { children: React.ReactNode }) {
   const { t, dir } = useI18n();
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const toggleCommandPalette = useCallback(() => setCommandPaletteOpen((v) => !v), []);
+  const { helpOpen, setHelpOpen } = useAdminShortcuts({ onCommandPalette: toggleCommandPalette });
 
   // Sync rail selection with pathname on navigation
   useEffect(() => {
@@ -49,11 +55,10 @@ function AdminLayoutShell({ children }: { children: React.ReactNode }) {
         toggleFolderPane();
         return;
       }
-      // Ctrl+K or Cmd+K → focus search
+      // Ctrl+K or Cmd+K → open command palette
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault();
-        const searchInput = document.querySelector<HTMLInputElement>('.admin-outlook input[type="text"]');
-        searchInput?.focus();
+        setCommandPaletteOpen((v) => !v);
       }
     }
     document.addEventListener('keydown', handleKeyDown);
@@ -141,6 +146,8 @@ function AdminLayoutShell({ children }: { children: React.ReactNode }) {
         </main>
       </div>
 
+      <AdminCommandPalette open={commandPaletteOpen} onClose={() => setCommandPaletteOpen(false)} />
+      <KeyboardShortcutsDialog open={helpOpen} onClose={() => setHelpOpen(false)} />
       <Toaster position={dir === 'rtl' ? 'top-left' : 'top-right'} richColors closeButton dir={dir} />
     </div>
   );

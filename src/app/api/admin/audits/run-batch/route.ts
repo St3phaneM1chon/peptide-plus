@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { runAudit } from '@/lib/audit-engine';
 import { prisma } from '@/lib/db';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { logger } from '@/lib/logger';
 import { z } from 'zod';
 
@@ -28,7 +29,7 @@ interface BatchResult {
   error?: string;
 }
 
-export const POST = withAdminGuard(async (request: NextRequest, context: { session: { user?: { email?: string } } }) => {
+export const POST = withAdminGuard(async (request: NextRequest, context: { session: { user: { id: string; email?: string | null } } }) => {
   try {
     let body: unknown;
     try {
@@ -119,6 +120,16 @@ export const POST = withAdminGuard(async (request: NextRequest, context: { sessi
       totalFailed,
       failedAudits: failed,
     });
+
+    logAdminAction({
+      adminUserId: context.session.user.id,
+      action: 'RUN_BATCH_AUDIT',
+      targetType: 'AuditRun',
+      targetId: `batch-${codes.length}`,
+      newValue: { totalAudits: codes.length, completed, failed, totalFindings, totalPassed, totalFailed, severity },
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json({
       data: {

@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
+import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { sendEmail } from '@/lib/email/email-service';
 import { getBounceStats } from '@/lib/email/bounce-handler';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
@@ -86,6 +87,16 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }: { s
       tags: ['admin-test'],
     });
 
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'TEST_EMAIL_SETTINGS',
+      targetType: 'EmailSettings',
+      targetId: 'test',
+      newValue: { testEmail, success: result.success },
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
+
     // Security #20: Do not leak provider details or internal error messages
     return NextResponse.json({
       success: result.success,
@@ -140,7 +151,7 @@ function validateSettings(settings: Record<string, string>): Record<string, stri
   return errors;
 }
 
-export const PUT = withAdminGuard(async (request: NextRequest) => {
+export const PUT = withAdminGuard(async (request: NextRequest, { session }: { session: { user: { id: string; email?: string | null } } }) => {
   try {
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
       || request.headers.get('x-real-ip') || '127.0.0.1';
@@ -196,6 +207,17 @@ export const PUT = withAdminGuard(async (request: NextRequest) => {
         })
       )
     );
+
+    logAdminAction({
+      adminUserId: session.user.id,
+      action: 'UPDATE_EMAIL_SETTINGS',
+      targetType: 'EmailSettings',
+      targetId: 'bulk',
+      previousValue: { keys: Object.keys(merged) },
+      newValue: { updatedKeys: entries.map(([k]) => k), count: entries.length },
+      ipAddress: getClientIpFromRequest(request),
+      userAgent: request.headers.get('user-agent') || undefined,
+    }).catch(() => {});
 
     return NextResponse.json({ success: true, updated: entries.length });
   } catch (error) {
