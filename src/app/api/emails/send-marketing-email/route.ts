@@ -6,9 +6,12 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { auth } from '@/lib/auth-config';
 import { db } from '@/lib/db';
 import { logger } from '@/lib/logger';
+import { validateCsrf } from '@/lib/csrf-middleware';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import {
   sendEmail,
   birthdayEmail,
@@ -19,31 +22,50 @@ import {
   generateUnsubscribeUrl,
 } from '@/lib/email';
 
-type MarketingEmailType = 'birthday' | 'welcome' | 'abandoned-cart' | 'back-in-stock' | 'points-expiring';
+const marketingEmailSchema = z.object({
+  userId: z.string().min(1, 'userId is required'),
+  emailType: z.enum(['birthday', 'welcome', 'abandoned-cart', 'back-in-stock', 'points-expiring'], {
+    errorMap: () => ({ message: 'Invalid emailType' }),
+  }),
+  data: z.record(z.unknown()).optional(),
+});
 
 export async function POST(request: NextRequest) {
   try {
+    // SECURITY: Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip')
+      || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/emails/send-marketing-email');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+
+    // SECURITY: CSRF protection
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     // Vérifier l'authentification
     const session = await auth();
     const apiKey = request.headers.get('x-api-key');
-    
+
     const isAdmin = session?.user?.role === 'OWNER' || session?.user?.role === 'EMPLOYEE';
     const isValidApiKey = apiKey === process.env.INTERNAL_API_KEY;
-    
+
     if (!isAdmin && !isValidApiKey) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await request.json();
-    const { userId, emailType, data } = body as {
-      userId: string;
-      emailType: MarketingEmailType;
-      data?: Record<string, unknown>;
-    };
-
-    if (!userId || !emailType) {
-      return NextResponse.json({ error: 'userId and emailType are required' }, { status: 400 });
+    const parsed = marketingEmailSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
     }
+    const { userId, emailType, data } = parsed.data;
 
     // Récupérer l'utilisateur
     const user = await db.user.findUnique({

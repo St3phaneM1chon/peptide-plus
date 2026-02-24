@@ -6,6 +6,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { auth } from '@/lib/auth-config';
 import { verifyTOTP } from '@/lib/mfa';
 import { decrypt } from '@/lib/security';
@@ -13,6 +14,10 @@ import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { validateCsrf } from '@/lib/csrf-middleware';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
+
+const mfaVerifySchema = z.object({
+  code: z.string().length(6, 'Code à 6 chiffres requis'),
+});
 
 export async function POST(request: NextRequest) {
   try {
@@ -39,14 +44,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
     }
 
-    const { code } = await request.json();
-
-    if (!code || typeof code !== 'string' || code.length !== 6) {
-      return NextResponse.json(
-        { error: 'Code à 6 chiffres requis' },
-        { status: 400 }
-      );
+    const body = await request.json();
+    const parsed = mfaVerifySchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
     }
+    const { code } = parsed.data;
 
     // Get the pending MFA secret
     const user = await prisma.user.findUnique({

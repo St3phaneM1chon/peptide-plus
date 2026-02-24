@@ -8,10 +8,24 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { auth } from '@/lib/auth-config';
 import { db } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { validateCsrf } from '@/lib/csrf-middleware';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+
+const createSubscriptionSchema = z.object({
+  productId: z.string().min(1, 'productId is required'),
+  formatId: z.string().optional(),
+  quantity: z.number().int().min(1).optional(),
+  frequency: z.string().min(1, 'frequency is required'),
+});
+
+const updateSubscriptionSchema = z.object({
+  id: z.string().min(1, 'id is required'),
+  action: z.enum(['pause', 'resume', 'cancel'], { message: 'Invalid action. Use: pause, resume, cancel' }),
+});
 
 const FREQUENCY_DISCOUNTS: Record<string, number> = {
   EVERY_2_MONTHS: 15,
@@ -76,6 +90,11 @@ export async function GET() {
 // POST — Create subscription
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/account/subscriptions');
+    if (!rl.success) { const res = NextResponse.json({ error: rl.error!.message }, { status: 429 }); Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v)); return res; }
+
     // SECURITY (BE-SEC-15): CSRF protection for mutation endpoint
     const csrfValid = await validateCsrf(request);
     if (!csrfValid) {
@@ -89,11 +108,11 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { productId, formatId, quantity, frequency } = body;
-
-    if (!productId || !frequency) {
-      return NextResponse.json({ error: 'productId and frequency are required' }, { status: 400 });
+    const parsed = createSubscriptionSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
     }
+    const { productId, formatId, quantity, frequency } = parsed.data;
 
     const freq = frequency.toUpperCase();
     if (!FREQUENCY_DISCOUNTS[freq]) {
@@ -191,6 +210,11 @@ export async function POST(request: NextRequest) {
 // PATCH — Pause/Resume/Cancel
 export async function PATCH(request: NextRequest) {
   try {
+    // Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/account/subscriptions');
+    if (!rl.success) { const res = NextResponse.json({ error: rl.error!.message }, { status: 429 }); Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v)); return res; }
+
     // SECURITY (BE-SEC-15): CSRF protection for mutation endpoint
     const csrfValid = await validateCsrf(request);
     if (!csrfValid) {
@@ -204,11 +228,11 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { id, action } = body;
-
-    if (!id || !action) {
-      return NextResponse.json({ error: 'id and action are required' }, { status: 400 });
+    const parsed = updateSubscriptionSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
     }
+    const { id, action } = parsed.data;
 
     // Verify ownership
     const subscription = await db.subscription.findFirst({

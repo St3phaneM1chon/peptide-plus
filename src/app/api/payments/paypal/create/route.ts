@@ -5,14 +5,33 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
+import { z } from 'zod';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { getPayPalAccessToken, PAYPAL_API_URL } from '@/lib/paypal';
 import { validateCsrf } from '@/lib/csrf-middleware';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { logger } from '@/lib/logger';
+
+const paypalCreateSchema = z.object({
+  productId: z.string().min(1, 'Product ID requis'),
+  companyId: z.string().optional(),
+  province: z.string().max(2).optional(),
+});
 
 export async function POST(request: NextRequest) {
   try {
+    // SECURITY: Rate limiting on PayPal order creation
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip')
+      || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/payments/paypal/create');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+
     // SECURITY: CSRF protection for payment mutation endpoint
     const csrfValid = await validateCsrf(request);
     if (!csrfValid) {
@@ -39,11 +58,12 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const { productId, companyId, province: reqProvince } = await request.json();
-
-    if (!productId) {
-      return NextResponse.json({ error: 'Product ID requis' }, { status: 400 });
+    const body = await request.json();
+    const parsed = paypalCreateSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
     }
+    const { productId, companyId, province: reqProvince } = parsed.data;
 
     // Récupérer le produit
     const product = await prisma.product.findUnique({

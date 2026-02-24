@@ -10,10 +10,21 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth-config';
 import { logger } from '@/lib/logger';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
+
+const promoValidateSchema = z.object({
+  code: z.string().min(1, 'Code promo requis').max(100),
+  subtotal: z.number().min(0),
+  cartItems: z.array(z.object({
+    productId: z.string(),
+    quantity: z.number().int().min(1),
+  })).optional(),
+});
 
 export async function POST(request: NextRequest) {
   try {
@@ -31,18 +42,18 @@ export async function POST(request: NextRequest) {
       return res;
     }
 
-    const { code, subtotal, cartItems } = await request.json() as {
-      code: string;
-      subtotal: number;
-      cartItems?: Array<{ productId: string; quantity: number }>;
-    };
-
-    if (!code) {
-      return NextResponse.json(
-        { valid: false, error: 'Code promo requis' },
-        { status: 400 }
-      );
+    // CSRF protection
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
     }
+
+    const body = await request.json();
+    const parsed = promoValidateSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ valid: false, error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+    }
+    const { code, subtotal, cartItems } = parsed.data;
 
     const upperCode = code.toUpperCase().trim();
 

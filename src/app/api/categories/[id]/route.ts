@@ -21,15 +21,28 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { enqueue } from '@/lib/translation';
 import { UserRole } from '@/types';
 import { apiSuccess, apiError, apiNoContent, validateContentType } from '@/lib/api-response';
 import { ErrorCode } from '@/lib/error-codes';
+import { validateCsrf } from '@/lib/csrf-middleware';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
 // BUG-017 FIX: Import cache invalidation
 import { cacheInvalidateTag, CacheTags } from '@/lib/cache';
 import { logger } from '@/lib/logger';
+
+const updateCategorySchema = z.object({
+  name: z.string().min(1).max(200).optional(),
+  slug: z.string().min(1).max(200).optional(),
+  description: z.string().max(2000).optional().nullable(),
+  imageUrl: z.string().url().optional().nullable().or(z.literal('')),
+  sortOrder: z.number().int().optional(),
+  isActive: z.boolean().optional(),
+  parentId: z.string().optional().nullable(),
+});
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -77,6 +90,23 @@ export async function GET(_request: Request, { params }: RouteParams) {
 // Status codes: 200 OK, 400 Bad Request, 401 Unauthorized, 403 Forbidden, 404 Not Found, 415 Unsupported Media Type, 500 Internal Error
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
+    // SECURITY: Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip')
+      || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/categories/[id]');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+
+    // SECURITY: CSRF protection
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     // Item 12: Content-Type validation
     const ctError = validateContentType(request);
     if (ctError) return ctError;
@@ -93,13 +123,17 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     }
 
     const body = await request.json();
+    const parsed = updateCategorySchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+    }
 
     // Whitelist: only allow safe fields to be updated (H11 - mass assignment fix)
     const allowedFields = ['name', 'slug', 'description', 'imageUrl', 'sortOrder', 'isActive', 'parentId'] as const;
     const updateData: Record<string, unknown> = {};
     for (const field of allowedFields) {
-      if (body[field] !== undefined) {
-        updateData[field] = body[field];
+      if (parsed.data[field] !== undefined) {
+        updateData[field] = parsed.data[field];
       }
     }
 
@@ -153,8 +187,25 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
 // DELETE - Supprimer une catégorie (soft delete, Owner only)
 // Status codes: 204 No Content, 400 Bad Request, 401 Unauthorized, 403 Forbidden, 404 Not Found, 500 Internal Error
-export async function DELETE(_request: Request, { params }: RouteParams) {
+export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
+    // SECURITY: Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip')
+      || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/categories/[id]');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+
+    // SECURITY: CSRF protection
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const session = await auth();
 
     if (!session?.user) {

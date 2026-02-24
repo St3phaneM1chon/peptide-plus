@@ -10,12 +10,42 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { getPayPalAccessToken, PAYPAL_API_URL } from '@/lib/paypal';
 import { validateCsrf } from '@/lib/csrf-middleware';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { logger } from '@/lib/logger';
+
+const createOrderItemSchema = z.object({
+  productId: z.string().min(1),
+  formatId: z.string().optional(),
+  quantity: z.number().int().min(1),
+  name: z.string().optional(),
+  price: z.number().optional(),
+});
+
+const createOrderSchema = z.object({
+  items: z.array(createOrderItemSchema).min(1, 'Panier vide'),
+  currency: z.string().max(3).default('CAD'),
+  shippingInfo: z.object({
+    firstName: z.string().optional(),
+    lastName: z.string().optional(),
+    address: z.string().optional(),
+    apartment: z.string().optional(),
+    city: z.string().optional(),
+    province: z.string().optional(),
+    postalCode: z.string().optional(),
+    country: z.string().optional(),
+    phone: z.string().optional(),
+  }).optional(),
+  promoCode: z.string().optional(),
+  giftCardCode: z.string().optional(),
+  giftCardDiscount: z.number().optional(),
+  researchConsentAccepted: z.boolean().optional(),
+  researchConsentTimestamp: z.string().optional(),
+});
 
 export async function POST(request: NextRequest) {
   try {
@@ -62,14 +92,14 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { items, currency = 'CAD', shippingInfo, promoCode, giftCardCode, giftCardDiscount: clientGiftCardDiscount, researchConsentAccepted, researchConsentTimestamp } = body;
+    const parsed = createOrderSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+    }
+    const { items, currency = 'CAD', shippingInfo, promoCode, giftCardCode, giftCardDiscount: clientGiftCardDiscount, researchConsentAccepted, researchConsentTimestamp } = parsed.data;
 
     if (!process.env.PAYPAL_CLIENT_ID || !process.env.PAYPAL_CLIENT_SECRET) {
       return NextResponse.json({ error: 'PayPal n\'est pas configuré' }, { status: 503 });
-    }
-
-    if (!items || !Array.isArray(items) || items.length === 0) {
-      return NextResponse.json({ error: 'Panier vide' }, { status: 400 });
     }
 
     // SECURITY: Validate ALL prices from the database

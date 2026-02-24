@@ -4,10 +4,19 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { UserRole } from '@/types';
+import { validateCsrf } from '@/lib/csrf-middleware';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { logger } from '@/lib/logger';
+
+const updateUserSchema = z.object({
+  name: z.string().min(1).max(200).optional(),
+  image: z.string().url().optional().nullable().or(z.literal('')),
+  role: z.string().optional(),
+});
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -81,6 +90,23 @@ export async function GET(_request: Request, { params }: RouteParams) {
 // PUT - Mettre à jour un utilisateur
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
+    // SECURITY: Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip')
+      || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/users/[id]');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+
+    // SECURITY: CSRF protection
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const { id } = await params;
     const session = await auth();
 
@@ -96,7 +122,11 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     }
 
     const body = await request.json();
-    const { name, image, role } = body;
+    const parsed = updateUserSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+    }
+    const { name, image, role } = parsed.data;
 
     // Seul un admin peut changer le rôle
     const updateData: Record<string, unknown> = {};
@@ -171,8 +201,25 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 }
 
 // DELETE - Supprimer/désactiver un utilisateur
-export async function DELETE(_request: Request, { params }: RouteParams) {
+export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
+    // SECURITY: Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip')
+      || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/users/[id]');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+
+    // SECURITY: CSRF protection
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const { id } = await params;
     const session = await auth();
 

@@ -7,11 +7,21 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { auth } from '@/lib/auth-config';
 import { db } from '@/lib/db';
 import { stripHtml, isValidPhone, isValidName } from '@/lib/validation';
 import { locales } from '@/i18n/config';
+import { validateCsrf } from '@/lib/csrf-middleware';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { logger } from '@/lib/logger';
+
+const updateProfileSchema = z.object({
+  name: z.string().max(100).optional(),
+  phone: z.string().max(20).optional().nullable().or(z.literal('')),
+  birthDate: z.string().optional().or(z.literal('')),
+  locale: z.string().max(5).optional(),
+});
 
 export async function GET() {
   try {
@@ -56,6 +66,23 @@ export async function GET() {
 
 export async function PUT(request: NextRequest) {
   try {
+    // SECURITY: Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip')
+      || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/user/profile');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+
+    // SECURITY: CSRF protection
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const session = await auth();
 
     if (!session?.user?.email) {
@@ -63,7 +90,11 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name: rawName, phone: rawPhone, birthDate, locale } = body;
+    const parsed = updateProfileSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+    }
+    const { name: rawName, phone: rawPhone, birthDate, locale } = parsed.data;
 
     // SECURITY FIX (BE-SEC-05): Validate and sanitize all profile fields
     // Strip HTML to prevent stored XSS

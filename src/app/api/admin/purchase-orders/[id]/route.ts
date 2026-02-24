@@ -8,22 +8,38 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { logger } from '@/lib/logger';
 
-// Valid PO statuses and allowed transitions
-const VALID_STATUSES = [
-  'DRAFT',
-  'SUBMITTED',
-  'APPROVED',
-  'ORDERED',
-  'PARTIAL_RECEIVED',
-  'RECEIVED',
-  'CANCELLED',
-] as const;
+const purchaseOrderItemSchema = z.object({
+  id: z.string().optional(),
+  description: z.string().min(1).max(500),
+  productId: z.string().optional(),
+  formatId: z.string().optional(),
+  sku: z.string().max(100).optional(),
+  quantity: z.number().positive(),
+  unitCost: z.number().min(0),
+});
 
+const patchPurchaseOrderSchema = z.object({
+  status: z.enum([
+    'DRAFT', 'SUBMITTED', 'APPROVED', 'ORDERED',
+    'PARTIAL_RECEIVED', 'RECEIVED', 'CANCELLED',
+  ]).optional(),
+  supplierName: z.string().max(200).optional(),
+  supplierEmail: z.string().email().max(255).optional(),
+  supplierId: z.string().optional(),
+  department: z.string().max(100).optional(),
+  currency: z.string().min(3).max(3).optional(),
+  notes: z.string().max(2000).optional().nullable(),
+  supplierInvoiceId: z.string().optional().nullable(),
+  items: z.array(purchaseOrderItemSchema).optional(),
+});
+
+// Allowed status transitions
 const STATUS_TRANSITIONS: Record<string, string[]> = {
   DRAFT: ['SUBMITTED', 'CANCELLED'],
   SUBMITTED: ['APPROVED', 'CANCELLED'],
@@ -197,6 +213,16 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
     const id = params!.id;
     const body = await request.json();
 
+    // Validate with Zod
+    const parsed = patchPurchaseOrderSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid data', details: parsed.error.errors },
+        { status: 400 }
+      );
+    }
+    const data = parsed.data;
+
     const po = await prisma.purchaseOrder.findUnique({
       where: { id },
       include: { items: true },
@@ -212,16 +238,8 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
     const updateData: Record<string, unknown> = {};
 
     // ─── Status transition ──────────────────────────────────────────────
-    if (body.status) {
-      const newStatus = body.status as string;
-
-      // Validate status value
-      if (!VALID_STATUSES.includes(newStatus as typeof VALID_STATUSES[number])) {
-        return NextResponse.json(
-          { error: `Invalid status. Must be one of: ${VALID_STATUSES.join(', ')}` },
-          { status: 400 }
-        );
-      }
+    if (data.status) {
+      const newStatus = data.status;
 
       // Validate transition
       const allowed = STATUS_TRANSITIONS[po.status] || [];
@@ -261,43 +279,35 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
     // ─── Update editable fields (only on DRAFT / SUBMITTED) ─────────────
     const isEditable = po.status === 'DRAFT' || po.status === 'SUBMITTED';
 
-    if (body.supplierName !== undefined && isEditable) {
-      updateData.supplierName = body.supplierName;
+    if (data.supplierName !== undefined && isEditable) {
+      updateData.supplierName = data.supplierName;
     }
-    if (body.supplierEmail !== undefined && isEditable) {
-      updateData.supplierEmail = body.supplierEmail;
+    if (data.supplierEmail !== undefined && isEditable) {
+      updateData.supplierEmail = data.supplierEmail;
     }
-    if (body.supplierId !== undefined && isEditable) {
-      updateData.supplierId = body.supplierId;
+    if (data.supplierId !== undefined && isEditable) {
+      updateData.supplierId = data.supplierId;
     }
-    if (body.department !== undefined && isEditable) {
-      updateData.department = body.department;
+    if (data.department !== undefined && isEditable) {
+      updateData.department = data.department;
     }
-    if (body.currency !== undefined && isEditable) {
-      updateData.currency = body.currency;
+    if (data.currency !== undefined && isEditable) {
+      updateData.currency = data.currency;
     }
 
     // Notes can always be updated
-    if (body.notes !== undefined) {
-      updateData.notes = body.notes;
+    if (data.notes !== undefined) {
+      updateData.notes = data.notes;
     }
 
     // Link supplier invoice
-    if (body.supplierInvoiceId !== undefined) {
-      updateData.supplierInvoiceId = body.supplierInvoiceId;
+    if (data.supplierInvoiceId !== undefined) {
+      updateData.supplierInvoiceId = data.supplierInvoiceId;
     }
 
     // ─── Update items (only on DRAFT / SUBMITTED) ───────────────────────
-    if (body.items && isEditable) {
-      const newItems = body.items as Array<{
-        id?: string;
-        description: string;
-        productId?: string;
-        formatId?: string;
-        sku?: string;
-        quantity: number;
-        unitCost: number;
-      }>;
+    if (data.items && isEditable) {
+      const newItems = data.items;
 
       // Delete existing items and recreate
       await prisma.purchaseOrderItem.deleteMany({

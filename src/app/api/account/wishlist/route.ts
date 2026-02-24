@@ -1,10 +1,16 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { auth } from '@/lib/auth-config';
 import { db } from '@/lib/db';
 import { validateCsrf } from '@/lib/csrf-middleware';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { logger } from '@/lib/logger';
+
+const addWishlistSchema = z.object({
+  productId: z.string().min(1, 'productId is required'),
+});
 
 /**
  * GET /api/account/wishlist
@@ -96,6 +102,11 @@ export async function GET() {
  */
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/account/wishlist');
+    if (!rl.success) { const res = NextResponse.json({ error: rl.error!.message }, { status: 429 }); Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v)); return res; }
+
     // SECURITY (BE-SEC-15): CSRF protection for mutation endpoint
     const csrfValid = await validateCsrf(request);
     if (!csrfValid) {
@@ -108,14 +119,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { productId } = await request.json();
-
-    if (!productId || typeof productId !== 'string') {
-      return NextResponse.json(
-        { error: 'productId is required' },
-        { status: 400 }
-      );
+    const body = await request.json();
+    const parsed = addWishlistSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
     }
+    const { productId } = parsed.data;
 
     // Verify the product exists
     const product = await db.product.findUnique({

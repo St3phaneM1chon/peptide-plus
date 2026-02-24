@@ -5,10 +5,40 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { UserRole } from '@/types';
 import { logger } from '@/lib/logger';
+import { validateCsrf } from '@/lib/csrf-middleware';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+
+const createCompanySchema = z.object({
+  name: z.string().min(1, 'name is required').max(200),
+  slug: z.string().max(200).optional(),
+  contactEmail: z.string().email('Invalid email').min(1, 'contactEmail is required'),
+  phone: z.string().max(30).optional(),
+  billingAddress: z.string().max(300).optional(),
+  billingCity: z.string().max(100).optional(),
+  billingState: z.string().max(100).optional(),
+  billingPostal: z.string().max(20).optional(),
+  billingCountry: z.string().max(100).optional(),
+  ownerId: z.string().optional(),
+});
+
+const updateCompanySchema = z.object({
+  id: z.string().min(1, 'id is required'),
+  name: z.string().min(1).max(200).optional(),
+  slug: z.string().max(200).optional(),
+  contactEmail: z.string().email().optional(),
+  phone: z.string().max(30).optional(),
+  billingAddress: z.string().max(300).optional(),
+  billingCity: z.string().max(100).optional(),
+  billingState: z.string().max(100).optional(),
+  billingPostal: z.string().max(20).optional(),
+  billingCountry: z.string().max(100).optional(),
+  isActive: z.boolean().optional(),
+});
 
 // GET - Liste des compagnies (Employee/Owner) ou ma compagnie (Client)
 export async function GET(request: NextRequest) {
@@ -114,6 +144,17 @@ export async function GET(request: NextRequest) {
 // POST - Créer une compagnie
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/company');
+    if (!rl.success) { const res = NextResponse.json({ error: rl.error!.message }, { status: 429 }); Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v)); return res; }
+
+    // CSRF protection
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const session = await auth();
 
     if (!session?.user) {
@@ -121,6 +162,10 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
+    const parsed = createCompanySchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+    }
     const {
       name,
       slug,
@@ -132,11 +177,7 @@ export async function POST(request: NextRequest) {
       billingPostal,
       billingCountry,
       ownerId,
-    } = body;
-
-    if (!name || !contactEmail) {
-      return NextResponse.json({ error: 'name et contactEmail requis' }, { status: 400 });
-    }
+    } = parsed.data;
 
     // Générer le slug si non fourni
     const finalSlug = slug || name.toLowerCase()
@@ -230,6 +271,17 @@ export async function POST(request: NextRequest) {
 // PUT - Mettre à jour une compagnie
 export async function PUT(request: NextRequest) {
   try {
+    // Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/company');
+    if (!rl.success) { const res = NextResponse.json({ error: rl.error!.message }, { status: 429 }); Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v)); return res; }
+
+    // CSRF protection
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const session = await auth();
 
     if (!session?.user) {
@@ -237,11 +289,11 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { id } = body;
-
-    if (!id) {
-      return NextResponse.json({ error: 'id requis' }, { status: 400 });
+    const parsed = updateCompanySchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
     }
+    const { id } = parsed.data;
 
     // Whitelist: only allow safe fields to be updated (H12 - mass assignment fix)
     const allowedFields = [
@@ -250,9 +302,10 @@ export async function PUT(request: NextRequest) {
       'isActive',
     ] as const;
     const updates: Record<string, unknown> = {};
+    const data = parsed.data as Record<string, unknown>;
     for (const field of allowedFields) {
-      if (body[field] !== undefined) {
-        updates[field] = body[field];
+      if (data[field] !== undefined) {
+        updates[field] = data[field];
       }
     }
 

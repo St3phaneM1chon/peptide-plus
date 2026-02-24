@@ -1,10 +1,21 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { logger } from '@/lib/logger';
+
+const createPaymentMethodSchema = z.object({
+  countryCode: z.string().min(2).max(5),
+  methodType: z.string().min(1).max(50),
+  provider: z.string().min(1).max(100),
+  isActive: z.boolean().optional().default(true),
+  sortOrder: z.number().int().min(0).optional().default(0),
+  minAmount: z.number().positive().nullable().optional(),
+  maxAmount: z.number().positive().nullable().optional(),
+});
 
 /**
  * GET /api/admin/payment-methods
@@ -49,23 +60,24 @@ export const GET = withAdminGuard(async (_request, { session }) => {
 export const POST = withAdminGuard(async (request, { session }) => {
   try {
     const body = await request.json();
+
+    // Validate with Zod
+    const parsed = createPaymentMethodSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid data', details: parsed.error.errors },
+        { status: 400 }
+      );
+    }
     const {
       countryCode,
       methodType,
       provider,
-      isActive = true,
-      sortOrder = 0,
+      isActive,
+      sortOrder,
       minAmount,
       maxAmount,
-    } = body;
-
-    // Validate required fields
-    if (!countryCode || !methodType || !provider) {
-      return NextResponse.json(
-        { error: 'countryCode, methodType, and provider are required' },
-        { status: 400 }
-      );
-    }
+    } = parsed.data;
 
     // Check if configuration already exists
     const existing = await prisma.paymentMethodConfig.findUnique({
@@ -87,8 +99,8 @@ export const POST = withAdminGuard(async (request, { session }) => {
           provider,
           isActive,
           sortOrder,
-          minAmount: minAmount ? minAmount : null,
-          maxAmount: maxAmount ? maxAmount : null,
+          minAmount: minAmount ?? null,
+          maxAmount: maxAmount ?? null,
         },
       });
     } else {
@@ -100,8 +112,8 @@ export const POST = withAdminGuard(async (request, { session }) => {
           provider,
           isActive,
           sortOrder,
-          minAmount: minAmount ? minAmount : null,
-          maxAmount: maxAmount ? maxAmount : null,
+          minAmount: minAmount ?? null,
+          maxAmount: maxAmount ?? null,
         },
       });
     }

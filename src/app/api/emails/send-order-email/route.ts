@@ -6,9 +6,12 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { auth } from '@/lib/auth-config';
 import { db } from '@/lib/db';
 import { logger } from '@/lib/logger';
+import { validateCsrf } from '@/lib/csrf-middleware';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import {
   sendEmail,
   orderConfirmationEmail,
@@ -22,38 +25,57 @@ import {
   type OrderData,
 } from '@/lib/email';
 
-type EmailType = 'confirmation' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'refund' | 'satisfaction';
+const orderEmailSchema = z.object({
+  orderId: z.string().min(1, 'orderId is required'),
+  emailType: z.enum(['confirmation', 'processing', 'shipped', 'delivered', 'cancelled', 'refund', 'satisfaction'], {
+    errorMap: () => ({ message: 'Invalid emailType' }),
+  }),
+  trackingNumber: z.string().optional(),
+  trackingUrl: z.string().url().optional().or(z.literal('')),
+  carrier: z.string().optional(),
+  estimatedDelivery: z.string().optional(),
+  cancellationReason: z.string().optional(),
+  refundAmount: z.number().optional(),
+  refundIsPartial: z.boolean().optional(),
+});
 
 export async function POST(request: NextRequest) {
   try {
+    // SECURITY: Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip')
+      || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/emails/send-order-email');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+
+    // SECURITY: CSRF protection
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     // Vérifier l'authentification (admin ou système)
     const session = await auth();
     const apiKey = request.headers.get('x-api-key');
-    
+
     // Autoriser si admin ou si clé API valide
     const isAdmin = session?.user?.role === 'OWNER' || session?.user?.role === 'EMPLOYEE';
     const isValidApiKey = apiKey === process.env.INTERNAL_API_KEY;
-    
+
     if (!isAdmin && !isValidApiKey) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await request.json();
-    const { orderId, emailType, trackingNumber, trackingUrl, carrier, estimatedDelivery, cancellationReason, refundAmount, refundIsPartial } = body as {
-      orderId: string;
-      emailType: EmailType;
-      trackingNumber?: string;
-      trackingUrl?: string;
-      carrier?: string;
-      estimatedDelivery?: string;
-      cancellationReason?: string;
-      refundAmount?: number;
-      refundIsPartial?: boolean;
-    };
-
-    if (!orderId || !emailType) {
-      return NextResponse.json({ error: 'orderId and emailType are required' }, { status: 400 });
+    const parsed = orderEmailSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
     }
+    const { orderId, emailType, trackingNumber, trackingUrl, carrier, estimatedDelivery, cancellationReason, refundAmount, refundIsPartial } = parsed.data;
 
     // Récupérer la commande
     const order = await db.order.findUnique({

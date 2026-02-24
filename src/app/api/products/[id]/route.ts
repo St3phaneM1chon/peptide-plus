@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
@@ -12,6 +13,66 @@ import { enqueue, withTranslation, getTranslatedFields, DB_SOURCE_LOCALE } from 
 import { defaultLocale } from '@/i18n/config';
 import { apiSuccess, apiError, apiNoContent, withETag, validateContentType } from '@/lib/api-response';
 import { ErrorCode } from '@/lib/error-codes';
+import { validateCsrf } from '@/lib/csrf-middleware';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+
+const updateProductSchema = z.object({
+  name: z.string().min(1).max(300).optional(),
+  subtitle: z.string().max(300).optional(),
+  slug: z.string().min(1).max(300).optional(),
+  shortDescription: z.string().max(1000).optional(),
+  description: z.string().max(10000).optional(),
+  fullDetails: z.string().max(50000).optional(),
+  specifications: z.string().max(10000).optional(),
+  productType: z.string().max(100).optional(),
+  price: z.number().min(0).optional(),
+  compareAtPrice: z.number().min(0).optional().nullable(),
+  purity: z.number().min(0).max(100).optional().nullable(),
+  aminoSequence: z.string().max(5000).optional().nullable(),
+  molecularWeight: z.string().max(200).optional().nullable(),
+  casNumber: z.string().max(100).optional().nullable(),
+  molecularFormula: z.string().max(500).optional().nullable(),
+  storageConditions: z.string().max(500).optional().nullable(),
+  imageUrl: z.string().max(500).optional().nullable(),
+  videoUrl: z.string().max(500).optional().nullable(),
+  certificateUrl: z.string().max(500).optional().nullable(),
+  certificateName: z.string().max(200).optional().nullable(),
+  dataSheetUrl: z.string().max(500).optional().nullable(),
+  dataSheetName: z.string().max(200).optional().nullable(),
+  coaUrl: z.string().max(500).optional().nullable(),
+  msdsUrl: z.string().max(500).optional().nullable(),
+  hplcUrl: z.string().max(500).optional().nullable(),
+  categoryId: z.string().optional().nullable(),
+  trackInventory: z.boolean().optional(),
+  allowBackorder: z.boolean().optional(),
+  weight: z.number().min(0).optional().nullable(),
+  dimensions: z.string().max(200).optional().nullable(),
+  requiresShipping: z.boolean().optional(),
+  sku: z.string().max(100).optional().nullable(),
+  barcode: z.string().max(100).optional().nullable(),
+  manufacturer: z.string().max(200).optional().nullable(),
+  origin: z.string().max(200).optional().nullable(),
+  supplierUrl: z.string().max(500).optional().nullable(),
+  metaTitle: z.string().max(200).optional().nullable(),
+  metaDescription: z.string().max(500).optional().nullable(),
+  tags: z.array(z.string()).optional().nullable(),
+  researchSays: z.string().max(10000).optional().nullable(),
+  relatedResearch: z.string().max(10000).optional().nullable(),
+  participateResearch: z.string().max(10000).optional().nullable(),
+  customSections: z.unknown().optional().nullable(),
+  isActive: z.boolean().optional(),
+  isFeatured: z.boolean().optional(),
+  isNew: z.boolean().optional(),
+  isBestseller: z.boolean().optional(),
+  images: z.array(z.object({
+    url: z.string(),
+    alt: z.string().optional(),
+    caption: z.string().optional(),
+    sortOrder: z.number().optional(),
+    isPrimary: z.boolean().optional(),
+  })).optional(),
+  formats: z.array(z.record(z.unknown())).optional(),
+}).passthrough();
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -76,6 +137,17 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 // Status codes: 200 OK, 400 Bad Request, 401 Unauthorized, 403 Forbidden, 404 Not Found, 409 Conflict, 415 Unsupported Media Type, 500 Internal Error
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
+    // Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/products');
+    if (!rl.success) { const res = NextResponse.json({ error: rl.error!.message }, { status: 429 }); Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v)); return res; }
+
+    // CSRF protection
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     // Item 12: Content-Type validation
     const ctError = validateContentType(request);
     if (ctError) return ctError;
@@ -92,13 +164,12 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     }
 
     const body = await request.json();
-
-    // BUG-016 FIX: Basic body type validation before processing
-    if (!body || typeof body !== 'object' || Array.isArray(body)) {
-      return apiError('Invalid request body', ErrorCode.BAD_REQUEST, { request });
+    const parsed = updateProductSchema.safeParse(body);
+    if (!parsed.success) {
+      return apiError('Invalid data', ErrorCode.VALIDATION_ERROR, { request });
     }
 
-    const { images, formats } = body;
+    const { images, formats } = parsed.data;
 
     // Whitelist: only allow safe fields to be updated (H13 - mass assignment fix)
     const allowedProductFields = [
@@ -117,9 +188,10 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       'isActive', 'isFeatured', 'isNew', 'isBestseller',
     ] as const;
     const productData: Record<string, unknown> = {};
+    const data = parsed.data as Record<string, unknown>;
     for (const field of allowedProductFields) {
-      if (body[field] !== undefined) {
-        productData[field] = body[field];
+      if (data[field] !== undefined) {
+        productData[field] = data[field];
       }
     }
 
@@ -267,8 +339,19 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
 // DELETE - Supprimer un produit (soft delete)
 // Status codes: 204 No Content, 401 Unauthorized, 403 Forbidden, 500 Internal Error
-export async function DELETE(_request: Request, { params }: RouteParams) {
+export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
+    // Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/products');
+    if (!rl.success) { const res = NextResponse.json({ error: rl.error!.message }, { status: 429 }); Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v)); return res; }
+
+    // CSRF protection
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const { id } = await params;
     const session = await auth();
 

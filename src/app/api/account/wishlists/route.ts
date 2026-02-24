@@ -1,10 +1,21 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { validateCsrf } from '@/lib/csrf-middleware';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { logger } from '@/lib/logger';
+
+const createWishlistSchema = z.object({
+  name: z.string().min(1, 'Name is required').max(100, 'Name must be 100 characters or less'),
+});
+
+const renameWishlistSchema = z.object({
+  id: z.string().min(1, 'ID is required'),
+  name: z.string().min(1, 'Name is required').max(100, 'Name must be 100 characters or less'),
+});
 
 /**
  * GET /api/account/wishlists
@@ -65,6 +76,11 @@ export async function GET() {
  */
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/account/wishlists');
+    if (!rl.success) { const res = NextResponse.json({ error: rl.error!.message }, { status: 429 }); Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v)); return res; }
+
     // SECURITY (BE-SEC-15): CSRF protection for mutation endpoint
     const csrfValid = await validateCsrf(request);
     if (!csrfValid) {
@@ -77,21 +93,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { name } = await request.json();
-
-    if (!name || typeof name !== 'string' || name.trim().length === 0) {
-      return NextResponse.json(
-        { error: 'Name is required' },
-        { status: 400 }
-      );
+    const body = await request.json();
+    const parsed = createWishlistSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
     }
-
-    if (name.trim().length > 100) {
-      return NextResponse.json(
-        { error: 'Name must be 100 characters or less' },
-        { status: 400 }
-      );
-    }
+    const { name } = parsed.data;
 
     const wishlist = await prisma.wishlistCollection.create({
       data: {
@@ -126,6 +133,11 @@ export async function POST(request: NextRequest) {
  */
 export async function PATCH(request: NextRequest) {
   try {
+    // Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/account/wishlists');
+    if (!rl.success) { const res = NextResponse.json({ error: rl.error!.message }, { status: 429 }); Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v)); return res; }
+
     // SECURITY (BE-SEC-15): CSRF protection for mutation endpoint
     const csrfValid = await validateCsrf(request);
     if (!csrfValid) {
@@ -138,21 +150,12 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id, name } = await request.json();
-
-    if (!id || !name || typeof name !== 'string' || name.trim().length === 0) {
-      return NextResponse.json(
-        { error: 'ID and name are required' },
-        { status: 400 }
-      );
+    const body = await request.json();
+    const parsed = renameWishlistSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
     }
-
-    if (name.trim().length > 100) {
-      return NextResponse.json(
-        { error: 'Name must be 100 characters or less' },
-        { status: 400 }
-      );
-    }
+    const { id, name } = parsed.data;
 
     // Verify ownership
     const wishlist = await prisma.wishlistCollection.findFirst({
@@ -198,6 +201,11 @@ export async function PATCH(request: NextRequest) {
  */
 export async function DELETE(request: NextRequest) {
   try {
+    // Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/account/wishlists');
+    if (!rl.success) { const res = NextResponse.json({ error: rl.error!.message }, { status: 429 }); Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v)); return res; }
+
     // SECURITY (BE-SEC-15): CSRF protection for mutation endpoint
     const csrfValid = await validateCsrf(request);
     if (!csrfValid) {

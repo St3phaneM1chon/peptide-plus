@@ -1,10 +1,26 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { validateCsrf } from '@/lib/csrf-middleware';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { logger } from '@/lib/logger';
+
+const createReturnSchema = z.object({
+  orderId: z.string().min(1, 'orderId is required'),
+  orderItemId: z.string().min(1, 'orderItemId is required'),
+  reason: z.string().min(1, 'reason is required').max(500),
+  details: z.string().max(2000).optional(),
+});
+
+const updateReturnSchema = z.object({
+  returnRequestId: z.string().min(1, 'returnRequestId is required'),
+  status: z.enum(['PENDING', 'APPROVED', 'RECEIVED', 'REFUNDED', 'REJECTED']),
+  resolution: z.string().max(500).optional(),
+  adminNotes: z.string().max(2000).optional(),
+});
 
 // GET - List user's return requests
 export async function GET() {
@@ -71,6 +87,11 @@ export async function GET() {
 // POST - Create new return request
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/account/returns');
+    if (!rl.success) { const res = NextResponse.json({ error: rl.error!.message }, { status: 429 }); Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v)); return res; }
+
     // SECURITY (BE-SEC-15): CSRF protection for mutation endpoint
     const csrfValid = await validateCsrf(request);
     if (!csrfValid) {
@@ -93,15 +114,11 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { orderId, orderItemId, reason, details } = body;
-
-    // Validate required fields
-    if (!orderId || !orderItemId || !reason) {
-      return NextResponse.json(
-        { error: 'Missing required fields: orderId, orderItemId, reason' },
-        { status: 400 }
-      );
+    const parsed = createReturnSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
     }
+    const { orderId, orderItemId, reason, details } = parsed.data;
 
     // Verify order belongs to user
     const order = await prisma.order.findUnique({
@@ -208,6 +225,17 @@ export async function POST(request: NextRequest) {
 // BE-PAY-13: When a return is marked as RECEIVED, automatically trigger refund creation
 export async function PATCH(request: NextRequest) {
   try {
+    // Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/account/returns');
+    if (!rl.success) { const res = NextResponse.json({ error: rl.error!.message }, { status: 429 }); Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v)); return res; }
+
+    // CSRF protection
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
     const session = await auth();
 
     if (!session?.user?.email) {
@@ -225,22 +253,11 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { returnRequestId, status, resolution, adminNotes } = body;
-
-    if (!returnRequestId || !status) {
-      return NextResponse.json(
-        { error: 'Missing required fields: returnRequestId, status' },
-        { status: 400 }
-      );
+    const parsed = updateReturnSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
     }
-
-    const validStatuses = ['PENDING', 'APPROVED', 'RECEIVED', 'REFUNDED', 'REJECTED'];
-    if (!validStatuses.includes(status)) {
-      return NextResponse.json(
-        { error: `Invalid status. Must be one of: ${validStatuses.join(', ')}` },
-        { status: 400 }
-      );
-    }
+    const { returnRequestId, status, resolution, adminNotes } = parsed.data;
 
     // Get the return request with order and item details
     const returnRequest = await prisma.returnRequest.findUnique({

@@ -10,8 +10,15 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { prisma } from '@/lib/db';
+import { validateCsrf } from '@/lib/csrf-middleware';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+
+const viewedProductSchema = z.object({
+  productId: z.string().min(1, 'productId required').regex(/^[a-z0-9]{20,30}$/, 'Invalid productId format'),
+});
 
 const COOKIE_NAME = 'recently_viewed';
 const MAX_VIEWED = 20;
@@ -82,16 +89,23 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const productId = body.productId;
+    // Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/products/viewed');
+    if (!rl.success) { const res = NextResponse.json({ error: rl.error!.message }, { status: 429 }); Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v)); return res; }
 
-    if (!productId || typeof productId !== 'string') {
-      return NextResponse.json({ error: 'productId required' }, { status: 400 });
+    // CSRF protection
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
     }
-    // BUG-073 FIX: Validate productId format to prevent arbitrary cookie injection
-    if (!/^[a-z0-9]{20,30}$/.test(productId)) {
-      return NextResponse.json({ error: 'Invalid productId format' }, { status: 400 });
+
+    const body = await request.json();
+    const parsed = viewedProductSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
     }
+    const { productId } = parsed.data;
 
     // FIX: BUG-059 - Verify product exists in DB before adding to viewed cookie
     const productExists = await prisma.product.findUnique({

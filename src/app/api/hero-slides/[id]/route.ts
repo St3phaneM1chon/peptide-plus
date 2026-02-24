@@ -2,12 +2,45 @@ export const dynamic = 'force-dynamic';
 
 // FIX: F5 - Migrated to withAdminGuard for consistent auth + CSRF + rate limiting
 import { NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { sanitizeUrl } from '@/lib/sanitize';
 import { stripHtml } from '@/lib/validation';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { logger } from '@/lib/logger';
+
+const updateHeroSlideSchema = z.object({
+  slug: z.string().min(1).max(200).optional(),
+  mediaType: z.string().optional(),
+  backgroundUrl: z.string().max(1000).optional(),
+  backgroundMobile: z.string().max(1000).optional().nullable(),
+  overlayOpacity: z.number().min(0).max(100).optional(),
+  overlayGradient: z.string().max(500).optional().nullable(),
+  badgeText: z.string().max(200).optional().nullable(),
+  title: z.string().max(500).optional(),
+  subtitle: z.string().max(1000).optional().nullable(),
+  ctaText: z.string().max(200).optional().nullable(),
+  ctaUrl: z.string().max(500).optional().nullable(),
+  ctaStyle: z.string().max(100).optional().nullable(),
+  cta2Text: z.string().max(200).optional().nullable(),
+  cta2Url: z.string().max(500).optional().nullable(),
+  cta2Style: z.string().max(100).optional().nullable(),
+  statsJson: z.unknown().optional().nullable(),
+  sortOrder: z.number().int().optional(),
+  isActive: z.boolean().optional(),
+  startDate: z.string().optional().nullable(),
+  endDate: z.string().optional().nullable(),
+  translations: z.array(z.object({
+    locale: z.string().min(1),
+    badgeText: z.string().optional(),
+    title: z.string().optional(),
+    subtitle: z.string().optional(),
+    ctaText: z.string().optional(),
+    cta2Text: z.string().optional(),
+    statsJson: z.string().optional(),
+  })).optional(),
+}).passthrough();
 
 // GET - Une slide avec traductions
 export const GET = withAdminGuard(async (_request, { params }) => {
@@ -42,7 +75,11 @@ export const PUT = withAdminGuard(async (request, { session, params }) => {
   try {
     const id = params!.id;
     const body = await request.json();
-    const { translations, ...rawSlideData } = body;
+    const parsed = updateHeroSlideSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+    }
+    const { translations, ...rawSlideData } = parsed.data;
 
     // FIX: F6 - Only accept whitelisted fields (prevents arbitrary data injection)
     const slideData: Record<string, unknown> = {};

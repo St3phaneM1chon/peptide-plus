@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { createAccountingEntriesForOrder } from '@/lib/accounting/webhook-accounting.service';
@@ -12,6 +13,39 @@ import { getPayPalAccessToken, PAYPAL_API_URL } from '@/lib/paypal';
 import { validateCsrf } from '@/lib/csrf-middleware';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { logger } from '@/lib/logger';
+
+const cartItemSchema = z.object({
+  productId: z.string().optional(),
+  formatId: z.string().optional(),
+  name: z.string().optional(),
+  formatName: z.string().optional(),
+  sku: z.string().optional(),
+  quantity: z.number().min(1).or(z.string().transform(Number)),
+  price: z.number().or(z.string().transform(Number)).optional(),
+  discount: z.number().optional(),
+  productType: z.string().optional(),
+});
+
+const captureSchema = z.object({
+  orderId: z.string().min(1, 'Order ID requis'),
+  cartItems: z.array(cartItemSchema).optional(),
+  shippingInfo: z.object({
+    firstName: z.string().optional(),
+    lastName: z.string().optional(),
+    address: z.string().optional(),
+    apartment: z.string().optional(),
+    city: z.string().optional(),
+    province: z.string().optional(),
+    postalCode: z.string().optional(),
+    country: z.string().optional(),
+    phone: z.string().optional(),
+  }).optional(),
+  promoCode: z.string().optional(),
+  promoDiscount: z.number().optional(),
+  cartId: z.string().optional(),
+  giftCardCode: z.string().optional(),
+  giftCardDiscount: z.number().optional(),
+});
 
 export async function POST(request: NextRequest) {
   try {
@@ -34,6 +68,10 @@ export async function POST(request: NextRequest) {
 
     const session = await auth();
     const body = await request.json();
+    const parsed = captureSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+    }
     const {
       orderId: paypalOrderId,
       cartItems,
@@ -43,11 +81,7 @@ export async function POST(request: NextRequest) {
       cartId,
       giftCardCode,
       giftCardDiscount: clientGiftCardDiscount,
-    } = body;
-
-    if (!paypalOrderId) {
-      return NextResponse.json({ error: 'Order ID requis' }, { status: 400 });
-    }
+    } = parsed.data;
 
     // BUG 6: Require authentication BEFORE capturing payment
     if (!session?.user?.id) {

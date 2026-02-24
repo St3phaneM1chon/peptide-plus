@@ -8,28 +8,35 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { validateCsrf } from '@/lib/csrf-middleware';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
 
-interface UpdateAddressRequest {
-  firstName: string;
-  lastName: string;
-  address1: string;
-  address2?: string;
-  city: string;
-  province: string;
-  postalCode: string;
-  country: string;
-  phone?: string;
-}
+const updateAddressSchema = z.object({
+  firstName: z.string().min(1, 'First name is required').max(100),
+  lastName: z.string().min(1, 'Last name is required').max(100),
+  address1: z.string().min(1, 'Address is required').max(200),
+  address2: z.string().max(200).optional(),
+  city: z.string().min(1, 'City is required').max(100),
+  province: z.string().min(1, 'Province is required').max(100),
+  postalCode: z.string().min(1, 'Postal code is required').max(20),
+  country: z.string().min(1, 'Country is required').max(100),
+  phone: z.string().max(30).optional(),
+});
 
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/account/orders/update-address');
+    if (!rl.success) { const res = NextResponse.json({ error: rl.error!.message }, { status: 429 }); Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v)); return res; }
+
     // SECURITY (BE-SEC-15): CSRF protection for mutation endpoint
     const csrfValid = await validateCsrf(request);
     if (!csrfValid) {
@@ -43,17 +50,12 @@ export async function PUT(
     }
 
     const { id: orderId } = await params;
-    const body = await request.json() as UpdateAddressRequest;
-
-    // Validate required fields
-    const { firstName, lastName, address1, city, province, postalCode, country } = body;
-
-    if (!firstName || !lastName || !address1 || !city || !province || !postalCode || !country) {
-      return NextResponse.json(
-        { error: 'Missing required address fields' },
-        { status: 400 }
-      );
+    const body = await request.json();
+    const parsed = updateAddressSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
     }
+    const { firstName, lastName, address1, city, province, postalCode, country } = parsed.data;
 
     // Find the user
     const user = await prisma.user.findUnique({
@@ -113,12 +115,12 @@ export async function PUT(
     const newAddress = {
       name: `${firstName} ${lastName}`,
       address1,
-      address2: body.address2 || '',
+      address2: parsed.data.address2 || '',
       city,
       province,
       postalCode,
       country,
-      phone: body.phone || '',
+      phone: parsed.data.phone || '',
     };
 
     // Update the order's shipping address
@@ -127,12 +129,12 @@ export async function PUT(
       data: {
         shippingName: `${firstName} ${lastName}`,
         shippingAddress1: address1,
-        shippingAddress2: body.address2 || null,
+        shippingAddress2: parsed.data.address2 || null,
         shippingCity: city,
         shippingState: province,
         shippingPostal: postalCode,
         shippingCountry: country,
-        shippingPhone: body.phone || null,
+        shippingPhone: parsed.data.phone || null,
       },
       include: {
         items: true,
@@ -211,23 +213,23 @@ export async function PUT(
           firstName,
           lastName,
           address1,
-          address2: body.address2,
+          address2: parsed.data.address2,
           city,
           province,
           postalCode,
           country,
-          phone: body.phone,
+          phone: parsed.data.phone,
         },
         billingAddress: {
           firstName,
           lastName,
           address1,
-          address2: body.address2,
+          address2: parsed.data.address2,
           city,
           province,
           postalCode,
           country,
-          phone: body.phone,
+          phone: parsed.data.phone,
         },
       },
     });

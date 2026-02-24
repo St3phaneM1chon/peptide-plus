@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
+import { z } from 'zod';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { createPaymentIntent, getOrCreateStripeCustomer } from '@/lib/stripe';
@@ -13,6 +14,13 @@ import { validateCsrf } from '@/lib/csrf-middleware';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { add, toCents } from '@/lib/decimal-calculator';
 import { logger } from '@/lib/logger';
+
+const createIntentSchema = z.object({
+  productId: z.string().min(1, 'Product ID requis'),
+  saveCard: z.boolean().optional(),
+  companyId: z.string().optional(),
+  province: z.string().max(2).optional(),
+});
 
 export async function POST(request: NextRequest) {
   try {
@@ -54,11 +62,12 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const { productId, saveCard, companyId, province: reqProvince } = await request.json();
-
-    if (!productId) {
-      return NextResponse.json({ error: 'Product ID requis' }, { status: 400 });
+    const body = await request.json();
+    const parsed = createIntentSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
     }
+    const { productId, saveCard, companyId, province: reqProvince } = parsed.data;
 
     // Récupérer le produit
     const product = await prisma.product.findUnique({
