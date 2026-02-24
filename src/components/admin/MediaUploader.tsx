@@ -27,7 +27,8 @@ interface MediaUploaderProps {
 }
 
 const CONTEXT_CONFIG: Record<MediaContext, { accept: string; folder: string; maxSizeMB: number }> = {
-  'product-image': { accept: 'image/jpeg,image/png,image/webp,image/gif', folder: 'products', maxSizeMB: 10 },
+  // G1-FLAW-05: Tighten product images to 5MB, remove GIF
+  'product-image': { accept: 'image/jpeg,image/png,image/webp', folder: 'products', maxSizeMB: 5 },
   'product-video': { accept: 'video/mp4,video/webm', folder: 'products', maxSizeMB: 50 },
   'product-doc': { accept: 'application/pdf', folder: 'documents', maxSizeMB: 10 },
   'banner': { accept: 'image/jpeg,image/png,image/webp', folder: 'banners', maxSizeMB: 10 },
