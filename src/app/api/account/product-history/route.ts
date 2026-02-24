@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { db } from '@/lib/db';
+import { logger } from '@/lib/logger';
 
 export async function GET() {
   try {
@@ -173,7 +174,7 @@ export async function GET() {
 
     return NextResponse.json({ categories });
   } catch (error) {
-    console.error('Error fetching product history:', error);
+    logger.error('Error fetching product history', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la récupération de l\'historique produits' },
       { status: 500 }

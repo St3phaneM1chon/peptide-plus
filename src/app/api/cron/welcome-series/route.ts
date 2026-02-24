@@ -39,6 +39,7 @@ import crypto from 'crypto';
 import { db } from '@/lib/db';
 import { sendEmail, welcomeEmail, generateUnsubscribeUrl } from '@/lib/email';
 import { withJobLock } from '@/lib/cron-lock';
+import { logger } from '@/lib/logger';
 
 const BATCH_SIZE = 10;
 const WELCOME_POINTS = 100; // Default welcome points to mention
@@ -173,7 +174,7 @@ export async function GET(request: NextRequest) {
         eligibleUsers = eligibleUsers.filter((u) => !orderedUserIds.has(u.id));
       }
 
-      console.log(`[CRON:WELCOME] Step "${step.id}" (day ${step.daysSinceSignup}): ${usersInWindow.length} in window, ${eligibleUsers.length} eligible`);
+      logger.info(`[CRON:WELCOME] Step "${step.id}" (day ${step.daysSinceSignup}): ${usersInWindow.length} in window, ${eligibleUsers.length} eligible`);
 
       // Process in batches
       for (let i = 0; i < eligibleUsers.length; i += BATCH_SIZE) {
@@ -265,7 +266,7 @@ export async function GET(request: NextRequest) {
                 status: result.success ? 'sent' : 'failed',
                 error: result.success ? null : 'Send failed',
               },
-            }).catch(console.error);
+            }).catch((err) => logger.error('Failed to create EmailLog entry', { error: err instanceof Error ? err.message : String(err) }));
 
             // Also log to AuditLog for traceability
             await db.auditLog.create({
@@ -280,9 +281,9 @@ export async function GET(request: NextRequest) {
                   sent: result.success,
                 }),
               },
-            }).catch(console.error);
+            }).catch((err) => logger.error('Failed to create AuditLog entry', { error: err instanceof Error ? err.message : String(err) }));
 
-            console.log(
+            logger.info(
               `[CRON:WELCOME] ${step.id} email sent to ${user.email} (${result.success ? 'OK' : 'FAILED'})`
             );
 
@@ -294,7 +295,7 @@ export async function GET(request: NextRequest) {
               messageId: result.messageId,
             };
           } catch (error) {
-            console.error(`[CRON:WELCOME] ${step.id} failed for ${user.email}:`, error);
+            logger.error(`[CRON:WELCOME] ${step.id} failed for ${user.email}`, { error: error instanceof Error ? error.message : String(error) });
 
             await db.emailLog.create({
               data: {
@@ -304,7 +305,7 @@ export async function GET(request: NextRequest) {
                 status: 'failed',
                 error: error instanceof Error ? error.message : 'Unknown error',
               },
-            }).catch(console.error);
+            }).catch((err) => logger.error('Failed to create failure EmailLog entry', { error: err instanceof Error ? err.message : String(err) }));
 
             return {
               step: step.id,
@@ -339,7 +340,7 @@ export async function GET(request: NextRequest) {
       else stepSummary[r.step].failed++;
     }
 
-    console.log(
+    logger.info(
       `[CRON:WELCOME] Complete: ${successCount} sent, ${failCount} failed across ${DRIP_STEPS.length} steps, ${duration}ms`
     );
 
@@ -354,7 +355,7 @@ export async function GET(request: NextRequest) {
       results: allResults,
     });
     } catch (error) {
-      console.error('[CRON:WELCOME] Job error:', error);
+      logger.error('[CRON:WELCOME] Job error', { error: error instanceof Error ? error.message : String(error) });
       return NextResponse.json(
         {
           error: 'Internal server error',

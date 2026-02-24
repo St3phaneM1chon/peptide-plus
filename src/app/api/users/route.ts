@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { UserRole } from '@/types';
+import { logger } from '@/lib/logger';
 
 // GET - Liste des utilisateurs
 export async function GET(request: NextRequest) {
@@ -77,7 +78,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error fetching users:', error);
+    logger.error('Error fetching users', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la récupération des utilisateurs' },
       { status: 500 }

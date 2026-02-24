@@ -23,6 +23,7 @@ import { generateUnsubscribeUrl } from '@/lib/email/unsubscribe';
 import { shouldSuppressEmail } from '@/lib/email/bounce-handler';
 import { escapeHtml } from '@/lib/email/templates/base-template';
 import { withJobLock } from '@/lib/cron-lock';
+import { logger } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
   // FLAW-007 FIX: Only accept cron secret via Authorization header, not query string.
@@ -249,7 +250,7 @@ export async function GET(request: NextRequest) {
     }
 
     const successCount = results.filter((r) => r.success).length;
-    console.log(`[CRON:SCHEDULED-CAMPAIGNS] Triggered ${successCount}/${scheduledCampaigns.length} campaigns`);
+    logger.info(`[CRON:SCHEDULED-CAMPAIGNS] Triggered ${successCount}/${scheduledCampaigns.length} campaigns`);
 
     return NextResponse.json({
       success: true,
@@ -258,7 +259,7 @@ export async function GET(request: NextRequest) {
       results,
     });
   } catch (error) {
-    console.error('[CRON:SCHEDULED-CAMPAIGNS] Error:', error);
+    logger.error('[CRON:SCHEDULED-CAMPAIGNS] Error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
   });

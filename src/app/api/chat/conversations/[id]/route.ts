@@ -10,6 +10,7 @@ import { prisma } from '@/lib/db';
 import { getApiTranslator } from '@/i18n/server';
 import { UserRole } from '@/types';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -101,7 +102,7 @@ export async function GET(_request: Request, { params }: RouteParams) {
 
     return NextResponse.json({ conversation });
   } catch (error) {
-    console.error('Error fetching conversation:', error);
+    logger.error('Error fetching conversation', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }
@@ -201,7 +202,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: 'Invalid data', details: error.errors }, { status: 400 });
     }
-    console.error('Error updating conversation:', error);
+    logger.error('Error updating conversation', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }
@@ -227,7 +228,7 @@ export async function DELETE(_request: Request, { params }: RouteParams) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error deleting conversation:', error);
+    logger.error('Error deleting conversation', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }

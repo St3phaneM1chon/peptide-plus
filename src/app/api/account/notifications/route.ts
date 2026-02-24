@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { validateCsrf } from '@/lib/csrf-middleware';
+import { logger } from '@/lib/logger';
 
 // GET - Fetch user's notification preferences
 export async function GET() {
@@ -39,7 +40,7 @@ export async function GET() {
 
     return NextResponse.json(prefs);
   } catch (error) {
-    console.error('Error fetching notification preferences:', error);
+    logger.error('Error fetching notification preferences', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to fetch notification preferences' },
       { status: 500 }
@@ -102,7 +103,7 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json(prefs);
   } catch (error) {
-    console.error('Error updating notification preferences:', error);
+    logger.error('Error updating notification preferences', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to update notification preferences' },
       { status: 500 }

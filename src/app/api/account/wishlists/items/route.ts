@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { validateCsrf } from '@/lib/csrf-middleware';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/account/wishlists/items?collectionId=...
@@ -107,7 +108,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ items: enrichedItems });
   } catch (error) {
-    console.error('Error fetching wishlist items:', error);
+    logger.error('Error fetching wishlist items', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to fetch wishlist items' },
       { status: 500 }
@@ -201,7 +202,7 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
-    console.error('Error adding to wishlist:', error);
+    logger.error('Error adding to wishlist', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to add to wishlist' },
       { status: 500 }
@@ -300,7 +301,7 @@ export async function PATCH(request: NextRequest) {
       id: updated.id,
     });
   } catch (error) {
-    console.error('Error moving wishlist item:', error);
+    logger.error('Error moving wishlist item', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to move wishlist item' },
       { status: 500 }
@@ -357,7 +358,7 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ message: 'Removed from wishlist' });
   } catch (error) {
-    console.error('Error removing wishlist item:', error);
+    logger.error('Error removing wishlist item', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to remove from wishlist' },
       { status: 500 }

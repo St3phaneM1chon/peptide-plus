@@ -10,6 +10,7 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { db } from '@/lib/db';
 import { storage } from '@/lib/storage';
+import { logger } from '@/lib/logger';
 
 // POST - Upload avatar
 export async function POST(request: Request) {
@@ -71,7 +72,7 @@ export async function POST(request: Request) {
       try {
         await storage.delete(currentUser.image);
       } catch (deleteErr) {
-        console.warn('FIX: F83 - Failed to delete old avatar, may be orphaned:', currentUser.image, deleteErr);
+        logger.warn('FIX: F83 - Failed to delete old avatar, may be orphaned', { path: currentUser.image, error: deleteErr instanceof Error ? deleteErr.message : String(deleteErr) });
       }
     }
 
@@ -83,7 +84,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, url: result.url });
   } catch (error) {
-    console.error('Avatar upload error:', error);
+    logger.error('Avatar upload error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
   }
 }
@@ -116,7 +117,7 @@ export async function DELETE() {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Avatar delete error:', error);
+    logger.error('Avatar delete error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Delete failed' }, { status: 500 });
   }
 }

@@ -14,6 +14,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { generateCSV, formatDateForCSV } from '@/lib/csv-export';
+import { logger } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
   try {
@@ -156,7 +157,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Export orders error:', error);
+    logger.error('Export orders error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error during export' },
       { status: 500 }

@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { logger } from '@/lib/logger';
 
 const FREQUENCY_DISCOUNTS: Record<string, number> = {
   EVERY_2_MONTHS: 15,
@@ -69,7 +70,7 @@ export async function GET(
       subscriptionOptions,
     });
   } catch (error) {
-    console.error('Error fetching upsell config:', error);
+    logger.error('Error fetching upsell config', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ enabled: false });
   }
 }

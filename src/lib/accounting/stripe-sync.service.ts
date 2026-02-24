@@ -5,6 +5,7 @@
 
 import Stripe from 'stripe';
 import { STRIPE_API_VERSION } from '@/lib/stripe';
+import { logger } from '@/lib/logger';
 import { generateSaleEntry, generateFeeEntry, generateRefundEntry, generateStripePayoutEntry } from './auto-entries.service';
 import { JournalEntry, BankTransaction } from './types';
 
@@ -421,7 +422,7 @@ export async function getStripeBalance(): Promise<{
       currency: cadBalance?.currency?.toUpperCase() || 'CAD',
     };
   } catch (error) {
-    console.error('Error fetching Stripe balance:', error);
+    logger.error('Error fetching Stripe balance', { error: error instanceof Error ? error.message : String(error) });
     const message = error instanceof Error ? error.message : 'Unknown Stripe error';
     return {
       available: 0,

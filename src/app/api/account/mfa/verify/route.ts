@@ -10,6 +10,7 @@ import { auth } from '@/lib/auth-config';
 import { verifyTOTP } from '@/lib/mfa';
 import { decrypt } from '@/lib/security';
 import { prisma } from '@/lib/db';
+import { logger } from '@/lib/logger';
 import { validateCsrf } from '@/lib/csrf-middleware';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 
@@ -112,7 +113,7 @@ export async function POST(request: NextRequest) {
       backupCodes,
     });
   } catch (error) {
-    console.error('MFA verify error:', error);
+    logger.error('MFA verify error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la vérification MFA' },
       { status: 500 }

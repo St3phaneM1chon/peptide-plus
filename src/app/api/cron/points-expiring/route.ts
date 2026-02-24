@@ -28,6 +28,7 @@ import { sendEmail, pointsExpiringEmail, generateUnsubscribeUrl } from '@/lib/em
 // FLAW-063 FIX: Import bounce suppression to skip hard-bounced addresses
 import { shouldSuppressEmail } from '@/lib/email/bounce-handler';
 import { withJobLock } from '@/lib/cron-lock';
+import { logger } from '@/lib/logger';
 
 const BATCH_SIZE = 10;
 const INACTIVITY_MONTHS = 11;
@@ -113,11 +114,11 @@ export async function GET(request: NextRequest) {
           });
           expiredCount++;
         } catch (err) {
-          console.error(`[CRON:POINTS] Failed to expire points for user ${data.userId}:`, err);
+          logger.error(`[CRON:POINTS] Failed to expire points for user ${data.userId}`, { error: err instanceof Error ? err.message : String(err) });
         }
       }
 
-      console.log(`[CRON:POINTS] Expired points for ${expiredCount} users (${Object.keys(expiredByUser).length} total)`);
+      logger.info(`[CRON:POINTS] Expired points for ${expiredCount} users (${Object.keys(expiredByUser).length} total)`);
 
       // === STRATEGY 1: Points with explicit expiresAt in ~30 days ===
     const thirtyDaysFromNow = new Date();
@@ -269,7 +270,7 @@ export async function GET(request: NextRequest) {
 
     const eligibleUsers = Object.entries(userPointsMap);
 
-    console.log(
+    logger.info(
       `[CRON:POINTS] Found ${eligibleUsers.length} users with points expiring ` +
       `(${expiringTransactions.length} explicit transactions, ${inactiveUsersWithPoints.length} inactive users)`
     );
@@ -327,9 +328,9 @@ export async function GET(request: NextRequest) {
               status: result.success ? 'sent' : 'failed',
               error: result.success ? null : 'Send failed',
             },
-          }).catch(console.error);
+          }).catch((err) => logger.error('Failed to create EmailLog entry', { error: err instanceof Error ? err.message : String(err) }));
 
-          console.log(
+          logger.info(
             `[CRON:POINTS] Email sent to ${data.user.email} ` +
             `(${data.expiringPoints} pts, source: ${data.source}, ${result.success ? 'OK' : 'FAILED'})`
           );
@@ -343,7 +344,7 @@ export async function GET(request: NextRequest) {
             messageId: result.messageId,
           };
         } catch (error) {
-          console.error(`[CRON:POINTS] Failed for ${data.user.email}:`, error);
+          logger.error(`[CRON:POINTS] Failed for ${data.user.email}`, { error: error instanceof Error ? error.message : String(error) });
 
           await db.emailLog.create({
             data: {
@@ -353,7 +354,7 @@ export async function GET(request: NextRequest) {
               status: 'failed',
               error: error instanceof Error ? error.message : 'Unknown error',
             },
-          }).catch(console.error);
+          }).catch((err) => logger.error('Failed to create failure EmailLog entry', { error: err instanceof Error ? err.message : String(err) }));
 
           return {
             userId,
@@ -378,7 +379,7 @@ export async function GET(request: NextRequest) {
     const failCount = results.filter((r) => !r.success).length;
     const duration = Date.now() - startTime;
 
-    console.log(
+    logger.info(
       `[CRON:POINTS] Complete: ${successCount} sent, ${failCount} failed, ${duration}ms`
     );
 
@@ -406,7 +407,7 @@ export async function GET(request: NextRequest) {
       },
     });
     } catch (error) {
-      console.error('[CRON:POINTS] Job error:', error);
+      logger.error('[CRON:POINTS] Job error', { error: error instanceof Error ? error.message : String(error) });
       return NextResponse.json(
         {
           error: 'Internal server error',

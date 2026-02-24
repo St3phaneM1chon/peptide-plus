@@ -5,6 +5,7 @@
 
 import Stripe from 'stripe';
 import { PaymentMethod } from '@/types';
+import { logger } from '@/lib/logger';
 
 /**
  * Centralized Stripe API version. Update here when upgrading the Stripe SDK
@@ -291,7 +292,7 @@ export async function handlePaymentSucceeded(
   const userId = paymentIntent.metadata.userId;
   
   if (!productId || !userId) {
-    console.error('Missing metadata in payment intent');
+    logger.error('Missing metadata in payment intent');
     return;
   }
   

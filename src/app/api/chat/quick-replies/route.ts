@@ -10,6 +10,7 @@ import { prisma } from '@/lib/db';
 import { UserRole } from '@/types';
 import { z } from 'zod';
 import { stripHtml, stripControlChars } from '@/lib/sanitize';
+import { logger } from '@/lib/logger';
 
 const quickReplySchema = z.object({
   title: z.string().min(1).max(100),
@@ -38,7 +39,7 @@ export async function GET() {
 
     return NextResponse.json({ quickReplies });
   } catch (error) {
-    console.error('Error fetching quick replies:', error);
+    logger.error('Error fetching quick replies', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }
@@ -81,7 +82,7 @@ export async function POST(request: NextRequest) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: 'Invalid data', details: error.errors }, { status: 400 });
     }
-    console.error('Error creating quick reply:', error);
+    logger.error('Error creating quick reply', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }

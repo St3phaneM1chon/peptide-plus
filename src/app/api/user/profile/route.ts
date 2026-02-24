@@ -11,6 +11,7 @@ import { auth } from '@/lib/auth-config';
 import { db } from '@/lib/db';
 import { stripHtml, isValidPhone, isValidName } from '@/lib/validation';
 import { locales } from '@/i18n/config';
+import { logger } from '@/lib/logger';
 
 export async function GET() {
   try {
@@ -45,7 +46,7 @@ export async function GET() {
     return NextResponse.json(user);
 
   } catch (error) {
-    console.error('Get profile error:', error);
+    logger.error('Get profile error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -128,7 +129,7 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json(updatedUser);
 
   } catch (error) {
-    console.error('Update profile error:', error);
+    logger.error('Update profile error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -11,6 +11,7 @@
  */
 
 import { prisma } from '@/lib/db';
+import { logger } from '@/lib/logger';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -399,7 +400,7 @@ export async function evaluateAlertRules(): Promise<{
       created++;
     } catch (error) {
       // Ignore unique constraint violations from concurrent writes
-      console.warn('Alert upsert warning:', error instanceof Error ? error.message : String(error));
+      logger.warn('Alert upsert warning', { error: error instanceof Error ? error.message : String(error) });
     }
   }
 

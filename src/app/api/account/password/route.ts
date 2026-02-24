@@ -8,6 +8,7 @@ import { validateCsrf } from '@/lib/csrf-middleware';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { passwordSchema } from '@/lib/security';
 import bcrypt from 'bcryptjs';
+import { logger } from '@/lib/logger';
 
 export async function PUT(request: NextRequest) {
   try {
@@ -98,7 +99,7 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error updating password:', error);
+    logger.error('Error updating password', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to update password' },
       { status: 500 }

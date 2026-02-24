@@ -5,6 +5,7 @@
 
 // Type import only (no runtime)
 import type OpenAI from 'openai';
+import { logger } from '@/lib/logger';
 
 // Lazy initialization - instance créée seulement quand nécessaire
 let openaiInstance: OpenAI | null = null;
@@ -78,7 +79,7 @@ ${sourceLanguage ? '' : '- First line of your response should be the detected so
     
     return { translatedText: result.trim() };
   } catch (error) {
-    console.error('Translation error:', error);
+    logger.error('Translation error', { error: error instanceof Error ? error.message : String(error) });
     return { translatedText: text };
   }
 }
@@ -293,7 +294,7 @@ export async function getChatbotResponse(
       suggestedProducts,
     };
   } catch (error) {
-    console.error('Chatbot error:', error);
+    logger.error('Chatbot error', { error: error instanceof Error ? error.message : String(error) });
     return {
       message: "Je suis désolé, je rencontre un problème technique. Notre équipe va vous répondre rapidement. Pouvez-vous laisser votre email?",
       shouldEscalate: true,
@@ -349,7 +350,7 @@ export async function detectLanguage(text: string): Promise<string> {
 
     return response.choices[0]?.message?.content?.trim().toLowerCase() || 'en';
   } catch (error) {
-    console.error('Language detection error:', error);
+    logger.error('Language detection error', { error: error instanceof Error ? error.message : String(error) });
     return 'en';
   }
 }

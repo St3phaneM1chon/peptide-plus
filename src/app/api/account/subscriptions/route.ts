@@ -10,6 +10,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { db } from '@/lib/db';
+import { logger } from '@/lib/logger';
 import { validateCsrf } from '@/lib/csrf-middleware';
 
 const FREQUENCY_DISCOUNTS: Record<string, number> = {
@@ -67,7 +68,7 @@ export async function GET() {
       })),
     });
   } catch (error) {
-    console.error('Error fetching subscriptions:', error);
+    logger.error('Error fetching subscriptions', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
   }
 }
@@ -182,7 +183,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error creating subscription:', error);
+    logger.error('Error creating subscription', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
   }
 }
@@ -260,7 +261,7 @@ export async function PATCH(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error updating subscription:', error);
+    logger.error('Error updating subscription', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
   }
 }

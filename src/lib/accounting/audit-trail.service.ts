@@ -6,6 +6,7 @@
 // FIX (F043): Standardize import to use 'prisma' directly
 import { prisma } from '@/lib/db';
 import { Prisma } from '@prisma/client';
+import { logger } from '@/lib/logger';
 
 export interface AuditEntry {
   id: string;
@@ -494,7 +495,7 @@ export async function logAuditTrail(entry: AuditTrailInput): Promise<void> {
     });
   } catch (error) {
     // Audit logging must never break the main operation
-    console.error('Failed to log audit trail:', error);
+    logger.error('Failed to log audit trail', { error: error instanceof Error ? error.message : String(error) });
   }
 }
 
@@ -522,6 +523,6 @@ export async function logAuditTrailBatch(
       })),
     });
   } catch (error) {
-    console.error('Failed to log audit trail batch:', error);
+    logger.error('Failed to log audit trail batch', { error: error instanceof Error ? error.message : String(error) });
   }
 }

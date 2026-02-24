@@ -5,18 +5,19 @@
 
 import { PrismaClient } from '@prisma/client';
 import { DEFAULT_PAYMENT_METHODS } from './payment-methods';
+import { logger } from '@/lib/logger';
 
 const prisma = new PrismaClient();
 
 export async function seedPaymentMethods() {
-  console.log('Starting payment methods seed...');
+  logger.info('Starting payment methods seed...');
 
   let created = 0;
   let updated = 0;
   let skipped = 0;
 
   for (const country of DEFAULT_PAYMENT_METHODS) {
-    console.log(`\nProcessing ${country.countryName} (${country.countryCode})...`);
+    logger.info('Processing country', { countryName: country.countryName, countryCode: country.countryCode });
 
     for (const method of country.methods) {
       try {
@@ -43,10 +44,10 @@ export async function seedPaymentMethods() {
                 maxAmount: method.maxAmount || null,
               },
             });
-            console.log(`  ✓ Updated: ${method.methodType}`);
+            logger.info('Updated payment method', { methodType: method.methodType });
             updated++;
           } else {
-            console.log(`  - Skipped: ${method.methodType} (already exists)`);
+            logger.info('Skipped payment method (already exists)', { methodType: method.methodType });
             skipped++;
           }
         } else {
@@ -62,29 +63,23 @@ export async function seedPaymentMethods() {
               maxAmount: method.maxAmount || null,
             },
           });
-          console.log(`  + Created: ${method.methodType}`);
+          logger.info('Created payment method', { methodType: method.methodType });
           created++;
         }
       } catch (error) {
-        console.error(`  ✗ Error processing ${method.methodType}:`, error);
+        logger.error('Error processing payment method', { methodType: method.methodType, error: error instanceof Error ? error.message : String(error) });
       }
     }
   }
 
-  console.log('\n' + '='.repeat(50));
-  console.log('Payment Methods Seed Summary:');
-  console.log(`  Created: ${created}`);
-  console.log(`  Updated: ${updated}`);
-  console.log(`  Skipped: ${skipped}`);
-  console.log(`  Total: ${created + updated + skipped}`);
-  console.log('='.repeat(50) + '\n');
+  logger.info('Payment Methods Seed Summary', { created, updated, skipped, total: created + updated + skipped });
 }
 
 // Run if executed directly
 if (require.main === module) {
   seedPaymentMethods()
     .catch((error) => {
-      console.error('Seed failed:', error);
+      logger.error('Seed failed', { error: error instanceof Error ? error.message : String(error) });
       process.exit(1);
     })
     .finally(() => {

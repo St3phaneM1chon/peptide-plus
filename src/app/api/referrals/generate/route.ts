@@ -10,6 +10,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth-config';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { logger } from '@/lib/logger';
 import crypto from 'crypto';
 
 // FLAW-003 FIX: Use crypto.randomBytes instead of Math.random() for referral code generation
@@ -102,7 +103,7 @@ export async function POST(request: NextRequest) {
       message: 'Referral code generated successfully',
     });
   } catch (error) {
-    console.error('Error generating referral code:', error);
+    logger.error('Error generating referral code', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to generate referral code' },
       { status: 500 }

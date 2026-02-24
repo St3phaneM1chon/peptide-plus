@@ -472,7 +472,7 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
           });
         }
         if (safeDecrement < reservation.quantity) {
-          console.warn(`[Stripe webhook] Stock floor hit for format ${reservation.formatId}: wanted to decrement ${reservation.quantity}, only decremented ${safeDecrement}`);
+          logger.warn(`[Stripe webhook] Stock floor hit for format ${reservation.formatId}: wanted to decrement ${reservation.quantity}, only decremented ${safeDecrement}`);
         }
       }
 

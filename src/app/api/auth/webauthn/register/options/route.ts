@@ -6,6 +6,7 @@ import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { rpName, rpID } from '@/lib/webauthn';
 import { cookies } from 'next/headers';
+import { logger } from '@/lib/logger';
 
 export async function POST() {
   try {
@@ -58,7 +59,7 @@ export async function POST() {
 
     return NextResponse.json(options);
   } catch (error) {
-    console.error('WebAuthn register options error:', error);
+    logger.error('WebAuthn register options error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to generate registration options' },
       { status: 500 }

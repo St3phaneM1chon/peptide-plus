@@ -7,6 +7,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { releaseExpiredReservations } from '@/lib/inventory';
 import { withJobLock } from '@/lib/cron-lock';
+import { logger } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
   // Verify cron secret
@@ -21,7 +22,7 @@ export async function GET(request: NextRequest) {
     try {
       const releasedCount = await releaseExpiredReservations();
 
-      console.log(`[CRON] Released ${releasedCount} expired inventory reservations`);
+      logger.info(`[CRON] Released ${releasedCount} expired inventory reservations`);
 
       return NextResponse.json({
         success: true,
@@ -29,7 +30,7 @@ export async function GET(request: NextRequest) {
         timestamp: new Date().toISOString(),
       });
     } catch (error) {
-      console.error('Release reservations cron error:', error);
+      logger.error('Release reservations cron error', { error: error instanceof Error ? error.message : String(error) });
       return NextResponse.json(
         { error: 'Internal server error' },
         { status: 500 }

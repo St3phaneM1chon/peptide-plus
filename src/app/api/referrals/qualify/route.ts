@@ -12,6 +12,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { qualifyReferral } from '@/lib/referral-qualify';
+import { logger } from '@/lib/logger';
 
 /**
  * POST endpoint for internal use / admin qualification
@@ -71,7 +72,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error('Error in qualify endpoint:', error);
+    logger.error('Error in qualify endpoint', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to qualify referral' },
       { status: 500 }

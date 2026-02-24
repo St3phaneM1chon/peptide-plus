@@ -10,6 +10,7 @@ import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { sendOrderCancellation } from '@/lib/email-service';
 import { validateCsrf } from '@/lib/csrf-middleware';
+import { logger } from '@/lib/logger';
 
 export async function POST(
   request: NextRequest,
@@ -106,7 +107,7 @@ export async function POST(
           if (product) {
             // ProductFormat might need update if product has variants
             // For now, we just log this case
-            console.log(`Restored stock for product ${item.productId} (no format)`);
+            logger.info(`Restored stock for product ${item.productId} (no format)`);
           }
         }
       }
@@ -192,7 +193,7 @@ export async function POST(
       );
     } catch (emailError) {
       // Log email error but don't fail the cancellation
-      console.error('Failed to send cancellation email:', emailError);
+      logger.error('Failed to send cancellation email', { error: emailError instanceof Error ? emailError.message : String(emailError) });
     }
 
     return NextResponse.json({
@@ -211,7 +212,7 @@ export async function POST(
       } : null,
     });
   } catch (error) {
-    console.error('Order cancellation error:', error);
+    logger.error('Order cancellation error', { error: error instanceof Error ? error.message : String(error) });
     // BE-SEC-04: Don't leak error details in production
     const details = process.env.NODE_ENV === 'development'
       ? (error instanceof Error ? error.message : 'Unknown error')

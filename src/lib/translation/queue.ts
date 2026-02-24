@@ -18,6 +18,7 @@
  */
 
 import { prisma } from '@/lib/db';
+import { logger } from '@/lib/logger';
 import {
   translateEntityAllLocales,
   TRANSLATABLE_FIELDS,
@@ -273,7 +274,7 @@ async function processNextJob(): Promise<void> {
   });
 
   try {
-    console.log(`[TranslationQueue] Pass ${job.pass}: Processing ${job.model}#${job.entityId} (priority: ${job.priority})`);
+    logger.info('[TranslationQueue] Processing job', { pass: job.pass, model: job.model, entityId: job.entityId, priority: job.priority });
 
     // Execute the appropriate pass
     await executePass(job);
@@ -284,7 +285,7 @@ async function processNextJob(): Promise<void> {
       data: { status: 'completed', completedAt: new Date() },
     });
 
-    console.log(`[TranslationQueue] Pass ${job.pass}: Completed ${job.model}#${job.entityId}`);
+    logger.info('[TranslationQueue] Job completed', { pass: job.pass, model: job.model, entityId: job.entityId });
 
     // Auto-schedule next pass if applicable
     if (job.pass === 1) {
@@ -309,7 +310,7 @@ async function processNextJob(): Promise<void> {
           error: error instanceof Error ? error.message : String(error),
         },
       });
-      console.error(`[TranslationQueue] Pass ${job.pass}: Failed (max retries) ${job.model}#${job.entityId}:`, error);
+      logger.error('[TranslationQueue] Job failed (max retries)', { pass: job.pass, model: job.model, entityId: job.entityId, error: error instanceof Error ? error.message : String(error) });
     } else {
       await prisma.translationJob.update({
         where: { id: job.id },
@@ -319,7 +320,7 @@ async function processNextJob(): Promise<void> {
           scheduledAt: new Date(Date.now() + Math.pow(2, retries) * 1000),
         },
       });
-      console.warn(`[TranslationQueue] Pass ${job.pass}: Retry ${retries}/${job.maxRetries} for ${job.model}#${job.entityId}`);
+      logger.warn('[TranslationQueue] Retrying job', { pass: job.pass, retries, maxRetries: job.maxRetries, model: job.model, entityId: job.entityId });
     }
   }
 
@@ -527,7 +528,7 @@ async function improveTranslationsWithClaude(
   entityId: string
 ): Promise<void> {
   if (!process.env.ANTHROPIC_API_KEY) {
-    console.log(`[Pass2] Skipping - ANTHROPIC_API_KEY not configured for ${model}#${entityId}`);
+    logger.info('[Pass2] Skipping - ANTHROPIC_API_KEY not configured', { model, entityId });
     return;
   }
 
@@ -607,7 +608,7 @@ Return each improved field using [FIELD:name]...[/FIELD:name] markers. Only outp
     }
   }
 
-  console.log(`[Pass2] Claude Haiku improved ${model}#${entityId} across ${targetLocales.length} locales`);
+  logger.info('[Pass2] Claude Haiku improved translations', { model, entityId, localeCount: targetLocales.length });
 }
 
 // ============================================
@@ -699,7 +700,7 @@ ${buildGlossaryPrompt()}`,
     }
   }
 
-  console.log(`[Pass3] GPT-4o verified ${model}#${entityId} across ${targetLocales.length} locales`);
+  logger.info('[Pass3] GPT-4o verified translations', { model, entityId, localeCount: targetLocales.length });
 }
 
 // ============================================
@@ -753,7 +754,7 @@ export async function processNightJobs(): Promise<{
       } catch (error) {
         const passKey = pass === 2 ? 'pass2' : 'pass3';
         results[passKey].errors++;
-        console.error(`[NightWorker] Pass ${pass} error for ${job.model}#${job.entityId}:`, error);
+        logger.error('[NightWorker] Pass error', { pass, model: job.model, entityId: job.entityId, error: error instanceof Error ? error.message : String(error) });
 
         await prisma.translationJob.update({
           where: { id: job.id },

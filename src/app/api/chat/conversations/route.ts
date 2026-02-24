@@ -11,6 +11,7 @@ import { getApiTranslator } from '@/i18n/server';
 import { UserRole } from '@/types';
 import { stripHtml, stripControlChars } from '@/lib/sanitize';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 const createConversationSchema = z.object({
   subject: z.string().max(200).optional(),
@@ -94,7 +95,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error fetching conversations:', error);
+    logger.error('Error fetching conversations', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }
@@ -163,7 +164,7 @@ export async function POST(request: NextRequest) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: 'Invalid data', details: error.errors }, { status: 400 });
     }
-    console.error('Error creating conversation:', error);
+    logger.error('Error creating conversation', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }

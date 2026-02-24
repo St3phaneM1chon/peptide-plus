@@ -10,6 +10,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
+import { logger } from '@/lib/logger';
 import { validateCsrf } from '@/lib/csrf-middleware';
 
 interface UpdateAddressRequest {
@@ -231,7 +232,7 @@ export async function PUT(
       },
     });
   } catch (error) {
-    console.error('Update address error:', error);
+    logger.error('Update address error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

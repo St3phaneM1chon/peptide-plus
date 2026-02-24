@@ -6,6 +6,7 @@
 import { prisma } from './db';
 import { createSecurityLog } from './security';
 import { getRedisClient, isRedisAvailable } from './redis';
+import { logger } from '@/lib/logger';
 
 // Configuration
 const MAX_FAILED_ATTEMPTS = 3;         // Nombre max de tentatives (Chubb: 3)
@@ -147,13 +148,7 @@ export async function recordFailedAttempt(
   }
 
   // Log de sécurité
-  console.log(createSecurityLog('warn', 'failed_login_attempt', {
-    email: key,
-    ipAddress,
-    userAgent,
-    attemptNumber: record.attempts,
-    maxAttempts: MAX_FAILED_ATTEMPTS,
-  }));
+  logger.info('Security event: failed login attempt', { event: 'failed_login_attempt', email: key, ipAddress, userAgent, attemptNumber: record.attempts, maxAttempts: MAX_FAILED_ATTEMPTS });
 
   // Stocker dans la base de données pour audit
   await prisma.auditLog.create({
@@ -168,7 +163,7 @@ export async function recordFailedAttempt(
         timestamp: new Date().toISOString(),
       }),
     },
-  }).catch((e) => console.error('Audit log failed:', e.message)); // FAILLE-058 FIX: Log errors instead of silencing
+  }).catch((e) => logger.error('Audit log failed', { error: e instanceof Error ? e.message : String(e) })); // FAILLE-058 FIX: Log errors instead of silencing
 
   // Vérifier si on doit verrouiller
   if (record.attempts >= MAX_FAILED_ATTEMPTS) {
@@ -180,12 +175,7 @@ export async function recordFailedAttempt(
     }
 
     // Log critique
-    console.log(createSecurityLog('critical', 'account_locked', {
-      email: key,
-      ipAddress,
-      userAgent,
-      lockoutDuration: LOCKOUT_DURATION_MS,
-    }));
+    logger.warn('Security event: account locked', { event: 'account_locked', email: key, ipAddress, userAgent, lockoutDuration: LOCKOUT_DURATION_MS });
 
     // TODO (SEC-L05): Send brute-force lockout email notification to the user.
     // The email should include: the locked email address, the IP that triggered

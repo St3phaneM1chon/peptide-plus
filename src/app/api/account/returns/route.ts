@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { validateCsrf } from '@/lib/csrf-middleware';
+import { logger } from '@/lib/logger';
 
 // GET - List user's return requests
 export async function GET() {
@@ -62,7 +63,7 @@ export async function GET() {
 
     return NextResponse.json(formattedReturns);
   } catch (error) {
-    console.error('Error fetching return requests:', error);
+    logger.error('Error fetching return requests', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -198,7 +199,7 @@ export async function POST(request: NextRequest) {
       updatedAt: returnRequest.updatedAt.toISOString(),
     }, { status: 201 });
   } catch (error) {
-    console.error('Error creating return request:', error);
+    logger.error('Error creating return request', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -322,7 +323,7 @@ export async function PATCH(request: NextRequest) {
 
     return NextResponse.json({ returnRequest: updatedReturn });
   } catch (error) {
-    console.error('Error updating return request:', error);
+    logger.error('Error updating return request', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { db } from '@/lib/db';
 import { validateCsrf } from '@/lib/csrf-middleware';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/account/wishlist
@@ -80,7 +81,7 @@ export async function GET() {
 
     return NextResponse.json({ items });
   } catch (error) {
-    console.error('Error fetching wishlist:', error);
+    logger.error('Error fetching wishlist', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to fetch wishlist' },
       { status: 500 }
@@ -159,7 +160,7 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
-    console.error('Error adding to wishlist:', error);
+    logger.error('Error adding to wishlist', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to add to wishlist' },
       { status: 500 }

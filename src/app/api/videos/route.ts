@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withTranslations, DB_SOURCE_LOCALE } from '@/lib/translation';
+import { logger } from '@/lib/logger';
 import { defaultLocale } from '@/i18n/config';
 
 // GET - List published videos
@@ -96,7 +97,7 @@ export async function GET(request: NextRequest) {
       headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600' },
     });
   } catch (error) {
-    console.error('Error fetching videos:', error);
+    logger.error('Error fetching videos', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Error fetching videos' },
       { status: 500 }

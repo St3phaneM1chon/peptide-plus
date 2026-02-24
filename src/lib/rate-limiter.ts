@@ -10,6 +10,8 @@
  *   4. Key pattern: rl:{ip_or_user}:{endpoint} with TTL = windowMs.
  */
 
+import { logger } from '@/lib/logger';
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -60,9 +62,7 @@ async function getRedisClient(): Promise<RedisClient | null> {
   const redisUrl = process.env.REDIS_URL;
 
   if (!redisUrl) {
-    console.warn(
-      '[rate-limiter] REDIS_URL not set -- using in-memory fallback'
-    );
+    logger.warn('[rate-limiter] REDIS_URL not set -- using in-memory fallback');
     return null;
   }
 
@@ -85,12 +85,12 @@ async function getRedisClient(): Promise<RedisClient | null> {
     await client.connect();
     redisClient = client as unknown as RedisClient;
     redisAvailable = true;
-    console.info('[rate-limiter] Redis connected successfully');
+    logger.info('[rate-limiter] Redis connected successfully');
 
     // If the connection drops later, flag as unavailable
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Redis client event emitter not typed
     (client as any).on('error', (err: Error) => {
-      console.error('[rate-limiter] Redis error:', err.message);
+      logger.error('[rate-limiter] Redis error', { error: err.message });
       redisAvailable = false;
     });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Redis client event emitter not typed
@@ -102,9 +102,7 @@ async function getRedisClient(): Promise<RedisClient | null> {
   } catch (err) {
     // ioredis not installed OR connection failed
     const message = err instanceof Error ? err.message : String(err);
-    console.warn(
-      `[rate-limiter] Redis unavailable (${message}) -- using in-memory fallback`
-    );
+    logger.warn('[rate-limiter] Redis unavailable -- using in-memory fallback', { error: message });
     return null;
   }
 }
@@ -346,7 +344,7 @@ export async function checkRateLimit(
     } catch (err) {
       // Redis call failed -- degrade gracefully
       const message = err instanceof Error ? err.message : String(err);
-      console.warn(`[rate-limiter] Redis call failed (${message}), falling back to memory`);
+      logger.warn('[rate-limiter] Redis call failed, falling back to memory', { error: message });
       redisAvailable = false;
     }
   }

@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { UserRole } from '@/types';
+import { logger } from '@/lib/logger';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -69,7 +70,7 @@ export async function GET(_request: Request, { params }: RouteParams) {
 
     return NextResponse.json({ user });
   } catch (error) {
-    console.error('Error fetching user:', error);
+    logger.error('Error fetching user', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la récupération de l\'utilisateur' },
       { status: 500 }
@@ -161,7 +162,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json({ user });
   } catch (error) {
-    console.error('Error updating user:', error);
+    logger.error('Error updating user', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la mise à jour de l\'utilisateur' },
       { status: 500 }
@@ -221,7 +222,7 @@ export async function DELETE(_request: Request, { params }: RouteParams) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error deleting user:', error);
+    logger.error('Error deleting user', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la suppression de l\'utilisateur' },
       { status: 500 }

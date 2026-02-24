@@ -12,6 +12,7 @@ import { checkPasswordHistory, addToPasswordHistory } from '@/lib/password-histo
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { PASSWORD_MIN_LENGTH } from '@/lib/constants';
+import { logger } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
   try {
@@ -62,7 +63,7 @@ export async function POST(request: NextRequest) {
         },
       });
     } catch (dbError) {
-      console.error('Database query error (resetToken fields may not exist):', dbError);
+      logger.error('Database query error (resetToken fields may not exist)', { error: dbError instanceof Error ? dbError.message : String(dbError) });
       // SECURITY FIX: Never bypass token validation. If schema is missing fields, fail.
     }
 
@@ -96,7 +97,7 @@ export async function POST(request: NextRequest) {
         },
       });
     } catch (dbError) {
-      console.error('Database update error:', dbError);
+      logger.error('Database update error', { error: dbError instanceof Error ? dbError.message : String(dbError) });
       // SECURITY FIX: If we can't clear the reset token, don't update the password
       // This prevents token reuse attacks
       return NextResponse.json(
@@ -109,12 +110,12 @@ export async function POST(request: NextRequest) {
     await addToPasswordHistory(user.id, hashedPassword);
 
     // Log pour audit
-    console.log(JSON.stringify({
+    logger.info('password_reset_completed', {
       event: 'password_reset_completed',
       timestamp: new Date().toISOString(),
       userId: user.id,
       email: user.email,
-    }));
+    });
 
     return NextResponse.json({
       success: true,
@@ -122,7 +123,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Reset password error:', error);
+    logger.error('Reset password error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Une erreur est survenue' },
       { status: 500 }

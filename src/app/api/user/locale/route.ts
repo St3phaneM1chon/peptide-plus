@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { isValidLocale } from '@/i18n/config';
+import { logger } from '@/lib/logger';
 
 export async function PUT(request: NextRequest) {
   try {
@@ -48,7 +49,7 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json({ success: true, locale });
   } catch (error) {
-    console.error('Error updating locale:', error);
+    logger.error('Error updating locale', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la mise à jour de la langue' },
       { status: 500 }
@@ -71,7 +72,7 @@ export async function GET() {
 
     return NextResponse.json({ locale: user?.locale || 'fr' });
   } catch (error) {
-    console.error('Error getting locale:', error);
+    logger.error('Error getting locale', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ locale: 'fr' });
   }
 }

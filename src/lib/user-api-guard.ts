@@ -25,6 +25,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { validateCsrf } from '@/lib/csrf-middleware';
 import { checkRateLimit } from '@/lib/security';
+import { logger } from '@/lib/logger';
 import type { Session } from 'next-auth';
 
 // ---------------------------------------------------------------------------
@@ -114,15 +115,12 @@ export function withUserGuard(
         const csrfValid = await validateCsrf(request);
 
         if (!csrfValid) {
-          console.warn(
-            JSON.stringify({
-              event: 'csrf_validation_failed',
-              timestamp: new Date().toISOString(),
-              userId: session.user.id,
-              path: new URL(request.url).pathname,
-              method: request.method,
-            })
-          );
+          logger.warn('CSRF validation failed', {
+            event: 'csrf_validation_failed',
+            userId: session.user.id,
+            path: new URL(request.url).pathname,
+            method: request.method,
+          });
           return jsonError('Invalid CSRF token', 403);
         }
       }
@@ -169,7 +167,7 @@ export function withUserGuard(
     } catch (error) {
       const method = request.method;
       const url = request.url;
-      console.error(`[UserGuard ${method} ${url}]`, error);
+      logger.error('[UserGuard] Request handler error', { method, url, error: error instanceof Error ? error.message : String(error) });
 
       const message =
         process.env.NODE_ENV === 'development' && error instanceof Error

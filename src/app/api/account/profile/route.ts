@@ -8,6 +8,7 @@ import { validateCsrf } from '@/lib/csrf-middleware';
 import { apiSuccess, apiError, validateContentType } from '@/lib/api-response';
 import { ErrorCode } from '@/lib/error-codes';
 import { updateProfileSchema } from '@/lib/validations/user';
+import { logger } from '@/lib/logger';
 
 // Status codes: 200 OK, 401 Unauthorized, 404 Not Found, 500 Internal Error
 export async function GET() {
@@ -29,7 +30,7 @@ export async function GET() {
 
     return apiSuccess({ user });
   } catch (error) {
-    console.error('Error fetching profile:', error);
+    logger.error('Error fetching profile', { error: error instanceof Error ? error.message : String(error) });
     return apiError('Failed to fetch profile', ErrorCode.INTERNAL_ERROR);
   }
 }
@@ -103,7 +104,7 @@ export async function PUT(request: NextRequest) {
       },
     }, { request });
   } catch (error) {
-    console.error('Error updating profile:', error);
+    logger.error('Error updating profile', { error: error instanceof Error ? error.message : String(error) });
     return apiError('Failed to update profile', ErrorCode.INTERNAL_ERROR, { request });
   }
 }

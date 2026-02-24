@@ -7,6 +7,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { logger } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
   try {
@@ -73,7 +74,7 @@ export async function POST(request: NextRequest) {
       referrerName: firstName,
     });
   } catch (error) {
-    console.error('Error validating referral code:', error);
+    logger.error('Error validating referral code', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { valid: false, error: 'Failed to validate referral code' },
       { status: 500 }

@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withTranslations, DB_SOURCE_LOCALE } from '@/lib/translation';
 import { defaultLocale } from '@/i18n/config';
+import { logger } from '@/lib/logger';
 
 // GET - List published articles
 export async function GET(request: NextRequest) {
@@ -108,7 +109,7 @@ export async function GET(request: NextRequest) {
       headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600' },
     });
   } catch (error) {
-    console.error('Error fetching articles:', error);
+    logger.error('Error fetching articles', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Error fetching articles' },
       { status: 500 }

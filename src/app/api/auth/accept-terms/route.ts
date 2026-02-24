@@ -11,6 +11,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
+import { logger } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
   try {
@@ -44,23 +45,21 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    console.log(
-      JSON.stringify({
-        event: 'terms_accepted',
-        timestamp: now.toISOString(),
-        userId: session.user.id,
-        email: session.user.email,
-        termsVersion,
-        privacyVersion: privacyVersion || termsVersion,
-      })
-    );
+    logger.info('terms_accepted', {
+      event: 'terms_accepted',
+      timestamp: now.toISOString(),
+      userId: session.user.id,
+      email: session.user.email,
+      termsVersion,
+      privacyVersion: privacyVersion || termsVersion,
+    });
 
     return NextResponse.json({
       success: true,
       acceptedAt: now.toISOString(),
     });
   } catch (error) {
-    console.error('Accept terms error:', error);
+    logger.error('Accept terms error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

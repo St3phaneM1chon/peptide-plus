@@ -12,6 +12,7 @@ import { getApiTranslator } from '@/i18n/server';
 import { UserRole } from '@/types';
 import { stripHtml, stripControlChars } from '@/lib/sanitize';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -98,7 +99,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json({ messages });
   } catch (error) {
-    console.error('Error fetching messages:', error);
+    logger.error('Error fetching messages', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }
@@ -185,7 +186,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: 'Invalid data', details: error.errors }, { status: 400 });
     }
-    console.error('Error sending message:', error);
+    logger.error('Error sending message', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }

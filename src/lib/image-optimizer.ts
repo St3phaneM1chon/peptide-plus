@@ -11,6 +11,7 @@
  */
 
 import { storage, StorageOptions } from '@/lib/storage';
+import { logger } from '@/lib/logger';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -49,7 +50,7 @@ async function getSharp() {
     sharpModule = (await import('sharp')).default;
     return sharpModule;
   } catch (error) {
-    console.warn('Sharp is not installed. Image optimization disabled.', error);
+    logger.warn('Sharp is not installed. Image optimization disabled.', { error: error instanceof Error ? error.message : String(error) });
     return null;
   }
 }
@@ -130,7 +131,7 @@ export async function optimizeImage(
     } catch (error) {
       // FIX: F42 - Collect errors instead of silently swallowing
       const errMsg = `Failed to generate ${variant.name} variant: ${error instanceof Error ? error.message : String(error)}`;
-      console.error(errMsg);
+      logger.error(errMsg);
       variantErrors.push(errMsg);
     }
   }
@@ -169,7 +170,7 @@ export async function optimizeImage(
       originalHash: originalResult.contentHash,
     };
   } catch (error) {
-    console.error('Failed to process original image:', error);
+    logger.error('Failed to process original image', { error: error instanceof Error ? error.message : String(error) });
     // Fallback: upload raw buffer
     const result = await storage.upload(buffer, filename, 'image/webp', { folder });
     variants.push({

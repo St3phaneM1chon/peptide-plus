@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { db } from '@/lib/db';
 import { validateCsrf } from '@/lib/csrf-middleware';
+import { logger } from '@/lib/logger';
 
 export async function PUT(request: NextRequest) {
   try {
@@ -87,7 +88,7 @@ export async function PUT(request: NextRequest) {
       address,
     });
   } catch (error) {
-    console.error('Error updating address:', error);
+    logger.error('Error updating address', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to update address' },
       { status: 500 }
@@ -132,7 +133,7 @@ export async function GET() {
       addresses,
     });
   } catch (error) {
-    console.error('Error fetching address:', error);
+    logger.error('Error fetching address', { error: error instanceof Error ? error.message : String(error) });
     // SEC-29: Return 500 status on error instead of 200
     return NextResponse.json(
       { error: 'Failed to fetch address' },

@@ -4,6 +4,7 @@
  */
 
 import { JournalEntry, JournalLine } from './types';
+import { logger } from '@/lib/logger';
 
 // ============================================
 // ENTRY TEMPLATES
@@ -184,7 +185,7 @@ export function evaluateFormula(
   // but should be avoided - callers should set numericValues.total explicitly.
   if (expression.includes('total')) {
     const amount = variables.amount || 0;
-    console.warn('evaluateFormula: "total" not pre-calculated, using QC fallback rate 1.14975');
+    logger.warn('evaluateFormula: "total" not pre-calculated, using QC fallback rate 1.14975');
     const total = amount * 1.14975;
     expression = expression.replace(/total/g, String(total));
   }

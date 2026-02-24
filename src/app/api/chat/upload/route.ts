@@ -10,6 +10,7 @@ import { storage } from '@/lib/storage';
 import { auth } from '@/lib/auth-config';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { db } from '@/lib/db';
+import { logger } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
   try {
@@ -97,7 +98,7 @@ export async function POST(request: NextRequest) {
       size: file.size,
     });
   } catch (error) {
-    console.error('Chat upload error:', error);
+    logger.error('Chat upload error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
   }
 }

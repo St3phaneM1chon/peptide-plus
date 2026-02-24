@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { db } from '@/lib/db';
+import { logger } from '@/lib/logger';
 import {
   sendEmail,
   orderConfirmationEmail,
@@ -157,12 +158,12 @@ export async function POST(request: NextRequest) {
     });
 
     if (!result.success) {
-      console.error('Failed to send order email:', result.error);
+      logger.error('Failed to send order email', { error: result.error instanceof Error ? result.error.message : String(result.error) });
       return NextResponse.json({ error: 'Failed to send email' }, { status: 500 });
     }
 
     // Log l'envoi
-    console.log(`📧 Order email sent: ${emailType} for order ${order.orderNumber} to ${user.email}`);
+    logger.info(`Order email sent: ${emailType} for order ${order.orderNumber} to ${user.email}`);
 
     return NextResponse.json({
       success: true,
@@ -173,7 +174,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Send order email error:', error);
+    logger.error('Send order email error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -11,6 +11,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withJobLock } from '@/lib/cron-lock';
+import { logger } from '@/lib/logger';
 
 import { escapeHtml } from '@/lib/email/templates/base-template';
 
@@ -76,7 +77,7 @@ export async function GET(request: NextRequest) {
           edges = JSON.parse(flow.edges);
           context = JSON.parse(execution.context);
         } catch (parseErr) {
-          console.error(`[CronEmailFlows] Corrupt JSON in flow ${flow.id} or execution ${execution.id}:`, parseErr);
+          logger.error(`[CronEmailFlows] Corrupt JSON in flow ${flow.id} or execution ${execution.id}`, { error: parseErr instanceof Error ? parseErr.message : String(parseErr) });
           await prisma.emailFlowExecution.update({
             where: { id: execution.id },
             data: { status: 'FAILED' },
@@ -105,7 +106,7 @@ export async function GET(request: NextRequest) {
         } else {
           failed++;
           const execution = batch[i];
-          console.error(`[CronEmailFlows] Error processing execution ${execution.id}:`, (results[i] as PromiseRejectedResult).reason);
+          logger.error(`[CronEmailFlows] Error processing execution ${execution.id}`, { error: (results[i] as PromiseRejectedResult).reason instanceof Error ? ((results[i] as PromiseRejectedResult).reason as Error).message : String((results[i] as PromiseRejectedResult).reason) });
           await prisma.emailFlowExecution.update({
             where: { id: execution.id },
             data: { status: 'FAILED' },
@@ -116,7 +117,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ processed, failed, total: readyExecutions.length });
   } catch (error) {
-    console.error('[CronEmailFlows] Error:', error);
+    logger.error('[CronEmailFlows] Error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
   });

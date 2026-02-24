@@ -5,6 +5,7 @@
 
 import { db as prisma } from '@/lib/db';
 import { logAuditTrail } from './audit-trail.service';
+import { logger } from '@/lib/logger';
 
 // #95 Retry configuration for failed recurring entries
 const RETRY_CONFIG = {
@@ -255,10 +256,7 @@ async function withRetry<T>(
       lastError = error;
       if (attempt < maxRetries) {
         const delay = baseDelayMs * Math.pow(2, attempt - 1);
-        console.warn(
-          `[Recurring] Tentative ${attempt}/${maxRetries} échouée pour "${label}". ` +
-          `Nouvelle tentative dans ${delay}ms. Erreur: ${error}`
-        );
+        logger.warn('[Recurring] Retry attempt failed', { attempt, maxRetries, label, delayMs: delay, error: error instanceof Error ? error.message : String(error) });
         await new Promise((resolve) => setTimeout(resolve, delay));
       }
     }

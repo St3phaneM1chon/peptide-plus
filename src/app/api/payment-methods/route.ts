@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { getPaymentMethodsForCountry } from '@/lib/payment-methods';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/payment-methods?country=CA
@@ -49,7 +50,7 @@ export async function GET(request: NextRequest) {
       usingDefaults: true,
     }, { headers: cacheHeaders });
   } catch (error) {
-    console.error('Get payment methods error:', error);
+    logger.error('Get payment methods error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Error fetching payment methods' },
       { status: 500 }

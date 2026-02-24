@@ -10,6 +10,7 @@ import { prisma } from '@/lib/db';
 import { generateReceiptPDFi18n } from '@/lib/receipt-generator-i18n';
 import { UserRole } from '@/types';
 import { getApiTranslator } from '@/i18n/server';
+import { logger } from '@/lib/logger';
 import { type Locale, isValidLocale, defaultLocale } from '@/i18n/config';
 
 interface RouteParams {
@@ -145,7 +146,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       },
     });
   } catch (error) {
-    console.error('Error generating receipt:', error);
+    logger.error('Error generating receipt', { error: error instanceof Error ? error.message : String(error) });
     const { t } = await getApiTranslator();
     return NextResponse.json(
       { error: t('common.error') },

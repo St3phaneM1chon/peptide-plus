@@ -14,6 +14,7 @@ import { translateMessage, getChatbotResponse, detectLanguage } from '@/lib/chat
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { validateCsrf } from '@/lib/csrf-middleware';
 import { stripHtml, stripControlChars } from '@/lib/sanitize';
+import { logger } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
   try {
@@ -268,7 +269,7 @@ export async function POST(request: NextRequest) {
       escalated: botResponse?.shouldEscalate || false,
     });
   } catch (error) {
-    console.error('Send message error:', error);
+    logger.error('Send message error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

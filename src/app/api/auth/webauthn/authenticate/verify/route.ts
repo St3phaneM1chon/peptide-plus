@@ -6,6 +6,7 @@ import { prisma } from '@/lib/db';
 import { rpID, origin } from '@/lib/webauthn';
 import { cookies } from 'next/headers';
 import jwt from 'jsonwebtoken';
+import { logger } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
   try {
@@ -124,7 +125,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('WebAuthn auth verify error:', error);
+    logger.error('WebAuthn auth verify error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Verification failed' },
       { status: 500 }

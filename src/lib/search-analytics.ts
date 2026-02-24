@@ -9,6 +9,7 @@
  */
 
 import { prisma } from '@/lib/db';
+import { logger } from '@/lib/logger';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -60,7 +61,7 @@ export async function logSearch(entry: SearchLogEntry): Promise<void> {
     });
   } catch (error) {
     // Silent fail - search analytics should never break search
-    console.warn('Failed to log search:', error);
+    logger.warn('Failed to log search', { error: error instanceof Error ? error.message : String(error) });
   }
 }
 

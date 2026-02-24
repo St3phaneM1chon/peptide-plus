@@ -11,6 +11,7 @@
  */
 
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 // ---------------------------------------------------------------------------
 // Schemas
@@ -188,7 +189,7 @@ function validateEnv(): Env {
   // ---- Warn about important vars ----
   for (const key of IMPORTANT_VARS) {
     if (!raw[key]) {
-      console.warn(`[env] WARNING: ${key} is not set. Some features may not work.`);
+      logger.warn(`[env] WARNING: ${key} is not set. Some features may not work.`);
     }
   }
 
@@ -208,7 +209,7 @@ function validateEnv(): Env {
     }
 
     // In development or build phase, log and return a best-effort object
-    console.warn(`[env] ${message}`);
+    logger.warn(`[env] ${message}`);
 
     // Return raw values cast to the type -- the dev/build is warned
     return raw as unknown as Env;

@@ -10,6 +10,7 @@ import { prisma } from '@/lib/db';
 import { sendPasswordResetEmail } from '@/lib/email-service';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import crypto from 'crypto';
+import { logger } from '@/lib/logger';
 
 // Durée de validité du token (1 heure)
 const TOKEN_EXPIRY_HOURS = 1;
@@ -43,7 +44,7 @@ export async function POST(request: NextRequest) {
     // IMPORTANT: Toujours retourner succès même si l'email n'existe pas
     // Pour éviter l'énumération des utilisateurs
     if (!user) {
-      console.log(`Password reset requested for non-existent email: ${email}`);
+      logger.info(`Password reset requested for non-existent email: ${email}`);
       return NextResponse.json({
         success: true,
         message: 'Si un compte existe avec cet email, vous recevrez un lien de réinitialisation.',
@@ -75,7 +76,7 @@ export async function POST(request: NextRequest) {
         },
       });
     } catch (dbError) {
-      console.error('Database update error (resetToken fields may not exist):', dbError);
+      logger.error('Database update error (resetToken fields may not exist)', { error: dbError instanceof Error ? dbError.message : String(dbError) });
       return NextResponse.json(
         { error: 'Une erreur est survenue' },
         { status: 500 }
@@ -94,12 +95,12 @@ export async function POST(request: NextRequest) {
     });
 
     // Log pour audit
-    console.log(JSON.stringify({
+    logger.info('password_reset_requested', {
       event: 'password_reset_requested',
       timestamp: new Date().toISOString(),
       email: email,
       userId: user.id,
-    }));
+    });
 
     return NextResponse.json({
       success: true,
@@ -107,7 +108,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Forgot password error:', error);
+    logger.error('Forgot password error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Une erreur est survenue' },
       { status: 500 }

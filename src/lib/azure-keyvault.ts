@@ -5,6 +5,7 @@
 
 import { DefaultAzureCredential } from '@azure/identity';
 import { SecretClient } from '@azure/keyvault-secrets';
+import { logger } from '@/lib/logger';
 
 // Singleton pour le client Key Vault
 let secretClient: SecretClient | null = null;
@@ -49,7 +50,7 @@ export async function getSecret(secretName: string): Promise<string> {
     
     return secret.value;
   } catch (error) {
-    console.error(`Error retrieving secret '${secretName}':`, error);
+    logger.error('Error retrieving secret', { secretName, error: error instanceof Error ? error.message : String(error) });
     throw new Error(`Failed to retrieve secret: ${secretName}`);
   }
 }
@@ -75,9 +76,9 @@ export async function setSecret(
       tags: options?.tags,
     });
     
-    console.log(`Secret '${secretName}' stored successfully`);
+    logger.info('Secret stored successfully', { secretName });
   } catch (error) {
-    console.error(`Error storing secret '${secretName}':`, error);
+    logger.error('Error storing secret', { secretName, error: error instanceof Error ? error.message : String(error) });
     throw new Error(`Failed to store secret: ${secretName}`);
   }
 }
@@ -91,9 +92,9 @@ export async function deleteSecret(secretName: string): Promise<void> {
     const poller = await client.beginDeleteSecret(secretName);
     await poller.pollUntilDone();
     
-    console.log(`Secret '${secretName}' deleted successfully`);
+    logger.info('Secret deleted successfully', { secretName });
   } catch (error) {
-    console.error(`Error deleting secret '${secretName}':`, error);
+    logger.error('Error deleting secret', { secretName, error: error instanceof Error ? error.message : String(error) });
     throw new Error(`Failed to delete secret: ${secretName}`);
   }
 }
@@ -114,7 +115,7 @@ export async function listSecrets(): Promise<string[]> {
     
     return secrets;
   } catch (error) {
-    console.error('Error listing secrets:', error);
+    logger.error('Error listing secrets', { error: error instanceof Error ? error.message : String(error) });
     throw new Error('Failed to list secrets');
   }
 }
@@ -175,7 +176,7 @@ export async function loadConfigFromKeyVault(secretNames: string[]): Promise<Rec
       try {
         config[name] = await getSecretCached(name);
       } catch (error) {
-        console.warn(`Failed to load secret '${name}', using fallback`);
+        logger.warn('Failed to load secret, using fallback', { secretName: name });
       }
     })
   );

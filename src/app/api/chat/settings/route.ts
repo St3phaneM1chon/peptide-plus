@@ -13,6 +13,7 @@ import { auth } from '@/lib/auth-config';
 import { db } from '@/lib/db';
 import { z } from 'zod';
 import { stripHtml, stripControlChars } from '@/lib/sanitize';
+import { logger } from '@/lib/logger';
 
 // FIX F-016: Zod schema for chat settings validation
 const chatSettingsSchema = z.object({
@@ -69,7 +70,7 @@ export async function GET(_request: Request) {
 
     return NextResponse.json(settings);
   } catch (error) {
-    console.error('Get settings error:', error);
+    logger.error('Get settings error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -155,7 +156,7 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json(settings);
   } catch (error) {
-    console.error('Update settings error:', error);
+    logger.error('Update settings error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

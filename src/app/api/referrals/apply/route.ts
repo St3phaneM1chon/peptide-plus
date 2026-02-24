@@ -10,6 +10,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth-config';
 import { validateCsrf } from '@/lib/csrf-middleware';
+import { logger } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
   try {
@@ -162,7 +163,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    console.error('Error applying referral:', error);
+    logger.error('Error applying referral', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to apply referral' },
       { status: 500 }

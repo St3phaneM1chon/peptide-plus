@@ -39,6 +39,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { sendEmail, satisfactionSurveyEmail, generateUnsubscribeUrl, type OrderData } from '@/lib/email';
 import { withJobLock } from '@/lib/cron-lock';
+import { logger } from '@/lib/logger';
 
 // Defaults (overridden by SiteSetting values)
 const DEFAULT_DELAY_DAYS = 5;
@@ -69,7 +70,7 @@ export async function GET(request: NextRequest) {
       const delayDays = parseInt(surveyConfigMap.get('satisfaction_survey.delay_days') || '', 10) || DEFAULT_DELAY_DAYS;
       const bonusPoints = parseInt(surveyConfigMap.get('satisfaction_survey.bonus_points') || '', 10) || DEFAULT_BONUS_POINTS;
 
-      console.log(`Satisfaction survey config: delay=${delayDays}d, bonus=${bonusPoints}pts`);
+      logger.info(`Satisfaction survey config: delay=${delayDays}d, bonus=${bonusPoints}pts`);
 
     // Find orders delivered delayDays ago (configurable, default 5)
     const targetDayAgo = new Date();
@@ -161,7 +162,7 @@ export async function GET(request: NextRequest) {
       (o) => !optedOutUserIds.has(o.userId)
     );
 
-    console.log(`Found ${deliveredOrders.length} delivered orders, ${filteredOrders.length} after dedup`);
+    logger.info(`Found ${deliveredOrders.length} delivered orders, ${filteredOrders.length} after dedup`);
 
     // DI-65: Batch fetch users to avoid N+1 queries
     const userIds = [...new Set(filteredOrders.map((o) => o.userId))];
@@ -230,7 +231,7 @@ export async function GET(request: NextRequest) {
             error: result.success ? null : 'Send failed',
             messageId: `order:${order.id}`,
           },
-        }).catch((err: unknown) => console.error('Failed to create email log', err));
+        }).catch((err: unknown) => logger.error('Failed to create email log', { error: err instanceof Error ? (err as Error).message : String(err) }));
 
         results.push({
           orderId: order.id,
@@ -240,10 +241,10 @@ export async function GET(request: NextRequest) {
           messageId: result.messageId,
         });
 
-        console.log(`Satisfaction survey sent for order ${order.orderNumber} to ${user.email}`);
+        logger.info(`Satisfaction survey sent for order ${order.orderNumber} to ${user.email}`);
 
       } catch (error) {
-        console.error(`Failed to send satisfaction email for order ${order.id}:`, error);
+        logger.error(`Failed to send satisfaction email for order ${order.id}`, { error: error instanceof Error ? error.message : String(error) });
         results.push({
           orderId: order.id,
           orderNumber: order.orderNumber,
@@ -261,7 +262,7 @@ export async function GET(request: NextRequest) {
     });
 
     } catch (error) {
-      console.error('Satisfaction survey cron job error:', error);
+      logger.error('Satisfaction survey cron job error', { error: error instanceof Error ? error.message : String(error) });
       return NextResponse.json(
         { error: 'Internal server error' },
         { status: 500 }

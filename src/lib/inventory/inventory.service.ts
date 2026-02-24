@@ -5,6 +5,7 @@
 
 import { prisma } from '@/lib/db';
 import { ACCOUNT_CODES } from '@/lib/accounting/types';
+import { logger } from '@/lib/logger';
 
 /**
  * Reserve stock for a checkout session
@@ -124,7 +125,7 @@ export async function consumeReservation(
           });
         }
         if (safeDecrement < reservation.quantity) {
-          console.warn(`[consumeReservation] Stock floor hit for format ${reservation.formatId}: wanted to decrement ${reservation.quantity}, only decremented ${safeDecrement}`);
+          logger.warn('[consumeReservation] Stock floor hit', { formatId: reservation.formatId, requested: reservation.quantity, decremented: safeDecrement });
         }
       }
 
@@ -259,7 +260,7 @@ export async function adjustStock(
           });
         }
         if (safeDecrement < absQuantity) {
-          console.warn(`[adjustStock] Stock floor hit for format ${formatId}: wanted to decrement ${absQuantity}, only decremented ${safeDecrement}`);
+          logger.warn('[adjustStock] Stock floor hit', { formatId, requested: absQuantity, decremented: safeDecrement });
         }
       }
     }
@@ -326,7 +327,7 @@ export async function generateCOGSEntry(orderId: string): Promise<string | null>
   });
 
   if (!cogsAccount || !stockAccount) {
-    console.error('COGS or Stock account not found in Chart of Accounts');
+    logger.error('COGS or Stock account not found in Chart of Accounts');
     return null;
   }
 

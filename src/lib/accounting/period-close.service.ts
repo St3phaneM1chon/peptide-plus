@@ -6,6 +6,7 @@
 import { prisma } from '@/lib/db';
 import { ACCOUNT_CODES } from './types';
 import { logAuditTrail } from './audit-trail.service';
+import { logger } from '@/lib/logger';
 
 export interface ChecklistItem {
   id: string;
@@ -230,13 +231,12 @@ export async function reopenPeriod(
   }
 
   // #100 Log the reopen action for audit trail before making the change
-  console.info('Period reopen:', {
+  logger.info('Period reopen', {
     periodCode,
     reopenedBy,
     reason,
     previouslyClosedBy: period.closedBy,
     previouslyClosedAt: period.closedAt?.toISOString(),
-    reopenedAt: new Date().toISOString(),
   });
 
   // NOTE: We intentionally preserve the original closedAt/closedBy values
@@ -553,14 +553,13 @@ export async function rollbackYearEndClose(
   });
 
   // 3. Audit log (outside transaction - logging should not affect the rollback)
-  console.info('Year-end close rollback:', {
+  logger.info('Year-end close rollback', {
     year,
     rolledBackBy,
     reason,
     closingEntryVoided: result.closingEntryVoided,
     closingEntryId: result.closingEntryId,
     periodsReopened: result.periodsReopened,
-    rolledBackAt: new Date().toISOString(),
   });
 
   // Persist a formal audit trail entry for the year-end rollback

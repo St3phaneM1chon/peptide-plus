@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth-config';
+import { logger } from '@/lib/logger';
 
 export async function GET() {
   try {
@@ -81,7 +82,7 @@ export async function GET() {
       recentReferrals,
     });
   } catch (error) {
-    console.error('Error fetching referral stats:', error);
+    logger.error('Error fetching referral stats', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to fetch referral stats' },
       { status: 500 }

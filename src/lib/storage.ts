@@ -13,6 +13,7 @@ import { writeFile, unlink, mkdir } from 'fs/promises';
 import { existsSync } from 'fs';
 import path from 'path';
 import { createHash, randomUUID } from 'crypto';
+import { logger } from '@/lib/logger';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -58,7 +59,7 @@ async function getAzureClients() {
 
     return { blobServiceClient, containerClient };
   } catch (error) {
-    console.warn('Azure Blob Storage not available, using local filesystem:', error);
+    logger.warn('Azure Blob Storage not available, using local filesystem', { error: error instanceof Error ? error.message : String(error) });
     return null;
   }
 }
@@ -188,7 +189,7 @@ export class StorageService {
         blobUrl: blockBlobClient.url,
       };
     } catch (error) {
-      console.error('Failed to generate presigned URL:', error);
+      logger.error('Failed to generate presigned URL', { error: error instanceof Error ? error.message : String(error) });
       return null;
     }
   }

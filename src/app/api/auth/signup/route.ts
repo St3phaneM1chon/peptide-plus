@@ -13,6 +13,7 @@ import { sendWelcomeEmail } from '@/lib/email-service';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { z } from 'zod';
 import { PASSWORD_MIN_LENGTH } from '@/lib/constants';
+import { logger } from '@/lib/logger';
 
 // Schéma de validation NYDFS-compliant
 const signupSchema = z.object({
@@ -115,7 +116,7 @@ export async function POST(request: NextRequest) {
     // Envoyer email de bienvenue
     sendWelcomeEmail(user.id, user.email, {
       userName: user.name || 'Utilisateur',
-    }).catch((err) => console.error('Welcome email failed:', err));
+    }).catch((err) => logger.error('Welcome email failed', { error: err instanceof Error ? err.message : String(err) }));
 
     return NextResponse.json(
       {
@@ -125,7 +126,7 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
-    console.error('Signup error:', error);
+    logger.error('Signup error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la création du compte' },
       { status: 500 }

@@ -5,6 +5,7 @@ import { generateAuthenticationOptions } from '@simplewebauthn/server';
 import { prisma } from '@/lib/db';
 import { rpID } from '@/lib/webauthn';
 import { cookies } from 'next/headers';
+import { logger } from '@/lib/logger';
 
 type AuthenticatorTransport = 'ble' | 'cable' | 'hybrid' | 'internal' | 'nfc' | 'smart-card' | 'usb';
 
@@ -67,7 +68,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(options);
   } catch (error) {
-    console.error('WebAuthn auth options error:', error);
+    logger.error('WebAuthn auth options error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to generate authentication options' },
       { status: 500 }

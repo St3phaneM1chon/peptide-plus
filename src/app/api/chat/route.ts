@@ -15,6 +15,7 @@ import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { validateCsrf } from '@/lib/csrf-middleware';
 import { stripHtml, stripControlChars } from '@/lib/sanitize';
 import { v4 as uuidv4 } from 'uuid';
+import { logger } from '@/lib/logger';
 
 // GET - Liste des conversations (admin only)
 export async function GET(request: NextRequest) {
@@ -55,7 +56,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ conversations });
   } catch (error) {
-    console.error('Get conversations error:', error);
+    logger.error('Get conversations error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -179,7 +180,7 @@ export async function POST(request: NextRequest) {
       visitorId: finalVisitorId,
     });
   } catch (error) {
-    console.error('Create conversation error:', error);
+    logger.error('Create conversation error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

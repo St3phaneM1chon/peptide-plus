@@ -4,6 +4,7 @@
  */
 
 import { prisma } from '@/lib/db';
+import { logger } from '@/lib/logger';
 import { getScenarios } from './scenarios';
 import { simulateAureliaPay, executePostActions } from './aurelia-pay';
 import { verifyTestCase, generateTaxReport } from './verifier';
@@ -26,7 +27,7 @@ export async function launchUatRun(canadaOnly: boolean): Promise<string> {
 
   // Run in background (non-blocking)
   executeRun(run.id, scenarios, canadaOnly).catch((err) => {
-    console.error(`[UAT] Run ${run.id} crashed:`, err);
+    logger.error('[UAT] Run crashed', { runId: run.id, error: err instanceof Error ? err.message : String(err) });
     prisma.uatTestRun.update({
       where: { id: run.id },
       data: { status: 'FAILED', completedAt: new Date() },

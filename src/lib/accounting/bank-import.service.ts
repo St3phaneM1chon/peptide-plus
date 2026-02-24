@@ -5,6 +5,7 @@
 
 import { BankTransaction, ReconciliationStatus } from './types';
 import { decrypt } from '@/lib/security';
+import { logger } from '@/lib/logger';
 
 /** Try to decrypt a value; if it fails (legacy plaintext), return as-is */
 async function safeDecryptField(value: string | null): Promise<string | null> {
@@ -459,7 +460,7 @@ function parseDate(dateStr: string): Date {
   }
 
   // Fallback - let JS handle it (with warning)
-  console.warn(`parseDate: Unknown date format "${dateStr}", using native Date parsing`);
+  logger.warn('parseDate: Unknown date format, using native Date parsing', { dateStr });
   return new Date(dateStr);
 }
 

@@ -10,6 +10,7 @@ import { auth } from '@/lib/auth-config';
 import { initializeMFASetup } from '@/lib/mfa';
 import { encrypt } from '@/lib/security';
 import { prisma } from '@/lib/db';
+import { logger } from '@/lib/logger';
 import { validateCsrf } from '@/lib/csrf-middleware';
 
 export async function POST(request: NextRequest) {
@@ -64,7 +65,7 @@ export async function POST(request: NextRequest) {
     response.headers.set('Pragma', 'no-cache');
     return response;
   } catch (error) {
-    console.error('MFA setup error:', error);
+    logger.error('MFA setup error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Erreur lors de la configuration MFA' },
       { status: 500 }

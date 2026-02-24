@@ -171,9 +171,7 @@ export async function processInboundEmail(
     if (payload.attachments && payload.attachments.length > 0) {
       const validAttachments = payload.attachments.filter((att) => {
         if (att.size > MAX_ATTACHMENT_SIZE) {
-          console.warn(
-            `[InboundHandler] Skipping oversized attachment "${att.filename}" (${att.size} bytes, max ${MAX_ATTACHMENT_SIZE})`,
-          );
+          logger.warn('[InboundHandler] Skipping oversized attachment', { filename: att.filename, size: att.size, maxSize: MAX_ATTACHMENT_SIZE });
           return false;
         }
         return true;

@@ -3,6 +3,8 @@
  * Exchange rates, currency conversion, and FX gain/loss tracking
  */
 
+import { logger } from '@/lib/logger';
+
 interface ExchangeRate {
   fromCurrency: string;
   toCurrency: string;
@@ -61,11 +63,10 @@ export async function fetchBOCRate(currency: string): Promise<number> {
     throw new Error('No rate data');
   } catch (error) {
     const fallbackRate = getFallbackRate(currency);
-    console.warn('BOC API failed, using fallback rate:', {
+    logger.warn('BOC API failed, using fallback rate', {
       currency,
       fallbackRate,
       error: error instanceof Error ? error.message : String(error),
-      timestamp: new Date().toISOString(),
     });
     return fallbackRate;
   }
@@ -95,7 +96,7 @@ function getFallbackRate(currency: string): number {
   const ageMs = Date.now() - new Date(FALLBACK_RATES.lastUpdated).getTime();
   const ageDays = ageMs / (1000 * 60 * 60 * 24);
   if (ageDays > 30) {
-    console.warn(`STALE FALLBACK RATES: Last updated ${FALLBACK_RATES.lastUpdated} (${Math.round(ageDays)} days ago). Update FALLBACK_RATES in currency.service.ts.`);
+    logger.warn('STALE FALLBACK RATES', { lastUpdated: FALLBACK_RATES.lastUpdated, ageDays: Math.round(ageDays) });
   }
   return FALLBACK_RATES.rates[currency] || 1;
 }
@@ -313,7 +314,7 @@ export async function getHistoricalRates(
 
     throw new Error('No observations returned from BOC API');
   } catch (error) {
-    console.warn('getHistoricalRates: BOC API failed, using fallback rates.', {
+    logger.warn('getHistoricalRates: BOC API failed, using fallback rates', {
       currency,
       startDate: startDate.toISOString(),
       endDate: endDate.toISOString(),

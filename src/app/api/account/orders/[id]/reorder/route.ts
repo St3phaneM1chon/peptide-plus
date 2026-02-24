@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { validateCsrf } from '@/lib/csrf-middleware';
+import { logger } from '@/lib/logger';
 
 interface ReorderItem {
   productId: string;
@@ -151,7 +152,7 @@ export async function POST(
       unavailable,
     });
   } catch (error) {
-    console.error('Reorder error:', error);
+    logger.error('Reorder error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

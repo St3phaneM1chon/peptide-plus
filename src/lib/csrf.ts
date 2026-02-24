@@ -4,6 +4,7 @@
  */
 
 import { randomBytes, createHmac } from 'crypto';
+import { logger } from '@/lib/logger';
 // NOTE: cookies() from 'next/headers' is loaded dynamically inside server-only
 // functions to avoid breaking client component imports of this module.
 // See: verifyCSRFMiddleware() and setCSRFCookie()
@@ -31,7 +32,7 @@ function resolveCSRFSecret(): string {
 
   // Development: use a stable, clearly-marked dev secret
   if (typeof window === 'undefined') {
-    console.warn('[csrf] CSRF_SECRET not set - using development fallback (NOT safe for production)');
+    logger.warn('[csrf] CSRF_SECRET not set - using development fallback (NOT safe for production)');
   }
   return DEV_FALLBACK_SECRET;
 }
@@ -138,18 +139,18 @@ export async function verifyCSRFMiddleware(request: Request): Promise<{
 
   if (!cookieToken) {
     // FAILLE-079 FIX: Log CSRF validation failures for security monitoring
-    console.warn(JSON.stringify({ event: 'csrf_failed', reason: 'missing_cookie', method: request.method, url: request.url }));
+    logger.warn('CSRF validation failed', { event: 'csrf_failed', reason: 'missing_cookie', method: request.method, url: request.url });
     return { valid: false, error: 'Cookie CSRF manquant' };
   }
 
   if (!headerToken) {
-    console.warn(JSON.stringify({ event: 'csrf_failed', reason: 'missing_header', method: request.method, url: request.url }));
+    logger.warn('CSRF validation failed', { event: 'csrf_failed', reason: 'missing_header', method: request.method, url: request.url });
     return { valid: false, error: 'Header CSRF manquant' };
   }
 
   const result = verifyCSRFToken(cookieToken, headerToken);
   if (!result.valid) {
-    console.warn(JSON.stringify({ event: 'csrf_failed', reason: 'invalid_token', method: request.method, url: request.url }));
+    logger.warn('CSRF validation failed', { event: 'csrf_failed', reason: 'invalid_token', method: request.method, url: request.url });
   }
   return result;
 }

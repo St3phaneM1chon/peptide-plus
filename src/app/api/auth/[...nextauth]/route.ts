@@ -14,6 +14,7 @@ export const dynamic = 'force-dynamic';
 import { handlers } from '@/lib/auth-config';
 import { NextRequest, NextResponse } from 'next/server';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { logger } from '@/lib/logger';
 
 function fixAzureRequest(req: NextRequest): NextRequest {
   const xArrSsl = req.headers.get('x-arr-ssl');
@@ -23,7 +24,7 @@ function fixAzureRequest(req: NextRequest): NextRequest {
   const url = req.nextUrl.pathname;
   if (url.includes('/callback/') || url.includes('/signin/')) {
     const cookieNames = req.cookies.getAll().map(c => `${c.name}(${c.value.length})`);
-    console.log(JSON.stringify({
+    logger.info('auth_debug', {
       event: 'auth_debug',
       url,
       proto: proto || 'MISSING',
@@ -34,7 +35,7 @@ function fixAzureRequest(req: NextRequest): NextRequest {
       hasSecurePkce: !!req.cookies.get('__Secure-authjs.pkce.code_verifier'),
       hasState: !!req.cookies.get('authjs.state'),
       hasSecureState: !!req.cookies.get('__Secure-authjs.state'),
-    }));
+    });
   }
 
   // Azure terminates TLS and uses x-arr-ssl instead of x-forwarded-proto

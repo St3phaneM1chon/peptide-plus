@@ -9,6 +9,7 @@
 
 import { prisma } from '@/lib/db';
 import { Prisma } from '@prisma/client';
+import { logger } from '@/lib/logger';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -178,7 +179,7 @@ export async function fullTextSearch(
     };
   } catch (error) {
     // Fallback to ILIKE if tsvector column doesn't exist yet
-    console.warn('Full-text search failed, falling back to ILIKE:', error);
+    logger.warn('Full-text search failed, falling back to ILIKE', { error: error instanceof Error ? error.message : String(error) });
     return fallbackSearch(query, options);
   }
 }
@@ -366,7 +367,7 @@ export async function multiLanguageSearch(
       query,
     };
   } catch (error) {
-    console.error('Multi-language search error:', error);
+    logger.error('Multi-language search error', { error: error instanceof Error ? error.message : String(error) });
     return { results: [], total: 0, query };
   }
 }

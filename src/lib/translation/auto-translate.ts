@@ -14,6 +14,7 @@
 import type OpenAI from 'openai';
 import { createHash } from 'crypto';
 import { prisma } from '@/lib/db';
+import { logger } from '@/lib/logger';
 import { cacheGet, cacheSet, CacheTTL } from '@/lib/cache';
 import { buildTranslationSystemPrompt, getLanguageName } from './glossary';
 import { locales } from '@/i18n/config';
@@ -257,7 +258,7 @@ export async function translateEntity(
   });
 
   if (!entity) {
-    console.error(`[Translation] Entity not found: ${model}#${entityId}`);
+    logger.error('[Translation] Entity not found', { model, entityId });
     return null;
   }
 
@@ -377,7 +378,7 @@ export async function translateEntityAllLocales(
       if (result.status === 'fulfilled' && result.value) {
         results.push(result.value);
       } else if (result.status === 'rejected') {
-        console.error(`[Translation] Failed for locale batch:`, result.reason);
+        logger.error('[Translation] Failed for locale batch', { error: result.reason instanceof Error ? result.reason.message : String(result.reason) });
       }
     }
 
@@ -675,7 +676,7 @@ export async function batchTranslateModel(
         await translateEntityAllLocales(model, entity.id, { force, concurrency });
         translated++;
       } catch (error) {
-        console.error(`[BatchTranslate] Error translating ${model}#${entity.id}:`, error);
+        logger.error('[BatchTranslate] Error translating entity', { model, entityId: entity.id, error: error instanceof Error ? error.message : String(error) });
         errors++;
       }
     }

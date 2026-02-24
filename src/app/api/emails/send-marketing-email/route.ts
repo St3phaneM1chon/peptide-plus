@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { db } from '@/lib/db';
+import { logger } from '@/lib/logger';
 import {
   sendEmail,
   birthdayEmail,
@@ -103,7 +104,7 @@ export async function POST(request: NextRequest) {
             }),
           ]);
         } catch (e) {
-          console.log('Failed to add birthday points:', e);
+          logger.info('Failed to add birthday points', { error: e instanceof Error ? e.message : String(e) });
         }
         break;
       }
@@ -197,11 +198,11 @@ export async function POST(request: NextRequest) {
     });
 
     if (!result.success) {
-      console.error('Failed to send marketing email:', result.error);
+      logger.error('Failed to send marketing email', { error: result.error instanceof Error ? result.error.message : String(result.error) });
       return NextResponse.json({ error: 'Failed to send email' }, { status: 500 });
     }
 
-    console.log(`Marketing email sent: ${emailType} to ${user.email}`);
+    logger.info(`Marketing email sent: ${emailType} to ${user.email}`);
 
     return NextResponse.json({
       success: true,
@@ -211,7 +212,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Send marketing email error:', error);
+    logger.error('Send marketing email error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
