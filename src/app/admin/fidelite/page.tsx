@@ -232,28 +232,82 @@ export default function FidelitePage() {
   }, [config]);
 
   const handleRibbonDelete = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    if (!config || config.tiers.length === 0) {
+      toast.info(t('admin.loyalty.noTiersToDelete') || 'No tiers to delete');
+      return;
+    }
+    // Open the last tier's editor so user can delete from there
+    const lastTier = config.tiers[config.tiers.length - 1];
+    openEditTier(lastTier.name);
+  }, [config, t]);
 
   const handleRibbonAdjustPoints = useCallback(() => {
-    toast.info(t('common.comingSoon'));
+    // Scroll to the simulation section where users can simulate point adjustments
+    const simSection = document.querySelector('.bg-sky-50');
+    if (simSection) {
+      simSection.scrollIntoView({ behavior: 'smooth' });
+      toast.info(t('admin.loyalty.useSimulator') || 'Use the simulator below to calculate point adjustments');
+    }
   }, [t]);
 
   const handleRibbonEarningRules = useCallback(() => {
-    toast.info(t('common.comingSoon'));
+    // Scroll to basic settings section
+    const settingsSection = document.querySelector('.bg-white.rounded-xl');
+    if (settingsSection) {
+      settingsSection.scrollIntoView({ behavior: 'smooth' });
+      toast.info(t('admin.loyalty.editEarningRules') || 'Edit earning rules in Basic Settings above');
+    }
   }, [t]);
 
-  const handleRibbonExchangeHistory = useCallback(() => {
-    toast.info(t('common.comingSoon'));
+  const handleRibbonExchangeHistory = useCallback(async () => {
+    try {
+      const res = await fetch('/api/admin/loyalty/history?limit=10');
+      if (res.ok) {
+        const data = await res.json();
+        const count = data.total || data.history?.length || 0;
+        toast.info(
+          (t('admin.loyalty.exchangeHistoryCount') || '{count} point exchange(s) recorded')
+            .replace('{count}', String(count))
+        );
+      } else {
+        toast.info(t('admin.loyalty.noExchangeHistory') || 'No exchange history available yet');
+      }
+    } catch {
+      toast.info(t('admin.loyalty.noExchangeHistory') || 'No exchange history available yet');
+    }
   }, [t]);
 
   const handleRibbonMemberStats = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    if (!config) return;
+    const tierSummary = config.tiers.map(tier => `${tier.name}: ${tier.multiplier}x`).join(', ');
+    toast.info(
+      `${config.tiers.length} ${t('admin.loyalty.loyaltyTiers') || 'tiers'} (${tierSummary})`
+    );
+  }, [config, t]);
 
   const handleRibbonExport = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    if (!config) return;
+    const BOM = '\uFEFF';
+    const headers = ['Tier Name', 'Min Points', 'Multiplier', 'Points per Dollar', 'Perks'];
+    const rows = config.tiers.map(tier => [
+      tier.name,
+      String(tier.minPoints),
+      String(tier.multiplier),
+      String(config.pointsPerDollar * tier.multiplier),
+      tier.perks.join('; '),
+    ]);
+    const csv = BOM + [headers, ...rows]
+      .map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(','))
+      .join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `loyalty-config-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(t('common.exported') || 'Exported successfully');
+  }, [config, t]);
 
   useRibbonAction('newTier', handleRibbonNewTier);
   useRibbonAction('delete', handleRibbonDelete);

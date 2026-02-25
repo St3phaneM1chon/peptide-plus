@@ -282,24 +282,74 @@ export default function PermissionsPage() {
   }, []);
 
   const handleRibbonDelete = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    if (groups.length === 0) {
+      toast.info(t('admin.permissions.noGroupsTitle') || 'No permission groups to delete');
+      return;
+    }
+    // Switch to groups tab so user can see and delete groups
+    setActiveTab('groups');
+    toast.info(t('admin.permissions.selectGroupToDelete') || 'Select a group and use the delete button to remove it');
+  }, [groups, t]);
 
   const handleRibbonModifyPermissions = useCallback(() => {
     setActiveTab('defaults');
   }, []);
 
   const handleRibbonDuplicateRole = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    if (groups.length === 0) {
+      toast.info(t('admin.permissions.noGroupsTitle') || 'No groups to duplicate');
+      return;
+    }
+    // Duplicate the first group as a template for a new one
+    const sourceGroup = groups[0];
+    setEditingGroup(null);
+    setGroupForm({
+      name: `${sourceGroup.name} (${t('admin.permissions.copy') || 'Copy'})`,
+      description: sourceGroup.description || '',
+      color: sourceGroup.color || '#0ea5e9',
+      permissionCodes: sourceGroup.permissions.map(p => p.permission.code),
+    });
+    setGroupModal(true);
+  }, [groups, t]);
 
   const handleRibbonAccessAudit = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    // Show summary of permissions state
+    const totalPerms = permissions.length;
+    const totalGroups = groups.length;
+    const totalUsersInGroups = groups.reduce((sum, g) => sum + g._count.users, 0);
+    toast.info(
+      `${t('admin.permissions.auditSummary') || 'Audit'}: ${totalPerms} ${t('admin.permissions.permission') || 'permissions'}, ${totalGroups} ${t('admin.permissions.tabGroups') || 'groups'}, ${totalUsersInGroups} ${t('admin.permissions.usersInGroups') || 'users in groups'}`
+    );
+  }, [permissions, groups, t]);
 
   const handleRibbonExport = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    if (permissions.length === 0) {
+      toast.info(t('admin.permissions.noPermissions') || 'No permissions to export');
+      return;
+    }
+    const BOM = '\uFEFF';
+    const headers = ['Code', 'Name', 'Module', 'Owner', 'Employee', 'Client', 'Customer'];
+    const rows = permissions.map(p => [
+      p.code,
+      p.name,
+      p.module,
+      p.defaultOwner ? 'Yes' : 'No',
+      p.defaultEmployee ? 'Yes' : 'No',
+      p.defaultClient ? 'Yes' : 'No',
+      p.defaultCustomer ? 'Yes' : 'No',
+    ]);
+    const csv = BOM + [headers, ...rows]
+      .map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(','))
+      .join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `permissions-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(t('common.exported') || 'Exported successfully');
+  }, [permissions, t]);
 
   useRibbonAction('newRole', handleRibbonNewRole);
   useRibbonAction('delete', handleRibbonDelete);

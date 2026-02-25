@@ -256,32 +256,80 @@ export default function AvisPage() {
 
   // ─── Ribbon action handlers ────────────────────────────────
   const handleRibbonRespond = useCallback(() => {
-    if (!selectedReview) { toast.info(t('common.comingSoon')); return; }
+    if (!selectedReview) { toast.info(t('admin.reviews.selectReviewFirst') || 'Select a review first'); return; }
     setAdminResponse(selectedReview.adminResponse || '');
     setShowResponseModal(true);
   }, [selectedReview, t]);
 
   const handleRibbonApprove = useCallback(() => {
-    if (!selectedReview) { toast.info(t('common.comingSoon')); return; }
+    if (!selectedReview) { toast.info(t('admin.reviews.selectReviewFirst') || 'Select a review first'); return; }
     updateReviewStatus(selectedReview.id, 'APPROVED');
   }, [selectedReview, t]);
 
   const handleRibbonReject = useCallback(() => {
-    if (!selectedReview) { toast.info(t('common.comingSoon')); return; }
+    if (!selectedReview) { toast.info(t('admin.reviews.selectReviewFirst') || 'Select a review first'); return; }
     updateReviewStatus(selectedReview.id, 'REJECTED');
   }, [selectedReview, t]);
 
   const handleRibbonReportContent = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    if (!selectedReview) {
+      toast.info(t('admin.reviews.selectReviewFirst') || 'Select a review first');
+      return;
+    }
+    // Reject the review to hide inappropriate content
+    if (selectedReview.status !== 'REJECTED') {
+      updateReviewStatus(selectedReview.id, 'REJECTED');
+      toast.success(t('admin.reviews.contentReported') || 'Review flagged and hidden from public');
+    } else {
+      toast.info(t('admin.reviews.alreadyRejected') || 'This review is already rejected');
+    }
+  }, [selectedReview, t]);
 
   const handleRibbonConvertTestimonial = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    if (!selectedReview) {
+      toast.info(t('admin.reviews.selectReviewFirst') || 'Select a review first');
+      return;
+    }
+    if (selectedReview.rating < 4) {
+      toast.info(t('admin.reviews.lowRatingTestimonial') || 'Only 4-5 star reviews can be used as testimonials');
+      return;
+    }
+    // Copy review as testimonial format to clipboard
+    const testimonial = `"${selectedReview.content}" - ${selectedReview.userName || 'Anonymous'}, ${selectedReview.rating}/5 stars`;
+    navigator.clipboard.writeText(testimonial);
+    toast.success(t('admin.reviews.testimonialCopied') || 'Testimonial copied to clipboard');
+  }, [selectedReview, t]);
 
   const handleRibbonExport = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    if (reviews.length === 0) {
+      toast.info(t('admin.reviews.noReviewsToExport') || 'No reviews to export');
+      return;
+    }
+    const BOM = '\uFEFF';
+    const headers = ['Product', 'User', 'Rating', 'Title', 'Content', 'Status', 'Verified Purchase', 'Admin Response', 'Date'];
+    const rows = reviews.map(r => [
+      r.productName,
+      r.userName || r.userEmail || 'Anonymous',
+      String(r.rating),
+      r.title || '',
+      r.content,
+      r.status,
+      r.isVerifiedPurchase ? 'Yes' : 'No',
+      r.adminResponse || '',
+      new Date(r.createdAt).toLocaleDateString(locale),
+    ]);
+    const csv = BOM + [headers, ...rows]
+      .map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(','))
+      .join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `reviews-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(t('common.exported') || 'Exported successfully');
+  }, [reviews, locale, t]);
 
   useRibbonAction('respond', handleRibbonRespond);
   useRibbonAction('approve', handleRibbonApprove);

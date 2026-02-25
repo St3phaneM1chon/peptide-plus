@@ -330,34 +330,75 @@ export default function WebinairesPage() {
   }, []);
 
   const handleRibbonDelete = useCallback(() => {
-    if (!selectedWebinar) { toast.info(t('common.comingSoon')); return; }
+    if (!selectedWebinar) { toast.info(t('admin.webinars.selectWebinarFirst') || 'Select a webinar first'); return; }
     handleCancelWebinar(selectedWebinar);
   }, [selectedWebinar, t]);
 
   const handleRibbonSchedule = useCallback(() => {
-    if (!selectedWebinar) { toast.info(t('common.comingSoon')); return; }
+    if (!selectedWebinar) { toast.info(t('admin.webinars.selectWebinarFirst') || 'Select a webinar first'); return; }
     openEditForm(selectedWebinar);
   }, [selectedWebinar, t]);
 
-  const handleRibbonLaunchNow = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+  const handleRibbonLaunchNow = useCallback(async () => {
+    if (!selectedWebinar) {
+      toast.info(t('admin.webinars.selectWebinarFirst') || 'Select a webinar first');
+      return;
+    }
+    if (selectedWebinar.meetingUrl) {
+      window.open(selectedWebinar.meetingUrl, '_blank');
+    } else {
+      toast.info(t('admin.webinars.noMeetingLink') || 'No meeting link configured. Edit the webinar to add one.');
+    }
+  }, [selectedWebinar, t]);
 
   const handleRibbonRecording = useCallback(() => {
     if (selectedWebinar?.recordingUrl) {
       window.open(selectedWebinar.recordingUrl, '_blank');
     } else {
-      toast.info(t('common.comingSoon'));
+      toast.info(t('admin.webinars.noRecording') || 'No recording available for this webinar');
     }
   }, [selectedWebinar, t]);
 
   const handleRibbonParticipantStats = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    if (!selectedWebinar) {
+      toast.info(t('admin.webinars.selectWebinarFirst') || 'Select a webinar first');
+      return;
+    }
+    toast.info(
+      `${selectedWebinar.title}: ${selectedWebinar.registeredCount} ${t('admin.webinars.registered') || 'registered'}, ${selectedWebinar.attendedCount} ${t('admin.webinars.attended') || 'attended'} (${selectedWebinar.registeredCount > 0 ? Math.round((selectedWebinar.attendedCount / selectedWebinar.registeredCount) * 100) : 0}%)`
+    );
+  }, [selectedWebinar, t]);
 
   const handleRibbonExport = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    if (webinars.length === 0) {
+      toast.info(t('admin.webinars.noWebinars') || 'No webinars to export');
+      return;
+    }
+    const BOM = '\uFEFF';
+    const headers = ['Title', 'Host', 'Status', 'Scheduled At', 'Duration (min)', 'Registered', 'Attended', 'Max Attendees', 'Meeting URL'];
+    const rows = webinars.map(w => [
+      w.title,
+      w.host,
+      w.status,
+      w.scheduledAt ? new Date(w.scheduledAt).toLocaleString(locale) : '',
+      String(w.duration),
+      String(w.registeredCount),
+      String(w.attendedCount),
+      String(w.maxAttendees),
+      w.meetingUrl || '',
+    ]);
+    const csv = BOM + [headers, ...rows]
+      .map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(','))
+      .join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `webinars-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(t('common.exported') || 'Exported successfully');
+  }, [webinars, locale, t]);
 
   useRibbonAction('newWebinar', handleRibbonNewWebinar);
   useRibbonAction('delete', handleRibbonDelete);

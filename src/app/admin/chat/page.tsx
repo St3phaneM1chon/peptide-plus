@@ -288,28 +288,116 @@ export default function AdminChatPage() {
 
   // ─── Ribbon action handlers ────────────────────────────────
   const handleRibbonNewMessage = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    // Focus the input field if a conversation is selected, otherwise prompt to select one
+    if (!selectedConversation) {
+      toast.info(t('admin.chat.selectConversation') || 'Select a conversation first');
+      return;
+    }
+    const input = document.querySelector<HTMLInputElement>('input[type="text"]');
+    if (input) input.focus();
+  }, [selectedConversation, t]);
 
-  const handleRibbonCloseConversation = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+  const handleRibbonCloseConversation = useCallback(async () => {
+    if (!selectedConversation) {
+      toast.info(t('admin.chat.selectConversation') || 'Select a conversation first');
+      return;
+    }
+    try {
+      const res = await fetch(`/api/chat/settings`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ conversationId: selectedConversation.id, status: 'CLOSED' }),
+      });
+      if (res.ok) {
+        toast.success(t('admin.chat.conversationClosed') || 'Conversation closed');
+        setSelectedConversation(null);
+        loadConversations();
+      } else {
+        toast.error(t('common.errorOccurred'));
+      }
+    } catch {
+      toast.error(t('common.errorOccurred'));
+    }
+  }, [selectedConversation, t, loadConversations]);
 
   const handleRibbonTransfer = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    if (!selectedConversation) {
+      toast.info(t('admin.chat.selectConversation') || 'Select a conversation first');
+      return;
+    }
+    toast.info(t('admin.chat.transferNotAvailable') || 'Transfer requires multiple agents. Configure additional agents in settings.');
+  }, [selectedConversation, t]);
 
-  const handleRibbonMarkResolved = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+  const handleRibbonMarkResolved = useCallback(async () => {
+    if (!selectedConversation) {
+      toast.info(t('admin.chat.selectConversation') || 'Select a conversation first');
+      return;
+    }
+    try {
+      const res = await fetch(`/api/chat/settings`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ conversationId: selectedConversation.id, status: 'RESOLVED' }),
+      });
+      if (res.ok) {
+        toast.success(t('admin.chat.conversationResolved') || 'Conversation marked as resolved');
+        loadConversations();
+      } else {
+        toast.error(t('common.errorOccurred'));
+      }
+    } catch {
+      toast.error(t('common.errorOccurred'));
+    }
+  }, [selectedConversation, t, loadConversations]);
 
-  const handleRibbonArchive = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+  const handleRibbonArchive = useCallback(async () => {
+    if (!selectedConversation) {
+      toast.info(t('admin.chat.selectConversation') || 'Select a conversation first');
+      return;
+    }
+    try {
+      const res = await fetch(`/api/chat/settings`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ conversationId: selectedConversation.id, status: 'ARCHIVED' }),
+      });
+      if (res.ok) {
+        toast.success(t('admin.chat.conversationArchived') || 'Conversation archived');
+        setSelectedConversation(null);
+        loadConversations();
+      } else {
+        toast.error(t('common.errorOccurred'));
+      }
+    } catch {
+      toast.error(t('common.errorOccurred'));
+    }
+  }, [selectedConversation, t, loadConversations]);
 
   const handleRibbonExportHistory = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    if (!selectedConversation || messages.length === 0) {
+      toast.info(t('admin.chat.noMessagesToExport') || 'No messages to export');
+      return;
+    }
+    const BOM = '\uFEFF';
+    const headers = ['Date', 'Sender', 'Language', 'Message'];
+    const rows = messages.map(m => [
+      new Date(m.createdAt).toLocaleString(locale),
+      m.sender,
+      m.language || '',
+      m.content.replace(/"/g, '""'),
+    ]);
+    const csv = BOM + [headers, ...rows]
+      .map(r => r.map(v => `"${v}"`).join(','))
+      .join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `chat-${selectedConversation.visitorId.slice(0, 8)}-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(t('common.exported') || 'Exported successfully');
+  }, [selectedConversation, messages, locale, t]);
 
   useRibbonAction('newMessage', handleRibbonNewMessage);
   useRibbonAction('closeConversation', handleRibbonCloseConversation);

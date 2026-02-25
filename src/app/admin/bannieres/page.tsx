@@ -292,28 +292,58 @@ export default function BannieresPage() {
   }, []);
 
   const onDeleteRibbon = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    if (slides.length === 0) {
+      toast.info(t('admin.banners.emptyTitle') || 'No banners to delete');
+      return;
+    }
+    // Delete the last slide or prompt user to pick one
+    toast.info(t('admin.banners.useDeleteButton') || 'Use the delete button next to each banner to remove it');
+  }, [slides, t]);
 
   const onUploadImage = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    // Open the create form with media tab active
+    openCreate();
+    // Small delay to let the modal open, then switch to media tab
+    setTimeout(() => setActiveTab('media'), 100);
+  }, []);
 
   const onActivate = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    const inactiveSlides = slides.filter(s => !s.isActive);
+    if (inactiveSlides.length === 0) {
+      toast.info(t('admin.banners.allActive') || 'All banners are already active');
+      return;
+    }
+    // Activate the first inactive slide
+    toggleActive(inactiveSlides[0]);
+  }, [slides, t]);
 
   const onDeactivate = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    const activeSlides = slides.filter(s => s.isActive);
+    if (activeSlides.length === 0) {
+      toast.info(t('admin.banners.noneActive') || 'No active banners to deactivate');
+      return;
+    }
+    // Deactivate the last active slide
+    toggleActive(activeSlides[activeSlides.length - 1]);
+  }, [slides, t]);
 
   const onReorganize = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    if (slides.length < 2) {
+      toast.info(t('admin.banners.needMultipleBanners') || 'Need at least 2 banners to reorganize');
+      return;
+    }
+    toast.info(t('admin.banners.useArrows') || 'Use the up/down arrows next to each banner to reorder');
+  }, [slides, t]);
 
   const onPreview = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    const activeSlides = slides.filter(s => s.isActive);
+    if (activeSlides.length === 0) {
+      toast.info(t('admin.banners.noActiveSlides') || 'No active banners to preview');
+      return;
+    }
+    // Open the shop homepage where banners are shown
+    window.open('/', '_blank');
+  }, [slides, t]);
 
   useRibbonAction('newBanner', onNewBanner);
   useRibbonAction('delete', onDeleteRibbon);

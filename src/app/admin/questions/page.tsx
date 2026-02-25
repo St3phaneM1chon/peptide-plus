@@ -234,30 +234,95 @@ export default function QuestionsPage() {
 
   // ─── Ribbon action handlers ────────────────────────────────
   const handleRibbonRespond = useCallback(() => {
-    if (!selectedQuestion) { toast.info(t('common.comingSoon')); return; }
+    if (!selectedQuestion) { toast.info(t('admin.questions.selectQuestionFirst') || 'Select a question first'); return; }
     setAnswerText(selectedQuestion.answer || '');
     setShowAnswerModal(true);
   }, [selectedQuestion, t]);
 
   const handleRibbonMarkResolved = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    if (!selectedQuestion) {
+      toast.info(t('admin.questions.selectQuestionFirst') || 'Select a question first');
+      return;
+    }
+    if (!selectedQuestion.answer) {
+      toast.info(t('admin.questions.answerBeforeResolving') || 'Please answer the question before marking it as resolved');
+      return;
+    }
+    // Mark as public (resolved = answered + public)
+    if (!selectedQuestion.isPublic) {
+      togglePublic(selectedQuestion.id, selectedQuestion.isPublic);
+      toast.success(t('admin.questions.markedResolved') || 'Question marked as resolved and made public');
+    } else {
+      toast.info(t('admin.questions.alreadyResolved') || 'This question is already answered and public');
+    }
+  }, [selectedQuestion, t]);
 
   const handleRibbonArchive = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    if (!selectedQuestion) {
+      toast.info(t('admin.questions.selectQuestionFirst') || 'Select a question first');
+      return;
+    }
+    // Archive = delete the question
+    setDeleteConfirmId(selectedQuestion.id);
+  }, [selectedQuestion, t]);
 
   const handleRibbonReportContent = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    if (!selectedQuestion) {
+      toast.info(t('admin.questions.selectQuestionFirst') || 'Select a question first');
+      return;
+    }
+    // Make question private if it contains inappropriate content
+    if (selectedQuestion.isPublic) {
+      togglePublic(selectedQuestion.id, selectedQuestion.isPublic);
+      toast.success(t('admin.questions.contentReported') || 'Question hidden from public view');
+    } else {
+      toast.info(t('admin.questions.alreadyPrivate') || 'This question is already private');
+    }
+  }, [selectedQuestion, t]);
 
   const handleRibbonConvertFaq = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    if (!selectedQuestion) {
+      toast.info(t('admin.questions.selectQuestionFirst') || 'Select a question first');
+      return;
+    }
+    if (!selectedQuestion.answer) {
+      toast.info(t('admin.questions.answerFirstForFaq') || 'Answer the question before converting to FAQ');
+      return;
+    }
+    // Copy Q&A to clipboard for easy pasting into FAQ section
+    const faqText = `Q: ${selectedQuestion.question}\nA: ${selectedQuestion.answer}`;
+    navigator.clipboard.writeText(faqText);
+    toast.success(t('admin.questions.faqCopied') || 'Q&A copied to clipboard. Paste it into your FAQ section.');
+  }, [selectedQuestion, t]);
 
   const handleRibbonExport = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    if (questions.length === 0) {
+      toast.info(t('admin.questions.noQuestionsToExport') || 'No questions to export');
+      return;
+    }
+    const BOM = '\uFEFF';
+    const headers = ['Product', 'User', 'Question', 'Answer', 'Status', 'Public', 'Date'];
+    const rows = questions.map(q => [
+      q.productName,
+      q.userName || q.userEmail || 'Anonymous',
+      q.question,
+      q.answer || '',
+      q.answer ? 'Answered' : 'Pending',
+      q.isPublic ? 'Yes' : 'No',
+      new Date(q.createdAt).toLocaleDateString(locale),
+    ]);
+    const csv = BOM + [headers, ...rows]
+      .map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(','))
+      .join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `questions-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(t('common.exported') || 'Exported successfully');
+  }, [questions, locale, t]);
 
   useRibbonAction('respond', handleRibbonRespond);
   useRibbonAction('markResolved', handleRibbonMarkResolved);

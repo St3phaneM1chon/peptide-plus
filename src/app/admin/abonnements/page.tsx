@@ -319,35 +319,89 @@ export default function AbonnementsPage() {
 
   // ─── Ribbon action handlers ────────────────────────────────
   const handleRibbonNewSubscription = useCallback(() => {
-    toast.info(t('common.comingSoon'));
+    toast.info(t('admin.subscriptions.newSubFromShop') || 'Subscriptions are created by customers from the shop. Use the product page to set up subscription options.');
   }, [t]);
 
   const handleRibbonDelete = useCallback(() => {
-    if (!selectedSub) { toast.info(t('common.comingSoon')); return; }
-    updateStatus(selectedSub.id, 'CANCELLED');
+    if (!selectedSub) { toast.info(t('admin.subscriptions.selectSubFirst') || 'Select a subscription first'); return; }
+    if (selectedSub.status === 'CANCELLED') {
+      toast.info(t('admin.subscriptions.alreadyCancelled') || 'This subscription is already cancelled');
+      return;
+    }
+    setConfirmCancelId(selectedSub.id);
   }, [selectedSub, t]);
 
   const handleRibbonSuspend = useCallback(() => {
-    if (!selectedSub) { toast.info(t('common.comingSoon')); return; }
+    if (!selectedSub) { toast.info(t('admin.subscriptions.selectSubFirst') || 'Select a subscription first'); return; }
+    if (selectedSub.status !== 'ACTIVE') {
+      toast.info(t('admin.subscriptions.canOnlyPauseActive') || 'Only active subscriptions can be paused');
+      return;
+    }
     updateStatus(selectedSub.id, 'PAUSED');
   }, [selectedSub, t]);
 
   const handleRibbonReactivate = useCallback(() => {
-    if (!selectedSub) { toast.info(t('common.comingSoon')); return; }
+    if (!selectedSub) { toast.info(t('admin.subscriptions.selectSubFirst') || 'Select a subscription first'); return; }
+    if (selectedSub.status === 'ACTIVE') {
+      toast.info(t('admin.subscriptions.alreadyActive') || 'This subscription is already active');
+      return;
+    }
+    if (selectedSub.status === 'CANCELLED') {
+      toast.info(t('admin.subscriptions.cannotReactivateCancelled') || 'Cancelled subscriptions cannot be reactivated. The customer must create a new subscription.');
+      return;
+    }
     updateStatus(selectedSub.id, 'ACTIVE');
   }, [selectedSub, t]);
 
   const handleRibbonRefund = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    if (!selectedSub) {
+      toast.info(t('admin.subscriptions.selectSubFirst') || 'Select a subscription first');
+      return;
+    }
+    toast.info(t('admin.subscriptions.refundViaStripe') || 'Process refunds through the Stripe dashboard for subscription payments');
+  }, [selectedSub, t]);
 
   const handleRibbonMrrStats = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    const activeSubs = subscriptions.filter(s => s.status === 'ACTIVE');
+    const mrr = stats.monthlyRevenue;
+    const arr = mrr * 12;
+    toast.info(
+      `MRR: ${formatCurrency(mrr)} | ARR: ${formatCurrency(arr)} | ${activeSubs.length} ${t('admin.subscriptions.activeSubscriptions') || 'active subscriptions'}`
+    );
+  }, [subscriptions, stats, formatCurrency, t]);
 
   const handleRibbonExport = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    if (subscriptions.length === 0) {
+      toast.info(t('admin.subscriptions.noSubscriptions') || 'No subscriptions to export');
+      return;
+    }
+    const BOM = '\uFEFF';
+    const headers = ['Customer', 'Email', 'Product', 'Format', 'Quantity', 'Frequency', 'Price', 'Discount', 'Status', 'Next Delivery', 'Created'];
+    const rows = subscriptions.map(s => [
+      s.userName,
+      s.userEmail,
+      s.productName,
+      s.formatName,
+      String(s.quantity),
+      frequencyLabels[s.frequency] || s.frequency,
+      String(s.price),
+      `${s.discount}%`,
+      statusLabels[s.status] || s.status,
+      s.nextDelivery ? new Date(s.nextDelivery).toLocaleDateString(locale) : '',
+      new Date(s.createdAt).toLocaleDateString(locale),
+    ]);
+    const csv = BOM + [headers, ...rows]
+      .map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(','))
+      .join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `subscriptions-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(t('common.exported') || 'Exported successfully');
+  }, [subscriptions, frequencyLabels, statusLabels, locale, t]);
 
   useRibbonAction('newSubscription', handleRibbonNewSubscription);
   useRibbonAction('delete', handleRibbonDelete);
