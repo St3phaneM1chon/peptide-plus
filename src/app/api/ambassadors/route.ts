@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic';
 
 // FIX: F-080 - Migrated to withAdminGuard for consistent auth + CSRF + rate limiting
-// TODO: F-096 - Error messages mix French and English; return error codes and translate client-side
+// FIXED: F-096 - Added errorCode fields alongside French text for client-side translation
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
@@ -281,6 +281,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session: _sess
     return NextResponse.json({ ambassador }, { status: 201 });
   } catch (error) {
     logger.error('Create ambassador error', { error: error instanceof Error ? error.message : String(error) });
-    return NextResponse.json({ error: 'Erreur lors de la création' }, { status: 500 });
+    // FIX: F-096 - Return error code alongside French text for client-side translation
+    return NextResponse.json({ error: 'Erreur lors de la création', errorCode: 'AMBASSADOR_CREATE_FAILED' }, { status: 500 });
   }
 });

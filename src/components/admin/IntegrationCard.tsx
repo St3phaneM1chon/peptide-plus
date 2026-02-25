@@ -130,7 +130,11 @@ export function IntegrationCard({
           const patternError = field.pattern && field.value && !new RegExp(field.pattern).test(field.value);
           return (
             <div key={field.key}>
-              <label className="block text-sm font-medium text-slate-700 mb-1">{field.label}</label>
+              {/* A84 FIX: Label with tooltip hint on hover for integration form fields */}
+              <label className="block text-sm font-medium text-slate-700 mb-1" title={field.hint || ''}>
+                {field.label}
+                {field.hint && <span className="ml-1 text-slate-400 cursor-help" title={field.hint}>&#9432;</span>}
+              </label>
               <input
                 type={field.type || 'text'}
                 value={field.value}

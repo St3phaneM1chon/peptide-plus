@@ -347,6 +347,61 @@ export async function calculateBreakEven(
 }
 
 // ---------------------------------------------------------------------------
+// A087: BFR (Besoin en Fonds de Roulement / Working Capital Requirement)
+// BFR = Receivables + Inventory - Payables
+// A key cash management indicator separate from current/quick ratios.
+// ---------------------------------------------------------------------------
+
+export interface WorkingCapitalRequirement {
+  receivables: number;         // Accounts receivable (11xx)
+  inventory: number;           // Inventory (12xx)
+  payables: number;            // Accounts payable (20xx)
+  bfr: number;                 // BFR = receivables + inventory - payables
+  bfrDays: number;             // BFR expressed in days of revenue
+  interpretation: string;      // Human-readable interpretation
+}
+
+/**
+ * A087: Calculate BFR (Besoin en Fonds de Roulement / Working Capital Requirement).
+ * BFR = Stock + Clients - Fournisseurs.
+ * A positive BFR means the business needs cash to finance its operating cycle.
+ * A negative BFR means the business generates cash from its operating cycle.
+ */
+export async function calculateWorkingCapitalRequirement(
+  startDate: Date,
+  endDate: Date,
+): Promise<WorkingCapitalRequirement> {
+  const rows = await bulkSumByAccountType(undefined, endDate);
+  const incomeRows = await bulkSumByAccountType(startDate, endDate);
+
+  const receivables = extractSum(rows, 'ASSET', '11');
+  const inventory = extractSum(rows, 'ASSET', '12');
+  const payables = extractSum(rows, 'LIABILITY', '20');
+  const revenue = extractSum(incomeRows, 'REVENUE');
+
+  const bfr = round2(receivables + inventory - payables);
+
+  // Express BFR in days of revenue for the period
+  const periodDays = Math.max(
+    1,
+    Math.round((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)),
+  );
+  const dailyRevenue = revenue / periodDays;
+  const bfrDays = dailyRevenue > 0 ? round2(bfr / dailyRevenue) : 0;
+
+  let interpretation: string;
+  if (bfr > 0) {
+    interpretation = `BFR positif (${bfr.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}): l'entreprise doit financer ${bfrDays} jours de chiffre d'affaires pour son cycle d'exploitation.`;
+  } else if (bfr < 0) {
+    interpretation = `BFR négatif (${bfr.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}): l'entreprise génère de la trésorerie grâce à son cycle d'exploitation.`;
+  } else {
+    interpretation = 'BFR nul: le cycle d\'exploitation est auto-financé.';
+  }
+
+  return { receivables: round2(receivables), inventory: round2(inventory), payables: round2(payables), bfr, bfrDays, interpretation };
+}
+
+// ---------------------------------------------------------------------------
 // KPI Trend
 // ---------------------------------------------------------------------------
 

@@ -1,6 +1,6 @@
 export const dynamic = 'force-dynamic';
 
-// TODO: F-071 - No audit log entry when birthday points are added; add logAdminAction for each attribution
+// FIXED: F-071 - Added logAdminAction for birthday points attribution (non-blocking)
 // TODO: F-076 - Birthday check uses new Date() in UTC; users in different timezones may get email a day early/late
 
 /**
@@ -28,6 +28,7 @@ import { sendEmail, birthdayEmail, generateUnsubscribeUrl } from '@/lib/email';
 // FLAW-062 FIX: Import bounce suppression to skip hard-bounced addresses
 import { shouldSuppressEmail } from '@/lib/email/bounce-handler';
 import { logger } from '@/lib/logger';
+import { logAdminAction } from '@/lib/admin-audit';
 import { withJobLock } from '@/lib/cron-lock';
 import { randomUUID, timingSafeEqual } from 'crypto';
 
@@ -308,6 +309,15 @@ export async function GET(request: NextRequest) {
               },
             });
           });
+
+          // FIX: F-071 - Audit log for birthday points attribution
+          logAdminAction({
+            adminUserId: 'SYSTEM_CRON',
+            action: 'BIRTHDAY_POINTS_AWARDED',
+            targetType: 'User',
+            targetId: user.id,
+            newValue: { points: userBonusPoints, tier: user.loyaltyTier || 'BRONZE' },
+          }).catch(() => {}); // Non-blocking: don't fail the cron if audit logging fails
 
           // Generate unsubscribe URL (CAN-SPAM / RGPD / LCAP compliance)
           const unsubscribeUrl = await generateUnsubscribeUrl(user.email, 'marketing', user.id).catch(() => undefined);

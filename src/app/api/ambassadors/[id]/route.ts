@@ -61,13 +61,14 @@ export const GET = withAdminGuard(async (_request: NextRequest, { params }) => {
     });
 
     if (!ambassador) {
-      return NextResponse.json({ error: 'Ambassadeur non trouvé' }, { status: 404 });
+      // FIX: F-096 - Return error codes alongside French text for client-side translation
+      return NextResponse.json({ error: 'Ambassadeur non trouvé', errorCode: 'AMBASSADOR_NOT_FOUND' }, { status: 404 });
     }
 
     return NextResponse.json({ ambassador });
   } catch (error) {
     logger.error('Get ambassador error', { error: error instanceof Error ? error.message : String(error) });
-    return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
+    return NextResponse.json({ error: 'Erreur serveur', errorCode: 'AMBASSADOR_FETCH_FAILED' }, { status: 500 });
   }
 });
 
@@ -79,7 +80,7 @@ export const PATCH = withAdminGuard(async (request: NextRequest, { session, para
     const parsed = updateAmbassadorSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Validation error', details: parsed.error.flatten().fieldErrors },
+        { error: 'Validation error', errorCode: 'VALIDATION_ERROR', details: parsed.error.flatten().fieldErrors },
         { status: 400 }
       );
     }
@@ -90,7 +91,7 @@ export const PATCH = withAdminGuard(async (request: NextRequest, { session, para
       select: { id: true, status: true, tier: true, commissionRate: true },
     });
     if (!existing) {
-      return NextResponse.json({ error: 'Ambassadeur non trouvé' }, { status: 404 });
+      return NextResponse.json({ error: 'Ambassadeur non trouvé', errorCode: 'AMBASSADOR_NOT_FOUND' }, { status: 404 });
     }
 
     // Build update data from validated fields
@@ -134,7 +135,8 @@ export const PATCH = withAdminGuard(async (request: NextRequest, { session, para
     return NextResponse.json({ ambassador });
   } catch (error) {
     logger.error('Update ambassador error', { error: error instanceof Error ? error.message : String(error) });
-    return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
+    // FIX: F-096 - Return error codes alongside French text
+    return NextResponse.json({ error: 'Erreur serveur', errorCode: 'AMBASSADOR_UPDATE_FAILED' }, { status: 500 });
   }
 });
 
@@ -147,7 +149,7 @@ export const DELETE = withAdminGuard(async (request: NextRequest, { session, par
       select: { id: true, name: true, status: true },
     });
     if (!existing) {
-      return NextResponse.json({ error: 'Ambassadeur non trouvé' }, { status: 404 });
+      return NextResponse.json({ error: 'Ambassadeur non trouvé', errorCode: 'AMBASSADOR_NOT_FOUND' }, { status: 404 });
     }
 
     // Soft delete: set status to INACTIVE
@@ -169,6 +171,7 @@ export const DELETE = withAdminGuard(async (request: NextRequest, { session, par
     return NextResponse.json({ success: true });
   } catch (error) {
     logger.error('Delete ambassador error', { error: error instanceof Error ? error.message : String(error) });
-    return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
+    // FIX: F-096 - Return error codes alongside French text
+    return NextResponse.json({ error: 'Erreur serveur', errorCode: 'AMBASSADOR_DELETE_FAILED' }, { status: 500 });
   }
 });

@@ -34,19 +34,8 @@ interface Post {
   lastReply?: string;
 }
 
-/* Reply interface for future use when implementing reply functionality
-interface Reply {
-  id: string;
-  userId: string;
-  userName: string;
-  userAvatar?: string;
-  userBadge?: string;
-  content: string;
-  likes: number;
-  isOfficial: boolean;
-  createdAt: string;
-}
-*/
+// F-085 FIX: Removed dead commented Reply interface (was unused code).
+// Will be re-created when reply functionality is implemented with proper backend models.
 
 const getCategories = (t: (key: string) => string) => [
   { id: 'all', name: t('community.allDiscussions') || 'All Discussions', icon: '💬', color: 'bg-neutral-100 text-neutral-700' },

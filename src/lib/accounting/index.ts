@@ -287,8 +287,9 @@ export {
   autoReconcileByReference,
   autoReconcileByAmount,
   runAutoReconciliation,
+  getReconciliationHealth,
 } from './auto-reconciliation.service';
-export type { ReconciliationMatch, AutoReconciliationResult } from './auto-reconciliation.service';
+export type { ReconciliationMatch, AutoReconciliationResult, ReconciliationHealth } from './auto-reconciliation.service';
 
 // PHASE 8: Scheduler Service
 export {
@@ -300,8 +301,10 @@ export type { ScheduledTaskResult, SchedulerRunResult } from './scheduler.servic
 export {
   calculateKPIs,
   getKPITrend,
+  calculateBreakEven,
+  calculateWorkingCapitalRequirement,
 } from './kpi.service';
-export type { FinancialKPIs, KPITrendPoint } from './kpi.service';
+export type { FinancialKPIs, KPITrendPoint, BreakEvenResult, WorkingCapitalRequirement } from './kpi.service';
 
 // PHASE 10: Payment Matching Service
 export {

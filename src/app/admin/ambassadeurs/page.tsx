@@ -1,4 +1,4 @@
-// TODO: F-055 - INACTIVE ambassador status is accepted by PATCH API but has no UI filter/badge
+// FIXED: F-055 - Added INACTIVE status variant, filter tab, and badge label to UI
 // TODO: F-056 - t('admin.ambassadors.joinedAt') has French fallback "Membre depuis"; ensure key exists in all 22 locales
 // FIXED: F-057 - Removed redundant locale from listItems dependency array
 // TODO: F-072 - Ambassador detail pane does not show individual commission history
@@ -86,11 +86,13 @@ function tierBadgeVariant(tier: string): 'success' | 'warning' | 'error' | 'info
   }
 }
 
+// FIX: F-055 - Added INACTIVE status variant for UI display
 function statusBadgeVariant(status: string): 'success' | 'warning' | 'error' | 'info' | 'neutral' {
   switch (status) {
     case 'ACTIVE': return 'success';
     case 'PENDING': return 'warning';
     case 'SUSPENDED': return 'error';
+    case 'INACTIVE': return 'neutral';
     default: return 'neutral';
   }
 }
@@ -372,11 +374,14 @@ export default function AmbassadeursPage() {
 
   const stats = useMemo(() => ({
     total: ambassadors.filter(a => a.status === 'ACTIVE').length,
-    totalSales: ambassadors.reduce((sum, a) => sum + a.totalSales, 0),
-    totalCommissions: ambassadors.reduce((sum, a) => sum + a.totalEarnings, 0),
-    pendingPayouts: ambassadors.reduce((sum, a) => sum + a.pendingPayout, 0),
+    // FIX: F-099 - Round aggregated Decimal values to 2 decimal places to avoid floating point display issues
+    totalSales: Math.round(ambassadors.reduce((sum, a) => sum + a.totalSales, 0) * 100) / 100,
+    totalCommissions: Math.round(ambassadors.reduce((sum, a) => sum + a.totalEarnings, 0) * 100) / 100,
+    pendingPayouts: Math.round(ambassadors.reduce((sum, a) => sum + a.pendingPayout, 0) * 100) / 100,
     pending: ambassadors.filter(a => a.status === 'PENDING').length,
     suspended: ambassadors.filter(a => a.status === 'SUSPENDED').length,
+    // FIX: F-055 - Track INACTIVE count for filter tab
+    inactive: ambassadors.filter(a => a.status === 'INACTIVE').length,
   }), [ambassadors]);
 
   // F097 FIX: Memoize pending ambassadors list to avoid recomputing .filter(a => a.status === 'PENDING') 3+ times
@@ -389,6 +394,8 @@ export default function AmbassadeursPage() {
     { key: 'ACTIVE', label: t('admin.ambassadors.statusActive'), count: stats.total },
     { key: 'PENDING', label: t('admin.ambassadors.statusPending'), count: stats.pending },
     { key: 'SUSPENDED', label: t('admin.ambassadors.statusSuspended'), count: stats.suspended },
+    // FIX: F-055 - Added INACTIVE filter tab so admins can see inactive ambassadors
+    { key: 'INACTIVE', label: t('admin.ambassadors.statusInactive') || 'Inactive', count: stats.inactive },
   ], [t, ambassadors.length, stats]);
 
   const listItems: ContentListItem[] = useMemo(() => {
@@ -396,12 +403,14 @@ export default function AmbassadeursPage() {
       id: amb.id,
       avatar: { text: amb.userName || 'A' },
       title: amb.userName,
-      subtitle: amb.userEmail,
+      // FIX: F-063 - Show placeholder when ambassador email is empty instead of blank string
+      subtitle: amb.userEmail || (t('admin.ambassadors.noEmail') || 'No email provided'),
       preview: `${amb.referralCode} - ${formatCurrency(amb.totalSales)} ${t('admin.ambassadors.salesLabel')}`,
       timestamp: amb.joinedAt,
       badges: [
         { text: amb.tier, variant: tierBadgeVariant(amb.tier) },
-        { text: amb.status === 'ACTIVE' ? t('admin.ambassadors.statusActive') : amb.status === 'PENDING' ? t('admin.ambassadors.statusPending') : t('admin.ambassadors.statusSuspended'), variant: statusBadgeVariant(amb.status) },
+        // FIX: F-055 - Include INACTIVE status label in badge
+        { text: amb.status === 'ACTIVE' ? t('admin.ambassadors.statusActive') : amb.status === 'PENDING' ? t('admin.ambassadors.statusPending') : amb.status === 'INACTIVE' ? (t('admin.ambassadors.statusInactive') || 'Inactive') : t('admin.ambassadors.statusSuspended'), variant: statusBadgeVariant(amb.status) },
         ...(amb.pendingPayout > 0
           ? [{ text: formatCurrency(amb.pendingPayout), variant: 'info' as const }]
           : []),
@@ -797,7 +806,8 @@ export default function AmbassadeursPage() {
               <DetailPane
                 header={{
                   title: selectedAmbassador.userName,
-                  subtitle: selectedAmbassador.userEmail,
+                  // FIX: F-063 - Show placeholder when ambassador email is empty
+                  subtitle: selectedAmbassador.userEmail || (t('admin.ambassadors.noEmail') || 'No email provided'),
                   avatar: { text: selectedAmbassador.userName || 'A' },
                   onBack: () => setSelectedAmbassadorId(null),
                   backLabel: t('admin.ambassadors.title'),
@@ -972,7 +982,8 @@ export default function AmbassadeursPage() {
               <div key={amb.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200">
                 <div>
                   <p className="font-medium text-slate-900">{amb.userName}</p>
-                  <p className="text-sm text-slate-500">{amb.userEmail}</p>
+                  {/* FIX: F-063 - Show placeholder when ambassador email is empty */}
+                  <p className="text-sm text-slate-500">{amb.userEmail || (t('admin.ambassadors.noEmail') || 'No email provided')}</p>
                   <p className="text-xs text-slate-400 mt-1">
                     {t('admin.ambassadors.referralCode')}: <code className="font-mono text-sky-600">{amb.referralCode}</code>
                   </p>

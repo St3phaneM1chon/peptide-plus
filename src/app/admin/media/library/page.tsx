@@ -9,12 +9,15 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useI18n } from '@/i18n/client';
 import {
   FolderOpen, Upload, Search, Copy, Check, FileText, Film, Image as ImageIcon,
   Loader2, ChevronLeft, ChevronRight, Grid, List, X, Download, Trash2,
+  FileSpreadsheet, FileType, FileArchive, FileCode, Music, House,
 } from 'lucide-react';
 import NextImage from 'next/image';
+import Link from 'next/link';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
 // FIX: F59 - Use shared formatFileSize utility instead of local duplicate
@@ -44,15 +47,31 @@ interface Pagination {
 // FIX: F59 - formatSize replaced by shared formatFileSize from @/lib/format-utils
 const formatSize = formatFileSize;
 
+// A76 FIX: Detailed file type icons for different document types
 function getFileIcon(mimeType: string) {
   if (mimeType.startsWith('image/')) return <ImageIcon className="w-5 h-5 text-emerald-500" />;
   if (mimeType.startsWith('video/')) return <Film className="w-5 h-5 text-red-500" />;
+  if (mimeType.startsWith('audio/')) return <Music className="w-5 h-5 text-purple-500" />;
   if (mimeType === 'application/pdf') return <FileText className="w-5 h-5 text-orange-500" />;
+  // A76: Spreadsheet formats (Excel, CSV, ODS)
+  if (mimeType.includes('spreadsheet') || mimeType.includes('excel') || mimeType === 'text/csv')
+    return <FileSpreadsheet className="w-5 h-5 text-green-600" />;
+  // A76: Word/document formats (DOC, DOCX, ODT)
+  if (mimeType.includes('wordprocessing') || mimeType.includes('msword'))
+    return <FileType className="w-5 h-5 text-blue-600" />;
+  // A76: Archive formats (ZIP, RAR, TAR, GZ)
+  if (mimeType.includes('zip') || mimeType.includes('rar') || mimeType.includes('tar') || mimeType.includes('gzip') || mimeType.includes('compressed'))
+    return <FileArchive className="w-5 h-5 text-amber-600" />;
+  // A76: Code/text formats (JSON, XML, HTML, JS, CSS)
+  if (mimeType.includes('json') || mimeType.includes('xml') || mimeType.includes('javascript') || mimeType.includes('html') || mimeType.includes('css'))
+    return <FileCode className="w-5 h-5 text-cyan-600" />;
   return <FileText className="w-5 h-5 text-slate-400" />;
 }
 
 export default function MediaLibraryPage() {
   const { t, locale } = useI18n();
+  // A87 FIX: Support deep-linking to a specific media via ?id=xxx query parameter
+  const searchParams = useSearchParams();
   const [items, setItems] = useState<MediaItem[]>([]);
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [loading, setLoading] = useState(true);
@@ -99,6 +118,15 @@ export default function MediaLibraryPage() {
   }, [page, search, mimeFilter, folderFilter, sortBy, sortDir]);
 
   useEffect(() => { loadItems(); }, [loadItems]);
+
+  // A87 FIX: Auto-open preview when navigating to /admin/media/library?id=xxx
+  useEffect(() => {
+    const deepLinkId = searchParams.get('id');
+    if (deepLinkId && items.length > 0 && !preview) {
+      const found = items.find(i => i.id === deepLinkId);
+      if (found) setPreview(found);
+    }
+  }, [searchParams, items, preview]);
 
   // F71 FIX: Debounce search input
   useEffect(() => {
@@ -327,6 +355,14 @@ export default function MediaLibraryPage() {
 
   return (
     <div className="p-6 max-w-6xl space-y-4">
+      {/* A95 FIX: Breadcrumbs for navigation context in media sub-pages */}
+      <nav className="flex items-center gap-1.5 text-xs text-slate-500" aria-label="Breadcrumb">
+        <Link href="/admin" className="hover:text-sky-600 transition-colors flex items-center gap-1"><House className="w-3 h-3" />{t('admin.nav.dashboard') || 'Admin'}</Link>
+        <ChevronRight className="w-3 h-3" />
+        <Link href="/admin/media" className="hover:text-sky-600 transition-colors">{t('admin.nav.media') || 'Media'}</Link>
+        <ChevronRight className="w-3 h-3" />
+        <span className="text-slate-700 font-medium">{t('admin.media.libraryTitle') || 'Library'}</span>
+      </nav>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-slate-900">{t('admin.media.libraryTitle')}</h1>
         <div className="flex items-center gap-2">
@@ -408,13 +444,25 @@ export default function MediaLibraryPage() {
       </div>
 
       {/* Content */}
+      {/* A78 FIX: Skeleton loading grid instead of simple spinner for better perceived performance */}
       {loading ? (
-        <div className="flex items-center justify-center h-32"><Loader2 className="w-6 h-6 animate-spin text-sky-500" /></div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+          {Array.from({ length: 12 }).map((_, i) => (
+            <div key={i} className="bg-white rounded-lg border border-slate-200 overflow-hidden animate-pulse">
+              <div className="aspect-square bg-slate-200" />
+              <div className="p-2 space-y-1.5">
+                <div className="h-3 bg-slate-200 rounded w-3/4" />
+                <div className="h-2.5 bg-slate-100 rounded w-1/2" />
+              </div>
+            </div>
+          ))}
+        </div>
       ) : items.length === 0 ? (
         <div className="text-center py-12 text-slate-500">
           <FolderOpen className="w-12 h-12 mx-auto mb-3 text-slate-300" />
           <p>{t('admin.media.libraryDesc')}</p>
         </div>
+      /* A100 FIX: View mode content uses CSS transition for smooth switching */
       ) : viewMode === 'grid' ? (
         <>
           <div className="flex items-center gap-2 mb-2">
@@ -423,7 +471,8 @@ export default function MediaLibraryPage() {
               {t('common.selectAll') || 'Select all'}
             </label>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+          {/* A100 FIX: Animate-in on view switch with fade transition */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 animate-in fade-in duration-200">
             {items.map(item => (
               <div key={item.id} className={`group relative bg-white rounded-lg border overflow-hidden hover:border-sky-300 transition-colors ${selectedIds.has(item.id) ? 'border-sky-400 ring-2 ring-sky-200' : 'border-slate-200'}`}>
                 {/* Selection checkbox */}
@@ -436,11 +485,18 @@ export default function MediaLibraryPage() {
                     aria-label={`Select ${item.originalName}`}
                   />
                 </div>
-                <div className="aspect-square cursor-pointer flex items-center justify-center bg-slate-50" onClick={() => setPreview(item)}>
+                {/* A86 FIX: "New" badge for media uploaded less than 24 hours ago */}
+                {(Date.now() - new Date(item.createdAt).getTime()) < 24 * 60 * 60 * 1000 && (
+                  <span className="absolute top-2 left-8 z-10 px-1.5 py-0.5 bg-emerald-500 text-white text-[9px] font-bold rounded-full uppercase">
+                    {t('common.new') || 'New'}
+                  </span>
+                )}
+                {/* A79 FIX: Slight zoom on hover for image preview */}
+              <div className="aspect-square cursor-pointer flex items-center justify-center bg-slate-50 overflow-hidden" onClick={() => setPreview(item)}>
                   {/* FIX: F2 - Use NextImage instead of native <img> */}
                   {/* F99 FIX: NextImage provides lazy loading by default (loading="lazy" is the default) */}
                   {item.mimeType.startsWith('image/') ? (
-                    <NextImage src={item.url} alt={item.alt || item.originalName} fill className="object-cover" sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 16vw" loading="lazy" unoptimized />
+                    <NextImage src={item.url} alt={item.alt || item.originalName} fill className="object-cover transition-transform duration-200 group-hover:scale-105" sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 16vw" loading="lazy" unoptimized />
                   ) : (
                     <div className="text-center">
                       {getFileIcon(item.mimeType)}
@@ -450,7 +506,8 @@ export default function MediaLibraryPage() {
                 </div>
                 <div className="p-2">
                   <p className="text-xs text-slate-700 truncate" title={item.originalName}>{item.originalName}</p>
-                  <p className="text-xs text-slate-400">{formatSize(item.size)}</p>
+                  {/* A80 FIX: Show upload date alongside file size in grid view */}
+                  <p className="text-xs text-slate-400">{formatSize(item.size)} &middot; {new Date(item.createdAt).toLocaleDateString(locale)}</p>
                 </div>
                 <button
                   onClick={() => copyUrl(item)}
@@ -464,7 +521,8 @@ export default function MediaLibraryPage() {
           </div>
         </>
       ) : (
-        <div className="bg-white rounded-lg border border-slate-200 divide-y">
+        // A100 FIX: Animate-in on view switch with fade transition
+        <div className="bg-white rounded-lg border border-slate-200 divide-y animate-in fade-in duration-200">
           <div className="flex items-center gap-3 p-2 bg-slate-50 text-xs text-slate-600 font-medium border-b">
             <input type="checkbox" checked={selectedIds.size === items.length && items.length > 0} onChange={toggleSelectAll} className="rounded border-slate-300 ml-1" aria-label="Select all files" />
             <span>{t('common.selectAll') || 'Select all'}</span>

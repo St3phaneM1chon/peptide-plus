@@ -11,8 +11,9 @@ import { useI18n } from '@/i18n/client';
 import {
   Video, Plus, Search, Eye, EyeOff, Star, Trash2, Play,
   Loader2, ChevronLeft, ChevronRight, ExternalLink, X,
-  ImageIcon, BarChart3,
+  ImageIcon, BarChart3, House,
 } from 'lucide-react';
+import Link from 'next/link';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
@@ -275,6 +276,14 @@ export default function MediaVideosPage() {
 
   return (
     <div className="p-6 max-w-5xl space-y-4">
+      {/* A95 FIX: Breadcrumbs for navigation context in media sub-pages */}
+      <nav className="flex items-center gap-1.5 text-xs text-slate-500" aria-label="Breadcrumb">
+        <Link href="/admin" className="hover:text-sky-600 transition-colors flex items-center gap-1"><House className="w-3 h-3" />{t('admin.nav.dashboard') || 'Admin'}</Link>
+        <ChevronRight className="w-3 h-3" />
+        <Link href="/admin/media" className="hover:text-sky-600 transition-colors">{t('admin.nav.media') || 'Media'}</Link>
+        <ChevronRight className="w-3 h-3" />
+        <span className="text-slate-700 font-medium">{t('admin.media.videosTitle') || 'Videos'}</span>
+      </nav>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-slate-900">{t('admin.media.videosTitle')}</h1>
         <button

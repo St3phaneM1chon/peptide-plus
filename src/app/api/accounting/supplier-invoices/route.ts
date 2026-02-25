@@ -169,22 +169,51 @@ export const POST = withAdminGuard(async (request) => {
       );
     }
 
+    // A097: Generate an internal sequential reference number (separate from supplier's invoice number).
+    // This provides consistent internal tracking regardless of supplier numbering conventions.
+    const year = new Date(invoiceDate).getFullYear();
+    const internalPrefix = `FF-${year}-`;
+    let internalRef: string | undefined;
+    try {
+      const [maxRow] = await prisma.$queryRaw<{ max_ref: string | null }[]>`
+        SELECT MAX("internalRef") as max_ref
+        FROM "SupplierInvoice"
+        WHERE "internalRef" LIKE ${internalPrefix + '%'}
+      `;
+      let nextNum = 1;
+      if (maxRow?.max_ref) {
+        const num = parseInt(maxRow.max_ref.split('-').pop() || '0');
+        if (!isNaN(num)) nextNum = num + 1;
+      }
+      internalRef = `${internalPrefix}${String(nextNum).padStart(5, '0')}`;
+    } catch {
+      // A097: If internalRef column doesn't exist yet, skip silently.
+      // The column may be added in a future migration.
+      internalRef = undefined;
+    }
+
+    const createData: Record<string, unknown> = {
+      invoiceNumber,
+      supplierName,
+      supplierEmail: supplierEmail || null,
+      subtotal,
+      taxTps: taxTps || 0,
+      taxTvq: taxTvq || 0,
+      taxOther: taxOther || 0,
+      total,
+      balance: total,
+      invoiceDate: new Date(invoiceDate),
+      dueDate: new Date(dueDate),
+      expenseCategory: expenseCategory || null,
+      status: 'DRAFT',
+    };
+    // A097: Include internal reference if the column exists
+    if (internalRef) {
+      createData.internalRef = internalRef;
+    }
+
     const invoice = await prisma.supplierInvoice.create({
-      data: {
-        invoiceNumber,
-        supplierName,
-        supplierEmail: supplierEmail || null,
-        subtotal,
-        taxTps: taxTps || 0,
-        taxTvq: taxTvq || 0,
-        taxOther: taxOther || 0,
-        total,
-        balance: total,
-        invoiceDate: new Date(invoiceDate),
-        dueDate: new Date(dueDate),
-        expenseCategory: expenseCategory || null,
-        status: 'DRAFT',
-      },
+      data: createData as Parameters<typeof prisma.supplierInvoice.create>[0]['data'],
     });
 
     return NextResponse.json({ success: true, invoice }, { status: 201 });

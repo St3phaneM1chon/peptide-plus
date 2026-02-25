@@ -1,6 +1,6 @@
 // NOTE: F-053 - formatCurrency in useMemo dependency array is correct (locale-dependent); not a bug
 // FIXED: F-067 - Replaced native confirm() with ConfirmDialog component (see confirmDelete state + ConfirmDialog below)
-// TODO: F-070 - updatePromoCodeSchema is alias of createPromoCodeSchema; requires schema refactor with .partial()
+// FIXED: F-070 - updatePromoCodeSchema now uses .partial() with optional fields instead of aliasing createPromoCodeSchema
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';

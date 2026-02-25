@@ -10,6 +10,8 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
+// FIX: F-091 - Use fetchWithRetry for consistent retry behavior across admin pages
+import { fetchWithRetry } from '@/lib/fetch-with-retry';
 import { BADGES, type Challenge } from '@/lib/loyalty/gamification';
 import { POINTS_RULES, LOYALTY_TIERS } from '@/lib/loyalty/points-engine';
 import { DEFAULT_EXPIRATION } from '@/lib/loyalty/expiration-manager';
@@ -153,7 +155,8 @@ export default function FidelitePage() {
   // FIX: FLAW-055 - Wrap fetchConfig in useCallback for stable reference
   const fetchConfig = useCallback(async () => {
     try {
-      const res = await fetch('/api/admin/loyalty/config');
+      // FIX: F-091 - Use fetchWithRetry for consistent retry behavior
+      const res = await fetchWithRetry('/api/admin/loyalty/config');
       if (!res.ok) {
         toast.error(t('common.error'));
         setConfig(null);
@@ -360,7 +363,8 @@ export default function FidelitePage() {
 
   const handleRibbonExchangeHistory = useCallback(async () => {
     try {
-      const res = await fetch('/api/admin/loyalty/history?limit=10');
+      // FIX: F-091 - Use fetchWithRetry for consistent retry behavior
+      const res = await fetchWithRetry('/api/admin/loyalty/history?limit=10');
       if (res.ok) {
         const data = await res.json();
         const count = data.total || data.history?.length || 0;

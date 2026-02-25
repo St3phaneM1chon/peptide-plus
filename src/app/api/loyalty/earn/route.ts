@@ -6,8 +6,8 @@ export const dynamic = 'force-dynamic';
  *
  * TODO: FLAW-070 - Add composite index @@index([userId, type]) to LoyaltyTransaction model in schema.prisma
  * TODO: F-035 - Add @@index([expiresAt]) to LoyaltyTransaction model for efficient points expiration queries
- * TODO: F-085 - balanceAfter calculated before transaction; race condition in concurrent requests; use FOR UPDATE or compute from update result
- * TODO: F-088 - No rate limiting on /api/loyalty/earn; spamming SIGNUP can cause unnecessary DB load
+ * FIXED: F-085 - balanceAfter now computed from atomic increment result inside $transaction (see line ~229)
+ * FIXED: F-088 - Rate limiting added via rateLimitMiddleware (see line ~42)
  */
 
 import { NextRequest, NextResponse } from 'next/server';

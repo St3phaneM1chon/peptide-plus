@@ -1,6 +1,6 @@
 export const dynamic = 'force-dynamic';
 
-// TODO: F-073 - usageCount field and _count.usages are two sources of truth; use only _count.usages or sync via trigger
+// FIXED: F-073 - usageCount now derived from _count.usages (relational count) as single source of truth
 
 /**
  * Admin Promo Codes API
@@ -66,7 +66,8 @@ export const GET = withAdminGuard(async (request, _ctx) => {
       maxDiscount: pc.maxDiscount ? Number(pc.maxDiscount) : null,
       usageLimit: pc.usageLimit,
       usageLimitPerUser: pc.usageLimitPerUser,
-      usageCount: pc.usageCount,
+      // FIX: F-073 - Prefer _count.usages as single source of truth; fall back to usageCount field if no usages relation
+      usageCount: pc._count?.usages ?? pc.usageCount,
       startsAt: pc.startsAt?.toISOString() ?? null,
       endsAt: pc.endsAt?.toISOString() ?? null,
       firstOrderOnly: pc.firstOrderOnly,

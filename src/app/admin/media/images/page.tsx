@@ -13,9 +13,10 @@ import { useI18n } from '@/i18n/client';
 import {
   Image as ImageIcon, Upload, Search, Copy, Check, Trash2,
   Loader2, ChevronLeft, ChevronRight, X, Tags, Crop, Link2,
-  UploadCloud, Sparkles, ScissorsIcon,
+  UploadCloud, Sparkles, ScissorsIcon, House,
 } from 'lucide-react';
 import NextImage from 'next/image';
+import Link from 'next/link';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
 // FIX: F59 - Use shared formatFileSize utility instead of local duplicate
@@ -419,6 +420,14 @@ export default function MediaImagesPage() {
 
   return (
     <div className="p-6 max-w-5xl space-y-4">
+      {/* A95 FIX: Breadcrumbs for navigation context in media sub-pages */}
+      <nav className="flex items-center gap-1.5 text-xs text-slate-500" aria-label="Breadcrumb">
+        <Link href="/admin" className="hover:text-sky-600 transition-colors flex items-center gap-1"><House className="w-3 h-3" />{t('admin.nav.dashboard') || 'Admin'}</Link>
+        <ChevronRight className="w-3 h-3" />
+        <Link href="/admin/media" className="hover:text-sky-600 transition-colors">{t('admin.nav.media') || 'Media'}</Link>
+        <ChevronRight className="w-3 h-3" />
+        <span className="text-slate-700 font-medium">{t('admin.media.imagesTitle') || 'Images'}</span>
+      </nav>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-slate-900">{t('admin.media.imagesTitle')}</h1>
         <div>
@@ -543,8 +552,19 @@ export default function MediaImagesPage() {
       )}
 
       {/* Image grid */}
+      {/* A78 FIX: Skeleton loading grid instead of simple spinner for better perceived performance */}
       {loading ? (
-        <div className="flex items-center justify-center h-32"><Loader2 className="w-6 h-6 animate-spin text-sky-500" /></div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+          {Array.from({ length: 12 }).map((_, i) => (
+            <div key={i} className="bg-white rounded-lg border border-slate-200 overflow-hidden animate-pulse">
+              <div className="aspect-square bg-slate-200" />
+              <div className="p-2 space-y-1.5">
+                <div className="h-3 bg-slate-200 rounded w-3/4" />
+                <div className="h-2.5 bg-slate-100 rounded w-1/2" />
+              </div>
+            </div>
+          ))}
+        </div>
       ) : images.length === 0 ? (
         <div className="text-center py-12 text-slate-500">
           <ImageIcon className="w-12 h-12 mx-auto mb-3 text-slate-300" />
@@ -571,13 +591,21 @@ export default function MediaImagesPage() {
                   aria-label={`Select ${img.originalName}`}
                 />
               </div>
+              {/* A86 FIX: "New" badge for images uploaded less than 24 hours ago */}
+              {(Date.now() - new Date(img.createdAt).getTime()) < 24 * 60 * 60 * 1000 && (
+                <span className="absolute top-2 left-8 z-10 px-1.5 py-0.5 bg-emerald-500 text-white text-[9px] font-bold rounded-full uppercase">
+                  {t('common.new') || 'New'}
+                </span>
+              )}
               {/* FIX: F3 - Use NextImage instead of native <img> */}
-              <div className="aspect-square cursor-pointer relative" onClick={() => setPreview(img)}>
-                <NextImage src={img.url} alt={img.alt || img.originalName} fill className="object-cover" sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 16vw" unoptimized />
+              {/* A79 FIX: Slight zoom on hover for image preview */}
+              <div className="aspect-square cursor-pointer relative overflow-hidden" onClick={() => setPreview(img)}>
+                <NextImage src={img.url} alt={img.alt || img.originalName} fill className="object-cover transition-transform duration-200 group-hover:scale-105" sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 16vw" unoptimized />
               </div>
               <div className="p-2 space-y-1">
                 <p className="text-xs text-slate-700 truncate" title={img.originalName}>{img.originalName}</p>
-                <p className="text-xs text-slate-400">{formatSize(img.size)}</p>
+                {/* A80 FIX: Show upload date alongside file size in grid view */}
+                <p className="text-xs text-slate-400">{formatSize(img.size)} &middot; {new Date(img.createdAt).toLocaleDateString(locale)}</p>
 
                 {/* AI Auto-Tags */}
                 {imageTags[img.id] && imageTags[img.id].length > 0 && (

@@ -426,3 +426,98 @@ export async function runAutoReconciliation(): Promise<AutoReconciliationResult>
 
   return result;
 }
+
+// ---------------------------------------------------------------------------
+// A089: Bank Reconciliation Health Indicator
+// Provides a quick dashboard-ready summary of reconciliation status.
+// ---------------------------------------------------------------------------
+
+export interface ReconciliationHealth {
+  /** Percentage of bank transactions that are reconciled (0-100) */
+  reconciledPct: number;
+  /** Total number of bank transactions in scope */
+  totalTransactions: number;
+  /** Number of reconciled (MATCHED) transactions */
+  matchedTransactions: number;
+  /** Number of unreconciled (PENDING) transactions */
+  pendingTransactions: number;
+  /** Total unreconciled amount (absolute sum) */
+  unreconciledAmount: number;
+  /** Days since last successful reconciliation (null if never) */
+  daysSinceLastReconciliation: number | null;
+  /** Overall health status */
+  status: 'GOOD' | 'ATTENTION' | 'CRITICAL';
+  /** Human-readable summary */
+  summary: string;
+}
+
+/**
+ * A089: Get a health indicator for bank reconciliation status.
+ * Useful for dashboard widgets showing reconciliation progress at a glance.
+ */
+export async function getReconciliationHealth(): Promise<ReconciliationHealth> {
+  // Count transactions by status
+  const [matchedCount, pendingCount, lastMatchedTx] = await Promise.all([
+    prisma.bankTransaction.count({
+      where: { reconciliationStatus: 'MATCHED', deletedAt: null },
+    }),
+    prisma.bankTransaction.count({
+      where: { reconciliationStatus: 'PENDING', deletedAt: null },
+    }),
+    prisma.bankTransaction.findFirst({
+      where: { reconciliationStatus: 'MATCHED', matchedAt: { not: null }, deletedAt: null },
+      orderBy: { matchedAt: 'desc' },
+      select: { matchedAt: true },
+    }),
+  ]);
+
+  const totalTransactions = matchedCount + pendingCount;
+  const reconciledPct = totalTransactions > 0
+    ? Math.round((matchedCount / totalTransactions) * 10000) / 100
+    : 100;
+
+  // Sum unreconciled amounts
+  const unreconciledAgg = await prisma.bankTransaction.aggregate({
+    where: { reconciliationStatus: 'PENDING', deletedAt: null },
+    _sum: { amount: true },
+  });
+  const unreconciledAmount = Math.abs(Number(unreconciledAgg._sum.amount ?? 0));
+
+  // Days since last reconciliation
+  let daysSinceLastReconciliation: number | null = null;
+  if (lastMatchedTx?.matchedAt) {
+    const diffMs = Date.now() - lastMatchedTx.matchedAt.getTime();
+    daysSinceLastReconciliation = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  }
+
+  // Determine health status
+  let status: ReconciliationHealth['status'] = 'GOOD';
+  if (reconciledPct < 50 || (daysSinceLastReconciliation !== null && daysSinceLastReconciliation > 30)) {
+    status = 'CRITICAL';
+  } else if (reconciledPct < 80 || (daysSinceLastReconciliation !== null && daysSinceLastReconciliation > 14)) {
+    status = 'ATTENTION';
+  }
+
+  // Build summary
+  const parts: string[] = [];
+  parts.push(`${reconciledPct}% rapproché (${matchedCount}/${totalTransactions})`);
+  if (pendingCount > 0) {
+    parts.push(`${pendingCount} transactions en attente (${unreconciledAmount.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })})`);
+  }
+  if (daysSinceLastReconciliation !== null) {
+    parts.push(`dernier rapprochement: il y a ${daysSinceLastReconciliation} jour(s)`);
+  } else {
+    parts.push('aucun rapprochement effectué');
+  }
+
+  return {
+    reconciledPct,
+    totalTransactions,
+    matchedTransactions: matchedCount,
+    pendingTransactions: pendingCount,
+    unreconciledAmount,
+    daysSinceLastReconciliation,
+    status,
+    summary: parts.join(' | '),
+  };
+}

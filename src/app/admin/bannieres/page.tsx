@@ -695,6 +695,10 @@ export default function BannieresPage() {
                 value={form.title}
                 onChange={(e) => { setForm({ ...form, title: e.target.value }); setFormErrors(prev => { const n = { ...prev }; delete n.title; return n; }); }}
               />
+              {/* A82 FIX: Character counter to help avoid truncation on the live site */}
+              <p className={`mt-1 text-xs ${form.title.length > 60 ? 'text-amber-500' : 'text-slate-400'}`}>
+                {form.title.length}/60 {t('common.characters') || 'characters'}{form.title.length > 60 ? ` - ${t('admin.banners.titleMayTruncate') || 'may be truncated on display'}` : ''}
+              </p>
               {formErrors.title && (
                 <p className="mt-1 text-sm text-red-600" role="alert">{formErrors.title}</p>
               )}
@@ -705,6 +709,10 @@ export default function BannieresPage() {
                 onChange={(e) => setForm({ ...form, subtitle: e.target.value })}
                 rows={2}
               />
+              {/* A82 FIX: Character counter for subtitle field */}
+              <p className={`mt-1 text-xs ${(form.subtitle?.length || 0) > 120 ? 'text-amber-500' : 'text-slate-400'}`}>
+                {form.subtitle?.length || 0}/120 {t('common.characters') || 'characters'}{(form.subtitle?.length || 0) > 120 ? ` - ${t('admin.banners.subtitleMayTruncate') || 'may be truncated on display'}` : ''}
+              </p>
             </FormField>
             <FormField label={t('admin.banners.badge')}>
               <Input
