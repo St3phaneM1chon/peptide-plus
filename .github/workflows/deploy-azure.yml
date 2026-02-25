@@ -196,19 +196,22 @@ jobs:
           echo "Checking ForumCategory in Prisma Client..."
           grep -c "ForumCategory" node_modules/.prisma/client/index.js || echo "WARNING: ForumCategory not in Prisma Client!"
 
-      - name: Create deploy zip (includes hidden dirs like .prisma)
+      - name: Clean stale Prisma Client on Azure
+        continue-on-error: true
         run: |
-          zip -r /tmp/deploy-package.zip . \
-            -x "*.map" \
-            -x "node_modules/.cache/*" \
-            -x "prisma/*"
-          echo "Deploy zip size: $(du -h /tmp/deploy-package.zip | cut -f1)"
+          # Azure keeps old .prisma/client files across deploys.
+          # Delete them before deploying new ones to avoid stale client.
+          az rest --method POST \
+            --url "https://${{ env.AZURE_WEBAPP_NAME }}.scm.azurewebsites.net/api/command" \
+            --resource "https://management.azure.com" \
+            --body '{"command":"find /home/site/wwwroot/node_modules/.prisma -type f -exec rm -f {} +","dir":"/home"}'
+          echo "Old .prisma client files cleaned."
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
           app-name: ${{ env.AZURE_WEBAPP_NAME }}
-          package: /tmp/deploy-package.zip
+          package: .
           clean: true
 
       - name: Sync Database Schema
