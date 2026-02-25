@@ -48,6 +48,31 @@ export async function reserveStock(
             );
           }
         }
+      } else {
+        // E-07 FIX: Check stock for base products (no formatId)
+        const product = await tx.product.findUnique({
+          where: { id: item.productId },
+          select: { stockQuantity: true, trackInventory: true },
+        });
+
+        if (product?.trackInventory) {
+          const reservedQty = await tx.inventoryReservation.aggregate({
+            where: {
+              productId: item.productId,
+              formatId: null,
+              status: 'RESERVED',
+              expiresAt: { gt: new Date() },
+            },
+            _sum: { quantity: true },
+          });
+
+          const available = product.stockQuantity - (reservedQty._sum.quantity || 0);
+          if (available < item.quantity) {
+            throw new Error(
+              `Stock insuffisant pour produit ${item.productId}: demandé ${item.quantity}, disponible ${available}`
+            );
+          }
+        }
       }
 
       const reservation = await tx.inventoryReservation.create({
@@ -129,6 +154,19 @@ export async function consumeReservation(
         if (rowsAffected === 0) {
           logger.warn('[consumeReservation] Insufficient stock', { formatId: reservation.formatId, requested: reservation.quantity });
         }
+      } else {
+        // E-07 FIX: Decrement stock for base products (no formatId)
+        const rowsAffected: number = await tx.$executeRaw`
+          UPDATE "Product"
+          SET "stockQuantity" = "stockQuantity" - ${reservation.quantity},
+              "updatedAt" = NOW()
+          WHERE id = ${reservation.productId}
+            AND "trackInventory" = true
+            AND "stockQuantity" >= ${reservation.quantity}
+        `;
+        if (rowsAffected === 0) {
+          logger.warn('[consumeReservation] Insufficient stock for base product', { productId: reservation.productId, requested: reservation.quantity });
+        }
       }
 
       // Get current WAC for this product/format
@@ -184,6 +222,13 @@ export async function purchaseStock(
           select: { stockQuantity: true },
         });
         currentQty = format?.stockQuantity || 0;
+      } else {
+        // E-07 FIX: Get current stock for base products
+        const product = await tx.product.findUnique({
+          where: { id: item.productId },
+          select: { stockQuantity: true },
+        });
+        currentQty = product?.stockQuantity || 0;
       }
 
       const lastTransaction = await tx.inventoryTransaction.findFirst({
@@ -208,6 +253,12 @@ export async function purchaseStock(
       if (item.formatId) {
         await tx.productFormat.update({
           where: { id: item.formatId },
+          data: { stockQuantity: { increment: item.quantity } },
+        });
+      } else {
+        // E-07 FIX: Increment stock for base products
+        await tx.product.update({
+          where: { id: item.productId },
           data: { stockQuantity: { increment: item.quantity } },
         });
       }
@@ -258,6 +309,27 @@ export async function adjustStock(
         `;
         if (rowsAffected === 0) {
           logger.warn('[adjustStock] Insufficient stock', { formatId, requested: absQuantity });
+        }
+      }
+    } else {
+      // E-07 FIX: Adjust stock for base products (no formatId)
+      if (quantity > 0) {
+        await tx.product.update({
+          where: { id: productId },
+          data: { stockQuantity: { increment: quantity } },
+        });
+      } else {
+        const absQuantity = Math.abs(quantity);
+        const rowsAffected: number = await tx.$executeRaw`
+          UPDATE "Product"
+          SET "stockQuantity" = "stockQuantity" - ${absQuantity},
+              "updatedAt" = NOW()
+          WHERE id = ${productId}
+            AND "trackInventory" = true
+            AND "stockQuantity" >= ${absQuantity}
+        `;
+        if (rowsAffected === 0) {
+          logger.warn('[adjustStock] Insufficient stock for base product', { productId, requested: absQuantity });
         }
       }
     }

@@ -9,6 +9,7 @@ import { settingsProfileSchema, validateForm } from '@/lib/form-validation';
 import { FormError } from '@/components/ui/FormError';
 import { toast } from 'sonner';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { useCsrf } from '@/hooks/useCsrf';
 
 interface ProfileData {
   name: string;
@@ -29,6 +30,7 @@ export default function SettingsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { t } = useI18n();
+  const { csrfHeaders } = useCsrf();
 
   const mfaRequired = searchParams.get('mfa_required') === '1';
   const [activeTab, setActiveTab] = useState<'profile' | 'password' | 'address' | 'security'>(mfaRequired ? 'security' : 'profile');
@@ -769,7 +771,7 @@ export default function SettingsPage() {
           setIsDeletingAccount(true);
           fetch('/api/account/delete-request', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', ...csrfHeaders() },
             body: JSON.stringify({ reason: 'User requested account deletion' }),
           })
             .then(async (res) => {
@@ -781,6 +783,8 @@ export default function SettingsPage() {
               } else if (res.status === 401) {
                 toast.error(t('account.errorAuth') || 'Authentication required. Please sign in again.');
                 router.push('/auth/signin');
+              } else if (res.status === 403) {
+                toast.error(t('account.errorCsrf') || 'Security token expired. Please refresh the page and try again.');
               } else {
                 toast.error(data.error || t('account.errorGeneric'));
               }

@@ -1483,6 +1483,8 @@ model Order {
   exchangeRate          Decimal         @default(1) @db.Decimal(10, 6)
   promoCode             String?
   promoDiscount         Decimal?        @db.Decimal(10, 2)
+  giftCardCode          String?
+  giftCardDiscount      Decimal?        @db.Decimal(10, 2)
   paymentMethod         PaymentMethod?
   paymentStatus         String          @default("PENDING")
   stripePaymentId       String?
@@ -1781,6 +1783,7 @@ model Product {
   purity              Decimal?             @db.Decimal(5, 2)
   storageConditions   String?
   tags                String?
+  stockQuantity       Int                  @default(0)
   trackInventory      Boolean              @default(true)
   // DB-011: Reorder management
   reorderPoint        Int?                 // Stock level that triggers reorder

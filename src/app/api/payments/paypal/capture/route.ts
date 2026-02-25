@@ -269,6 +269,8 @@ export async function POST(request: NextRequest) {
             paypalOrderId,
             promoCode: promoCode || null,
             promoDiscount: serverPromoDiscount || null,
+            giftCardCode: giftCardCode ? giftCardCode.toUpperCase().trim() : null,
+            giftCardDiscount: serverGiftCardDiscount || null,
             shippingName: shippingInfo ? `${shippingInfo.firstName} ${shippingInfo.lastName}` : '',
             shippingAddress1: shippingInfo?.address || '',
             shippingAddress2: shippingInfo?.apartment || null,
@@ -344,6 +346,55 @@ export async function POST(request: NextRequest) {
           }
         }
 
+        // E-06 FIX: Deduct gift card balance INSIDE the order transaction for atomicity.
+        // Previously this was a separate $transaction outside the order creation, so if the
+        // handler crashed between order creation and gift card deduction, the balance was
+        // never reduced — allowing infinite reuse of the same gift card.
+        if (giftCardCode && serverGiftCardDiscount > 0) {
+          // Lock the gift card row to prevent concurrent balance modifications
+          const [giftCard] = await tx.$queryRaw<{
+            id: string; balance: number; is_active: boolean; expires_at: Date | null;
+          }[]>`
+            SELECT id, balance::float as balance, "isActive" as is_active, "expiresAt" as expires_at
+            FROM "GiftCard"
+            WHERE code = ${giftCardCode.toUpperCase().trim()}
+            FOR UPDATE
+          `;
+
+          if (giftCard && giftCard.is_active && giftCard.balance > 0) {
+            // Check expiration
+            const isExpired = giftCard.expires_at && new Date() > giftCard.expires_at;
+            if (!isExpired) {
+              const amountToDeduct = Math.min(serverGiftCardDiscount, giftCard.balance);
+              const newBalance = Math.round((giftCard.balance - amountToDeduct) * 100) / 100;
+
+              await tx.giftCard.update({
+                where: { id: giftCard.id },
+                data: {
+                  balance: newBalance,
+                  // If balance reaches 0, deactivate the card
+                  isActive: newBalance > 0,
+                },
+              });
+
+              logger.info('Gift card balance decremented (atomic, PayPal)', {
+                giftCardCode,
+                amountDeducted: amountToDeduct,
+                newBalance,
+                orderNumber,
+              });
+            } else {
+              logger.warn('Gift card expired during PayPal capture balance deduction', { giftCardCode, orderNumber });
+            }
+          } else {
+            logger.warn('Gift card not found or inactive during PayPal capture balance deduction', {
+              giftCardCode,
+              serverGiftCardDiscount,
+              orderNumber,
+            });
+          }
+        }
+
         return newOrder;
       });
 
@@ -394,55 +445,8 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // BE-PAY-04: Decrement gift card balance after successful PayPal payment
-      // BUG 5: Re-validate gift card code and balance server-side (never trust client-sent discount)
-      // E-02 FIX: Use serverGiftCardDiscount instead of clientGiftCardDiscount
-      if (giftCardCode && serverGiftCardDiscount > 0) {
-        try {
-          await prisma.$transaction(async (tx) => {
-            // Lock the gift card row to prevent concurrent balance modifications
-            const [giftCard] = await tx.$queryRaw<{
-              id: string; balance: number; is_active: boolean; expires_at: Date | null;
-            }[]>`
-              SELECT id, balance::float as balance, "isActive" as is_active, "expiresAt" as expires_at
-              FROM "GiftCard"
-              WHERE code = ${giftCardCode.toUpperCase().trim()}
-              FOR UPDATE
-            `;
-
-            if (!giftCard || !giftCard.is_active || giftCard.balance <= 0) {
-              logger.warn('Gift card invalid or zero balance, skipping deduction', { giftCardCode });
-              return;
-            }
-
-            // Check expiration
-            if (giftCard.expires_at && new Date() > giftCard.expires_at) {
-              logger.warn('Gift card expired, skipping deduction', { giftCardCode });
-              return;
-            }
-
-            if (giftCard && giftCard.is_active && giftCard.balance > 0) {
-              // E-02 FIX: Use server-calculated gift card discount (never trust client value)
-              const amountToDeduct = Math.min(serverGiftCardDiscount, giftCard.balance);
-              const newBalance = Math.round((giftCard.balance - amountToDeduct) * 100) / 100;
-
-              await tx.giftCard.update({
-                where: { id: giftCard.id },
-                data: {
-                  balance: newBalance,
-                  // If balance reaches 0, deactivate the card
-                  isActive: newBalance > 0,
-                },
-              });
-
-              logger.info('Gift card decremented', { giftCardCode, amountDeducted: amountToDeduct, newBalance });
-            }
-          });
-        } catch (gcError) {
-          logger.error('Failed to decrement gift card balance', { error: gcError instanceof Error ? gcError.message : String(gcError) });
-          // Don't fail the order for gift card errors
-        }
-      }
+      // E-06 FIX: Gift card balance is now deducted INSIDE the main order $transaction above.
+      // This ensures atomicity: if the deduction fails, the order also rolls back.
 
       // Create ambassador commission if the order used a referral code
       if (promoCode) {

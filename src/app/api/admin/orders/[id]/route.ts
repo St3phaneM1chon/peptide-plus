@@ -261,7 +261,8 @@ async function handleOrderUpdate(
   }
 
   // Validate state transition if status is changing
-  if (status && status !== existingOrder.status) {
+  // OWNER role can bypass the state machine for edge cases (e.g., correcting data entry errors)
+  if (status && status !== existingOrder.status && session.user.role !== 'OWNER') {
     const allowedNextStatuses = VALID_TRANSITIONS[existingOrder.status] || [];
     if (!allowedNextStatuses.includes(status)) {
       return NextResponse.json(

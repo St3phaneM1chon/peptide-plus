@@ -422,6 +422,8 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
         stripePaymentId: session.payment_intent as string,
         promoCode,
         promoDiscount: promoDiscount || null,
+        giftCardCode: giftCardCode || null,
+        giftCardDiscount: giftCardDiscount || null,
         shippingName: shipping ? `${shipping.firstName} ${shipping.lastName}` : '',
         shippingAddress1: shipping?.address || '',
         shippingAddress2: shipping?.apartment || null,
@@ -493,6 +495,19 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
             // Stock was insufficient — log and continue (order is already paid)
             logger.warn(`[Stripe webhook] Insufficient stock for format ${reservation.formatId}: wanted ${reservation.quantity}, atomic UPDATE matched 0 rows`);
           }
+        } else {
+          // E-07 FIX: Also decrement stock for base products (no formatId)
+          const rowsAffected: number = await tx.$executeRaw`
+            UPDATE "Product"
+            SET "stockQuantity" = "stockQuantity" - ${reservation.quantity},
+                "updatedAt" = NOW()
+            WHERE id = ${reservation.productId}
+              AND "trackInventory" = true
+              AND "stockQuantity" >= ${reservation.quantity}
+          `;
+          if (rowsAffected === 0) {
+            logger.warn(`[Stripe webhook] Insufficient stock for base product ${reservation.productId}: wanted ${reservation.quantity}, atomic UPDATE matched 0 rows`);
+          }
         }
 
         const wac = wacMap.get(`${reservation.productId}-${reservation.formatId}`) ?? 0;
@@ -508,6 +523,49 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
             runningWAC: wac,
             orderId: newOrder.id,
           },
+        });
+      }
+    }
+
+    // E-06 FIX: Deduct gift card balance INSIDE the order transaction for atomicity.
+    // Previously this was a separate $transaction outside the order creation, so if the
+    // webhook crashed between order creation and gift card deduction, the balance was
+    // never reduced — allowing infinite reuse of the same gift card.
+    if (giftCardCode && giftCardDiscount > 0) {
+      // Lock the gift card row to prevent concurrent balance modifications
+      const [giftCard] = await tx.$queryRaw<{
+        id: string; balance: number; is_active: boolean;
+      }[]>`
+        SELECT id, balance::float as balance, "isActive" as is_active
+        FROM "GiftCard"
+        WHERE code = ${giftCardCode}
+        FOR UPDATE
+      `;
+
+      if (giftCard && giftCard.is_active && giftCard.balance > 0) {
+        const amountToDeduct = Math.min(giftCardDiscount, giftCard.balance);
+        const newBalance = Math.round((giftCard.balance - amountToDeduct) * 100) / 100;
+
+        await tx.giftCard.update({
+          where: { id: giftCard.id },
+          data: {
+            balance: newBalance,
+            // If balance reaches 0, deactivate the card
+            isActive: newBalance > 0,
+          },
+        });
+
+        logger.info('Gift card balance decremented (atomic)', {
+          giftCardCode,
+          amountDeducted: amountToDeduct,
+          newBalance,
+          orderNumber,
+        });
+      } else {
+        logger.warn('Gift card not found or inactive during balance deduction', {
+          giftCardCode,
+          giftCardDiscount,
+          orderNumber,
         });
       }
     }
@@ -582,52 +640,6 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
         promoCode,
         error: promoError instanceof Error ? promoError.message : String(promoError),
       });
-    }
-  }
-
-  // BE-PAY-04: Decrement gift card balance after successful payment
-  if (giftCardCode && giftCardDiscount > 0) {
-    try {
-      await prisma.$transaction(async (tx) => {
-        // Lock the gift card row to prevent concurrent balance modifications
-        const [giftCard] = await tx.$queryRaw<{
-          id: string; balance: number; is_active: boolean;
-        }[]>`
-          SELECT id, balance::float as balance, "isActive" as is_active
-          FROM "GiftCard"
-          WHERE code = ${giftCardCode}
-          FOR UPDATE
-        `;
-
-        if (giftCard && giftCard.is_active && giftCard.balance > 0) {
-          const amountToDeduct = Math.min(giftCardDiscount, giftCard.balance);
-          const newBalance = Math.round((giftCard.balance - amountToDeduct) * 100) / 100;
-
-          await tx.giftCard.update({
-            where: { id: giftCard.id },
-            data: {
-              balance: newBalance,
-              // If balance reaches 0, deactivate the card
-              isActive: newBalance > 0,
-            },
-          });
-
-          logger.info('Gift card balance decremented', {
-            giftCardCode,
-            amountDeducted: amountToDeduct,
-            newBalance,
-            orderNumber: order.orderNumber,
-          });
-        }
-      });
-    } catch (gcError) {
-      logger.error('Failed to decrement gift card balance', {
-        giftCardCode,
-        giftCardDiscount,
-        orderNumber: order.orderNumber,
-        error: gcError instanceof Error ? gcError.message : String(gcError),
-      });
-      // Don't fail the webhook for gift card errors
     }
   }
 
@@ -847,6 +859,12 @@ async function handleRefund(charge: Stripe.Charge, eventId: string) {
         if (saleTx.formatId) {
           await tx.productFormat.update({
             where: { id: saleTx.formatId },
+            data: { stockQuantity: { increment: Math.abs(saleTx.quantity) } },
+          });
+        } else {
+          // E-07 FIX: Restore stock for base products (no formatId)
+          await tx.product.update({
+            where: { id: saleTx.productId },
             data: { stockQuantity: { increment: Math.abs(saleTx.quantity) } },
           });
         }
