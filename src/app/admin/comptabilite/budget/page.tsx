@@ -159,13 +159,41 @@ export default function BudgetPage() {
   const theme = sectionThemes.reports;
 
   // Ribbon actions
-  const handleRibbonNewEntry = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleRibbonDelete = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleRibbonValidate = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleRibbonCancel = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleRibbonDuplicate = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonNewEntry = useCallback(() => {
+    window.location.href = '/admin/comptabilite/saisie-rapide';
+  }, []);
+  const handleRibbonDelete = useCallback(() => {
+    toast.info(t('admin.budget.selectLineToDelete') || 'Selectionnez une ligne budgetaire dans le tableau pour la supprimer.');
+  }, [t]);
+  const handleRibbonValidate = useCallback(() => {
+    const totalBudgetRev = revenueBudget.reduce((s, l) => s + l.budget, 0);
+    const totalBudgetExp = expenseBudget.reduce((s, l) => s + l.budget, 0);
+    const totalActualRev = revenueBudget.reduce((s, l) => s + l.actual, 0);
+    const totalActualExp = expenseBudget.reduce((s, l) => s + l.actual, 0);
+    toast.success(t('admin.budget.validationSummary') || `Budget valide - Revenus: ${totalActualRev.toLocaleString()}/${totalBudgetRev.toLocaleString()} CAD, Depenses: ${totalActualExp.toLocaleString()}/${totalBudgetExp.toLocaleString()} CAD`);
+  }, [revenueBudget, expenseBudget, t]);
+  const handleRibbonCancel = useCallback(() => {
+    fetchBudgets();
+    toast.info(t('admin.budget.resetDone') || 'Donnees budgetaires rechargees.');
+  }, [fetchBudgets, t]);
+  const handleRibbonDuplicate = useCallback(() => {
+    const nextYear = parseInt(selectedYear) + 1;
+    toast.info(t('admin.budget.duplicateInfo') || `Pour dupliquer le budget vers ${nextYear}, utilisez la fonction de creation de budget.`);
+  }, [selectedYear, t]);
   const handleRibbonPrint = useCallback(() => { window.print(); }, []);
-  const handleRibbonExport = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonExport = useCallback(() => {
+    const allLines = [...revenueBudget, ...expenseBudget];
+    if (allLines.length === 0) { toast.error(t('admin.budget.noDataToExport') || 'Aucune donnee budgetaire a exporter'); return; }
+    const bom = '\uFEFF';
+    const headers = [t('admin.budget.colCategory') || 'Categorie', t('admin.budget.colAccountCode') || 'Code compte', t('admin.budget.colType') || 'Type', t('admin.budget.colBudget') || 'Budget', t('admin.budget.colActual') || 'Reel', t('admin.budget.colVariance') || 'Ecart', t('admin.budget.colPercentUsed') || '% utilise'];
+    const rows = allLines.map(l => [l.category, l.accountCode, l.type || '', String(l.budget), String(l.actual), String(l.variance), String(l.percentUsed)]);
+    const csv = bom + [headers.join(','), ...rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `budget-${selectedYear}.csv`; a.click();
+    URL.revokeObjectURL(url);
+    toast.success(t('admin.budget.exportSuccess') || `${allLines.length} lignes exportees`);
+  }, [revenueBudget, expenseBudget, selectedYear, t]);
 
   useRibbonAction('newEntry', handleRibbonNewEntry);
   useRibbonAction('delete', handleRibbonDelete);

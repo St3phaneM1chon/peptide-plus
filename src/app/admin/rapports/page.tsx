@@ -209,12 +209,27 @@ export default function RapportsPage() {
   }, []);
 
   const handleRibbonSchedule = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    const summary = [
+      `${t('admin.reports.totalRevenue') || 'Revenue'}: ${formatCurrency(totalRevenue)}`,
+      `${t('admin.reports.orders') || 'Orders'}: ${totalOrders}`,
+      `${t('admin.reports.avgCart') || 'Avg cart'}: ${formatCurrency(avgOrderValue)}`,
+      `${t('admin.reports.topProducts') || 'Top products'}: ${topProducts.slice(0, 3).map(p => p.name).join(', ') || '-'}`,
+    ].join('\n');
+    toast.success(t('admin.reports.summaryGenerated') || 'Report summary generated', { description: summary, duration: 8000 });
+  }, [t, totalRevenue, totalOrders, avgOrderValue, topProducts, formatCurrency]);
 
   const handleRibbonComparePeriods = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    if (previousPeriodRevenue === 0) {
+      toast.info(t('admin.reports.noPreviousData') || 'No previous period data available for comparison');
+      return;
+    }
+    const comparison = [
+      `${t('admin.reports.totalRevenue') || 'Revenue'}: ${formatCurrency(totalRevenue)} vs ${formatCurrency(previousPeriodRevenue)} (${revenueTrend >= 0 ? '+' : ''}${Math.round(revenueTrend * 10) / 10}%)`,
+      `${t('admin.reports.orders') || 'Orders'}: ${totalOrders} vs ${previousPeriodOrders} (${ordersTrend >= 0 ? '+' : ''}${Math.round(ordersTrend * 10) / 10}%)`,
+      `${t('admin.reports.avgCart') || 'Avg cart'}: ${formatCurrency(avgOrderValue)} vs ${formatCurrency(previousAvgOrder)} (${avgOrderTrend >= 0 ? '+' : ''}${Math.round(avgOrderTrend * 10) / 10}%)`,
+    ].join('\n');
+    toast.success(t('admin.reports.periodComparison') || 'Period comparison', { description: comparison, duration: 10000 });
+  }, [t, totalRevenue, previousPeriodRevenue, revenueTrend, totalOrders, previousPeriodOrders, ordersTrend, avgOrderValue, previousAvgOrder, avgOrderTrend, formatCurrency]);
 
   // G5-FLAW-06: Implement PDF export via accounting reports endpoint
   const handleRibbonExportPdf = useCallback(() => {
@@ -223,8 +238,30 @@ export default function RapportsPage() {
   }, [period]);
 
   const handleRibbonExportExcel = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    if (salesData.length === 0 && topProducts.length === 0 && regionData.length === 0) {
+      toast.info(t('admin.reports.noDataForPeriod') || 'No data for this period');
+      return;
+    }
+    const bom = '\uFEFF';
+    const headers = [t('admin.reports.date') || 'Date', t('admin.reports.totalRevenue') || 'Revenue', t('admin.reports.orders') || 'Orders', t('admin.reports.avgCart') || 'Avg Order Value'];
+    const rows = salesData.map(d => [d.date, d.revenue.toFixed(2), d.orders.toString(), d.avgOrderValue.toFixed(2)]);
+    // Add top products section
+    rows.push([''], [t('admin.reports.topProducts') || 'Top Products', t('admin.reports.salesCount', { count: '' }) || 'Sales', t('admin.reports.totalRevenue') || 'Revenue', '']);
+    topProducts.forEach(p => rows.push([p.name, p.sales.toString(), p.revenue.toFixed(2), '']));
+    // Add region section
+    rows.push([''], [t('admin.reports.salesByRegion') || 'Sales by Region', t('admin.reports.orders') || 'Orders', t('admin.reports.totalRevenue') || 'Revenue', '']);
+    regionData.forEach(r => rows.push([r.region, r.orders.toString(), r.revenue.toFixed(2), '']));
+
+    const csv = bom + [headers.join(','), ...rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `report-${period}-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(t('common.exported') || 'Exported');
+  }, [t, salesData, topProducts, regionData, period]);
 
   const handleRibbonPrint = useCallback(() => {
     window.print();

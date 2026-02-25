@@ -376,8 +376,25 @@ export default function PromotionsPage() {
   }, [selectedId]);
 
   const onSchedule = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    if (!selectedPromo) {
+      toast.info(t('admin.promotions.selectFirst') || 'Select a promotion first');
+      return;
+    }
+    // Pre-fill dates and open form for editing schedule
+    setEditingPromo(selectedPromo);
+    setFormName(selectedPromo.name);
+    setFormPromoKind(selectedPromo.type);
+    setFormType(selectedPromo.discountType);
+    setFormValue(selectedPromo.discountValue);
+    setFormStartDate(selectedPromo.startsAt ? selectedPromo.startsAt.slice(0, 16) : '');
+    setFormEndDate(selectedPromo.endsAt ? selectedPromo.endsAt.slice(0, 16) : '');
+    setFormAppliesToAll(selectedPromo.type === 'FLASH_SALE');
+    setFormBuyQty(selectedPromo.buyQuantity ?? 2);
+    setFormGetQty(selectedPromo.getQuantity ?? 1);
+    setFormMinQuantity(selectedPromo.minQuantity ?? 1);
+    setShowForm(true);
+    toast.info(t('admin.promotions.editScheduleHint') || 'Modify start/end dates to schedule this promotion');
+  }, [selectedPromo, t]);
 
   const onActivate = useCallback(() => {
     if (!selectedId || !selectedPromo || selectedPromo.isActive) return;
@@ -406,12 +423,55 @@ export default function PromotionsPage() {
   }, [selectedPromo]);
 
   const onPerformanceStats = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    const active = promotions.filter(p => p.isActive).length;
+    const expired = promotions.filter(p => p.endsAt && new Date(p.endsAt) < new Date()).length;
+    const byType = promotions.reduce<Record<string, number>>((acc, p) => {
+      acc[typeLabels[p.type] || p.type] = (acc[typeLabels[p.type] || p.type] || 0) + 1;
+      return acc;
+    }, {});
+    const typeBreakdown = Object.entries(byType).map(([k, v]) => `${k}: ${v}`).join(', ');
+    toast.success(t('admin.promotions.performanceTitle') || 'Promotion Stats', {
+      description: `${t('admin.promotions.statTotal') || 'Total'}: ${promotions.length} | ${t('admin.promotions.statActive') || 'Active'}: ${active} | ${t('admin.promotions.expired') || 'Expired'}: ${expired}\n${typeBreakdown}`,
+      duration: 8000,
+    });
+  }, [promotions, typeLabels, t]);
 
   const onExport = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    if (filteredPromotions.length === 0) {
+      toast.info(t('admin.promotions.emptyTitle') || 'No promotions to export');
+      return;
+    }
+    const bom = '\uFEFF';
+    const headers = [
+      t('admin.promotions.formName') || 'Name',
+      t('admin.promotions.formType') || 'Type',
+      t('admin.promotions.discount') || 'Discount',
+      t('admin.promotions.formValue') || 'Value',
+      t('admin.promotions.statActive') || 'Active',
+      t('admin.promotions.formStartDate') || 'Start',
+      t('admin.promotions.formEndDate') || 'End',
+      t('admin.promotions.priority') || 'Priority',
+    ];
+    const rows = filteredPromotions.map(p => [
+      p.name,
+      typeLabels[p.type] || p.type,
+      p.discountType,
+      p.discountValue.toString(),
+      p.isActive ? 'Yes' : 'No',
+      p.startsAt ? new Date(p.startsAt).toLocaleDateString(locale) : '',
+      p.endsAt ? new Date(p.endsAt).toLocaleDateString(locale) : '',
+      p.priority.toString(),
+    ]);
+    const csv = bom + [headers.join(','), ...rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `promotions-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(t('common.exported') || 'Exported');
+  }, [filteredPromotions, typeLabels, locale, t]);
 
   useRibbonAction('newPromotion', onNewPromotion);
   useRibbonAction('delete', onDeleteRibbon);

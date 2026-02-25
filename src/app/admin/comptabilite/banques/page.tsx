@@ -217,12 +217,41 @@ export default function BanquesPage() {
   const theme = sectionThemes.bank;
 
   // Ribbon actions
-  const handleRibbonSynchronize = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleRibbonImportStatement = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleRibbonReconcile = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleRibbonAutoMatch = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleRibbonBankRules = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleRibbonExport = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonSynchronize = useCallback(async () => {
+    try {
+      const res = await fetch('/api/accounting/bank-sync', { method: 'POST' });
+      if (!res.ok) throw new Error();
+      toast.success(t('admin.banking.syncSuccess') || 'Synchronisation bancaire lancee');
+      fetchBankAccounts();
+      fetchRecentTransactions();
+    } catch {
+      toast.error(t('admin.banking.syncError') || 'Erreur de synchronisation. Verifiez les connexions bancaires.');
+    }
+  }, [fetchBankAccounts, fetchRecentTransactions, t]);
+  const handleRibbonImportStatement = useCallback(() => {
+    window.location.href = '/admin/comptabilite/import-bancaire';
+  }, []);
+  const handleRibbonReconcile = useCallback(() => {
+    window.location.href = '/admin/comptabilite/rapprochement';
+  }, []);
+  const handleRibbonAutoMatch = useCallback(() => {
+    window.location.href = '/admin/comptabilite/rapprochement';
+  }, []);
+  const handleRibbonBankRules = useCallback(() => {
+    window.location.href = '/admin/comptabilite/regles-bancaires';
+  }, []);
+  const handleRibbonExport = useCallback(() => {
+    if (recentTransactions.length === 0) { toast.error(t('admin.banking.noTransactionsToExport') || 'Aucune transaction a exporter'); return; }
+    const bom = '\uFEFF';
+    const headers = [t('admin.banking.colDate') || 'Date', t('admin.banking.colDescription') || 'Description', t('admin.banking.colAmount') || 'Montant', t('admin.banking.colType') || 'Type', t('admin.banking.colReconciled') || 'Rapproche'];
+    const rows = recentTransactions.map(tx => [tx.date, tx.description, String(tx.amount), tx.type || '', tx.reconciled ? 'Oui' : 'Non']);
+    const csv = bom + [headers.join(','), ...rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `transactions-bancaires-${new Date().toISOString().split('T')[0]}.csv`; a.click();
+    URL.revokeObjectURL(url);
+    toast.success(t('admin.banking.exportSuccess') || `${recentTransactions.length} transactions exportees`);
+  }, [recentTransactions, t]);
 
   useRibbonAction('synchronize', handleRibbonSynchronize);
   useRibbonAction('importStatement', handleRibbonImportStatement);

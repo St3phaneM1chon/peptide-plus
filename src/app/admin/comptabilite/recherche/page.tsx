@@ -157,9 +157,39 @@ export default function SearchPage() {
   // Ribbon actions
   const handleRibbonSearch = useCallback(() => { handleSearch(); }, [handleSearch]);
   const handleRibbonFilterPeriod = useCallback(() => { setShowFilters(prev => !prev); }, []);
-  const handleRibbonExportPdf = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonExportPdf = useCallback(() => {
+    if (results.length === 0) {
+      toast.warning(t('admin.search.noResults') || 'Aucun resultat a exporter');
+      return;
+    }
+    const headers = [
+      t('admin.search.documentType') || 'Type',
+      t('admin.search.titleCol') || 'Titre',
+      t('admin.search.referenceCol') || 'Reference',
+      t('admin.search.amountCol') || 'Montant',
+      t('admin.search.dateCol') || 'Date',
+      t('admin.search.statusLabel') || 'Statut',
+    ];
+    const rows = results.map(r => [
+      typeLabels[r.type] || r.type,
+      r.title,
+      r.reference || '',
+      String(r.amount),
+      r.date ? formatDate(r.date) : '',
+      r.status,
+    ]);
+    const bom = '\uFEFF';
+    const csv = bom + [headers.join(','), ...rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `recherche-comptabilite-${new Date().toISOString().split('T')[0]}.csv`; a.click();
+    URL.revokeObjectURL(url);
+    toast.success(t('common.exported') || 'Exporte avec succes');
+  }, [results, typeLabels, formatDate, t]);
   const handleRibbonPrint = useCallback(() => { window.print(); }, []);
-  const handleRibbonNewAccount = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonNewAccount = useCallback(() => {
+    window.location.href = '/admin/comptabilite/plan-comptable?new=true';
+  }, []);
 
   useRibbonAction('search', handleRibbonSearch);
   useRibbonAction('filterPeriod', handleRibbonFilterPeriod);

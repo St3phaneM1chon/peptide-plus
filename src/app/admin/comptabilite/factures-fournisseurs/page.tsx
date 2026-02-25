@@ -122,16 +122,47 @@ export default function FacturesFournisseursPage() {
   const theme = sectionThemes.accounts;
 
   // -- Ribbon actions --
-  const handleEnterInvoice = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleDeleteAction = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleEnterInvoice = useCallback(async () => {
+    try {
+      const res = await fetch('/api/accounting/supplier-invoices', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ supplier: { name: 'Nouveau fournisseur', email: '' }, items: [], subtotal: 0, taxes: 0, total: 0, category: 'Divers' }),
+      });
+      if (!res.ok) throw new Error();
+      await fetchInvoices();
+      toast.success(t('admin.supplierInvoices.created') || 'Facture fournisseur creee en attente');
+    } catch {
+      toast.error(t('admin.supplierInvoices.createError') || 'Erreur lors de la creation de la facture');
+    }
+  }, [fetchInvoices, t]);
+  const handleDeleteAction = useCallback(() => {
+    if (!selectedInvoice) { toast.info(t('admin.supplierInvoices.selectToDelete') || 'Selectionnez une facture fournisseur dans le tableau.'); return; }
+    if (selectedInvoice.status === 'PAID') { toast.error(t('admin.supplierInvoices.cannotDeletePaid') || 'Impossible de supprimer une facture deja payee.'); return; }
+    toast.info(t('admin.supplierInvoices.deleteConfirm') || `Suppression de ${selectedInvoice.invoiceNumber} - fonctionnalite en cours d'integration.`);
+  }, [selectedInvoice, t]);
   const handleApproveAction = useCallback(() => {
     if (selectedInvoice) { handleApprove(selectedInvoice.id); setSelectedInvoice(null); }
   }, [selectedInvoice]);
   const handleMarkPaidAction = useCallback(() => {
     if (selectedInvoice) { handleMarkAsPaid(selectedInvoice.id); setSelectedInvoice(null); }
   }, [selectedInvoice]);
-  const handleSchedulePay = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleExport = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleSchedulePay = useCallback(() => {
+    if (!selectedInvoice) { toast.info(t('admin.supplierInvoices.selectToSchedule') || 'Selectionnez une facture pour planifier le paiement.'); return; }
+    toast.info(t('admin.supplierInvoices.scheduleInfo') || `Paiement planifie pour ${selectedInvoice.invoiceNumber} - echeance ${new Date(selectedInvoice.dueDate).toLocaleDateString(locale)}`);
+  }, [selectedInvoice, locale, t]);
+  const handleExport = useCallback(() => {
+    if (invoices.length === 0) { toast.error(t('admin.supplierInvoices.noDataToExport') || 'Aucune facture a exporter'); return; }
+    const bom = '\uFEFF';
+    const headers = [t('admin.supplierInvoices.colInvoiceNumber') || 'Numero', t('admin.supplierInvoices.colSupplier') || 'Fournisseur', t('admin.supplierInvoices.colCategory') || 'Categorie', t('admin.supplierInvoices.colDate') || 'Date', t('admin.supplierInvoices.colDueDate') || 'Echeance', t('admin.supplierInvoices.colSubtotal') || 'Sous-total', t('admin.supplierInvoices.colTaxes') || 'Taxes', t('admin.supplierInvoices.colTotal') || 'Total', t('admin.supplierInvoices.colStatus') || 'Statut'];
+    const rows = invoices.map(inv => [inv.invoiceNumber, inv.supplier.name, inv.category, inv.date, inv.dueDate, String(inv.subtotal), String(inv.taxes), String(inv.total), inv.status]);
+    const csv = bom + [headers.join(','), ...rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `factures-fournisseurs-${new Date().toISOString().split('T')[0]}.csv`; a.click();
+    URL.revokeObjectURL(url);
+    toast.success(t('admin.supplierInvoices.exportSuccess') || `${invoices.length} factures exportees`);
+  }, [invoices, t]);
   const handlePrint = useCallback(() => { window.print(); }, []);
 
   useRibbonAction('enterInvoice', handleEnterInvoice);

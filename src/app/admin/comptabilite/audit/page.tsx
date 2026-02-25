@@ -154,12 +154,26 @@ export default function AuditTrailPage() {
   };
 
   // Ribbon actions
-  const handleRibbonVerifyBalances = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonVerifyBalances = useCallback(() => {
+    const totalActions = entries.length;
+    const creates = entries.filter(e => e.action === 'CREATE' || e.action === 'create').length;
+    const updates = entries.filter(e => e.action === 'UPDATE' || e.action === 'update').length;
+    const deletes = entries.filter(e => e.action === 'DELETE' || e.action === 'delete').length;
+    toast.success(t('admin.auditTrail.verifySummary') || `Piste d'audit: ${totalActions} actions - ${creates} creations, ${updates} modifications, ${deletes} suppressions`);
+  }, [entries, t]);
   const handleRibbonAuditTrail = useCallback(() => { loadEntries(); }, [loadEntries]);
-  const handleRibbonClosePeriod = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleRibbonReopen = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleRibbonFiscalCalendar = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleRibbonTaxReturn = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonClosePeriod = useCallback(() => {
+    window.location.href = '/admin/comptabilite/cloture';
+  }, []);
+  const handleRibbonReopen = useCallback(() => {
+    toast.info(t('admin.auditTrail.reopenInfo') || 'Pour rouvrir une periode, accedez a la page de cloture.');
+  }, [t]);
+  const handleRibbonFiscalCalendar = useCallback(() => {
+    window.location.href = '/admin/comptabilite/calendrier-fiscal';
+  }, []);
+  const handleRibbonTaxReturn = useCallback(() => {
+    window.location.href = '/admin/comptabilite/declaration-tps-tvq';
+  }, []);
   const handleRibbonExport = useCallback(() => { handleExport(); }, [handleExport]);
 
   useRibbonAction('verifyBalances', handleRibbonVerifyBalances);

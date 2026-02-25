@@ -174,10 +174,25 @@ export default function RapportsComptablesPage() {
 
   // Ribbon actions
   const handleRibbonGenerateReport = useCallback(() => { handleGeneratePdf('income'); }, [handleGeneratePdf]);
-  const handleRibbonSchedule = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleRibbonComparePeriods = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonSchedule = useCallback(() => {
+    toast.info(t('admin.reports.scheduleInfo') || 'La planification automatique des rapports sera disponible prochainement.');
+  }, [t]);
+  const handleRibbonComparePeriods = useCallback(() => {
+    window.location.href = '/admin/comptabilite/etats-financiers';
+  }, []);
   const handleRibbonExportPdf = useCallback(() => { handleGeneratePdf('income'); }, [handleGeneratePdf]);
-  const handleRibbonExportExcel = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonExportExcel = useCallback(() => {
+    if (taxReports.length === 0) { toast.error(t('admin.reports.noDataToExport') || 'Aucun rapport fiscal a exporter'); return; }
+    const bom = '\uFEFF';
+    const headers = [t('admin.reports.colPeriod') || 'Periode', t('admin.reports.colRegion') || 'Region', t('admin.reports.colTpsCollected') || 'TPS percue', t('admin.reports.colTvqCollected') || 'TVQ percue', t('admin.reports.colCtiRti') || 'CTI/RTI', t('admin.reports.colNetTotal') || 'Total net', t('admin.reports.colDueDate') || 'Echeance', t('admin.reports.colStatus') || 'Statut'];
+    const rows = taxReports.map(r => [r.period, r.region, String(r.tpsCollected), String(r.tvqCollected), String(r.tpsPaid + r.tvqPaid), String(r.netTotal), r.dueDate, r.status]);
+    const csv = bom + [headers.join(','), ...rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `rapports-fiscaux-${selectedYear}.csv`; a.click();
+    URL.revokeObjectURL(url);
+    toast.success(t('admin.reports.exportSuccess') || `${taxReports.length} rapports exportes`);
+  }, [taxReports, selectedYear, t]);
   const handleRibbonPrint = useCallback(() => { window.print(); }, []);
 
   useRibbonAction('generateReport', handleRibbonGenerateReport);

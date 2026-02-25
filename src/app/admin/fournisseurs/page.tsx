@@ -239,7 +239,7 @@ export default function FournisseursPage() {
     if (selectedSupplier?.website) {
       window.open(selectedSupplier.website, '_blank', 'noopener,noreferrer');
     } else {
-      toast.info(t('common.comingSoon'));
+      toast.warning(t('admin.suppliers.noWebsite') || 'Aucun site web renseigne pour ce fournisseur');
     }
   }, [selectedSupplier, t]);
 
@@ -256,8 +256,40 @@ export default function FournisseursPage() {
   }, [selectedSupplier]);
 
   const ribbonExport = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    if (suppliers.length === 0) {
+      toast.warning(t('admin.suppliers.noSuppliers') || 'Aucun fournisseur a exporter');
+      return;
+    }
+    const headers = [
+      t('admin.suppliers.name') || 'Nom',
+      t('admin.suppliers.code') || 'Code',
+      t('admin.suppliers.email') || 'Courriel',
+      t('admin.suppliers.phone') || 'Telephone',
+      t('admin.suppliers.website') || 'Site web',
+      t('admin.suppliers.address') || 'Adresse',
+      t('admin.suppliers.city') || 'Ville',
+      t('admin.suppliers.active') || 'Actif',
+      t('admin.suppliers.contacts') || 'Contacts',
+    ];
+    const rows = suppliers.map(s => [
+      s.name,
+      s.code || '',
+      s.email || '',
+      s.phone || '',
+      s.website || '',
+      [s.address, s.city, s.province, s.postalCode, s.country].filter(Boolean).join(', '),
+      s.city || '',
+      s.isActive ? (t('admin.suppliers.active') || 'Oui') : (t('admin.suppliers.inactive') || 'Non'),
+      String(s._count.contacts),
+    ]);
+    const bom = '\uFEFF';
+    const csv = bom + [headers.join(','), ...rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `fournisseurs-${new Date().toISOString().split('T')[0]}.csv`; a.click();
+    URL.revokeObjectURL(url);
+    toast.success(t('common.exported') || 'Exporte avec succes');
+  }, [suppliers, t]);
 
   useRibbonAction('addSupplier', ribbonAddSupplier);
   useRibbonAction('openWebsite', ribbonOpenWebsite);

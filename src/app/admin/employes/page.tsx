@@ -299,12 +299,51 @@ export default function EmployesPage() {
   }, []);
 
   const handleRibbonDelete = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    if (!selectedEmployee) {
+      toast.warning(t('admin.employees.selectFirst') || 'Selectionnez un employe d\'abord');
+      return;
+    }
+    if (selectedEmployee.role === 'OWNER') {
+      toast.error(t('admin.employees.cannotDeleteOwner') || 'Impossible de supprimer un proprietaire');
+      return;
+    }
+    const confirmed = window.confirm(
+      (t('admin.employees.confirmDelete') || 'Voulez-vous vraiment desactiver cet employe?') + `\n\n${selectedEmployee.name} (${selectedEmployee.email})`
+    );
+    if (confirmed) {
+      toggleActive(selectedEmployee.id);
+    }
+  }, [selectedEmployee, t, toggleActive]);
 
   const handleRibbonExport = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    if (employees.length === 0) {
+      toast.warning(t('admin.employees.emptyTitle') || 'Aucun employe a exporter');
+      return;
+    }
+    const headers = [
+      t('admin.employees.nameLabel') || 'Nom',
+      t('admin.employees.emailLabel') || 'Courriel',
+      t('admin.employees.roleCol') || 'Role',
+      t('admin.employees.statusCol') || 'Statut',
+      t('admin.employees.permissionsCol') || 'Permissions',
+      t('admin.employees.lastLogin') || 'Derniere connexion',
+    ];
+    const rows = employees.map(emp => [
+      emp.name,
+      emp.email,
+      emp.role,
+      emp.isActive ? (t('admin.employees.active') || 'Actif') : 'Inactif',
+      emp.role === 'OWNER' ? (t('admin.employees.allPermissions') || 'Toutes') : emp.permissions.join('; '),
+      emp.lastLogin ? new Date(emp.lastLogin).toLocaleDateString(locale) : (t('admin.employees.never') || 'Jamais'),
+    ]);
+    const bom = '\uFEFF';
+    const csv = bom + [headers.join(','), ...rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `employes-${new Date().toISOString().split('T')[0]}.csv`; a.click();
+    URL.revokeObjectURL(url);
+    toast.success(t('common.exported') || 'Exporte avec succes');
+  }, [employees, locale, t]);
 
   useRibbonAction('newRole', handleRibbonNewRole);
   useRibbonAction('save', handleRibbonSave);

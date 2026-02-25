@@ -193,11 +193,48 @@ export default function CurrencyPage() {
   const totalUnrealizedGainLoss = foreignAccounts.reduce((sum, a) => sum + a.unrealizedGainLoss, 0);
 
   // Ribbon actions
-  const handleRibbonSave = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleRibbonResetDefaults = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleRibbonImportConfig = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleRibbonExportConfig = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleRibbonTest = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonSave = useCallback(async () => {
+    try {
+      const res = await fetch('/api/accounting/currencies', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currencies: currencies.map(c => ({ code: c.code, exchangeRate: c.rate, isActive: true })) }),
+      });
+      if (!res.ok) throw new Error();
+      toast.success(t('admin.multiCurrency.saveSuccess') || 'Configuration des devises sauvegardee');
+    } catch {
+      toast.error(t('admin.multiCurrency.saveError') || 'Erreur lors de la sauvegarde');
+    }
+  }, [currencies, t]);
+  const handleRibbonResetDefaults = useCallback(() => {
+    loadData();
+    toast.success(t('admin.multiCurrency.resetDone') || 'Taux recharges depuis le serveur');
+  }, [t]);
+  const handleRibbonImportConfig = useCallback(() => {
+    toast.info(t('admin.multiCurrency.importInfo') || 'Pour importer une configuration de devises, utilisez un fichier CSV avec les colonnes: Code, Taux.');
+  }, [t]);
+  const handleRibbonExportConfig = useCallback(() => {
+    if (currencies.length === 0) { toast.error(t('admin.multiCurrency.noDataToExport') || 'Aucune devise a exporter'); return; }
+    const bom = '\uFEFF';
+    const headers = [t('admin.multiCurrency.colCode') || 'Code', t('admin.multiCurrency.colName') || 'Nom', t('admin.multiCurrency.colSymbol') || 'Symbole', t('admin.multiCurrency.colRate') || 'Taux', t('admin.multiCurrency.colTrend') || 'Tendance', t('admin.multiCurrency.colChange24h') || 'Variation 24h'];
+    const rows = currencies.map(c => [c.code, c.name, c.symbol, String(c.rate), c.trend, String(c.change24h)]);
+    const csv = bom + [headers.join(','), ...rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `devises-${new Date().toISOString().split('T')[0]}.csv`; a.click();
+    URL.revokeObjectURL(url);
+    toast.success(t('admin.multiCurrency.exportSuccess') || `${currencies.length} devises exportees`);
+  }, [currencies, t]);
+  const handleRibbonTest = useCallback(async () => {
+    try {
+      const res = await fetch('/api/accounting/currencies');
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      toast.success(t('admin.multiCurrency.testSuccess') || `Connexion API OK - ${data.currencies?.length || 0} devises configurees`);
+    } catch {
+      toast.error(t('admin.multiCurrency.testError') || 'Erreur de connexion a l\'API des devises');
+    }
+  }, [t]);
 
   useRibbonAction('save', handleRibbonSave);
   useRibbonAction('resetDefaults', handleRibbonResetDefaults);

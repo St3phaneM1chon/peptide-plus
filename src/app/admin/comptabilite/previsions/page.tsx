@@ -167,11 +167,34 @@ export default function ForecastingPage() {
   const theme = sectionThemes.reports;
 
   // Ribbon actions
-  const handleRibbonGenerateReport = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleRibbonSchedule = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleRibbonComparePeriods = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleRibbonExportPdf = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleRibbonExportExcel = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonGenerateReport = useCallback(() => {
+    const totalIn = baseProjections.reduce((s, p) => s + p.inflows, 0);
+    const totalOut = baseProjections.reduce((s, p) => s + p.outflows, 0);
+    const netFlow = totalIn - totalOut;
+    toast.success(t('admin.forecasts.reportSummary') || `Previsions: Entrees ${totalIn.toLocaleString()} CAD, Sorties ${totalOut.toLocaleString()} CAD, Flux net ${netFlow.toLocaleString()} CAD`);
+  }, [baseProjections, t]);
+  const handleRibbonSchedule = useCallback(() => {
+    toast.info(t('admin.forecasts.scheduleInfo') || 'La planification de rapports automatiques sera disponible dans une prochaine mise a jour.');
+  }, [t]);
+  const handleRibbonComparePeriods = useCallback(() => {
+    window.location.href = '/admin/comptabilite/etats-financiers';
+  }, []);
+  const handleRibbonExportPdf = useCallback(() => {
+    window.print();
+    toast.success(t('admin.forecasts.pdfExportInfo') || 'Utilisez la boite de dialogue d\'impression pour enregistrer en PDF.');
+  }, [t]);
+  const handleRibbonExportExcel = useCallback(() => {
+    if (baseProjections.length === 0) { toast.error(t('admin.forecasts.noDataToExport') || 'Aucune prevision a exporter'); return; }
+    const bom = '\uFEFF';
+    const headers = [t('admin.forecasts.colPeriod') || 'Periode', t('admin.forecasts.colInflows') || 'Entrees', t('admin.forecasts.colOutflows') || 'Sorties', t('admin.forecasts.colClosingBalance') || 'Solde de cloture'];
+    const rows = baseProjections.map(p => [p.period, String(p.inflows), String(p.outflows), String(p.closingBalance)]);
+    const csv = bom + [headers.join(','), ...rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `previsions-tresorerie-${new Date().toISOString().split('T')[0]}.csv`; a.click();
+    URL.revokeObjectURL(url);
+    toast.success(t('admin.forecasts.exportSuccess') || `${baseProjections.length} periodes exportees`);
+  }, [baseProjections, t]);
   const handleRibbonPrint = useCallback(() => { window.print(); }, []);
 
   useRibbonAction('generateReport', handleRibbonGenerateReport);

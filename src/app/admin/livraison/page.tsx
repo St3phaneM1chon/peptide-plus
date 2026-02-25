@@ -302,20 +302,97 @@ export default function LivraisonPage() {
   }, []);
 
   const handleRibbonResetDefaults = useCallback(() => {
-    toast.info(t('common.comingSoon'));
+    // Reload zones from server to discard unsaved local changes
+    setLoading(true);
+    fetchZones();
+    toast.success(t('admin.shipping.zonesReloaded') || 'Shipping zones reloaded from server');
   }, [t]);
 
   const handleRibbonImportConfig = useCallback(() => {
-    toast.info(t('common.comingSoon'));
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        const imported = JSON.parse(text);
+        if (!Array.isArray(imported.zones)) {
+          toast.error(t('admin.shipping.importError') || 'Invalid format: expected { zones: [...] }');
+          return;
+        }
+        // Create each zone via API
+        let created = 0;
+        for (const z of imported.zones) {
+          try {
+            const res = await fetch('/api/admin/shipping/zones', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(z),
+            });
+            if (res.ok) created++;
+          } catch { /* skip invalid */ }
+        }
+        await fetchZones();
+        toast.success(`${created} ${t('admin.shipping.zones') || 'zones'} ${t('admin.shipping.zoneCreated') || 'imported'}`);
+      } catch {
+        toast.error(t('admin.shipping.importError') || 'Invalid JSON file');
+      }
+    };
+    input.click();
   }, [t]);
 
   const handleRibbonExportConfig = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    if (zones.length === 0) {
+      toast.info(t('admin.shipping.emptyTitle') || 'No zones to export');
+      return;
+    }
+    const headers = [
+      t('admin.shipping.zoneName') || 'Zone',
+      t('admin.shipping.countriesLabel') || 'Countries',
+      t('admin.shipping.method') || 'Method',
+      t('admin.shipping.carrier') || 'Carrier',
+      t('admin.shipping.delay') || 'Delivery Days',
+      t('admin.shipping.price') || 'Price',
+      t('admin.shipping.freeAbove') || 'Free Above',
+      t('admin.shipping.activeCol') || 'Active',
+    ];
+    const rows: (string | number | boolean)[][] = [];
+    for (const z of zones) {
+      for (const m of z.methods) {
+        rows.push([
+          z.name, z.countries.join('; '), m.name, m.carrier,
+          `${m.minDays}-${m.maxDays}`, m.price,
+          m.freeAbove ?? '', z.isActive && m.isActive ? 'Yes' : 'No',
+        ]);
+      }
+      if (z.methods.length === 0) {
+        rows.push([z.name, z.countries.join('; '), '', '', '', '', '', z.isActive ? 'Yes' : 'No']);
+      }
+    }
+    const bom = '\uFEFF';
+    const csv = bom + [headers.join(','), ...rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `shipping-zones-${new Date().toISOString().slice(0, 10)}.csv`; a.click();
+    URL.revokeObjectURL(url);
+    toast.success(t('common.exported') || 'Exported');
+  }, [zones, t]);
 
   const handleRibbonTest = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    // Display a summary of shipping coverage
+    const activeZones = zones.filter(z => z.isActive).length;
+    const totalCountries = new Set(zones.flatMap(z => z.countries)).size;
+    const totalMethods = zones.reduce((sum, z) => sum + z.methods.length, 0);
+    const activeMethods = zones.reduce((sum, z) => sum + z.methods.filter(m => m.isActive).length, 0);
+    toast.success(
+      `${t('admin.shipping.zones') || 'Zones'}: ${activeZones}/${zones.length} ${t('admin.shipping.active') || 'active'} | ` +
+      `${t('admin.shipping.countriesCovered') || 'Countries'}: ${totalCountries} | ` +
+      `${t('admin.shipping.methods') || 'Methods'}: ${activeMethods}/${totalMethods} ${t('admin.shipping.active') || 'active'}`,
+      { duration: 6000 }
+    );
+  }, [zones, t]);
 
   useRibbonAction('save', handleRibbonSave);
   useRibbonAction('resetDefaults', handleRibbonResetDefaults);

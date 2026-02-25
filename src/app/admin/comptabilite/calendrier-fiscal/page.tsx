@@ -289,13 +289,37 @@ export default function CalendrierFiscalPage() {
   // Ribbon actions
   // ---------------------------------------------------------------------------
 
-  const handleRibbonVerifyBalances = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleRibbonAuditTrail = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleRibbonClosePeriod = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleRibbonReopen = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonVerifyBalances = useCallback(() => {
+    const completed = events.filter(e => e.status === 'completed' || e.status === 'filed').length;
+    const pending = events.filter(e => e.status === 'pending' || e.status === 'upcoming').length;
+    const overdue = events.filter(e => e.status === 'overdue').length;
+    toast.success(t('admin.fiscalCalendar.balanceSummary') || `Verification: ${completed} completes, ${pending} en attente, ${overdue} en retard`);
+  }, [events, t]);
+  const handleRibbonAuditTrail = useCallback(() => {
+    window.location.href = '/admin/comptabilite/audit';
+  }, []);
+  const handleRibbonClosePeriod = useCallback(() => {
+    window.location.href = '/admin/comptabilite/cloture';
+  }, []);
+  const handleRibbonReopen = useCallback(() => {
+    toast.info(t('admin.fiscalCalendar.reopenInfo') || 'Pour rouvrir une periode, accedez a la page de cloture.');
+  }, [t]);
   const handleRibbonFiscalCalendar = useCallback(() => { fetchEvents(); }, [fetchEvents]);
-  const handleRibbonTaxReturn = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleRibbonExport = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonTaxReturn = useCallback(() => {
+    window.location.href = '/admin/comptabilite/declaration-tps-tvq';
+  }, []);
+  const handleRibbonExport = useCallback(() => {
+    if (events.length === 0) { toast.error(t('admin.fiscalCalendar.noEventsToExport') || 'Aucun evenement a exporter'); return; }
+    const bom = '\uFEFF';
+    const headers = [t('admin.fiscalCalendar.colTitle') || 'Titre', t('admin.fiscalCalendar.colDueDate') || 'Echeance', t('admin.fiscalCalendar.colCategory') || 'Categorie', t('admin.fiscalCalendar.colAuthority') || 'Autorite', t('admin.fiscalCalendar.colStatus') || 'Statut', t('admin.fiscalCalendar.colAmount') || 'Montant'];
+    const rows = events.map(e => [e.title, e.dueDate, e.category, e.authority || '', e.status, String(e.amount || 0)]);
+    const csv = bom + [headers.join(','), ...rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `calendrier-fiscal-${selectedYear}.csv`; a.click();
+    URL.revokeObjectURL(url);
+    toast.success(t('admin.fiscalCalendar.exportSuccess') || `${events.length} evenements exportes`);
+  }, [events, selectedYear, t]);
 
   useRibbonAction('verifyBalances', handleRibbonVerifyBalances);
   useRibbonAction('auditTrail', handleRibbonAuditTrail);

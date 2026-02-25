@@ -339,12 +339,57 @@ export default function UpsellAdminPage() {
   }, [selectedConfig]);
 
   const onConversionStats = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    const enabled = configs.filter(c => c.isEnabled).length;
+    const disabled = configs.filter(c => !c.isEnabled).length;
+    const withQty = configs.filter(c => c.showQuantityDiscount).length;
+    const withSub = configs.filter(c => c.showSubscription).length;
+    const productOverrideCount = configs.filter(c => c.productId).length;
+    toast.success(t('admin.upsell.conversionStatsTitle') || 'Upsell Configuration Stats', {
+      description: [
+        `${t('admin.upsell.enabled') || 'Enabled'}: ${enabled} | ${t('admin.upsell.disabled') || 'Disabled'}: ${disabled}`,
+        `${t('admin.upsell.showQuantityDiscount') || 'Qty discount'}: ${withQty} | ${t('admin.upsell.showSubscription') || 'Subscription'}: ${withSub}`,
+        `${t('admin.upsell.globalConfig') || 'Global'}: ${globalConfig ? '1' : '0'} | ${t('admin.upsell.productOverrides') || 'Overrides'}: ${productOverrideCount}`,
+      ].join('\n'),
+      duration: 8000,
+    });
+  }, [configs, globalConfig, t]);
 
   const onExport = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    if (filteredConfigs.length === 0) {
+      toast.info(t('admin.upsell.noConfig') || 'No configurations to export');
+      return;
+    }
+    const bom = '\uFEFF';
+    const headers = [
+      t('admin.upsell.productId') || 'Product',
+      t('admin.upsell.enabled') || 'Enabled',
+      t('admin.upsell.showQuantityDiscount') || 'Qty Discount',
+      t('admin.upsell.showSubscription') || 'Subscription',
+      t('admin.upsell.displayRule') || 'Display Rule',
+      t('admin.upsell.suggestedQuantity') || 'Suggested Qty',
+      t('admin.upsell.suggestedFrequency') || 'Suggested Freq',
+      t('admin.upsell.updated') || 'Updated',
+    ];
+    const rows = filteredConfigs.map(c => [
+      c.productName || t('admin.upsell.globalLabel') || 'Global',
+      c.isEnabled ? 'Yes' : 'No',
+      c.showQuantityDiscount ? 'Yes' : 'No',
+      c.showSubscription ? 'Yes' : 'No',
+      c.displayRule,
+      c.suggestedQuantity?.toString() || '',
+      c.suggestedFrequency || '',
+      new Date(c.updatedAt).toLocaleDateString(locale),
+    ]);
+    const csv = bom + [headers.join(','), ...rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `upsell-configs-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(t('common.exported') || 'Exported');
+  }, [filteredConfigs, locale, t]);
 
   useRibbonAction('newRule', onNewRule);
   useRibbonAction('delete', onDeleteRibbon);

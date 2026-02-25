@@ -280,20 +280,121 @@ export default function ContenuPage() {
   }, [activeTab]);
 
   const handleRibbonResetDefaults = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    // Reload all content from server
+    setLoading(true);
+    Promise.all([fetchPages(), fetchFaqs()]).finally(() => setLoading(false));
+    toast.success(t('admin.content.contentReloaded') || 'Content reloaded from server');
+  }, [fetchPages, fetchFaqs, t]);
 
   const handleRibbonImportConfig = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        const imported = JSON.parse(text);
+        let created = 0;
+        if (activeTab === 'pages' && Array.isArray(imported.pages)) {
+          for (const p of imported.pages) {
+            try {
+              const res = await fetch('/api/admin/content/pages', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(p),
+              });
+              if (res.ok) created++;
+            } catch { /* skip */ }
+          }
+          fetchPages();
+          toast.success(`${created} ${t('admin.content.tabPages') || 'pages'} ${t('admin.content.imported') || 'imported'}`);
+        } else if (activeTab === 'faq' && Array.isArray(imported.faqs)) {
+          for (const f of imported.faqs) {
+            try {
+              const res = await fetch('/api/admin/content/faqs', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(f),
+              });
+              if (res.ok) created++;
+            } catch { /* skip */ }
+          }
+          fetchFaqs();
+          toast.success(`${created} ${t('admin.content.tabFaq') || 'FAQs'} ${t('admin.content.imported') || 'imported'}`);
+        } else {
+          toast.error(t('admin.content.importError') || 'Invalid format');
+        }
+      } catch {
+        toast.error(t('admin.content.importError') || 'Invalid JSON file');
+      }
+    };
+    input.click();
+  }, [activeTab, fetchPages, fetchFaqs, t]);
 
   const handleRibbonExportConfig = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    if (activeTab === 'pages') {
+      if (pages.length === 0) {
+        toast.info(t('admin.content.noPagesTitle') || 'No pages to export');
+        return;
+      }
+      const headers = [
+        t('admin.content.colPage') || 'Title',
+        t('admin.content.colUrl') || 'Slug',
+        t('admin.content.fieldExcerpt') || 'Excerpt',
+        t('admin.content.fieldTemplate') || 'Template',
+        t('admin.content.colStatus') || 'Status',
+        t('admin.content.colUpdated') || 'Updated',
+      ];
+      const rows = pages.map(p => [
+        p.title, `/${p.slug}`, p.excerpt || '', p.template,
+        p.isPublished ? 'Published' : 'Draft',
+        new Date(p.updatedAt).toLocaleDateString(locale),
+      ]);
+      const bom = '\uFEFF';
+      const csv = bom + [headers.join(','), ...rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = `pages-${new Date().toISOString().slice(0, 10)}.csv`; a.click();
+      URL.revokeObjectURL(url);
+    } else {
+      if (faqs.length === 0) {
+        toast.info(t('admin.content.noFaqsTitle') || 'No FAQs to export');
+        return;
+      }
+      const headers = [
+        t('admin.content.fieldCategory') || 'Category',
+        t('admin.content.fieldQuestion') || 'Question',
+        t('admin.content.fieldAnswer') || 'Answer',
+        t('admin.content.fieldSortOrder') || 'Order',
+        t('admin.content.colStatus') || 'Status',
+      ];
+      const rows = faqs.map(f => [
+        f.category, f.question, f.answer, f.sortOrder,
+        f.isPublished ? 'Published' : 'Draft',
+      ]);
+      const bom = '\uFEFF';
+      const csv = bom + [headers.join(','), ...rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = `faqs-${new Date().toISOString().slice(0, 10)}.csv`; a.click();
+      URL.revokeObjectURL(url);
+    }
+    toast.success(t('common.exported') || 'Exported');
+  }, [activeTab, pages, faqs, t, locale]);
 
   const handleRibbonTest = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    // Show content stats summary
+    const publishedPages = pages.filter(p => p.isPublished).length;
+    const publishedFaqs = faqs.filter(f => f.isPublished).length;
+    const categories = [...new Set(faqs.map(f => f.category))].length;
+    toast.success(
+      `${t('admin.content.tabPages') || 'Pages'}: ${publishedPages}/${pages.length} ${t('admin.content.published') || 'published'} | ` +
+      `${t('admin.content.tabFaq') || 'FAQs'}: ${publishedFaqs}/${faqs.length} ${t('admin.content.published') || 'published'} (${categories} ${t('admin.content.fieldCategory') || 'categories'})`,
+      { duration: 6000 }
+    );
+  }, [pages, faqs, t]);
 
   useRibbonAction('save', handleRibbonSave);
   useRibbonAction('resetDefaults', handleRibbonResetDefaults);

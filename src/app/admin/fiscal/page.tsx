@@ -258,7 +258,55 @@ export default function FiscalPage() {
   };
 
   const exportReport = (report: TaxReport, format: 'PDF' | 'CSV' | 'EXCEL') => {
-    toast.info(`${t('admin.fiscal.exportPdf').replace('PDF', format)} - ${report.region} - ${report.period}`);
+    if (format === 'CSV' || format === 'EXCEL') {
+      const headers = [
+        t('admin.fiscal.columns.region') || 'Region', 'Code',
+        t('admin.fiscal.columns.period') || 'Period',
+        t('admin.fiscal.columns.sales') || 'Total Sales',
+        t('admin.fiscal.columns.taxableAmount') || 'Taxable Amount',
+        t('admin.fiscal.columns.rate') || 'Tax Rate %',
+        t('admin.fiscal.columns.taxCollected') || 'Tax Collected',
+        t('admin.fiscal.columns.orders') || 'Orders',
+        t('admin.fiscal.columns.status') || 'Status',
+        t('admin.fiscal.columns.dueDate') || 'Due Date',
+      ];
+      const rows = [[
+        report.region, report.regionCode, report.period,
+        report.totalSales, report.taxableAmount, report.taxRate,
+        report.taxCollected, report.orderCount, report.status,
+        new Date(report.dueDate).toLocaleDateString(locale),
+      ]];
+      const bom = '\uFEFF';
+      const csv = bom + [headers.join(','), ...rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = `tax-report-${report.regionCode}-${report.period}.csv`; a.click();
+      URL.revokeObjectURL(url);
+      toast.success(t('common.exported') || 'Exported');
+    } else {
+      // PDF - generate a printable view
+      const w = window.open('', '_blank');
+      if (!w) { toast.error(t('admin.fiscal.exportError') || 'Popup blocked'); return; }
+      w.document.write(`<!DOCTYPE html><html><head><title>${t('admin.fiscal.modal.title').replace('{region}', report.region)} - ${report.period}</title>
+        <style>body{font-family:Arial,sans-serif;padding:40px;max-width:800px;margin:auto}
+        h1{font-size:20px}table{width:100%;border-collapse:collapse;margin-top:20px}
+        th,td{border:1px solid #ddd;padding:8px;text-align:left}th{background:#f5f5f5}
+        .right{text-align:right}.footer{margin-top:30px;font-size:12px;color:#888}</style></head><body>
+        <h1>${report.region} (${report.regionCode}) - ${report.period}</h1>
+        <table>
+          <tr><th>${t('admin.fiscal.modal.totalSales') || 'Total Sales'}</th><td class="right">${formatCurrency(report.totalSales)}</td></tr>
+          <tr><th>${t('admin.fiscal.modal.taxableAmount') || 'Taxable Amount'}</th><td class="right">${formatCurrency(report.taxableAmount)}</td></tr>
+          <tr><th>${t('admin.fiscal.modal.taxRate') || 'Tax Rate'}</th><td class="right">${report.taxRate}%</td></tr>
+          <tr><th>${t('admin.fiscal.modal.taxCollected') || 'Tax Collected'}</th><td class="right">${formatCurrency(report.taxCollected)}</td></tr>
+          <tr><th>${t('admin.fiscal.modal.orders') || 'Orders'}</th><td class="right">${report.orderCount}</td></tr>
+          <tr><th>${t('admin.fiscal.modal.currentStatus') || 'Status'}</th><td>${report.status}</td></tr>
+          <tr><th>${t('admin.fiscal.modal.dueDate') || 'Due Date'}</th><td>${new Date(report.dueDate).toLocaleDateString(locale)}</td></tr>
+        </table>
+        <p class="footer">${t('admin.fiscal.title') || 'Tax Report'} - ${new Date().toLocaleString(locale)}</p>
+        <script>window.print();</script></body></html>`);
+      w.document.close();
+      toast.success(t('admin.fiscal.exportPdf') || 'PDF generated');
+    }
   };
 
   const filteredReports = reports.filter(r => {
@@ -537,32 +585,114 @@ export default function FiscalPage() {
 
   // ─── Ribbon action handlers ───────────────────────────────
   const handleRibbonVerifyBalances = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    const totalCollected = taxSummary
+      ? taxSummary.tpsCollected + taxSummary.tvqCollected + taxSummary.tvhCollected
+      : monthlyReports.reduce((sum, r) => sum + r.taxCollected, 0);
+    const totalSalesAmt = taxSummary ? taxSummary.totalSales : monthlyReports.reduce((sum, r) => sum + r.totalSales, 0);
+    const filed = reports.filter(r => r.status === 'FILED' || r.status === 'PAID').length;
+    const pending = reports.filter(r => r.status === 'GENERATED' || r.status === 'DRAFT').length;
+    toast.success(
+      `${t('admin.fiscal.stats.totalSales').replace('{year}', String(selectedYear))}: ${formatCurrency(totalSalesAmt)} | ` +
+      `${t('admin.fiscal.stats.taxCollected') || 'Tax Collected'}: ${formatCurrency(totalCollected)} | ` +
+      `${t('admin.fiscal.tabs.reports') || 'Reports'}: ${reports.length} (${filed} ${t('admin.fiscal.annualTasks.statusCompleted') || 'filed'}, ${pending} ${t('admin.fiscal.stats.toDeclare') || 'pending'})`,
+      { duration: 8000 }
+    );
+  }, [reports, monthlyReports, taxSummary, selectedYear, t, formatCurrency]);
 
   const handleRibbonAuditTrail = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    window.open('/admin/audits', '_blank');
+  }, []);
 
   const handleRibbonClosePeriod = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    const generatedReports = reports.filter(r => r.status === 'GENERATED');
+    if (generatedReports.length === 0) {
+      toast.info(t('admin.fiscal.stats.toDeclare') || 'No reports to file');
+      return;
+    }
+    (async () => {
+      let filed = 0;
+      for (const r of generatedReports) {
+        await markAsFiled(r.id);
+        filed++;
+      }
+      toast.success(`${filed} ${t('admin.fiscal.tabs.reports') || 'reports'} ${t('admin.fiscal.columns.declare') || 'filed'}`, { duration: 5000 });
+    })();
+  }, [reports, t]);
 
   const handleRibbonReopen = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    if (!selectedReport) {
+      toast.info(t('admin.fiscal.modal.title').replace('{region}', '') || 'Select a report first via the details button');
+      return;
+    }
+    if (selectedReport.status === 'DRAFT' || selectedReport.status === 'GENERATED') {
+      toast.info(t('admin.fiscal.columns.status') || `Report is already in ${selectedReport.status} status`);
+      return;
+    }
+    (async () => {
+      try {
+        const res = await fetch('/api/accounting/tax-reports', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: selectedReport.id, status: 'GENERATED' }),
+        });
+        if (!res.ok) throw new Error('Error');
+        setReports(prev => prev.map(r =>
+          r.id === selectedReport.id ? { ...r, status: 'GENERATED' as const } : r
+        ));
+        setSelectedReport({ ...selectedReport, status: 'GENERATED' });
+        toast.success(t('admin.fiscal.columns.status') || 'Report reopened to GENERATED');
+      } catch {
+        toast.error(t('admin.fiscal.errorUpdatingStatus') || 'Failed to reopen report');
+      }
+    })();
+  }, [selectedReport, t]);
 
   const handleRibbonFiscalCalendar = useCallback(() => {
     setActiveTab('tasks');
   }, []);
 
   const handleRibbonTaxReturn = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    // Open the tax return generation: generate all reports for the current year, then switch to tasks tab
+    if (reports.length === 0) {
+      generateAllReports();
+      toast.info(t('admin.fiscal.generating') || 'Generating tax reports...');
+    } else {
+      setActiveTab('tasks');
+      toast.info(t('admin.fiscal.deadlines.title') || 'Showing tax deadlines and tasks');
+    }
+  }, [reports, t]);
 
   const handleRibbonExport = useCallback(() => {
-    toast.info(t('admin.fiscal.exportPdf'));
-  }, [t]);
+    if (filteredReports.length === 0) {
+      toast.info(t('admin.fiscal.monthlyReports.emptyTitle') || 'No reports to export');
+      return;
+    }
+    const headers = [
+      t('admin.fiscal.columns.region') || 'Region',
+      'Code',
+      t('admin.fiscal.columns.period') || 'Period',
+      t('admin.fiscal.columns.type') || 'Type',
+      t('admin.fiscal.columns.sales') || 'Total Sales',
+      t('admin.fiscal.columns.taxableAmount') || 'Taxable Amount',
+      t('admin.fiscal.columns.rate') || 'Tax Rate %',
+      t('admin.fiscal.columns.taxCollected') || 'Tax Collected',
+      t('admin.fiscal.columns.orders') || 'Orders',
+      t('admin.fiscal.columns.status') || 'Status',
+      t('admin.fiscal.columns.dueDate') || 'Due Date',
+    ];
+    const rows = filteredReports.map(r => [
+      r.region, r.regionCode, r.period, r.periodType,
+      r.totalSales, r.taxableAmount, r.taxRate, r.taxCollected,
+      r.orderCount, r.status, new Date(r.dueDate).toLocaleDateString(locale),
+    ]);
+    const bom = '\uFEFF';
+    const csv = bom + [headers.join(','), ...rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `fiscal-reports-${selectedYear}.csv`; a.click();
+    URL.revokeObjectURL(url);
+    toast.success(t('common.exported') || 'Exported');
+  }, [filteredReports, selectedYear, t, locale]);
 
   useRibbonAction('verifyBalances', handleRibbonVerifyBalances);
   useRibbonAction('auditTrail', handleRibbonAuditTrail);

@@ -124,7 +124,38 @@ export default function AgingPage() {
 
   // Ribbon actions
   const handleRibbonRefresh = useCallback(() => { fetchAgingReport(); }, [fetchAgingReport]);
-  const handleRibbonSendReminders = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonSendReminders = useCallback(async () => {
+    if (!report || report.byCustomer.length === 0) {
+      toast.warning(t('admin.aging.noOverdueCustomers') || 'Aucun client en retard de paiement');
+      return;
+    }
+    const overdueCustomers = report.byCustomer.filter(c => c.days31to60 > 0 || c.days61to90 > 0 || c.over90 > 0);
+    if (overdueCustomers.length === 0) {
+      toast.info(t('admin.aging.allCurrent') || 'Tous les comptes sont a jour');
+      return;
+    }
+    const confirmed = window.confirm(
+      (t('admin.aging.confirmSendReminders') || `Envoyer des rappels de paiement a ${overdueCustomers.length} client(s) en retard?`).replace('{count}', String(overdueCustomers.length))
+    );
+    if (!confirmed) return;
+    try {
+      const response = await fetch('/api/accounting/aging/reminders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: reportType,
+          customerIds: overdueCustomers.map(c => c.name),
+        }),
+      });
+      if (response.ok) {
+        toast.success(t('admin.aging.remindersSent') || `Rappels envoyes a ${overdueCustomers.length} client(s)`);
+      } else {
+        toast.error(t('admin.aging.remindersError') || 'Erreur lors de l\'envoi des rappels');
+      }
+    } catch {
+      toast.error(t('admin.aging.remindersError') || 'Erreur lors de l\'envoi des rappels');
+    }
+  }, [report, reportType, t]);
   const handleRibbonExport = useCallback(() => { exportCSV(); }, [exportCSV]);
   const handleRibbonPrint = useCallback(() => { window.print(); }, []);
 

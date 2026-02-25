@@ -283,8 +283,13 @@ export default function LogsPage() {
 
   // ─── Ribbon action handlers ───────────────────────────────
   const handleRibbonLaunch = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    setAutoRefresh((prev) => !prev);
+    toast.success(
+      autoRefresh
+        ? (t('admin.logs.autoRefreshDisabled') || 'Auto-refresh disabled')
+        : (t('admin.logs.autoRefreshEnabled') || 'Auto-refresh enabled')
+    );
+  }, [autoRefresh, t]);
 
   const handleRibbonRefresh = useCallback(() => {
     fetchLogs();
@@ -294,13 +299,40 @@ export default function LogsPage() {
     handleExportCSV();
   }, [handleExportCSV]);
 
-  const handleRibbonPurge = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+  const handleRibbonPurge = useCallback(async () => {
+    if (logs.length === 0) {
+      toast.info(t('admin.logs.emptyTitle') || 'No logs to purge');
+      return;
+    }
+    try {
+      const res = await fetch('/api/admin/logs', { method: 'DELETE' });
+      if (res.ok) {
+        const data = await res.json().catch(() => ({}));
+        toast.success(t('admin.logs.purgeSuccess') || `Purged ${data.deleted || 'all'} log entries`);
+        setLogs([]);
+        setSelectedLogId(null);
+      } else {
+        toast.error(t('common.errorOccurred'));
+      }
+    } catch {
+      toast.error(t('common.errorOccurred'));
+    }
+  }, [logs, t]);
 
   const handleRibbonSettings = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    const errorRate = stats.total > 0 ? ((stats.errors / stats.total) * 100).toFixed(1) : '0';
+    const warningRate = stats.total > 0 ? ((stats.warnings / stats.total) * 100).toFixed(1) : '0';
+    toast.success(t('admin.logs.statsTitle') || 'Log Statistics', {
+      description: [
+        `${t('admin.logs.total24h') || 'Total'}: ${stats.total}`,
+        `${t('admin.logs.errors') || 'Errors'}: ${stats.errors} (${errorRate}%)`,
+        `${t('admin.logs.warnings') || 'Warnings'}: ${stats.warnings} (${warningRate}%)`,
+        `${t('admin.logs.info') || 'Info'}: ${stats.info}`,
+        `${t('admin.logs.autoRefresh') || 'Auto-refresh'}: ${autoRefresh ? 'ON' : 'OFF'}`,
+      ].join('\n'),
+      duration: 8000,
+    });
+  }, [stats, autoRefresh, t]);
 
   useRibbonAction('launch', handleRibbonLaunch);
   useRibbonAction('refresh', handleRibbonRefresh);

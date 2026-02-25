@@ -217,10 +217,45 @@ export default function ParametresComptablesPage() {
 
   // Ribbon actions
   const handleRibbonSave = useCallback(() => { handleSave(); }, [handleSave]);
-  const handleRibbonResetDefaults = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleRibbonImportConfig = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleRibbonExportConfig = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleRibbonTest = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonResetDefaults = useCallback(() => {
+    setSettings({
+      companyName: '',
+      neq: '',
+      tpsNumber: '',
+      tvqNumber: '',
+      fiscalYearStart: 1,
+      accountingMethod: 'ACCRUAL',
+      defaultCurrency: 'CAD',
+      taxFilingFrequency: 'MONTHLY',
+      autoCreateSaleEntries: true,
+      autoReconcileStripe: true,
+      quickMethodEnabled: false,
+      quickMethodProvince: 'QC',
+      blockDeletionDuringRetention: true,
+    });
+    toast.success(t('admin.accountingSettings.resetDone') || 'Parametres reinitialises aux valeurs par defaut. Sauvegardez pour appliquer.');
+  }, [t]);
+  const handleRibbonImportConfig = useCallback(() => {
+    toast.info(t('admin.accountingSettings.importInfo') || 'L\'importation de configuration est disponible via les fonctions de restauration de sauvegarde.');
+  }, [t]);
+  const handleRibbonExportConfig = useCallback(() => {
+    const configData = JSON.stringify(settings, null, 2);
+    const blob = new Blob([configData], { type: 'application/json;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `parametres-comptabilite-${new Date().toISOString().split('T')[0]}.json`; a.click();
+    URL.revokeObjectURL(url);
+    toast.success(t('admin.accountingSettings.exportSuccess') || 'Configuration exportee en JSON');
+  }, [settings, t]);
+  const handleRibbonTest = useCallback(async () => {
+    try {
+      const res = await fetch('/api/accounting/settings');
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      toast.success(t('admin.accountingSettings.testSuccess') || `Connexion OK - Parametres charges: ${data.settings?.companyName || 'N/A'}`);
+    } catch {
+      toast.error(t('admin.accountingSettings.testError') || 'Erreur de connexion a l\'API des parametres');
+    }
+  }, [t]);
 
   useRibbonAction('save', handleRibbonSave);
   useRibbonAction('resetDefaults', handleRibbonResetDefaults);

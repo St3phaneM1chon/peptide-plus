@@ -180,11 +180,35 @@ export default function EtatsFinanciersPage() {
   }, [fetchFinancialData]);
 
   // Ribbon actions
-  const handleRibbonGenerateReport = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleRibbonSchedule = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleRibbonComparePeriods = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonGenerateReport = useCallback(() => {
+    fetchFinancialData();
+    toast.success(t('admin.financialStatements.reportRefreshed') || 'Etats financiers actualises');
+  }, [fetchFinancialData, t]);
+  const handleRibbonSchedule = useCallback(() => {
+    toast.info(t('admin.financialStatements.scheduleInfo') || 'La generation automatique des etats financiers sera disponible prochainement.');
+  }, [t]);
+  const handleRibbonComparePeriods = useCallback(() => {
+    window.location.href = '/admin/comptabilite/rapports';
+  }, []);
   const handleRibbonExportPdf = useCallback(() => { handleExportPdf(); }, [handleExportPdf]);
-  const handleRibbonExportExcel = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonExportExcel = useCallback(() => {
+    const { incomeStatement: is } = data;
+    const allEntries = [
+      ...Object.entries(is.revenue).map(([n, a]) => ['Revenus', n, String(a)]),
+      ...Object.entries(is.cogs).map(([n, a]) => ['CMV', n, String(a)]),
+      ...Object.entries(is.expenses).map(([n, a]) => ['Depenses', n, String(a)]),
+      ...Object.entries(is.other).map(([n, a]) => ['Autres', n, String(a)]),
+    ];
+    if (allEntries.length === 0) { toast.error(t('admin.financialStatements.noDataToExport') || 'Aucune donnee a exporter'); return; }
+    const bom = '\uFEFF';
+    const headers = [t('admin.financialStatements.colSection') || 'Section', t('admin.financialStatements.colAccount') || 'Compte', t('admin.financialStatements.colAmount') || 'Montant'];
+    const csv = bom + [headers.join(','), ...allEntries.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `etats-financiers-${selectedPeriod}.csv`; a.click();
+    URL.revokeObjectURL(url);
+    toast.success(t('admin.financialStatements.exportSuccess') || `${allEntries.length} lignes exportees`);
+  }, [data, selectedPeriod, t]);
   const handleRibbonPrint = useCallback(() => { window.print(); }, []);
 
   useRibbonAction('generateReport', handleRibbonGenerateReport);

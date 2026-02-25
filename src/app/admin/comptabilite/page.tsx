@@ -506,8 +506,43 @@ export default function ComptabiliteDashboard() {
 
   // -- Ribbon actions --
   const handleRefresh = useCallback(() => { setLoading(true); fetchDashboard(); }, [fetchDashboard]);
-  const handleExportReport = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleClosePeriod = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleExportReport = useCallback(() => {
+    const headers = [
+      t('admin.accounting.metric') || 'Indicateur',
+      t('admin.accounting.value') || 'Valeur',
+      t('admin.accounting.period') || 'Periode',
+    ];
+    const rows = [
+      [t('admin.accounting.treasury') || 'Tresorerie', String(stats.tresorerie), selectedPeriod],
+      [t('admin.accounting.monthlyRevenue') || 'CA mensuel', String(stats.caMonth), selectedPeriod],
+      [t('admin.accounting.grossMargin') || 'Marge brute', `${stats.margeBrute}%`, selectedPeriod],
+      [t('admin.accounting.netProfit') || 'Benefice net', String(stats.beneficeNet), selectedPeriod],
+      ['DSO', `${kpis.dso} ${t('admin.accounting.chartDays') || 'jours'}`, selectedPeriod],
+      ['DPO', `${kpis.dpo} ${t('admin.accounting.chartDays') || 'jours'}`, selectedPeriod],
+      [t('admin.accounting.currentRatioLabel') || 'Ratio courant', String(kpis.currentRatio.toFixed(2)), selectedPeriod],
+      ['AR', String(kpis.arOutstanding), selectedPeriod],
+      ['AP', String(kpis.apOutstanding), selectedPeriod],
+    ];
+    // Add monthly trends
+    if (monthlyTrends.length > 0) {
+      rows.push(['', '', '']);
+      rows.push([t('admin.accounting.revenueVsExpensesChart') || 'Tendances mensuelles', '', '']);
+      rows.push([t('admin.accounting.monthCol') || 'Mois', t('admin.accounting.revenueLabel') || 'Revenus', t('admin.accounting.expensesLabel') || 'Depenses']);
+      monthlyTrends.forEach(m => {
+        rows.push([m.month, String(m.revenue), String(m.expenses)]);
+      });
+    }
+    const bom = '\uFEFF';
+    const csv = bom + [headers.join(','), ...rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `rapport-comptabilite-${selectedPeriod}.csv`; a.click();
+    URL.revokeObjectURL(url);
+    toast.success(t('common.exported') || 'Rapport exporte avec succes');
+  }, [stats, kpis, monthlyTrends, selectedPeriod, t]);
+  const handleClosePeriod = useCallback(() => {
+    window.location.href = '/admin/comptabilite/cloture';
+  }, []);
   const handlePrint = useCallback(() => { window.print(); }, []);
 
   useRibbonAction('refresh', handleRefresh);

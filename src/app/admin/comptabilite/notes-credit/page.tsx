@@ -101,11 +101,69 @@ export default function NotesCreditPage() {
   const theme = sectionThemes.accounts;
 
   // -- Ribbon actions --
-  const handleNewCreditNote = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleDeleteAction = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleApply = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleCancel = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleExportPdf = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleNewCreditNote = useCallback(async () => {
+    try {
+      const res = await fetch('/api/accounting/credit-notes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ customerName: 'Nouveau client', reason: 'Correction', subtotal: 0, currency: 'CAD' }),
+      });
+      if (!res.ok) throw new Error();
+      await fetchCreditNotes();
+      toast.success(t('admin.creditNotes.created') || 'Note de credit creee en brouillon');
+    } catch {
+      toast.error(t('admin.creditNotes.createError') || 'Erreur lors de la creation de la note de credit');
+    }
+  }, [fetchCreditNotes, t]);
+  const handleDeleteAction = useCallback(() => {
+    if (!selectedNote) { toast.info(t('admin.creditNotes.selectFirst') || 'Selectionnez une note de credit dans le tableau.'); return; }
+    if (selectedNote.status === 'ISSUED') { toast.error(t('admin.creditNotes.cannotDeleteIssued') || 'Impossible de supprimer une note de credit emise. Annulez-la d\'abord.'); return; }
+    toast.info(t('admin.creditNotes.deleteConfirm') || `Suppression de ${selectedNote.creditNoteNumber} - fonctionnalite en cours d'integration.`);
+  }, [selectedNote, t]);
+  const handleApply = useCallback(async () => {
+    if (!selectedNote) { toast.info(t('admin.creditNotes.selectToApply') || 'Selectionnez une note de credit a emettre.'); return; }
+    try {
+      const res = await fetch('/api/accounting/credit-notes', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: selectedNote.id, status: 'ISSUED' }),
+      });
+      if (!res.ok) throw new Error();
+      await fetchCreditNotes();
+      setSelectedNote(null);
+      toast.success(t('admin.creditNotes.issued') || 'Note de credit emise avec succes');
+    } catch {
+      toast.error(t('admin.creditNotes.issueError') || 'Erreur lors de l\'emission');
+    }
+  }, [selectedNote, fetchCreditNotes, t]);
+  const handleCancel = useCallback(async () => {
+    if (!selectedNote) { toast.info(t('admin.creditNotes.selectToCancel') || 'Selectionnez une note de credit a annuler.'); return; }
+    try {
+      const res = await fetch('/api/accounting/credit-notes', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: selectedNote.id, status: 'VOID' }),
+      });
+      if (!res.ok) throw new Error();
+      await fetchCreditNotes();
+      setSelectedNote(null);
+      toast.success(t('admin.creditNotes.voided') || 'Note de credit annulee');
+    } catch {
+      toast.error(t('admin.creditNotes.voidError') || 'Erreur lors de l\'annulation');
+    }
+  }, [selectedNote, fetchCreditNotes, t]);
+  const handleExportPdf = useCallback(() => {
+    if (creditNotes.length === 0) { toast.error(t('admin.creditNotes.noDataToExport') || 'Aucune note de credit a exporter'); return; }
+    const bom = '\uFEFF';
+    const headers = [t('admin.creditNotes.colNumber') || 'Numero', t('admin.creditNotes.colCustomer') || 'Client', t('admin.creditNotes.colSubtotal') || 'Sous-total', t('admin.creditNotes.colTPS') || 'TPS', t('admin.creditNotes.colTVQ') || 'TVQ', t('admin.creditNotes.colTotal') || 'Total', t('admin.creditNotes.colStatus') || 'Statut', t('admin.creditNotes.colReason') || 'Raison'];
+    const rows = creditNotes.map(cn => [cn.creditNoteNumber, cn.customerName, String(cn.subtotal), String(cn.taxTps), String(cn.taxTvq), String(cn.total), cn.status, cn.reason]);
+    const csv = bom + [headers.join(','), ...rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `notes-credit-${new Date().toISOString().split('T')[0]}.csv`; a.click();
+    URL.revokeObjectURL(url);
+    toast.success(t('admin.creditNotes.exportSuccess') || `${creditNotes.length} notes de credit exportees`);
+  }, [creditNotes, t]);
   const handlePrint = useCallback(() => { window.print(); }, []);
 
   useRibbonAction('newCreditNote', handleNewCreditNote);

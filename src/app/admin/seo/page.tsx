@@ -297,16 +297,47 @@ export default function SEOPage() {
   }, []);
 
   const handleRibbonResetDefaults = useCallback(() => {
-    toast.info(t('common.comingSoon'));
+    setGlobalSettings({
+      siteName: 'BioCycle Peptides',
+      siteUrl: 'https://biocycle.ca',
+      defaultOgImage: '/og-image.jpg',
+      googleAnalyticsId: '',
+      googleTagManagerId: '',
+      facebookPixelId: '',
+    });
+    toast.success(t('admin.seo.resetSuccess') || 'Settings reset to defaults');
   }, [t]);
 
   const handleRibbonImportConfig = useCallback(() => {
-    toast.info(t('common.comingSoon'));
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        const config = JSON.parse(text);
+        if (config.siteName) setGlobalSettings((prev) => ({ ...prev, ...config }));
+        toast.success(t('admin.seo.importSuccess') || 'Configuration imported');
+      } catch {
+        toast.error(t('admin.seo.importError') || 'Invalid JSON file');
+      }
+    };
+    input.click();
   }, [t]);
 
   const handleRibbonExportConfig = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    const config = JSON.stringify(globalSettings, null, 2);
+    const blob = new Blob([config], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `seo-config-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(t('common.exported') || 'Exported');
+  }, [globalSettings, t]);
 
   const handleRibbonTest = useCallback(() => {
     generateSitemap();

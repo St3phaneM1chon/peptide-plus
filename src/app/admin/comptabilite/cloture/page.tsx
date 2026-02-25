@@ -127,12 +127,46 @@ export default function CloturePage() {
 
   // Ribbon actions
   const handleRibbonVerifyBalances = useCallback(() => { fetchChecklist(selectedPeriod); }, [fetchChecklist, selectedPeriod]);
-  const handleRibbonAuditTrail = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonAuditTrail = useCallback(() => {
+    window.location.href = '/admin/comptabilite/audit';
+  }, []);
   const handleRibbonClosePeriod = useCallback(() => { handleLockPeriod(); }, [handleLockPeriod]);
-  const handleRibbonReopen = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleRibbonFiscalCalendar = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleRibbonTaxReturn = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleRibbonExport = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonReopen = useCallback(async () => {
+    if (!selectedPeriod) { toast.info(t('admin.periodClosing.selectPeriod') || 'Selectionnez une periode a rouvrir.'); return; }
+    const period = periods.find(p => p.code === selectedPeriod);
+    if (!period || period.status !== 'LOCKED') { toast.error(t('admin.periodClosing.notLocked') || 'Seule une periode verrouillee peut etre rouverte.'); return; }
+    try {
+      const res = await fetch('/api/accounting/periods', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: selectedPeriod, status: 'OPEN' }),
+      });
+      if (!res.ok) throw new Error();
+      toast.success(t('admin.periodClosing.reopened') || `Periode ${selectedPeriod} rouverte`);
+      const firstCode = await fetchPeriods();
+      if (firstCode) fetchChecklist(firstCode);
+    } catch {
+      toast.error(t('admin.periodClosing.reopenError') || 'Erreur lors de la reouverture');
+    }
+  }, [selectedPeriod, periods, fetchPeriods, fetchChecklist, t]);
+  const handleRibbonFiscalCalendar = useCallback(() => {
+    window.location.href = '/admin/comptabilite/calendrier-fiscal';
+  }, []);
+  const handleRibbonTaxReturn = useCallback(() => {
+    window.location.href = '/admin/comptabilite/declaration-tps-tvq';
+  }, []);
+  const handleRibbonExport = useCallback(() => {
+    if (checklist.length === 0) { toast.error(t('admin.periodClosing.noChecklistToExport') || 'Aucune checklist a exporter'); return; }
+    const bom = '\uFEFF';
+    const headers = [t('admin.periodClosing.colTask') || 'Tache', t('admin.periodClosing.colCompleted') || 'Complete'];
+    const rows = checklist.map(item => [item.label || item.id, item.status === 'ok' ? 'Oui' : item.status]);
+    const csv = bom + [headers.join(','), ...rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `cloture-${selectedPeriod}.csv`; a.click();
+    URL.revokeObjectURL(url);
+    toast.success(t('admin.periodClosing.exportSuccess') || 'Checklist exportee');
+  }, [checklist, selectedPeriod, t]);
 
   useRibbonAction('verifyBalances', handleRibbonVerifyBalances);
   useRibbonAction('auditTrail', handleRibbonAuditTrail);

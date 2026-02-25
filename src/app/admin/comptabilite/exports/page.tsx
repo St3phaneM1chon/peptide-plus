@@ -163,10 +163,28 @@ export default function ExportsPage() {
 
   // Ribbon actions
   const handleRibbonGenerateReport = useCallback(() => { handleExport(); }, [handleExport]);
-  const handleRibbonSchedule = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleRibbonComparePeriods = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleRibbonExportPdf = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleRibbonExportExcel = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonSchedule = useCallback(() => {
+    toast.info(t('admin.exports.scheduleInfo') || 'La planification automatique des exports sera disponible prochainement.');
+  }, [t]);
+  const handleRibbonComparePeriods = useCallback(() => {
+    window.location.href = '/admin/comptabilite/etats-financiers';
+  }, []);
+  const handleRibbonExportPdf = useCallback(() => {
+    window.print();
+    toast.success(t('admin.exports.pdfInfo') || 'Utilisez la boite de dialogue pour enregistrer en PDF.');
+  }, [t]);
+  const handleRibbonExportExcel = useCallback(() => {
+    if (history.length === 0) { toast.error(t('admin.exports.noHistoryToExport') || 'Aucun historique a exporter'); return; }
+    const bom = '\uFEFF';
+    const headers = [t('admin.exports.colDate') || 'Date', t('admin.exports.colType') || 'Type', t('admin.exports.colFormat') || 'Format', t('admin.exports.colPeriod') || 'Periode', t('admin.exports.colRecords') || 'Enregistrements', t('admin.exports.colStatus') || 'Statut'];
+    const rows = history.map(j => [new Date(j.createdAt).toISOString().split('T')[0], j.type, j.format, j.dateRange, String(j.records), j.status]);
+    const csv = bom + [headers.join(','), ...rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `historique-exports-${new Date().toISOString().split('T')[0]}.csv`; a.click();
+    URL.revokeObjectURL(url);
+    toast.success(t('admin.exports.historyExported') || `${history.length} exports historiques sauvegardes`);
+  }, [history, t]);
   const handleRibbonPrint = useCallback(() => { window.print(); }, []);
 
   useRibbonAction('generateReport', handleRibbonGenerateReport);

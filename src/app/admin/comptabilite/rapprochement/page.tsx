@@ -174,12 +174,33 @@ export default function RapprochementPage() {
   const theme = sectionThemes.bank;
 
   // Ribbon actions
-  const handleRibbonSynchronize = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleRibbonImportStatement = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleRibbonReconcile = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonSynchronize = useCallback(() => {
+    window.location.href = '/admin/comptabilite/banques';
+  }, []);
+  const handleRibbonImportStatement = useCallback(() => {
+    window.location.href = '/admin/comptabilite/import-bancaire';
+  }, []);
+  const handleRibbonReconcile = useCallback(() => {
+    const unmatched = bankTransactions.filter(tx => !tx.matchedEntryId);
+    if (unmatched.length === 0) { toast.success(t('admin.reconciliation.allReconciled') || 'Toutes les transactions sont rapprochees!'); return; }
+    toast.info(t('admin.reconciliation.unmatchedCount') || `${unmatched.length} transactions non rapprochees restantes.`);
+  }, [bankTransactions, t]);
   const handleRibbonAutoMatch = useCallback(() => { handleAutoReconcile(); }, [handleAutoReconcile]);
-  const handleRibbonBankRules = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleRibbonExport = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonBankRules = useCallback(() => {
+    window.location.href = '/admin/comptabilite/regles-bancaires';
+  }, []);
+  const handleRibbonExport = useCallback(() => {
+    if (bankTransactions.length === 0) { toast.error(t('admin.reconciliation.noDataToExport') || 'Aucune donnee a exporter'); return; }
+    const bom = '\uFEFF';
+    const headers = [t('admin.reconciliation.colDate') || 'Date', t('admin.reconciliation.colDescription') || 'Description', t('admin.reconciliation.colAmount') || 'Montant', t('admin.reconciliation.colMatched') || 'Rapproche'];
+    const rows = bankTransactions.map(tx => [tx.date, tx.description, String(tx.amount), tx.matchedEntryId ? 'Oui' : 'Non']);
+    const csv = bom + [headers.join(','), ...rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `rapprochement-${selectedMonth}.csv`; a.click();
+    URL.revokeObjectURL(url);
+    toast.success(t('admin.reconciliation.exportSuccess') || `${bankTransactions.length} transactions exportees`);
+  }, [bankTransactions, selectedMonth, t]);
 
   useRibbonAction('synchronize', handleRibbonSynchronize);
   useRibbonAction('importStatement', handleRibbonImportStatement);

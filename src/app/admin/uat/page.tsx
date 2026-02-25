@@ -222,16 +222,78 @@ export default function UatPage() {
   }, [fetchRuns]);
 
   const handleRibbonExport = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    if (runs.length === 0) {
+      toast.info(t('admin.uat.noRuns') || 'No test runs to export');
+      return;
+    }
+    const headers = [
+      '#',
+      t('admin.uat.dateCol') || 'Date',
+      t('admin.uat.statusCol') || 'Status',
+      t('admin.uat.scopeCol') || 'Scope',
+      t('admin.uat.scenariosCol') || 'Scenarios',
+      t('admin.uat.passedCol') || 'Passed',
+      t('admin.uat.failedCol') || 'Failed',
+      'Skipped',
+      t('admin.uat.durationCol') || 'Duration (s)',
+      'Cleaned Up',
+    ];
+    const rows = runs.map(r => [
+      r.runNumber,
+      new Date(r.startedAt).toLocaleString(locale),
+      r.status,
+      r.canadaOnly ? 'Canada' : 'Global',
+      r.totalScenarios, r.passedCount, r.failedCount, r.skippedCount,
+      r.durationMs ? (r.durationMs / 1000).toFixed(1) : '-',
+      r.cleanedUp ? 'Yes' : 'No',
+    ]);
+    const bom = '\uFEFF';
+    const csv = bom + [headers.join(','), ...rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `uat-runs-${new Date().toISOString().slice(0, 10)}.csv`; a.click();
+    URL.revokeObjectURL(url);
+    toast.success(t('common.exported') || 'Exported');
+  }, [runs, t, locale]);
 
   const handleRibbonPurge = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    // Clean up all completed, non-running runs
+    const completedRuns = runs.filter(r => r.status !== 'RUNNING' && !r.cleanedUp);
+    if (completedRuns.length === 0) {
+      toast.info(t('admin.uat.cleanedUp') || 'No runs to clean up');
+      return;
+    }
+    (async () => {
+      let cleaned = 0;
+      for (const run of completedRuns) {
+        try {
+          const res = await fetch(`/api/admin/uat/${run.id}`, { method: 'DELETE', headers: addCSRFHeader() });
+          if (res.ok) cleaned++;
+        } catch { /* skip */ }
+      }
+      fetchRuns();
+      toast.success(`${cleaned}/${completedRuns.length} ${t('admin.uat.cleanupDone') || 'runs cleaned up'}`);
+    })();
+  }, [runs, fetchRuns, t]);
 
   const handleRibbonSettings = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    // Show UAT stats summary
+    const total = runs.length;
+    const completed = runs.filter(r => r.status === 'COMPLETED').length;
+    const failed = runs.filter(r => r.status === 'FAILED').length;
+    const avgPass = total > 0
+      ? (runs.reduce((s, r) => s + r.passedCount, 0) / total).toFixed(1)
+      : '0';
+    const avgDuration = runs.filter(r => r.durationMs).length > 0
+      ? (runs.filter(r => r.durationMs).reduce((s, r) => s + (r.durationMs || 0), 0) / runs.filter(r => r.durationMs).length / 1000).toFixed(1)
+      : '0';
+    toast.success(
+      `${t('admin.uat.runHistory') || 'Runs'}: ${total} (${completed} ${t('admin.uat.passedCol') || 'passed'}, ${failed} ${t('admin.uat.failedCol') || 'failed'}) | ` +
+      `${t('admin.uat.passedLabel') || 'Avg passed'}: ${avgPass} | ` +
+      `${t('admin.uat.durationCol') || 'Avg duration'}: ${avgDuration}s`,
+      { duration: 8000 }
+    );
+  }, [runs, t]);
 
   useRibbonAction('launch', handleRibbonLaunch);
   useRibbonAction('refresh', handleRibbonRefresh);

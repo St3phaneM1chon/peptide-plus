@@ -157,8 +157,28 @@ export default function OCRPage() {
   const handleScanDocument = useCallback(() => { fileInputRef.current?.click(); }, []);
   const handleUpload = useCallback(() => { fileInputRef.current?.click(); }, []);
   const handleValidateReading = useCallback(() => { handleSaveInvoice(); }, [extractedData]);
-  const handleCorrect = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleScanHistory = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleCorrect = useCallback(() => {
+    if (!extractedData) {
+      toast.warning(t('admin.ocrScan.noDataToCorrect') || 'Aucune donnee a corriger. Scannez une facture d\'abord.');
+      return;
+    }
+    // Focus the first editable input field in the extracted data form
+    const firstInput = document.querySelector<HTMLInputElement>('.space-y-4 input[type="text"], .space-y-4 input[type="number"], .space-y-4 input[type="date"]');
+    if (firstInput) {
+      firstInput.focus();
+      firstInput.select();
+      toast.info(t('admin.ocrScan.correctMode') || 'Mode correction actif. Modifiez les champs necessaires.');
+    }
+  }, [extractedData, t]);
+  const handleScanHistory = useCallback(() => {
+    loadHistory();
+    // Scroll to history section
+    const historySection = document.querySelector('[class*="recentScans"], [class*="divide-y"]');
+    if (historySection) {
+      historySection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    toast.info(t('admin.ocrScan.historyRefreshed') || 'Historique des scans actualise');
+  }, [t]);
 
   useRibbonAction('scanDocument', handleScanDocument);
   useRibbonAction('upload', handleUpload);

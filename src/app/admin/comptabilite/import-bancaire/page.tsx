@@ -238,13 +238,30 @@ export default function BankImportPage() {
 
   // Ribbon actions
   const handleRibbonSynchronize = useCallback(() => {
-    if (connections.length > 0) { handleSync(connections[0].id); } else { toast.info(t('common.comingSoon')); }
+    if (connections.length > 0) { handleSync(connections[0].id); } else { toast.info(t('admin.bankImport.noConnections') || 'Aucune connexion bancaire configuree. Ajoutez un compte bancaire d\'abord.'); }
   }, [connections, handleSync, t]);
   const handleRibbonImportStatement = useCallback(() => { handleImportSelected(); }, [handleImportSelected]);
-  const handleRibbonReconcile = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleRibbonAutoMatch = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleRibbonBankRules = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleRibbonExport = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonReconcile = useCallback(() => {
+    window.location.href = '/admin/comptabilite/rapprochement';
+  }, []);
+  const handleRibbonAutoMatch = useCallback(() => {
+    window.location.href = '/admin/comptabilite/rapprochement';
+  }, []);
+  const handleRibbonBankRules = useCallback(() => {
+    window.location.href = '/admin/comptabilite/regles-bancaires';
+  }, []);
+  const handleRibbonExport = useCallback(() => {
+    if (importedTransactions.length === 0) { toast.error(t('admin.bankImport.noDataToExport') || 'Aucune transaction importee a exporter'); return; }
+    const bom = '\uFEFF';
+    const headers = [t('admin.bankImport.colDate') || 'Date', t('admin.bankImport.colDescription') || 'Description', t('admin.bankImport.colAmount') || 'Montant', t('admin.bankImport.colCategory') || 'Categorie'];
+    const rows = importedTransactions.map(tx => [tx.date, tx.description, String(tx.amount), tx.category || '']);
+    const csv = bom + [headers.join(','), ...rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `import-bancaire-${new Date().toISOString().split('T')[0]}.csv`; a.click();
+    URL.revokeObjectURL(url);
+    toast.success(t('admin.bankImport.exportSuccess') || `${importedTransactions.length} transactions exportees`);
+  }, [importedTransactions, t]);
 
   useRibbonAction('synchronize', handleRibbonSynchronize);
   useRibbonAction('importStatement', handleRibbonImportStatement);

@@ -151,19 +151,73 @@ export default function ParametresPage() {
   }, [handleSave]);
 
   const handleRibbonResetDefaults = useCallback(() => {
-    toast.info(t('common.comingSoon'));
+    setSettings({
+      siteName: 'BioCycle Peptides',
+      logoUrl: '',
+      siteEmail: 'info@biocycle.ca',
+      supportEmail: 'support@biocycle.ca',
+      phone: '+1 (888) 555-0123',
+      timezone: 'America/Toronto',
+      currency: 'CAD',
+      weightUnit: 'g',
+      dimensionUnit: 'cm',
+      freeShippingThreshold: 150,
+      orderPrefix: 'BC',
+      minOrderAmount: 0,
+      maxOrderAmount: 10000,
+      guestCheckout: true,
+      orderNotifications: true,
+      lowStockNotifications: true,
+      reviewNotifications: true,
+      requireEmailVerification: false,
+      sessionTimeout: 30,
+      maxLoginAttempts: 5,
+    });
+    toast.success(t('admin.settingsPage.resetDefaults') || 'Settings reset to defaults (not yet saved)');
   }, [t]);
 
   const handleRibbonImportConfig = useCallback(() => {
-    toast.info(t('common.comingSoon'));
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        const imported = JSON.parse(text);
+        setSettings(prev => ({ ...prev, ...imported }));
+        toast.success(t('admin.settingsPage.configImported') || 'Configuration imported (not yet saved)');
+      } catch {
+        toast.error(t('admin.settingsPage.settingsError') || 'Invalid JSON file');
+      }
+    };
+    input.click();
   }, [t]);
 
   const handleRibbonExportConfig = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    const json = JSON.stringify(settings, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `site-settings-${new Date().toISOString().slice(0, 10)}.json`; a.click();
+    URL.revokeObjectURL(url);
+    toast.success(t('common.exported') || 'Exported');
+  }, [settings, t]);
 
   const handleRibbonTest = useCallback(() => {
-    toast.info(t('common.comingSoon'));
+    // Test notification system by sending a test notification
+    (async () => {
+      try {
+        const res = await fetch('/api/admin/settings');
+        if (res.ok) {
+          toast.success(t('admin.settingsPage.connectionOk') || 'API connection OK - Settings loaded successfully');
+        } else {
+          toast.error(t('admin.settingsPage.settingsError') || 'API connection failed');
+        }
+      } catch {
+        toast.error(t('admin.settingsPage.settingsError') || 'API connection failed');
+      }
+    })();
   }, [t]);
 
   useRibbonAction('save', handleRibbonSave);

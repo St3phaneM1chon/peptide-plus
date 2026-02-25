@@ -300,12 +300,39 @@ export default function ImmobilisationsPage() {
   // ---------------------------------------------------------------------------
 
   const handleRibbonNewEntry = useCallback(() => { openCreate(); }, []);
-  const handleRibbonDelete = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleRibbonValidate = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleRibbonCancel = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleRibbonDuplicate = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonDelete = useCallback(() => {
+    if (!editingAsset) { toast.info(t('admin.fixedAssets.selectToDelete') || 'Selectionnez une immobilisation dans le tableau pour la supprimer.'); return; }
+    if (editingAsset.status === 'DISPOSED') { toast.error(t('admin.fixedAssets.alreadyDisposed') || 'Cette immobilisation est deja disposee.'); return; }
+    toast.info(t('admin.fixedAssets.useDisposeAction') || 'Utilisez la fonction "Disposer" pour retirer une immobilisation.');
+  }, [editingAsset, t]);
+  const handleRibbonValidate = useCallback(() => {
+    const totalCost = assets.reduce((s, a) => s + a.acquisitionCost, 0);
+    const totalBookValue = assets.reduce((s, a) => s + a.currentBookValue, 0);
+    const totalDepreciation = assets.reduce((s, a) => s + a.accumulatedDepreciation, 0);
+    toast.success(t('admin.fixedAssets.validationSummary') || `${assets.length} immobilisations - Cout: ${totalCost.toLocaleString()} CAD, Valeur comptable: ${totalBookValue.toLocaleString()} CAD, Amortissement: ${totalDepreciation.toLocaleString()} CAD`);
+  }, [assets, t]);
+  const handleRibbonCancel = useCallback(() => {
+    setEditingAsset(null);
+    toast.info(t('admin.fixedAssets.selectionCleared') || 'Selection annulee');
+  }, [t]);
+  const handleRibbonDuplicate = useCallback(() => {
+    if (!editingAsset) { toast.info(t('admin.fixedAssets.selectToDuplicate') || 'Selectionnez une immobilisation a dupliquer.'); return; }
+    openCreate();
+    toast.info(t('admin.fixedAssets.duplicateInfo') || `Formulaire ouvert avec les donnees de ${editingAsset.name} comme base.`);
+  }, [editingAsset, t]);
   const handleRibbonPrint = useCallback(() => { window.print(); }, []);
-  const handleRibbonExport = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonExport = useCallback(() => {
+    if (assets.length === 0) { toast.error(t('admin.fixedAssets.noDataToExport') || 'Aucune immobilisation a exporter'); return; }
+    const bom = '\uFEFF';
+    const headers = [t('admin.fixedAssets.colName') || 'Nom', t('admin.fixedAssets.colAssetNumber') || 'Numero', t('admin.fixedAssets.colCcaClass') || 'Classe CCA', t('admin.fixedAssets.colAcquisitionDate') || 'Date acquisition', t('admin.fixedAssets.colAcquisitionCost') || 'Cout acquisition', t('admin.fixedAssets.colBookValue') || 'Valeur comptable', t('admin.fixedAssets.colDepreciation') || 'Amortissement cumule', t('admin.fixedAssets.colStatus') || 'Statut'];
+    const rows = assets.map(a => [a.name, a.assetNumber, String(a.ccaClass), a.acquisitionDate, String(a.acquisitionCost), String(a.currentBookValue), String(a.accumulatedDepreciation), a.status]);
+    const csv = bom + [headers.join(','), ...rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `immobilisations-${new Date().toISOString().split('T')[0]}.csv`; a.click();
+    URL.revokeObjectURL(url);
+    toast.success(t('admin.fixedAssets.exportSuccess') || `${assets.length} immobilisations exportees`);
+  }, [assets, t]);
 
   useRibbonAction('newEntry', handleRibbonNewEntry);
   useRibbonAction('delete', handleRibbonDelete);

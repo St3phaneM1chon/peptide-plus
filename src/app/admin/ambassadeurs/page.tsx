@@ -409,30 +409,80 @@ export default function AmbassadeursPage() {
 
   // ─── Ribbon action handlers ────────────────────────────────
   const handleRibbonNewAmbassador = useCallback(() => {
-    toast.info(t('common.comingSoon'));
+    setShowApplicationsModal(true);
+    toast.info(t('admin.ambassadors.applicationsTitle') || 'Review pending applications or invite a new ambassador');
   }, [t]);
 
   const handleRibbonApproveCandidacy = useCallback(() => {
-    if (!selectedAmbassador) { toast.info(t('common.comingSoon')); return; }
+    if (!selectedAmbassador) { toast.info(t('admin.ambassadors.emptyTitle') || 'Select an ambassador first'); return; }
     updateStatus(selectedAmbassador.id, 'ACTIVE');
   }, [selectedAmbassador, t]);
 
   const handleRibbonDelete = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    if (!selectedAmbassador) { toast.info(t('admin.ambassadors.emptyTitle') || 'Select an ambassador first'); return; }
+    setConfirmAction({
+      isOpen: true,
+      title: t('admin.ambassadors.confirmSuspendTitle') || 'Suspend ambassador?',
+      message: t('admin.ambassadors.confirmSuspendMessage') || `Are you sure you want to suspend ${selectedAmbassador.userName}? They will no longer earn commissions.`,
+      variant: 'danger',
+      onConfirm: () => {
+        updateStatus(selectedAmbassador.id, 'SUSPENDED');
+        setConfirmAction(prev => ({ ...prev, isOpen: false }));
+      },
+    });
+  }, [selectedAmbassador, t]);
 
   const handleRibbonManageCommission = useCallback(() => {
-    if (!selectedAmbassador) { toast.info(t('common.comingSoon')); return; }
+    if (!selectedAmbassador) { toast.info(t('admin.ambassadors.emptyTitle') || 'Select an ambassador first'); return; }
     openEditCommission(selectedAmbassador);
   }, [selectedAmbassador, t]);
 
   const handleRibbonSalesStats = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    const active = ambassadors.filter(a => a.status === 'ACTIVE').length;
+    const totalSales = ambassadors.reduce((s, a) => s + a.totalSales, 0);
+    const totalEarnings = ambassadors.reduce((s, a) => s + a.totalEarnings, 0);
+    const pendingPayout = ambassadors.reduce((s, a) => s + a.pendingPayout, 0);
+    const avgCommission = ambassadors.length > 0
+      ? (ambassadors.reduce((s, a) => s + a.commissionRate, 0) / ambassadors.length).toFixed(1)
+      : '0';
+    toast.success(
+      `${t('admin.ambassadors.activeAmbassadors') || 'Active'}: ${active} | ` +
+      `${t('admin.ambassadors.generatedSales') || 'Sales'}: ${formatCurrency(totalSales)} | ` +
+      `${t('admin.ambassadors.commissionsPaid') || 'Commissions'}: ${formatCurrency(totalEarnings)} | ` +
+      `${t('admin.ambassadors.pendingPayouts') || 'Pending'}: ${formatCurrency(pendingPayout)} | ` +
+      `${t('admin.ambassadors.commissionLabel') || 'Avg rate'}: ${avgCommission}%`,
+      { duration: 8000 }
+    );
+  }, [ambassadors, t, formatCurrency]);
 
   const handleRibbonExport = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    if (ambassadors.length === 0) {
+      toast.info(t('admin.ambassadors.emptyTitle') || 'No ambassadors to export');
+      return;
+    }
+    const headers = [
+      t('admin.ambassadors.referralCode') || 'Referral Code',
+      'Name', 'Email', 'Tier', 'Status',
+      t('admin.ambassadors.commissionLabel') || 'Commission %',
+      t('admin.ambassadors.referralsLabel') || 'Referrals',
+      t('admin.ambassadors.generatedSalesLabel') || 'Total Sales',
+      t('admin.ambassadors.totalEarningsLabel') || 'Total Earnings',
+      t('admin.ambassadors.pendingPayoutLabel') || 'Pending Payout',
+      t('admin.ambassadors.joinedAt') || 'Joined At',
+    ];
+    const rows = ambassadors.map(a => [
+      a.referralCode, a.userName, a.userEmail, a.tier, a.status,
+      a.commissionRate, a.totalReferrals, a.totalSales, a.totalEarnings,
+      a.pendingPayout, new Date(a.joinedAt).toLocaleDateString(locale),
+    ]);
+    const bom = '\uFEFF';
+    const csv = bom + [headers.join(','), ...rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `ambassadors-${new Date().toISOString().slice(0, 10)}.csv`; a.click();
+    URL.revokeObjectURL(url);
+    toast.success(t('common.exported') || 'Exported');
+  }, [ambassadors, t, locale]);
 
   useRibbonAction('newAmbassador', handleRibbonNewAmbassador);
   useRibbonAction('approveCandidacy', handleRibbonApproveCandidacy);

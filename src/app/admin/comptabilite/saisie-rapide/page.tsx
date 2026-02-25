@@ -390,13 +390,33 @@ export default function QuickEntryPage() {
   const sortedTemplates = [...templates].sort((a, b) => b.frequency - a.frequency);
 
   // -- Ribbon actions --
-  const handleNewEntry = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleDeleteAction = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleNewEntry = useCallback(() => {
+    setSelectedTemplate(null);
+    toast.info(t('admin.quickEntry.selectTemplate') || 'Selectionnez un modele ci-dessous pour creer une nouvelle ecriture.');
+  }, [t]);
+  const handleDeleteAction = useCallback(() => {
+    if (recentEntries.length === 0) { toast.info(t('admin.quickEntry.noRecentEntries') || 'Aucune ecriture recente a supprimer.'); return; }
+    toast.info(t('admin.quickEntry.deleteInfo') || 'Selectionnez une ecriture recente pour la supprimer.');
+  }, [recentEntries, t]);
   const handleValidate = useCallback(() => { if (selectedTemplate) handleSave(true); }, [selectedTemplate]);
   const handleCancel = useCallback(() => { setSelectedTemplate(null); }, []);
-  const handleDuplicate = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleDuplicate = useCallback(() => {
+    if (!selectedTemplate) { toast.info(t('admin.quickEntry.selectToDuplicate') || 'Selectionnez un modele pour le dupliquer.'); return; }
+    toast.success(t('admin.quickEntry.duplicateReady') || `Modele "${selectedTemplate.name}" selectionne. Modifiez les valeurs et validez.`);
+  }, [selectedTemplate, t]);
   const handlePrint = useCallback(() => { window.print(); }, []);
-  const handleExport = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleExport = useCallback(() => {
+    if (recentEntries.length === 0) { toast.error(t('admin.quickEntry.noDataToExport') || 'Aucune ecriture a exporter'); return; }
+    const bom = '\uFEFF';
+    const headers = [t('admin.quickEntry.colDate') || 'Date', t('admin.quickEntry.colDescription') || 'Description', t('admin.quickEntry.colAmount') || 'Montant', t('admin.quickEntry.colStatus') || 'Statut'];
+    const rows = recentEntries.map(e => [new Date(e.date).toISOString().split('T')[0], e.description, String(e.amount), e.status]);
+    const csv = bom + [headers.join(','), ...rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `ecritures-rapides-${new Date().toISOString().split('T')[0]}.csv`; a.click();
+    URL.revokeObjectURL(url);
+    toast.success(t('admin.quickEntry.exportSuccess') || `${recentEntries.length} ecritures exportees`);
+  }, [recentEntries, t]);
 
   useRibbonAction('newEntry', handleNewEntry);
   useRibbonAction('delete', handleDeleteAction);

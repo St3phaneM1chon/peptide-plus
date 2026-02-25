@@ -130,16 +130,50 @@ export default function NavigateurPage() {
   }, [fetchSections]);
 
   const handleRibbonExport = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    if (sections.length === 0) {
+      toast.info(t('admin.webNavigator.noSections') || 'No sections to export');
+      return;
+    }
+    const exportData = JSON.stringify(sections, null, 2);
+    const blob = new Blob([exportData], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `navigation-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(t('common.exported') || 'Exported');
+  }, [sections, t]);
 
-  const handleRibbonPurge = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+  const handleRibbonPurge = useCallback(async () => {
+    const inactiveSections = sections.filter(s => !s.isActive);
+    if (inactiveSections.length === 0) {
+      toast.info(t('admin.webNavigator.noInactiveSections') || 'No inactive sections to purge');
+      return;
+    }
+    try {
+      for (const sec of inactiveSections) {
+        await fetch(`/api/admin/nav-sections/${sec.id}`, { method: 'DELETE' });
+      }
+      toast.success(t('admin.webNavigator.purgeSuccess') || `Purged ${inactiveSections.length} inactive section(s)`);
+      setSelectedSection(null);
+      setSelectedSubSection(null);
+      await fetchSections();
+    } catch {
+      toast.error(t('common.errorOccurred'));
+    }
+  }, [sections, t, fetchSections]);
 
   const handleRibbonSettings = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    const totalSections = sections.length;
+    const totalSubSections = sections.reduce((sum, s) => sum + s.subSections.length, 0);
+    const totalPages = sections.reduce((sum, s) => sum + s.subSections.reduce((ss, sub) => ss + sub.pages.length, 0), 0);
+    const activeSections = sections.filter(s => s.isActive).length;
+    toast.success(t('admin.webNavigator.statsTitle') || 'Navigation Stats', {
+      description: `${t('admin.webNavigator.sections') || 'Sections'}: ${totalSections} (${activeSections} ${t('admin.promotions.statActive') || 'active'}) | ${t('admin.webNavigator.subSections') || 'Sub-sections'}: ${totalSubSections} | ${t('admin.webNavigator.pages') || 'Pages'}: ${totalPages}`,
+      duration: 6000,
+    });
+  }, [sections, t]);
 
   useRibbonAction('launch', handleRibbonLaunch);
   useRibbonAction('refresh', handleRibbonRefresh);

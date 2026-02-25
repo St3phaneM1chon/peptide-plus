@@ -162,11 +162,24 @@ export default function DeclarationTpsTvqPage() {
   };
 
   // Ribbon actions
-  const handleRibbonVerifyBalances = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleRibbonAuditTrail = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleRibbonClosePeriod = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleRibbonReopen = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleRibbonFiscalCalendar = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonVerifyBalances = useCallback(() => {
+    if (!declaration) { toast.info(t('admin.taxDeclaration.noData') || 'Aucune declaration chargee'); return; }
+    const netTps = declaration.gst.net;
+    const netTvq = declaration.qst.net;
+    toast.success(t('admin.taxDeclaration.balanceCheck') || `TPS net: ${netTps.toFixed(2)} CAD | TVQ net: ${netTvq.toFixed(2)} CAD | Total a remettre: ${declaration.totalRemittance.toFixed(2)} CAD`);
+  }, [declaration, t]);
+  const handleRibbonAuditTrail = useCallback(() => {
+    window.location.href = '/admin/comptabilite/audit';
+  }, []);
+  const handleRibbonClosePeriod = useCallback(() => {
+    window.location.href = '/admin/comptabilite/cloture';
+  }, []);
+  const handleRibbonReopen = useCallback(() => {
+    toast.info(t('admin.taxDeclaration.reopenInfo') || 'Pour rouvrir une periode, accedez a la page de cloture des periodes.');
+  }, [t]);
+  const handleRibbonFiscalCalendar = useCallback(() => {
+    window.location.href = '/admin/comptabilite/calendrier-fiscal';
+  }, []);
   const handleRibbonTaxReturn = useCallback(() => { fetchDeclaration(); }, [fetchDeclaration]);
   const handleRibbonExport = useCallback(() => { handleExportCsv(); }, [handleExportCsv]);
 

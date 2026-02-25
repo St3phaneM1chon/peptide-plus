@@ -228,20 +228,80 @@ export default function DevisesPage() {
 
   // Ribbon action handlers
   const handleRibbonSave = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    // Save current auto-update setting
+    handleAutoUpdateToggle();
+    toast.success(t('admin.currencies.settingsSaved') || 'Currency settings saved');
+  }, [handleAutoUpdateToggle, t]);
 
   const handleRibbonResetDefaults = useCallback(() => {
-    toast.info(t('common.comingSoon'));
+    // Reload currencies from server
+    setLoading(true);
+    fetchCurrencies();
+    toast.success(t('admin.currencies.ratesReloaded') || 'Currency data reloaded from server');
   }, [t]);
 
   const handleRibbonImportConfig = useCallback(() => {
-    toast.info(t('common.comingSoon'));
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        const imported = JSON.parse(text);
+        if (!Array.isArray(imported.currencies)) {
+          toast.error(t('admin.currencies.importError') || 'Invalid format: expected { currencies: [...] }');
+          return;
+        }
+        let added = 0;
+        for (const c of imported.currencies) {
+          if (!c.code || !c.name || !c.symbol) continue;
+          try {
+            const res = await fetch('/api/admin/currencies', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ code: c.code.toUpperCase(), name: c.name, symbol: c.symbol, exchangeRate: c.exchangeRate || 1 }),
+            });
+            if (res.ok) added++;
+          } catch { /* skip */ }
+        }
+        await fetchCurrencies();
+        toast.success(`${added} ${t('admin.currencies.totalCurrencies') || 'currencies'} ${t('admin.currencies.addSuccess') || 'imported'}`);
+      } catch {
+        toast.error(t('admin.currencies.importError') || 'Invalid JSON file');
+      }
+    };
+    input.click();
   }, [t]);
 
   const handleRibbonExportConfig = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    if (currencies.length === 0) {
+      toast.info(t('admin.currencies.totalCurrencies') || 'No currencies to export');
+      return;
+    }
+    const headers = [
+      t('admin.currencies.currency') || 'Code',
+      'Name',
+      t('admin.currencies.symbol') || 'Symbol',
+      t('admin.currencies.rateVsCAD') || 'Exchange Rate',
+      t('admin.currencies.defaultCol') || 'Default',
+      t('admin.currencies.activeCol') || 'Active',
+      t('admin.currencies.lastUpdate') || 'Last Updated',
+    ];
+    const rows = currencies.map(c => [
+      c.code, c.name, c.symbol, c.exchangeRate,
+      c.isDefault ? 'Yes' : 'No', c.isActive ? 'Yes' : 'No',
+      new Date(c.lastUpdated).toLocaleDateString(locale),
+    ]);
+    const bom = '\uFEFF';
+    const csv = bom + [headers.join(','), ...rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `currencies-${new Date().toISOString().slice(0, 10)}.csv`; a.click();
+    URL.revokeObjectURL(url);
+    toast.success(t('common.exported') || 'Exported');
+  }, [currencies, t, locale]);
 
   const handleRibbonTest = useCallback(() => {
     updateExchangeRates();

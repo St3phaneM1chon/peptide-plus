@@ -667,20 +667,57 @@ export default function TranslationsDashboard() {
 
   // Ribbon action handlers
   const handleRibbonSave = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    // Trigger translation for all models with untranslated content
+    const modelsWithWork = Object.entries(overview)
+      .filter(([, cov]) => cov.untranslated > 0 || cov.partiallyTranslated > 0)
+      .map(([model]) => model);
+    if (modelsWithWork.length === 0) {
+      toast.success(t('admin.translationsDashboard.globalCoverage') || 'All content is fully translated!');
+      return;
+    }
+    setShowWizard(true);
+  }, [overview, t]);
 
   const handleRibbonResetDefaults = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    setLoading(true);
+    fetchStatus();
+    toast.success(t('admin.translationsDashboard.refresh') || 'Translation stats refreshed');
+  }, [fetchStatus, t]);
 
   const handleRibbonImportConfig = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    // Trigger re-fetch of queue details to show latest jobs
+    fetchQueue();
+    setShowQueue(true);
+    toast.info(t('admin.translationsDashboard.translationQueue') || 'Queue refreshed');
+  }, [fetchQueue, t]);
 
   const handleRibbonExportConfig = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    // Export translation coverage report as CSV
+    const entries = Object.entries(overview);
+    if (entries.length === 0) {
+      toast.info(t('admin.translationsDashboard.loadingStats') || 'No data to export');
+      return;
+    }
+    const headers = [
+      t('admin.translationsDashboard.colType') || 'Model',
+      t('admin.translationsDashboard.colTotal') || 'Total',
+      t('admin.translationsDashboard.colTranslated') || 'Translated',
+      t('admin.translationsDashboard.colPartial') || 'Partial',
+      t('admin.translationsDashboard.colUntranslated') || 'Untranslated',
+      t('admin.translationsDashboard.colCoverage') || 'Coverage %',
+    ];
+    const rows = entries.map(([model, cov]) => [
+      getModelLabel(model), cov.totalEntities, cov.fullyTranslated,
+      cov.partiallyTranslated, cov.untranslated, cov.coveragePercent,
+    ]);
+    const bom = '\uFEFF';
+    const csv = bom + [headers.join(','), ...rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `translation-coverage-${new Date().toISOString().slice(0, 10)}.csv`; a.click();
+    URL.revokeObjectURL(url);
+    toast.success(t('common.exported') || 'Exported');
+  }, [overview, t]);
 
   const handleRibbonTest = useCallback(() => {
     setShowWizard(true);

@@ -403,12 +403,61 @@ export default function PromoCodesPage() {
   }, [selectedId, selectedPromo]);
 
   const onUsageStats = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    const totalUsage = promoCodes.reduce((sum, p) => sum + p.usageCount, 0);
+    const mostUsed = [...promoCodes].sort((a, b) => b.usageCount - a.usageCount).slice(0, 3);
+    const expired = promoCodes.filter(p => p.endsAt && new Date(p.endsAt) < new Date()).length;
+    const firstOrderCodes = promoCodes.filter(p => p.firstOrderOnly).length;
+    toast.success(t('admin.promoCodes.usageStatsTitle') || 'Promo Code Usage Stats', {
+      description: [
+        `${t('admin.promoCodes.totalUsage') || 'Total usage'}: ${totalUsage}`,
+        `${t('admin.promoCodes.active') || 'Active'}: ${stats.active} | ${t('admin.promoCodes.expired') || 'Expired'}: ${expired}`,
+        `${t('admin.promoCodes.firstOrderOnly') || '1st order only'}: ${firstOrderCodes}`,
+        mostUsed.length > 0 ? `${t('admin.promoCodes.topUsed') || 'Top used'}: ${mostUsed.map(p => `${p.code} (${p.usageCount})`).join(', ')}` : '',
+      ].filter(Boolean).join('\n'),
+      duration: 8000,
+    });
+  }, [promoCodes, stats, t]);
 
   const onExport = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    if (filteredPromoCodes.length === 0) {
+      toast.info(t('admin.promoCodes.emptyTitle') || 'No promo codes to export');
+      return;
+    }
+    const bom = '\uFEFF';
+    const headers = [
+      t('admin.promoCodes.colCode') || 'Code',
+      t('admin.promoCodes.labelDescription') || 'Description',
+      t('admin.promoCodes.labelType') || 'Type',
+      t('admin.promoCodes.labelValue') || 'Value',
+      t('admin.promoCodes.colUsage') || 'Usage',
+      t('admin.promoCodes.labelTotalLimit') || 'Limit',
+      t('admin.promoCodes.colStatus') || 'Status',
+      t('admin.promoCodes.labelStartDate') || 'Start',
+      t('admin.promoCodes.labelEndDate') || 'End',
+      t('admin.promoCodes.firstOrderOnlyCheckbox') || 'First Order Only',
+    ];
+    const rows = filteredPromoCodes.map(p => [
+      p.code,
+      p.description || '',
+      p.type === 'PERCENTAGE' ? t('admin.promoCodes.typePercentage') : t('admin.promoCodes.typeFixedAmount'),
+      p.value.toString(),
+      p.usageCount.toString(),
+      p.usageLimit?.toString() || t('admin.promoCodes.unlimited') || 'Unlimited',
+      promoStatusLabel(p, t),
+      p.startsAt ? new Date(p.startsAt).toLocaleDateString(locale) : '',
+      p.endsAt ? new Date(p.endsAt).toLocaleDateString(locale) : '',
+      p.firstOrderOnly ? 'Yes' : 'No',
+    ]);
+    const csv = bom + [headers.join(','), ...rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `promo-codes-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(t('common.exported') || 'Exported');
+  }, [filteredPromoCodes, locale, t]);
 
   useRibbonAction('newPromo', onNewPromo);
   useRibbonAction('delete', onDelete);

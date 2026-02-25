@@ -412,12 +412,35 @@ export default function ReglesBancairesPage() {
   // Ribbon actions
   // ---------------------------------------------------------------------------
 
-  const handleRibbonSynchronize = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleRibbonImportStatement = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleRibbonReconcile = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonSynchronize = useCallback(() => {
+    window.location.href = '/admin/comptabilite/banques';
+  }, []);
+  const handleRibbonImportStatement = useCallback(() => {
+    window.location.href = '/admin/comptabilite/import-bancaire';
+  }, []);
+  const handleRibbonReconcile = useCallback(() => {
+    window.location.href = '/admin/comptabilite/rapprochement';
+  }, []);
   const handleRibbonAutoMatch = useCallback(() => { handleApplyRules(); }, [handleApplyRules]);
-  const handleRibbonBankRules = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleRibbonExport = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleRibbonBankRules = useCallback(() => {
+    fetchRules();
+    toast.success(t('admin.bankRules.refreshed') || 'Regles bancaires actualisees');
+  }, [fetchRules, t]);
+  const handleRibbonExport = useCallback(() => {
+    if (rules.length === 0) { toast.error(t('admin.bankRules.noRulesToExport') || 'Aucune regle a exporter'); return; }
+    const bom = '\uFEFF';
+    const headers = [t('admin.bankRules.colName') || 'Nom', t('admin.bankRules.colCondition') || 'Condition', t('admin.bankRules.colAccount') || 'Compte', t('admin.bankRules.colPriority') || 'Priorite', t('admin.bankRules.colActive') || 'Active', t('admin.bankRules.colTimesApplied') || 'Applications'];
+    const rows = rules.map(r => {
+      const conditions = [r.descriptionContains ? `contient:${r.descriptionContains}` : '', r.amountMin ? `min:${r.amountMin}` : '', r.amountMax ? `max:${r.amountMax}` : ''].filter(Boolean).join('; ') || '-';
+      return [r.name, conditions, r.account?.name || r.accountId || '-', String(r.priority || 0), r.isActive ? 'Oui' : 'Non', String(r.timesApplied || 0)];
+    });
+    const csv = bom + [headers.join(','), ...rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `regles-bancaires-${new Date().toISOString().split('T')[0]}.csv`; a.click();
+    URL.revokeObjectURL(url);
+    toast.success(t('admin.bankRules.exportSuccess') || `${rules.length} regles exportees`);
+  }, [rules, t]);
 
   useRibbonAction('synchronize', handleRibbonSynchronize);
   useRibbonAction('importStatement', handleRibbonImportStatement);

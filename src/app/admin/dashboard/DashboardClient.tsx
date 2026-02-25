@@ -94,8 +94,36 @@ export default function DashboardClient({ stats, recentOrders, recentUsers }: Da
   }, [router]);
 
   const handleExportDashboard = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    const headers = [
+      t('admin.dashboard.metric') || 'Indicateur',
+      t('admin.dashboard.value') || 'Valeur',
+    ];
+    const rows = [
+      [t('admin.dashboard.totalOrders') || 'Total commandes', String(stats.totalOrders)],
+      [t('admin.dashboard.pendingOrders') || 'Commandes en attente', String(stats.pendingOrders)],
+      [t('admin.dashboard.monthlyRevenue') || 'Revenus mensuels', formatCurrency(stats.monthlyRevenue, locale)],
+      [t('admin.dashboard.b2bClients') || 'Clients B2B', String(stats.totalClients)],
+      [t('admin.dashboard.customers') || 'Clients', String(stats.totalCustomers)],
+      [t('admin.dashboard.activeProducts') || 'Produits actifs', String(stats.totalProducts)],
+      [t('admin.dashboard.stockAlerts') || 'Alertes stock', String(stats.lowStockFormats)],
+    ];
+    // Add recent orders
+    if (recentOrders.length > 0) {
+      rows.push(['', '']);
+      rows.push([t('admin.dashboard.recentOrders') || 'Commandes recentes', '']);
+      rows.push([t('admin.dashboard.orderNumber') || 'Numero', `${t('admin.dashboard.amount') || 'Montant'}`]);
+      recentOrders.forEach(order => {
+        rows.push([order.orderNumber, formatCurrency(Number(order.total), locale)]);
+      });
+    }
+    const bom = '\uFEFF';
+    const csv = bom + [headers.join(','), ...rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `dashboard-${new Date().toISOString().split('T')[0]}.csv`; a.click();
+    URL.revokeObjectURL(url);
+    toast.success(t('common.exported') || 'Dashboard exporte avec succes');
+  }, [stats, recentOrders, locale, t]);
 
   useRibbonAction('refresh', handleRefresh);
   useRibbonAction('exportDashboard', handleExportDashboard);
