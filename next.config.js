@@ -41,10 +41,10 @@ const nextConfig = {
       {
         source: '/:path*',
         headers: [
-          // HSTS - Force HTTPS
+          // HSTS - Force HTTPS (FAILLE-012: 2-year max-age per security policy)
           {
             key: 'Strict-Transport-Security',
-            value: 'max-age=31536000; includeSubDomains; preload'
+            value: 'max-age=63072000; includeSubDomains; preload'
           },
           // Empêcher le clickjacking
           {
