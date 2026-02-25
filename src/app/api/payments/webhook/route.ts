@@ -384,15 +384,17 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
 
   // Create the order with items in a transaction
   const order = await prisma.$transaction(async (tx) => {
-    // Atomic order number generation with row locking (prevents duplicates)
+    // Atomic order number generation with advisory lock (prevents duplicates even on empty table)
+    // E-01 FIX: pg_advisory_xact_lock serializes order number generation across all transactions.
+    // Unlike FOR UPDATE, this works even when no rows exist yet (e.g., first order of a new year).
     const year = new Date().getFullYear();
     const prefix = `PP-${year}-`;
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(42)`;
     const lastRows = await tx.$queryRaw<{ order_number: string }[]>`
       SELECT "orderNumber" as order_number FROM "Order"
       WHERE "orderNumber" LIKE ${prefix + '%'}
       ORDER BY "orderNumber" DESC
       LIMIT 1
-      FOR UPDATE
     `;
     const lastNum = lastRows.length > 0
       ? parseInt(lastRows[0].order_number.replace(prefix, ''), 10)

@@ -160,8 +160,28 @@ export async function POST(request: NextRequest) {
 
       const discountedSubtotal = Math.max(0, serverSubtotal - serverPromoDiscount);
 
+      // E-03 FIX: Apply gift card discount before calculating taxes (matches create-order flow)
+      let serverGiftCardDiscount = 0;
+      if (giftCardCode && (clientGiftCardDiscount ?? 0) > 0) {
+        const giftCard = await prisma.giftCard.findUnique({
+          where: { code: giftCardCode.toUpperCase().trim() },
+        });
+        if (giftCard && giftCard.isActive && Number(giftCard.balance) > 0) {
+          const isExpired = giftCard.expiresAt && new Date() > giftCard.expiresAt;
+          if (!isExpired) {
+            serverGiftCardDiscount = Math.min(
+              Number(giftCard.balance),
+              discountedSubtotal
+            );
+          }
+        }
+      }
+
+      const subtotalAfterAllDiscounts = Math.max(0, discountedSubtotal - serverGiftCardDiscount);
+
       // SECURITY: Calculate taxes server-side (never trust client values)
       // BE-PAY-11, BE-PAY-20: Fixed to handle PST for BC/MB/SK, not just QC+HST
+      // E-03 FIX: Taxes computed on subtotalAfterAllDiscounts (promo + gift card) to match Stripe/PayPal create-order
       const province = shippingInfo?.province || 'QC';
       const CANADIAN_TAX_RATES: Record<string, { gst: number; pst?: number; hst?: number; qst?: number; rst?: number }> = {
         'AB': { gst: 0.05 }, 'BC': { gst: 0.05, pst: 0.07 }, 'MB': { gst: 0.05, rst: 0.07 },
@@ -173,15 +193,15 @@ export async function POST(request: NextRequest) {
       const rates = CANADIAN_TAX_RATES[province.toUpperCase()] || CANADIAN_TAX_RATES['QC'];
       let taxTps = 0, taxTvq = 0, taxTvh = 0, taxPst = 0;
       if (rates.hst) {
-        taxTvh = Math.round(discountedSubtotal * rates.hst * 100) / 100;
+        taxTvh = Math.round(subtotalAfterAllDiscounts * rates.hst * 100) / 100;
       } else if (rates.qst) {
-        taxTps = Math.round(discountedSubtotal * rates.gst * 100) / 100;
-        taxTvq = Math.round(discountedSubtotal * rates.qst * 100) / 100;
+        taxTps = Math.round(subtotalAfterAllDiscounts * rates.gst * 100) / 100;
+        taxTvq = Math.round(subtotalAfterAllDiscounts * rates.qst * 100) / 100;
       } else if (rates.pst || rates.rst) {
-        taxTps = Math.round(discountedSubtotal * rates.gst * 100) / 100;
-        taxPst = Math.round(discountedSubtotal * (rates.pst || rates.rst || 0) * 100) / 100;
+        taxTps = Math.round(subtotalAfterAllDiscounts * rates.gst * 100) / 100;
+        taxPst = Math.round(subtotalAfterAllDiscounts * (rates.pst || rates.rst || 0) * 100) / 100;
       } else {
-        taxTps = Math.round(discountedSubtotal * rates.gst * 100) / 100;
+        taxTps = Math.round(subtotalAfterAllDiscounts * rates.gst * 100) / 100;
       }
       const totalTax = Math.round((taxTps + taxTvq + taxTvh + taxPst) * 100) / 100;
 
@@ -211,15 +231,17 @@ export async function POST(request: NextRequest) {
 
       // Create the order in a transaction with atomic order number
       const order = await prisma.$transaction(async (tx) => {
-        // Atomic order number generation with row locking (prevents duplicates)
+        // Atomic order number generation with advisory lock (prevents duplicates even on empty table)
+        // E-01 FIX: pg_advisory_xact_lock serializes order number generation across all transactions.
+        // Unlike FOR UPDATE, this works even when no rows exist yet (e.g., first order of a new year).
         const year = new Date().getFullYear();
         const prefix = `PP-${year}-`;
+        await tx.$executeRaw`SELECT pg_advisory_xact_lock(42)`;
         const lastRows = await tx.$queryRaw<{ order_number: string }[]>`
           SELECT "orderNumber" as order_number FROM "Order"
           WHERE "orderNumber" LIKE ${prefix + '%'}
           ORDER BY "orderNumber" DESC
           LIMIT 1
-          FOR UPDATE
         `;
         const lastNum = lastRows.length > 0
           ? parseInt(lastRows[0].order_number.replace(prefix, ''), 10)
@@ -232,7 +254,7 @@ export async function POST(request: NextRequest) {
             userId,
             subtotal: serverSubtotal,
             shippingCost: serverShipping,
-            discount: serverPromoDiscount,
+            discount: serverPromoDiscount + serverGiftCardDiscount,
             tax: totalTax,
             taxTps,
             taxTvq,
