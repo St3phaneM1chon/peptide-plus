@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
@@ -130,7 +131,17 @@ function FolderItem({
         `}
         aria-current={isActive ? 'page' : undefined}
       >
-        <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-sky-700' : 'text-slate-400 group-hover:text-slate-500'}`} />
+        {item.image ? (
+          <Image
+            src={item.image}
+            alt=""
+            width={18}
+            height={18}
+            className="w-[18px] h-[18px] object-contain flex-shrink-0 transition-transform duration-200 group-hover:scale-125"
+          />
+        ) : (
+          <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-sky-700' : 'text-slate-400 group-hover:text-slate-500'}`} />
+        )}
         <span className="flex-1 truncate">{item.labelKey.startsWith('_dynamic_:') ? item.labelKey.slice(10) : t(item.labelKey)}</span>
 
         {/* Badge */}

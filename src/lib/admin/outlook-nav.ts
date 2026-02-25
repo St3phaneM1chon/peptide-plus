@@ -47,6 +47,7 @@ export interface NavFolderItem {
   icon: LucideIcon;
   badge?: string;
   children?: NavFolderItem[];
+  image?: string; // Optional PNG logo path (used instead of icon when set)
 }
 
 export interface NavFolderGroup {
@@ -162,10 +163,10 @@ export const folderSections: Record<string, NavFolderSection> = {
       {
         labelKey: 'admin.nav.mediaPlatforms',
         items: [
-          { href: '/admin/media/launch-teams', labelKey: 'admin.nav.launchTeams', icon: TeamsIcon as unknown as LucideIcon },
-          { href: '/admin/media/launch-zoom', labelKey: 'admin.nav.launchZoom', icon: ZoomIcon as unknown as LucideIcon },
-          { href: '/admin/media/launch-webex', labelKey: 'admin.nav.launchWebex', icon: WebexIcon as unknown as LucideIcon },
-          { href: '/admin/media/launch-google-meet', labelKey: 'admin.nav.launchGoogleMeet', icon: GoogleMeetIcon as unknown as LucideIcon },
+          { href: '/admin/media/launch-teams', labelKey: 'admin.nav.launchTeams', icon: TeamsIcon as unknown as LucideIcon, image: '/images/platforms/teams.png' },
+          { href: '/admin/media/launch-zoom', labelKey: 'admin.nav.launchZoom', icon: ZoomIcon as unknown as LucideIcon, image: '/images/platforms/zoom.png' },
+          { href: '/admin/media/launch-webex', labelKey: 'admin.nav.launchWebex', icon: WebexIcon as unknown as LucideIcon, image: '/images/platforms/webex.png' },
+          { href: '/admin/media/launch-google-meet', labelKey: 'admin.nav.launchGoogleMeet', icon: GoogleMeetIcon as unknown as LucideIcon, image: '/images/platforms/google-meet.png' },
         ],
         defaultOpen: true,
       },

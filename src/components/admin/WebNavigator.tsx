@@ -1,14 +1,13 @@
 'use client';
 
-import { useState, useRef, useCallback, useMemo } from 'react';
-import { ArrowLeft, ArrowRight, RotateCw, Maximize2, ExternalLink, Loader2, ShieldAlert } from 'lucide-react';
+import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
+import { ArrowLeft, ArrowRight, RotateCw, Maximize2, ExternalLink, Loader2, ShieldAlert, AlertCircle } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
 
 // Security: Only allow HTTPS URLs from trusted protocols
 function isUrlSafe(url: string): boolean {
   try {
     const parsed = new URL(url);
-    // Only allow https (block http, file, data, javascript, blob, etc.)
     return parsed.protocol === 'https:';
   } catch {
     return false;
@@ -26,8 +25,28 @@ export function WebNavigator({ url, title, subtitle }: WebNavigatorProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [showFallbackBanner, setShowFallbackBanner] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const urlSafe = useMemo(() => isUrlSafe(url), [url]);
+
+  // After iframe loads, wait a few seconds then show fallback banner
+  // (many sites block iframe embedding silently without triggering onError)
+  useEffect(() => {
+    if (!loading && !error && urlSafe) {
+      const timer = setTimeout(() => {
+        try {
+          // If we can access contentDocument, the site loaded (same-origin or no block)
+          const doc = iframeRef.current?.contentDocument;
+          if (doc && doc.body && doc.body.innerHTML.trim().length > 0) return;
+        } catch {
+          // Cross-origin — we can't tell if blocked, show fallback banner
+        }
+        setShowFallbackBanner(true);
+      }, 2500);
+      return () => clearTimeout(timer);
+    }
+    return undefined;
+  }, [loading, error, urlSafe]);
 
   const handleRefresh = useCallback(() => {
     if (iframeRef.current) {
@@ -105,6 +124,24 @@ export function WebNavigator({ url, title, subtitle }: WebNavigatorProps) {
           </button>
         </div>
       </div>
+
+      {/* Fallback banner — shown after timeout for sites that may block iframes */}
+      {showFallbackBanner && !error && (
+        <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 border-b border-amber-200 text-amber-800 text-xs flex-shrink-0">
+          <AlertCircle className="w-4 h-4 flex-shrink-0" />
+          <span className="flex-1">
+            {t('admin.webNavigator.mayBeBlocked') || 'This page may not load in the embedded view.'}
+          </span>
+          <button
+            type="button"
+            onClick={handleOpenExternal}
+            className="flex items-center gap-1 px-3 py-1 bg-amber-600 text-white rounded text-xs font-medium hover:bg-amber-700 transition-colors flex-shrink-0"
+          >
+            <ExternalLink className="w-3 h-3" />
+            {t('admin.webNavigator.openNewTab')}
+          </button>
+        </div>
+      )}
 
       {/* Content area */}
       <div className="relative flex-1">
