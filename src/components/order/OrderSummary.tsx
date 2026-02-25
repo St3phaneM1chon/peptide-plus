@@ -303,7 +303,7 @@ export function OrderSummary({ order }: OrderSummaryProps) {
               {t('order.customer')}
             </p>
             <p style={{ fontSize: '14px', color: 'var(--gray-500)' }}>
-              {order.user.name || order.user.email}
+              {order.user?.name || order.user?.email || order.shippingName || t('order.guest')}
             </p>
           </div>
           <div>
@@ -317,7 +317,7 @@ export function OrderSummary({ order }: OrderSummaryProps) {
               Email
             </p>
             <p style={{ fontSize: '14px', color: 'var(--gray-500)' }}>
-              {order.user.email}
+              {order.user?.email || '-'}
             </p>
           </div>
         </div>

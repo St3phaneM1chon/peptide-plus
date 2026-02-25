@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
     const productType = searchParams.get('type');
     const slugs = searchParams.get('slugs');
     const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10) || 1);
-    const limit = Math.min(Math.max(1, parseInt(searchParams.get('limit') || '50', 10) || 50), 200);
+    const limit = Math.min(Math.max(1, parseInt(searchParams.get('limit') || '24', 10) || 24), 50);
     const includeInactive = searchParams.get('includeInactive') === 'true';
     const locale = searchParams.get('locale') || defaultLocale;
 
@@ -149,62 +149,32 @@ export async function GET(request: NextRequest) {
       prisma.product.findMany({
         where,
         select: {
+          // P-03 FIX: Minimal fields for product listing/grid view (~50-100 KB instead of 1-2 MB)
           id: true,
           name: true,
-          subtitle: true,
           slug: true,
-          shortDescription: true,
-          description: true,
-          productType: true,
           price: true,
           compareAtPrice: true,
           imageUrl: true,
-          videoUrl: true,
-          categoryId: true,
-          isFeatured: true,
           isActive: true,
+          isFeatured: true,
           isNew: true,
           isBestseller: true,
-          sku: true,
-          manufacturer: true,
-          origin: true,
-          purity: true,
-          tags: true,
           averageRating: true,
           reviewCount: true,
-          metaTitle: true,
-          metaDescription: true,
-          createdAt: true,
-          updatedAt: true,
+          productType: true,
           category: {
-            select: { id: true, name: true, slug: true, parentId: true, parent: { select: { id: true, name: true, slug: true } } },
+            select: { id: true, name: true, slug: true },
           },
-          // PERF 89: For list view, only fetch the primary image to reduce payload for large catalogs
+          // PERF 89: For list view, only fetch the primary image
           images: {
             orderBy: { sortOrder: 'asc' },
             take: 1,
-            select: { id: true, url: true, alt: true, sortOrder: true, isPrimary: true },
+            select: { url: true, alt: true },
           },
-          formats: {
-            where: { isActive: true },
-            orderBy: { sortOrder: 'asc' },
-            select: {
-              id: true,
-              name: true,
-              formatType: true,
-              price: true,
-              comparePrice: true,
-              sku: true,
-              inStock: true,
-              stockQuantity: true,
-              availability: true,
-              dosageMg: true,
-              volumeMl: true,
-              unitCount: true,
-              sortOrder: true,
-              isDefault: true,
-              isActive: true,
-            },
+          // P-03: Only return format count for listing; full formats loaded on detail page
+          _count: {
+            select: { formats: true },
           },
         },
         orderBy: { createdAt: 'desc' },

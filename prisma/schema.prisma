@@ -1473,7 +1473,7 @@ model NotificationPreference {
 model Order {
   id                    String          @id @default(cuid())
   orderNumber           String          @unique
-  userId                String
+  userId                String?
   subtotal              Decimal         @db.Decimal(10, 2)
   shippingCost          Decimal         @default(0) @db.Decimal(10, 2)
   discount              Decimal         @default(0) @db.Decimal(10, 2)
@@ -1515,7 +1515,7 @@ model Order {
   replacementReason     String?
   taxPst                Decimal         @default(0) @db.Decimal(10, 2)
   idempotencyKey        String?         @unique
-  user                  User            @relation(fields: [userId], references: [id], onDelete: Restrict)
+  user                  User?           @relation(fields: [userId], references: [id], onDelete: Restrict)
   currency              Currency        @relation(fields: [currencyId], references: [id], onDelete: Restrict)
   parentOrder           Order?          @relation("OrderToOrder", fields: [parentOrderId], references: [id])
   replacementOrders     Order[]         @relation("OrderToOrder")

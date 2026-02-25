@@ -123,6 +123,29 @@ export async function POST(
         }
       }
 
+      // E-20 FIX: Reverse promo code usage if the cancelled order used a promo code.
+      // Decrement the global usageCount and delete the per-user PromoCodeUsage record
+      // so the promo code slot is freed and the customer (or others) can reuse it.
+      if (order.promoCode) {
+        const promo = await tx.promoCode.findUnique({
+          where: { code: order.promoCode },
+        });
+        if (promo && promo.usageCount > 0) {
+          await tx.promoCode.update({
+            where: { code: order.promoCode },
+            data: { usageCount: { decrement: 1 } },
+          });
+        }
+        // Delete the PromoCodeUsage record tied to this order
+        await tx.promoCodeUsage.deleteMany({
+          where: { orderId: orderId },
+        });
+        logger.info('[cancelOrder] E-20: reversed promo code usage', {
+          promoCode: order.promoCode,
+          orderId,
+        });
+      }
+
       // If payment was made (PAID status), mark as REFUND_PENDING
       // IMPORTANT: Do NOT set REFUNDED here — actual refund must go through
       // Stripe/PayPal API via the admin refund endpoint

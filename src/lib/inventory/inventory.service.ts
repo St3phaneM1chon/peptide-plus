@@ -19,6 +19,30 @@ export async function reserveStock(
 ): Promise<string[]> {
   const expiresAt = new Date(Date.now() + ttlMinutes * 60 * 1000);
 
+  // E-19 FIX: Self-healing — release expired reservations for the requested products/formats
+  // before checking available stock. This prevents permanently locked inventory if the
+  // cron job (releaseExpiredReservations) stops running.
+  const now = new Date();
+  for (const item of items) {
+    const released = await prisma.inventoryReservation.updateMany({
+      where: {
+        status: 'RESERVED',
+        expiresAt: { lt: now },
+        ...(item.formatId
+          ? { formatId: item.formatId }
+          : { productId: item.productId, formatId: null }),
+      },
+      data: { status: 'RELEASED', releasedAt: now },
+    });
+    if (released.count > 0) {
+      logger.info('[reserveStock] E-19 self-healing: released expired reservations', {
+        productId: item.productId,
+        formatId: item.formatId ?? null,
+        releasedCount: released.count,
+      });
+    }
+  }
+
   // Wrap entire reservation in a single transaction to prevent race conditions
   return prisma.$transaction(async (tx) => {
     const reservationIds: string[] = [];

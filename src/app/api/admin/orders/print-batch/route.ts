@@ -31,8 +31,8 @@ export async function POST(request: NextRequest) {
       const invoiceData = {
         orderNumber: order.orderNumber,
         date: new Intl.DateTimeFormat('fr-CA').format(order.createdAt),
-        customerName: order.user.name || order.shippingName,
-        customerEmail: order.user.email,
+        customerName: order.user?.name || order.shippingName,
+        customerEmail: order.user?.email || '',
         shippingAddress: {
           address1: order.shippingAddress1,
           address2: order.shippingAddress2 || undefined,

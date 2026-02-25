@@ -17,7 +17,7 @@ import { prisma } from '@/lib/db';
 import { z } from 'zod';
 import { validateCsrf } from '@/lib/csrf-middleware';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
-import { applyRate, add, multiply, subtract, convertCurrency, toCents, proportionalDiscount, clamp } from '@/lib/decimal-calculator';
+import { applyRate, add, multiply, subtract, convertCurrency, toCents, clamp } from '@/lib/decimal-calculator';
 import { logger } from '@/lib/logger';
 
 // KB-PP-BUILD-002: Lazy init to avoid crash when STRIPE_SECRET_KEY is absent at build time
@@ -573,13 +573,27 @@ export async function POST(request: NextRequest) {
     }
 
     // Recalculate: apply all discounts (promo + gift card) proportionally to each item
+    // E-15 FIX: "last item absorbs remainder" pattern to prevent rounding drift.
+    // All items except the last use floor rounding; the last item gets the remainder
+    // so the sum of individual discounts exactly equals the total discount in cents.
     const totalItemDiscount = add(serverPromoDiscount, serverGiftCardDiscount);
     if (totalItemDiscount > 0) {
-      lineItems.forEach((li) => {
+      const totalDiscountCents = toCents(convertCurrency(totalItemDiscount, exchangeRate));
+      const totalOriginalCents = lineItems.reduce((s, l) => s + l.price_data!.unit_amount!, 0);
+      let distributedCents = 0;
+      lineItems.forEach((li, idx) => {
         const originalAmount = li.price_data!.unit_amount!;
-        const discountAmount = proportionalDiscount(originalAmount, totalItemDiscount, serverSubtotal);
+        let discountCents: number;
+        if (idx < lineItems.length - 1) {
+          // All items except the last: round DOWN to avoid over-distributing
+          discountCents = Math.floor((originalAmount / totalOriginalCents) * totalDiscountCents);
+          distributedCents += discountCents;
+        } else {
+          // Last item absorbs the remainder so total is exact
+          discountCents = totalDiscountCents - distributedCents;
+        }
         // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Stripe line item type does not expose writable unit_amount
-        (li.price_data as any).unit_amount = originalAmount - discountAmount;
+        (li.price_data as any).unit_amount = originalAmount - discountCents;
       });
     }
 

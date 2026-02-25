@@ -541,7 +541,7 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
     const newOrder = await tx.order.create({
       data: {
         orderNumber,
-        userId: userId && userId !== 'guest' ? userId : `guest-${session.id}`,
+        userId: userId && userId !== 'guest' ? userId : null,
         subtotal: stripeSubtotal,
         shippingCost,
         discount: promoDiscount + giftCardDiscount,
@@ -749,7 +749,7 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
       if (promo) {
         // Check per-user usage limit (default: 1 use per user)
         const maxUsesPerUser = (promo as Record<string, unknown>).maxUsesPerUser as number || 1;
-        const existingUsage = userId && userId !== 'guest'
+        const existingUsage = userId
           ? await prisma.promoCodeUsage.count({
               where: { promoCodeId: promo.id, userId },
             })
@@ -763,7 +763,7 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
           await prisma.promoCodeUsage.create({
             data: {
               promoCodeId: promo.id,
-              userId: userId && userId !== 'guest' ? userId : 'anonymous',
+              userId: userId || 'anonymous',
               orderId: order.id,
               discount: promoDiscount,
             },
@@ -826,7 +826,7 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
   }
 
   // Referral program: qualify referral if buyer was referred and this is their first paid order
-  if (userId && userId !== 'guest') {
+  if (userId) {
     try {
       const buyer = await prisma.user.findUnique({
         where: { id: userId },
@@ -862,7 +862,7 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
   }
 
   // N+1 FIX: Fetch user once for both loyalty points and automation engine
-  if (userId && userId !== 'guest') {
+  if (userId) {
     // Single user fetch with all needed fields
     const user = await prisma.user.findUnique({
       where: { id: userId },
