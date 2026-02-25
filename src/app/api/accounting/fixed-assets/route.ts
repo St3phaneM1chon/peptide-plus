@@ -322,7 +322,7 @@ export const PATCH = withAdminGuard(async (request, { session }) => {
 
       const openingUCC = Number(asset.currentBookValue);
       const residual = Number(asset.residualValue);
-      const rate = asset.ccaRate / 100;
+      const rate = Number(asset.ccaRate) / 100;
 
       // Determine if this is the first year (acquisition year)
       const acquisitionYear = new Date(asset.acquisitionDate).getFullYear();
@@ -435,7 +435,7 @@ export const PATCH = withAdminGuard(async (request, { session }) => {
         fiscalYear,
         openingUCC,
         effectiveUCC,
-        rate: asset.ccaRate,
+        rate: Number(asset.ccaRate),
         ccaClaimed,
         closingUCC,
         isFirstYear,

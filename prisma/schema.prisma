@@ -306,7 +306,8 @@ model BankTransaction {
   category             String?
   reference            String?
   reconciliationStatus ReconciliationStatus @default(PENDING)
-  matchedEntryId       String? // TODO #53: Add foreign key constraint: @relation(fields: [matchedEntryId], references: [id]) to JournalEntry
+  matchedEntryId       String?
+  matchedEntry         JournalEntry?        @relation("BankTransactionMatchedEntry", fields: [matchedEntryId], references: [id], onDelete: SetNull)
   matchedAt            DateTime?
   matchedBy            String?
   importBatch          String?
@@ -1261,7 +1262,8 @@ model JournalEntry {
   deletedAt    DateTime?
   currency     String             @default("CAD")
   exchangeRate Decimal            @default(1.000000) @db.Decimal(10, 6)
-  lines        JournalLine[]
+  lines            JournalLine[]
+  bankTransactions BankTransaction[] @relation("BankTransactionMatchedEntry")
 
   @@index([date])
   @@index([orderId])

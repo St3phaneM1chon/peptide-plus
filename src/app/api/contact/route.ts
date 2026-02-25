@@ -1,7 +1,5 @@
 export const dynamic = 'force-dynamic';
 
-// TODO: F-100 - Contact messages are email-only; save to DB requires new ContactMessage model (schema change needed)
-
 /**
  * API Contact - BioCycle Peptides
  * Reçoit et traite les messages du formulaire de contact
@@ -17,6 +15,8 @@ import { stripHtml, stripControlChars } from '@/lib/sanitize';
 import { apiSuccess, apiError, validateContentType } from '@/lib/api-response';
 import { ErrorCode } from '@/lib/error-codes';
 import { contactFormSchema } from '@/lib/validations/contact';
+import { prisma } from '@/lib/db';
+import { auth } from '@/lib/auth-config';
 
 // Status codes: 200 OK, 400 Bad Request, 415 Unsupported Media Type, 429 Rate Limited, 500 Internal Error
 export async function POST(request: NextRequest) {
@@ -91,6 +91,24 @@ export async function POST(request: NextRequest) {
     if (!result.success) {
       logger.error('Contact email failed', { error: result.error || 'Unknown error' });
       return apiError('Erreur lors de l\'envoi du message. Veuillez réessayer.', ErrorCode.INTERNAL_ERROR, { request });
+    }
+
+    // F-100: Persist contact message to DB
+    try {
+      const session = await auth();
+      await prisma.contactMessage.create({
+        data: {
+          name,
+          email,
+          subject,
+          message,
+          userId: session?.user?.id ?? null,
+          ipAddress: ip,
+        },
+      });
+    } catch (dbError) {
+      // Log but don't fail the request — email was already sent successfully
+      logger.error('Contact message DB save failed', { error: dbError instanceof Error ? dbError.message : String(dbError) });
     }
 
     return apiSuccess({
