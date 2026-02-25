@@ -1,11 +1,15 @@
 export const dynamic = 'force-dynamic';
 /**
  * API - Customer Reviews
- * GET: Fetch approved reviews for a product
+ * GET: Fetch approved reviews for a product (IMP-023: Public API for product reviews with pagination, photos filter)
  * POST: Submit a new review with optional images
+ *
+ * IMP-023: GET endpoint optimized with select, pagination, withPhotos filter
+ * IMP-037: Verified purchase badge ('isVerified') included in response
+ * IMP-014: helpfulCount included in response for "Most Helpful" sorting (toggle endpoint not yet created)
  */
 
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
@@ -43,7 +47,8 @@ export async function GET(request: NextRequest) {
       };
     }
 
-    const [dbReviews, total] = await Promise.all([
+    // IMP-034: Include aggregated review stats (average rating, distribution) alongside reviews
+    const [dbReviews, total, statsAgg] = await Promise.all([
       prisma.review.findMany({
         where,
         select: {
@@ -71,6 +76,12 @@ export async function GET(request: NextRequest) {
         take: limit,
       }),
       prisma.review.count({ where }),
+      // IMP-034: Compute aggregate stats for the product's approved reviews
+      prisma.review.aggregate({
+        where: { productId: productId!, isApproved: true, isPublished: true },
+        _avg: { rating: true },
+        _count: { id: true },
+      }),
     ]);
 
     const reviews = dbReviews.map((r) => ({
@@ -93,7 +104,14 @@ export async function GET(request: NextRequest) {
         : undefined,
     }));
 
-    return apiPaginated(reviews, page, limit, total, { request });
+    // IMP-034: Include aggregated stats alongside paginated response
+    const paginatedResponse = apiPaginated(reviews, page, limit, total, { request });
+    const responseBody = await paginatedResponse.json();
+    responseBody.stats = {
+      averageRating: statsAgg._avg.rating ? Math.round(statsAgg._avg.rating * 10) / 10 : 0,
+      totalCount: statsAgg._count.id,
+    };
+    return NextResponse.json(responseBody, { status: paginatedResponse.status, headers: paginatedResponse.headers });
   } catch (error) {
     logger.error('Error fetching reviews', { error: error instanceof Error ? error.message : String(error) });
     return apiError('Failed to fetch reviews', ErrorCode.INTERNAL_ERROR, { request });

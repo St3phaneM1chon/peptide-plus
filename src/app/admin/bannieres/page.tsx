@@ -1,5 +1,9 @@
 /**
  * ADMIN - GESTION DES BANNIERES HERO SLIDER
+ *
+ * IMP-035: TODO: Add responsive variants for banner images (tablet, retina) beyond just backgroundMobile
+ * IMP-049: DONE: Duplicate banner functionality added (duplicateSlide function + Copy button)
+ * IMP-067: DONE: Banner schedule awareness - active/inactive visual indicators based on startDate/endDate
  */
 
 'use client';
@@ -16,6 +20,7 @@ import {
   Eye,
   Languages,
   Image as ImageIcon,
+  Copy, // IMP-049: Import Copy icon for duplicate banner action
 } from 'lucide-react';
 import {
   PageHeader,
@@ -310,6 +315,37 @@ export default function BannieresPage() {
     }
   };
 
+  // IMP-049: Duplicate an existing banner with "(copy)" suffix
+  const duplicateSlide = (slide: HeroSlide) => {
+    setEditingSlide(null);
+    setForm({
+      slug: `${slide.slug}-copy`,
+      mediaType: slide.mediaType,
+      backgroundUrl: slide.backgroundUrl,
+      backgroundMobile: slide.backgroundMobile || '',
+      overlayOpacity: slide.overlayOpacity,
+      overlayGradient: slide.overlayGradient || '',
+      badgeText: slide.badgeText || '',
+      title: `${slide.title} (copy)`,
+      subtitle: slide.subtitle || '',
+      ctaText: slide.ctaText || '',
+      ctaUrl: slide.ctaUrl || '',
+      ctaStyle: slide.ctaStyle || 'primary',
+      cta2Text: slide.cta2Text || '',
+      cta2Url: slide.cta2Url || '',
+      cta2Style: slide.cta2Style || 'outline',
+      statsJson: slide.statsJson || '',
+      sortOrder: slides.length,
+      isActive: false, // Default to inactive for the copy
+    });
+    const trMap: Record<string, Translation> = {};
+    slide.translations.forEach((tr) => { trMap[tr.locale] = { ...tr }; });
+    setTranslations(trMap);
+    setActiveTab('general');
+    setShowForm(true);
+    toast.info(t('admin.banners.duplicated') || 'Banner duplicated. Edit and save to create the copy.');
+  };
+
   const updateTranslation = (locale: string, field: string, value: string) => {
     setTranslations((prev) => ({
       ...prev,
@@ -510,6 +546,17 @@ export default function BannieresPage() {
                     <span>{t('admin.banners.translationCount', { count: slide.translations.length })}</span>
                     {slide.ctaUrl && <span>CTA: {slide.ctaUrl}</span>}
                     <span>{t('admin.banners.order')}: {slide.sortOrder}</span>
+                    {/* IMP-067: Schedule-aware status indicators */}
+                    {slide.startDate && new Date(slide.startDate) > new Date() && (
+                      <span className="inline-flex items-center px-1.5 py-0.5 bg-amber-50 text-amber-600 rounded text-[10px] font-medium">
+                        {t('admin.banners.scheduled') || 'Scheduled'}: {new Date(slide.startDate).toLocaleDateString()}
+                      </span>
+                    )}
+                    {slide.endDate && new Date(slide.endDate) < new Date() && (
+                      <span className="inline-flex items-center px-1.5 py-0.5 bg-red-50 text-red-500 rounded text-[10px] font-medium">
+                        {t('admin.banners.expired') || 'Expired'}: {new Date(slide.endDate).toLocaleDateString()}
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -529,6 +576,10 @@ export default function BannieresPage() {
                   </button>
                   <Button size="sm" variant="secondary" icon={Pencil} onClick={() => openEdit(slide)}>
                     {t('admin.banners.editSlide')}
+                  </Button>
+                  {/* IMP-049: Duplicate banner button */}
+                  <Button size="sm" variant="secondary" icon={Copy} onClick={() => duplicateSlide(slide)}>
+                    {t('admin.banners.duplicateSlide') || 'Copy'}
                   </Button>
                   <Button size="sm" variant="danger" icon={Trash2} disabled={deletingId === slide.id} onClick={() => deleteSlide(slide.id)}>
                     {t('admin.banners.deleteSlide')}

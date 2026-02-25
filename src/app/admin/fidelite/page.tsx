@@ -3,6 +3,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import Link from 'next/link';
 import { Plus, Loader2, Trash2, Trophy, Award, Flame, Target, Gift, Clock, Star, Zap } from 'lucide-react';
 import { PageHeader, Button, Modal, FormField, Input } from '@/components/admin';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
@@ -83,6 +84,71 @@ export default function FidelitePage() {
     expiring30: 4800,
     expiring90: 12400,
   });
+
+  // A-026: Recent transactions state for admin view
+  const [recentTxns, setRecentTxns] = useState<Array<{
+    id: string;
+    userName: string;
+    userEmail: string;
+    type: string;
+    points: number;
+    description: string;
+    createdAt: string;
+  }>>([]);
+  const [txnsLoading, setTxnsLoading] = useState(false);
+  const [txnStats, setTxnStats] = useState<{
+    totalEarned: number;
+    totalRedeemed: number;
+    netPoints: number;
+    totalTransactions: number;
+  } | null>(null);
+
+  // A-027: Stats state for admin overview
+  const [loyaltyStats, setLoyaltyStats] = useState<{
+    membersByTier: Record<string, number>;
+    totalMembers: number;
+  } | null>(null);
+
+  // A-026/A-027: Fetch recent transactions and stats
+  const fetchTransactionsAndStats = useCallback(async () => {
+    setTxnsLoading(true);
+    try {
+      const [txnRes, statsRes] = await Promise.all([
+        fetch('/api/admin/loyalty/transactions?limit=10'),
+        fetch('/api/admin/users?limit=1&loyaltyTier=BRONZE'),
+      ]);
+      if (txnRes.ok) {
+        const data = await txnRes.json();
+        setRecentTxns(data.transactions || []);
+        setTxnStats(data.stats || null);
+      }
+      // A-027: Get member count per tier (basic stats)
+      if (statsRes.ok) {
+        const tierCounts: Record<string, number> = {};
+        let totalMembers = 0;
+        // Fetch count for each tier
+        for (const tierName of ['BRONZE', 'SILVER', 'GOLD', 'PLATINUM', 'DIAMOND']) {
+          try {
+            const res = await fetch(`/api/admin/users?limit=1&loyaltyTier=${tierName}`);
+            if (res.ok) {
+              const d = await res.json();
+              const count = d.total || d.pagination?.total || 0;
+              tierCounts[tierName] = count;
+              totalMembers += count;
+            }
+          } catch { /* ignore individual tier failures */ }
+        }
+        setLoyaltyStats({ membersByTier: tierCounts, totalMembers });
+      }
+    } catch (err) {
+      console.error('Error fetching loyalty transactions/stats:', err);
+    }
+    setTxnsLoading(false);
+  }, []);
+
+  useEffect(() => {
+    fetchTransactionsAndStats();
+  }, [fetchTransactionsAndStats]);
 
   // FIX: FLAW-055 - Wrap fetchConfig in useCallback for stable reference
   const fetchConfig = useCallback(async () => {
@@ -539,6 +605,115 @@ export default function FidelitePage() {
             <p className="text-xs text-sky-600">{t('admin.loyalty.discountValue', { value: simResult.discount })}</p>
           </div>
         </div>
+      </div>
+
+      {/* A-027: Loyalty Statistics Overview */}
+      {(txnStats || loyaltyStats) && (
+        <div className="bg-white rounded-xl border border-slate-200 p-6">
+          <h3 className="font-semibold text-slate-900 mb-4">{t('admin.loyalty.statsTitle') || 'Program Statistics'}</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
+              <p className="text-xs text-green-600 font-medium">{t('admin.loyalty.totalEarned') || 'Total Earned'}</p>
+              <p className="text-2xl font-bold text-green-700">{(txnStats?.totalEarned || 0).toLocaleString(locale)}</p>
+              <p className="text-[10px] text-green-500">{t('admin.loyalty.pts')}</p>
+            </div>
+            <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 text-center">
+              <p className="text-xs text-orange-600 font-medium">{t('admin.loyalty.totalRedeemed') || 'Total Redeemed'}</p>
+              <p className="text-2xl font-bold text-orange-700">{(txnStats?.totalRedeemed || 0).toLocaleString(locale)}</p>
+              <p className="text-[10px] text-orange-500">{t('admin.loyalty.pts')}</p>
+            </div>
+            <div className="bg-sky-50 border border-sky-200 rounded-lg p-4 text-center">
+              <p className="text-xs text-sky-600 font-medium">{t('admin.loyalty.netCirculation') || 'Net in Circulation'}</p>
+              <p className="text-2xl font-bold text-sky-700">{(txnStats?.netPoints || 0).toLocaleString(locale)}</p>
+              <p className="text-[10px] text-sky-500">{t('admin.loyalty.pts')}</p>
+            </div>
+            <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 text-center">
+              <p className="text-xs text-purple-600 font-medium">{t('admin.loyalty.totalMembers') || 'Total Members'}</p>
+              <p className="text-2xl font-bold text-purple-700">{(loyaltyStats?.totalMembers || 0).toLocaleString(locale)}</p>
+              <p className="text-[10px] text-purple-500">{t('admin.loyalty.members') || 'members'}</p>
+            </div>
+          </div>
+          {/* A-027: Members by tier distribution */}
+          {loyaltyStats && Object.keys(loyaltyStats.membersByTier).length > 0 && (
+            <div>
+              <h4 className="text-sm font-semibold text-slate-700 mb-3">{t('admin.loyalty.membersByTier') || 'Members by Tier'}</h4>
+              <div className="space-y-2">
+                {Object.entries(loyaltyStats.membersByTier).map(([tier, count]) => (
+                  <div key={tier} className="flex items-center gap-3">
+                    <span className="text-sm font-medium text-slate-600 w-20">{tier}</span>
+                    <div className="flex-1 bg-slate-100 rounded-full h-4">
+                      <div
+                        className="bg-sky-500 rounded-full h-4 transition-all duration-500"
+                        style={{ width: `${loyaltyStats.totalMembers > 0 ? Math.max(2, (count / loyaltyStats.totalMembers) * 100) : 0}%` }}
+                      />
+                    </div>
+                    <span className="text-sm font-bold text-slate-700 w-12 text-right">{count}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* A-026: Recent Transactions */}
+      <div className="bg-white rounded-xl border border-slate-200 p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-semibold text-slate-900">{t('admin.loyalty.recentTransactions') || 'Recent Transactions'}</h3>
+          <Link
+            href="/admin/clients"
+            className="text-sm text-sky-600 hover:text-sky-700 font-medium"
+          >
+            {t('admin.loyalty.viewAll') || 'View All'} →
+          </Link>
+        </div>
+        {txnsLoading ? (
+          <div className="flex items-center justify-center h-32">
+            <Loader2 className="w-6 h-6 animate-spin text-sky-500" />
+          </div>
+        ) : recentTxns.length === 0 ? (
+          <p className="text-sm text-slate-500 text-center py-8">{t('admin.loyalty.noTransactions') || 'No transactions yet'}</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-slate-200">
+                  <th className="text-left py-2 px-3 font-semibold text-slate-600">{t('admin.loyalty.user') || 'User'}</th>
+                  <th className="text-left py-2 px-3 font-semibold text-slate-600">{t('admin.loyalty.type') || 'Type'}</th>
+                  <th className="text-right py-2 px-3 font-semibold text-slate-600">{t('admin.loyalty.pointsLabel') || 'Points'}</th>
+                  <th className="text-left py-2 px-3 font-semibold text-slate-600">{t('admin.loyalty.description') || 'Description'}</th>
+                  <th className="text-left py-2 px-3 font-semibold text-slate-600">{t('admin.loyalty.date') || 'Date'}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentTxns.map(txn => (
+                  <tr key={txn.id} className="border-b border-slate-100 hover:bg-slate-50">
+                    <td className="py-2 px-3">
+                      <p className="font-medium text-slate-800 truncate max-w-[120px]">{txn.userName}</p>
+                    </td>
+                    <td className="py-2 px-3">
+                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                        txn.type.startsWith('EARN') ? 'bg-green-100 text-green-700' :
+                        txn.type.startsWith('REDEEM') ? 'bg-orange-100 text-orange-700' :
+                        txn.type === 'EXPIRE' ? 'bg-red-100 text-red-700' :
+                        'bg-slate-100 text-slate-600'
+                      }`}>
+                        {txn.type.replace('EARN_', '').replace('REDEEM_', '')}
+                      </span>
+                    </td>
+                    <td className={`py-2 px-3 text-right font-bold ${txn.points > 0 ? 'text-green-600' : 'text-orange-600'}`}>
+                      {txn.points > 0 ? '+' : ''}{txn.points}
+                    </td>
+                    <td className="py-2 px-3 text-slate-500 truncate max-w-[200px]">{txn.description}</td>
+                    <td className="py-2 px-3 text-slate-500 text-xs">
+                      {new Date(txn.createdAt).toLocaleDateString(locale)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* ─── Gamification Dashboard ──────────────────────────── */}

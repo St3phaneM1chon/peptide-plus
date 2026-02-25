@@ -3,6 +3,9 @@ export const dynamic = 'force-dynamic';
 /**
  * API Chat Image Upload
  * POST /api/chat/upload - Upload an image for chat messages
+ *
+ * IMP-008: Secured with auth + rate limiting + CSRF + magic bytes validation + extension derivation
+ * IMP-010: Attachment URLs validated against allowed domains (see chat/message/route.ts)
  */
 
 import { NextRequest, NextResponse } from 'next/server';

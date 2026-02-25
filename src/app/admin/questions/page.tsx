@@ -223,6 +223,18 @@ export default function QuestionsPage() {
     return questions.find(q => q.id === selectedQuestionId) || null;
   }, [questions, selectedQuestionId]);
 
+  // A-057: Keyboard shortcut - Ctrl+Enter to submit answer when modal is open
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && showAnswerModal && selectedQuestion && answerText.trim()) {
+        e.preventDefault();
+        submitAnswer(selectedQuestion.id);
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [showAnswerModal, selectedQuestion, answerText]);
+
   const handleSelectQuestion = useCallback((id: string) => {
     setSelectedQuestionId(id);
   }, []);
@@ -547,6 +559,8 @@ export default function QuestionsPage() {
               onChange={(e) => setAnswerText(e.target.value)}
               placeholder={t('admin.questions.answerPlaceholder')}
             />
+            {/* A-057: Keyboard shortcut hint */}
+            <p className="text-xs text-slate-400 mt-1">{'\u2318'}+Enter / Ctrl+Enter {t('common.toSubmit') || 'to submit'}</p>
           </FormField>
         </div>
       </Modal>

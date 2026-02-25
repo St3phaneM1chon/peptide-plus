@@ -1,3 +1,11 @@
+// IMP-019: TODO: Implement client-side crop/resize before upload (e.g., react-image-crop)
+// IMP-020: PARTIALLY_DONE: AI tagging exists via generateTags() from ai-tagger.ts; full Azure Computer Vision integration is TODO
+// IMP-021: TODO: Implement automatic watermarking on product images to prevent content theft
+// IMP-025: TODO: Implement blur placeholder + intersection observer for progressive image loading
+// IMP-027: TODO: Integrate image-optimizer.ts server-side to auto-generate thumbnail/medium/large variants at upload
+// IMP-028: TODO: Add content moderation (Azure Content Moderator) for user-uploaded images (reviews, chat)
+// IMP-034: PARTIALLY_DONE: Usage tracking exists via usage-tracker.ts; full tracking from all entity references is TODO
+// IMP-040: DONE: Client-side file size validation added before upload
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -100,12 +108,26 @@ export default function MediaImagesPage() {
   }, [searchInput]);
 
   // F63 FIX: Close preview modal with Escape key
+  // IMP-044: Arrow key navigation between images in preview modal
   useEffect(() => {
     if (!preview) return;
-    const handleEscape = (e: KeyboardEvent) => { if (e.key === 'Escape') setPreview(null); };
-    window.addEventListener('keydown', handleEscape);
-    return () => window.removeEventListener('keydown', handleEscape);
-  }, [preview]);
+    const handleKeydown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { setPreview(null); return; }
+      // IMP-044: Navigate between images with arrow keys
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        const idx = images.findIndex(i => i.id === preview.id);
+        if (idx < images.length - 1) setPreview(images[idx + 1]);
+      }
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        const idx = images.findIndex(i => i.id === preview.id);
+        if (idx > 0) setPreview(images[idx - 1]);
+      }
+    };
+    window.addEventListener('keydown', handleKeydown);
+    return () => window.removeEventListener('keydown', handleKeydown);
+  }, [preview, images]);
 
   // Generate AI tags for loaded images
   useEffect(() => {
@@ -200,7 +222,7 @@ export default function MediaImagesPage() {
   }, [bulkFiles, loadImages]);
 
   // Smart crop handler
-  const handleCropPreset = useCallback(async (imageId: string, preset: CropPreset) => {
+  const handleCropPreset = useCallback(async (_imageId: string, preset: CropPreset) => {
     toast.info(`Recadrage ${preset.nameFr} (${preset.width}x${preset.height}) - Traitement côté serveur requis`);
     setShowCropPresets(null);
   }, []);
@@ -208,6 +230,17 @@ export default function MediaImagesPage() {
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
+
+    // IMP-040: Client-side file size validation before upload to avoid wasting bandwidth
+    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB - matches server limit
+    for (let i = 0; i < files.length; i++) {
+      if (files[i].size > MAX_FILE_SIZE) {
+        toast.error(`${files[i].name}: ${t('admin.media.fileTooLarge') || 'File exceeds maximum size of 10MB'}`);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+        return;
+      }
+    }
+
     setUploading(true);
     try {
       const formData = new FormData();

@@ -3,6 +3,10 @@
 /**
  * Widget Chat Client - BioCycle Peptides
  * Bulle de chat en bas à droite de l'écran
+ *
+ * IMP-032: Chat widget floats on all pages (except /admin), with open/close animation,
+ *          unread badge, emoji picker, image upload support
+ * IMP-045: Max character length enforcement on chat input (5000 chars)
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -483,15 +487,17 @@ export default function ChatWidget() {
                 )}
               </div>
 
+              {/* IMP-045: Max length enforcement on chat input */}
               <input
                 ref={inputRef}
                 type="text"
                 value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
+                onChange={(e) => setInputValue(e.target.value.slice(0, 5000))}
                 onKeyDown={handleKeyPress}
                 placeholder={t('chat.placeholder.typeMessage')}
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:border-orange-500 text-sm"
                 disabled={isLoading || isUploading}
+                maxLength={5000}
               />
               <button
                 onClick={sendMessage}

@@ -311,11 +311,16 @@ export default function PromotionsPage() {
 
   // ─── Filtering ──────────────────────────────────────────────
 
+  // A-031: Advanced filters - filter by all 5 promotion types + active status
   const filteredPromotions = useMemo(() => {
     return promotions.filter(promo => {
       if (statusFilter === 'active' && !promo.isActive) return false;
       if (statusFilter === 'flash' && promo.type !== 'FLASH_SALE') return false;
       if (statusFilter === 'bundle' && promo.type !== 'BUNDLE') return false;
+      // A-031: Added filters for PRODUCT_DISCOUNT, CATEGORY_DISCOUNT, BUY_X_GET_Y
+      if (statusFilter === 'product' && promo.type !== 'PRODUCT_DISCOUNT') return false;
+      if (statusFilter === 'category' && promo.type !== 'CATEGORY_DISCOUNT') return false;
+      if (statusFilter === 'buyxgety' && promo.type !== 'BUY_X_GET_Y') return false;
       if (searchValue) {
         const search = searchValue.toLowerCase();
         if (!promo.name.toLowerCase().includes(search)) return false;
@@ -324,20 +329,28 @@ export default function PromotionsPage() {
     });
   }, [promotions, statusFilter, searchValue]);
 
+  // A-031: Extended stats to include all 5 promotion types
   const stats = useMemo(() => ({
     total: promotions.length,
     active: promotions.filter((p) => p.isActive).length,
+    productDiscount: promotions.filter((p) => p.type === 'PRODUCT_DISCOUNT').length,
+    categoryDiscount: promotions.filter((p) => p.type === 'CATEGORY_DISCOUNT').length,
     flashSales: promotions.filter((p) => p.type === 'FLASH_SALE').length,
     bundles: promotions.filter((p) => p.type === 'BUNDLE').length,
+    buyXGetY: promotions.filter((p) => p.type === 'BUY_X_GET_Y').length,
   }), [promotions]);
 
   // ─── ContentList data ────────────────────────────────────────
 
+  // A-031: Filter tabs for all promotion types
   const filterTabs = useMemo(() => [
     { key: 'all', label: t('admin.promotions.statTotal'), count: stats.total },
     { key: 'active', label: t('admin.promotions.statActive'), count: stats.active },
+    { key: 'product', label: t('admin.promotions.typeProductDiscount'), count: stats.productDiscount },
+    { key: 'category', label: t('admin.promotions.typeCategoryDiscount'), count: stats.categoryDiscount },
     { key: 'flash', label: t('admin.promotions.statFlashSales'), count: stats.flashSales },
     { key: 'bundle', label: t('admin.promotions.statBundles'), count: stats.bundles },
+    { key: 'buyxgety', label: t('admin.promotions.typeBuyXGetY'), count: stats.buyXGetY },
   ], [t, stats]);
 
   const listItems: ContentListItem[] = useMemo(() => {

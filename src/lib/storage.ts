@@ -7,6 +7,14 @@
  *   const storage = new StorageService();
  *   const url = await storage.upload(buffer, 'image.jpg', 'image/jpeg');
  *   await storage.delete(url);
+ *
+ * IMP-001: TODO: Implement CDN (Azure CDN or Cloudflare) in front of storage for geo-distributed caching
+ * IMP-002: DONE: All 5 upload endpoints already use StorageService (admin/medias, reviews/upload, chat/upload, accounting/attachments, hero-slides)
+ * IMP-004: TODO: Add storageQuota field to settings and enforce per-user/org quota check before upload
+ * IMP-005: TODO: Implement orphan media garbage collection job (find Media records not referenced by any Product/Article/HeroSlide)
+ * IMP-006: TODO: Wire getPresignedUploadUrl() to a client-side direct upload flow for large files (method exists but unused)
+ * IMP-008: TODO: Configure Azure Blob Storage geo-redundancy (GRS) and soft-delete for backup
+ * IMP-010: TODO: Implement media versioning (keep previous versions with isLatest flag before overwrite)
  */
 
 import { writeFile, unlink, mkdir } from 'fs/promises';

@@ -597,3 +597,130 @@ export function suggestGifiCode(accountName: string, accountType?: string): Gifi
 
   return undefined;
 }
+
+// =============================================================================
+// IMP-A028: GIFI Auto-Validation
+// Validates that a GIFI code is valid, exists in the CRA reference, and is
+// consistent with the expected account type.
+// =============================================================================
+
+export interface GifiValidationResult {
+  valid: boolean;
+  code: string;
+  gifiEntry?: GifiCode;
+  errors: string[];
+  warnings: string[];
+  suggestedCode?: string;
+}
+
+/**
+ * Validates a GIFI code for correctness and consistency with an account type.
+ *
+ * Checks performed:
+ * 1. Format: must be a 4-digit numeric string
+ * 2. Existence: must be in the GIFI_CODES reference list
+ * 3. Type consistency: GIFI range must match the account type (e.g., ASSET accounts
+ *    should use codes 1000-2599, not 8000+)
+ * 4. Suggestion: if invalid, suggests a better code based on account name
+ *
+ * @param gifiCode - The GIFI code to validate
+ * @param accountType - The account type ('ASSET', 'LIABILITY', 'EQUITY', 'REVENUE', 'EXPENSE')
+ * @param accountName - Optional account name for suggestion if code is invalid
+ */
+export function validateGifiCode(
+  gifiCode: string,
+  accountType?: string,
+  accountName?: string,
+): GifiValidationResult {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+
+  // 1. Format check: must be a 4-digit numeric string
+  if (!/^\d{4}$/.test(gifiCode)) {
+    errors.push(`Le code GIFI "${gifiCode}" doit etre un nombre de 4 chiffres (ex: 1001)`);
+    return {
+      valid: false,
+      code: gifiCode,
+      errors,
+      warnings,
+      suggestedCode: accountName ? suggestGifiCode(accountName, accountType)?.code : undefined,
+    };
+  }
+
+  // 2. Existence check: must be in the reference list
+  const gifiEntry = getGifiCode(gifiCode);
+  if (!gifiEntry) {
+    warnings.push(`Le code GIFI "${gifiCode}" n'est pas dans la liste de reference CRA. Verifiez qu'il est valide.`);
+  }
+
+  // 3. Type consistency check: GIFI range must match account type
+  if (accountType) {
+    const num = parseInt(gifiCode, 10);
+    const typeRanges: Record<string, { min: number; max: number; label: string }[]> = {
+      ASSET: [{ min: 1000, max: 2599, label: 'Actifs (1000-2599)' }],
+      LIABILITY: [{ min: 2600, max: 3449, label: 'Passifs (2600-3449)' }],
+      EQUITY: [{ min: 3450, max: 3849, label: 'Capitaux propres (3450-3849)' }],
+      REVENUE: [{ min: 7000, max: 8089, label: 'Revenus (7000-8089)' }],
+      EXPENSE: [
+        { min: 8090, max: 8518, label: 'Cout des ventes (8090-8518)' },
+        { min: 8519, max: 9974, label: 'Charges d\'exploitation (8519-9974)' },
+        { min: 9975, max: 9999, label: 'Impots (9975-9999)' },
+      ],
+    };
+
+    const allowedRanges = typeRanges[accountType];
+    if (allowedRanges) {
+      const inRange = allowedRanges.some(r => num >= r.min && num <= r.max);
+      if (!inRange) {
+        const expectedLabels = allowedRanges.map(r => r.label).join(' ou ');
+        errors.push(
+          `Le code GIFI ${gifiCode} n'est pas dans la plage attendue pour un compte de type ${accountType}. ` +
+          `Plages attendues: ${expectedLabels}`
+        );
+      }
+    }
+  }
+
+  // 4. If errors, suggest a better code based on account name
+  let suggestedCode: string | undefined;
+  if (errors.length > 0 && accountName) {
+    const suggestion = suggestGifiCode(accountName, accountType);
+    if (suggestion && suggestion.code !== gifiCode) {
+      suggestedCode = suggestion.code;
+    }
+  }
+
+  return {
+    valid: errors.length === 0,
+    code: gifiCode,
+    gifiEntry: gifiEntry || undefined,
+    errors,
+    warnings,
+    suggestedCode,
+  };
+}
+
+/**
+ * Batch-validates an array of chart-of-account to GIFI code mappings.
+ * Returns a summary of all validation issues found.
+ *
+ * @param mappings - Array of { gifiCode, accountType?, accountName? } objects
+ */
+export function validateGifiMappings(
+  mappings: Array<{ gifiCode: string; accountType?: string; accountName?: string }>
+): {
+  totalChecked: number;
+  validCount: number;
+  invalidCount: number;
+  warningCount: number;
+  results: GifiValidationResult[];
+} {
+  const results = mappings.map(m => validateGifiCode(m.gifiCode, m.accountType, m.accountName));
+  return {
+    totalChecked: results.length,
+    validCount: results.filter(r => r.valid).length,
+    invalidCount: results.filter(r => !r.valid).length,
+    warningCount: results.filter(r => r.warnings.length > 0).length,
+    results,
+  };
+}

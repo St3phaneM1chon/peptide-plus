@@ -354,8 +354,9 @@ export default function ProductReviews({ productId, productName }: ProductReview
                 <div key={review.id} className="border-b border-neutral-200 pb-6">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
+                      {/* A-049: Removed unoptimized; use Next.js image optimization with lazy loading */}
                       {review.userAvatar ? (
-                        <Image src={review.userAvatar} alt={review.userName || 'Reviewer'} width={40} height={40} className="w-10 h-10 rounded-full" unoptimized />
+                        <Image src={review.userAvatar} alt={review.userName || 'Reviewer'} width={40} height={40} className="w-10 h-10 rounded-full" loading="lazy" />
                       ) : (
                         <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
                           <span className="text-orange-600 font-bold">{review.userName.charAt(0)}</span>

@@ -88,6 +88,8 @@ export default function RewardsPage() {
   const [transactions, setTransactions] = useState<PointTransaction[]>([]);
   const [referralCode, setReferralCode] = useState('');
   const [referralCount, setReferralCount] = useState(0);
+  // A-045: Transaction filter state
+  const [txFilter, setTxFilter] = useState<'all' | 'earned' | 'redeemed' | 'expired' | 'bonus'>('all');
 
   // Auth check
   useEffect(() => {
@@ -143,6 +145,12 @@ export default function RewardsPage() {
     return currentIndex < LOYALTY_LEVELS_CONFIG.length - 1 ? LOYALTY_LEVELS_CONFIG[currentIndex + 1] : null;
   }, [currentLevel]);
 
+  // A-045: Filtered transactions based on type filter
+  const filteredTransactions = useMemo(() => {
+    if (txFilter === 'all') return transactions;
+    return transactions.filter(t => t.type === txFilter);
+  }, [transactions, txFilter]);
+
   // Progress to next level
   const progressToNext = useMemo(() => {
     if (!nextLevel) return 100;
@@ -151,18 +159,44 @@ export default function RewardsPage() {
     return Math.min((pointsInLevel / pointsNeeded) * 100, 100);
   }, [lifetimePoints, currentLevel, nextLevel]);
 
-  // Redeem reward
-  const redeemReward = (reward: Reward) => {
-    if (points >= reward.pointsCost) {
-      setPoints(p => p - reward.pointsCost);
+  // A-041 FIX: Connect redeemReward to real backend API instead of client-only state update
+  const [redeeming, setRedeeming] = useState<string | null>(null);
+
+  const redeemReward = async (reward: Reward) => {
+    if (points < reward.pointsCost || redeeming) return;
+    setRedeeming(reward.id);
+    try {
+      const res = await fetch('/api/loyalty/redeem', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rewardId: reward.id }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        alert(err.error || t('common.error') || 'Error redeeming reward');
+        return;
+      }
+      const data = await res.json();
+      // A-041: Update state from server-confirmed values
+      setPoints(data.newBalance ?? (points - reward.pointsCost));
       setTransactions(prev => [{
-        id: `txn_${Date.now()}`,
+        id: data.transaction?.id || `txn_${Date.now()}`,
         type: 'redeemed',
-        points: -reward.pointsCost,
-        description: `${t('customerRewards.exchangeLabel')}: ${t(reward.nameKey)}`,
-        date: new Date().toISOString(),
+        points: -(data.pointsSpent ?? reward.pointsCost),
+        description: data.transaction?.description || `${t('customerRewards.exchangeLabel')}: ${t(reward.nameKey)}`,
+        date: data.transaction?.date || new Date().toISOString(),
       }, ...prev]);
-      alert(t('customerRewards.rewardRedeemedSuccess'));
+      // A-041: Show reward code if returned (for discount rewards)
+      if (data.reward?.code) {
+        alert(`${t('customerRewards.rewardRedeemedSuccess')}\n${t('customerRewards.yourCode') || 'Your code'}: ${data.reward.code}`);
+      } else {
+        alert(t('customerRewards.rewardRedeemedSuccess'));
+      }
+    } catch (error) {
+      console.error('Redeem error:', error);
+      alert(t('common.error') || 'Network error');
+    } finally {
+      setRedeeming(null);
     }
   };
 
@@ -278,16 +312,25 @@ export default function RewardsPage() {
                       </div>
                       <div className="flex items-center justify-between mt-4">
                         <span className="text-orange-600 font-bold">{reward.pointsCost} points</span>
+                        {/* A-041: Redeem button with loading state */}
                         <button
                           onClick={() => redeemReward(reward)}
-                          disabled={points < reward.pointsCost}
+                          disabled={points < reward.pointsCost || redeeming === reward.id}
                           className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                            points >= reward.pointsCost
+                            points >= reward.pointsCost && redeeming !== reward.id
                               ? 'bg-orange-500 hover:bg-orange-600 text-white'
                               : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                           }`}
                         >
-                          {t('customerRewards.exchange')}
+                          {redeeming === reward.id ? (
+                            <span className="flex items-center gap-1">
+                              <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                              </svg>
+                              ...
+                            </span>
+                          ) : t('customerRewards.exchange')}
                         </button>
                       </div>
                     </div>
@@ -300,14 +343,34 @@ export default function RewardsPage() {
             <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
               <div className="p-6 border-b border-gray-200">
                 <h3 className="text-lg font-bold text-gray-900">{t('customerRewards.pointsHistory')}</h3>
+                {/* A-045: Transaction type filter buttons */}
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {(['all', 'earned', 'redeemed', 'expired', 'bonus'] as const).map(filterType => (
+                    <button
+                      key={filterType}
+                      onClick={() => setTxFilter(filterType)}
+                      className={`px-3 py-1 text-xs rounded-full font-medium transition-colors ${
+                        txFilter === filterType
+                          ? 'bg-orange-500 text-white'
+                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      }`}
+                    >
+                      {filterType === 'all' ? (t('common.all') || 'All') :
+                       filterType === 'earned' ? (t('customerRewards.earned') || 'Earned') :
+                       filterType === 'redeemed' ? (t('customerRewards.redeemed') || 'Redeemed') :
+                       filterType === 'expired' ? (t('customerRewards.expired') || 'Expired') :
+                       (t('customerRewards.bonusLabel') || 'Bonus')}
+                    </button>
+                  ))}
+                </div>
               </div>
               <div className="divide-y divide-gray-100">
-                {transactions.length === 0 ? (
+                {filteredTransactions.length === 0 ? (
                   <div className="p-8 text-center text-gray-500">
                     {t('customerRewards.noTransactions')}
                   </div>
                 ) : (
-                  transactions.map(txn => (
+                  filteredTransactions.map(txn => (
                     <div key={txn.id} className="p-4 flex items-center justify-between">
                       <div className="flex items-center gap-4">
                         <span className={`w-10 h-10 rounded-full flex items-center justify-center text-lg ${

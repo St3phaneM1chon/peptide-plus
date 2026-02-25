@@ -6,6 +6,8 @@ export const dynamic = 'force-dynamic';
  * API Chat - Gestion des conversations
  * GET /api/chat - Liste des conversations (admin)
  * POST /api/chat - Créer/récupérer une conversation
+ *
+ * IMP-011: CSRF protection on all POST chat endpoints (validateCsrf)
  */
 
 import { NextRequest, NextResponse } from 'next/server';

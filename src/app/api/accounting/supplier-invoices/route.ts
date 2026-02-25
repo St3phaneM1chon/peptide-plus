@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { logAuditTrail } from '@/lib/accounting/audit-trail.service';
+import { assertPeriodOpen } from '@/lib/accounting/validation';
 import { logger } from '@/lib/logger';
 
 const createSupplierInvoiceSchema = z.object({
@@ -158,6 +159,16 @@ export const POST = withAdminGuard(async (request) => {
       );
     }
 
+    // IMP-A017: Check that the invoice date is not in a closed/locked accounting period
+    try {
+      await assertPeriodOpen(parsedInvoiceDate);
+    } catch (periodError) {
+      return NextResponse.json(
+        { error: periodError instanceof Error ? periodError.message : 'Période comptable verrouillée' },
+        { status: 400 }
+      );
+    }
+
     const invoice = await prisma.supplierInvoice.create({
       data: {
         invoiceNumber,
@@ -193,7 +204,7 @@ export const POST = withAdminGuard(async (request) => {
 export const PUT = withAdminGuard(async (request, { session }) => {
   try {
     const body = await request.json();
-    const { id, status, amountPaid, paidAt } = body;
+    const { id, status, amountPaid, paidAt, updatedAt: clientUpdatedAt } = body;
 
     if (!id) {
       return NextResponse.json({ error: 'ID requis' }, { status: 400 });
@@ -202,6 +213,15 @@ export const PUT = withAdminGuard(async (request, { session }) => {
     const existing = await prisma.supplierInvoice.findFirst({ where: { id, deletedAt: null } });
     if (!existing) {
       return NextResponse.json({ error: 'Facture fournisseur non trouvée' }, { status: 404 });
+    }
+
+    // A058: Optimistic locking - verify the invoice has not been modified by another user
+    // since the client last fetched it. Prevents silent data loss from concurrent edits.
+    if (clientUpdatedAt && existing.updatedAt.toISOString() !== clientUpdatedAt) {
+      return NextResponse.json(
+        { error: 'Facture modifiée par un autre utilisateur. Veuillez recharger.' },
+        { status: 409 }
+      );
     }
 
     // Supplier invoice status transition validation (state machine)
@@ -239,9 +259,13 @@ export const PUT = withAdminGuard(async (request, { session }) => {
       updateData.balance = total - amountPaid;
     }
 
-    const invoice = await prisma.supplierInvoice.update({
-      where: { id },
-      data: updateData,
+    // A035: Use $transaction for atomicity when modifying financial fields (status + amountPaid + balance)
+    // to prevent inconsistent state if the request is interrupted mid-update.
+    const invoice = await prisma.$transaction(async (tx) => {
+      return tx.supplierInvoice.update({
+        where: { id },
+        data: updateData,
+      });
     });
 
     // #76 Compliance: Audit logging for PUT operations
@@ -305,6 +329,21 @@ export const DELETE = withAdminGuard(async (request, { session }) => {
     if (existing.status === 'PAID') {
       return NextResponse.json(
         { error: 'Les factures payées ne peuvent pas être supprimées' },
+        { status: 400 }
+      );
+    }
+
+    // IMP-A004: Enforce 7-year retention policy (CRA/RQ section 230(4) ITA)
+    const RETENTION_YEARS = 7;
+    const retentionCutoff = new Date();
+    retentionCutoff.setFullYear(retentionCutoff.getFullYear() - RETENTION_YEARS);
+    if (existing.invoiceDate > retentionCutoff) {
+      const retentionEndDate = new Date(existing.invoiceDate);
+      retentionEndDate.setFullYear(retentionEndDate.getFullYear() + RETENTION_YEARS);
+      return NextResponse.json(
+        {
+          error: `Suppression interdite: cette facture fournisseur (${existing.invoiceNumber}) est sous la politique de retention fiscale de ${RETENTION_YEARS} ans (CRA/RQ art. 230(4) LIR). Retention jusqu'au ${retentionEndDate.toISOString().split('T')[0]}.`,
+        },
         { status: 400 }
       );
     }

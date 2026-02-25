@@ -139,6 +139,7 @@ export async function GET(request: NextRequest) {
         locale: true,
         birthDate: true,
         loyaltyPoints: true,
+        loyaltyTier: true, // A-082: Needed for tier-based birthday personalization
       },
     });
 
@@ -220,6 +221,19 @@ export async function GET(request: NextRequest) {
             return { userId: user.id, email: user.email, success: false, error: 'bounce_suppressed' };
           }
 
+          // A-082: Personalize birthday discount/points by loyalty tier
+          // Higher-tier members get better birthday rewards
+          const tierBirthdayConfig: Record<string, { discount: number; points: number }> = {
+            DIAMOND:  { discount: Math.min(DISCOUNT_PERCENT + 15, 50), points: Math.round(BONUS_POINTS * 3) },
+            PLATINUM: { discount: Math.min(DISCOUNT_PERCENT + 10, 40), points: Math.round(BONUS_POINTS * 2.5) },
+            GOLD:     { discount: Math.min(DISCOUNT_PERCENT + 5, 30), points: Math.round(BONUS_POINTS * 1.5) },
+            SILVER:   { discount: DISCOUNT_PERCENT, points: BONUS_POINTS },
+            BRONZE:   { discount: DISCOUNT_PERCENT, points: BONUS_POINTS },
+          };
+          const tierConfig = tierBirthdayConfig[user.loyaltyTier || 'BRONZE'] || tierBirthdayConfig.BRONZE;
+          const userDiscountPercent = tierConfig.discount;
+          const userBonusPoints = tierConfig.points;
+
           // FIX: FLAW-012 - Include crypto-random suffix instead of predictable userId-based code
           // TODO: FLAW-060 - Promo code has no user-specific restriction; any user guessing the code could use it.
           // Consider adding a userId field to PromoCode model for user-locked promo codes.
@@ -228,13 +242,14 @@ export async function GET(request: NextRequest) {
           expiresAt.setDate(expiresAt.getDate() + PROMO_VALIDITY_DAYS);
 
           // Create promo code in database (skip if already exists)
+          // A-082: Use tier-personalized discount value
           try {
             await db.promoCode.create({
               data: {
                 code: discountCode,
-                description: `Birthday discount for ${user.name || user.email}`,
+                description: `Birthday discount for ${user.name || user.email} (${user.loyaltyTier || 'BRONZE'})`,
                 type: 'PERCENTAGE',
-                value: DISCOUNT_PERCENT,
+                value: userDiscountPercent,
                 usageLimit: 1,
                 usageLimitPerUser: 1,
                 isActive: true,
@@ -252,6 +267,7 @@ export async function GET(request: NextRequest) {
           // DI-62: Calculate balanceAfter from the updated user record
           // F45 FIX: Check for existing EARN_BIRTHDAY transaction this year inside
           // the transaction to prevent double-award if cron is manually re-run
+          // A-082: Use tier-personalized bonus points
           await db.$transaction(async (tx) => {
             const currentYear = new Date().getFullYear();
             const existingBirthdayTx = await tx.loyaltyTransaction.findFirst({
@@ -276,8 +292,8 @@ export async function GET(request: NextRequest) {
             const updatedUser = await tx.user.update({
               where: { id: user.id },
               data: {
-                loyaltyPoints: { increment: BONUS_POINTS },
-                lifetimePoints: { increment: BONUS_POINTS },
+                loyaltyPoints: { increment: userBonusPoints },
+                lifetimePoints: { increment: userBonusPoints },
                 lastBirthdayEmail: new Date(),
               },
               select: { loyaltyPoints: true },
@@ -286,8 +302,8 @@ export async function GET(request: NextRequest) {
               data: {
                 userId: user.id,
                 type: 'EARN_BIRTHDAY',
-                points: BONUS_POINTS,
-                description: 'Happy Birthday! Bonus points',
+                points: userBonusPoints,
+                description: `Happy Birthday! Bonus points (${user.loyaltyTier || 'BRONZE'} tier)`,
                 balanceAfter: updatedUser.loyaltyPoints,
               },
             });
@@ -297,13 +313,14 @@ export async function GET(request: NextRequest) {
           const unsubscribeUrl = await generateUnsubscribeUrl(user.email, 'marketing', user.id).catch(() => undefined);
 
           // Generate and send email
+          // A-082: Use tier-personalized values in email
           const emailContent = birthdayEmail({
             customerName: user.name || 'Client',
             customerEmail: user.email,
             discountCode,
-            discountValue: DISCOUNT_PERCENT,
+            discountValue: userDiscountPercent,
             discountType: 'percentage',
-            bonusPoints: BONUS_POINTS,
+            bonusPoints: userBonusPoints,
             expiresAt,
             locale: (user.locale as 'fr' | 'en') || 'fr',
             unsubscribeUrl,

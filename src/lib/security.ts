@@ -352,7 +352,7 @@ export function checkRateLimit(
   };
 }
 
-// AMELIORATION A-005: Removed duplicate in-memory CSRF implementation.
+// AMELIORATION A-005 / IMP-005: Removed duplicate in-memory CSRF implementation.
 // All CSRF protection is handled by csrf.ts + csrf-middleware.ts (HMAC-signed, cookie-based).
 
 // FAILLE-038 FIX: Expose cleanup function for graceful shutdown

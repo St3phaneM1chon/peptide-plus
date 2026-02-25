@@ -45,11 +45,13 @@ export const GET = withAdminGuard(async (request, _ctx) => {
     }
 
     if (search) {
+      // IMP-051: TODO: Add tags to search (tags is stored as JSON string, needs contains search)
       where.OR = [
         { title: { contains: search, mode: 'insensitive' } },
         { description: { contains: search, mode: 'insensitive' } },
         { instructor: { contains: search, mode: 'insensitive' } },
         { category: { contains: search, mode: 'insensitive' } },
+        { tags: { contains: search, mode: 'insensitive' } }, // IMP-051: Search within tags JSON string
       ];
     }
 

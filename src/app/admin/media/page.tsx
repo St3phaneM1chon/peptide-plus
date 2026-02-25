@@ -1,3 +1,7 @@
+// IMP-013: TODO: Create a reusable <MediaPicker> modal component for selecting/uploading media across all admin pages
+// IMP-014: TODO: Create webhook routes /api/webhooks/[platform] for TikTok, YouTube, Meta, X, LinkedIn callbacks
+// IMP-015: TODO: Create IntegrationConfig Prisma model to store platform credentials in DB (encrypted) instead of env-only
+// IMP-039: TODO: Add analytics dashboard showing media metrics (views, engagement, ROI) for social integrations
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';

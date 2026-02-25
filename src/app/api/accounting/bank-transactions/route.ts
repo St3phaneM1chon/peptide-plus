@@ -7,6 +7,7 @@ import { logger } from '@/lib/logger';
 import { z } from 'zod';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { validateCsrf } from '@/lib/csrf-middleware';
+import { assertPeriodOpen } from '@/lib/accounting/validation';
 
 // ---------------------------------------------------------------------------
 // Zod schemas
@@ -141,6 +142,18 @@ export const POST = withAdminGuard(async (request) => {
     const bankAccount = await prisma.bankAccount.findUnique({ where: { id: bankAccountId } });
     if (!bankAccount) {
       return NextResponse.json({ error: 'Compte bancaire non trouvé' }, { status: 404 });
+    }
+
+    // IMP-A017: Check that transaction dates are not in a closed/locked accounting period
+    for (const t of transactions) {
+      try {
+        await assertPeriodOpen(new Date(t.date));
+      } catch (periodError) {
+        return NextResponse.json(
+          { error: periodError instanceof Error ? periodError.message : `Période comptable verrouillée pour la date ${t.date}` },
+          { status: 400 }
+        );
+      }
     }
 
     const importBatch = `IMP-${Date.now()}`;

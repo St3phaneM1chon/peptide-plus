@@ -9,7 +9,7 @@ import { logAuditTrail } from '@/lib/accounting/audit-trail.service';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { validateCsrf } from '@/lib/csrf-middleware';
 // FIX: F017 - Import consolidated schemas from validation.ts instead of duplicating
-import { createExpenseSchema, updateExpenseSchema } from '@/lib/accounting/validation';
+import { createExpenseSchema, updateExpenseSchema, assertPeriodOpen } from '@/lib/accounting/validation';
 
 // ---------------------------------------------------------------------------
 // Deductibility rules per category (Canadian tax rules)
@@ -242,6 +242,16 @@ export const POST = withAdminGuard(async (request, { session }) => {
     if (Math.abs(computedTotal - data.total) > 0.01) {
       return NextResponse.json(
         { error: `Le total (${data.total}) ne correspond pas au sous-total + taxes (${computedTotal.toFixed(2)})` },
+        { status: 400 }
+      );
+    }
+
+    // IMP-A017: Check that the expense date is not in a closed/locked accounting period
+    try {
+      await assertPeriodOpen(new Date(data.date));
+    } catch (periodError) {
+      return NextResponse.json(
+        { error: periodError instanceof Error ? periodError.message : 'Période comptable verrouillée' },
         { status: 400 }
       );
     }

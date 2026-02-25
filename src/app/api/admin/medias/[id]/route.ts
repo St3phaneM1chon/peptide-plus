@@ -22,6 +22,29 @@ const patchMediaSchema = z.object({
   folder: z.string().max(200).optional(),
 });
 
+// IMP-032: GET /api/admin/medias/[id] - Get single media with details
+export const GET = withAdminGuard(async (_request: NextRequest, { params }) => {
+  try {
+    const id = params!.id;
+
+    const media = await prisma.media.findUnique({
+      where: { id },
+    });
+
+    if (!media) {
+      return NextResponse.json({ error: 'Media not found' }, { status: 404 });
+    }
+
+    return NextResponse.json({ media });
+  } catch (error) {
+    logger.error('Admin medias GET [id] error', { error: error instanceof Error ? error.message : String(error) });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+});
+
 // F21 FIX: Sanitize folder path to prevent path traversal
 function sanitizeFolderPath(rawFolder: string): string {
   return rawFolder

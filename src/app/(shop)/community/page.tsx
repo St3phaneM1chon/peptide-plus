@@ -2,6 +2,10 @@
 // TODO: F-055 - Calculate popular tags dynamically from posts instead of hardcoded fallback
 // TODO: F-072 - Add skeleton loading state for when backend data loading is implemented
 // F086 FIX: Dynamic SEO meta (Open Graph, Twitter Card) added to community/layout.tsx
+// IMP-001: Forum backend NOT YET IMPLEMENTED - requires new Prisma models (ForumPost, ForumReply, ForumTag)
+// IMP-045: Character counters added to post title and content fields
+// A-041: URL-based pagination params for bookmarkable/shareable community URLs
+// A-062: Auto-save draft post to localStorage for persistence across page navigations
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -9,6 +13,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useSession } from 'next-auth/react';
 import { useI18n } from '@/i18n/client';
+import { useSearchParams } from 'next/navigation';
 import { sanitizeText } from '@/lib/sanitize';
 
 interface Post {
@@ -58,12 +63,20 @@ export default function CommunityPage() {
   const { data: session } = useSession();
   const { t, locale } = useI18n();
   const categories = getCategories(t);
-  const [activeCategory, setActiveCategory] = useState('all');
+  // A-041: Read initial state from URL search params for bookmarkable/shareable URLs
+  const searchParams = useSearchParams();
+  const [activeCategory, setActiveCategory] = useState(() => {
+    const cat = searchParams.get('category');
+    return cat && ['all', 'general', 'research', 'howto', 'results', 'support'].includes(cat) ? cat : 'all';
+  });
   const [posts, setPosts] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
   // F-064 FIX: Persist sort preference in localStorage
+  // A-041: Also read from URL params (URL takes priority over localStorage)
   const [sortBy, setSortBy] = useState<'recent' | 'popular' | 'replies'>(() => {
+    const urlSort = searchParams.get('sort');
+    if (urlSort === 'recent' || urlSort === 'popular' || urlSort === 'replies') return urlSort;
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('community-sort');
       if (saved === 'recent' || saved === 'popular' || saved === 'replies') return saved;
@@ -71,7 +84,8 @@ export default function CommunityPage() {
     return 'recent';
   });
   const [showNewPost, setShowNewPost] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  // A-041: Read initial search from URL params
+  const [searchQuery, setSearchQuery] = useState(() => searchParams.get('q') || '');
   // FIX F-032: Debounce search query to avoid excessive re-renders with future API calls
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -86,12 +100,34 @@ export default function CommunityPage() {
     localStorage.setItem('community-sort', sortBy);
   }, [sortBy]);
 
-  // New post form
-  const [newPost, setNewPost] = useState({
-    title: '',
-    content: '',
-    category: 'general',
-    tags: '',
+  // A-041: Sync URL search params when filters change (bookmarkable/shareable)
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (activeCategory !== 'all') params.set('category', activeCategory);
+    if (sortBy !== 'recent') params.set('sort', sortBy);
+    if (debouncedSearch) params.set('q', debouncedSearch);
+    const paramStr = params.toString();
+    const newUrl = paramStr ? `?${paramStr}` : window.location.pathname;
+    // Use replaceState to avoid polluting browser history on every keystroke
+    window.history.replaceState({}, '', newUrl);
+  }, [activeCategory, sortBy, debouncedSearch]);
+
+  // A-062: Auto-save draft post to localStorage for persistence across page navigations
+  const DRAFT_KEY = 'community-draft-post';
+  type PostDraft = { title: string; content: string; category: string; tags: string };
+  const defaultDraft: PostDraft = { title: '', content: '', category: 'general', tags: '' };
+  // New post form -- A-062: Restore draft from localStorage on mount
+  const [newPost, setNewPost] = useState<PostDraft>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem(DRAFT_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed && typeof parsed.title === 'string') return parsed as PostDraft;
+        }
+      } catch { /* ignore parse errors */ }
+    }
+    return defaultDraft;
   });
 
   const filteredPosts = posts
@@ -115,9 +151,19 @@ export default function CommunityPage() {
       }
     });
 
+  // A-062: Auto-save draft to localStorage whenever form fields change
+  useEffect(() => {
+    if (newPost.title || newPost.content || newPost.tags) {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(newPost));
+    }
+  }, [newPost]);
+
   const handleCreatePost = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!session) return;
+
+    // A-062: Clear draft on successful submission
+    localStorage.removeItem(DRAFT_KEY);
 
     // F-024 FIX: Sanitize HTML in user-generated content using centralized sanitizeText
     const post: Post = {
@@ -127,7 +173,7 @@ export default function CommunityPage() {
       title: sanitizeText(newPost.title),
       content: sanitizeText(newPost.content),
       category: newPost.category,
-      tags: newPost.tags.split(',').map(tag => sanitizeText(tag.trim().toLowerCase())).filter(Boolean),
+      tags: newPost.tags.split(',').map((tag: string) => sanitizeText(tag.trim().toLowerCase())).filter(Boolean),
       likes: 0,
       replies: 0,
       views: 0,
@@ -511,6 +557,7 @@ export default function CommunityPage() {
             </div>
             
             <form onSubmit={handleCreatePost} className="p-6 space-y-6">
+              {/* IMP-045: Character counter on form fields */}
               <div>
                 <label className="block text-sm font-medium mb-2">{t('community.postTitle') || 'Title'}</label>
                 <input
@@ -522,6 +569,9 @@ export default function CommunityPage() {
                   required
                   maxLength={200}
                 />
+                <p className={`text-xs mt-1 text-end ${newPost.title.length > 180 ? 'text-red-500' : newPost.title.length > 150 ? 'text-amber-500' : 'text-neutral-400'}`}>
+                  {newPost.title.length}/200
+                </p>
               </div>
 
               <div>
@@ -537,6 +587,7 @@ export default function CommunityPage() {
                 </select>
               </div>
 
+              {/* IMP-045: Character counter on form fields */}
               <div>
                 <label className="block text-sm font-medium mb-2">{t('community.postContent') || 'Content'}</label>
                 <textarea
@@ -548,6 +599,9 @@ export default function CommunityPage() {
                   required
                   maxLength={10000}
                 />
+                <p className={`text-xs mt-1 text-end ${newPost.content.length > 9500 ? 'text-red-500' : newPost.content.length > 8000 ? 'text-amber-500' : 'text-neutral-400'}`}>
+                  {newPost.content.length}/10000
+                </p>
               </div>
 
               <div>
@@ -570,6 +624,20 @@ export default function CommunityPage() {
                   <p className="text-sm text-purple-600">{t('community.guidelinesDesc') || 'Be respectful, stay on topic, and remember this is for research discussion only.'}</p>
                 </div>
               </div>
+
+              {/* A-062: Discard draft button when draft data exists */}
+              {(newPost.title || newPost.content || newPost.tags) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    localStorage.removeItem(DRAFT_KEY);
+                    setNewPost({ title: '', content: '', category: 'general', tags: '' });
+                  }}
+                  className="w-full py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                >
+                  {t('community.discardDraft') || 'Discard Draft'}
+                </button>
+              )}
 
               <button
                 type="submit"

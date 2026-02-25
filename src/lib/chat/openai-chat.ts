@@ -262,10 +262,11 @@ export async function getChatbotResponse(
     const botMessage = response.choices[0]?.message?.content || '';
     
     // F-057 FIX: Multilingual escalation detection (not French-only)
+    // IMP-022: Extended escalation detection for all 22 supported languages
     const botLower = botMessage.toLowerCase();
     const userLower = userMessage.toLowerCase();
     const shouldEscalate =
-      // Bot response signals (FR + EN + ES)
+      // Bot response signals (FR + EN + ES + DE + IT + PT)
       botLower.includes('transmettre') ||
       botLower.includes('équipe') ||
       botLower.includes('email pour') ||
@@ -273,6 +274,8 @@ export async function getChatbotResponse(
       botLower.includes('connect you with') ||
       botLower.includes('human agent') ||
       botLower.includes('transferir') ||
+      botLower.includes('weiterleiten') ||    // DE
+      botLower.includes('trasferire') ||      // IT
       // User request signals (multilingual)
       userLower.includes('parler à quelqu') ||
       userLower.includes('humain') ||
@@ -282,7 +285,17 @@ export async function getChatbotResponse(
       userLower.includes('real person') ||
       userLower.includes('human') ||
       userLower.includes('hablar con') ||
-      userLower.includes('persona real');
+      userLower.includes('persona real') ||
+      userLower.includes('mit jemandem sprechen') || // DE: talk to someone
+      userLower.includes('echte person') ||           // DE: real person
+      userLower.includes('parlare con') ||             // IT: speak with
+      userLower.includes('pessoa real') ||             // PT: real person
+      userLower.includes('falar com') ||               // PT: speak with
+      userLower.includes('사람과 대화') ||               // KO: talk to a person
+      userLower.includes('真人') ||                     // ZH: real person
+      userLower.includes('担当者') ||                   // JA: person in charge
+      userLower.includes('оператор') ||                // RU: operator
+      userLower.includes('человек');                   // RU: human
 
     // Extraire les produits suggérés
     const productMatches = botMessage.match(/BPC-157|TB-500|Semaglutide|Tirzepatide|CJC-1295|Ipamorelin|GHRP-6|Epitalon|NAD\+|PT-141/gi);
@@ -306,6 +319,7 @@ export async function getChatbotResponse(
 // HELPERS
 // ============================================
 
+// IMP-022: Full multilingual support for all 22 supported locales + common detection results
 function getLanguageName(code: string): string {
   const languages: Record<string, string> = {
     en: 'English',
@@ -325,8 +339,34 @@ function getLanguageName(code: string): string {
     sv: 'Swedish',
     tr: 'Turkish',
     vi: 'Vietnamese',
+    // IMP-022: Added missing supported languages for complete chatbot multilingual coverage
+    ta: 'Tamil',
+    pa: 'Punjabi',
+    tl: 'Tagalog',
+    ht: 'Haitian Creole',
+    gcr: 'Guianese Creole',
+    bn: 'Bengali',
+    cs: 'Czech',
+    da: 'Danish',
+    el: 'Greek',
+    fi: 'Finnish',
+    he: 'Hebrew',
+    hu: 'Hungarian',
+    id: 'Indonesian',
+    ms: 'Malay',
+    no: 'Norwegian',
+    ro: 'Romanian',
+    sk: 'Slovak',
+    th: 'Thai',
+    uk: 'Ukrainian',
+    ur: 'Urdu',
+    fa: 'Persian',
+    af: 'Afrikaans',
+    sw: 'Swahili',
   };
-  return languages[code] || code;
+  // IMP-022: Handle regional variants (e.g., ar-dz -> Arabic)
+  const baseCode = code.includes('-') ? code.split('-')[0] : code;
+  return languages[baseCode] || code;
 }
 
 export async function detectLanguage(text: string): Promise<string> {

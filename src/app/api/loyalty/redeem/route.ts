@@ -81,6 +81,22 @@ export async function POST(request: NextRequest) {
     // FIX: F-038 - lifetimePoints is monotonically increasing (never decremented on redemptions).
     // Only loyaltyPoints (spendable balance) decreases. Tier is based on lifetimePoints.
 
+    // A-015: Fraud velocity check - flag if user redeems more than 3 times in 1 hour
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    const recentRedemptions = await db.loyaltyTransaction.count({
+      where: {
+        userId: user.id,
+        type: { in: ['REDEEM_DISCOUNT', 'REDEEM_PRODUCT'] },
+        createdAt: { gte: oneHourAgo },
+      },
+    });
+    if (recentRedemptions >= 3) {
+      logger.warn('A-015: Redemption velocity limit reached', { userId: user.id, recentRedemptions });
+      return NextResponse.json({
+        error: 'Too many redemptions in a short period. Please try again later.',
+      }, { status: 429 });
+    }
+
     // Vérifier que l'utilisateur a assez de points
     if (user.loyaltyPoints < reward.points) {
       return NextResponse.json({

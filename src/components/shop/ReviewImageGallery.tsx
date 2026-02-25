@@ -48,13 +48,14 @@ export default function ReviewImageGallery({ images }: ReviewImageGalleryProps) 
             onClick={() => openLightbox(index)}
             className="relative w-20 h-20 rounded-lg overflow-hidden border border-neutral-200 hover:border-orange-400 transition-colors cursor-pointer group"
           >
+            {/* A-049: Lazy loading with Next.js optimization (removed unoptimized) */}
             <Image
               src={img}
               alt={`Review image ${index + 1}`}
               fill
               sizes="80px"
               className="object-cover group-hover:scale-105 transition-transform"
-              unoptimized
+              loading="lazy"
             />
             {/* Hover overlay */}
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
@@ -126,13 +127,14 @@ export default function ReviewImageGallery({ images }: ReviewImageGalleryProps) 
             className="relative max-w-5xl max-h-[90vh] w-full h-full"
             onClick={(e) => e.stopPropagation()}
           >
+            {/* A-049: Lightbox image uses priority loading for instant display */}
             <Image
               src={images[currentIndex]}
               alt={`Review image ${currentIndex + 1}`}
               fill
               sizes="100vw"
               className="object-contain"
-              unoptimized
+              priority
             />
           </div>
 

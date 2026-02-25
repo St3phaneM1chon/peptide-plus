@@ -37,6 +37,7 @@ export const GET = withAdminGuard(async (request) => {
       ];
     }
 
+    // IMP-027: Optimized Prisma queries use select instead of full model fetch
     const [rawQuestions, total] = await Promise.all([
       prisma.productQuestion.findMany({
         where,

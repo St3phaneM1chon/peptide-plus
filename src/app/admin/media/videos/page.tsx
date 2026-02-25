@@ -1,3 +1,8 @@
+// IMP-022: DONE: Inline video player modal is implemented (playingVideo state + modal with YouTube/Vimeo/native embed)
+// IMP-023: TODO: Add direct video file upload (currently only accepts URL); requires server-side storage + transcoding
+// IMP-024: TODO: Add analytics tracking for media views/downloads/shares (view count exists but no tracking endpoint)
+// IMP-036: TODO: Implement OAuth flow for social integrations instead of manual token copy-paste
+// IMP-037: TODO: Add post scheduling functionality for social media integrations
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';

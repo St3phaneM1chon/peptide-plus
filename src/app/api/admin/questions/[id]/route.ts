@@ -56,6 +56,7 @@ export const DELETE = withAdminGuard(async (request: NextRequest, { session, par
         deletedBy: session.user.id,
       });
 
+    // IMP-025: Log admin modifications with who/when - log errors instead of silencing
     logAdminAction({
       adminUserId: session.user.id,
       action: 'DELETE_QUESTION',
@@ -64,7 +65,7 @@ export const DELETE = withAdminGuard(async (request: NextRequest, { session, par
       previousValue: { productId: existing.productId, question: existing.question?.substring(0, 200) },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch(() => {});
+    }).catch((err) => logger.error('IMP-025: Audit log failed for DELETE_QUESTION', { error: err instanceof Error ? err.message : String(err) }));
 
     return NextResponse.json({ success: true });
   } catch (error) {
@@ -128,6 +129,7 @@ export const PATCH = withAdminGuard(async (request: NextRequest, { session, para
       data: updateData,
     });
 
+    // IMP-025: Log admin modifications with who/when - log errors instead of silencing
     logAdminAction({
       adminUserId: session.user.id,
       action: 'UPDATE_QUESTION',
@@ -137,7 +139,7 @@ export const PATCH = withAdminGuard(async (request: NextRequest, { session, para
       newValue: updateData,
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch(() => {});
+    }).catch((err) => logger.error('IMP-025: Audit log failed for UPDATE_QUESTION', { error: err instanceof Error ? err.message : String(err) }));
 
     return NextResponse.json({
       question: {

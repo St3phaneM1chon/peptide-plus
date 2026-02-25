@@ -9,6 +9,8 @@ import { logAuditTrail } from '@/lib/accounting';
 import { updateJournalEntrySchema, assertJournalBalance } from '@/lib/accounting/validation';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { validateCsrf } from '@/lib/csrf-middleware';
 /**
  * GET /api/accounting/entries
  * List journal entries with filters
@@ -687,6 +689,119 @@ export const DELETE = withAdminGuard(async (request, { session }) => {
     logger.error('Delete/void entry error', { error: errMsg });
     return NextResponse.json(
       { error: 'Erreur lors de l\'opération' },
+      { status: 500 }
+    );
+  }
+});
+
+/**
+ * PATCH /api/accounting/entries
+ * A041: Batch posting - validate (post) multiple DRAFT entries in a single request.
+ * Body: { ids: string[] } - array of journal entry IDs to post.
+ * All entries must be DRAFT status. Returns count of posted entries.
+ */
+export const PATCH = withAdminGuard(async (request, { session }) => {
+  try {
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rl = await rateLimitMiddleware(ip, '/api/accounting/entries');
+    if (!rl.success) {
+      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
+    }
+    const csrfValid = await validateCsrf(request);
+    if (!csrfValid) {
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
+    const body = await request.json();
+    const batchPostSchema = z.object({
+      ids: z.array(z.string().min(1)).min(1, 'Au moins 1 ID requis').max(100, 'Maximum 100 écritures par lot'),
+    });
+    const parsed = batchPostSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+    }
+    const { ids } = parsed.data;
+
+    // Fetch all entries and verify they are DRAFT
+    const entries = await prisma.journalEntry.findMany({
+      where: { id: { in: ids }, deletedAt: null },
+      include: { lines: true },
+    });
+
+    const notFound = ids.filter((id) => !entries.find((e) => e.id === id));
+    if (notFound.length > 0) {
+      return NextResponse.json(
+        { error: `Écritures non trouvées: ${notFound.join(', ')}` },
+        { status: 404 }
+      );
+    }
+
+    const nonDraft = entries.filter((e) => e.status !== 'DRAFT');
+    if (nonDraft.length > 0) {
+      return NextResponse.json(
+        { error: `${nonDraft.length} écriture(s) ne sont pas en brouillon: ${nonDraft.map((e) => e.entryNumber).join(', ')}` },
+        { status: 400 }
+      );
+    }
+
+    // A041: Validate balance for each entry before posting
+    for (const entry of entries) {
+      const totalDebits = roundCurrency(entry.lines.reduce((s, l) => s + Number(l.debit), 0));
+      const totalCredits = roundCurrency(entry.lines.reduce((s, l) => s + Number(l.credit), 0));
+      if (roundCurrency(totalDebits - totalCredits) !== 0) {
+        return NextResponse.json(
+          { error: `Écriture ${entry.entryNumber} non équilibrée (débits: ${totalDebits}, crédits: ${totalCredits})` },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Batch post all entries in a single transaction
+    const now = new Date();
+    const userId = session.user.id || session.user.email || 'system';
+
+    const result = await prisma.$transaction(async (tx) => {
+      const updated = await tx.journalEntry.updateMany({
+        where: { id: { in: ids }, status: 'DRAFT', deletedAt: null },
+        data: {
+          status: 'POSTED',
+          postedBy: userId,
+          postedAt: now,
+        },
+      });
+      return updated;
+    });
+
+    // Log audit trail for each posted entry
+    for (const entry of entries) {
+      logAuditTrail({
+        entityType: 'JournalEntry',
+        entityId: entry.id,
+        action: 'BATCH_POST',
+        userId,
+        userName: session.user.name || undefined,
+        metadata: { entryNumber: entry.entryNumber, batchSize: ids.length },
+      });
+    }
+
+    logger.info('Batch post completed:', {
+      count: result.count,
+      ids,
+      postedBy: userId,
+    });
+
+    return NextResponse.json({
+      success: true,
+      posted: result.count,
+      message: `${result.count} écriture(s) validée(s) avec succès`,
+    });
+  } catch (error) {
+    logger.error('Batch post error', { error: error instanceof Error ? error.message : String(error) });
+    return NextResponse.json(
+      { error: 'Erreur lors de la validation en lot' },
       { status: 500 }
     );
   }

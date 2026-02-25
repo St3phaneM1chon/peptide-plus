@@ -30,6 +30,8 @@ const signupSchema = z.object({
   acceptTerms: z.boolean().refine((val) => val === true, {
     message: 'Vous devez accepter les conditions d\'utilisation',
   }),
+  // A-044: Optional referral code during signup
+  referralCode: z.string().max(100).optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -60,7 +62,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { name: rawName, email, password, acceptTerms } = result.data;
+    const { name: rawName, email, password, acceptTerms, referralCode } = result.data;
 
     // BE-SEC-03: Sanitize user-supplied name to prevent stored XSS
     const name = stripControlChars(stripHtml(rawName)).trim();
@@ -109,6 +111,34 @@ export async function POST(request: NextRequest) {
 
     // Store initial password in history (for reuse prevention)
     await addToPasswordHistory(user.id, hashedPassword);
+
+    // A-044: Link referral if a valid code was provided
+    if (referralCode) {
+      try {
+        const referrer = await prisma.user.findFirst({
+          where: { referralCode: referralCode.trim().toUpperCase() },
+          select: { id: true },
+        });
+        if (referrer && referrer.id !== user.id) {
+          await prisma.user.update({
+            where: { id: user.id },
+            data: { referredById: referrer.id },
+          });
+          // Create a Referral record for tracking
+          await prisma.referral.create({
+            data: {
+              referrerId: referrer.id,
+              referredId: user.id,
+              referralCode: referralCode.trim().toUpperCase(),
+              status: 'PENDING',
+            },
+          }).catch((err: unknown) => logger.warn('Referral record creation failed (non-critical)', { error: err instanceof Error ? err.message : String(err) }));
+        }
+      } catch (refErr) {
+        // A-044: Referral linking is non-critical - don't fail signup
+        logger.warn('Referral code linking failed during signup', { error: refErr instanceof Error ? refErr.message : String(refErr), referralCode });
+      }
+    }
 
     // Log d'audit
     await prisma.auditLog.create({

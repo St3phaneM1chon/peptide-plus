@@ -35,6 +35,16 @@ import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
 import { fetchWithRetry } from '@/lib/fetch-with-retry';
+import { z } from 'zod';
+
+// A-046: F-046 FIX - Zod schema for ambassador program config JSON structure
+const ambassadorConfigSchema = z.object({
+  defaultCommission: z.number().min(0).max(100),
+  minPayoutAmount: z.number().min(0),
+  cookieDays: z.number().int().min(1).max(365),
+  autoApprove: z.boolean(),
+  programActive: z.boolean(),
+});
 
 // ── Types ─────────────────────────────────────────────────────
 
@@ -58,7 +68,7 @@ interface Ambassador {
 
 // TODO: F-050 - Ambassador tiers are hardcoded here instead of loaded from DB (SiteSettings.ambassadorTiers)
 // F40 FIX: formatCurrency now used for minSales display in the UI
-// TODO: F-046 - Add Zod validation schema for ambassador config JSON structure
+// A-046: F-046 FIX - Zod validation schema for ambassador config JSON structure (validated in handleSaveConfig)
 const tierConfig: Record<string, { color: string; commission: number; minSales: number }> = {
   BRONZE: { color: 'bg-amber-100 text-amber-800', commission: 5, minSales: 0 },
   SILVER: { color: 'bg-slate-200 text-slate-700', commission: 8, minSales: 1000 },
@@ -306,18 +316,28 @@ export default function AmbassadeursPage() {
 
     setSavingConfig(true);
     try {
+      // A-046: F-046 FIX - Validate config structure with Zod before saving
+      const configPayload = {
+        defaultCommission: parseFloat(configDefaultCommission) || 5,
+        minPayoutAmount: parseFloat(configMinPayout) || 50,
+        cookieDays: parseInt(configCookieDays) || 30,
+        autoApprove: configAutoApprove,
+        programActive: configProgramActive,
+      };
+      const zodResult = ambassadorConfigSchema.safeParse(configPayload);
+      if (!zodResult.success) {
+        const firstError = zodResult.error.issues[0];
+        toast.error(firstError?.message || 'Invalid config');
+        setSavingConfig(false);
+        return;
+      }
+
       const res = await fetch('/api/admin/settings', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           key: 'ambassador_program_config',
-          value: JSON.stringify({
-            defaultCommission: parseFloat(configDefaultCommission) || 5,
-            minPayoutAmount: parseFloat(configMinPayout) || 50,
-            cookieDays: parseInt(configCookieDays) || 30,
-            autoApprove: configAutoApprove,
-            programActive: configProgramActive,
-          }),
+          value: JSON.stringify(zodResult.data),
         }),
       });
       if (res.ok) {

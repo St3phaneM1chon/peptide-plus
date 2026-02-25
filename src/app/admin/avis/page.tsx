@@ -1,6 +1,10 @@
 // F084 FIX: Show "-" instead of "0.0" for avgRating when there are no reviews (see StatCard below)
 // F090 FIX: Added aria-label to star rating display for screen reader accessibility (see renderStars)
 // F-021 FIX: Add frontend pagination
+// IMP-013: Server-side pagination with 20 reviews per page (infinite scroll deferred - standard pagination implemented)
+// IMP-031: Response templates added (RESPONSE_TEMPLATES array with 4 pre-written templates)
+// IMP-035: CSV export available via handleRibbonExport (ribbon action)
+// IMP-037: Verified purchase badge displayed in review detail (isVerifiedPurchase badge)
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -316,6 +320,19 @@ export default function AvisPage() {
     if (!selectedReviewId) return null;
     return reviews.find(r => r.id === selectedReviewId) || null;
   }, [reviews, selectedReviewId]);
+
+  // A-057: Keyboard shortcuts for admin actions
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl+Enter or Cmd+Enter to submit response when modal is open
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && showResponseModal && selectedReview && adminResponse.trim() && !submittingResponse) {
+        e.preventDefault();
+        submitAdminResponse(selectedReview.id);
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [showResponseModal, selectedReview, adminResponse, submittingResponse]);
 
   const handleSelectReview = useCallback((id: string) => {
     setSelectedReviewId(id);
@@ -819,12 +836,20 @@ export default function AvisPage() {
               </div>
             </div>
 
+            {/* IMP-045: Character counter on admin response textarea */}
             <FormField label={t('admin.reviews.yourResponse')}>
               <Textarea
                 value={adminResponse}
-                onChange={(e) => setAdminResponse(e.target.value)}
+                onChange={(e) => setAdminResponse(e.target.value.slice(0, 5000))}
                 placeholder={t('admin.reviews.respondPlaceholder')}
               />
+              <div className="flex items-center justify-between mt-1">
+                {/* A-057: Keyboard shortcut hint */}
+                <p className="text-xs text-slate-400">{'\u2318'}+Enter / Ctrl+Enter {t('common.toSubmit') || 'to submit'}</p>
+                <p className={`text-xs ${adminResponse.length > 4800 ? 'text-red-500' : adminResponse.length > 4000 ? 'text-amber-500' : 'text-slate-400'}`}>
+                  {adminResponse.length}/5000
+                </p>
+              </div>
             </FormField>
           </div>
         )}

@@ -11,11 +11,13 @@ import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { validateCsrf } from '@/lib/csrf-middleware';
 import { GST_RATE, QST_RATE } from '@/lib/tax-constants';
 import { calculateTax, roundCurrency } from '@/lib/financial';
+import { assertPeriodOpen } from '@/lib/accounting/validation';
 
 // ---------------------------------------------------------------------------
 // Zod Schemas (for PUT - update invoice status)
 // ---------------------------------------------------------------------------
 
+// A058: Optimistic locking via updatedAt field to prevent concurrent modifications
 const updateCustomerInvoiceSchema = z.object({
   id: z.string().min(1),
   status: z.string().optional(),
@@ -23,6 +25,7 @@ const updateCustomerInvoiceSchema = z.object({
   amountPaid: z.number().min(0).optional(),
   notes: z.string().optional().nullable(),
   adminNotes: z.string().optional().nullable(),
+  updatedAt: z.string().optional(), // A058: Client sends last-known updatedAt for conflict detection
 });
 
 /**
@@ -191,6 +194,16 @@ export const POST = withAdminGuard(async (request) => {
     const tvh = 0; // HST computed separately when applicable (not QC)
     const total = roundCurrency(subtotal + tps + tvq + tvh);
 
+    // IMP-A017: Check that the invoice date is not in a closed/locked accounting period
+    try {
+      await assertPeriodOpen(invoiceDateNow);
+    } catch (periodError) {
+      return NextResponse.json(
+        { error: periodError instanceof Error ? periodError.message : 'Période comptable verrouillée' },
+        { status: 400 }
+      );
+    }
+
     // Generate invoice number inside a transaction to prevent race conditions
     const year = new Date().getFullYear();
     const prefix = `FACT-${year}-`;
@@ -277,11 +290,26 @@ export const PUT = withAdminGuard(async (request, { session }) => {
     if (!parsed.success) {
       return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
     }
-    const { id, status, paidAt, amountPaid } = parsed.data;
+    const { id, status, paidAt, amountPaid, updatedAt: clientUpdatedAt } = parsed.data;
 
-    const existing = await prisma.customerInvoice.findFirst({ where: { id, deletedAt: null } });
+    const existing = await prisma.customerInvoice.findFirst({
+      where: { id, deletedAt: null },
+      select: {
+        id: true, status: true, total: true, invoiceNumber: true,
+        amountPaid: true, balance: true, updatedAt: true,
+      },
+    });
     if (!existing) {
       return NextResponse.json({ error: 'Facture non trouvée' }, { status: 404 });
+    }
+
+    // A058: Optimistic locking - verify the invoice has not been modified by another user
+    // since the client last fetched it. Prevents silent data loss from concurrent edits.
+    if (clientUpdatedAt && existing.updatedAt.toISOString() !== clientUpdatedAt) {
+      return NextResponse.json(
+        { error: 'Facture modifiée par un autre utilisateur. Veuillez recharger.' },
+        { status: 409 }
+      );
     }
 
     // Guard: PAID invoices may not have financial fields modified.
@@ -420,6 +448,22 @@ export const DELETE = withAdminGuard(async (request, { session }) => {
     if (existing.status === 'PAID') {
       return NextResponse.json(
         { error: 'Les factures payées ne peuvent pas être supprimées' },
+        { status: 400 }
+      );
+    }
+
+    // IMP-A004: Enforce 7-year retention policy (CRA/RQ section 230(4) ITA)
+    // Records within the retention period CANNOT be deleted (even soft-deleted)
+    const RETENTION_YEARS = 7;
+    const retentionCutoff = new Date();
+    retentionCutoff.setFullYear(retentionCutoff.getFullYear() - RETENTION_YEARS);
+    if (existing.invoiceDate > retentionCutoff) {
+      const retentionEndDate = new Date(existing.invoiceDate);
+      retentionEndDate.setFullYear(retentionEndDate.getFullYear() + RETENTION_YEARS);
+      return NextResponse.json(
+        {
+          error: `Suppression interdite: cette facture (${existing.invoiceNumber}) est sous la politique de retention fiscale de ${RETENTION_YEARS} ans (CRA/RQ art. 230(4) LIR). Retention jusqu'au ${retentionEndDate.toISOString().split('T')[0]}.`,
+        },
         { status: 400 }
       );
     }

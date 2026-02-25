@@ -293,6 +293,63 @@ export async function calculateKPIs(startDate: Date, endDate: Date): Promise<Fin
 // KPI Trend
 // ---------------------------------------------------------------------------
 
+// A054: Break-even calculation - minimum revenue to cover fixed + variable costs
+export interface BreakEvenResult {
+  fixedCosts: number;
+  variableCosts: number;
+  revenue: number;
+  contributionMarginRatio: number; // (revenue - variableCosts) / revenue
+  breakEvenRevenue: number;       // fixedCosts / contributionMarginRatio
+  currentVsBreakEven: number;     // revenue - breakEvenRevenue (positive = profitable)
+  safetyMarginPct: number;        // ((revenue - breakEvenRevenue) / revenue) * 100
+}
+
+/**
+ * A054: Calculate break-even point based on posted journal entries.
+ * Fixed costs = accounts 61xx-69xx (rent, salaries, admin, depreciation)
+ * Variable costs = accounts 50xx-59xx (COGS, materials, shipping)
+ * Revenue = all REVENUE type accounts
+ */
+export async function calculateBreakEven(
+  startDate: Date,
+  endDate: Date,
+): Promise<BreakEvenResult> {
+  const rows = await bulkSumByAccountType(startDate, endDate);
+
+  const revenue = extractSum(rows, 'REVENUE');
+  // Variable costs: COGS and direct costs (account codes starting with 5)
+  const variableCosts = extractSum(rows, 'EXPENSE', '5');
+  // Fixed costs: Operating expenses (account codes starting with 6), plus other (7)
+  const fixedCosts = extractSum(rows, 'EXPENSE', '6') + extractSum(rows, 'EXPENSE', '7');
+
+  const contributionMarginRatio = revenue !== 0
+    ? (revenue - variableCosts) / revenue
+    : 0;
+
+  const breakEvenRevenue = contributionMarginRatio > 0
+    ? round2(fixedCosts / contributionMarginRatio)
+    : 0;
+
+  const currentVsBreakEven = round2(revenue - breakEvenRevenue);
+  const safetyMarginPct = revenue !== 0
+    ? round2(((revenue - breakEvenRevenue) / revenue) * 100)
+    : 0;
+
+  return {
+    fixedCosts: round2(fixedCosts),
+    variableCosts: round2(variableCosts),
+    revenue: round2(revenue),
+    contributionMarginRatio: round2(contributionMarginRatio),
+    breakEvenRevenue,
+    currentVsBreakEven,
+    safetyMarginPct,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// KPI Trend
+// ---------------------------------------------------------------------------
+
 export async function getKPITrend(
   kpiName: keyof FinancialKPIs,
   periods: number = 6,

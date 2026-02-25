@@ -64,7 +64,10 @@ export async function GET() {
       }
     }
 
-    return NextResponse.json({ config });
+    // A-056: Add Cache-Control header for public config endpoint (5 min cache)
+    const response = NextResponse.json({ config });
+    response.headers.set('Cache-Control', 'public, max-age=300, s-maxage=300, stale-while-revalidate=60');
+    return response;
   } catch (error) {
     logger.error('Public loyalty config GET error', { error: error instanceof Error ? error.message : String(error) });
     // On error, return hardcoded defaults so the page still works

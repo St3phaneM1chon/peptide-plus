@@ -6,9 +6,9 @@
 'use client';
 export const dynamic = 'force-dynamic';
 
-import { Suspense, useState } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { signIn } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useI18n } from '@/i18n/client';
 
@@ -25,6 +25,7 @@ function LoadingFallback() {
 
 function SignUpContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { t } = useI18n();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -33,9 +34,45 @@ function SignUpContent() {
     password: '',
     confirmPassword: '',
     acceptTerms: false,
+    // A-044: Referral code field, pre-filled from URL param (?ref=CODE)
+    referralCode: '',
   });
+  const [referralValid, setReferralValid] = useState<boolean | null>(null);
+  const [referralName, setReferralName] = useState('');
   const [formError, setFormError] = useState('');
   const [success, setSuccess] = useState(false);
+
+  // A-044: Pre-fill referral code from URL query parameter
+  useEffect(() => {
+    const refCode = searchParams.get('ref');
+    if (refCode && !formData.referralCode) {
+      setFormData(prev => ({ ...prev, referralCode: refCode }));
+    }
+  }, [searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // A-044: Validate referral code when user finishes typing
+  useEffect(() => {
+    if (!formData.referralCode || formData.referralCode.length < 4) {
+      setReferralValid(null);
+      setReferralName('');
+      return;
+    }
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch('/api/referrals/validate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code: formData.referralCode, email: formData.email || undefined }),
+        });
+        const data = await res.json();
+        setReferralValid(data.valid === true);
+        setReferralName(data.referrerName || '');
+      } catch {
+        setReferralValid(null);
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [formData.referralCode, formData.email]);
 
   // Validation du mot de passe
   const validatePassword = (password: string): string | null => {
@@ -88,6 +125,7 @@ function SignUpContent() {
     setIsLoading(true);
 
     try {
+      // A-044: Include referral code in signup request
       const response = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -96,6 +134,7 @@ function SignUpContent() {
           email: formData.email,
           password: formData.password,
           acceptTerms: formData.acceptTerms,
+          referralCode: formData.referralCode || undefined,
         }),
       });
 
@@ -306,6 +345,36 @@ function SignUpContent() {
               )}
               {formData.confirmPassword && formData.password === formData.confirmPassword && (
                 <p className="mt-1 text-xs text-green-600">✓ {t('auth.passwordsMatch')}</p>
+              )}
+            </div>
+
+            {/* A-044: Referral code field (optional) */}
+            <div>
+              <label htmlFor="referralCode" className="block text-sm font-medium text-gray-700 mb-1">
+                {t('auth.referralCode') || 'Referral Code'} <span className="text-gray-400 font-normal">({t('common.optional') || 'optional'})</span>
+              </label>
+              <input
+                id="referralCode"
+                type="text"
+                autoComplete="off"
+                value={formData.referralCode}
+                onChange={(e) => setFormData({ ...formData, referralCode: e.target.value.toUpperCase() })}
+                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
+                  referralValid === true ? 'border-green-300 bg-green-50' :
+                  referralValid === false ? 'border-red-300 bg-red-50' :
+                  'border-gray-200'
+                }`}
+                placeholder={t('auth.referralCodePlaceholder') || 'e.g. STX1A2B3'}
+              />
+              {referralValid === true && referralName && (
+                <p className="mt-1 text-xs text-green-600">
+                  {t('auth.referredBy') || 'Referred by'}: {referralName}
+                </p>
+              )}
+              {referralValid === false && (
+                <p className="mt-1 text-xs text-red-500">
+                  {t('auth.invalidReferralCode') || 'Invalid referral code'}
+                </p>
               )}
             </div>
 

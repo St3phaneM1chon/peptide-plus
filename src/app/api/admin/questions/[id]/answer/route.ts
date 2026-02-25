@@ -65,15 +65,17 @@ export const POST = withAdminGuard(async (request: NextRequest, { session, param
       },
     });
 
+    // IMP-025: Log admin modifications with who, when, and previous state for audit trail
     logAdminAction({
       adminUserId: session.user.id,
       action: 'ANSWER_QUESTION',
       targetType: 'ProductQuestion',
       targetId: id,
-      newValue: { answer: answer.substring(0, 200) },
+      previousValue: existing.answer ? { answer: existing.answer.substring(0, 200), answeredBy: existing.answeredBy } : null,
+      newValue: { answer: answer.substring(0, 200), answeredBy: session.user.name || session.user.email || 'Admin' },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch(() => {});
+    }).catch((err) => logger.error('IMP-025: Audit log failed for ANSWER_QUESTION', { error: err instanceof Error ? err.message : String(err) }));
 
     return NextResponse.json({ question: updated });
   } catch (error) {

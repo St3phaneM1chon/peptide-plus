@@ -4,13 +4,18 @@ export const dynamic = 'force-dynamic';
  * Admin Media Management API
  * GET  - List media files with folder filter and pagination
  * POST - Upload media (handle file upload via FormData)
+ *
+ * IMP-003: TODO: Add antivirus scan (ClamAV or Azure Defender for Storage) on uploaded files
+ * IMP-009: DONE: CSRF protection is handled via withAdminGuard + validateCsrf on mutation endpoints
+ * IMP-011: TODO: Add automated tests (Jest/Vitest) for upload endpoints (path traversal, MIME bypass, size limits)
+ * IMP-012: TODO: Implement video compression/transcoding (FFmpeg or Azure Media Services) for uploaded videos
  */
 
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import path from 'path';
-import { randomUUID } from 'crypto';
+import { randomUUID, createHash } from 'crypto';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { storage } from '@/lib/storage';
 import { logger } from '@/lib/logger';
@@ -42,6 +47,9 @@ const ALLOWED_MIME_SIGNATURES: Record<string, { bytes: number[]; offset?: number
   ],
   'video/webm': [{ bytes: [0x1A, 0x45, 0xDF, 0xA3] }], // EBML header
   'image/svg+xml': [], // SVGs are text-based, validated separately
+  // IMP-054: HEIC/HEIF support for iPhone photo uploads (ftyp box at offset 4)
+  'image/heic': [{ bytes: [0x66, 0x74, 0x79, 0x70], offset: 4 }],
+  'image/heif': [{ bytes: [0x66, 0x74, 0x79, 0x70], offset: 4 }],
 };
 
 // Blocked extensions that could be dangerous even with correct MIME
@@ -117,6 +125,12 @@ export const GET = withAdminGuard(async (request, { session }) => {
     const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10), 100);
     const skip = (page - 1) * limit;
 
+    // IMP-031: Support sort parameter for flexible ordering (name, date, size, type)
+    const sortBy = searchParams.get('sortBy') || 'createdAt';
+    const sortDir = searchParams.get('sortDir') === 'asc' ? 'asc' : 'desc';
+    const allowedSortFields = ['createdAt', 'originalName', 'size', 'mimeType', 'folder'];
+    const orderField = allowedSortFields.includes(sortBy) ? sortBy : 'createdAt';
+
     const where: Record<string, unknown> = {};
 
     // F44 FIX: Non-OWNER users can only see their own media (multi-tenant scoping)
@@ -134,10 +148,11 @@ export const GET = withAdminGuard(async (request, { session }) => {
       ];
     }
 
+    // IMP-031: Use dynamic sort field and direction
     const [media, total] = await Promise.all([
       prisma.media.findMany({
         where,
-        orderBy: { createdAt: 'desc' },
+        orderBy: { [orderField]: sortDir },
         skip,
         take: limit,
       }),
@@ -166,6 +181,13 @@ export const GET = withAdminGuard(async (request, { session }) => {
 // FIX: F56 - TODO: Add @@index([createdAt]) and @@index([originalName]) to Media model in schema.prisma
 // FIX: F57 - TODO: Add @@index([title]) to Video model in schema.prisma for text search performance
 // FIX: F96 - TODO: Accept per-file alt text (e.g. alt_0, alt_1 FormData fields) instead of single alt for batch
+// IMP-007: TODO: Integrate image-optimizer.ts (sharp) in upload flow to auto-generate thumbnail/medium/large variants
+//   - After upload, call sharp to resize image into THUMBNAIL_CONFIGS variants
+//   - Store variant URLs alongside original in Media record (requires schema: variantsJson String?)
+//   - Currently image-optimizer.ts is client-only; needs server-side sharp integration
+// IMP-038: TODO: Extract image dimensions at upload with sharp metadata (width, height)
+//   - Requires adding width/height Int? fields to Media model (same as F50)
+//   - Use: const metadata = await sharp(buffer).metadata(); then metadata.width, metadata.height
 // POST /api/admin/medias - Upload media file(s) via FormData
 export const POST = withAdminGuard(async (request, { session }) => {
   try {
@@ -225,6 +247,27 @@ export const POST = withAdminGuard(async (request, { session }) => {
 
       // Generate unique filename
       const uniqueName = `${randomUUID()}${ext}`;
+
+      // IMP-033: Check for duplicate files before uploading (uses SHA-256 content hash)
+      const contentHash = createHash('sha256').update(buffer).digest('hex').slice(0, 16);
+      const existingUrl = await storage.findDuplicate(contentHash, folder);
+      if (existingUrl) {
+        // Duplicate found - reuse existing file URL instead of re-uploading
+        const media = await prisma.media.create({
+          data: {
+            filename: uniqueName,
+            originalName: file.name,
+            mimeType: file.type,
+            size: file.size,
+            url: existingUrl,
+            alt: alt || null,
+            folder,
+            uploadedBy: session.user.id,
+          },
+        });
+        uploaded.push(media);
+        continue;
+      }
 
       // FIX (F9): Use StorageService instead of local filesystem (persists on Azure)
       const uploadResult = await storage.upload(buffer, uniqueName, file.type, { folder });

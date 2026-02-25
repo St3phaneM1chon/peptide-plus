@@ -7,6 +7,7 @@ import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { validateCsrf } from '@/lib/csrf-middleware';
+import { assertPeriodOpen } from '@/lib/accounting/validation';
 // CCA_CLASSES available if needed for validation: import { CCA_CLASSES } from '@/lib/accounting/canadian-tax-config';
 
 // ---------------------------------------------------------------------------
@@ -179,6 +180,16 @@ export const POST = withAdminGuard(async (request, { session }) => {
       expenseAccountId,
       notes,
     } = parsed.data;
+
+    // IMP-A017: Check that the acquisition date is not in a closed/locked accounting period
+    try {
+      await assertPeriodOpen(new Date(acquisitionDate));
+    } catch (periodError) {
+      return NextResponse.json(
+        { error: periodError instanceof Error ? periodError.message : 'Période comptable verrouillée' },
+        { status: 400 }
+      );
+    }
 
     // Validate uniqueness of assetNumber
     const existing = await prisma.fixedAsset.findUnique({ where: { assetNumber } });

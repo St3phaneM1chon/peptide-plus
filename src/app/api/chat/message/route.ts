@@ -12,6 +12,10 @@ const VALID_LANGUAGE_CODES = new Set([
 /**
  * API Chat Messages
  * POST /api/chat/message - Envoyer un message
+ *
+ * IMP-008: Sender enforcement prevents spoofing (F-008 FIX applied)
+ * IMP-010: Attachment URL domain validation added
+ * IMP-011: CSRF protection for authenticated users
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -102,7 +106,32 @@ export async function POST(request: NextRequest) {
     // FIX F-068: messageType validated by Zod schema above
     const messageType = body.type || 'TEXT';
     // FIX F-020: attachmentUrl validated by Zod .url() above
-    const attachmentUrl = body.attachmentUrl || null;
+    // IMP-010: Validate attachment URLs against allowed domains to prevent external resource injection
+    const rawAttachmentUrl = body.attachmentUrl || null;
+    let attachmentUrl: string | null = null;
+    if (rawAttachmentUrl) {
+      try {
+        const parsed = new URL(rawAttachmentUrl, process.env.NEXT_PUBLIC_APP_URL || 'https://biocyclepeptides.com');
+        const allowedHosts = [
+          parsed.hostname === new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://biocyclepeptides.com').hostname,
+          parsed.hostname.endsWith('.blob.core.windows.net'), // Azure Blob Storage
+          parsed.hostname === 'localhost',
+        ];
+        if (allowedHosts.some(Boolean) || rawAttachmentUrl.startsWith('/')) {
+          attachmentUrl = rawAttachmentUrl;
+        } else {
+          logger.warn('IMP-010: Rejected external attachment URL', { url: rawAttachmentUrl.substring(0, 100) });
+          return NextResponse.json({ error: 'Attachment URL not from allowed domain' }, { status: 400 });
+        }
+      } catch {
+        // Relative URL paths are allowed (e.g. /uploads/chat/...)
+        if (rawAttachmentUrl.startsWith('/')) {
+          attachmentUrl = rawAttachmentUrl;
+        } else {
+          return NextResponse.json({ error: 'Invalid attachment URL' }, { status: 400 });
+        }
+      }
+    }
     const attachmentName = body.attachmentName || null;
     const attachmentSize = body.attachmentSize ? parseInt(String(body.attachmentSize)) : null;
 

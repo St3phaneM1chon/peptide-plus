@@ -30,7 +30,9 @@ export const THUMBNAIL_CONFIGS: ThumbnailConfig[] = [
   { name: 'hero', width: 1200, height: 630, fit: 'cover' },
 ];
 
-export const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/avif'];
+// IMP-041: AVIF support already included in allowed types for modern browser compression
+// IMP-054: HEIC/HEIF support added for iPhone photo uploads (auto-converted to JPEG/WebP server-side)
+export const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/heic', 'image/heif'];
 export const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
 
 export function validateImage(file: File): { valid: boolean; error?: string } {

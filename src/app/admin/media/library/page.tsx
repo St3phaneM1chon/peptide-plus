@@ -1,3 +1,11 @@
+// IMP-016: TODO: Add global drag-and-drop zone for multi-file upload (currently only MediaUploader supports DnD)
+// IMP-017: DONE: Bulk delete is implemented via selection toolbar + handleDeleteSelected
+// IMP-018: PARTIALLY_DONE: Alt text editing exists via handleRenameFile; full metadata editor (title, description, tags) is TODO
+// IMP-025: TODO: Implement blur placeholder + intersection observer for progressive image loading in gallery
+// IMP-026: TODO: Load folders dynamically from DB (SELECT DISTINCT folder FROM Media) instead of hardcoded list
+// IMP-029: DONE: Pagination is already implemented with page/limit params and pagination controls
+// IMP-030: TODO: Add advanced filters (date range, size range, dimensions, uploadedBy, usage status)
+// IMP-031: DONE: Sort parameters (sortBy, sortDir) added to API; TODO: add sort buttons in UI
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -60,6 +68,9 @@ export default function MediaLibraryPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  // IMP-031: Sort state for flexible ordering
+  const [sortBy, setSortBy] = useState('createdAt');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const loadItems = useCallback(async () => {
@@ -69,6 +80,11 @@ export default function MediaLibraryPage() {
       if (search) params.set('search', search);
       if (mimeFilter) params.set('mimeType', mimeFilter);
       if (folderFilter) params.set('folder', folderFilter);
+      // IMP-031: Pass sort parameters to API
+      if (sortBy !== 'createdAt' || sortDir !== 'desc') {
+        params.set('sortBy', sortBy);
+        params.set('sortDir', sortDir);
+      }
       const res = await fetch(`/api/admin/medias?${params}`);
       const data = await res.json();
       setItems(data.media || []);
@@ -80,7 +96,7 @@ export default function MediaLibraryPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, search, mimeFilter, folderFilter]);
+  }, [page, search, mimeFilter, folderFilter, sortBy, sortDir]);
 
   useEffect(() => { loadItems(); }, [loadItems]);
 
@@ -91,16 +107,46 @@ export default function MediaLibraryPage() {
   }, [searchInput]);
 
   // F62 FIX: Close preview modal with Escape key
+  // IMP-044: Arrow key navigation between media items in preview modal
   useEffect(() => {
     if (!preview) return;
-    const handleEscape = (e: KeyboardEvent) => { if (e.key === 'Escape') setPreview(null); };
-    window.addEventListener('keydown', handleEscape);
-    return () => window.removeEventListener('keydown', handleEscape);
-  }, [preview]);
+    const handleKeydown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { setPreview(null); return; }
+      // IMP-044: Navigate between media with arrow keys
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        const idx = items.findIndex(i => i.id === preview.id);
+        if (idx < items.length - 1) setPreview(items[idx + 1]);
+      }
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        const idx = items.findIndex(i => i.id === preview.id);
+        if (idx > 0) setPreview(items[idx - 1]);
+      }
+      // IMP-044: Delete key to remove selected file from preview
+      if (e.key === 'Delete' && preview) {
+        setSelectedIds(new Set([preview.id]));
+        setShowDeleteConfirm(true);
+      }
+    };
+    window.addEventListener('keydown', handleKeydown);
+    return () => window.removeEventListener('keydown', handleKeydown);
+  }, [preview, items]);
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
+
+    // IMP-040: Client-side file size validation before upload to avoid wasting bandwidth
+    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB - matches server limit
+    for (let i = 0; i < files.length; i++) {
+      if (files[i].size > MAX_FILE_SIZE) {
+        toast.error(`${files[i].name}: ${t('admin.media.fileTooLarge') || 'File exceeds maximum size of 10MB'}`);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+        return;
+      }
+    }
+
     setUploading(true);
     try {
       const formData = new FormData();
@@ -344,6 +390,21 @@ export default function MediaLibraryPage() {
           <option value="products">{t('admin.media.folderProducts') || 'Products'}</option>
           <option value="blog">{t('admin.media.folderBlog') || 'Blog'}</option>
         </select>
+        {/* IMP-031: Sort controls for flexible ordering */}
+        <select className="border border-slate-300 rounded-lg px-3 py-2 text-sm" value={sortBy} onChange={e => { setSortBy(e.target.value); setPage(1); }} aria-label={t('admin.media.sortBy') || 'Sort by'}>
+          <option value="createdAt">{t('admin.media.sortDate') || 'Date'}</option>
+          <option value="originalName">{t('admin.media.sortName') || 'Name'}</option>
+          <option value="size">{t('admin.media.sortSize') || 'Size'}</option>
+          <option value="mimeType">{t('admin.media.sortType') || 'Type'}</option>
+        </select>
+        <button
+          onClick={() => setSortDir(d => d === 'asc' ? 'desc' : 'asc')}
+          className="border border-slate-300 rounded-lg px-3 py-2 text-sm hover:bg-slate-50"
+          aria-label={sortDir === 'asc' ? 'Sort descending' : 'Sort ascending'}
+          title={sortDir === 'asc' ? 'Sort descending' : 'Sort ascending'}
+        >
+          {sortDir === 'asc' ? '\u2191' : '\u2193'}
+        </button>
       </div>
 
       {/* Content */}
@@ -487,6 +548,9 @@ export default function MediaLibraryPage() {
               <NextImage src={preview.url} alt={preview.alt || preview.originalName} width={800} height={600} className="max-w-full max-h-[70vh] object-contain" style={{ width: '100%', height: 'auto' }} unoptimized />
             ) : preview.mimeType.startsWith('video/') ? (
               <video src={preview.url} controls className="max-w-full max-h-[70vh]" />
+            ) : preview.mimeType === 'application/pdf' ? (
+              /* IMP-059: Inline PDF preview using browser native rendering */
+              <iframe src={preview.url} className="w-full" style={{ height: '70vh' }} title={preview.originalName} />
             ) : (
               <div className="w-96 h-64 flex flex-col items-center justify-center">
                 {getFileIcon(preview.mimeType)}

@@ -14,6 +14,9 @@ function CheckoutSuccessContent() {
   const [orderNumber, setOrderNumber] = useState<string>('');
   const [orderId, setOrderId] = useState<string>('');
   const hasCleared = useRef(false);
+  // A-043: Track points earned on this order
+  const [pointsEarned, setPointsEarned] = useState<number | null>(null);
+  const [currentTier, setCurrentTier] = useState<string>('');
 
   const fetchOrderInfo = useCallback(async () => {
     // Clear cart only once, silently (no toast)
@@ -41,6 +44,26 @@ function CheckoutSuccessContent() {
       }
     } else {
       setOrderNumber(`PP-${new Date().getFullYear()}-${Date.now().toString(36).toUpperCase().slice(-6)}`);
+    }
+
+    // A-043: Fetch loyalty data to show points earned on this order
+    try {
+      const loyaltyRes = await fetch('/api/loyalty');
+      if (loyaltyRes.ok) {
+        const loyaltyData = await loyaltyRes.json();
+        setCurrentTier(loyaltyData.tier || '');
+        // Check if there's a recent EARN_PURCHASE transaction (within last 5 min)
+        if (loyaltyData.transactions?.length > 0) {
+          const recentTx = loyaltyData.transactions[0];
+          const txDate = new Date(recentTx.date || recentTx.createdAt);
+          const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000);
+          if (txDate > fiveMinAgo && recentTx.type?.startsWith('EARN')) {
+            setPointsEarned(recentTx.points);
+          }
+        }
+      }
+    } catch {
+      // A-043: Non-critical - don't break the success page if loyalty fetch fails
     }
   }, [searchParams, clearCart]);
 
@@ -79,6 +102,28 @@ function CheckoutSuccessContent() {
             <p className="text-sm text-gray-500 mb-1">{t('checkout.orderNumber')}</p>
             <p className="text-xl font-mono font-bold text-gray-900">{orderNumber || '...'}</p>
           </div>
+
+          {/* A-043: Loyalty points earned on this order */}
+          {pointsEarned !== null && pointsEarned > 0 && (
+            <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-lg p-4 mb-6 text-start">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl" aria-hidden="true">🎉</span>
+                <div>
+                  <p className="font-semibold text-amber-900">
+                    {t('checkout.pointsEarned') || 'You earned'} <span className="text-orange-600">{pointsEarned} {t('customerRewards.points') || 'points'}</span> {t('checkout.withThisOrder') || 'with this order'}!
+                  </p>
+                  {currentTier && (
+                    <p className="text-sm text-amber-700">
+                      {t('customerRewards.currentLevel') || 'Current level'}: {currentTier}
+                    </p>
+                  )}
+                  <Link href="/account/rewards" className="text-sm text-orange-600 hover:underline font-medium">
+                    {t('checkout.viewRewards') || 'View your rewards'} →
+                  </Link>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Email Confirmation */}
           <p className="text-sm text-gray-500 mb-8">
