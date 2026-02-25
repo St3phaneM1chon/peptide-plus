@@ -58,6 +58,7 @@ export function PlatformLauncher({ platformId }: PlatformLauncherProps) {
       }, 1500);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [loading]);
 
   const handleOpenDesktop = useCallback(() => {
