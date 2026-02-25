@@ -108,7 +108,7 @@ export async function GET(request: NextRequest) {
           },
           _count: {
             select: {
-              replies: true,
+              replies: { where: { deletedAt: null } },
             },
           },
         },

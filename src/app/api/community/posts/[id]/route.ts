@@ -78,7 +78,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
         },
         _count: {
           select: {
-            replies: true,
+            replies: { where: { deletedAt: null } },
           },
         },
       },

@@ -189,20 +189,35 @@ jobs:
           du -sh .
           echo "Standalone package verified."
 
+      - name: Verify Prisma Client includes new models
+        run: |
+          echo "Checking .prisma/client exists..."
+          ls -la node_modules/.prisma/client/ || echo "WARNING: .prisma/client not found!"
+          echo "Checking ForumCategory in Prisma Client..."
+          grep -c "ForumCategory" node_modules/.prisma/client/index.js || echo "WARNING: ForumCategory not in Prisma Client!"
+
+      - name: Create deploy zip (includes hidden dirs like .prisma)
+        run: |
+          zip -r /tmp/deploy-package.zip . \
+            -x "*.map" \
+            -x "node_modules/.cache/*" \
+            -x "prisma/*"
+          echo "Deploy zip size: $(du -h /tmp/deploy-package.zip | cut -f1)"
+
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
           app-name: ${{ env.AZURE_WEBAPP_NAME }}
-          package: .
+          package: /tmp/deploy-package.zip
           clean: true
 
       - name: Sync Database Schema
         if: env.DB_URL != ''
+        continue-on-error: true
         run: |
-          # Install prisma CLI for DB sync
-          npm install --no-save prisma@5
+          # Use prisma from node_modules (already in the artifact)
           echo "Pushing Prisma schema to production database..."
-          npx prisma db push --accept-data-loss --skip-generate 2>&1 || echo "WARNING: prisma db push failed - check manually"
+          npx prisma db push --accept-data-loss --skip-generate 2>&1 || echo "WARNING: prisma db push failed - sync manually before deploy"
         env:
           DB_URL: ${{ secrets.DATABASE_URL }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}

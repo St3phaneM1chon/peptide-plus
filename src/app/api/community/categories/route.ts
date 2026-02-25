@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
       include: {
         _count: {
           select: {
-            posts: true,
+            posts: { where: { deletedAt: null } },
           },
         },
       },
@@ -36,12 +36,10 @@ export async function GET(request: NextRequest) {
     }));
 
     return apiSuccess(data, { request });
-  } catch (error: unknown) {
-    const errMsg = error instanceof Error ? error.message : String(error);
-    const errStack = error instanceof Error ? error.stack : '';
-    console.error('Error fetching forum categories:', errMsg, errStack);
+  } catch (error) {
+    console.error('Error fetching forum categories:', error);
     return apiError(
-      `Failed to fetch forum categories: ${errMsg}`,
+      'Failed to fetch forum categories',
       'Failed to fetch forum categories',
       ErrorCode.INTERNAL_ERROR,
       { request }
