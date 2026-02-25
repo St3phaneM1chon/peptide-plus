@@ -50,6 +50,7 @@ interface RecentOrder {
   total: number;
   createdAt: string;
   shippingName: string | null;
+  currency?: { code: string; symbol: string } | null;
   _count: { items: number };
 }
 
@@ -72,10 +73,10 @@ interface DashboardClientProps {
 // Helpers
 // --------------------------------------------------
 
-function formatCurrency(amount: number, locale: string): string {
+function formatCurrency(amount: number, locale: string, currencyCode: string = 'CAD'): string {
   return new Intl.NumberFormat(locale, {
     style: 'currency',
-    currency: 'CAD',
+    currency: currencyCode,
   }).format(amount);
 }
 
@@ -113,7 +114,7 @@ export default function DashboardClient({ stats, recentOrders, recentUsers }: Da
       rows.push([t('admin.dashboard.recentOrders') || 'Commandes recentes', '']);
       rows.push([t('admin.dashboard.orderNumber') || 'Numero', `${t('admin.dashboard.amount') || 'Montant'}`]);
       recentOrders.forEach(order => {
-        rows.push([order.orderNumber, formatCurrency(Number(order.total), locale)]);
+        rows.push([order.orderNumber, formatCurrency(Number(order.total), locale, order.currency?.code || 'CAD')]);
       });
     }
     const bom = '\uFEFF';
@@ -128,38 +129,46 @@ export default function DashboardClient({ stats, recentOrders, recentUsers }: Da
   useRibbonAction('refresh', handleRefresh);
   useRibbonAction('exportDashboard', handleExportDashboard);
 
+  // F1.17: Order status labels with translated text + hardcoded fallbacks
+  // so raw enum values (PENDING, CONFIRMED, etc.) never appear in the UI
+  const ORDER_STATUS_CONFIG: Record<string, { i18nKey: string; fallback: string; classes: string }> = {
+    PENDING:    { i18nKey: 'admin.dashboard.orderStatus.pending',    fallback: 'Pending',    classes: 'bg-yellow-100 text-yellow-700' },
+    CONFIRMED:  { i18nKey: 'admin.dashboard.orderStatus.confirmed',  fallback: 'Confirmed',  classes: 'bg-sky-100 text-sky-700' },
+    PROCESSING: { i18nKey: 'admin.dashboard.orderStatus.processing', fallback: 'Processing', classes: 'bg-sky-100 text-sky-700' },
+    SHIPPED:    { i18nKey: 'admin.dashboard.orderStatus.shipped',    fallback: 'Shipped',    classes: 'bg-indigo-100 text-indigo-700' },
+    DELIVERED:  { i18nKey: 'admin.dashboard.orderStatus.delivered',  fallback: 'Delivered',  classes: 'bg-green-100 text-green-700' },
+    CANCELLED:  { i18nKey: 'admin.dashboard.orderStatus.cancelled',  fallback: 'Cancelled',  classes: 'bg-red-100 text-red-700' },
+    RETURNED:   { i18nKey: 'admin.dashboard.orderStatus.returned',   fallback: 'Returned',   classes: 'bg-orange-100 text-orange-700' },
+  };
+
+  const PAYMENT_STATUS_CONFIG: Record<string, { i18nKey: string; fallback: string; classes: string }> = {
+    PAID:                { i18nKey: 'admin.dashboard.paymentStatus.paid',                fallback: 'Paid',                classes: 'bg-green-100 text-green-700' },
+    PENDING:             { i18nKey: 'admin.dashboard.paymentStatus.pending',             fallback: 'Pending',             classes: 'bg-yellow-100 text-yellow-700' },
+    FAILED:              { i18nKey: 'admin.dashboard.paymentStatus.failed',              fallback: 'Failed',              classes: 'bg-red-100 text-red-700' },
+    REFUNDED:            { i18nKey: 'admin.dashboard.paymentStatus.refunded',            fallback: 'Refunded',            classes: 'bg-slate-100 text-slate-700' },
+    PARTIALLY_REFUNDED:  { i18nKey: 'admin.dashboard.paymentStatus.partiallyRefunded',  fallback: 'Partially Refunded',  classes: 'bg-orange-100 text-orange-700' },
+  };
+
   function getOrderStatusLabel(status: string): { label: string; classes: string } {
-    switch (status) {
-      case 'PENDING':
-        return { label: t('admin.dashboard.orderStatus.pending'), classes: 'bg-yellow-100 text-yellow-700' };
-      case 'CONFIRMED':
-        return { label: t('admin.dashboard.orderStatus.confirmed'), classes: 'bg-sky-100 text-sky-700' };
-      case 'PROCESSING':
-        return { label: t('admin.dashboard.orderStatus.processing'), classes: 'bg-sky-100 text-sky-700' };
-      case 'SHIPPED':
-        return { label: t('admin.dashboard.orderStatus.shipped'), classes: 'bg-indigo-100 text-indigo-700' };
-      case 'DELIVERED':
-        return { label: t('admin.dashboard.orderStatus.delivered'), classes: 'bg-green-100 text-green-700' };
-      case 'CANCELLED':
-        return { label: t('admin.dashboard.orderStatus.cancelled'), classes: 'bg-red-100 text-red-700' };
-      default:
-        return { label: status, classes: 'bg-slate-100 text-slate-700' };
+    const cfg = ORDER_STATUS_CONFIG[status];
+    if (cfg) {
+      const translated = t(cfg.i18nKey);
+      // If t() returns the raw key path, use the hardcoded fallback instead
+      const label = translated && !translated.includes('.') ? translated : cfg.fallback;
+      return { label, classes: cfg.classes };
     }
+    // Unknown status: capitalize it nicely instead of showing raw enum
+    return { label: status.charAt(0) + status.slice(1).toLowerCase().replace(/_/g, ' '), classes: 'bg-slate-100 text-slate-700' };
   }
 
   function getPaymentStatusLabel(status: string): { label: string; classes: string } {
-    switch (status) {
-      case 'PAID':
-        return { label: t('admin.dashboard.paymentStatus.paid'), classes: 'bg-green-100 text-green-700' };
-      case 'PENDING':
-        return { label: t('admin.dashboard.paymentStatus.pending'), classes: 'bg-yellow-100 text-yellow-700' };
-      case 'FAILED':
-        return { label: t('admin.dashboard.paymentStatus.failed'), classes: 'bg-red-100 text-red-700' };
-      case 'REFUNDED':
-        return { label: t('admin.dashboard.paymentStatus.refunded'), classes: 'bg-slate-100 text-slate-700' };
-      default:
-        return { label: status, classes: 'bg-slate-100 text-slate-700' };
+    const cfg = PAYMENT_STATUS_CONFIG[status];
+    if (cfg) {
+      const translated = t(cfg.i18nKey);
+      const label = translated && !translated.includes('.') ? translated : cfg.fallback;
+      return { label, classes: cfg.classes };
     }
+    return { label: status.charAt(0) + status.slice(1).toLowerCase().replace(/_/g, ' '), classes: 'bg-slate-100 text-slate-700' };
   }
 
   return (
@@ -198,8 +207,8 @@ export default function DashboardClient({ stats, recentOrders, recentUsers }: Da
           href="/admin/commandes"
         />
         <StatCard
-          label={t('admin.dashboard.monthlyRevenue')}
-          value={formatCurrency(stats.monthlyRevenue, locale)}
+          label={`${t('admin.dashboard.monthlyRevenue')} (CAD)`}
+          value={formatCurrency(stats.monthlyRevenue, locale, 'CAD')}
           icon={<DollarSign className="w-5 h-5" />}
           iconBg="bg-green-100 text-green-600"
           href="/admin/comptabilite"
@@ -310,7 +319,7 @@ export default function DashboardClient({ stats, recentOrders, recentUsers }: Da
                       </span>
                     </div>
                     <span className="font-semibold text-slate-900 text-sm">
-                      {formatCurrency(Number(order.total), locale)}
+                      {formatCurrency(Number(order.total), locale, order.currency?.code || 'CAD')}
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-xs">

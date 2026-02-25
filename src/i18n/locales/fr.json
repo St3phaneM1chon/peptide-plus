@@ -3397,17 +3397,19 @@
       "client": "Client",
       "viewProfile": "Voir le profil",
       "orderStatus": {
-        "pending": "En attente",
+        "cancelled": "Annulée",
         "confirmed": "Confirmée",
-        "processing": "En traitement",
-        "shipped": "Expédiée",
         "delivered": "Livrée",
-        "cancelled": "Annulée"
+        "pending": "En attente",
+        "processing": "En traitement",
+        "returned": "Retourné",
+        "shipped": "Expédiée"
       },
       "paymentStatus": {
-        "paid": "Payé",
-        "pending": "En attente",
         "failed": "Échoué",
+        "paid": "Payé",
+        "partiallyRefunded": "Partiellement remboursé",
+        "pending": "En attente",
         "refunded": "Remboursé"
       }
     },

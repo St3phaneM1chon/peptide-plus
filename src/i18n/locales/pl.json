@@ -2024,6 +2024,7 @@
         "delivered": "Dostarczone",
         "pending": "W toku",
         "processing": "W przetwarzaniu",
+        "returned": "Zwrócono",
         "shipped": "Wysłane"
       },
       "orders": "Zamówienia",
@@ -2031,6 +2032,7 @@
       "paymentStatus": {
         "failed": "Nieudane",
         "paid": "Opłacone",
+        "partiallyRefunded": "Częściowo zwrócono",
         "pending": "W toku",
         "refunded": "Zwrócono"
       },

@@ -62,7 +62,7 @@ interface LoyaltyState {
 
 interface LoyaltyContextType extends LoyaltyState {
   isLoading: boolean;
-  earnPoints: (amount: number, description: string, orderId?: string) => void;
+  earnPoints: (amount: number, description: string, orderId?: string, type?: string) => void;
   redeemReward: (rewardId: string) => Promise<boolean>;
   getPointsForPurchase: (amount: number) => number;
   getDiscountFromPoints: (points: number) => number;
@@ -157,17 +157,22 @@ export function LoyaltyProvider({ children }: { children: ReactNode }) {
   // response. Previously, setState was called BEFORE the fetch, so if the API
   // rejected the operation (rate limit, validation error, server error) the UI
   // would show incorrect points that never matched the database.
-  const earnPoints = async (amount: number, description: string, orderId?: string) => {
-    const pointsEarned = Math.floor(amount * state.tier.multiplier);
+  const earnPoints = async (amount: number, description: string, orderId?: string, type: string = 'PURCHASE') => {
+    // F-008 FIX: Include pointsPerDollar so the local estimate matches the
+    // server calculation in calculatePurchasePoints(). Previously this was just
+    // amount * multiplier, which would be wrong if pointsPerDollar ever changes.
+    const pointsEarned = Math.floor(amount * LOYALTY_CONFIG.pointsPerDollar * state.tier.multiplier);
 
     // F-002 FIX: For authenticated users, call the API FIRST and only update
     // local state from the server-confirmed response.
     if (session?.user?.email) {
       try {
+        // F-002 FIX: Send `type` and `amount` to match the API's earnPointsSchema.
+        // Previously sent `points` which is not a recognized field in the schema.
         const res = await fetch('/api/loyalty/earn', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ points: pointsEarned, description, orderId }),
+          body: JSON.stringify({ type, amount, description, orderId }),
         });
 
         if (!res.ok) {

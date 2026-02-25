@@ -2024,6 +2024,7 @@
         "delivered": "Naipadala na",
         "pending": "Naka-pending",
         "processing": "Pinoproseso",
+        "returned": "Naibalik",
         "shipped": "Naipadala"
       },
       "orders": "Mga Order",
@@ -2031,6 +2032,7 @@
       "paymentStatus": {
         "failed": "Nabigo",
         "paid": "Nabayaran",
+        "partiallyRefunded": "Bahagyang naibalik",
         "pending": "Naka-pending",
         "refunded": "Naibalik"
       },

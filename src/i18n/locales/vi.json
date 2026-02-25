@@ -2024,6 +2024,7 @@
         "delivered": "Đã giao",
         "pending": "Đang chờ",
         "processing": "Đang xử lý",
+        "returned": "Đã trả lại",
         "shipped": "Đã giao hàng"
       },
       "orders": "Đơn hàng",
@@ -2031,6 +2032,7 @@
       "paymentStatus": {
         "failed": "Thất bại",
         "paid": "Đã thanh toán",
+        "partiallyRefunded": "Hoàn tiền một phần",
         "pending": "Đang chờ",
         "refunded": "Đã hoàn tiền"
       },

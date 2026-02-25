@@ -2024,6 +2024,7 @@
         "delivered": "ਡਿਲਿਵਰ ਕੀਤਾ",
         "pending": "ਲੰਬਿਤ",
         "processing": "ਪ੍ਰਕਿਰਿਆ ਵਿੱਚ",
+        "returned": "ਵਾਪਸ ਕੀਤਾ",
         "shipped": "ਭੇਜਿਆ ਗਿਆ"
       },
       "orders": "ਆਰਡਰ",
@@ -2031,6 +2032,7 @@
       "paymentStatus": {
         "failed": "ਅਸਫਲ",
         "paid": "ਭੁਗਤਾਨ ਕੀਤਾ",
+        "partiallyRefunded": "ਅੰਸ਼ਕ ਵਾਪਸੀ",
         "pending": "ਲੰਬਿਤ",
         "refunded": "ਵਾਪਸ ਕੀਤਾ"
       },

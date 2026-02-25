@@ -2024,6 +2024,7 @@
         "delivered": "Zugestellt",
         "pending": "Ausstehend",
         "processing": "In Bearbeitung",
+        "returned": "Zurückgegeben",
         "shipped": "Versendet"
       },
       "orders": "Bestellungen",
@@ -2031,6 +2032,7 @@
       "paymentStatus": {
         "failed": "Fehlgeschlagen",
         "paid": "Bezahlt",
+        "partiallyRefunded": "Teilweise erstattet",
         "pending": "Ausstehend",
         "refunded": "Erstattet"
       },

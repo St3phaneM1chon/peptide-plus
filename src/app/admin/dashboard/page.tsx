@@ -81,6 +81,7 @@ async function fetchAdminData() {
     `,
 
     // F1.13: Recent orders with item count only (not full items)
+    // F1.16: Include currency relation so client can display correct symbol
     prisma.order.findMany({
       take: 10,
       orderBy: { createdAt: 'desc' },
@@ -92,6 +93,7 @@ async function fetchAdminData() {
         total: true,
         createdAt: true,
         shippingName: true,
+        currency: { select: { code: true, symbol: true } },
         _count: { select: { items: true } },
       },
     }),

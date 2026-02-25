@@ -13,13 +13,15 @@ export interface PointsRule {
   cooldownHours?: number;
 }
 
+// F-008 FIX: Reference LOYALTY_POINTS_CONFIG for purchase/review/referral/birthday
+// to prevent drift between this file and the canonical constants.
 export const POINTS_RULES: PointsRule[] = [
-  { id: 'purchase', action: 'PURCHASE', points: (amount: number) => Math.floor(amount), description: '1 point per $1 spent', descriptionFr: '1 point par $ dépensé' },
-  { id: 'review', action: 'REVIEW', points: 50, description: '50 points per review', descriptionFr: '50 points par avis', maxPerDay: 3 },
+  { id: 'purchase', action: 'PURCHASE', points: (amount: number) => Math.floor(amount * LOYALTY_POINTS_CONFIG.pointsPerDollar), description: `${LOYALTY_POINTS_CONFIG.pointsPerDollar} point per $1 spent`, descriptionFr: `${LOYALTY_POINTS_CONFIG.pointsPerDollar} point par $ dépensé` },
+  { id: 'review', action: 'REVIEW', points: LOYALTY_POINTS_CONFIG.reviewBonus, description: `${LOYALTY_POINTS_CONFIG.reviewBonus} points per review`, descriptionFr: `${LOYALTY_POINTS_CONFIG.reviewBonus} points par avis`, maxPerDay: 3 },
   { id: 'review-photo', action: 'REVIEW_WITH_PHOTO', points: 75, description: '75 points per review with photo', descriptionFr: '75 points par avis avec photo', maxPerDay: 3 },
-  { id: 'referral', action: 'REFERRAL', points: 200, description: '200 points per successful referral', descriptionFr: '200 points par parrainage réussi' },
+  { id: 'referral', action: 'REFERRAL', points: LOYALTY_POINTS_CONFIG.referralBonus, description: `${LOYALTY_POINTS_CONFIG.referralBonus} points per successful referral`, descriptionFr: `${LOYALTY_POINTS_CONFIG.referralBonus} points par parrainage réussi` },
   { id: 'social-share', action: 'SOCIAL_SHARE', points: 25, description: '25 points per social share', descriptionFr: '25 points par partage social', maxPerDay: 5 },
-  { id: 'birthday', action: 'BIRTHDAY', points: 100, description: '100 birthday points', descriptionFr: '100 points d\'anniversaire' },
+  { id: 'birthday', action: 'BIRTHDAY', points: LOYALTY_POINTS_CONFIG.birthdayBonus, description: `${LOYALTY_POINTS_CONFIG.birthdayBonus} birthday points`, descriptionFr: `${LOYALTY_POINTS_CONFIG.birthdayBonus} points d\'anniversaire` },
   { id: 'newsletter', action: 'NEWSLETTER_SIGNUP', points: 50, description: '50 points for newsletter signup', descriptionFr: '50 points pour l\'inscription newsletter' },
   { id: 'account-complete', action: 'PROFILE_COMPLETE', points: 100, description: '100 points for completing profile', descriptionFr: '100 points pour profil complet' },
   { id: 'first-order', action: 'FIRST_ORDER', points: 100, description: '100 bonus points on first order', descriptionFr: '100 points bonus première commande' },
@@ -43,6 +45,7 @@ export interface PointsBalance {
 // Previously, this file had its own LOYALTY_TIERS array with hardcoded thresholds
 // that was missing the DIAMOND tier and could drift out of sync with constants.ts.
 import {
+  LOYALTY_POINTS_CONFIG,
   LOYALTY_TIER_THRESHOLDS,
   calculateTierFromPoints,
 } from '@/lib/constants';

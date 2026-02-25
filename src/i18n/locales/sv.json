@@ -2024,6 +2024,7 @@
         "delivered": "Levererad",
         "pending": "Utestående",
         "processing": "Behandlas",
+        "returned": "Returnerad",
         "shipped": "Skickad"
       },
       "orders": "Beställningar",
@@ -2031,6 +2032,7 @@
       "paymentStatus": {
         "failed": "Misslyckades",
         "paid": "Betald",
+        "partiallyRefunded": "Delvis återbetald",
         "pending": "Väntande",
         "refunded": "Återbetalad"
       },

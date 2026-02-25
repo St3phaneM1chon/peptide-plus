@@ -2024,6 +2024,7 @@
         "delivered": "डिलीवर किया गया",
         "pending": "लंबित",
         "processing": "प्रसंस्करण",
+        "returned": "वापस किया गया",
         "shipped": "भेजा गया"
       },
       "orders": "आदेश",
@@ -2031,6 +2032,7 @@
       "paymentStatus": {
         "failed": "विफल",
         "paid": "भुगतान किया गया",
+        "partiallyRefunded": "आंशिक रूप से वापस",
         "pending": "लंबित",
         "refunded": "रिफंड किया गया"
       },

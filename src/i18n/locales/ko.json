@@ -2024,6 +2024,7 @@
         "delivered": "배송 완료",
         "pending": "대기 중",
         "processing": "처리 중",
+        "returned": "반품됨",
         "shipped": "배송됨"
       },
       "orders": "주문",
@@ -2031,6 +2032,7 @@
       "paymentStatus": {
         "failed": "실패",
         "paid": "지불 완료",
+        "partiallyRefunded": "부분 환불",
         "pending": "대기 중",
         "refunded": "환불됨"
       },

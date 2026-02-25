@@ -2024,6 +2024,7 @@
         "delivered": "تم التوصيل",
         "pending": "معلق",
         "processing": "قيد المعالجة",
+        "returned": "مُرتجع",
         "shipped": "تم الشحن"
       },
       "orders": "الطلبات",
@@ -2031,6 +2032,7 @@
       "paymentStatus": {
         "failed": "فشل",
         "paid": "مدفوع",
+        "partiallyRefunded": "مسترد جزئياً",
         "pending": "معلق",
         "refunded": "تم استرداده"
       },

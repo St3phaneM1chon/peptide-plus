@@ -2024,6 +2024,7 @@
         "delivered": "已送达",
         "pending": "待处理",
         "processing": "处理中",
+        "returned": "已退货",
         "shipped": "已发货"
       },
       "orders": "订单",
@@ -2031,6 +2032,7 @@
       "paymentStatus": {
         "failed": "失败",
         "paid": "已支付",
+        "partiallyRefunded": "部分退款",
         "pending": "待处理",
         "refunded": "已退款"
       },

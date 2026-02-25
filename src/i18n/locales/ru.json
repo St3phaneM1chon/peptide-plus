@@ -2024,6 +2024,7 @@
         "delivered": "Доставлен",
         "pending": "В ожидании",
         "processing": "В обработке",
+        "returned": "Возвращён",
         "shipped": "Отправлен"
       },
       "orders": "Заказы",
@@ -2031,6 +2032,7 @@
       "paymentStatus": {
         "failed": "Не удалось",
         "paid": "Оплачено",
+        "partiallyRefunded": "Частично возвращён",
         "pending": "В ожидании",
         "refunded": "Возвращено"
       },

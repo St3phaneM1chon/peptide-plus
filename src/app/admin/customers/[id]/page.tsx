@@ -39,6 +39,7 @@ import { StatusBadge, type BadgeVariant } from '@/components/admin/StatusBadge';
 import { StatCard } from '@/components/admin/StatCard';
 import { useI18n } from '@/i18n/client';
 import { toast } from 'sonner';
+import { LOYALTY_TIER_THRESHOLDS } from '@/lib/constants';
 
 // ---------------------------------------------------------------------------
 // Interfaces
@@ -226,15 +227,12 @@ const tierVariants: Record<string, BadgeVariant> = {
   DIAMOND: 'primary',
 };
 
-const tierThresholds: Record<string, number> = {
-  BRONZE: 0,
-  SILVER: 500,
-  GOLD: 2000,
-  PLATINUM: 5000,
-  DIAMOND: 15000,
-};
+// F-001 FIX: Derive from canonical LOYALTY_TIER_THRESHOLDS instead of hardcoding
+const tierThresholds: Record<string, number> = Object.fromEntries(
+  LOYALTY_TIER_THRESHOLDS.map(t => [t.id, t.minPoints])
+);
 
-const tierOrder = ['BRONZE', 'SILVER', 'GOLD', 'PLATINUM', 'DIAMOND'];
+const tierOrder: string[] = LOYALTY_TIER_THRESHOLDS.map(t => t.id);
 
 const tierColors: Record<string, string> = {
   BRONZE: 'bg-amber-600',

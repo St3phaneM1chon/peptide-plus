@@ -41,7 +41,7 @@ interface Reward {
   available: boolean;
 }
 
-import { LOYALTY_TIER_THRESHOLDS } from '@/lib/constants';
+import { LOYALTY_TIER_THRESHOLDS, LOYALTY_POINTS_CONFIG } from '@/lib/constants';
 
 // Configuration des niveaux - derived from CANONICAL thresholds in constants.ts
 // benefits keys resolved at render time via t()
@@ -497,15 +497,15 @@ export default function RewardsPage() {
               <ul className="space-y-3 text-sm">
                 <li className="flex items-start gap-2">
                   <span className="text-green-500">✓</span>
-                  <span><strong>{t('customerRewards.purchases')}:</strong> 1 {t('customerRewards.pointsPerDollar')} (×{currentLevel.pointsMultiplier})</span>
+                  <span><strong>{t('customerRewards.purchases')}:</strong> {LOYALTY_POINTS_CONFIG.pointsPerDollar} {t('customerRewards.pointsPerDollar')} (×{currentLevel.pointsMultiplier})</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-green-500">✓</span>
-                  <span><strong>{t('customerRewards.referral')}:</strong> 100 {t('customerRewards.pointsPerFriend')}</span>
+                  <span><strong>{t('customerRewards.referral')}:</strong> {LOYALTY_POINTS_CONFIG.referralBonus} {t('customerRewards.pointsPerFriend')}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-green-500">✓</span>
-                  <span><strong>{t('customerRewards.productReview')}:</strong> 25 points</span>
+                  <span><strong>{t('customerRewards.productReview')}:</strong> {LOYALTY_POINTS_CONFIG.reviewBonus} points</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-green-500">✓</span>

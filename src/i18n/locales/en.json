@@ -2098,6 +2098,7 @@
         "delivered": "Delivered",
         "pending": "Pending",
         "processing": "Processing",
+        "returned": "Returned",
         "shipped": "Shipped"
       },
       "orders": "Orders",
@@ -2105,6 +2106,7 @@
       "paymentStatus": {
         "failed": "Failed",
         "paid": "Paid",
+        "partiallyRefunded": "Partially Refunded",
         "pending": "Pending",
         "refunded": "Refunded"
       },

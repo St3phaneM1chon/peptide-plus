@@ -18,7 +18,7 @@ import { sanitizeWebhookPayload } from '@/lib/sanitize';
 import { getRedisClient, isRedisAvailable } from '@/lib/redis';
 import { clawbackAmbassadorCommission } from '@/lib/ambassador-commission';
 import { STRIPE_API_VERSION } from '@/lib/stripe';
-import { calculatePurchasePoints } from '@/lib/constants';
+import { calculatePurchasePoints, calculateTierFromPoints } from '@/lib/constants';
 
 // Lazy-initialized Stripe client to avoid crashing during Next.js build/SSG
 // when STRIPE_SECRET_KEY is not available in the CI environment.
@@ -872,7 +872,10 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
     // G2-FLAW-10: Award loyalty points for purchase (non-blocking)
     if (user) {
       try {
-        const tierMultiplier = user.loyaltyTier === 'VIP' ? 2 : user.loyaltyTier === 'GOLD' ? 1.5 : 1;
+        // F-001 FIX: Use canonical tier multiplier from LOYALTY_TIER_THRESHOLDS
+        // instead of hardcoded values that can drift out of sync.
+        const canonicalTier = calculateTierFromPoints(user.lifetimePoints || 0);
+        const tierMultiplier = canonicalTier.multiplier;
         const pointsToAward = calculatePurchasePoints(Number(cadTotal), tierMultiplier);
 
         if (pointsToAward > 0) {

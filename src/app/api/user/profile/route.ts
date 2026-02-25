@@ -20,7 +20,9 @@ const updateProfileSchema = z.object({
   name: z.string().max(100).optional(),
   phone: z.string().max(20).optional().nullable().or(z.literal('')),
   birthDate: z.string().optional().or(z.literal('')),
-  locale: z.string().max(5).optional(),
+  // E-22 FIX: Validate locale against full list of 22 supported locales (was z.string().max(5) which
+  // relied on a separate runtime check; now Zod rejects invalid locales at parse time)
+  locale: z.enum(locales as unknown as [string, ...string[]]).optional(),
 });
 
 export async function GET() {

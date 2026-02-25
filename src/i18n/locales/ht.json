@@ -2024,6 +2024,7 @@
         "delivered": "Livré",
         "pending": "An atant",
         "processing": "Ap trete",
+        "returned": "Retounen",
         "shipped": "Voye"
       },
       "orders": "Lòd",
@@ -2031,6 +2032,7 @@
       "paymentStatus": {
         "failed": "Echwe",
         "paid": "Peye",
+        "partiallyRefunded": "Pasyèlman ranbouse",
         "pending": "An atant",
         "refunded": "Rembouse"
       },

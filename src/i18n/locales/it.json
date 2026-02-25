@@ -2024,6 +2024,7 @@
         "delivered": "Consegnato",
         "pending": "In attesa",
         "processing": "In elaborazione",
+        "returned": "Reso",
         "shipped": "Spedito"
       },
       "orders": "Ordini",
@@ -2031,6 +2032,7 @@
       "paymentStatus": {
         "failed": "Fallito",
         "paid": "Pagato",
+        "partiallyRefunded": "Parzialmente rimborsato",
         "pending": "In attesa",
         "refunded": "Rimborsato"
       },

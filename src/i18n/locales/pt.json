@@ -2024,6 +2024,7 @@
         "delivered": "Entregue",
         "pending": "Pendente",
         "processing": "Processando",
+        "returned": "Devolvido",
         "shipped": "Enviado"
       },
       "orders": "Pedidos",
@@ -2031,6 +2032,7 @@
       "paymentStatus": {
         "failed": "Falhou",
         "paid": "Pago",
+        "partiallyRefunded": "Parcialmente reembolsado",
         "pending": "Pendente",
         "refunded": "Reembolsado"
       },

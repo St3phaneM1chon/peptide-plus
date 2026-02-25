@@ -458,13 +458,21 @@ export async function POST(request: NextRequest) {
         return newOrder;
       });
 
-      // SECURITY (E-02): Verify server-calculated total matches PayPal captured amount
-      const paypalCapturedAmount = Number(captureData.purchase_units?.[0]?.payments?.captures?.[0]?.amount?.value || 0);
+      // E-17 FIX: Verify server-calculated total matches PayPal captured amount
+      // After capture, extract the actual captured amount from PayPal's response and compare
+      // against our server-side calculation. If mismatch > $0.02, flag the order for admin review.
+      const paypalCapturedAmount = Number(
+        captureData.purchase_units?.[0]?.payments?.captures?.[0]?.amount?.value
+        || captureData.purchase_units?.[0]?.amount?.value
+        || 0
+      );
       const serverCalculatedTotal = Math.round((subtotalAfterAllDiscounts + totalTax + serverShipping) * 100) / 100;
-      if (Math.abs(paypalCapturedAmount - serverCalculatedTotal) > 0.02) {
+      const amountDifference = Math.abs(paypalCapturedAmount - serverCalculatedTotal);
+      if (amountDifference > 0.02) {
         logger.warn('[PayPal capture] Amount mismatch between server calculation and PayPal captured amount', {
           paypalCapturedAmount,
           serverCalculatedTotal,
+          difference: amountDifference,
           serverSubtotal,
           serverPromoDiscount,
           serverGiftCardDiscount,
@@ -473,6 +481,22 @@ export async function POST(request: NextRequest) {
           orderNumber: order.orderNumber,
           orderId: order.id,
         });
+
+        // Store mismatch flag on order adminNotes for admin review (non-blocking)
+        try {
+          const mismatchNote = `[AMOUNT MISMATCH] PayPal captured: $${paypalCapturedAmount.toFixed(2)}, Server expected: $${serverCalculatedTotal.toFixed(2)}, Difference: $${amountDifference.toFixed(2)}. Breakdown: subtotal=$${serverSubtotal}, promoDiscount=$${serverPromoDiscount}, giftCardDiscount=$${serverGiftCardDiscount}, tax=$${totalTax}, shipping=$${serverShipping}`;
+          await prisma.order.update({
+            where: { id: order.id },
+            data: {
+              adminNotes: mismatchNote,
+            },
+          });
+        } catch (noteError) {
+          logger.error('[PayPal capture] Failed to store amount mismatch note on order', {
+            orderId: order.id,
+            error: noteError instanceof Error ? noteError.message : String(noteError),
+          });
+        }
       }
 
       // Create accounting entries (non-blocking)

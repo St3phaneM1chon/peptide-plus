@@ -2024,6 +2024,7 @@
         "delivered": "Livré",
         "pending": "An atant",
         "processing": "Ap trete",
+        "returned": "Retourné",
         "shipped": "Voye"
       },
       "orders": "Acha",
@@ -2031,6 +2032,7 @@
       "paymentStatus": {
         "failed": "Echwe",
         "paid": "Peye",
+        "partiallyRefunded": "Partiellement remboursé",
         "pending": "An atant",
         "refunded": "Rembouse"
       },
