@@ -37,32 +37,35 @@ export async function POST(request: NextRequest) {
     // FIX F-004: Add authentication - require CRON_SECRET or admin session
     const authHeader = request.headers.get('authorization');
     const cronSecret = process.env.CRON_SECRET;
-    let authorized = false;
+    let authorizedViaCron = false;
 
-    // Check CRON_SECRET bearer token
+    // Check CRON_SECRET bearer token (for cron jobs / webhooks)
     if (cronSecret && authHeader === `Bearer ${cronSecret}`) {
-      authorized = true;
+      authorizedViaCron = true;
     }
 
-    // Check admin session
-    if (!authorized) {
-      const session = await auth();
-      if (session?.user && ['OWNER', 'EMPLOYEE'].includes(session.user.role as string)) {
-        authorized = true;
+    // If not authenticated via CRON_SECRET, require admin session + CSRF
+    if (!authorizedViaCron) {
+      // CSRF validation (only for session-based auth, not CRON_SECRET bearer)
+      const csrfValid = await validateCsrf(request);
+      if (!csrfValid) {
+        return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
       }
-    }
 
-    if (!authorized) {
-      return NextResponse.json(
-        { error: 'Unauthorized - requires CRON_SECRET or admin session' },
-        { status: 401 }
-      );
-    }
+      const session = await auth();
+      if (!session?.user?.id) {
+        return NextResponse.json(
+          { error: 'Unauthorized - authentication required' },
+          { status: 401 }
+        );
+      }
 
-    // CSRF validation
-    const csrfValid = await validateCsrf(request);
-    if (!csrfValid) {
-      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+      if (!['OWNER', 'EMPLOYEE'].includes(session.user.role as string)) {
+        return NextResponse.json(
+          { error: 'Forbidden - requires OWNER or EMPLOYEE role' },
+          { status: 403 }
+        );
+      }
     }
 
     const body = await request.json();

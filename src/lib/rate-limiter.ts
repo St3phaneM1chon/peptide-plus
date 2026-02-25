@@ -184,6 +184,9 @@ const RATE_LIMIT_CONFIGS: Record<string, { windowMs: number; maxRequests: number
   // FLAW-FIX: Referral code application - 10 per user per hour
   'referrals/apply': { windowMs: 3600000, maxRequests: 10 },
 
+  // FIX F-007: Referral code validation - 10 per IP per hour (anti brute-force enumeration)
+  'referrals/validate': { windowMs: 3600000, maxRequests: 10 },
+
   // FLAW-FIX: Mailing list subscribe - 5 per IP per hour (uses 'newsletter' config via path mapping)
   'mailing-list/subscribe': { windowMs: 3600000, maxRequests: 5 },
 
@@ -244,9 +247,10 @@ function getEndpointType(path: string): string {
     if (segments[1] === 'orders' && segments[2] === 'track') return 'orders/track';
     // Stock alerts
     if (segments[1] === 'stock-alerts') return 'stock-alerts';
-    // Referrals: distinguish /api/referrals/generate and /api/referrals/apply
+    // Referrals: distinguish /api/referrals/generate, /api/referrals/apply, and /api/referrals/validate
     if (segments[1] === 'referrals' && segments[2] === 'generate') return 'referrals/generate';
     if (segments[1] === 'referrals' && segments[2] === 'apply') return 'referrals/apply';
+    if (segments[1] === 'referrals' && segments[2] === 'validate') return 'referrals/validate';
     // Mailing list: distinguish /api/mailing-list/subscribe
     if (segments[1] === 'mailing-list' && segments[2] === 'subscribe') return 'mailing-list/subscribe';
     // Account: distinguish /api/account/password and /api/account/delete-request

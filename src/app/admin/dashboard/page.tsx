@@ -32,6 +32,8 @@ async function fetchAdminData() {
   // G5-FLAW-08: Use UTC to avoid server timezone drift
   const startOfMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
 
+  // F1.11: Wrap all queries in $transaction to share a single DB connection
+  // instead of opening 9 parallel connections via Promise.all
   const [
     totalOrders,
     pendingOrders,
@@ -39,10 +41,10 @@ async function fetchAdminData() {
     totalClients,
     totalCustomers,
     totalProducts,
-    lowStockFormats,
+    lowStockRaw,
     recentOrders,
     recentUsers,
-  ] = await Promise.all([
+  ] = await prisma.$transaction([
     // Total orders
     prisma.order.count(),
 
@@ -51,18 +53,18 @@ async function fetchAdminData() {
       where: { status: { in: ['PENDING', 'CONFIRMED', 'PROCESSING'] } },
     }),
 
-    // F1.6+F1.12: Monthly revenue via aggregate (excludes cancelled orders)
+    // F1.6+F1.12: Monthly revenue via aggregate (excludes cancelled orders, only paid)
     prisma.order.aggregate({
       where: {
         createdAt: { gte: startOfMonth },
-        paymentStatus: 'PAID',
-        status: { notIn: ['CANCELLED', 'REFUNDED'] },
+        status: { notIn: ['CANCELLED'] },
+        paymentStatus: { in: ['PAID', 'PARTIALLY_REFUNDED'] },
       },
       _sum: { total: true },
     }),
 
-    // Total companies (clients B2B)
-    prisma.company.count(),
+    // F1.8: Total active companies only (clients B2B)
+    prisma.company.count({ where: { isActive: true } }),
 
     // Total customers
     prisma.user.count({ where: { role: 'CUSTOMER' } }),
@@ -76,7 +78,7 @@ async function fetchAdminData() {
       WHERE "trackInventory" = true
         AND "isActive" = true
         AND "stockQuantity" <= "lowStockThreshold"
-    `.then(rows => Number(rows[0]?.count ?? 0)),
+    `,
 
     // F1.13: Recent orders with item count only (not full items)
     prisma.order.findMany({
@@ -112,6 +114,9 @@ async function fetchAdminData() {
 
   // G1-FLAW-09: Preserve Decimal precision
   const monthlyRevenue = parseFloat(parseFloat(String(monthlyRevenueAgg._sum.total ?? 0)).toFixed(2));
+
+  // Convert raw SQL bigint result to number
+  const lowStockFormats = Number((lowStockRaw as [{ count: bigint }])[0]?.count ?? 0);
 
   return {
     stats: {

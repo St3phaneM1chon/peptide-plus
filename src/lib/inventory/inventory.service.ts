@@ -117,21 +117,17 @@ export async function consumeReservation(
 
     // Process stock decrements and inventory transactions for each reservation
     for (const reservation of reservations) {
-      // Decrement stock (floor at 0 to prevent negative inventory)
+      // E-08 FIX: Atomic conditional stock decrement — prevents negative inventory
       if (reservation.formatId) {
-        const currentFormat = await tx.productFormat.findUnique({
-          where: { id: reservation.formatId },
-          select: { stockQuantity: true },
-        });
-        const safeDecrement = Math.min(reservation.quantity, currentFormat?.stockQuantity ?? 0);
-        if (safeDecrement > 0) {
-          await tx.productFormat.update({
-            where: { id: reservation.formatId },
-            data: { stockQuantity: { decrement: safeDecrement } },
-          });
-        }
-        if (safeDecrement < reservation.quantity) {
-          logger.warn('[consumeReservation] Stock floor hit', { formatId: reservation.formatId, requested: reservation.quantity, decremented: safeDecrement });
+        const rowsAffected: number = await tx.$executeRaw`
+          UPDATE "ProductFormat"
+          SET "stockQuantity" = "stockQuantity" - ${reservation.quantity},
+              "updatedAt" = NOW()
+          WHERE id = ${reservation.formatId}
+            AND "stockQuantity" >= ${reservation.quantity}
+        `;
+        if (rowsAffected === 0) {
+          logger.warn('[consumeReservation] Insufficient stock', { formatId: reservation.formatId, requested: reservation.quantity });
         }
       }
 
@@ -251,22 +247,17 @@ export async function adjustStock(
           data: { stockQuantity: { increment: quantity } },
         });
       } else {
-        // Floor at 0 to prevent negative inventory
-        const currentFormat = await tx.productFormat.findUnique({
-          where: { id: formatId },
-          select: { stockQuantity: true },
-        });
-        const currentStock = currentFormat?.stockQuantity ?? 0;
+        // E-08 FIX: Atomic conditional stock decrement — prevents negative inventory
         const absQuantity = Math.abs(quantity);
-        const safeDecrement = Math.min(absQuantity, currentStock);
-        if (safeDecrement > 0) {
-          await tx.productFormat.update({
-            where: { id: formatId },
-            data: { stockQuantity: { decrement: safeDecrement } },
-          });
-        }
-        if (safeDecrement < absQuantity) {
-          logger.warn('[adjustStock] Stock floor hit', { formatId, requested: absQuantity, decremented: safeDecrement });
+        const rowsAffected: number = await tx.$executeRaw`
+          UPDATE "ProductFormat"
+          SET "stockQuantity" = "stockQuantity" - ${absQuantity},
+              "updatedAt" = NOW()
+          WHERE id = ${formatId}
+            AND "stockQuantity" >= ${absQuantity}
+        `;
+        if (rowsAffected === 0) {
+          logger.warn('[adjustStock] Insufficient stock', { formatId, requested: absQuantity });
         }
       }
     }

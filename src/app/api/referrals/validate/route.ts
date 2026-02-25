@@ -2,12 +2,17 @@ export const dynamic = 'force-dynamic';
 
 /**
  * Referral Code Validation API
- * POST - Validate a referral code (public endpoint, used during signup)
+ * POST - Validate a referral code (requires authentication)
+ *
+ * SECURITY (F-007 fix): Requires authenticated session to prevent
+ * anonymous brute-force enumeration of referral codes.
+ * Rate limited to 10 requests per IP per hour.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
+import { auth } from '@/lib/auth-config';
 import { logger } from '@/lib/logger';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { validateCsrf } from '@/lib/csrf-middleware';
@@ -38,6 +43,15 @@ export async function POST(request: NextRequest) {
     const csrfValid = await validateCsrf(request);
     if (!csrfValid) {
       return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+    }
+
+    // FIX F-007: Require authenticated session to prevent anonymous enumeration
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { valid: false, error: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
     const body = await request.json();

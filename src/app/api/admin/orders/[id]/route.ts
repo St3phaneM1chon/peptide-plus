@@ -898,17 +898,6 @@ async function handleReship(
     });
     const wacMap = new Map(wacResults.map(w => [`${w.productId}-${w.formatId}`, Number(w.runningWAC)]));
 
-    // N+1 FIX: Batch-fetch all format stock quantities
-    const formatIds = order.items.map(i => i.formatId).filter((id): id is string => !!id);
-    const uniqueFormatIds = [...new Set(formatIds)];
-    const formats = uniqueFormatIds.length > 0
-      ? await tx.productFormat.findMany({
-          where: { id: { in: uniqueFormatIds } },
-          select: { id: true, stockQuantity: true },
-        })
-      : [];
-    const formatStockMap = new Map(formats.map(f => [f.id, f.stockQuantity]));
-
     for (const item of order.items) {
       const wac = wacMap.get(`${item.productId}-${item.formatId}`) ?? 0;
       lossAccumulator += wac * item.quantity;
@@ -943,20 +932,17 @@ async function handleReship(
         },
       });
 
-      // Decrement stock (floor at 0 to prevent negative inventory)
+      // E-08 FIX: Atomic conditional stock decrement — prevents negative inventory
       if (item.formatId) {
-        const currentStock = formatStockMap.get(item.formatId) ?? 0;
-        const safeDecrement = Math.min(item.quantity, currentStock);
-        if (safeDecrement > 0) {
-          await tx.productFormat.update({
-            where: { id: item.formatId },
-            data: { stockQuantity: { decrement: safeDecrement } },
-          });
-          // Update local map for subsequent items with the same format
-          formatStockMap.set(item.formatId, currentStock - safeDecrement);
-        }
-        if (safeDecrement < item.quantity) {
-          logger.warn(`[Admin reship] Stock floor hit for format ${item.formatId}: wanted to decrement ${item.quantity}, only decremented ${safeDecrement}`);
+        const rowsAffected: number = await tx.$executeRaw`
+          UPDATE "ProductFormat"
+          SET "stockQuantity" = "stockQuantity" - ${item.quantity},
+              "updatedAt" = NOW()
+          WHERE id = ${item.formatId}
+            AND "stockQuantity" >= ${item.quantity}
+        `;
+        if (rowsAffected === 0) {
+          logger.warn(`[Admin reship] Insufficient stock for format ${item.formatId}: wanted to decrement ${item.quantity}, atomic UPDATE matched 0 rows`);
         }
       }
     }

@@ -305,21 +305,17 @@ export async function POST(request: NextRequest) {
               data: { status: 'CONSUMED', orderId: newOrder.id, consumedAt: new Date() },
             });
 
-            // Decrement stock (floor at 0 to prevent negative inventory)
+            // E-08 FIX: Atomic conditional stock decrement — prevents negative inventory
             if (reservation.formatId) {
-              const currentFormat = await tx.productFormat.findUnique({
-                where: { id: reservation.formatId },
-                select: { stockQuantity: true },
-              });
-              const safeDecrement = Math.min(reservation.quantity, currentFormat?.stockQuantity ?? 0);
-              if (safeDecrement > 0) {
-                await tx.productFormat.update({
-                  where: { id: reservation.formatId },
-                  data: { stockQuantity: { decrement: safeDecrement } },
-                });
-              }
-              if (safeDecrement < reservation.quantity) {
-                logger.warn(`[PayPal capture] Stock floor hit for format ${reservation.formatId}`, { wanted: reservation.quantity, decremented: safeDecrement });
+              const rowsAffected: number = await tx.$executeRaw`
+                UPDATE "ProductFormat"
+                SET "stockQuantity" = "stockQuantity" - ${reservation.quantity},
+                    "updatedAt" = NOW()
+                WHERE id = ${reservation.formatId}
+                  AND "stockQuantity" >= ${reservation.quantity}
+              `;
+              if (rowsAffected === 0) {
+                logger.warn(`[PayPal capture] Insufficient stock for format ${reservation.formatId}`, { wanted: reservation.quantity });
               }
             }
 

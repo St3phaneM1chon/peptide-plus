@@ -461,17 +461,6 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
         data: { status: 'CONSUMED', orderId: newOrder.id, consumedAt: new Date() },
       });
 
-      // N+1 FIX: Batch-fetch all format stock quantities
-      const formatIds = reservations.map(r => r.formatId).filter((id): id is string => !!id);
-      const uniqueFormatIds = [...new Set(formatIds)];
-      const formats = uniqueFormatIds.length > 0
-        ? await tx.productFormat.findMany({
-            where: { id: { in: uniqueFormatIds } },
-            select: { id: true, stockQuantity: true },
-          })
-        : [];
-      const formatStockMap = new Map(formats.map(f => [f.id, f.stockQuantity]));
-
       // N+1 FIX: Batch-fetch latest WAC for all unique (productId, formatId) combos
       const wacKeys = reservations.map(r => ({ productId: r.productId, formatId: r.formatId }));
       const uniqueWacKeys = [...new Map(wacKeys.map(k => [`${k.productId}-${k.formatId}`, k])).values()];
@@ -488,20 +477,21 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
       }
 
       for (const reservation of reservations) {
-        // Decrement stock (floor at 0 to prevent negative inventory)
+        // E-08 FIX: Atomic conditional stock decrement — prevents negative inventory
+        // Uses a single UPDATE with a WHERE guard so the row is only modified when
+        // sufficient stock exists.  The returned row-count tells us if the decrement
+        // actually happened (race-condition-safe, no read-then-write gap).
         if (reservation.formatId) {
-          const currentStock = formatStockMap.get(reservation.formatId) ?? 0;
-          const safeDecrement = Math.min(reservation.quantity, currentStock);
-          if (safeDecrement > 0) {
-            await tx.productFormat.update({
-              where: { id: reservation.formatId },
-              data: { stockQuantity: { decrement: safeDecrement } },
-            });
-            // Update local map for subsequent reservations on the same format
-            formatStockMap.set(reservation.formatId, currentStock - safeDecrement);
-          }
-          if (safeDecrement < reservation.quantity) {
-            logger.warn(`[Stripe webhook] Stock floor hit for format ${reservation.formatId}: wanted to decrement ${reservation.quantity}, only decremented ${safeDecrement}`);
+          const rowsAffected: number = await tx.$executeRaw`
+            UPDATE "ProductFormat"
+            SET "stockQuantity" = "stockQuantity" - ${reservation.quantity},
+                "updatedAt" = NOW()
+            WHERE id = ${reservation.formatId}
+              AND "stockQuantity" >= ${reservation.quantity}
+          `;
+          if (rowsAffected === 0) {
+            // Stock was insufficient — log and continue (order is already paid)
+            logger.warn(`[Stripe webhook] Insufficient stock for format ${reservation.formatId}: wanted ${reservation.quantity}, atomic UPDATE matched 0 rows`);
           }
         }
 
