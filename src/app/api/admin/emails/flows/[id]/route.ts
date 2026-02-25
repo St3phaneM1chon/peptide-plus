@@ -204,7 +204,7 @@ export const PUT = withAdminGuard(
         newValue: updates,
         ipAddress: getClientIpFromRequest(request),
         userAgent: request.headers.get('user-agent') || undefined,
-      }).catch(() => {});
+      }).catch((err: unknown) => { logger.error('[Flow] Non-blocking audit log for update failed', { error: err instanceof Error ? err.message : String(err) }); });
 
       return NextResponse.json({
         flow: {
@@ -251,7 +251,7 @@ export const DELETE = withAdminGuard(
         targetId: params.id,
         ipAddress: getClientIpFromRequest(request),
         userAgent: request.headers.get('user-agent') || undefined,
-      }).catch(() => {});
+      }).catch((err: unknown) => { logger.error('[Flow] Non-blocking audit log for delete failed', { error: err instanceof Error ? err.message : String(err) }); });
 
       return NextResponse.json({ success: true });
     } catch (error) {

@@ -602,7 +602,7 @@ export default function CalendrierFiscalPage() {
                 type="text"
                 value={formDescription}
                 onChange={(e) => setFormDescription(e.target.value)}
-                placeholder="Details..."
+                placeholder={t('admin.accounting.fiscal.detailsPlaceholder') || 'Details...'}
               />
             </FormField>
             <FormField label={t('admin.accounting.fiscal.descriptionFr')}>

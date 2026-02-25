@@ -306,6 +306,20 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
     const updated = await prisma.user.update({
       where: { id },
       data: allowed,
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        image: true,
+        role: true,
+        phone: true,
+        locale: true,
+        loyaltyTier: true,
+        loyaltyPoints: true,
+        lifetimePoints: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     });
 
     // Audit log for user update (fire-and-forget)

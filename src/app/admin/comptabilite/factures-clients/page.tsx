@@ -814,7 +814,7 @@ export default function FacturesClientsPage() {
                 value={form.customerName}
                 onChange={(e) => setForm(prev => ({ ...prev, customerName: e.target.value }))}
                 error={!!formErrors.customerName}
-                placeholder="BioCycle Peptides Inc."
+                placeholder={t('admin.customerInvoices.customerNamePlaceholder') || 'BioCycle Peptides Inc.'}
               />
             </FormField>
             <FormField
@@ -960,6 +960,7 @@ export default function FacturesClientsPage() {
                               onClick={() => removeLine(idx)}
                               className="p-1 text-slate-400 hover:text-red-500 rounded"
                               title={t('admin.customerInvoices.removeLine')}
+                              aria-label="Supprimer la ligne"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>

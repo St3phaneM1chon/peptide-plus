@@ -202,7 +202,12 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     // Vérifier que le produit existe
     const existingProduct = await prisma.product.findUnique({
       where: { id },
-      include: { images: true, formats: true },
+      select: {
+        id: true,
+        slug: true,
+        images: { select: { id: true } },
+        formats: { select: { id: true } },
+      },
     });
 
     if (!existingProduct) {
@@ -213,6 +218,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     if (productData.slug && productData.slug !== existingProduct.slug) {
       const slugExists = await prisma.product.findUnique({
         where: { slug: productData.slug as string },
+        select: { id: true },
       });
       if (slugExists) {
         return apiError('Ce slug existe déjà', ErrorCode.DUPLICATE_ENTRY, { status: 409, request });

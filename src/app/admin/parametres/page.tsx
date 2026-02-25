@@ -272,10 +272,10 @@ export default function ParametresPage() {
                   onChange={(e) => setSettings({ ...settings, timezone: e.target.value })}
                   className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
                 >
-                  <option value="America/Toronto">Toronto (EST)</option>
-                  <option value="America/Montreal">Montreal (EST)</option>
-                  <option value="America/Vancouver">Vancouver (PST)</option>
-                  <option value="America/Edmonton">Edmonton (MST)</option>
+                  <option value="America/Toronto">{t('admin.settingsPage.timezoneToronto') || 'Toronto (EST)'}</option>
+                  <option value="America/Montreal">{t('admin.settingsPage.timezoneMontreal') || 'Montreal (EST)'}</option>
+                  <option value="America/Vancouver">{t('admin.settingsPage.timezoneVancouver') || 'Vancouver (PST)'}</option>
+                  <option value="America/Edmonton">{t('admin.settingsPage.timezoneEdmonton') || 'Edmonton (MST)'}</option>
                 </select>
               </FormField>
             </div>

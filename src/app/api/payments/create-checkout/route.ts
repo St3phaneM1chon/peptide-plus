@@ -167,7 +167,7 @@ export async function POST(request: NextRequest) {
     const validation = checkoutSchema.safeParse(body);
     if (!validation.success) {
       return NextResponse.json(
-        { error: validation.error.errors[0]?.message || 'Invalid checkout data' },
+        { error: 'Validation failed', details: validation.error.flatten() },
         { status: 400 }
       );
     }

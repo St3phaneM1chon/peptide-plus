@@ -17,8 +17,9 @@ export const GET = withAdminGuard(async (request, _ctx) => {
     const productId = searchParams.get('productId');
     const formatId = searchParams.get('formatId');
     const type = searchParams.get('type');
-    const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10), 200);
-    const offset = parseInt(searchParams.get('offset') || '0', 10);
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
+    const limit = Math.min(Math.max(1, parseInt(searchParams.get('limit') || '50', 10)), 200);
+    const skip = (page - 1) * limit;
 
     // Build where clause
     const where: Record<string, unknown> = {};
@@ -48,7 +49,7 @@ export const GET = withAdminGuard(async (request, _ctx) => {
         where,
         orderBy: { createdAt: 'desc' },
         take: limit,
-        skip: offset,
+        skip,
       }),
       prisma.inventoryTransaction.count({ where }),
     ]);
@@ -96,12 +97,14 @@ export const GET = withAdminGuard(async (request, _ctx) => {
       };
     });
 
+    const totalPages = Math.ceil(total / limit);
+
     return NextResponse.json({
-      transactions: enrichedTransactions,
+      data: enrichedTransactions,
       total,
+      page,
       limit,
-      offset,
-      hasMore: offset + limit < total,
+      totalPages,
     });
   } catch (error) {
     logger.error('Admin inventory history error', { error: error instanceof Error ? error.message : String(error) });

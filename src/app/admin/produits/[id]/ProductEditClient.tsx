@@ -112,6 +112,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
   const [deleting, setDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [formatToDelete, setFormatToDelete] = useState<string | null>(null);
+  const [concurrentEditConfirm, setConcurrentEditConfirm] = useState<{ format: ProductFormat; initialFormat: ProductFormat } | null>(null);
   const [activeTab, setActiveTab] = useState<'header' | 'texts' | 'formats'>('header');
   const [translationStatuses, setTranslationStatuses] = useState<TranslationStatus[]>([]);
   const [isDirty, setIsDirty] = useState(false);
@@ -255,11 +256,9 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
       if (checkRes.ok) {
         const serverFormat = await checkRes.json();
         if (serverFormat.updatedAt && initialFormat.updatedAt && serverFormat.updatedAt !== initialFormat.updatedAt) {
-          const proceed = window.confirm(
-            t('admin.productForm.concurrentEditWarning') ||
-            'This format was modified by another user since you started editing. Save anyway and overwrite their changes?'
-          );
-          if (!proceed) return;
+          // Show ConfirmDialog instead of window.confirm for concurrent edit warning
+          setConcurrentEditConfirm({ format, initialFormat });
+          return;
         }
       }
     } catch {
@@ -297,6 +296,42 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
       }
     } catch {
       // BUG-075: Revert optimistic update on network error
+      setFormats(previousFormats);
+      setEditingFormatId(format.id);
+      toast.error(t('admin.productForm.formatUpdateError'));
+    }
+  };
+
+  // Proceed with save after concurrent edit confirmation
+  const handleConcurrentEditConfirm = async () => {
+    if (!concurrentEditConfirm) return;
+    const { format, initialFormat } = concurrentEditConfirm;
+    setConcurrentEditConfirm(null);
+    // Skip the server check and go straight to the optimistic update + save
+    const previousFormats = formats;
+    setFormats(formats.map(f => f.id === format.id ? format : f));
+    setEditingFormatId(null);
+    try {
+      const changedFields: Record<string, unknown> = {};
+      for (const key of Object.keys(format) as (keyof ProductFormat)[]) {
+        if (format[key] !== initialFormat[key]) {
+          changedFields[key] = format[key];
+        }
+      }
+      const res = await fetch(`/api/products/${product.id}/formats/${format.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(Object.keys(changedFields).length > 0 ? changedFields : format),
+      });
+      if (res.ok) {
+        const updatedFormat = await res.json();
+        setFormats(prev => prev.map(f => f.id === format.id ? updatedFormat : f));
+      } else {
+        setFormats(previousFormats);
+        setEditingFormatId(format.id);
+        toast.error(t('admin.productForm.formatUpdateError'));
+      }
+    } catch {
       setFormats(previousFormats);
       setEditingFormatId(format.id);
       toast.error(t('admin.productForm.formatUpdateError'));
@@ -392,7 +427,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
         {/* Page Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
-            <Link href="/admin/produits" className="p-2 text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors">
+            <Link href="/admin/produits" className="p-2 text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors" aria-label="Retour aux produits">
               <ArrowLeft className="w-5 h-5" />
             </Link>
             <div>
@@ -733,6 +768,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
                       <button
                         onClick={(e) => { e.stopPropagation(); removeProductText(pt.id); }}
                         className="p-1.5 text-neutral-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        aria-label="Supprimer le texte"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -897,6 +933,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
                             <button
                               onClick={() => setEditingFormatId(format.id)}
                               className="p-2 text-neutral-600 hover:text-sky-600 hover:bg-sky-50 rounded-lg transition-colors"
+                              aria-label="Modifier le format"
                             >
                               <Pencil className="w-4 h-4" />
                             </button>
@@ -904,6 +941,7 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
                               <button
                                 onClick={() => handleDeleteFormat(format.id)}
                                 className="p-2 text-neutral-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                aria-label="Supprimer le format"
                               >
                                 <Trash2 className="w-4 h-4" />
                               </button>
@@ -954,6 +992,18 @@ export default function ProductEditClient({ product, categories, isOwner }: Prop
         onConfirm={confirmDeleteFormat}
         onCancel={() => setFormatToDelete(null)}
         variant="danger"
+      />
+
+      {/* Concurrent edit warning ConfirmDialog (replaces window.confirm) */}
+      <ConfirmDialog
+        isOpen={concurrentEditConfirm !== null}
+        title={t('admin.productForm.concurrentEditTitle') || 'Concurrent Edit Detected'}
+        message={t('admin.productForm.concurrentEditWarning') || 'This format was modified by another user since you started editing. Save anyway and overwrite their changes?'}
+        confirmLabel={t('admin.productForm.overwrite') || 'Overwrite'}
+        cancelLabel={t('common.cancel')}
+        onConfirm={handleConcurrentEditConfirm}
+        onCancel={() => setConcurrentEditConfirm(null)}
+        variant="warning"
       />
     </div>
   );

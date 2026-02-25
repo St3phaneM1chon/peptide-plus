@@ -98,6 +98,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
     // Verify ambassador exists
     const ambassador = await prisma.ambassador.findUnique({
       where: { id: ambassadorId },
+      select: { id: true, name: true, status: true },
     });
 
     if (!ambassador) {
@@ -107,6 +108,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
     // Get all unpaid commissions for this ambassador
     const pendingCommissions = await prisma.ambassadorCommission.findMany({
       where: { ambassadorId, paidOut: false },
+      select: { id: true, commissionAmount: true },
     });
 
     if (pendingCommissions.length === 0) {

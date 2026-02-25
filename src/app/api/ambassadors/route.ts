@@ -21,19 +21,37 @@ export const GET = withAdminGuard(async (request: NextRequest, { session: _sessi
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
     const tier = searchParams.get('tier');
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
+    const limit = Math.min(Math.max(1, parseInt(searchParams.get('limit') || '50', 10)), 200);
+    const skip = (page - 1) * limit;
 
     const where: Record<string, unknown> = {};
     if (status) where.status = status;
     if (tier) where.tier = tier;
 
-    const ambassadors = await prisma.ambassador.findMany({
-      where,
-      include: {
-        user: { select: { name: true, email: true } },
-      },
-      orderBy: { totalEarnings: 'desc' },
-      take: 200,
-    });
+    const [ambassadors, total] = await Promise.all([
+      prisma.ambassador.findMany({
+        where,
+        select: {
+          id: true,
+          userId: true,
+          name: true,
+          email: true,
+          referralCode: true,
+          commissionRate: true,
+          totalReferrals: true,
+          totalEarnings: true,
+          status: true,
+          tier: true,
+          joinedAt: true,
+          user: { select: { name: true, email: true } },
+        },
+        orderBy: { totalEarnings: 'desc' },
+        skip,
+        take: limit,
+      }),
+      prisma.ambassador.count({ where }),
+    ]);
 
     // FIX: FLAW-004 - Removed syncCommissionsForCodes from GET handler.
     // GET should be read-only (REST convention). Sync should be done via
@@ -106,10 +124,18 @@ export const GET = withAdminGuard(async (request: NextRequest, { session: _sessi
       ).catch((err) => logger.error('Ambassador earnings sync error', { error: err instanceof Error ? err.message : String(err) }));
     }
 
-    return NextResponse.json({ ambassadors: formatted });
+    const totalPages = Math.ceil(total / limit);
+
+    return NextResponse.json({
+      data: formatted,
+      total,
+      page,
+      limit,
+      totalPages,
+    });
   } catch (error) {
     logger.error('Ambassadors API error', { error: error instanceof Error ? error.message : String(error) });
-    return NextResponse.json({ error: 'Failed to fetch ambassadors', ambassadors: [] }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to fetch ambassadors', data: [], total: 0, page: 1, limit: 50, totalPages: 0 }, { status: 500 });
   }
 });
 
@@ -238,6 +264,17 @@ export const POST = withAdminGuard(async (request: NextRequest, { session: _sess
         commissionRate,
         status: 'ACTIVE',
         tier: 'BRONZE',
+      },
+      select: {
+        id: true,
+        userId: true,
+        name: true,
+        email: true,
+        referralCode: true,
+        commissionRate: true,
+        status: true,
+        tier: true,
+        joinedAt: true,
       },
     });
 

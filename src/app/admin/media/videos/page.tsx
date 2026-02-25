@@ -239,7 +239,7 @@ export default function MediaVideosPage() {
                 {v.isFeatured && <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />}
                 {v.isPublished ? <Eye className="w-4 h-4 text-green-500" /> : <EyeOff className="w-4 h-4 text-slate-300" />}
                 {v.videoUrl && (
-                  <a href={v.videoUrl} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-sky-600">
+                  <a href={v.videoUrl} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-sky-600" aria-label="Ouvrir la video dans un nouvel onglet">
                     <ExternalLink className="w-4 h-4" />
                   </a>
                 )}
@@ -252,12 +252,12 @@ export default function MediaVideosPage() {
       {/* Pagination */}
       {pagination && pagination.totalPages > 1 && (
         <div className="flex items-center justify-center gap-4 pt-2">
-          <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="p-2 rounded hover:bg-slate-100 disabled:opacity-30">
+          <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="p-2 rounded hover:bg-slate-100 disabled:opacity-30" aria-label="Page precedente">
             <ChevronLeft className="w-5 h-5" />
           </button>
           <span className="text-sm text-slate-600">{page} / {pagination.totalPages}</span>
           {/* FIX: F93 - Use page >= totalPages for consistency with other pagination components */}
-          <button disabled={page >= pagination.totalPages} onClick={() => setPage(p => p + 1)} className="p-2 rounded hover:bg-slate-100 disabled:opacity-30">
+          <button disabled={page >= pagination.totalPages} onClick={() => setPage(p => p + 1)} className="p-2 rounded hover:bg-slate-100 disabled:opacity-30" aria-label="Page suivante">
             <ChevronRight className="w-5 h-5" />
           </button>
         </div>

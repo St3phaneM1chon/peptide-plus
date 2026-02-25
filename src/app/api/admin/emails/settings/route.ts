@@ -95,7 +95,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }: { s
       newValue: { testEmail, success: result.success },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch(() => {});
+    }).catch((err: unknown) => { logger.error('[EmailSettings] Non-blocking audit log for test email failed', { error: err instanceof Error ? err.message : String(err) }); });
 
     // Security #20: Do not leak provider details or internal error messages
     return NextResponse.json({
@@ -217,7 +217,7 @@ export const PUT = withAdminGuard(async (request: NextRequest, { session }: { se
       newValue: { updatedKeys: entries.map(([k]) => k), count: entries.length },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch(() => {});
+    }).catch((err: unknown) => { logger.error('[EmailSettings] Non-blocking audit log for settings update failed', { error: err instanceof Error ? err.message : String(err) }); });
 
     return NextResponse.json({ success: true, updated: entries.length });
   } catch (error) {

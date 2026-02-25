@@ -274,7 +274,7 @@ export const PATCH = withAdminGuard(async (request, { session }) => {
       newValue: { action, ids: validIds, assigneeId: assigneeId || null },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch(() => {});
+    }).catch((err: unknown) => { logger.error('[Inbox] Non-blocking audit log for bulk update failed', { error: err instanceof Error ? err.message : String(err) }); });
 
     return NextResponse.json({
       updated: updatedCount,

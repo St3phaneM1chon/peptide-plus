@@ -304,7 +304,7 @@ export const PUT = withAdminGuard(
         newValue: updates,
         ipAddress: getClientIpFromRequest(request),
         userAgent: request.headers.get('user-agent') || undefined,
-      }).catch(() => {});
+      }).catch((err: unknown) => { logger.error('[InboxDetail] Non-blocking audit log for conversation update failed', { error: err instanceof Error ? err.message : String(err) }); });
 
       return NextResponse.json({ conversation });
     } catch (error) {

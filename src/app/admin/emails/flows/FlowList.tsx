@@ -6,6 +6,7 @@ import {
   Mail, Clock, GitMerge,
 } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { toast } from 'sonner';
 
 interface FlowNodeSummary {
@@ -35,6 +36,7 @@ export default function FlowList({ onEditFlow, onCreateFlow }: FlowListProps) {
   const [flows, setFlows] = useState<Flow[]>([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [flowToDelete, setFlowToDelete] = useState<string | null>(null);
 
   const triggerLabels: Record<string, { label: string; icon: typeof Zap; color: string }> = {
     'order.created': { label: t('admin.emails.flows.triggerOrderCreated'), icon: Zap, color: 'text-green-500' },
@@ -81,7 +83,6 @@ export default function FlowList({ onEditFlow, onCreateFlow }: FlowListProps) {
   };
 
   const deleteFlow = async (flowId: string) => {
-    if (!confirm(t('admin.emails.flows.confirmDelete'))) return;
     setDeletingId(flowId);
     try {
       await fetch(`/api/admin/emails/flows/${flowId}`, { method: 'DELETE' });
@@ -91,6 +92,7 @@ export default function FlowList({ onEditFlow, onCreateFlow }: FlowListProps) {
       toast.error(t('common.errorOccurred'));
     } finally {
       setDeletingId(null);
+      setFlowToDelete(null);
     }
   };
 
@@ -146,13 +148,14 @@ export default function FlowList({ onEditFlow, onCreateFlow }: FlowListProps) {
                       onClick={() => toggleFlow(flow.id, flow.isActive)}
                       className={`p-1.5 rounded ${flow.isActive ? 'text-green-600 hover:bg-green-50' : 'text-slate-400 hover:bg-slate-50'}`}
                       title={flow.isActive ? t('admin.emails.flows.deactivate') : t('admin.emails.flows.activate')}
+                      aria-label={flow.isActive ? 'Desactiver le flux' : 'Activer le flux'}
                     >
                       {flow.isActive ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
                     </button>
-                    <button onClick={() => onEditFlow(flow.id)} className="p-1.5 rounded text-slate-400 hover:bg-slate-50">
+                    <button onClick={() => onEditFlow(flow.id)} className="p-1.5 rounded text-slate-400 hover:bg-slate-50" aria-label="Modifier le flux">
                       <Edit className="h-4 w-4" />
                     </button>
-                    <button onClick={() => deleteFlow(flow.id)} disabled={deletingId === flow.id} className="p-1.5 rounded text-slate-400 hover:bg-red-50 hover:text-red-500 disabled:opacity-50">
+                    <button onClick={() => setFlowToDelete(flow.id)} disabled={deletingId === flow.id} className="p-1.5 rounded text-slate-400 hover:bg-red-50 hover:text-red-500 disabled:opacity-50" aria-label="Supprimer le flux">
                       <Trash2 className="h-4 w-4" />
                     </button>
                   </div>
@@ -208,6 +211,18 @@ export default function FlowList({ onEditFlow, onCreateFlow }: FlowListProps) {
           })}
         </div>
       )}
+
+      {/* Delete flow ConfirmDialog (replaces native confirm()) */}
+      <ConfirmDialog
+        isOpen={flowToDelete !== null}
+        title={t('admin.emails.flows.deleteTitle') || 'Delete Workflow'}
+        message={t('admin.emails.flows.confirmDelete')}
+        confirmLabel={t('common.delete') || 'Delete'}
+        cancelLabel={t('common.cancel')}
+        onConfirm={() => { if (flowToDelete) deleteFlow(flowToDelete); }}
+        onCancel={() => setFlowToDelete(null)}
+        variant="danger"
+      />
     </div>
   );
 }

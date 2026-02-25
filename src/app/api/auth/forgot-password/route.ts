@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
     const parsed = forgotPasswordSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Invalid data', details: parsed.error.errors },
+        { error: 'Validation failed', details: parsed.error.flatten() },
         { status: 400 }
       );
     }

@@ -274,10 +274,10 @@ export default function AuditDashboardPage() {
       {/* Stats Bar */}
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
         <StatBox label={isFr ? 'Total Audits' : 'Total Audits'} value={stats.total} color="bg-slate-100" />
-        <StatBox label="Critical" value={stats.critical} color="bg-red-100" />
-        <StatBox label="High" value={stats.high} color="bg-orange-100" />
-        <StatBox label="Medium" value={stats.medium} color="bg-yellow-100" />
-        <StatBox label="Low" value={stats.low} color="bg-blue-100" />
+        <StatBox label={isFr ? 'Critique' : 'Critical'} value={stats.critical} color="bg-red-100" />
+        <StatBox label={isFr ? 'Élevé' : 'High'} value={stats.high} color="bg-orange-100" />
+        <StatBox label={isFr ? 'Moyen' : 'Medium'} value={stats.medium} color="bg-yellow-100" />
+        <StatBox label={isFr ? 'Faible' : 'Low'} value={stats.low} color="bg-blue-100" />
         <StatBox label={isFr ? 'Trouvailles' : 'Findings'} value={stats.totalFindings} color="bg-purple-100" />
         <StatBox label={isFr ? 'Exécutés' : 'Executed'} value={`${stats.ranAtLeastOnce}/${stats.total}`} color="bg-green-100" />
       </div>

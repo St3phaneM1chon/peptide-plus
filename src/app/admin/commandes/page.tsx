@@ -841,7 +841,7 @@ ${selectedOrder.adminNotes ? `<div class="notes"><strong>${t('admin.commandes.pr
                           className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
                         >
                           <option value="">{t('admin.commandes.carrierSelect')}</option>
-                          <option value="Postes Canada">Postes Canada</option>
+                          <option value="Postes Canada">{t('admin.commandes.carrierCanadaPost') || 'Canada Post'}</option>
                           <option value="FedEx">FedEx</option>
                           <option value="UPS">UPS</option>
                           <option value="Purolator">Purolator</option>

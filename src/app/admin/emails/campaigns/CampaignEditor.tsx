@@ -6,6 +6,7 @@ import {
   Type, Heading1, List, Link2, Variable,
 } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { toast } from 'sonner';
 import DOMPurify from 'dompurify';
 
@@ -28,6 +29,7 @@ export default function CampaignEditor({ campaignId, onBack }: CampaignEditorPro
   const [previewHtml, setPreviewHtml] = useState('');
   const [previewSubject, setPreviewSubject] = useState('');
   const [availableVars, setAvailableVars] = useState<string[]>([]);
+  const [showSendConfirm, setShowSendConfirm] = useState(false);
   const editorRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -132,7 +134,7 @@ export default function CampaignEditor({ campaignId, onBack }: CampaignEditorPro
   };
 
   const handleSend = async () => {
-    if (!confirm(t('admin.emails.campaigns.confirmSend'))) return;
+    setShowSendConfirm(false);
     await handleSave();
     try {
       const res = await fetch(`/api/admin/emails/campaigns/${campaignId}/send`, { method: 'POST' });
@@ -164,7 +166,7 @@ export default function CampaignEditor({ campaignId, onBack }: CampaignEditorPro
     <div className="flex flex-col h-full bg-white">
       {/* Top bar */}
       <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-200 bg-slate-50 flex-shrink-0">
-        <button onClick={onBack} className="p-1.5 hover:bg-slate-200 rounded">
+        <button onClick={onBack} className="p-1.5 hover:bg-slate-200 rounded" aria-label="Retour aux campagnes">
           <ArrowLeft className="h-4 w-4 text-slate-600" />
         </button>
         <div className="flex-1 min-w-0">
@@ -197,7 +199,7 @@ export default function CampaignEditor({ campaignId, onBack }: CampaignEditorPro
                 <Save className="h-3.5 w-3.5" /> {saving ? t('admin.emails.flows.saving') : t('admin.emails.flows.save')}
               </button>
               <button
-                onClick={handleSend}
+                onClick={() => setShowSendConfirm(true)}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-green-500 rounded-lg hover:bg-green-600"
               >
                 <Send className="h-3.5 w-3.5" /> {t('admin.emails.campaigns.send')}
@@ -237,6 +239,7 @@ export default function CampaignEditor({ campaignId, onBack }: CampaignEditorPro
               setMode(mode === 'visual' ? 'code' : 'visual');
             }}
             className={`px-2 py-1 text-[10px] font-medium rounded ${mode === 'code' ? 'bg-slate-200 text-slate-700' : 'text-slate-500 hover:bg-slate-100'}`}
+            aria-label="Basculer entre mode visuel et HTML"
           >
             <Code className="h-3 w-3 inline mr-1" />{mode === 'code' ? 'HTML' : 'Visual'}
           </button>
@@ -244,26 +247,26 @@ export default function CampaignEditor({ campaignId, onBack }: CampaignEditorPro
 
           {mode === 'visual' && (
             <>
-              <button type="button" onClick={() => execCommand('bold')} className="p-1.5 rounded hover:bg-slate-100" title="Bold">
+              <button type="button" onClick={() => execCommand('bold')} className="p-1.5 rounded hover:bg-slate-100" title="Bold" aria-label="Gras">
                 <Bold className="w-3.5 h-3.5 text-slate-600" />
               </button>
-              <button type="button" onClick={() => execCommand('italic')} className="p-1.5 rounded hover:bg-slate-100" title="Italic">
+              <button type="button" onClick={() => execCommand('italic')} className="p-1.5 rounded hover:bg-slate-100" title="Italic" aria-label="Italique">
                 <Italic className="w-3.5 h-3.5 text-slate-600" />
               </button>
-              <button type="button" onClick={() => execCommand('underline')} className="p-1.5 rounded hover:bg-slate-100" title="Underline">
+              <button type="button" onClick={() => execCommand('underline')} className="p-1.5 rounded hover:bg-slate-100" title="Underline" aria-label="Souligner">
                 <Underline className="w-3.5 h-3.5 text-slate-600" />
               </button>
               <div className="w-px h-4 bg-slate-200 mx-1" />
-              <button type="button" onClick={() => execCommand('formatBlock', 'h1')} className="p-1.5 rounded hover:bg-slate-100" title="Heading">
+              <button type="button" onClick={() => execCommand('formatBlock', 'h1')} className="p-1.5 rounded hover:bg-slate-100" title="Heading" aria-label="Titre">
                 <Heading1 className="w-3.5 h-3.5 text-slate-600" />
               </button>
-              <button type="button" onClick={() => execCommand('insertUnorderedList')} className="p-1.5 rounded hover:bg-slate-100" title="List">
+              <button type="button" onClick={() => execCommand('insertUnorderedList')} className="p-1.5 rounded hover:bg-slate-100" title="List" aria-label="Liste">
                 <List className="w-3.5 h-3.5 text-slate-600" />
               </button>
               <button type="button" onClick={() => {
                 const url = prompt('URL:');
                 if (url) execCommand('createLink', url);
-              }} className="p-1.5 rounded hover:bg-slate-100" title="Link">
+              }} className="p-1.5 rounded hover:bg-slate-100" title="Link" aria-label="Inserer un lien">
                 <Link2 className="w-3.5 h-3.5 text-slate-600" />
               </button>
             </>
@@ -273,7 +276,7 @@ export default function CampaignEditor({ campaignId, onBack }: CampaignEditorPro
 
           {/* Variable insertion */}
           <div className="relative group">
-            <button className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-sky-600 hover:bg-sky-50 rounded">
+            <button className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-sky-600 hover:bg-sky-50 rounded" aria-label="Inserer une variable">
               <Variable className="h-3 w-3" /> Variables
             </button>
             <div className="absolute right-0 top-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg hidden group-hover:block z-10 min-w-[140px]">
@@ -364,6 +367,18 @@ export default function CampaignEditor({ campaignId, onBack }: CampaignEditorPro
           </details>
         </div>
       )}
+
+      {/* Send campaign ConfirmDialog (replaces native confirm()) */}
+      <ConfirmDialog
+        isOpen={showSendConfirm}
+        title={t('admin.emails.campaigns.sendTitle') || 'Send Campaign'}
+        message={t('admin.emails.campaigns.confirmSend')}
+        confirmLabel={t('admin.emails.campaigns.send') || 'Send'}
+        cancelLabel={t('common.cancel')}
+        onConfirm={handleSend}
+        onCancel={() => setShowSendConfirm(false)}
+        variant="warning"
+      />
     </div>
   );
 }

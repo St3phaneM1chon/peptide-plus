@@ -14,6 +14,7 @@ import {
   SectionCard,
 } from '@/components/admin';
 import { useI18n } from '@/i18n/client';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { sectionThemes } from '@/lib/admin/section-themes';
 import { toast } from 'sonner';
 import { CCA_CLASSES } from '@/lib/accounting/canadian-tax-config';
@@ -74,6 +75,7 @@ export default function PlanComptablePage() {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(true);
   const [batchAssigning, setBatchAssigning] = useState(false);
+  const [showGifiConfirm, setShowGifiConfirm] = useState(false);
 
   // GIFI modal state
   const [modalCode, setModalCode] = useState('');
@@ -254,8 +256,7 @@ export default function PlanComptablePage() {
   };
 
   const handleBatchAssignGifi = async () => {
-    if (!confirm(t('admin.chartOfAccounts.autoAssignGifiConfirm'))) return;
-
+    setShowGifiConfirm(false);
     setBatchAssigning(true);
     try {
       const res = await fetch('/api/accounting/chart-of-accounts/gifi-suggest', {
@@ -421,7 +422,7 @@ export default function PlanComptablePage() {
             <Button
               variant="secondary"
               icon={Sparkles}
-              onClick={handleBatchAssignGifi}
+              onClick={() => setShowGifiConfirm(true)}
               disabled={batchAssigning}
             >
               {batchAssigning ? '...' : t('admin.chartOfAccounts.autoAssignGifi')}
@@ -615,6 +616,7 @@ export default function PlanComptablePage() {
                           <button
                             onClick={() => openModal(child)}
                             className="p-1 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded"
+                            aria-label="Modifier le sous-compte"
                           >
                             <Pencil className="w-3.5 h-3.5" />
                           </button>
@@ -852,6 +854,18 @@ export default function PlanComptablePage() {
           )}
         </div>
       </Modal>
+
+      {/* Auto-assign GIFI ConfirmDialog (replaces native confirm()) */}
+      <ConfirmDialog
+        isOpen={showGifiConfirm}
+        title={t('admin.chartOfAccounts.autoAssignGifi')}
+        message={t('admin.chartOfAccounts.autoAssignGifiConfirm')}
+        confirmLabel={t('common.confirm')}
+        cancelLabel={t('common.cancel')}
+        onConfirm={handleBatchAssignGifi}
+        onCancel={() => setShowGifiConfirm(false)}
+        variant="warning"
+      />
     </div>
   );
 }

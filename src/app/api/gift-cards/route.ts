@@ -145,7 +145,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET(_request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
     const session = await auth();
 
@@ -156,33 +156,49 @@ export async function GET(_request: NextRequest) {
       );
     }
 
-    // Get user's purchased gift cards
-    const giftCards = await prisma.giftCard.findMany({
-      where: {
-        purchaserId: session.user.id,
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-      select: {
-        id: true,
-        code: true,
-        initialAmount: true,
-        balance: true,
-        recipientEmail: true,
-        recipientName: true,
-        isActive: true,
-        expiresAt: true,
-        createdAt: true,
-      },
-    });
+    const { searchParams } = new URL(request.url);
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
+    const limit = Math.min(Math.max(1, parseInt(searchParams.get('limit') || '50', 10)), 200);
+    const skip = (page - 1) * limit;
+
+    const where = { purchaserId: session.user.id };
+
+    // Get user's purchased gift cards with pagination
+    const [giftCards, total] = await Promise.all([
+      prisma.giftCard.findMany({
+        where,
+        orderBy: {
+          createdAt: 'desc',
+        },
+        skip,
+        take: limit,
+        select: {
+          id: true,
+          code: true,
+          initialAmount: true,
+          balance: true,
+          recipientEmail: true,
+          recipientName: true,
+          isActive: true,
+          expiresAt: true,
+          createdAt: true,
+        },
+      }),
+      prisma.giftCard.count({ where }),
+    ]);
+
+    const totalPages = Math.ceil(total / limit);
 
     return NextResponse.json({
-      giftCards: giftCards.map(gc => ({
+      data: giftCards.map(gc => ({
         ...gc,
         initialAmount: Number(gc.initialAmount),
         balance: Number(gc.balance),
       })),
+      total,
+      page,
+      limit,
+      totalPages,
     });
   } catch (error) {
     logger.error('Gift cards fetch error', { error: error instanceof Error ? error.message : String(error) });

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { useI18n } from '@/i18n/client';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useCurrency } from '@/contexts/CurrencyContext';
 
 interface SubscriptionProduct {
@@ -60,6 +61,7 @@ export default function SubscriptionsPage() {
   const frequencyLabels = getFrequencyLabels(t);
   const [selectedFrequency, setSelectedFrequency] = useState(frequencies[2]); // Monthly default
   const [quantity, setQuantity] = useState(1);
+  const [subToCancel, setSubToCancel] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [loadingSubs, setLoadingSubs] = useState(false);
 
@@ -155,8 +157,14 @@ export default function SubscriptionsPage() {
     }
   };
 
-  const handleCancelSubscription = async (subId: string) => {
-    if (!confirm(t('subscriptions.confirmCancel') || 'Are you sure you want to cancel this subscription?')) return;
+  const handleCancelSubscription = (subId: string) => {
+    setSubToCancel(subId);
+  };
+
+  const confirmCancelSubscription = async () => {
+    if (!subToCancel) return;
+    const subId = subToCancel;
+    setSubToCancel(null);
 
     try {
       const res = await fetch('/api/account/subscriptions', {
@@ -553,6 +561,18 @@ export default function SubscriptionsPage() {
           </div>
         </div>
       </div>
+
+      {/* Cancel subscription ConfirmDialog (replaces native confirm()) */}
+      <ConfirmDialog
+        isOpen={subToCancel !== null}
+        title={t('subscriptions.cancelTitle') || 'Cancel Subscription'}
+        message={t('subscriptions.confirmCancel') || 'Are you sure you want to cancel this subscription?'}
+        confirmLabel={t('subscriptions.confirmCancelButton') || 'Cancel Subscription'}
+        cancelLabel={t('common.cancel')}
+        onConfirm={confirmCancelSubscription}
+        onCancel={() => setSubToCancel(null)}
+        variant="danger"
+      />
     </div>
   );
 }

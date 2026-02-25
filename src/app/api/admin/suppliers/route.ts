@@ -49,8 +49,8 @@ const createSupplierSchema = z.object({
 export const GET = withAdminGuard(async (request) => {
   try {
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 100);
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
+    const limit = Math.min(Math.max(1, parseInt(searchParams.get('limit') || '50', 10)), 200);
     const search = searchParams.get('search') || '';
     const activeOnly = searchParams.get('active') !== 'false';
 
@@ -112,7 +112,15 @@ export const GET = withAdminGuard(async (request) => {
       prisma.supplier.count({ where }),
     ]);
 
-    return NextResponse.json({ suppliers, total, page, limit });
+    const totalPages = Math.ceil(total / limit);
+
+    return NextResponse.json({
+      data: suppliers,
+      total,
+      page,
+      limit,
+      totalPages,
+    });
   } catch (error) {
     logger.error('Suppliers GET error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(

@@ -96,7 +96,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       newValue: { name, trigger, isActive: isActive || false },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch(() => {});
+    }).catch((err: unknown) => { logger.error('[Flows] Non-blocking audit log for create failed', { error: err instanceof Error ? err.message : String(err) }); });
 
     return NextResponse.json({
       flow: {

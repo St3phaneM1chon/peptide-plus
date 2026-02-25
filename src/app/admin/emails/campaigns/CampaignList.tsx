@@ -6,6 +6,7 @@ import {
   BarChart3,
 } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { toast } from 'sonner';
 
 interface Campaign {
@@ -30,6 +31,8 @@ export default function CampaignList({ onEditCampaign }: CampaignListProps) {
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [campaignToDelete, setCampaignToDelete] = useState<string | null>(null);
+  const [campaignToSend, setCampaignToSend] = useState<string | null>(null);
 
   const statusConfig: Record<string, { label: string; color: string }> = {
     DRAFT: { label: t('admin.emails.campaigns.statusDraft'), color: 'bg-slate-100 text-slate-600' },
@@ -83,7 +86,6 @@ export default function CampaignList({ onEditCampaign }: CampaignListProps) {
   };
 
   const deleteCampaign = async (id: string) => {
-    if (!confirm(t('admin.emails.campaigns.confirmDelete'))) return;
     setDeletingId(id);
     try {
       await fetch(`/api/admin/emails/campaigns/${id}`, { method: 'DELETE' });
@@ -93,11 +95,12 @@ export default function CampaignList({ onEditCampaign }: CampaignListProps) {
       toast.error(t('common.errorOccurred'));
     } finally {
       setDeletingId(null);
+      setCampaignToDelete(null);
     }
   };
 
   const sendCampaign = async (id: string) => {
-    if (!confirm(t('admin.emails.campaigns.confirmSend'))) return;
+    setCampaignToSend(null);
     try {
       const res = await fetch(`/api/admin/emails/campaigns/${id}/send`, { method: 'POST' });
       if (res.ok) {
@@ -184,22 +187,23 @@ export default function CampaignList({ onEditCampaign }: CampaignListProps) {
                     {campaign.status === 'DRAFT' && (
                       <>
                         <button
-                          onClick={() => sendCampaign(campaign.id)}
+                          onClick={() => setCampaignToSend(campaign.id)}
                           className="p-1.5 rounded text-green-600 hover:bg-green-50"
                           title={t('admin.emails.campaigns.send')}
+                          aria-label="Envoyer la campagne"
                         >
                           <Send className="h-4 w-4" />
                         </button>
-                        <button onClick={() => onEditCampaign(campaign.id)} className="p-1.5 rounded text-slate-400 hover:bg-slate-50">
+                        <button onClick={() => onEditCampaign(campaign.id)} className="p-1.5 rounded text-slate-400 hover:bg-slate-50" aria-label="Modifier la campagne">
                           <Edit className="h-4 w-4" />
                         </button>
-                        <button onClick={() => deleteCampaign(campaign.id)} disabled={deletingId === campaign.id} className="p-1.5 rounded text-slate-400 hover:bg-red-50 hover:text-red-500 disabled:opacity-50">
+                        <button onClick={() => setCampaignToDelete(campaign.id)} disabled={deletingId === campaign.id} className="p-1.5 rounded text-slate-400 hover:bg-red-50 hover:text-red-500 disabled:opacity-50" aria-label="Supprimer la campagne">
                           <Trash2 className="h-4 w-4" />
                         </button>
                       </>
                     )}
                     {campaign.status === 'SENT' && (
-                      <button className="p-1.5 rounded text-slate-400 hover:bg-slate-50">
+                      <button className="p-1.5 rounded text-slate-400 hover:bg-slate-50" aria-label="Voir les statistiques">
                         <BarChart3 className="h-4 w-4" />
                       </button>
                     )}
@@ -226,6 +230,30 @@ export default function CampaignList({ onEditCampaign }: CampaignListProps) {
           })}
         </div>
       )}
+
+      {/* Delete campaign ConfirmDialog (replaces native confirm()) */}
+      <ConfirmDialog
+        isOpen={campaignToDelete !== null}
+        title={t('admin.emails.campaigns.deleteTitle') || 'Delete Campaign'}
+        message={t('admin.emails.campaigns.confirmDelete')}
+        confirmLabel={t('common.delete') || 'Delete'}
+        cancelLabel={t('common.cancel')}
+        onConfirm={() => { if (campaignToDelete) deleteCampaign(campaignToDelete); }}
+        onCancel={() => setCampaignToDelete(null)}
+        variant="danger"
+      />
+
+      {/* Send campaign ConfirmDialog (replaces native confirm()) */}
+      <ConfirmDialog
+        isOpen={campaignToSend !== null}
+        title={t('admin.emails.campaigns.sendTitle') || 'Send Campaign'}
+        message={t('admin.emails.campaigns.confirmSend')}
+        confirmLabel={t('admin.emails.campaigns.send') || 'Send'}
+        cancelLabel={t('common.cancel')}
+        onConfirm={() => { if (campaignToSend) sendCampaign(campaignToSend); }}
+        onCancel={() => setCampaignToSend(null)}
+        variant="warning"
+      />
     </div>
   );
 }

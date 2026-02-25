@@ -368,7 +368,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       newValue: { totalRows: rows.length, created, updated, errorCount: errors.length },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch(() => {});
+    }).catch((err: unknown) => { logger.error('[ProductImport] Non-blocking audit log for import failed', { error: err instanceof Error ? err.message : String(err) }); });
 
     return NextResponse.json({
       success: true,

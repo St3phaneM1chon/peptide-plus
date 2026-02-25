@@ -70,7 +70,7 @@ export const POST = withAdminGuard(
         },
         ipAddress: getClientIpFromRequest(request),
         userAgent: request.headers.get('user-agent') || undefined,
-      }).catch(() => {});
+      }).catch((err: unknown) => { logger.error('[MailingListClean] Non-blocking audit log for clean failed', { error: err instanceof Error ? err.message : String(err) }); });
 
       return NextResponse.json({
         deactivated: result.count,

@@ -128,7 +128,14 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { subject, message } = createConversationSchema.parse(body);
+    const parsed = createConversationSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
+    const { subject, message } = parsed.data;
 
     // BE-SEC-03: Sanitize user-supplied text to prevent stored XSS
     const sanitizedSubject = subject ? stripControlChars(stripHtml(subject)).trim() : null;
@@ -178,9 +185,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ conversation }, { status: 201 });
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: 'Invalid data', details: error.errors }, { status: 400 });
-    }
     logger.error('Error creating conversation', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }

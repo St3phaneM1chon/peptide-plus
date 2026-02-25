@@ -33,7 +33,10 @@ export const POST = withAdminGuard(async (request: NextRequest, { session, param
     }
     const { amount, reason } = parsed.data;
 
-    const user = await prisma.user.findUnique({ where: { id } });
+    const user = await prisma.user.findUnique({
+      where: { id },
+      select: { id: true, loyaltyPoints: true },
+    });
     if (!user) {
       return NextResponse.json({ error: 'Utilisateur non trouvé' }, { status: 404 });
     }
@@ -59,6 +62,14 @@ export const POST = withAdminGuard(async (request: NextRequest, { session, param
         data: {
           loyaltyPoints: newPoints,
           ...(amount > 0 ? { lifetimePoints: { increment: amount } } : {}),
+        },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          loyaltyPoints: true,
+          lifetimePoints: true,
+          loyaltyTier: true,
         },
       }),
       prisma.loyaltyTransaction.create({

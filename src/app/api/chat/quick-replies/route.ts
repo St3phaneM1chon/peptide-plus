@@ -74,7 +74,14 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const data = quickReplySchema.parse(body);
+    const parsed = quickReplySchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
+    const data = parsed.data;
 
     // FIX F-017/F-046: Sanitize quick reply content to prevent stored XSS
     const sanitizedTitle = stripControlChars(stripHtml(data.title)).trim();
@@ -95,9 +102,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ quickReply }, { status: 201 });
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: 'Invalid data', details: error.errors }, { status: 400 });
-    }
     logger.error('Error creating quick reply', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }

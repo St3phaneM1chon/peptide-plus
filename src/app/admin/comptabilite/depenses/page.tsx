@@ -526,6 +526,7 @@ export default function DepensesPage() {
             onClick={(e) => { e.stopPropagation(); setSelectedExpense(exp); setShowDetailModal(true); }}
             className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100"
             title={t('common.view')}
+            aria-label="Voir les details de la depense"
           >
             <Eye className="w-4 h-4" />
           </button>
@@ -535,6 +536,7 @@ export default function DepensesPage() {
                 onClick={(e) => { e.stopPropagation(); openEditForm(exp); }}
                 className="p-1.5 text-slate-400 hover:text-blue-600 rounded-lg hover:bg-blue-50"
                 title={t('common.edit')}
+                aria-label="Modifier la depense"
               >
                 <Pencil className="w-4 h-4" />
               </button>
@@ -543,6 +545,7 @@ export default function DepensesPage() {
                 disabled={deletingId === exp.id}
                 className="p-1.5 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50 disabled:opacity-50"
                 title={t('common.delete')}
+                aria-label="Supprimer la depense"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
@@ -592,7 +595,7 @@ export default function DepensesPage() {
       {error && (
         <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 flex items-center justify-between">
           <span>{error}</span>
-          <button onClick={() => setError(null)} className="text-red-400 hover:text-red-600">
+          <button onClick={() => setError(null)} className="text-red-400 hover:text-red-600" aria-label="Fermer le message d'erreur">
             <X className="w-4 h-4" />
           </button>
         </div>

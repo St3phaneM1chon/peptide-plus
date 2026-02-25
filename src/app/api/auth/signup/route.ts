@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
     const result = signupSchema.safeParse(body);
     if (!result.success) {
       return NextResponse.json(
-        { error: result.error.errors[0].message },
+        { error: 'Validation failed', details: result.error.flatten() },
         { status: 400 }
       );
     }

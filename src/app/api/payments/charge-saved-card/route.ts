@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
     const result = chargeSavedCardSchema.safeParse(body);
     if (!result.success) {
       return NextResponse.json(
-        { error: 'Validation error', details: result.error.issues },
+        { error: 'Validation failed', details: result.error.flatten() },
         { status: 400 }
       );
     }

@@ -313,7 +313,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
         newValue: { name: cloned.name, sourceId, contactCount: count },
         ipAddress: getClientIpFromRequest(request),
         userAgent: request.headers.get('user-agent') || undefined,
-      }).catch(() => {});
+      }).catch((err: unknown) => { logger.error('[Segments] Non-blocking audit log for clone failed', { error: err instanceof Error ? err.message : String(err) }); });
 
       return NextResponse.json({
         segment: {
@@ -369,7 +369,7 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
       newValue: { name, description, color },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch(() => {});
+    }).catch((err: unknown) => { logger.error('[Segments] Non-blocking audit log for create failed', { error: err instanceof Error ? err.message : String(err) }); });
 
     return NextResponse.json({ segment: { ...segment, type: 'custom' } });
   } catch (error) {

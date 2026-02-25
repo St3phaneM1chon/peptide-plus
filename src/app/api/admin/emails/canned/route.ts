@@ -111,7 +111,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       newValue: { title, category: category || null, locale: locale || 'fr' },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch(() => {});
+    }).catch((err: unknown) => { logger.error('[Canned] Non-blocking audit log for create failed', { error: err instanceof Error ? err.message : String(err) }); });
 
     return NextResponse.json({ response });
   } catch (error) {

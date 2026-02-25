@@ -91,16 +91,30 @@ function mapZone(zone: {
 // GET /api/admin/shipping-methods
 // ---------------------------------------------------------------------------
 
-export const GET = withAdminGuard(async () => {
+export const GET = withAdminGuard(async (request) => {
   try {
-    const zones = await prisma.shippingZone.findMany({
-      take: 100,
-      orderBy: { name: 'asc' },
-    });
+    const { searchParams } = new URL(request.url);
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
+    const limit = Math.min(Math.max(1, parseInt(searchParams.get('limit') || '50', 10)), 200);
+    const skip = (page - 1) * limit;
+
+    const [zones, total] = await Promise.all([
+      prisma.shippingZone.findMany({
+        orderBy: { name: 'asc' },
+        skip,
+        take: limit,
+      }),
+      prisma.shippingZone.count(),
+    ]);
+
+    const totalPages = Math.ceil(total / limit);
 
     return NextResponse.json({
-      shippingMethods: zones.map(mapZone),
-      total: zones.length,
+      data: zones.map(mapZone),
+      total,
+      page,
+      limit,
+      totalPages,
     });
   } catch (error) {
     logger.error('GET shipping-methods error', { error: error instanceof Error ? error.message : String(error) });

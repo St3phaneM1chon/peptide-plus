@@ -127,7 +127,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
         newValue: { name: cloned.name, sourceId, status: 'DRAFT' },
         ipAddress: getClientIpFromRequest(request),
         userAgent: request.headers.get('user-agent') || undefined,
-      }).catch(() => {});
+      }).catch((err: unknown) => { logger.error('[Campaigns] Non-blocking audit log for clone failed', { error: err instanceof Error ? err.message : String(err) }); });
 
       return NextResponse.json({
         campaign: {
@@ -166,7 +166,7 @@ export const POST = withAdminGuard(async (request, { session }) => {
       newValue: { name, subject, status: 'DRAFT' },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch(() => {});
+    }).catch((err: unknown) => { logger.error('[Campaigns] Non-blocking audit log for create failed', { error: err instanceof Error ? err.message : String(err) }); });
 
     return NextResponse.json({ campaign });
   } catch (error) {

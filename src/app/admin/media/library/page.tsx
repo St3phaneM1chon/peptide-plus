@@ -225,6 +225,7 @@ export default function MediaLibraryPage() {
               <button
                 onClick={() => copyUrl(item)}
                 className="absolute top-2 right-2 p-1.5 bg-white/80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white"
+                aria-label="Copier l'URL du fichier"
               >
                 {copiedId === item.id ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3 text-slate-600" />}
               </button>
@@ -248,11 +249,11 @@ export default function MediaLibraryPage() {
                 <p className="text-xs text-slate-400">{item.folder} &middot; {formatSize(item.size)} &middot; {new Date(item.createdAt).toLocaleDateString(locale)}</p>
               </div>
               <div className="flex items-center gap-1">
-                <button onClick={() => copyUrl(item)} className="p-1.5 rounded hover:bg-slate-100" title="Copy URL">
+                <button onClick={() => copyUrl(item)} className="p-1.5 rounded hover:bg-slate-100" title="Copy URL" aria-label="Copier l'URL">
                   {copiedId === item.id ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4 text-slate-400" />}
                 </button>
                 {/* F87 FIX: Use original filename for download */}
-                <a href={item.url} download={item.originalName} className="p-1.5 rounded hover:bg-slate-100" title="Download">
+                <a href={item.url} download={item.originalName} className="p-1.5 rounded hover:bg-slate-100" title="Download" aria-label="Telecharger le fichier">
                   <Download className="w-4 h-4 text-slate-400" />
                 </a>
               </div>
@@ -264,11 +265,11 @@ export default function MediaLibraryPage() {
       {/* Pagination */}
       {pagination && pagination.totalPages > 1 && (
         <div className="flex items-center justify-center gap-4 pt-2">
-          <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="p-2 rounded hover:bg-slate-100 disabled:opacity-30">
+          <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="p-2 rounded hover:bg-slate-100 disabled:opacity-30" aria-label="Page precedente">
             <ChevronLeft className="w-5 h-5" />
           </button>
           <span className="text-sm text-slate-600">{page} / {pagination.totalPages} ({pagination.total} files)</span>
-          <button disabled={page >= pagination.totalPages} onClick={() => setPage(p => p + 1)} className="p-2 rounded hover:bg-slate-100 disabled:opacity-30">
+          <button disabled={page >= pagination.totalPages} onClick={() => setPage(p => p + 1)} className="p-2 rounded hover:bg-slate-100 disabled:opacity-30" aria-label="Page suivante">
             <ChevronRight className="w-5 h-5" />
           </button>
         </div>
@@ -279,7 +280,7 @@ export default function MediaLibraryPage() {
       {preview && (
         <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-6" onClick={() => setPreview(null)} role="dialog" aria-modal="true" aria-label="Media preview">
           <div className="relative max-w-3xl max-h-[80vh] bg-white rounded-xl overflow-hidden" onClick={e => e.stopPropagation()}>
-            <button onClick={() => setPreview(null)} className="absolute top-3 right-3 p-1.5 bg-white/80 rounded-full hover:bg-white z-10" autoFocus>
+            <button onClick={() => setPreview(null)} className="absolute top-3 right-3 p-1.5 bg-white/80 rounded-full hover:bg-white z-10" autoFocus aria-label="Fermer l'apercu">
               <X className="w-5 h-5" />
             </button>
             {/* FIX: F2 - Use NextImage instead of native <img> */}
@@ -303,7 +304,7 @@ export default function MediaLibraryPage() {
               </div>
               <div className="flex items-center gap-2 mt-2">
                 <code className="flex-1 text-xs bg-slate-100 px-2 py-1 rounded truncate">{preview.url}</code>
-                <button onClick={() => copyUrl(preview)} className="text-sky-600 hover:text-sky-700">
+                <button onClick={() => copyUrl(preview)} className="text-sky-600 hover:text-sky-700" aria-label="Copier l'URL">
                   {copiedId === preview.id ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                 </button>
               </div>

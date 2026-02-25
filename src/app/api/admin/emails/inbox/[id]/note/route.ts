@@ -84,7 +84,7 @@ export const POST = withAdminGuard(
         newValue: { conversationId, contentPreview: content.trim().substring(0, 200) },
         ipAddress: getClientIpFromRequest(request),
         userAgent: request.headers.get('user-agent') || undefined,
-      }).catch(() => {});
+      }).catch((err: unknown) => { logger.error('[Note] Non-blocking audit log for note creation failed', { error: err instanceof Error ? err.message : String(err) }); });
 
       return NextResponse.json({ note });
     } catch (error) {

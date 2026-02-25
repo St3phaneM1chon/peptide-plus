@@ -10,31 +10,39 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const locale = searchParams.get('locale') || defaultLocale;
 
-    const take = Math.min(Number(searchParams.get('limit') || 50), 100);
-    const skip = Number(searchParams.get('offset') || 0);
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
+    const limit = Math.min(Math.max(1, parseInt(searchParams.get('limit') || '50', 10)), 200);
+    const skip = (page - 1) * limit;
 
-    let posts = await prisma.blogPost.findMany({
-      where: { isPublished: true },
-      orderBy: { publishedAt: 'desc' },
-      take,
-      skip,
-      select: {
-        id: true, title: true, slug: true, excerpt: true, imageUrl: true,
-        author: true, category: true, readTime: true, isFeatured: true,
-        publishedAt: true, locale: true,
-      },
-    });
+    const where = { isPublished: true };
+
+    let [posts, total] = await Promise.all([
+      prisma.blogPost.findMany({
+        where,
+        orderBy: { publishedAt: 'desc' },
+        skip,
+        take: limit,
+        select: {
+          id: true, title: true, slug: true, excerpt: true, imageUrl: true,
+          author: true, category: true, readTime: true, isFeatured: true,
+          publishedAt: true, locale: true,
+        },
+      }),
+      prisma.blogPost.count({ where }),
+    ]);
 
     // Apply translations
     if (locale !== DB_SOURCE_LOCALE) {
       posts = await withTranslations(posts, 'BlogPost', locale);
     }
 
-    return NextResponse.json({ posts }, {
+    const totalPages = Math.ceil(total / limit);
+
+    return NextResponse.json({ data: posts, total, page, limit, totalPages }, {
       headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600' },
     });
   } catch (error) {
     logger.error('Blog API error', { error: error instanceof Error ? error.message : String(error) });
-    return NextResponse.json({ error: 'Failed to fetch blog posts', posts: [] }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to fetch blog posts', data: [], total: 0, page: 1, limit: 50, totalPages: 0 }, { status: 500 });
   }
 }

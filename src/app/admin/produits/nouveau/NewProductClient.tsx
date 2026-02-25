@@ -279,7 +279,7 @@ export default function NewProductClient({ categories }: Props) {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
-            <Link href="/admin/produits" className="p-2 text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors">
+            <Link href="/admin/produits" className="p-2 text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors" aria-label="Retour aux produits">
               <ArrowLeft className="w-5 h-5" />
             </Link>
             <div>
@@ -620,6 +620,7 @@ export default function NewProductClient({ categories }: Props) {
                       <button
                         onClick={(e) => { e.stopPropagation(); removeProductText(pt.id); }}
                         className="p-1.5 text-neutral-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        aria-label="Supprimer le texte"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -880,6 +881,7 @@ function FormatCard({
           <button
             onClick={(e) => { e.stopPropagation(); onRemove(); }}
             className="p-1.5 text-neutral-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+            aria-label="Supprimer le format"
           >
             <Trash2 className="w-4 h-4" />
           </button>

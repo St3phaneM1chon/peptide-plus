@@ -288,7 +288,7 @@ export const DELETE = withAdminGuard(async (request: NextRequest, { session }) =
       newValue: { removed: true },
       ipAddress: getClientIpFromRequest(request),
       userAgent: request.headers.get('user-agent') || undefined,
-    }).catch(() => {});
+    }).catch((err: unknown) => { logger.error('[MailingList] Non-blocking audit log for unsuppress failed', { error: err instanceof Error ? err.message : String(err) }); });
 
     return NextResponse.json({
       success: true,

@@ -19,7 +19,18 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     // BUG-003 FIX: Filter on isActive to prevent exposing inactive products via QuickView
     const product = await prisma.product.findFirst({
       where: { slug, isActive: true },
-      include: {
+      select: {
+        id: true,
+        name: true,
+        subtitle: true,
+        slug: true,
+        shortDescription: true,
+        price: true,
+        imageUrl: true,
+        videoUrl: true,
+        purity: true,
+        molecularWeight: true,
+        isActive: true,
         category: {
           select: { id: true, name: true, slug: true },
         },
@@ -27,13 +38,26 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
           where: { isPrimary: true },
           take: 1,
           orderBy: { sortOrder: 'asc' },
+          select: { id: true, url: true, alt: true },
         },
         formats: {
           where: { isActive: true },
           orderBy: { sortOrder: 'asc' },
+          select: {
+            id: true,
+            name: true,
+            formatType: true,
+            dosageMg: true,
+            price: true,
+            comparePrice: true,
+            sku: true,
+            inStock: true,
+            imageUrl: true,
+          },
         },
         quantityDiscounts: {
           orderBy: { minQty: 'asc' },
+          select: { id: true, minQty: true, maxQty: true, discount: true },
         },
       },
     });

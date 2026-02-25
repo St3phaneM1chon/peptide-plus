@@ -5,6 +5,7 @@ import { RefreshCw, ArrowRightLeft } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
 import { sectionThemes } from '@/lib/admin/section-themes';
 import { PageHeader, Button, SectionCard } from '@/components/admin';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
 
@@ -38,6 +39,7 @@ export default function CurrencyPage() {
   const [foreignAccounts, setForeignAccounts] = useState<ForeignAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [showRevaluationConfirm, setShowRevaluationConfirm] = useState(false);
   // Converter state
   const [converterAmount, setConverterAmount] = useState<number>(100);
   const [converterCurrency, setConverterCurrency] = useState<string>('');
@@ -145,9 +147,12 @@ export default function CurrencyPage() {
     }
   };
 
-  const handleRevaluation = async () => {
-    const confirm = window.confirm(t('admin.multiCurrency.revaluationConfirm'));
-    if (!confirm) return;
+  const handleRevaluation = () => {
+    setShowRevaluationConfirm(true);
+  };
+
+  const confirmRevaluation = () => {
+    setShowRevaluationConfirm(false);
 
     // Revaluation using current rates from currencies
     setForeignAccounts(prev => prev.map(acc => {
@@ -490,6 +495,18 @@ export default function CurrencyPage() {
       </SectionCard>
         );
       })()}
+
+      {/* Revaluation ConfirmDialog (replaces window.confirm) */}
+      <ConfirmDialog
+        isOpen={showRevaluationConfirm}
+        title={t('admin.multiCurrency.revaluation')}
+        message={t('admin.multiCurrency.revaluationConfirm')}
+        confirmLabel={t('common.confirm')}
+        cancelLabel={t('common.cancel')}
+        onConfirm={confirmRevaluation}
+        onCancel={() => setShowRevaluationConfirm(false)}
+        variant="warning"
+      />
     </div>
   );
 }

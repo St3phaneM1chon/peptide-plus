@@ -461,7 +461,7 @@ export default function ImmobilisationsPage() {
                   <td className="px-4 py-3 text-center">{statusBadge(asset.status)}</td>
                   <td className="px-4 py-3 text-center">
                     <div className="flex items-center justify-center gap-1" onClick={(e) => e.stopPropagation()}>
-                      <button onClick={() => openEdit(asset)} className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded" title="Modifier">
+                      <button onClick={() => openEdit(asset)} className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded" title="Modifier" aria-label="Modifier l'immobilisation">
                         <Pencil className="w-4 h-4" />
                       </button>
                       {asset.status === 'ACTIVE' && (
@@ -478,6 +478,7 @@ export default function ImmobilisationsPage() {
                             disabled={disposingId === asset.id}
                             className="p-1.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded disabled:opacity-50"
                             title={t('admin.accounting.assets.dispose')}
+                            aria-label="Disposer de l'immobilisation"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>

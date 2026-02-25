@@ -481,6 +481,7 @@ export default function ProductsListClient({
                           icon={deleting === selectedProduct.id ? Loader2 : Trash2}
                           onClick={() => setConfirmDeleteId(selectedProduct.id)}
                           disabled={deleting === selectedProduct.id}
+                          aria-label="Supprimer le produit"
                         />
                       )}
                     </div>

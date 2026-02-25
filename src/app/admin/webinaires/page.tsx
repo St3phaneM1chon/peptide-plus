@@ -574,7 +574,7 @@ export default function WebinairesPage() {
                       size="sm"
                       icon={Users}
                       disabled
-                      title="Registration tracking coming soon"
+                      title={t('admin.webinars.registrationTrackingComingSoon') || 'Registration tracking coming soon'}
                       onClick={() => {
                         // TODO: FLAW-045/IMP-002 - Show registered attendees modal
                         // Requires WebinarRegistration model (userId, webinarId, registeredAt, attended)

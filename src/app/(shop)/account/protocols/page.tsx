@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useI18n } from '@/i18n/client';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
 // Types
 interface ProtocolEntry {
@@ -116,6 +117,7 @@ export default function ProtocolsPage() {
   const [selectedProtocol, setSelectedProtocol] = useState<Protocol | null>(null);
   const [_showNewEntry, _setShowNewEntry] = useState(false);
   const [showNewProtocol, setShowNewProtocol] = useState(false);
+  const [protocolToDelete, setProtocolToDelete] = useState<string | null>(null);
 
   // Auth check
   useEffect(() => {
@@ -192,9 +194,14 @@ export default function ProtocolsPage() {
 
   // Delete protocol
   const deleteProtocol = (protocolId: string) => {
-    if (confirm(t('protocols.confirmDelete'))) {
-      saveProtocols(protocols.filter(p => p.id !== protocolId));
+    setProtocolToDelete(protocolId);
+  };
+
+  const confirmDeleteProtocol = () => {
+    if (protocolToDelete) {
+      saveProtocols(protocols.filter(p => p.id !== protocolToDelete));
       setSelectedProtocol(null);
+      setProtocolToDelete(null);
     }
   };
 
@@ -391,6 +398,18 @@ export default function ProtocolsPage() {
           </div>
         </div>
       </div>
+
+      {/* Delete protocol ConfirmDialog (replaces native confirm()) */}
+      <ConfirmDialog
+        isOpen={protocolToDelete !== null}
+        title={t('protocols.deleteTitle') || 'Delete Protocol'}
+        message={t('protocols.confirmDelete')}
+        confirmLabel={t('common.delete') || 'Delete'}
+        cancelLabel={t('common.cancel')}
+        onConfirm={confirmDeleteProtocol}
+        onCancel={() => setProtocolToDelete(null)}
+        variant="danger"
+      />
     </div>
   );
 }

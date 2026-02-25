@@ -174,7 +174,7 @@ export default function ConversationThread({ conversationId, onBack }: Conversat
       <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
         <div className="flex items-center gap-3 p-4 border-b border-slate-200 bg-white">
-          <button onClick={onBack} className="p-1 hover:bg-slate-100 rounded">
+          <button onClick={onBack} className="p-1 hover:bg-slate-100 rounded" aria-label="Retour a la boite de reception">
             <ArrowLeft className="h-5 w-5 text-slate-500" />
           </button>
 
@@ -221,6 +221,7 @@ export default function ConversationThread({ conversationId, onBack }: Conversat
           <button
             onClick={() => setShowSidebar(!showSidebar)}
             className="p-2 hover:bg-slate-100 rounded"
+            aria-label="Afficher les informations du contact"
           >
             <User className="h-5 w-5 text-slate-400" />
           </button>

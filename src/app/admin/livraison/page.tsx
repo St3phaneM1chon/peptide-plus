@@ -560,7 +560,7 @@ export default function LivraisonPage() {
               type="text"
               value={methodName}
               onChange={e => setMethodName(e.target.value)}
-              placeholder="Standard, Express, Economy..."
+              placeholder={t('admin.shipping.methodNamePlaceholder') || 'Standard, Express, Economy...'}
               className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-sky-500 focus:border-sky-500"
             />
           </div>
@@ -570,7 +570,7 @@ export default function LivraisonPage() {
               type="text"
               value={methodCarrier}
               onChange={e => setMethodCarrier(e.target.value)}
-              placeholder="Canada Post, UPS, FedEx..."
+              placeholder={t('admin.shipping.methodCarrierPlaceholder') || 'Canada Post, UPS, FedEx...'}
               className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-sky-500 focus:border-sky-500"
             />
           </div>

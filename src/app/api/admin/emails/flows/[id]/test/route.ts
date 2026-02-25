@@ -191,7 +191,7 @@ export const POST = withAdminGuard(
         newValue: { testEmail, nodesExecuted: results.length },
         ipAddress: getClientIpFromRequest(request),
         userAgent: request.headers.get('user-agent') || undefined,
-      }).catch(() => {});
+      }).catch((err: unknown) => { logger.error('[FlowTest] Non-blocking audit log for test flow failed', { error: err instanceof Error ? err.message : String(err) }); });
 
       return NextResponse.json({
         flowId: flow.id,

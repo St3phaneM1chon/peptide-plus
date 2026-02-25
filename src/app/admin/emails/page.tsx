@@ -604,6 +604,9 @@ export default function EmailsPage() {
                         className={`w-10 h-5 rounded-full transition-colors relative ${
                           template.isActive ? 'bg-green-500' : 'bg-slate-300'
                         }`}
+                        aria-label={template.isActive ? 'Desactiver le modele' : 'Activer le modele'}
+                        role="switch"
+                        aria-checked={template.isActive}
                       >
                         <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-transform ${
                           template.isActive ? 'right-0.5' : 'left-0.5'

@@ -156,7 +156,7 @@ export default function FlowEditor({ flowId, onBack }: FlowEditorProps) {
     <div className="flex flex-col h-[calc(100vh-200px)] bg-white rounded-xl border border-slate-200 overflow-hidden">
       {/* Toolbar */}
       <div className="flex items-center gap-3 p-3 border-b border-slate-200 bg-slate-50">
-        <button onClick={onBack} className="p-1.5 hover:bg-slate-200 rounded">
+        <button onClick={onBack} className="p-1.5 hover:bg-slate-200 rounded" aria-label="Retour aux flux">
           <ArrowLeft className="h-4 w-4 text-slate-500" />
         </button>
 

@@ -39,6 +39,9 @@ export const GET = withAdminGuard(async (request, _ctx) => {
   try {
     const { searchParams } = new URL(request.url);
     const lowStockOnly = searchParams.get('lowStock') === 'true';
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
+    const limit = Math.min(Math.max(1, parseInt(searchParams.get('limit') || '50', 10)), 200);
+    const skip = (page - 1) * limit;
 
     // DI-69: Use raw WHERE for low stock filter instead of JS post-filtering
     let lowStockIds: string[] | null = null;
@@ -52,36 +55,42 @@ export const GET = withAdminGuard(async (request, _ctx) => {
       lowStockIds = lowStockFormats.map((f) => f.id);
     }
 
-    const formats = await prisma.productFormat.findMany({
-      where: {
-        isActive: true,
-        trackInventory: true,
-        ...(lowStockIds !== null ? { id: { in: lowStockIds } } : {}),
-      },
-      select: {
-        id: true,
-        productId: true,
-        name: true,
-        formatType: true,
-        sku: true,
-        price: true,
-        stockQuantity: true,
-        lowStockThreshold: true,
-        availability: true,
-        product: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            sku: true,
-            imageUrl: true,
-            isActive: true,
+    const formatWhere = {
+      isActive: true,
+      trackInventory: true,
+      ...(lowStockIds !== null ? { id: { in: lowStockIds } } : {}),
+    };
+
+    const [formats, total] = await Promise.all([
+      prisma.productFormat.findMany({
+        where: formatWhere,
+        select: {
+          id: true,
+          productId: true,
+          name: true,
+          formatType: true,
+          sku: true,
+          price: true,
+          stockQuantity: true,
+          lowStockThreshold: true,
+          availability: true,
+          product: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+              sku: true,
+              imageUrl: true,
+              isActive: true,
+            },
           },
         },
-      },
-      orderBy: { stockQuantity: 'asc' },
-      take: 500, // Safety net: limit inventory list to prevent unbounded queries
-    });
+        orderBy: { stockQuantity: 'asc' },
+        skip,
+        take: limit,
+      }),
+      prisma.productFormat.count({ where: formatWhere }),
+    ]);
 
     // Batch query: fetch the latest WAC for ALL formats at once
     // Uses raw SQL with DISTINCT ON to get the most recent transaction per (productId, formatId)
@@ -127,10 +136,14 @@ export const GET = withAdminGuard(async (request, _ctx) => {
 
     // DI-69: Low stock is already filtered at DB level when lowStockOnly is true
     const result = inventoryItems;
+    const totalPages = Math.ceil(total / limit);
 
     return NextResponse.json({
-      inventory: result,
-      total: result.length,
+      data: result,
+      total,
+      page,
+      limit,
+      totalPages,
       lowStockCount: inventoryItems.filter((item) => item.isLowStock).length,
     });
   } catch (error) {

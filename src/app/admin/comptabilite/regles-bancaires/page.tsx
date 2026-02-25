@@ -606,6 +606,7 @@ export default function ReglesBancairesPage() {
                           onClick={() => openEditModal(rule)}
                           className="p-1.5 rounded-lg hover:bg-sky-50 text-slate-400 hover:text-sky-600 transition-colors"
                           title={t('admin.bankRules.edit') || 'Edit'}
+                          aria-label="Modifier la regle"
                         >
                           <Pencil className="w-4 h-4" />
                         </button>
@@ -614,6 +615,7 @@ export default function ReglesBancairesPage() {
                           disabled={deletingId === rule.id}
                           className="p-1.5 rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-600 transition-colors disabled:opacity-50"
                           title={t('admin.bankRules.delete') || 'Delete'}
+                          aria-label="Supprimer la regle"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>

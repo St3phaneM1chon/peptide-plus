@@ -28,11 +28,34 @@ export const GET = withAdminGuard(async (_request: NextRequest, { params }) => {
 
     const ambassador = await prisma.ambassador.findUnique({
       where: { id },
-      include: {
+      select: {
+        id: true,
+        userId: true,
+        name: true,
+        email: true,
+        referralCode: true,
+        commissionRate: true,
+        totalReferrals: true,
+        totalEarnings: true,
+        status: true,
+        tier: true,
+        joinedAt: true,
+        createdAt: true,
         user: { select: { name: true, email: true } },
         commissions: {
           orderBy: { createdAt: 'desc' },
           take: 20,
+          select: {
+            id: true,
+            orderId: true,
+            orderNumber: true,
+            orderTotal: true,
+            commissionRate: true,
+            commissionAmount: true,
+            paidOut: true,
+            paidOutAt: true,
+            createdAt: true,
+          },
         },
       },
     });
@@ -62,7 +85,10 @@ export const PATCH = withAdminGuard(async (request: NextRequest, { session, para
     }
 
     // Check ambassador exists
-    const existing = await prisma.ambassador.findUnique({ where: { id } });
+    const existing = await prisma.ambassador.findUnique({
+      where: { id },
+      select: { id: true, status: true, tier: true, commissionRate: true },
+    });
     if (!existing) {
       return NextResponse.json({ error: 'Ambassadeur non trouvé' }, { status: 404 });
     }
@@ -78,6 +104,19 @@ export const PATCH = withAdminGuard(async (request: NextRequest, { session, para
     const ambassador = await prisma.ambassador.update({
       where: { id },
       data: updateData,
+      select: {
+        id: true,
+        userId: true,
+        name: true,
+        email: true,
+        referralCode: true,
+        commissionRate: true,
+        totalReferrals: true,
+        totalEarnings: true,
+        status: true,
+        tier: true,
+        joinedAt: true,
+      },
     });
 
     // Audit log
@@ -103,7 +142,10 @@ export const DELETE = withAdminGuard(async (request: NextRequest, { session, par
   try {
     const id = params!.id;
 
-    const existing = await prisma.ambassador.findUnique({ where: { id } });
+    const existing = await prisma.ambassador.findUnique({
+      where: { id },
+      select: { id: true, name: true, status: true },
+    });
     if (!existing) {
       return NextResponse.json({ error: 'Ambassadeur non trouvé' }, { status: 404 });
     }

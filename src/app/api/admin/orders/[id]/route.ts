@@ -211,6 +211,15 @@ async function handleOrderUpdate(
 
   const existingOrder = await prisma.order.findUnique({
     where: { id },
+    select: {
+      id: true,
+      status: true,
+      trackingNumber: true,
+      carrier: true,
+      shippedAt: true,
+      deliveredAt: true,
+      updatedAt: true,
+    },
   });
 
   if (!existingOrder) {
@@ -311,7 +320,7 @@ async function handleOrderUpdate(
     newValue: { status: status || existingOrder.status, trackingNumber: trackingNumber || null, carrier: carrier || null, adminNotes: adminNotes || null },
     ipAddress: getClientIpFromRequest(request),
     userAgent: request.headers.get('user-agent') || undefined,
-  }).catch(() => {});
+  }).catch((err: unknown) => { logger.error('[AdminOrder] Non-blocking audit log for order update failed', { error: err instanceof Error ? err.message : String(err) }); });
 
   // Send lifecycle email on status change (fire-and-forget)
   if (status && status !== existingOrder.status) {
@@ -411,7 +420,31 @@ async function handleRefund(
   // Find the order
   const order = await prisma.order.findUnique({
     where: { id: orderId },
-    include: { items: true, currency: { select: { code: true } } },
+    select: {
+      id: true,
+      orderNumber: true,
+      userId: true,
+      status: true,
+      paymentStatus: true,
+      total: true,
+      taxTps: true,
+      taxTvq: true,
+      taxTvh: true,
+      taxPst: true,
+      stripePaymentId: true,
+      paypalOrderId: true,
+      adminNotes: true,
+      shippingName: true,
+      items: {
+        select: {
+          id: true,
+          productId: true,
+          formatId: true,
+          quantity: true,
+        },
+      },
+      currency: { select: { code: true } },
+    },
   });
 
   if (!order) {
@@ -660,7 +693,7 @@ async function handleRefund(
     ipAddress: getClientIpFromRequest(request),
     userAgent: request.headers.get('user-agent') || undefined,
     metadata: { journalEntryId: entryId, creditNoteId, commissionClawback: commissionClawback.clawbackAmount ? commissionClawback : null },
-  }).catch(() => {});
+  }).catch((err: unknown) => { logger.error('[AdminOrder] Non-blocking audit log for refund failed', { error: err instanceof Error ? err.message : String(err) }); });
 
   // ── Send refund email (fire-and-forget) ──────────────────────────────
   sendOrderLifecycleEmail(orderId, 'REFUNDED', {
@@ -720,7 +753,34 @@ async function handleReship(
   // Find the original order
   const order = await prisma.order.findUnique({
     where: { id: orderId },
-    include: { items: true, currency: { select: { id: true } } },
+    select: {
+      id: true,
+      orderNumber: true,
+      userId: true,
+      status: true,
+      currencyId: true,
+      shippingName: true,
+      shippingAddress1: true,
+      shippingAddress2: true,
+      shippingCity: true,
+      shippingState: true,
+      shippingPostal: true,
+      shippingCountry: true,
+      shippingPhone: true,
+      adminNotes: true,
+      items: {
+        select: {
+          id: true,
+          productId: true,
+          formatId: true,
+          productName: true,
+          formatName: true,
+          sku: true,
+          quantity: true,
+        },
+      },
+      currency: { select: { id: true } },
+    },
   });
 
   if (!order) {
@@ -923,7 +983,7 @@ async function handleReship(
     ipAddress: getClientIpFromRequest(request),
     userAgent: request.headers.get('user-agent') || undefined,
     metadata: { originalOrderNumber: order.orderNumber, totalLossAmount: Math.round(totalLossAmount * 100) / 100, lossEntryId },
-  }).catch(() => {});
+  }).catch((err: unknown) => { logger.error('[AdminOrder] Non-blocking audit log for reship failed', { error: err instanceof Error ? err.message : String(err) }); });
 
   return NextResponse.json({
     success: true,
