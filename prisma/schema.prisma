@@ -549,7 +549,7 @@ model ChartOfAccount {
   gifiName           String? // GIFI name for reference
   // CCA (Capital Cost Allowance) for depreciable assets
   ccaClass           Int? // CCA class number (e.g. 8, 10, 50)
-  ccaRate            Float? // CCA rate percentage (e.g. 20, 30, 55)
+  ccaRate            Decimal? @db.Decimal(5, 4) // F-008: CCA rate (was Float, now Decimal for tax precision)
   // Deductibility
   deductiblePercent  Int? // 100 = fully, 50 = meals, 0 = non-deductible
   isContra           Boolean          @default(false)
@@ -1316,6 +1316,7 @@ model LoyaltyTransaction {
   @@index([referralId])
   @@index([type])
   @@index([userId])
+  @@index([userId, type]) // F-070: Composite for duplicate detection (EARN_SIGNUP, EARN_BIRTHDAY)
 }
 
 model Media {
@@ -1334,11 +1335,15 @@ model Media {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
+  width        Int?     // F-50: Image width for display/optimization
+  height       Int?     // F-50: Image height for display/optimization
+
   @@index([folder])
   @@index([mimeType])
   @@index([uploadedBy])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([originalName]) // F-56: Search by filename
 }
 
 model Message {
@@ -2689,6 +2694,12 @@ model User {
   consentRecords        ConsentRecord[]
   mailingListSubscriber MailingListSubscriber[] @relation("mailingListSubscriber")
 
+  // Forum & Community relations
+  forumPosts      ForumPost[]      @relation("ForumPostAuthor")
+  forumReplies    ForumReply[]     @relation("ForumReplyAuthor")
+  forumVotes      ForumVote[]
+  contactMessages ContactMessage[] @relation("ContactMessageUser")
+
   // RGPD: Terms of Service & Privacy Policy acceptance proof
   termsAcceptedAt   DateTime?
   termsVersion      String?
@@ -2807,6 +2818,7 @@ model Video {
   @@index([slug])
   @@index([createdAt])
   @@index([updatedAt])
+  @@index([title])    // F-57: Text search on video title
 }
 
 model VideoTranslation {
@@ -3370,7 +3382,7 @@ model FixedAsset {
   accumulatedDepreciation Decimal                  @default(0) @db.Decimal(12, 2)
   // CCA (Capital Cost Allowance)
   ccaClass                Int // CCA class number (8, 10, 12, 13, 14.1, 50, etc.)
-  ccaRate                 Float // Declining balance rate (e.g. 20, 30, 55)
+  ccaRate                 Decimal @db.Decimal(5, 4) // F-008: CCA rate (was Float, now Decimal for tax precision)
   depreciationMethod      String                   @default("DECLINING_BALANCE") // DECLINING_BALANCE, STRAIGHT_LINE, LEASE_TERM
   halfYearRuleApplied     Boolean                  @default(true) // Half-year rule for first year
   aiiApplied              Boolean                  @default(false) // Accelerated Investment Incentive (1.5x first year)
@@ -3735,8 +3747,8 @@ model ConsentRecord {
   @@index([email])
   @@index([userId])
   @@index([type])
+  @@index([email, type]) // FLAW-069: Composite for consent queries
   @@index([purpose])
-  @@index([email, type])
   @@index([grantedAt])
   @@index([revokedAt])
 }
@@ -4393,4 +4405,112 @@ model CustomerPreference {
   @@index([userId])
   @@index([createdAt])
   @@index([updatedAt])
+}
+
+// =============================================
+// F-005 (Communauté CRITICAL): Forum community backend
+// =============================================
+
+model ForumCategory {
+  id          String      @id @default(cuid())
+  name        String
+  slug        String      @unique
+  description String?
+  icon        String?
+  sortOrder   Int         @default(0)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  posts       ForumPost[]
+
+  @@index([slug])
+  @@index([sortOrder])
+}
+
+model ForumPost {
+  id           String         @id @default(cuid())
+  title        String
+  content      String
+  authorId     String
+  categoryId   String
+  upvotes      Int            @default(0)
+  downvotes    Int            @default(0)
+  viewCount    Int            @default(0)
+  isPinned     Boolean        @default(false)
+  isLocked     Boolean        @default(false)
+  deletedAt    DateTime?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  author       User           @relation("ForumPostAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  category     ForumCategory  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  replies      ForumReply[]
+  votes        ForumVote[]    @relation("PostVotes")
+
+  @@index([authorId])
+  @@index([categoryId])
+  @@index([createdAt])
+  @@index([isPinned, createdAt])
+  @@index([deletedAt])
+}
+
+model ForumReply {
+  id            String       @id @default(cuid())
+  content       String
+  authorId      String
+  postId        String
+  parentReplyId String?
+  upvotes       Int          @default(0)
+  downvotes     Int          @default(0)
+  deletedAt     DateTime?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  author        User         @relation("ForumReplyAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  post          ForumPost    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  parentReply   ForumReply?  @relation("ReplyToReply", fields: [parentReplyId], references: [id])
+  childReplies  ForumReply[] @relation("ReplyToReply")
+  votes         ForumVote[]  @relation("ReplyVotes")
+
+  @@index([postId])
+  @@index([authorId])
+  @@index([parentReplyId])
+  @@index([createdAt])
+  @@index([deletedAt])
+}
+
+model ForumVote {
+  id        String      @id @default(cuid())
+  userId    String
+  postId    String?
+  replyId   String?
+  value     Int         // +1 or -1
+  createdAt DateTime    @default(now())
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post      ForumPost?  @relation("PostVotes", fields: [postId], references: [id], onDelete: Cascade)
+  reply     ForumReply? @relation("ReplyVotes", fields: [replyId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId])
+  @@unique([userId, replyId])
+  @@index([postId])
+  @@index([replyId])
+}
+
+// =============================================
+// F-100 (Communauté): Contact form persistence
+// =============================================
+
+model ContactMessage {
+  id        String    @id @default(cuid())
+  name      String
+  email     String
+  subject   String?
+  message   String
+  userId    String?
+  ipAddress String?
+  isRead    Boolean   @default(false)
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User?     @relation("ContactMessageUser", fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([email])
+  @@index([createdAt])
+  @@index([isRead])
 }
