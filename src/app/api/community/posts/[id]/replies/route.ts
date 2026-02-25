@@ -18,6 +18,7 @@ import {
   validateContentType,
 } from '@/lib/api-response';
 import { ErrorCode } from '@/lib/error-codes';
+import { stripHtml, stripControlChars } from '@/lib/sanitize';
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -186,10 +187,13 @@ export async function POST(request: NextRequest, context: RouteContext) {
       }
     }
 
+    // Sanitize user content before storage (defense-in-depth XSS prevention)
+    const cleanContent = stripControlChars(stripHtml(content.trim()));
+
     // Create the reply
     const reply = await prisma.forumReply.create({
       data: {
-        content: content.trim(),
+        content: cleanContent,
         authorId: session.user.id,
         postId,
         parentReplyId: parentReplyId || null,

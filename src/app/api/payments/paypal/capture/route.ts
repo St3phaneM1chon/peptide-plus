@@ -77,10 +77,8 @@ export async function POST(request: NextRequest) {
       cartItems,
       shippingInfo,
       promoCode,
-      promoDiscount,
       cartId,
       giftCardCode,
-      giftCardDiscount: clientGiftCardDiscount,
     } = parsed.data;
 
     // BUG 6: Require authentication BEFORE capturing payment
@@ -138,8 +136,9 @@ export async function POST(request: NextRequest) {
       serverSubtotal = Math.round(serverSubtotal * 100) / 100;
 
       // SECURITY: Validate promo code server-side
+      // E-02 FIX: Always validate when promoCode is provided (never trust client-sent promoDiscount)
       let serverPromoDiscount = 0;
-      if (promoCode && (promoDiscount ?? 0) > 0) {
+      if (promoCode) {
         const promo = await prisma.promoCode.findUnique({ where: { code: promoCode } });
         if (promo && promo.isActive) {
           const now = new Date();
@@ -161,8 +160,9 @@ export async function POST(request: NextRequest) {
       const discountedSubtotal = Math.max(0, serverSubtotal - serverPromoDiscount);
 
       // E-03 FIX: Apply gift card discount before calculating taxes (matches create-order flow)
+      // E-02 FIX: Always validate gift card when code is provided (never trust client-sent discount amount)
       let serverGiftCardDiscount = 0;
-      if (giftCardCode && (clientGiftCardDiscount ?? 0) > 0) {
+      if (giftCardCode) {
         const giftCard = await prisma.giftCard.findUnique({
           where: { code: giftCardCode.toUpperCase().trim() },
         });
@@ -268,7 +268,7 @@ export async function POST(request: NextRequest) {
             status: 'CONFIRMED',
             paypalOrderId,
             promoCode: promoCode || null,
-            promoDiscount: promoDiscount || null,
+            promoDiscount: serverPromoDiscount || null,
             shippingName: shippingInfo ? `${shippingInfo.firstName} ${shippingInfo.lastName}` : '',
             shippingAddress1: shippingInfo?.address || '',
             shippingAddress2: shippingInfo?.apartment || null,
@@ -351,6 +351,23 @@ export async function POST(request: NextRequest) {
         return newOrder;
       });
 
+      // SECURITY (E-02): Verify server-calculated total matches PayPal captured amount
+      const paypalCapturedAmount = Number(captureData.purchase_units?.[0]?.payments?.captures?.[0]?.amount?.value || 0);
+      const serverCalculatedTotal = Math.round((subtotalAfterAllDiscounts + totalTax + serverShipping) * 100) / 100;
+      if (Math.abs(paypalCapturedAmount - serverCalculatedTotal) > 0.02) {
+        logger.warn('[PayPal capture] Amount mismatch between server calculation and PayPal captured amount', {
+          paypalCapturedAmount,
+          serverCalculatedTotal,
+          serverSubtotal,
+          serverPromoDiscount,
+          serverGiftCardDiscount,
+          totalTax,
+          serverShipping,
+          orderNumber: order.orderNumber,
+          orderId: order.id,
+        });
+      }
+
       // Create accounting entries (non-blocking)
       try {
         await createAccountingEntriesForOrder(order.id);
@@ -383,7 +400,8 @@ export async function POST(request: NextRequest) {
 
       // BE-PAY-04: Decrement gift card balance after successful PayPal payment
       // BUG 5: Re-validate gift card code and balance server-side (never trust client-sent discount)
-      if (giftCardCode && (clientGiftCardDiscount ?? 0) > 0) {
+      // E-02 FIX: Use serverGiftCardDiscount instead of clientGiftCardDiscount
+      if (giftCardCode && serverGiftCardDiscount > 0) {
         try {
           await prisma.$transaction(async (tx) => {
             // Lock the gift card row to prevent concurrent balance modifications
@@ -408,8 +426,8 @@ export async function POST(request: NextRequest) {
             }
 
             if (giftCard && giftCard.is_active && giftCard.balance > 0) {
-              // Server-side validation: cap the deduction to actual balance (never trust client value)
-              const amountToDeduct = Math.min(clientGiftCardDiscount ?? 0, giftCard.balance);
+              // E-02 FIX: Use server-calculated gift card discount (never trust client value)
+              const amountToDeduct = Math.min(serverGiftCardDiscount, giftCard.balance);
               const newBalance = Math.round((giftCard.balance - amountToDeduct) * 100) / 100;
 
               await tx.giftCard.update({

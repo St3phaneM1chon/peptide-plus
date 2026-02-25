@@ -247,13 +247,21 @@ export async function POST(request: NextRequest) {
     });
     const productMap = new Map(allProducts.map(p => [p.id, p]));
 
-    // Batch-fetch all formats in one query (only those referenced)
-    const formatIds = items
-      .map((i: { formatId?: string }) => i.formatId)
-      .filter((id: string | undefined): id is string => !!id);
-    const allFormats = formatIds.length > 0
+    // E-16 FIX: Batch-fetch formats with productId constraint to prevent cross-product format attacks.
+    // Each format is looked up with its claimed productId, so a cheap format from product A
+    // cannot be referenced as belonging to product B.
+    const formatProductPairs = items
+      .filter((i: { formatId?: string }) => !!i.formatId)
+      .map((i: { formatId?: string; productId: string }) => ({
+        id: i.formatId!,
+        productId: i.productId,
+      }));
+    const uniqueFormatPairs = [...new Map(formatProductPairs.map(p => [`${p.id}:${p.productId}`, p])).values()];
+    const allFormats = uniqueFormatPairs.length > 0
       ? await prisma.productFormat.findMany({
-          where: { id: { in: [...new Set(formatIds)] } },
+          where: {
+            OR: uniqueFormatPairs.map(pair => ({ id: pair.id, productId: pair.productId })),
+          },
           select: { id: true, name: true, price: true, imageUrl: true, productId: true },
         })
       : [];
@@ -327,7 +335,14 @@ export async function POST(request: NextRequest) {
 
         if (notExpired && withinUsageLimit) {
           // E-05: Per-user promo usage limit check (prevents abuse before payment)
-          if (session?.user?.id && promo.usageLimitPerUser) {
+          if (promo.usageLimitPerUser) {
+            if (!session?.user?.id) {
+              // Per-user limit requires authentication to track usage
+              return NextResponse.json(
+                { error: 'Vous devez être connecté pour utiliser ce code promo' },
+                { status: 401 }
+              );
+            }
             const userUsageCount = await prisma.promoCodeUsage.count({
               where: { promoCodeId: promo.id, userId: session.user.id },
             });
@@ -339,10 +354,19 @@ export async function POST(request: NextRequest) {
             }
           }
 
-          // E-04: firstOrderOnly check at checkout
-          if (promo.firstOrderOnly && session?.user?.id) {
+          // E-04: firstOrderOnly check at checkout - require auth + check PAID/DELIVERED
+          if (promo.firstOrderOnly) {
+            if (!session?.user?.id) {
+              return NextResponse.json(
+                { error: 'Vous devez être connecté pour utiliser ce code promo' },
+                { status: 401 }
+              );
+            }
             const previousPaidOrders = await prisma.order.count({
-              where: { userId: session.user.id, paymentStatus: 'PAID' },
+              where: {
+                userId: session.user.id,
+                paymentStatus: { in: ['PAID', 'DELIVERED'] },
+              },
             });
             if (previousPaidOrders > 0) {
               return NextResponse.json(
@@ -354,37 +378,51 @@ export async function POST(request: NextRequest) {
 
           // E-04: productIds restriction check at checkout
           if (promo.productIds) {
-            const allowedProductIds: string[] = JSON.parse(promo.productIds);
-            const cartProductIds = verifiedItems.map((item) => item.productId);
-            const hasMatchingProduct = cartProductIds.some((pid) =>
-              allowedProductIds.includes(pid)
-            );
-            if (!hasMatchingProduct) {
-              return NextResponse.json(
-                { error: 'Ce code promo ne s\'applique pas aux produits de votre panier' },
-                { status: 400 }
+            let allowedProductIds: string[] = [];
+            try {
+              allowedProductIds = JSON.parse(promo.productIds);
+            } catch {
+              logger.error('Malformed productIds JSON for promo code', { promoCode: singlePromoCode });
+            }
+            if (allowedProductIds.length > 0) {
+              const cartProductIds = verifiedItems.map((item) => item.productId);
+              const hasMatchingProduct = cartProductIds.some((pid) =>
+                allowedProductIds.includes(pid)
               );
+              if (!hasMatchingProduct) {
+                return NextResponse.json(
+                  { error: 'Ce code promo ne s\'applique pas aux produits de votre panier' },
+                  { status: 400 }
+                );
+              }
             }
           }
 
           // E-04: categoryIds restriction check at checkout
           // N+1 FIX: Batch-fetch all product categoryIds in one query
           if (promo.categoryIds) {
-            const allowedCategoryIds: string[] = JSON.parse(promo.categoryIds);
-            const cartProductIds = verifiedItems.map((item) => item.productId);
-            const productsWithCategory = await prisma.product.findMany({
-              where: { id: { in: cartProductIds } },
-              select: { categoryId: true },
-            });
-            const cartProductCategoryIds = productsWithCategory.map(p => p.categoryId);
-            const hasMatchingCategory = cartProductCategoryIds.some(
-              (cid) => cid && allowedCategoryIds.includes(cid)
-            );
-            if (!hasMatchingCategory) {
-              return NextResponse.json(
-                { error: 'Ce code promo ne s\'applique pas aux catégories de votre panier' },
-                { status: 400 }
+            let allowedCategoryIds: string[] = [];
+            try {
+              allowedCategoryIds = JSON.parse(promo.categoryIds);
+            } catch {
+              logger.error('Malformed categoryIds JSON for promo code', { promoCode: singlePromoCode });
+            }
+            if (allowedCategoryIds.length > 0) {
+              const cartProductIds = verifiedItems.map((item) => item.productId);
+              const productsWithCategory = await prisma.product.findMany({
+                where: { id: { in: cartProductIds } },
+                select: { categoryId: true },
+              });
+              const cartProductCategoryIds = productsWithCategory.map(p => p.categoryId);
+              const hasMatchingCategory = cartProductCategoryIds.some(
+                (cid) => cid && allowedCategoryIds.includes(cid)
               );
+              if (!hasMatchingCategory) {
+                return NextResponse.json(
+                  { error: 'Ce code promo ne s\'applique pas aux catégories de votre panier' },
+                  { status: 400 }
+                );
+              }
             }
           }
 

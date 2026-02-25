@@ -17,6 +17,7 @@ import {
   validateContentType,
 } from '@/lib/api-response';
 import { ErrorCode } from '@/lib/error-codes';
+import { stripHtml, stripControlChars } from '@/lib/sanitize';
 import type { Prisma } from '@prisma/client';
 
 export async function GET(request: NextRequest) {
@@ -233,11 +234,15 @@ export async function POST(request: NextRequest) {
       return apiError('Category not found', ErrorCode.NOT_FOUND, { request });
     }
 
+    // Sanitize user content before storage (defense-in-depth XSS prevention)
+    const cleanTitle = stripControlChars(stripHtml(title.trim()));
+    const cleanContent = stripControlChars(stripHtml(content.trim()));
+
     // Create the post
     const post = await prisma.forumPost.create({
       data: {
-        title: title.trim(),
-        content: content.trim(),
+        title: cleanTitle,
+        content: cleanContent,
         authorId: session.user.id,
         categoryId,
       },

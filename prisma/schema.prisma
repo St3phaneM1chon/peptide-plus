@@ -1052,21 +1052,22 @@ model FaqTranslation {
 }
 
 model GiftCard {
-  id             String    @id @default(cuid())
-  code           String    @unique
-  initialAmount  Decimal   @db.Decimal(10, 2)
-  balance        Decimal   @db.Decimal(10, 2)
-  currency       String    @default("CAD")
-  purchaserId    String?
-  recipientEmail String?
-  recipientName  String?
-  message        String?
-  isActive       Boolean   @default(true)
-  expiresAt      DateTime?
-  redeemedBy     String?
-  createdAt      DateTime  @default(now())
-  purchaser      User?     @relation("GiftCard_purchaserIdToUser", fields: [purchaserId], references: [id])
-  redeemer       User?     @relation("GiftCard_redeemedByToUser", fields: [redeemedBy], references: [id])
+  id                    String    @id @default(cuid())
+  code                  String    @unique
+  initialAmount         Decimal   @db.Decimal(10, 2)
+  balance               Decimal   @db.Decimal(10, 2)
+  currency              String    @default("CAD")
+  purchaserId           String?
+  recipientEmail        String?
+  recipientName         String?
+  message               String?
+  isActive              Boolean   @default(true)
+  expiresAt             DateTime?
+  redeemedBy            String?
+  stripePaymentIntentId String?   @unique // BUG E-21: Track payment intent to prevent double-use
+  createdAt             DateTime  @default(now())
+  purchaser             User?     @relation("GiftCard_purchaserIdToUser", fields: [purchaserId], references: [id])
+  redeemer              User?     @relation("GiftCard_redeemedByToUser", fields: [redeemedBy], references: [id])
 
   @@index([code])
   @@index([purchaserId])

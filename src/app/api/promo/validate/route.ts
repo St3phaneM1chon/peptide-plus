@@ -127,19 +127,25 @@ export async function POST(request: NextRequest) {
     // F-092 FIX: Call auth() once for all user-specific checks
     const session = (promoCode.usageLimitPerUser || promoCode.firstOrderOnly) ? await auth() : null;
 
-    // PAY-013: Vérifier la limite d'utilisation par utilisateur
+    // E-05: Vérifier la limite d'utilisation par utilisateur via PromoCodeUsage
     if (promoCode.usageLimitPerUser) {
-      if (session?.user?.id) {
-        const userUsageCount = await prisma.order.count({
-          where: { userId: session.user.id, promoCode: upperCode, status: { not: 'CANCELLED' } },
-        });
-        if (userUsageCount >= promoCode.usageLimitPerUser) {
-          return NextResponse.json({
-            valid: false,
-            errorCode: 'PROMO_USER_LIMIT_REACHED',
-            error: 'Vous avez atteint la limite d\'utilisation pour ce code',
-          }, { status: 400 });
-        }
+      if (!session?.user?.id) {
+        // Per-user limit requires authentication to track usage
+        return NextResponse.json({
+          valid: false,
+          errorCode: 'PROMO_AUTH_REQUIRED',
+          error: 'Vous devez être connecté pour utiliser ce code promo',
+        }, { status: 401 });
+      }
+      const userUsageCount = await prisma.promoCodeUsage.count({
+        where: { promoCodeId: promoCode.id, userId: session.user.id },
+      });
+      if (userUsageCount >= promoCode.usageLimitPerUser) {
+        return NextResponse.json({
+          valid: false,
+          errorCode: 'PROMO_USER_LIMIT_REACHED',
+          error: 'Vous avez atteint la limite d\'utilisation pour ce code',
+        }, { status: 400 });
       }
     }
 
@@ -153,7 +159,10 @@ export async function POST(request: NextRequest) {
         });
       }
       const previousPaidOrders = await prisma.order.count({
-        where: { userId: session.user.id, paymentStatus: 'PAID' },
+        where: {
+          userId: session.user.id,
+          paymentStatus: { in: ['PAID', 'DELIVERED'] },
+        },
       });
       if (previousPaidOrders > 0) {
         return NextResponse.json({

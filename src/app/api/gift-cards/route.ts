@@ -13,12 +13,15 @@ import { z } from 'zod';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { validateCsrf } from '@/lib/csrf-middleware';
 import { stripHtml, stripControlChars } from '@/lib/sanitize';
+import { getPaymentIntent } from '@/lib/stripe';
 
 const createGiftCardSchema = z.object({
   amount: z.number({ coerce: true }).int().min(25).max(1000),
   recipientEmail: z.string().email().max(255).optional().nullable(),
   recipientName: z.string().max(100).optional().nullable(),
   message: z.string().max(500).optional().nullable(),
+  // BUG E-21 FIX: Non-admin users MUST provide a valid Stripe payment intent ID
+  paymentIntentId: z.string().max(255).optional().nullable(),
 });
 
 // SEC-20: Generate unique gift card code using cryptographically secure random bytes
@@ -65,8 +68,88 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { amount, recipientEmail, recipientName, message } = parsed.data;
+    const { amount, recipientEmail, recipientName, message, paymentIntentId } = parsed.data;
     const parsedAmount = amount;
+
+    // BUG E-21 FIX: Payment verification - admin bypass or Stripe payment required
+    const isAdmin = session.user.role === 'OWNER' || session.user.role === 'EMPLOYEE';
+
+    if (!isAdmin) {
+      // Non-admin users MUST provide a valid, succeeded Stripe payment intent
+      if (!paymentIntentId) {
+        return NextResponse.json(
+          { error: 'Payment is required to purchase a gift card. Please provide a valid paymentIntentId.' },
+          { status: 402 }
+        );
+      }
+
+      // Validate payment intent ID format (Stripe PI IDs start with "pi_")
+      if (!paymentIntentId.startsWith('pi_')) {
+        return NextResponse.json(
+          { error: 'Invalid payment intent ID format' },
+          { status: 400 }
+        );
+      }
+
+      try {
+        const paymentIntent = await getPaymentIntent(paymentIntentId);
+
+        // Verify the payment succeeded
+        if (paymentIntent.status !== 'succeeded') {
+          logger.warn('Gift card payment intent not succeeded', {
+            paymentIntentId,
+            status: paymentIntent.status,
+            userId: session.user.id,
+          });
+          return NextResponse.json(
+            { error: 'Payment has not been completed. Please complete payment first.' },
+            { status: 402 }
+          );
+        }
+
+        // Verify the payment amount matches the gift card amount (amount is in cents in Stripe)
+        const expectedAmountCents = parsedAmount * 100;
+        if (paymentIntent.amount !== expectedAmountCents) {
+          logger.warn('Gift card payment amount mismatch', {
+            paymentIntentId,
+            expectedCents: expectedAmountCents,
+            actualCents: paymentIntent.amount,
+            userId: session.user.id,
+          });
+          return NextResponse.json(
+            { error: 'Payment amount does not match the requested gift card amount' },
+            { status: 400 }
+          );
+        }
+
+        // Verify this payment intent hasn't already been used for another gift card
+        // (stripePaymentIntentId has a @unique constraint in Prisma for DB-level enforcement too)
+        const existingGiftCard = await prisma.giftCard.findUnique({
+          where: { stripePaymentIntentId: paymentIntentId },
+        });
+        if (existingGiftCard) {
+          logger.warn('Gift card payment intent already used', {
+            paymentIntentId,
+            existingGiftCardId: existingGiftCard.id,
+            userId: session.user.id,
+          });
+          return NextResponse.json(
+            { error: 'This payment has already been used for a gift card' },
+            { status: 409 }
+          );
+        }
+      } catch (stripeError) {
+        logger.error('Gift card Stripe payment verification failed', {
+          paymentIntentId,
+          error: stripeError instanceof Error ? stripeError.message : String(stripeError),
+          userId: session.user.id,
+        });
+        return NextResponse.json(
+          { error: 'Failed to verify payment. Please try again or contact support.' },
+          { status: 502 }
+        );
+      }
+    }
 
     // Rate limit: max 5 gift cards per user per day
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
@@ -113,14 +196,15 @@ export async function POST(request: NextRequest) {
       data: {
         code,
         initialAmount: parsedAmount,
-        balance: 0, // BE-PAY-03: Balance stays 0 until payment confirmed
+        balance: isAdmin ? parsedAmount : 0, // BUG E-21: Admin cards are immediately active; customer cards stay 0 until payment webhook
         currency: 'CAD',
         purchaserId: session.user.id,
         recipientEmail: recipientEmail ? stripControlChars(stripHtml(recipientEmail)) : null,
         recipientName: recipientName ? stripControlChars(stripHtml(recipientName)) : null,
         message: message ? stripControlChars(stripHtml(message)) : null,
-        isActive: false, // BE-PAY-03: Inactive until payment confirmed
+        isActive: isAdmin, // BUG E-21: Admin promotional cards are immediately active
         expiresAt,
+        ...(paymentIntentId && !isAdmin ? { stripePaymentIntentId: paymentIntentId } : {}),
       },
     });
 
@@ -130,7 +214,7 @@ export async function POST(request: NextRequest) {
         id: giftCard.id,
         code: giftCard.code,
         amount: Number(giftCard.initialAmount),
-        status: 'PENDING_PAYMENT',
+        status: isAdmin ? 'ACTIVE' : 'PENDING_PAYMENT',
         recipientEmail: giftCard.recipientEmail,
         recipientName: giftCard.recipientName,
         expiresAt: giftCard.expiresAt,
