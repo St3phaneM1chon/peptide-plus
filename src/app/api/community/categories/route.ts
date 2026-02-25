@@ -36,9 +36,12 @@ export async function GET(request: NextRequest) {
     }));
 
     return apiSuccess(data, { request });
-  } catch (error) {
-    console.error('Error fetching forum categories:', error);
+  } catch (error: unknown) {
+    const errMsg = error instanceof Error ? error.message : String(error);
+    const errStack = error instanceof Error ? error.stack : '';
+    console.error('Error fetching forum categories:', errMsg, errStack);
     return apiError(
+      `Failed to fetch forum categories: ${errMsg}`,
       'Failed to fetch forum categories',
       ErrorCode.INTERNAL_ERROR,
       { request }
