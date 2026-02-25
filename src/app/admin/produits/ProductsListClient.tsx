@@ -17,8 +17,9 @@ import {
   Wrench,
   Upload,
   FileDown,
+  Percent,
 } from 'lucide-react';
-import { Button, StatusBadge } from '@/components/admin';
+import { Button, StatusBadge, Modal } from '@/components/admin';
 import {
   ContentList,
   DetailPane,
@@ -120,6 +121,10 @@ export default function ProductsListClient({
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [showBulkPriceModal, setShowBulkPriceModal] = useState(false);
+  const [bulkPricePercent, setBulkPricePercent] = useState<number>(0);
+  const [bulkPriceApplying, setBulkPriceApplying] = useState(false);
+  const [bulkPriceDirection, setBulkPriceDirection] = useState<'increase' | 'decrease'>('increase');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // ─── Business logic (unchanged) ─────────────────────────────
@@ -237,29 +242,161 @@ export default function ProductsListClient({
     }
   }, [selectedProductId, t]);
 
-  const handleDuplicate = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+  const handleDuplicate = useCallback(async () => {
+    if (!selectedProductId) {
+      toast.info(t('admin.products.selectFirst'));
+      return;
+    }
+    try {
+      const res = await fetch(`/api/admin/products/${selectedProductId}/duplicate`, {
+        method: 'POST',
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        toast.error(data.error || t('admin.products.duplicateError') || 'Failed to duplicate product');
+        return;
+      }
+      const data = await res.json();
+      toast.success(t('admin.products.duplicateSuccess') || 'Product duplicated');
+      if (data.product?.id) {
+        router.push(`/admin/produits/${data.product.id}`);
+      } else {
+        window.location.reload();
+      }
+    } catch {
+      toast.error(t('admin.products.duplicateError') || 'Failed to duplicate product');
+    }
+  }, [selectedProductId, t, router]);
 
-  const handlePublish = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+  const handlePublish = useCallback(async () => {
+    if (!selectedProductId) {
+      toast.info(t('admin.products.selectFirst'));
+      return;
+    }
+    try {
+      const res = await fetch(`/api/products/${selectedProductId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isActive: true }),
+      });
+      if (res.ok) {
+        setProducts(prev => prev.map(p => p.id === selectedProductId ? { ...p, isActive: true } : p));
+        toast.success(t('admin.products.publishSuccess') || 'Product published');
+      } else {
+        toast.error(t('admin.products.publishError') || 'Failed to publish product');
+      }
+    } catch {
+      toast.error(t('admin.products.publishError') || 'Failed to publish product');
+    }
+  }, [selectedProductId, t]);
 
-  const handleUnpublish = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+  const handleUnpublish = useCallback(async () => {
+    if (!selectedProductId) {
+      toast.info(t('admin.products.selectFirst'));
+      return;
+    }
+    try {
+      const res = await fetch(`/api/products/${selectedProductId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isActive: false }),
+      });
+      if (res.ok) {
+        setProducts(prev => prev.map(p => p.id === selectedProductId ? { ...p, isActive: false } : p));
+        toast.success(t('admin.products.unpublishSuccess') || 'Product unpublished');
+      } else {
+        toast.error(t('admin.products.unpublishError') || 'Failed to unpublish product');
+      }
+    } catch {
+      toast.error(t('admin.products.unpublishError') || 'Failed to unpublish product');
+    }
+  }, [selectedProductId, t]);
 
   const handleCategoriesFilter = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    // Focus the category filter dropdown
+    const select = document.querySelector('select[class*="border-slate"]') as HTMLSelectElement | null;
+    if (select) {
+      select.focus();
+      select.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, []);
+
+  const handleBulkPriceUpdate = useCallback(() => {
+    setShowBulkPriceModal(true);
+    setBulkPricePercent(0);
+    setBulkPriceDirection('increase');
+  }, []);
+
+  const applyBulkPriceUpdate = useCallback(async () => {
+    if (bulkPricePercent <= 0 || bulkPricePercent > 100) {
+      toast.error(t('admin.products.bulkPriceInvalidPercent') || 'Enter a valid percentage (1-100)');
+      return;
+    }
+    setBulkPriceApplying(true);
+    try {
+      const res = await fetch('/api/admin/products/bulk-price', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          percentage: bulkPricePercent,
+          direction: bulkPriceDirection,
+          categoryFilter: categoryFilter || undefined,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        toast.error(data.error || t('admin.products.bulkPriceError') || 'Failed to update prices');
+        return;
+      }
+      const data = await res.json();
+      toast.success(
+        (t('admin.products.bulkPriceSuccess') || 'Prices updated for {count} products').replace('{count}', String(data.updated || 0))
+      );
+      setShowBulkPriceModal(false);
+      window.location.reload();
+    } catch {
+      toast.error(t('admin.products.bulkPriceError') || 'Failed to update prices');
+    } finally {
+      setBulkPriceApplying(false);
+    }
+  }, [bulkPricePercent, bulkPriceDirection, categoryFilter, t]);
 
   const handlePopularPages = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    // Navigate to analytics/stats page if it exists, otherwise link to products stats
+    router.push('/admin/analytics');
+  }, [router]);
 
   const handlePdfCatalog = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    // Generate a client-side CSV catalog of all products
+    const headers = ['ID', 'Name', 'SKU', 'Price', 'Category', 'Type', 'Active', 'Featured'];
+    const rows = products.map(p => {
+      const activeFormats = (p.formats || []).filter(f => f.isActive);
+      const minPrice = activeFormats.length > 0
+        ? Math.min(...activeFormats.map(f => Number(f.price)))
+        : Number(p.price);
+      return [
+        p.id,
+        `"${p.name.replace(/"/g, '""')}"`,
+        p.slug,
+        minPrice.toFixed(2),
+        `"${p.category.name.replace(/"/g, '""')}"`,
+        p.productType,
+        p.isActive ? 'Yes' : 'No',
+        p.isFeatured ? 'Yes' : 'No',
+      ].join(',');
+    });
+    const csv = [headers.join(','), ...rows].join('\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `product-catalog-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+    toast.success(t('admin.products.catalogExportSuccess') || 'Catalog exported');
+  }, [products, t]);
 
   const handleImportCsv = useCallback(() => {
     fileInputRef.current?.click();
@@ -275,6 +412,7 @@ export default function ProductsListClient({
   useRibbonAction('publish', handlePublish);
   useRibbonAction('unpublish', handleUnpublish);
   useRibbonAction('categoriesFilter', handleCategoriesFilter);
+  useRibbonAction('bulkPrice', handleBulkPriceUpdate);
   useRibbonAction('popularPages', handlePopularPages);
   useRibbonAction('pdfCatalog', handlePdfCatalog);
   useRibbonAction('importCsv', handleImportCsv);
@@ -642,6 +780,94 @@ export default function ProductsListClient({
         onConfirm={() => confirmDeleteId && handleDelete(confirmDeleteId)}
         onCancel={() => setConfirmDeleteId(null)}
       />
+
+      {/* ─── BULK PRICE UPDATE MODAL ─────────────────────────────── */}
+      <Modal
+        isOpen={showBulkPriceModal}
+        onClose={() => setShowBulkPriceModal(false)}
+        title={t('admin.products.bulkPriceTitle') || 'Bulk Price Update'}
+        subtitle={t('admin.products.bulkPriceSubtitle') || 'Adjust prices for all products by a percentage'}
+        size="sm"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setShowBulkPriceModal(false)}>
+              {t('common.cancel') || 'Cancel'}
+            </Button>
+            <Button
+              variant="primary"
+              icon={bulkPriceApplying ? Loader2 : Percent}
+              loading={bulkPriceApplying}
+              onClick={applyBulkPriceUpdate}
+              disabled={bulkPriceApplying || bulkPricePercent <= 0}
+            >
+              {t('admin.products.bulkPriceApply') || 'Apply'}
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              {t('admin.products.bulkPriceDirectionLabel') || 'Direction'}
+            </label>
+            <div className="flex gap-3">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="priceDirection"
+                  checked={bulkPriceDirection === 'increase'}
+                  onChange={() => setBulkPriceDirection('increase')}
+                  className="w-4 h-4 text-sky-600 border-slate-300 focus:ring-sky-500"
+                />
+                <span className="text-sm text-slate-700">
+                  {t('admin.products.bulkPriceIncrease') || 'Increase'}
+                </span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="priceDirection"
+                  checked={bulkPriceDirection === 'decrease'}
+                  onChange={() => setBulkPriceDirection('decrease')}
+                  className="w-4 h-4 text-sky-600 border-slate-300 focus:ring-sky-500"
+                />
+                <span className="text-sm text-slate-700">
+                  {t('admin.products.bulkPriceDecrease') || 'Decrease'}
+                </span>
+              </label>
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              {t('admin.products.bulkPricePercentLabel') || 'Percentage (%)'}
+            </label>
+            <input
+              type="number"
+              min={0}
+              max={100}
+              step={0.5}
+              value={bulkPricePercent}
+              onChange={(e) => setBulkPricePercent(parseFloat(e.target.value) || 0)}
+              className="w-full h-10 px-3 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+              placeholder="e.g. 10"
+            />
+          </div>
+          {categoryFilter && (
+            <p className="text-xs text-slate-500 bg-slate-50 rounded-lg p-2">
+              {(t('admin.products.bulkPriceCategoryNote') || 'Only products in the currently filtered category will be affected.').replace('{category}', categoryFilter)}
+            </p>
+          )}
+          {bulkPricePercent > 0 && (
+            <div className="bg-sky-50 border border-sky-200 rounded-lg p-3">
+              <p className="text-sm text-sky-800">
+                {bulkPriceDirection === 'increase' ? '+' : '-'}{bulkPricePercent}%{' '}
+                {t('admin.products.bulkPricePreview') || 'will be applied to all product format prices'}
+                {categoryFilter ? ` (${categoryFilter})` : ''}
+              </p>
+            </div>
+          )}
+        </div>
+      </Modal>
     </div>
   );
 }

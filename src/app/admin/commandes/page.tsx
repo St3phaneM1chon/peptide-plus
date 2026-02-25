@@ -15,6 +15,9 @@ import {
   Package,
   AlertTriangle,
   FileText,
+  CheckSquare,
+  Square,
+  X,
 } from 'lucide-react';
 
 import { Button } from '@/components/admin/Button';
@@ -215,6 +218,12 @@ export default function OrdersPage() {
   // UX FIX: ConfirmDialog for cancel order action
   const [confirmCancelOrderId, setConfirmCancelOrderId] = useState<string | null>(null);
 
+  // Bulk selection state
+  const [selectedOrderIds, setSelectedOrderIds] = useState<Set<string>>(new Set());
+  const [bulkStatus, setBulkStatus] = useState('');
+  const [bulkUpdating, setBulkUpdating] = useState(false);
+  const [showBulkBar, setShowBulkBar] = useState(false);
+
   // Enriched detail data
   const [creditNotes, setCreditNotes] = useState<CreditNoteRef[]>([]);
   const [paymentErrors, setPaymentErrors] = useState<PaymentErrorRef[]>([]);
@@ -292,6 +301,35 @@ export default function OrdersPage() {
     // Then fetch the full detail
     fetchOrderDetail(orderId);
   }, [orders, fetchOrderDetail]);
+
+  // ─── Filtering (moved up so bulk/print callbacks can reference filteredOrders) ──
+
+  const filteredOrders = useMemo(() => {
+    return orders.filter(order => {
+      // Status filter
+      if (statusFilter !== 'all' && order.status !== statusFilter) return false;
+      // Search filter
+      if (searchValue) {
+        const search = searchValue.toLowerCase();
+        if (
+          !order.orderNumber.toLowerCase().includes(search) &&
+          !order.userName?.toLowerCase().includes(search) &&
+          !order.userEmail?.toLowerCase().includes(search)
+        ) {
+          return false;
+        }
+      }
+      return true;
+    });
+  }, [orders, statusFilter, searchValue]);
+
+  const stats = useMemo(() => ({
+    total: orders.length,
+    pending: orders.filter(o => o.status === 'PENDING').length,
+    processing: orders.filter(o => o.status === 'PROCESSING').length,
+    shipped: orders.filter(o => o.status === 'SHIPPED').length,
+    delivered: orders.filter(o => o.status === 'DELIVERED').length,
+  }), [orders]);
 
   // ─── Status update ──────────────────────────────────────────
 
@@ -433,7 +471,7 @@ export default function OrdersPage() {
   // ─── Export CSV ────────────────────────────────────────
 
   const handleExportCsv = useCallback(() => {
-    if (orders.length === 0) {
+    if (filteredOrders.length === 0) {
       toast.error(t('admin.commandes.noOrdersToExport'));
       return;
     }
@@ -444,7 +482,7 @@ export default function OrdersPage() {
       'Carrier', 'Tracking', 'Items',
     ];
 
-    const rows = orders.map((o) => [
+    const rows = filteredOrders.map((o) => [
       o.orderNumber,
       new Date(o.createdAt).toISOString().slice(0, 10),
       o.userName || o.shippingName || '',
@@ -477,7 +515,7 @@ export default function OrdersPage() {
     a.click();
     URL.revokeObjectURL(url);
     toast.success(t('admin.commandes.exportCsvSuccess'));
-  }, [orders, t]);
+  }, [filteredOrders, t]);
 
   // ─── Send Confirmation Email ──────────────────────────
 
@@ -505,6 +543,150 @@ export default function OrdersPage() {
       setSendingEmail(false);
     }
   }, [selectedOrder, t]);
+
+  // ─── Bulk Selection Helpers ──────────────────────────────
+
+  const selectAllFiltered = useCallback(() => {
+    setSelectedOrderIds(new Set(filteredOrders.map(o => o.id)));
+  }, [filteredOrders]);
+
+  const clearSelection = useCallback(() => {
+    setSelectedOrderIds(new Set());
+    setShowBulkBar(false);
+    setBulkStatus('');
+  }, []);
+
+  // Show/hide bulk bar based on selection
+  useEffect(() => {
+    setShowBulkBar(selectedOrderIds.size > 0);
+  }, [selectedOrderIds]);
+
+  // Clear selection when filters change
+  useEffect(() => {
+    setSelectedOrderIds(new Set());
+  }, [statusFilter, searchValue]);
+
+  // ─── Bulk Status Update ──────────────────────────────
+
+  const handleBulkStatusUpdate = useCallback(async (newStatus: string) => {
+    if (selectedOrderIds.size === 0 || !newStatus) return;
+
+    setBulkUpdating(true);
+    try {
+      const payload = {
+        orders: Array.from(selectedOrderIds).map(orderId => ({
+          orderId,
+          status: newStatus,
+        })),
+      };
+
+      const res = await fetch('/api/admin/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        toast.error(data.error || t('common.updateFailed'));
+        return;
+      }
+
+      const { summary, results } = data;
+
+      if (summary.failed > 0) {
+        const failedOrders = results
+          .filter((r: { success: boolean }) => !r.success)
+          .map((r: { orderNumber?: string; error?: string }) => r.orderNumber || r.error)
+          .join(', ');
+        toast.warning(
+          t('admin.commandes.bulkPartialSuccess', {
+            succeeded: String(summary.succeeded),
+            failed: String(summary.failed),
+          }) || `${summary.succeeded} updated, ${summary.failed} failed: ${failedOrders}`
+        );
+      } else {
+        toast.success(
+          t('admin.commandes.bulkStatusUpdated', { count: String(summary.succeeded) })
+            || `${summary.succeeded} orders updated`
+        );
+      }
+
+      // Refresh orders list
+      await fetchOrders();
+      clearSelection();
+    } catch (err) {
+      console.error('Bulk status update error:', err);
+      toast.error(t('common.networkError'));
+    } finally {
+      setBulkUpdating(false);
+    }
+  }, [selectedOrderIds, t, clearSelection]);
+
+  // ─── Print Filtered Orders List ──────────────────────
+
+  const handlePrintOrdersList = useCallback(() => {
+    if (filteredOrders.length === 0) {
+      toast.error(t('admin.commandes.emptyTitle'));
+      return;
+    }
+
+    const rowsHtml = filteredOrders
+      .map(
+        (o) =>
+          `<tr>
+            <td style="padding:6px 12px;border-bottom:1px solid #e2e8f0;font-family:monospace">#${o.orderNumber}</td>
+            <td style="padding:6px 12px;border-bottom:1px solid #e2e8f0">${new Date(o.createdAt).toLocaleDateString(locale)}</td>
+            <td style="padding:6px 12px;border-bottom:1px solid #e2e8f0">${o.userName || o.shippingName || ''}</td>
+            <td style="padding:6px 12px;border-bottom:1px solid #e2e8f0">${statusLabel(o.status)}</td>
+            <td style="padding:6px 12px;border-bottom:1px solid #e2e8f0;text-align:center">${o.items?.length || 0}</td>
+            <td style="padding:6px 12px;border-bottom:1px solid #e2e8f0;text-align:right;font-family:monospace">${formatCurrency(o.total)}</td>
+          </tr>`
+      )
+      .join('');
+
+    const totalAmount = filteredOrders.reduce((acc, o) => acc + o.total, 0);
+
+    const html = `<!DOCTYPE html>
+<html><head><title>${t('admin.commandes.printOrdersListTitle') || 'Orders List'}</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 900px; margin: 0 auto; padding: 32px; color: #1e293b; }
+  h1 { font-size: 20px; margin-bottom: 4px; }
+  .meta { color: #64748b; font-size: 13px; margin-bottom: 24px; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
+  th { text-align: left; padding: 8px 12px; background: #f8fafc; border-bottom: 2px solid #e2e8f0; font-size: 12px; text-transform: uppercase; color: #64748b; }
+  .summary { background: #f8fafc; padding: 12px; border-radius: 6px; font-size: 14px; display: flex; justify-content: space-between; }
+  @media print { body { padding: 0; } }
+</style></head><body>
+<h1>${t('admin.commandes.printOrdersListTitle') || 'Orders List'}</h1>
+<p class="meta">${t('admin.commandes.printGeneratedOn') || 'Generated on'} ${new Date().toLocaleDateString(locale)} &mdash; ${filteredOrders.length} ${t('admin.commandes.printOrdersCount') || 'orders'}</p>
+<table>
+  <thead><tr>
+    <th>${t('admin.commandes.colOrder')}</th>
+    <th>${t('admin.commandes.colDate')}</th>
+    <th>${t('admin.commandes.colCustomer')}</th>
+    <th>${t('admin.commandes.colStatus')}</th>
+    <th style="text-align:center">${t('admin.commandes.colQty')}</th>
+    <th style="text-align:right">${t('admin.commandes.colTotal')}</th>
+  </tr></thead>
+  <tbody>${rowsHtml}</tbody>
+</table>
+<div class="summary">
+  <span><strong>${filteredOrders.length}</strong> ${t('admin.commandes.printOrdersCount') || 'orders'}</span>
+  <span><strong>${t('admin.commandes.total')}: ${formatCurrency(totalAmount)}</strong></span>
+</div>
+</body></html>`;
+
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(html);
+      printWindow.document.close();
+      printWindow.onload = () => {
+        printWindow.print();
+      };
+    }
+  }, [filteredOrders, t, locale, formatCurrency]);
 
   // ─── Print Delivery Slip ──────────────────────────────
 
@@ -576,20 +758,31 @@ ${selectedOrder.adminNotes ? `<div class="notes"><strong>${t('admin.commandes.pr
   // ─── Ribbon Actions ─────────────────────────────────────────
 
   const ribbonNewOrder = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    // Toggle bulk selection mode: when activated, all filtered orders become selectable
+    if (selectedOrderIds.size > 0) {
+      clearSelection();
+    } else {
+      selectAllFiltered();
+    }
+  }, [selectedOrderIds, clearSelection, selectAllFiltered]);
 
   const ribbonDelete = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    // Cancel selected order via ConfirmDialog
+    if (selectedOrder) {
+      setConfirmCancelOrderId(selectedOrder.id);
+    } else {
+      toast.info(t('admin.commandes.selectOrderFirst') || 'Select an order first');
+    }
+  }, [selectedOrder, t]);
 
   const ribbonPrint = useCallback(() => {
     if (selectedOrder) {
       handlePrintDeliverySlip();
     } else {
-      toast.info(t('common.comingSoon'));
+      // Print list of all filtered orders
+      handlePrintOrdersList();
     }
-  }, [selectedOrder, handlePrintDeliverySlip, t]);
+  }, [selectedOrder, handlePrintDeliverySlip, handlePrintOrdersList]);
 
   const ribbonMarkShipped = useCallback(() => {
     if (selectedOrder) {
@@ -613,35 +806,6 @@ ${selectedOrder.adminNotes ? `<div class="notes"><strong>${t('admin.commandes.pr
   useRibbonAction('markShipped', ribbonMarkShipped);
   useRibbonAction('refund', ribbonRefund);
   useRibbonAction('export', ribbonExport);
-
-  // ─── Filtering ──────────────────────────────────────────────
-
-  const filteredOrders = useMemo(() => {
-    return orders.filter(order => {
-      // Status filter
-      if (statusFilter !== 'all' && order.status !== statusFilter) return false;
-      // Search filter
-      if (searchValue) {
-        const search = searchValue.toLowerCase();
-        if (
-          !order.orderNumber.toLowerCase().includes(search) &&
-          !order.userName?.toLowerCase().includes(search) &&
-          !order.userEmail?.toLowerCase().includes(search)
-        ) {
-          return false;
-        }
-      }
-      return true;
-    });
-  }, [orders, statusFilter, searchValue]);
-
-  const stats = useMemo(() => ({
-    total: orders.length,
-    pending: orders.filter(o => o.status === 'PENDING').length,
-    processing: orders.filter(o => o.status === 'PROCESSING').length,
-    shipped: orders.filter(o => o.status === 'SHIPPED').length,
-    delivered: orders.filter(o => o.status === 'DELIVERED').length,
-  }), [orders]);
 
   // ─── ContentList data ───────────────────────────────────────
 
@@ -716,6 +880,62 @@ ${selectedOrder.adminNotes ? `<div class="notes"><strong>${t('admin.commandes.pr
         </div>
       </div>
 
+      {/* Bulk Action Bar */}
+      {showBulkBar && selectedOrderIds.size > 0 && (
+        <div className="mx-4 lg:mx-6 mb-2 flex-shrink-0">
+          <div className="flex items-center gap-3 bg-sky-50 border border-sky-200 rounded-lg px-4 py-2.5">
+            <div className="flex items-center gap-2">
+              <CheckSquare className="w-4 h-4 text-sky-600" />
+              <span className="text-sm font-medium text-sky-800">
+                {t('admin.commandes.bulkSelected', { count: String(selectedOrderIds.size) })
+                  || `${selectedOrderIds.size} order(s) selected`}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2 ml-auto">
+              <select
+                value={bulkStatus}
+                onChange={(e) => setBulkStatus(e.target.value)}
+                className="h-8 px-2 rounded border border-sky-300 text-xs text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500"
+              >
+                <option value="">{t('admin.commandes.bulkSelectStatus') || 'Change status to...'}</option>
+                {statusOptionValues.map(s => (
+                  <option key={s} value={s}>{statusLabel(s)}</option>
+                ))}
+              </select>
+
+              <Button
+                variant="primary"
+                size="sm"
+                disabled={!bulkStatus || bulkUpdating}
+                onClick={() => handleBulkStatusUpdate(bulkStatus)}
+              >
+                {bulkUpdating
+                  ? (t('admin.commandes.processing'))
+                  : (t('admin.commandes.bulkApply') || 'Apply')}
+              </Button>
+
+              <button
+                type="button"
+                onClick={() => selectAllFiltered()}
+                className="text-xs text-sky-700 hover:text-sky-900 hover:underline px-1"
+              >
+                {t('admin.commandes.bulkSelectAll') || 'Select all'}
+              </button>
+
+              <button
+                type="button"
+                onClick={clearSelection}
+                className="p-1 rounded hover:bg-sky-100 text-sky-600"
+                title={t('admin.commandes.cancel')}
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Main content: list + detail */}
       <div className="flex-1 min-h-0">
         <MobileSplitLayout
@@ -736,6 +956,34 @@ ${selectedOrder.adminNotes ? `<div class="notes"><strong>${t('admin.commandes.pr
               emptyIcon={ShoppingBag}
               emptyTitle={t('admin.commandes.emptyTitle')}
               emptyDescription={t('admin.commandes.emptyDescription')}
+              headerActions={
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (selectedOrderIds.size > 0) {
+                      clearSelection();
+                    } else {
+                      selectAllFiltered();
+                    }
+                  }}
+                  className={`p-1.5 rounded transition-colors ${
+                    selectedOrderIds.size > 0
+                      ? 'text-sky-700 bg-sky-100 hover:bg-sky-200'
+                      : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
+                  }`}
+                  title={
+                    selectedOrderIds.size > 0
+                      ? (t('admin.commandes.bulkClearSelection') || 'Clear selection')
+                      : (t('admin.commandes.bulkSelectAll') || 'Select all')
+                  }
+                >
+                  {selectedOrderIds.size > 0 ? (
+                    <CheckSquare className="w-4 h-4" />
+                  ) : (
+                    <Square className="w-4 h-4" />
+                  )}
+                </button>
+              }
             />
           }
           detail={

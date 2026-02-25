@@ -15,6 +15,8 @@ import {
   History,
   Check,
   X,
+  Bell,
+  BarChart3,
 } from 'lucide-react';
 import { Button } from '@/components/admin/Button';
 import { StatCard } from '@/components/admin/StatCard';
@@ -94,6 +96,8 @@ export default function InventairePage() {
   }>>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [showStockAlerts, setShowStockAlerts] = useState(false);
+  const [showMonthlyStats, setShowMonthlyStats] = useState(false);
 
   // ─── Data fetching ──────────────────────────────────────────
 
@@ -230,7 +234,7 @@ export default function InventairePage() {
       setEditingId(selectedItem.id);
       setEditValue(selectedItem.stockQuantity);
     } else {
-      toast.info(t('common.comingSoon'));
+      toast.info(t('admin.inventory.selectItemFirst') || 'Select an item first');
     }
   }, [selectedItem, t]);
 
@@ -239,25 +243,79 @@ export default function InventairePage() {
       setEditingId(selectedItem.id);
       setEditValue(selectedItem.stockQuantity);
     } else {
-      toast.info(t('common.comingSoon'));
+      toast.info(t('admin.inventory.selectItemFirst') || 'Select an item first');
     }
   }, [selectedItem, t]);
 
   const ribbonMonthlyStats = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    setShowMonthlyStats(true);
+  }, []);
 
   const ribbonRenewalList = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    // Generate CSV of low-stock items that need reordering
+    const lowStockItems = inventory.filter(i => i.stockQuantity <= i.lowStockThreshold);
+    if (lowStockItems.length === 0) {
+      toast.info(t('admin.inventory.noLowStockItems') || 'No items need reordering');
+      return;
+    }
+    const headers = ['Product', 'Format', 'SKU', 'Current Stock', 'Threshold', 'Price', 'Status'];
+    const rows = lowStockItems.map(item => [
+      `"${item.productName.replace(/"/g, '""')}"`,
+      `"${item.formatName.replace(/"/g, '""')}"`,
+      item.sku || '',
+      item.stockQuantity,
+      item.lowStockThreshold,
+      item.price.toFixed(2),
+      item.availability,
+    ].join(','));
+    const csv = [headers.join(','), ...rows].join('\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `reorder-list-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+    toast.success(
+      (t('admin.inventory.renewalListExported') || 'Reorder list exported ({count} items)').replace('{count}', String(lowStockItems.length))
+    );
+  }, [inventory, t]);
 
   const ribbonSubmissions = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    setShowStockAlerts(true);
+  }, []);
 
   const ribbonOrderOnline = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    // Generate a CSV of out-of-stock items to order
+    const outOfStock = inventory.filter(i => i.stockQuantity === 0);
+    if (outOfStock.length === 0) {
+      toast.info(t('admin.inventory.noOutOfStockItems') || 'No out-of-stock items');
+      return;
+    }
+    const headers = ['Product', 'Format', 'SKU', 'Price', 'Suggested Order Qty'];
+    const rows = outOfStock.map(item => [
+      `"${item.productName.replace(/"/g, '""')}"`,
+      `"${item.formatName.replace(/"/g, '""')}"`,
+      item.sku || '',
+      item.price.toFixed(2),
+      Math.max(item.lowStockThreshold * 2, 10), // Suggest 2x threshold or min 10
+    ].join(','));
+    const csv = [headers.join(','), ...rows].join('\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `purchase-order-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+    toast.success(
+      (t('admin.inventory.purchaseOrderExported') || 'Purchase order exported ({count} items)').replace('{count}', String(outOfStock.length))
+    );
+  }, [inventory, t]);
 
   const ribbonExport = useCallback(() => {
     handleExportInventory();
@@ -349,6 +407,28 @@ export default function InventairePage() {
             <p className="text-sm text-slate-500 mt-0.5">{t('admin.inventory.subtitle')}</p>
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              icon={BarChart3}
+              size="sm"
+              onClick={() => setShowMonthlyStats(true)}
+            >
+              {t('admin.inventory.statsBtn') || 'Stats'}
+            </Button>
+            <Button
+              variant="ghost"
+              icon={Bell}
+              size="sm"
+              onClick={() => setShowStockAlerts(true)}
+              className={stats.outOfStock + stats.lowStock > 0 ? 'text-amber-600' : ''}
+            >
+              {t('admin.inventory.alertsBtn') || 'Alerts'}
+              {(stats.outOfStock + stats.lowStock > 0) && (
+                <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold bg-red-500 text-white rounded-full">
+                  {stats.outOfStock + stats.lowStock}
+                </span>
+              )}
+            </Button>
             <label className="cursor-pointer inline-block">
               <span className="inline-flex items-center justify-center font-medium rounded-lg border transition-colors duration-150 bg-white text-slate-700 hover:bg-slate-50 active:bg-slate-100 border-slate-300 shadow-sm h-8 px-3 text-xs gap-1.5">
                 <Upload className="w-4 h-4" />
@@ -656,6 +736,162 @@ export default function InventairePage() {
             })}
           </div>
         )}
+      </Modal>
+
+      {/* ─── STOCK ALERTS MODAL ──────────────────────────────────── */}
+      <Modal
+        isOpen={showStockAlerts}
+        onClose={() => setShowStockAlerts(false)}
+        title={t('admin.inventory.stockAlertsTitle') || 'Stock Alerts'}
+        subtitle={t('admin.inventory.stockAlertsSubtitle') || 'Items requiring attention'}
+        size="lg"
+      >
+        {(() => {
+          const outOfStockItems = inventory.filter(i => i.stockQuantity === 0);
+          const lowStockItems = inventory.filter(i => i.stockQuantity > 0 && i.stockQuantity <= i.lowStockThreshold);
+          return (
+            <div className="space-y-4">
+              {/* Out of stock */}
+              <div>
+                <h4 className="text-sm font-semibold text-red-700 flex items-center gap-2 mb-2">
+                  <PackageX className="w-4 h-4" />
+                  {t('admin.inventory.outOfStock') || 'Out of Stock'} ({outOfStockItems.length})
+                </h4>
+                {outOfStockItems.length === 0 ? (
+                  <p className="text-sm text-slate-400 italic">{t('admin.inventory.noOutOfStockItems') || 'No out-of-stock items'}</p>
+                ) : (
+                  <div className="border border-red-200 rounded-lg overflow-hidden">
+                    <table className="w-full text-sm">
+                      <thead className="bg-red-50">
+                        <tr>
+                          <th className="px-3 py-2 text-start text-xs font-medium text-red-600">{t('admin.inventory.colProduct')}</th>
+                          <th className="px-3 py-2 text-start text-xs font-medium text-red-600">Format</th>
+                          <th className="px-3 py-2 text-start text-xs font-medium text-red-600">{t('admin.inventory.colSku')}</th>
+                          <th className="px-3 py-2 text-end text-xs font-medium text-red-600">{t('admin.inventory.colPrice')}</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-red-100">
+                        {outOfStockItems.map(item => (
+                          <tr key={item.id} className="hover:bg-red-50/50">
+                            <td className="px-3 py-2 text-slate-900">{item.productName}</td>
+                            <td className="px-3 py-2 text-slate-600">{item.formatName}</td>
+                            <td className="px-3 py-2 text-slate-500">{item.sku || '-'}</td>
+                            <td className="px-3 py-2 text-end text-slate-700">{formatCurrency(item.price)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+
+              {/* Low stock */}
+              <div>
+                <h4 className="text-sm font-semibold text-amber-700 flex items-center gap-2 mb-2">
+                  <AlertTriangle className="w-4 h-4" />
+                  {t('admin.inventory.lowStock') || 'Low Stock'} ({lowStockItems.length})
+                </h4>
+                {lowStockItems.length === 0 ? (
+                  <p className="text-sm text-slate-400 italic">{t('admin.inventory.noLowStockItems') || 'No low-stock items'}</p>
+                ) : (
+                  <div className="border border-amber-200 rounded-lg overflow-hidden">
+                    <table className="w-full text-sm">
+                      <thead className="bg-amber-50">
+                        <tr>
+                          <th className="px-3 py-2 text-start text-xs font-medium text-amber-600">{t('admin.inventory.colProduct')}</th>
+                          <th className="px-3 py-2 text-start text-xs font-medium text-amber-600">Format</th>
+                          <th className="px-3 py-2 text-center text-xs font-medium text-amber-600">{t('admin.inventory.colStock')}</th>
+                          <th className="px-3 py-2 text-center text-xs font-medium text-amber-600">{t('admin.inventory.colThreshold')}</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-amber-100">
+                        {lowStockItems.map(item => (
+                          <tr key={item.id} className="hover:bg-amber-50/50">
+                            <td className="px-3 py-2 text-slate-900">{item.productName}</td>
+                            <td className="px-3 py-2 text-slate-600">{item.formatName}</td>
+                            <td className="px-3 py-2 text-center font-semibold text-amber-700">{item.stockQuantity}</td>
+                            <td className="px-3 py-2 text-center text-slate-500">{item.lowStockThreshold}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })()}
+      </Modal>
+
+      {/* ─── MONTHLY STATS MODAL ──────────────────────────────────── */}
+      <Modal
+        isOpen={showMonthlyStats}
+        onClose={() => setShowMonthlyStats(false)}
+        title={t('admin.inventory.monthlyStatsTitle') || 'Inventory Summary'}
+        subtitle={t('admin.inventory.monthlyStatsSubtitle') || 'Current stock overview'}
+        size="md"
+      >
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-slate-50 rounded-lg p-4 text-center">
+              <p className="text-2xl font-bold text-slate-900">{stats.total}</p>
+              <p className="text-xs text-slate-500 mt-1">{t('admin.inventory.totalProducts') || 'Total Products'}</p>
+            </div>
+            <div className="bg-emerald-50 rounded-lg p-4 text-center">
+              <p className="text-2xl font-bold text-emerald-700">{stats.inStock}</p>
+              <p className="text-xs text-emerald-600 mt-1">{t('admin.inventory.inStock') || 'In Stock'}</p>
+            </div>
+            <div className="bg-amber-50 rounded-lg p-4 text-center">
+              <p className="text-2xl font-bold text-amber-700">{stats.lowStock}</p>
+              <p className="text-xs text-amber-600 mt-1">{t('admin.inventory.lowStock') || 'Low Stock'}</p>
+            </div>
+            <div className="bg-red-50 rounded-lg p-4 text-center">
+              <p className="text-2xl font-bold text-red-700">{stats.outOfStock}</p>
+              <p className="text-xs text-red-600 mt-1">{t('admin.inventory.outOfStock') || 'Out of Stock'}</p>
+            </div>
+          </div>
+          <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-emerald-700">{t('admin.inventory.stockValue') || 'Total Stock Value'}</p>
+                <p className="text-2xl font-bold text-emerald-800">{formatCurrency(stats.totalValue)}</p>
+              </div>
+              <DollarSign className="w-8 h-8 text-emerald-400" />
+            </div>
+          </div>
+          {/* Stock health indicator */}
+          <div className="bg-slate-50 rounded-lg p-4">
+            <h4 className="text-sm font-semibold text-slate-700 mb-2">
+              {t('admin.inventory.stockHealth') || 'Stock Health'}
+            </h4>
+            <div className="w-full bg-slate-200 rounded-full h-3 overflow-hidden flex">
+              {stats.total > 0 && (
+                <>
+                  <div
+                    className="bg-emerald-500 h-full"
+                    style={{ width: `${(stats.inStock / stats.total) * 100}%` }}
+                    title={`${t('admin.inventory.inStock') || 'In Stock'}: ${stats.inStock}`}
+                  />
+                  <div
+                    className="bg-amber-500 h-full"
+                    style={{ width: `${(stats.lowStock / stats.total) * 100}%` }}
+                    title={`${t('admin.inventory.lowStock') || 'Low Stock'}: ${stats.lowStock}`}
+                  />
+                  <div
+                    className="bg-red-500 h-full"
+                    style={{ width: `${(stats.outOfStock / stats.total) * 100}%` }}
+                    title={`${t('admin.inventory.outOfStock') || 'Out of Stock'}: ${stats.outOfStock}`}
+                  />
+                </>
+              )}
+            </div>
+            <div className="flex justify-between mt-2 text-xs text-slate-500">
+              <span className="flex items-center gap-1"><span className="w-2 h-2 bg-emerald-500 rounded-full inline-block" /> {t('admin.inventory.inStock') || 'In Stock'}</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 bg-amber-500 rounded-full inline-block" /> {t('admin.inventory.lowStock') || 'Low Stock'}</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 bg-red-500 rounded-full inline-block" /> {t('admin.inventory.outOfStock') || 'Out of Stock'}</span>
+            </div>
+          </div>
+        </div>
       </Modal>
     </div>
   );

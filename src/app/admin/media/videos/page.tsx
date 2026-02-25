@@ -3,14 +3,14 @@
 import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { useI18n } from '@/i18n/client';
-// FIX: F32 - TODO: Implement edit modal and delete button using Edit2/Trash2 icons
-//   connected to PATCH/DELETE /api/admin/videos/[id]
 import {
-  Video, Plus, Search, Eye, EyeOff, Star,
-  Loader2, ChevronLeft, ChevronRight, ExternalLink,
+  Video, Plus, Search, Eye, EyeOff, Star, Trash2, Play,
+  Loader2, ChevronLeft, ChevronRight, ExternalLink, X,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { fetchWithCSRF } from '@/lib/csrf';
 
 interface VideoItem {
   id: string;
@@ -55,6 +55,10 @@ export default function MediaVideosPage() {
     duration: '', category: '', tags: '', instructor: '',
     isFeatured: false, isPublished: false,
   });
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [playingVideo, setPlayingVideo] = useState<VideoItem | null>(null);
 
   const loadVideos = useCallback(async () => {
     setLoading(true);
@@ -132,13 +136,79 @@ export default function MediaVideosPage() {
     }
   };
 
+  // ---- Selection handling ----
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  // ---- Delete selected videos ----
+  const handleDeleteSelected = useCallback(async () => {
+    if (selectedIds.size === 0) return;
+    setDeleting(true);
+    let successCount = 0;
+    let failCount = 0;
+    for (const id of selectedIds) {
+      try {
+        const res = await fetchWithCSRF(`/api/admin/videos/${id}`, { method: 'DELETE' });
+        if (res.ok) successCount++;
+        else failCount++;
+      } catch {
+        failCount++;
+      }
+    }
+    setDeleting(false);
+    setShowDeleteConfirm(false);
+    setSelectedIds(new Set());
+    if (successCount > 0) {
+      toast.success(`${successCount} ${t('admin.media.videosTitle') || 'video(s)'} ${t('common.deleted') || 'deleted'}`);
+      loadVideos();
+    }
+    if (failCount > 0) {
+      toast.error(`${failCount} ${t('admin.media.deleteFailed') || 'failed to delete'}`);
+    }
+  }, [selectedIds, t, loadVideos]);
+
+  // ---- Export CSV ----
+  const handleExportCsv = useCallback(() => {
+    if (videos.length === 0) {
+      toast.info(t('admin.media.noDataToExport') || 'No videos to export');
+      return;
+    }
+    const BOM = '\uFEFF';
+    const headers = ['ID', 'Title', 'Slug', 'Category', 'Duration', 'Instructor', 'Views', 'Featured', 'Published', 'Video URL', 'Created At'];
+    const rows = videos.map(v => [
+      v.id, v.title, v.slug, v.category || '', v.duration || '',
+      v.instructor || '', String(v.views), v.isFeatured ? 'Yes' : 'No',
+      v.isPublished ? 'Yes' : 'No', v.videoUrl || '',
+      new Date(v.createdAt).toISOString(),
+    ]);
+    const csv = BOM + [headers, ...rows]
+      .map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(','))
+      .join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `videos-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(t('admin.media.exportSuccess') || 'CSV exported');
+  }, [videos, t]);
+
   // ---- Ribbon action handlers (media.management) ----
   const handleUploadRibbon = useCallback(() => { setShowForm(true); }, []);
-  const handleDeleteRibbon = useCallback(() => toast.info(t('common.comingSoon')), [t]);
-  const handleRenameRibbon = useCallback(() => toast.info(t('common.comingSoon')), [t]);
-  const handleOrganizeRibbon = useCallback(() => toast.info(t('common.comingSoon')), [t]);
-  const handleOptimizeRibbon = useCallback(() => toast.info(t('common.comingSoon')), [t]);
-  const handleExportRibbon = useCallback(() => toast.info(t('common.comingSoon')), [t]);
+  const handleDeleteRibbon = useCallback(() => {
+    if (selectedIds.size === 0) { toast.info(t('admin.media.selectToDelete') || 'Select videos to delete'); return; }
+    setShowDeleteConfirm(true);
+  }, [selectedIds, t]);
+  const handleRenameRibbon = useCallback(() => toast.info(t('admin.media.renameHint') || 'To rename, click a video and edit its title via the form above.'), [t]);
+  const handleOrganizeRibbon = useCallback(() => toast.info(t('admin.media.organizeHint') || 'Use the category field to organize videos.'), [t]);
+  const handleOptimizeRibbon = useCallback(() => toast.info(t('admin.media.optimizeHint') || 'Video optimization requires server-side processing. Coming soon.'), [t]);
+  const handleExportRibbon = useCallback(() => { handleExportCsv(); }, [handleExportCsv]);
 
   useRibbonAction('upload', handleUploadRibbon);
   useRibbonAction('delete', handleDeleteRibbon);
@@ -188,6 +258,19 @@ export default function MediaVideosPage() {
         </form>
       )}
 
+      {/* Selection toolbar */}
+      {selectedIds.size > 0 && (
+        <div className="flex items-center gap-3 p-2 bg-sky-50 border border-sky-200 rounded-lg text-sm">
+          <span className="text-sky-700 font-medium">{selectedIds.size} {t('common.selected') || 'selected'}</span>
+          <button onClick={() => setShowDeleteConfirm(true)} disabled={deleting} className="flex items-center gap-1 px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 text-xs">
+            <Trash2 className="w-3 h-3" /> {t('common.delete') || 'Delete'}
+          </button>
+          <button onClick={() => setSelectedIds(new Set())} className="ml-auto text-slate-500 hover:text-slate-700 text-xs">
+            {t('common.clearSelection') || 'Clear'}
+          </button>
+        </div>
+      )}
+
       {/* Search & filters */}
       <div className="flex items-center gap-3">
         <div className="relative flex-1">
@@ -219,7 +302,14 @@ export default function MediaVideosPage() {
       ) : (
         <div className="space-y-2">
           {videos.map(v => (
-            <div key={v.id} className="flex items-center gap-3 p-3 bg-white rounded-lg border border-slate-200 hover:border-slate-300 transition-colors">
+            <div key={v.id} className={`flex items-center gap-3 p-3 bg-white rounded-lg border transition-colors ${selectedIds.has(v.id) ? 'border-sky-400 ring-2 ring-sky-200' : 'border-slate-200 hover:border-slate-300'}`}>
+              <input
+                type="checkbox"
+                checked={selectedIds.has(v.id)}
+                onChange={() => toggleSelect(v.id)}
+                className="rounded border-slate-300 flex-shrink-0"
+                aria-label={`Select ${v.title}`}
+              />
               {v.thumbnailUrl ? (
                 <Image src={v.thumbnailUrl} alt={v.title} className="w-20 h-14 rounded object-cover bg-slate-100" width={80} height={56} unoptimized />
               ) : (
@@ -239,9 +329,14 @@ export default function MediaVideosPage() {
                 {v.isFeatured && <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />}
                 {v.isPublished ? <Eye className="w-4 h-4 text-green-500" /> : <EyeOff className="w-4 h-4 text-slate-300" />}
                 {v.videoUrl && (
-                  <a href={v.videoUrl} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-sky-600" aria-label="Ouvrir la video dans un nouvel onglet">
-                    <ExternalLink className="w-4 h-4" />
-                  </a>
+                  <>
+                    <button onClick={() => setPlayingVideo(v)} className="text-slate-400 hover:text-sky-600" aria-label="Play video">
+                      <Play className="w-4 h-4" />
+                    </button>
+                    <a href={v.videoUrl} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-sky-600" aria-label="Ouvrir la video dans un nouvel onglet">
+                      <ExternalLink className="w-4 h-4" />
+                    </a>
+                  </>
                 )}
               </div>
             </div>
@@ -262,6 +357,51 @@ export default function MediaVideosPage() {
           </button>
         </div>
       )}
+
+      {/* Video player modal */}
+      {playingVideo && playingVideo.videoUrl && (
+        <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-6" onClick={() => setPlayingVideo(null)}>
+          <div className="relative max-w-4xl w-full bg-black rounded-xl overflow-hidden" onClick={e => e.stopPropagation()}>
+            <button onClick={() => setPlayingVideo(null)} className="absolute top-3 right-3 p-1.5 bg-white/80 rounded-full hover:bg-white z-10" aria-label="Close video">
+              <X className="w-5 h-5" />
+            </button>
+            {playingVideo.videoUrl.includes('youtube.com') || playingVideo.videoUrl.includes('youtu.be') ? (
+              <iframe
+                src={playingVideo.videoUrl.replace('watch?v=', 'embed/').replace('youtu.be/', 'www.youtube.com/embed/') + '?autoplay=1'}
+                className="w-full aspect-video"
+                allow="autoplay; encrypted-media"
+                allowFullScreen
+                title={playingVideo.title}
+              />
+            ) : playingVideo.videoUrl.includes('vimeo.com') ? (
+              <iframe
+                src={`https://player.vimeo.com/video/${playingVideo.videoUrl.split('/').pop()}?autoplay=1`}
+                className="w-full aspect-video"
+                allow="autoplay; encrypted-media"
+                allowFullScreen
+                title={playingVideo.title}
+              />
+            ) : (
+              <video src={playingVideo.videoUrl} controls autoPlay className="w-full aspect-video" />
+            )}
+            <div className="p-4 bg-slate-900 text-white">
+              <p className="font-medium">{playingVideo.title}</p>
+              <p className="text-sm text-slate-400">{playingVideo.duration || ''} {playingVideo.instructor ? `- ${playingVideo.instructor}` : ''}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete confirmation dialog */}
+      <ConfirmDialog
+        isOpen={showDeleteConfirm}
+        title={t('admin.media.deleteConfirmTitle') || 'Delete Videos'}
+        message={`${t('admin.media.deleteConfirmMessage') || 'Are you sure you want to delete'} ${selectedIds.size} ${t('admin.media.videosTitle') || 'video(s)'}? ${t('admin.media.deleteIrreversible') || 'This action cannot be undone.'}`}
+        confirmLabel={deleting ? '...' : (t('common.delete') || 'Delete')}
+        onConfirm={handleDeleteSelected}
+        onCancel={() => setShowDeleteConfirm(false)}
+        variant="danger"
+      />
     </div>
   );
 }

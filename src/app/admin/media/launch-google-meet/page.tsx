@@ -9,11 +9,11 @@ import { useI18n } from '@/i18n/client';
 export default function LaunchGoogleMeetPage() {
   const { t } = useI18n();
 
-  // ---- Ribbon action handlers (media section-level: upload, delete, play, export) ----
-  const handleUploadRibbon = useCallback(() => toast.info(t('common.comingSoon')), [t]);
-  const handleDeleteRibbon = useCallback(() => toast.info(t('common.comingSoon')), [t]);
-  const handlePlayRibbon = useCallback(() => toast.info(t('common.comingSoon')), [t]);
-  const handleExportRibbon = useCallback(() => toast.info(t('common.comingSoon')), [t]);
+  // ---- Ribbon action handlers (media section-level: contextual for platform launcher) ----
+  const handleUploadRibbon = useCallback(() => toast.info(t('admin.media.platformUploadHint') || 'File sharing is available within Google Meet.'), [t]);
+  const handleDeleteRibbon = useCallback(() => toast.info(t('admin.media.platformDeleteHint') || 'Meeting history can be managed in Google Calendar.'), [t]);
+  const handlePlayRibbon = useCallback(() => toast.info(t('admin.media.platformPlayHint') || 'Recordings are available in Google Drive after the meeting.'), [t]);
+  const handleExportRibbon = useCallback(() => toast.info(t('admin.media.platformExportHint') || 'Export meeting data from Google Workspace.'), [t]);
 
   useRibbonAction('upload', handleUploadRibbon);
   useRibbonAction('delete', handleDeleteRibbon);

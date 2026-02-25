@@ -15,6 +15,9 @@ import {
   ChevronRight,
   Trash2,
   AlertTriangle, // BUG-057: Icon for orphan warning / fix button
+  ArrowUp,
+  ArrowDown,
+  FileDown,
 } from 'lucide-react';
 import {
   PageHeader,
@@ -65,6 +68,8 @@ export default function CategoriesPage() {
   const [error, setError] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [reorderMode, setReorderMode] = useState(false);
+  const [reordering, setReordering] = useState<string | null>(null);
 
   // Fetch categories
   useEffect(() => {
@@ -277,24 +282,104 @@ export default function CategoriesPage() {
   }, [resetForm]);
 
   const handleNewSubcategory = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    // If there are parent categories, default to the first one; otherwise ask user to create a parent first
+    if (parentOptions.length === 0) {
+      toast.info(t('admin.categories.createParentFirst') || 'Create a parent category first');
+      return;
+    }
+    resetForm();
+    setFormData(prev => ({ ...prev, parentId: parentOptions[0].id }));
+    setShowForm(true);
+  }, [parentOptions, resetForm, t]);
 
   const handleRibbonDelete = useCallback(() => {
-    toast.info(t('common.comingSoon'));
+    toast.info(t('admin.categories.selectToDelete') || 'Use the delete button in each row to delete a category');
   }, [t]);
 
   const handleVisitStats = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    // Show a quick summary of category stats
+    const totalProducts = categories.reduce((sum, c) => sum + c._count.products, 0);
+    const activeCount = categories.filter(c => c.isActive).length;
+    const parentCount = categories.filter(c => !c.parentId).length;
+    const childCount = categories.filter(c => c.parentId).length;
+    toast.info(
+      `${categories.length} ${t('admin.categories.title') || 'categories'}: ${parentCount} ${t('admin.categories.parents') || 'parents'}, ${childCount} ${t('admin.categories.children') || 'children'}, ${activeCount} ${t('admin.categories.colActive') || 'active'}, ${totalProducts} ${t('admin.categories.colProducts') || 'products'}`
+    );
+  }, [categories, t]);
 
   const handleReorganize = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    setReorderMode(prev => !prev);
+    if (!reorderMode) {
+      toast.info(t('admin.categories.reorderModeOn') || 'Use the arrows to reorder categories');
+    } else {
+      toast.success(t('admin.categories.reorderModeSaved') || 'Reorder mode off');
+    }
+  }, [reorderMode, t]);
+
+  const handleMoveCategory = useCallback(async (catId: string, direction: 'up' | 'down') => {
+    // Find the category and its siblings (same parentId group)
+    const cat = categories.find(c => c.id === catId);
+    if (!cat) return;
+
+    const siblings = categories
+      .filter(c => c.parentId === cat.parentId)
+      .sort((a, b) => a.sortOrder - b.sortOrder);
+
+    const idx = siblings.findIndex(c => c.id === catId);
+    if (idx < 0) return;
+    if (direction === 'up' && idx === 0) return;
+    if (direction === 'down' && idx === siblings.length - 1) return;
+
+    const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
+    const swapCat = siblings[swapIdx];
+
+    setReordering(catId);
+    try {
+      // Swap sort orders
+      await Promise.all([
+        fetch(`/api/categories/${catId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sortOrder: swapCat.sortOrder }),
+        }),
+        fetch(`/api/categories/${swapCat.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sortOrder: cat.sortOrder }),
+        }),
+      ]);
+      await fetchCategories();
+    } catch (err) {
+      console.error('Error reordering:', err);
+      toast.error(t('common.networkError'));
+    }
+    setReordering(null);
+  }, [categories, t]);
 
   const handleExport = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    // Generate CSV of categories in-browser
+    const headers = ['ID', 'Name', 'Slug', 'Parent', 'Sort Order', 'Active', 'Products'];
+    const rows = treeCategories.map(cat => [
+      cat.id,
+      `"${cat.name.replace(/"/g, '""')}"`,
+      cat.slug,
+      cat.parentId ? `"${(categories.find(c => c.id === cat.parentId)?.name || '').replace(/"/g, '""')}"` : '',
+      cat.sortOrder,
+      cat.isActive ? 'Yes' : 'No',
+      cat._count.products,
+    ].join(','));
+    const csv = [headers.join(','), ...rows].join('\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `categories-export-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+    toast.success(t('admin.categories.exportSuccess') || 'Categories exported');
+  }, [treeCategories, categories, t]);
 
   useRibbonAction('newCategory', handleNewCategory);
   useRibbonAction('newSubcategory', handleNewSubcategory);
@@ -353,9 +438,31 @@ export default function CategoriesPage() {
       key: 'sortOrder',
       header: t('admin.categories.colOrder'),
       align: 'center',
-      width: '80px',
+      width: reorderMode ? '140px' : '80px',
       render: (cat) => (
-        <span className="text-slate-500">{cat.sortOrder}</span>
+        <div className="flex items-center justify-center gap-1">
+          {reorderMode && (
+            <button
+              onClick={(e) => { e.stopPropagation(); handleMoveCategory(cat.id, 'up'); }}
+              disabled={reordering === cat.id}
+              className="p-1 rounded hover:bg-slate-100 text-slate-500 hover:text-slate-700 transition-colors disabled:opacity-50"
+              title={t('admin.categories.moveUp') || 'Move up'}
+            >
+              <ArrowUp className="w-3.5 h-3.5" />
+            </button>
+          )}
+          <span className="text-slate-500 min-w-[2rem] text-center">{cat.sortOrder}</span>
+          {reorderMode && (
+            <button
+              onClick={(e) => { e.stopPropagation(); handleMoveCategory(cat.id, 'down'); }}
+              disabled={reordering === cat.id}
+              className="p-1 rounded hover:bg-slate-100 text-slate-500 hover:text-slate-700 transition-colors disabled:opacity-50"
+              title={t('admin.categories.moveDown') || 'Move down'}
+            >
+              <ArrowDown className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
       ),
     },
     {
@@ -428,7 +535,7 @@ export default function CategoriesPage() {
         </div>
       ),
     },
-  ], [locale, treeCategories, t, toggleActive, startEdit, startCreateChild, fixOrphan]);
+  ], [locale, treeCategories, t, toggleActive, startEdit, startCreateChild, fixOrphan, reorderMode, reordering, handleMoveCategory]);
 
   return (
     <>
@@ -439,6 +546,24 @@ export default function CategoriesPage() {
         backLabel={t('admin.categories.backToProducts')}
         actions={
           <div className="flex gap-2">
+            <Button
+              variant="ghost"
+              icon={FileDown}
+              onClick={handleExport}
+              size="sm"
+            >
+              {t('admin.categories.exportBtn') || 'Export'}
+            </Button>
+            <Button
+              variant={reorderMode ? 'primary' : 'secondary'}
+              icon={reorderMode ? Check : ArrowUp}
+              onClick={handleReorganize}
+              size="sm"
+            >
+              {reorderMode
+                ? (t('admin.categories.reorderDone') || 'Done')
+                : (t('admin.categories.reorder') || 'Reorder')}
+            </Button>
             <Button
               variant="secondary"
               icon={Plus}

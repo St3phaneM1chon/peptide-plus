@@ -90,7 +90,17 @@ export default function MediaYouTubePage() {
 
   const onViewLogs = useCallback(() => { router.push('/admin/logs?filter=youtube'); }, [router]);
   const onDocumentation = useCallback(() => { window.open('https://developers.google.com/youtube/v3', '_blank'); }, []);
-  const onExport = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const onExport = useCallback(() => {
+    const config = { platform: 'YouTube', enabled, channelId, apiKey: apiKey ? '***' : '', hasClientSecret, publicLink, webhookUrl, exportedAt: new Date().toISOString() };
+    const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `youtube-config-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(t('admin.media.exportSuccess') || 'Configuration exported');
+  }, [enabled, channelId, apiKey, hasClientSecret, publicLink, webhookUrl, t]);
 
   useRibbonAction('configure', onConfigure);
   useRibbonAction('testConnection', onTestConnection);
@@ -100,12 +110,12 @@ export default function MediaYouTubePage() {
   useRibbonAction('export', onExport);
 
   // --- media.ads ribbon actions ---
-  useRibbonAction('newAdCampaign', useCallback(() => { toast.info(t('common.comingSoon')); }, [t]));
-  useRibbonAction('delete', useCallback(() => { toast.info(t('common.comingSoon')); }, [t]));
-  useRibbonAction('pause', useCallback(() => { toast.info(t('common.comingSoon')); }, [t]));
-  useRibbonAction('resume', useCallback(() => { toast.info(t('common.comingSoon')); }, [t]));
-  useRibbonAction('modifyBudget', useCallback(() => { toast.info(t('common.comingSoon')); }, [t]));
-  useRibbonAction('performanceStats', useCallback(() => { toast.info(t('common.comingSoon')); }, [t]));
+  useRibbonAction('newAdCampaign', useCallback(() => { toast.info(t('admin.media.adCampaignHint') || 'Create ad campaigns in YouTube Studio or Google Ads console.'); }, [t]));
+  useRibbonAction('delete', useCallback(() => { toast.info(t('admin.media.adDeleteHint') || 'Manage and delete campaigns in the platform dashboard.'); }, [t]));
+  useRibbonAction('pause', useCallback(() => { toast.info(t('admin.media.adPauseHint') || 'Pause campaigns directly in YouTube Studio or Google Ads.'); }, [t]));
+  useRibbonAction('resume', useCallback(() => { toast.info(t('admin.media.adResumeHint') || 'Resume paused campaigns in the platform dashboard.'); }, [t]));
+  useRibbonAction('modifyBudget', useCallback(() => { toast.info(t('admin.media.adBudgetHint') || 'Adjust budgets in Google Ads console.'); }, [t]));
+  useRibbonAction('performanceStats', useCallback(() => { toast.info(t('admin.media.adStatsHint') || 'View analytics in YouTube Studio or Google Ads.'); }, [t]));
 
   if (loading) {
     return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500" /></div>;

@@ -362,7 +362,7 @@ export default function NewsletterPage() {
 
   const onSendNow = useCallback(() => {
     if (!selectedCampaign || selectedCampaign.status !== 'DRAFT') {
-      toast.info(t('common.comingSoon'));
+      toast.info(t('admin.newsletter.selectDraftToSend') || 'Select a draft campaign to send');
       return;
     }
     // UX FIX: Replaced native confirm() with ConfirmDialog
@@ -392,12 +392,27 @@ export default function NewsletterPage() {
   }, [selectedCampaign, t, fetchData]);
 
   const onPreview = useCallback(() => {
-    toast.info(t('common.comingSoon'));
-  }, [t]);
+    if (selectedCampaign) {
+      // Open a preview window with the campaign content
+      const rawContent = selectedCampaign.content || '';
+      const wrapper = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${t('admin.newsletter.preview') || 'Preview'}: ${selectedCampaign.subject}</title><style>body{margin:20px;font-family:-apple-system,BlinkMacSystemFont,sans-serif;max-width:600px;margin:20px auto;line-height:1.6;color:#333;}</style></head><body><h1 style="border-bottom:1px solid #ddd;padding-bottom:8px;">${selectedCampaign.subject}</h1><div style="white-space:pre-wrap;">${rawContent}</div></body></html>`;
+      const blob = new Blob([wrapper], { type: 'text/html' });
+      const blobUrl = URL.createObjectURL(blob);
+      const preview = window.open('', '_blank');
+      if (preview) {
+        preview.document.write(`<!DOCTYPE html><html><head><title>${t('admin.newsletter.preview') || 'Preview'}</title></head><body style="margin:0;">
+          <iframe sandbox="allow-same-origin" style="width:100%;height:100vh;border:none;" src="${blobUrl}"></iframe>
+        </body></html>`);
+        preview.document.close();
+      }
+    } else {
+      toast.info(t('admin.newsletter.selectCampaignFirst') || 'Select a campaign to preview');
+    }
+  }, [selectedCampaign, t]);
 
   const onOpenClickStats = useCallback(() => {
     if (!selectedCampaign || selectedCampaign.status !== 'SENT') {
-      toast.info(t('common.comingSoon'));
+      toast.info(t('admin.newsletter.selectSentForStats') || 'Select a sent campaign to view statistics');
       return;
     }
     setStatsLoading(true);

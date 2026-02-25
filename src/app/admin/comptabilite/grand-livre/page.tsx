@@ -155,10 +155,53 @@ export default function GrandLivrePage() {
 
   // -- Ribbon actions --
   const handleSearch = useCallback(() => { /* search is already live via searchTerm state */ }, []);
-  const handleFilterPeriod = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleExportPdf = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleFilterPeriod = useCallback(() => {
+    // Set period to current month
+    const now = new Date();
+    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    setDateFrom(firstDay.toISOString().split('T')[0]);
+    setDateTo(lastDay.toISOString().split('T')[0]);
+    toast.success(t('admin.generalLedger.periodFiltered') || 'Periode filtree au mois courant');
+  }, [t]);
+  const handleExportPdf = useCallback(() => {
+    if (filteredTransactions.length === 0) { toast.info(t('admin.generalLedger.noDataToExport') || 'Aucune donnee a exporter'); return; }
+    const accountLabel = currentAccount ? `${currentAccount.code} - ${currentAccount.name}` : selectedAccount;
+    const headers = ['Date', 'Ecriture', 'Description', 'Reference', 'Debit', 'Credit', 'Solde'];
+    const rows = filteredTransactions.map(tr => [
+      formatDate(tr.date),
+      tr.journalEntry,
+      `"${tr.description.replace(/"/g, '""')}"`,
+      tr.reference || '',
+      tr.debit > 0 ? tr.debit.toFixed(2) : '',
+      tr.credit > 0 ? tr.credit.toFixed(2) : '',
+      tr.balance.toFixed(2),
+    ]);
+    const csv = [
+      `Grand Livre - ${accountLabel}`,
+      `Periode: ${dateFrom} a ${dateTo}`,
+      '',
+      headers.join(','),
+      ...rows.map(r => r.join(',')),
+      '',
+      `Total,,,,${totalDebit.toFixed(2)},${totalCredit.toFixed(2)},${(totalDebit - totalCredit).toFixed(2)}`,
+    ].join('\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `grand-livre-${selectedAccount}-${dateFrom}-${dateTo}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success(t('admin.generalLedger.exportSuccess') || 'Export CSV telecharge');
+  }, [filteredTransactions, currentAccount, selectedAccount, dateFrom, dateTo, totalDebit, totalCredit, formatDate, t]);
   const handlePrint = useCallback(() => { window.print(); }, []);
-  const handleNewAccount = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleNewAccount = useCallback(() => {
+    // Navigate to chart of accounts page to create a new account
+    window.location.href = '/admin/comptabilite/plan-comptable';
+  }, []);
 
   useRibbonAction('search', handleSearch);
   useRibbonAction('filterPeriod', handleFilterPeriod);
@@ -197,8 +240,8 @@ export default function GrandLivrePage() {
         theme={theme}
         actions={
           <>
-            <Button variant="secondary" icon={Printer}>{t('admin.generalLedger.print')}</Button>
-            <Button variant="primary" icon={Download} className={`${theme.btnPrimary} border-transparent text-white`}>{t('admin.generalLedger.exportPDF')}</Button>
+            <Button variant="secondary" icon={Printer} onClick={handlePrint}>{t('admin.generalLedger.print')}</Button>
+            <Button variant="primary" icon={Download} className={`${theme.btnPrimary} border-transparent text-white`} onClick={handleExportPdf}>{t('admin.generalLedger.exportPDF')}</Button>
           </>
         }
       />

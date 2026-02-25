@@ -416,12 +416,30 @@ export default function EcrituresPage() {
         </Button>
       )}
       {selectedEntry.status === 'POSTED' && (
-        <Button variant="danger" icon={RotateCcw} className="bg-red-100 text-red-700 hover:bg-red-200 border-transparent shadow-none">
+        <Button variant="danger" icon={RotateCcw} className="bg-red-100 text-red-700 hover:bg-red-200 border-transparent shadow-none"
+          onClick={() => {
+            // Create a reversal by duplicating with negated amounts
+            setNewEntryDate(new Date().toISOString().split('T')[0]);
+            setNewEntryDescription(`Contrepassation: ${selectedEntry.description}`);
+            setNewEntryReference(selectedEntry.entryNumber);
+            setNewEntryLines(
+              selectedEntry.lines.map(l => ({
+                accountCode: l.accountCode,
+                description: l.description || '',
+                debit: l.credit > 0 ? String(l.credit) : '',
+                credit: l.debit > 0 ? String(l.debit) : '',
+              }))
+            );
+            setShowDetailModal(false);
+            setShowNewEntryModal(true);
+            toast.success(t('admin.entries.reversalCreated') || 'Contrepassation preparee - verifiez et enregistrez');
+          }}
+        >
           {t('admin.entries.reverseEntry')}
         </Button>
       )}
-      <Button variant="secondary" icon={Copy}>{t('admin.entries.duplicate')}</Button>
-      <Button variant="secondary" icon={Printer} className="ms-auto">{t('admin.entries.print')}</Button>
+      <Button variant="secondary" icon={Copy} onClick={() => handleDuplicate()}>{t('admin.entries.duplicate')}</Button>
+      <Button variant="secondary" icon={Printer} className="ms-auto" onClick={() => window.print()}>{t('admin.entries.print')}</Button>
     </div>
   ) : null;
 
@@ -450,14 +468,59 @@ export default function EcrituresPage() {
 
   // -- Ribbon actions --
   const handleNewEntry = useCallback(() => { setShowNewEntryModal(true); }, []);
-  const handleDelete = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleDelete = useCallback(() => {
+    if (!selectedEntry) { toast.info(t('admin.entries.selectEntryFirst') || 'Selectionnez une ecriture'); return; }
+    if (selectedEntry.status === 'POSTED') { toast.error(t('admin.entries.cannotDeletePosted') || 'Impossible de supprimer une ecriture comptabilisee'); return; }
+    toast.info(t('admin.entries.deleteNotAvailable') || 'La suppression est reservee aux ecritures en brouillon via le detail');
+  }, [selectedEntry, t]);
   const handleValidate = useCallback(() => {
     if (selectedEntry && selectedEntry.status === 'DRAFT') handlePostEntry(selectedEntry.id);
   }, [selectedEntry]);
   const handleCancel = useCallback(() => { setShowNewEntryModal(false); setShowDetailModal(false); }, []);
-  const handleDuplicate = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleDuplicate = useCallback(() => {
+    if (!selectedEntry) { toast.info(t('admin.entries.selectEntryFirst') || 'Selectionnez une ecriture'); return; }
+    // Pre-fill the new entry form with data from the selected entry
+    setNewEntryDate(new Date().toISOString().split('T')[0]);
+    setNewEntryDescription(selectedEntry.description + ' (copie)');
+    setNewEntryReference(selectedEntry.reference || '');
+    setNewEntryLines(
+      selectedEntry.lines.map(l => ({
+        accountCode: l.accountCode,
+        description: l.description || '',
+        debit: l.debit > 0 ? String(l.debit) : '',
+        credit: l.credit > 0 ? String(l.credit) : '',
+      }))
+    );
+    setShowDetailModal(false);
+    setShowNewEntryModal(true);
+    toast.success(t('admin.entries.duplicated') || 'Ecriture dupliquee - modifiez et enregistrez');
+  }, [selectedEntry, t]);
   const handlePrint = useCallback(() => { window.print(); }, []);
-  const handleExport = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleExport = useCallback(() => {
+    if (filteredEntries.length === 0) { toast.info(t('admin.entries.noDataToExport') || 'Aucune donnee a exporter'); return; }
+    const headers = ['Numero', 'Date', 'Description', 'Type', 'Statut', 'Debit', 'Credit', 'Reference'];
+    const rows = filteredEntries.map(e => [
+      e.entryNumber,
+      new Date(e.date).toLocaleDateString(locale),
+      `"${e.description.replace(/"/g, '""')}"`,
+      e.type,
+      e.status,
+      totalDebit(e).toFixed(2),
+      totalCredit(e).toFixed(2),
+      e.reference || '',
+    ]);
+    const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ecritures-${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success(t('admin.entries.exportSuccess') || 'Export CSV telecharge');
+  }, [filteredEntries, locale, t]);
 
   useRibbonAction('newEntry', handleNewEntry);
   useRibbonAction('delete', handleDelete);

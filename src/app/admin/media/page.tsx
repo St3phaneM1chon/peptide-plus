@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useI18n } from '@/i18n/client';
 import {
   Video, MessageCircle, Users, Search, Activity, Globe, Briefcase,
-  Image as ImageIcon, FolderOpen, CheckCircle2, XCircle, Loader2, Monitor,
+  Image as ImageIcon, FolderOpen, CheckCircle2, XCircle, Loader2, Monitor, Upload,
 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -54,6 +54,8 @@ export default function MediaDashboardPage() {
   const [platforms, setPlatforms] = useState<PlatformStatus[]>([]);
   const [stats, setStats] = useState<MediaStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const loadAll = async () => {
@@ -99,11 +101,41 @@ export default function MediaDashboardPage() {
     loadAll();
   }, []);
 
+  // ---- Upload handler for dashboard-level upload ----
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      for (let i = 0; i < files.length; i++) {
+        formData.append('files', files[i]);
+      }
+      formData.append('folder', 'general');
+      const res = await fetch('/api/admin/medias', { method: 'POST', body: formData });
+      if (res.ok) {
+        const data = await res.json();
+        toast.success(`${data.count || 1} ${t('admin.media.uploadSuccess') || 'file(s) uploaded'}`);
+        // Refresh stats
+        const mediaRes = await fetch('/api/admin/medias?limit=1').then(r => r.json()).catch(() => ({ pagination: { total: 0 } }));
+        setStats(prev => prev ? { ...prev, totalMedia: mediaRes.pagination?.total || prev.totalMedia } : prev);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        toast.error(data.error || t('admin.media.uploadFailed') || 'Upload failed');
+      }
+    } catch {
+      toast.error(t('admin.media.uploadFailed') || 'Upload failed');
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
   // ---- Ribbon action handlers (media section-level: upload, delete, play, export) ----
-  const handleUploadRibbon = useCallback(() => toast.info(t('common.comingSoon')), [t]);
-  const handleDeleteRibbon = useCallback(() => toast.info(t('common.comingSoon')), [t]);
-  const handlePlayRibbon = useCallback(() => toast.info(t('common.comingSoon')), [t]);
-  const handleExportRibbon = useCallback(() => toast.info(t('common.comingSoon')), [t]);
+  const handleUploadRibbon = useCallback(() => { fileInputRef.current?.click(); }, []);
+  const handleDeleteRibbon = useCallback(() => toast.info(t('admin.media.deleteHint') || 'Navigate to Images, Videos, or Library to select and delete files.'), [t]);
+  const handlePlayRibbon = useCallback(() => toast.info(t('admin.media.playHint') || 'Navigate to Videos to play a video.'), [t]);
+  const handleExportRibbon = useCallback(() => toast.info(t('admin.media.exportHint') || 'Navigate to Images, Videos, or Library to export data as CSV.'), [t]);
 
   useRibbonAction('upload', handleUploadRibbon);
   useRibbonAction('delete', handleDeleteRibbon);
@@ -123,7 +155,20 @@ export default function MediaDashboardPage() {
 
   return (
     <div className="p-6 max-w-5xl space-y-6">
-      <h1 className="text-2xl font-bold text-slate-900">{t('admin.media.dashboardTitle')}</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-slate-900">{t('admin.media.dashboardTitle')}</h1>
+        <div>
+          <input ref={fileInputRef} type="file" multiple onChange={handleUpload} aria-label={t('admin.media.upload') || 'Upload files'} className="hidden" />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            className="flex items-center gap-2 px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors text-sm disabled:opacity-50"
+          >
+            {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+            {t('admin.media.upload') || 'Upload'}
+          </button>
+        </div>
+      </div>
 
       {/* Stats row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

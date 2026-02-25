@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useI18n } from '@/i18n/client';
 import {
-  Image as ImageIcon, Upload, Search, Copy, Check,
+  Image as ImageIcon, Upload, Search, Copy, Check, Trash2,
   Loader2, ChevronLeft, ChevronRight, X,
 } from 'lucide-react';
 import NextImage from 'next/image';
@@ -11,6 +11,8 @@ import { toast } from 'sonner';
 import { useRibbonAction } from '@/hooks/useRibbonAction';
 // FIX: F59 - Use shared formatFileSize utility instead of local duplicate
 import { formatFileSize } from '@/lib/format-utils';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { fetchWithCSRF } from '@/lib/csrf';
 
 interface MediaItem {
   id: string;
@@ -45,6 +47,9 @@ export default function MediaImagesPage() {
   const [page, setPage] = useState(1);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [preview, setPreview] = useState<MediaItem | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const loadImages = useCallback(async () => {
@@ -113,13 +118,143 @@ export default function MediaImagesPage() {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
+  // ---- Selection handling ----
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === images.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(images.map(img => img.id)));
+    }
+  };
+
+  // ---- Delete selected images ----
+  const handleDeleteSelected = useCallback(async () => {
+    if (selectedIds.size === 0) return;
+    setDeleting(true);
+    let successCount = 0;
+    let failCount = 0;
+    for (const id of selectedIds) {
+      try {
+        const res = await fetchWithCSRF(`/api/admin/medias/${id}`, { method: 'DELETE' });
+        if (res.ok) successCount++;
+        else failCount++;
+      } catch {
+        failCount++;
+      }
+    }
+    setDeleting(false);
+    setShowDeleteConfirm(false);
+    setSelectedIds(new Set());
+    if (successCount > 0) {
+      toast.success(`${successCount} ${t('admin.media.imagesTitle') || 'image(s)'} ${t('common.deleted') || 'deleted'}`);
+      loadImages();
+    }
+    if (failCount > 0) {
+      toast.error(`${failCount} ${t('admin.media.deleteFailed') || 'failed to delete'}`);
+    }
+  }, [selectedIds, t, loadImages]);
+
+  // ---- Rename (update alt text) ----
+  const handleRenameImage = useCallback(async () => {
+    if (selectedIds.size !== 1) {
+      toast.info(t('admin.media.selectOneToRename') || 'Select exactly one image to rename');
+      return;
+    }
+    const id = Array.from(selectedIds)[0];
+    const img = images.find(i => i.id === id);
+    if (!img) return;
+    const newAlt = window.prompt(t('admin.media.enterAltText') || 'Enter new alt text:', img.alt || img.originalName);
+    if (newAlt === null) return;
+    try {
+      const res = await fetchWithCSRF(`/api/admin/medias/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ alt: newAlt }),
+      });
+      if (res.ok) {
+        toast.success(t('common.saved') || 'Saved');
+        loadImages();
+      } else {
+        toast.error(t('common.error') || 'Error');
+      }
+    } catch {
+      toast.error(t('common.error') || 'Error');
+    }
+  }, [selectedIds, images, t, loadImages]);
+
+  // ---- Organize (move to folder) ----
+  const handleOrganizeImage = useCallback(async () => {
+    if (selectedIds.size === 0) {
+      toast.info(t('admin.media.selectToOrganize') || 'Select images to organize');
+      return;
+    }
+    const folder = window.prompt(
+      t('admin.media.enterFolder') || 'Enter folder name (e.g., products, blog, general):',
+      'images'
+    );
+    if (!folder) return;
+    let successCount = 0;
+    for (const id of selectedIds) {
+      try {
+        const res = await fetchWithCSRF(`/api/admin/medias/${id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ folder }),
+        });
+        if (res.ok) successCount++;
+      } catch { /* skip */ }
+    }
+    if (successCount > 0) {
+      toast.success(`${successCount} ${t('admin.media.movedToFolder') || 'moved to'} "${folder}"`);
+      loadImages();
+    }
+    setSelectedIds(new Set());
+  }, [selectedIds, t, loadImages]);
+
+  // ---- Export CSV ----
+  const handleExportCsv = useCallback(() => {
+    if (images.length === 0) {
+      toast.info(t('admin.media.noDataToExport') || 'No images to export');
+      return;
+    }
+    const BOM = '\uFEFF';
+    const headers = ['ID', 'Filename', 'Original Name', 'MIME Type', 'Size (bytes)', 'URL', 'Alt Text', 'Folder', 'Created At'];
+    const rows = images.map(img => [
+      img.id, img.filename, img.originalName, img.mimeType,
+      String(img.size), img.url, img.alt || '', img.folder,
+      new Date(img.createdAt).toISOString(),
+    ]);
+    const csv = BOM + [headers, ...rows]
+      .map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(','))
+      .join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `images-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(t('admin.media.exportSuccess') || 'CSV exported');
+  }, [images, t]);
+
   // ---- Ribbon action handlers (media.management) ----
   const handleUploadRibbon = useCallback(() => { fileInputRef.current?.click(); }, []);
-  const handleDeleteRibbon = useCallback(() => toast.info(t('common.comingSoon')), [t]);
-  const handleRenameRibbon = useCallback(() => toast.info(t('common.comingSoon')), [t]);
-  const handleOrganizeRibbon = useCallback(() => toast.info(t('common.comingSoon')), [t]);
-  const handleOptimizeRibbon = useCallback(() => toast.info(t('common.comingSoon')), [t]);
-  const handleExportRibbon = useCallback(() => toast.info(t('common.comingSoon')), [t]);
+  const handleDeleteRibbon = useCallback(() => {
+    if (selectedIds.size === 0) { toast.info(t('admin.media.selectToDelete') || 'Select images to delete'); return; }
+    setShowDeleteConfirm(true);
+  }, [selectedIds, t]);
+  const handleRenameRibbon = useCallback(() => { handleRenameImage(); }, [handleRenameImage]);
+  const handleOrganizeRibbon = useCallback(() => { handleOrganizeImage(); }, [handleOrganizeImage]);
+  const handleOptimizeRibbon = useCallback(() => toast.info(t('admin.media.optimizeHint') || 'Image optimization requires server-side processing. Coming soon.'), [t]);
+  const handleExportRibbon = useCallback(() => { handleExportCsv(); }, [handleExportCsv]);
 
   useRibbonAction('upload', handleUploadRibbon);
   useRibbonAction('delete', handleDeleteRibbon);
@@ -146,6 +281,22 @@ export default function MediaImagesPage() {
         </div>
       </div>
 
+      {/* Selection toolbar */}
+      {selectedIds.size > 0 && (
+        <div className="flex items-center gap-3 p-2 bg-sky-50 border border-sky-200 rounded-lg text-sm">
+          <span className="text-sky-700 font-medium">{selectedIds.size} {t('common.selected') || 'selected'}</span>
+          <button onClick={() => setShowDeleteConfirm(true)} disabled={deleting} className="flex items-center gap-1 px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 text-xs">
+            <Trash2 className="w-3 h-3" /> {t('common.delete') || 'Delete'}
+          </button>
+          <button onClick={handleOrganizeImage} className="px-3 py-1 bg-white border border-slate-300 text-slate-700 rounded hover:bg-slate-50 text-xs">
+            {t('admin.media.moveToFolder') || 'Move to folder'}
+          </button>
+          <button onClick={() => setSelectedIds(new Set())} className="ml-auto text-slate-500 hover:text-slate-700 text-xs">
+            {t('common.clearSelection') || 'Clear'}
+          </button>
+        </div>
+      )}
+
       {/* Search */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -166,9 +317,26 @@ export default function MediaImagesPage() {
           <p>{t('admin.media.imagesDesc')}</p>
         </div>
       ) : (
+        <>
+        <div className="flex items-center gap-2 mb-2">
+          <label className="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer">
+            <input type="checkbox" checked={selectedIds.size === images.length && images.length > 0} onChange={toggleSelectAll} className="rounded border-slate-300" aria-label="Select all images" />
+            {t('common.selectAll') || 'Select all'}
+          </label>
+        </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
           {images.map(img => (
-            <div key={img.id} className="group relative bg-white rounded-lg border border-slate-200 overflow-hidden hover:border-sky-300 transition-colors">
+            <div key={img.id} className={`group relative bg-white rounded-lg border overflow-hidden hover:border-sky-300 transition-colors ${selectedIds.has(img.id) ? 'border-sky-400 ring-2 ring-sky-200' : 'border-slate-200'}`}>
+              {/* Selection checkbox */}
+              <div className="absolute top-2 left-2 z-10">
+                <input
+                  type="checkbox"
+                  checked={selectedIds.has(img.id)}
+                  onChange={() => toggleSelect(img.id)}
+                  className="rounded border-slate-300 opacity-0 group-hover:opacity-100 checked:opacity-100 transition-opacity"
+                  aria-label={`Select ${img.originalName}`}
+                />
+              </div>
               {/* FIX: F3 - Use NextImage instead of native <img> */}
               <div className="aspect-square cursor-pointer relative" onClick={() => setPreview(img)}>
                 <NextImage src={img.url} alt={img.alt || img.originalName} fill className="object-cover" sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 16vw" unoptimized />
@@ -188,6 +356,7 @@ export default function MediaImagesPage() {
             </div>
           ))}
         </div>
+        </>
       )}
 
       {/* Pagination */}
@@ -229,6 +398,17 @@ export default function MediaImagesPage() {
           </div>
         </div>
       )}
+
+      {/* Delete confirmation dialog */}
+      <ConfirmDialog
+        isOpen={showDeleteConfirm}
+        title={t('admin.media.deleteConfirmTitle') || 'Delete Images'}
+        message={`${t('admin.media.deleteConfirmMessage') || 'Are you sure you want to delete'} ${selectedIds.size} ${t('admin.media.imagesTitle') || 'image(s)'}? ${t('admin.media.deleteIrreversible') || 'This action cannot be undone.'}`}
+        confirmLabel={deleting ? '...' : (t('common.delete') || 'Delete')}
+        onConfirm={handleDeleteSelected}
+        onCancel={() => setShowDeleteConfirm(false)}
+        variant="danger"
+      />
     </div>
   );
 }

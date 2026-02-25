@@ -360,7 +360,16 @@ export default function PlanComptablePage() {
 
   // -- Ribbon actions --
   const handleSearch = useCallback(() => { /* search is already live via searchTerm state */ }, []);
-  const handleFilterPeriod = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleFilterPeriod = useCallback(() => {
+    // Toggle between all accounts and active only
+    if (selectedType) {
+      setSelectedType('');
+      toast.success(t('admin.chartOfAccounts.filterCleared') || 'Filtres reinitialises');
+    } else {
+      setSelectedType('EXPENSE');
+      toast.success(t('admin.chartOfAccounts.filterApplied') || 'Filtre applique: Depenses');
+    }
+  }, [selectedType, t]);
   const handleExportPdfAction = useCallback(() => { handleExportGifi(); }, []);
   const handlePrint = useCallback(() => { window.print(); }, []);
   const handleNewAccount = useCallback(() => { openModal(null); }, []);
@@ -484,7 +493,30 @@ export default function PlanComptablePage() {
             <Button variant="secondary" icon={FileSpreadsheet} onClick={handleExportGifi}>
               {t('admin.chartOfAccounts.exportGifi')}
             </Button>
-            <Button variant="secondary" icon={Download}>
+            <Button variant="secondary" icon={Download} onClick={() => {
+              if (filteredAccounts.length === 0) { toast.info(t('admin.chartOfAccounts.noDataToExport') || 'Aucun compte a exporter'); return; }
+              const headers = ['Code', 'Nom', 'Type', 'Categorie', 'GIFI', 'Solde', 'Actif'];
+              const rows = filteredAccounts.map(a => [
+                a.code,
+                `"${a.name.replace(/"/g, '""')}"`,
+                a.type,
+                `"${(a.category || '').replace(/"/g, '""')}"`,
+                a.gifiCode || '',
+                a.balance.toFixed(2),
+                a.isActive ? 'Oui' : 'Non',
+              ]);
+              const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+              const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+              const url = URL.createObjectURL(blob);
+              const anchor = document.createElement('a');
+              anchor.href = url;
+              anchor.download = `plan-comptable-${new Date().toISOString().split('T')[0]}.csv`;
+              document.body.appendChild(anchor);
+              anchor.click();
+              document.body.removeChild(anchor);
+              URL.revokeObjectURL(url);
+              toast.success(t('admin.chartOfAccounts.exportSuccess') || 'Export CSV telecharge');
+            }}>
               {t('admin.chartOfAccounts.export')}
             </Button>
           </div>

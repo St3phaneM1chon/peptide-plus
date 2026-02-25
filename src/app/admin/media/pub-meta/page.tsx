@@ -99,7 +99,17 @@ export default function MediaMetaPage() {
 
   const onViewLogs = useCallback(() => { router.push('/admin/logs?filter=meta'); }, [router]);
   const onDocumentation = useCallback(() => { window.open('https://developers.facebook.com/docs/marketing-apis', '_blank'); }, []);
-  const onExport = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const onExport = useCallback(() => {
+    const config = { platform: 'Meta', enabled, appId, pixelId, pageId, igAccountId, hasAccessToken, hasAppSecret, publicLink, webhookUrl, exportedAt: new Date().toISOString() };
+    const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `meta-config-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(t('admin.media.exportSuccess') || 'Configuration exported');
+  }, [enabled, appId, pixelId, pageId, igAccountId, hasAccessToken, hasAppSecret, publicLink, webhookUrl, t]);
 
   useRibbonAction('configure', onConfigure);
   useRibbonAction('testConnection', onTestConnection);
@@ -109,12 +119,12 @@ export default function MediaMetaPage() {
   useRibbonAction('export', onExport);
 
   // --- media.ads ribbon actions ---
-  useRibbonAction('newAdCampaign', useCallback(() => { toast.info(t('common.comingSoon')); }, [t]));
-  useRibbonAction('delete', useCallback(() => { toast.info(t('common.comingSoon')); }, [t]));
-  useRibbonAction('pause', useCallback(() => { toast.info(t('common.comingSoon')); }, [t]));
-  useRibbonAction('resume', useCallback(() => { toast.info(t('common.comingSoon')); }, [t]));
-  useRibbonAction('modifyBudget', useCallback(() => { toast.info(t('common.comingSoon')); }, [t]));
-  useRibbonAction('performanceStats', useCallback(() => { toast.info(t('common.comingSoon')); }, [t]));
+  useRibbonAction('newAdCampaign', useCallback(() => { toast.info(t('admin.media.adCampaignHint') || 'Create ad campaigns in Meta Ads Manager.'); }, [t]));
+  useRibbonAction('delete', useCallback(() => { toast.info(t('admin.media.adDeleteHint') || 'Manage and delete campaigns in Meta Ads Manager.'); }, [t]));
+  useRibbonAction('pause', useCallback(() => { toast.info(t('admin.media.adPauseHint') || 'Pause campaigns directly in Meta Ads Manager.'); }, [t]));
+  useRibbonAction('resume', useCallback(() => { toast.info(t('admin.media.adResumeHint') || 'Resume paused campaigns in Meta Ads Manager.'); }, [t]));
+  useRibbonAction('modifyBudget', useCallback(() => { toast.info(t('admin.media.adBudgetHint') || 'Adjust budgets in Meta Ads Manager.'); }, [t]));
+  useRibbonAction('performanceStats', useCallback(() => { toast.info(t('admin.media.adStatsHint') || 'View analytics in Meta Business Suite.'); }, [t]));
 
   if (loading) {
     return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500" /></div>;

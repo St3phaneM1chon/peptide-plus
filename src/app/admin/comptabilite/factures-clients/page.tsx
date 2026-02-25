@@ -649,14 +649,42 @@ export default function FacturesClientsPage() {
 
   // -- Ribbon actions --
   const handleNewInvoice = useCallback(() => { openCreateModal(); }, []);
-  const handleDeleteAction = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleDeleteAction = useCallback(() => {
+    if (!selectedInvoice) { toast.info(t('admin.customerInvoices.selectInvoiceFirst') || 'Selectionnez une facture'); return; }
+    if (selectedInvoice.status !== 'DRAFT') { toast.error(t('admin.customerInvoices.cannotDeleteNonDraft') || 'Seules les factures en brouillon peuvent etre supprimees'); return; }
+    // Void draft invoices rather than deleting
+    setShowVoidConfirm(true);
+  }, [selectedInvoice, t]);
   const handleSendByEmail = useCallback(() => {
     if (selectedInvoice) handleSendInvoice(selectedInvoice);
   }, [selectedInvoice]);
   const handleMarkPaid = useCallback(() => {
     if (selectedInvoice) openPaymentModal(selectedInvoice);
   }, [selectedInvoice]);
-  const handleCreditNote = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleCreditNote = useCallback(() => {
+    if (!selectedInvoice) { toast.info(t('admin.customerInvoices.selectInvoiceFirst') || 'Selectionnez une facture'); return; }
+    // Pre-fill create form with negated amounts for credit note
+    setEditingInvoice(null);
+    setForm({
+      customerName: selectedInvoice.customerName,
+      customerEmail: selectedInvoice.customerEmail || '',
+      customerAddress: selectedInvoice.customerAddress || '',
+      invoiceDate: new Date().toISOString().split('T')[0],
+      paymentTerms: 'NET30',
+      items: selectedInvoice.items.map(item => ({
+        description: `Note de credit: ${item.description}`,
+        quantity: item.quantity,
+        unitPrice: -Math.abs(Number(item.unitPrice)),
+        applyGst: Number(selectedInvoice.taxTps) > 0,
+        applyQst: Number(selectedInvoice.taxTvq) > 0,
+      })),
+      notes: `Note de credit pour facture ${selectedInvoice.invoiceNumber}`,
+    });
+    setFormErrors({});
+    setShowDetailModal(false);
+    setShowCreateModal(true);
+    toast.success(t('admin.customerInvoices.creditNoteCreated') || 'Note de credit preparee - verifiez et enregistrez');
+  }, [selectedInvoice, t]);
   const handleExportPdf = useCallback(() => {
     if (selectedInvoice) handleDownloadPdf(selectedInvoice.id);
   }, [selectedInvoice]);
@@ -748,7 +776,35 @@ export default function FacturesClientsPage() {
         onSearchChange={setSearchTerm}
         searchPlaceholder={t('admin.customerInvoices.searchPlaceholder')}
         actions={
-          <Button variant="secondary">
+          <Button variant="secondary" onClick={() => {
+            if (filteredInvoices.length === 0) { toast.info(t('admin.customerInvoices.noDataToExport') || 'Aucune facture a exporter'); return; }
+            const headers = ['Numero', 'Client', 'Email', 'Date', 'Echeance', 'Sous-total', 'TPS', 'TVQ', 'Total', 'Paye', 'Solde', 'Statut'];
+            const rows = filteredInvoices.map(inv => [
+              inv.invoiceNumber,
+              `"${inv.customerName.replace(/"/g, '""')}"`,
+              inv.customerEmail || '',
+              new Date(inv.invoiceDate).toLocaleDateString(locale),
+              new Date(inv.dueDate).toLocaleDateString(locale),
+              Number(inv.subtotal).toFixed(2),
+              Number(inv.taxTps).toFixed(2),
+              Number(inv.taxTvq).toFixed(2),
+              Number(inv.total).toFixed(2),
+              Number(inv.amountPaid).toFixed(2),
+              Number(inv.balance).toFixed(2),
+              inv.status,
+            ]);
+            const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+            const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `factures-clients-${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            toast.success(t('admin.customerInvoices.exportSuccess') || 'Export CSV telecharge');
+          }}>
             {t('admin.customerInvoices.export')}
           </Button>
         }

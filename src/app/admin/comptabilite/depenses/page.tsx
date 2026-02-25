@@ -403,10 +403,55 @@ export default function DepensesPage() {
 
   // -- Ribbon actions --
   const handleNewExpense = useCallback(() => { openCreateForm(); }, []);
-  const handleDeleteAction = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleCategorize = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleApprove = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
-  const handleExport = useCallback(() => { toast.info(t('common.comingSoon')); }, [t]);
+  const handleDeleteAction = useCallback(() => {
+    if (!selectedExpense) { toast.info(t('admin.expenses.selectExpenseFirst') || 'Selectionnez une depense'); return; }
+    if (selectedExpense.status !== 'DRAFT') { toast.error(t('admin.expenses.cannotDeleteNonDraft') || 'Seules les depenses en brouillon peuvent etre supprimees'); return; }
+    setConfirmDeleteExpenseId(selectedExpense.id);
+  }, [selectedExpense, t]);
+  const handleCategorize = useCallback(() => {
+    if (!selectedExpense) { toast.info(t('admin.expenses.selectExpenseFirst') || 'Selectionnez une depense'); return; }
+    if (selectedExpense.status !== 'DRAFT') { toast.error(t('admin.expenses.cannotEditNonDraft') || 'Seules les depenses en brouillon peuvent etre modifiees'); return; }
+    openEditForm(selectedExpense);
+  }, [selectedExpense, t]);
+  const handleApprove = useCallback(() => {
+    if (!selectedExpense) { toast.info(t('admin.expenses.selectExpenseFirst') || 'Selectionnez une depense'); return; }
+    if (selectedExpense.status === 'SUBMITTED') {
+      handleStatusChange(selectedExpense.id, 'APPROVED');
+    } else if (selectedExpense.status === 'DRAFT') {
+      handleStatusChange(selectedExpense.id, 'SUBMITTED');
+    } else {
+      toast.info(t('admin.expenses.cannotApprove') || 'Cette depense ne peut pas etre approuvee dans son etat actuel');
+    }
+  }, [selectedExpense, t]);
+  const handleExport = useCallback(() => {
+    if (expenses.length === 0) { toast.info(t('admin.expenses.noDataToExport') || 'Aucune depense a exporter'); return; }
+    const headers = ['Numero', 'Date', 'Description', 'Categorie', 'Fournisseur', 'Sous-total', 'TPS', 'TVQ', 'Total', 'Deductible %', 'Statut', 'Paiement'];
+    const rows = expenses.map(exp => [
+      exp.expenseNumber,
+      new Date(exp.date).toLocaleDateString(locale),
+      `"${exp.description.replace(/"/g, '""')}"`,
+      getCategoryLabel(exp.category),
+      `"${(exp.vendorName || '').replace(/"/g, '""')}"`,
+      exp.subtotal.toFixed(2),
+      exp.taxGst.toFixed(2),
+      exp.taxQst.toFixed(2),
+      exp.total.toFixed(2),
+      String(exp.deductiblePercent),
+      exp.status,
+      exp.paymentMethod || '',
+    ]);
+    const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `depenses-${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success(t('admin.expenses.exportSuccess') || 'Export CSV telecharge');
+  }, [expenses, locale, getCategoryLabel, t]);
   const handlePrint = useCallback(() => { window.print(); }, []);
 
   useRibbonAction('newExpense', handleNewExpense);
