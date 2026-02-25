@@ -3237,7 +3237,8 @@
       "youtubeDesc": "Manage your YouTube ad campaigns",
       "youtubeTitle": "YouTube Placement",
       "zoomDesc": "Configure your Zoom meetings and webinars",
-      "zoomTitle": "Zoom API Integration"
+      "zoomTitle": "Zoom API Integration",
+      "platformBlocked": "Diese Website kann nicht eingebettet werden. Verwenden Sie die Schaltflächen unten."
     },
     "mediaGallery": {
       "addPhoto": "Add photo",

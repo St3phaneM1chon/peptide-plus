@@ -3237,7 +3237,8 @@
       "youtubeDesc": "Manage your YouTube ad campaigns",
       "youtubeTitle": "YouTube Placement",
       "zoomDesc": "Configure your Zoom meetings and webinars",
-      "zoomTitle": "Zoom API Integration"
+      "zoomTitle": "Zoom API Integration",
+      "platformBlocked": "Este sitio no se puede incrustar. Use los botones a continuación para abrirlo."
     },
     "mediaGallery": {
       "addPhoto": "Add photo",

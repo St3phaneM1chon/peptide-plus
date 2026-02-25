@@ -3237,7 +3237,8 @@
       "youtubeDesc": "Manage your YouTube ad campaigns",
       "youtubeTitle": "YouTube Placement",
       "zoomDesc": "Configure your Zoom meetings and webinars",
-      "zoomTitle": "Zoom API Integration"
+      "zoomTitle": "Zoom API Integration",
+      "platformBlocked": "이 사이트는 삽입할 수 없습니다. 아래 버튼을 사용하여 여세요."
     },
     "mediaGallery": {
       "addPhoto": "Add photo",

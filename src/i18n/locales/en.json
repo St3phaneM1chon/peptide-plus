@@ -3215,6 +3215,7 @@
       "libraryDesc": "Browse all your media files",
       "libraryTitle": "Media Library",
       "openDesktopApp": "Open Desktop App",
+      "platformBlocked": "This site cannot be embedded. Use the buttons below to open it.",
       "platformGoogleMeet": "Google Meet",
       "platformGoogleMeetDesc": "Start a video call with Google Meet",
       "platformTeams": "Microsoft Teams",

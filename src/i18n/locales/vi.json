@@ -3237,7 +3237,8 @@
       "youtubeDesc": "Manage your YouTube ad campaigns",
       "youtubeTitle": "YouTube Placement",
       "zoomDesc": "Configure your Zoom meetings and webinars",
-      "zoomTitle": "Zoom API Integration"
+      "zoomTitle": "Zoom API Integration",
+      "platformBlocked": "Trang web này không thể nhúng được. Sử dụng các nút bên dưới để mở."
     },
     "mediaGallery": {
       "addPhoto": "Add photo",

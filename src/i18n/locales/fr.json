@@ -2949,7 +2949,8 @@
       "platformWebex": "Webex",
       "platformWebexDesc": "Accédez à Cisco Webex pour vos visioconférences",
       "platformGoogleMeet": "Google Meet",
-      "platformGoogleMeetDesc": "Démarrez un appel vidéo avec Google Meet"
+      "platformGoogleMeetDesc": "Démarrez un appel vidéo avec Google Meet",
+      "platformBlocked": "Ce site ne peut pas être intégré. Utilisez les boutons ci-dessous pour l'ouvrir."
     },
     "integrations": {
       "connected": "Connecté avec succès",

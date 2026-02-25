@@ -3237,7 +3237,8 @@
       "youtubeDesc": "Manage your YouTube ad campaigns",
       "youtubeTitle": "YouTube Placement",
       "zoomDesc": "Configure your Zoom meetings and webinars",
-      "zoomTitle": "Zoom API Integration"
+      "zoomTitle": "Zoom API Integration",
+      "platformBlocked": "Tej strony nie można osadzić. Użyj poniższych przycisków, aby ją otworzyć."
     },
     "mediaGallery": {
       "addPhoto": "Add photo",

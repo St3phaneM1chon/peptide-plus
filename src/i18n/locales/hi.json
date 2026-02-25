@@ -3237,7 +3237,8 @@
       "youtubeDesc": "Manage your YouTube ad campaigns",
       "youtubeTitle": "YouTube Placement",
       "zoomDesc": "Configure your Zoom meetings and webinars",
-      "zoomTitle": "Zoom API Integration"
+      "zoomTitle": "Zoom API Integration",
+      "platformBlocked": "इस साइट को एम्बेड नहीं किया जा सकता। नीचे दिए गए बटनों का उपयोग करें।"
     },
     "mediaGallery": {
       "addPhoto": "Add photo",
