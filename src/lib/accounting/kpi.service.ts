@@ -110,22 +110,103 @@ function round2(value: number): number {
 }
 
 // ---------------------------------------------------------------------------
+// Consolidated Query Helper
+// ---------------------------------------------------------------------------
+
+// F038 FIX: Consolidated KPI queries for performance
+// Instead of ~15 sequential sumByAccountType() calls (each a separate DB round-trip),
+// we use a single GROUP BY raw query per date range to fetch all account type/prefix
+// aggregates at once, then extract individual KPI values from the result in-memory.
+// This reduces 15 queries down to 3 (balance sheet + income statement + previous period).
+
+interface AggRow {
+  account_type: string;
+  code_prefix: string;
+  total_debit: number;
+  total_credit: number;
+}
+
+/**
+ * Execute a single GROUP BY query that aggregates journal line totals
+ * by account type and 2-character code prefix for a given date range.
+ */
+async function bulkSumByAccountType(
+  startDate?: Date,
+  endDate?: Date,
+): Promise<AggRow[]> {
+  try {
+    const dateConditions: string[] = [
+      `je.status = 'POSTED'`,
+      `je."deletedAt" IS NULL`,
+      `ca."isActive" = true`,
+    ];
+    const params: (Date | string)[] = [];
+
+    if (startDate) {
+      params.push(startDate);
+      dateConditions.push(`je.date >= $${params.length}::timestamp`);
+    }
+    if (endDate) {
+      params.push(endDate);
+      dateConditions.push(`je.date <= $${params.length}::timestamp`);
+    }
+
+    const whereClause = dateConditions.join(' AND ');
+
+    const rows = await prisma.$queryRawUnsafe<AggRow[]>(
+      `SELECT ca.type AS account_type,
+              LEFT(ca.code, 2) AS code_prefix,
+              COALESCE(SUM(jl.debit), 0)::float AS total_debit,
+              COALESCE(SUM(jl.credit), 0)::float AS total_credit
+       FROM "JournalLine" jl
+       JOIN "ChartOfAccount" ca ON jl."accountId" = ca.id
+       JOIN "JournalEntry" je ON jl."entryId" = je.id
+       WHERE ${whereClause}
+       GROUP BY ca.type, LEFT(ca.code, 2)`,
+      ...params,
+    );
+
+    return rows;
+  } catch (error) {
+    console.error('[KPIService] bulkSumByAccountType query failed:', {
+      startDate,
+      endDate,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return [];
+  }
+}
+
+/**
+ * Extract the net balance for a given account type and optional code prefix
+ * from pre-aggregated rows. ASSET/EXPENSE = debit - credit; others = credit - debit.
+ */
+function extractSum(rows: AggRow[], accountType: string, codePrefix?: string): number {
+  const filtered = rows.filter((r) => {
+    if (r.account_type !== accountType) return false;
+    if (codePrefix) return r.code_prefix.startsWith(codePrefix);
+    return true;
+  });
+
+  let totalDebit = 0;
+  let totalCredit = 0;
+  for (const r of filtered) {
+    totalDebit += r.total_debit;
+    totalCredit += r.total_credit;
+  }
+
+  if (accountType === 'ASSET' || accountType === 'EXPENSE') {
+    return totalDebit - totalCredit;
+  }
+  return totalCredit - totalDebit;
+}
+
+// ---------------------------------------------------------------------------
 // Main KPI Calculation
 // ---------------------------------------------------------------------------
 
-// FIX: F038 - Performance: calculateKPIs() currently makes ~15 sequential DB queries
-// via sumByAccountType(). getKPITrend(kpi, 6) amplifies this to ~90 queries.
-// TODO: Refactor to use a single GROUP BY query:
-//   SELECT ca.type, LEFT(ca.code, 2) as prefix,
-//          SUM(jl.debit) as total_debit, SUM(jl.credit) as total_credit
-//   FROM "JournalLine" jl
-//   JOIN "ChartOfAccount" ca ON jl."accountId" = ca.id
-//   JOIN "JournalEntry" je ON jl."entryId" = je.id
-//   WHERE je.status = 'POSTED' AND je."deletedAt" IS NULL
-//     AND je.date BETWEEN $1 AND $2
-//   GROUP BY ca.type, LEFT(ca.code, 2)
-// Then compute all KPIs from the aggregated result in-memory.
-// This would reduce 15 queries to 1-2 queries per period.
+// F038 FIX: Consolidated KPI queries for performance
+// Reduced from ~15 sequential DB queries to 3 bulk GROUP BY queries.
 export async function calculateKPIs(startDate: Date, endDate: Date): Promise<FinancialKPIs> {
   try {
   const periodDays = Math.max(
@@ -133,27 +214,39 @@ export async function calculateKPIs(startDate: Date, endDate: Date): Promise<Fin
     Math.round((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)),
   );
 
-  // Balance sheet items (cumulative up to endDate)
-  const currentAssets = await sumByAccountType('ASSET', undefined, endDate, '1');
-  const inventoryBalance = await sumByAccountType('ASSET', undefined, endDate, '12');
-  const currentLiabilities = await sumByAccountType('LIABILITY', undefined, endDate);
-  const cashBalance = await sumByAccountType('ASSET', undefined, endDate, '10');
-  const receivables = await sumByAccountType('ASSET', undefined, endDate, '11');
-  const payables = await sumByAccountType('LIABILITY', undefined, endDate, '20');
-
-  // Income statement items (within period)
-  const revenue = await sumByAccountType('REVENUE', startDate, endDate);
-  const cogs = await sumByAccountType('EXPENSE', startDate, endDate, '5');
-  const opex = await sumByAccountType('EXPENSE', startDate, endDate, '6');
-  const otherNet = await sumByAccountType('EXPENSE', startDate, endDate, '7');
-
-  // Previous period for growth comparison
+  // Previous period dates for growth comparison
   const { prevStart, prevEnd } = getPreviousPeriod(startDate, endDate);
-  const prevRevenue = await sumByAccountType('REVENUE', prevStart, prevEnd);
+
+  // F038 FIX: Execute only 3 queries in parallel instead of 15 sequential ones
+  const [balanceSheetRows, incomeRows, prevPeriodRows] = await Promise.all([
+    // Query 1: Balance sheet (cumulative up to endDate, no startDate)
+    bulkSumByAccountType(undefined, endDate),
+    // Query 2: Income statement (within current period)
+    bulkSumByAccountType(startDate, endDate),
+    // Query 3: Previous period (for growth comparison)
+    bulkSumByAccountType(prevStart, prevEnd),
+  ]);
+
+  // Extract balance sheet items from bulk result
+  const currentAssets = extractSum(balanceSheetRows, 'ASSET', '1');
+  const inventoryBalance = extractSum(balanceSheetRows, 'ASSET', '12');
+  const currentLiabilities = extractSum(balanceSheetRows, 'LIABILITY');
+  const cashBalance = extractSum(balanceSheetRows, 'ASSET', '10');
+  const receivables = extractSum(balanceSheetRows, 'ASSET', '11');
+  const payables = extractSum(balanceSheetRows, 'LIABILITY', '20');
+
+  // Extract income statement items from bulk result
+  const revenue = extractSum(incomeRows, 'REVENUE');
+  const cogs = extractSum(incomeRows, 'EXPENSE', '5');
+  const opex = extractSum(incomeRows, 'EXPENSE', '6');
+  const otherNet = extractSum(incomeRows, 'EXPENSE', '7');
+
+  // Extract previous period values from bulk result
+  const prevRevenue = extractSum(prevPeriodRows, 'REVENUE');
   const prevExpenses =
-    (await sumByAccountType('EXPENSE', prevStart, prevEnd, '5')) +
-    (await sumByAccountType('EXPENSE', prevStart, prevEnd, '6')) +
-    (await sumByAccountType('EXPENSE', prevStart, prevEnd, '7'));
+    extractSum(prevPeriodRows, 'EXPENSE', '5') +
+    extractSum(prevPeriodRows, 'EXPENSE', '6') +
+    extractSum(prevPeriodRows, 'EXPENSE', '7');
 
   // Compute KPIs
   const totalExpenses = cogs + opex + otherNet;

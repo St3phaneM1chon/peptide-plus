@@ -189,13 +189,17 @@ export const POST = withAdminGuard(async (request: NextRequest, { session }) => 
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // SECURITY FIX (F17): Validate magic bytes match declared MIME type
+    // F17 FIX: Validate magic bytes to prevent file type spoofing
     const MAGIC_BYTES: Record<string, number[]> = {
       'application/pdf': [0x25, 0x50, 0x44, 0x46], // %PDF
       'image/jpeg': [0xFF, 0xD8, 0xFF],
       'image/png': [0x89, 0x50, 0x4E, 0x47],
       'image/gif': [0x47, 0x49, 0x46],
       'image/webp': [0x52, 0x49, 0x46, 0x46], // RIFF
+      'application/msword': [0xD0, 0xCF, 0x11, 0xE0], // OLE2 Compound Document (.doc)
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': [0x50, 0x4B, 0x03, 0x04], // ZIP/PK (.docx)
+      'application/vnd.ms-excel': [0xD0, 0xCF, 0x11, 0xE0], // OLE2 Compound Document (.xls)
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': [0x50, 0x4B, 0x03, 0x04], // ZIP/PK (.xlsx)
     };
 
     const expectedBytes = MAGIC_BYTES[mimeType];

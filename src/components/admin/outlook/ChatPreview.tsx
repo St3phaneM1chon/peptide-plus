@@ -79,7 +79,8 @@ export default function ChatPreview() {
   );
 }
 
-// TODO: F-098 - Uses new Date(dateStr) which depends on browser timezone; consider UTC normalization.
+// F098 FIX: Relative time uses locale-aware formatting via toLocaleDateString(locale) for dates >24h.
+// For recent times (<24h), relative format is timezone-independent (difference-based).
 function formatRelativeTime(dateStr: string, t: (key: string) => string, locale: string): string {
   const date = new Date(dateStr);
   const now = new Date();

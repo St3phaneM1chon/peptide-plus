@@ -341,7 +341,26 @@ async function handleOrderUpdate(
     }
   }
 
-  return NextResponse.json({ order });
+  // Serialize Decimal fields to numbers for JSON response
+  const serializedOrder = {
+    ...order,
+    subtotal: Number(order.subtotal),
+    shippingCost: Number(order.shippingCost),
+    discount: Number(order.discount),
+    tax: Number(order.tax),
+    total: Number(order.total),
+    taxTps: Number((order as Record<string, unknown>).taxTps || 0),
+    taxTvq: Number((order as Record<string, unknown>).taxTvq || 0),
+    taxTvh: Number((order as Record<string, unknown>).taxTvh || 0),
+    items: order.items.map((item) => ({
+      ...item,
+      unitPrice: Number(item.unitPrice),
+      discount: Number(item.discount),
+      total: Number(item.total),
+    })),
+  };
+
+  return NextResponse.json({ order: serializedOrder });
 }
 
 // PATCH /api/admin/orders/[id] - Update order fields (used by frontend)

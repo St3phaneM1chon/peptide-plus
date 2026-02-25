@@ -95,6 +95,18 @@ export async function GET(request: NextRequest) {
 
       return {
         ...order,
+        // Serialize Decimal fields to plain numbers for JSON
+        subtotal: Number(order.subtotal),
+        shippingCost: Number(order.shippingCost),
+        discount: Number(order.discount),
+        tax: Number(order.tax),
+        total: Number(order.total),
+        items: order.items.map((item) => ({
+          ...item,
+          unitPrice: Number(item.unitPrice),
+          discount: Number(item.discount),
+          total: Number(item.total),
+        })),
         shippingAddress: {
           firstName,
           lastName,
@@ -118,10 +130,10 @@ export async function GET(request: NextRequest) {
           phone: order.shippingPhone,
         },
         taxDetails: {
-          gst: order.taxTps,
-          pst: order.taxPst,
-          qst: order.taxTvq,
-          hst: order.taxTvh,
+          gst: Number(order.taxTps),
+          pst: Number(order.taxPst),
+          qst: Number(order.taxTvq),
+          hst: Number(order.taxTvh),
         },
       };
     });

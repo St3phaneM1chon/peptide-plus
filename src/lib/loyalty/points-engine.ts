@@ -39,6 +39,14 @@ export interface PointsBalance {
   expiringSoon: number; // points expiring in next 30 days
 }
 
+// F-001 FIX: Import tier thresholds from the SINGLE SOURCE OF TRUTH (constants.ts).
+// Previously, this file had its own LOYALTY_TIERS array with hardcoded thresholds
+// that was missing the DIAMOND tier and could drift out of sync with constants.ts.
+import {
+  LOYALTY_TIER_THRESHOLDS,
+  calculateTierFromPoints,
+} from '@/lib/constants';
+
 export interface LoyaltyTier {
   id: string;
   name: string;
@@ -49,16 +57,35 @@ export interface LoyaltyTier {
   color: string;
 }
 
-export const LOYALTY_TIERS: LoyaltyTier[] = [
-  { id: 'BRONZE', name: 'Bronze', nameFr: 'Bronze', minPoints: 0, multiplier: 1, perks: ['Earn 1x points'], color: '#CD7F32' },
-  { id: 'SILVER', name: 'Silver', nameFr: 'Argent', minPoints: 500, multiplier: 1.25, perks: ['Earn 1.25x points', 'Free shipping over $75'], color: '#C0C0C0' },
-  { id: 'GOLD', name: 'Gold', nameFr: 'Or', minPoints: 2000, multiplier: 1.5, perks: ['Earn 1.5x points', 'Free shipping', 'Early access'], color: '#FFD700' },
-  { id: 'PLATINUM', name: 'Platinum', nameFr: 'Platine', minPoints: 5000, multiplier: 2, perks: ['Earn 2x points', 'Free shipping', 'Early access', 'VIP support', 'Birthday 2x points'], color: '#E5E4E2' },
-];
+// F-001 FIX: Derive LOYALTY_TIERS from the canonical LOYALTY_TIER_THRESHOLDS.
+// This adds display-specific fields (nameFr, perks, hex color) on top of the
+// canonical definition, ensuring thresholds and multipliers are always in sync.
+const TIER_EXTRAS: Record<string, { nameFr: string; perks: string[]; color: string }> = {
+  BRONZE:   { nameFr: 'Bronze',   perks: ['Earn 1x points'],                                                                             color: '#CD7F32' },
+  SILVER:   { nameFr: 'Argent',   perks: ['Earn 1.25x points', 'Free shipping over $75'],                                                color: '#C0C0C0' },
+  GOLD:     { nameFr: 'Or',       perks: ['Earn 1.5x points', 'Free shipping', 'Early access'],                                          color: '#FFD700' },
+  PLATINUM: { nameFr: 'Platine',  perks: ['Earn 2x points', 'Free shipping', 'Early access', 'VIP support', 'Birthday 2x points'],       color: '#E5E4E2' },
+  DIAMOND:  { nameFr: 'Diamant',  perks: ['Earn 3x points', 'Free express shipping', '20% off everything', 'Dedicated support', 'Exclusive products'], color: '#B9F2FF' },
+};
 
+export const LOYALTY_TIERS: LoyaltyTier[] = LOYALTY_TIER_THRESHOLDS.map(tier => {
+  const extra = TIER_EXTRAS[tier.id] || { nameFr: tier.name, perks: [`Earn ${tier.multiplier}x points`], color: '#888888' };
+  return {
+    id: tier.id,
+    name: tier.name,
+    nameFr: extra.nameFr,
+    minPoints: tier.minPoints,
+    multiplier: tier.multiplier,
+    perks: extra.perks,
+    color: extra.color,
+  };
+});
+
+// F-001 FIX: Delegate to canonical calculateTierFromPoints from constants.ts
+// instead of maintaining a separate tier lookup.
 export function getTierForPoints(lifetimePoints: number): LoyaltyTier {
-  const sorted = [...LOYALTY_TIERS].sort((a, b) => b.minPoints - a.minPoints);
-  return sorted.find(t => lifetimePoints >= t.minPoints) || LOYALTY_TIERS[0];
+  const canonical = calculateTierFromPoints(lifetimePoints);
+  return LOYALTY_TIERS.find(t => t.id === canonical.id) || LOYALTY_TIERS[0];
 }
 
 export function getNextTier(currentTier: string): LoyaltyTier | null {

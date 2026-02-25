@@ -8,10 +8,12 @@ export const dynamic = 'force-dynamic';
  * Sorted by popularity (purchaseCount).
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { cacheGetOrSet, CacheTTL } from '@/lib/cache';
+import { apiSuccess, apiError } from '@/lib/api-response';
+import { ErrorCode } from '@/lib/error-codes';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -92,7 +94,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       { ttl: CacheTTL.PRODUCTS, tags: ['products'] }
     );
 
-    return NextResponse.json(
+    return apiSuccess(
       { related },
       {
         headers: {
@@ -102,9 +104,6 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     );
   } catch (error) {
     logger.error('Related products error', { error: error instanceof Error ? error.message : String(error) });
-    return NextResponse.json(
-      { error: 'Failed to fetch related products' },
-      { status: 500 }
-    );
+    return apiError('Failed to fetch related products', ErrorCode.INTERNAL_ERROR);
   }
 }

@@ -14,6 +14,7 @@ import { randomUUID } from 'crypto';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { storage } from '@/lib/storage';
 import { logger } from '@/lib/logger';
+import { rateLimitMiddleware } from '@/lib/rate-limiter';
 
 /**
  * SECURITY FIX: Sanitize folder path to prevent path traversal attacks.
@@ -77,12 +78,37 @@ function validateMagicBytes(buffer: Buffer, declaredMime: string): boolean {
   return false;
 }
 
-// FIX: F44 - TODO: Add optional uploadedBy filter for multi-tenant scoping
-// FIX: F49 - TODO: Add rate limiting middleware (e.g., 50 uploads/hour per user) to POST endpoint
-// GET /api/admin/medias - List media files
-export const GET = withAdminGuard(async (request, _ctx) => {
+// F44 FIX: Filter media by uploadedBy for non-owner users
+// F49 FIX: Add rate limiting to upload endpoint
+// GET /api/admin/medias - List media files (supports ?stats=true for aggregated counts)
+export const GET = withAdminGuard(async (request, { session }) => {
   try {
     const { searchParams } = new URL(request.url);
+
+    // F52 FIX: Support ?stats=true to return aggregated counts in a single request
+    // instead of the dashboard making 5 separate API calls
+    if (searchParams.get('stats') === 'true') {
+      // F44 FIX: scope stats to user's own media if not OWNER
+      const statsWhere: Record<string, unknown> = {};
+      if (session.user.role !== 'OWNER') {
+        statsWhere.uploadedBy = session.user.id;
+      }
+
+      const [totalMedia, imageCount, videoFileCount, pdfCount] = await Promise.all([
+        prisma.media.count({ where: statsWhere }),
+        prisma.media.count({ where: { ...statsWhere, mimeType: { startsWith: 'image' } } }),
+        prisma.media.count({ where: { ...statsWhere, mimeType: { startsWith: 'video' } } }),
+        prisma.media.count({ where: { ...statsWhere, mimeType: { startsWith: 'application/pdf' } } }),
+      ]);
+
+      return NextResponse.json({
+        totalMedia,
+        imageCount,
+        videoFileCount,
+        pdfCount,
+      });
+    }
+
     const rawFolder = searchParams.get('folder');
     const folder = rawFolder ? sanitizeFolderPath(rawFolder) : null;
     const mimeType = searchParams.get('mimeType');
@@ -92,6 +118,12 @@ export const GET = withAdminGuard(async (request, _ctx) => {
     const skip = (page - 1) * limit;
 
     const where: Record<string, unknown> = {};
+
+    // F44 FIX: Non-OWNER users can only see their own media (multi-tenant scoping)
+    if (session.user.role !== 'OWNER') {
+      where.uploadedBy = session.user.id;
+    }
+
     if (folder) where.folder = folder;
     if (mimeType) where.mimeType = { startsWith: mimeType };
     if (search) {
@@ -137,6 +169,16 @@ export const GET = withAdminGuard(async (request, _ctx) => {
 // POST /api/admin/medias - Upload media file(s) via FormData
 export const POST = withAdminGuard(async (request, { session }) => {
   try {
+    // F49 FIX: Rate limit uploads - 50 uploads per hour per user
+    const ip = getClientIpFromRequest(request);
+    const rl = await rateLimitMiddleware(ip, '/api/admin/medias/upload', session.user.id);
+    if (!rl.success) {
+      return NextResponse.json(
+        { error: rl.error!.message },
+        { status: 429, headers: rl.headers }
+      );
+    }
+
     const formData = await request.formData();
     const files = formData.getAll('files') as File[];
     const folder = sanitizeFolderPath((formData.get('folder') as string) || 'general');

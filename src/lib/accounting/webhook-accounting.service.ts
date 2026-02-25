@@ -6,8 +6,9 @@
 import { prisma } from '@/lib/db';
 import { ACCOUNT_CODES } from './types';
 import { assertJournalBalance, assertPeriodOpen } from '@/lib/accounting/validation';
-// FIX: F093 - TODO: Replace with 'import { Decimal } from "decimal.js"' to avoid Prisma internal import
-import { Decimal } from '@prisma/client/runtime/library';
+// F093 FIX: Use decimal.js directly instead of Prisma internal runtime import
+// (Prisma's internal path may change between versions and break builds)
+import Decimal from 'decimal.js';
 import { convertCurrency, subtract } from '@/lib/decimal-calculator';
 
 interface OrderWithItems {

@@ -1,4 +1,4 @@
-// TODO: F-093 - Add loading spinner on togglePublic badge while PATCH request is in-flight
+// F093 FIX: Added loading spinner on togglePublic badge while PATCH request is in-flight
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -58,6 +58,9 @@ export default function QuestionsPage() {
   const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
+  // F093 FIX: Track which question is currently toggling public/private for loading state
+  const [togglingPublicId, setTogglingPublicId] = useState<string | null>(null);
+
   // Filter state
   const [searchValue, setSearchValue] = useState('');
   const [answeredFilter, setAnsweredFilter] = useState('all');
@@ -113,7 +116,9 @@ export default function QuestionsPage() {
     }
   };
 
+  // F093 FIX: Add loading state around togglePublic to show spinner on the badge
   const togglePublic = async (id: string, isPublic: boolean) => {
+    setTogglingPublicId(id);
     try {
       const response = await fetch(`/api/admin/questions/${id}`, {
         method: 'PATCH',
@@ -129,6 +134,8 @@ export default function QuestionsPage() {
     } catch (err) {
       console.error('Error toggling question visibility:', err);
       toast.error(t('common.networkError'));
+    } finally {
+      setTogglingPublicId(null);
     }
   };
 
@@ -428,10 +435,17 @@ export default function QuestionsPage() {
                         {t('admin.questions.awaitingAnswer')}
                       </span>
                     )}
-                    <button onClick={() => togglePublic(selectedQuestion.id, selectedQuestion.isPublic)}>
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium cursor-pointer ${
+                    {/* F093 FIX: Show spinner on togglePublic badge while PATCH is in-flight */}
+                    <button
+                      onClick={() => togglePublic(selectedQuestion.id, selectedQuestion.isPublic)}
+                      disabled={togglingPublicId === selectedQuestion.id}
+                    >
+                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium cursor-pointer ${
                         selectedQuestion.isPublic ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-600'
-                      }`}>
+                      } ${togglingPublicId === selectedQuestion.id ? 'opacity-60' : ''}`}>
+                        {togglingPublicId === selectedQuestion.id && (
+                          <span className="inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                        )}
                         {selectedQuestion.isPublic ? t('admin.questions.public') : t('admin.questions.private')}
                       </span>
                     </button>

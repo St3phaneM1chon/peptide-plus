@@ -377,8 +377,9 @@ export default function MediaLibraryPage() {
                 </div>
                 <div className="aspect-square cursor-pointer flex items-center justify-center bg-slate-50" onClick={() => setPreview(item)}>
                   {/* FIX: F2 - Use NextImage instead of native <img> */}
+                  {/* F99 FIX: NextImage provides lazy loading by default (loading="lazy" is the default) */}
                   {item.mimeType.startsWith('image/') ? (
-                    <NextImage src={item.url} alt={item.alt || item.originalName} fill className="object-cover" sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 16vw" unoptimized />
+                    <NextImage src={item.url} alt={item.alt || item.originalName} fill className="object-cover" sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 16vw" loading="lazy" unoptimized />
                   ) : (
                     <div className="text-center">
                       {getFileIcon(item.mimeType)}
@@ -418,8 +419,9 @@ export default function MediaLibraryPage() {
               />
               <div className="w-10 h-10 rounded bg-slate-100 flex items-center justify-center flex-shrink-0">
                 {/* FIX: F2 - Use NextImage instead of native <img> */}
+                {/* F99 FIX: Explicit lazy loading for list view thumbnails */}
                 {item.mimeType.startsWith('image/') ? (
-                  <NextImage src={item.url} alt="" width={40} height={40} className="w-10 h-10 rounded object-cover" unoptimized />
+                  <NextImage src={item.url} alt="" width={40} height={40} className="w-10 h-10 rounded object-cover" loading="lazy" unoptimized />
                 ) : (
                   getFileIcon(item.mimeType)
                 )}
@@ -456,10 +458,27 @@ export default function MediaLibraryPage() {
       )}
 
       {/* Preview modal */}
-      {/* FIX: F64 - TODO: Implement focus trap (use dialog element or focus-trap library) to prevent tabbing behind modal */}
+      {/* F64 FIX: Focus trap implemented via onKeyDown handler to prevent tabbing behind modal */}
       {preview && (
-        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-6" onClick={() => setPreview(null)} role="dialog" aria-modal="true" aria-label="Media preview">
-          <div className="relative max-w-3xl max-h-[80vh] bg-white rounded-xl overflow-hidden" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-6" onClick={() => setPreview(null)} role="dialog" aria-modal="true" aria-label="Media preview"
+          onKeyDown={(e) => {
+            // F64 FIX: Trap Tab focus within the modal dialog
+            if (e.key === 'Tab') {
+              const modal = e.currentTarget.querySelector('[data-modal-content]') as HTMLElement | null;
+              if (!modal) return;
+              const focusable = modal.querySelectorAll<HTMLElement>('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+              if (focusable.length === 0) return;
+              const first = focusable[0];
+              const last = focusable[focusable.length - 1];
+              if (e.shiftKey) {
+                if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+              } else {
+                if (document.activeElement === last) { e.preventDefault(); first.focus(); }
+              }
+            }
+          }}
+        >
+          <div data-modal-content className="relative max-w-3xl max-h-[80vh] bg-white rounded-xl overflow-hidden" onClick={e => e.stopPropagation()}>
             <button onClick={() => setPreview(null)} className="absolute top-3 right-3 p-1.5 bg-white/80 rounded-full hover:bg-white z-10" autoFocus aria-label="Fermer l'apercu">
               <X className="w-5 h-5" />
             </button>

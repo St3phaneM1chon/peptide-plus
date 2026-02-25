@@ -4,6 +4,7 @@ import { useState, useCallback, useRef } from 'react';
 import NextImage from 'next/image';
 import { Plus, X, GripVertical, Star } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
+import { toast } from 'sonner';
 import { MediaUploader } from './MediaUploader';
 
 export interface GalleryImage {
@@ -11,13 +12,15 @@ export interface GalleryImage {
   alt?: string;
   sortOrder: number;
   isPrimary: boolean;
+  // F79 FIX: Track file size per image for total size validation
+  fileSize?: number;
 }
 
 interface MediaGalleryUploaderProps {
   images: GalleryImage[];
   onChange: (images: GalleryImage[]) => void;
   maxImages?: number;
-  // FIX: F79 - Add optional total size limit to prevent excessive uploads
+  // F79 FIX: Optional total size limit to prevent excessive uploads
   maxTotalSizeMB?: number;
 }
 
@@ -25,29 +28,39 @@ export function MediaGalleryUploader({
   images,
   onChange,
   maxImages = 10,
-  // FIX: F79 - Default max total size 50MB (5 images * 10MB)
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  maxTotalSizeMB: _maxTotalSizeMB = 50,
+  // F79 FIX: Default max total size 50MB
+  maxTotalSizeMB = 50,
 }: MediaGalleryUploaderProps) {
-  // FIX: F79 - TODO: Validate total size of images array against _maxTotalSizeMB before allowing add
-  // Currently the prop is declared for callers to pass in; actual enforcement needs image file size tracking
   const { t } = useI18n();
   const [showUploader, setShowUploader] = useState(false);
   const [editingAlt, setEditingAlt] = useState<number | null>(null);
   const dragItem = useRef<number | null>(null);
   const dragOverItem = useRef<number | null>(null);
 
-  const addImage = useCallback((url: string) => {
+  // F79 FIX: Compute current total size of gallery images in bytes
+  const totalSizeBytes = images.reduce((sum, img) => sum + (img.fileSize || 0), 0);
+  const totalSizeMB = totalSizeBytes / (1024 * 1024);
+  const isOverSizeLimit = totalSizeMB >= maxTotalSizeMB;
+
+  const addImage = useCallback((url: string, fileSize?: number) => {
     if (!url) return;
+    // F79 FIX: Check total size limit before allowing add
+    const currentTotal = images.reduce((sum, img) => sum + (img.fileSize || 0), 0);
+    const newTotal = currentTotal + (fileSize || 0);
+    if (maxTotalSizeMB > 0 && newTotal > maxTotalSizeMB * 1024 * 1024) {
+      toast.error(t('admin.mediaGallery.totalSizeLimitReached') || `Total size exceeds ${maxTotalSizeMB}MB limit`);
+      return;
+    }
     const newImage: GalleryImage = {
       url,
       alt: '',
       sortOrder: images.length,
       isPrimary: images.length === 0,
+      fileSize,
     };
     onChange([...images, newImage]);
     setShowUploader(false);
-  }, [images, onChange]);
+  }, [images, onChange, maxTotalSizeMB, t]);
 
   const removeImage = useCallback((index: number) => {
     const updated = images.filter((_, i) => i !== index);
@@ -203,7 +216,8 @@ export function MediaGalleryUploader({
         ))}
 
         {/* Add photo slot */}
-        {images.length < maxImages && (
+        {/* F79 FIX: Disable add button when total size limit is reached */}
+        {images.length < maxImages && !isOverSizeLimit && (
           showUploader ? (
             <div className="aspect-square">
               <MediaUploader
@@ -223,6 +237,17 @@ export function MediaGalleryUploader({
               <span className="text-xs text-neutral-500">{t('admin.mediaGallery.addPhoto')}</span>
             </button>
           )
+        )}
+        {/* F79 FIX: Show warning when total size limit reached */}
+        {isOverSizeLimit && images.length < maxImages && (
+          <div className="aspect-square rounded-lg border-2 border-dashed border-amber-300 bg-amber-50 flex flex-col items-center justify-center gap-1 p-2">
+            <span className="text-xs text-amber-600 text-center font-medium">
+              {t('admin.mediaGallery.sizeLimitReached') || `Size limit (${maxTotalSizeMB}MB) reached`}
+            </span>
+            <span className="text-[10px] text-amber-500 text-center">
+              {totalSizeMB.toFixed(1)}MB / {maxTotalSizeMB}MB
+            </span>
+          </div>
         )}
       </div>
 

@@ -14,6 +14,7 @@ import { patchVideoSchema } from '@/lib/validations/video';
 import { enqueue } from '@/lib/translation';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { logger } from '@/lib/logger';
+import { sanitizeUrl } from '@/lib/sanitize';
 
 // GET /api/admin/videos/[id] - Get single video
 export const GET = withAdminGuard(async (_request, { params }) => {
@@ -127,8 +128,9 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
     }
 
     if (description !== undefined) updateData.description = description;
-    if (thumbnailUrl !== undefined) updateData.thumbnailUrl = thumbnailUrl;
-    if (videoUrl !== undefined) updateData.videoUrl = videoUrl;
+    // F16 FIX: Sanitize URL to prevent SSRF/XSS
+    if (thumbnailUrl !== undefined) updateData.thumbnailUrl = thumbnailUrl ? sanitizeUrl(thumbnailUrl) : thumbnailUrl;
+    if (videoUrl !== undefined) updateData.videoUrl = videoUrl ? sanitizeUrl(videoUrl) : videoUrl;
     if (duration !== undefined) updateData.duration = duration;
     if (category !== undefined) updateData.category = category;
     if (tags !== undefined) {
@@ -137,7 +139,16 @@ export const PATCH = withAdminGuard(async (request, { session, params }) => {
         : null;
     }
     if (instructor !== undefined) updateData.instructor = instructor;
-    if (views !== undefined) updateData.views = views;
+    // F15 FIX: Validate views is a non-negative finite number
+    if (views !== undefined) {
+      if (!Number.isFinite(views) || views < 0) {
+        return NextResponse.json(
+          { error: 'views must be a non-negative finite number' },
+          { status: 400 }
+        );
+      }
+      updateData.views = views;
+    }
     if (isFeatured !== undefined) updateData.isFeatured = isFeatured;
     if (isPublished !== undefined) updateData.isPublished = isPublished;
     if (locale !== undefined) updateData.locale = locale;

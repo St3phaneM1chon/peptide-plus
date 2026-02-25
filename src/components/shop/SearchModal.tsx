@@ -59,7 +59,7 @@ export default function SearchModal({ open, onClose }: SearchModalProps) {
   }, [open]);
 
   // Search products
-  // TODO: BUG-085 - Add AbortController to cancel in-flight fetch when modal unmounts or query changes
+  // BUG-085 FIX: AbortController cancels in-flight fetch on query change or unmount (see cleanup below)
   useEffect(() => {
     if (!query.trim()) {
       setResults([]);

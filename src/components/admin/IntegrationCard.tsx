@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { CheckCircle2, XCircle, Loader2, Plug, Copy, ExternalLink } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
 
-// FIX: F94 - TODO: Add pattern (regex) validation for ID fields (Advertiser ID, Channel ID, etc.)
+// F94 FIX: ConfigField supports pattern (regex) validation for ID fields
 interface ConfigField {
   key: string;
   label: string;
@@ -14,7 +14,10 @@ interface ConfigField {
   type?: 'text' | 'password' | 'url';
   readOnly?: boolean;
   hint?: string;
+  /** F94 FIX: Regex pattern string to validate field value (e.g. "^\\d+$" for numeric IDs) */
   pattern?: string;
+  /** F94 FIX: Error message shown when pattern validation fails */
+  patternMessage?: string;
 }
 
 interface IntegrationCardProps {
@@ -122,20 +125,29 @@ export function IntegrationCard({
 
       {/* Configuration Fields */}
       <div className="p-6 space-y-4">
-        {fields.map((field) => (
-          <div key={field.key}>
-            <label className="block text-sm font-medium text-slate-700 mb-1">{field.label}</label>
-            <input
-              type={field.type || 'text'}
-              value={field.value}
-              onChange={(e) => field.onChange(e.target.value)}
-              placeholder={field.placeholder}
-              readOnly={field.readOnly}
-              className={`w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 ${field.readOnly ? 'bg-slate-50 text-slate-500' : ''}`}
-            />
-            {field.hint && <p className="mt-1 text-xs text-slate-400">{field.hint}</p>}
-          </div>
-        ))}
+        {fields.map((field) => {
+          // F94 FIX: Validate field value against pattern regex if provided
+          const patternError = field.pattern && field.value && !new RegExp(field.pattern).test(field.value);
+          return (
+            <div key={field.key}>
+              <label className="block text-sm font-medium text-slate-700 mb-1">{field.label}</label>
+              <input
+                type={field.type || 'text'}
+                value={field.value}
+                onChange={(e) => field.onChange(e.target.value)}
+                placeholder={field.placeholder}
+                readOnly={field.readOnly}
+                pattern={field.pattern}
+                className={`w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 ${field.readOnly ? 'bg-slate-50 text-slate-500' : ''} ${patternError ? 'border-red-300' : 'border-slate-300'}`}
+              />
+              {/* F94 FIX: Show pattern validation error inline */}
+              {patternError && (
+                <p className="mt-1 text-xs text-red-500">{field.patternMessage || t('admin.integrations.invalidFormat') || 'Invalid format'}</p>
+              )}
+              {field.hint && !patternError && <p className="mt-1 text-xs text-slate-400">{field.hint}</p>}
+            </div>
+          );
+        })}
 
         {/* Webhook URL */}
         {webhookUrl && (

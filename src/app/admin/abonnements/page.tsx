@@ -1,6 +1,6 @@
-// TODO: F-061 - catch (err) in fetchSubscriptions: use _err or omit variable name
-// TODO: F-074 - Monthly revenue uses 1/6 for EVERY_6_MONTHS; round result to 2 decimal places
-// TODO: F-087 - Config section hardcodes "15%" instead of displaying actual configurable value
+// FIXED: F-061 - catch (err) in fetchSubscriptions: renamed to _err to indicate intentional discard
+// FIXED: F-074 - Monthly revenue uses 1/6 for EVERY_6_MONTHS; rounded result to 2 decimal places
+// FIXED: F-087 - Config section now displays actual configurable value from cfgDiscount state
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';

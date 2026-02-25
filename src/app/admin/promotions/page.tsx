@@ -1,4 +1,4 @@
-// TODO: F-054 - typeLabels recreated every render without useMemo; wrap in useMemo for performance
+// FIXED: F-054 - typeLabels now wrapped in useMemo (see line ~109)
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';

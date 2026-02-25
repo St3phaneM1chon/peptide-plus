@@ -153,37 +153,69 @@ export function LoyaltyProvider({ children }: { children: ReactNode }) {
     }
   }, [state.lifetimePoints, state.tier.id]);
 
+  // F-002 FIX: earnPoints now updates client state ONLY AFTER a successful API
+  // response. Previously, setState was called BEFORE the fetch, so if the API
+  // rejected the operation (rate limit, validation error, server error) the UI
+  // would show incorrect points that never matched the database.
   const earnPoints = async (amount: number, description: string, orderId?: string) => {
     const pointsEarned = Math.floor(amount * state.tier.multiplier);
-    
-    const transaction: LoyaltyTransaction = {
-      id: Date.now().toString(),
-      type: 'earn',
-      points: pointsEarned,
-      description,
-      date: new Date().toISOString(),
-      orderId,
-    };
 
-    setState(prev => ({
-      ...prev,
-      points: prev.points + pointsEarned,
-      lifetimePoints: prev.lifetimePoints + pointsEarned,
-      transactions: [transaction, ...prev.transactions],
-    }));
-
-    // Save to backend
+    // F-002 FIX: For authenticated users, call the API FIRST and only update
+    // local state from the server-confirmed response.
     if (session?.user?.email) {
       try {
-        await fetch('/api/loyalty/earn', {
+        const res = await fetch('/api/loyalty/earn', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ points: pointsEarned, description, orderId }),
         });
+
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}));
+          console.error('Earn points API error:', errorData);
+          // F-002 FIX: Do NOT update state on failure - keep the previous
+          // (correct) values so the UI stays consistent with the server.
+          return;
+        }
+
+        const data = await res.json();
+
+        // F-002 FIX: Update state from server-confirmed values, not local estimates.
+        setState(prev => ({
+          ...prev,
+          points: data.newBalance ?? (prev.points + pointsEarned),
+          lifetimePoints: data.lifetimePoints ?? (prev.lifetimePoints + pointsEarned),
+          transactions: [{
+            id: data.transaction?.id || Date.now().toString(),
+            type: 'earn' as const,
+            points: data.transaction?.points ?? pointsEarned,
+            description: data.transaction?.description ?? description,
+            date: data.transaction?.date || new Date().toISOString(),
+            orderId,
+          }, ...prev.transactions],
+        }));
       } catch (error) {
         console.error('Error saving points:', error);
+        // F-002 FIX: Network error - do NOT update local state.
       }
     } else {
+      // Not authenticated: local-only preview (no API to confirm against)
+      const transaction: LoyaltyTransaction = {
+        id: Date.now().toString(),
+        type: 'earn',
+        points: pointsEarned,
+        description,
+        date: new Date().toISOString(),
+        orderId,
+      };
+
+      setState(prev => ({
+        ...prev,
+        points: prev.points + pointsEarned,
+        lifetimePoints: prev.lifetimePoints + pointsEarned,
+        transactions: [transaction, ...prev.transactions],
+      }));
+
       // Save preview to localStorage
       try {
         if (typeof window !== 'undefined') {

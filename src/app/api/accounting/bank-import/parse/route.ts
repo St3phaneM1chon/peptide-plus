@@ -19,6 +19,8 @@ export const POST = withAdminGuard(async (request) => {
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
     const requestedFormat = formData.get('format') as string | null;
+    // F057 FIX: Accept bankAccountId from form data so CSV imports target the correct account
+    const bankAccountId = formData.get('bankAccountId') as string | null;
 
     if (!file) {
       return NextResponse.json({ error: 'Aucun fichier fourni' }, { status: 400 });
@@ -48,10 +50,12 @@ export const POST = withAdminGuard(async (request) => {
 
     switch (detectedFormat) {
       case 'desjardins':
-        transactions = parseDesjardinsCSV(csvContent);
+        // F057 FIX: Pass bankAccountId parameter (falls back to 'desjardins-main' if null)
+        transactions = parseDesjardinsCSV(csvContent, bankAccountId || undefined);
         break;
       case 'td':
-        transactions = parseTDCSV(csvContent);
+        // F057 FIX: Pass bankAccountId parameter (falls back to 'td-main' if null)
+        transactions = parseTDCSV(csvContent, bankAccountId || undefined);
         break;
       case 'rbc':
       case 'generic':

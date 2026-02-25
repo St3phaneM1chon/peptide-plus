@@ -94,6 +94,7 @@ export const PATCH = withAdminGuard(async (request: NextRequest, { session, para
 });
 
 // DELETE /api/admin/medias/[id] - Delete a media file
+// F27 FIX: Renamed from _request since this parameter is used (getClientIpFromRequest, validateCsrf)
 export const DELETE = withAdminGuard(async (request: NextRequest, { session, params }) => {
   try {
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()

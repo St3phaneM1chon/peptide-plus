@@ -1,6 +1,6 @@
 export const dynamic = 'force-dynamic';
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth-config';
@@ -9,6 +9,8 @@ import { logger } from '@/lib/logger';
 import { validateCsrf } from '@/lib/csrf-middleware';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { createFormatSchema } from '@/lib/validations/format';
+import { apiSuccess, apiError } from '@/lib/api-response';
+import { ErrorCode } from '@/lib/error-codes';
 
 // GET all formats for a product
 export async function GET(
@@ -22,13 +24,10 @@ export async function GET(
       orderBy: { sortOrder: 'asc' },
     });
 
-    return NextResponse.json(formats);
+    return apiSuccess(formats);
   } catch (error) {
     logger.error('Error fetching formats', { error: error instanceof Error ? error.message : String(error) });
-    return NextResponse.json(
-      { error: 'Failed to fetch formats' },
-      { status: 500 }
-    );
+    return apiError('Failed to fetch formats', ErrorCode.INTERNAL_ERROR);
   }
 }
 
@@ -41,24 +40,24 @@ export async function POST(
     // Rate limiting
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || '127.0.0.1';
     const rl = await rateLimitMiddleware(ip, '/api/products/formats');
-    if (!rl.success) { const res = NextResponse.json({ error: rl.error!.message }, { status: 429 }); Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v)); return res; }
+    if (!rl.success) { const res = apiError(rl.error!.message, ErrorCode.RATE_LIMITED); Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v)); return res; }
 
     // CSRF protection
     const csrfValid = await validateCsrf(request);
     if (!csrfValid) {
-      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+      return apiError('Invalid CSRF token', ErrorCode.FORBIDDEN);
     }
 
     const { id } = await params;
     const session = await auth();
     if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return apiError('Unauthorized', ErrorCode.UNAUTHORIZED);
     }
 
     const body = await request.json();
     const parsed = createFormatSchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+      return apiError('Invalid data', ErrorCode.VALIDATION_ERROR);
     }
     const {
       formatType,
@@ -143,12 +142,9 @@ export async function POST(
     try { revalidatePath('/api/products', 'layout'); } catch { /* revalidation is best-effort */ }
 
     // FIX: BUG-043 - Include warning in response if format was created inactive
-    return NextResponse.json({ ...format, ...(warningMessage ? { warning: warningMessage } : {}) }, { status: 201 });
+    return apiSuccess({ ...format, ...(warningMessage ? { warning: warningMessage } : {}) }, { status: 201 });
   } catch (error) {
     logger.error('Error creating format', { error: error instanceof Error ? error.message : String(error) });
-    return NextResponse.json(
-      { error: 'Failed to create format' },
-      { status: 500 }
-    );
+    return apiError('Failed to create format', ErrorCode.INTERNAL_ERROR);
   }
 }

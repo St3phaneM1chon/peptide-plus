@@ -272,12 +272,13 @@ export async function autoReconcileByAmount(
  * FIX: F014 - Maintains a Set of already-matched journalEntryIds to prevent
  * the same journal entry from being matched to multiple bank transactions.
  *
- * TODO: F031 - N+1 query performance issue. Currently each transaction triggers
- * 2-4 individual DB queries via autoReconcileByReference() and autoReconcileByAmount().
- * For 100 pending transactions, this produces ~200-400 DB round-trips.
- * Optimization: Pre-load all POSTED journal entries (with lines) for the relevant
- * date range in a single query, then match in-memory. This would reduce DB calls
- * from O(n) to O(1) regardless of transaction count.
+ * F031 FIX: Bulk-load entries to eliminate N+1 queries
+ * Previously each transaction triggered 2-4 individual DB queries via
+ * autoReconcileByReference() and autoReconcileByAmount(). For 100 pending
+ * transactions, this produced ~200-400 DB round-trips.
+ * Now we pre-load all pending bank transactions (with full data) and all
+ * POSTED journal entries (with lines) for the relevant date range in bulk,
+ * then match entirely in-memory. This reduces DB calls from O(n) to O(1).
  */
 export async function runAutoReconciliation(): Promise<AutoReconciliationResult> {
   const result: AutoReconciliationResult = {
@@ -292,51 +293,133 @@ export async function runAutoReconciliation(): Promise<AutoReconciliationResult>
   // to prevent the same entry from being assigned to multiple bank transactions
   const matchedJournalEntryIds = new Set<string>();
 
+  // F031 FIX: Bulk-load all pending bank transactions with full data
   const pendingTxs = await prisma.bankTransaction.findMany({
     where: {
       reconciliationStatus: 'PENDING',
       deletedAt: null,
     },
-    select: { id: true },
     orderBy: { date: 'asc' },
   });
 
-  for (const tx of pendingTxs) {
+  if (pendingTxs.length === 0) return result;
+
+  // F031 FIX: Compute the date range covering all pending transactions +/- proximity window
+  const txDates = pendingTxs.map((t) => t.date.getTime());
+  const minTxDate = Math.min(...txDates);
+  const maxTxDate = Math.max(...txDates);
+  const dateRangeMin = new Date(minTxDate - DATE_PROXIMITY_DAYS * 86400000);
+  const dateRangeMax = new Date(maxTxDate + DATE_PROXIMITY_DAYS * 86400000);
+
+  // F031 FIX: Single bulk query to load ALL candidate journal entries with lines
+  const allEntries = await prisma.journalEntry.findMany({
+    where: {
+      status: 'POSTED',
+      deletedAt: null,
+      date: {
+        gte: dateRangeMin,
+        lte: dateRangeMax,
+      },
+    },
+    include: { lines: true },
+  });
+
+  // F031 FIX: Pre-compute normalized references and amounts for all entries
+  const entryData = allEntries.map((entry) => ({
+    entry,
+    normalizedRef: normalize(entry.reference || entry.description),
+    amount: entry.lines.reduce((sum, l) => sum + Number(l.debit) - Number(l.credit), 0),
+  }));
+
+  for (const bankTx of pendingTxs) {
     result.processed++;
 
     try {
-      // First pass: try by reference
-      let match = await autoReconcileByReference(tx.id);
+      let bestMatch: ReconciliationMatch | null = null;
+      const bankAmount = Math.abs(Number(bankTx.amount));
+      const searchRef = bankTx.reference || bankTx.description;
+      const normalizedBankRef = searchRef ? normalize(searchRef) : '';
 
-      // FIX: F014 - Skip if this journal entry was already matched in this batch
-      if (match && matchedJournalEntryIds.has(match.journalEntryId)) {
-        match = null;
-      }
+      // F031 FIX: In-memory matching against pre-loaded entries
+      for (const { entry, normalizedRef: entryRef, amount: entryAmount } of entryData) {
+        // FIX: F014 - Skip entries already matched in this batch
+        if (matchedJournalEntryIds.has(entry.id)) continue;
 
-      // Second pass: try by amount if no confident match
-      if (!match || match.confidence < AUTO_APPLY_THRESHOLD) {
-        const amountMatch = await autoReconcileByAmount(tx.id);
-        if (amountMatch && !matchedJournalEntryIds.has(amountMatch.journalEntryId)) {
-          if (!match || amountMatch.confidence > match.confidence) {
-            match = amountMatch;
+        // Check date proximity
+        const dDays = daysBetween(bankTx.date, entry.date);
+        if (dDays > DATE_PROXIMITY_DAYS) continue;
+
+        let confidence = 0;
+        const reasons: string[] = [];
+
+        // Reference matching
+        if (normalizedBankRef.length > 0 && entryRef.length > 0) {
+          if (normalizedBankRef === entryRef) {
+            confidence += WEIGHT_EXACT_REFERENCE;
+            reasons.push('R\u00e9f\u00e9rence identique');
+          } else if (normalizedBankRef.includes(entryRef) || entryRef.includes(normalizedBankRef)) {
+            confidence += WEIGHT_PARTIAL_REFERENCE;
+            reasons.push('R\u00e9f\u00e9rence partielle');
           }
+        }
+
+        // Amount matching
+        const amountDiff = Math.abs(bankAmount - Math.abs(entryAmount));
+        if (amountDiff < 0.01) {
+          confidence += WEIGHT_EXACT_AMOUNT;
+          reasons.push('Montant exact');
+        }
+
+        // Date proximity
+        if (dDays === 0) {
+          confidence += WEIGHT_SAME_DATE;
+          reasons.push('M\u00eame date');
+        } else if (dDays <= DATE_PROXIMITY_DAYS) {
+          confidence += WEIGHT_CLOSE_DATE;
+          reasons.push(`Date proche (\u00b1${dDays}j)`);
+        }
+
+        confidence = Math.min(confidence, 1);
+
+        if (confidence > 0 && (!bestMatch || confidence > bestMatch.confidence)) {
+          bestMatch = {
+            bankTransactionId: bankTx.id,
+            journalEntryId: entry.id,
+            confidence,
+            reason: reasons.join(', '),
+            autoApplied: false,
+          };
         }
       }
 
-      if (match) {
+      // Auto-apply if above threshold
+      if (bestMatch && bestMatch.confidence >= AUTO_APPLY_THRESHOLD) {
+        await prisma.bankTransaction.update({
+          where: { id: bankTx.id },
+          data: {
+            reconciliationStatus: 'MATCHED',
+            matchedEntryId: bestMatch.journalEntryId,
+            matchedAt: new Date(),
+            matchedBy: 'Syst\u00e8me (auto-rapprochement batch)',
+          },
+        });
+        bestMatch.autoApplied = true;
+      }
+
+      if (bestMatch) {
         // FIX: F014 - Record this journal entry as matched so it won't be reused
-        matchedJournalEntryIds.add(match.journalEntryId);
-        result.matches.push(match);
-        if (match.autoApplied) {
+        matchedJournalEntryIds.add(bestMatch.journalEntryId);
+        result.matches.push(bestMatch);
+        if (bestMatch.autoApplied) {
           result.autoMatched++;
         } else {
           result.suggested++;
         }
       }
     } catch (error) {
-      console.error('[AutoReconciliation] Reconciliation failed for transaction:', tx.id, error);
+      console.error('[AutoReconciliation] Reconciliation failed for transaction:', bankTx.id, error);
       result.errors.push(
-        `Erreur pour tx ${tx.id}: ${error instanceof Error ? error.message : String(error)}`
+        `Erreur pour tx ${bankTx.id}: ${error instanceof Error ? error.message : String(error)}`
       );
     }
   }

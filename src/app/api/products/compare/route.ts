@@ -1,10 +1,12 @@
 export const dynamic = 'force-dynamic';
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { withTranslations, DB_SOURCE_LOCALE } from '@/lib/translation';
 import { isValidLocale, defaultLocale } from '@/i18n/config';
+import { apiSuccess, apiError } from '@/lib/api-response';
+import { ErrorCode } from '@/lib/error-codes';
 
 /**
  * GET /api/products/compare?slugs=slug1,slug2,slug3,slug4
@@ -17,25 +19,19 @@ export async function GET(request: NextRequest) {
     const locale = searchParams.get('locale') || defaultLocale;
 
     if (!slugsParam) {
-      return NextResponse.json(
-        { error: 'Missing slugs parameter' },
-        { status: 400 }
-      );
+      return apiError('Missing slugs parameter', ErrorCode.VALIDATION_ERROR);
     }
 
     // Parse and limit to 4 products
     const allSlugs = slugsParam.split(',').filter(Boolean);
     // FIX: BUG-055 - Return explicit error when more than 4 products requested
     if (allSlugs.length > 4) {
-      return NextResponse.json(
-        { error: 'Maximum 4 products for comparison. Please remove some products.', requested: allSlugs.length },
-        { status: 400 }
-      );
+      return apiError('Maximum 4 products for comparison. Please remove some products.', ErrorCode.VALIDATION_ERROR);
     }
     const slugs = allSlugs.slice(0, 4);
 
     if (slugs.length === 0) {
-      return NextResponse.json({ products: [] });
+      return apiSuccess({ products: [] });
     }
 
     // Fetch products with full details
@@ -125,7 +121,7 @@ export async function GET(request: NextRequest) {
       .map(slug => productsWithStats.find(p => p.slug === slug))
       .filter(Boolean);
 
-    return NextResponse.json(
+    return apiSuccess(
       { products: sortedProducts },
       {
         headers: {
@@ -135,9 +131,6 @@ export async function GET(request: NextRequest) {
     );
   } catch (error) {
     logger.error('Error fetching products for comparison', { error: error instanceof Error ? error.message : String(error) });
-    return NextResponse.json(
-      { error: 'Failed to fetch products for comparison' },
-      { status: 500 }
-    );
+    return apiError('Failed to fetch products for comparison', ErrorCode.INTERNAL_ERROR);
   }
 }

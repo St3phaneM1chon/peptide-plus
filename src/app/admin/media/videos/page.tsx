@@ -140,7 +140,8 @@ export default function MediaVideosPage() {
     setSaving(true);
     setFormError(null); // FIX: F51 - Clear previous errors
     try {
-      const tags = form.tags ? form.tags.split(',').map(t => t.trim()).filter(Boolean) : [];
+      // F89 FIX: Normalize multiple spaces within tags and filter empty entries
+      const tags = form.tags ? form.tags.split(',').map(t => t.trim().replace(/\s+/g, ' ')).filter(Boolean) : [];
       // F33 FIX: Validate video URL format before submission
       if (form.videoUrl && !/^https?:\/\/.+/i.test(form.videoUrl)) {
         const msg = t('admin.media.invalidVideoUrl') || 'Please enter a valid URL starting with http:// or https://';

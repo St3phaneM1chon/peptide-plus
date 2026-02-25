@@ -4,7 +4,8 @@ import { NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import type { BankRule, BankTransaction } from '@prisma/client';
-import { Decimal } from '@prisma/client/runtime/library';
+// F093 FIX: Use decimal.js directly instead of Prisma internal runtime import
+import Decimal from 'decimal.js';
 import { logger } from '@/lib/logger';
 import { z } from 'zod';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';

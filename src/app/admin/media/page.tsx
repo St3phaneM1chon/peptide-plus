@@ -72,28 +72,24 @@ export default function MediaDashboardPage() {
         }
       });
 
-      // FIX: F52 - TODO: Create a single /api/admin/medias/stats endpoint that aggregates all counts in one DB query
-      // Load media stats (currently 5 separate requests)
+      // F52 FIX: Single aggregated stats request instead of 5 separate API calls
       const statsPromise = Promise.all([
-        fetch('/api/admin/medias?limit=1').then(r => r.json()).catch(() => ({ pagination: { total: 0 } })),
+        fetch('/api/admin/medias?stats=true').then(r => r.json()).catch(() => ({ totalMedia: 0, imageCount: 0, videoFileCount: 0, pdfCount: 0 })),
         fetch('/api/admin/videos?limit=1').then(r => r.json()).catch(() => ({ pagination: { total: 0 } })),
-        fetch('/api/admin/medias?mimeType=image&limit=1').then(r => r.json()).catch(() => ({ pagination: { total: 0 } })),
-        fetch('/api/admin/medias?mimeType=video&limit=1').then(r => r.json()).catch(() => ({ pagination: { total: 0 } })),
-        fetch('/api/admin/medias?mimeType=application/pdf&limit=1').then(r => r.json()).catch(() => ({ pagination: { total: 0 } })),
       ]);
 
-      const [statuses, [mediaRes, videoRes, imgRes, vidFileRes, pdfRes]] = await Promise.all([
+      const [statuses, [mediaStatsRes, videoRes]] = await Promise.all([
         Promise.all(statusPromises),
         statsPromise,
       ]);
 
       setPlatforms(statuses);
       setStats({
-        totalMedia: mediaRes.pagination?.total || 0,
+        totalMedia: mediaStatsRes.totalMedia || 0,
         totalVideos: videoRes.pagination?.total || 0,
-        imageCount: imgRes.pagination?.total || 0,
-        videoFileCount: vidFileRes.pagination?.total || 0,
-        pdfCount: pdfRes.pagination?.total || 0,
+        imageCount: mediaStatsRes.imageCount || 0,
+        videoFileCount: mediaStatsRes.videoFileCount || 0,
+        pdfCount: mediaStatsRes.pdfCount || 0,
       });
       setLoading(false);
     };

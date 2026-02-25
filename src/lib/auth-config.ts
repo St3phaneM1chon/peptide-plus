@@ -340,6 +340,10 @@ export const authConfig: NextAuthConfig = {
               });
               token.role = (dbUser?.role as UserRole) || UserRole.CUSTOMER;
               token.mfaEnabled = dbUser?.mfaEnabled || false;
+              // SECURITY FIX (FAILLE-059): OAuth users who have MFA enabled have NOT
+              // verified MFA at this point. Mark as unverified so the session callback
+              // propagates the correct state. They must complete MFA separately.
+              token.mfaVerified = !(dbUser?.mfaEnabled);
               // RGPD: Flag OAuth users who haven't accepted terms yet
               token.needsTerms = !dbUser?.termsAcceptedAt;
               // Use DB values for name/image if available (most up-to-date)
@@ -349,11 +353,17 @@ export const authConfig: NextAuthConfig = {
               console.error('[AuthConfig] Failed to fetch user data for JWT token:', error);
               token.role = UserRole.CUSTOMER;
               token.mfaEnabled = false;
+              token.mfaVerified = false;
               token.needsTerms = true;
             }
           } else {
             token.role = ((user as unknown as Record<string, unknown>).role as UserRole) || UserRole.CUSTOMER;
             token.mfaEnabled = (user as unknown as Record<string, unknown>).mfaEnabled as boolean || false;
+            // SECURITY FIX (FAILLE-059): For credentials provider, MFA was already
+            // verified during the authorize() call if mfaEnabled is true (the code
+            // in authorize() validates the TOTP code). So if we reach here, MFA is verified.
+            // If MFA is not enabled, mfaVerified is trivially true (no MFA to verify).
+            token.mfaVerified = true;
           }
         }
 
@@ -388,9 +398,10 @@ export const authConfig: NextAuthConfig = {
         session.user.id = token.id as string;
         session.user.role = token.role as UserRole;
         session.user.mfaEnabled = token.mfaEnabled as boolean;
-        // TODO: FAILLE-059 - mfaVerified is always true here, even for OAuth users who didn't verify MFA.
-        //       Track actual MFA verification state in the JWT and propagate it correctly.
-        session.user.mfaVerified = true; // Si on arrive ici, MFA est vérifié
+        // SECURITY FIX (FAILLE-059): Propagate actual MFA verification state from JWT.
+        // For credentials login: MFA was verified in authorize() before token was issued.
+        // For OAuth login: mfaVerified is false if user has MFA enabled but didn't verify yet.
+        session.user.mfaVerified = (token.mfaVerified as boolean) ?? false;
         session.user.needsTerms = (token.needsTerms as boolean) || false;
         // Ensure name/email/image are passed through from JWT
         if (token.name) session.user.name = token.name as string;
@@ -446,12 +457,14 @@ export const authConfig: NextAuthConfig = {
         });
 
         // SECURITY (FAILLE-006): Record session creation for security tracking
+        // FAILLE-001 FIX: Integrate enforceMaxSessions to limit concurrent sessions (NYDFS compliance)
         if (user.id) {
           try {
-            const { recordSessionCreation } = await import('./session-security');
+            const { recordSessionCreation, enforceMaxSessions } = await import('./session-security');
             recordSessionCreation(user.id);
+            await enforceMaxSessions(user.id, 3);
           } catch (error) {
-            console.error('[AuthConfig] Session creation recording failed (non-blocking):', error);
+            logger.error('Session security recording failed (non-blocking)', { error: error instanceof Error ? error.message : String(error) });
           }
         }
       } catch (error) {
@@ -536,6 +549,7 @@ declare module 'next-auth/jwt' {
     id: string;
     role: UserRole;
     mfaEnabled: boolean;
+    mfaVerified: boolean;
     needsTerms: boolean;
   }
 }

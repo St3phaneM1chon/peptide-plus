@@ -1,6 +1,13 @@
 export const dynamic = 'force-dynamic';
 
-// TODO: F-092 - Validate message language code against ISO 639-1 list before storing
+// F092 FIX: ISO 639-1 language codes supported by the application (matches i18n locales + common detection results)
+const VALID_LANGUAGE_CODES = new Set([
+  'en', 'fr', 'ar', 'de', 'es', 'hi', 'it', 'ko', 'pa', 'pl', 'pt', 'ru',
+  'sv', 'ta', 'tl', 'vi', 'zh', 'ja', 'nl', 'tr', 'uk', 'th', 'id', 'ms',
+  'bn', 'cs', 'da', 'el', 'fi', 'he', 'hu', 'no', 'ro', 'sk', 'bg', 'hr',
+  'lt', 'lv', 'et', 'sl', 'sr', 'ca', 'gl', 'eu', 'af', 'sw', 'ur', 'fa',
+  'ht', 'gcr',
+]);
 
 /**
  * API Chat Messages
@@ -50,7 +57,7 @@ export async function POST(request: NextRequest) {
     const chatMessageSchema = z.object({
       conversationId: z.string().min(1, 'conversationId is required'),
       content: z.string().min(1, 'content is required').max(5000, 'Message too long (max 5000 characters)'),
-      sender: z.enum(['VISITOR', 'ADMIN']),
+      sender: z.enum(['VISITOR', 'ADMIN', 'BOT', 'USER']),
       visitorId: z.string().optional(),
       type: z.enum(['TEXT', 'IMAGE', 'FILE']).optional().default('TEXT'),
       attachmentUrl: z.string().url().optional().nullable(),
@@ -74,6 +81,19 @@ export async function POST(request: NextRequest) {
         { error: 'Invalid JSON body' },
         { status: 400 }
       );
+    }
+
+    // F-008 FIX: Enforce sender based on auth role to prevent spoofing
+    // Non-admin users cannot impersonate BOT or ADMIN senders
+    const isAdminUser = session?.user && ['OWNER', 'EMPLOYEE'].includes(session.user.role as string);
+    if (!isAdminUser) {
+      // Force sender to VISITOR for non-admin/non-system requests
+      body = { ...body, sender: 'VISITOR' };
+    } else {
+      // Admins may send as ADMIN or BOT; normalize USER to ADMIN for admin users
+      if (body.sender === 'USER' || body.sender === 'VISITOR') {
+        body = { ...body, sender: 'ADMIN' };
+      }
     }
 
     const { conversationId, content: rawContent, sender, visitorId } = body;
@@ -106,6 +126,9 @@ export async function POST(request: NextRequest) {
     // Vérifier la conversation avec contrôle d'accès
     let conversation;
 
+    // F096 FIX: Standardize message fetch limit to 50 (was 20, inconsistent with /api/chat which uses 50)
+    const MESSAGE_FETCH_LIMIT = 50;
+
     if (isAdmin) {
       // Les admins peuvent accéder à toutes les conversations
       conversation = await db.chatConversation.findUnique({
@@ -113,18 +136,20 @@ export async function POST(request: NextRequest) {
         include: {
           messages: {
             orderBy: { createdAt: 'asc' },
-            take: 20,
+            take: MESSAGE_FETCH_LIMIT,
           },
         },
       });
     } else if (sender === 'VISITOR' && visitorId) {
-      // Les visiteurs ne peuvent accéder qu'à leur propre conversation via visitorId
+      // F-009 FIX: Visitors can only access their own conversation via exact visitorId match.
+      // The visitorId is now a full cryptographic UUID (not guessable), and the lookup
+      // requires BOTH conversationId AND visitorId to match, preventing enumeration.
       conversation = await db.chatConversation.findFirst({
         where: { id: conversationId, visitorId: visitorId },
         include: {
           messages: {
             orderBy: { createdAt: 'asc' },
-            take: 20,
+            take: MESSAGE_FETCH_LIMIT,
           },
         },
       });
@@ -135,7 +160,7 @@ export async function POST(request: NextRequest) {
         include: {
           messages: {
             orderBy: { createdAt: 'asc' },
-            take: 20,
+            take: MESSAGE_FETCH_LIMIT,
           },
         },
       });
@@ -179,7 +204,9 @@ export async function POST(request: NextRequest) {
     if (sender === 'VISITOR') {
       // Message du visiteur
       // Détecter la langue si pas déjà connue
-      const detectedLang = await detectLanguage(content);
+      const rawDetectedLang = await detectLanguage(content);
+      // F092 FIX: Validate detected language code against ISO 639-1 list; fallback to 'en' if invalid
+      const detectedLang = VALID_LANGUAGE_CODES.has(rawDetectedLang) ? rawDetectedLang : 'en';
       
       // Mettre à jour la langue du visiteur si différente
       // TODO: F-075 - Use atomic update to prevent race condition when concurrent messages detect different languages

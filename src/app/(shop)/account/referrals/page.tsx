@@ -68,42 +68,48 @@ function WhatsAppIcon({ className }: { className?: string }) {
 }
 
 // -- Status badge component --
-// TODO: F-060 - Status labels are hardcoded in English; use t() for each label
+// F060 FIX: Use t() for status labels instead of hardcoded English strings
 
-function StatusBadge({ status }: { status: string }) {
-  const config: Record<string, { bg: string; text: string; icon: React.ReactNode; label: string }> = {
+function StatusBadge({ status, t }: { status: string; t: (key: string) => string }) {
+  const config: Record<string, { bg: string; text: string; icon: React.ReactNode; labelKey: string; fallback: string }> = {
     PENDING: {
       bg: 'bg-yellow-100',
       text: 'text-yellow-700',
       icon: <Clock className="w-3 h-3" />,
-      label: 'Pending',
+      labelKey: 'account.referrals.statusPending',
+      fallback: 'Pending',
     },
     QUALIFIED: {
       bg: 'bg-blue-100',
       text: 'text-blue-700',
       icon: <CheckCircle2 className="w-3 h-3" />,
-      label: 'Qualified',
+      labelKey: 'account.referrals.statusQualified',
+      fallback: 'Qualified',
     },
     REWARDED: {
       bg: 'bg-green-100',
       text: 'text-green-700',
       icon: <Award className="w-3 h-3" />,
-      label: 'Rewarded',
+      labelKey: 'account.referrals.statusRewarded',
+      fallback: 'Rewarded',
     },
     CANCELLED: {
       bg: 'bg-red-100',
       text: 'text-red-700',
       icon: <Clock className="w-3 h-3" />,
-      label: 'Cancelled',
+      labelKey: 'account.referrals.statusCancelled',
+      fallback: 'Cancelled',
     },
   };
 
   const cfg = config[status] || config.PENDING;
+  // F060 FIX: Resolve translated label, fall back to English if key not found
+  const label = t(cfg.labelKey) !== cfg.labelKey ? t(cfg.labelKey) : cfg.fallback;
 
   return (
     <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${cfg.bg} ${cfg.text}`}>
       {cfg.icon}
-      {cfg.label}
+      {label}
     </span>
   );
 }
@@ -518,7 +524,8 @@ export default function ReferralsPage() {
                             </div>
                           </td>
                           <td className="px-6 py-4">
-                            <StatusBadge status={referral.status} />
+                            {/* F060 FIX: Pass t() for translated status labels */}
+                            <StatusBadge status={referral.status} t={t} />
                           </td>
                           <td className="px-6 py-4 text-gray-700">
                             {referral.orderAmount

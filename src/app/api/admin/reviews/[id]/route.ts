@@ -17,8 +17,13 @@ import { stripHtml, stripControlChars } from '@/lib/sanitize';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { validateCsrf } from '@/lib/csrf-middleware';
 
+// F-010 FIX: Proper Zod enum for review moderation status values.
+// This is the canonical validation for admin review actions (approve/reject).
+// The allowed values are also defined in @/lib/validations/review (adminReviewActionSchema).
+const REVIEW_ACTION_STATUSES = ['APPROVED', 'REJECTED'] as const;
+
 const patchReviewSchema = z.object({
-  status: z.enum(['APPROVED', 'REJECTED']).optional(),
+  status: z.enum(REVIEW_ACTION_STATUSES).optional(),
   reply: z.string().max(5000).nullable().optional(),
 });
 

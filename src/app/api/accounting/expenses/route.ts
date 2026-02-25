@@ -15,11 +15,10 @@ import { createExpenseSchema, updateExpenseSchema } from '@/lib/accounting/valid
 // Deductibility rules per category (Canadian tax rules)
 // ---------------------------------------------------------------------------
 
-// FIX: F096 - TODO: Import full DEDUCTIBILITY_RULES from canadian-tax-config.ts for complete coverage
-// Categories not mapped here will have no deductibility rate.
+// F096 FIX: Complete deductibility map aligned with DEDUCTIBILITY_RULES in canadian-tax-config.ts
+// All expense categories now have explicit deductibility rates per CRA rules.
 const CATEGORY_DEDUCTIBILITY: Record<string, number> = {
-  meals: 50,
-  entertainment: 50,
+  // Fully deductible (100%) - per CRA rules
   travel: 100,
   office: 100,
   professional: 100,
@@ -37,8 +36,25 @@ const CATEGORY_DEDUCTIBILITY: Record<string, number> = {
   subscriptions: 100,
   equipment: 100,
   supplies: 100,
+  salaries: 100,
+  wages: 100,
+  contractor: 100,
+  hosting: 100,
+  accounting: 100,
+  legal: 100,
+  // Partially deductible (50%) - meals & entertainment per CRA s.67.1
+  meals: 50,
+  entertainment: 50,
+  // Non-deductible (0%) - per CRA rules
   fines: 0,
+  penalties: 0,
   personal: 0,
+  commuting: 0,
+  political_donations: 0,
+  club_dues: 0,
+  life_insurance: 0,
+  income_tax: 0,
+  capital_expenditure: 0,  // Goes through CCA instead
 };
 
 // ---------------------------------------------------------------------------
@@ -70,7 +86,8 @@ async function generateExpenseNumberInTx(tx: Prisma.TransactionClient): Promise<
     if (!isNaN(lastSeq)) nextSeq = lastSeq + 1;
   }
 
-  return `${prefix}${String(nextSeq).padStart(4, '0')}`;
+  // F063 FIX: Use padStart(5) for consistent 5-digit entry number format across all services
+  return `${prefix}${String(nextSeq).padStart(5, '0')}`;
 }
 
 // FIX: F017 - Schemas imported from @/lib/accounting/validation.ts (single source of truth)
@@ -449,13 +466,24 @@ export const DELETE = withAdminGuard(async (request, { session }) => {
       return NextResponse.json({ error: 'Dépense introuvable' }, { status: 404 });
     }
 
-    // FIX (F024): Enforce 7-year retention policy (CRA/RQ section 230(4) ITA)
+    // F024 FIX: Enforce 7-year retention policy (CRA/RQ section 230(4) ITA)
+    // Records within the 7-year retention period CANNOT be deleted (even soft-deleted)
+    // if they have been approved or reimbursed (i.e., they are part of the fiscal record).
     const RETENTION_YEARS = 7;
     const retentionCutoff = new Date();
     retentionCutoff.setFullYear(retentionCutoff.getFullYear() - RETENTION_YEARS);
     if (existing.date > retentionCutoff) {
-      // Record is within the 7-year retention period - only allow soft-delete
-      // (the code below already does soft-delete, but we add a flag to prevent hard-deletes)
+      const protectedStatuses = ['APPROVED', 'REIMBURSED'];
+      if (protectedStatuses.includes(existing.status)) {
+        const retentionEndDate = new Date(existing.date);
+        retentionEndDate.setFullYear(retentionEndDate.getFullYear() + RETENTION_YEARS);
+        return NextResponse.json(
+          {
+            error: `Suppression interdite: cette dépense (${existing.expenseNumber}) est sous la politique de rétention fiscale de ${RETENTION_YEARS} ans (CRA/RQ art. 230(4) LIR). Rétention jusqu'au ${retentionEndDate.toISOString().split('T')[0]}.`,
+          },
+          { status: 403 }
+        );
+      }
     }
 
     // FIX: F015 - Log audit trail BEFORE deletion for compliance

@@ -57,33 +57,49 @@ interface BankConnection {
   status: 'ACTIVE' | 'REQUIRES_REAUTH' | 'ERROR';
 }
 
-// FIX: F092 - TODO: Add French equivalents for Plaid categories from francophone Canadian banks
-// e.g. 'Frais bancaires:Frais de service' → same as 'Bank Fees:Service Charge'
-// Category mapping for automatic categorization
+// F092 FIX: Added French equivalents for Plaid categories from francophone Canadian banks
+// Category mapping for automatic categorization (English + French keys)
 const CATEGORY_MAPPING: Record<string, { accountCode: string; description: string }> = {
   // Revenue
   'Transfer:Deposit': { accountCode: '4010', description: 'Ventes' },
   'Transfer:Credit': { accountCode: '4010', description: 'Ventes' },
-  
+  // F092 FIX: French equivalents for revenue
+  'Transfert:Dépôt': { accountCode: '4010', description: 'Ventes' },
+  'Transfert:Crédit': { accountCode: '4010', description: 'Ventes' },
+
   // Payment processors
   'Payment:Stripe': { accountCode: '1040', description: 'Transfert Stripe' },
   'Payment:PayPal': { accountCode: '1030', description: 'Transfert PayPal' },
-  
+  // F092 FIX: French equivalents for payments
+  'Paiement:Stripe': { accountCode: '1040', description: 'Transfert Stripe' },
+  'Paiement:PayPal': { accountCode: '1030', description: 'Transfert PayPal' },
+
   // Operating expenses
   'Service:Web Hosting': { accountCode: '6310', description: 'Hébergement web' },
   'Service:Software': { accountCode: '6330', description: 'Logiciels SaaS' },
   'Service:Marketing': { accountCode: '6210', description: 'Marketing' },
   'Shops:Shipping': { accountCode: '6010', description: 'Frais de livraison' },
-  
+  // F092 FIX: French equivalents for operating expenses
+  'Service:Hébergement web': { accountCode: '6310', description: 'Hébergement web' },
+  'Service:Logiciel': { accountCode: '6330', description: 'Logiciels SaaS' },
+  'Magasins:Livraison': { accountCode: '6010', description: 'Frais de livraison' },
+
   // Bank fees
   'Bank Fees:Service Charge': { accountCode: '6130', description: 'Frais bancaires' },
   'Bank Fees:Foreign Transaction': { accountCode: '6130', description: 'Frais de change' },
   'Bank Fees:Overdraft': { accountCode: '6130', description: 'Frais de découvert' },
-  
+  // F092 FIX: French equivalents for bank fees (Desjardins, Banque Nationale, etc.)
+  'Frais bancaires:Frais de service': { accountCode: '6130', description: 'Frais bancaires' },
+  'Frais bancaires:Transaction étrangère': { accountCode: '6130', description: 'Frais de change' },
+  'Frais bancaires:Découvert': { accountCode: '6130', description: 'Frais de découvert' },
+
   // Professional services
   'Service:Accounting': { accountCode: '6710', description: 'Comptabilité' },
   'Service:Legal': { accountCode: '6720', description: 'Frais juridiques' },
-  
+  // F092 FIX: French equivalents for professional services
+  'Service:Comptabilité': { accountCode: '6710', description: 'Comptabilité' },
+  'Service:Juridique': { accountCode: '6720', description: 'Frais juridiques' },
+
   // Default
   'default': { accountCode: '6999', description: 'Dépense non classée' },
 };
@@ -283,8 +299,9 @@ export async function syncBankAccount(
 
 /**
  * Parse bank statement from CSV (Desjardins format)
+ * // F057 FIX: bankAccountId is now a parameter instead of hardcoded 'desjardins-main'
  */
-export function parseDesjardinsCSV(csvContent: string): BankTransaction[] {
+export function parseDesjardinsCSV(csvContent: string, bankAccountId: string = 'desjardins-main'): BankTransaction[] {
   const lines = csvContent.split('\n').filter(l => l.trim());
   const transactions: BankTransaction[] = [];
 
@@ -310,9 +327,8 @@ export function parseDesjardinsCSV(csvContent: string): BankTransaction[] {
     // to prevent collisions when two CSV files are imported at the same millisecond
     transactions.push({
       id: `csv-${crypto.randomUUID()}`,
-      // FIX: F057 - bankAccountId should be parameterized, not hardcoded.
-      // Using 'desjardins-main' as default; callers should pass bankAccountId via function param.
-      bankAccountId: 'desjardins-main',
+      // F057 FIX: bankAccountId is now parameterized (default: 'desjardins-main')
+      bankAccountId,
       date,
       description,
       amount,
@@ -334,10 +350,9 @@ export function parseDesjardinsCSV(csvContent: string): BankTransaction[] {
 
 /**
  * Parse bank statement from CSV (TD format)
- * FIX: F057 - bankAccountId is hardcoded to 'td-main'; should be parameterized.
- * TODO: Accept bankAccountId as function parameter for both parseDesjardinsCSV and parseTDCSV.
+ * // F057 FIX: bankAccountId is now a parameter instead of hardcoded 'td-main'
  */
-export function parseTDCSV(csvContent: string): BankTransaction[] {
+export function parseTDCSV(csvContent: string, bankAccountId: string = 'td-main'): BankTransaction[] {
   const lines = csvContent.split('\n').filter(l => l.trim());
   const transactions: BankTransaction[] = [];
 
@@ -361,7 +376,8 @@ export function parseTDCSV(csvContent: string): BankTransaction[] {
     // FIX (F033): Use crypto.randomUUID() for TD CSV imports too
     transactions.push({
       id: `csv-td-${crypto.randomUUID()}`,
-      bankAccountId: 'td-main',
+      // F057 FIX: bankAccountId is now parameterized (default: 'td-main')
+      bankAccountId,
       date,
       description,
       amount,

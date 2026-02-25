@@ -1,6 +1,6 @@
-// TODO: F-084 - Show "-" instead of "0.0" for avgRating when there are no reviews
-// TODO: F-090 - Add aria-label to star rating SVGs for accessibility (e.g. "{n} out of 5 stars")
-// TODO: F-099 - Frontend ignores pagination metadata returned by /api/admin/reviews
+// F084 FIX: Show "-" instead of "0.0" for avgRating when there are no reviews (see StatCard below)
+// F090 FIX: Added aria-label to star rating display for screen reader accessibility (see renderStars)
+// F-021 FIX: Add frontend pagination
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -21,6 +21,8 @@ import {
   Send,
   ToggleLeft,
   ToggleRight,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { Button } from '@/components/admin/Button';
 import { Modal } from '@/components/admin/Modal';
@@ -116,6 +118,12 @@ export default function AvisPage() {
   const [selectedReviewId, setSelectedReviewId] = useState<string | null>(null);
   const [updatingIds, setUpdatingIds] = useState<Set<string>>(new Set());
 
+  // F-021 FIX: Add frontend pagination state
+  const REVIEWS_PER_PAGE = 20;
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalReviews, setTotalReviews] = useState(0);
+
   // Filter state
   const [searchValue, setSearchValue] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -129,6 +137,11 @@ export default function AvisPage() {
   // Review request automation state
   const [autoRequestEnabled, setAutoRequestEnabled] = useState(false);
   const [showTemplateSelector, setShowTemplateSelector] = useState(false);
+
+  // F-073 FIX: Lightbox state for viewing review images at full size
+  const [lightboxImages, setLightboxImages] = useState<string[]>([]);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
 
   // FIX F-070: ConfirmDialog state for approve/reject actions
   const [confirmAction, setConfirmAction] = useState<{
@@ -148,11 +161,25 @@ export default function AvisPage() {
   // ─── Data fetching ──────────────────────────────────────────
 
   // F-069 FIX: Wrap fetchReviews in useCallback for stable reference
-  const fetchReviews = useCallback(async () => {
+  // F-021 FIX: Pass page/limit params to API for server-side pagination
+  // F-056 FIX: Pass status filter to API for server-side filtering instead of client-only
+  const fetchReviews = useCallback(async (page: number = 1, status?: string) => {
     try {
-      const res = await fetch('/api/admin/reviews');
+      const params = new URLSearchParams({
+        page: String(page),
+        limit: String(REVIEWS_PER_PAGE),
+      });
+      // F-056 FIX: Map frontend status values to API filter values
+      if (status && status !== 'all') {
+        params.set('status', status.toLowerCase());
+      }
+      const res = await fetch(`/api/admin/reviews?${params.toString()}`);
       const data = await res.json();
       setReviews(data.reviews || []);
+      if (data.pagination) {
+        setTotalPages(data.pagination.pages || 1);
+        setTotalReviews(data.pagination.total || 0);
+      }
     } catch (err) {
       console.error('Error fetching reviews:', err);
       toast.error(t('common.error'));
@@ -161,12 +188,19 @@ export default function AvisPage() {
     setLoading(false);
   }, [t]);
 
+  // F-056 FIX: Pass statusFilter to API and reset to page 1 when filter changes
   useEffect(() => {
-    fetchReviews();
-  }, [fetchReviews]);
+    fetchReviews(currentPage, statusFilter);
+  }, [fetchReviews, currentPage, statusFilter]);
 
-  // TODO: F-056 - Consider passing status filter to API (/api/admin/reviews?status=) for server-side filtering
-  // TODO: F-070 - Add confirmation modal before approve/reject to prevent accidental clicks
+  // F-056 FIX: Reset to page 1 when status filter changes to avoid empty pages
+  const handleStatusFilterChange = useCallback((newFilter: string) => {
+    setStatusFilter(newFilter);
+    setCurrentPage(1);
+    setLoading(true);
+  }, []);
+
+  // F-070 FIXED: ConfirmDialog added below for approve/reject to prevent accidental clicks
   const updateReviewStatus = async (id: string, status: 'APPROVED' | 'REJECTED') => {
     setUpdatingIds(prev => new Set(prev).add(id));
     try {
@@ -383,11 +417,13 @@ export default function AvisPage() {
   useRibbonAction('convertTestimonial', handleRibbonConvertTestimonial);
   useRibbonAction('export', handleRibbonExport);
 
+  // F090 FIX: Add aria-label to star rating display for screen reader accessibility
   const renderStars = (rating: number) => (
-    <div className="flex gap-0.5">
+    <div className="flex gap-0.5" role="img" aria-label={`${rating} ${t('admin.reviews.outOf5Stars') || 'out of 5 stars'}`}>
       {[1, 2, 3, 4, 5].map((star) => (
         <Star
           key={star}
+          aria-hidden="true"
           className={`w-4 h-4 ${star <= rating ? 'text-yellow-400 fill-yellow-400' : 'text-slate-300'}`}
         />
       ))}
@@ -445,7 +481,8 @@ export default function AvisPage() {
           <StatCard label={t('admin.reviews.totalReviews')} value={stats.total} icon={MessageSquare} />
           <StatCard label={t('admin.reviews.pending')} value={stats.pending} icon={Clock} />
           <StatCard label={t('admin.reviews.approved')} value={stats.approved} icon={CheckCircle2} />
-          <StatCard label={t('admin.reviews.avgRating')} value={stats.avgRating.toFixed(1)} icon={Star} />
+          {/* F084 FIX: Show "-" instead of "0.0" when there are no reviews */}
+          <StatCard label={t('admin.reviews.avgRating')} value={reviews.length === 0 ? '-' : stats.avgRating.toFixed(1)} icon={Star} />
           <StatCard label={t('admin.reviews.withPhotos')} value={stats.withPhotos} icon={Camera} />
         </div>
       </div>
@@ -462,7 +499,7 @@ export default function AvisPage() {
               onSelect={handleSelectReview}
               filterTabs={filterTabs}
               activeFilter={statusFilter}
-              onFilterChange={setStatusFilter}
+              onFilterChange={handleStatusFilterChange}
               searchValue={searchValue}
               onSearchChange={setSearchValue}
               searchPlaceholder={t('admin.reviews.searchPlaceholder')}
@@ -599,23 +636,36 @@ export default function AvisPage() {
                   {/* Review Images */}
                   {selectedReview.images && selectedReview.images.length > 0 && (
                     <div>
-                      {/* TODO: F-073 - Add lightbox/modal for viewing review images at full size */}
+                      {/* F-073 FIX: Clickable images open lightbox for full-size viewing */}
                       <h4 className="text-sm font-medium text-slate-700 mb-2 flex items-center gap-1">
                         <Camera className="w-4 h-4" />
                         Photos ({selectedReview.images.length})
                       </h4>
                       <div className="flex gap-3 flex-wrap">
                         {selectedReview.images.map((img, idx) => (
-                          <div key={idx} className="relative w-28 h-28 rounded-lg overflow-hidden border border-slate-200">
+                          <button
+                            key={idx}
+                            onClick={() => {
+                              setLightboxImages(selectedReview.images!);
+                              setLightboxIndex(idx);
+                              setLightboxOpen(true);
+                            }}
+                            className="relative w-28 h-28 rounded-lg overflow-hidden border border-slate-200 hover:border-sky-400 transition-colors cursor-pointer group"
+                          >
                             <Image
                               src={img}
                               alt={`Review image ${idx + 1}`}
                               fill
                               sizes="112px"
-                              className="object-cover"
+                              className="object-cover group-hover:scale-105 transition-transform"
                               /* FIX F-035: Removed unoptimized to use Next.js image optimization */
                             />
-                          </div>
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                              <svg className="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                              </svg>
+                            </div>
+                          </button>
                         ))}
                       </div>
                     </div>
@@ -653,6 +703,36 @@ export default function AvisPage() {
           }
         />
       </div>
+
+      {/* F-021 FIX: Pagination navigation */}
+      {totalPages > 1 && (
+        <div className="flex-shrink-0 flex items-center justify-between px-4 lg:px-6 py-3 border-t border-slate-200 bg-white">
+          <p className="text-sm text-slate-500">
+            {t('common.page') || 'Page'} {currentPage} / {totalPages}
+            {' '}({totalReviews} {t('admin.reviews.totalReviews') || 'avis'})
+          </p>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="secondary"
+              icon={ChevronLeft}
+              disabled={currentPage <= 1}
+              onClick={() => { setCurrentPage(p => Math.max(1, p - 1)); setLoading(true); }}
+            >
+              {t('common.previous') || 'Precedent'}
+            </Button>
+            <Button
+              size="sm"
+              variant="secondary"
+              icon={ChevronRight}
+              disabled={currentPage >= totalPages}
+              onClick={() => { setCurrentPage(p => Math.min(totalPages, p + 1)); setLoading(true); }}
+            >
+              {t('common.next') || 'Suivant'}
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* FIX F-070: ConfirmDialog for approve/reject actions */}
       <ConfirmDialog
@@ -697,20 +777,27 @@ export default function AvisPage() {
               )}
               <p className="text-slate-700">{selectedReview.content}</p>
 
-              {/* Review Images in Modal */}
+              {/* Review Images in Modal - F-073 FIX: Clickable to open lightbox */}
               {selectedReview.images && selectedReview.images.length > 0 && (
                 <div className="flex gap-2 mt-3">
                   {selectedReview.images.map((img, idx) => (
-                    <div key={idx} className="relative w-24 h-24 rounded-lg overflow-hidden border border-slate-200">
+                    <button
+                      key={idx}
+                      onClick={() => {
+                        setLightboxImages(selectedReview.images!);
+                        setLightboxIndex(idx);
+                        setLightboxOpen(true);
+                      }}
+                      className="relative w-24 h-24 rounded-lg overflow-hidden border border-slate-200 hover:border-sky-400 transition-colors cursor-pointer group"
+                    >
                       <Image
                         src={img}
                         alt={`Review image ${idx + 1}`}
                         fill
                         sizes="96px"
-                        className="object-cover"
-                        /* F-035 FIX: Removed unoptimized to use Next.js image optimization */
+                        className="object-cover group-hover:scale-105 transition-transform"
                       />
-                    </div>
+                    </button>
                   ))}
                 </div>
               )}
@@ -742,6 +829,79 @@ export default function AvisPage() {
           </div>
         )}
       </Modal>
+
+      {/* F-073 FIX: Image lightbox modal for viewing review images at full size */}
+      {lightboxOpen && lightboxImages.length > 0 && (
+        <div
+          className="fixed inset-0 bg-black/90 z-[60] flex items-center justify-center p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Image viewer"
+          onClick={() => setLightboxOpen(false)}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') setLightboxOpen(false);
+            if (e.key === 'ArrowLeft') setLightboxIndex(i => (i === 0 ? lightboxImages.length - 1 : i - 1));
+            if (e.key === 'ArrowRight') setLightboxIndex(i => (i === lightboxImages.length - 1 ? 0 : i + 1));
+          }}
+          tabIndex={0}
+        >
+          {/* Close button */}
+          <button
+            onClick={() => setLightboxOpen(false)}
+            aria-label="Close image viewer"
+            className="absolute top-4 right-4 text-white hover:text-neutral-300 transition-colors z-10"
+          >
+            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+
+          {/* Image counter */}
+          <div className="absolute top-4 left-4 text-white text-sm bg-black/50 px-3 py-1 rounded-full z-10">
+            {lightboxIndex + 1} / {lightboxImages.length}
+          </div>
+
+          {/* Previous button */}
+          {lightboxImages.length > 1 && (
+            <button
+              onClick={(e) => { e.stopPropagation(); setLightboxIndex(i => (i === 0 ? lightboxImages.length - 1 : i - 1)); }}
+              className="absolute left-4 text-white hover:text-neutral-300 transition-colors z-10"
+            >
+              <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+          )}
+
+          {/* Current image */}
+          <div className="relative max-w-5xl max-h-[90vh] w-full h-full" onClick={(e) => e.stopPropagation()}>
+            <Image
+              src={lightboxImages[lightboxIndex]}
+              alt={`Review image ${lightboxIndex + 1}`}
+              fill
+              sizes="100vw"
+              className="object-contain"
+            />
+          </div>
+
+          {/* Next button */}
+          {lightboxImages.length > 1 && (
+            <button
+              onClick={(e) => { e.stopPropagation(); setLightboxIndex(i => (i === lightboxImages.length - 1 ? 0 : i + 1)); }}
+              className="absolute right-4 text-white hover:text-neutral-300 transition-colors z-10"
+            >
+              <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          )}
+
+          {/* Keyboard hint */}
+          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white text-xs bg-black/50 px-4 py-2 rounded-full">
+            ESC {t('common.close') || 'close'} {lightboxImages.length > 1 && '| \u2190 \u2192 navigate'}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

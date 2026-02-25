@@ -3,12 +3,15 @@
  */
 
 import { z } from 'zod';
+// F089 FIX: Reuse promoCodeTypeEnum from promo-code.ts to avoid duplication
+import { promoCodeTypeEnum } from './promo-code';
 
 // ---------------------------------------------------------------------------
 // Discount type enum
+// F089 FIX: Alias promoCodeTypeEnum instead of redefining the same enum
 // ---------------------------------------------------------------------------
 
-export const discountTypeEnum = z.enum(['PERCENTAGE', 'FIXED_AMOUNT']);
+export const discountTypeEnum = promoCodeTypeEnum;
 
 // ---------------------------------------------------------------------------
 // Create promotion (POST /api/admin/promotions)

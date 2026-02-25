@@ -4,7 +4,9 @@ export const dynamic = 'force-dynamic';
  * Supports: ?q=query&category=slug&minPrice=0&maxPrice=500&inStock=true&purity=99&sort=relevance&limit=50
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
+import { apiSuccess, apiError } from '@/lib/api-response';
+import { ErrorCode } from '@/lib/error-codes';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { Prisma } from '@prisma/client';
@@ -24,10 +26,7 @@ export async function GET(request: NextRequest) {
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || '127.0.0.1';
     const rlResult = await rateLimitMiddleware(ip, '/api/products/search');
     if (!rlResult.success) {
-      return NextResponse.json(
-        { error: rlResult.error?.message || 'Too many requests' },
-        { status: 429, headers: rlResult.headers }
-      );
+      return apiError(rlResult.error?.message || 'Too many requests', ErrorCode.RATE_LIMITED, { request, headers: rlResult.headers });
     }
 
     const searchStart = Date.now();
@@ -153,9 +152,7 @@ export async function GET(request: NextRequest) {
         duration,
       }).catch((err) => logger.error('Search logging failed', { error: err instanceof Error ? err.message : String(err) }));
 
-      return NextResponse.json(responseData, {
-        headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120' },
-      });
+      return apiSuccess(responseData, { request, headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120' } });
     }
 
     // ── Standard Prisma search path (no query, or non-relevance sort with query) ──
@@ -385,19 +382,9 @@ export async function GET(request: NextRequest) {
       }).catch((err) => logger.error('Search logging failed', { error: err instanceof Error ? err.message : String(err) })); // silent
     }
 
-    return NextResponse.json(
-      responseData,
-      {
-        headers: {
-          'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120',
-        },
-      }
-    );
+    return apiSuccess(responseData, { request, headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120' } });
   } catch (error) {
     logger.error('Search error', { error: error instanceof Error ? error.message : String(error) });
-    return NextResponse.json(
-      { error: 'Search failed' },
-      { status: 500 }
-    );
+    return apiError('Search failed', ErrorCode.INTERNAL_ERROR, { request });
   }
 }

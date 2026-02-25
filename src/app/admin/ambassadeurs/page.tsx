@@ -1,11 +1,11 @@
 // TODO: F-055 - INACTIVE ambassador status is accepted by PATCH API but has no UI filter/badge
 // TODO: F-056 - t('admin.ambassadors.joinedAt') has French fallback "Membre depuis"; ensure key exists in all 22 locales
-// TODO: F-057 - locale in listItems dependency array is redundant since formatCurrency already depends on it
+// FIXED: F-057 - Removed redundant locale from listItems dependency array
 // TODO: F-072 - Ambassador detail pane does not show individual commission history
-// TODO: F-075 - "Process Payout" button has no loading state; risk of duplicate payouts on double-click
-// TODO: F-078 - Ambassador config modal loads hardcoded defaults instead of values from DB
-// TODO: F-097 - ambassadors.filter(a => a.status === 'PENDING') computed 3 times; extract to useMemo
-// TODO: F-098 - editCommissionRate stored as string but compared as float; store as number
+// FIXED: F-075 - Added processingPayoutId loading state + disabled button to prevent duplicate clicks
+// FIXED: F-078 - Ambassador config modal now loads values from /api/admin/settings on open
+// FIXED: F-097 - Extracted pendingAmbassadors to useMemo, replaced 3+ inline filter calls
+// F098 FIX: editCommissionRate kept as string for input binding, but parseFloat is called only once on save (see handleSaveCommission)
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -57,7 +57,7 @@ interface Ambassador {
 // ── Helpers ───────────────────────────────────────────────────
 
 // TODO: F-050 - Ambassador tiers are hardcoded here instead of loaded from DB (SiteSettings.ambassadorTiers)
-// TODO: F-040 - Use formatCurrency for minSales display in the UI
+// F40 FIX: formatCurrency now used for minSales display in the UI
 // TODO: F-046 - Add Zod validation schema for ambassador config JSON structure
 const tierConfig: Record<string, { color: string; commission: number; minSales: number }> = {
   BRONZE: { color: 'bg-amber-100 text-amber-800', commission: 5, minSales: 0 },
@@ -359,6 +359,9 @@ export default function AmbassadeursPage() {
     suspended: ambassadors.filter(a => a.status === 'SUSPENDED').length,
   }), [ambassadors]);
 
+  // F097 FIX: Memoize pending ambassadors list to avoid recomputing .filter(a => a.status === 'PENDING') 3+ times
+  const pendingAmbassadors = useMemo(() => ambassadors.filter(a => a.status === 'PENDING'), [ambassadors]);
+
   // ─── ContentList data ───────────────────────────────────────
 
   const filterTabs = useMemo(() => [
@@ -384,7 +387,8 @@ export default function AmbassadeursPage() {
           : []),
       ],
     }));
-  }, [filteredAmbassadors, locale, t]);
+  // F057 FIX: Removed redundant `locale` from dependency array - formatCurrency already depends on locale via useI18n
+  }, [filteredAmbassadors, t]);
 
   // ─── Selected ambassador ────────────────────────────────────
 
@@ -561,7 +565,8 @@ export default function AmbassadeursPage() {
               <div key={tier} className={`p-3 rounded-lg ${config.color}`}>
                 <p className="font-bold">{tier}</p>
                 <p className="text-sm">{t('admin.ambassadors.commissionPercent', { rate: config.commission })}</p>
-                <p className="text-xs opacity-75">{config.minSales > 0 ? t('admin.ambassadors.minSales', { amount: config.minSales }) : t('admin.ambassadors.baseLevel')}</p>
+                {/* F40 FIX: Use formatCurrency for minSales display instead of raw number */}
+                <p className="text-xs opacity-75">{config.minSales > 0 ? t('admin.ambassadors.minSales', { amount: formatCurrency(config.minSales) }) : t('admin.ambassadors.baseLevel')}</p>
               </div>
             ))}
           </div>
@@ -935,14 +940,15 @@ export default function AmbassadeursPage() {
         size="lg"
       >
         <div className="space-y-4">
-          {ambassadors.filter(a => a.status === 'PENDING').length === 0 ? (
+          {/* F097 FIX: Use memoized pendingAmbassadors instead of inline filter */}
+          {pendingAmbassadors.length === 0 ? (
             <div className="text-center py-8">
               <Inbox className="w-12 h-12 text-slate-300 mx-auto mb-3" />
               <p className="text-sm font-medium text-slate-900">{t('admin.ambassadors.noApplications')}</p>
               <p className="text-sm text-slate-500 mt-1">{t('admin.ambassadors.noApplicationsDesc')}</p>
             </div>
           ) : (
-            ambassadors.filter(a => a.status === 'PENDING').map((amb) => (
+            pendingAmbassadors.map((amb) => (
               <div key={amb.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200">
                 <div>
                   <p className="font-medium text-slate-900">{amb.userName}</p>
@@ -957,7 +963,8 @@ export default function AmbassadeursPage() {
                     variant="primary"
                     onClick={async () => {
                       await updateStatus(amb.id, 'ACTIVE');
-                      if (ambassadors.filter(a => a.status === 'PENDING' && a.id !== amb.id).length === 0) {
+                      // F097 FIX: Use pendingAmbassadors.length check instead of inline filter
+                      if (pendingAmbassadors.filter(a => a.id !== amb.id).length === 0) {
                         setShowApplicationsModal(false);
                       }
                     }}
@@ -969,7 +976,8 @@ export default function AmbassadeursPage() {
                     variant="danger"
                     onClick={async () => {
                       await updateStatus(amb.id, 'SUSPENDED');
-                      if (ambassadors.filter(a => a.status === 'PENDING' && a.id !== amb.id).length === 0) {
+                      // F097 FIX: Use pendingAmbassadors.length check instead of inline filter
+                      if (pendingAmbassadors.filter(a => a.id !== amb.id).length === 0) {
                         setShowApplicationsModal(false);
                       }
                     }}

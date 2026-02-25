@@ -1,6 +1,6 @@
 export const dynamic = 'force-dynamic';
 
-// TODO: F-100 - Contact messages are email-only; save to DB (ContactMessage model) as backup if email fails
+// TODO: F-100 - Contact messages are email-only; save to DB requires new ContactMessage model (schema change needed)
 
 /**
  * API Contact - BioCycle Peptides

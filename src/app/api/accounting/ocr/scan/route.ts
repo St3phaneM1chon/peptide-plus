@@ -28,9 +28,34 @@ export const POST = withAdminGuard(async (request) => {
       return NextResponse.json({ error: validation.error }, { status: 400 });
     }
 
-    // Convert to base64
+    // Convert to buffer
     const arrayBuffer = await file.arrayBuffer();
-    const base64 = Buffer.from(arrayBuffer).toString('base64');
+    const buffer = Buffer.from(arrayBuffer);
+
+    // F17 FIX: Validate magic bytes to prevent file type spoofing
+    const MAGIC_BYTES: Record<string, number[]> = {
+      'application/pdf': [0x25, 0x50, 0x44, 0x46], // %PDF
+      'image/jpeg': [0xFF, 0xD8, 0xFF],
+      'image/jpg': [0xFF, 0xD8, 0xFF],
+      'image/png': [0x89, 0x50, 0x4E, 0x47],
+      'image/gif': [0x47, 0x49, 0x46],
+      'image/webp': [0x52, 0x49, 0x46, 0x46], // RIFF
+    };
+
+    const expectedBytes = MAGIC_BYTES[file.type];
+    if (expectedBytes) {
+      const header = buffer.subarray(0, expectedBytes.length);
+      const matches = expectedBytes.every((b, i) => header[i] === b);
+      if (!matches) {
+        return NextResponse.json(
+          { error: `Le contenu du fichier ne correspond pas au type déclaré (${file.type}). Possible tentative de spoofing.` },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Convert to base64 for Vision API
+    const base64 = buffer.toString('base64');
 
     // Process with Vision API
     const result = await processInvoiceWithVision(base64, file.type);

@@ -248,6 +248,15 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: t('errors.forbidden') }, { status: 403 });
     }
 
+    // F-012 FIX: Verify conversation exists before deletion
+    const existing = await prisma.conversation.findUnique({
+      where: { id },
+    });
+
+    if (!existing) {
+      return NextResponse.json({ error: 'Conversation not found' }, { status: 404 });
+    }
+
     await prisma.conversation.delete({
       where: { id },
     });

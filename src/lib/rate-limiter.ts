@@ -195,6 +195,9 @@ const RATE_LIMIT_CONFIGS: Record<string, { windowMs: number; maxRequests: number
 
   // SEC-002: Account deletion - 2 per user per day (irreversible action)
   'account/delete-request': { windowMs: 86400000, maxRequests: 2 },
+
+  // F49 FIX: Media upload - 50 per user per hour (prevents storage abuse)
+  'admin/medias/upload': { windowMs: 3600000, maxRequests: 50 },
 };
 
 // ---------------------------------------------------------------------------
@@ -222,6 +225,8 @@ function getEndpointType(path: string): string {
 
   if (segments[0] === 'api') {
     if (segments[1] === 'auth') return `auth/${segments[2] || 'default'}`;
+    // F49 FIX: Route admin media upload to specific rate limit config
+    if (segments[1] === 'admin' && segments[2] === 'medias' && segments[3] === 'upload') return 'admin/medias/upload';
     if (segments[1] === 'admin') return 'admin';
     // FIX: F023 - Route accounting endpoints to specific rate limit config
     // Write operations (POST/PUT/DELETE handled via path depth) get stricter limits

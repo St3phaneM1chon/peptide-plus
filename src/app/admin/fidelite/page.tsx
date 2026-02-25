@@ -1,4 +1,4 @@
-// TODO: F-052 - key={tier.name} may cause React warnings if two tiers share the same name; use unique index or ID
+// TODO: F-052 - key={tier.name} may cause React warnings if two tiers share the same name; mitigated by F-014 name collision check
 // TODO: F-062 - Simulation does not account for special bonuses (birthday, signup, review); add scenario options
 'use client';
 
@@ -88,6 +88,12 @@ export default function FidelitePage() {
   const fetchConfig = useCallback(async () => {
     try {
       const res = await fetch('/api/admin/loyalty/config');
+      if (!res.ok) {
+        toast.error(t('common.error'));
+        setConfig(null);
+        setLoading(false);
+        return;
+      }
       const data = await res.json();
       setConfig(data.config || null);
     } catch (err) {
@@ -351,6 +357,21 @@ export default function FidelitePage() {
         <span className="sr-only">Loading...</span>
       </div>
     );
+  }
+
+  // F44 FIX: Guard against empty tiers array - ensure at least one tier exists.
+  // If a bug or DB corruption causes config.tiers to be empty, auto-add a default Bronze tier.
+  if (!config.tiers || config.tiers.length === 0) {
+    setConfig({
+      ...config,
+      tiers: [{
+        name: 'Bronze',
+        minPoints: 0,
+        multiplier: 1,
+        perks: [],
+        color: 'orange',
+      }],
+    });
   }
 
   return (

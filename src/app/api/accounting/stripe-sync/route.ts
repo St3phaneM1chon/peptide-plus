@@ -152,7 +152,8 @@ export const POST = withAdminGuard(async (request, { session }) => {
             const parsed = parseInt(maxRow.max_num.split('-').pop() || '0');
             if (!isNaN(parsed)) nextNum = parsed + 1;
           }
-          const entryNumber = `${prefix}${String(nextNum).padStart(4, '0')}`;
+          // F063 FIX: Use padStart(5) for consistent 5-digit entry number format
+          const entryNumber = `${prefix}${String(nextNum).padStart(5, '0')}`;
 
           // Validate debit/credit balance before insertion
           const linesToCreate = entry.lines.map((l: { accountCode: string; description?: string; debit: number; credit: number }) => ({

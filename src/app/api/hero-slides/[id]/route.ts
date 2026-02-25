@@ -40,7 +40,7 @@ const updateHeroSlideSchema = z.object({
     cta2Text: z.string().optional(),
     statsJson: z.string().optional(),
   })).optional(),
-}).passthrough();
+}); // F23 FIX: Removed .passthrough() - unknown fields are now rejected by Zod before reaching the whitelist
 
 // GET - Une slide avec traductions
 export const GET = withAdminGuard(async (_request, { params }) => {
@@ -62,7 +62,7 @@ export const GET = withAdminGuard(async (_request, { params }) => {
   }
 });
 
-// FIX: F6 - Field whitelist for allowed slide fields (prevents arbitrary field injection)
+// F23 FIX: Whitelist allowed fields to prevent injection of id/createdAt/etc.
 const ALLOWED_SLIDE_FIELDS = new Set([
   'slug', 'mediaType', 'backgroundUrl', 'backgroundMobile', 'overlayOpacity',
   'overlayGradient', 'badgeText', 'title', 'subtitle', 'ctaText', 'ctaUrl',
@@ -81,7 +81,7 @@ export const PUT = withAdminGuard(async (request, { session, params }) => {
     }
     const { translations, ...rawSlideData } = parsed.data;
 
-    // FIX: F6 - Only accept whitelisted fields (prevents arbitrary data injection)
+    // F23 FIX: Only accept whitelisted fields (prevents injection of id/createdAt/etc.)
     const slideData: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(rawSlideData)) {
       if (ALLOWED_SLIDE_FIELDS.has(key)) {
@@ -200,6 +200,17 @@ export const DELETE = withAdminGuard(async (request, { session, params }) => {
     const existing = await prisma.heroSlide.findUnique({ where: { id } });
     if (!existing) {
       return NextResponse.json({ error: 'Slide non trouvee' }, { status: 404 });
+    }
+
+    // FIX: F19 - Warn if this is the last active slide (prevents empty hero carousel)
+    if (existing.isActive) {
+      const activeCount = await prisma.heroSlide.count({ where: { isActive: true } });
+      if (activeCount <= 1) {
+        return NextResponse.json(
+          { error: 'Cannot delete the last active slide. Activate another slide first or deactivate this one before deleting.' },
+          { status: 409 }
+        );
+      }
     }
 
     // FIX: F19 - Add audit logging before deletion

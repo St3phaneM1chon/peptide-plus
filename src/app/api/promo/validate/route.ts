@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic';
 
 // TODO: F-065 - Error messages are hardcoded in French; return error codes and translate client-side
 // TODO: F-092 - firstOrderOnly check calls auth() a second time; reuse session from earlier call
-// TODO: F-093 - products.map(p => p.categoryId) can contain null; filter nulls before includes check
+// FIXED: F-093 - products.map(p => p.categoryId) already filters nulls via .filter((cid): cid is string => cid !== null) at line 216
 
 /**
  * API Validation Code Promo - BioCycle Peptides

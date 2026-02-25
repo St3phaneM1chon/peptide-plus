@@ -1,6 +1,6 @@
 export const dynamic = 'force-dynamic';
 
-// TODO: F-096 - Message fetch limit is 50 here but 20 in /api/chat/message; standardize to one value
+// F096 FIX: Message fetch limit standardized to 50 in both /api/chat and /api/chat/message
 
 /**
  * API Chat - Gestion des conversations
@@ -65,7 +65,8 @@ export async function GET(request: NextRequest) {
 // POST - Créer ou récupérer une conversation
 export async function POST(request: NextRequest) {
   try {
-    // SEC-25: Rate limit chat creation - 10 per user per hour
+    // F-009 FIX: Tighter rate limiting on conversation lookup/creation to prevent
+    // visitorId brute-force enumeration attacks (SEC-25 enhanced)
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
       || request.headers.get('x-real-ip')
       || '127.0.0.1';
@@ -125,8 +126,29 @@ export async function POST(request: NextRequest) {
     const session = await auth();
     const isAdmin = session?.user && ['OWNER', 'EMPLOYEE'].includes(session.user.role as string);
 
-    // Utiliser visitorId fourni ou en générer un nouveau
-    const finalVisitorId = visitorId || uuidv4();
+    // F-009 FIX: Use cryptographically random UUIDs for visitorId to prevent brute-force enumeration.
+    // Reject client-supplied visitorId values that use the old predictable format (visitor_{timestamp}_...)
+    // unless they already exist in the database (backward compatibility for existing sessions).
+    let finalVisitorId = visitorId || uuidv4();
+
+    if (visitorId) {
+      // F-009 FIX: Validate that a client-supplied visitorId actually corresponds to an existing
+      // conversation. If not, generate a fresh cryptographic UUID to prevent attackers from
+      // enumerating visitorIds to access other users' conversations.
+      const existingConv = await db.chatConversation.findFirst({
+        where: { visitorId },
+        select: { id: true },
+      });
+      if (!existingConv) {
+        // The supplied visitorId doesn't match any conversation - generate a new secure one
+        // to prevent probing/enumeration attacks
+        finalVisitorId = uuidv4();
+        logger.warn('F-009: Rejected unknown visitorId, generated new one', {
+          suppliedPrefix: visitorId.substring(0, 12),
+          ip,
+        });
+      }
+    }
 
     // BE-SEC-03: Sanitize visitor-supplied text fields to prevent stored XSS
     const sanitizedVisitorName = visitorName ? stripControlChars(stripHtml(String(visitorName))).trim().slice(0, 200) : null;

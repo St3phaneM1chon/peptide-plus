@@ -2,10 +2,13 @@
  * Accounting Alerts Service
  * Intelligent notifications for financial events
  *
- * FIX: F060 - This service overlaps with alert-rules.service.ts (DB-persisted rules).
- * TODO: Consolidate alert logic. This file handles in-memory alert generation from data;
- * alert-rules.service.ts handles user-configured DB-based alert rules. Eventually merge
- * or clearly separate responsibilities (this = built-in alerts, rules = custom alerts).
+ * F060 FIX: DEPRECATION NOTICE - This service is the in-memory/functional variant.
+ * For production use, prefer alert-rules.service.ts which persists alerts to the DB.
+ * This module is retained for:
+ *   - Stateless alert generation (dashboard previews, quick checks)
+ *   - Unit testing without DB dependencies
+ * All new alert types should be added to alert-rules.service.ts instead.
+ * @deprecated Use alert-rules.service.ts for any new alert logic.
  */
 
 import { Alert, TaxReport } from './types';
@@ -176,8 +179,8 @@ export function generateClosingAlerts(
     if (lastClosedPeriod !== prevPeriod) {
       alerts.push({
         id: `closing-${prevPeriod}`,
-        // F068 FIX: Use RECONCILIATION_PENDING as closest match for period closing
-        type: 'RECONCILIATION_PENDING' as const,
+        // F068 FIX: Use dedicated PERIOD_CLOSE_PENDING type instead of misusing RECONCILIATION_PENDING
+        type: 'PERIOD_CLOSE_PENDING' as const,
         severity: dayOfMonth > 15 ? 'HIGH' : 'MEDIUM',
         title: `Clôture de période en attente`,
         message: `La période ${getMonthName(prevMonth)} ${prevYear} n'est pas encore clôturée.`,

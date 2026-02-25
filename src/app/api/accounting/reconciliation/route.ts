@@ -118,17 +118,15 @@ export const POST = withAdminGuard(async (request, { session }) => {
 
     const result = autoReconcile(bankTransactions, journalEntries, criteria as Parameters<typeof autoReconcile>[2]);
 
-    // #84 Error Recovery: Track matched IDs from result.suggestions directly,
-    // don't rely on mutated in-memory state which may be inconsistent after autoReconcile
+    // F070 FIX: Use result.matchedPairs (explicit return value) instead of relying on
+    // mutated in-memory state. matchedPairs provides a clean list of confirmed matches.
+    const matchedPairIds = result.matchedPairs.map((p) => p.bankTransactionId);
+    // Also include IDs from suggestions above threshold as secondary matches
     const matchedIds = result.suggestions
       .filter((s) => s.confidence >= (criteria?.minConfidenceScore || 0.7))
       .map((s) => s.bankTransactionId);
-    // Also include IDs from bankTransactions that autoReconcile mutated to MATCHED
-    const mutatedMatchedIds = bankTransactions
-      .filter((t) => t.reconciliationStatus === 'MATCHED')
-      .map((t) => t.id);
-    // Merge both sets of matched IDs (deduplicated)
-    const allMatchedIds = [...new Set([...matchedIds, ...mutatedMatchedIds])];
+    // Merge all matched IDs (deduplicated)
+    const allMatchedIds = [...new Set([...matchedPairIds, ...matchedIds])];
     if (allMatchedIds.length > 0) {
       await prisma.bankTransaction.updateMany({
         where: { id: { in: allMatchedIds } },

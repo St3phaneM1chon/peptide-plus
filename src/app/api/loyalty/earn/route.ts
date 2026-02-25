@@ -203,36 +203,42 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Invalid type' }, { status: 400 });
     }
 
-    // Calculer les nouveaux soldes
-    const newPoints = user.loyaltyPoints + pointsToEarn;
-    const newLifetimePoints = user.lifetimePoints + pointsToEarn;
-    const newTier = calculateTierName(newLifetimePoints);
+    // F-005 FIX: Use interactive transaction with atomic increment to prevent race condition.
+    // Previous code: read balance → compute → write (TOCTOU race).
+    // Now: atomic increment + compute balanceAfter from DB result.
+    const newLifetimeEstimate = user.lifetimePoints + pointsToEarn;
+    const newTier = calculateTierName(newLifetimeEstimate);
 
-    // Transaction Prisma pour mettre à jour l'utilisateur et créer la transaction
-    const [, transaction] = await db.$transaction([
-      db.user.update({
+    const { updatedUser, transaction } = await db.$transaction(async (tx) => {
+      const updated = await tx.user.update({
         where: { id: user.id },
         data: {
-          loyaltyPoints: newPoints,
-          lifetimePoints: newLifetimePoints,
+          loyaltyPoints: { increment: pointsToEarn },
+          lifetimePoints: { increment: pointsToEarn },
           loyaltyTier: newTier,
         },
-      }),
-      db.loyaltyTransaction.create({
+      });
+
+      const txn = await tx.loyaltyTransaction.create({
         data: {
           userId: user.id,
           type: transactionType as 'EARN_PURCHASE' | 'EARN_SIGNUP' | 'EARN_REVIEW' | 'EARN_REFERRAL' | 'EARN_BIRTHDAY' | 'EARN_BONUS',
           points: pointsToEarn,
           description: transactionDescription,
           orderId: orderId || null,
-          balanceAfter: newPoints,
+          balanceAfter: updated.loyaltyPoints,
           // Points de purchase expirent après 1 an
-          expiresAt: type.toUpperCase() === 'PURCHASE' 
-            ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) 
+          expiresAt: type.toUpperCase() === 'PURCHASE'
+            ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
             : null,
         },
-      }),
-    ]);
+      });
+
+      return { updatedUser: updated, transaction: txn };
+    });
+
+    const newPoints = updatedUser.loyaltyPoints;
+    const newLifetimePoints = updatedUser.lifetimePoints;
 
     // AUDIT: Log loyalty point operation for traceability
     logAdminAction({

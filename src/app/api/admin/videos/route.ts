@@ -13,6 +13,7 @@ import { createVideoSchema } from '@/lib/validations/video';
 import { enqueue } from '@/lib/translation';
 import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { logger } from '@/lib/logger';
+import { sanitizeUrl } from '@/lib/sanitize';
 
 // GET /api/admin/videos - List all videos
 export const GET = withAdminGuard(async (request, _ctx) => {
@@ -181,8 +182,9 @@ export const POST = withAdminGuard(async (request, { session }) => {
         title,
         slug,
         description: description || null,
-        thumbnailUrl: thumbnailUrl || null,
-        videoUrl: videoUrl || null,
+        // F16 FIX: Sanitize URL to prevent SSRF/XSS
+        thumbnailUrl: thumbnailUrl ? sanitizeUrl(thumbnailUrl) : null,
+        videoUrl: videoUrl ? sanitizeUrl(videoUrl) : null,
         duration: duration || null,
         category: category || null,
         tags: tagsJson,

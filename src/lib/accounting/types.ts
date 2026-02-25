@@ -31,6 +31,10 @@ export type TransactionType = 'CREDIT' | 'DEBIT';
 
 export type ReconciliationStatus = 'PENDING' | 'MATCHED' | 'UNMATCHED' | 'MANUAL';
 
+// F048 FIX: Define valid AccountingPeriod statuses so 'IN_REVIEW' is an explicit, documented value
+// instead of an undocumented string that might conflict with strict validation.
+export type AccountingPeriodStatus = 'OPEN' | 'IN_REVIEW' | 'LOCKED';
+
 export type TaxType = 'TPS' | 'TVQ' | 'TVH' | 'PST' | 'GST' | 'SALES_TAX' | 'VAT';
 
 // Account codes for BioCycle (Quebec NCECF structure)
@@ -225,6 +229,8 @@ export interface ReconciliationResult {
   matched: number;
   unmatched: number;
   suggestions: ReconciliationSuggestion[];
+  // F070 FIX: Return matched pairs explicitly instead of mutating input objects
+  matchedPairs: { bankTransactionId: string; journalEntryId: string }[];
 }
 
 export interface ReconciliationSuggestion {
@@ -236,7 +242,8 @@ export interface ReconciliationSuggestion {
 
 export interface Alert {
   id: string;
-  type: 'OVERDUE_INVOICE' | 'LOW_CASH' | 'TAX_DUE' | 'RECONCILIATION_PENDING' | 'EXPENSE_ANOMALY';
+  // F068 FIX: Added 'PERIOD_CLOSE_PENDING' as a distinct alert type for period closing
+  type: 'OVERDUE_INVOICE' | 'LOW_CASH' | 'TAX_DUE' | 'RECONCILIATION_PENDING' | 'EXPENSE_ANOMALY' | 'PERIOD_CLOSE_PENDING';
   severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
   title: string;
   message: string;
@@ -244,4 +251,51 @@ export interface Alert {
   createdAt: Date;
   readAt?: Date;
   resolvedAt?: Date;
+}
+
+// F061 FIX: Shared aging report types (previously duplicated locally in aging.service.ts)
+export interface AgingInvoice {
+  id: string;
+  invoiceNumber: string;
+  type: 'RECEIVABLE' | 'PAYABLE';
+  customerOrVendor: string;
+  email?: string;
+  invoiceDate: Date;
+  dueDate: Date;
+  amount: number;
+  amountPaid: number;
+  balance: number;
+  status: string;
+}
+
+export interface AgingBucket {
+  label: string;
+  minDays: number;
+  maxDays: number;
+  count: number;
+  total: number;
+  percentage: number;
+  invoices: AgingInvoice[];
+}
+
+export interface CustomerAgingSummary {
+  name: string;
+  email?: string;
+  current: number;
+  days1to30: number;
+  days31to60: number;
+  days61to90: number;
+  over90: number;
+  total: number;
+  oldestInvoiceDays: number;
+}
+
+export interface AgingReport {
+  type: 'RECEIVABLE' | 'PAYABLE';
+  asOfDate: Date;
+  totalOutstanding: number;
+  totalOverdue: number;
+  averageDaysOutstanding: number;
+  buckets: AgingBucket[];
+  byCustomer: CustomerAgingSummary[];
 }

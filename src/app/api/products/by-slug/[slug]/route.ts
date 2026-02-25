@@ -1,6 +1,8 @@
 export const dynamic = 'force-dynamic';
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
+import { apiSuccess, apiError } from '@/lib/api-response';
+import { ErrorCode } from '@/lib/error-codes';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { withTranslation, getTranslatedFields, DB_SOURCE_LOCALE } from '@/lib/translation';
@@ -63,7 +65,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     });
 
     if (!product) {
-      return NextResponse.json({ error: 'Product not found' }, { status: 404 });
+      return apiError('Product not found', ErrorCode.NOT_FOUND);
     }
 
     // Apply translations
@@ -116,12 +118,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       })),
     };
 
-    return NextResponse.json({ product: transformedProduct });
+    return apiSuccess({ product: transformedProduct });
   } catch (error) {
     logger.error('Error fetching product by slug', { error: error instanceof Error ? error.message : String(error) });
-    return NextResponse.json(
-      { error: 'Failed to fetch product' },
-      { status: 500 }
-    );
+    return apiError('Failed to fetch product', ErrorCode.INTERNAL_ERROR);
   }
 }

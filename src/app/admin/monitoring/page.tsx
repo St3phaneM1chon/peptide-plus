@@ -1,7 +1,21 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Activity, Clock, Zap, AlertTriangle, Server, Database, Globe, TrendingUp } from 'lucide-react';
+/**
+ * MONITORING PAGE - Demo implementation
+ *
+ * IMPORTANT: The performance metrics (Web Vitals, route latencies) and uptime data
+ * on this page are SIMULATED / HARDCODED demonstration data. They do NOT reflect
+ * real application performance.
+ *
+ * The "Health Status" section at the top is connected to the real /api/health endpoint
+ * and shows live service status when the API is reachable.
+ *
+ * TODO: Connect to a real APM provider (e.g., Azure Application Insights, Datadog)
+ * for actual performance metrics and uptime tracking.
+ */
+
+import { useState, useEffect, useCallback } from 'react';
+import { Activity, Clock, Zap, AlertTriangle, Server, Database, Globe, TrendingUp, Info } from 'lucide-react';
 
 interface HealthStatus {
   service: string;
@@ -18,14 +32,32 @@ interface PerformanceMetric {
   requests: number;
 }
 
+// Map /api/health check names to display labels
+function mapHealthCheckToService(check: { name: string; status: string; duration?: number }): HealthStatus {
+  const nameMap: Record<string, string> = {
+    application: 'Application',
+    database: 'Base de donnees',
+    redis: 'Redis Cache',
+    stripe: 'Stripe API',
+    email: 'Email (Resend)',
+    memory: 'Memoire',
+    auth: 'Authentification',
+    csrf: 'Protection CSRF',
+    environment: 'Variables env.',
+    sentry: 'Sentry',
+  };
+  return {
+    service: nameMap[check.name] || check.name,
+    status: check.status === 'pass' ? 'healthy' : check.status === 'warn' ? 'degraded' : 'down',
+    responseTime: check.duration,
+    lastCheck: new Date(),
+  };
+}
+
 export default function MonitoringPage() {
-  const [health, setHealth] = useState<HealthStatus[]>([
-    { service: 'Application', status: 'healthy', responseTime: 45, lastCheck: new Date() },
-    { service: 'Base de données', status: 'healthy', responseTime: 12, lastCheck: new Date() },
-    { service: 'Stripe API', status: 'healthy', responseTime: 89, lastCheck: new Date() },
-    { service: 'Email (Resend)', status: 'healthy', responseTime: 120, lastCheck: new Date() },
-    { service: 'Azure Storage', status: 'healthy', responseTime: 67, lastCheck: new Date() },
-  ]);
+  const [health, setHealth] = useState<HealthStatus[]>([]);
+  const [healthLoading, setHealthLoading] = useState(true);
+  const [healthError, setHealthError] = useState<string | null>(null);
 
   const [metrics] = useState<PerformanceMetric[]>([
     { route: '/api/products', p50: 45, p95: 120, p99: 250, requests: 15420 },
@@ -37,14 +69,31 @@ export default function MonitoringPage() {
 
   const [uptime] = useState(99.97);
 
-  const refreshHealth = () => {
-    setHealth(prev => prev.map(h => ({ ...h, lastCheck: new Date() })));
-  };
+  // Fetch real health data from /api/health
+  const refreshHealth = useCallback(async () => {
+    setHealthLoading(true);
+    setHealthError(null);
+    try {
+      const res = await fetch('/api/health', { cache: 'no-store' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      if (data.checks && Array.isArray(data.checks)) {
+        setHealth(data.checks.map(mapHealthCheckToService));
+      }
+    } catch (err) {
+      setHealthError(err instanceof Error ? err.message : 'Erreur de connexion');
+      // Fallback to empty state on error
+      setHealth([]);
+    } finally {
+      setHealthLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
+    refreshHealth();
     const interval = setInterval(refreshHealth, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [refreshHealth]);
 
   const statusColor = (s: string) => s === 'healthy' ? 'text-green-600 bg-green-100' : s === 'degraded' ? 'text-yellow-600 bg-yellow-100' : 'text-red-600 bg-red-100';
   const statusLabel = (s: string) => s === 'healthy' ? 'Opérationnel' : s === 'degraded' ? 'Dégradé' : 'Hors ligne';

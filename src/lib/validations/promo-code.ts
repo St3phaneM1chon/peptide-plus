@@ -1,8 +1,8 @@
 /**
  * Promo Code Zod Validation Schemas
  *
- * TODO: F-058 - PATCH schema missing refine for percentage <= 100; add same validation as create
- * TODO: F-089 - promoCodeTypeEnum duplicated in promotion.ts; extract to shared file
+ * FIXED: F-058 - PATCH schema now has refine for percentage <= 100 (see patchPromoCodeSchema below)
+ * FIXED: F-089 - promotion.ts now imports promoCodeTypeEnum from this file instead of duplicating
  */
 
 import { z } from 'zod';

@@ -1,6 +1,8 @@
 export const dynamic = 'force-dynamic';
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
+import { apiSuccess, apiError } from '@/lib/api-response';
+import { ErrorCode } from '@/lib/error-codes';
 import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth-config';
@@ -47,16 +49,13 @@ export async function GET(
     });
 
     if (!format || format.productId !== id) {
-      return NextResponse.json({ error: 'Format not found' }, { status: 404 });
+      return apiError('Format not found', ErrorCode.NOT_FOUND);
     }
 
-    return NextResponse.json(format);
+    return apiSuccess(format);
   } catch (error) {
     logger.error('Error fetching format', { error: error instanceof Error ? error.message : String(error) });
-    return NextResponse.json(
-      { error: 'Failed to fetch format' },
-      { status: 500 }
-    );
+    return apiError('Failed to fetch format', ErrorCode.INTERNAL_ERROR);
   }
 }
 
@@ -69,13 +68,13 @@ export async function PUT(
     const { id, formatId } = await params;
     const session = await auth();
     if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return apiError('Unauthorized', ErrorCode.UNAUTHORIZED, { request });
     }
 
     // CSRF validation
     const csrfValid = await validateCsrf(request);
     if (!csrfValid) {
-      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+      return apiError('Invalid CSRF token', ErrorCode.FORBIDDEN, { request });
     }
 
     const body = await request.json();
@@ -83,10 +82,7 @@ export async function PUT(
     // BUG-009 FIX: Validate body with Zod before destructuring to prevent mass assignment
     const validation = updateFormatSchema.safeParse(body);
     if (!validation.success) {
-      return NextResponse.json(
-        { error: validation.error.errors[0]?.message || 'Invalid format data', details: validation.error.errors },
-        { status: 400 }
-      );
+      return apiError(validation.error.errors[0]?.message || 'Invalid format data', ErrorCode.VALIDATION_ERROR, { details: validation.error.errors, request });
     }
     const {
       formatType,
@@ -119,7 +115,7 @@ export async function PUT(
     });
 
     if (!existingFormat || existingFormat.productId !== id) {
-      return NextResponse.json({ error: 'Format not found' }, { status: 404 });
+      return apiError('Format not found', ErrorCode.NOT_FOUND, { request });
     }
 
     // BUG-044 FIX: Use transaction for atomic default toggle
@@ -177,13 +173,10 @@ export async function PUT(
     try { revalidatePath('/shop', 'layout'); } catch { /* revalidation is best-effort */ }
     try { revalidatePath('/api/products', 'layout'); } catch { /* revalidation is best-effort */ }
 
-    return NextResponse.json(format);
+    return apiSuccess(format, { request });
   } catch (error) {
     logger.error('Error updating format', { error: error instanceof Error ? error.message : String(error) });
-    return NextResponse.json(
-      { error: 'Failed to update format' },
-      { status: 500 }
-    );
+    return apiError('Failed to update format', ErrorCode.INTERNAL_ERROR, { request });
   }
 }
 
@@ -196,13 +189,13 @@ export async function DELETE(
     const { id, formatId } = await params;
     const session = await auth();
     if (!session?.user || !['OWNER', 'EMPLOYEE'].includes(session.user.role)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return apiError('Unauthorized', ErrorCode.UNAUTHORIZED, { request });
     }
 
     // CSRF validation
     const csrfValid = await validateCsrf(request);
     if (!csrfValid) {
-      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+      return apiError('Invalid CSRF token', ErrorCode.FORBIDDEN, { request });
     }
 
     // Check if format exists
@@ -211,7 +204,7 @@ export async function DELETE(
     });
 
     if (!format || format.productId !== id) {
-      return NextResponse.json({ error: 'Format not found' }, { status: 404 });
+      return apiError('Format not found', ErrorCode.NOT_FOUND, { request });
     }
 
     // BUG-018 FIX: Soft-delete instead of hard-delete to preserve OrderItem references
@@ -224,12 +217,9 @@ export async function DELETE(
     try { revalidatePath('/shop', 'layout'); } catch { /* revalidation is best-effort */ }
     try { revalidatePath('/api/products', 'layout'); } catch { /* revalidation is best-effort */ }
 
-    return NextResponse.json({ success: true });
+    return apiSuccess({ success: true }, { request });
   } catch (error) {
     logger.error('Error deleting format', { error: error instanceof Error ? error.message : String(error) });
-    return NextResponse.json(
-      { error: 'Failed to delete format' },
-      { status: 500 }
-    );
+    return apiError('Failed to delete format', ErrorCode.INTERNAL_ERROR, { request });
   }
 }

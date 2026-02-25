@@ -35,17 +35,14 @@ export const GET = withAdminGuard(async (request: NextRequest, _ctx) => {
     }
 
     if (search) {
-      // Search by user name or email
-      const matchingUsers = await prisma.user.findMany({
-        where: {
-          OR: [
-            { name: { contains: search, mode: 'insensitive' } },
-            { email: { contains: search, mode: 'insensitive' } },
-          ],
-        },
-        select: { id: true },
-      });
-      where.userId = { in: matchingUsers.map((u) => u.id) };
+      // F39 FIX: Use Prisma nested relation filter instead of separate user query + userId IN.
+      // This lets Prisma generate a single SQL JOIN/subquery rather than two round-trips.
+      where.user = {
+        OR: [
+          { name: { contains: search, mode: 'insensitive' } },
+          { email: { contains: search, mode: 'insensitive' } },
+        ],
+      };
     }
 
     if (from || to) {

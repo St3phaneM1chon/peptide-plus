@@ -230,7 +230,8 @@ export const POST = withAdminGuard(async (request, { session }) => {
         const parsed = parseInt(maxRow.max_num.split('-').pop() || '0');
         if (!isNaN(parsed)) nextNum = parsed + 1;
       }
-      const entryNumber = `${prefix}${String(nextNum).padStart(4, '0')}`;
+      // F063 FIX: Use padStart(5) for consistent 5-digit entry number format
+      const entryNumber = `${prefix}${String(nextNum).padStart(5, '0')}`;
 
       const linesToCreate = lines.map((l: { accountCode: string; debit?: number; credit?: number; description?: string }) => ({
         accountId: accountMap.get(l.accountCode)!.id,
@@ -635,7 +636,8 @@ export const DELETE = withAdminGuard(async (request, { session }) => {
           const parsed = parseInt(maxRow.max_num.split('-').pop() || '0');
           if (!isNaN(parsed)) nextNum = parsed + 1;
         }
-        const reversingEntryNumber = `${prefix}${String(nextNum).padStart(4, '0')}`;
+        // F063 FIX: Use padStart(5) for consistent 5-digit entry number format
+        const reversingEntryNumber = `${prefix}${String(nextNum).padStart(5, '0')}`;
 
         // 3. Create reversing entry with swapped debits/credits
         const reversingLines = originalEntry.lines.map((line) => ({

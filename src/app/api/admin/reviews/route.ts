@@ -9,15 +9,30 @@ import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
 
+// F-010 FIX: Define a proper const array + type for review status values
+// instead of relying on scattered string literals. This is the single source
+// of truth for the status filter on the admin GET endpoint.
+const REVIEW_FILTER_STATUSES = ['pending', 'approved', 'rejected'] as const;
+type ReviewFilterStatus = typeof REVIEW_FILTER_STATUSES[number];
+
+function isValidReviewFilterStatus(value: string): value is ReviewFilterStatus {
+  return (REVIEW_FILTER_STATUSES as readonly string[]).includes(value);
+}
+
 export const GET = withAdminGuard(async (request: NextRequest, _ctx) => {
   try {
     const { searchParams } = new URL(request.url);
-    const status = searchParams.get('status'); // pending, approved, rejected
+    const rawStatus = searchParams.get('status');
     const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
     const limit = Math.min(parseInt(searchParams.get('limit') || '20', 10), 100);
     const skip = (page - 1) * limit;
 
-    // Build where clause based on status filter
+    // F-010 FIX: Validate status query parameter against the enum instead of
+    // accepting arbitrary strings. Invalid values are ignored (no filter applied).
+    const status: ReviewFilterStatus | null =
+      rawStatus && isValidReviewFilterStatus(rawStatus) ? rawStatus : null;
+
+    // Build where clause based on validated status filter
     const where: Record<string, unknown> = {};
     if (status === 'pending') {
       where.isApproved = false;
@@ -64,16 +79,22 @@ export const GET = withAdminGuard(async (request: NextRequest, _ctx) => {
       prisma.review.count({ where }),
     ]);
 
+    // F-010 FIX: Use a proper typed enum for derived review status values.
+    // These match the values expected by the frontend Review interface and the
+    // PATCH endpoint's Zod schema (z.enum(['APPROVED', 'REJECTED'])).
+    const REVIEW_STATUS = { PENDING: 'PENDING', APPROVED: 'APPROVED', REJECTED: 'REJECTED' } as const;
+    type ReviewStatus = typeof REVIEW_STATUS[keyof typeof REVIEW_STATUS];
+
     // Map DB model to frontend Review interface
     const reviews = dbReviews.map((r) => {
       // Derive status: if approved -> APPROVED, if not approved and has a rejection marker -> REJECTED, else PENDING
-      let reviewStatus: 'PENDING' | 'APPROVED' | 'REJECTED' = 'PENDING';
+      let reviewStatus: ReviewStatus = REVIEW_STATUS.PENDING;
       if (r.isApproved) {
-        reviewStatus = 'APPROVED';
+        reviewStatus = REVIEW_STATUS.APPROVED;
       } else if (r.isPublished === false && r.isApproved === false && r.reply !== null) {
         // Convention: if there's a reply but not approved, treat as rejected
         // This is a simple heuristic; a dedicated `status` field would be better
-        reviewStatus = 'REJECTED';
+        reviewStatus = REVIEW_STATUS.REJECTED;
       }
 
       return {

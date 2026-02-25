@@ -1,4 +1,4 @@
-// TODO: F-094 - Export button has no onClick handler; implement CSV/Excel export or hide the button
+// F094 FIX: Export button now has CSV export onClick handler (see handleExport)
 'use client';
 
 import { useState, useMemo, useCallback, type ReactNode } from 'react';
@@ -243,6 +243,34 @@ export function ContactListPage({ config }: { config: ContactListPageConfig }) {
     [config.ordersLinkPattern]
   );
 
+  // F094 FIX: Implement CSV export for the contact list export button
+  const handleExport = useCallback(() => {
+    if (filteredItems.length === 0) return;
+    const BOM = '\uFEFF';
+    const headers = ['Name', 'Email', 'Phone', 'Tier', 'Points', 'Lifetime Points', 'Purchases', 'Total Spent', 'Registered'];
+    const rows = filteredItems.map(item => [
+      item.name || '',
+      item.email,
+      item.phone || '',
+      item.loyaltyTier,
+      String(item.loyaltyPoints),
+      String(item.lifetimePoints),
+      String(item._count?.purchases || 0),
+      String(item.totalSpent || 0),
+      new Date(item.createdAt).toLocaleDateString(locale),
+    ]);
+    const csv = BOM + [headers, ...rows]
+      .map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(','))
+      .join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `contacts-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [filteredItems, locale]);
+
   // ─── Loading state ─────────────────────────────────────────
 
   if (loading) {
@@ -264,7 +292,8 @@ export function ContactListPage({ config }: { config: ContactListPageConfig }) {
             <h1 className="text-xl font-bold text-slate-900">{t(`${prefix}.title`)}</h1>
             <p className="text-sm text-slate-500 mt-0.5">{t(`${prefix}.subtitle`)}</p>
           </div>
-          <Button variant="secondary" icon={Download} size="sm">
+          {/* F094 FIX: Wire onClick handler to CSV export function */}
+          <Button variant="secondary" icon={Download} size="sm" onClick={handleExport}>
             {t(`${prefix}.export`)}
           </Button>
         </div>

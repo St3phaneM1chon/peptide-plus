@@ -257,6 +257,28 @@ export const GET = withAdminGuard(async (request) => {
     } | null = null;
 
     if (method === 'quick') {
+      // F066 FIX: Validate Quick Method eligibility - annual taxable supplies must be <= $400,000
+      const annualStart = new Date(startDate.getFullYear(), 0, 1);
+      const annualEnd = new Date(startDate.getFullYear(), 11, 31, 23, 59, 59, 999);
+      const annualSuppliesAgg = await prisma.customerInvoice.aggregate({
+        where: {
+          invoiceDate: { gte: annualStart, lte: annualEnd },
+          status: { not: 'CANCELLED' },
+          deletedAt: null,
+        },
+        _sum: { total: true },
+      });
+      const annualRevenue = Number(annualSuppliesAgg._sum.total ?? 0);
+      if (annualRevenue > 400000) {
+        return NextResponse.json(
+          {
+            error: 'La méthode rapide n\'est pas admissible: le chiffre d\'affaires annuel dépasse 400 000 $. ' +
+              `Revenu annuel estimé: ${annualRevenue.toFixed(2)} $`,
+          },
+          { status: 400 }
+        );
+      }
+
       const qmRates = QUICK_METHOD_RATES[province] || QUICK_METHOD_RATES['QC'];
       // Total revenue including taxes
       const totalRevenueWithTax = round2(

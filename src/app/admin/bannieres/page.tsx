@@ -100,6 +100,8 @@ export default function BannieresPage() {
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  // F82 FIX: Track slug checking state for debounced uniqueness validation
+  const [slugChecking, setSlugChecking] = useState(false);
 
   // UX FIX: ConfirmDialog for delete action
   const [confirmDelete, setConfirmDelete] = useState<{
@@ -125,6 +127,36 @@ export default function BannieresPage() {
   }, [t]);
 
   useEffect(() => { fetchSlides(); }, [fetchSlides]);
+
+  // F82 FIX: Debounced client-side slug uniqueness check
+  useEffect(() => {
+    if (!form.slug || !showForm) return;
+    // Skip check when editing and slug hasn't changed from original
+    if (editingSlide && editingSlide.slug === form.slug) {
+      setFormErrors(prev => { const n = { ...prev }; delete n.slug; return n; });
+      return;
+    }
+    setSlugChecking(true);
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/hero-slides?slug=${encodeURIComponent(form.slug)}`);
+        if (res.ok) {
+          const data = await res.json();
+          const existing = (data.slides || []).find((s: HeroSlide) => s.slug === form.slug);
+          if (existing && (!editingSlide || existing.id !== editingSlide.id)) {
+            setFormErrors(prev => ({ ...prev, slug: t('admin.banners.slugAlreadyExists') || 'This slug is already in use' }));
+          } else {
+            setFormErrors(prev => { const n = { ...prev }; delete n.slug; return n; });
+          }
+        }
+      } catch {
+        // Slug check is advisory, don't block on network error
+      } finally {
+        setSlugChecking(false);
+      }
+    }, 500);
+    return () => { clearTimeout(timer); setSlugChecking(false); };
+  }, [form.slug, showForm, editingSlide, t]);
 
   const openCreate = () => {
     setEditingSlide(null);
@@ -542,43 +574,59 @@ export default function BannieresPage() {
         size="xl"
         footer={modalFooter}
       >
-        {/* Tabs */}
-        <div className="border-b border-slate-200 -mx-5 px-5 -mt-5 mb-5 flex gap-1 overflow-x-auto">
-          <button onClick={() => setActiveTab('general')} className={tabCls('general')}>
-            {t('admin.banners.tabGeneral')}
-          </button>
-          <button onClick={() => setActiveTab('media')} className={tabCls('media')}>
-            {t('admin.banners.tabMedia')}
-          </button>
-          <button onClick={() => setActiveTab('cta')} className={tabCls('cta')}>
-            {t('admin.banners.tabCta')}
-          </button>
-          <button onClick={() => setActiveTab('schedule')} className={tabCls('schedule')}>
-            {t('admin.banners.tabSchedule')}
-          </button>
-          {/* FIX: F90 - TODO: Use a dropdown or horizontal scroll with indicator for 22 locale tabs */}
-          {LOCALES.map((loc) => (
-            <button
-              key={loc}
-              onClick={() => setActiveTab(`lang-${loc}`)}
-              className={tabCls(`lang-${loc}`, !!translations[loc]?.title)}
-            >
-              {loc.toUpperCase()}
+        {/* Tabs - F90 FIX: Separated main tabs from locale tabs with scroll indicator */}
+        <div className="border-b border-slate-200 -mx-5 px-5 -mt-5 mb-5">
+          <div className="flex gap-1">
+            <button onClick={() => setActiveTab('general')} className={tabCls('general')}>
+              {t('admin.banners.tabGeneral')}
             </button>
-          ))}
+            <button onClick={() => setActiveTab('media')} className={tabCls('media')}>
+              {t('admin.banners.tabMedia')}
+            </button>
+            <button onClick={() => setActiveTab('cta')} className={tabCls('cta')}>
+              {t('admin.banners.tabCta')}
+            </button>
+            <button onClick={() => setActiveTab('schedule')} className={tabCls('schedule')}>
+              {t('admin.banners.tabSchedule')}
+            </button>
+            {/* F90 FIX: Locale tabs in a scrollable container with divider and fade indicator */}
+            <span className="border-l border-slate-300 mx-1 self-stretch" />
+            <div className="relative flex-1 min-w-0">
+              <div className="flex gap-1 overflow-x-auto scrollbar-thin scrollbar-thumb-slate-300 pb-px">
+                {LOCALES.map((loc) => (
+                  <button
+                    key={loc}
+                    onClick={() => setActiveTab(`lang-${loc}`)}
+                    className={tabCls(`lang-${loc}`, !!translations[loc]?.title)}
+                  >
+                    {loc.toUpperCase()}
+                  </button>
+                ))}
+              </div>
+              {/* F90 FIX: Right fade gradient to indicate more tabs are scrollable */}
+              <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white to-transparent pointer-events-none" />
+            </div>
+          </div>
         </div>
 
         {/* General Tab */}
         {activeTab === 'general' && (
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              {/* FIX: F82 - TODO: Add debounced client-side slug uniqueness check against /api/hero-slides?slug=X */}
+              {/* F82 FIX: Debounced client-side slug uniqueness check via useEffect above */}
               <FormField label={t('admin.banners.slug')} required>
-                <Input
-                  value={form.slug}
-                  onChange={(e) => { setForm({ ...form, slug: e.target.value }); setFormErrors(prev => { const n = { ...prev }; delete n.slug; return n; }); }}
-                  placeholder="research-peptides"
-                />
+                <div className="relative">
+                  <Input
+                    value={form.slug}
+                    onChange={(e) => { setForm({ ...form, slug: e.target.value }); }}
+                    placeholder="research-peptides"
+                    className={formErrors.slug ? 'border-red-300 focus:ring-red-500' : ''}
+                  />
+                  {/* F82 FIX: Show spinner while checking slug uniqueness */}
+                  {slugChecking && (
+                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-slate-400">{t('common.checking') || 'Checking...'}</span>
+                  )}
+                </div>
                 {formErrors.slug && (
                   <p className="mt-1 text-sm text-red-600" role="alert">{formErrors.slug}</p>
                 )}

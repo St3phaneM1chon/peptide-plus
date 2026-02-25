@@ -3,54 +3,13 @@
  * Tracks accounts receivable and payable by age
  */
 
-// FIX: F061 - These interfaces are local duplicates of types in ./types.ts.
-// TODO: Import Invoice, AgingBucket, AgingReport, CustomerAgingSummary from './types'
-// once they are added there, and remove these local definitions.
-interface Invoice {
-  id: string;
-  invoiceNumber: string;
-  type: 'RECEIVABLE' | 'PAYABLE';
-  customerOrVendor: string;
-  email?: string;
-  invoiceDate: Date;
-  dueDate: Date;
-  amount: number;
-  amountPaid: number;
-  balance: number;
-  status: string;
-}
-
-interface AgingBucket {
-  label: string;
-  minDays: number;
-  maxDays: number;
-  count: number;
-  total: number;
-  percentage: number;
-  invoices: Invoice[];
-}
-
-interface AgingReport {
-  type: 'RECEIVABLE' | 'PAYABLE';
-  asOfDate: Date;
-  totalOutstanding: number;
-  totalOverdue: number;
-  averageDaysOutstanding: number;
-  buckets: AgingBucket[];
-  byCustomer: CustomerAgingSummary[];
-}
-
-interface CustomerAgingSummary {
-  name: string;
-  email?: string;
-  current: number;
-  days1to30: number;
-  days31to60: number;
-  days61to90: number;
-  over90: number;
-  total: number;
-  oldestInvoiceDays: number;
-}
+// F061 FIX: Import shared types from types.ts instead of duplicating local interfaces
+import type {
+  AgingInvoice as Invoice,
+  AgingBucket,
+  AgingReport,
+  CustomerAgingSummary,
+} from './types';
 
 /**
  * Calculate days between two dates

@@ -161,11 +161,19 @@ export class StorageService {
 
       const blockBlobClient = azure.containerClient.getBlockBlobClient(blobPath);
 
-      // FIX: F78 - TODO: Replace regex parsing with @azure/storage-blob StorageSharedKeyCredential.fromConnectionString()
-      // or a proper connection string parser. Current regex is fragile for edge cases.
+      // F78 FIX: Parse connection string with key-value splitting instead of fragile regex.
+      // Handles edge cases like values containing '=' (e.g. base64 AccountKey) by splitting
+      // only on the first '=' per segment.
       const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING!;
-      const accountName = connectionString.match(/AccountName=([^;]+)/)?.[1] || '';
-      const accountKey = connectionString.match(/AccountKey=([^;]+)/)?.[1] || '';
+      const connParts: Record<string, string> = {};
+      for (const segment of connectionString.split(';')) {
+        const eqIdx = segment.indexOf('=');
+        if (eqIdx > 0) {
+          connParts[segment.substring(0, eqIdx).trim()] = segment.substring(eqIdx + 1).trim();
+        }
+      }
+      const accountName = connParts['AccountName'] || '';
+      const accountKey = connParts['AccountKey'] || '';
 
       if (!accountName || !accountKey) {
         return null;

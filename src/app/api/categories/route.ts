@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic';
  * Supporte: ?locale=fr pour contenu traduit
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
@@ -16,6 +16,8 @@ import { cacheGetOrSet, cacheInvalidateTag, CacheTags, CacheTTL } from '@/lib/ca
 import { createCategorySchema } from '@/lib/validations/category';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { validateCsrf } from '@/lib/csrf-middleware';
+import { apiSuccess, apiError, withETag } from '@/lib/api-response';
+import { ErrorCode } from '@/lib/error-codes';
 
 // GET - Liste des catégories
 export async function GET(request: NextRequest) {
@@ -24,7 +26,7 @@ export async function GET(request: NextRequest) {
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || '127.0.0.1';
     const rl = await rateLimitMiddleware(ip, '/api/categories');
     if (!rl.success) {
-      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      const res = apiError(rl.error!.message, ErrorCode.RATE_LIMITED, { request });
       Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
       return res;
     }
@@ -123,20 +125,17 @@ export async function GET(request: NextRequest) {
           },
         };
       });
-      return NextResponse.json({ categories: treeCategories }, {
-        headers: { 'Cache-Control': 'public, s-maxage=600, stale-while-revalidate=1200' },
+      return withETag({ categories: treeCategories }, request, {
+        cacheControl: 'public, s-maxage=600, stale-while-revalidate=1200',
       });
     }
 
-    return NextResponse.json({ categories }, {
-      headers: { 'Cache-Control': 'public, s-maxage=600, stale-while-revalidate=1200' },
+    return withETag({ categories }, request, {
+      cacheControl: 'public, s-maxage=600, stale-while-revalidate=1200',
     });
   } catch (error) {
     logger.error('Error fetching categories', { error: error instanceof Error ? error.message : String(error) });
-    return NextResponse.json(
-      { error: 'Erreur lors de la récupération des catégories' },
-      { status: 500 }
-    );
+    return apiError('Erreur lors de la récupération des catégories', ErrorCode.INTERNAL_ERROR, { request });
   }
 }
 
@@ -147,7 +146,7 @@ export async function POST(request: NextRequest) {
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || '127.0.0.1';
     const rl = await rateLimitMiddleware(ip, '/api/categories');
     if (!rl.success) {
-      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
+      const res = apiError(rl.error!.message, ErrorCode.RATE_LIMITED, { request });
       Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
       return res;
     }
@@ -155,17 +154,17 @@ export async function POST(request: NextRequest) {
     // CSRF protection
     const csrfValid = await validateCsrf(request);
     if (!csrfValid) {
-      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+      return apiError('Invalid CSRF token', ErrorCode.CSRF_INVALID, { request });
     }
 
     const session = await auth();
 
     if (!session?.user) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
+      return apiError('Non autorisé', ErrorCode.UNAUTHORIZED, { request });
     }
 
     if (session.user.role !== UserRole.EMPLOYEE && session.user.role !== UserRole.OWNER) {
-      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
+      return apiError('Accès refusé', ErrorCode.FORBIDDEN, { request });
     }
 
     const body = await request.json();
@@ -173,9 +172,10 @@ export async function POST(request: NextRequest) {
     // BUG-004 FIX: Validate with Zod schema instead of simple truthy checks
     const validation = createCategorySchema.safeParse(body);
     if (!validation.success) {
-      return NextResponse.json(
-        { error: validation.error.errors[0]?.message || 'Invalid category data', details: validation.error.errors },
-        { status: 400 }
+      return apiError(
+        validation.error.errors[0]?.message || 'Invalid category data',
+        ErrorCode.VALIDATION_ERROR,
+        { request, details: validation.error.errors }
       );
     }
     const { name, slug, description, imageUrl, sortOrder, parentId } = validation.data;
@@ -186,17 +186,14 @@ export async function POST(request: NextRequest) {
     });
 
     if (existingCategory) {
-      return NextResponse.json(
-        { error: 'Ce slug existe déjà' },
-        { status: 400 }
-      );
+      return apiError('Ce slug existe déjà', ErrorCode.DUPLICATE_ENTRY, { request });
     }
 
     // Validate parentId if provided
     if (parentId) {
       const parentCategory = await prisma.category.findUnique({ where: { id: parentId } });
       if (!parentCategory) {
-        return NextResponse.json({ error: 'Catégorie parent non trouvée' }, { status: 400 });
+        return apiError('Catégorie parent non trouvée', ErrorCode.VALIDATION_ERROR, { request });
       }
     }
 
@@ -232,12 +229,9 @@ export async function POST(request: NextRequest) {
     try { revalidatePath('/shop', 'layout'); } catch { /* revalidation is best-effort */ }
     try { revalidatePath('/api/categories', 'layout'); } catch { /* revalidation is best-effort */ }
 
-    return NextResponse.json({ category }, { status: 201 });
+    return apiSuccess({ category }, { status: 201, request });
   } catch (error) {
     logger.error('Error creating category', { error: error instanceof Error ? error.message : String(error) });
-    return NextResponse.json(
-      { error: 'Erreur lors de la création de la catégorie' },
-      { status: 500 }
-    );
+    return apiError('Erreur lors de la création de la catégorie', ErrorCode.INTERNAL_ERROR, { request });
   }
 }

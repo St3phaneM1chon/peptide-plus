@@ -250,7 +250,29 @@ export async function GET(request: NextRequest) {
 
           // Add bonus loyalty points in a transaction
           // DI-62: Calculate balanceAfter from the updated user record
+          // F45 FIX: Check for existing EARN_BIRTHDAY transaction this year inside
+          // the transaction to prevent double-award if cron is manually re-run
           await db.$transaction(async (tx) => {
+            const currentYear = new Date().getFullYear();
+            const existingBirthdayTx = await tx.loyaltyTransaction.findFirst({
+              where: {
+                userId: user.id,
+                type: 'EARN_BIRTHDAY',
+                createdAt: {
+                  gte: new Date(currentYear, 0, 1),
+                  lt: new Date(currentYear + 1, 0, 1),
+                },
+              },
+            });
+            if (existingBirthdayTx) {
+              logger.info('Birthday cron: skipping points for user (already awarded this year)', { userId: user.id });
+              // Still update lastBirthdayEmail to prevent re-processing
+              await tx.user.update({
+                where: { id: user.id },
+                data: { lastBirthdayEmail: new Date() },
+              });
+              return;
+            }
             const updatedUser = await tx.user.update({
               where: { id: user.id },
               data: {

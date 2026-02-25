@@ -10,9 +10,11 @@ export const dynamic = 'force-dynamic';
  * 4. Fallback to same-category products if insufficient data
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
+import { apiSuccess, apiError } from '@/lib/api-response';
+import { ErrorCode } from '@/lib/error-codes';
 
 interface ProductRecommendation {
   id: string;
@@ -38,16 +40,13 @@ export async function GET(request: NextRequest) {
     const limit = Math.min(Math.max(1, parseInt(searchParams.get('limit') || '4', 10)), 20);
 
     if (!productIdsParam) {
-      return NextResponse.json(
-        { error: 'productIds parameter is required' },
-        { status: 400 }
-      );
+      return apiError('productIds parameter is required', ErrorCode.VALIDATION_ERROR);
     }
 
     const productIds = productIdsParam.split(',').map(id => id.trim()).filter(Boolean);
 
     if (productIds.length === 0) {
-      return NextResponse.json({ recommendations: [] });
+      return apiSuccess({ recommendations: [] });
     }
 
     // PERF-002: Run Strategy 1 (order-based) and category lookup in parallel
@@ -267,7 +266,7 @@ export async function GET(request: NextRequest) {
     // Remove frequency from final output
     const cleanedRecommendations = recommendations.map(({ frequency, ...rest }) => rest);
 
-    return NextResponse.json(
+    return apiSuccess(
       { recommendations: cleanedRecommendations },
       {
         headers: {
@@ -277,9 +276,6 @@ export async function GET(request: NextRequest) {
     );
   } catch (error) {
     logger.error('Recommendations error', { error: error instanceof Error ? error.message : String(error) });
-    return NextResponse.json(
-      { error: 'Failed to fetch recommendations' },
-      { status: 500 }
-    );
+    return apiError('Failed to fetch recommendations', ErrorCode.INTERNAL_ERROR);
   }
 }

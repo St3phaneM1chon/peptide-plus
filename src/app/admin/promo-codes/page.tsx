@@ -1,6 +1,6 @@
-// TODO: F-053 - formatCurrency is constant; remove from useMemo dependency array or memoize at higher level
-// TODO: F-067 - Replace native confirm() for delete with custom Modal component
-// TODO: F-070 - updatePromoCodeSchema is alias of createPromoCodeSchema; make fields optional with .partial()
+// NOTE: F-053 - formatCurrency in useMemo dependency array is correct (locale-dependent); not a bug
+// FIXED: F-067 - Replaced native confirm() with ConfirmDialog component (see confirmDelete state + ConfirmDialog below)
+// TODO: F-070 - updatePromoCodeSchema is alias of createPromoCodeSchema; requires schema refactor with .partial()
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';

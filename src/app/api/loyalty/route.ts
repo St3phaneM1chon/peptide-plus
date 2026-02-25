@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
  * Récupère les données de fidélité de l'utilisateur
  */
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { logger } from '@/lib/logger';
 // FIX: FLAW-090 - Uses 'db' alias; standardize on one name across codebase (prefer 'prisma')
@@ -20,7 +20,8 @@ function generateReferralCode(name: string | null): string {
   return `${prefix}${random}`;
 }
 
-export async function GET() {
+// F36 FIX: Accept NextRequest to support pagination query parameters
+export async function GET(request: NextRequest) {
   try {
     const session = await auth();
 
@@ -28,9 +29,11 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // FIX: F-036 - Support pagination parameters for transaction history
-    // Note: In GET() without request param, we can't read searchParams.
-    // TODO: F-036 - Add NextRequest parameter and implement page/limit params for full pagination support
+    // F36 FIX: Read pagination params from URL search parameters
+    const { searchParams } = new URL(request.url);
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
+    const limit = Math.min(Math.max(1, parseInt(searchParams.get('limit') || '20', 10)), 100);
+    const skip = (page - 1) * limit;
 
     // Récupérer l'utilisateur avec ses transactions de fidélité
     let user = await db.user.findUnique({
@@ -45,7 +48,8 @@ export async function GET() {
         referralCode: true,
         loyaltyTransactions: {
           orderBy: { createdAt: 'desc' },
-          take: 20, // FIX: F-036 - Hardcoded limit; see TODO above for pagination
+          take: limit, // F36 FIX: Use dynamic limit from query params (default 20, max 100)
+          skip,        // F36 FIX: Support offset-based pagination
           select: {
             id: true,
             type: true,
@@ -102,6 +106,11 @@ export async function GET() {
       date: t.createdAt.toISOString(),
     }));
 
+    // F36 FIX: Count total transactions for pagination metadata
+    const totalTransactions = await db.loyaltyTransaction.count({
+      where: { userId: user.id },
+    });
+
     return NextResponse.json({
       points: user.loyaltyPoints,
       lifetimePoints: user.lifetimePoints,
@@ -111,6 +120,14 @@ export async function GET() {
       referralCount,
       nextTier: tierProgress.nextTier,
       pointsToNextTier: tierProgress.pointsNeeded,
+      // F36 FIX: Pagination metadata for transaction history
+      pagination: {
+        page,
+        limit,
+        total: totalTransactions,
+        totalPages: Math.ceil(totalTransactions / limit),
+        hasMore: skip + limit < totalTransactions,
+      },
     });
 
   } catch (error) {

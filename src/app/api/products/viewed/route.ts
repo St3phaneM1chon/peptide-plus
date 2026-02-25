@@ -15,6 +15,8 @@ import { logger } from '@/lib/logger';
 import { prisma } from '@/lib/db';
 import { validateCsrf } from '@/lib/csrf-middleware';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
+import { apiSuccess, apiError } from '@/lib/api-response';
+import { ErrorCode } from '@/lib/error-codes';
 
 const viewedProductSchema = z.object({
   productId: z.string().min(1, 'productId required').regex(/^[a-z0-9]{20,30}$/, 'Invalid productId format'),
@@ -35,14 +37,14 @@ export async function GET(request: NextRequest) {
     const cookie = request.cookies.get(COOKIE_NAME)?.value;
 
     if (!cookie) {
-      return NextResponse.json({ products: [] });
+      return apiSuccess({ products: [] });
     }
 
     // BUG-073 FIX: Validate that cookie values match safe ID pattern before querying DB
     const productIds = cookie.split(',').filter(id => id && isValidProductId(id)).slice(0, MAX_VIEWED);
 
     if (productIds.length === 0) {
-      return NextResponse.json({ products: [] });
+      return apiSuccess({ products: [] });
     }
 
     const products = await prisma.product.findMany({
@@ -87,10 +89,10 @@ export async function GET(request: NextRequest) {
         inStock: p!.formats.some(f => f.inStock && f.stockQuantity > 0),
       }));
 
-    return NextResponse.json({ products: sorted });
+    return apiSuccess({ products: sorted });
   } catch (error) {
     logger.error('Recently viewed error', { error: error instanceof Error ? error.message : String(error) });
-    return NextResponse.json({ products: [] });
+    return apiSuccess({ products: [] });
   }
 }
 
@@ -99,18 +101,18 @@ export async function POST(request: NextRequest) {
     // Rate limiting
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || '127.0.0.1';
     const rl = await rateLimitMiddleware(ip, '/api/products/viewed');
-    if (!rl.success) { const res = NextResponse.json({ error: rl.error!.message }, { status: 429 }); Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v)); return res; }
+    if (!rl.success) { const res = apiError(rl.error!.message, ErrorCode.RATE_LIMITED); Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v)); return res; }
 
     // CSRF protection
     const csrfValid = await validateCsrf(request);
     if (!csrfValid) {
-      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+      return apiError('Invalid CSRF token', ErrorCode.FORBIDDEN);
     }
 
     const body = await request.json();
     const parsed = viewedProductSchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+      return apiError('Invalid data', ErrorCode.VALIDATION_ERROR);
     }
     const { productId } = parsed.data;
 
@@ -120,7 +122,7 @@ export async function POST(request: NextRequest) {
       select: { id: true },
     });
     if (!productExists) {
-      return NextResponse.json({ error: 'Product not found' }, { status: 404 });
+      return apiError('Product not found', ErrorCode.NOT_FOUND);
     }
 
     // Get existing cookie
@@ -147,6 +149,6 @@ export async function POST(request: NextRequest) {
     return response;
   } catch (error) {
     logger.error('Recently viewed POST error', { error: error instanceof Error ? error.message : String(error) });
-    return NextResponse.json({ error: 'Failed to update viewed' }, { status: 500 });
+    return apiError('Failed to update viewed', ErrorCode.INTERNAL_ERROR);
   }
 }

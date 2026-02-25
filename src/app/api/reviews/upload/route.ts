@@ -10,6 +10,7 @@ import { validateCsrf } from '@/lib/csrf-middleware';
 import { rateLimitMiddleware } from '@/lib/rate-limiter';
 import { storage } from '@/lib/storage';
 import { logger } from '@/lib/logger';
+import { db } from '@/lib/db';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const MAX_IMAGES = 3;
@@ -53,6 +54,13 @@ export async function POST(request: NextRequest) {
     }
 
     const uploadedUrls: string[] = [];
+    // F-019 FIX: Track uploaded files for orphan cleanup
+    // Each uploaded file is recorded in the Media table with folder='reviews-pending'.
+    // Once a review is successfully created (by the review creation endpoint),
+    // these records should be updated to folder='reviews'.
+    // A scheduled cron job can then clean up any 'reviews-pending' entries older than
+    // 24 hours that were never associated with a review (orphan files).
+    const uploadedMediaIds: string[] = [];
 
     for (const file of files) {
       // Validate file type
@@ -103,9 +111,37 @@ export async function POST(request: NextRequest) {
       // FIX (F10): Use StorageService instead of local filesystem (persists on Azure)
       const result = await storage.upload(buffer, filename, file.type, { folder: 'reviews' });
       uploadedUrls.push(result.url);
+
+      // F-019 FIX: Track uploaded file in Media table with 'reviews-pending' folder.
+      // This enables a cron job to identify and clean orphan uploads that were never
+      // linked to a review (e.g., user abandoned the form, or review creation failed).
+      try {
+        const media = await db.media.create({
+          data: {
+            filename,
+            originalName: file.name,
+            mimeType: file.type,
+            size: file.size,
+            url: result.url,
+            folder: 'reviews-pending',
+            uploadedBy: session.user.id,
+          },
+        });
+        uploadedMediaIds.push(media.id);
+      } catch (trackErr) {
+        // Non-blocking: if tracking fails, the upload still succeeds
+        logger.warn('F-019: Failed to track uploaded file for orphan cleanup', {
+          filename,
+          error: trackErr instanceof Error ? trackErr.message : String(trackErr),
+        });
+      }
     }
 
-    return NextResponse.json({ urls: uploadedUrls });
+    return NextResponse.json({
+      urls: uploadedUrls,
+      // F-019 FIX: Return media IDs so the review creation endpoint can mark them as confirmed
+      _mediaIds: uploadedMediaIds,
+    });
   } catch (error) {
     logger.error('Error uploading review images', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(

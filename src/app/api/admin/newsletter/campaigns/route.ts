@@ -1,148 +1,127 @@
 export const dynamic = 'force-dynamic';
 
+/**
+ * Admin Newsletter Campaigns API
+ * GET - List all campaigns
+ * POST - Create a new campaign (draft, scheduled, or sent)
+ *
+ * FIX: FLAW-002 - These routes were missing; the admin page fetched from them but they didn't exist.
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
-import { createCampaignSchema } from '@/lib/validations/newsletter';
-import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { logger } from '@/lib/logger';
+import { z } from 'zod';
 
-const CAMPAIGNS_KEY = 'newsletter_campaigns';
+const createCampaignSchema = z.object({
+  subject: z.string().min(1, 'Subject is required').max(500),
+  content: z.string().min(1, 'Content is required'),
+  status: z.enum(['DRAFT', 'SCHEDULED', 'SENT']).default('DRAFT'),
+  scheduledFor: z.string().datetime().optional(),
+});
 
-interface Campaign {
-  id: string;
-  subject: string;
-  content: string;
-  status: 'DRAFT' | 'SCHEDULED' | 'SENT';
-  scheduledFor?: string;
-  sentAt?: string;
-  recipientCount: number;
-  openRate?: number;
-  clickRate?: number;
-  createdAt: string;
-}
-
-/**
- * Helper to load campaigns from the SiteSetting key-value store.
- * This is a temporary solution until a dedicated NewsletterCampaign model is added.
- */
-async function loadCampaigns(): Promise<Campaign[]> {
-  const entry = await prisma.siteSetting.findUnique({
-    where: { key: CAMPAIGNS_KEY },
-  });
-  if (!entry) return [];
+export const GET = withAdminGuard(async (request: NextRequest, { session: _session }) => {
   try {
-    return JSON.parse(entry.value) as Campaign[];
-  } catch (error) {
-    logger.error('[NewsletterCampaigns] Failed to parse campaigns JSON', { error: error instanceof Error ? error.message : String(error) });
-    return [];
-  }
-}
+    const { searchParams } = new URL(request.url);
+    const status = searchParams.get('status');
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
+    const limit = Math.min(Math.max(1, parseInt(searchParams.get('limit') || '100', 10)), 200);
+    const skip = (page - 1) * limit;
 
-async function saveCampaigns(campaigns: Campaign[], userId: string): Promise<void> {
-  await prisma.siteSetting.upsert({
-    where: { key: CAMPAIGNS_KEY },
-    update: {
-      value: JSON.stringify(campaigns),
-      updatedBy: userId,
-    },
-    create: {
-      key: CAMPAIGNS_KEY,
-      value: JSON.stringify(campaigns),
-      type: 'json',
-      module: 'newsletter',
-      updatedBy: userId,
-    },
-  });
-}
+    const where: Record<string, unknown> = {};
+    if (status) where.status = status;
 
-/**
- * GET /api/admin/newsletter/campaigns
- * List newsletter campaigns
- */
-export const GET = withAdminGuard(async (_request, { session: _session }) => {
-  try {
-    const [campaigns, totalActive] = await Promise.all([
-      loadCampaigns(),
-      prisma.newsletterSubscriber.count({
-        where: { isActive: true },
+    const [campaigns, total] = await Promise.all([
+      prisma.emailCampaign.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
       }),
+      prisma.emailCampaign.count({ where }),
     ]);
 
+    const formatted = campaigns.map((c) => {
+      let parsedStats: Record<string, number> = {};
+      if (c.stats) {
+        try {
+          parsedStats = JSON.parse(c.stats);
+        } catch { /* ignore invalid JSON */ }
+      }
+
+      return {
+        id: c.id,
+        subject: c.subject,
+        content: c.htmlContent,
+        status: c.status,
+        scheduledFor: c.scheduledAt?.toISOString() || null,
+        sentAt: c.sentAt?.toISOString() || null,
+        recipientCount: parsedStats.totalRecipients || parsedStats.sent || 0,
+        openRate: parsedStats.sent > 0
+          ? Math.round((parsedStats.opened || 0) / parsedStats.sent * 100)
+          : undefined,
+        clickRate: parsedStats.sent > 0
+          ? Math.round((parsedStats.clicked || 0) / parsedStats.sent * 100)
+          : undefined,
+        createdAt: c.createdAt.toISOString(),
+      };
+    });
+
     return NextResponse.json({
-      campaigns,
-      meta: {
-        totalActiveSubscribers: totalActive,
-      },
+      campaigns: formatted,
+      total,
+      page,
+      limit,
     });
   } catch (error) {
-    logger.error('Get newsletter campaigns error', { error: error instanceof Error ? error.message : String(error) });
+    logger.error('Admin newsletter campaigns GET error', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json(
-      { error: 'Error fetching campaigns' },
+      { error: 'Failed to fetch campaigns', campaigns: [] },
       { status: 500 }
     );
   }
 });
 
-/**
- * POST /api/admin/newsletter/campaigns
- * Create a new campaign (draft, scheduled, or send now)
- */
 export const POST = withAdminGuard(async (request: NextRequest, { session }) => {
   try {
     const body = await request.json();
-
-    // Validate with Zod
     const parsed = createCampaignSchema.safeParse(body);
+
     if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Validation error', details: parsed.error.flatten() },
+        { error: 'Validation error', details: parsed.error.flatten().fieldErrors },
         { status: 400 }
       );
     }
-    const { subject, content, status, scheduledFor } = parsed.data;
-    const campaignStatus = status;
 
-    // Count active subscribers for recipientCount
-    const recipientCount = await prisma.newsletterSubscriber.count({
-      where: { isActive: true },
+    const { subject, content, status, scheduledFor } = parsed.data;
+
+    const campaign = await prisma.emailCampaign.create({
+      data: {
+        name: subject,
+        subject,
+        htmlContent: content,
+        status: status === 'SENT' ? 'SCHEDULED' : status,
+        scheduledAt: status === 'SENT'
+          ? new Date()
+          : scheduledFor
+            ? new Date(scheduledFor)
+            : null,
+        sentAt: null,
+        createdBy: session.user.id,
+      },
     });
 
-    const now = new Date().toISOString();
-    const newCampaign: Campaign = {
-      // AMELIORATION: Use crypto.randomUUID instead of Math.random for campaign IDs
-      id: `campaign-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`,
-      subject,
-      content,
-      status: campaignStatus,
-      scheduledFor: scheduledFor || undefined,
-      sentAt: campaignStatus === 'SENT' ? now : undefined,
-      recipientCount: campaignStatus === 'SENT' ? recipientCount : 0,
-      createdAt: now,
-    };
-
-    const campaigns = await loadCampaigns();
-    campaigns.unshift(newCampaign);
-    await saveCampaigns(campaigns, session.user.id);
-
-    logAdminAction({
-      adminUserId: session.user.id,
-      action: 'CREATE_NEWSLETTER_CAMPAIGN',
-      targetType: 'NewsletterCampaign',
-      targetId: newCampaign.id,
-      newValue: { subject, status: campaignStatus, recipientCount: newCampaign.recipientCount },
-      ipAddress: getClientIpFromRequest(request),
-      userAgent: request.headers.get('user-agent') || undefined,
-    }).catch(() => {});
-
-    return NextResponse.json(
-      { success: true, campaign: newCampaign },
-      { status: 201 }
-    );
+    return NextResponse.json({ campaign }, { status: 201 });
   } catch (error) {
-    logger.error('Create newsletter campaign error', { error: error instanceof Error ? error.message : String(error) });
+    logger.error('Admin newsletter campaigns POST error', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json(
-      { error: 'Error creating campaign' },
+      { error: 'Failed to create campaign' },
       { status: 500 }
     );
   }

@@ -20,7 +20,7 @@ export const dynamic = 'force-dynamic';
  *   - Update return request flow to validate against category policy
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { auth } from '@/lib/auth-config';
 import { prisma } from '@/lib/db';
 import { enqueue } from '@/lib/translation';
@@ -86,15 +86,13 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       || '127.0.0.1';
     const rl = await rateLimitMiddleware(ip, '/api/categories/[id]');
     if (!rl.success) {
-      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
-      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
-      return res;
+      return apiError(rl.error!.message, ErrorCode.RATE_LIMITED, { request, headers: rl.headers });
     }
 
     // SECURITY: CSRF protection
     const csrfValid = await validateCsrf(request);
     if (!csrfValid) {
-      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+      return apiError('Invalid CSRF token', ErrorCode.FORBIDDEN, { request });
     }
 
     // Item 12: Content-Type validation
@@ -115,7 +113,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     const body = await request.json();
     const parsed = updateCategorySchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
+      return apiError('Invalid data', ErrorCode.VALIDATION_ERROR, { details: parsed.error.errors, request });
     }
 
     // Whitelist: only allow safe fields to be updated (H11 - mass assignment fix)
@@ -185,15 +183,13 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       || '127.0.0.1';
     const rl = await rateLimitMiddleware(ip, '/api/categories/[id]');
     if (!rl.success) {
-      const res = NextResponse.json({ error: rl.error!.message }, { status: 429 });
-      Object.entries(rl.headers).forEach(([k, v]) => res.headers.set(k, v));
-      return res;
+      return apiError(rl.error!.message, ErrorCode.RATE_LIMITED, { request, headers: rl.headers });
     }
 
     // SECURITY: CSRF protection
     const csrfValid = await validateCsrf(request);
     if (!csrfValid) {
-      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 });
+      return apiError('Invalid CSRF token', ErrorCode.FORBIDDEN, { request });
     }
 
     const session = await auth();

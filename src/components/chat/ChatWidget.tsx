@@ -47,13 +47,16 @@ export default function ChatWidget() {
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Obtenir ou créer le visitorId
+  // F-009 FIX: Use fully random UUID for visitorId instead of timestamp-based format
+  // to prevent brute-force enumeration of conversation ownership.
+  // Old format (visitor_{timestamp}_{8chars}) was partially predictable.
   useEffect(() => {
     const stored = localStorage.getItem('biocycle_chat_visitor_id');
     if (stored) {
       setVisitorId(stored);
     } else {
-      const newId = `visitor_${Date.now()}_${crypto.randomUUID().substring(0, 8)}`;
+      // F-009 FIX: Cryptographically random UUID - not guessable
+      const newId = crypto.randomUUID();
       localStorage.setItem('biocycle_chat_visitor_id', newId);
       setVisitorId(newId);
     }

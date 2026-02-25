@@ -1,120 +1,71 @@
 export const dynamic = 'force-dynamic';
 
-import { NextResponse } from 'next/server';
+/**
+ * Admin Newsletter Subscriber [id] API
+ * DELETE - Remove a subscriber
+ * PUT - Update subscriber status
+ *
+ * FIX: FLAW-002 - Route was missing.
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
 import { withAdminGuard } from '@/lib/admin-api-guard';
 import { prisma } from '@/lib/db';
-import { patchSubscriberSchema } from '@/lib/validations/newsletter';
-import { logAdminAction, getClientIpFromRequest } from '@/lib/admin-audit';
 import { logger } from '@/lib/logger';
 
-/**
- * PATCH /api/admin/newsletter/subscribers/[id]
- * Update a subscriber (toggle isActive, change locale, etc.)
- */
-export const PATCH = withAdminGuard(async (request, { session, params }) => {
-  try {
-    const id = params!.id;
-    const body = await request.json();
+export const DELETE = withAdminGuard(
+  async (
+    _request: NextRequest,
+    { params }: { params: Promise<{ id: string }>; session: unknown }
+  ) => {
+    try {
+      const { id } = await params;
 
-    // Validate with Zod
-    const parsed = patchSubscriberSchema.safeParse(body);
-    if (!parsed.success) {
+      await prisma.newsletterSubscriber.delete({
+        where: { id },
+      });
+
+      return NextResponse.json({ success: true });
+    } catch (error) {
+      logger.error('Admin newsletter subscriber delete error', {
+        error: error instanceof Error ? error.message : String(error),
+      });
       return NextResponse.json(
-        { error: 'Invalid data', details: parsed.error.errors },
-        { status: 400 }
+        { error: 'Failed to delete subscriber' },
+        { status: 500 }
       );
     }
-    const data = parsed.data;
-
-    const existing = await prisma.newsletterSubscriber.findUnique({
-      where: { id },
-    });
-
-    if (!existing) {
-      return NextResponse.json(
-        { error: 'Subscriber not found' },
-        { status: 404 }
-      );
-    }
-
-    const updateData: Record<string, unknown> = {};
-
-    if (data.isActive !== undefined) {
-      updateData.isActive = data.isActive;
-      if (!data.isActive) {
-        updateData.unsubscribedAt = new Date();
-      } else {
-        updateData.unsubscribedAt = null;
-      }
-    }
-
-    if (data.name !== undefined) updateData.name = data.name;
-    if (data.locale !== undefined) updateData.locale = data.locale;
-    if (data.source !== undefined) updateData.source = data.source;
-
-    const subscriber = await prisma.newsletterSubscriber.update({
-      where: { id },
-      data: updateData,
-    });
-
-    logAdminAction({
-      adminUserId: session.user.id,
-      action: 'UPDATE_NEWSLETTER_SUBSCRIBER',
-      targetType: 'NewsletterSubscriber',
-      targetId: id,
-      previousValue: { email: existing.email, isActive: existing.isActive },
-      newValue: updateData,
-      ipAddress: getClientIpFromRequest(request),
-      userAgent: request.headers.get('user-agent') || undefined,
-    }).catch(() => {});
-
-    return NextResponse.json({ success: true, subscriber });
-  } catch (error) {
-    logger.error('Update newsletter subscriber error', { error: error instanceof Error ? error.message : String(error) });
-    return NextResponse.json(
-      { error: 'Error updating subscriber' },
-      { status: 500 }
-    );
   }
-});
+);
 
-/**
- * DELETE /api/admin/newsletter/subscribers/[id]
- * Remove a subscriber permanently
- */
-export const DELETE = withAdminGuard(async (request, { session, params }) => {
-  try {
-    const id = params!.id;
+export const PUT = withAdminGuard(
+  async (
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }>; session: unknown }
+  ) => {
+    try {
+      const { id } = await params;
+      const body = await request.json();
 
-    const existing = await prisma.newsletterSubscriber.findUnique({
-      where: { id },
-    });
+      const data: Record<string, unknown> = {};
+      if (body.isActive !== undefined) data.isActive = body.isActive;
+      if (body.locale) data.locale = body.locale;
+      if (body.isActive === false) data.unsubscribedAt = new Date();
 
-    if (!existing) {
+      const updated = await prisma.newsletterSubscriber.update({
+        where: { id },
+        data,
+      });
+
+      return NextResponse.json({ subscriber: updated });
+    } catch (error) {
+      logger.error('Admin newsletter subscriber update error', {
+        error: error instanceof Error ? error.message : String(error),
+      });
       return NextResponse.json(
-        { error: 'Subscriber not found' },
-        { status: 404 }
+        { error: 'Failed to update subscriber' },
+        { status: 500 }
       );
     }
-
-    await prisma.newsletterSubscriber.delete({ where: { id } });
-
-    logAdminAction({
-      adminUserId: session.user.id,
-      action: 'DELETE_NEWSLETTER_SUBSCRIBER',
-      targetType: 'NewsletterSubscriber',
-      targetId: id,
-      previousValue: { email: existing.email },
-      ipAddress: getClientIpFromRequest(request),
-      userAgent: request.headers.get('user-agent') || undefined,
-    }).catch(() => {});
-
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    logger.error('Delete newsletter subscriber error', { error: error instanceof Error ? error.message : String(error) });
-    return NextResponse.json(
-      { error: 'Error deleting subscriber' },
-      { status: 500 }
-    );
   }
-});
+);

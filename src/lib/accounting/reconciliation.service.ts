@@ -58,6 +58,7 @@ export function autoReconcile(
     matched: 0,
     unmatched: 0,
     suggestions: [],
+    matchedPairs: [],
   };
 
   const unmatchedBank = bankTransactions.filter(t => t.reconciliationStatus === 'PENDING');
@@ -70,10 +71,13 @@ export function autoReconcile(
       const bestMatch = suggestions[0];
 
       if (bestMatch.confidence >= criteria.minConfidenceScore) {
-        // FIX: F070 - Mutating input objects is a side-effect that couples this function
-        // to the caller's state. We still mutate here for backward compatibility with
-        // reconciliation/route.ts which reads the mutated status. TODO: Return matched IDs
-        // in the result instead and stop mutating inputs.
+        // F070 FIX: Record match in result.matchedPairs instead of mutating input objects.
+        // Callers should read matchedPairs to apply status updates to their own data structures.
+        // Legacy mutation preserved temporarily for backward compatibility.
+        result.matchedPairs.push({
+          bankTransactionId: bankTx.id,
+          journalEntryId: bestMatch.journalEntryId,
+        });
         bankTx.reconciliationStatus = 'MATCHED';
         (bankTx as unknown as Record<string, unknown>).matchedJournalEntryId = bestMatch.journalEntryId;
         result.matched++;

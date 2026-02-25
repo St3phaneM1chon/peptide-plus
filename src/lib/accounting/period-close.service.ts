@@ -4,7 +4,7 @@
  */
 
 import { prisma } from '@/lib/db';
-import { ACCOUNT_CODES } from './types';
+import { ACCOUNT_CODES, AccountingPeriodStatus } from './types';
 import { assertJournalBalance } from '@/lib/accounting/validation';
 import { logAuditTrail } from './audit-trail.service';
 import { logger } from '@/lib/logger';
@@ -156,7 +156,8 @@ export async function runMonthEndChecklist(periodCode: string): Promise<Checklis
     where: { code: periodCode },
     data: {
       closingChecklist: JSON.stringify(items),
-      status: 'IN_REVIEW',
+      // F048 FIX: 'IN_REVIEW' is now a documented value in AccountingPeriodStatus type
+      status: 'IN_REVIEW' satisfies AccountingPeriodStatus,
     },
   });
 
