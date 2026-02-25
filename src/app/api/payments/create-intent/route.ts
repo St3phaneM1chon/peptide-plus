@@ -20,6 +20,7 @@ const createIntentSchema = z.object({
   saveCard: z.boolean().optional(),
   companyId: z.string().optional(),
   province: z.string().max(2).optional(),
+  country: z.string().max(2).optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -67,7 +68,7 @@ export async function POST(request: NextRequest) {
     if (!parsed.success) {
       return NextResponse.json({ error: 'Invalid data', details: parsed.error.errors }, { status: 400 });
     }
-    const { productId, saveCard, companyId, province: reqProvince } = parsed.data;
+    const { productId, saveCard, companyId, province: reqProvince, country: reqCountry } = parsed.data;
 
     // Récupérer le produit
     const product = await prisma.product.findUnique({
@@ -84,10 +85,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Product is not available' }, { status: 400 });
     }
 
-    // BE-PAY-11: Calculate taxes based on province (not hardcoded to QC)
+    // BE-PAY-11: Calculate taxes based on province and country
+    // International orders (country !== CA) → 0% tax (handled by customs)
+    // Canadian orders → province-specific rates (default QC if not specified)
     const subtotal = Number(product.price);
     const province = (reqProvince || 'QC').toUpperCase();
-    const taxAmount = calculateTaxAmount(subtotal, province);
+    const country = (reqCountry || 'CA').toUpperCase();
+    const taxAmount = calculateTaxAmount(subtotal, province, country);
     const total = toCents(add(subtotal, taxAmount));
 
     // Récupérer ou créer le customer Stripe

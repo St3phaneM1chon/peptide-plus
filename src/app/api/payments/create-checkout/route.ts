@@ -617,33 +617,27 @@ export async function POST(request: NextRequest) {
         ? ['acss_debit']
         : ['card'];
 
-    // Prepare cart items for metadata using VERIFIED data
-    const cartItemsData = verifiedItems.map((item) => ({
-      productId: item.productId,
-      formatId: item.formatId,
-      name: item.name,
-      formatName: item.formatName,
-      quantity: item.quantity,
-      price: item.price,
+    // BUG E-14 FIX: Stripe metadata has a 500-char limit per value.
+    // Always use compact encoding (IDs + quantity + price only) to stay within limits.
+    // The webhook reconstructs product names from the database.
+    // If even compact data exceeds the limit (50+ items with long CUIDs), fall back to
+    // a reference-based approach where the webhook recovers items from InventoryReservation
+    // records via cartId + DB product lookups.
+    const compactItems = verifiedItems.map((item) => ({
+      p: item.productId,
+      f: item.formatId,
+      q: item.quantity,
+      $: item.price,
     }));
+    let cartItemsStr = JSON.stringify(compactItems);
+    // E-14: Flag to tell the webhook which format we used
+    let cartItemsFormat: 'compact' | 'ref' = 'compact';
 
-    // BUG 14: Use compact encoding to avoid metadata truncation losing cart items
-    // First try full data, then minimal, then store a reference ID to retrieve later
-    let cartItemsStr = JSON.stringify(cartItemsData);
     if (cartItemsStr.length > 490) {
-      // Compact: only essential fields with short keys
-      cartItemsStr = JSON.stringify(cartItemsData.map((item) => ({
-        p: item.productId,
-        f: item.formatId,
-        q: item.quantity,
-        $: item.price,
-      })));
-    }
-    if (cartItemsStr.length > 490) {
-      // Still too long: store cart data in DB and reference by cartId
-      const cartRef = cartId || `cart-${Date.now()}`;
-      // The webhook can recover items from inventoryReservation records via cartId
-      cartItemsStr = JSON.stringify({ ref: cartRef, count: cartItemsData.length });
+      // Still too long: the webhook will recover items from InventoryReservation + DB
+      const cartRef = cartId || `checkout-${Date.now()}`;
+      cartItemsStr = JSON.stringify({ ref: cartRef, count: verifiedItems.length });
+      cartItemsFormat = 'ref';
     }
 
     const checkoutParams: Stripe.Checkout.SessionCreateParams = {
@@ -664,6 +658,7 @@ export async function POST(request: NextRequest) {
         taxTvh: String(serverTaxes.tvh),
         taxPst: String(serverTaxes.pst),
         cartItems: cartItemsStr,
+        cartItemsFormat, // E-14: 'compact' or 'ref' so webhook knows how to parse
         promoCode: validatedPromoCode,
         promoDiscount: String(serverPromoDiscount),
         // BE-PAY-04: Gift card info for balance decrement in webhook

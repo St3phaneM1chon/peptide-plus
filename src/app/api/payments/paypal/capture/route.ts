@@ -395,6 +395,66 @@ export async function POST(request: NextRequest) {
           }
         }
 
+        // E-12 FIX: Atomic promo code usage tracking inside the order transaction.
+        // Uses a conditional UPDATE to prevent race conditions where two concurrent
+        // captures both pass the usage check and both increment, exceeding the limit.
+        // Also enforces per-user usage limits (usageLimitPerUser).
+        if (promoCode && serverPromoDiscount > 0) {
+          // Step 1: Atomic conditional increment — only succeeds if within global usage limit
+          const promoRowsAffected: number = await tx.$executeRaw`
+            UPDATE "PromoCode"
+            SET "usageCount" = "usageCount" + 1, "updatedAt" = NOW()
+            WHERE code = ${promoCode}
+              AND "isActive" = true
+              AND ("usageLimit" IS NULL OR "usageCount" < "usageLimit")
+          `;
+
+          if (promoRowsAffected === 0) {
+            // Promo exceeded its global usage limit between validation and capture.
+            // Payment is already captured so we log a warning but don't block the order.
+            logger.warn('[PayPal capture] Promo code usage limit exceeded (atomic check failed)', {
+              promoCode,
+              orderNumber,
+            });
+          } else {
+            // Step 2: Fetch the promo to get its ID and per-user limit
+            const promoRecord = await tx.promoCode.findUnique({ where: { code: promoCode } });
+            if (promoRecord) {
+              // Step 3: Check per-user usage limit atomically
+              const maxUsesPerUser = promoRecord.usageLimitPerUser ?? 1;
+              const existingUserUsage = await tx.promoCodeUsage.count({
+                where: { promoCodeId: promoRecord.id, userId },
+              });
+
+              if (existingUserUsage >= maxUsesPerUser) {
+                // Per-user limit exceeded — rollback the global increment
+                await tx.$executeRaw`
+                  UPDATE "PromoCode"
+                  SET "usageCount" = GREATEST("usageCount" - 1, 0), "updatedAt" = NOW()
+                  WHERE code = ${promoCode}
+                `;
+                logger.warn('[PayPal capture] Promo code per-user limit reached', {
+                  promoCode,
+                  userId,
+                  maxUsesPerUser,
+                  existingUserUsage,
+                  orderNumber,
+                });
+              } else {
+                // Step 4: Create per-user usage record inside the transaction
+                await tx.promoCodeUsage.create({
+                  data: {
+                    promoCodeId: promoRecord.id,
+                    userId,
+                    orderId: newOrder.id,
+                    discount: serverPromoDiscount,
+                  },
+                });
+              }
+            }
+          }
+        }
+
         return newOrder;
       });
 
@@ -420,29 +480,6 @@ export async function POST(request: NextRequest) {
         await createAccountingEntriesForOrder(order.id);
       } catch (acctError) {
         logger.error('Failed to create PayPal accounting entries', { error: acctError instanceof Error ? acctError.message : String(acctError) });
-      }
-
-      // Track promo code usage
-      if (promoCode && serverPromoDiscount > 0) {
-        try {
-          await prisma.promoCode.updateMany({
-            where: { code: promoCode },
-            data: { usageCount: { increment: 1 } },
-          });
-          const promo = await prisma.promoCode.findUnique({ where: { code: promoCode } });
-          if (promo) {
-            await prisma.promoCodeUsage.create({
-              data: {
-                promoCodeId: promo.id,
-                userId,
-                orderId: order.id,
-                discount: serverPromoDiscount,
-              },
-            });
-          }
-        } catch (promoError) {
-          logger.error('Failed to track promo code usage', { error: promoError instanceof Error ? promoError.message : String(promoError) });
-        }
       }
 
       // E-06 FIX: Gift card balance is now deducted INSIDE the main order $transaction above.

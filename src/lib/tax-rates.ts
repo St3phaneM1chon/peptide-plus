@@ -35,10 +35,21 @@ export function getProvinceTaxRates(province: string): ProvinceTaxRates {
 }
 
 /**
- * Calculate tax amount for a given subtotal and province.
+ * Calculate tax amount for a given subtotal, province and country.
  * Uses Decimal.js for safe financial arithmetic.
+ *
+ * - For Canadian orders (`country` is "CA" or omitted): applies the
+ *   province-specific GST/HST/PST/QST/RST rates.
+ * - For international orders (`country` is anything other than "CA"):
+ *   returns 0 (taxes are handled by customs/import duties).
+ * - If `province` is unknown, falls back to Quebec rates (most customers are local).
  */
-export function calculateTaxAmount(subtotal: number, province: string): number {
+export function calculateTaxAmount(subtotal: number, province: string, country?: string): number {
+  // International orders: 0% tax (customs/import duties apply separately)
+  if (country && country.toUpperCase() !== 'CA') {
+    return 0;
+  }
+
   const rates = getProvinceTaxRates(province);
   if (rates.hst) {
     return applyRate(subtotal, rates.hst);

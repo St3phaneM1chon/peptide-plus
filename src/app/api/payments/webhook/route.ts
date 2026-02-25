@@ -329,7 +329,50 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
   const taxTvq = parseFloat(metadata.taxTvq || '0');
   const taxTvh = parseFloat(metadata.taxTvh || '0');
   const taxPst = parseFloat(metadata.taxPst || '0');
-  const cartItems = metadata.cartItems ? JSON.parse(metadata.cartItems) : [];
+  // BUG E-14 FIX: Safe parsing of cartItems metadata.
+  // Stripe metadata values are capped at 500 chars. If the JSON was truncated,
+  // JSON.parse would throw and the order would be created with 0 items.
+  // We now handle 3 formats:
+  //   1. 'compact' — short keys: [{p, f, q, $}, ...] (names looked up from DB)
+  //   2. 'ref'     — {ref, count} reference; items recovered from InventoryReservation + DB
+  //   3. legacy    — full objects with productId, name, formatName, quantity, price
+  let cartItems: Record<string, unknown>[] = [];
+  const cartItemsFormat = metadata.cartItemsFormat || 'legacy';
+
+  if (metadata.cartItems) {
+    try {
+      const parsed = JSON.parse(metadata.cartItems);
+
+      if (cartItemsFormat === 'ref' || (parsed && typeof parsed === 'object' && 'ref' in parsed)) {
+        // Format 'ref': recover from InventoryReservation records (handled below after reservation fetch)
+        // cartItems stays empty here; we populate it from reservations + DB lookup later
+        cartItems = [];
+      } else if (cartItemsFormat === 'compact' || (Array.isArray(parsed) && parsed.length > 0 && 'p' in parsed[0])) {
+        // Format 'compact': short keys {p, f, q, $} — need DB lookup for names
+        cartItems = parsed.map((item: { p: string; f: string | null; q: number; $: number }) => ({
+          productId: item.p,
+          formatId: item.f,
+          quantity: item.q,
+          price: item.$,
+          // name and formatName will be filled from DB below
+          name: null,
+          formatName: null,
+        }));
+      } else if (Array.isArray(parsed)) {
+        // Legacy format: full objects
+        cartItems = parsed;
+      }
+    } catch (parseError) {
+      // E-14: Truncated JSON — fall back to recovering from InventoryReservation + DB
+      logger.warn('[Webhook] cartItems metadata JSON parse failed (likely truncated), will recover from reservations', {
+        sessionId: session.id,
+        error: parseError instanceof Error ? parseError.message : String(parseError),
+        rawLength: metadata.cartItems?.length,
+      });
+      cartItems = [];
+    }
+  }
+
   const promoCode = metadata.promoCode || null;
   const promoDiscount = parseFloat(metadata.promoDiscount || '0');
   const shippingCost = parseFloat(metadata.shippingCost || '0');
@@ -378,6 +421,100 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
   const cadTotal = subtotal
     ? subtotal - promoDiscount - giftCardDiscount + totalTax + shippingCost
     : stripeTotal; // fallback
+
+  // BUG E-14 FIX: If cartItems is empty (truncated JSON or 'ref' format) or compact
+  // (missing names), recover/enrich from InventoryReservation + Product/Format DB lookups.
+  if (cartItems.length === 0) {
+    // Recover items from InventoryReservation records using cartId
+    const cartIdForLookup = metadata.cartId || undefined;
+    if (cartIdForLookup) {
+      const reservations = await prisma.inventoryReservation.findMany({
+        where: { cartId: cartIdForLookup, status: 'RESERVED' },
+        select: { productId: true, formatId: true, quantity: true },
+      });
+      if (reservations.length > 0) {
+        // Look up product names and prices
+        const productIds = [...new Set(reservations.map(r => r.productId))];
+        const products = await prisma.product.findMany({
+          where: { id: { in: productIds } },
+          select: { id: true, name: true, price: true },
+        });
+        const productMap = new Map(products.map(p => [p.id, p]));
+
+        const formatIds = reservations.map(r => r.formatId).filter((f): f is string => !!f);
+        const formats = formatIds.length > 0
+          ? await prisma.productFormat.findMany({
+              where: { id: { in: formatIds } },
+              select: { id: true, name: true, price: true },
+            })
+          : [];
+        const formatMap = new Map(formats.map(f => [f.id, f]));
+
+        cartItems = reservations.map(r => {
+          const product = productMap.get(r.productId);
+          const format = r.formatId ? formatMap.get(r.formatId) : null;
+          return {
+            productId: r.productId,
+            formatId: r.formatId,
+            quantity: r.quantity,
+            price: format ? Number(format.price) : (product ? Number(product.price) : 0),
+            name: product?.name || 'Unknown product',
+            formatName: format?.name || null,
+          };
+        });
+        logger.info('[Webhook] E-14: Recovered cart items from InventoryReservation', {
+          sessionId: session.id,
+          itemCount: cartItems.length,
+        });
+      }
+    }
+    // If still empty after reservation lookup, the order will be created with 0 items.
+    // This is a data integrity issue but better than crashing the webhook.
+    if (cartItems.length === 0) {
+      logger.error('[Webhook] E-14: Could not recover cart items from any source', {
+        sessionId: session.id,
+        cartId: metadata.cartId,
+        cartItemsFormat,
+      });
+    }
+  }
+
+  // BUG E-14 FIX: Enrich compact-format items that are missing product names
+  const itemsMissingNames = cartItems.filter(item => !item.name);
+  if (itemsMissingNames.length > 0) {
+    const productIds = [...new Set(itemsMissingNames.map(i => String(i.productId)))];
+    const products = await prisma.product.findMany({
+      where: { id: { in: productIds } },
+      select: { id: true, name: true, price: true },
+    });
+    const productMap = new Map(products.map(p => [p.id, p]));
+
+    const formatIds = itemsMissingNames.map(i => i.formatId).filter((f): f is string => typeof f === 'string' && !!f);
+    const formats = formatIds.length > 0
+      ? await prisma.productFormat.findMany({
+          where: { id: { in: formatIds } },
+          select: { id: true, name: true, price: true },
+        })
+      : [];
+    const formatMap = new Map(formats.map(f => [f.id, f]));
+
+    for (const item of cartItems) {
+      if (!item.name) {
+        const product = productMap.get(String(item.productId));
+        item.name = product?.name || 'Unknown product';
+        if (!item.price && product) {
+          item.price = Number(product.price);
+        }
+      }
+      if (!item.formatName && item.formatId) {
+        const format = formatMap.get(String(item.formatId));
+        item.formatName = format?.name || null;
+        if (!item.price && format) {
+          item.price = Number(format.price);
+        }
+      }
+    }
+  }
 
   // BUG 15: Declare orderNumber before transaction so it's accessible outside
   let orderNumber = '';
@@ -434,14 +571,14 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session, eventId:
         shippingPhone: shipping?.phone || null,
         items: cartItems.length > 0 ? {
           create: cartItems.map((item: Record<string, unknown>) => ({
-            productId: item.productId,
-            formatId: item.formatId || null,
-            productName: item.name,
-            formatName: item.formatName || null,
-            sku: item.sku || null,
-            quantity: item.quantity,
-            unitPrice: item.price,
-            discount: item.discount || 0,
+            productId: String(item.productId),
+            formatId: item.formatId ? String(item.formatId) : null,
+            productName: String(item.name || 'Unknown product'),
+            formatName: item.formatName ? String(item.formatName) : null,
+            sku: item.sku ? String(item.sku) : null,
+            quantity: Number(item.quantity),
+            unitPrice: Number(item.price),
+            discount: Number(item.discount) || 0,
             total: Number(item.price) * Number(item.quantity) - (Number(item.discount) || 0),
           })),
         } : undefined,

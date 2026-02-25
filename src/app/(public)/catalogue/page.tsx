@@ -1,8 +1,11 @@
-export const dynamic = 'force-dynamic';
 /**
  * PAGE CATALOGUE
  * Liste de tous les produits peptides avec filtres
  */
+
+// P-02 FIX: Use ISR instead of force-dynamic for catalog (products don't change every second)
+// searchParams already opts into dynamic rendering; revalidate provides ISR caching
+export const revalidate = 300; // 5 minutes ISR, consistent with other catalog pages
 
 import type { Metadata } from 'next';
 import Link from 'next/link';

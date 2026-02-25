@@ -1,5 +1,6 @@
 'use client';
-export const dynamic = 'force-dynamic';
+// P-02 FIX: Removed force-dynamic (has no effect on 'use client' components;
+// data is fetched client-side via useEffect, not SSR)
 /**
  * PAGE GUIDES & RESSOURCES
  */
