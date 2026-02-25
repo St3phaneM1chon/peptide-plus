@@ -1,15 +1,15 @@
 # PROJECT MAP - peptide-plus (BioCycle Peptides)
-# LAST UPDATED: 2026-02-24 (Session 2 - S10/S11/S12 complete)
+# LAST UPDATED: 2026-02-25 (Community Forum backend + Prisma models)
 # RULE: This file MUST be updated after every feature addition/modification
 # SEE: .claude/rules/project-map-mandatory.md for enforcement rules
 
 ## QUICK STATS
-- **Pages**: 189 | **API Routes**: 333 | **Prisma Models**: 104 | **Enums**: 30 | **Components**: 110 | **Hooks**: 16 | **Lib files**: 184
+- **Pages**: 189 | **API Routes**: 340 | **Prisma Models**: 109 | **Enums**: 30 | **Components**: 110 | **Hooks**: 16 | **Lib files**: 184
 - **Loading skeletons**: 119 loading.tsx files (all admin pages covered)
 - **Stack**: Next.js 15 (App Router), TypeScript strict, Prisma 5.22, PostgreSQL 15, Redis
 - **i18n**: 22 languages (fr reference) | **Auth**: NextAuth v5 + MFA + WebAuthn
 - **Hosting**: Azure App Service | **Payments**: Stripe + PayPal
-- **Orphan models** (no Prisma FK): 35/101 (34.6%) -- many use soft references
+- **Orphan models** (no Prisma FK): 35/109 (32.1%) -- many use soft references
 
 ---
 
@@ -96,7 +96,7 @@ Each domain lists ALL pages, API routes, models, and components involved.
 | **Models** | `ChartOfAccount` (self-ref parent/children), `JournalEntry`, `JournalLine`, `CustomerInvoice`, `CustomerInvoiceItem`, `SupplierInvoice` (orphan), `CreditNote`, `BankAccount`, `BankTransaction`, `BankRule`, `Budget`, `BudgetLine`, `Expense`, `TaxReport` (orphan), `FixedAsset`, `FixedAssetDepreciation`, `AuditTrail`, `RecurringEntryTemplate` (orphan), `AccountingPeriod` (orphan), `FiscalYear` (orphan), `AccountingSettings` (orphan), `AccountingAlert` (orphan), `DocumentAttachment` (orphan), `FiscalCalendarEvent` (orphan) |
 | **Lib** | 33 files in `@/lib/accounting/`: auto-entries, stripe-sync, reconciliation, pdf-reports, alerts, aging, recurring-entries, bank-import, ml-reconciliation, forecasting, audit-trail, tax-compliance, currency, integrations (QuickBooks/Sage), quick-entry, ocr, search, alert-rules, auto-reconciliation, scheduler, kpi, payment-matching, report-templates |
 | **Affects** | Orders (auto journal entries on sale/refund), Payments (stripe-sync), Tax (TPS/TVQ declarations), Fixed Assets (depreciation) |
-| **NOTE** | Heavily uses soft references. JournalEntry.orderId is NOT a FK. BankTransaction.matchedEntryId is NOT a FK. Most accounting-to-commerce connections are soft. |
+| **NOTE** | Heavily uses soft references. JournalEntry.orderId is NOT a FK. BankTransaction.matchedEntryId is NOW a real FK to JournalEntry (SetNull). Most accounting-to-commerce connections are soft. |
 
 ---
 
@@ -333,7 +333,7 @@ ChartOfAccount (self-ref)
     +--> BankRule
     +--> Expense
 
-BankAccount --> BankTransaction [soft: matchedEntryId to JournalEntry]
+BankAccount --> BankTransaction --> JournalEntry (matchedEntry FK, SetNull)
 Budget --> BudgetLine [soft: accountCode to ChartOfAccount.code]
 CustomerInvoice --> CustomerInvoiceItem, CreditNote [soft: customerId, orderId, journalEntryId]
 SupplierInvoice [ORPHAN: soft refs supplierId, journalEntryId]
@@ -529,7 +529,7 @@ All share: `useSession` (next-auth), `useRouter`, `useI18n`, SessionProvider, I1
 ### Community & Learning
 | Page | Path | Status | API | Notes |
 |------|------|--------|-----|-------|
-| Community Forum | `/community` | **MOCKUP** | NONE | 100% useState, no backend |
+| Community Forum | `/community` | **COMPLETE** | `GET/POST /api/community/posts`, `GET /api/community/categories` | Real API with ForumPost, ForumCategory, ForumReply, ForumVote models |
 | FAQ | `/faq` | COMPLETE (ISR) | Server Prisma | Uses JsonLd, faqSchema |
 | Learn | `/learn` | COMPLETE | NONE | Hardcoded articles |
 | Learn Detail | `/learn/[slug]` | COMPLETE | NONE | DOMPurify for HTML |
@@ -676,6 +676,17 @@ abandoned-cart, birthday-emails, data-retention, dependency-check, email-flows, 
 ### Admin Core (100+ routes)
 orders, users/[id], users/[id]/points, employees, inventory, **inventory/[id]** (PATCH - stock update), **inventory/history**, **inventory/import**, **inventory/export**, currencies, settings, seo, emails/send, emails/settings, emails/mailing-list, emails/mailing-list/import, promotions, promo-codes, reviews, suppliers, subscriptions, loyalty/*, translations, nav-sections, nav-subsections, nav-pages, medias, webinars, videos, logs, audit-log, **audits** (GET - audit dashboard), metrics, cache-stats, permissions, shipping/*, uat, reports
 
+### Community Forum (7 routes) - NEW 2026-02-25
+| Route | Methods | Models | Auth | Notes |
+|-------|---------|--------|------|-------|
+| /api/community/categories | GET | ForumCategory,ForumPost | none | Returns categories with post counts |
+| /api/community/posts | GET,POST | ForumPost,ForumCategory,User,ForumVote | GET:none POST:auth | Pagination, filtering by category/search |
+| /api/community/posts/[id] | GET,DELETE | ForumPost,ForumReply,ForumVote,User | GET:none DEL:auth(owner/admin) | Single post with replies |
+| /api/community/posts/[id]/replies | GET,POST | ForumReply,ForumPost,User | GET:none POST:auth | Nested replies support |
+| /api/community/posts/[id]/vote | POST | ForumVote,ForumPost | auth | Upvote/downvote, unique per user |
+| /api/community/seed | POST | ForumCategory | admin-guard | Seed default forum categories |
+| /api/community/debug | GET | ForumCategory,ForumPost | none | Debug endpoint for dev |
+
 ### Public Utility (30+ routes)
 products, categories, blog, articles, reviews, ambassadors, referrals, loyalty, gift-cards, currencies, contact, consent, csrf, health, hero-slides, testimonials, videos, webinars, search/suggest, social-proof, stock-alerts, price-watch, promo/validate, upsell, bundles
 
@@ -746,7 +757,7 @@ Header, Footer, HeroBanner, ProductCard, ProductGallery, ProductReviews, Product
 ### Hub Models (highest incoming FK)
 | Model | Incoming FK Count | Deletion Impact |
 |-------|------------------|-----------------|
-| **User** | 32 | CATASTROPHIC -- cascades to 12+ tables, blocks on 3 |
+| **User** | 36 | CATASTROPHIC -- cascades to 16+ tables (incl. ForumPost, ForumReply, ForumVote, ContactMessage), blocks on 3 |
 | **Product** | 14 | HIGH -- cascades formats, images, translations, modules, alerts |
 | **ChartOfAccount** | 6 | BLOCKS if JournalLines or FixedAssets reference it |
 | **Order** | 4 | Cascades OrderItems. SetNull PaymentErrors. |
@@ -755,6 +766,28 @@ Header, Footer, HeroBanner, ProductCard, ProductGallery, ProductReviews, Product
 ### Translation Models (14)
 ALL follow pattern: `1:N Cascade`, `@@unique([parentId, locale])`, `translatedBy @default("gpt-4o-mini")`
 - Article, BlogPost, Category, Faq, Guide, HeroSlide, NewsArticle, Page, Product, ProductFormat, QuickReply, Testimonial, Video, Webinar
+
+### Community Forum Models (4) - NEW 2026-02-25
+| Model | Fields | Relations | Notes |
+|-------|--------|-----------|-------|
+| `ForumCategory` | id, name, slug, description, icon, color, sortOrder, isActive | ForumPost[] | Forum discussion categories, unique slug |
+| `ForumPost` | id, title, content, isPinned, isLocked, viewCount, deletedAt | author(User), category(ForumCategory), replies(ForumReply[]), votes(ForumVote[]) | Soft-delete via deletedAt, pinned/locked flags |
+| `ForumReply` | id, content, parentReplyId, deletedAt | author(User), post(ForumPost), parentReply(self-ref), childReplies[] | Nested replies, soft-delete |
+| `ForumVote` | id, type(UP/DOWN), targetType(POST/REPLY), targetId | user(User), post(ForumPost?) | @@unique([userId, targetType, targetId]) |
+
+### Contact Model (1) - NEW 2026-02-25
+| Model | Fields | Relations | Notes |
+|-------|--------|-----------|-------|
+| `ContactMessage` | id, name, email, subject, message, status, userId?, readAt, archivedAt | user(User?) | Persisted contact form messages, optional user FK |
+
+### Updated Models (2026-02-25)
+| Model | Change | Details |
+|-------|--------|---------|
+| `BankTransaction` | Added FK | `matchedEntryId` now real FK to JournalEntry (was soft reference), onDelete: SetNull |
+| `ChartOfAccount` | Type change | `ccaRate` changed from Float? to Decimal? @db.Decimal(5,4) for tax precision |
+| `FixedAsset` | Type change | `ccaRate` changed from Float to Decimal @db.Decimal(5,4) for tax precision |
+| `Media` | New fields | Added `width Int?` and `height Int?` for image dimensions |
+| `User` | New relations | Added `forumPosts`, `forumReplies`, `forumVotes`, `contactMessages` relations |
 
 ### Orphan Models (35 -- no Prisma @relation)
 **Critical orphans** (should probably have FK):
@@ -844,7 +877,7 @@ manifest.json, sw.js, offline.html, icons
 4. ~~**Audit Logging Coverage**~~ -- FIXED 2026-02-24 (S10-06): 100% admin API audit logging with `logAdminAction()`
 5. ~~**Skeleton Loading**~~ -- FIXED 2026-02-24 (S11): 119 loading.tsx files across all admin pages
 6. **Media Section** -- 6 remaining STUB pages (4 ad platforms: YouTube/X/TikTok/Google, Videos, Library)
-7. **Community Forum** -- MOCKUP only, needs DB + API
+7. ~~**Community Forum**~~ -- FIXED 2026-02-25: 5 Prisma models (ForumCategory, ForumPost, ForumReply, ForumVote, ContactMessage) + 7 API routes, /community page now uses real API
 8. **About Section** -- 6 STUB pages
 9. **Checkout Payment** -- Stripe integration incomplete
 10. **35 Orphan Models** -- Many should have proper FK constraints (InventoryReservation, Subscription, Refund, etc.)
@@ -886,3 +919,31 @@ manifest.json, sw.js, offline.html, icons
 - `POST /api/admin/inventory/import/route.ts` -- Bulk inventory import
 - `GET /api/admin/inventory/export/route.ts` -- Inventory data export
 - `GET/POST /api/accounting/payroll/route.ts` -- Payroll stub (in-memory, no Prisma model)
+
+### New Files (2026-02-25 Session - Community Forum Backend)
+
+#### Community Forum API Routes (7 files)
+- `src/app/api/community/categories/route.ts` -- GET forum categories with post counts
+- `src/app/api/community/posts/route.ts` -- GET (paginated, filterable) + POST forum posts
+- `src/app/api/community/posts/[id]/route.ts` -- GET single post with replies, DELETE (owner/admin)
+- `src/app/api/community/posts/[id]/replies/route.ts` -- GET + POST replies (nested support)
+- `src/app/api/community/posts/[id]/vote/route.ts` -- POST upvote/downvote (unique per user)
+- `src/app/api/community/seed/route.ts` -- POST seed default forum categories (admin-guard)
+- `src/app/api/community/debug/route.ts` -- GET debug endpoint for dev
+
+#### New Prisma Models (5)
+- `ForumCategory` -- Forum discussion categories (name, slug, icon, color, sortOrder, isActive)
+- `ForumPost` -- Forum discussion posts (soft-delete via deletedAt, isPinned, isLocked, viewCount)
+- `ForumReply` -- Replies to forum posts (nested via parentReplyId self-ref, soft-delete)
+- `ForumVote` -- User votes on posts/replies (UP/DOWN, @@unique per user+target)
+- `ContactMessage` -- Persisted contact form messages (name, email, subject, message, status, optional user FK)
+
+#### Updated Prisma Models
+- `BankTransaction` -- Added `matchedEntry` FK relation to JournalEntry (onDelete: SetNull)
+- `ChartOfAccount` -- `ccaRate` changed from Float? to Decimal? @db.Decimal(5,4)
+- `FixedAsset` -- `ccaRate` changed from Float to Decimal @db.Decimal(5,4)
+- `Media` -- Added `width Int?`, `height Int?` fields for image dimensions
+- `User` -- Added `forumPosts`, `forumReplies`, `forumVotes`, `contactMessages` relations
+
+#### Updated Pages
+- `src/app/(shop)/community/page.tsx` -- Now uses real API (was useState local data only)

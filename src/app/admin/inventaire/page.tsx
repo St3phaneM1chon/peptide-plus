@@ -168,7 +168,7 @@ export default function InventairePage() {
 
         const res = await fetch(`/api/admin/inventory/history?${params.toString()}`);
         const data = await res.json();
-        setHistoryData(data.transactions || []);
+        setHistoryData(data.data || data.transactions || []);
       } catch (err) {
         console.error('Error fetching inventory history:', err);
         setHistoryData([]);
@@ -183,7 +183,7 @@ export default function InventairePage() {
     try {
       const res = await fetchWithRetry('/api/admin/inventory');
       const data = await res.json();
-      setInventory(data.inventory || []);
+      setInventory(data.data || data.inventory || []);
     } catch (err) {
       console.error('Error fetching inventory:', err);
       toast.error(t('common.error'));

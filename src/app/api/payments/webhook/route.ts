@@ -827,20 +827,59 @@ async function handleRefund(charge: Stripe.Charge, eventId: string) {
     return;
   }
 
-  // Update order status
-  await prisma.order.update({
-    where: { id: order.id },
-    data: {
-      paymentStatus: charge.amount_refunded === charge.amount ? 'REFUNDED' : 'PAID',
-      status: charge.amount_refunded === charge.amount ? 'CANCELLED' : order.status,
-    },
-  });
-
   // Compute refund values outside try block so they're available for commission clawback
   const refundAmount = (charge.amount_refunded || 0) / 100;
   const orderTotal = Number(order.total);
+  const isFullRefund = charge.amount_refunded === charge.amount;
 
-  // Create refund accounting entries
+  // BUG FIX: Wrap order status update + inventory restore in a single $transaction
+  // to ensure atomicity. Previously the order status update was standalone, so if the
+  // inventory restore failed the order would be marked REFUNDED without stock restoration.
+  await prisma.$transaction(async (tx) => {
+    // Update order status
+    await tx.order.update({
+      where: { id: order.id },
+      data: {
+        paymentStatus: isFullRefund ? 'REFUNDED' : 'PAID',
+        status: isFullRefund ? 'CANCELLED' : order.status,
+      },
+    });
+
+    // Restore inventory for full refunds
+    if (isFullRefund) {
+      const saleTxs = await tx.inventoryTransaction.findMany({
+        where: { orderId: order.id, type: 'SALE' },
+      });
+
+      // N+1 FIX: Batch-create all RETURN transactions using individual creates
+      // (stock increments must still be per-format for atomicity)
+      for (const saleTx of saleTxs) {
+        if (saleTx.formatId) {
+          await tx.productFormat.update({
+            where: { id: saleTx.formatId },
+            data: { stockQuantity: { increment: Math.abs(saleTx.quantity) } },
+          });
+        }
+      }
+      // Batch-create all return inventory transactions
+      if (saleTxs.length > 0) {
+        await tx.inventoryTransaction.createMany({
+          data: saleTxs.map(saleTx => ({
+            productId: saleTx.productId,
+            formatId: saleTx.formatId,
+            type: 'RETURN' as const,
+            quantity: Math.abs(saleTx.quantity),
+            unitCost: saleTx.unitCost,
+            runningWAC: saleTx.runningWAC,
+            orderId: order.id,
+            reason: 'Remboursement complet',
+          })),
+        });
+      }
+    }
+  });
+
+  // Create refund accounting entries (non-blocking - uses its own internal transaction)
   try {
     const { createRefundAccountingEntries } = await import('@/lib/accounting/webhook-accounting.service');
     const tps = Number(order.taxTps);
@@ -865,50 +904,7 @@ async function handleRefund(charge: Stripe.Charge, eventId: string) {
     });
   }
 
-  // Restore inventory for full refunds (atomic transaction)
-  if (charge.amount_refunded === charge.amount) {
-    try {
-      await prisma.$transaction(async (tx) => {
-        const saleTxs = await tx.inventoryTransaction.findMany({
-          where: { orderId: order.id, type: 'SALE' },
-        });
-
-        // N+1 FIX: Batch-create all RETURN transactions using individual creates
-        // (stock increments must still be per-format for atomicity)
-        for (const saleTx of saleTxs) {
-          if (saleTx.formatId) {
-            await tx.productFormat.update({
-              where: { id: saleTx.formatId },
-              data: { stockQuantity: { increment: Math.abs(saleTx.quantity) } },
-            });
-          }
-        }
-        // Batch-create all return inventory transactions
-        if (saleTxs.length > 0) {
-          await tx.inventoryTransaction.createMany({
-            data: saleTxs.map(saleTx => ({
-              productId: saleTx.productId,
-              formatId: saleTx.formatId,
-              type: 'RETURN' as const,
-              quantity: Math.abs(saleTx.quantity),
-              unitCost: saleTx.unitCost,
-              runningWAC: saleTx.runningWAC,
-              orderId: order.id,
-              reason: 'Remboursement complet',
-            })),
-          });
-        }
-      });
-    } catch (invError) {
-      logger.error('Failed to restore inventory for refund', {
-        orderId: order.id,
-        error: invError instanceof Error ? invError.message : String(invError),
-      });
-    }
-  }
-
   // Clawback ambassador commission on refund (P2 #28 fix)
-  const isFullRefund = charge.amount_refunded === charge.amount;
   try {
     const result = await clawbackAmbassadorCommission(
       order.id,

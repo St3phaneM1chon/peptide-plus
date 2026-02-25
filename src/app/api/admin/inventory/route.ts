@@ -115,7 +115,8 @@ export const GET = withAdminGuard(async (request, _ctx) => {
       const wac = wacMap.get(key) ?? 0;
 
       return {
-        formatId: format.id,
+        id: format.id,           // frontend uses item.id (= ProductFormat id)
+        formatId: format.id,     // keep for backward compat
         productId: format.productId,
         productName: format.product.name,
         productSlug: format.product.slug,
@@ -124,10 +125,12 @@ export const GET = withAdminGuard(async (request, _ctx) => {
         productActive: format.product.isActive,
         formatName: format.name,
         formatType: format.formatType,
-        formatSku: format.sku,
+        sku: format.sku,         // frontend expects "sku" not "formatSku"
+        formatSku: format.sku,   // keep for backward compat
         stockQuantity: format.stockQuantity,
         lowStockThreshold: format.lowStockThreshold,
         isLowStock: format.stockQuantity <= format.lowStockThreshold,
+        isActive: format.product.isActive, // frontend expects isActive
         availability: format.availability,
         wac,
         price: Number(format.price),
